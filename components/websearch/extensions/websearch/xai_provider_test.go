@@ -234,8 +234,6 @@ func TestUpstream_xai_provider(t *testing.T) {
 		}
 	})
 
-	tskip(t, f, "curator page exposes xAI as a manual provider", "the search curator page is the websearch-curator slice (it renders the provider buttons of curator-page.ts); the xAI availability it displays is IsXaiSearchAvailable, covered above")
-
 	tw(t, f, "xAI answers with no answer text and no sources fail loudly", func(t *testing.T) {
 		xaiSetup(t, `{"xaiApiKey":"xai-key"}`)
 		useNet(t, func(netCall) netReply { return reply(200, `{"output":[]}`) })

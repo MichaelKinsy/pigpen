@@ -72,27 +72,6 @@ func providerRuntime(t *testing.T, cfg string, env map[string]string) *Runtime {
 	return r
 }
 
-func TestRefusalSearchWorkflows(t *testing.T) {
-	for _, workflow := range []string{"summary-review", "auto-summary"} {
-		workflow := workflow
-		t.Run("workflow parameter "+workflow, func(t *testing.T) {
-			r := providerRuntime(t, `{}`, map[string]string{"TAVILY_API_KEY": "k"})
-			n := searchProviderNet(t)
-			_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "tavily", "workflow": workflow})
-			wantRefusal(t, err, `web_search workflow "`+workflow+`" (the search curator and generated summaries)`)
-			wantCalls(t, n)
-		})
-	}
-	t.Run("configured workflow auto-summary", func(t *testing.T) {
-		cfg := `{"workflow":"auto-summary"}`
-		r := providerRuntime(t, cfg, map[string]string{"TAVILY_API_KEY": "k"})
-		n := searchProviderNet(t)
-		_, err := execTool(t, r, "web_search", map[string]any{"query": "x", "provider": "tavily"})
-		wantRefusal(t, err, `web_search workflow "auto-summary" (the search curator and generated summaries)`)
-		wantCalls(t, n)
-	})
-}
-
 func TestRefusalFetchHostedProviders(t *testing.T) {
 	t.Run("a provider that is not configured is skipped as in the original", func(t *testing.T) {
 		r, _ := newRuntime(t, "")

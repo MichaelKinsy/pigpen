@@ -77,7 +77,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "what shipped?",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "xai web and x tools",
@@ -179,7 +186,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "what are people saying?",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "xai filters in the prompt",
@@ -266,7 +280,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "filtered",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "xai registry login",
@@ -360,7 +381,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "subscription",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "xai http error",
@@ -384,7 +412,15 @@
      "body": "{\"model\":\"grok-4.5\",\"input\":\"Search the web and answer using only what the web results say. Cite your sources inline.\\n\\ndenied\",\"tools\":[{\"type\":\"web_search\"}]}"
     }
    ],
-   "error": "xAI API error 401: denied for [redacted]"
+   "error": "xAI API error 401: denied for [redacted]",
+   "activity": [
+    {
+     "type": "api",
+     "query": "denied",
+     "status": null,
+     "error": "xAI API error 401: denied for [redacted]"
+    }
+   ]
   },
   {
    "name": "kimi registry login",
@@ -469,7 +505,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "Kimi Code Plan search",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "kimi bearer in header only",
@@ -543,7 +586,14 @@
       "snippet": "blocked"
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "header auth",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "mistral default",
@@ -602,7 +652,14 @@
       "snippet": "A useful source."
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "what shipped?",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "mistral premium and filters",
@@ -665,7 +722,14 @@
    "result": {
     "answer": "Mistral found the answer.\nIt returned references.",
     "results": []
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "filtered query",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai standalone key, default endpoint",
@@ -743,7 +807,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "hosted search",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai streamed response",
@@ -776,7 +847,14 @@
       "snippet": "Streamed answer"
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "stream",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai alpha default endpoint",
@@ -832,7 +910,14 @@
       "snippet": "Evidence"
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "alpha",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai registry login picks the terra model",
@@ -932,7 +1017,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "registry",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai codex login",
@@ -1019,7 +1111,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "codex",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai codex alpha",
@@ -1088,7 +1187,14 @@
       "snippet": "Evidence"
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "codex alpha",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai opencode attribution",
@@ -1191,7 +1297,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "opencode",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai current model",
@@ -1282,7 +1395,14 @@
       "snippet": ""
      }
     ]
-   }
+   },
+   "activity": [
+    {
+     "type": "api",
+     "query": "current model",
+     "status": 200
+    }
+   ]
   },
   {
    "name": "openai http error",
@@ -1307,7 +1427,15 @@
      "body": "{\"model\":\"gpt-5.6-terra\",\"instructions\":\"Search the web and return a concise answer grounded only in the web results. Include clickable source citations in the response text when possible.\",\"input\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"denied\"}]}],\"tools\":[{\"type\":\"web_search\"}],\"include\":[\"web_search_call.action.sources\"],\"store\":false,\"stream\":true,\"tool_choice\":\"required\",\"parallel_tool_calls\":true}"
     }
    ],
-   "error": "OpenAI API error 429: slow down [redacted]"
+   "error": "OpenAI API error 429: slow down [redacted]",
+   "activity": [
+    {
+     "type": "api",
+     "query": "denied",
+     "status": null,
+     "error": "OpenAI API error 429: slow down [redacted]"
+    }
+   ]
   }
  ]
 }

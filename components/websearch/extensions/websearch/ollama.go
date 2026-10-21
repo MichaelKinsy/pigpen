@@ -41,16 +41,19 @@ func SearchWithOllama(ctx context.Context, query string, o SearchOptions) (*Sear
 		return nil, err
 	}
 	n := ollamaCount(o.NumResults)
+	act := logAPIStart(query)
 	status, text, err := hostedSend(ctx, hostedCall{URL: ollamaSearchURL, Body: jsonBytes(map[string]any{"query": query, "max_results": n}), Key: key, Timeout: ollamaSearchTimeout,
-		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}})
+		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}, Act: act})
 	if err != nil {
 		return nil, err
 	}
 	if status < 200 || status > 299 {
+		act.complete(status)
 		return nil, fmt.Errorf("Ollama API error %d: %s", status, slice300(RedactCredential(text, key)))
 	}
 	raw, err := decodeAny(text)
 	if err != nil {
+		act.complete(status)
 		return nil, fmt.Errorf("Ollama API returned invalid JSON: %v", err)
 	}
 	env := asMap(raw)
@@ -82,6 +85,7 @@ func SearchWithOllama(ctx context.Context, query string, o SearchOptions) (*Sear
 		}
 		items = append(items, item{title, u, content})
 	}
+	act.complete(status)
 	if len(items) > n {
 		items = items[:n]
 	}
@@ -112,22 +116,25 @@ func ExtractWithOllama(ctx context.Context, rawURL string, o ExtractOptions, ssr
 	if err != nil {
 		return nil, err
 	}
+	act := logAPIStart("ollama fetch: " + rawURL)
 	resp, tctx, cancel, err := guardedAPI(ctx, ollamaFetchURL, RequestInit{Method: "POST", Body: jsonBytes(map[string]any{"url": rawURL}),
 		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}},
 		timeoutMsOr(o.TimeoutMs, ollamaSearchTimeout), FetchRemoteOptions{ValidationOptions: ssrfValidation(ssrf, o.Lookup, false), OnRedirect: redirectKeepsOnlyJSON(false)})
 	defer cancel()
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), key))
 	}
 	text, err := readBody(resp)
 	if err != nil {
 		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Ollama Web Fetch error %d: %s", resp.StatusCode, slice300(RedactCredential(text, key)))
 	}
 	raw, err := decodeAny(text)
 	if err != nil {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Ollama Web Fetch returned invalid JSON: %v", err)
 	}
 	env := asMap(raw)
@@ -142,6 +149,7 @@ func ExtractWithOllama(ctx context.Context, rawURL string, o ExtractOptions, ssr
 	if !ok {
 		return nil, ollamaInvalid("expected content string")
 	}
+	act.complete(resp.StatusCode)
 	content = jsTrim(content)
 	if content == "" {
 		return nil, nil

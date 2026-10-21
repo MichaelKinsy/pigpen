@@ -32,8 +32,9 @@ type wireCase struct {
 			Headers map[string]string `json:"headers"`
 			Body    any               `json:"body"`
 		} `json:"calls"`
-		Result any     `json:"result"`
-		Error  *string `json:"error"`
+		Result   any              `json:"result"`
+		Error    *string          `json:"error"`
+		Activity []oracleActivity `json:"activity"`
 	} `json:"expect"`
 }
 
@@ -135,7 +136,9 @@ func TestProviderWireFixtures(t *testing.T) {
 			noErr(t, json.Unmarshal(c.Args[len(c.Args)-1], &o))
 			so := SearchOptions{NumResults: o.NumResults, RecencyFilter: o.RecencyFilter, DomainFilter: o.DomainFilter, IncludeContent: o.IncludeContent}
 			eo := ExtractOptions{Prompt: o.Prompt, TimeoutMs: o.TimeoutMs, Lookup: pubLookup}
+			Activity.Clear()
 			got, err := wireCall(t, c.Fn, first, so, eo)
+			requireActivity(t, c.Name, c.Expect.Activity)
 			if c.Expect.Error != nil {
 				if err == nil || err.Error() != *c.Expect.Error {
 					t.Fatalf("error = %v, want %q", err, *c.Expect.Error)

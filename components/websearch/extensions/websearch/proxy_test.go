@@ -37,7 +37,6 @@ func TestUpstream_proxy_transport(t *testing.T) {
 			t.Fatalf("curl ran: %+v", f.snapshot())
 		}
 	})
-	tskip(t, F, "websearch command scopes searches but not model callbacks to configured proxy", "the /websearch curator command is deferred (docs/PORT.md)")
 
 	tw(t, F, "configured proxy is scoped to web operations while empty string forces direct access", func(t *testing.T) {
 		extractEnv(t, `{"proxy":"http://global-proxy.example:8080"}`)

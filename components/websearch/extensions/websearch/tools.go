@@ -77,6 +77,11 @@ type Runtime struct {
 	wg             sync.WaitGroup
 
 	specs []ToolSpec
+
+	// cur is the curator state (pending curated calls, running servers, the per-prompt approval).
+	cur curatorState
+	// openBrowser replaces the platform's way of opening the curator page (tests).
+	openBrowser func(url string) error
 }
 
 // NewRuntime reads the registration configuration and builds the tools it enables. An invalid
@@ -105,12 +110,15 @@ func (r *Runtime) Tool(name string) *ToolSpec {
 	return nil
 }
 
-// Commands are the enabled slash commands this port implements.
+// Commands are the enabled slash commands, in the original's registration order.
 func (r *Runtime) Commands() []string {
-	if r.cfg.Commands["search"] {
-		return []string{"search"}
+	var names []string
+	for _, name := range []string{"websearch", "curator", "google-account", "search"} {
+		if r.cfg.Commands[name] {
+			names = append(names, name)
+		}
 	}
-	return nil
+	return names
 }
 
 // Warning is set when web-search.json could not be read at registration.
@@ -321,4 +329,20 @@ func stripThumbnails(in []ExtractedContent) []ExtractedContent {
 		out[i] = c
 	}
 	return out
+}
+
+// RenderedTools are the registered tools that draw their own call and result (web_search,
+// fetch_content and get_search_content; source_check and web_enable use the default card).
+func (r *Runtime) RenderedTools() []string {
+	var names []string
+	if r.cfg.WebSearch {
+		names = append(names, r.cfg.Names.WebSearch)
+	}
+	if r.cfg.FetchContent {
+		names = append(names, r.cfg.Names.FetchContent)
+	}
+	if r.cfg.GetSearchContent {
+		names = append(names, r.cfg.Names.GetSearchContent)
+	}
+	return names
 }

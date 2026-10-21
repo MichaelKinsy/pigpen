@@ -1,0 +1,91 @@
+{
+ "name": "curator-summary-review-timeout",
+ "description": "web_search with workflow summary-review: the curator starts (browser launch off: the launch races the first search request in the original, so its trace order is not stable), no browser connects, and after the idle minimum the call returns the deterministic summary of the curated results. The HTTP side of the curator is not driven (the harness has no HTTP client step): the Go twins prove it; the launcher is proven by the Go twin with a fake xdg-open.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1, \"autoOpenBrowser\": false}"
+ },
+ "commands": {
+  "xdg-open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "cmd": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "npm": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "hello world",
+      "workflow": "summary-review"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "tavily": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/search",
+     "json": {
+      "answer": "Tavily says hello.",
+      "results": [
+       {
+        "title": "Source one",
+        "url": "https://example.com/one",
+        "content": "First source."
+       },
+       {
+        "title": "Source two",
+        "url": "https://example.com/two",
+        "content": "Second source."
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "http://localhost:[0-9]+/",
+   "replacement": "http://localhost:<port>/"
+  }
+ ]
+}

@@ -246,12 +246,17 @@ func SearchWithBrightData(ctx context.Context, query string, o SearchOptions) (*
 	}
 	n := NormalizeSearchResultCount(o.NumResults)
 	f := normalizeDomainFilters(o.DomainFilter)
-	body := map[string]any{"url": brightdataSerpURL(brightdataQuery(query, f), n, o.RecencyFilter), "zone": zone, "format": "raw", "data_format": "parsed_light"}
+	searchQuery := brightdataQuery(query, f)
+	body := map[string]any{"url": brightdataSerpURL(searchQuery, n, o.RecencyFilter), "zone": zone, "format": "raw", "data_format": "parsed_light"}
+	act := logAPIStart(searchQuery)
 	status, text, err := hostedSend(ctx, hostedCall{URL: brightdataAPIURL, Body: jsonBytes(body), Key: key, Timeout: brightdataSearchTimeout,
-		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}})
+		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}, Act: act})
 	if err != nil {
 		return nil, err
 	}
+	// A non-2xx status, an empty body, a body that is not JSON and an envelope that is not a SERP all complete the entry
+	// with the status (brightdata.ts:121-166), as does success.
+	act.complete(status)
 	if status < 200 || status > 299 {
 		return nil, fmt.Errorf("Bright Data API error %d for zone %s: %s", status, zone, untrustedText(RedactCredential(text, key), 300))
 	}

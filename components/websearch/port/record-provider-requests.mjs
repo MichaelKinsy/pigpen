@@ -233,6 +233,51 @@ export const cases = [
 	{ id: "baizhi-config-root", module: "baizhi.ts", fn: "searchWithBaizhi", configRaw: "[1]", env: { BAIZHI_API_KEY: "k" }, query: "q", options: {}, baizhi: "json" },
 ];
 
+// ── activity outcomes ──
+// The entries the original's activity monitor holds depend on how the call ends: a status, an error message, an
+// abort (status 0) or an entry left open. Every provider function gets the same set of endings so that each call
+// site of the port that logs one is replayed against the original's entries.
+const exaResults = [{ title: "Exa result", url: "https://example.com/exa", highlights: ["highlight"] }];
+cases.push(
+	{ id: "brave-act-ok", module: "brave.ts", fn: "searchWithBrave", env: { BRAVE_API_KEY: "brave-act-key" }, query: "brave query", options: {},
+		responses: [json({ web: { results: [{ title: "Brave result", url: "https://example.com/brave", description: "Brave snippet" }] } })] },
+	{ id: "perplexity-act-ok", module: "perplexity.ts", fn: "searchWithPerplexity", env: { PERPLEXITY_API_KEY: "pplx-act-key" }, query: "pplx query", options: {},
+		responses: [json({ choices: [{ message: { content: "Answer [1]" } }], citations: ["https://example.com/pplx"] })] },
+	{ id: "serpdive-act-ok", module: "serpdive.ts", fn: "searchWithSerpdive", env: { SERPDIVE_API_KEY: "serpdive-act-key" }, query: "serpdive query", options: {},
+		responses: [json({ answer: "Answer", results: [{ title: "SERPdive result", url: "https://example.com/serpdive", snippet: "snippet" }] })] },
+	{ id: "duckduckgo-act-ok", module: "duckduckgo.ts", fn: "searchWithDuckDuckGo", query: "ddg query", options: {},
+		responses: [r('<html><body><div class="result"><a class="result__a" href="https://example.com/ddg">DDG result</a><a class="result__snippet">DDG snippet</a></div></body></html>')] },
+	{ id: "tavily-act-ok", module: "tavily.ts", fn: "searchWithTavily", env: { TAVILY_API_KEY: "tavily-act-key" }, query: "tavily query", options: {},
+		responses: [json({ answer: "Answer", results: [{ title: "Tavily result", url: "https://example.com/tavily", content: "content" }] })] },
+	{ id: "exa-act-ok", module: "exa.ts", fn: "searchWithExa", env: { EXA_API_KEY: "exa-act-key" }, query: "exa query", options: {},
+		responses: [json({ results: exaResults })] },
+	{ id: "exa-mcp-act-ok", module: "exa.ts", fn: "searchWithExa", query: "exa mcp query", options: {},
+		responses: [json({ jsonrpc: "2.0", id: 1, result: { content: [{ type: "text", text: "Title: Exa MCP\nURL: https://example.com/mcp\nText: body\n---" }] } })] },
+	{ id: "kagi-act-ok", module: "kagi.ts", fn: "searchWithKagi", env: { KAGI_API_KEY: "kagi-act-key" }, query: "kagi query", options: {},
+		responses: [json({ data: { search: [{ title: "Kagi result", url: "https://example.com/kagi", snippet: "Kagi snippet" }] } })] },
+	{ id: "ollama-act-ok", module: "ollama.ts", fn: "searchWithOllama", env: { OLLAMA_API_KEY: "ollama-act-key" }, query: "ollama query", options: {},
+		responses: [json({ results: [{ title: "Ollama result", url: "https://example.com/ollama", content: "content" }] })] },
+);
+const endings = [
+	["http500", { responses: [r("boom", 500)] }],
+	["transport", { responses: [{ throw: "plain", message: "connect failed" }] }],
+	["abort", { preAborted: true, responses: [{ throw: "abort" }] }],
+	["invalid-json", { responses: [r("<<not json")] }],
+];
+// brave.ts and exa.ts let the JSON parser's own message escape ("Unexpected token ..." of V8), which Go cannot produce.
+const rawJsonError = new Set(["searchWithBrave", "searchWithExa"]);
+const seenFns = new Set();
+for (const base of [...cases]) {
+	const key = base.id.startsWith("exa-mcp") ? "searchWithExaMcp" : base.fn;
+	if (base.baizhi || seenFns.has(key)) continue;
+	seenFns.add(key);
+	for (const [name, change] of endings) {
+		if (name === "invalid-json" && rawJsonError.has(base.fn)) continue;
+		const { preAborted, patchTimeout, ...rest } = base;
+		cases.push({ ...rest, ...change, id: `${base.id}-${name}` });
+	}
+}
+
 // ── child: one case ──
 function baizhiResponse(mode, req, key) {
 	const rpc = req.body ? JSON.parse(req.body) : null;
@@ -302,7 +347,10 @@ async function runChild(index) {
 	for (const req of requests) {
 		if (typeof req.body === "string") req.body = normalize(req.body);
 	}
-	process.stdout.write(JSON.stringify({ id: c.id, requests, outcome }));
+	// The activity entries the original's activity monitor holds after the call (activity.ts), without ids and times.
+	const { activityMonitor } = await import(pathToFileURL(join(oracle, "activity.ts")).href);
+	const activity = activityMonitor.getEntries().map(({ type, query, url, status, error }) => ({ type, query, url, status, error: error === undefined ? undefined : normalize(error) }));
+	process.stdout.write(JSON.stringify({ id: c.id, requests, outcome, activity }));
 }
 
 if (process.argv[2] === "--case") {

@@ -8,11 +8,11 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (781 exact twins, 94 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (857 exact twins, 18 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
-| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
+| Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | (none of the curator, commands, widget, shortcuts and renderers is missing any more: see Slice 11) |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
 | SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | None: the Defuddle fallback is ported (Slice 12) |
 
@@ -24,10 +24,10 @@ Every unported option, mode or URL kind is refused with one message and returns 
 
 | Feature | When | Where |
 |---|---|---|
-| `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
+| (none: every refusal is gone) | | |
 
-A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
-`/google-account`, the shortcuts and the activity widget. Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
+A batch of URLs is refused whole when one URL is. The commands `/websearch`, `/curator` and `/google-account`, the
+shortcuts and the activity widget are registered (Slice 11). Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
 
 ## Slice 2: the REST search providers
 
@@ -73,8 +73,7 @@ under Pi 1402973a and pass `pigeq check` on PiG.
   headers and bodies (`baizhi-*` fixture cases); JSON and server-sent-event responses are read; the SDK's schema
   validation of results is reduced to the fields the provider reads.
 - `structuredContent` is re-serialised like `JSON.stringify(x, null, 2)` (key order and string escapes of JavaScript).
-- The activity monitor is the widget slice's: the cases that read it (Bocha, Jina "recorded as activity errors") run the error
-  path and its text; the Curator page halves of the Serply, SerpApi, You.com and Baizhi cases belong to the curator slice.
+- The activity entries are logged and compared with the original's (Bocha, Jina "recorded as activity errors" and the recorded fixtures); the Curator page halves of the Serply, SerpApi, You.com and Baizhi cases are twinned in the curator page tests.
   The real Pi session case of Baizhi runs the registered `web_search` tool instead of a Pi agent session.
 
 ## Slice: hosted search and fetch providers
@@ -101,9 +100,7 @@ Proof:
   guidance of the fixed-endpoint providers.
 
 Deliberate differences (each pinned by a twin):
-- **No activity log.** The original opens and closes an activity entry around every provider call; this port has none (the
-  activity widget belongs to the curator slice), so the twins assert the request and error behaviour and skip the entry itself
-  (`the activity entry is opened once ...`).
+- **Activity log.** Every provider call opens and closes an activity entry as the original does; the recorded fixtures compare the entries with the original's.
 - **Own timeouts** are aborts, as upstream (a `fetch` cut off by `AbortSignal.timeout` reads "The operation was aborted due to
   timeout", which the routing classifier takes for an abort; see "Provider timeouts"); Querit keeps its own wording,
   `Querit <Search|Contents> API request timed out after N seconds`.
@@ -219,7 +216,7 @@ Deliberate differences:
 - **Messages that quote a platform error** are Go's: the REST fallback's `GitHub REST fallback failed: <message>` for a transport or JSON error
   (`fetch failed`, `Unexpected token ...` upstream), a configuration that does not parse (`Failed to parse <path>: <message>`, only the prefix
   is compared), and `Could not inspect <path>: <message>`.
-- **No activity log.** The original opens an activity entry around a clone (the activity widget belongs to the curator slice).
+- A clone opens an activity entry as the original does (github-extract.ts:931-1014).
 - **The runtime directory sweep on Windows** only removes a runtime whose process id `OpenProcess` reports as nonexistent; Linux and macOS
   follow the original (boot id and start time on Linux, `kill(pid, 0)` elsewhere). The directory names (`runtime-` and six letters or
   digits), the owner file and the clone digest are the original's, so the original and the port can share a clone directory.
@@ -335,7 +332,7 @@ cannot be redirected to a pigeq server under the unmodified original; only OpenA
 `-alpha`, `-registry-key` (the key held in `auth.json` reaches the request under Pi and PiG alike), `-http-error`) and the
 credential and configuration errors of all four providers (`web-search-model-providers-unavailable`, `-bad-config`).
 For the fixed endpoints, `port/record-model-requests.mjs` runs the original modules with a recording `fetch` and checks in
-`port/fixtures/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
+`extensions/websearch/testdata/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
 `TestModelProviderWireFixtures` replays every case against the port and requires the same.
 
 **Deliberate differences**
@@ -356,7 +353,7 @@ For the fixed endpoints, `port/record-model-requests.mjs` runs the original modu
   first among equals). It is exact for ASCII ids.
 - A non-object `web-search.json` root fails every provider with `Invalid config in <path>: expected a JSON object`; the original
   does that for Mistral only.
-- The activity monitor (`activityMonitor.logStart/logComplete`) is not driven: the activity widget is the curator slice.
+- The activity monitor is driven by the call sites of the curator slice (`activityMonitor.logStart/logComplete`).
 - Provider timeouts are aborts (see "Provider timeouts" above), except Kimi, whose own
   `Kimi Code search API timed out` message is ported.
 - The shared "No search provider available" text of `auto` lists every provider present (integration of this slice with the Gemini slice).
@@ -469,7 +466,7 @@ transcription are real. What each file carries:
 Deliberate differences:
 
 - Provider timeouts are aborts, as in the original (see "Provider timeouts"): configured routing does not fall through them.
-- The activity monitor (curator slice) is not ported, so no activity is logged around Gemini calls.
+- Gemini calls log activity entries as the original does (gemini-search.ts, gemini-url-context.ts), compared with recorded fixtures.
 - The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) and Gemini Web ("Sign into gemini.google.com in Chrome").
 - Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
 - The grounding-redirect lookup (`HEAD`, no redirect following, 5 s) goes through the provider transport, so a configured proxy applies.
@@ -540,7 +537,7 @@ afterwards); a 6-page license text differs in 2 of 33 728 characters (see the fo
 - **Datalab transport**: the calls go through the provider transport, so a configured proxy applies; a redirect is `fetch failed:
   unexpected redirect`; a request that outlives the shared deadline reads `request timed out (...)`, not the runtime's TimeoutError text;
   the key from `datalabApiKey` is read on every call (the original caches the config for the process).
-- **No activity monitor** around the fetch (curator slice).
+- The fetch logs its activity entries as the original does (youtube, video, direct page fetch).
 - **Cancelled PDF answer**: the original's `execute` resolves with `details.error` "Aborted" for an already aborted signal; the Go tool returns an `Aborted: context canceled` error for a cancelled context, as every `fetch_content` cancellation does (`tool_fetch.go`). The twin accepts either form and still requires that no request and no model call happened.
 - **fetch-pdf-answer**: all seven upstream cases are twins. The six answer-mode ones run through `fetch_content` with a scripted
   model registry (`pdfAnswerFixture`, the upstream test's `ctx`) on top of the answer-mode slice; the PDF half of each is also a Go test
@@ -662,7 +659,73 @@ Deliberate differences:
   is dropped (the original prints it to the console).
 - Config is read through the stat-validated cache of `config.go` (`readLenientConfig`), so a call does not re-read or re-parse
   `web-search.json` while it is unchanged; an edit is seen on the next call.
-- The activity monitor is not ported, so nothing is logged around extraction.
+- Extraction logs its activity entries as the original does.
+
+## Slice 11: the search curator, commands, widget, shortcuts and renderers (W9, W10)
+
+Ported: `curator-page.ts` (the page is the original's bytes, `curator_page.html` derived by
+`port/record-curator-page.mjs`; `curator_page_test.go` compares 17 renderings with the original's SHA-256 and
+the minimal one byte for byte), `curator-server.ts` (`curator_server.go`), `curator-run.ts`, the curated and
+auto-summary branches of `web_search`, `/websearch`, `/curator`, `/google-account`, `activity.ts` with the call
+sites of the ported providers and fetches, the two shortcuts, and the tool renderers (`render.go`,
+`render_search_error.go`, as kit views). The `web_search workflow` refusal is removed.
+
+Deliberate differences, for owner veto:
+- macOS: the original opens a Glimpse window when the optional `glimpseui` package is installed; a Go extension
+  cannot load it, so the port always uses `open`. Linux and Windows are the original's (`xdg-open` detached with a
+  100 ms grace, `cmd /c start`).
+- Proposed fix, for owner veto: the original never answers a request whose JSON body is falsy (`null`, `0`, `false`, `""`);
+  the request hangs until the client closes. The port keeps that behaviour (the handler waits for the client or the
+  server shutdown). Answering 400 "Invalid body" would be the fix; it is not applied.
+- The curator server keeps the original's provider list, which has no `serpapi`: POST /provider and /search with
+  `serpapi` answer "Provider unavailable" (an upstream omission, reported rather than fixed).
+- Invalid-JSON messages of the server differ in wording from V8's.
+- `/google-account` reaches the cookie reader through `SetGoogleAccountSource`; without the authenticated-fetch
+  slice it answers the opt-in state or the refusal. The integrator installs the S9 reader.
+- `currentModelHostedSearchEligible` (curator default provider) is a seam for the OpenAI slice; without it no
+  model is eligible.
+
+Evidence (xd670, tern-ci:v3, CPUs 64-95,160-191): `pigeq twins check`: 402 exact twins, 473 skipped (exit 0; the
+curator, summary, search-error-render, parallel-curator-state and allowed-search-providers rows are twins).
+`pigeq run` (Pi 1402973a vs PiG Node vs the port): PASS for all 18 scenarios, `pigeq check` PASS. Four scenarios are
+new: `curator-summary-review-timeout`, `curator-command-workflow`, `curator-browser-missing`,
+`curator-remote-no-browser`. Not scenarios (reasons): `workflow auto-summary` puts a measured `durationMs`
+number in the trace, which a normalize rule (strings only) cannot hide; `/websearch` and `/google-account` start a
+turn from an extension message, and Pi and PiG's Node lane disagree on that turn's system prompt diff (`inserted`
+empty and the baseline prompt `removed` under PiG Node): a host difference to report to the PiG lead, so those
+are proven by Go twins. The browser launch is not in a scenario either: it races the first search request, so
+its trace order is unstable between hosts; the Go twin runs the real `xdg-open` path with a fake program. The
+curator's HTTP side cannot be driven by the harness (no HTTP-client step, random port).
+Performance (Go benchmarks, xd670, -benchmem): GenerateCuratorPage 50 us, 126 KB, 50 allocs; page served over
+loopback HTTP 240-265 us, 7.6 KB, 136 allocs; renderer of a curated web_search result 3.4-4.6 us, 1.6 KB, 38
+allocs; renderCall of fetch_content 1.8-2.9 us, 0.8 KB, 26 allocs. The embedded page adds 115 439 bytes to the
+extension binary (curator_page.html).
+Activity logging: every provider and fetch path calls the monitor where its original does (`grep -n activityMonitor
+port/oracle/<file>.ts`). The recorders record the original's entries (testdata/provider-requests.json, provider-wire.json,
+gemini-wire.json, testdata/model-provider-requests.json) and the replays compare them; activity_providers_test.go
+adds the failure paths the fixtures do not reach.
+Seams are installed: `/google-account` reads the cookie reader of the auth-cookies slice, the curator default provider
+uses the OpenAI eligibility check (`modelHostedSearchEligible`).
+
+Activity logging proof (integration of the curator onto the stack): `testdata/provider-requests.json` now holds the
+original's activity entries for HTTP 500, transport failure, abort and invalid JSON of every REST provider, SearXNG,
+Brave, Exa (keyed and MCP), Perplexity, SERPdive, DuckDuckGo, Tavily, Kagi and Ollama search (62 recorded cases, replayed by
+`TestOracleProviderFixtures`). `activity_fetch_test.go` and `activity_endings_test.go` pin how a page fetch, the Jina reader,
+Crawl4AI, Firecrawl, the Bright Data Unlocker, Kagi and Ollama extraction and Gemini end in the monitor. A cancelled provider
+call reads "This operation was aborted" like the original's fetch rejection. The model fixture moved to
+`testdata/model-provider-requests.json` so mutation runs replay it too. Replay differences kept out of the recorder: Brave
+and Exa pass V8's JSON parser message through (Go cannot produce it), and a body read that fails under a deadline is
+"returned invalid JSON" with status 200 in the original but a plain deadline error here (restCallA, Kagi, Perplexity).
+
+Mutants of the activity code that are NOT in `mutations.json` because no test kills them yet (recorded, not equivalent):
+the GitHub clone entries (`github_extract.go`, 14 sites), the video and YouTube entries, the Kimi and OpenAI HTTP-error
+entries, xAI's HTTP-error entry, `act.logError("HTTP n")` before the error of Brave and SearXNG (equivalent: the next
+`failedErr` overwrites the message), the invalid-JSON branches of Brave and Exa, and ten semantic mutants (xAI credits
+regex, `useCurrentModel` only for openai, unsupported errors in configured routing, a non-array `openaiSearchProviders`,
+untrimmed provider ids, the Codex URL and api check of the current model, the curator eligibility flag, case-sensitive
+abort text, credential redaction in `failedBy`). They need GitHub/video wire recordings of the original's activity and
+hand twins.
+
 
 ## Slice 12: Defuddle fallback
 

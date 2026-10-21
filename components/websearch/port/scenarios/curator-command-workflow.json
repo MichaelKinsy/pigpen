@@ -1,0 +1,122 @@
+{
+ "name": "curator-command-workflow",
+ "description": "/curator writes the configured workflow and the next web_search, which names none, reads it on that call: toggle, explicit values, an unknown option, then a search that inherits summary-review (curator, no browser launch) and ends by the idle minimum with the deterministic summary.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1, \"workflow\": \"summary-review\", \"autoOpenBrowser\": false}"
+ },
+ "commands": {
+  "xdg-open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "cmd": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "npm": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "hello world"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "toggle",
+   "rpc": {
+    "type": "prompt",
+    "message": "/curator"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "on",
+   "rpc": {
+    "type": "prompt",
+    "message": "/curator on"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "unknown",
+   "rpc": {
+    "type": "prompt",
+    "message": "/curator sideways"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "summary-review",
+   "rpc": {
+    "type": "prompt",
+    "message": "/curator summary-review"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "search",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "tavily": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/search",
+     "json": {
+      "answer": "Tavily says hello.",
+      "results": [
+       {
+        "title": "Source one",
+        "url": "https://example.com/one",
+        "content": "First source."
+       },
+       {
+        "title": "Source two",
+        "url": "https://example.com/two",
+        "content": "Second source."
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "http://localhost:[0-9]+/",
+   "replacement": "http://localhost:<port>/"
+  }
+ ]
+}

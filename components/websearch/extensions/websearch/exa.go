@@ -355,6 +355,16 @@ func searchWithExaMCPTool(ctx context.Context, tool string, args map[string]any,
 }
 
 func searchWithExaMCP(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
+	act := logAPIStart(query)
+	resp, err := searchWithExaMCPLogged(ctx, query, o)
+	if err != nil {
+		return nil, act.failedErr(err)
+	}
+	act.complete(200)
+	return resp, nil
+}
+
+func searchWithExaMCPLogged(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
 	n := 5.0
 	if o.NumResults != nil && !math.IsNaN(*o.NumResults) && !math.IsInf(*o.NumResults, 0) {
 		n = *o.NumResults
@@ -406,24 +416,26 @@ func SearchWithExa(ctx context.Context, query string, o SearchOptions) (*SearchR
 	payload, _ := json.Marshal(body)
 	tctx, cancel := withTimeout(ctx, exaTimeout)
 	defer cancel()
+	act := logAPIStart(query)
 	resp, err := FetchWithCredentialRedirects(tctx, base+"/search", RequestInit{Method: "POST", Body: payload,
 		Header: http.Header{"X-Api-Key": {apiKey}, "Content-Type": {"application/json"}, "X-Exa-Integration": {"pi-web-access"}}}, []string{"x-api-key"})
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("Exa API error %d: %s", resp.StatusCode, slice300(RedactCredential(text, apiKey)))
+		return nil, act.failedErr(fmt.Errorf("Exa API error %d: %s", resp.StatusCode, slice300(RedactCredential(text, apiKey))))
 	}
 	var data struct {
 		Results []exaItem `json:"results"`
 	}
 	if err := json.Unmarshal([]byte(text), &data); err != nil {
-		return nil, fmt.Errorf("Exa API returned invalid JSON: %v", err)
+		return nil, act.failedErr(fmt.Errorf("Exa API returned invalid JSON: %v", err))
 	}
+	act.complete(resp.StatusCode)
 	var inline []ExtractedContent
 	if o.IncludeContent {
 		inline = mapExaInline(data.Results)

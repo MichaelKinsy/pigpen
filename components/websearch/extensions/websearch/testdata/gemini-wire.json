@@ -107,7 +107,14 @@
     ],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "what is the capital of France?",
+     "status": 200
+    }
+   ]
   },
   "search-model-from-config": {
    "env": {
@@ -152,7 +159,14 @@
     "results": [],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "configured model",
+     "status": 200
+    }
+   ]
   },
   "relay-base-url-search": {
    "env": {
@@ -197,7 +211,14 @@
     "results": [],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "relay",
+     "status": 200
+    }
+   ]
   },
   "cloudflare-gateway-search": {
    "env": {
@@ -241,7 +262,14 @@
     "results": [],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "gateway",
+     "status": 200
+    }
+   ]
   },
   "adc-authorized-user-search": {
    "env": {},
@@ -307,7 +335,14 @@
     "results": [],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "adc",
+     "status": 200
+    }
+   ]
   },
   "adc-service-account-search": {
    "env": {},
@@ -373,7 +408,14 @@
     "results": [],
     "provider": "gemini"
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "adc sa",
+     "status": 200
+    }
+   ]
   },
   "url-context-extraction": {
    "env": {
@@ -417,7 +459,14 @@
     "content": "# Extracted Title\n\nGemini extracted this page. Gemini extracted this page. Gemini extracted this page. Gemini extracted this page. Gemini extracted this page. ",
     "error": null
    },
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "url_context: https://example.com/docs/page",
+     "status": 200
+    }
+   ]
   },
   "url-context-unsafe-retrieval": {
    "env": {
@@ -463,7 +512,14 @@
     }
    ],
    "result": null,
-   "error": null
+   "error": null,
+   "activity": [
+    {
+     "type": "api",
+     "query": "url_context: https://example.com/docs/page",
+     "status": 200
+    }
+   ]
   },
   "pdf-inline-conversion": {
    "env": {
@@ -503,7 +559,8 @@
     }
    ],
    "result": "<!-- Page 1 -->\nFirst page.\n\n<!-- Page 2 -->\n\nSecond page.",
-   "error": null
+   "error": null,
+   "activity": []
   },
   "video-query-gateway": {
    "env": {
@@ -543,7 +600,8 @@
     }
    ],
    "result": "ok",
-   "error": null
+   "error": null,
+   "activity": []
   },
   "api-error-redacted": {
    "env": {
@@ -570,7 +628,8 @@
     }
    ],
    "result": null,
-   "error": "Gemini API error 400: provider echoed [redacted]"
+   "error": "Gemini API error 400: provider echoed [redacted]",
+   "activity": []
   }
  }
 }

@@ -1,0 +1,90 @@
+{
+ "name": "curator-browser-missing",
+ "description": "The browser launcher is not installed: the curator keeps running (the launch error becomes a manual-URL update) and the call still ends with the deterministic summary after the idle minimum.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}, \"provider\": \"tavily\", \"tavilyApiKey\": \"tvly-test-key\", \"tavilyBaseUrl\": \"{{server:tavily}}\", \"curatorTimeoutSeconds\": 1}"
+ },
+ "commands": {
+  "xdg-open": {
+   "mode": "missing"
+  },
+  "open": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "cmd": {
+   "mode": "canned",
+   "exit": 0
+  },
+  "npm": {
+   "mode": "missing"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "web_search",
+     "arguments": {
+      "query": "hello world",
+      "workflow": "summary-review"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "tavily": {
+   "recordHeaders": [
+    "authorization"
+   ],
+   "routes": [
+    {
+     "method": "POST",
+     "path": "/search",
+     "json": {
+      "answer": "Tavily says hello.",
+      "results": [
+       {
+        "title": "Source one",
+        "url": "https://example.com/one",
+        "content": "First source."
+       },
+       {
+        "title": "Source two",
+        "url": "https://example.com/two",
+        "content": "Second source."
+       }
+      ]
+     }
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "http://localhost:[0-9]+/",
+   "replacement": "http://localhost:<port>/"
+  }
+ ]
+}

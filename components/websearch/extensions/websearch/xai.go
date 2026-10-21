@@ -296,12 +296,18 @@ func SearchWithXai(ctx context.Context, query string, o SearchOptions) (*SearchR
 	headers.set("Authorization", "Bearer "+auth.apiKey)
 	headers.set("Content-Type", "application/json")
 
+	act := logAPIStart(query)
+	status := 0
 	tctx, cancel := withTimeout(ctx, xaiSearchTimeout)
 	defer cancel()
 	result, err := func() (*SearchResponse, error) {
 		resp, err := FetchWithCredentialRedirects(tctx, xaiResponsesURL, RequestInit{Method: "POST", Header: headersFromObject(headers).http(), Body: payload}, plainFetchCredentialHeaders)
 		if err != nil {
 			return nil, timeoutFix(ctx, tctx, err)
+		}
+		status = resp.StatusCode
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
 		}
 		text, err := readBody(resp)
 		if err != nil {
@@ -331,7 +337,8 @@ func SearchWithXai(ctx context.Context, query string, o SearchOptions) (*SearchR
 		return &SearchResponse{Answer: answer, Results: results}, nil
 	}()
 	if err != nil {
-		return nil, redactErr(err, auth.apiKey)
+		return nil, act.failedErr(redactErr(err, auth.apiKey))
 	}
+	act.complete(status)
 	return result, nil
 }

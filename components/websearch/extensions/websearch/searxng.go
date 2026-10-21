@@ -190,9 +190,10 @@ func SearchWithSearXNG(ctx context.Context, query string, o SearchOptions) (*Sea
 	case "day", "week", "month", "year":
 		rawURL += "&time_range=" + o.RecencyFilter
 	}
+	act := logAPIStart(searxngQuery(query, filters))
 	ssrf, err := LoadSsrfConfig()
 	if err != nil {
-		return nil, err
+		return nil, act.failedErr(err)
 	}
 	tctx, cancel := withTimeout(ctx, restTimeout(searxngTimeout))
 	defer cancel()
@@ -208,19 +209,21 @@ func SearchWithSearXNG(ctx context.Context, query string, o SearchOptions) (*Sea
 		},
 	})
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, transportFailure(err, false))
+		return nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, false)))
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, transportFailure(err, true))
+		return nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, true)))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("SearXNG search error %d: %s", resp.StatusCode, slice300(text))
+		act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
+		return nil, act.failedErr(fmt.Errorf("SearXNG search error %d: %s", resp.StatusCode, slice300(text)))
 	}
 	data, err := decodeJSON(text)
 	if err != nil {
-		return nil, fmt.Errorf("SearXNG returned invalid JSON: %v", err)
+		return nil, act.failedErr(fmt.Errorf("SearXNG returned invalid JSON: %v", err))
 	}
+	act.complete(resp.StatusCode)
 	envelope, _ := jsonObject(data)
 	results := []SearchResult{}
 	items, _ := envelope["results"].([]any)

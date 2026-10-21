@@ -45,15 +45,17 @@ type modelWireCase struct {
 	} `json:"requests"`
 	Result *SearchResponse `json:"result"`
 	Error  *string         `json:"error"`
+	// Activity is what the original's activity monitor held after the call.
+	Activity []oracleActivity `json:"activity"`
 }
 
 var uuidRE = regexp.MustCompile(`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
 
 func TestModelProviderWireFixtures(t *testing.T) {
-	raw, err := os.ReadFile("../../port/fixtures/model-provider-requests.json")
+	raw, err := os.ReadFile("testdata/model-provider-requests.json")
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Skip("the Package files are not beside this module (a mutation run copies the module alone); the repository run checks them")
+			t.Skip("testdata/model-provider-requests.json is not beside this module")
 		}
 		t.Fatal(err)
 	}
@@ -95,6 +97,7 @@ func TestModelProviderWireFixtures(t *testing.T) {
 			o := SearchOptions{RecencyFilter: c.Options.RecencyFilter, DomainFilter: c.Options.DomainFilter, NumResults: c.Options.NumResults}
 			var got *SearchResponse
 			var err error
+			Activity.Clear()
 			switch c.Provider {
 			case "xai":
 				got, err = SearchWithXai(ctx, c.Query, o)
@@ -108,6 +111,7 @@ func TestModelProviderWireFixtures(t *testing.T) {
 				got, err = SearchWithOpenAI(ctx, c.Query, o)
 			}
 
+			requireActivity(t, c.Name, c.Activity)
 			if len(fn.calls) != len(c.Requests) {
 				t.Fatalf("%d requests, the original sent %d", len(fn.calls), len(c.Requests))
 			}

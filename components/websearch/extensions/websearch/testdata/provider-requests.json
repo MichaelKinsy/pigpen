@@ -59,7 +59,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-filters",
@@ -136,7 +143,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "docs",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-multi-include",
@@ -220,7 +234,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "docs",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-entries",
@@ -307,7 +328,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "entries",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-401-redacted",
@@ -350,7 +378,14 @@
   ],
   "outcome": {
    "error": "Serper API error 401: secret [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "serper-long-error",
@@ -393,7 +428,14 @@
   ],
   "outcome": {
    "error": "Serper API error 503: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "long",
+    "status": 503
+   }
+  ]
  },
  {
   "id": "serper-missing-key",
@@ -413,7 +455,8 @@
   "requests": [],
   "outcome": {
    "error": "Serper API key not found. Either:\n  1. Create <CONFIG> with { \"serperApiKey\": \"your-key\" }\n  2. Set SERPER_API_KEY environment variable\nGet a key at https://serper.dev"
-  }
+  },
+  "activity": []
  },
  {
   "id": "serper-bad-envelope",
@@ -457,7 +500,14 @@
   ],
   "outcome": {
    "error": "Serper API returned invalid response: expected organic array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-array-envelope",
@@ -499,7 +549,14 @@
   ],
   "outcome": {
    "error": "Serper API returned invalid response: expected an object envelope"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-invalid-json",
@@ -542,7 +599,14 @@
   ],
   "outcome": {
    "error": "Serper API returned invalid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-config-root",
@@ -562,7 +626,8 @@
   "requests": [],
   "outcome": {
    "error": "Invalid config in <CONFIG>: expected a JSON object"
-  }
+  },
+  "activity": []
  },
  {
   "id": "serper-recency-day",
@@ -612,7 +677,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serper-recency-month",
@@ -662,7 +734,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpapi-env-filters",
@@ -733,7 +812,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpapi-error-envelope-redacted",
@@ -774,7 +860,15 @@
   ],
   "outcome": {
    "error": "SerpApi returned invalid response: invalid api_key [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact envelope",
+    "status": null,
+    "error": "SerpApi returned invalid response: invalid api_key [redacted]"
+   }
+  ]
  },
  {
   "id": "serpapi-401-redacted",
@@ -812,7 +906,15 @@
   ],
   "outcome": {
    "error": "SerpApi error 401: invalid [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": null,
+    "error": "SerpApi error 401: invalid [redacted]"
+   }
+  ]
  },
  {
   "id": "serpapi-missing-organic",
@@ -849,7 +951,15 @@
   ],
   "outcome": {
    "error": "SerpApi returned invalid response: expected organic_results array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "SerpApi returned invalid response: expected organic_results array"
+   }
+  ]
  },
  {
   "id": "serpapi-invalid-json",
@@ -887,7 +997,15 @@
   ],
   "outcome": {
    "error": "SerpApi returned invalid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "SerpApi returned invalid JSON"
+   }
+  ]
  },
  {
   "id": "serpapi-timeout",
@@ -923,7 +1041,15 @@
   ],
   "outcome": {
    "error": "SerpApi request timed out after 60s"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "SerpApi request timed out after 60s"
+   }
+  ]
  },
  {
   "id": "serpapi-caller-abort",
@@ -959,7 +1085,14 @@
   ],
   "outcome": {
    "error": "Aborted"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 0
+   }
+  ]
  },
  {
   "id": "serpapi-network",
@@ -996,7 +1129,15 @@
   ],
   "outcome": {
    "error": "connect failed for [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "connect failed for [redacted]"
+   }
+  ]
  },
  {
   "id": "serpbase-map",
@@ -1056,7 +1197,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpbase-default-count-and-fields",
@@ -1122,7 +1270,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpbase-error-envelope",
@@ -1162,7 +1317,14 @@
   ],
   "outcome": {
    "error": "SerpBase API returned invalid response: bad key secret-sb (status 403)"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null
+   }
+  ]
  },
  {
   "id": "serpbase-error-envelope-no-status",
@@ -1201,7 +1363,14 @@
   ],
   "outcome": {
    "error": "SerpBase API returned invalid response: nope"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null
+   }
+  ]
  },
  {
   "id": "serpbase-bad-envelope",
@@ -1240,7 +1409,14 @@
   ],
   "outcome": {
    "error": "SerpBase API returned invalid response: expected organic_results array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null
+   }
+  ]
  },
  {
   "id": "serpbase-429",
@@ -1280,7 +1456,14 @@
   ],
   "outcome": {
    "error": "SerpBase API error 429: slow down"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 429
+   }
+  ]
  },
  {
   "id": "serpbase-missing-key",
@@ -1300,7 +1483,8 @@
   "requests": [],
   "outcome": {
    "error": "SerpBase API key not found. Either:\n  1. Create <CONFIG> with { \"serpbaseApiKey\": \"your-key\" }\n  2. Set SERPBASE_API_KEY environment variable\nGet a key at https://serpbase.dev"
-  }
+  },
+  "activity": []
  },
  {
   "id": "serpbase-recency-day-and-year",
@@ -1344,7 +1528,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpbase-recency-month",
@@ -1388,7 +1579,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serpbase-recency-year",
@@ -1432,7 +1630,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serply-env-filters",
@@ -1504,7 +1709,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serply-redirects",
@@ -1591,7 +1803,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redirect",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serply-links",
@@ -1681,7 +1900,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "links",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "serply-detail-redacted",
@@ -1723,7 +1949,15 @@
   ],
   "outcome": {
    "error": "Serply returned invalid response: Invalid API key [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact envelope",
+    "status": null,
+    "error": "Serply returned invalid response: Invalid API key [redacted]"
+   }
+  ]
  },
  {
   "id": "serply-401-redacted",
@@ -1762,7 +1996,15 @@
   ],
   "outcome": {
    "error": "Serply error 401: invalid [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": null,
+    "error": "Serply error 401: invalid [redacted]"
+   }
+  ]
  },
  {
   "id": "serply-timeout",
@@ -1799,7 +2041,15 @@
   ],
   "outcome": {
    "error": "Serply request timed out after 60s"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Serply request timed out after 60s"
+   }
+  ]
  },
  {
   "id": "serply-caller-abort",
@@ -1836,7 +2086,14 @@
   ],
   "outcome": {
    "error": "Aborted"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 0
+   }
+  ]
  },
  {
   "id": "serply-missing-results",
@@ -1876,7 +2133,15 @@
   ],
   "outcome": {
    "error": "Serply returned invalid response: expected results array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Serply returned invalid response: expected results array"
+   }
+  ]
  },
  {
   "id": "valyu-content-bounds",
@@ -1949,7 +2214,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-filters-recency",
@@ -2010,7 +2282,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-entries",
@@ -2098,7 +2377,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-not-success",
@@ -2143,7 +2429,14 @@
   ],
   "outcome": {
    "error": "Valyu API returned invalid response: expected success true"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-missing-results",
@@ -2187,7 +2480,14 @@
   ],
   "outcome": {
    "error": "Valyu API returned invalid response: expected results array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-401-redacted",
@@ -2230,7 +2530,14 @@
   ],
   "outcome": {
    "error": "Valyu API error 401: secret [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "valyu-recency-day",
@@ -2281,7 +2588,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-recency-month",
@@ -2332,7 +2646,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "valyu-recency-year",
@@ -2383,7 +2704,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-filters",
@@ -2466,7 +2794,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-api-error-redacted",
@@ -2513,7 +2848,15 @@
   ],
   "outcome": {
    "error": "Bocha API returned invalid response: code 500: invalid request [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bad query",
+    "status": null,
+    "error": "Bocha API returned invalid response: code 500: invalid request [redacted]"
+   }
+  ]
  },
  {
   "id": "bocha-string-code-and-fields",
@@ -2602,7 +2945,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-code-without-msg",
@@ -2648,7 +2998,15 @@
   ],
   "outcome": {
    "error": "Bocha API returned invalid response: code 403: unknown error"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Bocha API returned invalid response: code 403: unknown error"
+   }
+  ]
  },
  {
   "id": "bocha-missing-array",
@@ -2696,7 +3054,15 @@
   ],
   "outcome": {
    "error": "Bocha API returned invalid response: missing data.webPages.value array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Bocha API returned invalid response: missing data.webPages.value array"
+   }
+  ]
  },
  {
   "id": "bocha-no-code",
@@ -2773,7 +3139,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-401",
@@ -2818,7 +3191,14 @@
   ],
   "outcome": {
    "error": "Bocha API error 401: bad [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "bocha-freshness-day",
@@ -2874,7 +3254,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-freshness-year",
@@ -2930,7 +3317,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "bocha-freshness-none",
@@ -2984,7 +3378,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "you-map",
@@ -3091,7 +3492,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "you-401-redacted",
@@ -3134,7 +3542,15 @@
   ],
   "outcome": {
    "error": "You.com error 401: invalid [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": null,
+    "error": "You.com error 401: invalid [redacted]"
+   }
+  ]
  },
  {
   "id": "you-invalid-response",
@@ -3178,7 +3594,15 @@
   ],
   "outcome": {
    "error": "You.com returned invalid response: expected results.web array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "You.com returned invalid response: expected results.web array"
+   }
+  ]
  },
  {
   "id": "you-invalid-json",
@@ -3221,7 +3645,15 @@
   ],
   "outcome": {
    "error": "You.com returned invalid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "You.com returned invalid JSON"
+   }
+  ]
  },
  {
   "id": "you-timeout",
@@ -3262,7 +3694,15 @@
   ],
   "outcome": {
    "error": "You.com request timed out after 60s"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "You.com request timed out after 60s"
+   }
+  ]
  },
  {
   "id": "you-caller-abort",
@@ -3303,7 +3743,14 @@
   ],
   "outcome": {
    "error": "Aborted"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 0
+   }
+  ]
  },
  {
   "id": "you-redirect-strips-key",
@@ -3372,7 +3819,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "you-missing-key",
@@ -3392,7 +3846,8 @@
   "requests": [],
   "outcome": {
    "error": "You.com API key not found. Either:\n  1. Create <CONFIG> with { \"youApiKey\": \"your-key\" }\n  2. Set YDC_API_KEY environment variable\nGet a key at https://you.com/platform/api-keys"
-  }
+  },
+  "activity": []
  },
  {
   "id": "anysearch-anonymous",
@@ -3458,7 +3913,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-include-content",
@@ -3528,7 +3990,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-null-content",
@@ -3619,7 +4088,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "partial content",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-invalid-content",
@@ -3670,7 +4146,14 @@
   ],
   "outcome": {
    "error": "AnySearch API returned invalid response: expected data.results[0].content string"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "invalid content",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-keyed",
@@ -3739,7 +4222,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "keyed",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-no-metadata",
@@ -3782,7 +4272,14 @@
   ],
   "outcome": {
    "error": "AnySearch API returned invalid response: expected data.metadata object"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "malformed",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-bad-code",
@@ -3826,7 +4323,14 @@
   ],
   "outcome": {
    "error": "AnySearch API returned invalid response: expected code 0"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-empty-url",
@@ -3876,7 +4380,14 @@
   ],
   "outcome": {
    "error": "AnySearch API returned invalid response: expected data.results[0].url to be non-empty"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-bad-fields",
@@ -3922,7 +4433,14 @@
   ],
   "outcome": {
    "error": "AnySearch API returned invalid response: expected data.results[0] object"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "anysearch-402",
@@ -3961,7 +4479,14 @@
   ],
   "outcome": {
    "error": "AnySearch API error 402: quota"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 402
+   }
+  ]
  },
  {
   "id": "anysearch-401-redacted",
@@ -4003,7 +4528,14 @@
   ],
   "outcome": {
    "error": "AnySearch API error 401: secret [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "anysearch-config-root",
@@ -4023,7 +4555,8 @@
   "requests": [],
   "outcome": {
    "error": "Invalid config in <CONFIG>: expected a JSON object"
-  }
+  },
+  "activity": []
  },
  {
   "id": "xcrawl-map",
@@ -4105,7 +4638,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-relative-links",
@@ -4185,7 +4725,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "links",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-blank-link",
@@ -4245,7 +4792,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected organic_results[0].link to be a non-empty string"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "blank link",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-include-filter",
@@ -4324,7 +4878,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-exclude-filter",
@@ -4403,7 +4964,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-fuzzy-filter",
@@ -4482,7 +5050,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-www-include",
@@ -4561,7 +5136,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-www-exclude",
@@ -4640,7 +5222,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-cap",
@@ -4723,7 +5312,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-401-message",
@@ -4766,7 +5362,14 @@
   ],
   "outcome": {
    "error": "XCrawl API error (401): invalid api key"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "boom",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "xcrawl-401-error-field",
@@ -4809,7 +5412,14 @@
   ],
   "outcome": {
    "error": "XCrawl API error (403): denied [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "boom",
+    "status": 403
+   }
+  ]
  },
  {
   "id": "xcrawl-500-text",
@@ -4851,7 +5461,14 @@
   ],
   "outcome": {
    "error": "XCrawl API error (502): upstream [redacted] down"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "boom",
+    "status": 502
+   }
+  ]
  },
  {
   "id": "xcrawl-bad-status",
@@ -4896,7 +5513,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected search_metadata.status \"completed\", got \"failed\""
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bad status",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-missing-results",
@@ -4941,7 +5565,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected organic_results array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "missing results",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-bad-entry",
@@ -4987,7 +5618,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected organic_results[0] object"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-bad-title",
@@ -5036,7 +5674,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected organic_results[0].title to be a string or null"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-bad-snippet",
@@ -5085,7 +5730,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected organic_results[0].snippet to be a string or null"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-bad-metadata",
@@ -5128,7 +5780,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: expected search_metadata object"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-invalid-json",
@@ -5170,7 +5829,14 @@
   ],
   "outcome": {
    "error": "XCrawl API returned invalid response: response body is not valid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "xcrawl-timeout",
@@ -5210,7 +5876,15 @@
   ],
   "outcome": {
    "error": "XCrawl search request timed out after 60s"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "slow",
+    "status": null,
+    "error": "XCrawl search request timed out after 60s"
+   }
+  ]
  },
  {
   "id": "xcrawl-caller-abort",
@@ -5250,7 +5924,14 @@
   ],
   "outcome": {
    "error": "Aborted"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "cancel",
+    "status": 0
+   }
+  ]
  },
  {
   "id": "xcrawl-network-redacted",
@@ -5291,7 +5972,15 @@
   ],
   "outcome": {
    "error": "refused [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "refused [redacted]"
+   }
+  ]
  },
  {
   "id": "xcrawl-missing-key",
@@ -5311,7 +6000,8 @@
   "requests": [],
   "outcome": {
    "error": "XCrawl search requires an API key. Set xcrawlApiKey in <CONFIG> or export XCRAWL_API_KEY. Get one at https://dash.xcrawl.com/"
-  }
+  },
+  "activity": []
  },
  {
   "id": "jina-filters-content",
@@ -5400,7 +6090,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "jina-array-response",
@@ -5459,7 +6156,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "basic search",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "jina-query-encoding",
@@ -5536,7 +6240,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "  what's up? ünï/#x  ",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "jina-401-redacted",
@@ -5579,7 +6290,14 @@
   ],
   "outcome": {
    "error": "Jina Search API error 401: {\"detail\":\"rejected [redacted]\"}"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redact me",
+    "status": 401
+   }
+  ]
  },
  {
   "id": "jina-invalid-json",
@@ -5621,7 +6339,14 @@
   ],
   "outcome": {
    "error": "Jina Search API returned invalid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "invalid json",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "jina-envelope-429",
@@ -5666,7 +6391,15 @@
   ],
   "outcome": {
    "error": "Jina Search API error 429: response envelope reported failure"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "activity envelope failure",
+    "status": null,
+    "error": "Jina Search API error 429: response envelope reported failure"
+   }
+  ]
  },
  {
   "id": "jina-envelope-no-data",
@@ -5709,7 +6442,15 @@
   ],
   "outcome": {
    "error": "Jina Search API returned invalid response: expected data array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Jina Search API returned invalid response: expected data array"
+   }
+  ]
  },
  {
   "id": "jina-scalar-response",
@@ -5750,7 +6491,15 @@
   ],
   "outcome": {
    "error": "Jina Search API returned invalid response: expected an object or array"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Jina Search API returned invalid response: expected an object or array"
+   }
+  ]
  },
  {
   "id": "jina-timeout",
@@ -5790,7 +6539,14 @@
   ],
   "outcome": {
    "error": "Jina Search API error 408: request timed out"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 408
+   }
+  ]
  },
  {
   "id": "jina-body-timeout",
@@ -5830,7 +6586,14 @@
   ],
   "outcome": {
    "error": "Jina Search API error 408: request timed out"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 408
+   }
+  ]
  },
  {
   "id": "jina-caller-abort",
@@ -5870,7 +6633,14 @@
   ],
   "outcome": {
    "error": "This operation was aborted"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 0
+   }
+  ]
  },
  {
   "id": "jina-network-redacted",
@@ -5911,7 +6681,15 @@
   ],
   "outcome": {
    "error": "refused [redacted]"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "refused [redacted]"
+   }
+  ]
  },
  {
   "id": "jina-missing-key",
@@ -5931,7 +6709,8 @@
   "requests": [],
   "outcome": {
    "error": "Jina Search API key not found. Either:\n  1. Create <CONFIG> with { \"jinaApiKey\": \"your-key\" }\n  2. Set JINA_API_KEY environment variable\nGet a key at https://jina.ai/api-dashboard"
-  }
+  },
+  "activity": []
  },
  {
   "id": "searxng-direct",
@@ -6015,7 +6794,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "searxng-headers",
@@ -6083,7 +6869,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "headers",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "searxng-accept-override",
@@ -6133,7 +6926,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "headers",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "searxng-redirect-strips-headers",
@@ -6214,7 +7014,14 @@
      }
     ]
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "headers redirect",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "searxng-redirect-private",
@@ -6259,7 +7066,15 @@
   ],
   "outcome": {
    "error": "Blocked internal address for 127.0.0.2: 127.0.0.2"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "redirect",
+    "status": null,
+    "error": "Blocked internal address for 127.0.0.2: 127.0.0.2"
+   }
+  ]
  },
  {
   "id": "searxng-error-status",
@@ -6302,7 +7117,15 @@
   ],
   "outcome": {
    "error": "SearXNG search error 500: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "boom",
+    "status": null,
+    "error": "SearXNG search error 500: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+   }
+  ]
  },
  {
   "id": "searxng-invalid-json",
@@ -6345,7 +7168,15 @@
   ],
   "outcome": {
    "error": "SearXNG returned invalid JSON"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "boom",
+    "status": null,
+    "error": "SearXNG returned invalid JSON"
+   }
+  ]
  },
  {
   "id": "searxng-missing-base",
@@ -6365,7 +7196,8 @@
   "requests": [],
   "outcome": {
    "error": "SearXNG base URL is invalid or missing. Either:\n  1. Create <CONFIG> with { \"searxngBaseUrl\": \"https://search.example.com\" }\n  2. Set SEARXNG_BASE_URL to an HTTP(S) URL"
-  }
+  },
+  "activity": []
  },
  {
   "id": "searxng-base-with-credentials",
@@ -6392,7 +7224,8 @@
   "requests": [],
   "outcome": {
    "error": "SearXNG base URL is invalid or missing. Either:\n  1. Create <CONFIG> with { \"searxngBaseUrl\": \"https://search.example.com\" }\n  2. Set SEARXNG_BASE_URL to an HTTP(S) URL"
-  }
+  },
+  "activity": []
  },
  {
   "id": "searxng-env-base",
@@ -6436,7 +7269,14 @@
     "answer": "",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "baizhi-json",
@@ -6567,7 +7407,14 @@
     "answer": "{\n  \"status\": \"success\",\n  \"results\": [\n    {\n      \"unknown_service_field\": \"opaque search result; https://example.com/reference\"\n    }\n  ]\n}",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "  中文 query  ",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "baizhi-text",
@@ -6681,7 +7528,14 @@
     "answer": "{\"status\":\"success\",\"results\":[{\"unknown_service_field\":\"opaque search result; https://example.com/reference\"}]}",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "baizhi-sse",
@@ -6795,7 +7649,14 @@
     "answer": "{\n  \"status\": \"success\",\n  \"results\": [\n    {\n      \"unknown_service_field\": \"opaque search result; https://example.com/reference\"\n    }\n  ]\n}",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "baizhi-redact",
@@ -6912,7 +7773,14 @@
     "answer": "{\n  \"echoed\": \"[redacted]\"\n}\n\n[redacted]",
     "results": []
    }
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": 200
+   }
+  ]
  },
  {
   "id": "baizhi-tool-error",
@@ -7023,7 +7891,15 @@
   ],
   "outcome": {
    "error": "Baizhi search tool returned an error"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi search tool returned an error"
+   }
+  ]
  },
  {
   "id": "baizhi-empty",
@@ -7134,7 +8010,15 @@
   ],
   "outcome": {
    "error": "Baizhi returned invalid response: no search text or structured content"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi returned invalid response: no search text or structured content"
+   }
+  ]
  },
  {
   "id": "baizhi-http401",
@@ -7180,7 +8064,15 @@
   ],
   "outcome": {
    "error": "Baizhi HTTP 401 request failed; check your API key, account and service status"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi HTTP 401 request failed; check your API key, account and service status"
+   }
+  ]
  },
  {
   "id": "baizhi-http503",
@@ -7226,7 +8118,15 @@
   ],
   "outcome": {
    "error": "Baizhi HTTP 503 request failed; check your API key, account and service status"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi HTTP 503 request failed; check your API key, account and service status"
+   }
+  ]
  },
  {
   "id": "baizhi-redirect",
@@ -7272,7 +8172,15 @@
   ],
   "outcome": {
    "error": "Baizhi network request failed"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi network request failed"
+   }
+  ]
  },
  {
   "id": "baizhi-network",
@@ -7318,7 +8226,15 @@
   ],
   "outcome": {
    "error": "Baizhi network request failed"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi network request failed"
+   }
+  ]
  },
  {
   "id": "baizhi-invalid-json",
@@ -7364,7 +8280,15 @@
   ],
   "outcome": {
    "error": "Baizhi returned invalid response"
-  }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "q",
+    "status": null,
+    "error": "Baizhi returned invalid response"
+   }
+  ]
  },
  {
   "id": "baizhi-missing-key",
@@ -7384,7 +8308,8 @@
   "requests": [],
   "outcome": {
    "error": "Baizhi API key not found. Set BAIZHI_API_KEY or baizhiApiKey in web-search.json. Get your own key at https://agent-toolkit.app.baizhi.cloud/"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-empty-query",
@@ -7406,7 +8331,8 @@
   "requests": [],
   "outcome": {
    "error": "Baizhi search query must not be empty"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-invalid-filter",
@@ -7432,7 +8358,8 @@
   "requests": [],
   "outcome": {
    "error": "Baizhi domain filter must contain a valid domain"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-pre-aborted",
@@ -7454,7 +8381,8 @@
   "requests": [],
   "outcome": {
    "error": "Aborted"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-malformed-credential",
@@ -7476,7 +8404,8 @@
   "requests": [],
   "outcome": {
    "error": "Baizhi credential resolution failed: invalid-header-value"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-env-empty-named",
@@ -7500,7 +8429,8 @@
   "requests": [],
   "outcome": {
    "error": "Baizhi credential resolution failed: environment-empty"
-  }
+  },
+  "activity": []
  },
  {
   "id": "baizhi-config-root",
@@ -7522,6 +8452,4669 @@
   "requests": [],
   "outcome": {
    "error": "Invalid configuration in <CONFIG>: expected a JSON object"
-  }
+  },
+  "activity": []
+ },
+ {
+  "id": "brave-act-ok",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "web": {
+      "results": [
+       {
+        "title": "Brave result",
+        "url": "https://example.com/brave",
+        "description": "Brave snippet"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Brave snippet\nSource: Brave result (https://example.com/brave)",
+    "results": [
+     {
+      "title": "Brave result",
+      "url": "https://example.com/brave",
+      "snippet": "Brave snippet"
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "choices": [
+      {
+       "message": {
+        "content": "Answer [1]"
+       }
+      }
+     ],
+     "citations": [
+      "https://example.com/pplx"
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Answer [1]",
+    "results": [
+     {
+      "title": "Source 1",
+      "url": "https://example.com/pplx",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "answer": "Answer",
+     "results": [
+      {
+       "title": "SERPdive result",
+       "url": "https://example.com/serpdive",
+       "snippet": "snippet"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Answer",
+    "results": [
+     {
+      "title": "SERPdive result",
+      "url": "https://example.com/serpdive",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<html><body><div class=\"result\"><a class=\"result__a\" href=\"https://example.com/ddg\">DDG result</a><a class=\"result__snippet\">DDG snippet</a></div></body></html>",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "DDG snippet\nSource: DDG result (https://example.com/ddg)",
+    "results": [
+     {
+      "title": "DDG result",
+      "url": "https://example.com/ddg",
+      "snippet": "DDG snippet"
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "answer": "Answer",
+     "results": [
+      {
+       "title": "Tavily result",
+       "url": "https://example.com/tavily",
+       "content": "content"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Answer",
+    "results": [
+     {
+      "title": "Tavily result",
+      "url": "https://example.com/tavily",
+      "snippet": "content"
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Exa result",
+       "url": "https://example.com/exa",
+       "highlights": [
+        "highlight"
+       ]
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "highlight\nSource: Exa result (https://example.com/exa)",
+    "results": [
+     {
+      "title": "Exa result",
+      "url": "https://example.com/exa",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "result": {
+      "content": [
+       {
+        "type": "text",
+        "text": "Title: Exa MCP\nURL: https://example.com/mcp\nText: body\n---"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "body\nSource: Exa MCP (https://example.com/mcp)",
+    "results": [
+     {
+      "title": "Exa MCP",
+      "url": "https://example.com/mcp",
+      "snippet": ""
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "data": {
+      "search": [
+       {
+        "title": "Kagi result",
+        "url": "https://example.com/kagi",
+        "snippet": "Kagi snippet"
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "Kagi snippet\nSource: Kagi result (https://example.com/kagi)",
+    "results": [
+     {
+      "title": "Kagi result",
+      "url": "https://example.com/kagi",
+      "snippet": "Kagi snippet"
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "json": {
+     "results": [
+      {
+       "title": "Ollama result",
+       "url": "https://example.com/ollama",
+       "content": "content"
+      }
+     ]
+    }
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "result": {
+    "answer": "content\nSource: Ollama result (https://example.com/ollama)",
+    "results": [
+     {
+      "title": "Ollama result",
+      "url": "https://example.com/ollama",
+      "snippet": "content"
+     }
+    ]
+   }
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-http500",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-transport",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-abort",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-invalid-json",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-http500",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "SerpApi error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-transport",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-abort",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-invalid-json",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "SerpApi returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-http500",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-transport",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-abort",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-invalid-json",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-http500",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "Serply error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-transport",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-abort",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-invalid-json",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "Serply returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-http500",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-transport",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-abort",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-invalid-json",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-http500",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-transport",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-abort",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-invalid-json",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "you-map-http500",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "You.com error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "you-map-transport",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "you-map-abort",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "you-map-invalid-json",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "You.com returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-http500",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-transport",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-abort",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-invalid-json",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-http500",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API error (500): boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-transport",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-abort",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-invalid-json",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: response body is not valid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-http500",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-transport",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-abort",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-invalid-json",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-http500",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG search error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": null,
+    "error": "SearXNG search error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-transport",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-abort",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-invalid-json",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": null,
+    "error": "SearXNG returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-http500",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Brave Search API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": null,
+    "error": "Brave Search API error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-transport",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-abort",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok-http500",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Perplexity API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok-transport",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok-abort",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok-invalid-json",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Perplexity API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-http500",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SERPdive API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-transport",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-abort",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-invalid-json",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SERPdive API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-http500",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "DuckDuckGo search error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": null,
+    "error": "DuckDuckGo search error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-transport",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-abort",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-invalid-json",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "DuckDuckGo returned no parseable results (invalid response)"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": null,
+    "error": "DuckDuckGo returned no parseable results (invalid response)"
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-http500",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Tavily API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-transport",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-abort",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-invalid-json",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Tavily API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": null,
+    "error": "Tavily API returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-http500",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Exa API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": null,
+    "error": "Exa API error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-transport",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-abort",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-http500",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Exa MCP error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": null,
+    "error": "Exa MCP error 500: boom"
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-transport",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-abort",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-http500",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Kagi API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-transport",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-abort",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-invalid-json",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Kagi API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-http500",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "body": "boom",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Ollama API error 500: boom"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 500
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-transport",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "plain",
+    "message": "connect failed"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "connect failed"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": null,
+    "error": "connect failed"
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-abort",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "throw": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-invalid-json",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "status": 200,
+    "body": "<<not json",
+    "headers": {}
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Ollama API returned invalid JSON"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 200
+   }
+  ]
  }
 ]

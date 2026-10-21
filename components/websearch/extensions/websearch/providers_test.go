@@ -598,6 +598,8 @@ func TestUpstream_tavily_key_pool(t *testing.T) {
 		for k, v := range env {
 			t.Setenv(k, v)
 		}
+		// The original runs every case in a fresh process: its activity log holds only this search.
+		Activity.Clear()
 		var keys []string
 		useNet(t, func(c netCall) netReply {
 			key := strings.TrimPrefix(c.Header.Get("Authorization"), "Bearer ")
@@ -642,8 +644,15 @@ func TestUpstream_tavily_key_pool(t *testing.T) {
 			t.Fatalf("%+v", o)
 		}
 	})
-	tskip(t, f, "the standalone environment key is tried after the pool and logs one activity entry",
-		"the activity monitor widget is deferred; key order is covered by TestTavilyStandaloneKeyAfterPool")
+	tw(t, f, "the standalone environment key is tried after the pool and logs one activity entry", func(t *testing.T) {
+		o := run(t, "", map[string]string{"TAVILY_API_KEY": "solo", "TAVILY_API_KEY_1": "key-1", "TAVILY_API_KEY_5": "key-5", "TAVILY_API_KEY_INDEX": "5"}, "solo", 429)
+		if !eqStrings(o.keys, []string{"key-5", "key-1", "solo"}) {
+			t.Fatalf("%+v", o)
+		}
+		if e := Activity.Entries(); len(e) != 1 || e[0].Type != "api" || e[0].Status == nil || *e[0].Status != 200 {
+			t.Fatalf("%+v", e)
+		}
+	})
 	tw(t, f, "the configured key is tried after the pool", func(t *testing.T) {
 		o := run(t, `{"tavilyApiKey":"config-key"}`, map[string]string{"TAVILY_API_KEY_1": "key-1"}, "config-key", 429)
 		if !eqStrings(o.keys, []string{"key-1", "config-key"}) {
