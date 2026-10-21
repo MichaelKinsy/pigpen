@@ -491,7 +491,26 @@ func TestUpstream_brightdata_serp(t *testing.T) {
 		}
 	})
 
-	tskip(t, f, "the activity entry is opened once and closed with the outcome that happened", "this port keeps no activity log (the activity widget and its entries belong to the curator slice), so there is no entry to open or close; the request, status and error behaviour it accompanies is pinned by the neighbouring cases")
+	tw(t, f, "the activity entry is opened once and closed with the outcome that happened", func(t *testing.T) {
+		bdSetup(t, ``, bdKeyZone)
+		useNet(t, func(netCall) netReply { return reply(500, "upstream down") })
+		Activity.Clear()
+		if _, err := SearchWithBrightData(bg(), "q", SearchOptions{}); err == nil {
+			t.Fatal("no error")
+		}
+		e := Activity.Entries()
+		if len(e) != 1 || e[0].Type != "api" || e[0].Query != "q" || e[0].Status == nil || *e[0].Status != 500 || e[0].Error != "" {
+			t.Fatalf("%+v", e)
+		}
+		useNet(t, func(netCall) netReply { return reply(200, `{"organic":[]}`) })
+		Activity.Clear()
+		if _, err := SearchWithBrightData(bg(), "q", SearchOptions{}); err != nil {
+			t.Fatal(err)
+		}
+		if e = Activity.Entries(); len(e) != 1 || e[0].Status == nil || *e[0].Status != 200 {
+			t.Fatalf("%+v", e)
+		}
+	})
 
 	tw(t, f, "each request carries a 60-second timeout composed with the caller's signal", func(t *testing.T) {
 		bdSetup(t, "", bdKeyZone)

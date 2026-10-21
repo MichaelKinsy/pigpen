@@ -30,6 +30,7 @@ func TestActivityEntriesOfHostedProviderFailures(t *testing.T) {
 		{"xai", map[string]string{"XAI_API_KEY": "k"}, SearchWithXai, false, "xAI API error 500"},
 		{"mistral", map[string]string{"MISTRAL_API_KEY": "k"}, SearchWithMistral, false, "Mistral API error 500"},
 		{"parallel-mcp", nil, SearchWithParallelMCP, false, ""},
+		{"parallel", map[string]string{"PARALLEL_API_KEY": "pk_live_activity_key"}, SearchWithParallel, true, ""},
 		{"ollama", map[string]string{"OLLAMA_API_KEY": "k"}, SearchWithOllama, true, ""},
 	}
 	for _, c := range cases {
