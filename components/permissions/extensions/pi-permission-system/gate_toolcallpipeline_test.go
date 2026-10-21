@@ -259,7 +259,7 @@ func TestToolCallGatePipelineTwins(t *testing.T) {
 					t.Errorf("resolved the tool's own surface")
 				}
 			}
-			eq(t, bashCall, AccessIntent(BashCommandAccessIntent{Surface: "bash", Command: "npm install", Spellings: nil}), "bash call")
+			eq(t, bashCall, AccessIntent(BashCommandAccessIntent{Surface: "bash", Command: "npm install", Spellings: []string{}}), "bash call")
 		})
 		tw(t, f, "blocks an aliased command denied on the bash surface", func(t *testing.T) {
 			runner, _ := makeGateRunner()
