@@ -499,7 +499,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-warden"
       },
-      "manifestSha256": "939ffc02fc18ceaa41a788ac647c7c0a82bb23ac722e44bb3983650e898e7c75",
+      "manifestSha256": "b620f950ee18bff35ea6cd85856849020a427b6607ca8b56baf0052937e8d38e",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
