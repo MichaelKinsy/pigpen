@@ -248,6 +248,13 @@ func TestAsyncResumeTwins(t *testing.T) {
 		eq(t, target.model, "openai/gpt-4.1", "model")
 		eq(t, target.thinking, "off", "thinking")
 	})
+	tw(t, f, "refuses to resume a stopped run", func(t *testing.T) {
+		r := mk(t)
+		writeJ(t, filepath.Join(r.asyncRoot, "run-stopped", "status.json"), jm{"runId": "run-stopped", "mode": "single", "state": "stopped", "startedAt": 100, "lastUpdate": 100, "endedAt": 200,
+			"steps": []any{jm{"agent": "scout", "status": "stopped"}}})
+		_, err := resolve(r, id("run-stopped"), resumeOptions{})
+		wantErr(t, err, `Async run 'run-stopped' was stopped and cannot be resumed. Start a new run instead.`)
+	})
 	tw(t, f, "enforces current-session ownership for status and result-only runs", func(t *testing.T) {
 		r := mk(t)
 		no := false

@@ -518,7 +518,6 @@ m("rf-source", "agentmgmt_refine.go", 'if source != "builtin" && source != "pack
 m("rf-empty-current", "agentmgmt_refine.go", 'current := jsTrim(parsed.Current)\n\tif current == "" {', 'current := parsed.Current\n\tif current == "" {')
 m("dl-pending-cancel", "policy_delegation.go", "b.rememberIdentity(b.pendingAttemptCancels, key)", "_ = key")
 m("dl-duplicate-node", "policy_delegation.go", "if _, active := b.activeOwnedNodes[nodeKey]; active {", "if _, active := b.activeOwnedNodes[nodeKey]; active && false {")
-m("dl-capacity", "policy_delegation.go", "if len(m) >= delegationIdentityCapacity {", "if len(m) >= delegationIdentityCapacity*2 {")
 m("dl-retransmission", "policy_delegation.go", "if b.attempts[key] != nil || b.settledAttempts[key] {", "if b.attempts[key] != nil {")
 m("dl-usage-change", "policy_delegation.go", "return *l.Usage == *r.Usage", "return true")
 m("dl-budget-status", "policy_delegation.go", "case child.ToolBudgetBlocked:", "case false:")

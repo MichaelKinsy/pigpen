@@ -792,10 +792,6 @@ func (b *delegationBridge) rememberIdentity(m map[string]bool, key string) {
 	if m[key] || b.identitySaturated {
 		return
 	}
-	if len(m) >= delegationIdentityCapacity {
-		b.identitySaturated = true
-		return
-	}
 	m[key] = true
 	if len(m) == delegationIdentityCapacity {
 		b.identitySaturated = true

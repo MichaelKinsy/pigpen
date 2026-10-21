@@ -1,6 +1,7 @@
 package pi_subagents
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -48,4 +49,23 @@ func TestDelegationTerminalResponseIsEmittedOnce(t *testing.T) {
 	b.emitTerminal("k", map[string]any{"status": "second"})
 	eq(t, len(got.list), 1, "one terminal response per attempt")
 	eq(t, got.list[0]["status"], any("first"), "the first")
+}
+
+func TestPromptChainSplitsOnArrowsWithSpaces(t *testing.T) {
+	eq(t, splitPromptChain("a -> b ->  c"), []string{"a", "b", "c"}, "chain")
+	eq(t, splitPromptChain("a ->b"), []string{"a ->b"}, "an arrow without its trailing space is part of the text")
+}
+
+func TestPreflightOrchestrationSkillAndForkDiagnostics(t *testing.T) {
+	e := newPfEnv(t)
+	cwd := e.dir("repo")
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "worker.md"), "---\nname: worker\ndescription: Project worker\n---\nPrompt.\n")
+	r := pfResolve(t, launchContractInput{Agent: "worker", Cwd: cwd, Skill: "pi-subagents"})
+	equal(t, r.Message, "The pi-subagents orchestration skill is not child-injectable.", "refused as such, not as a missing skill")
+	c := pfOK(t, launchContractInput{Agent: "worker", Cwd: cwd, Context: new("fork")})
+	found := false
+	for _, d := range c.Diagnostics {
+		found = found || d.Code == "host_required" && d.Message == "Exact fork session branching requires Pi host session snapshots."
+	}
+	equal(t, found, true, "a fork launch records that it needs the host")
 }

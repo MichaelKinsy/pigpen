@@ -1863,13 +1863,13 @@
   "name": "mis-act-title-summary",
   "file": "mission_actions.go",
   "find": "if hasTitle && hasSummary {",
-  "replace": "if false {"
+  "replace": "if hasTitle && hasSummary && false {"
  },
  {
   "name": "mis-act-goal-true",
   "file": "mission_actions.go",
   "find": "if hasGoal && goalV != true {",
-  "replace": "if false {"
+  "replace": "if hasGoal && goalV != true && false {"
  },
  {
   "name": "mis-act-scope",
@@ -1893,7 +1893,7 @@
   "name": "mis-act-update-empty",
   "file": "mission_actions.go",
   "find": "if !set {",
-  "replace": "if false {"
+  "replace": "if !set && false {"
  },
  {
   "name": "mis-act-receipt-keys",
@@ -2127,7 +2127,7 @@
   "name": "ret-recent",
   "file": "async_retention.go",
   "find": "\tif ts > in.cutoff {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy",
-  "replace": "\tif false {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy"
+  "replace": "\tif ts > in.cutoff && false {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy"
  },
  {
   "name": "ret-paused-terminal",
@@ -2211,13 +2211,13 @@
   "name": "ret-repaired",
   "file": "async_retention.go",
   "find": "\t\t\tif rec.Repaired {\n\t\t\t\tres.RepairedRuns++\n\t\t\t}",
-  "replace": ""
+  "replace": "\t\t\tif rec.Repaired {\n\t\t\t\tres.RepairedRuns += 0\n\t\t\t}"
  },
  {
   "name": "ret-discovery-run-candidate",
   "file": "async_retention.go",
   "find": "if !validRunID(c.Name) || c.Relative != c.Name {",
-  "replace": "if false {"
+  "replace": "if (!validRunID(c.Name) || c.Relative != c.Name) && false {"
  },
  {
   "name": "run-git-env",
@@ -2403,7 +2403,7 @@
   "name": "proj-end-overflow",
   "file": "async_projection.go",
   "find": "sum <= 9007199254740991",
-  "replace": "true"
+  "replace": "sum <= 9007199254740991 || true"
  },
  {
   "name": "proj-host-no-verdict",
@@ -2433,7 +2433,7 @@
   "name": "proj-live-root",
   "file": "async_projection.go",
   "find": "keepLiveRoot := (status == \"running\" || status == \"queued\") && (parent == nil || parent.str(\"status\") != \"running\")",
-  "replace": "keepLiveRoot := false"
+  "replace": "keepLiveRoot := (status == \"running\" || status == \"queued\") && (parent == nil || parent.str(\"status\") != \"running\") && false"
  },
  {
   "name": "proj-run-precedence",
@@ -2577,7 +2577,7 @@
   "name": "tp-required-contact",
   "file": "policy_toolplan.go",
   "find": "if t != \"contact_supervisor\" && (!legacyPairing || t != \"intercom\") {",
-  "replace": "if true {"
+  "replace": "if t != \"contact_supervisor\" && (!legacyPairing || t != \"intercom\") || true {"
  },
  {
   "name": "tp-ambient",
@@ -2728,12 +2728,6 @@
   "file": "policy_delegation.go",
   "find": "if _, active := b.activeOwnedNodes[nodeKey]; active {",
   "replace": "if _, active := b.activeOwnedNodes[nodeKey]; active && false {"
- },
- {
-  "name": "dl-capacity",
-  "file": "policy_delegation.go",
-  "find": "if len(m) >= delegationIdentityCapacity {",
-  "replace": "if len(m) >= delegationIdentityCapacity*2 {"
  },
  {
   "name": "dl-retransmission",

@@ -66,3 +66,12 @@ func TestValidateRefusesBothScriptSources(t *testing.T) {
 	_, failure := h.Tool("subagent", map[string]any{"action": "validate", "workflowScript": "return 1;", "workflowScriptPath": "flow.js"})
 	eq(t, failure, "workflowScript and workflowScriptPath are mutually exclusive.", "both sources")
 }
+
+func TestResumeActionAcceptsIndex(t *testing.T) {
+	withTempHome(t)
+	h := StartHost(t, Extension(), HostOptions{Cwd: tmp(t)})
+	_, failure := h.Tool("subagent", map[string]any{"action": "resume", "id": "no-such-run", "index": 0, "message": "go on"})
+	if failure == "" || strings.Contains(failure, "does not support") {
+		t.Errorf("resume with an index: %q", failure)
+	}
+}
