@@ -1,0 +1,41 @@
+{
+  "name": "bash-nested-deny",
+  "description": "a denied command nested in a substitution blocks the whole command; an allowed one runs",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo $(rm -rf x)"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "echo ok"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"*\": \"allow\",\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"bash\": {\n      \"*\": \"allow\",\n      \"rm *\": {\n        \"action\": \"deny\",\n        \"reason\": \"no deletes\"\n      }\n    }\n  }\n}"
+  }
+}
