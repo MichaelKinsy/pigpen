@@ -30,6 +30,8 @@ const (
 	maxWakeEvents               = 50
 	outputUIRefreshMs           = 200
 	outputPersistMs             = 1000
+	// identityReadFloor is the least time after a spawn at which the identity read starts (spawn.go: when the original reads).
+	identityReadFloor           = 10 * time.Millisecond
 	bgToolResultMaxDetailsBytes = 64 * 1024
 	bgToolResultMaxTasks        = 50
 	bgToolResultSampleLimit     = 20

@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -21,11 +22,18 @@ import (
 // The port keeps that order with one lock (mu) held by every job that touches a task, and two serial queues:
 //
 //   - loop runs the callbacks of timers, process exits and future continuations, one at a time, under mu;
-//   - out sends the host calls a locked job makes (a wake, a session entry, a notification) in the order the job made
+//   - out sends the host calls a locked handler makes (a session entry, a notification) in the order the handler made
 //     them, without mu held, so a host that answers a call by calling the extension back cannot deadlock against the lock.
 //
 // A handler of the SDK takes mu itself, releases it before it blocks, and waits for out before it returns, so the host
 // sees a handler's effects in the order the original's synchronous calls made them.
+//
+// The host calls of a loop job (a wake, a persist, a refresh) are another matter (D5): Pi runs them from a timer or a
+// promise continuation, so a host that models Pi's event loop holds them until the loop would turn, and the SDK marks
+// every call made through the context of a request that has returned. Those calls go through timerOut, which no handler
+// waits for: a held call at the head of out would hold every handler's calls behind it, and the handler would wait for
+// the host, which waits for the handler to return. A call a handler makes goes through a request that is still running
+// (liveContext), never through the context of an earlier request.
 
 // serial runs posted jobs one at a time, in order, on a goroutine that exists only while there are jobs.
 type serial struct {
@@ -129,9 +137,16 @@ func (g *guardedTimer) Stop() {
 
 // bgRuntime is one extension load's state.
 type bgRuntime struct {
-	mu     sync.Mutex
-	loop   serial
-	out    serial
+	mu   sync.Mutex
+	loop serial
+	out  serial
+	// timerOut carries the host calls of the loop's jobs; nothing waits for it.
+	timerOut serial
+	// timerOrigin is set while a loop job runs (under mu): the host calls it makes are timer calls.
+	timerOrigin atomic.Bool
+	// live are the handlers of the SDK that have not returned.
+	liveMu sync.Mutex
+	live   []*liveHandler
 	timers timers
 	// logs is the log writer every task of this runtime shares.
 	logs *logWriter
@@ -240,6 +255,8 @@ func (rt *bgRuntime) job(fn func()) func() {
 func (rt *bgRuntime) run(fn func()) {
 	rt.mu.Lock()
 	defer rt.mu.Unlock()
+	rt.timerOrigin.Store(true)
+	defer rt.timerOrigin.Store(false)
 	defer func() {
 		if r := recover(); r != nil {
 			logBackgroundDiagnostic("job panicked", map[string]any{"panic": fmt.Sprint(r), "stack": string(debug.Stack())})
@@ -271,6 +288,76 @@ func (rt *bgRuntime) whenDone(f *future, fn func()) {
 // settle waits for the host calls queued so far; a handler calls it, with mu released, before it returns.
 func (rt *bgRuntime) settle() { rt.out.barrier() }
 
+// liveHandler is a handler of the SDK that has not returned, with the work that waits for its return.
+type liveHandler struct {
+	ctx   sdk.Context
+	after []func()
+}
+
+// enter registers a handler's context for as long as the handler runs (defer rt.enter(ctx)()); what whenHandlerReturns
+// collected runs after the handler's last statement.
+func (rt *bgRuntime) enter(ctx sdk.Context) func() {
+	h := &liveHandler{ctx: ctx}
+	rt.liveMu.Lock()
+	rt.live = append(rt.live, h)
+	rt.liveMu.Unlock()
+	return func() {
+		rt.liveMu.Lock()
+		if i := slices.Index(rt.live, h); i >= 0 {
+			rt.live = slices.Delete(rt.live, i, i+1)
+		}
+		after := h.after
+		rt.liveMu.Unlock()
+		for _, f := range after {
+			f()
+		}
+	}
+}
+
+// liveContext is the context of the newest handler that has not returned.
+func (rt *bgRuntime) liveContext() (sdk.Context, bool) {
+	rt.liveMu.Lock()
+	defer rt.liveMu.Unlock()
+	if len(rt.live) == 0 {
+		return sdk.Context{}, false
+	}
+	return rt.live[len(rt.live)-1].ctx, true
+}
+
+// whenHandlerReturns runs f once the newest running handler has returned, at once when none runs or a loop job asks. The
+// original starts its identity read inside the handler, but the read is a chain of file system calls that Node's event loop
+// carries on only after the handler's synchronous work and the result it returns have gone back to Pi.
+func (rt *bgRuntime) whenHandlerReturns(f func()) {
+	if !rt.timerOrigin.Load() {
+		rt.liveMu.Lock()
+		if n := len(rt.live); n > 0 {
+			h := rt.live[n-1]
+			h.after = append(h.after, f)
+			rt.liveMu.Unlock()
+			return
+		}
+		rt.liveMu.Unlock()
+	}
+	f()
+}
+
+// post queues a host call made through ctx. A handler's call goes through a request that is still running when the call is
+// made, because the handler waits for it (settle); a loop job's call, and a call that finds no handler running, goes through
+// base and is a timer call for the host.
+func (rt *bgRuntime) post(base sdk.Context, call func(sdk.Context)) {
+	if rt.timerOrigin.Load() {
+		rt.timerOut.post(func() { call(base) })
+		return
+	}
+	rt.out.post(func() {
+		if live, ok := rt.liveContext(); ok {
+			call(live)
+			return
+		}
+		rt.timerOut.post(func() { call(base) })
+	})
+}
+
 // ── host effects ────────────────────────────────────────────────────────────
 
 // setContext is `activeCtx = ctx`.
@@ -293,8 +380,7 @@ func (rt *bgRuntime) notify(message, level string) {
 	if !rt.active {
 		return
 	}
-	ctx := rt.ctx
-	rt.out.post(func() { ctx.Notify(message, level) })
+	rt.post(rt.ctx, func(ctx sdk.Context) { ctx.Notify(message, level) })
 }
 
 // sendMessage is pi.sendMessage; the host applies its delivery rules (a follow-up joins the running turn, a steer interrupts it,
@@ -304,11 +390,10 @@ func (rt *bgRuntime) sendMessage(m customMessage, o sendOptions) {
 		logBackgroundDiagnostic("sendMessage without a session", map[string]any{"customType": m.CustomType})
 		return
 	}
-	ctx := rt.last
 	if rt.beforeSend != nil {
 		rt.beforeSend(m)
 	}
-	rt.out.post(func() {
+	rt.post(rt.last, func(ctx sdk.Context) {
 		err := ctx.SendCustomMessage(sdk.CustomMessage{CustomType: m.CustomType, Content: m.Content, Display: m.Display, Details: m.Details},
 			sdk.SendMessageOptions{TriggerTurn: new(o.TriggerTurn), DeliverAs: o.DeliverAs})
 		if err != nil {
@@ -323,8 +408,7 @@ func (rt *bgRuntime) appendEntry(customType string, payload any) error {
 	if !rt.haveLast {
 		return fmt.Errorf("no session")
 	}
-	ctx := rt.last
-	rt.out.post(func() {
+	rt.post(rt.last, func(ctx sdk.Context) {
 		if err := ctx.AppendEntry(customType, payload); err != nil {
 			rt.persistence.forgetFingerprints()
 			reportPersistFailure("appendEntry", err, func(where string) {

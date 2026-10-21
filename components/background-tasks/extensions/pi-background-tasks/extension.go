@@ -138,7 +138,7 @@ func extensionWith(tm timers) *sdk.Extension {
 // extensionFor registers the runtime's tools, commands and events on e.
 func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 	defs := toolDefs()
-	execute := map[string]sdk.ToolFunc{"bg_status": rt.bgStatusTool(), "bg_task": rt.bgTaskTool()}
+	execute := map[string]sdk.ToolFunc{"bg_status": rt.liveTool(rt.bgStatusTool()), "bg_task": rt.liveTool(rt.bgTaskTool())}
 	// The original registers bg_status first.
 	for _, name := range []string{"bg_status", "bg_task"} {
 		d := defs[name]
@@ -155,6 +155,7 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 
 	// upstream: registrations.ts:276-309. Shortcuts register at load from the settings read then; "none" disables one.
 	openDashboardShortcut := func(ctx sdk.Context) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		return rt.openDashboard(ctx, "")
 	}
@@ -166,6 +167,7 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 	}
 	if rt.backgroundBashShortcut != "none" {
 		e.Shortcut(rt.backgroundBashShortcut, "Move the next not-yet-started bash command to a background task", func(ctx sdk.Context) error {
+			defer rt.enter(ctx)()
 			rt.adopt(ctx)
 			rt.armForcedBackground(ctx, "shortcut")
 			return nil
@@ -173,17 +175,20 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 	}
 	if rt.widgetToggleShortcut != "none" {
 		e.Shortcut(rt.widgetToggleShortcut, "Toggle background task mini-dashboard", func(ctx sdk.Context) error {
+			defer rt.enter(ctx)()
 			rt.toggleWidgetShortcut(ctx)
 			return nil
 		})
 	}
 
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, data map[string]any) (any, error) {
+		defer rt.enter(ctx)()
 		rt.onSessionStart(ctx)
 		rt.settle()
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, data map[string]any) (any, error) {
+		defer rt.enter(ctx)()
 		rt.mu.Lock()
 		settings.recordProjectTrust(ctx.Cwd(), ctx.IsProjectTrusted)
 		rt.setContext(ctx)
@@ -197,16 +202,24 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 	})
 	for _, event := range []string{sdk.EventSessionTree, sdk.EventSessionCompact} {
 		e.OnEvent(event, func(ctx sdk.Context, data map[string]any) (any, error) {
+			defer rt.enter(ctx)()
 			rt.adoptAndSync(ctx)
 			return nil, nil
 		})
 	}
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, data map[string]any) (any, error) {
+		defer rt.enter(ctx)()
 		rt.onSessionShutdown()
 		return nil, nil
 	})
-	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) { return rt.onToolCall(ctx, data) })
-	e.OnEvent(sdk.EventUserBash, func(ctx sdk.Context, data map[string]any) (any, error) { return rt.onUserBash(ctx, data) })
+	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) {
+		defer rt.enter(ctx)()
+		return rt.onToolCall(ctx, data)
+	})
+	e.OnEvent(sdk.EventUserBash, func(ctx sdk.Context, data map[string]any) (any, error) {
+		defer rt.enter(ctx)()
+		return rt.onUserBash(ctx, data)
+	})
 	return e
 }
 

@@ -267,7 +267,7 @@ func (s *miniStack) repush(host widgetHost) {
 // widget, so the original's stack never marks itself active there and sends nothing, not even its removal; neither does the port.
 type ctxHost struct {
 	ctx  sdk.Context
-	post func(func())
+	post func(sdk.Context, func(sdk.Context))
 }
 
 func (h ctxHost) hasUI() bool { return h.ctx.HasUI() }
@@ -275,12 +275,12 @@ func (h ctxHost) setWidget(key string, lines []string, placement string) {
 	if h.ctx.Mode() == "rpc" {
 		return
 	}
-	h.post(func() {
+	h.post(h.ctx, func(ctx sdk.Context) {
 		if lines == nil {
-			_ = h.ctx.SetWidget(key, nil, sdk.WidgetOptions{"placement": placement})
+			_ = ctx.SetWidget(key, nil, sdk.WidgetOptions{"placement": placement})
 			return
 		}
-		_ = h.ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": placement})
+		_ = ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": placement})
 	})
 }
 func (h ctxHost) width() int {
@@ -423,7 +423,7 @@ func (rt *bgRuntime) currentHost() widgetHost {
 	if !rt.active {
 		return nil
 	}
-	return ctxHost{ctx: rt.ctx, post: rt.out.post}
+	return ctxHost{ctx: rt.ctx, post: rt.post}
 }
 
 // repushWidgets draws the stack again at the terminal's current width (the SDK sends widget rows laid out for one width).
@@ -468,7 +468,8 @@ func (rt *bgRuntime) watchWidth(ctx sdk.Context) {
 	if rt.unwatchWidth != nil || !ctx.HasUI() || ctx.Mode() == "rpc" {
 		return
 	}
-	if off, err := ctx.OnWidthChange(func(sdk.Context, int) {
+	if off, err := ctx.OnWidthChange(func(c sdk.Context, _ int) {
+		defer rt.enter(c)()
 		rt.repushWidgets()
 		rt.settle()
 	}); err == nil {

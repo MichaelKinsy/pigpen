@@ -54,9 +54,11 @@ func text(t *testing.T, raw json.RawMessage) toolOut {
 
 func (o toolOut) text() string { return o.Content }
 
+// eventually polls ok. The bound is a hang detector, not a timing claim: with one busy loop per CPU of the container (128 on xd670) a run of the
+// mixed row of exit-reads takes 10-24 s, and a 20 s bound failed 2 runs of 98 ("timed out waiting for the first reads"; no assertion on order failed).
 func eventually(t *testing.T, what string, ok func() bool) {
 	t.Helper()
-	for deadline := time.Now().Add(20 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+	for deadline := time.Now().Add(60 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
 		if ok() {
 			return
 		}

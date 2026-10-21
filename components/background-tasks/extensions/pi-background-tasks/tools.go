@@ -116,6 +116,14 @@ func (rt *bgRuntime) tokenOf(params map[string]any) string {
 	return ""
 }
 
+// liveTool registers the tool's context as a running handler, so the host calls it makes go through its own request.
+func (rt *bgRuntime) liveTool(f sdk.ToolFunc) sdk.ToolFunc {
+	return func(ctx sdk.Context, params map[string]any) (any, error) {
+		defer rt.enter(ctx)()
+		return f(ctx, params)
+	}
+}
+
 // bgStatusTool is the bg_status tool.
 func (rt *bgRuntime) bgStatusTool() sdk.ToolFunc {
 	return func(ctx sdk.Context, params map[string]any) (any, error) {
@@ -502,6 +510,7 @@ func (rt *bgRuntime) stopFor(token string) {
 // bgHandler is the handler of /bg.
 func (rt *bgRuntime) bgHandler() sdk.CommandFunc {
 	return func(ctx sdk.Context, args string) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		trimmed := jsTrim(args)
 		switch {
@@ -567,16 +576,19 @@ func inspectArgs(trimmed string) (verb, rest string, ok bool) {
 
 func (rt *bgRuntime) simpleCommands(e *sdk.Extension) {
 	e.Command(bgCommand+":list", "Show tracked background tasks", func(ctx sdk.Context, _ string) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		rt.withLock(func() { rt.notify(rt.formatTaskListText(), "info") })
 		return nil
 	})
 	e.Command(bgCommand+":next", "Move the next bash command to a background task", func(ctx sdk.Context, _ string) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		rt.armForcedBackground(ctx, "command")
 		return nil
 	})
 	e.Command(bgCommand+":clear", "Remove finished background tasks", func(ctx sdk.Context, _ string) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		rt.withLock(func() {
 			rt.notify(fmt.Sprintf("Removed %d finished background task(s).", rt.clearFinishedTasks()), "info")
@@ -584,6 +596,7 @@ func (rt *bgRuntime) simpleCommands(e *sdk.Extension) {
 		return nil
 	})
 	e.Command(bgCommand+":run", "Spawn a background shell task: /bg:run <command>", func(ctx sdk.Context, args string) error {
+		defer rt.enter(ctx)()
 		rt.adopt(ctx)
 		command := jsTrim(args)
 		if command == "" {
@@ -595,6 +608,7 @@ func (rt *bgRuntime) simpleCommands(e *sdk.Extension) {
 	e.RegisterCommand(bgCommand+":stop", sdk.CommandOptions{
 		Description: "Terminate a running background task: /bg:stop <id>", GetArgumentCompletions: rt.stopCompletions,
 		Handler: func(ctx sdk.Context, args string) error {
+			defer rt.enter(ctx)()
 			rt.adopt(ctx)
 			rt.stopFor(jsTrim(args))
 			return nil

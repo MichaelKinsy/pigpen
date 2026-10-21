@@ -140,7 +140,7 @@ func (r *Rig) FireInterval(t testing.TB, ms int) {
 }
 
 // Settle waits until the runtime's queued callbacks and host calls have run.
-func (r *Rig) Settle() { r.rt.loop.barrier(); r.rt.settle() }
+func (r *Rig) Settle() { r.rt.loop.barrier(); r.rt.settle(); r.rt.timerOut.barrier() }
 
 // Paused reports whether the task's output is held back by its log writer.
 func (r *Rig) Paused(id string) bool {

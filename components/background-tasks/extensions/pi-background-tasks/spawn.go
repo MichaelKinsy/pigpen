@@ -155,26 +155,42 @@ func (rt *bgRuntime) spawnTask(o spawnOptions) (*task, error) {
 	// The identity lets a later restore tell this process from a reused pid; it rides the next windowed persist, and every
 	// lifecycle persist and the shutdown flush it. A task cleared or replaced before the read resolves stays forgotten. An
 	// identity the read could not answer stays unset, so restore falls back to pid-only liveness.
+	//
+	// When the original reads: readFile("/proc/<pid>/stat") is a chain of four thread-pool calls (open, fstat, read, close), each
+	// carried on by one turn of Node's event loop, and the loop turns only after the handler's synchronous work and its result
+	// have gone back to Pi. Under Pi the read resolved 2.1 ms to 51 ms after spawn (median 16 ms, 24 spawns on xd670), after the
+	// shell had exec'd its command, so `bash -c "tail -f x"` reads `tail`. The port reads once the handler has returned and
+	// identityReadFloor has passed since the spawn.
 	if pid > 0 {
-		go func() {
-			reading := readProcessIdentity(pid)
-			rt.loop.post(func() {
-				rt.run(func() {
-					if rt.tasks.get(id) != t {
-						return
-					}
-					switch reading.kind {
-					case "identity":
-						ident := reading.identity
-						t.ProcIdent = &ident
-						rememberSnapshot(t)
-						rt.persistSoon.request()
-					case "unknown":
-						logBackgroundDiagnostic("spawn identity unknown", map[string]any{"id": id, "pid": pid, "reason": reading.reason})
-					}
+		spawned := time.Now()
+		read := func() {
+			go func() {
+				reading := readProcessIdentity(pid)
+				rt.loop.post(func() {
+					rt.run(func() {
+						if rt.tasks.get(id) != t {
+							return
+						}
+						switch reading.kind {
+						case "identity":
+							ident := reading.identity
+							t.ProcIdent = &ident
+							rememberSnapshot(t)
+							rt.persistSoon.request()
+						case "unknown":
+							logBackgroundDiagnostic("spawn identity unknown", map[string]any{"id": id, "pid": pid, "reason": reading.reason})
+						}
+					})
 				})
-			})
-		}()
+			}()
+		}
+		rt.whenHandlerReturns(func() {
+			if wait := identityReadFloor - time.Since(spawned); wait > 0 {
+				time.AfterFunc(wait, read)
+				return
+			}
+			read()
+		})
 	}
 
 	if startErr != nil {
