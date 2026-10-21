@@ -24,11 +24,10 @@ Every unported option, mode or URL kind is refused with one message and returns 
 
 | Feature | When | Where |
 |---|---|---|
-| `web_search workflow "summary-review" / "auto-summary"` | parameter or `workflow` in config | `tool_search.go` |
 | `the Defuddle fallback extractor` | readable extraction failed or was short and the RSC payload gave nothing, where the original tries Defuddle before giving up (the refusal follows the original's verdict) | `extract.go`, `defuddle.go` |
 
-A batch of URLs is refused whole when one URL is. Not registered, so not advertised: the commands `/websearch`, `/curator`,
-`/google-account`, the shortcuts and the activity widget. Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
+A batch of URLs is refused whole when one URL is. The commands `/websearch`, `/curator` and `/google-account`, the
+shortcuts and the activity widget are registered (Slice 11). Provider availability follows the original for every provider (OpenAI, xAI and Kimi read the model registry, see slice 4a; Gemini: see "Slice: Gemini").
 
 ## Slice 2: the REST search providers
 
