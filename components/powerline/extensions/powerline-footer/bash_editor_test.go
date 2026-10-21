@@ -315,8 +315,8 @@ func TestBashEditorEmptyCommandIsNotSubmitted(t *testing.T) {
 
 func TestBashEditorBoundaryShortcutsSendTheDefaultEditorsDocumentKeys(t *testing.T) {
 	r := newBashRig(false)
-	r.key(t, "\x1b[1;9A") // super+up
-	r.key(t, "\x1b[1;9B")
+	r.key(t, "\x1b[1;10A") // super+shift+up, the default editorStart
+	r.key(t, "\x1b[1;10B")
 	if len(r.base.input) != 2 || r.base.input[0] != keyDocumentStart || r.base.input[1] != keyDocumentEnd {
 		t.Errorf("input %q", r.base.input)
 	}
