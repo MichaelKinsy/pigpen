@@ -155,7 +155,7 @@ func (k *keysExt) installEditor(ctx sdk.Context) {
 		}
 		if bash != nil {
 			mode := bash.bind(ctx)
-			e.bash = newBashModeEditor(base, bash.editorEnv(ctx, mode, k.ensure(ctx)))
+			e.bash = newBashModeEditor(pb, bash.editorEnv(ctx, mode, k.ensure(ctx)))
 			mode.setEditorHooks(bashEditorHooks{dismissBashModeUi: e.bash.dismissBashModeUi, refreshGhostSuggestion: e.bash.refreshGhostSuggestion})
 		}
 		return e
