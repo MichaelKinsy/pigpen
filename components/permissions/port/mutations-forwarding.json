@@ -657,7 +657,7 @@
   "name": "sv-deny-decider",
   "file": "fwd_server.go",
   "find": "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)",
-  "replace": "CreateDeniedPermissionDecision(check.Reason)"
+  "replace": "CreateDeniedPermissionDecision(check.Reason).Attribute(DecisionSource{})"
  },
  {
   "name": "sv-auto-event",

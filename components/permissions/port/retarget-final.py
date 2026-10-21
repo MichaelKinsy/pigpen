@@ -36,7 +36,7 @@ RETARGET = {
  "ip-collapse-run": ("toolinputpreview.go", "j := i + size\n\t\tfor j < len(s) {", "j := i + size\n\t\tfor j < len(s) && false {"),
  "ip-collapse-js": ("toolinputpreview.go", "if !isJSSpace(r) {\n\t\t\ti += size\n\t\t\tcontinue\n\t\t}", "if !(r == ' ' || r == '\\n' || r == '\\t' || r == '\\r') {\n\t\t\ti += size\n\t\t\tcontinue\n\t\t}"),
  "sv-deny-reason": ("fwd_server.go", "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)", "CreateDeniedPermissionDecision(nil).Attribute(decidedBy)"),
- "sv-deny-decider": ("fwd_server.go", "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)", "CreateDeniedPermissionDecision(check.Reason)"),
+ "sv-deny-decider": ("fwd_server.go", "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)", "CreateDeniedPermissionDecision(check.Reason).Attribute(DecisionSource{})"),
 }
 GONE = "the code no longer exists in the merged tree"
 DROP_FILES = {  # file of the mutant -> reason
