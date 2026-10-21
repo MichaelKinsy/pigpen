@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // isJSSpace reports whether r is trimmed by JavaScript's String.prototype.trim: ECMAScript WhiteSpace and
@@ -18,7 +19,13 @@ func isJSSpace(r rune) bool {
 }
 
 // jsTrim is String.prototype.trim.
-func jsTrim(s string) string { return strings.TrimFunc(s, isJSSpace) }
+func jsTrim(s string) string {
+	// Both ends non-space ASCII: nothing to trim, and no rune decoding or per-rune call to find that out (most inputs).
+	if n := len(s); n > 0 && s[0] > ' ' && s[0] < utf8.RuneSelf && s[n-1] > ' ' && s[n-1] < utf8.RuneSelf {
+		return s
+	}
+	return strings.TrimFunc(s, isJSSpace)
+}
 
 // jsNumber formats a number as JavaScript's `${n}` does (Number::toString): the shortest digits that
 // round-trip, in fixed notation from 1e-6 up to 1e21 and otherwise as an exponent without zero padding

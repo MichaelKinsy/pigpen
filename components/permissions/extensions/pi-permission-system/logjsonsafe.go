@@ -117,6 +117,7 @@ func SafeJSONStringify(value any) (string, bool) {
 // jsonStringifyWith is JSON.stringify(value, replacer) with no indent.
 func jsonStringifyWith(value any, replacer JSONReplacer) (string, bool) {
 	var b bytes.Buffer
+	b.Grow(512) // a structured tool input is a few hundred bytes; growing from 64 copied it five times
 	if !serializeProperty(&b, "", value, replacer) {
 		return "", false
 	}
