@@ -232,6 +232,9 @@ func TestTheSwitchDropsAWorktreeAtTheToolToo(t *testing.T) {
 	r := startRigIn(t, t.TempDir())
 	setWorktreeIsolationEnabled(false)
 	defer setWorktreeIsolationEnabled(true)
+	off := false
+	setSettingsView(settings{WorktreeIsolation: &off})
+	defer resetSettingsView()
 	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolation": "worktree"})
 	eq(t, r.fleet.wait(t, 1)[0].spec.Worktree, false)
 }

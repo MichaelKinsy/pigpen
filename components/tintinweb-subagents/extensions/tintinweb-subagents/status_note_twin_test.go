@@ -36,15 +36,15 @@ func TestErrorStatusTwins(t *testing.T) {
 	})
 }
 
-// The original's throwing case is a worktree that cannot be created; here the spawn that never starts is one the
-// port refuses before any agent exists. Either way the tool call fails instead of returning a diagnostic.
+// The original's throwing case is a worktree that cannot be created; here it is the same (a workspace that is not a git
+// repository): the tool call fails instead of returning a diagnostic.
 func TestStartupErrorTwin(t *testing.T) {
 	tw(t, "agent-startup-error", "rejects instead of returning the diagnostic (run_in_background: ${background})", func(t *testing.T) {
 		for _, background := range []bool{false, true} {
 			r := startObsRig(t, obsWorkspace(t, "", ""))
 			text, failure := r.tool("Agent", obj{"prompt": "do it", "description": "worktree probe", "subagent_type": "general-purpose", "isolation": "worktree", "run_in_background": background})
 			eq(t, text, "")
-			eq(t, strings.Contains(failure, "worktree isolation"), true)
+			eq(t, strings.Contains(failure, worktreeStartupError), true)
 			eq(t, r.fleet.count(), 0)
 		}
 	})
