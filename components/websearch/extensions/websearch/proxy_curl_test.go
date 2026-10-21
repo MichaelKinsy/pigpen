@@ -495,8 +495,6 @@ func TestSocksProxiesGoToCurl(t *testing.T) {
 	}
 }
 
-func strp(s string) *string { return &s }
-
 func TestProxyNormalizationMatchesTheURLClass(t *testing.T) {
 	// utils.ts normalizeProxyUrl returns URL.toString(): an http(s) proxy gains the root path,
 	// a socks proxy does not; curl receives that string.
