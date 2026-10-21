@@ -346,7 +346,6 @@ m("mis-update-unexhaust", "mission_update.go", 'case goal.Status == "budget-exha
 m("mis-update-usage-sum", "mission_update.go", 'total += run.Usage.Tokens', 'total = run.Usage.Tokens')
 m("mis-update-run-key", "mission_update.go", 'item.RunID == run.RunID && sameChildIndex(item.ChildIndex, run.ChildIndex)', 'item.RunID == run.RunID')
 m("mis-update-child-start", "mission_update.go", 'merged.set("startedAt", existing.StartedAt)', 'merged.set("startedAt", parsed.StartedAt)')
-m("mis-update-child-paths", "mission_update.go", 'for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif !seen[p] {', 'for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif true {')
 m("mis-update-receipt-time", "mission_update.go", 'receipt.CreatedAt = receipts[found].CreatedAt', 'receipt.CreatedAt = createdAt')
 m("mis-update-resolved-twice", "mission_update.go", 'if decisions[index].Status == "resolved" {', 'if false {')
 m("mis-update-decision-missing", "mission_update.go", 'if index == -1 {\n\t\t\treturn nil, fmt.Errorf("Decision', 'if false {\n\t\t\treturn nil, fmt.Errorf("Decision')

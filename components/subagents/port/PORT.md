@@ -318,6 +318,7 @@ Every mutation of `mutations.json` was run with `pigeq mutate --unit-only`; each
 | `val-exclusive` | the public boundary refuses both script sources first | check removed from the validate action |
 | `mis-act-trim-resolution` | `updateMission` trims the resolution again | trim removed from the action |
 | `mis-update-auto-decision` | an open decision on an active mission already yields `needs_decision` through `decisionStatus`, so the branch changes nothing observable | mutation removed (the branch mirrors the original's code) |
+| `mis-update-child-paths` | `parseMissionWorkflowChild` de-duplicates artifact paths again, so the merge's own de-duplication is not observable | mutation removed |
 | `dl-capacity` | the saturation flag is set when a table fills, so the length guard could not be reached | guard removed |
 | `ref-run-params` | `output` is registered by the run policy | mutation retargeted at an unregistered parameter |
 | 40 mutations whose definition did not build | unused variable after the mutation | definitions repaired in `gen-mutations.py` |

@@ -1764,12 +1764,6 @@
   "replace": "merged.set(\"startedAt\", parsed.StartedAt)"
  },
  {
-  "name": "mis-update-child-paths",
-  "file": "mission_update.go",
-  "find": "for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif !seen[p] {",
-  "replace": "for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {\n\t\tif true {"
- },
- {
   "name": "mis-update-receipt-time",
   "file": "mission_update.go",
   "find": "receipt.CreatedAt = receipts[found].CreatedAt",
