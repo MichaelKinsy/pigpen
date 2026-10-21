@@ -44,7 +44,7 @@ async function one() {
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 
 function goRun(bin, name) {
-	const r = spawnSync(bin, ["-test.run=NONE", `-test.bench=^${name}$`, `-test.benchtime=${CALLS}x`, "-test.benchmem"], { encoding: "utf8" });
+	const r = spawnSync(bin, ["-test.run=NONE", `-test.bench=^${name}$`, `-test.benchtime=${CALLS}x`, "-test.benchmem"], { encoding: "utf8", cwd: join(here, "..", "extensions", "websearch") });
 	const m = r.stdout.match(/([\d.]+) ns\/op\s+[\d.]+ MB\/s\s+(\d+) B\/op\s+(\d+) allocs\/op/);
 	if (!m) throw new Error(`no benchmark line: ${r.stdout}${r.stderr}`);
 	return { ms: Number(m[1]) / 1e6, bytes: Number(m[2]), allocs: Number(m[3]) };
