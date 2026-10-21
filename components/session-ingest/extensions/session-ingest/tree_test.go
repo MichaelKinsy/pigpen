@@ -322,3 +322,89 @@ func TestTurnMarkdownShowsCompactionAndCustomDetails(t *testing.T) {
 		}
 	}
 }
+
+// The optional leaf parameter reads the branch that ends at an entry id, instead of the active branch.
+
+func texts(slice sliceReport) string {
+	var out []string
+	for _, m := range slice.Messages {
+		out = append(out, strings.Join(m.Text, ""))
+	}
+	return strings.Join(out, "|")
+}
+
+func TestLeafReadsTheAbandonedBranchThatEndsThere(t *testing.T) {
+	path := forkedFixture(t)
+	slice := run(t, map[string]any{"path": path, "mode": "slice", "format": "json", "leaf": "a4"}).(sliceReport)
+	if got := texts(slice); got != "root question|first answer|abandoned question|abandoned answer" {
+		t.Fatalf("slice = %q", got)
+	}
+	if slice.Session.Leaf != "a4" || slice.Session.OffBranchEntries != 2 {
+		t.Fatalf("session = %+v, want leaf a4 and the 2 entries of the active branch left out", slice.Session)
+	}
+	toc := run(t, map[string]any{"path": path, "mode": "toc", "format": "json", "leaf": "a4"}).(tocReport)
+	if len(toc.Events) != 1 || toc.Events[0].ModelID != "abandoned-model" {
+		t.Fatalf("events = %+v, want the model change on that branch", toc.Events)
+	}
+	q := run(t, map[string]any{"path": path, "mode": "query", "query": "abandoned", "format": "json", "leaf": "a4"}).(queryReport)
+	if q.TotalHits != 2 {
+		t.Fatalf("hits = %d, want the two abandoned messages", q.TotalHits)
+	}
+}
+
+func TestLeafInTheMiddleOfABranchCutsItThere(t *testing.T) {
+	slice := run(t, map[string]any{"path": forkedFixture(t), "mode": "slice", "format": "json", "leaf": "a2"}).(sliceReport)
+	if got := texts(slice); got != "root question|first answer" || slice.Session.OffBranchEntries != 5 {
+		t.Fatalf("slice = %q, off branch %d", got, slice.Session.OffBranchEntries)
+	}
+}
+
+func TestLeafMayBeAnyEntryNotOnlyAMessage(t *testing.T) {
+	path := compactedFixture(t)
+	slice := run(t, map[string]any{"path": path, "mode": "slice", "format": "json", "leaf": "c1"}).(sliceReport)
+	if len(slice.Messages) != 4 || slice.Messages[3].Role != "compactionSummary" || slice.Session.OffBranchEntries != 2 {
+		t.Fatalf("slice = %+v off %d", slice.Messages, slice.Session.OffBranchEntries)
+	}
+}
+
+func TestNoLeafOrAnEmptyOneIsTheActiveBranch(t *testing.T) {
+	path := forkedFixture(t)
+	want := texts(run(t, map[string]any{"path": path, "mode": "slice", "format": "json"}).(sliceReport))
+	for _, leaf := range []any{"", nil, 7} {
+		got := run(t, map[string]any{"path": path, "mode": "slice", "format": "json", "leaf": leaf}).(sliceReport)
+		if texts(got) != want || got.Session.Leaf != "" {
+			t.Errorf("leaf %v: %q leaf %q", leaf, texts(got), got.Session.Leaf)
+		}
+	}
+	if md := run(t, map[string]any{"path": path, "mode": "toc"}).(sdk.ToolResult).Content; strings.Contains(md, "leaf:") {
+		t.Errorf("the default branch must not print a leaf line:\n%s", md)
+	}
+}
+
+func TestAnUnknownLeafIsAnErrorThatNamesItInEveryMode(t *testing.T) {
+	path := forkedFixture(t)
+	for _, mode := range []string{"toc", "query", "slice", "turn", "tools", "stats"} {
+		_, err := handleReadSession(sdk.Context{}, map[string]any{"path": path, "mode": mode, "query": "x", "turn": 1, "leaf": "no-such-entry"})
+		if err == nil || !strings.Contains(err.Error(), `"no-such-entry"`) || !strings.Contains(err.Error(), "leaf") {
+			t.Errorf("mode=%s: err = %v", mode, err)
+		}
+	}
+	linear := writeLines(t, `{"type":"session","id":"old"}`, `{"type":"message","message":{"role":"user","content":"one"}}`)
+	if _, err := handleReadSession(sdk.Context{}, map[string]any{"path": linear, "leaf": "x"}); err == nil {
+		t.Error("a session whose entries have no ids has no leaf to select")
+	}
+}
+
+func TestTheChosenLeafIsShownAndKeptByTheNextPageHint(t *testing.T) {
+	path := forkedFixture(t)
+	md := run(t, map[string]any{"path": path, "mode": "slice", "limit": 1, "leaf": "a4"}).(sdk.ToolResult).Content
+	for _, want := range []string{"- leaf: a4", `"leaf":"a4"`} {
+		if !strings.Contains(md, want) {
+			t.Errorf("missing %q:\n%s", want, md)
+		}
+	}
+	q := run(t, map[string]any{"path": path, "mode": "query", "query": "abandoned", "format": "json", "leaf": "a4"}).(queryReport)
+	if !strings.Contains(q.Hits[0].RetrievalHint, "leaf=a4") {
+		t.Errorf("a retrieval hint must name the leaf: %q", q.Hits[0].RetrievalHint)
+	}
+}

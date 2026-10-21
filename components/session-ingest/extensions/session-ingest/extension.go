@@ -181,6 +181,8 @@ type sessionMetadata struct {
 	Name      string `json:"name,omitempty"`
 	// OffBranchEntries counts the entries that are not on the active branch.
 	OffBranchEntries int `json:"offBranchEntries,omitempty"`
+	// Leaf is the entry id the branch ends at when the call chose one; empty is the active branch.
+	Leaf string `json:"leaf,omitempty"`
 }
 
 type sessionEvent struct {
