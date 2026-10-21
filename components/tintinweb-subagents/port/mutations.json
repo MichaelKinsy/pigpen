@@ -164,8 +164,8 @@
  {
   "name": "queue-lifo",
   "file": "manager.go",
-  "find": "next = m.queue[0]\n\t\tm.queue = m.queue[1:]",
-  "replace": "next = m.queue[len(m.queue)-1]\n\t\tm.queue = m.queue[:len(m.queue)-1]"
+  "find": "next := m.queue[0]\n\t\tm.queue = m.queue[1:]",
+  "replace": "next := m.queue[len(m.queue)-1]\n\t\tm.queue = m.queue[:len(m.queue)-1]"
  },
  {
   "name": "foreground-queued",
@@ -651,7 +651,7 @@
   "name": "skills-false-accepted",
   "file": "refuse.go",
   "find": "return v == nil || (ok && b)",
-  "replace": "return true"
+  "replace": "return v == nil || (ok && b) || ok"
  },
  {
   "name": "extension-list-accepted",
@@ -693,7 +693,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -705,13 +705,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); feature != \"\" && false {"
  },
  {
   "name": "rpc-name-dropped",
@@ -908,20 +908,20 @@
  {
   "name": "depth-cap-off-by-one",
   "file": "runner.go",
-  "find": "max(s.Depth, 1) < s.MaxDepth }",
-  "replace": "max(s.Depth, 1) <= s.MaxDepth }"
+  "find": "max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)\n}",
+  "replace": "max(s.Depth, 1) <= min(s.MaxDepth, subagentDepthCeiling)\n}"
  },
  {
   "name": "allowance-not-needed",
   "file": "runner.go",
-  "find": "return s.Allowed != nil && max(s.Depth, 1) < s.MaxDepth",
-  "replace": "return max(s.Depth, 1) < s.MaxDepth"
+  "find": "return s.Allowed != nil && max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)",
+  "replace": "return max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)"
  },
  {
   "name": "depth-not-handed-down",
   "file": "runner.go",
-  "find": "fmt.Sprintf(\"%s=%d\", depthEnv, max(spec.Depth, 1))",
-  "replace": "fmt.Sprintf(\"%s=%d\", depthEnv, 1)"
+  "find": "depthEnv+\"=\"+strconv.Itoa(max(spec.Depth, 1))",
+  "replace": "depthEnv+\"=1\""
  },
  {
   "name": "owner-id-not-handed-down",
@@ -933,13 +933,13 @@
   "name": "allowance-not-handed-down",
   "file": "runner.go",
   "find": "allowedEnv+\"=\"+string(allowed),",
-  "replace": "allowedEnv+\"=\\\"all\\\"\","
+  "replace": "allowedEnv+\"=\"+strings.ToUpper(string(allowed)),"
  },
  {
   "name": "stale-place-handed-down",
   "file": "runner.go",
-  "find": "if strings.HasPrefix(kv, name+\"=\") {\n\t\t\t\treturn true",
-  "replace": "if strings.HasPrefix(kv, name+\"=\") {\n\t\t\t\treturn false"
+  "find": "func(kv string) bool { return strings.HasPrefix(kv, envPrefix) })",
+  "replace": "func(kv string) bool { return false })"
  },
  {
   "name": "nested-spend-dropped",
@@ -999,7 +999,7 @@
   "name": "allowance-names-case-sensitive",
   "file": "nested.go",
   "find": "if k, found := reg.resolveKey(name); found {",
-  "replace": "if false {"
+  "replace": "if k, found := reg.resolveKey(name); found && false {"
  },
  {
   "name": "unknown-type-falls-back",
@@ -1132,5 +1132,53 @@
   "file": "nested.go",
   "find": "if v, _ := p[\"inherit_context\"].(bool); v {\n\t\treturn \"inheriting",
   "replace": "if v, _ := p[\"inherit_context\"].(bool); !v {\n\t\treturn \"inheriting"
+ },
+ {
+  "name": "ceiling-ignored-by-the-runner",
+  "file": "runner.go",
+  "find": "max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)\n}",
+  "replace": "max(s.Depth, 1) < s.MaxDepth\n}"
+ },
+ {
+  "name": "ceiling-ignored-by-the-child",
+  "file": "nested.go",
+  "find": "maxDepth = min(maxDepth, subagentDepthCeiling)",
+  "replace": "_ = maxDepth"
+ },
+ {
+  "name": "agent-panic-not-recovered",
+  "file": "manager.go",
+  "find": "if v := recover(); v != nil {\n\t\t\tm.crash(r, v)",
+  "replace": "if v := any(nil); v != nil {\n\t\t\tm.crash(r, v)"
+ },
+ {
+  "name": "agent-panic-keeps-slot",
+  "file": "manager.go",
+  "find": "next := m.releaseSlotLocked(r)\n\tc := r.child",
+  "replace": "var next *agentRecord\n\tc := r.child"
+ },
+ {
+  "name": "agent-panic-not-an-error",
+  "file": "manager.go",
+  "find": "r.Status, r.Error = statusError, fmt.Sprintf(\"internal error: %v\", v)",
+  "replace": "r.Status = statusCompleted"
+ },
+ {
+  "name": "agent-panic-leaves-waiters",
+  "file": "manager.go",
+  "find": "select {\n\tcase <-r.done:\n\tdefault:\n\t\tclose(r.done)\n\t}\n}",
+  "replace": "}"
+ },
+ {
+  "name": "message-panic-not-recovered",
+  "file": "runner.go",
+  "find": "func (c *rpcChild) handleSafe(m map[string]any) {\n\tdefer func() { _ = recover() }()\n\tc.handle(m)",
+  "replace": "func (c *rpcChild) handleSafe(m map[string]any) {\n\tc.handle(m)"
+ },
+ {
+  "name": "start-announced-before-failure-recorded",
+  "file": "manager.go",
+  "find": "if err != nil {\n\t\t// A waiter released by `started` must find the failure",
+  "replace": "if false {\n\t\t// A waiter released by `started` must find the failure"
  }
 ]

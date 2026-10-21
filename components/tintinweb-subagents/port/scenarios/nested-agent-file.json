@@ -1,0 +1,43 @@
+{
+  "name": "nested-agent-file",
+  "description": "An agent file with allowed_subagents and a maxSubagentDepth setting are accepted: the agent is listed, nothing is refused.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"maxSubagentDepth\": 3}' > .pi/subagents.json"
+    ],
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi/agents && printf '%s' '---\ndescription: Delegates to the worker\ntools: read\nallowed_subagents: worker\n---\nYou delegate.\n' > .pi/agents/orchestrator.md"
+    ],
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi/agents && printf '%s' '---\ndescription: Does the work\ntools: read\n---\nYou work.\n' > .pi/agents/worker.md"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

@@ -21,6 +21,10 @@ func TestMain(m *testing.M) {
 		fakePig(mode)
 		return
 	}
+	if os.Getenv("TW_PRINT_DEPTH") != "" { // a fresh process: the cap nothing has set yet (documented-defaults twin)
+		os.Stdout.WriteString(strconv.Itoa(getMaxSubagentDepth()))
+		return
+	}
 	os.Exit(m.Run())
 }
 

@@ -3,7 +3,6 @@ package tintinweb_subagents
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -102,6 +101,8 @@ func nestedConfigFromEnv() *nestedConfig {
 	if cwd == "" {
 		cwd, _ = os.Getwd()
 	}
+	// The hard ceiling holds whatever the environment says: no chain of processes is longer than it.
+	maxDepth = min(maxDepth, subagentDepthCeiling)
 	return &nestedConfig{AgentID: os.Getenv(agentIDEnv), Depth: depth, MaxDepth: maxDepth, Allowed: allowed, ConfigCwd: cwd, UsageFile: os.Getenv(usageEnv)}
 }
 
@@ -467,5 +468,3 @@ func removeUsage(path string) {
 		_ = os.Remove(path + ".tmp")
 	}
 }
-
-var _ = errors.New

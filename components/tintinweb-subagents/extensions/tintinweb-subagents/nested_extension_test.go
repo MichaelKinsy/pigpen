@@ -33,7 +33,13 @@ func TestChildArgsForNestedDelegation(t *testing.T) {
 	eq(t, childArgs(childSpec{Allowed: "all", Depth: 0, MaxDepth: 0}), base)
 }
 
+// subagentEnv is every variable of the namespace a child is given.
+var subagentEnv = []string{depthEnv, maxDepthEnv, allowedEnv, agentIDEnv, configCwdEnv, usageEnv}
+
 func TestChildEnvironment(t *testing.T) {
+	for _, name := range subagentEnv {
+		eq(t, strings.HasPrefix(name, envPrefix), true)
+	}
 	for _, name := range subagentEnv {
 		t.Setenv(name, "stale") // a parent that is itself a child must not hand its own place down
 	}
@@ -461,9 +467,19 @@ func ptrInt(n int) *int { return &n }
 
 // Every model-facing string of the nested tools is a string literal of the original's source.
 func TestNestedToolTextIsTheOriginals(t *testing.T) {
-	src, err := os.ReadFile(filepath.Join("..", "..", "port", "oracle", "src", "nested-tools.ts"))
+	// testdata/nested-tools-literals.jsonl: every double-quoted string literal of src/nested-tools.ts, one JSON string per
+	// line (the module is tested without the original's tree beside it).
+	raw, err := os.ReadFile(filepath.Join("testdata", "nested-tools-literals.jsonl"))
 	if err != nil {
 		t.Fatal(err)
+	}
+	literals := map[string]bool{}
+	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
+		var lit string
+		if err := json.Unmarshal([]byte(line), &lit); err != nil {
+			t.Fatal(err)
+		}
+		literals[lit] = true
 	}
 	r, cwd := scoutRig(t)
 	defs := r.app.nestedToolDefs(r.app.nested)
@@ -490,7 +506,7 @@ func TestNestedToolTextIsTheOriginals(t *testing.T) {
 	}
 	eq(t, len(defs), 3)
 	for _, text := range texts {
-		if !strings.Contains(string(src), `"`+text+`"`) && !strings.Contains(string(src), `"`+text+` "`) {
+		if !literals[text] && !literals[text+" "] {
 			t.Errorf("not a string of nested-tools.ts: %q", text)
 		}
 	}
@@ -505,4 +521,15 @@ func TestTheAllowanceNamesAreMatchedCaseInsensitively(t *testing.T) {
 	eq(t, recv(t, out).must(t).IsError, false)
 	denied := nestedExec(r, "Agent", obj{"subagent_type": "reviewer", "description": "d", "prompt": "p"}, nil).must(t)
 	eq(t, denied.Text, `Nested agent type "reviewer" is not allowed for this parent. Allowed: scout.`)
+}
+
+// The name an RPC caller gives an agent reaches the record, and so the way it is addressed. upstream: cross-extension-rpc.ts spawn options.
+func TestSpawnRPCNameNamesTheAgent(t *testing.T) {
+	r := startRig(t)
+	reply := r.request("subagents:rpc:spawn", obj{"type": "Plan", "prompt": "p", "options": obj{"description": "d", "name": "auth-audit"}})
+	eq(t, reply["success"], true)
+	id, _ := reply["data"].(map[string]any)["id"].(string)
+	rec := r.app.mgr.get(id)
+	eq(t, rec.Name, "auth-audit")
+	eq(t, r.app.mgr.resolve("auth-audit") == rec, true)
 }

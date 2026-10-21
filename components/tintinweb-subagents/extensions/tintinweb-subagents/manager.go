@@ -53,6 +53,8 @@ type agentRecord struct {
 	cancel  context.CancelFunc
 	stopped bool // stopped by the user or the parent (not a failure)
 	started chan struct{}
+	// slotReleased: the record's pool slot (if it held one) has been given back.
+	slotReleased bool
 }
 
 func newAgentID() string {
@@ -212,7 +214,7 @@ func (m *manager) spawnOwned(typ, description, name string, spec childSpec, back
 	}
 	r.Status = statusRunning
 	m.mu.Unlock()
-	go m.run(r)
+	go m.safeRun(r)
 	return r
 }
 
@@ -226,6 +228,14 @@ func (m *manager) run(r *agentRecord) {
 	spec := r.spec
 	spec.AgentID = r.ID
 	c, err := m.start(ctx, spec)
+	if err != nil {
+		// A waiter released by `started` must find the failure: a child that did not start is not "running".
+		m.mu.Lock()
+		if !r.stopped {
+			r.Status, r.Error = statusError, err.Error()
+		}
+		m.mu.Unlock()
+	}
 	close(r.started)
 	var res *childResult
 	if err == nil {
@@ -269,18 +279,13 @@ func (m *manager) run(r *agentRecord) {
 	if res != nil {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
 	}
-	if occupiesPoolSlot(r) {
-		m.running--
-	}
-	var next *agentRecord
-	if len(m.queue) > 0 && m.running < m.maxConcurrent {
-		next = m.queue[0]
-		m.queue = m.queue[1:]
-		m.running++
-		next.Status = statusRunning
-	}
+	next := m.releaseSlotLocked(r)
 	m.mu.Unlock()
 	cancel()
+	// The next queued agent starts before this one's bookkeeping runs: nothing below may keep it waiting.
+	if next != nil {
+		go m.safeRun(next)
+	}
 	if m.account != nil && !isTopLevelAgent(r) {
 		m.account(r)
 	}
@@ -291,8 +296,69 @@ func (m *manager) run(r *agentRecord) {
 	if m.onSettle != nil {
 		m.onSettle(r)
 	}
+}
+
+// releaseSlotLocked gives back the pool slot a settled record held and takes the next queued record (marked running)
+// off the queue; the caller holds m.mu and starts the returned record. Safe to call twice for one record.
+func (m *manager) releaseSlotLocked(r *agentRecord) *agentRecord {
+	if r.slotReleased {
+		return nil
+	}
+	r.slotReleased = true
+	if occupiesPoolSlot(r) {
+		m.running--
+	}
+	if len(m.queue) > 0 && m.running < m.maxConcurrent {
+		next := m.queue[0]
+		m.queue = m.queue[1:]
+		m.running++
+		next.Status = statusRunning
+		return next
+	}
+	return nil
+}
+
+// safeRun runs an agent in its own goroutine: a panic in it must never take the extension process down, nor leave
+// its owner waiting on an agent that never settles.
+func (m *manager) safeRun(r *agentRecord) {
+	defer func() {
+		if v := recover(); v != nil {
+			m.crash(r, v)
+		}
+	}()
+	m.run(r)
+}
+
+// crash settles a record whose run panicked: an error, its slot returned, its child stopped, its waiters released.
+func (m *manager) crash(r *agentRecord, v any) {
+	m.mu.Lock()
+	if r.CompletedAt.IsZero() {
+		r.CompletedAt = time.Now()
+	}
+	if r.Status == statusRunning || r.Status == statusQueued {
+		r.Status, r.Error = statusError, fmt.Sprintf("internal error: %v", v)
+	}
+	next := m.releaseSlotLocked(r)
+	c := r.child
+	m.mu.Unlock()
 	if next != nil {
-		go m.run(next)
+		go m.safeRun(next)
+	}
+	if c != nil {
+		go func() {
+			defer func() { _ = recover() }()
+			c.abort()
+		}()
+	}
+	select {
+	case <-r.started:
+	default:
+		close(r.started)
+	}
+	select {
+	case <-r.done:
+	default:
+		close(r.done)
 	}
 }
 

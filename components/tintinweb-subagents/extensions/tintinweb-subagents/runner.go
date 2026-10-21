@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -44,7 +45,9 @@ type childSpec struct {
 // nestedActive says whether the child is given the nested tools: its file opted in and it is below the depth cap. A
 // child at the cap can never spawn, so it gets nothing rather than three tools whose every call is an error.
 // upstream: agent-runner.ts:847-865.
-func (s childSpec) nestedActive() bool { return s.Allowed != nil && max(s.Depth, 1) < s.MaxDepth }
+func (s childSpec) nestedActive() bool {
+	return s.Allowed != nil && max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)
+}
 
 // childResult is what a finished child reports.
 type childResult struct {
@@ -178,23 +181,17 @@ const (
 	usageEnv     = "TINTINWEB_SUBAGENT_USAGE_FILE" // where the child writes the tokens its own children spent
 )
 
-var subagentEnv = []string{depthEnv, maxDepthEnv, allowedEnv, agentIDEnv, configCwdEnv, usageEnv}
+// envPrefix is the namespace of the variables above: every one of them starts with it, and nothing else does.
+const envPrefix = "TINTINWEB_SUBAGENT_"
 
 // childEnv is the environment of a child: the parent's, with this child's place in the tree. A variable the parent
 // itself was started with (it may be a nested child) never reaches a grandchild.
 func childEnv(spec childSpec, usageFile string) []string {
-	env := slices.DeleteFunc(os.Environ(), func(kv string) bool {
-		for _, name := range subagentEnv {
-			if strings.HasPrefix(kv, name+"=") {
-				return true
-			}
-		}
-		return false
-	})
-	env = append(env, fmt.Sprintf("%s=%d", depthEnv, max(spec.Depth, 1)))
+	env := slices.DeleteFunc(os.Environ(), func(kv string) bool { return strings.HasPrefix(kv, envPrefix) })
+	env = append(env, depthEnv+"="+strconv.Itoa(max(spec.Depth, 1)))
 	if spec.nestedActive() {
 		allowed, _ := json.Marshal(spec.Allowed)
-		env = append(env, fmt.Sprintf("%s=%d", maxDepthEnv, spec.MaxDepth), allowedEnv+"="+string(allowed), agentIDEnv+"="+spec.AgentID,
+		env = append(env, maxDepthEnv+"="+strconv.Itoa(spec.MaxDepth), allowedEnv+"="+string(allowed), agentIDEnv+"="+spec.AgentID,
 			configCwdEnv+"="+spec.ConfigCwd, usageEnv+"="+usageFile)
 	}
 	return env
@@ -267,7 +264,10 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		for {
 			select {
 			case cmd := <-c.limits:
-				_, _ = c.call(cmd)
+				func() {
+					defer func() { _ = recover() }() // a panic must not end the only sender of the limit commands
+					_, _ = c.call(cmd)
+				}()
 			case <-c.exited:
 				return
 			}
@@ -281,7 +281,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 			if json.Unmarshal(sc.Bytes(), &m) != nil {
 				continue
 			}
-			c.handle(m)
+			c.handleSafe(m)
 		}
 		err := cmd.Wait()
 		close(c.exited)
@@ -308,6 +308,13 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		return nil, err
 	}
 	return c, nil
+}
+
+// handleSafe is handle for the reader goroutine: a panic on one message drops that message, never the goroutine that
+// reads the child's output (the agent would never settle).
+func (c *rpcChild) handleSafe(m map[string]any) {
+	defer func() { _ = recover() }()
+	c.handle(m)
 }
 
 func (c *rpcChild) handle(m map[string]any) {

@@ -5,7 +5,7 @@
 | Original | `@tintinweb/pi-subagents` 0.19.0 by tintinweb, https://github.com/tintinweb/pi-subagents, commit `4f572eaa04c09d3dbc16e4a5f13a16b295e84e14`, MIT |
 | Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; **1907 deferred by name** in `port/slices.json`, each file with its reason |
+| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **173 exact twins** (`agent-types` 46, `custom-agents` 76, and 51 about nested delegation across `nested-tools`, `nested-delegation-e2e`, `subagents-nested-print-mode-e2e`, `agent-manager`, `agent-runner`, `cross-extension-rpc`, `documented-defaults`, `foreground-concurrency`, `manager-registry-guard`, `settings` and `status-note-wiring`); **13 named skips** among the nested cases, each with its reason in the test (scopeModels, `output_transcript`, `persist_session` and `resume`, usage reporting, `disallowed_tools`, compaction events, tombstone reclaim: each follows the gap that ports it); **the rest of the 2029 deferred by name** in `port/slices.json`, each file with its reason |
 | Kind | 1: an extension, no CLI built-in, no provider |
 | Not this | `nicobailon/pi-subagents`, ported as `components/subagents`. A different project |
 
@@ -43,7 +43,7 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
-| M12 | `nested-tools.ts`, `agent-runner.ts:843-866`, `agent-manager.ts` (ownership, depth, `abortOwnedChildren`), `cross-extension-rpc.ts` stop ownership, `allowed_subagents`, `maxSubagentDepth` | `nested.go`, `manager.go`, `runner.go`, `bus.go`, `settings.go` | 24 + 2 + 4 + 9 twins (`nested_tools_twin_test.go`, `nested_process_test.go`, `nested_manager_twin_test.go`), `nested_extension_test.go`, a fake pig two and three levels deep |
+| M12 | `nested-tools.ts`, `agent-runner.ts:843-866`, `agent-manager.ts` (ownership, depth, `abortOwnedChildren`), `cross-extension-rpc.ts` stop ownership, `allowed_subagents`, `maxSubagentDepth` | `nested.go`, `manager.go`, `runner.go`, `bus.go`, `settings.go` | 51 twins and 13 named skips (`nested_tools_twin_test.go`, `nested_process_test.go`, `nested_manager_twin_test.go`, `nested_other_twin_test.go`), `nested_extension_test.go`, `nested_guard_test.go`, a fake pig two and three levels deep; scenario `nested-agent-file` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -63,6 +63,28 @@ components; this port registers none.
   fixes (finding 10): **101 mutations, all killed by the unit tests** (`--unit-only`); the first run after the fixes left
   three (a setting that never reached the child, a process-group signal the test waited long enough to miss, and a test
   whose failure text the runner read as a build failure), each closed by a test.
+- **Nested delegation (G7), imladris, container tern-ci:v2, `taskset` 96-151:** `go vet` and `go test -race -count=1 ./...`
+  pass; `go vet` passes for `GOOS=windows`, `darwin` and `linux` (each run printed `go env GOOS` for the requested
+  value, kept in the lane's log); the nested tests also pass `-race -count=10`. A `-race -count=6` run found one flake (the
+  nested Agent tool answered "started in background" for a child that could not start, because the manager announced
+  `started` before it recorded the failure); fixed, with a test that holds the manager's lock so the order is the test's,
+  not the scheduler's. `pigeq check`: `port-gaps`, `exec-coverage` and the four scenarios pass, including the new
+  `nested-agent-file` (an agent file with `allowed_subagents` and `maxSubagentDepth: 3` in `subagents.json`, equal to Pi's
+  trace; recorded under Pi 1.3.0.1402973a). `pigeq mutate --unit-only`: 197 mutations, all killed (the first run left 8:
+  four that did not build, three that survived for want of a test, and one `depth-default` that the tests' own reset
+  hid; each got a test or a valid rewrite; the last of them, `start-announced-before-failure-recorded`, was rewritten after the full run and killed in a run of its own). `npm run check` and `npm run generate` (in a full-`.git` clone): check exit
+  0, generate changes nothing. `pigeq twins check`: no nested title missing or unknown; the one `UNKNOWN` it prints
+  (`accepts %s as a spelling of off`, `custom_agents_twin4_test.go`) and the 19 `MISSING` worktree cases are not nested.
+- **Performance of the nested additions** (`nested_perf_test.go`, 5 runs, imladris host, medians): the environment of a
+  child was 959 ns, 768 B, 2 allocs (the parent's environment plus the depth variable) and is 1.1 µs, 800 B, 3 allocs for a
+  child that may not delegate (+15%, 0.15 µs, from dropping the stale `TINTINWEB_SUBAGENT_*` of a parent that is itself a
+  child) and 1.9 µs, 1.07 kB, 10 allocs for one that may (the JSON of the allowance and five variables). A first version
+  of that filter cost 3.6 µs; the shipped one is one prefix test per variable. The command line is 0.85 µs, 6 allocs.
+  These are per-agent-start costs next to the start of a `pig` process (tens of milliseconds): under 0.01% of it, so the
+  10% rule on per-call cost is reported to the lead rather than chased further. In a nested child, once at start:
+  reading its place from the environment 7.2 µs; registering the three nested tools, four hooks and one read of the
+  settings and agent files 73 µs, 23 kB, 190 allocs (a child with no allowance: 2.6 µs, registers nothing). Nothing
+  runs on the TUI render path. The nested Agent tool re-reads the agent files per call, as the original does.
 - `pig package validate components/tintinweb-subagents` and `pig install <extension dir> --validate-only --json`: valid.
 - Live check of the child's protocol against `pig-0.4.1 --mode rpc`: `get_session_stats` returns `data.tokens.total` and
   `data.toolCalls`, `get_last_assistant_text` returns `data.text` (or `{}`), a `prompt` without a usable model
@@ -73,7 +95,7 @@ components; this port registers none.
 1. **A child process, not an in-process session.** Each agent is `pig --mode rpc --no-session`; an agent costs a process
    start. The pig to run is found as described in the README. The child inherits the parent's environment (and so its
    credentials and settings) and, unless the call or file sets one, the parent's model and thinking level. A child
-   registers nothing (`TINTINWEB_SUBAGENT_DEPTH`): no nesting. `Explore`'s `claude-haiku-4-5` default is not forced on the
+   registers no top-level tools (`TINTINWEB_SUBAGENT_DEPTH`) and nests only as D6 says. `Explore`'s `claude-haiku-4-5` default is not forced on the
    child (the original falls back to the parent's model when it is not available); it is shown in the type list.
 2. **F2: a recorded child run cannot be compared whole.** A foreground `Plan` agent was recorded under Pi and run under
    PiG. The child's request carries the same user message and the same inserted system text (the agent header, the
@@ -155,13 +177,21 @@ follows from that:
   (`abortOwnedChildren`); a stop of the agent or the end of the session SIGTERMs the agent's process group, pig runs the
   extensions' `session_shutdown` on SIGTERM and at the end of its input, and the nested extension aborts everything it
   started: each of those is a process group the runner signals in turn, so a stop reaches any depth. A child that is
-  SIGKILLed outright cannot do this; the stop path always sends SIGTERM first, five seconds before SIGKILL.
+  SIGKILLed outright cannot do this itself, but its own children read their input from a pipe it held, so their input
+  ends and their pig shuts down the same way; the stop path always sends SIGTERM first, five seconds before SIGKILL.
 - **Spend.** The original's `onAssistantUsage` adds a nested child's usage to every ancestor. Here a settled child's
   tokens go to its owner's usage file; the owner's runner adds the file's total to the owner's own count when it
   settles, so each level's count includes everything below and the top-level record counts the tree.
 - **The cap.** `maxSubagentDepth` is read from `subagents.json` (0 to 16, default 2) and floored; a branch's cap is passed
   down unchanged. The `Nested subagent call blocked (depth=N, max=M)` text exists for a tool that is reached at the cap; the
-  runner never gives an agent at the cap the tools.
+  runner never gives an agent at the cap the tools. **No chain of processes is longer than the ceiling (16)** whatever the
+  environment or a setting says (`nestedActive` and `nestedConfigFromEnv` clamp it; `TestNoChainOfProcessesIsLongerThanTheCeiling`).
+  As in the original, how many children one agent starts is the model's choice (nested children take no pool slot);
+  only the depth is capped.
+- **Panics.** Every goroutine this adds recovers: an agent's run (`safeRun`: a panic settles the record as an error,
+  returns its pool slot, starts the next queued agent, stops its child and releases its waiters, so an owner waiting on it
+  never hangs), the reader of a child's output (one message that panics is dropped) and the sender of the turn-limit
+  commands. The SDK recovers the tool and hook handlers themselves.
 - **Not carried over, refused.** `resume` and `inherit_context` of a nested call, and `isolation`, are refused with the
   port's one message (they follow their own gaps). The `scopeModels` check and output transcripts of nested spawns follow
   those gaps (scopeModels, `output_transcript` and the setting are refused today).
