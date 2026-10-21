@@ -978,10 +978,10 @@ function later(pi: ExtensionAPI, ctx: any) {
 // appears, two different ids stay two tokens, and text that only looks like an id is kept.
 func TestNormalizerReplacesWorkflowTaskIDsByFirstAppearance(t *testing.T) {
 	run := func(ids ...string) string {
-		n := NewNormalizer("/w", "/t", "/h")
+		n := NewNormalizer("/zw", "/zt", "/zh")
 		return string(n.Data(map[string]any{
 			"notice":  "<task-id>" + ids[0] + "</task-id>",
-			"result":  "Task ID: " + ids[0] + "\nScript: /w/tasks/" + ids[0] + ".workflow.js",
+			"result":  "Task ID: " + ids[0] + "\nScript: /zw/tasks/" + ids[0] + ".workflow.js",
 			"details": map[string]any{"taskId": ids[0]},
 			"second":  ids[1],
 		}))
@@ -1000,7 +1000,7 @@ func TestNormalizerReplacesWorkflowTaskIDsByFirstAppearance(t *testing.T) {
 		t.Errorf("distinct ids collapsed: %s", same)
 	}
 	// Not an id: wrong length, wrong alphabet, no word boundary.
-	n := NewNormalizer("/w", "/t", "/h")
+	n := NewNormalizer("/zw", "/zt", "/zh")
 	for _, keep := range []string{"wf_0123456789a", "wf_0123456789abc", "wf_0123456789AB", "wf_0123456789gh", "xwf_0123456789ab", "wf-0123456789ab"} {
 		if got := n.str(keep); got != keep {
 			t.Errorf("%q was rewritten to %q", keep, got)
@@ -1010,7 +1010,7 @@ func TestNormalizerReplacesWorkflowTaskIDsByFirstAppearance(t *testing.T) {
 
 // N9: only digits inside the exact <duration_ms> tag are replaced.
 func TestNormalizerReplacesDurationMsOnlyInsideItsTag(t *testing.T) {
-	n := NewNormalizer("/w", "/t", "/h")
+	n := NewNormalizer("/zw", "/zt", "/zh")
 	if a, b := n.str("<duration_ms>12</duration_ms>"), n.str("<duration_ms>98765</duration_ms>"); a != b || a != "<duration_ms>0</duration_ms>" {
 		t.Errorf("duration not normalized: %q %q", a, b)
 	}

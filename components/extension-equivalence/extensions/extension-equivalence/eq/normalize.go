@@ -55,9 +55,10 @@ const NormalizerVersion = "v3"
 //	    counting from 1 in order of first appearance within the run. Two different ids stay two
 //	    different tokens, so a port that reuses one id where the original used two still differs;
 //	    the same id in the notification <task-id>, the `Task ID:` line, details.taskId and the
-//	    script path .../tasks/wf_<id>.workflow.js is one token. The count is per run (per lane),
-//	    and the order is the order events are recorded, so ids that two goroutines reveal in
-//	    either order can swap tokens: scenarios should wait between steps that show new ids.
+//	    script path .../tasks/wf_<id>.workflow.js is one token. The count is per run (per lane).
+//	    Within an event ids are numbered in sorted key order, across events in the order they are
+//	    recorded, so ids that two goroutines reveal in either order can swap tokens: scenarios
+//	    should wait between steps that show new ids.
 //	N9  `<duration_ms>\d+</duration_ms>` becomes `<duration_ms>0</duration_ms>`: the elapsed
 //	    time the original reports in a workflow notification. Only digits inside that exact tag
 //	    are replaced; a non-numeric value, an empty tag or any other text keeps its difference.
@@ -198,9 +199,10 @@ func (n *Normalizer) Value(v any) any {
 		}
 		return out
 	case map[string]any:
+		// Sorted keys, the order the canonical encoding writes, so N8 numbers ids the same way every run.
 		out := make(map[string]any, len(x))
-		for k, e := range x {
-			out[n.str(k)] = n.Value(e)
+		for _, k := range slices.Sorted(maps.Keys(x)) {
+			out[n.str(k)] = n.Value(x[k])
 		}
 		return out
 	}
