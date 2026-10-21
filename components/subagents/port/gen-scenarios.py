@@ -73,7 +73,7 @@ scenario("manage-disable-enable", "Disable a builtin agent, see it hidden from t
           call("subagent", action="enable", agent="scout", agentScope="project"), call("subagent", action="list", agentScope="both")], {".pi/keep": ""})
 scenario("manage-reset", "Change a builtin agent's model through an override, then reset it.",
          [ENABLE, call("subagent", action="update", agent="scout", config={"model": "claude-x"}, agentScope="project"), call("subagent", action="get", agent="scout"),
-          call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""})
+          call("subagent", action="reset", agent="scout", agentScope="project"), call("subagent", action="get", agent="scout")], {".pi/keep": ""}, to="host-bound/scenarios")
 scenario("advertise-catalog", "An agent that opts in with advertise: true is listed in the system prompt once the subagent tool is active.",
          [ENABLE, call("subagent", action="list", capabilities=True)], {".pi/agents/specialist.md": ADVERTISED, ".pi/agents/helper.md": HELPER})
 # the validate action: a script checked without a child (the original runs these without a child model)
@@ -152,3 +152,18 @@ scenario("run-gate-validation", "Invalid gates of a single run: an empty gate, a
          [ENABLE, fg(gate={}), fg(gate="npm test", acceptance={"level": "checked"}), fg(gate=5)], PROJECT)
 scenario("run-limit-validation", "Invalid run limits and output options: timeouts, an output mode that needs a file, an agent contract version.",
          [ENABLE, fg(timeoutMs=0), fg(timeoutMs=-1), fg(maxRuntimeMs="soon"), fg(outputMode="file-only"), fg(agentContract={"version": 2})], PROJECT)
+# A foreground run whose launch fails before a child starts (the working directory is not usable) is a failed tool call: the original
+# rejects at the tool boundary (finalizeToolResult), so Pi records no details for it. No child model is needed.
+PLAIN = "---\nname: plain\ndescription: No model of its own\n---\n\nYou help.\n"
+
+
+def plain(**args):
+    c = call("subagent", agent="plain", task="do the work", **args)
+    c["arguments"]["async"] = False
+    return c
+
+
+scenario("run-launch-failure", "A foreground run in a missing directory and in a file, the same with a mission, and a background run in a missing directory: failed tool calls.",
+         [ENABLE, plain(cwd="nope"), plain(cwd="flow.js"), plain(cwd="nope", mission={"title": "Goal"}),
+          {"name": "subagent", "arguments": {"agent": "plain", "task": "do the work", "cwd": "nope", "async": True}}],
+         {".pi/agents/plain.md": PLAIN, "flow.js": "return 1;"})

@@ -313,10 +313,10 @@ func TestRunCwd(t *testing.T) {
 		{filepath.Join(base, "nope"), "", "Subagent launch aborted: cwd does not exist: " + filepath.Join(base, "nope")},
 		{"file", "", "Subagent launch aborted: cwd is not a directory: " + filepath.Join(base, "file") + "\n(resolved from \"file\")"},
 	} {
-		got, err := resolveRunCwd(base, c.requested)
+		got, note := runCwd(base, c.requested)
 		msg := ""
-		if err != nil {
-			msg = err.Error()
+		if err := preflightRunCwd(got, note); err != nil {
+			msg, got = err.Error(), ""
 		}
 		eq(t, []string{got, msg}, []string{c.want, c.err}, "cwd "+c.requested)
 	}

@@ -1,0 +1,10 @@
+
+removed 3 packages in 491ms
+eq: keeping /tmp/eq1eec0752
+PASS port-gaps
+PASS exec-coverage
+     every literal command is declared and shimmed: git, npm, powershell.exe
+FAIL run-launch-failure
+     pig-go differs from pi-ts: first difference at event 19
+       want: [01-prompt] host {"isError":true,"result":{"content":[{"text":"Run fan-out: 1/64 used, 63 remaining\nSubagent launch aborted: cwd does not exist: <cwd>/nope\n(resolved from \"nope\")\nMission: <uuid> (failed)","type":"text"}],"details":{}},"toolName":"subagent","type":"tool_execution_end"}
+       got:  [01-prompt] host {"isError":true,"result":{"content":[{"text":"Subagent launch aborted: cwd does not exist: <cwd>/nope\n(resolved from \"nope\")","type":"text"}],"details":{}},"toolName":"subagent","type":"tool_execution_end"}

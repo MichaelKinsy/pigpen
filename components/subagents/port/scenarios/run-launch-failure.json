@@ -1,0 +1,117 @@
+{
+  "name": "run-launch-failure",
+  "description": "A foreground run in a missing directory and in a file, the same with a mission, and a background run in a missing directory: failed tool calls.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "subagents_enable",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "plain",
+            "task": "do the work",
+            "cwd": "nope",
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "plain",
+            "task": "do the work",
+            "cwd": "flow.js",
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "plain",
+            "task": "do the work",
+            "cwd": "nope",
+            "mission": {
+              "title": "Goal"
+            },
+            "async": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "subagent",
+          "arguments": {
+            "agent": "plain",
+            "task": "do the work",
+            "cwd": "nope",
+            "async": true
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "delegate the work"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/plain.md": "---\nname: plain\ndescription: No model of its own\n---\n\nYou help.\n",
+    "flow.js": "return 1;"
+  },
+  "commands": {
+    "git": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "npm": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "ps": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "gh": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    },
+    "powershell.exe": {
+      "mode": "canned",
+      "stdout": "",
+      "stderr": "",
+      "exit": 1
+    }
+  }
+}

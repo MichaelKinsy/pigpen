@@ -301,30 +301,34 @@ func nestedBlocked(getenv func(string) string) string {
 	return fmt.Sprintf("Nested subagent call blocked (depth=%d, max=%d). You are running at the maximum subagent nesting depth. Complete your current task directly without delegating to further subagents.", depth, max)
 }
 
-// resolveRunCwd is the original's resolveRequestedCwd and preflightLaunchCwd: a relative cwd is the session's, and a
-// missing one, or a file, is refused before any child starts.
-func resolveRunCwd(base, requested string) (string, error) {
+// runCwd is resolveRequestedCwd: the effective directory of a run and the note of what it was resolved from. It touches no file:
+// the original checks the directory when the run starts (preflightRunCwd), after the run's budget slot and mission exist.
+func runCwd(base, requested string) (effective, resolution string) {
 	if requested == "" {
-		return base, nil
+		return base, ""
 	}
-	effective := filepath.Clean(requested)
+	effective = filepath.Clean(requested)
 	if !filepath.IsAbs(effective) {
 		effective = filepath.Join(base, requested)
 	}
-	resolution := ""
 	if requested != effective {
 		resolution = "\n(resolved from " + marshalJSON(requested, "") + ")"
 	}
+	return effective, resolution
+}
+
+// preflightRunCwd is preflightLaunchCwd: the launch failure of a directory that is missing, a file or unreadable.
+func preflightRunCwd(effective, resolution string) error {
 	st, err := os.Stat(effective)
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
-		return "", fmt.Errorf("Subagent launch aborted: cwd does not exist: %s%s", effective, resolution)
+		return fmt.Errorf("Subagent launch aborted: cwd does not exist: %s%s", effective, resolution)
 	case err != nil:
-		return "", fmt.Errorf("Subagent launch aborted: cwd could not be accessed: %s%s\n%s", effective, resolution, err.Error())
+		return fmt.Errorf("Subagent launch aborted: cwd could not be accessed: %s%s\n%s", effective, resolution, err.Error())
 	case !st.IsDir():
-		return "", fmt.Errorf("Subagent launch aborted: cwd is not a directory: %s%s", effective, resolution)
+		return fmt.Errorf("Subagent launch aborted: cwd is not a directory: %s%s", effective, resolution)
 	}
-	return effective, nil
+	return nil
 }
 
 // eitherDone closes when a or b closes (nil when both are nil); stop releases its watcher.

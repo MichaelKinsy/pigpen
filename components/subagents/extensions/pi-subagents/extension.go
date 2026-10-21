@@ -277,10 +277,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError(msg)
 	}
 	requested, _ := params["cwd"].(string)
-	cwd, err := resolveRunCwd(ctx.Cwd(), requested)
-	if err != nil {
-		return nil, sdk.NewToolError(err.Error())
-	}
+	cwd, cwdNote := runCwd(ctx.Cwd(), requested)
 	if cfg := loadAsyncConfig(); wantsAsync(params, cfg) {
 		if p := asyncUnsupportedPolicyParam(params); p != "" {
 			return nil, sdk.NewToolError(refusal("the `" + p + "` option of a background (async) run; pass async: false to run in the foreground"))
@@ -293,7 +290,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		if err != nil {
 			return fan.annotate(nil, err)
 		}
-		res, err := bgRT.launchBackground(ctx, params, a, task, cwd, model, cfg)
+		res, err := bgRT.launchBackground(ctx, params, a, task, cwd, cwdNote, model, cfg)
 		if err != nil && strings.HasPrefix(err.Error(), capacityRefusalPrefix) {
 			return nil, err // the original checks the active-run capacity before it claims the budget: that refusal carries no budget line
 		}
@@ -322,6 +319,9 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	defer stop()
 	defer activeRunStart()()
 	return trackMission(ctx, params, cwd, a.Name, task, func() (any, error) {
+		if err := preflightRunCwd(cwd, cwdNote); err != nil { // the run's own first step: a failed run, not a refusal
+			return fan.annotate(finishRun(pol, runOutcome{Err: err}))
+		}
 		out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})
 		return fan.annotate(finishRun(pol, runOutcome{Stdout: out, Err: err}))
 	})

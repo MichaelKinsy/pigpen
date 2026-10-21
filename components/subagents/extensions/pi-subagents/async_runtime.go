@@ -686,7 +686,7 @@ func wantsAsync(params map[string]any, cfg asyncConfig) bool {
 }
 
 // launchBackground starts a background single-agent run and returns the tool result of the launch.
-func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd, model string, cfg asyncConfig) (any, error) {
+func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any, a *AgentConfig, task, cwd, cwdNote, model string, cfg asyncConfig) (any, error) {
 	if cfg.ConfigErr != nil {
 		return nil, sdk.NewToolError(cfg.ConfigErr.Error())
 	}
@@ -710,6 +710,12 @@ func (rt *asyncRuntime) launchBackground(ctx sdk.Context, params map[string]any,
 		if err != nil {
 			return nil, sdk.NewToolError(err.Error())
 		}
+	}
+	if err := preflightRunCwd(cwd, cwdNote); err != nil { // the original's runner start checks the directory: a failed launch that names the run
+		if capacity != nil {
+			capacity.Rollback()
+		}
+		return nil, sdk.NewToolError(fmt.Sprintf("Failed to start async run '%s': %s", id, err.Error()))
 	}
 	started := nowMs()
 	var deadline *int64
