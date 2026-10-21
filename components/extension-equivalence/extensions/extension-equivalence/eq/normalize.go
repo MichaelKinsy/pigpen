@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // NormalizerVersion names the reviewed rule set below and the trace
@@ -23,8 +24,9 @@ import (
 //	v3  N6 (Pi 1.0's bash tool reports its wall time in a tool result's
 //	    structuredContent).
 //
-// N7 (a scenario's own `normalize` list) does not change the version: a scenario without the field
-// produces the same trace as under v3, and only a harness that knows the field can load one with it.
+// N7 (a scenario's own `normalize` list), N8 and N9 do not change the version: a scenario without the
+// field, and a trace without a workflow task id or a <duration_ms> tag, is the same under v3 (no
+// recorded golden contains either), and only a harness that knows the field can load one with it.
 const NormalizerVersion = "v3"
 
 // The normalizer removes only values that are different in every run by
@@ -47,6 +49,18 @@ const NormalizerVersion = "v3"
 //	    becomes "<seconds>": Pi 1.0's bash tool measures the command's wall
 //	    time (rounded to 0.1 s, pi-coding-agent 1.0.1 dist/core/tools/bash.js
 //	    lines 284-294). Every other structured key is compared.
+//	N7  the scenario's own `normalize` list (see AddRules).
+//	N8  workflow task ids: `\bwf_[0-9a-f]{12}\b`, which the original @tintinweb/pi-subagents
+//	    workflow tool draws at random per task (src/workflow/task.ts), become <wf-id:N>, N
+//	    counting from 1 in order of first appearance within the run. Two different ids stay two
+//	    different tokens, so a port that reuses one id where the original used two still differs;
+//	    the same id in the notification <task-id>, the `Task ID:` line, details.taskId and the
+//	    script path .../tasks/wf_<id>.workflow.js is one token. The count is per run (per lane),
+//	    and the order is the order events are recorded, so ids that two goroutines reveal in
+//	    either order can swap tokens: scenarios should wait between steps that show new ids.
+//	N9  `<duration_ms>\d+</duration_ms>` becomes `<duration_ms>0</duration_ms>`: the elapsed
+//	    time the original reports in a workflow notification. Only digits inside that exact tag
+//	    are replaced; a non-numeric value, an empty tag or any other text keeps its difference.
 var volatileKeys = []string{
 	"timestamp", "usage", "responseId", "sessionId", "sessionFile",
 	"toolCallId", "api", "provider", "model", "durationMs", "sessionPath",
@@ -55,15 +69,35 @@ var volatileKeys = []string{
 var (
 	uuidRE = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
 	timeRE = regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})`)
+	wfIDRE = regexp.MustCompile(`\bwf_[0-9a-f]{12}\b`)
+	durRE  = regexp.MustCompile(`<duration_ms>\d+</duration_ms>`)
 )
 
 // Replacement is one literal N1 rule.
 type Replacement struct{ From, To string }
 
-// Normalizer applies rules N1-N7.
+// Normalizer applies rules N1-N3 and N7-N9.
 type Normalizer struct {
 	Replace []Replacement
 	rules   []compiledRule
+
+	mu    sync.Mutex
+	wfIDs map[string]int // N8: workflow task id -> its number, by first appearance
+}
+
+// wfToken returns N8's token for a workflow task id.
+func (n *Normalizer) wfToken(id string) string {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	i, ok := n.wfIDs[id]
+	if !ok {
+		if n.wfIDs == nil {
+			n.wfIDs = map[string]int{}
+		}
+		i = len(n.wfIDs) + 1
+		n.wfIDs[id] = i
+	}
+	return fmt.Sprintf("<wf-id:%d>", i)
 }
 
 type compiledRule struct {
@@ -87,7 +121,7 @@ func compileRules(rules []NormalizeRule) ([]compiledRule, error) {
 	return out, nil
 }
 
-// AddRules installs the scenario's N7 rules; they run after N1 to N3, in the given order.
+// AddRules installs the scenario's N7 rules; they run after N1 to N3, N8 and N9, in the given order.
 func (n *Normalizer) AddRules(rules []NormalizeRule) error {
 	c, err := compileRules(rules)
 	if err != nil {
@@ -132,13 +166,15 @@ func (n *Normalizer) str(s string) string {
 	}
 	s = uuidRE.ReplaceAllString(s, "<uuid>")
 	s = timeRE.ReplaceAllString(s, "<time>")
+	s = wfIDRE.ReplaceAllStringFunc(s, n.wfToken)
+	s = durRE.ReplaceAllString(s, "<duration_ms>0</duration_ms>")
 	for _, r := range n.rules {
 		s = r.re.ReplaceAllString(s, r.repl)
 	}
 	return s
 }
 
-// Value applies N1-N3 and N7 to a decoded JSON value.
+// Value applies N1-N3 and N7-N9 to a decoded JSON value.
 func (n *Normalizer) Value(v any) any {
 	switch x := v.(type) {
 	case string:

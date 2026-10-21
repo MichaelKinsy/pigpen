@@ -973,3 +973,53 @@ function later(pi: ExtensionAPI, ctx: any) {
 		t.Errorf("lines = %v, want [5]", g.Lines)
 	}
 }
+
+// N8: the workflow tool draws a task id at random (wf_ and twelve hex digits). The id is one token wherever it
+// appears, two different ids stay two tokens, and text that only looks like an id is kept.
+func TestNormalizerReplacesWorkflowTaskIDsByFirstAppearance(t *testing.T) {
+	run := func(ids ...string) string {
+		n := NewNormalizer("/w", "/t", "/h")
+		return string(n.Data(map[string]any{
+			"notice":  "<task-id>" + ids[0] + "</task-id>",
+			"result":  "Task ID: " + ids[0] + "\nScript: /w/tasks/" + ids[0] + ".workflow.js",
+			"details": map[string]any{"taskId": ids[0]},
+			"second":  ids[1],
+		}))
+	}
+	a, b := run("wf_0123456789ab", "wf_aaaaaaaaaaaa"), run("wf_fedcba987654", "wf_bbbbbbbbbbbb")
+	if a != b {
+		t.Errorf("random ids not normalized:\n%s\n%s", a, b)
+	}
+	for _, want := range []string{`<task-id><wf-id:1></task-id>`, `Task ID: <wf-id:1>\nScript: <cwd>/tasks/<wf-id:1>.workflow.js`, `"taskId":"<wf-id:1>"`, `"second":"<wf-id:2>"`} {
+		if !strings.Contains(a, want) {
+			t.Errorf("missing %s in %s", want, a)
+		}
+	}
+	// A port that reuses one id where the original had two still differs.
+	if same := run("wf_0123456789ab", "wf_0123456789ab"); same == a || !strings.Contains(same, `"second":"<wf-id:1>"`) {
+		t.Errorf("distinct ids collapsed: %s", same)
+	}
+	// Not an id: wrong length, wrong alphabet, no word boundary.
+	n := NewNormalizer("/w", "/t", "/h")
+	for _, keep := range []string{"wf_0123456789a", "wf_0123456789abc", "wf_0123456789AB", "wf_0123456789gh", "xwf_0123456789ab", "wf-0123456789ab"} {
+		if got := n.str(keep); got != keep {
+			t.Errorf("%q was rewritten to %q", keep, got)
+		}
+	}
+}
+
+// N9: only digits inside the exact <duration_ms> tag are replaced.
+func TestNormalizerReplacesDurationMsOnlyInsideItsTag(t *testing.T) {
+	n := NewNormalizer("/w", "/t", "/h")
+	if a, b := n.str("<duration_ms>12</duration_ms>"), n.str("<duration_ms>98765</duration_ms>"); a != b || a != "<duration_ms>0</duration_ms>" {
+		t.Errorf("duration not normalized: %q %q", a, b)
+	}
+	if got := n.str("x <duration_ms>7</duration_ms> y <tokens>7</tokens>"); got != "x <duration_ms>0</duration_ms> y <tokens>7</tokens>" {
+		t.Errorf("neighbours changed: %q", got)
+	}
+	for _, keep := range []string{"<duration_ms>slow</duration_ms>", "<duration_ms></duration_ms>", "<duration_ms>1.5</duration_ms>", "duration_ms: 12", "<duration_s>12</duration_s>", "<duration_ms>12</duration_ms", "<duration_ms>-3</duration_ms>"} {
+		if got := n.str(keep); got != keep {
+			t.Errorf("%q was rewritten to %q", keep, got)
+		}
+	}
+}

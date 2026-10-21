@@ -101,14 +101,19 @@ records late effects instead of losing them at shutdown. Every lane runs in a sc
 quotes a path and counts its characters gets the same number in every lane. The loopback address of each fake server and of
 the scripted model server (a `set_model` response echoes the model's base URL) is normalized to `<server:NAME>` and `<llm>`.
 The normalizer removes only values that differ on every run
-(paths, UUIDs, timestamps, host session ids, the bash tool's measured wall time); its rules N1 to N6 are listed in
+(paths, UUIDs, timestamps, host session ids, the bash tool's measured wall time); its rules N1 to N9 are listed in
 [normalize.go](extensions/extension-equivalence/eq/normalize.go) and versioned, and a
 golden trace recorded under another version is refused. Rule N7 is the scenario's own `normalize` list
 (above): the one place where a scenario author, not the harness, decides that a value differs on every run.
 It is a reviewed hole in the comparison, so write the narrowest pattern that matches only the invented
 value (an id's exact shape, not `.*`), keep the extension's own text out of it, and read the recorded
 trace once to see the placeholder where the value was. N7 changes no trace of a scenario without the
-field, so it does not change the normalizer version.
+field, so it does not change the normalizer version. Rules N8 and N9 are built in and narrow. N8 replaces a
+workflow task id (`wf_` and twelve lowercase hex digits, a word on its own) with `<wf-id:N>`, N counting from 1 in
+order of first appearance in the run, so the same id is one token wherever it appears (notification `<task-id>`,
+the `Task ID:` line, `details.taskId`, the script path `.../tasks/wf_<id>.workflow.js`) while two different ids
+stay two different tokens. N9 replaces the digits of `<duration_ms>N</duration_ms>` with `0`, inside that exact tag
+only. Neither changes a trace that has no such text (no recorded golden has), so the normalizer version stays v3.
 
 ## Limits
 
