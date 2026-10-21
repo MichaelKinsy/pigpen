@@ -1,8 +1,11 @@
 package pi_subagents
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestExecutionProjectionOfDetachedStoppedAndTimedOutRuns(t *testing.T) {
@@ -12,7 +15,10 @@ func TestExecutionProjectionOfDetachedStoppedAndTimedOutRuns(t *testing.T) {
 	eq(t, buildExecutionProjection(runProjectionInput{}), executionProjection{Status: "completed", Success: true}, "completed")
 }
 
-func TestFastModeRewritesTheObjectPayloadShape(t *testing.T) {
+func TestFastModeRewritesBothPayloadShapes(t *testing.T) {
+	in := map[string]any{"a": 1}
+	eq(t, rewriteFastModeProviderRequest(in), any(map[string]any{"a": 1, "service_tier": "priority"}), "map")
+	eq(t, in, map[string]any{"a": 1}, "the input map is not modified")
 	out := rewriteFastModeProviderRequest(obj("a", float64(1))).(*jsObject)
 	eq(t, marshalJSON(out, ""), `{"a":1,"service_tier":"priority"}`, "object")
 	eq(t, rewriteFastModeProviderRequest("text"), any("text"), "other payloads stay")
@@ -35,4 +41,26 @@ func TestDelegationTerminalResponseIsEmittedOncePerAttempt(t *testing.T) {
 	bridge.emitTerminal("k", obj("status", "second"))
 	eq(t, len(got), 1, "one terminal response per attempt")
 	eq(t, got[0].vals["status"], any("first"), "the first")
+}
+
+// A refresh drops the discovery cache: a file edited to the same size with its modification time put back (the discovery
+// fingerprint cannot see it) is still read again.
+func TestAdvertisementRefreshReadsAnEditThatKeepsSizeAndTime(t *testing.T) {
+	e := newMgmtEnv(t)
+	a := newAdvertisement()
+	a.hasCtx, a.cwd = true, e.dir
+	file := filepath.Join(e.dir, ".pi", "agents", "a.md")
+	writeFile(t, file, "---\nname: a\ndescription: AAA\nadvertise: true\n---\n\nA.\n")
+	a.refresh()
+	eq(t, a.snapshot()[0].Description, "AAA", "first description")
+	before, err := os.Stat(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, file, "---\nname: a\ndescription: BBB\nadvertise: true\n---\n\nA.\n")
+	if err := os.Chtimes(file, time.Now(), before.ModTime()); err != nil {
+		t.Fatal(err)
+	}
+	a.refresh()
+	eq(t, a.snapshot()[0].Description, "BBB", "the refresh rediscovers from the files")
 }

@@ -194,7 +194,7 @@ m("adv-stale-generation", "advertise.go", "if gen != a.generation {", "if gen !=
 m("adv-wait-error", "advertise.go", "if same {\n\t\t\treturn err", "if same {\n\t\t\t_ = err\n\t\t\treturn nil")
 m("adv-refresh-cache", "advertise.go", "\tclearAgentDiscoveryCache()\n\td, err := discoverAgents(a.cwd", "\td, err := discoverAgents(a.cwd")
 m("adv-section", "advertise.go", "sections.Set(advertisedTag, catalog)", "_ = sections")
-m("adv-selected", "advertise.go", "has = has || n == subagentName", "has = has || true")
+m("adv-selected", "advertise.go", "has = has || n == subagentName", "has = has || n == subagentName || true")
 m("adv-loader-catalog", "extension.go", 'text += "\\n\\n" + prompt', "_ = prompt")
 m("adv-tool-barrier", "extension.go", "\tif err := adv.wait(ctx.Done()); err != nil {\n\t\treturn nil, sdk.NewToolError(err.Error())\n\t}\n\taction := \"\"", "\taction := \"\"")
 m("adv-mutation-refresh", "agentmgmt_actions.go", "c.onAgentsChanged = adv.refresh", "c.onAgentsChanged = nil")
@@ -239,9 +239,8 @@ m("child-fanout-history", "child_prompt.go", "if !preserveFanoutToolHistory {\n\
 m("child-composite-apis", "child_prompt.go", '"cursor-native": true, ', "")
 m("child-watchdog-warning", "child_prompt.go", "ct == subagentWatchdogWarningType ||", "")
 m("plan-ambient", "extension_plan.go", "disable := denyExtensions || a.Extensions != nil", "disable := denyExtensions")
-m("plan-deny", "extension_plan.go", "if !denyExtensions {\n\t\tfor _, t := range a.Tools {", "if true {\n\t\tfor _, t := range a.Tools {")
 m("plan-fast-prefix", "extension_plan.go", 'const fastModeProviderPrefix = "openai-codex/"', 'const fastModeProviderPrefix = "openai/"')
-m("plan-thinking-suffix", "extension_plan.go", 'if base, suffix := splitKnownThinkingSuffix(model); suffix != "" {', 'if false {')
+m("plan-thinking-suffix", "extension_plan.go", 'if base, suffix := splitKnownThinkingSuffix(model); suffix != "" {', 'if base, suffix := splitKnownThinkingSuffix(model); suffix != "" && false {')
 
 # agentmgmt_refine.go
 m("refine-evidence-cap", "agentmgmt_refine.go", "maxEvidenceItems        = 8", "maxEvidenceItems        = 9")
