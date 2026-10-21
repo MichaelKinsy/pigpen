@@ -80,7 +80,7 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	eq(t, req.Stdin, "Task: build", "stdin")
 
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "cwd": "nope"})
-	if !strings.HasPrefix(failure, "Subagent launch aborted: cwd does not exist: ") {
+	if !strings.Contains(failure, "Subagent launch aborted: cwd does not exist: ") { // behind the run's budget line (the call is a background run)
 		t.Errorf("bad cwd: %q", failure)
 	}
 	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "project"})
