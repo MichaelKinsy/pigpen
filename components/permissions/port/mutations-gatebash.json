@@ -69,7 +69,7 @@
   "name": "cmd-whole-deny-never",
   "file": "gatebashcommand.go",
   "find": "\t\tif whole.State == \"deny\" {\n\t\t\treturn whole\n\t\t}",
-  "replace": ""
+  "replace": "\t\t_ = whole"
  },
  {
   "name": "cmd-whole-deny-ask",
@@ -135,7 +135,7 @@
   "name": "cmd-zero-pattern",
   "file": "gatebashcommand.go",
   "find": "Origin: \"builtin\", Command: &command, MatchedPattern: &pattern",
-  "replace": "Origin: \"builtin\", Command: &command"
+  "replace": "Origin: \"builtin\", Command: &command, MatchedPattern: func() *string { _ = pattern; return nil }()"
  },
  {
   "name": "cmd-zero-sentinel",
@@ -261,7 +261,7 @@
   "name": "unit-unparsed-uses-base",
   "file": "gatebashcommand.go",
   "find": "result := floorUnparsedBashUnit(cmd, command, floored)",
-  "replace": "result := floorUnparsedBashUnit(cmd, command, base)"
+  "replace": "result := floorUnparsedBashUnit(cmd, command, base)\n\t_ = floored"
  },
  {
   "name": "unit-context-dropped",
@@ -351,7 +351,7 @@
   "name": "floor-pattern-kept",
   "file": "gatebashcommand.go",
   "find": "\tresolved.MatchedPattern = &pattern\n\treturn resolved",
-  "replace": "\treturn resolved"
+  "replace": "\t_ = pattern\n\treturn resolved"
  },
  {
   "name": "floor-pattern-sentinel",
@@ -453,7 +453,7 @@
   "name": "wrap-pattern-kept",
   "file": "gatebashcommand.go",
   "find": "\t\tbase.MatchedPattern = &sentinel\n",
-  "replace": ""
+  "replace": "\t\t_ = sentinel\n"
  },
  {
   "name": "wrap-returns-inner",
@@ -723,7 +723,7 @@
   "name": "path-bypass-never",
   "file": "gatebashpath.go",
   "find": "\tif allSessionCovered {",
-  "replace": "\tif false {"
+  "replace": "\tif allSessionCovered && false {"
  },
  {
   "name": "path-bypass-always",
@@ -963,13 +963,13 @@
   "name": "path-prompt-access",
   "file": "gatebashpath.go",
   "find": "Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
-  "replace": "Command: &command,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+  "replace": "Command: &command, AccessIntent: func() *ForwardedAccessFacts { _ = access; return nil }(),\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
  },
  {
   "name": "path-prompt-toolcallid",
   "file": "gatebashpath.go",
   "find": "ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
-  "replace": "ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+  "replace": "ToolCallID: func() *string { _ = toolCallID; return nil }(), ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
  },
  {
   "name": "path-decision-surface",
@@ -1041,7 +1041,7 @@
   "name": "ext-covered-values",
   "file": "gatebashpath.go",
   "find": "covered[i] = p.Value()",
-  "replace": "covered[i] = command"
+  "replace": "_ = p\n\t\t\tcovered[i] = command"
  },
  {
   "name": "ext-bypass-event",
@@ -1215,7 +1215,7 @@
   "name": "ext-grants-pattern",
   "file": "gatebashpath.go",
   "find": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: pattern})",
-  "replace": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: u.Path.Value()})"
+  "replace": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: u.Path.Value() + pattern[:0]})"
  },
  {
   "name": "ext-grants-only-worst",
@@ -1311,7 +1311,7 @@
   "name": "ext-prompt-access",
   "file": "gatebashpath.go",
   "find": "Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}",
-  "replace": "Command: &command,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
+  "replace": "Command: &command, AccessIntent: func() *ForwardedAccessFacts { _ = access; return nil }(),\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
  },
  {
   "name": "ext-decision-surface",
@@ -1371,6 +1371,6 @@
   "name": "help-strings-as-json",
   "file": "gatebashpath.go",
   "find": "\t\tout[i] = s\n",
-  "replace": "\t\tout[i] = \"\"\n"
+  "replace": "\t\tout[i] = \"\" + s[:0]\n"
  }
 ]
