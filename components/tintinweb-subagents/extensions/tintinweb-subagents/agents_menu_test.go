@@ -255,3 +255,9 @@ func TestWorkflowDialogOpenAgentHidesAndRestoresTheDialog(t *testing.T) {
 		eq(t, viewed, []string{"rec-1"})
 	})
 }
+
+func TestDisableKeepsTheFilesLineEndings(t *testing.T) {
+	content, outcome := disableInContent("---\r\ndescription: Scout\r\n---\r\n\r\nBody.\r\n")
+	eq(t, outcome, outcomeDisabled)
+	eq(t, content, "---\r\nenabled: false\r\ndescription: Scout\r\n---\r\n\r\nBody.\r\n")
+}

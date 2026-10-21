@@ -452,7 +452,7 @@ How it differs from the original, and why:
   `testdata/menus-golden.json`; `menus_golden_test.go` draws the same inputs with the Go code and compares every line,
   markup included. It passed on the first recording. Re-record with
   `RECORD_ROOT=$PWD PI_SRC=<pi checkout> vitest run --config port/record-menus.config.mjs` (after `npm install --omit=dev` in `port/oracle`).
-- **Mutants**: 32 for the toggles, the card, the dialog, the settings and the menus (see `gen-mutations.py`); every one is killed.
+- **Mutants**: 40 for the toggles, the card, the dialog, the settings, the menus and the lifecycle handlers (see `gen-mutations.py`, from `hub-viewer-persist`); every one is killed by `pigeq mutate --unit-only`.
 - **Benchmarks** (`menu_bench_test.go`): one spinner frame of a 1000-agent dialog, one key, a 200-agent card layout and the
   settings list. The dialog caches its phase groups against the log's revision, so a frame costs the visible rows.
 - **Not done**: a `pigeq` scenario of the menu (its answers are dialogs, which the headless harness cancels, so there is
