@@ -226,4 +226,6 @@ evidence("u1-long-once", "U1: a one-shot 30 days away. Node's setTimeout cannot 
     [sp("add", name="in-a-month", schedule="+30d", type="once", prompt="renew the certificate")],
     {"text": "scheduled"},
     {"text": "reminded"},
+    {"text": "again"},
+    {"text": "and again"},
 ], [prompt("remind me in 30 days", name="add"), {"name": "wait", "rpc": {"type": "get_state"}, "settleMs": 1500}], tailMs=500, normalize=NORM)
