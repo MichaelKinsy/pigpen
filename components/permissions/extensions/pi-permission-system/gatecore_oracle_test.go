@@ -378,17 +378,11 @@ func TestGateCoreOracle(t *testing.T) {
 	if len(oracle) != len(cases) {
 		t.Fatalf("oracle has %d cases, the corpus %d", len(oracle), len(cases))
 	}
-	diffs, orderDiffs, pending := 0, 0, 0
+	diffs, orderDiffs := 0, 0
 	for _, c := range cases {
 		co := c.(*jsObject)
 		id, _ := co.str("id")
 		got, want := gcRun(t, co), oracle[id]
-		// A world the fail-closed stand-ins of the bash gates blocked (gatebashpending.go) is not a difference of the gate core; it is
-		// counted apart and fails the test unless GATECORE_ALLOW_PENDING is set.
-		if strings.Contains(marshalJSON(got.vals["answers"], ""), pendingBashGates) {
-			pending++
-			continue
-		}
 		for _, part := range []string{"answers", "prompts", "reviews", "decisions", "notes", "rules"} {
 			if gcCanon(got.vals[part]) != gcCanon(want.vals[part]) {
 				diffs++
@@ -403,11 +397,8 @@ func TestGateCoreOracle(t *testing.T) {
 			}
 		}
 	}
-	if pending > 0 && os.Getenv("GATECORE_ALLOW_PENDING") == "" {
-		t.Errorf("%d worlds reached a bash gate stand-in", pending)
-	}
 	if diffs+orderDiffs > 0 {
 		t.Fatalf("%d content differences, %d key-order differences over %d cases", diffs, orderDiffs, len(cases))
 	}
-	t.Logf("%d worlds, %d pending on the bash gates, zero differences", len(cases), pending)
+	t.Logf("%d worlds, zero differences", len(cases))
 }
