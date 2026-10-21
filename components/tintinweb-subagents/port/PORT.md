@@ -241,3 +241,19 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+
+## Mutation status at the last run (`pigeq mutate --unit-only`, 423 mutants)
+
+40 mutants were not killed, 0 did not build. Equivalent and removed: `journal-read-keeps-blank-line` (a blank line fails JSON
+parsing and is skipped by the next guard). Equivalent in the test rig, kept: `flag-relative-path` (the rig changes into the
+project directory, so a relative flag path resolves the same). Not killed yet, each needs a twin that drives the real manager
+or a live run control, not written: `setting-notice-repeats`, `rpc-name-dropped`, `progress-stats-complete-live`,
+`task-batch-counts-reemits`, `worker-explicit-phase-moves-ambient`, `worker-nested-cap-not-fatal`, `worker-log-unprefixed`,
+`worker-schema-key-order`, `worker-progress-not-flushed-before-call`, `runtime-skip-not-null`, `runtime-retry-while-aborted`,
+`runtime-retry-needs-child`, `runtime-gate-keeps-text`, `runtime-already-aborted-runs`, `runtime-onresolved-record-id`,
+`runtime-unknown-method-not-fatal`, `runtime-boundary-undefined-args`, `host-unresolvable-agent-model-error`,
+`tool-resume-reuses-script`, `tool-resume-line`, `tool-args-presence`, `tool-collision-checked-twice`,
+`flag-read-before-collision`, `flag-result-displayed`, `workflow-schema-title-required`, `adapter-effort-dropped`,
+`adapter-abort-wait`, `adapter-output-tokens`, `owned-agent-addressable`, `owned-agent-announced`, `abort-all-skips-owned`,
+`runner-output-tokens`, `menu-skip-notice-always`. Three more (`saved-list-unsorted`, `models-list-unsorted`,
+`models-dot-normalization`, `journal-entry-negative-index`, `saved-known-names-hidden`) got stronger tests after that run.

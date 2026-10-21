@@ -762,12 +762,6 @@
   "replace": "sort.SliceStable(entries, func(i, j int) bool { return false })"
  },
  {
-  "name": "journal-read-keeps-blank-line",
-  "file": "workflow_journal.go",
-  "find": "if strings.TrimSpace(line) == \"\" {\n\t\t\tcontinue\n\t\t}",
-  "replace": ""
- },
- {
   "name": "journal-entry-negative-index",
   "file": "workflow_journal.go",
   "find": "index != math.Trunc(index) || index < 0 ||",

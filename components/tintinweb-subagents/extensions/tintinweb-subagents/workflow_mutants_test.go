@@ -79,6 +79,8 @@ func TestWorkflowJournalLines(t *testing.T) {
 	t.Run("a non-string text and a false resumed are not entries", func(t *testing.T) {
 		_, ok := workflowJournalEntryOf(map[string]any{"index": float64(0), "key": "k", "ok": true, "text": float64(5)})
 		eq(t, ok, false)
+		_, ok = workflowJournalEntryOf(map[string]any{"index": float64(-1), "key": "k", "ok": true})
+		eq(t, ok, false)
 		_, ok = workflowJournalEntryOf(map[string]any{"index": float64(0), "key": "k", "ok": true, "resumed": false})
 		eq(t, ok, false)
 		e, ok := workflowJournalEntryOf(map[string]any{"index": float64(0), "key": "k", "ok": true, "resumed": true})
@@ -117,7 +119,10 @@ func TestWorkflowSavedNames(t *testing.T) {
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "zeta.js"), fileScript)
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "alpha.js"), fileScript)
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "utils.js"), "const x = 1;\n")
-		eq(t, listSavedWorkflows(cwd), []string{"alpha", "zeta"})
+		for _, n := range []string{"mid", "beta", "omega", "gamma"} {
+			writeFile(t, filepath.Join(cwd, ".pi", "workflows", n+".js"), fileScript)
+		}
+		eq(t, listSavedWorkflows(cwd), []string{"alpha", "beta", "gamma", "mid", "omega", "zeta"})
 	})
 	t.Run("an unknown name lists the saved ones", func(t *testing.T) {
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
@@ -192,8 +197,9 @@ func TestWorkflowModelResolution(t *testing.T) {
 		eq(t, got, other)
 	})
 	t.Run("4.5 and 4-5 are one model", func(t *testing.T) {
-		got, _ := wfResolveModel("claude-haiku-4.5", reg)
-		eq(t, got, haiku)
+		plain := &workflowModel{Provider: "p", ID: "claude-haiku-4-5", Name: "Haiku"}
+		got, _ := wfResolveModel("claude-haiku-4.5", fakeRegistry{models: []*workflowModel{plain}})
+		eq(t, got, plain)
 	})
 	t.Run("a trailing date stamp is optional", func(t *testing.T) {
 		got, _ := wfResolveModel("claude-haiku-4-5-20250929", reg)
@@ -204,7 +210,7 @@ func TestWorkflowModelResolution(t *testing.T) {
 		eq(t, got, haiku)
 	})
 	t.Run("the not-found list is sorted", func(t *testing.T) {
-		_, msg := wfResolveModel("zzz-none", reg)
+		_, msg := wfResolveModel("zzz-none", fakeRegistry{models: []*workflowModel{other, haiku}})
 		eq(t, strings.Index(msg, "anthropic/claude-haiku-4-5") < strings.Index(msg, "p/abc-1"), true)
 	})
 	t.Run("describe drops a Claude prefix", func(t *testing.T) {

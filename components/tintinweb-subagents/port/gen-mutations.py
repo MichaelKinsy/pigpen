@@ -159,7 +159,6 @@ m("journal-key-schema-unconditional", "workflow_journal.go", "if in.Schema != ni
 m("journal-key-short", "workflow_journal.go", "[:32]", "[:31]")
 m("journal-quote-escapes-html", "workflow_journal.go", "\tcase '\\b':\n", "\tcase '<':\n\t\t\tb.WriteString(`\\u003c`)\n\t\tcase '\\b':\n")
 m("journal-read-keeps-unsorted", "workflow_journal.go", "sort.SliceStable(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })", "sort.SliceStable(entries, func(i, j int) bool { return false })")
-m("journal-read-keeps-blank-line", "workflow_journal.go", "if strings.TrimSpace(line) == \"\" {\n\t\t\tcontinue\n\t\t}", "")
 m("journal-entry-negative-index", "workflow_journal.go", "index != math.Trunc(index) || index < 0 ||", "index != math.Trunc(index) ||")
 m("journal-entry-text-any-type", "workflow_journal.go", "if !isString {\n\t\t\treturn workflowJournalEntry{}, false\n\t\t}\n\t\tentry.Text = &s", "entry.Text = &s\n\t\t_ = isString")
 m("journal-entry-resumed-false", "workflow_journal.go", "if !isBool || !b {", "if !isBool || (b && false) {")
@@ -473,7 +472,7 @@ m("engine-compile-strict", "workflow_engine.go", "_ = host.Set(\"compile\", func
 m("meta-eval-strict", "workflow_meta.go", "\"(\"+fragment+\")\", false)", "\"(\"+fragment+\")\", true)")
 m("engine-response-error-dropped", "workflow_engine.go", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\tw.failUncaught(err)", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err")
 m("meta-eval-error-name-dropped", "workflow_meta.go", "return ex.Value().String()\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail", "return wfErrorDetail(err)\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail")
-# Not mutated, equivalent: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
+# Not mutated, equivalent: `journal-read-keeps-blank-line` (a blank line fails JSON parsing and is skipped by the next guard anyway);: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
 # make overflow) and `encoded = encoded[3:]` vs `[2:]` (the TrimLeft of dashes that follows removes the difference).
 m("engine-overflow-text", "workflow_meta.go", "return \"Maximum call stack size exceeded\"", "return \"Stack overflow\"")
 m("engine-rejections-not-flushed", "workflow_engine.go", "\t\tfn()\n\t\tw.flushRejections()", "\t\tfn()")
