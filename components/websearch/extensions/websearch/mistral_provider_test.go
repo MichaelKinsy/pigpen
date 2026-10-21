@@ -216,5 +216,4 @@ func TestUpstream_mistral_provider(t *testing.T) {
 		}
 	})
 
-	tskip(t, f, "Curator page exposes Mistral as an available manual provider", "the search curator page is the websearch-curator slice (it renders the provider buttons of curator-page.ts); the Mistral availability it displays is IsMistralAvailable, covered above")
 }
