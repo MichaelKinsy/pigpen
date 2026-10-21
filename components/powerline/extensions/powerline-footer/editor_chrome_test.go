@@ -190,8 +190,8 @@ func TestFastRenderWrapsAVeryLongLine(t *testing.T) {
 	if want := long[19*49 : 20*49]; !strings.Contains(got[1], want) {
 		t.Errorf("first row %q, want chunk 19 %q", got[1], want)
 	}
-	if want := long[25*49 : 26*49]; !strings.Contains(got[7], want[2:]) {
-		t.Errorf("cursor row %q, want chunk 25 %q", got[7], want)
+	if want := long[25*49 : 25*49+25]; !strings.Contains(got[7], want+cursorMarker) { // the cursor is at column 25 of its chunk
+		t.Errorf("cursor row %q, want chunk 25 up to the cursor %q", got[7], want)
 	}
 }
 
