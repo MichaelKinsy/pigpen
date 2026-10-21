@@ -622,10 +622,11 @@ func (f *fwFormatter) Format(*jsObject) (string, bool) { return f.out, true }
 
 // fwService is makeFakePermissionsService(): every getter answers nothing unless a test sets one.
 type fwService struct {
-	extractor     ToolAccessExtractor
-	formatter     ToolInputFormatter
-	extractorArgs []string
-	formatterArgs []string
+	PermissionsService // the methods a test does not set are never called
+	extractor          ToolAccessExtractor
+	formatter          ToolInputFormatter
+	extractorArgs      []string
+	formatterArgs      []string
 }
 
 func (s *fwService) GetToolAccessExtractor(name string) ToolAccessExtractor {

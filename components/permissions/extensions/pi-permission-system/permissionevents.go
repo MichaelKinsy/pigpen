@@ -1,7 +1,27 @@
 package pi_permission_system
 
-// The decision slice of src/service/permission-events.ts: the channel constant, the event, and the best-effort emit helper.
-// (The ready and ui_prompt halves belong to the service lane.)
+// The decision and ready slices of src/service/permission-events.ts: the channel constants, the events, and the best-effort emit
+// helpers. (The ui_prompt half is in uiprompt.go.)
+
+// PermissionsReadyChannel is emitted at session_start after the emitting node published its service, and again at that node's first
+// before_agent_start (ADR 0012 decision 3). It fires at least once per session and may repeat, so a handler must be idempotent.
+const PermissionsReadyChannel = "permissions:ready"
+
+// PermissionsReadyEvent is the payload emitted on permissions:ready: plain facts about the node that emitted it, never a live
+// capability (the service itself is fetched with GetPermissionsService(sessionID)).
+type PermissionsReadyEvent struct {
+	// SessionID is the emitting node's session id, the key for GetPermissionsService; nil (null) when the host exposed none, in
+	// which case this node published no keyed service.
+	SessionID *string `json:"sessionId"`
+	// AdjudicatesLocally is whether this node adjudicates its own asks (its authorizer chain runs) or relays them to a serving node.
+	AdjudicatesLocally bool `json:"adjudicatesLocally"`
+}
+
+// EmitReadyEvent broadcasts permissions:ready. Best effort: a failing or panicking listener must not block session startup.
+func EmitReadyEvent(events PermissionEventBus, event PermissionsReadyEvent) {
+	defer func() { _ = recover() }()
+	_ = events.Emit(PermissionsReadyChannel, event)
+}
 
 // PermissionsDecisionChannel is emitted after every permission gate resolution (PERMISSIONS_DECISION_CHANNEL).
 const PermissionsDecisionChannel = "permissions:decision"

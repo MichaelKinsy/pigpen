@@ -13,6 +13,13 @@ import (
 type SessionContext struct {
 	AuthorityContext
 	Notifier ConfigUI
+	// IsProjectTrusted is ctx.isProjectTrusted(). nil, or an answer that failed, is not trust: the project scope stays withheld.
+	IsProjectTrusted func() bool
+}
+
+// ProjectTrusted asks the host whether the project is trusted; a context with no answer is untrusted (fail closed).
+func (c SessionContext) ProjectTrusted() bool {
+	return c.IsProjectTrusted != nil && c.IsProjectTrusted()
 }
 
 // GetEntries makes the context an ActiveAgentContext: the session manager's entries. A context with no session manager is an error,
