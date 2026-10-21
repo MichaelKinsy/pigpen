@@ -137,15 +137,19 @@ func (c *Cron) scheduleLocked() error {
 	if !ok || math.IsNaN(waitMs) || math.IsNaN(target) {
 		return nil
 	}
+	c.timer = time.AfterFunc(timerDelay(waitMs), func() { c.checkTrigger(target) })
+	return nil
+}
+
+// timerDelay is the wait before the next check: the time to the next run, at most maxDelay, never negative.
+func timerDelay(waitMs float64) time.Duration {
 	if waitMs > maxDelay {
 		waitMs = maxDelay
 	}
-	wait := time.Duration(waitMs) * time.Millisecond
 	if waitMs < 0 {
-		wait = 0
+		return 0
 	}
-	c.timer = time.AfterFunc(wait, func() { c.checkTrigger(target) })
-	return nil
+	return time.Duration(waitMs) * time.Millisecond
 }
 
 func (c *Cron) checkTrigger(target float64) {

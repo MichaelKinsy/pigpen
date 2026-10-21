@@ -38,7 +38,7 @@ func renderScheduledPrompt(ctx sdk.Context, message map[string]any, _ sdk.Messag
 	return scheduledPromptLines(ctx.UITheme(), message, width), nil
 }
 
-func scheduledPromptLines(theme sdk.UITheme, message map[string]any, width int) []string {
+func scheduledPromptLines(theme viewTheme, message map[string]any, width int) []string {
 	details, _ := message["details"].(map[string]any)
 	jobName := orDefault(details, "jobName", "Unknown")
 	prompt := orDefault(details, "prompt", "")
@@ -86,7 +86,7 @@ func renderToolCall(ctx sdk.Context, args map[string]any, _ sdk.ToolRenderContex
 	return toolCallLines(ctx.UITheme(), args, width), nil
 }
 
-func toolCallLines(theme sdk.UITheme, args map[string]any, width int) []string {
+func toolCallLines(theme viewTheme, args map[string]any, width int) []string {
 	action := jsStr(args["action"])
 	name := orDefault(args, "name", orDefault(args, "jobId", ""))
 	actionText := theme.Fg("accent", action)
@@ -113,7 +113,7 @@ func renderToolResult(ctx sdk.Context, result sdk.ToolRenderResult, _ sdk.ToolRe
 	return toolResultLines(ctx.UITheme(), result, width), nil
 }
 
-func toolResultLines(theme sdk.UITheme, result sdk.ToolRenderResult, width int) []string {
+func toolResultLines(theme viewTheme, result sdk.ToolRenderResult, width int) []string {
 	details, ok := detailsMap(result.Details)
 	if !ok {
 		var parts []string

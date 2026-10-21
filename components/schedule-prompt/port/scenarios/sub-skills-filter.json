@@ -1,0 +1,77 @@
+{
+  "name": "sub-skills-filter",
+  "description": "skills=[\"alpha\"]: the session's system text lists the skill alpha and not beta (the host applies the skills filter as the original does).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "bg",
+            "schedule": "+2s",
+            "type": "once",
+            "prompt": "check",
+            "model": "eq-1",
+            "skills": [
+              "alpha"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "scheduled"
+    },
+    {
+      "text": "filtered"
+    }
+  ],
+  "steps": [
+    {
+      "name": "add",
+      "rpc": {
+        "type": "prompt",
+        "message": "add"
+      }
+    },
+    {
+      "name": "wait",
+      "rpc": {
+        "type": "get_state"
+      },
+      "settleMs": 3500
+    }
+  ],
+  "tailMs": 500,
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    },
+    {
+      "pattern": "(?s)^.*(<available_skills>.*</available_skills>).*$",
+      "replacement": "SKILLS:$1"
+    },
+    {
+      "pattern": "(?s)^(?:[^S]|S[^K]|SK[^I]|SKI[^L]|SKIL[^L]|SKILL[^S]|SKILLS[^:]).{900}.*$",
+      "replacement": "<host system text>"
+    }
+  ],
+  "agentFiles": {
+    "skills/alpha/SKILL.md": "---\nname: alpha\ndescription: Alpha skill for the filter scenario\n---\n\nUse the alpha skill.\n",
+    "skills/beta/SKILL.md": "---\nname: beta\ndescription: Beta skill for the filter scenario\n---\n\nUse the beta skill.\n"
+  }
+}

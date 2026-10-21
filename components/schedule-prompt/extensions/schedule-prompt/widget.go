@@ -174,7 +174,7 @@ func truncCol(s string, width, keep int) string {
 }
 
 // widgetRows are the job rows of the widget (the column layout of the original).
-func widgetRows(theme sdk.UITheme, jobs []*jsobj.Object, sched jobScheduler, now float64) []string {
+func widgetRows(theme viewTheme, jobs []*jsobj.Object, sched jobScheduler, now float64) []string {
 	rows := make([]string, 0, len(jobs))
 	for _, job := range jobs {
 		enabled := truthy(job.Get("enabled"))
@@ -258,7 +258,7 @@ func containsT(s string) bool {
 }
 
 // widgetView is the component tree of the original's renderWidget: a border, the header, a spacer, the rows and a border.
-func widgetView(theme sdk.UITheme, jobs []*jsobj.Object, sched jobScheduler, now float64) kit.View {
+func widgetView(theme viewTheme, jobs []*jsobj.Object, sched jobScheduler, now float64) kit.View {
 	rows := widgetRows(theme, jobs, sched, now)
 	header := theme.Fg("accent", theme.Bold("Scheduled Prompts")) + theme.Fg("dim", " ("+jsNumber(float64(len(jobs)))+" jobs)")
 	text := ""

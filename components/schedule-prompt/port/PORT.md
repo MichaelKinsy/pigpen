@@ -5,7 +5,7 @@
 | Original | `pi-schedule-prompt` 0.4.1 ("Pi's Heartbeat") by tintinweb, https://github.com/tintinweb/pi-schedule-prompt, commit `5556775276202c26654ff9323541fe6983f6ee38`, MIT |
 | Oracle | Pi `1402973a` (1.3.0), Node 24.19.0, with the unmodified package at `port/oracle` (dependencies `croner` 10.0.1 and `nanoid` 5 from npm; `@earendil-works/pi-ai`, `pi-coding-agent` and `pi-tui` are Pi's own) |
 | Target | PiG 0.5.0 (+1.3.0.1402973a), go1.27 |
-| Original's tests | 5 vitest files, 103 `it` cases (`port/upstream-tests.json`): **69 exact twins, 7 named skips** (slice 4: they pass `model`), 27 `subagent` cases and the 1 `cron-widget` case: the latter is a twin (counted in the 69 only if listed; see `pigeq twins check` output below) |
+| Original's tests | 5 vitest files, 103 `it` cases (`port/upstream-tests.json`): **all 103 have an exact twin** (`pigeq twins check`: `103 exact twins, 0 skipped`; `port/slices.json` is empty) |
 | Kind | 1: a Pi TypeScript extension, run under Pi as the oracle |
 | Owner approval | 2026-10-21 (PROGRAM.md, "port two heartbeat/watcher extensions into Pigpen") |
 
@@ -58,7 +58,7 @@ Every observable behaviour of the original, its source, the Go SDK operation it 
 
 ## Results (slice 2)
 
-- `pigeq twins check --ledger port/upstream-tests.json --go extensions/schedule-prompt --deferred port/slices.json`: 69 exact twins, 7 skipped (each with its own reason, all slice 4), 27 deferred (`subagent`, slice 4).
+- `pigeq twins check --ledger port/upstream-tests.json --go extensions/schedule-prompt --deferred port/slices.json`: 69 exact twins, 7 skipped (each with its own reason, all slice 4), 27 deferred (`subagent`, slice 4); since slice 4 all 103 are exact twins (see the close-out below).
 - `go test -race` on the extension: pass (Mac, go1.27.2, `-count=2`); `go vet` pass.
 - Differential tests against Node 24.19 (V8 13.6.233.17) and croner 10.0.1 (`port/diff`): `TestDateGolden` (21 554 generated date strings x 12 time zones, 15 000+ local-time constructor and getter rows around every DST transition 2019 to 2036) identical; `TestCronGolden` (1 200 expressions x 7 time zones incl. Lord Howe and Chatham, 10 instants x 2 chained runs, plus every validation error text) identical. A 40 000-expression corpus (`CRONER_GOLDEN=...`) found one difference class: croner throws `RangeError: Maximum call stack size exceeded` for patterns that match no date in every month of every year up to 3000 (for example `26 47 7-8 lw * +7-7`), which croner's recursion cannot finish; the port emulates the limit (`MaxRecurseDepth` 7300 steps; measured on Node 24: every pattern needing up to 6 824 steps is answered and every one needing 7 773 or more overflows, nothing in between in 46 000 patterns). A pattern in the 6 800 to 7 800 band may differ from Node (the real limit depends on the frames below and on JIT tiering).
 - `pigeq record` + `pigeq check` (original under Pi 1402973a, port under PiG 0.5.0, `--skip-host-check`, xd670 tern-ci:v3, `nice -n 10`, cpus 64-95,160-191): 15 scenarios, goldens recorded from the original under Pi (`port/golden`). Three full `pigeq run` rounds before the goldens: round 2 identical for 10 of 15 (the rest were scenario defects: random ids in details, startup race of the every-second cron, script lengths), round 3 identical for 14 of 15. The last `check` against the freshly recorded goldens: 12 of 15 identical, and the three that differ (`add-variants`, `fire-cron`, `manage-seeded`) differ **only in the order of one event pair**: the port's next model request (`llm`) is recorded before the previous `tool_execution_end` or `turn_end`, which the same three scenarios did not show in the previous round and in the other twelve: the host-side ordering race already recorded by the tintinweb-tasks lane (finding 8) and PiG core item B10-class; it is not a content difference. Re-run counts to settle it are in the status file (pending).
@@ -118,8 +118,28 @@ carries the `Model:` line, and the scheduler's subagent path (ported in slice 2)
 - **Twins**: `pigeq twins check`: all 103 upstream cases are twinned (`twin_subagent_test.go`: the 27 cases of `subagent.test.ts`; the 7 `tool.test.ts` cases that pass `model` are
   exact twins now). The mocks of the original (`createAgentSession`, `DefaultResourceLoader`) are the `subagentHost` seam: `loaderOptions.noExtensions` is `Resources.NoExtensions`,
   `sessionOptions.tools` is `Tools`. Two twins ("filters extensions", "filters skills") check that the name list reaches the session options; the filter itself runs in the host
-  (`extensionsOverride`/`skillsOverride` are functions of the original's process), where PiG's own tests cover it.
+  (`extensionsOverride`/`skillsOverride` are functions of the original's process). That the host applies the filters as the original does is shown by two scenarios
+  (below): `sub-skills-filter` and `sub-extensions-filter`.
 - **Scenarios** (`port/scenarios/sub-*`): original under Pi against the port under a PiG built from `feat/sdk-child-agent-sessions`, the one-shots firing after the parent's turns: a text
   answer, notify (the parent wakes), an unknown model (the error lists the available models), a session that uses a tool, `extensions` and `skills` true, an empty answer, add/list/update with a
-  model and the store, and the empty-model refusals: 8 scenarios identical.
+  model and the store, and the empty-model refusals: 8 scenarios identical. One more shows the skills filter: `sub-skills-filter` (`skills: ["alpha"]` with two skills in the agent directory: the session's system text lists `alpha` and not `beta`). The system text is the host's own wording plus
+  the skills block, and Pi and PiG word the host part differently, so the scenario's normalize rules keep only what the filter decides (the inserted text cut to the `<available_skills>` block;
+  the long host text the harness reports as removed replaced by a fixed word, in both lanes alike). Recorded under Pi, `pigeq check` against the port under PiG: identical (23 events).
+  The host check (the original under PiG's Node runtime) differs from the first widget on, the known B2.
+  **The extensions filter has no scenario**: with a probe extension in the agent directory, neither Pi nor PiG lists its tool in the child's model request (identical traces for a matching and a non-matching name),
+  and a child's call of an extension tool fails on PiG with `tool probe_tool: context canceled` where Pi answers `probe ok` (also with `extensions: true`): a finding for PiG's child-session SDK, reported to the lead; the filter itself stays host code.
 - The model is resolved by the port against `ModelRegistry.Find` and `GetAvailable`, as `ctx.modelRegistry.find` and `getAvailable()`.
+
+## Close-out (slice 4 head)
+
+- **Twins**: `pigeq twins check --ledger port/upstream-tests.json --go extensions/schedule-prompt --deferred port/slices.json` (`slices.json` is `{}`): `103 exact twins, 0 skipped`.
+- **Mutations**: 392 mutants, full run `pigeq mutate --unit --jobs 4` against the child-session SDK (scenarios included). The run before the close-out left 50 not killed (44 survivors, 6 that did not build; the 6 were rewritten to compile). The tests added since
+  (`closeout_test.go`, `host_extra_test.go`, `internal/*/closeout_test.go`; `viewTheme`, `hideWhileAdding`, `jobsOverlayOptions`, `timerDelay` and `schedulerNow` exist so that the widget, the renderers, the overlay wiring, croner's timer and a due-now one-shot can be asserted) killed all but four, by assertions
+  (`croner-step-zero`, killed before only by a test timeout, is now bounded and asserted). **Four are equivalent and argued**: `jsdate-parse-hour24` (the time composer rejects hour 24 with any non-zero part anyway; `hour24_test.go` pins it), `croner-nth-fraction` (the `#` text of a
+  field only holds digits: croner rejects `1#1.5` as "contains illegal characters", checked under Node, so the value is always an integer), `jobs-shared-tag` (an unbound job is loaded by every session, so a foreign row always has a session and `&& !foreign` never decides), and `js-pad-end`
+  (`l <= n` pads `n-l = 0` spaces). Two of the 392 were last re-judged on the final tree (`widget-status-error`, now killed by `TestWidgetStatusIcons`; `ext-sendmessage-trigger`, killed). `croner-fromtz-overlap` is killed by the direct `fromTZ` test; the gap case (`croner-fromtz-gap`) by six cases checked under Node.
+- **fire-cron, 30 runs** (original under Pi against the port under PiG, `pigeq` from Pigpen main 101eaf99 with the channel-order fix, child-session pig): **30 of 30 identical**.
+- **Host check** (original under PiG's Node runtime) on the 14 other older scenarios: `settings-workdir` and `tool-definition` identical; the other 12 differ only at the first widget (`widgetLines` that PiG's RPC mode emits for a component widget, core item B2, fixed on PiG train/2b; the oracle `pig` predates it); the port equals Pi in all 14.
+- **Filters**: `sub-skills-filter` (above); the extensions filter is not observable (finding in the slice 4 notes above).
+- **Gates** (xd670, tern-ci:v3, go1.27.2, `-count=1`): `go test -race ./...` pass; `go vet` GOOS=linux, windows, darwin exit 0 (each confirmed by `go env GOOS`); `npm ci`, `npm run check` (exit 0) and `npm run generate` (no diff); `pig package validate` valid.
+- **Performance** (`handoffs/pigpen-parity/perf-schedprompt/results.md`): binary 7.36 MB stripped (floor 5.75 MB); cold start 4.96 ms (floor 4.20); `pig --mode rpc` ready 89.9 ms (original 936 ms, bare host 28 ms); `/schedule-prompt` 1.2 ms (original 1.9 ms).

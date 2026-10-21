@@ -249,6 +249,9 @@ func errorEvent(jobID, text string) *jsobj.Object {
 	return ev
 }
 
+// schedulerNow is Date.now() for the one-shot's delay; a seam for the test of a delay of exactly zero.
+var schedulerNow = jsdate.Now
+
 func (s *scheduler) scheduleJob(job *jsobj.Object) {
 	id := jobID(job)
 	switch {
@@ -276,7 +279,7 @@ func (s *scheduler) scheduleJob(job *jsobj.Object) {
 		s.mu.Unlock()
 	case strictEqualString(job.Get("type"), "once"):
 		target := toDate(job.Get("schedule"))
-		delay := target - jsdate.Now()
+		delay := target - schedulerNow()
 		if delay > 0 {
 			// PORT.md D1: Node caps a timer at 2^31-1 ms and fires a longer one after 1 ms; a Go timer takes any delay.
 			d := time.Duration(math.Min(delay, float64(math.MaxInt64/int64(time.Millisecond)))) * time.Millisecond

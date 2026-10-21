@@ -1881,7 +1881,7 @@
   "name": "jobs-cleanup-counts-all",
   "file": "jobsview.go",
   "find": "for _, j := range v.mine {\n\t\t\tif !truthy(j.Get(\"enabled\")) {\n\t\t\t\tcount++",
-  "replace": "for _, j := range v.mine {\n\t\t\tif true {\n\t\t\t\tcount++"
+  "replace": "for _, j := range v.mine {\n\t\t\tif !truthy(j.Get(\"enabled\")) || true {\n\t\t\t\tcount++"
  },
  {
   "name": "jobs-cleanup-empty-opens",
@@ -2043,7 +2043,7 @@
   "name": "flow-duplicate-allowed",
   "file": "addflow.go",
   "find": "if dup {\n\t\tui.Notify(",
-  "replace": "if false {\n\t\tui.Notify("
+  "replace": "if dup && false {\n\t\tui.Notify("
  },
  {
   "name": "flow-duplicate-text",
@@ -2061,7 +2061,7 @@
   "name": "flow-no-trim",
   "file": "addflow.go",
   "find": "validateSchedule(jobType, croner.JSTrim(raw))",
-  "replace": "validateSchedule(jobType, raw)"
+  "replace": "validateSchedule(jobType, func() string { _ = croner.JSTrim; return raw }())"
  },
  {
   "name": "flow-reprompt-placeholder",
@@ -2097,7 +2097,7 @@
   "name": "flow-declined-saves",
   "file": "addflow.go",
   "find": "if err != nil || !confirmed {\n\t\treturn err",
-  "replace": "if err != nil {\n\t\treturn err"
+  "replace": "if err != nil || (!confirmed && false) {\n\t\treturn err"
  },
  {
   "name": "flow-not-scheduled",
@@ -2168,20 +2168,20 @@
  {
   "name": "cmd-jobs-overlay-not-full",
   "file": "command.go",
-  "find": "OverlayOptions: &sdk.OverlayOptions{Width: sdk.OverlayPercent(100), MaxHeight: sdk.OverlayPercent(100)},",
-  "replace": "OverlayOptions: &sdk.OverlayOptions{Width: sdk.OverlayPercent(50), MaxHeight: sdk.OverlayPercent(100)},"
+  "find": "return &sdk.OverlayOptions{Width: sdk.OverlayPercent(100), MaxHeight: sdk.OverlayPercent(100)}",
+  "replace": "return &sdk.OverlayOptions{Width: sdk.OverlayPercent(50), MaxHeight: sdk.OverlayPercent(100)}"
  },
  {
   "name": "cmd-add-keeps-overlay",
   "file": "command.go",
-  "find": "_ = overlay.SetHidden(true)",
-  "replace": "_ = overlay"
+  "find": "_ = h.SetHidden(true)",
+  "replace": "_ = h"
  },
  {
   "name": "cmd-add-no-refocus",
   "file": "command.go",
-  "find": "_ = overlay.Focus()",
-  "replace": "_ = overlay"
+  "find": "_ = h.Focus()",
+  "replace": "_ = h"
  },
  {
   "name": "sub-default-tools",
@@ -2205,7 +2205,7 @@
   "name": "sub-skills-always-off",
   "file": "subagent.go",
   "find": "NoSkills:          !skillsEnabled,",
-  "replace": "NoSkills:          true,"
+  "replace": "NoSkills:          true || !skillsEnabled,"
  },
  {
   "name": "sub-extensions-always-off",
@@ -2253,7 +2253,7 @@
   "name": "sub-empty-list-enabled",
   "file": "subagent.go",
   "find": "return ok && len(l) > 0\n}",
-  "replace": "return ok\n}"
+  "replace": "return ok && len(l) >= 0\n}"
  },
  {
   "name": "sub-no-dispose",

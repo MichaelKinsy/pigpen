@@ -50,25 +50,49 @@ func (a *app) runCommand(ctx sdk.Context, _ string) error {
 	return nil
 }
 
-func (a *app) runJobs(ctx sdk.Context, storage jobStore, sched jobScheduler, mySessionID string) error {
-	// Hide the Jobs overlay while the add flow's dialogs are open: otherwise it sits on top of them and steals input.
-	var overlay *sdk.OverlayHandle
-	wrappedRunAdd := func() error {
-		if overlay != nil {
-			_ = overlay.SetHidden(true)
+// overlayControl is the part of the overlay handle the add flow uses.
+type overlayControl interface {
+	SetHidden(hidden bool) error
+	Focus() error
+}
+
+// hideWhileAdding wraps the add flow: the Jobs overlay is hidden while the flow's dialogs are open (it would sit on top of them and steal
+// input) and shown and focused again afterwards. handle is read at call time: the host hands the overlay over after the command started.
+func hideWhileAdding(handle func() overlayControl, add func() error) func() error {
+	return func() error {
+		if h := handle(); h != nil {
+			_ = h.SetHidden(true)
 		}
 		defer func() {
-			if overlay != nil {
-				_ = overlay.SetHidden(false)
-				_ = overlay.Focus()
+			if h := handle(); h != nil {
+				_ = h.SetHidden(false)
+				_ = h.Focus()
 			}
 		}()
-		return runAddFlow(sdkFlowUI{ctx}, storage, sched, a.currentSettings(), mySessionID)
+		return add()
 	}
+}
+
+// jobsOverlayOptions: the overlay takes the whole terminal, as the original's ctx.ui.custom({overlay: true, overlayOptions: {width: "100%", maxHeight: "100%"}}).
+func jobsOverlayOptions() *sdk.OverlayOptions {
+	return &sdk.OverlayOptions{Width: sdk.OverlayPercent(100), MaxHeight: sdk.OverlayPercent(100)}
+}
+
+func (a *app) runJobs(ctx sdk.Context, storage jobStore, sched jobScheduler, mySessionID string) error {
+	var overlay *sdk.OverlayHandle
+	handle := func() overlayControl {
+		if overlay == nil {
+			return nil
+		}
+		return overlay
+	}
+	wrappedRunAdd := hideWhileAdding(handle, func() error {
+		return runAddFlow(sdkFlowUI{ctx}, storage, sched, a.currentSettings(), mySessionID)
+	})
 	view := newJobsView(storage, sched, mySessionID, wrappedRunAdd, ctx.UITheme())
 	_, err := ctx.Custom(view, sdk.RemoteOverlayOptions{
 		Overlay:        true,
-		OverlayOptions: &sdk.OverlayOptions{Width: sdk.OverlayPercent(100), MaxHeight: sdk.OverlayPercent(100)},
+		OverlayOptions: jobsOverlayOptions(),
 		OnHandle:       func(h *sdk.OverlayHandle) { overlay = h },
 	})
 	return err

@@ -275,6 +275,17 @@ raw_scenario("sub-empty-model", "An empty model is refused on add and on update.
     {"toolCalls": [sp("update", jobId="mod0000001", model="")]}, {"text": "done"},
 ], [prompt("go", name="go")], files={STORE: store(job("mod0000001", "seeded", "0 0 1 * * *", "q", model="eq-1"))}, normalize=NORM)
 
+SKILL = "---\nname: %s\ndescription: %s skill for the filter scenario\n---\n\nUse the %s skill.\n"
+raw_scenario("sub-skills-filter", "skills=[\"alpha\"]: the session's system text lists the skill alpha and not beta (the host applies the skills filter as the original does).", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="check", model="eq-1", skills=["alpha"])]}, {"text": "scheduled"},
+    {"text": "filtered"},
+], [prompt("add", name="add"), WAIT], tailMs=500,
+    # The session's system text is the host's own wording plus the skills block. Pi and PiG word the host part differently, so the rules keep only
+    # what the filter decides: the inserted text is cut to the <available_skills> block, and the host text the harness reports as removed (over 900 characters,
+    # without the marker) is replaced by a fixed word, in both lanes alike.
+    normalize=NORM + [{"pattern": r"(?s)^.*(<available_skills>.*</available_skills>).*$", "replacement": "SKILLS:$1"},
+                      {"pattern": r"(?s)^(?:[^S]|S[^K]|SK[^I]|SKI[^L]|SKIL[^L]|SKILL[^S]|SKILLS[^:]).{900}.*$", "replacement": "<host system text>"}],
+    agentFiles={"skills/alpha/SKILL.md": SKILL % ("alpha", "Alpha", "alpha"), "skills/beta/SKILL.md": SKILL % ("beta", "Beta", "beta")})
 print("wrote", len(os.listdir(out)), "scenarios")
 
 # ---- evidence: behavior of the original that the port deliberately does not copy (PORT.md D1). Recorded under Pi only. ----
