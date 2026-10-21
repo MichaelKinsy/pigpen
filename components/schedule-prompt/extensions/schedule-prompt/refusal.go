@@ -12,3 +12,5 @@ const (
 func unsupported(feature string) error {
 	return fmt.Errorf("%s (Go port) does not support %s yet. Install the original extension, %s, which runs unchanged in PiG.", packageName, feature, originalSpec)
 }
+
+var errNoSession = fmt.Errorf("schedule_prompt is not ready: the session has not started")

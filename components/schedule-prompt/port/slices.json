@@ -1,7 +1,3 @@
 {
- "scheduler": "not ported: slice 2 (the scheduler: schedule parsing, croner-compatible next-run times, firing, statistics, the subagent marker delivery)",
- "tool": "not ported: slice 2 (the schedule_prompt tool: add, remove, list, enable, disable, update, cleanup)",
- "settings": "not ported: slice 2 (the two-layer settings files)",
- "cron-widget": "not ported: slice 3 (the live widget)",
- "subagent": "not ported: slice 4 (the per-task model mode: an in-process agent session, which the Go SDK cannot start yet)"
+ "subagent": "not ported: slice 4 (the per-task model mode: an in-process agent session, which the Go SDK of PiG 0.5.0 cannot start; PiG's branch feat/sdk-child-agent-sessions adds it)"
 }
