@@ -49,22 +49,6 @@ func TestEveryUnportedCommandIsRefused(t *testing.T) {
 	}
 }
 
-func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
-	settings := map[string]struct{ json, feature string }{
-		"sendDelayMs": {`{"powerline":{"sendDelayMs":1500}}`, "delayed send (powerline.sendDelayMs)"},
-	}
-	for name, c := range settings {
-		t.Run(name, func(t *testing.T) {
-			h := tuiRig{settings: c.json}.start(t)
-			got := notifications(h)
-			want := "warning: " + refusalFor(c.feature)
-			if len(got) != 1 || got[0] != want {
-				t.Errorf("notifications = %q, want exactly %q", got, want)
-			}
-		})
-	}
-}
-
 func TestTheProfilerEnvironmentIsRefused(t *testing.T) {
 	t.Setenv("POWERLINE_DEBUG_PERF", "1")
 	h := tuiRig{}.start(t)
@@ -79,6 +63,8 @@ func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 	for name, json := range map[string]string{
 		"vibe off":           `{"workingVibe":"off"}`,
 		"delay zero":         `{"powerline":{"sendDelayMs":0}}`,
+		"delay set":          `{"powerline":{"sendDelayMs":1500}}`,
+		"bash mode settings": `{"bashMode":{"completions":true}}`,
 		"native compaction":  `{"powerline":{"queue":{"compactPromptMode":"native"}}}`,
 		"last prompt off":    `{"showLastPrompt":false}`,
 		"last prompt on":     `{"showLastPrompt":true}`,
@@ -92,23 +78,5 @@ func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 				t.Errorf("notifications = %q, want none", got)
 			}
 		})
-	}
-}
-
-func TestSeveralUnportedSettingsAreEachRefused(t *testing.T) {
-	t.Setenv("POWERLINE_DEBUG_PERF", "1")
-	h := tuiRig{settings: `{"powerline":{"sendDelayMs":1000,"autoFollowUp":true}}`}.start(t)
-	got := notifications(h)
-	want := []string{
-		"warning: " + refusalFor("delayed send (powerline.sendDelayMs)"),
-		"warning: " + refusalFor("the editor performance profiler (POWERLINE_DEBUG_PERF)"),
-	}
-	if len(got) != len(want) {
-		t.Fatalf("notifications = %q, want %q", got, want)
-	}
-	for i := range want {
-		if got[i] != want[i] {
-			t.Errorf("notification %d = %q, want %q", i, got[i], want[i])
-		}
 	}
 }

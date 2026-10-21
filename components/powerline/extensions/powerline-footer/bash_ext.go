@@ -3,7 +3,6 @@ package powerline_footer
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -31,7 +30,6 @@ type bashExt struct {
 	ctx  sdk.Context // the latest handler's context: the shell's directory and the notifications follow it
 
 	autocompleteOnce sync.Once
-	repaintPending   atomic.Bool
 }
 
 func newBashExt(a *app) *bashExt { return &bashExt{a: a} }
@@ -81,23 +79,8 @@ func (b *bashExt) current() *bashMode {
 	return b.mode
 }
 
-// scheduleRepaint is requestStatusRender: it never blocks (the shell's output goroutines call it), and a repaint that is
-// already waiting covers the request.
-func (b *bashExt) scheduleRepaint() {
-	if !b.repaintPending.CompareAndSwap(false, true) {
-		return
-	}
-	go func() {
-		b.repaintPending.Store(false)
-		a := b.a
-		a.mu.Lock()
-		defer a.mu.Unlock()
-		if a.pl == nil || !a.pl.enabled || !a.host.ctx.HasUI() {
-			return
-		}
-		a.host.Repaint()
-	}()
-}
+// scheduleRepaint is requestStatusRender.
+func (b *bashExt) scheduleRepaint() { b.a.scheduleRepaint() }
 
 // The bashHooks the core calls.
 

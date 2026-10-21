@@ -1,6 +1,8 @@
 package powerline_footer
 
 import (
+	"sync"
+
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
@@ -14,9 +16,16 @@ import (
 // property, and getEditorComponent of another extension's editor (the original passes the previous editor's autocomplete
 // provider through; the SDK returns only this extension's own factory, so there is no previous editor to read).
 
+// powerlineBase is the default editor as the powerline editor uses it; *sdk.Editor implements it.
+type powerlineBase interface {
+	bashEditorBase
+	AddToHistory(text string) error
+}
+
 type powerlineEditor struct {
 	*sdk.Editor // inherits HandleMouse, SetText, InsertTextAtCursor and AddToHistory
-	base        editorBase
+	base        powerlineBase
+	mu          sync.Mutex      // one input at a time reaches the default editor: a key, or a delayed prompt being sent
 	bash        *bashModeEditor // nil until the bash slice is wired in (internal tests)
 	ctx         sdk.Context
 	k           *keysExt
@@ -28,6 +37,12 @@ func (e *powerlineEditor) HandleInput(data string) error {
 	if isPrintableInput(data) {
 		return e.pass(data)
 	}
+	switch e.queueKey(data) {
+	case editorHandled:
+		return nil
+	case editorPassThrough:
+		return e.pass(data)
+	}
 	if e.k.editorInput(e.ctx, data) {
 		return nil
 	}
@@ -36,6 +51,8 @@ func (e *powerlineEditor) HandleInput(data string) error {
 
 // pass is originalHandleInput: BashModeEditor.handleInput over the default editor.
 func (e *powerlineEditor) pass(data string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
 	if e.bash != nil {
 		return e.bash.handleInput(data)
 	}
@@ -53,6 +70,50 @@ func (e *powerlineEditor) Render(width int) ([]string, error) {
 	return renderPowerlineEditor(base, &e.border, width, active, completions)
 }
 
+// queueKey is the queue's part of handleInput (index.ts 3335-3384): Esc takes a delayed prompt back, /compact starts a compaction
+// the queue knows of, a prompt submitted during a compaction is queued for after it, and a prompt submitted under
+// powerline.sendDelayMs waits.
+func (e *powerlineEditor) queueKey(data string) editorVerdict {
+	a := e.k.a
+	if a == nil {
+		return editorContinue
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.pl == nil {
+		return editorContinue
+	}
+	bashActive := e.bash != nil && e.bash.env.active()
+	return a.pl.queue.editorKey(editorQueueAdapter{e}, data, bashActive)
+}
+
+// editorQueueAdapter is the editor as the queue sees it (queueKeyEditor).
+type editorQueueAdapter struct{ e *powerlineEditor }
+
+func (a editorQueueAdapter) GetExpandedText() string {
+	text, _ := a.e.base.GetExpandedText()
+	return text
+}
+func (a editorQueueAdapter) SetText(text string)      { _ = a.e.base.SetText(text) }
+func (a editorQueueAdapter) AddToHistory(text string) { _ = a.e.base.AddToHistory(text) }
+func (a editorQueueAdapter) ShowingAutocomplete() bool {
+	v, _ := a.e.base.IsShowingAutocomplete()
+	return v
+}
+
+// SubmitText sends a delayed prompt through Pi's own submit path: its text goes into the editor and Enter is pressed there. A
+// draft typed during the countdown is put back afterwards.
+func (a editorQueueAdapter) SubmitText(text string) {
+	a.e.mu.Lock()
+	defer a.e.mu.Unlock()
+	draft, _ := a.e.base.GetExpandedText()
+	_ = a.e.base.SetText(text)
+	_ = a.e.base.HandleInput("\r")
+	if jsTrim(draft) != "" {
+		_ = a.e.base.SetText(draft)
+	}
+}
+
 // installEditor installs the powerline editor; with no UI or in RPC mode the SDK ignores it, as Pi does.
 func (k *keysExt) installEditor(ctx sdk.Context) {
 	var bash *bashExt
@@ -61,6 +122,9 @@ func (k *keysExt) installEditor(ctx sdk.Context) {
 	}
 	_ = ctx.SetEditorComponent(func(base *sdk.Editor) sdk.EditorComponent {
 		e := &powerlineEditor{Editor: base, base: base, ctx: ctx, k: k}
+		if k.a != nil && k.a.pl != nil {
+			k.a.pl.queue.editor = editorQueueAdapter{e} // called with a.mu held, from the core's setup
+		}
 		if bash != nil {
 			mode := bash.bind(ctx)
 			e.bash = newBashModeEditor(base, bash.editorEnv(ctx, mode, k.ensure(ctx)))
@@ -72,6 +136,9 @@ func (k *keysExt) installEditor(ctx sdk.Context) {
 
 // uninstallEditor restores the host's editor (ctx.ui.setEditorComponent(undefined)).
 func (k *keysExt) uninstallEditor(ctx sdk.Context) {
+	if k.a != nil && k.a.pl != nil {
+		k.a.pl.queue.editor = nil
+	}
 	if k.a != nil && k.a.bash != nil {
 		if mode := k.a.bash.current(); mode != nil {
 			mode.setEditorHooks(bashEditorHooks{})

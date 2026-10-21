@@ -342,12 +342,6 @@
   "replace": ""
  },
  {
-  "name": "bash-ext-repaint-guard",
-  "file": "bash_ext.go",
-  "find": "if !b.repaintPending.CompareAndSwap(false, true) {\n\t\treturn\n\t}",
-  "replace": "if false {\n\t\treturn\n\t}"
- },
- {
   "name": "hooks-queue-open",
   "file": "extension.go",
   "find": "a.keys.setHook(actionQueueOpen, a.openQueuePicker)",
@@ -358,5 +352,113 @@
   "file": "extension.go",
   "find": "a.keys.setHook(actionReply, func(ctx sdk.Context) {",
   "replace": "a.keys.setHook(\"unused\", func(ctx sdk.Context) {"
+ },
+ {
+  "name": "queue-key-follow-up",
+  "file": "queue_editor.go",
+  "find": "FollowUpSubmit: piKeyMatches(data, \"app.message.followUp\"),",
+  "replace": "FollowUpSubmit: false,"
+ },
+ {
+  "name": "queue-key-newline",
+  "file": "queue_editor.go",
+  "find": "Submit:         piKeyMatches(data, \"tui.input.submit\") && !piKeyMatches(data, \"tui.input.newLine\"),",
+  "replace": "Submit:         piKeyMatches(data, \"tui.input.submit\"),"
+ },
+ {
+  "name": "queue-key-early-out",
+  "file": "queue_editor.go",
+  "find": "if !in.Interrupt && !in.Submit && !in.FollowUpSubmit {\n\t\treturn editorContinue\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "queue-key-autocomplete",
+  "file": "queue_editor.go",
+  "find": "in.AutocompleteShowing = ed.ShowingAutocomplete()",
+  "replace": "in.AutocompleteShowing = false"
+ },
+ {
+  "name": "queue-key-no-delay",
+  "file": "queue_editor.go",
+  "find": "if !in.Submit || bashModeActive || q.p.config.SendDelayMs <= 0 {",
+  "replace": "if true {"
+ },
+ {
+  "name": "queue-key-bash",
+  "file": "queue_editor.go",
+  "find": "if !in.Submit || bashModeActive || q.p.config.SendDelayMs <= 0 {",
+  "replace": "if !in.Submit || q.p.config.SendDelayMs <= 0 {"
+ },
+ {
+  "name": "queue-key-empty",
+  "file": "queue_editor.go",
+  "find": "\tif text == \"\" {\n\t\tq.sendPendingNow()\n\t\treturn editorHandled\n\t}\n\tif strings.HasPrefix(text, \"/\")",
+  "replace": "\tif text == \"\" {\n\t\treturn editorHandled\n\t}\n\tif strings.HasPrefix(text, \"/\")"
+ },
+ {
+  "name": "queue-key-bang",
+  "file": "queue_editor.go",
+  "find": "|| strings.HasPrefix(text, \"!\") {\n\t\treturn editorContinue",
+  "replace": "{\n\t\treturn editorContinue"
+ },
+ {
+  "name": "queue-key-history",
+  "file": "queue_editor.go",
+  "find": "\ted.AddToHistory(text)\n\ted.SetText(\"\")\n\tq.submitWithDelay(text, ed.SubmitText)",
+  "replace": "\ted.SetText(\"\")\n\tq.submitWithDelay(text, ed.SubmitText)"
+ },
+ {
+  "name": "queue-key-clear",
+  "file": "queue_editor.go",
+  "find": "\ted.AddToHistory(text)\n\ted.SetText(\"\")\n\tq.submitWithDelay(text, ed.SubmitText)",
+  "replace": "\ted.AddToHistory(text)\n\tq.submitWithDelay(text, ed.SubmitText)"
+ },
+ {
+  "name": "editor-queue-pass-through",
+  "file": "editor_ext.go",
+  "find": "\tcase editorPassThrough:\n\t\treturn e.pass(data)\n",
+  "replace": "\tcase editorPassThrough:\n\t\treturn nil\n"
+ },
+ {
+  "name": "editor-queue-handled",
+  "file": "editor_ext.go",
+  "find": "\tcase editorHandled:\n\t\treturn nil\n",
+  "replace": ""
+ },
+ {
+  "name": "editor-submit-restores-draft",
+  "file": "editor_ext.go",
+  "find": "if jsTrim(draft) != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "editor-submit-enter",
+  "file": "editor_ext.go",
+  "find": "_ = a.e.base.HandleInput(\"\\r\")",
+  "replace": "_ = a.e.base.HandleInput(\"\\n\\n\")"
+ },
+ {
+  "name": "editor-queue-bash-active",
+  "file": "editor_ext.go",
+  "find": "bashActive := e.bash != nil && e.bash.env.active()",
+  "replace": "bashActive := false"
+ },
+ {
+  "name": "app-queue-repaint",
+  "file": "extension.go",
+  "find": "a.pl.queue.requestRender = a.scheduleRepaint\n",
+  "replace": ""
+ },
+ {
+  "name": "app-repaint-guard",
+  "file": "extension.go",
+  "find": "if !a.repaintPending.CompareAndSwap(false, true) {\n\t\treturn\n\t}",
+  "replace": "if false {\n\t\treturn\n\t}"
+ },
+ {
+  "name": "editor-queue-attach",
+  "file": "editor_ext.go",
+  "find": "k.a.pl.queue.editor = editorQueueAdapter{e} // called with a.mu held, from the core's setup",
+  "replace": "_ = e"
  }
 ]

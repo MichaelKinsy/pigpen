@@ -3,6 +3,7 @@ package powerline_footer
 import (
 	"slices"
 	"sync"
+	"sync/atomic"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -218,6 +219,27 @@ type app struct {
 	cdq       *cdQuote     // /cd, /reply and the last-prompt line (cdquote_ext.go)
 	keys      *keysExt
 	bash      *bashExt // bash mode (bash_ext.go)
+
+	repaintPending atomic.Bool
+}
+
+// scheduleRepaint draws the bar's widgets again from a goroutine that holds no lock: the shell's output goroutines, the delayed
+// send's timers and everything else that cannot take a.mu where it stands call it. It never blocks, and a repaint that is
+// already waiting covers the request.
+func (a *app) scheduleRepaint() {
+	if !a.repaintPending.CompareAndSwap(false, true) {
+		return
+	}
+	go func() {
+		a.repaintPending.Store(false)
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		if a.pl == nil || !a.pl.enabled || !a.host.ctx.HasUI() {
+			return
+		}
+		a.pl.base = nil
+		a.host.Repaint()
+	}()
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -226,6 +248,7 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.pl = newPowerline(a.host)
 		a.host.pl = a.pl
 		a.pl.queue.mu = &a.mu
+		a.pl.queue.requestRender = a.scheduleRepaint
 		if a.keys != nil {
 			a.pl.keys = a.keys
 		}

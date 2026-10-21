@@ -48,6 +48,7 @@ var piKeyDefaults = map[string][]string{
 	"tui.editor.deleteWordForward":  {"alt+d", "alt+delete"},
 	"tui.editor.deleteToLineStart":  {"ctrl+u"},
 	"tui.editor.deleteToLineEnd":    {"ctrl+k"},
+	"app.message.followUp":          {"alt+enter"},
 }
 
 // piKeyMatches is keybindings.matches(data, id) at Pi's defaults.

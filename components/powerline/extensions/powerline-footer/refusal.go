@@ -28,12 +28,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 	var features []string
 	add := func(feature string) { features = append(features, feature) }
 
-	rawPowerline := asObject(settings["powerline"])
-	if rawPowerline != nil {
-		if cfg.SendDelayMs > 0 {
-			add("delayed send (powerline.sendDelayMs)")
-		}
-	}
 	if readEditorPerfOptions(env).Enabled {
 		add("the editor performance profiler (POWERLINE_DEBUG_PERF)")
 	}

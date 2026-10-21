@@ -106,7 +106,7 @@ func TestPostCompactionQueueTwins(t *testing.T) {
 		eq(t, h.status(h.item.ID), statusQueued, "still queued")
 	})
 	tskip(t, "post-compaction-queue", "reload -> editor /compact -> captured prompt starts after delayed manual completion without agent_settled",
-		"SDK: setEditorComponent. The case types /compact and a prompt into Pi's real CustomEditor (index.ts 3342-3384) inside a real Pi SDK session (PI_COMPACTION_SDK, skipped upstream without it); an extension cannot install or wrap the editor. The delivery half it ends with is covered by the two twins above and by TestPostCompactionDeliveryAfterAManualCompaction")
+		"The case types /compact and a prompt into Pi's real CustomEditor (index.ts 3342-3384) inside a real Pi SDK session (PI_COMPACTION_SDK, skipped upstream without it), which needs Pi's session runtime. The editor half is covered by TestEditorKeyStartsACompaction and TestEditorKeyCapturesAPromptTypedWhileCompacting, the delivery half it ends with by the two twins above and by TestPostCompactionDeliveryAfterAManualCompaction")
 }
 
 // The delivery after a manual compaction without agent_settled, as the skipped upstream case ends: the compaction completes

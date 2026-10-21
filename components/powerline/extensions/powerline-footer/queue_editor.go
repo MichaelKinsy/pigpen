@@ -9,16 +9,26 @@ import (
 // The editor-facing half of the queue: delayed send (powerline.sendDelayMs) and the capture of what the user types while the
 // session compacts. upstream: index.ts 1554-1603 (pending send), 3335-3384 (the editor's handleInput wrapper) and 3052-3058.
 //
-// Both need Pi's editor: its submit path (onSubmit, handleInput, getExpandedText, setText, addToHistory) and its keybindings.
-// The editor hook is Context.SetEditorComponent (PiG v0.5.0), which the next slice wires in; until then
-// nothing calls this code outside the tests, powerline.sendDelayMs stays refused (refusal.go) and the typed-prompt capture is
-// not active. The code is here, with the original's logic and its own tests, for that slice.
+// Both work through the powerline editor (editor_ext.go), installed with Context.SetEditorComponent (PiG v0.5.0). The original
+// wraps the editor's onSubmit property, which the SDK editor does not expose, so a submit is recognised as the Enter key
+// (Pi's default tui.input.submit; the SDK has no keybinding lookup, E10) and a delayed prompt is sent again later by putting its
+// text in the editor and pressing Enter there, which runs Pi's own submit path (slash commands, templates, streaming
+// behaviour). The draft typed during the countdown is put back after it.
 
 // queueEditor is the part of Pi's editor the queue uses.
 type queueEditor interface {
 	GetExpandedText() string
 	SetText(text string)
 	AddToHistory(text string)
+}
+
+// queueKeyEditor is the editor as editorKey uses it.
+type queueKeyEditor interface {
+	queueEditor
+	// ShowingAutocomplete is editor.isShowingAutocomplete().
+	ShowingAutocomplete() bool
+	// SubmitText sends text through the editor's submit path, as the editor's onSubmit does.
+	SubmitText(text string)
 }
 
 type pendingSend struct {
@@ -226,4 +236,41 @@ func (q *queueState) interceptEditorInput(ed queueEditor, in editorInput) editor
 		return editorHandled
 	}
 	return editorContinue
+}
+
+// editorKey is the queue's part of the editor's handleInput for one key: the interception of interceptEditorInput, and the
+// delay of a submitted prompt under powerline.sendDelayMs. It assumes the lock is held. data is compared with Pi's default key
+// bindings.
+func (q *queueState) editorKey(ed queueKeyEditor, data string, bashModeActive bool) editorVerdict {
+	in := editorInput{
+		Interrupt:      piKeyMatches(data, "app.interrupt"),
+		Submit:         piKeyMatches(data, "tui.input.submit") && !piKeyMatches(data, "tui.input.newLine"),
+		FollowUpSubmit: piKeyMatches(data, "app.message.followUp"),
+		BashModeActive: bashModeActive,
+	}
+	if !in.Interrupt && !in.Submit && !in.FollowUpSubmit {
+		return editorContinue
+	}
+	if in.Interrupt && q.pendingSend != nil {
+		in.AutocompleteShowing = ed.ShowingAutocomplete()
+	}
+	if verdict := q.interceptEditorInput(ed, in); verdict != editorContinue {
+		return verdict
+	}
+	if !in.Submit || bashModeActive || q.p.config.SendDelayMs <= 0 {
+		return editorContinue
+	}
+	// Pi's editor submits the expanded text and, before it calls onSubmit, adds it to its history and clears itself.
+	text := jsTrim(ed.GetExpandedText())
+	if text == "" {
+		q.sendPendingNow()
+		return editorHandled
+	}
+	if strings.HasPrefix(text, "/") || strings.HasPrefix(text, "!") {
+		return editorContinue
+	}
+	ed.AddToHistory(text)
+	ed.SetText("")
+	q.submitWithDelay(text, ed.SubmitText)
+	return editorHandled
 }
