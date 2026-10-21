@@ -194,6 +194,18 @@ func TestSessionLifecycle(t *testing.T) {
 		}
 	})
 
+	t.Run("uses only the first working directory, as pi-ahp does", func(t *testing.T) {
+		l := newLifecycle(t)
+		c := l.initialized()
+		a := wire.PathToFileURI(t.TempDir())
+		b := wire.PathToFileURI(t.TempDir())
+		uri := wire.SessionURI(newID())
+		c.Must("createSession", obj{"channel": uri, "workingDirectories": []string{a, b}})
+		if got := l.h.host.Store().Session(uri).WorkingDirectories; !reflect.DeepEqual(got, []ahptypes.URI{a}) {
+			t.Fatalf("workingDirectories = %v", got)
+		}
+	})
+
 	twin.Run(t, "session-lifecycle", "tracks the active session count in root state", func(t *testing.T) {
 		l := newLifecycle(t)
 		c := l.initialized()

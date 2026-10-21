@@ -71,7 +71,9 @@ session. The equivalence method is therefore three layers, not the scenario harn
 
 1. **One session.** Only the running PiG session has an agent. Other sessions in the catalogue are
    read from their files (browse, history); starting a turn on one fails with a clear error.
-   Clients cannot create sessions, and `chat/truncated`, fork and tree navigation are refused: the
+   `createSession` is accepted and registers the channel (only the first working directory is used, as
+   in pi-ahp), but the backend factory then fails readiness because only the running session
+   has an agent, so a client cannot get a usable new session. `chat/truncated`, fork and tree navigation are refused: the
    SDK offers `NewSession`, `Fork` and `NavigateTree` to commands only.
 2. **Session replacement.** Contexts retained from `session_start` belong to their runtime. On
    `new`, `resume`, `fork` and `reload`, PiG emits `session_shutdown` and runs the extension factory
