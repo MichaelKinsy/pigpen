@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-session-ingest",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "description": "read_session: a token-safe tool that lets the model query Pi and PiG JSONL session transcripts (contents, search, single turns, tool usage, stats)",
   "keywords": [
     "pig-package",

@@ -37,6 +37,8 @@ type turnMessage struct {
 	StopReason   string        `json:"stopReason,omitempty"`
 	ErrorMessage string        `json:"errorMessage,omitempty"`
 	Model        string        `json:"model,omitempty"`
+	CustomType   string        `json:"customType,omitempty"`
+	TokensBefore int           `json:"tokensBefore,omitempty"`
 	Usage        *usageSummary `json:"usage,omitempty"`
 }
 
@@ -57,7 +59,7 @@ func handleTurn(session sessionFile, params map[string]any, format, path string,
 	if format == "json" {
 		return report, nil
 	}
-	content := truncateOutput(formatTurnMarkdown(report, session.Metadata), path, "turn", start, limit, 0)
+	content := truncateOutput(session.Metadata.Leaf, formatTurnMarkdown(report, session.Metadata), path, "turn", start, limit, 0)
 	return sdk.ToolResult{
 		Content: content,
 		Preview: fmt.Sprintf("Turn %d of %d — %d messages", turn, total, len(report.Messages)),
@@ -88,7 +90,7 @@ func buildTurnReport(session sessionFile, turn, total int, include []string) tur
 		if current != turn {
 			continue
 		}
-		out := turnMessage{EntryIndex: msg.EntryIndex, MessageIndex: msg.MessageIndex, Timestamp: msg.Timestamp, Role: msg.Role, ToolName: msg.ToolName, Model: msg.Model}
+		out := turnMessage{EntryIndex: msg.EntryIndex, MessageIndex: msg.MessageIndex, Timestamp: msg.Timestamp, Role: msg.Role, ToolName: msg.ToolName, Model: msg.Model, CustomType: msg.CustomType, TokensBefore: msg.TokensBefore}
 		if msg.Role == "toolResult" {
 			if want["tool_results"] {
 				out.Text = msg.Texts
@@ -121,7 +123,7 @@ func buildTurnReport(session sessionFile, turn, total int, include []string) tur
 func formatTurnMarkdown(report turnReport, meta sessionMetadata) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session turn %d of %d\n\n", report.Turn, report.TotalTurns)
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(meta.ID)))
+	writeSessionHeader(&b, meta)
 	fmt.Fprintf(&b, "- messages: %d\n", len(report.Messages))
 	fmt.Fprintf(&b, "- include: %s\n", strings.Join(report.Include, ", "))
 	for _, msg := range report.Messages {
@@ -131,6 +133,12 @@ func formatTurnMarkdown(report turnReport, meta sessionMetadata) string {
 		}
 		if msg.Model != "" {
 			fmt.Fprintf(&b, "- model: %s\n", msg.Model)
+		}
+		if msg.CustomType != "" {
+			fmt.Fprintf(&b, "- custom_type: %s\n", msg.CustomType)
+		}
+		if msg.TokensBefore > 0 {
+			fmt.Fprintf(&b, "- tokens_before_compaction: %d\n", msg.TokensBefore)
 		}
 		if msg.IsError {
 			fmt.Fprintf(&b, "- errors: tool result reported an error\n")
@@ -209,7 +217,7 @@ func handleTools(session sessionFile, params map[string]any, format, path string
 		return report, nil
 	}
 	return sdk.ToolResult{
-		Content: truncateOutput(formatToolsMarkdown(report), path, "tools", start, limit, report.FilesTotal),
+		Content: truncateOutput(session.Metadata.Leaf, formatToolsMarkdown(report), path, "tools", start, limit, report.FilesTotal),
 		Preview: fmt.Sprintf("%d tool calls across %d tools, %d files", report.TotalCalls, len(report.Tools), report.FilesTotal),
 	}, nil
 }
@@ -292,7 +300,7 @@ func buildToolsReport(session sessionFile, turn, start, limit int) toolsReport {
 func formatToolsMarkdown(report toolsReport) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session tools\n\n")
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(report.Session.ID)))
+	writeSessionHeader(&b, report.Session)
 	if report.Turn > 0 {
 		fmt.Fprintf(&b, "- turn: %d\n", report.Turn)
 	}
@@ -330,6 +338,7 @@ type statsReport struct {
 	ToolCalls       int             `json:"toolCalls"`
 	Errors          int             `json:"errors"`
 	Usage           usageSummary    `json:"usage"`
+	OtherUsage      usageSummary    `json:"otherUsage,omitempty"`
 	Models          []modelStat     `json:"models,omitempty"`
 	FirstTimestamp  string          `json:"firstTimestamp,omitempty"`
 	LastTimestamp   string          `json:"lastTimestamp,omitempty"`
@@ -351,7 +360,7 @@ func handleStats(session sessionFile, format, path string) (any, error) {
 		return report, nil
 	}
 	return sdk.ToolResult{
-		Content: truncateOutput(formatStatsMarkdown(report), path, "stats", 0, 0, 0),
+		Content: truncateOutput(session.Metadata.Leaf, formatStatsMarkdown(report), path, "stats", 0, 0, 0),
 		Preview: fmt.Sprintf("%d turns, %d messages, %d tokens, $%.4f", report.Turns, report.Messages, report.Usage.Total, report.Usage.Cost),
 	}, nil
 }
@@ -396,6 +405,8 @@ func buildStatsReport(session sessionFile) statsReport {
 			}
 		}
 	}
+	report.OtherUsage = session.SideUsage
+	report.Usage = addUsage(report.Usage, session.SideUsage)
 	if !first.IsZero() {
 		report.DurationSeconds = int(last.Sub(first).Seconds())
 	}
@@ -427,7 +438,7 @@ func parseTimestamp(ts string) (time.Time, bool) {
 func formatStatsMarkdown(report statsReport) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session stats\n\n")
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(report.Session.ID)))
+	writeSessionHeader(&b, report.Session)
 	fmt.Fprintf(&b, "- cwd: %s\n", emptyDash(report.Session.CWD))
 	fmt.Fprintf(&b, "- turns: %d\n", report.Turns)
 	fmt.Fprintf(&b, "- messages: %d\n", report.Messages)
@@ -447,6 +458,9 @@ func formatStatsMarkdown(report statsReport) string {
 	u := report.Usage
 	fmt.Fprintf(&b, "- tokens: in %d, out %d, cache read %d, cache write %d, total %d\n", u.Input, u.Output, u.CacheRead, u.CacheWrite, u.Total)
 	fmt.Fprintf(&b, "- cost: $%.4f\n", u.Cost)
+	if o := report.OtherUsage; o != (usageSummary{}) {
+		fmt.Fprintf(&b, "- usage_outside_messages (included above): total %d tokens, $%.4f\n", o.Total, o.Cost)
+	}
 	if report.MalformedJSON > 0 {
 		fmt.Fprintf(&b, "- malformed_json_lines: %d\n", report.MalformedJSON)
 	}

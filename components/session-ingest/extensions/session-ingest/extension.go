@@ -40,58 +40,35 @@ func readSessionSchema() sdk.Schema {
 		"properties": map[string]any{
 			"path": map[string]any{
 				"type":        "string",
-				"description": "Path to a Pi or PiG .jsonl session file.",
+				"description": "Path to a Pi or PiG .jsonl session file. Reads the active branch of the session tree: the path from the last entry back to the root.",
 			},
 			"mode": map[string]any{
 				"type":    "string",
 				"enum":    []string{"toc", "query", "slice", "turn", "tools", "stats"},
 				"default": "toc",
 			},
-			"query":         map[string]any{"type": "string"},
-			"regex":         map[string]any{"type": "boolean", "default": false},
-			"caseSensitive": map[string]any{"type": "boolean", "default": false},
+			"query":         map[string]any{"type": "string", "description": "Text to search for. mode=query only."},
+			"regex":         map[string]any{"type": "boolean", "default": false, "description": "Treat query as a regular expression. mode=query only."},
+			"caseSensitive": map[string]any{"type": "boolean", "default": false, "description": "mode=query only."},
 			"turn":          map[string]any{"type": "integer", "minimum": 1, "description": "1-based turn number. Required for mode=turn; optional filter for mode=tools."},
-			"start":         map[string]any{"type": "integer", "default": 0},
-			"limit":         map[string]any{"type": "integer", "default": 20, "minimum": 1, "maximum": 200},
+			"start":         map[string]any{"type": "integer", "default": 0, "description": "First item of the page. Not used by mode=stats."},
+			"limit":         map[string]any{"type": "integer", "default": 20, "minimum": 1, "maximum": 200, "description": "Page size. Not used by mode=stats."},
 			"roles": map[string]any{
-				"type":  "array",
-				"items": map[string]any{"type": "string", "enum": []string{"user", "assistant", "toolResult", "custom", "system"}},
+				"description": "Only these roles. mode=slice only.",
+				"type":        "array",
+				"items":       map[string]any{"type": "string", "enum": []string{"user", "assistant", "toolResult", "bashExecution", "custom", "branchSummary", "compactionSummary", "system"}},
 			},
 			"include": map[string]any{
-				"type":    "array",
-				"items":   map[string]any{"type": "string", "enum": []string{"text", "thinking", "tool_calls", "tool_results", "errors", "usage"}},
-				"default": []string{"text", "tool_calls", "errors"},
+				"description": "What to show for each message. mode=turn only.",
+				"type":        "array",
+				"items":       map[string]any{"type": "string", "enum": []string{"text", "thinking", "tool_calls", "tool_results", "errors", "usage"}},
+				"default":     []string{"text", "tool_calls", "errors"},
 			},
+			"leaf":            map[string]any{"type": "string", "description": "Entry id the branch ends at: read that branch instead of the active one (the path from the last entry in the file to the root). Use it for a branch the session was forked away from; the ids are in the session file. Applies to every mode; an id that is not in the file is an error."},
 			"maxCharsPerItem": map[string]any{"type": "integer", "default": 0, "minimum": 0, "maximum": 50000, "description": "Max chars per message text block. 0 = no per-item truncation (default)."},
 			"format":          map[string]any{"type": "string", "enum": []string{"compact_markdown", "json"}, "default": "compact_markdown"},
 		},
 	}
-}
-
-// modeOnlyParams lists, per parameter, the only modes that use it. A parameter
-// given for any other mode would be ignored, so it is refused instead.
-var modeOnlyParams = []struct {
-	name  string
-	modes []string
-}{
-	{"query", []string{"query"}},
-	{"regex", []string{"query"}},
-	{"caseSensitive", []string{"query"}},
-	{"roles", []string{"slice"}},
-	{"include", []string{"turn"}},
-	{"turn", []string{"turn", "tools"}},
-	{"start", []string{"toc", "query", "slice", "turn", "tools"}},
-	{"limit", []string{"toc", "query", "slice", "turn", "tools"}},
-}
-
-func rejectInapplicableParams(params map[string]any, mode string) error {
-	for _, p := range modeOnlyParams {
-		if _, given := params[p.name]; !given || slices.Contains(p.modes, mode) {
-			continue
-		}
-		return sdk.NewToolError(fmt.Sprintf("@pi-in-go/pigpen-session-ingest does not support the %q parameter with mode=%s (it applies only to mode=%s).", p.name, mode, strings.Join(p.modes, ", mode=")))
-	}
-	return nil
 }
 
 // Output truncation constants — match pig's built-in tool limits.
@@ -106,10 +83,6 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 	case "toc", "query", "slice", "turn", "tools", "stats":
 	default:
 		return nil, sdk.NewToolError(fmt.Sprintf("unknown mode %q", mode))
-	}
-
-	if err := rejectInapplicableParams(params, mode); err != nil {
-		return nil, err
 	}
 
 	path := stringParam(params, "path", "")
@@ -142,7 +115,7 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 	if mode == "query" {
 		parseChars = 0
 	}
-	session, err := parseSessionFile(path, parseChars)
+	session, err := parseSessionFileAt(path, parseChars, stringParam(params, "leaf", ""))
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
@@ -160,7 +133,7 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 		if format == "json" {
 			return report, nil
 		}
-		content := truncateOutput(formatQueryMarkdown(report, width), path, mode, start, limit, report.TotalHits)
+		content := truncateOutput(session.Metadata.Leaf, formatQueryMarkdown(report, width), path, mode, start, limit, report.TotalHits)
 		preview := queryPreview(report)
 		return sdk.ToolResult{Content: content, Preview: preview}, nil
 	}
@@ -177,7 +150,7 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 		if format == "json" {
 			return report, nil
 		}
-		content := truncateOutput(formatSliceMarkdown(report), path, mode, start, limit, report.FilteredTotal)
+		content := truncateOutput(session.Metadata.Leaf, formatSliceMarkdown(report), path, mode, start, limit, report.FilteredTotal)
 		preview := slicePreview(report)
 		return sdk.ToolResult{Content: content, Preview: preview}, nil
 	}
@@ -185,16 +158,18 @@ func handleReadSession(ctx sdk.Context, params map[string]any) (any, error) {
 	if format == "json" {
 		return report, nil
 	}
-	content := truncateOutput(formatTOCMarkdown(report, width), path, mode, start, limit, report.TotalTurns)
+	content := truncateOutput(session.Metadata.Leaf, formatTOCMarkdown(report, width), path, mode, start, limit, report.TotalTurns)
 	preview := tocPreview(report)
 	return sdk.ToolResult{Content: content, Preview: preview}, nil
 }
 
 type sessionFile struct {
-	Path          string
-	Metadata      sessionMetadata
-	Events        []sessionEvent
-	Messages      []sessionMessage
+	Path     string
+	Metadata sessionMetadata
+	Events   []sessionEvent
+	Messages []sessionMessage
+	// SideUsage is spend recorded in "usage" entries, which belong to no message.
+	SideUsage     usageSummary
 	LineCount     int
 	MalformedJSON int
 }
@@ -204,6 +179,11 @@ type sessionMetadata struct {
 	Version   string `json:"version,omitempty"`
 	CWD       string `json:"cwd,omitempty"`
 	Timestamp string `json:"timestamp,omitempty"`
+	Name      string `json:"name,omitempty"`
+	// OffBranchEntries counts the entries that are not on the active branch.
+	OffBranchEntries int `json:"offBranchEntries,omitempty"`
+	// Leaf is the entry id the branch ends at when the call chose one; empty is the active branch.
+	Leaf string `json:"leaf,omitempty"`
 }
 
 type sessionEvent struct {
@@ -229,6 +209,8 @@ type sessionMessage struct {
 	StopReason   string
 	Model        string
 	Provider     string
+	CustomType   string
+	TokensBefore int
 }
 
 type toolCall struct {
@@ -272,6 +254,7 @@ type tocItem struct {
 	AssistantMessages int          `json:"assistantMessages"`
 	ToolResults       int          `json:"toolResults"`
 	Errors            int          `json:"errors,omitempty"`
+	Compactions       int          `json:"compactions,omitempty"`
 	Usage             usageSummary `json:"usage,omitempty"`
 }
 
@@ -326,9 +309,29 @@ type sliceMessage struct {
 	StopReason   string       `json:"stopReason,omitempty"`
 	Model        string       `json:"model,omitempty"`
 	Provider     string       `json:"provider,omitempty"`
+	CustomType   string       `json:"customType,omitempty"`
+	TokensBefore int          `json:"tokensBefore,omitempty"`
 }
 
+// entryNode is one tree entry (everything but the header) as it appeared in the file.
+type entryNode struct {
+	parent  int // index of the parent node, or -1 for a root
+	event   *sessionEvent
+	message *sessionMessage
+	name    *string       // session_info
+	side    *usageSummary // usage entry: spend that belongs to no message
+}
+
+// parseSessionFile reads the active branch of a session: the entries on the path
+// from the last entry in the file back to the root, which is the branch Pi
+// continues from. An entry that omits parentId follows the entry before it (v1
+// sessions have no tree), as Pi's migration does.
 func parseSessionFile(path string, maxChars int) (sessionFile, error) {
+	return parseSessionFileAt(path, maxChars, "")
+}
+
+// parseSessionFileAt reads the branch that ends at the entry whose id is leaf; an empty leaf is the active branch.
+func parseSessionFileAt(path string, maxChars int, leaf string) (sessionFile, error) {
 	clean := filepath.Clean(path)
 	file, err := os.Open(clean)
 	if err != nil {
@@ -341,7 +344,8 @@ func parseSessionFile(path string, maxChars int) (sessionFile, error) {
 	// Session entries can contain large tool outputs. Keep parsing, but cap the
 	// scanner at 16 MiB so a single pathological line fails clearly.
 	scanner.Buffer(make([]byte, 64*1024), 16*1024*1024)
-	messageIndex := 0
+	var nodes []entryNode
+	indexByID := map[string]int{}
 	for scanner.Scan() {
 		session.LineCount++
 		// Decode from the scanner's buffer: the line is not copied to a string and then back to bytes.
@@ -355,35 +359,102 @@ func parseSessionFile(path string, maxChars int) (sessionFile, error) {
 			continue
 		}
 		typeName := stringValue(obj["type"])
-		switch typeName {
-		case "session":
-			session.Metadata = sessionMetadata{
-				ID:        stringValue(obj["id"]),
-				Version:   stringValue(obj["version"]),
-				CWD:       stringValue(obj["cwd"]),
-				Timestamp: stringValue(obj["timestamp"]),
+		if typeName == "session" {
+			session.Metadata.ID = stringValue(obj["id"])
+			session.Metadata.Version = stringValue(obj["version"])
+			session.Metadata.CWD = stringValue(obj["cwd"])
+			session.Metadata.Timestamp = stringValue(obj["timestamp"])
+			continue
+		}
+		node := entryNode{parent: len(nodes) - 1}
+		if raw, given := obj["parentId"]; given {
+			node.parent = -1
+			if id, ok := raw.(string); ok {
+				if i, known := indexByID[id]; known {
+					node.parent = i
+				}
 			}
+		}
+		switch typeName {
 		case "model_change", "thinking_level_change":
-			session.Events = append(session.Events, sessionEvent{
+			node.event = &sessionEvent{
 				Type:          typeName,
 				Provider:      stringValue(obj["provider"]),
 				ModelID:       stringValue(obj["modelId"]),
 				ThinkingLevel: stringValue(obj["thinkingLevel"]),
 				Timestamp:     stringValue(obj["timestamp"]),
-			})
-		case "message":
-			msg, ok := objectValue(obj["message"])
-			if !ok {
-				continue
 			}
-			messageIndex++
-			session.Messages = append(session.Messages, parseMessage(obj, msg, session.LineCount, messageIndex, maxChars))
+		case "message":
+			// A message entry without a message object stays in the tree so its children keep their parent.
+			if msg, ok := objectValue(obj["message"]); ok {
+				m := parseMessage(obj, msg, session.LineCount, 0, maxChars)
+				node.message = &m
+			}
+		case "compaction":
+			m := summaryMessage(obj, session.LineCount, "compactionSummary", maxChars)
+			m.TokensBefore = intValue(obj["tokensBefore"])
+			node.message = &m
+		case "branch_summary":
+			m := summaryMessage(obj, session.LineCount, "branchSummary", maxChars)
+			node.message = &m
+		case "custom_message":
+			m := sessionMessage{EntryIndex: session.LineCount, Timestamp: stringValue(obj["timestamp"]), Role: "custom", CustomType: stringValue(obj["customType"])}
+			m.Texts, _, _ = parseContent(obj["content"], maxChars)
+			node.message = &m
+		case "session_info":
+			name := stringValue(obj["name"])
+			node.name = &name
+		case "usage":
+			usage := parseUsage(obj["usage"])
+			node.side = &usage
 		}
+		if id := stringValue(obj["id"]); id != "" {
+			indexByID[id] = len(nodes)
+		}
+		nodes = append(nodes, node)
 	}
 	if err := scanner.Err(); err != nil {
 		return sessionFile{}, fmt.Errorf("read session %s: %w", clean, err)
 	}
+	tip := len(nodes) - 1
+	if leaf != "" {
+		i, known := indexByID[leaf]
+		if !known {
+			return sessionFile{}, fmt.Errorf("leaf %q is not an entry of %s (it needs an entry id from the session file)", leaf, clean)
+		}
+		tip = i
+		session.Metadata.Leaf = leaf
+	}
+	var branch []int
+	for i := tip; i >= 0; i = nodes[i].parent {
+		branch = append(branch, i)
+	}
+	slices.Reverse(branch)
+	session.Metadata.OffBranchEntries = len(nodes) - len(branch)
+	for _, i := range branch {
+		node := nodes[i]
+		switch {
+		case node.event != nil:
+			session.Events = append(session.Events, *node.event)
+		case node.message != nil:
+			node.message.MessageIndex = len(session.Messages) + 1
+			session.Messages = append(session.Messages, *node.message)
+		case node.name != nil:
+			session.Metadata.Name = *node.name
+		case node.side != nil:
+			session.SideUsage = addUsage(session.SideUsage, *node.side)
+		}
+	}
 	return session, nil
+}
+
+// summaryMessage turns a compaction or branch_summary entry into a transcript item.
+func summaryMessage(entry map[string]any, entryIndex int, role string, maxChars int) sessionMessage {
+	m := sessionMessage{EntryIndex: entryIndex, Timestamp: stringValue(entry["timestamp"]), Role: role, Usage: parseUsage(entry["usage"])}
+	if text := strings.TrimSpace(stringValue(entry["summary"])); text != "" {
+		m.Texts = []string{truncate(text, maxChars)}
+	}
+	return m
 }
 
 func parseMessage(entry, msg map[string]any, entryIndex, messageIndex, maxChars int) sessionMessage {
@@ -401,10 +472,25 @@ func parseMessage(entry, msg map[string]any, entryIndex, messageIndex, maxChars 
 		Usage:        parseUsage(msg["usage"]),
 	}
 	m.Texts, m.Thinking, m.ToolCalls = parseContent(msg["content"], maxChars)
+	if m.Role == "bashExecution" {
+		m.Texts = bashExecutionTexts(msg, maxChars)
+	}
 	if m.Role == "toolResult" && m.ToolName == "" && len(m.ToolCalls) > 0 {
 		m.ToolName = m.ToolCalls[0].Name
 	}
 	return m
+}
+
+// bashExecutionTexts renders a user "!cmd" message: the command, then its output.
+func bashExecutionTexts(msg map[string]any, maxChars int) []string {
+	var texts []string
+	if command := strings.TrimSpace(stringValue(msg["command"])); command != "" {
+		texts = append(texts, truncate("$ "+command, maxChars))
+	}
+	if output := strings.TrimSpace(stringValue(msg["output"])); output != "" {
+		texts = append(texts, truncate(output, maxChars))
+	}
+	return texts
 }
 
 func parseContent(content any, maxChars int) (texts, thinking []string, tools []toolCall) {
@@ -539,6 +625,11 @@ func buildTOCItems(messages []sessionMessage) []tocItem {
 			if strings.EqualFold(msg.StopReason, "error") {
 				current.Errors++
 			}
+		case "compactionSummary":
+			current.Compactions++
+			current.Usage = addUsage(current.Usage, msg.Usage)
+		case "branchSummary":
+			current.Usage = addUsage(current.Usage, msg.Usage)
 		case "toolResult":
 			current.ToolResults++
 			if msg.ToolName != "" && !slices.Contains(current.Tools, msg.ToolName) {
@@ -596,7 +687,7 @@ func buildQueryReport(session sessionFile, query string, regexMode, caseSensitiv
 				ToolName:      msg.ToolName,
 				Excerpt:       matcher.excerpt(text, maxChars),
 				Score:         matcher.score(text, msg.Role),
-				RetrievalHint: fmt.Sprintf("mode=turn turn=%d or mode=slice start=%d limit=1", turnIndex, msg.MessageIndex-1),
+				RetrievalHint: retrievalHint(turnIndex, msg.MessageIndex, session.Metadata.Leaf),
 			})
 		}
 	}
@@ -760,6 +851,8 @@ func buildSliceReport(session sessionFile, roles []string, start, limit int) sli
 			StopReason:   msg.StopReason,
 			Model:        msg.Model,
 			Provider:     msg.Provider,
+			CustomType:   msg.CustomType,
+			TokensBefore: msg.TokensBefore,
 		})
 	}
 	end := min(len(messages), start+limit)
@@ -805,7 +898,7 @@ func slicePreview(report sliceReport) string {
 func formatTOCMarkdown(report tocReport, width int) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session TOC\n\n")
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(report.Session.ID)))
+	writeSessionHeader(&b, report.Session)
 	fmt.Fprintf(&b, "- cwd: %s\n", emptyDash(report.Session.CWD))
 	fmt.Fprintf(&b, "- started: %s\n", emptyDash(report.Session.Timestamp))
 	fmt.Fprintf(&b, "- turns: %d\n", report.TotalTurns)
@@ -828,6 +921,9 @@ func formatTOCMarkdown(report tocReport, width int) string {
 		if item.ToolResults > 0 {
 			notes = append(notes, fmt.Sprintf("results:%d", item.ToolResults))
 		}
+		if item.Compactions > 0 {
+			notes = append(notes, fmt.Sprintf("compaction:%d", item.Compactions))
+		}
 		if item.Errors > 0 {
 			notes = append(notes, fmt.Sprintf("errors:%d", item.Errors))
 		}
@@ -843,7 +939,7 @@ func formatTOCMarkdown(report tocReport, width int) string {
 func formatSliceMarkdown(report sliceReport) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session slice\n\n")
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(report.Session.ID)))
+	writeSessionHeader(&b, report.Session)
 	fmt.Fprintf(&b, "- messages: %d of %d\n", len(report.Messages), report.FilteredTotal)
 	fmt.Fprintf(&b, "- start: %d\n", report.Start)
 	if len(report.Roles) > 0 {
@@ -874,7 +970,7 @@ func formatSliceMarkdown(report sliceReport) string {
 func formatQueryMarkdown(report queryReport, width int) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Session query\n\n")
-	fmt.Fprintf(&b, "- session: %s\n", emptyDash(shortID(report.Session.ID)))
+	writeSessionHeader(&b, report.Session)
 	fmt.Fprintf(&b, "- query: %s\n", report.Query)
 	fmt.Fprintf(&b, "- hits: %d\n", report.TotalHits)
 	// Fixed cols: rank(6)+turn(6)+role(12)+tool(12)+score(7)+hint(~60)+seps(21) ≈ 124
@@ -894,6 +990,30 @@ func formatQueryMarkdown(report queryReport, width int) string {
 		fmt.Fprintf(&b, "\nNo hits.\n")
 	}
 	return b.String()
+}
+
+// writeSessionHeader writes the session line every markdown report starts with, plus
+// the session name and a note when entries on other branches were left out.
+func writeSessionHeader(b *strings.Builder, meta sessionMetadata) {
+	fmt.Fprintf(b, "- session: %s\n", emptyDash(shortID(meta.ID)))
+	if meta.Name != "" {
+		fmt.Fprintf(b, "- name: %s\n", meta.Name)
+	}
+	if meta.Leaf != "" {
+		fmt.Fprintf(b, "- leaf: %s (the branch ending at this entry, chosen with the leaf parameter)\n", meta.Leaf)
+	}
+	if meta.OffBranchEntries > 0 {
+		fmt.Fprintf(b, "- off_branch_entries: %d (on other branches of the session tree; not shown)\n", meta.OffBranchEntries)
+	}
+}
+
+// retrievalHint is the call that fetches a hit; a branch chosen with leaf is part of it.
+func retrievalHint(turn, message int, leaf string) string {
+	hint := fmt.Sprintf("mode=turn turn=%d or mode=slice start=%d limit=1", turn, message-1)
+	if leaf != "" {
+		hint += " leaf=" + leaf
+	}
+	return hint
 }
 
 func truncate(text string, maxLen int) string {
@@ -931,7 +1051,7 @@ func runeBoundary(text string, i int) int {
 // final markdown output string, matching bash/read/grep tool behavior. total is
 // the number of pageable items (0 for modes that are not paged); a continuation
 // hint is added only when the page stops before total or the output was cut.
-func truncateOutput(output, path, mode string, start, limit, total int) string {
+func truncateOutput(leaf, output, path, mode string, start, limit, total int) string {
 	lines := strings.Split(output, "\n")
 	totalLines := len(lines)
 	totalBytes := len(output)
@@ -954,6 +1074,9 @@ func truncateOutput(output, path, mode string, start, limit, total int) string {
 	hint := ""
 	if total > 0 && start+limit < total {
 		hint = fmt.Sprintf(`read_session {"path":%q, "mode":%q, "start":%d, "limit":%d}`, path, mode, start+limit, limit)
+		if leaf != "" {
+			hint = fmt.Sprintf(`read_session {"path":%q, "mode":%q, "start":%d, "limit":%d, "leaf":%q}`, path, mode, start+limit, limit, leaf)
+		}
 	}
 	switch {
 	case truncated && hint != "":
