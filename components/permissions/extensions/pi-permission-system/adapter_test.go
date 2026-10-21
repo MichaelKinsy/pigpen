@@ -30,6 +30,8 @@ type adapterRig struct {
 	h      *Host
 	active []string
 	set    []string
+	// failEntries makes the session manager fail its entry reads (the active agent cannot be resolved).
+	failEntries bool
 }
 
 func rigWith(t *testing.T, config string, active ...string) *adapterRig {
@@ -57,6 +59,9 @@ func (r *adapterRig) onCall(method string, args map[string]any) (any, string) {
 		case "getSessionDir":
 			return "/sessions/sess-1", ""
 		case "getEntries", "getBranch":
+			if r.failEntries {
+				return nil, "entries unavailable"
+			}
 			return []any{}, ""
 		}
 		return nil, ""
@@ -202,4 +207,26 @@ func TestAdapterSkillRead(t *testing.T) {
 	h.Fire("session_start", map[string]any{})
 	blocked, _ = r.toolCall("read", map[string]any{"path": "skills/demo/SKILL.md"})
 	eq(t, blocked, false, "a new session forgets the listed skills until its first prompt")
+}
+
+// The input event: a gate that errors drops the input, and a skill the policy denies is "handled", never let through.
+func TestAdapterInputIsDroppedWhenTheGateFails(t *testing.T) {
+	r := rigWith(t, `{"permission":{"*":"allow","skill":{"*":"allow","secret":"deny"}}}`, "read")
+	r.h.Fire("session_start", map[string]any{"reason": "startup"})
+	handled := func(text string) bool {
+		raw := r.h.Fire("input", map[string]any{"text": text, "source": "interactive"})
+		var res struct {
+			Action string `json:"action"`
+		}
+		if len(raw) > 0 {
+			_ = json.Unmarshal(raw, &res)
+		}
+		return res.Action == "handled"
+	}
+	eq(t, handled("/skill:open"), false, "an allowed skill continues")
+	eq(t, handled("/skill:secret"), true, "a denied skill is handled")
+	eq(t, handled("plain text"), false, "other input continues")
+	// the active agent cannot be read: the gate cannot decide, so the skill input is dropped (fail closed)
+	r.failEntries = true
+	eq(t, handled("/skill:open"), true, "an unreadable session drops the input")
 }

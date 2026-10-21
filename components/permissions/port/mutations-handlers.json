@@ -252,12 +252,6 @@
   "replace": ""
  },
  {
-  "name": "ap-skill-session-rules",
-  "file": "agentprep.go",
-  "find": "return c.resolver.CheckPermission(surface, input, agentName, nil)",
-  "replace": "return c.resolver.CheckPermission(surface, input, agentName, Ruleset{})"
- },
- {
   "name": "ap-fragments-joined",
   "file": "agentprep.go",
   "find": "strings.Join(fragments, \"\\n\")",
@@ -412,12 +406,6 @@
   "file": "extension.go",
   "find": "\t\tif result.Action == \"handled\" {\n\t\t\treturn map[string]any{\"action\": \"handled\"}, nil\n\t\t}",
   "replace": "\t\t_ = result\n"
- },
- {
-  "name": "cr-flavor-posix",
-  "file": "extension.go",
-  "find": "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)",
-  "replace": "p.hostFlavor = PathFlavorForPlatform(\"linux\" + runtime.GOOS[:0])"
  },
  {
   "name": "cr-lifecycle-bus-unsubscribed",

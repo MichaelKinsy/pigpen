@@ -8,6 +8,8 @@ import json, os
 
 root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "extensions", "pi-permission-system")
 M = []
+# Pruned as equivalent: ap-skill-session-rules (a nil and an empty session ruleset evaluate identically) and cr-flavor-posix (the host flavor
+# differs from "linux" only on windows, and the mutation run is on linux).
 
 def m(name, file, find, replace):
     M.append({"name": name, "file": file, "find": find, "replace": replace})
@@ -62,7 +64,6 @@ m("ap-rules-section-dropped", AP, '\t\t\toptions.Sections.Set("rules", sections.
 m("ap-skills-not-narrowed", AP, "\toptions.Skills = WithoutDeniedSkills(", "\t_ = WithoutDeniedSkills(")
 m("ap-skill-entries-dropped", AP, "\th.session.SetActiveSkillEntries(VisibleSkillPromptEntries(systemPrompt, rawSkillChecker{h.resolver}, agentName, h.session.GetPathNormalizer()))",
   "")
-m("ap-skill-session-rules", AP, "return c.resolver.CheckPermission(surface, input, agentName, nil)", "return c.resolver.CheckPermission(surface, input, agentName, Ruleset{})")
 m("ap-fragments-joined", AP, 'strings.Join(fragments, "\\n")', 'strings.Join(fragments, "")')
 
 SL = "servicelocator.go"
@@ -102,7 +103,6 @@ m("cr-yolo-never", CR, "isYoloEnabled := func() bool { return isYoloModeEnabled(
 m("cr-trust-default", CR, "return err == nil && trusted\n\t\t},", "return err == nil || trusted\n\t\t},")
 m("cr-input-error-allows", CR, '\t\t\tctx.Notify(UntrustedInputMessage(err), "warning")\n\t\t\treturn map[string]any{"action": "handled"}, nil', "\t\t\treturn nil, nil")
 m("cr-input-handled-allows", CR, '\t\tif result.Action == "handled" {\n\t\t\treturn map[string]any{"action": "handled"}, nil\n\t\t}', "\t\t_ = result\n")
-m("cr-flavor-posix", CR, "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)", "p.hostFlavor = PathFlavorForPlatform(\"linux\" + runtime.GOOS[:0])")
 m("cr-lifecycle-bus-unsubscribed", CR, "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, []func(){unsubSubagentLifecycle})", "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, func() []func() { _ = unsubSubagentLifecycle; return nil }())")
 m("cr-service-not-observed", CR, "NewObservedAuthorizerRegistrar(authorizerRegistry, p.selection, p.logger))", "authorizerRegistry)")
 m("cr-skills-not-written-back", CR, "\t\twriteBackSkills(data, payload.Options)\n", "")
