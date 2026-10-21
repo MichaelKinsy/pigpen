@@ -1,0 +1,158 @@
+[
+ {
+  "name": "bash-pi-key-escape",
+  "file": "bash_editor.go",
+  "find": "\"app.interrupt\":                 {\"escape\"},",
+  "replace": "\"app.interrupt\":                 {\"ctrl+q\"},"
+ },
+ {
+  "name": "bash-ghost-accept-text",
+  "file": "bash_editor.go",
+  "find": "if e.base.SetText(accepted) != nil {",
+  "replace": "if e.base.SetText(accepted + \"!\") != nil {"
+ },
+ {
+  "name": "bash-tab-needs-context",
+  "file": "bash_editor.go",
+  "find": "if piKeyMatches(data, \"tui.input.tab\") && (active || e.isOneOffBashCommandContext()) {",
+  "replace": "if piKeyMatches(data, \"tui.input.tab\") {"
+ },
+ {
+  "name": "bash-right-needs-context",
+  "file": "bash_editor.go",
+  "find": "(active || e.isOneOffBashCommandContext()) && e.acceptGhost() {",
+  "replace": "e.acceptGhost() {"
+ },
+ {
+  "name": "bash-submit-running",
+  "file": "bash_editor.go",
+  "find": "\tif e.env.running() {\n\t\te.env.notify(\"Shell command already running\", \"warning\")",
+  "replace": "\tif !e.env.running() {\n\t\te.env.notify(\"Shell command already running\", \"warning\")"
+ },
+ {
+  "name": "bash-submit-trim",
+  "file": "bash_editor.go",
+  "find": "command := jsTrim(expanded)",
+  "replace": "command := expanded"
+ },
+ {
+  "name": "bash-submit-clears",
+  "file": "bash_editor.go",
+  "find": "if err := e.base.SetText(\"\"); err != nil {",
+  "replace": "if err := e.base.SetText(\"x\"); err != nil {"
+ },
+ {
+  "name": "bash-submit-needs-mode",
+  "file": "bash_editor.go",
+  "find": "if active && piKeyMatches(data, \"tui.input.submit\")",
+  "replace": "if piKeyMatches(data, \"tui.input.submit\")"
+ },
+ {
+  "name": "bash-submit-newline",
+  "file": "bash_editor.go",
+  "find": " && !piKeyMatches(data, \"tui.input.newLine\") {\n\t\treturn true, e.submitCommand()",
+  "replace": " {\n\t\treturn true, e.submitCommand()"
+ },
+ {
+  "name": "bash-interrupt-needs-running",
+  "file": "bash_editor.go",
+  "find": "piKeyMatches(data, \"app.clear\") && e.env.running()",
+  "replace": "piKeyMatches(data, \"app.clear\")"
+ },
+ {
+  "name": "bash-history-direction",
+  "file": "bash_editor.go",
+  "find": "return true, e.navigateShellHistory(-1)",
+  "replace": "return true, e.navigateShellHistory(1)"
+ },
+ {
+  "name": "bash-undo-key",
+  "file": "bash_editor.go",
+  "find": "keyUndo          = \"\\x1f\"",
+  "replace": "keyUndo          = \"\\x1e\""
+ },
+ {
+  "name": "bash-paste-end",
+  "file": "bash_editor.go",
+  "find": "\t\tcase strings.Contains(data, \"\\x1b[201~\"):\n\t\t\te.inPaste = false",
+  "replace": "\t\tcase strings.Contains(data, \"\\x1b[201~\"):\n\t\t\te.inPaste = true"
+ },
+ {
+  "name": "bash-dropped-reset",
+  "file": "bash_editor.go",
+  "find": "\t\te.resetHistory()\n\t\te.afterEdit()\n\t\treturn nil\n\t}\n\tpaste",
+  "replace": "\t\te.afterEdit()\n\t\treturn nil\n\t}\n\tpaste"
+ },
+ {
+  "name": "bash-ghost-timeout",
+  "file": "bash_editor.go",
+  "find": "if ctx.Err() != nil {\n\t\tghost = nil",
+  "replace": "if false {\n\t\tghost = nil"
+ },
+ {
+  "name": "bash-ghost-one-off-line",
+  "file": "bash_editor.go",
+  "find": "len(lines) > 0 && isOneOffBashCommandLine(lines[0])",
+  "replace": "len(lines) > 0 && isOneOffBashCommandLine(lines[len(lines)-1])"
+ },
+ {
+  "name": "bash-render-needs-context",
+  "file": "bash_editor.go",
+  "find": "if ghost == nil || len(lines) < 3 || !e.isShellCompletionContext() {",
+  "replace": "if ghost == nil || len(lines) < 3 {"
+ },
+ {
+  "name": "bash-boundary-keys",
+  "file": "bash_editor.go",
+  "find": "keyDocumentStart = \"\\x1b[1;5H\"",
+  "replace": "keyDocumentStart = \"\\x1b[1;5F\""
+ },
+ {
+  "name": "bash-ext-toggle-hook",
+  "file": "bash_ext.go",
+  "find": "a.keys.setHook(actionBashMode, b.toggle)",
+  "replace": ""
+ },
+ {
+  "name": "bash-ext-shell-data",
+  "file": "core.go",
+  "find": "ctx.Shell = p.bash.segmentData()",
+  "replace": "_ = p.bash"
+ },
+ {
+  "name": "bash-ext-disable",
+  "file": "core.go",
+  "find": "\t\tp.bash.powerlineDisabled()\n",
+  "replace": ""
+ },
+ {
+  "name": "bash-ext-session-start",
+  "file": "core.go",
+  "find": "\t\tp.bash.sessionStart()\n",
+  "replace": ""
+ },
+ {
+  "name": "bash-ext-shutdown",
+  "file": "bash_ext.go",
+  "find": "\t\tmode.sessionShutdown()\n",
+  "replace": ""
+ },
+ {
+  "name": "hooks-queue-open",
+  "file": "extension.go",
+  "find": "a.keys.setHook(actionQueueOpen, a.openQueuePicker)",
+  "replace": ""
+ },
+ {
+  "name": "hooks-reply",
+  "file": "extension.go",
+  "find": "a.keys.setHook(actionReply, func(ctx sdk.Context) {",
+  "replace": "a.keys.setHook(\"unused\", func(ctx sdk.Context) {"
+ },
+ {
+  "name": "bash-ext-session-reset",
+  "file": "bash_mode.go",
+  "find": "b.session, b.active, b.limits = nil, false, limits",
+  "replace": "b.session, b.limits = nil, limits"
+ }
+]
