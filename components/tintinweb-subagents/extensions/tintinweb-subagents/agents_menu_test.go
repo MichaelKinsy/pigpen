@@ -191,14 +191,67 @@ func TestWorkflowsMenuOpensTheInspectorAsAnOverlay(t *testing.T) {
 	eq(t, task.Ctx.Err() != nil, true)
 }
 
-func TestClearCompletedKeepsUnreadBackgroundResults(t *testing.T) {
+// Twins of test/clear-completed-wiring.test.ts (issue #108): a background agent that has COMPLETED but whose result the
+// model has not read yet was wiped on session_start / session_before_switch, so the next get_subagent_result answered
+// "Agent not found". Both handlers keep unread records; a read one goes.
+const fClear = "clear-completed-wiring"
+
+func completedUnread(t *testing.T) (*rig, string) {
+	t.Helper()
 	r := startRig(t)
-	spawnBackground(r, "unread")
+	spawnBackground(r, "Review monero_en.rs in depth")
 	c := r.fleet.wait(t, 1)[0]
-	c.finish("THE-RESULT")
+	c.finish("THE-RESULT-PAYLOAD")
 	r.waitEmitted("subagents:completed")
-	r.app.clearCompleted(true)
-	eq(t, len(r.app.mgr.list()), 1) // unread: kept
-	r.app.clearCompleted(false)
-	eq(t, len(r.app.mgr.list()), 0)
+	return r, r.app.mgr.list()[0].ID
+}
+
+func TestClearCompletedWiring(t *testing.T) {
+	tw(t, fClear, "session_before_switch (user switches sessions) does NOT wipe the unread result", func(t *testing.T) {
+		r, id := completedUnread(t)
+		r.Fire("session_before_switch", obj{})
+		out := r.must("get_subagent_result", obj{"agent_id": id})
+		lacksStr(t, out, "Agent not found")
+		hasStr(t, out, "THE-RESULT-PAYLOAD")
+	})
+	tw(t, fClear, "session_start (/resume) does NOT wipe the unread result", func(t *testing.T) {
+		r, id := completedUnread(t)
+		r.Fire("session_start", obj{})
+		out := r.must("get_subagent_result", obj{"agent_id": id})
+		lacksStr(t, out, "Agent not found")
+		hasStr(t, out, "THE-RESULT-PAYLOAD")
+	})
+	tw(t, fClear, "once read, a session switch DOES evict it — the fix stays surgical, no leak", func(t *testing.T) {
+		r, id := completedUnread(t)
+		hasStr(t, r.must("get_subagent_result", obj{"agent_id": id}), "THE-RESULT-PAYLOAD")
+		r.Fire("session_before_switch", obj{})
+		hasStr(t, r.must("get_subagent_result", obj{"agent_id": id}), "Agent not found")
+	})
+}
+
+// The inspector's `c` key hides the dialog's own overlay while the conversation is up and brings it back after.
+func TestWorkflowDialogOpenAgentHidesAndRestoresTheDialog(t *testing.T) {
+	tw(t, "workflow-dialog-open-agent", "carries the child's record id onto the row and opens its conversation on c", func(t *testing.T) {
+		task := createWorkflowTask(workflowTaskInit{ID: "wf_run", StartTime: dlgStart})
+		updateWorkflowProgressBatch(task, []workflowEntry{newPhaseEntry(0, "Review"),
+			&workflowAgentEntry{Type: "workflow_agent", Index: 0, Label: "audit", PhaseIndex: intp(0), State: entryDone, RecordID: "rec-1"}})
+		var viewed []string
+		handle := &fakeOverlayHandle{}
+		deps := workflowMenuDeps{tasks: newWorkflowTaskStore(), getRecord: func(id string) *agentView { return &agentView{ID: id} },
+			viewAgentConversation: func(_ menuUI, rec *agentView) { viewed = append(viewed, rec.ID) }}
+		ui := &fakeMenuUI{}
+		finished := make(chan struct{})
+		ui.custom = func(factory menuFactory, o *menuOverlay) (any, bool) {
+			o.OnHandle(handle)
+			c := factory(&fakeDialogHost{}, tagTheme(), func(any) {})
+			defer c.Dispose()
+			c.HandleInput("c")
+			handle.waitHidden(t, []bool{true, false})
+			close(finished)
+			return nil, true
+		}
+		showWorkflowDialog(ui, task, deps)
+		<-finished
+		eq(t, viewed, []string{"rec-1"})
+	})
 }

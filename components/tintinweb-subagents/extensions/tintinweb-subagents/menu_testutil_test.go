@@ -2,6 +2,8 @@ package tintinweb_subagents
 
 import (
 	"sync"
+	"testing"
+	"time"
 )
 
 // fakeMenuUI is the scripted ctx.ui of the menu tests: the stubs of the original's tests (`select` returns whichever
@@ -120,4 +122,29 @@ func (u *fakeMenuUI) noteTexts() []string {
 // pickIndex answers a select with the option at index i.
 func pickIndex(i int) func(string, []string) (string, bool) {
 	return func(_ string, options []string) (string, bool) { return options[i], true }
+}
+
+// fakeOverlayHandle records the SetHidden calls of the dialog's overlay.
+type fakeOverlayHandle struct {
+	mu     sync.Mutex
+	hidden []bool
+}
+
+func (h *fakeOverlayHandle) SetHidden(hidden bool) error {
+	h.mu.Lock()
+	h.hidden = append(h.hidden, hidden)
+	h.mu.Unlock()
+	return nil
+}
+
+func (h *fakeOverlayHandle) waitHidden(t *testing.T, want []bool) {
+	t.Helper()
+	waitFor(t, 2*time.Second, "the dialog to be hidden and shown again", func() bool {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		return len(h.hidden) >= len(want)
+	})
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	eq(t, h.hidden, want)
 }

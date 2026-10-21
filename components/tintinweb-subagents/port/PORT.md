@@ -403,3 +403,43 @@ equivalent or unreachable through the extension's public surface:
 - `flag-relative-path`: the test rig changes into the project directory, so a relative flag path resolves the same either way.
 - `host-unresolvable-agent-model-error`: the carry-on branch is for an agent file's own unresolvable model, which the rig's
   agent types cannot set without the agent-file model setting the settings slice owns.
+
+## Menus and dialogs (`/agents`, settings, agent file toggles, workflow card and dialog, clear completed)
+
+| ID | Original | Go | Proof |
+|---|---|---|---|
+| M1 | `agent-file-toggle.ts` (`locateAgentFile`, `disableInContent`, `enableInContent`, `isEmptyStub`, `buildNewAgentFile`; `serializeAgentFile` is `serialize.go`) | `agent_file_toggle.go` | 40 twins (`agent_file_toggle_twin_test.go`), 1 named skip |
+| M2 | `index.ts` showAgentsMenu and what it opens (types list, detail, eject, disable, enable, create wizards, running agents) | `agents_menu.go`, `menu_ui.go` | `agents_menu_test.go` (the original has no test of the closure) |
+| M3 | `ui/schedule-menu.ts` showSchedulesMenu | `agents_menu.go`, data layer `schedule_menu_data.go` | 11 twins (`schedule_menu_twin_test.go`) |
+| M4 | `index.ts` showSettings, snapshotSettings, applyValue, notifyApplied; `settings.ts` saveAndEmitChanged | `settings_menu.go`, `settings_store.go`, `settings_list.go` | `agents_menu_test.go` |
+| M5 | `ui/workflow-card.ts` | `workflow_card.go` | 39 twins (`workflow_render_twin_test.go`) |
+| M6 | `ui/workflow-dialog.ts` | `workflow_dialog.go` | 84 twins (`workflow_dialog_twin_test.go`) |
+| M7 | `ui/workflow-menu.ts` | `workflow_overlay.go` (the data and actions are `workflow_menu.go`) | 1 twin, `agents_menu_test.go` |
+| M8 | `agent-manager.ts` clearCompleted on `session_start` / `session_before_switch` | `manager_clear.go` | 3 twins |
+
+How it differs from the original, and why:
+
+- **The menus run over `menuUI`** (`menu_ui.go`), which the command's context implements with every host call guarded;
+  a UI that cannot be reached is a cancel. A panic in a menu is recovered at the command entry (`protectCommand`), in the
+  overlay component (`overlayComponent`) and in the goroutines the dialog starts.
+- **`SettingsList` is pi-tui's without the search box, the submenus and the mouse**: neither menu uses them, and a
+  mouse never reaches an extension's component.
+- **Settings the port has no feature for are held** (`heldSettings`): the menu shows them, a change is written like any
+  other, and the menu says that the port does not support the value yet. They start at the value the port behaves as
+  (the one `refuse.go` accepts), not the original's default, so writing the snapshot never announces a refusal for a
+  default the user did not choose (`agentMentions` is `off`, `worktreeIsolation` `off`, `outputTranscript` `off`,
+  `maxSubagentDepth` 1). Written only when chosen, as in the original: `workflowsEnabled` and `fallbackSubagent`. The
+  settings slice (`settings.go` there) replaces the reader, the writer and the held values when it lands.
+- **"Generate with Claude"** starts a foreground `general-purpose` agent (5 turns) and waits for it; the original passes
+  no signal either, so Esc in the dialogs cannot cancel it. It ends with the session.
+- **The workflow dialog follows the run** through a snapshot taken on every render under the task's lock (the progress
+  log is append-only); the phase groups are cached against the log's revision, so a spinner frame costs the visible
+  rows and not a fold of the whole log. The spinner is a recovered ticker goroutine that stops at `Dispose`.
+- **`c` in the dialog** hides the dialog's own overlay through the SDK's `OverlayHandle` (`SetHidden`), opens the
+  conversation in a goroutine and shows the dialog again when it closes. (G15's single-component workaround is not
+  needed: the SDK has the handle.)
+- **clearCompleted** drops the finished agents at the session boundaries and keeps a background result the model has
+  not read; the original's ten-minute sweep and the tombstones for `@handle` are not ported here.
+- **The old `/agents` text listing is gone** (it was a stand-in for the menu), with its refusal of the Workflows menu and
+  of cancelling a scheduled job.
+- **Skipped twin:** "leaves a file without a BOM exactly as the parser reads it": Go has one parser.

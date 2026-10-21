@@ -38,6 +38,18 @@ reaches the limit, and aborted if it is still working `graceTurns` turns later (
 `steered` or `aborted`, and a run whose last turn failed (a provider error) reports as an error, as in the original.
 Stopping an agent (or ending the session) stops its process group: SIGTERM, then SIGKILL five seconds later.
 
+## The `/agents` menu
+
+`/agents` is the original's interactive menu: the running agents (Enter opens the live conversation), the agent types
+(the file toggles: Eject a default to a `.md`, Disable and Enable an agent through its `enabled:` frontmatter, Edit,
+Delete, Reset to default), the scheduled jobs, the workflow runs, `Create new agent` (a generated one, or a manual
+wizard) and `Settings`. Settings is one row per key of `subagents.json`, written back whole to
+`<workspace>/.pi/subagents.json` after each change with the original's wording. A setting whose feature this port does
+not have yet is shown, held and written like the others, starts at the value the port behaves as, and a change to a
+value that asks for the feature also says that the port does not support it yet (the refusal message below).
+`session_start` and a session switch drop the finished agents of the session before, keeping a background result the
+model has not read.
+
 ## Agent files
 
 Custom agents are Markdown files with YAML frontmatter, read from `<agent dir>/agents/`, `<workspace>/.agents/agents/`
@@ -59,8 +71,7 @@ timestamp). The call answers with the job's id and next run. A job fires as a ba
 concurrency limit; its completion reaches you as the usual notification. Jobs belong to a session and are kept in
 `<workspace>/.pi/subagent-schedules/<session id>.json` (written atomically, under a lock file, in the original's
 format): `/new` starts empty, `/resume` brings the session's jobs back. The `subagents:scheduled` and
-`subagents:scheduler_ready` events are published as in the original. `/agents` lists the jobs; the interactive
-`Scheduled jobs` menu, which cancels one, is not ported and says so with the message below.
+`subagents:scheduler_ready` events are published as in the original. `/agents → Scheduled jobs` lists the jobs and cancels one after a confirm that shows its details.
 
 ## The display surfaces
 
@@ -86,8 +97,9 @@ difference from the original are in [port/PORT.md](port/PORT.md). A workflow's a
 `/agents`, no completion notice of their own, no slot in the session's concurrency limit. `isolation: "worktree"`,
 `agent({ schema })` and `agent({ resume })` need features the port does not have yet and fail the run with the refusal
 message below.
-The `/agents → Workflows` menu (stop, pause, skip, retry, the run dialog) is not ported yet: `/agents` lists the runs and
-says so with the same refusal message.
+`/agents → Workflows` lists the runs and opens the two-pane inspector (phases and agents, filter, prompt, activity and
+outcome of an agent; `x` stops, `p` pauses and resumes, `s` skips and `r` retries an agent, `c` opens its conversation).
+The inline card of a run and the entry a flag-launched run leaves in the session are drawn the same way.
 
 ## What is not ported, and how it answers
 
@@ -104,7 +116,7 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
 - Agent call parameters `isolation: "worktree"`, `inherit_context: true` and `resume`; a `schedule` that asks for the same,
-  and cancelling a scheduled job (the `/agents` Scheduled jobs menu).
+
 - Agent file fields that ask for an unported feature: `inherit_context: true`, `isolation: worktree`, `memory`,
   `allowed_subagents`, `ext:` tool selectors, `disallowed_tools`, an `extensions` list, `exclude_extensions`, `skills` as
   `false` or a list, `persist_session: true`, `output_transcript: true`, `session_dir`.
