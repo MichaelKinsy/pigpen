@@ -24,7 +24,14 @@ const (
 )
 
 // Event is one observable effect. Order in a trace is the order the effects
-// reached the harness, which follows causal order within a step.
+// reached the harness. The host's own output (response, ui, host) is one pipe
+// and keeps the host's order. A request the host or its extension sends to the
+// model server (llm) or to a scenario's fake upstream server (http) is recorded
+// after the host output that precedes it (recorder.addAfterHost). A child
+// process the extension started (exec, exec_end) reaches the harness over a
+// socket of its own and is not ordered against the host's output: the host may
+// be blocked in a synchronous spawn and unable to answer the round trip that
+// would order it.
 type Event struct {
 	Step string          `json:"step"`
 	Ch   string          `json:"ch"`
