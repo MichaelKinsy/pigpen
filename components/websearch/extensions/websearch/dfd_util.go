@@ -60,8 +60,9 @@ func jsParseInt(s string) float64 {
 
 var reFloatPrefix = mustRE(`^[+-]?(?:Infinity|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)`)
 
-// jsParseFloat is parseFloat(s): NaN when there is no leading decimal literal.
-func jsParseFloat(s string) float64 {
+// jsParseFloatNaN is parseFloat(s) with NaN as the result when there is no leading decimal literal (frames.go jsParseFloat
+// reports the same case as ok false).
+func jsParseFloatNaN(s string) float64 {
 	s = strings.TrimLeftFunc(s, jsSpace)
 	m := reFloatPrefix.FindString(s)
 	if m == "" {
@@ -78,6 +79,14 @@ func jsParseFloat(s string) float64 {
 		return math.NaN()
 	}
 	return f
+}
+
+// jsToNumberNaN is Number(s) with NaN for a string that is not a number (frames.go jsToNumber reports ok false).
+func jsToNumberNaN(s string) float64 {
+	if f, ok := jsToNumber(s); ok {
+		return f
+	}
+	return math.NaN()
 }
 
 // jsIsNaN reports NaN.

@@ -160,7 +160,7 @@ func (e *dfdYoutube) buildTranscriptFromContainer(container *ldNode, chapters []
 func ytParseTimestamp(ts string) (float64, bool) {
 	var nums []float64
 	for _, p := range strings.Split(ts, ":") {
-		n := jsToNumber(p)
+		n := jsToNumberNaN(p)
 		if jsIsNaN(n) {
 			return 0, false
 		}

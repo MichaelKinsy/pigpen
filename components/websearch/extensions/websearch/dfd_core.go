@@ -593,7 +593,7 @@ func (d *dfdDefuddle) getLargestImageSrc(img *ldNode) string {
 			url = reLeadingComma.ReplaceAllString(url, "")
 		}
 		lastIndex = m[1]
-		width := jsParseFloat(srcset[m[4]:m[5]])
+		width := jsParseFloatNaN(srcset[m[4]:m[5]])
 		if url != "" && width > bestWidth {
 			bestWidth = width
 			bestURL = url

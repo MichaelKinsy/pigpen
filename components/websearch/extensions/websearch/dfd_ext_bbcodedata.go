@@ -93,7 +93,7 @@ func (e *dfdBbcodeData) extract() dfdExtracted {
 		case float64:
 			n = x
 		case string:
-			n = jsToNumber(x)
+			n = jsToNumberNaN(x)
 		case bool:
 			n = 1
 		case []any:
@@ -103,7 +103,7 @@ func (e *dfdBbcodeData) extract() dfdExtracted {
 					parts[i] = jsToString(it)
 				}
 			}
-			n = jsToNumber(strings.Join(parts, ","))
+			n = jsToNumberNaN(strings.Join(parts, ","))
 		default:
 			n = math.NaN()
 		}

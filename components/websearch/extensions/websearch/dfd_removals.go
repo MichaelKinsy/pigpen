@@ -374,8 +374,8 @@ func dfdFindSmallImages(doc *ldNode) map[string]bool {
 		if element.name == "svg" {
 			if viewBox, ok := element.getAttribute("viewBox"); ok && viewBox != "" {
 				if parts := reViewBoxSplit.Split(viewBox, -1); len(parts) == 4 {
-					viewBoxWidth = jsOr0(jsParseFloat(parts[2]))
-					viewBoxHeight = jsOr0(jsParseFloat(parts[3]))
+					viewBoxWidth = jsOr0(jsParseFloatNaN(parts[2]))
+					viewBoxHeight = jsOr0(jsParseFloatNaN(parts[3]))
 				}
 			}
 		}

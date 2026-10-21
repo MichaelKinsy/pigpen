@@ -945,7 +945,7 @@ func mlThickness(raw string) (string, bool) {
 	if m == nil {
 		return "", false
 	}
-	amount := jsParseFloat(m[1])
+	amount := jsParseFloatNaN(m[1])
 	unit := m[2]
 	if amount == 0 {
 		return "0pt", true
