@@ -1159,9 +1159,9 @@
  },
  {
   "name": "pn-entry-lstat",
-  "file": "pathnormalizer.go",
-  "find": "_, err := os.Lstat(absolutePath)",
-  "replace": "_, err := os.Stat(absolutePath)"
+  "file": "canonicalize.go",
+  "find": "_, err := os.Lstat(p)",
+  "replace": "_, err := os.Stat(p)"
  },
  {
   "name": "pn-approval-value",
@@ -1202,8 +1202,8 @@
  {
   "name": "surf-members-order",
   "file": "pathsurfaces.go",
-  "find": "return [2]string{surface + \"_read\", surface + \"_write\"}, true",
-  "replace": "return [2]string{surface + \"_write\", surface + \"_read\"}, true"
+  "find": "m[f] = [2]string{f + \"_\" + string(capabilityDirections[0]), f + \"_\" + string(capabilityDirections[1])}",
+  "replace": "m[f] = [2]string{f + \"_\" + string(capabilityDirections[1]), f + \"_\" + string(capabilityDirections[0])}"
  },
  {
   "name": "surf-effect-read",
@@ -1306,12 +1306,6 @@
   "file": "effect.go",
   "find": "if a.Source == SourceUnproven {\n\t\treturn b",
   "replace": "if a.Source == SourceUnproven {\n\t\treturn a"
- },
- {
-  "name": "effect-unproven",
-  "file": "effect.go",
-  "find": "var UnprovenEffect = TokenEffect{Effect: EffectUnproven, Source: SourceUnproven}",
-  "replace": "var UnprovenEffect = TokenEffect{Effect: EffectUnproven, Source: SourceRetracted}"
  },
  {
   "name": "mcp-add-empty",
@@ -1460,8 +1454,8 @@
  {
   "name": "mcp-pi-units",
   "file": "mcptargets.go",
-  "find": "units := utf16.Encode([]rune(name))\n\tvar b strings.Builder\n\tfor _, u := range units {",
-  "replace": "_ = utf16.Encode\n\tvar b strings.Builder\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)"
+  "find": "units := utf16.Encode([]rune(name))\n\tfor _, u := range units {",
+  "replace": "_ = utf16.Encode\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)"
  },
  {
   "name": "in-comment",

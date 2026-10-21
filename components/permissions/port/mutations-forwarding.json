@@ -650,14 +650,14 @@
  {
   "name": "sv-deny-reason",
   "file": "fwd_server.go",
-  "find": "denied := CreateDeniedPermissionDecision(check.Reason)",
-  "replace": "denied := CreateDeniedPermissionDecision(nil)"
+  "find": "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)",
+  "replace": "CreateDeniedPermissionDecision(nil).Attribute(decidedBy)"
  },
  {
   "name": "sv-deny-decider",
   "file": "fwd_server.go",
-  "find": "\t\t\tdenied.DecidedBy = decidedBy\n",
-  "replace": ""
+  "find": "CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)",
+  "replace": "CreateDeniedPermissionDecision(check.Reason)"
  },
  {
   "name": "sv-auto-event",

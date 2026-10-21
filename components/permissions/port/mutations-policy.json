@@ -1100,8 +1100,8 @@
  {
   "name": "sp-activate-selection",
   "file": "sessionpermission.go",
-  "find": "s.authorizerSelection.Activate(ctx)",
-  "replace": ""
+  "find": "return s.authorizerSelection.Activate(ctx.AuthorityContext)",
+  "replace": "return nil"
  },
  {
   "name": "sp-deactivate-context",
@@ -1148,20 +1148,20 @@
  {
   "name": "sp-reset-skills",
   "file": "sessionpermission.go",
-  "find": "func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) {\n\tcwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n",
-  "replace": "func (s *PermissionSession) ResetForNewSession(ctx SessionContext, projectTrusted bool) {\n\tcwd := \"\"\n\tif projectTrusted {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n"
+  "find": "\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\treturn s.Activate(ctx)",
+  "replace": "\ts.mu.Lock()\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\treturn s.Activate(ctx)"
  },
  {
   "name": "sp-reset-baseline",
   "file": "sessionpermission.go",
-  "find": "s.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\ts.Activate(ctx)",
-  "replace": "s.skillEntries = nil\n\ts.mu.Unlock()\n\ts.Activate(ctx)"
+  "find": "\ts.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\treturn s.Activate(ctx)",
+  "replace": "\ts.skillEntries = nil\n\ts.mu.Unlock()\n\treturn s.Activate(ctx)"
  },
  {
   "name": "sp-reset-activate",
   "file": "sessionpermission.go",
-  "find": "s.mu.Unlock()\n\ts.Activate(ctx)",
-  "replace": "s.mu.Unlock()"
+  "find": "s.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\treturn s.Activate(ctx)",
+  "replace": "s.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n\treturn nil"
  },
  {
   "name": "sp-shutdown-rules",
@@ -1297,15 +1297,15 @@
  },
  {
   "name": "sp-preview-input",
-  "file": "sessionpermission.go",
-  "find": "ToolInputPreviewMaxLength: 200,",
-  "replace": "ToolInputPreviewMaxLength: 201,"
+  "file": "toolinputpreview.go",
+  "find": "ToolInputPreviewMaxLength = 200",
+  "replace": "ToolInputPreviewMaxLength = 201"
  },
  {
   "name": "sp-preview-text",
-  "file": "sessionpermission.go",
-  "find": "ToolTextSummaryMaxLength: 80}",
-  "replace": "ToolTextSummaryMaxLength: 81}"
+  "file": "toolinputpreview.go",
+  "find": "ToolTextSummaryMaxLength  = 80",
+  "replace": "ToolTextSummaryMaxLength  = 81"
  },
  {
   "name": "sp-shell-nil",

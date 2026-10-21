@@ -872,8 +872,8 @@
  {
   "name": "ps-mcp-colon-star",
   "file": "patternsuggest.go",
-  "find": "return trimmed[:i] + \":*\"",
-  "replace": "return trimmed[:i] + \":\""
+  "find": "return trimmed[:i], \":*\"",
+  "replace": "return trimmed[:i], \":\""
  },
  {
   "name": "ps-mcp-underscore",
@@ -884,8 +884,8 @@
  {
   "name": "ps-mcp-order",
   "file": "patternsuggest.go",
-  "find": "if i := strings.Index(trimmed, \":\"); i > 0 {\n\t\treturn trimmed[:i] + \":*\"\n\t}\n\tif i := strings.Index(trimmed, \"_\"); i > 0 {",
-  "replace": "if i := strings.Index(trimmed, \"_\"); i > 0 {\n\t\treturn trimmed[:i] + \"_*\"\n\t}\n\tif i := strings.Index(trimmed, \":\"); i > 0 {"
+  "find": "if i := strings.Index(trimmed, \":\"); i > 0 {\n\t\treturn trimmed[:i], \":*\"\n\t}\n\tif i := strings.Index(trimmed, \"_\"); i > 0 {",
+  "replace": "if i := strings.Index(trimmed, \"_\"); i > 0 {\n\t\treturn trimmed[:i], \"_*\"\n\t}\n\tif i := strings.Index(trimmed, \":\"); i > 0 {"
  },
  {
   "name": "ps-mcp-trim",
@@ -1052,8 +1052,8 @@
  {
   "name": "ps-session-mcp",
   "file": "patternsuggest.go",
-  "find": "case \"mcp\":\n\t\tpattern = SuggestMcpPattern(value)",
-  "replace": "case \"mcp\":\n\t\tpattern = value"
+  "find": "head, tail := mcpPatternParts(value)",
+  "replace": "head, tail := value, \"\""
  },
  {
   "name": "ps-session-skill",
@@ -1087,31 +1087,31 @@
  },
  {
   "name": "gt-sibling",
-  "file": "fwd_stub_authority.go",
+  "file": "sessionapprovalgrant.go",
   "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
   "replace": "if seen[g.Pattern] {"
  },
  {
   "name": "gt-seen",
-  "file": "fwd_stub_authority.go",
+  "file": "sessionapprovalgrant.go",
   "find": "if hasContentsSibling(g, grants) || seen[g.Pattern] {",
   "replace": "if hasContentsSibling(g, grants) {"
  },
  {
   "name": "gt-surface",
-  "file": "fwd_stub_authority.go",
+  "file": "sessionapprovalgrant.go",
   "find": "if other.Surface != g.Surface {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, suffix := range contentsSuffixes {",
   "replace": "for _, suffix := range contentsSuffixes {"
  },
  {
   "name": "gt-suffix-win",
-  "file": "fwd_stub_authority.go",
+  "file": "sessionapprovalgrant.go",
   "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
   "replace": "var contentsSuffixes = []string{\"/*\"}"
  },
  {
   "name": "gt-suffix-posix",
-  "file": "fwd_stub_authority.go",
+  "file": "sessionapprovalgrant.go",
   "find": "var contentsSuffixes = []string{\"/*\", \"\\\\*\"}",
   "replace": "var contentsSuffixes = []string{\"\\\\*\"}"
  },
@@ -1562,14 +1562,14 @@
  {
   "name": "ip-collapse-run",
   "file": "toolinputpreview.go",
-  "find": "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}",
-  "replace": "_ = inSpace\n\t\t\tb.WriteByte(' ')"
+  "find": "j := i + size\n\t\tfor j < len(s) {",
+  "replace": "j := i + size\n\t\tfor j < len(s) && false {"
  },
  {
   "name": "ip-collapse-js",
   "file": "toolinputpreview.go",
-  "find": "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif isJSSpace(r) {",
-  "replace": "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif r == ' ' || r == '\\n' || r == '\\t' || r == '\\r' {"
+  "find": "if !isJSSpace(r) {\n\t\t\ti += size\n\t\t\tcontinue\n\t\t}",
+  "replace": "if !(r == ' ' || r == '\\n' || r == '\\t' || r == '\\r') {\n\t\t\ti += size\n\t\t\tcontinue\n\t\t}"
  },
  {
   "name": "pf-path-file",

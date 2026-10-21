@@ -8,14 +8,14 @@
  {
   "name": "js-seen-add",
   "file": "logjsonsafe.go",
-  "find": "\t\t\tseen[id] = true\n",
-  "replace": "\t\t\t_ = id\n"
+  "find": "\t\ts.small = append(s.small, id)\n",
+  "replace": "\t\t_ = id\n"
  },
  {
   "name": "js-seen-check",
   "file": "logjsonsafe.go",
-  "find": "if seen[id] {",
-  "replace": "if !seen[id] {"
+  "find": "for _, k := range s.small {\n\t\tif k == id {",
+  "replace": "for _, k := range s.small {\n\t\tif k != id {"
  },
  {
   "name": "js-error-name",
@@ -110,13 +110,13 @@
  {
   "name": "js-array-key",
   "file": "logjsonsafe.go",
-  "find": "serializeProperty(b, strconv.Itoa(i), e, replacer)",
-  "replace": "serializeProperty(b, \"\", e, replacer)"
+  "find": "key = strconv.Itoa(i)",
+  "replace": "key = \"\""
  },
  {
   "name": "js-object-order",
   "file": "logjsonsafe.go",
-  "find": "writeObjectWith(b, x.order(), x.vals, replacer)",
+  "find": "writeObjectWith(b, x.orderView(), x.vals, replacer)",
   "replace": "writeObjectWith(b, x.keys, x.vals, replacer)"
  },
  {
@@ -458,8 +458,8 @@
  {
   "name": "ev-recover",
   "file": "permissionevents.go",
-  "find": "defer func() { _ = recover() }()",
-  "replace": "defer func() {}()"
+  "find": "func EmitReadyEvent(events PermissionEventBus, event PermissionsReadyEvent) {\n\tdefer func() { _ = recover() }()",
+  "replace": "func EmitReadyEvent(events PermissionEventBus, event PermissionsReadyEvent) {\n\tdefer func() {}()"
  },
  {
   "name": "ev-error",
@@ -634,12 +634,6 @@
   "file": "factvocabulary.go",
   "find": "if payload.Kind == \"bash_external_directory\" {\n\t\tout := []string{}",
   "replace": "if payload.Kind == \"bash\" {\n\t\tout := []string{}"
- },
- {
-  "name": "fv-label",
-  "file": "factvocabulary.go",
-  "find": "if e.Label == label {",
-  "replace": "if e.Label != label {"
  },
  {
   "name": "fv-empty",
