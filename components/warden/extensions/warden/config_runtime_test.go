@@ -243,9 +243,15 @@ func TestTraceFileIsWrittenWhenTheDirectoryIsSet(t *testing.T) {
 	h.start()
 	h.say("user", "list the files")
 	h.toolCall("bash", "c1", map[string]any{"command": "rm -rf /"})
-	files, err := filepath.Glob(filepath.Join(dir, "*.jsonl"))
-	if err != nil || len(files) != 1 {
-		t.Fatalf("trace files: %v %v", files, err)
+	// The file is written off the caller's goroutine (NewTraceFile): it exists once its first line is written, not once
+	// the hook returns. A host busy with other work made the immediate glob find nothing.
+	var files []string
+	waitUntil(t, func() bool {
+		files, _ = filepath.Glob(filepath.Join(dir, "*.jsonl"))
+		return len(files) >= 1
+	})
+	if len(files) != 1 {
+		t.Fatalf("trace files: %v", files)
 	}
 	var records []map[string]any
 	waitUntil(t, func() bool {

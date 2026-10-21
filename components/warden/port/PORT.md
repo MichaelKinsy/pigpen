@@ -829,3 +829,18 @@ Not Go twins, by design (named skips with a per-case reason that names the scrip
 `eval-env`, `eval-score`, `eval-turn`, `eval-waste`, `eval-weak` and the 13 of `judge-bench`. They import `../eval/*.mjs` (research scripts of the
 upstream repository: `npm run eval:*`), and `package.json` `files` is `dist, extensions, examples, README, CHANGELOG, LICENSE`, so `eval/` is neither
 published nor vendored in `port/oracle`. `/warden bench` is `runBench` in `src/rules-audit.ts` and imports none of them.
+
+## Final-head gates (port/warden-pr11-perf)
+
+- Layer-1 mutations: the whole `port/mutate.py` (624 rows) on the finished stack, `port/mutation-results.txt`: 605 killed, 19 equivalent
+  with their reasons in `EQUIVALENT`. A kill counts only when it came from a test failing on its own: runs under host overload (a
+  `test timed out`, or the shared 12-shard run) were rerun alone and serially. That moved `state-reminder-ignores-nudge-cap` to
+  equivalent (the loader floors `maxNudges` at 1, so the cap cannot be reached; the test that once killed it was replaced when the floor
+  was ported), and showed that `TestTraceFileIsWrittenWhenTheDirectoryIsSet` globbed for the trace file before the writer goroutine had
+  created it (68 false kills in the shared run); it now waits for the file.
+- pigeq mutations (`port/mutations.json`, 95 rows): 85 killed by the scenarios, 10 survive at the scenario layer and are killed by layer 1:
+  `quick-repeat-fires-on-success-without-readonly`, `quick-repeat-ignores-changes`, `quick-repeat-once-per-key`,
+  `sql-read-only-wrapper-ignored`, `rm-verb-never-authorizes`, `find-delete-authorized-by-verb` (named above), and by the layer-1 row of the
+  same name `gate-hash-ignored`, `conscience-awaiting-user-selects`, `conscience-usefulness-first-level-only`;
+  `appendix-open-loops-line` survives because the compaction of `compact-evidence-appendix` is refused ("Nothing to compact (session too
+  small)"), so no scenario shows the appendix; the layer-1 row of the same name is killed by `TestLoopsCompactionAppendixIncludesTheOpenLoops`.

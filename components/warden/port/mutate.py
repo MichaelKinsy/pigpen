@@ -400,6 +400,7 @@ M = [
  # Conscience slice (conscience.go, conscience_load.go, index_cmd.go, hashing.go, conscience_state.go, index_command.go).
  ('conscience-threshold-ignored', 'conscience.go', 'if best.usefulness < cfg.RecommendThreshold || pAdvance < cfg.AdvanceThreshold {', 'if false {'),
  ('conscience-advance-threshold-ignored', 'conscience.go', 'best.usefulness < cfg.RecommendThreshold || pAdvance < cfg.AdvanceThreshold', 'best.usefulness < cfg.RecommendThreshold'),
+ ('appendix-open-loops-line', 'compact.go', 'Promised earlier in this session and not done yet; close each with warden_loops done or drop.', 'Open loops.'),
  ('conscience-usefulness-first-level-only', 'conscience.go', 'pUseful := s.probabilities[2] + s.probabilities[3]', 'pUseful := s.probabilities[3]'),
  ('conscience-skip-tools-ignored', 'conscience.go', 'containsString(cfg.SkipTools, t.Name)', 'false'),
  ('conscience-user-only-skill-offered', 'conscience.go', 'isExcluded(s.Name, cfg.Skills.Exclude) || s.DisableModelInvocation || containsString(supplied, s.Name)', 'isExcluded(s.Name, cfg.Skills.Exclude) || containsString(supplied, s.Name)'),
@@ -575,6 +576,7 @@ EQUIVALENT["banner-only-on-first-block"] = "a notice and several text blocks nev
 EQUIVALENT["audit-new-file-not-written"] = "a missing file snapshots with mtime 0 and an existing one has a positive mtime, so `after.MtimeMs > before.MtimeMs` alone already says written; `!before.Exists` is the original's explicit form"
 EQUIVALENT.update(SECURITY_EQUIVALENT)
 EQUIVALENT["state-reminder-while-awaiting-user"] = "redundant in the original too: assess selects nothing unless the disposition is advance, so a fresh assessment that awaits the user has no selection and the earlier test of the selection already stops the reminder"
+EQUIVALENT["state-reminder-ignores-nudge-cap"] = "redundant since the loader floors maxNudges at 1 (config.ts Math.max(1, Math.min(5, ..)), clampedInt in config_load.go): nudges is incremented only together with reminderSent (conscience_state.go 719-720) and both are reset together, so a candidate (which needs !reminderSent) always has nudges 0, below the floor of 1"
 EQUIVALENT["state-loaded-bytes-not-counted"] = "the counter is read only by the next load of the same prompt, and the original loads at most once a prompt (before_agent_start); it starts again at 0 for every prompt"
 only = set(sys.argv[1:])
 out = []
