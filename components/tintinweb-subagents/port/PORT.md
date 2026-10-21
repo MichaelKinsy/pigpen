@@ -155,10 +155,17 @@ components; this port registers none.
     - **Timers and goroutines.** One `time.AfterFunc` per armed job (a cron job re-arms every 30 s as croner does), none for
       a stopped one, none when there are no jobs; each fire runs in a recovered goroutine (a panic in the manager is a fire
       error, in a timer callback it is dropped), the one goroutine per fire waits for its agent and is bounded by the agents.
-    - **Settings are read once**, when the extension loads (as the original applies its settings once): `schedulingEnabled`
-      from `subagents.json`, project over global. The settings slice (branch `parity/tintinweb-subagents-settings`) holds the
-      full reader and the tool-text assembly; `schedule_feature.go` is the temporary form of the `schedule` part and says
-      what to delete when the two merge.
+    - **`schedulingEnabled` is read when the extension loads (the tool text) and again when a session starts (the check and
+      the scheduler)**, from `subagents.json`, project over global; the original applies its settings once, at load. The
+      settings slice (branch `parity/tintinweb-subagents-settings`) holds the full reader and the tool-text assembly;
+      `schedule_feature.go` is the temporary form of the `schedule` part and says what to delete when the two merge.
+    - **A pattern that never runs, and whose search overflows V8's stack, is refused as croner's constructor refuses it.**
+      croner finds the first run when the Cron is built, by a recursion that makes one call per field it settles; for a
+      pattern whose failure is decided at the day level (`0 0 8 27 * +6#3`: the 27th that is a third Saturday) that is
+      thousands of calls up to the year 3000 and V8 throws `Maximum call stack size exceeded`, so the original answers
+      `Invalid schedule`. `cron.go` counts the same calls (exactly: `testdata/croner-stack.json`) and refuses at
+      `cronStackLimit`, a threshold between the most calls a completed search made and the fewest at which one overflowed.
+      The limit is V8's stack, which varies a little with how warm the code is; a search near it could go either way.
     - **`/agents` is a listing, not the original's menu**: it adds a `Scheduled jobs (N)` section with the original's rows,
       and cancelling a job says it is not supported yet (the refusal message). Until the menu slice lands, the jobs of a
       running session end with it (or with `/new`, which starts a session with none); one that should not come back on

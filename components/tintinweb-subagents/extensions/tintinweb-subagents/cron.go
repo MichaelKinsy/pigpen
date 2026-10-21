@@ -30,6 +30,15 @@ var occurrenceBitmasks = [5]int{0b00001, 0b00010, 0b00100, 0b01000, 0b10000}
 // cronYearLimit: a search that reaches this year gives up (croner date.ts recurse, `this.year >= 3000` with a `*` year).
 const cronYearLimit = 3000
 
+// cronStackLimit is how many nested `recurse` calls croner's search can make before V8 throws "Maximum call stack size
+// exceeded" (the search recurses once per field it settles or carries, and nothing unwinds until it is done). A search
+// for a run that never comes, whose failure is decided at the day level, makes about a dozen calls per year to the year
+// 3000 and overflows: croner's constructor throws, so the original refuses such a pattern ("Invalid schedule"), where a
+// search with fewer calls ends quietly with no next run. The value sits between the most calls a completed search made
+// and the fewest at which one overflowed, both measured by port/record-croner.mjs under Node 24.19.0 and kept in
+// testdata/croner-stack.json, which cron_test.go replays call for call.
+const cronStackLimit = 7000
+
 // jsSpace reports whether r is a JavaScript whitespace character (what `\s`, `\S` and String.prototype.trim use).
 // Go's unicode.IsSpace differs (it has U+0085 and lacks U+FEFF).
 func jsSpace(r rune) bool {
@@ -437,7 +446,11 @@ var recursionSteps = [5]struct{ target, parent, offset int }{
 }
 
 // cronDate is a calendar time in the process's local zone, field by field, as croner's CronDate holds it.
-type cronDate struct{ ms, second, minute, hour, day, month, year int }
+type cronDate struct {
+	ms, second, minute, hour, day, month, year int
+	calls                                      int  // nested calls of croner's `recurse` so far
+	overflow                                   bool // the search made more than cronStackLimit of them
+}
 
 func (d *cronDate) get(t int) int {
 	switch t {
@@ -644,6 +657,11 @@ func (d *cronDate) findNext(p *cronPattern, target, offset int) int {
 func (d *cronDate) recurse(p *cronPattern) bool {
 	doing := 0
 	for {
+		d.calls++ // each pass is one call of croner's recursive `recurse`
+		if d.calls > cronStackLimit {
+			d.overflow = true
+			return false
+		}
 		step := recursionSteps[doing]
 		res := d.findNext(p, step.target, step.offset)
 		if res > 1 {
@@ -720,7 +738,12 @@ func (d *cronDate) time() time.Time {
 // cron is a parsed expression. upstream: croner Cron (the part src/schedule.ts uses).
 type cron struct{ pattern *cronPattern }
 
-func newCron(expr string) (*cron, error) {
+// newCron is `new Cron(expr, fn)` as it stands now: see newCronAt.
+func newCron(expr string) (*cron, error) { return newCronAt(expr, time.Now()) }
+
+// newCronAt is `new Cron(expr, fn)` at the instant now. croner's constructor arms the job at once, which searches for
+// the first run, so a pattern whose search overflows croner's stack is refused here as it is there.
+func newCronAt(expr string, now time.Time) (*cron, error) {
 	// croner reads a pattern with a `:` after its first character as a date, parsed by V8's Date.parse. The
 	// original's own check (six fields) lets a few such strings through ("Tue Jan 01 2030 10:00:00 GMT+0100" is six
 	// fields), and Go has no Date.parse: they are refused here, like croner refuses the ones Date.parse rejects.
@@ -731,15 +754,25 @@ func newCron(expr string) (*cron, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &cron{pattern: p}, nil
+	c := &cron{pattern: p}
+	if _, _, overflow := c.nextRun(now); overflow {
+		return nil, errors.New("Maximum call stack size exceeded")
+	}
+	return c, nil
 }
 
 // next is the first run after `after` (strictly: the next whole second), or false when there is none before the year
 // 3000. upstream: croner Cron.nextRun(prev).
 func (c *cron) next(after time.Time) (time.Time, bool) {
+	t, ok, _ := c.nextRun(after)
+	return t, ok
+}
+
+// nextRun is next, also reporting that croner's search would have overflowed the stack (and so found nothing).
+func (c *cron) nextRun(after time.Time) (t time.Time, ok, overflow bool) {
 	d := fromTime(after)
 	if !d.increment(c.pattern) {
-		return time.Time{}, false
+		return time.Time{}, false, d.overflow
 	}
-	return d.time(), true
+	return d.time(), true, false
 }

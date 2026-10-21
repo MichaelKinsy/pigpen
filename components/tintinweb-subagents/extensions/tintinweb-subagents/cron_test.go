@@ -27,26 +27,33 @@ type dateVector struct {
 }
 
 func loadCronVectors(t *testing.T) []cronVector {
-	vectors, _ := loadCronFixture(t)
-	return vectors
+	return loadCronFile(t).Vectors
 }
 
 func loadCronFixture(t *testing.T) ([]cronVector, []dateVector) {
+	f := loadCronFile(t)
+	return f.Vectors, f.Dates
+}
+
+type cronFixture struct {
+	Croner  string           `json:"croner"`
+	At      map[string]int64 `json:"at"` // per zone: the instant croner built its Crons at (a Cron searches for its first run from then)
+	Vectors []cronVector     `json:"vectors"`
+	Dates   []dateVector     `json:"dates"`
+}
+
+func loadCronFile(t *testing.T) cronFixture {
 	t.Helper()
 	raw, err := os.ReadFile("testdata/croner-vectors.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var f struct {
-		Croner  string       `json:"croner"`
-		Vectors []cronVector `json:"vectors"`
-		Dates   []dateVector `json:"dates"`
-	}
+	var f cronFixture
 	if err := json.Unmarshal(raw, &f); err != nil {
 		t.Fatal(err)
 	}
 	eq(t, f.Croner, "10.0.1")
-	return f.Vectors, f.Dates
+	return f
 }
 
 func withLocal(t *testing.T, zone string) {
@@ -61,7 +68,8 @@ func withLocal(t *testing.T, zone string) {
 }
 
 func TestCronMatchesCroner(t *testing.T) {
-	vectors := loadCronVectors(t)
+	fixture := loadCronFile(t)
+	vectors := fixture.Vectors
 	eq(t, len(vectors) > 2500, true)
 	byZone := map[string][]cronVector{}
 	for _, v := range vectors {
@@ -71,7 +79,7 @@ func TestCronMatchesCroner(t *testing.T) {
 		t.Run(zone, func(t *testing.T) {
 			withLocal(t, zone)
 			for _, v := range list {
-				c, err := newCron(v.Pattern)
+				c, err := newCronAt(v.Pattern, time.UnixMilli(fixture.At[zone]))
 				if len(jsFields(v.Pattern)) != 6 {
 					// croner also reads five and seven fields; the scheduler's own gate (validateCronExpression) allows six only.
 					eq(t, validateCronExpression(v.Pattern).Valid, false)
@@ -123,4 +131,56 @@ func TestParseJSDateMatchesNode(t *testing.T) {
 			t.Errorf("%s %q: Date.parse says %d, parseJSDate says %v (ok=%v)", d.Zone, d.Input, *d.Ms, got, ok)
 		}
 	}
+}
+
+// The search croner makes for a run is a recursion, one call per field it settles or carries, and V8 throws from
+// `new Cron` when it gets too deep. testdata/croner-stack.json holds, per pattern and instant, the calls croner's
+// `recurse` made (read by a counting copy of croner, in a fresh process) and whether it overflowed. cron.go makes the
+// same calls, one for one, and gives up at cronStackLimit, between the most a completed search made and the fewest at
+// which one overflowed.
+func TestCronSearchMakesCronersCallsAndOverflowsWhereItDoes(t *testing.T) {
+	withLocal(t, "UTC")
+	raw, err := os.ReadFile("testdata/croner-stack.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var f struct {
+		Croner  string `json:"croner"`
+		Entries []struct {
+			Pattern string `json:"pattern"`
+			From    int64  `json:"from"`
+			Calls   int    `json:"calls"`
+			Outcome string `json:"outcome"` // "ok", "none" (no run before the year 3000) or "overflow"
+		} `json:"entries"`
+	}
+	eq(t, json.Unmarshal(raw, &f), nil)
+	eq(t, f.Croner, "10.0.1")
+	var overflowed, completed, deepest int
+	for _, e := range f.Entries {
+		p, err := parseCronPattern(e.Pattern)
+		if err != nil {
+			t.Errorf("%q: %v", e.Pattern, err)
+			continue
+		}
+		d := fromTime(time.UnixMilli(e.From))
+		found := d.increment(p)
+		if e.Outcome == "overflow" {
+			overflowed++
+			if !d.overflow {
+				t.Errorf("%q from %d: croner overflowed its stack (at %d calls), cron.go made %d calls and did not", e.Pattern, e.From, e.Calls, d.calls)
+			}
+			continue
+		}
+		completed++
+		deepest = max(deepest, e.Calls)
+		if d.overflow || d.calls != e.Calls {
+			t.Errorf("%q from %d: croner made %d calls, cron.go %d (overflow %v)", e.Pattern, e.From, e.Calls, d.calls, d.overflow)
+		}
+		if found != (e.Outcome == "ok") {
+			t.Errorf("%q from %d: croner says %s, cron.go found a run: %v", e.Pattern, e.From, e.Outcome, found)
+		}
+	}
+	eq(t, overflowed > 0, true)
+	eq(t, completed > 50, true)
+	eq(t, deepest < cronStackLimit, true)
 }

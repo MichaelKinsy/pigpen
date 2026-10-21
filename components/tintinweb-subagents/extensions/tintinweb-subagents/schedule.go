@@ -471,7 +471,7 @@ func (s *subagentScheduler) scheduleJob(job scheduledSubagent) {
 			s.emit(scheduleChange{Type: "error", JobID: job.ID, Error: fmt.Sprintf("Scheduled time %s is in the past", job.Schedule)})
 		}
 	default:
-		c, err := newCron(job.Schedule)
+		c, err := newCronAt(job.Schedule, s.clock.now())
 		if err != nil {
 			s.emit(scheduleChange{Type: "error", JobID: job.ID, Error: err.Error()})
 			return
@@ -714,7 +714,7 @@ func detectSchedule(s string, now time.Time) (detected, error) {
 			return detected{Type: "once", Normalized: isoString(t)}, nil
 		}
 	}
-	if validateCronExpression(trimmed).Valid {
+	if validateCronExpressionAt(trimmed, now).Valid {
 		return detected{Type: "cron", Normalized: trimmed}, nil
 	}
 	return detected{}, fmt.Errorf(`Invalid schedule "%s". Use 6-field cron (e.g. "0 0 9 * * 1" — 9am every Monday), interval ("5m"/"1h"), or one-shot ("+10m" / ISO).`, s)
@@ -726,8 +726,13 @@ type cronValidation struct {
 	Error string
 }
 
-// validateCronExpression: 6-field cron, "second minute hour dom month dow". upstream: schedule.ts validateCronExpression.
-func validateCronExpression(expr string) cronValidation {
+// validateCronExpression: 6-field cron, "second minute hour dom month dow", judged at this moment.
+// upstream: schedule.ts validateCronExpression.
+func validateCronExpression(expr string) cronValidation { return validateCronExpressionAt(expr, time.Now()) }
+
+// validateCronExpressionAt is validateCronExpression at the instant now: constructing a Cron searches for its first
+// run from then, which is what a pattern that never runs can fail on (cronStackLimit).
+func validateCronExpressionAt(expr string, now time.Time) cronValidation {
 	fields := 1 // "".split(/\s+/) is [""]
 	if t := jsTrim(expr); t != "" {
 		fields = len(jsFields(t))
@@ -735,7 +740,7 @@ func validateCronExpression(expr string) cronValidation {
 	if fields != 6 {
 		return cronValidation{Error: fmt.Sprintf(`Cron must have 6 fields (second minute hour dom month dow), got %d. Example: "0 0 9 * * 1" for 9am every Monday.`, fields)}
 	}
-	if _, err := newCron(expr); err != nil {
+	if _, err := newCronAt(expr, now); err != nil {
 		return cronValidation{Error: err.Error()}
 	}
 	return cronValidation{Valid: true}

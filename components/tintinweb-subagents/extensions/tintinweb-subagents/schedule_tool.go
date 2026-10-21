@@ -37,9 +37,9 @@ func (a *app) schedulingOn() bool {
 	return a.schedule.enabled
 }
 
-// setSchedulingEnabled is `setSchedulingEnabled(b)`: the switch of the feature. The settings are applied once, when the
-// extension loads (as the original applies them), so flipping it later changes the `schedule` check and what starts
-// with the next session, not the tool text.
+// setSchedulingEnabled is `setSchedulingEnabled(b)`: the switch of the feature. The tool text is decided when the
+// extension loads; the `schedule` check and the scheduler follow the setting as it is when a session starts (like the
+// other settings of this port, which are read at a session start in the workspace the host reports).
 func (a *app) setSchedulingEnabled(on bool) {
 	a.schedule.mu.Lock()
 	a.schedule.enabled = on && scheduleFeatureOn
@@ -51,7 +51,7 @@ func (a *app) scheduler() *subagentScheduler { return a.schedule.sched }
 
 func (a *app) registerSchedule(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		// The setting was read when the extension loaded (tools.go), as the original applies its settings once.
+		a.setSchedulingEnabled(scheduleSettingEnabled(ctx.Cwd()))
 		if a.schedulingOn() && !a.scheduler().isActive() {
 			a.startScheduler(ctx)
 		}

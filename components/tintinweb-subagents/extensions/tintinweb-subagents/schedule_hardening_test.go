@@ -404,3 +404,30 @@ func TestAJobStoredWithAWorktreeIsRefusedWhenItFiresNotRunWithoutOne(t *testing.
 	eq(t, r.fleet.count(), 0)
 	eq(t, r.app.scheduler().list()[0].LastStatus, "error")
 }
+
+func TestAPatternThatNeverRunsAndOverflowsCronersStackIsRefused(t *testing.T) {
+	withLocal(t, "UTC")
+	now := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
+	// The 27th that is a third Saturday: there is none, and the day-level search to the year 3000 is thousands of calls.
+	for _, pattern := range []string{"0 0 8 27 * +6#3", "0 0 0 L * +1#1"} {
+		v := validateCronExpressionAt(pattern, now)
+		eq(t, v.Valid, false)
+		eq(t, v.Error, "Maximum call stack size exceeded")
+		_, err := detectSchedule(pattern, now)
+		eq(t, err != nil && strings.HasPrefix(err.Error(), `Invalid schedule "`+pattern+`"`), true)
+	}
+	// One whose search is short ends quietly with no run, and is accepted: February 30th in a year that ends in 2999.
+	late := time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC)
+	eq(t, validateCronExpressionAt("0 0 0 30 2 *", late).Valid, true)
+	// A stored job that overflows is an error event when it is armed, not a timer.
+	r := startSched(t, newFakeClockAt(now), newMockManager())
+	eq(t, r.store.add(makeJob(func(j *scheduledSubagent) {
+		j.ID, j.Name, j.Schedule, j.ScheduleType, j.IntervalMs = "never", "never", "0 0 8 27 * +6#3", "cron", nil
+	})), nil)
+	r.sched.stop()
+	r.sched.start(r.manager, r.store, r.events.emit)
+	eq(t, r.events.has(func(e scheduleChange) bool {
+		return e.Type == "error" && e.JobID == "never" && e.Error == "Maximum call stack size exceeded"
+	}), true)
+	eq(t, len(r.sched.crons), 0)
+}

@@ -882,6 +882,30 @@
   "replace": "if parts[3] == \"**\" {\n\t\tp.starDOM = true"
  },
  {
+  "name": "cron-stack-never-overflows",
+  "file": "cron.go",
+  "find": "if d.calls > cronStackLimit {",
+  "replace": "if d.calls > cronStackLimit*1000 {"
+ },
+ {
+  "name": "cron-stack-counts-double",
+  "file": "cron.go",
+  "find": "d.calls++ // each pass is one call of croner's recursive `recurse`",
+  "replace": "d.calls += 2"
+ },
+ {
+  "name": "cron-stack-overflow-accepted",
+  "file": "cron.go",
+  "find": "if _, _, overflow := c.nextRun(now); overflow {",
+  "replace": "if _, _, overflow := c.nextRun(now); overflow && false {"
+ },
+ {
+  "name": "cron-stack-checked-at-no-time",
+  "file": "schedule.go",
+  "find": "if _, err := newCronAt(expr, now); err != nil {",
+  "replace": "if _, err := newCronAt(expr, time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC)); err != nil {"
+ },
+ {
   "name": "schedule-relative-needs-no-plus",
   "file": "schedule.go",
   "find": "`^\\+(\\d+)(s|m|h|d)$`",

@@ -168,8 +168,69 @@ function chainFor(pattern, from, length) {
   return out;
 }
 
-if (process.argv[2] === "--zone") {
+// ---- the stack depth: how many nested calls of croner's `recurse` a search makes, and when V8 gives up ----
+// croner's constructor searches for the first run, and the search recurses once per field it settles or carries, with
+// nothing unwinding until it is done. A pattern that never runs and fails at the day level makes thousands of calls on
+// the way to the year 3000 and V8 throws "Maximum call stack size exceeded" from `new Cron`. cron.go counts the same
+// calls. The count is read by a copy of croner whose `recurse` increments a counter; each probe is a fresh process (the
+// depth V8 allows depends on how warm the code is, and the original builds its Cron cold).
+const STACK_EXTRA = ["0 0 8 27 * +6#3", "0 0 0 31 2 *", "0 0 0 30 2 *", "0 0 0 31 4,6,9,11 *", "0 0 0 31 * +2#1", "0 0 0 1 * +1#2",
+  "0 0 0 1-7 * +1#2", "0 0 12 * * +1#5", "0 0 0 15W * +6", "0 0 0 LW * +6", "0 0 0 L * +1#1", "0 0 0 29 2 +2#1", "0 0 0 29 2 *",
+  "0 0 0 29 2 +1", "0 0 0 31 * 5", "0 0 0 31 * +5", "0 0 0 30 2 +0", "0 0 0 13 * +5", "0 0 0 13 * +5#1", "0 0 0 5W * +0", "0 0 0 L 2 +1#5"];
+
+if (process.argv[2] === "--probe") {
+  const [file, pattern, from] = process.argv.slice(3);
+  const { Cron } = await import(file);
+  globalThis.__calls = 0;
+  let outcome;
+  try {
+    outcome = new Cron(pattern).nextRun(new Date(from)) ? "ok" : "none";
+  } catch (e) {
+    outcome = /call stack/i.test(String(e && e.message)) ? "overflow" : "error";
+  }
+  process.stdout.write(JSON.stringify({ calls: globalThis.__calls, outcome }));
+} else if (process.argv[2] === "--stack") {
+  const { spawn } = await import("node:child_process");
+  const { mkdtempSync, readFileSync, writeFileSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { pathToFileURL } = await import("node:url");
+  const dir = join(process.env.CRONER_FROM || join(here, "oracle"), "node_modules", "croner", "dist");
+  const source = readFileSync(join(dir, "croner.js"), "utf8");
+  if (source.split("recurse(e,t,r){").length !== 2) throw new Error("croner's recurse is not where the counter expects it");
+  const tmp = mkdtempSync(join(tmpdir(), "croner-count-"));
+  writeFileSync(join(tmp, "croner.mjs"), source.replace("recurse(e,t,r){", "recurse(e,t,r){globalThis.__calls=(globalThis.__calls||0)+1;"));
+  const file = pathToFileURL(join(tmp, "croner.mjs")).href;
+  const patterns = [...new Set([...PATTERNS, ...STACK_EXTRA])].filter((p) => p.trim().split(/\s+/).length === 6 && !p.includes(":"));
+  const froms = [ANCHORS[0], ANCHORS[2], ...RANDOM_ANCHORS.slice(0, 2)];
+  const jobs = patterns.flatMap((pattern) => froms.map((from) => ({ pattern, from })));
+  const results = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < jobs.length) {
+      const job = jobs[next++];
+      const out = await new Promise((resolve) => {
+        let text = "";
+        const child = spawn(process.execPath, [fileURLToPath(import.meta.url), "--probe", file, job.pattern, job.from], { env: { ...process.env, TZ: "UTC" } });
+        child.stdout.on("data", (d) => { text += d; });
+        child.on("close", () => resolve(text));
+      });
+      const got = JSON.parse(out);
+      if (got.outcome !== "error") results.push({ pattern: job.pattern, from: Date.parse(job.from), calls: got.calls, outcome: got.outcome });
+    }
+  };
+  await Promise.all(Array.from({ length: 12 }, worker));
+  results.sort((a, b) => a.pattern.localeCompare(b.pattern) || a.from - b.from);
+  const done = results.filter((r) => r.outcome !== "overflow").map((r) => r.calls);
+  const over = results.filter((r) => r.outcome === "overflow").map((r) => r.calls);
+  const most = Math.max(...done), fewest = over.length ? Math.min(...over) : Infinity;
+  console.error(`stack: ${results.length} probes, ${over.length} overflowed (calls ${fewest}..${over.length ? Math.max(...over) : "-"}), the most a completed search made ${most}`);
+  if (over.length) console.error(`LIMIT ${Math.floor((most + fewest) / 2)}`);
+  if (most >= fewest) console.error("WARNING: a completed search made more calls than the fewest at which one overflowed; the limit is not clean");
+  const keep = results.filter((r, i) => r.outcome === "overflow" || r.calls >= most * 0.4 || i % 12 === 0);
+  process.stdout.write(JSON.stringify({ croner: "10.0.1", node: process.version, probes: results.length, entries: keep }, null, 0).replace(/\},\{/g, "},\n{") + "\n");
+} else if (process.argv[2] === "--zone") {
   const zone = process.env.TZ;
+  const at = Date.now(); // `new Cron` searches for the first run from now: a pattern that overflows does so relative to this
   const vectors = [];
   const patterns = zone === "UTC" ? PATTERNS : [...new Set([...PATTERNS.filter((_, i) => i % 7 === 0), ...DST_PATTERNS])];
   const anchors = [...(zone === "UTC" ? [0, 1, 2, 3, 10, 11].map((i) => ANCHORS[i]) : DST_ANCHORS), ...RANDOM_ANCHORS];
@@ -190,18 +251,20 @@ if (process.argv[2] === "--zone") {
   const dates = zone === "UTC" || zone === "America/New_York"
     ? DATES.map((input) => { const t = new Date(input).getTime(); return { zone, input, ms: Number.isNaN(t) ? null : t }; })
     : [];
-  process.stdout.write(JSON.stringify({ vectors, dates }));
+  process.stdout.write(JSON.stringify({ at, vectors, dates }));
 } else {
   const all = [];
   const dates = [];
+  const at = {};
   for (const zone of ZONES) {
     const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--zone"], {
       env: { ...process.env, TZ: zone }, encoding: "utf8", maxBuffer: 1 << 28,
     });
     if (r.status !== 0) throw new Error(`zone ${zone}: ${r.stderr}`);
     const got = JSON.parse(r.stdout);
+    at[zone] = got.at;
     all.push(...got.vectors);
     dates.push(...got.dates);
   }
-  process.stdout.write(JSON.stringify({ croner: "10.0.1", vectors: all, dates }, null, 0).replace(/\},\{/g, "},\n{") + "\n");
+  process.stdout.write(JSON.stringify({ croner: "10.0.1", at, vectors: all, dates }, null, 0).replace(/\},\{/g, "},\n{") + "\n");
 }

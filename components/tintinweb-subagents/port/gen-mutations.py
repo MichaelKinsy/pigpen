@@ -179,6 +179,10 @@ m("cron-same-second-again", "cron.go", "d.second++\n\td.ms = 0", "d.second += 0\
 m("cron-keeps-milliseconds", "cron.go", "d.second++\n\td.ms = 0", "d.second++")
 m("cron-lw-flag", "cron.go", 'if strings.EqualFold(parts[3], "LW") {', 'if strings.EqualFold(parts[3], "LWX") {')
 m("cron-star-dom-undecided", "cron.go", 'if parts[3] == "*" {\n\t\tp.starDOM = true', 'if parts[3] == "**" {\n\t\tp.starDOM = true')
+m("cron-stack-never-overflows", "cron.go", "if d.calls > cronStackLimit {", "if d.calls > cronStackLimit*1000 {")
+m("cron-stack-counts-double", "cron.go", "d.calls++ // each pass is one call of croner's recursive `recurse`", "d.calls += 2")
+m("cron-stack-overflow-accepted", "cron.go", "if _, _, overflow := c.nextRun(now); overflow {", "if _, _, overflow := c.nextRun(now); overflow && false {")
+m("cron-stack-checked-at-no-time", "schedule.go", "if _, err := newCronAt(expr, now); err != nil {", "if _, err := newCronAt(expr, time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC)); err != nil {")
 
 # schedule.go: the scheduler
 m("schedule-relative-needs-no-plus", "schedule.go", "`^\\+(\\d+)(s|m|h|d)$`", "`^\\+?(\\d+)(s|m|h|d)$`")
