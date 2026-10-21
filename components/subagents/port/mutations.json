@@ -1704,6 +1704,30 @@
   "replace": "\treturn created, nil"
  },
  {
+  "name": "mis-prune-count-skipped",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-prune-count-strict",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if countJSONFiles(loc.MissionDir) < maxTerminal {"
+ },
+ {
+  "name": "mis-prune-count-loose",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if countJSONFiles(loc.MissionDir) <= maxTerminal+1 {"
+ },
+ {
+  "name": "mis-prune-count-suffix",
+  "file": "mission_store.go",
+  "find": "if strings.HasSuffix(e.Name(), \".json\") {\n\t\t\tn++",
+  "replace": "if true {\n\t\t\tn++"
+ },
+ {
   "name": "mis-update-gate",
   "file": "mission_update.go",
   "find": "if hasOpenDecisions && (candidateStatus == \"active\" || candidateStatus == \"completed\") {",
