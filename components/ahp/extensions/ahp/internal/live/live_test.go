@@ -2,6 +2,7 @@ package live
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/MichaelKinsy/pigpen/ahp/internal/mapper"
@@ -72,8 +73,12 @@ func TestOnlyTheRunningSessionHasABackend(t *testing.T) {
 	if b, err := s.BackendFactory(&pi.LiveSession{SessionID: "live-id"}); err != nil || b == nil {
 		t.Fatalf("the running session must get its backend: %v", err)
 	}
-	if _, err := s.BackendFactory(&pi.LiveSession{SessionID: "other"}); err == nil {
+	_, err := s.BackendFactory(&pi.LiveSession{SessionID: "other"})
+	if err == nil {
 		t.Fatal("another session must not get a backend")
+	}
+	if want := pi.Unsupported("running a turn in a session other than the running PiG session"); !strings.HasPrefix(err.Error(), want) {
+		t.Fatalf("the refusal must use the program's wording, got %q", err.Error())
 	}
 }
 

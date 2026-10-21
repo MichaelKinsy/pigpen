@@ -169,6 +169,9 @@ func (s *Store) Chat(uri string) *ahptypes.ChatState       { return get[ahptypes
 func (s *Store) Terminal(uri string) *ahptypes.TerminalState {
 	return get[ahptypes.TerminalState](s, uri)
 }
+func (s *Store) Changeset(uri string) *ahptypes.ChangesetState {
+	return get[ahptypes.ChangesetState](s, uri)
+}
 func (s *Store) ResourceWatch(uri string) *ahptypes.ResourceWatchState {
 	return get[ahptypes.ResourceWatchState](s, uri)
 }

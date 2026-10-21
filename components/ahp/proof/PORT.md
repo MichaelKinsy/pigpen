@@ -22,7 +22,7 @@ session. The equivalence method is therefore three layers, not the scenario harn
 
 1. **Twins.** Every one of the 430 upstream test cases has a Go test named after it
    (`internal/twin`; the gate `extensions/ahp/twins_test.go` fails when a case has neither a test nor
-   a named skip). **375 run, 55 are named skips** (below). Upstream inputs and expectations are kept;
+   a named skip). **410 run, 20 are named skips** (below). Upstream inputs and expectations are kept;
    where the Go form had to differ the test says why.
 2. **Real host.** `extensions/ahp/realpig_test.go` builds the extension with a real `pig`, serves a real PiG
    session backed by a scripted local model (`tools/fakellm`), and drives it with a WebSocket AHP
@@ -31,9 +31,26 @@ session. The equivalence method is therefore three layers, not the scenario harn
    non-loopback without token, listener off unless asked, session replacement. The same eight
    scenarios pass against a Piglet Binary with the extension fused in (`PIGPEN_AHP_FUSED=1`).
 3. **Mutation.** `proof/mutations.json` (run with `pigeq mutate --unit-only`) lists mutants of the
-   security and reconciliation checks. Each one is killed by a unit test. **No protocol differential
-   against pi-ahp under Pi, and no interop run with Microsoft's Go client, has been done.** Both are
-   open.
+   security and reconciliation checks and of the changeset service, the dev tunnel and the MIME and refusal code (106 at 0.4.0). Each one is killed by a unit test; an
+   equivalent mutant is not listed (the changeset service's second guard against untracked files outside the working directory,
+   which `toFiles` repeats). A protocol differential
+   against pi-ahp (layer 4, below) covers the changeset flow; **no differential of Pi-driven turns and no interop run with Microsoft's
+   Go client has been done.**
+4. **Protocol differential** (`proof/differential`, kind 4 of the porting skill: a protocol adapter, so no scenario lane exists).
+   `oracle-run.mjs` runs pi-ahp's own `AhpHost` and `ChangesetService` (unmodified `src/`, with its npm dependencies `@microsoft/agent-host-protocol@0.9.0`,
+   `chokidar@5` and `mime@4.1.1`, and without Pi) under Node 24 with a scripted client over an in-memory transport and a scripted git backend and
+   watcher; `TestDifferential` runs the same steps on `host.Host` and `changeset.Service`; `run.sh` runs both and compares the host's wire transcripts
+   frame by frame after removing what legitimately differs (`serverInfo`, the clocks `modifiedAt`/`createdAt`/`startedAt`, `_meta`, the work directory).
+   Architecture mapping: upstream's session registry embeds one Pi `AgentSession` per session and the host owns them all; here the session
+   state is created in the store directly (the registry and the single running PiG session sit behind the SDK adapter, so they are not part
+   of the comparison), while `AhpHost`/`host.Host` (handshake, subscribe, sequencing, hydration, client-action validation, error mapping) and the
+   changeset service (catalogue, hydration, computing/ready actions, refresh, rejection, eviction) are compared as the original wrote them.
+   Scenario (11 frames): initialize, subscribe to the session, subscribe to its Uncommitted changeset (hydrated), first scan, watcher-triggered
+   refresh, a client `changeset/filesReviewChanged` (rejected), unsubscribe (state evicted), subscribe to an unknown changeset (error), ping.
+   Result (imladris, node 24.19.0, go 1.27.2): the transcripts are equal after normalization. Findings: none in the port. One mistake of the
+   harness was found by the first run (the script's literal `status: "idle"` where the protocol has the number 1) and fixed in the script.
+   Not covered: turns driven by a Pi agent (the 15 pi-replay skips), resources, terminals, reconnect; the Go reducers and the npm client library
+   are not compared with each other.
 
 ## Mapping
 
@@ -49,19 +66,20 @@ session. The equivalence method is therefore three layers, not the scenario harn
 | Pi `SessionManager` (JSONL v3) | `internal/pisession` | used by the above |
 | `pi/resource-*.ts` | `internal/svc` (`resource.go`, `watch.go`, `glob.go`, `watchpolicy.go`) | resource 23, resource-watch 28, policy 9, watch-events 4 |
 | `host/terminal-service.ts` | `internal/svc` (`terminal.go`, `pty*.go`) | terminal-service 14, pty 2 |
+| `pi/changeset-uri.ts`, `git-changes.ts`, `changeset-service.ts` | `internal/changeset` | changeset 8, changeset-lifecycle 5, changeset-uri 2 |
+| `tunnel/discovery.ts`, `tunnel/devtunnel.ts` | `internal/tunnel` | tunnel 20 |
+| `bin/tunnel.ts` | root package: `/ahp tunnel`, `tunnelhost.go` | unit tests (`tunnelhost_test.go`) |
 | `pi/image-input.ts` | `internal/pi/imageinput.go` | image-input 2 |
 | `host/pi-host.ts` | `internal/compose` | pi-host 1 |
 | `host/direct-settings.ts` | `internal/settings` | direct-settings 3 |
 | `pi/in-process-backend.ts` | `internal/live` (adapter over the SDK; not a port) | real-pig scenarios |
 | (none) | root package: flags, `/ahp`, listener lifecycle | real-pig scenarios |
 
-## Named skipped twins (55)
+## Named skipped twins (20)
 
 | Family | Count | Why |
 |---|---|---|
-| `tunnel` | 20 | The dev tunnel (Microsoft `devtunnel` CLI management) is not bundled: owner decision, ACP, AHP and A2A are separate extensions |
 | `pi-replay` | 15 | Replays provider streams through a live embedded Pi agent loop. Covered by the recorded-stream twins (`mapper-fixtures`) and the real-pig scenarios |
-| `changeset`, `changeset-lifecycle`, `changeset-uri` | 15 | The git changeset service (`git-changes.ts`, `changeset-service.ts`) is not ported in this release; the host advertises no changeset channels. Documented gap, candidate for the next release |
 | `image-session` | 1 | Needs Pi's `InProcessPiBackend` and a faux model |
 | `model-discovery` | 2 | Needs an embedded Pi model registry with extension providers; the adapter reads models through the SDK |
 | `live-turn` | 1 | Upstream skips it itself without a real model |
@@ -72,8 +90,8 @@ session. The equivalence method is therefore three layers, not the scenario harn
 1. **One session.** Only the running PiG session has an agent. Other sessions in the catalogue are
    read from their files (browse, history); starting a turn on one fails with a clear error.
    `createSession` is accepted and registers the channel (only the first working directory is used, as
-   in pi-ahp), but the backend factory then fails readiness because only the running session
-   has an agent, so a client cannot get a usable new session. `chat/truncated`, fork and tree navigation are refused: the
+   in pi-ahp), but the storage factory then refuses it, so a client cannot get a usable new session. That refusal, and the one for a
+   turn on a catalogue session, use the program's single wording (`pi.Unsupported`: "@pi-in-go/pigpen-ahp (Go port) does not support <feature> yet. The original, git:github.com/Qusic/pi-ahp@4065e98..., is a standalone Node host and runs on its own, outside PiG.": the original is not a Pi extension, so no install advice is given). `chat/truncated`, fork and tree navigation are refused: the
    SDK offers `NewSession`, `Fork` and `NavigateTree` to commands only.
 2. **Session replacement.** Contexts retained from `session_start` belong to their runtime. On
    `new`, `resume`, `fork` and `reload`, PiG emits `session_shutdown` and runs the extension factory
@@ -101,7 +119,9 @@ session. The equivalence method is therefore three layers, not the scenario harn
    beyond its header. PNG, JPEG and GIF declaring more than 64 megapixels are refused from their header,
    before decoding (Go's decoders allocate the whole image from the header). A
    panic while a prompt or steering message is handed to the agent fails that turn or message.
-10. **MIME table** is the subset of the `mime` package that matters for source trees.
+10. **MIME table** is the full table of `mime@4.1.1` (mime-db's, 1240 extensions; `internal/svc/mimetable.go`, generated by `proof/tools/gen-mime.mjs`, sorted for binary
+    search so that it costs nothing at start-up) with `getType`'s own rules for paths, so a type is absent exactly where upstream's is (for example `.go`, `.py` and `.tsx`
+    files fall back to `text/plain` when they are text).
 11. **Async side effects.** Registry and driver effects run on goroutines where upstream runs them in
     the same tick; a few twins wait for the backend call before the next step. `host.drain` defers
     re-entrant listener callbacks; the driver serialises events (`evMu`).
@@ -116,6 +136,25 @@ session. The equivalence method is therefore three layers, not the scenario harn
     writes 401. The AHP spec leaves endpoint access to the transport, upstream's twin only asserts the refusal, and no
     client tells the two apart (a browser WebSocket reports either as one error); a 401 would also owe a `WWW-Authenticate`
     challenge that a query token has no scheme for. A browser `Origin` that is not allowed is 403 as before.
+
+16. **Changesets.** Ported from `changeset-uri.ts`, `git-changes.ts` and `changeset-service.ts`; git is run with the same
+    argument lists, environment scrubbing, limits and parsers. (a) The watcher polls a snapshot (default every second) where
+    chokidar uses native events; the upstream `ignored` rule is kept, so ignored directories and most of `.git` are not walked.
+    (b) Upstream's resource service is always on and its `readVirtual` serves `git-blob:`; here the filesystem services exist only
+    when opted in, so `git-blob:` is served by a front handler in `internal/compose` that is always present and otherwise
+    answers MethodNotFound for every resource command. The blobs are read-only and limited to the session working directory
+    (`PathForBlob`); with the filesystem opted in its roots also authorize the working directory and each blob path, as
+    upstream's `authorizeResource` does. (c) File ordering uses the same approximated `localeCompare` as the other services
+    (deviation 12). (d) The MIME type of a blob comes from the same table as deviation 10.
+17. **Dev tunnel.** `pi-ahp-tunnel` is a program with its own `main`; here it is the command `/ahp tunnel [name]`. The `devtunnel` CLI
+    is run exactly as upstream runs it (same argument lists, same decoders and messages; `exec:devtunnel`, and only that program).
+    Differences: the CLI runs with the command's context and setup happens in the background with notices instead of lines on
+    standard error; `devtunnel host` has its output captured and shown as notices (upstream inherits the terminal); `--cwd`
+    and `--verbose` do not exist (the session's directory is served, and the extension logs to standard error); `name` may be
+    the rest of the line, where the program takes only the next argument. Like upstream, the listener is on `127.0.0.1:31546`
+    without a token, and an exiting `devtunnel host` shuts the listener down. On Windows `devtunnel host` is stopped with Kill, as
+    Windows has no polite signal for a child. The sequence "login, list, create, port" and the stop order are proven by unit tests with a
+    scripted CLI and a substituted host process, not against Microsoft's service (no account was used).
 
 ## Build notes
 
