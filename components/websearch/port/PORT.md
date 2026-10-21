@@ -694,8 +694,9 @@ Markdown and the error; `TestDefuddleFixturesEqualTheOriginal` runs the port on 
 `port--` pages from `port/gen-defuddle-fixtures.mjs` for removals, scoring, standardization, footnotes, code blocks, callouts,
 malformed markup, large pages, invalid bytes and empty pages; plus the 25 Readability fixtures of `testdata/html`, recorded as
 `<name>.defuddle.json`): 470 fixtures, 14 of them errors of the original that the port reproduces (the message included). The
-fixture-count guard fails the test below 470. The four `rsc-fallback` cases that reach Defuddle are twins, and three scenarios
-(`fetch-defuddle-null-readability`, `fetch-defuddle-short-readability`, `fetch-defuddle-rich-page`) record the tool result under Pi.
+fixture-count guard fails the test below 470. The four `rsc-fallback` cases that reach Defuddle are twins (the fifth, the processing failure, is a twin
+and a scenario too), and four scenarios (`fetch-defuddle-null-readability`, `fetch-defuddle-short-readability`, `fetch-defuddle-rich-page`,
+`fetch-defuddle-processing-failure`) record the tool result under Pi.
 `decodeText` (the charset handling that feeds the pipeline) is proven on 806 recorded `TextDecoder` cases (`testdata/decode-text.json`).
 The Markdown stage is also proven on its own: `port/record-defuddle-markdown.mjs` records the original's `createMarkdownContent` for 20 HTML
 snippets (`testdata/defuddle-markdown.json`) and `TestDefuddleMarkdownStageEqualsTheOriginal` compares `dfdCreateMarkdownContent` with them. A page
@@ -798,9 +799,9 @@ machine and the tern-ci container) with identical bytes.
 - **Console output.** The port writes nothing to the console. `extractWithDefuddle` of the original swallows the Defuddle-prefixed `console.error`
   lines and turns "Error processing document" into the thrown error (reproduced); other console lines of Defuddle would go to the host's stderr
   and are not reproduced. The `rsc-fallback` case that asserts `console.warn` stays silent holds trivially.
-- **The failure checklist.** An error of the Defuddle run ends in the hosted-provider "Fallback options" list of `extract.ts`; on this branch the list
-  names the providers this branch ports, so it is shorter than the original's until the hosted, Gemini and cookie slices are in the stack
-  (the `rsc-fallback` twin and `testdata/defuddle` pin the error line itself; the scenario for that page is therefore not recorded).
+- **The failure checklist.** An error of the Defuddle run ends in the hosted-provider "Fallback options" list of `extract.ts`; the list is complete in
+  this stack (the hosted, Gemini and cookie slices are ported), and the scenario `fetch-defuddle-processing-failure` records the error line and the
+  list under Pi (the `rsc-fallback` twin and `testdata/defuddle` pin the error line as well).
 - **Timing.** The original's Defuddle run is synchronous and cannot be interrupted; the port checks the request's context before and after it.
 
 **Speed and size.** The first Go build of this slice was 1.4 to 1.9 times slower than the original under Node on four of five pages and started
