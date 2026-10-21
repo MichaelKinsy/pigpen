@@ -404,7 +404,7 @@ func TestLifecycleAndPersistence(t *testing.T) {
 		t.Errorf("fallback: port %v/%v key reused %v", i2["port"], i3["port"], tok3 == tok2)
 	}
 	if got := readTrim(filepath.Join(project, ".superpowers", "brainstorm", ".last-port")); got != fmt.Sprint(i2["port"]) {
-		t.Errorf(".last-port %q overwritten by the fallback", got)
+		t.Errorf(".last-port %q overwritten by the fallback (c1 %v, c2 %v, c3 %v, tries %d)", got, i1["port"], i2["port"], i3["port"], restarts)
 	}
 	// an explicit key refuses the fallback
 	if _, _, err := StartCompanion(CompanionOptions{SessionDir: t.TempDir(), Port: i2["port"].(int), Token: "explicit", Env: envOf(nil)}); err == nil || !strings.Contains(err.Error(), "refusing fallback with explicit token") {
