@@ -1,6 +1,6 @@
 // Generates date-golden.json.gz: what Node's V8 (Date.parse, new Date(y,m,d,...), local getters, toISOString) answers for a
 // deterministic corpus, in each of several time zones. The Go port (extensions/schedule-prompt/internal/jsdate) is compared with it by
-// TestDateGolden. Usage: node gen-date-golden.mjs   (writes ./date-golden.json.gz; prints the V8 and tzdata versions)
+// TestDateGolden. Usage: node gen-date-golden.mjs   (writes the file under internal/jsdate/testdata; prints the V8 and tzdata versions)
 import { gzipSync } from "node:zlib";
 import { writeFileSync } from "node:fs";
 
@@ -134,5 +134,5 @@ for (const zone of ZONES) {
 process.env.TZ = "UTC";
 out.iso = [];
 for (const t of [0, 1, -1, 86399999, 1e12, -1e12, 8.64e15, -8.64e15, 253402300799999, 253402300800000, -62198755200000, -62167219200001, -62167219200000]) out.iso.push([t, new Date(t).toISOString()]);
-writeFileSync(new URL("./date-golden.json.gz", import.meta.url), gzipSync(JSON.stringify(out)));
+writeFileSync(new URL("../extensions/schedule-prompt/internal/jsdate/testdata/date-golden.json.gz", import.meta.url), gzipSync(JSON.stringify(out)));
 console.log(`strings ${list.length}, zones ${ZONES.length}, local rows ${out.local.map((r) => r.length).join(",")}, v8 ${process.versions.v8}, tz ${process.versions.tz}`);

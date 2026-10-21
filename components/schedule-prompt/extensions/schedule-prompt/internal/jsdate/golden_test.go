@@ -21,10 +21,7 @@ type dateGolden struct {
 
 func loadGolden(t *testing.T) dateGolden {
 	t.Helper()
-	f, err := os.Open("../../../../port/diff/date-golden.json.gz")
-	if err != nil {
-		f, err = os.Open("../../../../../port/diff/date-golden.json.gz")
-	}
+	f, err := os.Open("testdata/date-golden.json.gz")
 	if err != nil {
 		t.Fatal(err)
 	}

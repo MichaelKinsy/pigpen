@@ -2,7 +2,7 @@
 // six-field expressions, in several time zones: the validation error (or none) and the next runs after reference instants.
 // The Go port (extensions/schedule-prompt/internal/croner) is compared with it by TestCronGolden.
 //
-//   node gen-cron-golden.mjs [--out cron-golden.json.gz] [--exprs 1200] [--refs 10] [--seed 1] [--croner <dir with croner.js>]
+//   node gen-cron-golden.mjs [--out <file>] (default: internal/croner/testdata/cron-golden.json.gz) [--exprs 1200] [--refs 10] [--seed 1] [--croner <dir with croner.js>]
 //
 // croner is loaded from --croner (default: ../oracle/node_modules/croner/dist, after `npm ci` in ../oracle).
 import { gzipSync } from "node:zlib";
@@ -11,7 +11,7 @@ import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith("--") ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
-const OUT = args.out || "cron-golden.json.gz";
+const OUT = args.out || new URL("../extensions/schedule-prompt/internal/croner/testdata/cron-golden.json.gz", import.meta.url).pathname;
 const EXPRS = Number(args.exprs || 1200);
 const REFS = Number(args.refs || 10);
 const SEED = Number(args.seed || 1);

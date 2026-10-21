@@ -130,7 +130,7 @@ func checkGolden(t *testing.T, g cronGolden) {
 
 // TestCronGolden compares validation errors and next-run times with croner 10.0.1 under Node (gen-cron-golden.mjs).
 func TestCronGolden(t *testing.T) {
-	checkGolden(t, readGolden(t, "../../../../port/diff/cron-golden.json.gz"))
+	checkGolden(t, readGolden(t, "testdata/cron-golden.json.gz"))
 }
 
 // TestCronGoldenLarge runs a bigger corpus (CRONER_GOLDEN=<file made with gen-cron-golden.mjs --exprs 100000>), for the evidence run.
