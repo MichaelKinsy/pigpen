@@ -59,8 +59,9 @@ under Pi 1402973a and pass `pigeq check` on PiG.
 - The JSON parser text after `... returned invalid JSON: ` is Go's, not V8's (`serper-invalid-json`, `xcrawl-invalid-json`).
 - A provider's own deadline: SerpApi, Serply, You.com and XCrawl say `<name> request timed out after 60s` (as the original);
   Jina says `Jina Search API error 408: request timed out` (as the original). Serper, SerpBase, Valyu, Bocha, AnySearch and
-  SearXNG have no such branch upstream, where a deadline is an abort error; here it is the shared network-class timeout
-  (see "Provider timeouts" above), so routing can fall through. Caller cancellation is an abort everywhere.
+  SearXNG have no such branch upstream, where a deadline is an abort error ("The operation was aborted due to timeout"); here it
+  is the same since the extract-fidelity slice (see "Provider timeouts"), so routing does not fall through it. Caller
+  cancellation is an abort everywhere.
 - Serper, Valyu, Bocha, AnySearch, XCrawl and Jina use a plain `fetch` upstream, which forwards a custom credential
   header (`X-API-KEY`, `x-api-key`) to another origin on a redirect (undici drops only `Authorization`). The Go transport
   follows the redirect the same way but drops the provider's credential header when the origin changes (hardening beyond the
@@ -104,8 +105,9 @@ Deliberate differences (each pinned by a twin):
 - **No activity log.** The original opens and closes an activity entry around every provider call; this port has none (the
   activity widget belongs to the curator slice), so the twins assert the request and error behaviour and skip the entry itself
   (`the activity entry is opened once ...`).
-- **Own timeouts** are "timed out" errors, like the other Go providers (a `fetch` aborted by `AbortSignal.timeout` reads
-  "aborted" upstream); Querit keeps its own wording, `Querit <Search|Contents> API request timed out after N seconds`.
+- **Own timeouts** are aborts, as upstream (a `fetch` cut off by `AbortSignal.timeout` reads "The operation was aborted due to
+  timeout", which the routing classifier takes for an abort; see "Provider timeouts"); Querit keeps its own wording,
+  `Querit <Search|Contents> API request timed out after N seconds`.
 - **JSON parse messages** are Go's, not V8's, where a provider quotes them (`... returned invalid JSON: <detail>`).
   Bright Data's config parse error keeps only a position, as upstream; V8 omits the position for a bad token at a value
   position and Go cannot tell all V8 cases apart, so the port omits it for Go's "looking for beginning of value" and "in literal"
@@ -228,7 +230,7 @@ Deliberate differences:
 ## Mapping (original file -> Go)
 
 `storage.ts` storage.go - `utils.ts`/`ssrf-protection.ts`/`credential-source.ts` config.go, credential.go, ssrf.go, proxy.go,
-transport.go - `pdf-extract.ts` pdf_extract.go, featureconfig.go (`pdf.*`), pdf_text.go (the unpdf extraction) - `datalab-pdf-extract.ts` datalab_pdf_extract.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
+transport.go, proxy_curl.go (`fetchViaCurl`), hostexec.go - `rsc-extract.ts` rsc_extract.go - the Readability and Turndown steps of `extract.ts` htmlmd.go, turndown.go - `pdf-extract.ts` pdf_extract.go, featureconfig.go (`pdf.*`), pdf_text.go (the unpdf extraction) - `datalab-pdf-extract.ts` datalab_pdf_extract.go - `gemini-search.ts` (routing) search.go, searchcommon.go - `brave/tavily/perplexity/exa/duckduckgo/serpdive/kagi/serper/serpapi/serpbase/serply/valyu/bocha/baizhi/you/anysearch/xcrawl/searxng.ts`
 same names (`jina-search.ts` jinasearch.go; the shared mechanics of the keyed REST providers are in restcommon.go; the hosted providers are listed in "Slice: hosted search and fetch providers") - `github-extract/github-api/github-issue-pr.ts` github_extract.go, github_api.go, github_issue_pr.go (and procrun.go, nodedecode.go) - `extract.ts` extract.go, htmlmd.go, imageproc.go, declared_links.go, featureconfig.go - `find`/`source-check`/`fetch-params`
 find.go, sourcecheck.go, fetchparams.go - `data-uri-sanitize.ts` datauri.go - `index.ts` tools.go, tool_*.go, toolconfig.go,
 schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enable.go - `page-query.ts` page_query.go, fetch_answer.go -
@@ -253,9 +255,8 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   followed by the refusal (`the Defuddle fallback extractor`); four upstream `rsc-fallback` cases stay named skips.
 - **Provider timeouts** are aborts, as in the original (`searchcommon.go timeoutFix`: a provider's own deadline reads "The operation
   was aborted due to timeout", so `searchRouting` does not fall through and the search stops). Twins: `timeout_test.go`. Providers
-  with their own timeout text (SerpApi, Serply, You.com, XCrawl, Jina, Querit) keep it. Slice branches that record "own timeouts use the
-  network-class timeout" (rest-providers PORT.md 'Differences recorded with fixtures', hosted-providers PORT.md 'Own timeouts') must
-  drop that note when they are rebased on this change.
+  with their own timeout text (SerpApi, Serply, You.com, XCrawl, Jina, Querit, Kimi) keep it. The provider slices of the stack
+  (REST, hosted, model, Gemini) describe their timeouts in terms of this rule.
 - **SSRF hardening beyond the original**: the address is checked again when the connection is made (a name that changes
   between validation and connect cannot reach an internal address); IPv6 multicast, NAT64 and 6to4-embedded IPv4 are blocked.
 - **Config directory** is PiG-first (`PIG_CODING_AGENT_DIR`, then `PI_CODING_AGENT_DIR`, XDG `pig`, `$PIG_HOME/agent`), with Pi's
@@ -289,6 +290,11 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   requests are single hops (every caller follows redirects by hand, as `fetchRemoteUrl` does with `redirect: "manual"`), so the
   follow-mode header stripping of the original's fetch wrapper has no counterpart; a localhost or NO_PROXY host is fetched directly,
   behind the dial-time address check.
+  Stack integration: the original wraps the global `fetch`, so every request of a proxied call runs curl (Gemini API, hosted
+  providers, thumbnails, redirect probes, Datalab), except Gemini Web, which uses its own undici agent and the proxy environment. All
+  of those paths here end in `guardedFetch`, `doAPI` or `apiClientFor`, which choose curl; `proxy_paths_test.go` runs one entry point
+  of each family under a scoped proxy and requires curl and no `net/http` request. The `exec:curl` accepted gap is gone: the two
+  scenarios declare `curl`.
 - **Credential commands** run through the bare `sh` (Go) instead of `/bin/sh`, so the harness can record them and NixOS-style systems work.
 - **Guidance** (review fix): the "No search provider available" error of `auto` is the original's (gemini-search.ts:820-828) and
   lists every provider of the port, OpenAI/Codex `/login` included, and (since the browser cookie slice) its item 5, signing
@@ -355,7 +361,7 @@ For the fixed endpoints, `port/record-model-requests.mjs` runs the original modu
 - A non-object `web-search.json` root fails every provider with `Invalid config in <path>: expected a JSON object`; the original
   does that for Mistral only.
 - The activity monitor (`activityMonitor.logStart/logComplete`) is not driven: the activity widget is the curator slice.
-- Provider timeouts take the classification of the first slice (see "Provider timeouts" above), except Kimi, whose own
+- Provider timeouts are aborts (see "Provider timeouts" above), except Kimi, whose own
   `Kimi Code search API timed out` message is ported.
 - The shared "No search provider available" text of `auto` lists every provider present (integration of this slice with the Gemini slice).
 - Responses of these providers are decoded by the direct parser described under "Deliberate differences" (`unmarshalAny`), the request
@@ -466,7 +472,7 @@ transcription are real. What each file carries:
 
 Deliberate differences:
 
-- Provider timeouts follow the port-wide classification (network, so routing can fall through); the original treats them as aborts.
+- Provider timeouts are aborts, as in the original (see "Provider timeouts"): configured routing does not fall through them.
 - The activity monitor (curator slice) is not ported, so no activity is logged around Gemini calls.
 - The fetch "Fallback options" checklist names the Gemini API (`GEMINI_API_KEY`) and Gemini Web ("Sign into gemini.google.com in Chrome").
 - Config is read at each call (the original caches it for the process), so an edit to `web-search.json` is seen without a restart.
