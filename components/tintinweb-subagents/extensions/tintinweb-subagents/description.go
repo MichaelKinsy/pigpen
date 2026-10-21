@@ -111,17 +111,6 @@ func (d descriptionContext) compactTypeList() string {
 	return strings.Join(lines, "\n")
 }
 
-// isJSSpace is JavaScript's `\s` (and what String.prototype.trim removes).
-func isJSSpace(r rune) bool {
-	switch r {
-	case ' ', '\t', '\n', '\v', '\f', '\r', 0xa0, 0x1680, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000, 0xfeff:
-		return true
-	}
-	return r >= 0x2000 && r <= 0x200a
-}
-
-func jsTrim(s string) string { return strings.TrimFunc(s, isJSSpace) }
-
 // firstSentence is the text up to the first `.`, `!` or `?` that ends the text or is followed by white space (the
 // whole text when there is none), its white space collapsed to single spaces. upstream: index.ts firstSentence.
 func firstSentence(text string) string {
