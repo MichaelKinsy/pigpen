@@ -599,8 +599,23 @@ swaps it for this layer.
   `session_oracle_test.go` replays them: zero differences. The manager probe also records the original's `PermissionResolver` over the
   manager corpus (`resolved`): `Resolve` of every tool, bash and path-values intent, and each path-values intent again as an access-path
   intent whose `matchValues()` is the same list; `manager_oracle_test.go` replays them through `Resolve` and `ResolvePrefixed`.
-  Not differential-tested: `GetShellToolAliases` for a config the schema rejects (the port drops an entry without a string
-  `commandArgument`; the schema never lets one through) and the unknown-intent panic (the original's TypeError).
+- `port/record-shelltools-probe.sh <installed oracle>` runs `port/probe/shelltools-probe.test.ts` over `testdata/shelltools-cases.json`
+  (`port/probe/gen-shelltools-cases.py`: 60 global and project config files with `shellTools` in every shape the schema accepts and rejects,
+  trusted and untrusted project scope, invalid JSON, other rejected fields in the same file, `__proto__` and duplicate keys; 6,300 tool calls
+  with the names that matter: `bash`, padded names, `constructor`, `toString`, `__proto__`). It loads each through the original's real
+  `ConfigStore` into a real `PermissionSession` and records `getShellToolAliases()` and the shell invocation `resolveShellInvocation`
+  decides for each tool call. `shelltools_oracle_test.go` replays them through the port's `ConfigStore`, `PermissionSession` and
+  `ResolveShellInvocation`: 60 cases, 6,360 comparisons (31 cases with aliases), zero differences. A config the schema rejects never gets
+  to the session with a half-formed entry (the loader ignores the whole rejected file, every key in it, and reports an issue), so the port's dropping of an entry
+  without a string `commandArgument` is unreachable through the loader; it is kept for a hand-built config.
+- `port/record-intent-probe.sh` records the original's resolver on intents its types forbid (`testdata/intent-oracle.json`,
+  `intent_oracle_test.go`). The original does NOT throw for an unknown `kind` that carries a surface: `PermissionManager.check` falls
+  through to its tool branch, so `{kind: "bogus", surface: "bash"}` is evaluated as the `bash` tool and denied where bash is denied.
+  It throws a TypeError only for `null`/`undefined`/non-objects, a missing surface and a kind whose fields are missing. The port's
+  `AccessIntent` is a sealed interface, so no Go input exists for the unknown kind; a nil intent or an intent type the resolver does not
+  know panics (pinned by the test), the gate pipeline's recover turns that into a block, and a wire decoder in the forwarding code
+  must decide an unknown kind itself (it must refuse it, not evaluate it as a tool, though the original would). This corrects the earlier
+  note that the unknown-intent panic mirrors the original's TypeError: it mirrors it for nil only.
 - Mutations: `port/gen-mutations-policy.py` writes `port/mutations-policy.json`; run `pigeq mutate --unit-only --go
   extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-policy.json --jobs 4`.
 - Performance: `port/bench-manager.sh <installed oracle>` interleaves `go test -bench` (`pol_bench_test.go`) with

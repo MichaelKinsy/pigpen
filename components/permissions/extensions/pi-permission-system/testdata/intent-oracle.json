@@ -1,0 +1,111 @@
+[
+ {
+  "name": "tool read",
+  "result": {
+   "toolName": "read",
+   "state": "allow",
+   "matchedPattern": "*",
+   "source": "tool",
+   "origin": "global"
+  }
+ },
+ {
+  "name": "tool bash",
+  "result": {
+   "toolName": "bash",
+   "state": "deny",
+   "matchedPattern": "*",
+   "source": "bash",
+   "origin": "global",
+   "command": "ls"
+  }
+ },
+ {
+  "name": "unknown kind, surface read",
+  "result": {
+   "toolName": "read",
+   "state": "allow",
+   "matchedPattern": "*",
+   "source": "tool",
+   "origin": "global"
+  }
+ },
+ {
+  "name": "unknown kind, surface bash",
+  "result": {
+   "toolName": "bash",
+   "state": "deny",
+   "matchedPattern": "*",
+   "source": "bash",
+   "origin": "global",
+   "command": "ls"
+  }
+ },
+ {
+  "name": "unknown kind, no surface",
+  "throws": "TypeError"
+ },
+ {
+  "name": "no kind, surface read",
+  "result": {
+   "toolName": "read",
+   "state": "allow",
+   "matchedPattern": "*",
+   "source": "tool",
+   "origin": "global"
+  }
+ },
+ {
+  "name": "no kind, surface bash",
+  "result": {
+   "toolName": "bash",
+   "state": "deny",
+   "matchedPattern": "*",
+   "source": "bash",
+   "origin": "global",
+   "command": "ls"
+  }
+ },
+ {
+  "name": "kind null",
+  "result": {
+   "toolName": "read",
+   "state": "allow",
+   "matchedPattern": "*",
+   "source": "tool",
+   "origin": "global"
+  }
+ },
+ {
+  "name": "tool without surface",
+  "throws": "TypeError"
+ },
+ {
+  "name": "path-values without values",
+  "throws": "TypeError"
+ },
+ {
+  "name": "bash-command without command",
+  "throws": "TypeError"
+ },
+ {
+  "name": "access-path without path",
+  "throws": "TypeError"
+ },
+ {
+  "name": "null",
+  "throws": "TypeError"
+ },
+ {
+  "name": "undefined",
+  "throws": "TypeError"
+ },
+ {
+  "name": "number",
+  "throws": "TypeError"
+ },
+ {
+  "name": "string",
+  "throws": "TypeError"
+ }
+]
