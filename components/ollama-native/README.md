@@ -59,8 +59,32 @@ Run `/ollama refresh` again after `ollama pull` or `ollama rm`.
 - **Errors** say what to do: Ollama not reachable (start it with `ollama serve` or set
   `OLLAMA_HOST`), a model that is not installed (`ollama pull <model>`), or the message
   Ollama returned, including one that arrives in the middle of a stream.
-- `think` is sent only to models marked as reasoning, and only when a thinking level
-  is chosen.
+- **Stream options** follow Pi's `StreamOptions` / `SimpleStreamOptions`:
+  - `temperature` and `maxTokens` become Ollama's `temperature` and `num_predict`.
+    `samplingParams` pass into Ollama's `options` per key and win over those two, so
+    `top_p`, `top_k`, `min_p`, `seed`, `stop`, `repeat_penalty`, `num_ctx` and the
+    rest of Ollama's options work.
+  - `think` is sent only to models marked as reasoning, and only when thinking is asked
+    for: from `thinkingEnabled`, else the level (`reasoning`, then `reasoningEffort`,
+    then `effort`). `off` sends `false`. `gpt-oss` models take a level, so
+    minimal/low send `low`, medium `medium`, high/xhigh/max `high`; other models get `true`.
+  - `toolChoice: "none"` leaves the tools out of the request. Other values, and a
+    `deferred` request, are refused with an error and nothing is sent.
+  - `headers` are added to the request over the defaults (a `null` value removes a
+    default header). `env` gives a request its own `OLLAMA_HOST` and `OLLAMA_API_KEY`.
+    `timeoutMs` bounds the wait for Ollama's response (not the stream).
+    `maxRetries` retries connection failures, timeouts and 408/409/429/5xx answers,
+    waiting for `Retry-After` or 0.5 s doubling to 8 s; a wait over `maxRetryDelayMs`
+    (default 60 s, `0` for no cap) fails at once. No retries unless `maxRetries` is set.
+  - Pi documents `sessionId`, `cacheRetention`, `transport`,
+    `websocketConnectTimeoutMs`, `thinkingBudgets`, `thinkingBudgetTokens`,
+    `interleavedThinking`, `metadata`, `requestMetadata`, `region` and `profile` as hints
+    a provider without the feature ignores. Ollama has no equivalent, so they are
+    accepted and change nothing.
+- **Hooks**: `onPayload` sees the `/api/chat` body and may replace it (returning nothing
+  keeps it); `onResponse` sees the HTTP status and lowercased headers before the body is
+  read; `onProviderStreamEvent` sees each parsed `/api/chat` line before it becomes a PiG
+  event. An error from a hook ends the turn with that error.
 
 ## Limits
 
@@ -69,8 +93,10 @@ Run `/ollama refresh` again after `ollama pull` or `ollama rm`.
   so they are sent in name order, not PiG's authored order. The text is all there.
 - The catalog's `maxTokens` is 8,192 (or the context window if smaller); PiG sends a
   limit only when you set one.
-- The `onPayload`, `onResponse` and `onProviderStreamEvent` caller hooks are not run. A request that carries one is refused with an error and nothing is sent. Stream options other than temperature, max tokens, thinking and the API key are not sent to Ollama.
-- Only chat is covered: no embeddings, no model management (pull, delete).
+- Only chat is covered: no embeddings, no model management (pull, delete). This is a scope
+  choice, not a gap against an original: the README has always said "model provider for
+  chat". Owner decision pending; the recommendation is to keep it, since Pi's provider
+  contract has no embeddings or model-management operation to map them onto.
 
 ## Tests
 
@@ -79,4 +105,5 @@ local HTTP server: `/api/tags`, `/api/show` and the `/api/chat` streams (text,
 thinking, tool calls, length stop, a mid-stream error, a truncated body, a 404). They
 are written to the wire format in Ollama's API documentation, not recorded from a live
 server. `go test ./...` in `extensions/ollama-native` runs them; nothing needs Ollama.
-A run against a real Ollama is the owner's check; it has not been done here.
+No Ollama was reachable on the machines the port was built on, so a run against a real
+server has not been done; that is the owner's check.
