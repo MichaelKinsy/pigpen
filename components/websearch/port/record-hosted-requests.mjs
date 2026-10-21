@@ -75,6 +75,15 @@ const cases = [
 		responses: [ok({ data: { search: [{ title: "Kagi result", url: "https://example.com/kagi", snippet: "Kagi snippet", markdown: "Body" }] } })] },
 	{ name: "kagi extract", module: "kagi.ts", fn: "extractWithKagi", kind: "extract", env: { KAGI_API_KEY: "wire-kagi-key" }, lookup: true, args: [{}],
 		url: "https://example.com/kagi", responses: [ok({ data: [{ url: "https://example.com/kagi", title: "Kagi extract", markdown: "Kagi markdown" }] })] },
+	// The headers arrive and the body read fails: the extract's own deadline (AbortSignal.timeout) or a dropped connection.
+	{ name: "ollama web fetch body deadline", module: "ollama.ts", fn: "extractWithOllama", kind: "extract", env: { OLLAMA_API_KEY: "wire-ollama-key" }, lookup: true, args: [{}], patchTimeout: true,
+		url: "https://example.com/ollama", responses: [{ status: 200, bodyThrow: "timeout" }] },
+	{ name: "ollama web fetch body terminated", module: "ollama.ts", fn: "extractWithOllama", kind: "extract", env: { OLLAMA_API_KEY: "wire-ollama-key" }, lookup: true, args: [{}],
+		url: "https://example.com/ollama", responses: [{ status: 200, bodyThrow: "terminated" }] },
+	{ name: "kagi extract body deadline", module: "kagi.ts", fn: "extractWithKagi", kind: "extract", env: { KAGI_API_KEY: "wire-kagi-key" }, lookup: true, args: [{}], patchTimeout: true,
+		url: "https://example.com/kagi", responses: [{ status: 200, bodyThrow: "timeout" }] },
+	{ name: "kagi extract body terminated", module: "kagi.ts", fn: "extractWithKagi", kind: "extract", env: { KAGI_API_KEY: "wire-kagi-key" }, lookup: true, args: [{}],
+		url: "https://example.com/kagi", responses: [{ status: 200, bodyThrow: "terminated" }] },
 	{ name: "brightdata serp with filters", module: "brightdata.ts", fn: "searchWithBrightData", kind: "search", env: { BRIGHTDATA_API_KEY: "wire-bd-key", BRIGHTDATA_SERP_ZONE: "pi_serp" },
 		args: ["vector databases", { numResults: 3, recencyFilter: "week", domainFilter: ["github.com", "example.com", "-gist.github.com"] }],
 		responses: [ok({ organic: [{ link: "https://github.com/a/b", title: "Repo", description: "repo   description" }, { link: "https://gist.github.com/x", title: "Gist" }, { link: "https://example.com/c" }, { title: "no link" }] })] },
@@ -91,12 +100,17 @@ function run(c) {
 	writeFileSync(join(agent, "web-search.json"), "{}\n");
 	const opts = JSON.stringify(c.args[c.args.length - 1]);
 	const script = `
+		${c.patchTimeout ? `AbortSignal.timeout = () => AbortSignal.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));` : ""}
 		const calls = [];
 		const responses = ${JSON.stringify(c.responses)};
 		let i = 0;
 		globalThis.fetch = async (url, init = {}) => {
 			calls.push({ method: init.method || "GET", url: String(url), headers: Object.fromEntries(new Headers(init.headers || {})), body: init.body ? JSON.parse(init.body) : null });
 			const r = responses[Math.min(i++, responses.length - 1)];
+			if (r.bodyThrow) {
+				const fail = () => { throw r.bodyThrow === "terminated" ? new TypeError("terminated") : init.signal.reason; };
+				return { ok: true, status: r.status, async json() { fail(); }, async text() { fail(); } };
+			}
 			return new Response(typeof r.body === "string" ? r.body : JSON.stringify(r.body), { status: r.status });
 		};
 		const mod = await import(${JSON.stringify(join(oracle, c.module))});

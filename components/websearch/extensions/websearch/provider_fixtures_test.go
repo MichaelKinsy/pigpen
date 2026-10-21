@@ -1,6 +1,7 @@
 package websearch
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -44,7 +45,9 @@ type fixtureResponse struct {
 	Headers map[string]string `json:"headers"`
 	Throw   string            `json:"throw"`
 	Message string            `json:"message"`
-	// BodyThrow makes reading the body fail the way a deadline during the transfer does.
+	// BodyThrow makes reading the body fail after the headers arrived: "timeout" blocks until the
+	// request's own deadline (providerTimeoutOverride makes it short), "abort" cancels the caller
+	// while the body is read, "terminated" cuts the connection.
 	BodyThrow string `json:"bodyThrow"`
 }
 
@@ -60,11 +63,13 @@ type fixtureCase struct {
 	Responses  []fixtureResponse `json:"responses"`
 	Baizhi     string            `json:"baizhi"`
 	PreAborted bool              `json:"preAborted"`
-	Now        string            `json:"now"`
-	Unordered  bool              `json:"unordered"`
-	Requests   []fixtureRequest  `json:"requests"`
-	Activity   []oracleActivity  `json:"activity"`
-	Outcome    struct {
+	// CallerAbortsBody: the caller's context is cancelled while the body is read (bodyThrow "abort").
+	CallerAbortsBody bool             `json:"callerAbortsBody"`
+	Now              string           `json:"now"`
+	Unordered        bool             `json:"unordered"`
+	Requests         []fixtureRequest `json:"requests"`
+	Activity         []oracleActivity `json:"activity"`
+	Outcome          struct {
 		Result any    `json:"result"`
 		Error  string `json:"error"`
 	} `json:"outcome"`
@@ -119,6 +124,23 @@ type brokenBody struct{ err error }
 func (b brokenBody) Read([]byte) (int, error) { return 0, b.err }
 func (b brokenBody) Close() error             { return nil }
 
+// stalledBody is a body that never delivers a byte: a read returns when the request's context ends,
+// with the context's error, as net/http's body does once a deadline or a cancellation fires.
+// cancel, when set, is the caller's cancellation, fired on the first read.
+type stalledBody struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+}
+
+func (b stalledBody) Read([]byte) (int, error) {
+	if b.cancel != nil {
+		b.cancel()
+	}
+	<-b.ctx.Done()
+	return 0, b.ctx.Err()
+}
+func (b stalledBody) Close() error { return nil }
+
 func (d *fixtureDoer) serve(ctx context.Context, method, rawURL string, h http.Header, body []byte) (*http.Response, error) {
 	hdr := map[string]string{}
 	for k, v := range h {
@@ -161,8 +183,14 @@ func (d *fixtureDoer) serve(ctx context.Context, method, rawURL string, h http.H
 	}
 	switch {
 	case spec.BodyThrow == "timeout":
+		resp.StatusCode = cmp.Or(spec.Status, 200)
+		resp.Body = stalledBody{ctx: ctx}
+	case spec.BodyThrow == "abort":
 		resp.StatusCode = 200
-		resp.Body = brokenBody{context.DeadlineExceeded}
+		resp.Body = stalledBody{ctx: ctx, cancel: d.cancel}
+	case spec.BodyThrow == "terminated":
+		resp.StatusCode = 200
+		resp.Body = brokenBody{io.ErrUnexpectedEOF}
 	case spec.JSON != nil:
 		b, _ := json.Marshal(spec.JSON)
 		resp.Header.Set("Content-Type", "application/json")
@@ -280,13 +308,23 @@ func (d *fixtureDoer) baizhi(method string, h map[string]string, body []byte) (*
 }
 
 var (
-	parseTailRE  = regexp.MustCompile(`(invalid JSON|not valid JSON): [\s\S]*$`)
+	parseTailRE  = regexp.MustCompile(`(invalid JSON|not valid JSON): ([\s\S]*)$`)
 	configTailRE = regexp.MustCompile(`(Failed to parse <CONFIG>): [\s\S]*$`)
 )
 
+// bodyReadTexts are what a body that could not be read at all says after "invalid JSON:" (the
+// deadline, the caller's abort, a dropped connection); every other text there is a parser's.
+var bodyReadTexts = map[string]bool{"The operation was aborted due to timeout": true, "This operation was aborted": true, "terminated": true}
+
 func normalizeFixtureText(s string) string {
 	s = strings.ReplaceAll(s, ConfigPath(), "<CONFIG>")
-	s = parseTailRE.ReplaceAllString(s, "$1")
+	s = parseTailRE.ReplaceAllStringFunc(s, func(m string) string {
+		sub := parseTailRE.FindStringSubmatch(m)
+		if bodyReadTexts[sub[2]] {
+			return m
+		}
+		return sub[1]
+	})
 	return configTailRE.ReplaceAllString(s, "$1")
 }
 
@@ -366,6 +404,18 @@ func runFixture(t *testing.T, c *fixtureCase) (*fixtureDoer, *SearchResponse, er
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithCancel(ctx)
 		cancel()
+	}
+	if c.CallerAbortsBody {
+		ctx, d.cancel = context.WithCancel(ctx)
+		defer d.cancel()
+	}
+	for _, spec := range c.Responses {
+		if spec.BodyThrow == "timeout" {
+			prev := providerTimeoutOverride
+			providerTimeoutOverride = 30 * time.Millisecond
+			defer func() { providerTimeoutOverride = prev }()
+			break
+		}
 	}
 	Activity.Clear()
 	res, err := fixtureFns[c.Fn](ctx, c.Query, fixtureSearchOptions(t, c.Options))

@@ -40,6 +40,9 @@ type netReply struct {
 	Hang bool
 	// BodyErr makes reading the body fail after the status and headers arrived.
 	BodyErr error
+	// BodyStall makes a read of the body wait until the request's context ends and fail with its error: a
+	// server that sent the headers and then went quiet, cut off by the deadline.
+	BodyStall bool
 }
 
 func reply(status int, body string) netReply { return netReply{Status: status, Body: body} }
@@ -76,6 +79,9 @@ func (f *fakeNet) Do(r *http.Request) (*http.Response, error) {
 	var respBody io.ReadCloser = io.NopCloser(strings.NewReader(rep.Body))
 	if rep.BodyErr != nil {
 		respBody = brokenBody{rep.BodyErr}
+	}
+	if rep.BodyStall {
+		respBody = stalledBody{ctx: r.Context()}
 	}
 	return &http.Response{StatusCode: rep.Status, Status: http.StatusText(rep.Status), Header: h, Body: respBody, Request: r}, nil
 }

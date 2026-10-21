@@ -29,6 +29,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -112,6 +113,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -198,6 +200,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -288,6 +291,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -357,6 +361,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -407,6 +412,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -449,6 +455,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -479,6 +486,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -528,6 +536,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -578,6 +587,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -620,6 +630,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -652,6 +663,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -709,6 +721,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -787,6 +800,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -844,6 +858,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -890,6 +905,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -935,6 +951,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -981,6 +998,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1025,6 +1043,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -1069,6 +1088,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1113,6 +1133,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1172,6 +1193,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1240,6 +1262,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1301,6 +1324,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1347,6 +1371,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1393,6 +1418,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1440,6 +1466,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1477,6 +1504,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1509,6 +1537,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1560,6 +1589,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1611,6 +1641,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1683,6 +1714,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1758,6 +1790,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1864,6 +1897,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1932,6 +1966,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -1979,6 +2014,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2024,6 +2060,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -2069,6 +2106,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2116,6 +2154,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2176,6 +2215,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2251,6 +2291,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": "2026-03-10T12:00:00.000Z",
   "unordered": false,
@@ -2334,6 +2375,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2408,6 +2450,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2459,6 +2502,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2509,6 +2553,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2563,6 +2608,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": "2026-03-10T12:00:00.000Z",
   "unordered": false,
@@ -2621,6 +2667,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": "2026-03-10T12:00:00.000Z",
   "unordered": false,
@@ -2679,6 +2726,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": "2026-03-10T12:00:00.000Z",
   "unordered": false,
@@ -2762,6 +2810,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2825,6 +2874,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2903,6 +2953,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -2975,6 +3026,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3031,6 +3083,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3102,6 +3155,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3168,6 +3222,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3228,6 +3283,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3291,6 +3347,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3352,6 +3409,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3445,6 +3503,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3521,6 +3580,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3573,6 +3633,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3624,6 +3685,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3673,6 +3735,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -3722,6 +3785,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3782,6 +3846,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3840,6 +3905,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3885,6 +3951,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -3954,6 +4021,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4042,6 +4110,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4127,6 +4196,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4193,6 +4263,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4253,6 +4324,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4304,6 +4376,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4361,6 +4434,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4414,6 +4488,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4460,6 +4535,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4508,6 +4584,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4549,6 +4626,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4604,6 +4682,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4691,6 +4770,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4772,6 +4852,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4849,6 +4930,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -4935,6 +5017,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5021,6 +5104,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5107,6 +5191,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5193,6 +5278,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5283,6 +5369,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5342,6 +5429,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5392,6 +5480,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5441,6 +5530,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5493,6 +5583,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5545,6 +5636,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5598,6 +5690,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5654,6 +5747,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5710,6 +5804,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5760,6 +5855,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5809,6 +5905,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5856,6 +5953,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -5904,6 +6002,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5952,6 +6051,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -5994,6 +6094,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6053,6 +6154,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6127,6 +6229,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6206,6 +6309,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6270,6 +6374,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6319,6 +6424,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6371,6 +6477,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6422,6 +6529,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6471,6 +6579,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6519,6 +6628,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -6566,6 +6676,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": true,
   "now": null,
   "unordered": false,
@@ -6613,6 +6724,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6661,6 +6773,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6703,6 +6816,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6764,6 +6878,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6842,6 +6957,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6907,6 +7023,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -6978,6 +7095,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7050,6 +7168,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7101,6 +7220,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7152,6 +7272,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7190,6 +7311,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7218,6 +7340,7 @@
   "responses": [],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7250,6 +7373,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -7300,6 +7424,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -7430,6 +7555,7 @@
   "responses": null,
   "baizhi": "text",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -7551,6 +7677,7 @@
   "responses": null,
   "baizhi": "sse",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -7675,6 +7802,7 @@
   "responses": null,
   "baizhi": "redact",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -7796,6 +7924,7 @@
   "responses": null,
   "baizhi": "tool-error",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -7915,6 +8044,7 @@
   "responses": null,
   "baizhi": "empty",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8034,6 +8164,7 @@
   "responses": null,
   "baizhi": "http401",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8088,6 +8219,7 @@
   "responses": null,
   "baizhi": "http503",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8142,6 +8274,7 @@
   "responses": null,
   "baizhi": "redirect",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8196,6 +8329,7 @@
   "responses": null,
   "baizhi": "network",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8250,6 +8384,7 @@
   "responses": null,
   "baizhi": "invalid-json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": true,
@@ -8302,6 +8437,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8325,6 +8461,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8352,6 +8489,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8375,6 +8513,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8398,6 +8537,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8423,6 +8563,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8446,6 +8587,7 @@
   "responses": null,
   "baizhi": "json",
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8484,6 +8626,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8550,6 +8693,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8623,6 +8767,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8680,6 +8825,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8743,6 +8889,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8813,6 +8960,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8884,6 +9032,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -8960,6 +9109,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9026,6 +9176,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9086,6 +9237,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9137,6 +9289,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9188,6 +9341,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9240,6 +9394,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9271,6 +9426,211 @@
   ]
  },
  {
+  "id": "serper-env-credential-body-timeout",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-body-abort",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-body-terminated",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Serper API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serper-env-credential-http500-body-timeout",
+  "provider": "serper",
+  "fn": "searchWithSerper",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPER_API_KEY": "serper-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 4
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://google.serper.dev/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "serper-test-key"
+    },
+    "body": {
+     "q": "google query",
+     "num": 4
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "serpapi-env-filters-http500",
   "provider": "serpapi",
   "fn": "searchWithSerpApi",
@@ -9297,6 +9657,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9349,6 +9710,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9400,6 +9762,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9452,6 +9815,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9475,6 +9839,214 @@
     "query": "google query",
     "status": null,
     "error": "SerpApi returned invalid JSON"
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-body-timeout",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "SerpApi request timed out after 60s"
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-body-abort",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-body-terminated",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "SerpApi returned invalid JSON: terminated"
+   }
+  ]
+ },
+ {
+  "id": "serpapi-env-filters-http500-body-timeout",
+  "provider": "serpapi",
+  "fn": "searchWithSerpApi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPAPI_KEY": "serpapi-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://serpapi.com/search.json?engine=google&q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&api_key=serpapi-test-key&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpApi request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "SerpApi request timed out after 60s"
    }
   ]
  },
@@ -9504,6 +10076,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9554,6 +10127,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9604,6 +10178,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9655,6 +10230,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9677,6 +10253,207 @@
     "type": "api",
     "query": "google query",
     "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-body-timeout",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-body-abort",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-body-terminated",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SerpBase API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpbase-map-http500-body-timeout",
+  "provider": "serpbase",
+  "fn": "searchWithSerpBase",
+  "config": {
+   "serpbaseApiKey": "serpbase-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "google query",
+  "options": {
+   "numResults": 4,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serpbase.dev/google/search?q=google+query+site%3Aexample.com&api_key=serpbase-test-key&num=4&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 500
    }
   ]
  },
@@ -9707,6 +10484,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9760,6 +10538,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9812,6 +10591,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9865,6 +10645,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9893,6 +10674,218 @@
   ]
  },
  {
+  "id": "serply-env-filters-body-timeout",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "Serply request timed out after 60s"
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-body-abort",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-body-terminated",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "Serply returned invalid JSON: terminated"
+   }
+  ]
+ },
+ {
+  "id": "serply-env-filters-http500-body-timeout",
+  "provider": "serply",
+  "fn": "searchWithSerply",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPLY_API_KEY": "serply-test-key"
+  },
+  "query": "google query",
+  "options": {
+   "numResults": 3,
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ],
+   "recencyFilter": "week"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.serply.io/v1/search?q=google+query+site%3Aexample.com+-site%3Aprivate.docs.example.com&num=8&tbs=qdr%3Aw",
+    "headers": {
+     "accept": "application/json",
+     "x-api-key": "serply-test-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Serply request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "google query",
+    "status": null,
+    "error": "Serply request timed out after 60s"
+   }
+  ]
+ },
+ {
   "id": "valyu-content-bounds-http500",
   "provider": "valyu",
   "fn": "searchWithValyu",
@@ -9915,6 +10908,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -9967,6 +10961,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10019,6 +11014,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10072,6 +11068,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10103,6 +11100,215 @@
   ]
  },
  {
+  "id": "valyu-content-bounds-body-timeout",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-body-abort",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-body-terminated",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Valyu API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "valyu-content-bounds-http500-body-timeout",
+  "provider": "valyu",
+  "fn": "searchWithValyu",
+  "config": {
+   "valyuApiKey": "valyu-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7,
+   "includeContent": true
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.valyu.ai/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "valyu-test-key"
+    },
+    "body": {
+     "query": "research",
+     "max_num_results": 7
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "bocha-filters-http500",
   "provider": "bocha",
   "fn": "searchWithBocha",
@@ -10129,6 +11335,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10187,6 +11394,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10245,6 +11453,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10304,6 +11513,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10337,6 +11547,239 @@
   ]
  },
  {
+  "id": "bocha-filters-body-timeout",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-body-abort",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-body-terminated",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Bocha API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "bocha-filters-http500-body-timeout",
+  "provider": "bocha",
+  "fn": "searchWithBocha",
+  "config": {
+   "bochaApiKey": "bocha-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "bocha query",
+  "options": {
+   "numResults": 5,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.docs.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.bochaai.com/v1/web-search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer bocha-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "bocha query",
+     "count": 5,
+     "freshness": "oneWeek",
+     "summary": true
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "bocha query",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "you-map-http500",
   "provider": "you",
   "fn": "searchWithYou",
@@ -10363,6 +11806,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10427,6 +11871,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10490,6 +11935,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10554,6 +12000,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10593,6 +12040,262 @@
   ]
  },
  {
+  "id": "you-map-body-timeout",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "You.com request timed out after 60s"
+   }
+  ]
+ },
+ {
+  "id": "you-map-body-abort",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "you-map-body-terminated",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "You.com returned invalid JSON: terminated"
+   }
+  ]
+ },
+ {
+  "id": "you-map-http500-body-timeout",
+  "provider": "you",
+  "fn": "searchWithYou",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "YDC_API_KEY": "you-test-key"
+  },
+  "query": "you query",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com",
+    "-private.example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ydc-index.io/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "content-type": "application/json",
+     "x-api-key": "you-test-key"
+    },
+    "body": {
+     "query": "you query",
+     "count": 3,
+     "freshness": "week",
+     "include_domains": [
+      "example.com"
+     ],
+     "exclude_domains": [
+      "private.example.com"
+     ]
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "You.com request timed out after 60s"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "you query",
+    "status": null,
+    "error": "You.com request timed out after 60s"
+   }
+  ]
+ },
+ {
   "id": "anysearch-anonymous-http500",
   "provider": "anysearch",
   "fn": "searchWithAnySearch",
@@ -10616,6 +12319,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10667,6 +12371,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10718,6 +12423,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10770,6 +12476,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10799,6 +12506,211 @@
   ]
  },
  {
+  "id": "anysearch-anonymous-body-timeout",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-body-abort",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-body-terminated",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "AnySearch API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "anysearch-anonymous-http500-body-timeout",
+  "provider": "anysearch",
+  "fn": "searchWithAnySearch",
+  "config": {},
+  "configRaw": null,
+  "env": {},
+  "query": "anonymous",
+  "options": {
+   "numResults": 3,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "example.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.anysearch.com/v1/search",
+    "headers": {
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "anonymous",
+     "max_results": 3
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "anonymous",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "xcrawl-map-http500",
   "provider": "xcrawl",
   "fn": "searchWithXCrawl",
@@ -10820,6 +12732,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10870,6 +12783,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10920,6 +12834,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10971,6 +12886,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -10997,6 +12913,207 @@
     "type": "api",
     "query": "research",
     "status": 200
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-body-timeout",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: response body is not valid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-body-abort",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: response body is not valid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-body-terminated",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "XCrawl API returned invalid response: response body is not valid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "xcrawl-map-http500-body-timeout",
+  "provider": "xcrawl",
+  "fn": "searchWithXCrawl",
+  "config": {
+   "xcrawlApiKey": "xc-test-key"
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "research",
+  "options": {
+   "numResults": 7
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://run.xcrawl.com/v1/serp",
+    "headers": {
+     "authorization": "Bearer xc-test-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "engine": "google_search",
+     "q": "research"
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "research",
+    "status": 500
    }
   ]
  },
@@ -11028,6 +13145,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11084,6 +13202,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11140,6 +13259,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11197,6 +13317,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11223,6 +13344,232 @@
     "type": "api",
     "query": "jina search docs",
     "status": 200
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-body-timeout",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 408: request timed out"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 408
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-body-abort",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-body-terminated",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": null,
+    "error": "terminated"
+   }
+  ]
+ },
+ {
+  "id": "jina-filters-content-http500-body-timeout",
+  "provider": "jina-search",
+  "fn": "searchWithJina",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "JINA_API_KEY": "synthetic-jina-test-key"
+  },
+  "query": "jina search docs",
+  "options": {
+   "includeContent": true,
+   "numResults": 2,
+   "recencyFilter": "week",
+   "domainFilter": [
+    "https://docs.jina.ai/search",
+    "-reddit.com"
+   ]
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://s.jina.ai/jina%20search%20docs%20-site%3Areddit.com%20published%20in%20the%20past%20week?count=2&site=docs.jina.ai",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer synthetic-jina-test-key",
+     "user-agent": "pi-web-access",
+     "x-respond-with": "content",
+     "x-retain-images": "none"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Jina Search API error 408: request timed out"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "jina search docs",
+    "status": 408
    }
   ]
  },
@@ -11258,6 +13605,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11315,6 +13663,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11371,6 +13720,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11428,6 +13778,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11455,6 +13806,233 @@
   ]
  },
  {
+  "id": "searxng-direct-body-timeout",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-body-abort",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-body-terminated",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "SearXNG returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": null,
+    "error": "SearXNG returned invalid JSON: terminated"
+   }
+  ]
+ },
+ {
+  "id": "searxng-direct-http500-body-timeout",
+  "provider": "searxng",
+  "fn": "searchWithSearXNG",
+  "config": {
+   "searxngBaseUrl": "http://127.0.0.1:8443/",
+   "ssrf": {
+    "allowRanges": [
+     "127.0.0.1"
+    ]
+   }
+  },
+  "configRaw": null,
+  "env": {},
+  "query": "self hosted",
+  "options": {
+   "domainFilter": [
+    "example.com",
+    "-private.example.net"
+   ],
+   "numResults": 2,
+   "recencyFilter": "month"
+  },
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "http://127.0.0.1:8443/search?q=self+hosted+site%3Aexample.com+-site%3Aprivate.example.net&format=json&time_range=month",
+    "headers": {
+     "accept": "application/json"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "self hosted site:example.com -site:private.example.net",
+    "status": 0,
+    "error": "HTTP 500"
+   }
+  ]
+ },
+ {
   "id": "brave-act-ok-http500",
   "provider": "brave",
   "fn": "searchWithBrave",
@@ -11474,6 +14052,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11521,6 +14100,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11567,6 +14147,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11595,6 +14176,193 @@
   ]
  },
  {
+  "id": "brave-act-ok-body-timeout",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-body-abort",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-body-terminated",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": null,
+    "error": "terminated"
+   }
+  ]
+ },
+ {
+  "id": "brave-act-ok-http500-body-timeout",
+  "provider": "brave",
+  "fn": "searchWithBrave",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "BRAVE_API_KEY": "brave-act-key"
+  },
+  "query": "brave query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://api.search.brave.com/res/v1/web/search?q=brave+query&count=5",
+    "headers": {
+     "accept": "application/json",
+     "accept-encoding": "gzip",
+     "x-subscription-token": "brave-act-key"
+    },
+    "body": null,
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "brave query",
+    "status": 0,
+    "error": "HTTP 500"
+   }
+  ]
+ },
+ {
   "id": "perplexity-act-ok-http500",
   "provider": "perplexity",
   "fn": "searchWithPerplexity",
@@ -11614,6 +14382,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11669,6 +14438,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11724,6 +14494,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11780,6 +14551,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11817,6 +14589,116 @@
   ]
  },
  {
+  "id": "perplexity-act-ok-body-abort",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Perplexity API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "perplexity-act-ok-body-terminated",
+  "provider": "perplexity",
+  "fn": "searchWithPerplexity",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "PERPLEXITY_API_KEY": "pplx-act-key"
+  },
+  "query": "pplx query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.perplexity.ai/chat/completions",
+    "headers": {
+     "authorization": "Bearer pplx-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "model": "sonar",
+     "messages": [
+      {
+       "role": "user",
+       "content": "pplx query"
+      }
+     ],
+     "max_tokens": 1024,
+     "return_related_questions": false
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Perplexity API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "pplx query",
+    "status": 200
+   }
+  ]
+ },
+ {
   "id": "serpdive-act-ok-http500",
   "provider": "serpdive",
   "fn": "searchWithSerpdive",
@@ -11836,6 +14718,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11885,6 +14768,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11934,6 +14818,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -11984,6 +14869,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12015,6 +14901,203 @@
   ]
  },
  {
+  "id": "serpdive-act-ok-body-timeout",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SERPdive API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-body-abort",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SERPdive API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-body-terminated",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "SERPdive API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "serpdive-act-ok-http500-body-timeout",
+  "provider": "serpdive",
+  "fn": "searchWithSerpdive",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "SERPDIVE_API_KEY": "serpdive-act-key"
+  },
+  "query": "serpdive query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.serpdive.com/v1/search",
+    "headers": {
+     "authorization": "Bearer serpdive-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "serpdive query",
+     "model": "krill",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "serpdive query",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "duckduckgo-act-ok-http500",
   "provider": "duckduckgo",
   "fn": "searchWithDuckDuckGo",
@@ -12032,6 +15115,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12076,6 +15160,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12119,6 +15204,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12163,6 +15249,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12191,6 +15278,180 @@
   ]
  },
  {
+  "id": "duckduckgo-act-ok-body-timeout",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-body-abort",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-body-terminated",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": null,
+    "error": "terminated"
+   }
+  ]
+ },
+ {
+  "id": "duckduckgo-act-ok-http500-body-timeout",
+  "provider": "duckduckgo",
+  "fn": "searchWithDuckDuckGo",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "ddg query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "GET",
+    "url": "https://html.duckduckgo.com/html/?q=ddg+query",
+    "headers": {
+     "accept": "text/html",
+     "user-agent": "Mozilla/5.0 (compatible; pi-web-access/1.0; +https://github.com/nicobailon/pi-web-access)"
+    },
+    "body": null,
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ddg query",
+    "status": 0
+   }
+  ]
+ },
+ {
   "id": "tavily-act-ok-http500",
   "provider": "tavily",
   "fn": "searchWithTavily",
@@ -12210,6 +15471,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12261,6 +15523,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12312,6 +15575,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12364,6 +15628,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12398,6 +15663,214 @@
   ]
  },
  {
+  "id": "tavily-act-ok-body-timeout",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Tavily API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": null,
+    "error": "Tavily API returned invalid JSON: The operation was aborted due to timeout"
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-body-abort",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Tavily API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-body-terminated",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "Tavily API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": null,
+    "error": "Tavily API returned invalid JSON: terminated"
+   }
+  ]
+ },
+ {
+  "id": "tavily-act-ok-http500-body-timeout",
+  "provider": "tavily",
+  "fn": "searchWithTavily",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "TAVILY_API_KEY": "tavily-act-key"
+  },
+  "query": "tavily query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.tavily.com/search",
+    "headers": {
+     "authorization": "Bearer tavily-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "tavily query",
+     "search_depth": "basic",
+     "max_results": 5,
+     "include_answer": "basic",
+     "include_raw_content": false
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "tavily query",
+    "status": null,
+    "error": "The operation was aborted due to timeout"
+   }
+  ]
+ },
+ {
   "id": "exa-act-ok-http500",
   "provider": "exa",
   "fn": "searchWithExa",
@@ -12417,6 +15890,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12471,6 +15945,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12524,6 +15999,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12559,6 +16035,220 @@
   ]
  },
  {
+  "id": "exa-act-ok-body-timeout",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-body-abort",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-body-terminated",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": null,
+    "error": "terminated"
+   }
+  ]
+ },
+ {
+  "id": "exa-act-ok-http500-body-timeout",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "EXA_API_KEY": "exa-act-key"
+  },
+  "query": "exa query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://api.exa.ai/search",
+    "headers": {
+     "content-type": "application/json",
+     "x-api-key": "exa-act-key",
+     "x-exa-integration": "pi-web-access"
+    },
+    "body": {
+     "query": "exa query",
+     "type": "auto",
+     "numResults": 5,
+     "contents": {
+      "highlights": true
+     }
+    },
+    "redirect": "manual"
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa query",
+    "status": 0
+   }
+  ]
+ },
+ {
   "id": "exa-mcp-act-ok-http500",
   "provider": "exa",
   "fn": "searchWithExa",
@@ -12576,6 +16266,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12632,6 +16323,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12687,6 +16379,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12726,6 +16419,228 @@
   ]
  },
  {
+  "id": "exa-mcp-act-ok-body-timeout",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-body-abort",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": 0
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-body-terminated",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": null,
+    "error": "terminated"
+   }
+  ]
+ },
+ {
+  "id": "exa-mcp-act-ok-http500-body-timeout",
+  "provider": "exa",
+  "fn": "searchWithExa",
+  "config": null,
+  "configRaw": null,
+  "env": {},
+  "query": "exa mcp query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://mcp.exa.ai/mcp?tools=web_search_exa",
+    "headers": {
+     "accept": "application/json, text/event-stream",
+     "content-type": "application/json",
+     "x-exa-source": "pi-web-access"
+    },
+    "body": {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "tools/call",
+     "params": {
+      "name": "web_search_exa",
+      "arguments": {
+       "query": "exa mcp query",
+       "numResults": 5
+      }
+     }
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "exa mcp query",
+    "status": 0
+   }
+  ]
+ },
+ {
   "id": "kagi-act-ok-http500",
   "provider": "kagi",
   "fn": "searchWithKagi",
@@ -12745,6 +16660,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12794,6 +16710,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12843,6 +16760,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12893,6 +16811,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12924,6 +16843,203 @@
   ]
  },
  {
+  "id": "kagi-act-ok-body-timeout",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Kagi API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-body-abort",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Kagi API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-body-terminated",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Kagi API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "kagi-act-ok-http500-body-timeout",
+  "provider": "kagi",
+  "fn": "searchWithKagi",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "KAGI_API_KEY": "kagi-act-key"
+  },
+  "query": "kagi query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://kagi.com/api/v1/search",
+    "headers": {
+     "accept": "application/json",
+     "authorization": "Bearer kagi-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "kagi query",
+     "limit": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "kagi query",
+    "status": 500
+   }
+  ]
+ },
+ {
   "id": "ollama-act-ok-http500",
   "provider": "ollama",
   "fn": "searchWithOllama",
@@ -12943,6 +17059,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -12991,6 +17108,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -13039,6 +17157,7 @@
   ],
   "baizhi": null,
   "preAborted": true,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -13088,6 +17207,7 @@
   ],
   "baizhi": null,
   "preAborted": false,
+  "callerAbortsBody": false,
   "patchTimeout": false,
   "now": null,
   "unordered": false,
@@ -13114,6 +17234,199 @@
     "type": "api",
     "query": "ollama query",
     "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-body-timeout",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Ollama API returned invalid JSON: The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-body-abort",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "abort"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": true,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Ollama API returned invalid JSON: This operation was aborted"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-body-terminated",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "bodyThrow": "terminated"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": false,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "Ollama API returned invalid JSON: terminated"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 200
+   }
+  ]
+ },
+ {
+  "id": "ollama-act-ok-http500-body-timeout",
+  "provider": "ollama",
+  "fn": "searchWithOllama",
+  "config": null,
+  "configRaw": null,
+  "env": {
+   "OLLAMA_API_KEY": "ollama-act-key"
+  },
+  "query": "ollama query",
+  "options": {},
+  "responses": [
+   {
+    "status": 500,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "baizhi": null,
+  "preAborted": false,
+  "callerAbortsBody": false,
+  "patchTimeout": true,
+  "now": null,
+  "unordered": false,
+  "requests": [
+   {
+    "method": "POST",
+    "url": "https://ollama.com/api/web_search",
+    "headers": {
+     "authorization": "Bearer ollama-act-key",
+     "content-type": "application/json"
+    },
+    "body": {
+     "query": "ollama query",
+     "max_results": 5
+    },
+    "redirect": null
+   }
+  ],
+  "outcome": {
+   "error": "The operation was aborted due to timeout"
+  },
+  "activity": [
+   {
+    "type": "api",
+    "query": "ollama query",
+    "status": 500
    }
   ]
  }

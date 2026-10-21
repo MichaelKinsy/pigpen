@@ -263,6 +263,13 @@ const endings = [
 	["transport", { responses: [{ throw: "plain", message: "connect failed" }] }],
 	["abort", { preAborted: true, responses: [{ throw: "abort" }] }],
 	["invalid-json", { responses: [r("<<not json")] }],
+	// The headers arrive and the body read fails: the provider's own deadline cuts the transfer, the caller
+	// cancels during it, the connection drops. Perplexity's fetch has no deadline of its own.
+	["body-timeout", { patchTimeout: true, responses: [{ bodyThrow: "timeout" }] }],
+	["body-abort", { callerAbortsBody: true, responses: [{ bodyThrow: "abort" }] }],
+	["body-terminated", { responses: [{ bodyThrow: "terminated" }] }],
+	// The same on an error status, where the original reads the body with response.text() and has no catch block of its own.
+	["http500-body-timeout", { patchTimeout: true, responses: [{ status: 500, bodyThrow: "timeout" }] }],
 ];
 // brave.ts and exa.ts let the JSON parser's own message escape ("Unexpected token ..." of V8), which Go cannot produce.
 const rawJsonError = new Set(["searchWithBrave", "searchWithExa"]);
@@ -273,7 +280,8 @@ for (const base of [...cases]) {
 	seenFns.add(key);
 	for (const [name, change] of endings) {
 		if (name === "invalid-json" && rawJsonError.has(base.fn)) continue;
-		const { preAborted, patchTimeout, ...rest } = base;
+		if (name.endsWith("body-timeout") && base.fn === "searchWithPerplexity") continue;
+		const { preAborted, patchTimeout, callerAbortsBody, ...rest } = base;
 		cases.push({ ...rest, ...change, id: `${base.id}-${name}` });
 	}
 }
@@ -309,10 +317,14 @@ async function runChild(index) {
 	const c = cases[index];
 	const requests = [];
 	const home = process.env.PI_CODING_AGENT_DIR;
-	const normalize = (s) => String(s).split(join(home, "web-search.json")).join("<CONFIG>").replace(/(invalid JSON|not valid JSON): [\s\S]*$/, "$1").replace(/(Failed to parse <CONFIG>): [\s\S]*$/, "$1");
+	// The parser's own text after "invalid JSON:" differs between V8 and Go and is dropped; the texts of a body that
+	// could not be read at all (the deadline, the caller's abort, a dropped connection) are kept.
+	const bodyReadTexts = new Set(["The operation was aborted due to timeout", "This operation was aborted", "terminated"]);
+	const normalize = (s) => String(s).split(join(home, "web-search.json")).join("<CONFIG>").replace(/(invalid JSON|not valid JSON): ([\s\S]*)$/, (m, head, tail) => (bodyReadTexts.has(tail) ? m : head)).replace(/(Failed to parse <CONFIG>): [\s\S]*$/, "$1");
 	if (c.now) { const fixed = Date.parse(c.now); Date.now = () => fixed; }
 	if (c.patchTimeout) AbortSignal.timeout = () => AbortSignal.abort(new DOMException("The operation was aborted due to timeout", "TimeoutError"));
-	const caller = c.preAborted ? AbortSignal.abort() : undefined;
+	const callerController = c.callerAbortsBody ? new AbortController() : undefined;
+	const caller = c.preAborted ? AbortSignal.abort() : callerController?.signal;
 	let n = 0;
 	globalThis.fetch = async (url, init = {}) => {
 		const headers = Object.fromEntries([...new Headers(init.headers ?? {})].sort(([a], [b]) => (a < b ? -1 : 1)));
@@ -330,7 +342,17 @@ async function runChild(index) {
 		if (spec.throw === "abort") throw init.signal?.reason ?? new DOMException("This operation was aborted", "AbortError");
 		if (spec.throw === "network") throw new TypeError("fetch failed");
 		if (spec.throw === "plain") throw new Error(spec.message);
-		if (spec.bodyThrow === "timeout") return { ok: true, status: 200, async json() { throw init.signal.reason; }, async text() { throw init.signal.reason; } };
+		if (spec.bodyThrow) {
+			// What a body stream rejects with once the request's signal fired (or the connection dropped) after the headers.
+			const fail = () => {
+				if (spec.bodyThrow === "terminated") throw new TypeError("terminated");
+				if (spec.bodyThrow === "abort") { callerController.abort(); throw (init.signal ?? callerController.signal).reason; }
+				if (!init.signal) { process.stderr.write(`recorder: ${c.id} sends its request without a deadline signal\n`); process.exit(3); }
+				throw init.signal.reason;
+			};
+			const status = spec.status ?? 200;
+			return { ok: status >= 200 && status < 300, status, async json() { fail(); }, async text() { fail(); } };
+		}
 		const text = spec.json !== undefined ? JSON.stringify(spec.json) : spec.body;
 		const headersOut = spec.json !== undefined ? { "content-type": "application/json", ...spec.headers } : spec.headers ?? {};
 		return new Response(text, { status: spec.status, headers: headersOut });
@@ -367,7 +389,7 @@ if (process.argv[2] === "--case") {
 			const child = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--case", String(i)], { env, encoding: "utf8", cwd: oracle });
 			if (child.status !== 0) throw new Error(`case ${c.id} failed: ${child.stderr}`);
 			const rec = JSON.parse(child.stdout);
-			out.push({ id: c.id, provider: c.module.replace(/\.ts$/, ""), fn: c.fn, config: c.config ?? null, configRaw: c.configRaw ?? null, env: c.env ?? {}, query: c.query, options: c.options, responses: c.responses ?? null, baizhi: c.baizhi ?? null, preAborted: !!c.preAborted, patchTimeout: !!c.patchTimeout, now: c.now ?? null, unordered: !!c.unordered, ...rec });
+			out.push({ id: c.id, provider: c.module.replace(/\.ts$/, ""), fn: c.fn, config: c.config ?? null, configRaw: c.configRaw ?? null, env: c.env ?? {}, query: c.query, options: c.options, responses: c.responses ?? null, baizhi: c.baizhi ?? null, preAborted: !!c.preAborted, callerAbortsBody: !!c.callerAbortsBody, patchTimeout: !!c.patchTimeout, now: c.now ?? null, unordered: !!c.unordered, ...rec });
 		} finally {
 			rmSync(home, { recursive: true, force: true });
 		}

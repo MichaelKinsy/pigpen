@@ -3,11 +3,13 @@ package websearch
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // The providers below call fixed endpoints, so no scenario server can receive their traffic under
@@ -24,6 +26,9 @@ type wireCase struct {
 	Responses []struct {
 		Status int `json:"status"`
 		Body   any `json:"body"`
+		// BodyThrow: the headers arrive and the body read fails, "timeout" by the call's own deadline,
+		// "terminated" by a dropped connection.
+		BodyThrow string `json:"bodyThrow"`
 	} `json:"responses"`
 	Expect struct {
 		Calls []struct {
@@ -122,9 +127,22 @@ func TestProviderWireFixtures(t *testing.T) {
 				t.Setenv(k, v)
 			}
 			i := 0
+			for _, r := range c.Responses {
+				if r.BodyThrow == "timeout" {
+					prev := providerTimeoutOverride
+					providerTimeoutOverride = 30 * time.Millisecond
+					t.Cleanup(func() { providerTimeoutOverride = prev })
+				}
+			}
 			fn := useNet(t, func(netCall) netReply {
 				r := c.Responses[min(i, len(c.Responses)-1)]
 				i++
+				switch r.BodyThrow {
+				case "timeout":
+					return netReply{Status: r.Status, BodyStall: true}
+				case "terminated":
+					return netReply{Status: r.Status, BodyErr: io.ErrUnexpectedEOF}
+				}
 				if s, ok := r.Body.(string); ok {
 					return reply(r.Status, s)
 				}

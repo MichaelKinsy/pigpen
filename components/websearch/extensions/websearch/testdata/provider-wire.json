@@ -1484,6 +1484,184 @@
   }
  },
  {
+  "name": "ollama web fetch body deadline",
+  "kind": "extract",
+  "fn": "extractWithOllama",
+  "env": {
+   "OLLAMA_API_KEY": "wire-ollama-key"
+  },
+  "args": [
+   "https://example.com/ollama",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://ollama.com/api/web_fetch",
+     "headers": {
+      "authorization": "Bearer wire-ollama-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://example.com/ollama"
+     }
+    }
+   ],
+   "result": null,
+   "error": "Ollama Web Fetch returned invalid JSON: The operation was aborted due to timeout",
+   "activity": [
+    {
+     "type": "api",
+     "query": "ollama fetch: https://example.com/ollama",
+     "status": 200
+    }
+   ]
+  }
+ },
+ {
+  "name": "ollama web fetch body terminated",
+  "kind": "extract",
+  "fn": "extractWithOllama",
+  "env": {
+   "OLLAMA_API_KEY": "wire-ollama-key"
+  },
+  "args": [
+   "https://example.com/ollama",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "bodyThrow": "terminated"
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://ollama.com/api/web_fetch",
+     "headers": {
+      "authorization": "Bearer wire-ollama-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "url": "https://example.com/ollama"
+     }
+    }
+   ],
+   "result": null,
+   "error": "Ollama Web Fetch returned invalid JSON: terminated",
+   "activity": [
+    {
+     "type": "api",
+     "query": "ollama fetch: https://example.com/ollama",
+     "status": 200
+    }
+   ]
+  }
+ },
+ {
+  "name": "kagi extract body deadline",
+  "kind": "extract",
+  "fn": "extractWithKagi",
+  "env": {
+   "KAGI_API_KEY": "wire-kagi-key"
+  },
+  "args": [
+   "https://example.com/kagi",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "bodyThrow": "timeout"
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://kagi.com/api/v1/extract",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-kagi-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "pages": [
+       {
+        "url": "https://example.com/kagi"
+       }
+      ]
+     }
+    }
+   ],
+   "result": null,
+   "error": "Kagi Extract API returned invalid JSON: The operation was aborted due to timeout",
+   "activity": [
+    {
+     "type": "api",
+     "query": "kagi extract: https://example.com/kagi",
+     "status": 200
+    }
+   ]
+  }
+ },
+ {
+  "name": "kagi extract body terminated",
+  "kind": "extract",
+  "fn": "extractWithKagi",
+  "env": {
+   "KAGI_API_KEY": "wire-kagi-key"
+  },
+  "args": [
+   "https://example.com/kagi",
+   {}
+  ],
+  "responses": [
+   {
+    "status": 200,
+    "bodyThrow": "terminated"
+   }
+  ],
+  "expect": {
+   "calls": [
+    {
+     "method": "POST",
+     "url": "https://kagi.com/api/v1/extract",
+     "headers": {
+      "accept": "application/json",
+      "authorization": "Bearer wire-kagi-key",
+      "content-type": "application/json"
+     },
+     "body": {
+      "pages": [
+       {
+        "url": "https://example.com/kagi"
+       }
+      ]
+     }
+    }
+   ],
+   "result": null,
+   "error": "Kagi Extract API returned invalid JSON: terminated",
+   "activity": [
+    {
+     "type": "api",
+     "query": "kagi extract: https://example.com/kagi",
+     "status": 200
+    }
+   ]
+  }
+ },
+ {
   "name": "brightdata serp with filters",
   "kind": "search",
   "fn": "searchWithBrightData",
