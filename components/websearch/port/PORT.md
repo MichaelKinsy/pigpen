@@ -471,9 +471,9 @@ afterwards); a 6-page license text differs in 2 of 33 728 characters (see the fo
   unexpected redirect`; a request that outlives the shared deadline reads `request timed out (...)`, not the runtime's TimeoutError text;
   the key from `datalabApiKey` is read on every call (the original caches the config for the process).
 - **No activity monitor** around the fetch (curator slice).
-- **fetch-pdf-answer**: its six answer-mode twins stay named skips, each with its own reason, until the answer-mode slice ports the model
-  call (`mode: "answer"` is still refused in `tool_fetch.go`); the PDF half of each is a Go test beside it
-  (`TestPDFAnswerModeExtraction*`, driving `ExtractContent` with `Mode: "answer"`). The readable-PDF twin runs through the tool.
+- **fetch-pdf-answer**: all seven upstream cases are twins. The six answer-mode ones run through `fetch_content` with a scripted
+  model registry (`pdfAnswerFixture`, the upstream test's `ctx`) on top of the answer-mode slice; the PDF half of each is also a Go test
+  beside them (`TestPDFAnswerModeExtraction*`, driving `ExtractContent` with `Mode: "answer"`).
   `pdf-extract` keeps two named skips: `works on Node 22 without native Promise.try` (a Node runtime shim) and `passes PDF.js
   errors-only verbosity` (a PDF.js option); both have no Go counterpart.
 
@@ -487,8 +487,7 @@ route bodies, so a fake Datalab server cannot return an `upload_url` that points
 scenario. That flow is proven instead by `port/record-datalab-requests.mjs`, which runs the original with `fetch` replaced by a
 recorder (`testdata/datalab-wire.json`, seven cases) and `TestDatalabWireFixture`, which requires the same requests (method, URL,
 headers, JSON, multipart fields in order, the uploaded bytes) and the same result or error. The failure texts of a bad or oversized PDF
-carry the fetch "Fallback options" list, which this base lists differently from the original until the hosted-provider slice lands, so
-no scenario asserts them (twins do).
+carry the fetch "Fallback options" list; no scenario asserts them (twins do).
 
 Mutations: 50 mutants for this slice in `port/mutations.json`, all killed by `pigeq mutate --unit`. Three candidates were removed as
 equivalent: no cancellation rethrow in the chain (the local extractor checks the context itself, so the result is the same), no
