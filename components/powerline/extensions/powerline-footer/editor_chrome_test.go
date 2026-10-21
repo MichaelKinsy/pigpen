@@ -307,3 +307,19 @@ func TestEditorInputDismissesTheWelcomeForEveryKey(t *testing.T) {
 		t.Errorf("dismissed %d times, default editor got %q", dismissed, base.input)
 	}
 }
+
+func TestFastRenderPlacesTheCursorInItsChunk(t *testing.T) {
+	var border editorBorderColor
+	line := strings.Repeat("0123456789", 130) // layout width 36 at width 40: chunk 0 ends at column 35
+	last, _ := renderFastPowerlineEditor(&fakeBase{lines: []string{line}, cursor: sdk.EditorCursor{Col: 35}}, border, 40, false, false)
+	if last == nil || strings.Contains(last[0], "↑") {
+		t.Errorf("column 35 is the last of the first chunk, nothing is above: %q", last)
+	}
+	next, _ := renderFastPowerlineEditor(&fakeBase{lines: []string{line}, cursor: sdk.EditorCursor{Col: 36}}, border, 40, false, false)
+	if next == nil || len(next) < 3 {
+		t.Fatalf("rows %q", next)
+	}
+	if !strings.Contains(next[0], "↑") {
+		t.Errorf("column 36 starts the second chunk, so the first is above: %q", next[0])
+	}
+}
