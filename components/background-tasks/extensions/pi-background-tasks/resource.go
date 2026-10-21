@@ -461,6 +461,9 @@ type stopRunResult struct {
 
 type stopRunner func(command string, args []string) stopRunResult
 
+// systemctlRunner runs the stop and kill of a unit; the tests replace it.
+var systemctlRunner stopRunner = defaultStopRunner
+
 func defaultStopRunner(command string, args []string) stopRunResult {
 	ctx, cancel := context.WithTimeout(context.Background(), systemctlTimeout)
 	defer cancel()
@@ -507,7 +510,7 @@ func stopResourceControlledTask(meta *resourceControlMeta, signal string, runner
 		args = []string{"--user", "stop", "--no-block", meta.UnitName}
 	}
 	if runner == nil {
-		runner = defaultStopRunner
+		runner = systemctlRunner
 	}
 	result := runner("systemctl", args)
 	ok := result.status != nil && *result.status == 0

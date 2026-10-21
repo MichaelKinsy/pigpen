@@ -40,5 +40,59 @@
   "file": "logtail.go",
   "find": "\tr.tails = map[*task]*tailState{}\n\tqueued := r.queued",
   "replace": "\tr.tails = map[*task]*tailState{}\n\tr.active = 0\n\tqueued := r.queued"
+ },
+ {
+  "name": "restored-exit-tail-dropped",
+  "file": "wakeflow.go",
+  "find": "rt.sendTaskEvent(typ, target, o, &tail)",
+  "replace": "rt.sendTaskEvent(typ, target, o, &outputTail{text: tail.text[:0], truncated: tail.truncated})"
+ },
+ {
+  "name": "restored-exit-disk-omission-dropped",
+  "file": "wakeflow.go",
+  "find": "return tailText(output.text, alertMax, output.truncated)",
+  "replace": "return tailText(output.text, alertMax, false)"
+ },
+ {
+  "name": "restored-exit-forced-marker-dropped",
+  "file": "format.go",
+  "find": "if !truncated && float64(jsLen(text)) <= maxChars {",
+  "replace": "if float64(jsLen(text)) <= maxChars {"
+ },
+ {
+  "name": "restored-exit-bounded-read-omission-forgotten",
+  "file": "logtail.go",
+  "find": "truncated: size > read || jsLen(decoded) > lengthLimit}",
+  "replace": "truncated: false}"
+ },
+ {
+  "name": "restored-exit-queue-unprotected",
+  "file": "runtime.go",
+  "find": "if t.Status != statusRunning && !rt.exitWakeDue[t] {",
+  "replace": "if t.Status != statusRunning {"
+ },
+ {
+  "name": "matcher-timeout-rethrown",
+  "file": "wakeflow.go",
+  "find": "if err != nil {\n\t\t\tlogBackgroundDiagnostic(\"notify pattern over budget\"",
+  "replace": "if err != nil {\n\t\t\tpanic(err)\n\t\t\tlogBackgroundDiagnostic(\"notify pattern over budget\""
+ },
+ {
+  "name": "matcher-notice-dropped",
+  "file": "wakeflow.go",
+  "find": "sendOutputMatcherTimeoutNotice(rt.noticeDeps(), t, err.Error())",
+  "replace": "_ = rt.noticeDeps"
+ },
+ {
+  "name": "matcher-timeout-recorded-as-no-match",
+  "file": "wakeflow.go",
+  "find": "rt.persistScheduledOutputDrop(t, pending, \"notify-pattern-timeout\"",
+  "replace": "rt.persistScheduledOutputDrop(t, pending, \"notify-pattern-no-match\""
+ },
+ {
+  "name": "matcher-deadline-removed",
+  "file": "matcher.go",
+  "find": "re.test(text, outputMatcherDeadline)",
+  "replace": "re.test(text, 0)"
  }
 ]

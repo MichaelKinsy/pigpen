@@ -399,9 +399,6 @@ func (w *logWriter) settled(file string) bool {
 	return !has
 }
 
-// taskLogs is the log writer every task of this process shares.
-var taskLogs = newLogWriter(logWriterDeps{})
-
 // nodeErrorMessage is the text Node gives an fs error: `CODE: description, syscall 'path'`, which the log markers quote.
 func nodeErrorMessage(err error) string {
 	var pe *fs.PathError

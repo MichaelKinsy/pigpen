@@ -41,7 +41,7 @@ type spawnOptions struct {
 
 // appendLogLine is the log writer's append for a task; a non-nil result is the producer's hold.
 func (rt *bgRuntime) appendLogLine(t *task, text string) *future {
-	return taskLogs.append(t.LogFile, text)
+	return rt.logs.append(t.LogFile, text)
 }
 
 func (rt *bgRuntime) warnResourceControlFallback(message, cwd string) {
@@ -157,7 +157,7 @@ func (rt *bgRuntime) spawnTask(o spawnOptions) (*task, error) {
 	// identity the read could not answer stays unset, so restore falls back to pid-only liveness.
 	if pid > 0 {
 		go func() {
-			reading := defaultReadProcessIdentity(pid, identityReaderDeps{})
+			reading := readProcessIdentity(pid)
 			rt.loop.post(func() {
 				rt.run(func() {
 					if rt.tasks.get(id) != t {
@@ -297,14 +297,14 @@ func (rt *bgRuntime) finalizeTask(t *task, exitCode *int, statusOverride string)
 			return
 		}
 		sendExitWakeLifecycle(t, rt.hooks)
-		if taskLogs.settled(t.LogFile) && exists(t.LogFile) {
+		if rt.logs.settled(t.LogFile) && exists(t.LogFile) {
 			t.output, t.outBuf, t.outputUnits, t.lastAnnouncedLen = "", nil, 0, 0
 		}
 		if rt.boundFinishedTasks() > 0 {
 			rt.persistNow()
 		}
 	}
-	if written := taskLogs.flush(t.LogFile); written != nil {
+	if written := rt.logs.flush(t.LogFile); written != nil {
 		rt.whenDone(written, settle)
 		return
 	}
@@ -336,7 +336,7 @@ func (rt *bgRuntime) killTaskProcess(t *task, signal string) killResult {
 	}
 	// The task is its own process group on POSIX (it was spawned in its own session), so -pid reaches everything it started;
 	// on Windows the tree goes with taskkill /T /F.
-	if err := killProcess(t.Pid, signal, runtime.GOOS != "windows"); err != nil {
+	if err := sendKill(t.Pid, signal, runtime.GOOS != "windows"); err != nil {
 		if !isNoSuchProcess(err) {
 			rt.appendLogLine(t, "\n[kill error] "+nodeKillError(err)+"\n")
 		}
@@ -344,6 +344,9 @@ func (rt *bgRuntime) killTaskProcess(t *task, signal string) killResult {
 	}
 	return killResult{sent: true}
 }
+
+// sendKill is killProcess; the tests count the signals a task receives.
+var sendKill = killProcess
 
 // nodeKillError is String(error) of the error process.kill throws.
 func nodeKillError(err error) string {

@@ -1,6 +1,7 @@
 package pi_background_tasks
 
 import (
+	"fmt"
 	"io/fs"
 	"strings"
 	"sync"
@@ -873,6 +874,9 @@ func (nopTimer) Stop() {}
 type fakeTimers struct {
 	mu      sync.Mutex
 	handles []*fakeHandle
+	// events is every set and clear in order, as "set kind:ms" and "clear kind:ms"; clearing a timer twice is not an event
+	// (clearing one that already fired is, as clearTimeout is).
+	events []string
 }
 
 type fakeHandle struct {
@@ -890,6 +894,9 @@ type fakeTimer struct {
 
 func (f fakeTimer) Stop() {
 	f.owner.mu.Lock()
+	if !f.h.stopped {
+		f.owner.events = append(f.owner.events, fmt.Sprintf("clear %s:%d", f.h.kind, int(f.h.d/time.Millisecond)))
+	}
 	f.h.stopped = true
 	f.owner.mu.Unlock()
 }
@@ -899,6 +906,7 @@ func (f *fakeTimers) add(kind string, d time.Duration, fn func()) timer {
 	defer f.mu.Unlock()
 	h := &fakeHandle{f: fn, d: d, kind: kind}
 	f.handles = append(f.handles, h)
+	f.events = append(f.events, fmt.Sprintf("set %s:%d", kind, int(d/time.Millisecond)))
 	return fakeTimer{f, h}
 }
 

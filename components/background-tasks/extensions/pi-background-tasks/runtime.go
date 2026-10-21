@@ -133,6 +133,11 @@ type bgRuntime struct {
 	loop   serial
 	out    serial
 	timers timers
+	// logs is the log writer every task of this runtime shares.
+	logs *logWriter
+	// beforeSend is a test seam: it sees each custom message at the moment the runtime hands it to the host queue, as the
+	// original's synchronous sendMessage call is seen.
+	beforeSend func(m customMessage)
 
 	// active is activeCtx: the context of the last handler, nil after a shutdown. last survives a shutdown, for the host calls
 	// a late exit wake still makes.
@@ -164,9 +169,9 @@ type bgRuntime struct {
 	unsubscribeSettings func()
 }
 
-func newRuntime() *bgRuntime {
+func newRuntime(tm timers) *bgRuntime {
 	rt := &bgRuntime{
-		timers: realTimers{}, dedupe: map[string]string{}, exitWakeDue: map[*task]bool{}, warned: map[string]bool{},
+		timers: tm, logs: newLogWriter(logWriterDeps{timers: tm}), dedupe: map[string]string{}, exitWakeDue: map[*task]bool{}, warned: map[string]bool{},
 		backgroundBashShortcut: settingString("backgroundBashShortcut", defaultBackgroundBashShortcut, ""),
 		dashboardShortcut:      settingString("dashboardShortcut", defaultDashboardShortcut, ""),
 		widgetToggleShortcut:   settingString("widgetToggleShortcut", defaultWidgetToggleShortcut, ""),
@@ -284,6 +289,9 @@ func (rt *bgRuntime) sendMessage(m customMessage, o sendOptions) {
 		return
 	}
 	ctx := rt.last
+	if rt.beforeSend != nil {
+		rt.beforeSend(m)
+	}
 	rt.out.post(func() {
 		err := ctx.SendCustomMessage(sdk.CustomMessage{CustomType: m.CustomType, Content: m.Content, Display: m.Display, Details: m.Details},
 			sdk.SendMessageOptions{TriggerTurn: new(o.TriggerTurn), DeliverAs: o.DeliverAs})
@@ -381,7 +389,7 @@ func (rt *bgRuntime) removeTaskLog(t *task) {
 			logBackgroundDiagnostic("task log removal failed", map[string]any{"id": t.ID, "logFile": t.LogFile, "error": err.Error()})
 		}
 	}
-	if written := taskLogs.flush(t.LogFile); written != nil {
+	if written := rt.logs.flush(t.LogFile); written != nil {
 		written.then(remove)
 		return
 	}
@@ -467,7 +475,7 @@ func (rt *bgRuntime) ensureOrphanWatcher() {
 		return
 	}
 	rt.watcher = newOrphanWatcher(orphanWatcherDeps{
-		getTasks: func() []*task { return rt.tasks.values() }, hooks: rt.hooks, unitActive: defaultSystemdUnitActive, lock: &rt.mu, timers: rt.timers,
+		getTasks: func() []*task { return rt.tasks.values() }, hooks: rt.hooks, unitActive: systemdUnitActive, lock: &rt.mu, timers: rt.timers,
 		onFinalize: func(t *task, reason string) {
 			logBackgroundDiagnostic("orphan task finalized", map[string]any{"id": t.ID, "pid": t.Pid, "reason": reason, "status": t.Status})
 		},
@@ -553,7 +561,7 @@ func (rt *bgRuntime) onSessionShutdown() {
 	}
 	settings.clear()
 	rt.settle()
-	taskLogs.drain().wait()
+	rt.logs.drain().wait()
 }
 
 // restoreSnapshots rebuilds the task set from the session: the sidecar first, then the branch's state entries and the
@@ -627,7 +635,7 @@ func (rt *bgRuntime) restoreSnapshots(ctx sdk.Context) {
 		snaps = append(snaps, rep.byID[taskID])
 	}
 	restored := mapWithConcurrency(snaps, probeConcurrency, func(s snapshot) *task {
-		return restoredTaskFromSnapshot(s, restoreOptions{sessionID: sessionID, hasSession: true, unitActive: defaultSystemdUnitActive})
+		return restoredTaskFromSnapshot(s, restoreOptions{sessionID: sessionID, hasSession: true, unitActive: systemdUnitActive})
 	})
 	rt.mu.Lock()
 	defer rt.mu.Unlock()

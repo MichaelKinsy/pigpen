@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-background-tasks",
-  "version": "0.1.0",
-  "description": "Go port of @vanillagreen/pi-background-tasks: explicit non-blocking background shell tasks, log tails and completion wakeups for PiG (partial: every task action is refused until the port lands; see port/PORT.md)",
+  "version": "0.2.0",
+  "description": "Go port of @vanillagreen/pi-background-tasks: explicit non-blocking background shell tasks, log tails and completion wakeups for PiG (partial: the task runtime runs; the widget, dashboard, renderers and widget/dashboard shortcuts are refused until slice 3; see port/PORT.md)",
   "keywords": [
     "pig-package",
     "background-tasks",
@@ -37,7 +37,8 @@
   "pi": {
     "extensions": [
       "extensions/pi-background-tasks"
-    ]
+    ],
+    "appendSystem": "./extensions/pi-background-tasks/instructions.md"
   },
   "kendex": {
     "extensionManager": {

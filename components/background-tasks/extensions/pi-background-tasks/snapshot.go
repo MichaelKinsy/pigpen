@@ -282,7 +282,7 @@ func restoredTaskFromSnapshot(s snapshot, opts restoreOptions) *task {
 	}
 	probe := opts.identity
 	if probe == nil {
-		probe = func(pid int) identityReading { return defaultReadProcessIdentity(pid, identityReaderDeps{}) }
+		probe = readProcessIdentity
 	}
 	wasRunning := s.Status == statusRunning
 	foreign := opts.hasSession && s.SessionID != "" && s.SessionID != opts.sessionID
@@ -373,3 +373,10 @@ func sortNewestFirst(list []*task) []*task {
 	sort.SliceStable(out, func(i, j int) bool { return out[i].StartedAt > out[j].StartedAt })
 	return out
 }
+
+// readProcessIdentity and systemdUnitActive are the process probes of spawn, restore and the orphan watcher; the tests replace
+// them to hold or count the reads.
+var (
+	readProcessIdentity identityProbe   = func(pid int) identityReading { return defaultReadProcessIdentity(pid, identityReaderDeps{}) }
+	systemdUnitActive   unitActiveProbe = defaultSystemdUnitActive
+)

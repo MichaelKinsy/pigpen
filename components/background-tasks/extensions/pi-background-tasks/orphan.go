@@ -39,10 +39,10 @@ func newOrphanWatcher(deps orphanWatcherDeps) *orphanWatcher {
 		deps.poll = defaultOrphanPoll
 	}
 	if deps.identity == nil {
-		deps.identity = func(pid int) identityReading { return defaultReadProcessIdentity(pid, identityReaderDeps{}) }
+		deps.identity = readProcessIdentity
 	}
 	if deps.unitActive == nil {
-		deps.unitActive = defaultSystemdUnitActive
+		deps.unitActive = systemdUnitActive
 	}
 	if deps.timers == nil {
 		deps.timers = realTimers{}

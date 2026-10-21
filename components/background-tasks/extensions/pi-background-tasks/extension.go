@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"io"
+	"regexp"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -110,18 +111,32 @@ func toolDefs() map[string]toolDef {
 	return out
 }
 
-// instructionsMarker begins the block the original's npm postinstall writes into APPEND_SYSTEM.md (scripts/append-system.mjs).
-const instructionsMarker = "<!-- kendex:append-system @vanillagreen/pi-background-tasks begin -->"
+// instructionsBegin and instructionsEnd delimit the block the original's npm postinstall (scripts/append-system.mjs) writes
+// into APPEND_SYSTEM.md. They carry the original's package name, so an install of the original, the kendex CLI or this port
+// recognise each other's block and never add it twice.
+const (
+	instructionsBegin = "<!-- kendex:append-system @vanillagreen/pi-background-tasks begin -->"
+	instructionsEnd   = "<!-- kendex:append-system @vanillagreen/pi-background-tasks end -->"
+)
+
+var threeNewlines = regexp.MustCompile(`\n{3,}`)
 
 // Extension returns the port.
-func Extension() *sdk.Extension {
+func Extension() *sdk.Extension { return extensionWith(realTimers{}) }
+
+// extensionWith is Extension on the given clock of timers; the tests drive the windows by hand.
+func extensionWith(tm timers) *sdk.Extension {
 	e := sdk.New(extensionID)
 	// upstream: background-tasks.ts:151. A package that is switched off registers nothing; the setting is read from the
 	// user settings at load, as the original does (no project is trusted yet).
 	if !settingBoolean("enabled", true, "") {
 		return e
 	}
-	rt := newRuntime()
+	return extensionFor(e, newRuntime(tm))
+}
+
+// extensionFor registers the runtime's tools, commands and events on e.
+func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 	defs := toolDefs()
 	execute := map[string]sdk.ToolFunc{"bg_status": rt.bgStatusTool(), "bg_task": rt.bgTaskTool()}
 	// The original registers bg_status first.
@@ -188,20 +203,28 @@ func Extension() *sdk.Extension {
 	return e
 }
 
-// appendInstructions adds instructions.md to the system prompt of the run, as the original's install step adds it to
-// APPEND_SYSTEM.md: not when that file already carries the block (an install by the original package, or the kendex CLI).
+// appendInstructions puts the instructions into the system prompt of the run the way the original's install step puts them into
+// APPEND_SYSTEM.md: the same marked block, after what the file already holds, and not at all when the file holds it. A Go
+// package has no install hook, and Pi and PiG ignore the manifest's `appendSystem`, so the port delivers the block here (the
+// manifest still declares it, as the original's does).
 func appendInstructions(data map[string]any) {
 	options, _ := data["systemPromptOptions"].(map[string]any)
 	if options == nil {
 		return
 	}
 	current, _ := options["appendSystemPrompt"].(string)
-	if strings.Contains(current, instructionsMarker) {
+	if strings.Contains(current, instructionsBegin) {
 		return
 	}
-	text := strings.TrimSpace(instructions)
-	if current != "" {
-		text = current + "\n\n" + text
+	content := jsTrim(instructions)
+	if content == "" {
+		return
 	}
-	options["appendSystemPrompt"] = text
+	block := instructionsBegin + "\n" + content + "\n" + instructionsEnd
+	stripped := strings.TrimRight(strings.TrimLeft(threeNewlines.ReplaceAllString(current, "\n\n"), "\n"), "\n")
+	if stripped != "" {
+		options["appendSystemPrompt"] = stripped + "\n\n" + block + "\n"
+		return
+	}
+	options["appendSystemPrompt"] = block + "\n"
 }

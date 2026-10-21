@@ -2,17 +2,7 @@
  "active-context": "slice 3: the widget decision it feeds is not ported (refused)",
  "component-benchmark": "slice 3: the dashboard overlay is not ported (refused)",
  "dashboard": "slice 3: the dashboard overlay is not ported (refused)",
- "log-tool-result-bounds": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "orphan-reconcile-effects": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "resource-stop-integration": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "restored-exit": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "spawn-hardening": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "stop-content-e2e": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "task-retention": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "wake-defaults": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
  "widget-expiry": "slice 3: the widget is not ported (refused)",
  "widget-lifecycle": "slice 3: the widget and its expiry timer are not ported (refused)",
- "widget-visibility": "slice 3: the widget is not ported (refused)",
- "write-path": "slice 2b: needs the task runtime (spawn, stop, wakes, restore), which is refused until then",
- "output-matcher": "slice 2b: the registered-callback and must-fail cases run the task runtime (spawn-extension fixture)"
+ "widget-visibility": "slice 3: the widget is not ported (refused)"
 }
