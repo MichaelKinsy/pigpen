@@ -99,7 +99,10 @@ func (l *Learning) open() sqlStore {
 // CloseLearningDatabases closes every open connection and forgets them (tests, shutdown).
 func CloseLearningDatabases() {
 	learningDBs.Range(func(k, v any) bool {
-		if e := v.(*dbEntry); e.db != nil {
+		e := v.(*dbEntry)
+		// An open in flight finishes first (Once waits for it); an entry never opened is marked done without opening.
+		e.once.Do(func() {})
+		if e.db != nil {
 			_ = e.db.close()
 		}
 		learningDBs.Delete(k)
