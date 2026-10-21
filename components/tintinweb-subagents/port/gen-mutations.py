@@ -551,7 +551,7 @@ m("depth-not-handed-down", "runner.go", 'depthEnv+"="+strconv.Itoa(max(spec.Dept
 m("owner-id-not-handed-down", "runner.go", 'agentIDEnv+"="+spec.AgentID,', 'agentIDEnv+"=",')
 m("allowance-not-handed-down", "runner.go", 'allowedEnv+"="+string(allowed),', 'allowedEnv+"="+strings.ToUpper(string(allowed)),')
 m("stale-place-handed-down", "runner.go", "func(kv string) bool { return strings.HasPrefix(kv, envPrefix) })", "func(kv string) bool { return false })")
-m("nested-spend-dropped", "runner.go", "res.Tokens += nestedTokens", "_ = nestedTokens")
+m("nested-spend-dropped", "runner.go", "res.Nested = readUsage(c.usage)", "_ = readUsage(c.usage)")
 m("usage-file-not-handed-down", "runner.go", 'usageEnv+"="+usageFile, rootSessionEnv', 'usageEnv+"=", rootSessionEnv')
 m("depth-clamp-negative", "nested.go", "math.Max(0, math.Floor(n))", "math.Floor(n)")
 m("depth-clamp-fraction", "nested.go", "math.Floor(n)))", "math.Ceil(n)))")

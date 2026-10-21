@@ -2900,8 +2900,8 @@
  {
   "name": "nested-spend-dropped",
   "file": "runner.go",
-  "find": "res.Tokens += nestedTokens",
-  "replace": "_ = nestedTokens"
+  "find": "res.Nested = readUsage(c.usage)",
+  "replace": "_ = readUsage(c.usage)"
  },
  {
   "name": "usage-file-not-handed-down",
