@@ -9,7 +9,9 @@ import { loadSkillBody } from "./src/load.ts";
 import { buildIndexPrompt, readIndex, validateIndex, writeIndex } from "./src/index-cmd.ts";
 import type { IndexFile } from "./src/index-cmd.ts";
 
+// BENCH_ONLY (a regular expression on the case name) limits the run.
 const time = async (name: string, n: number, f: (i: number) => unknown | Promise<unknown>) => {
+  if (process.env.BENCH_ONLY && !new RegExp(process.env.BENCH_ONLY).test(name)) return;
   const runs: number[] = [];
   for (let r = 0; r < 11; r++) {
     const start = performance.now();
