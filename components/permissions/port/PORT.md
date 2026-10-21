@@ -432,15 +432,21 @@ code, then a differential against the original's own functions.
 | R9 | `tool-input/{tool-input-formatter-registry,tool-access-extractor-registry}.ts` | `toolinputformatterregistry.go`, `toolaccessextractorregistry.go` (replace the stand-ins in `fwd_stub_authority.go`) | 14 twins (the forwarding twins stay green) |
 | R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,062 registry cases, 500 surfaces, 720 skill-prompt cases in the corpus |
 
-How it is checked (STATUS at this commit: the differential ran: 9,209 answers compared with the original's own, 0 differences. The mutation run, the race/vet/npm run and the Node-vs-Go benchmarks are queued on imladris and have NOT been run; the counts below are corpus sizes):
+How it is checked (STATUS at this commit, all run on imladris, Node 24.19 / Go 1.27.2 in tern-ci:v2, CPUs 96-151):
 
-- `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
-  `testdata/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
-  `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Two kinds of recorded answer are not compared byte for byte, on purpose: one function-valued MCP argument (`String(fn)` is source text; not reachable from a JSON tool input) and the home directory inside `~` skill locations (read on the host running the test). `gen-presentation-cases.py` no longer produces either, so the next recording needs neither exception; the committed oracle was recorded from the previous corpus. Every string is well-formed on both sides
-  (the probe applies `toWellFormed()`; see "Differences" for why).
-- Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of
+- Differential: `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
+  `testdata/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded; the committed file equals the generator's output) and writes `testdata/presentation-oracle.json` (9,215 answers);
+  `presentation_oracle_test.go` replays it and compares every answer as compact JSON, with no exclusions: 0 differences. Every string is well-formed on both sides
+  (the probe applies `toWellFormed()`; see "Differences" for why). The cases live in `testdata` so the mutation sandbox can read them.
+- Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (381 mutations, one per behaviour of
   the files above); run `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-presentation.json --jobs 4`.
-- `port/bench-presentation.sh` and `presentation_bench_test.go` time the same operations under Node and in Go (see the PR body for numbers).
+  The first run of 392 left 29 alive and 12 not building. The 12 were rewritten to build and the existing suite kills them; 18 of the 29 are
+  killed by `presentation_guards_test.go`; 11 are equivalent and pruned, each with its reason in the generator (an empty needle guard
+  repeated by the line split, a lazy-layout bound that cannot change the answer, guards repeated by `IsWithinDirectory`, aliases that are
+  map keys, ...). `TestCheckRequestedToolRegistrationExhaustive` compares the registration check with a transcription of the original over
+  40,000 alias/registered/requested combinations; the two registration-variant mutants that survive it are equivalent on that domain.
+- Verify (head `02fd8130`): `go vet` linux, windows and darwin with `GOOS evidence: requested <os> -> go env GOOS prints <os>` printed for each, `go test -race -count=1 ./...` (all packages ok), `npm run check` (Go-only gate and ports list passed; `scripts/go-modules.mjs` finds `components/pitui` beside the Package), `npm run generate` (no diff left), `pig package validate components/permissions` valid.
+- Performance: `port/bench-presentation.sh` (Node) and `presentation_bench_test.go` (Go), 12 interleaved runs on CPU 100, medians in the PR body. Profiling found and fixed: one UTF-16 length with an ASCII fast path per capped field (HereString dialog 136 to 41 us), a copy-free key order, lazy array keys and string/whitespace run fast paths in the JSON preview (nested input 27 to 13 us, 143 to 25 allocations), presized registry and surface collections. Two ratios stay above 1.10 (nested JSON input 1.21, `SuggestSessionPattern` 1.21 on a 120 ns call); see the PR body.
 
 Security reading of the slice: the original's dialog shows the approver the command, the flagged paths, the executed unit and the
 evidence, and elides only by a quantity cap (never by content) with a marker; the agent-facing denial never echoes a bash command.
