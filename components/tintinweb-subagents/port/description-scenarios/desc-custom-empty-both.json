@@ -1,0 +1,39 @@
+{
+  "name": "desc-custom-empty-both",
+  "description": "empty project and global templates fall back to the full description.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"toolDescriptionMode\": \"custom\", \"schedulingEnabled\": true, \"worktreeIsolation\": true, \"workflowsEnabled\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agent-tool-description.md": "\n"
+  },
+  "agentFiles": {
+    "agent-tool-description.md": "   "
+  }
+}

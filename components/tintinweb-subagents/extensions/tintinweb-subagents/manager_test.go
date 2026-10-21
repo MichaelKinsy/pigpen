@@ -7,7 +7,7 @@ import (
 
 func TestQueueBeyondTheConcurrencyLimit(t *testing.T) {
 	r := startRig(t)
-	r.app.mgr.maxConcurrent = 1
+	r.app.mgr.setMaxConcurrent(1)
 	first := r.app.mgr.spawn("general-purpose", "one", "", childSpec{Prompt: "1"}, true)
 	second := r.app.mgr.spawn("general-purpose", "two", "", childSpec{Prompt: "2"}, true)
 	third := r.app.mgr.spawn("general-purpose", "three", "", childSpec{Prompt: "3"}, true)
@@ -28,24 +28,24 @@ func TestQueueBeyondTheConcurrencyLimit(t *testing.T) {
 	<-second.done
 	time.Sleep(50 * time.Millisecond)
 	eq(t, r.fleet.count(), 2) // the stopped one never started
-	eq(t, r.app.mgr.running, 0)
+	eq(t, r.app.mgr.runningBackground, 0)
 }
 
 func TestForegroundAgentsAreNotQueued(t *testing.T) {
 	r := startRig(t)
-	r.app.mgr.maxConcurrent = 1
+	r.app.mgr.setMaxConcurrent(1)
 	r.app.mgr.spawn("general-purpose", "bg", "", childSpec{}, true)
 	fg := r.app.mgr.spawn("general-purpose", "fg", "", childSpec{}, false)
 	r.fleet.wait(t, 2)
 	eq(t, fg.Status, statusRunning)
 }
 
-func TestResolveByIDPrefixAndName(t *testing.T) {
+func TestResolveByIDAndHandle(t *testing.T) {
 	r := startRig(t)
 	a := r.app.mgr.spawn("Explore", "a", "alpha", childSpec{}, true)
 	r.fleet.wait(t, 1)
 	eq(t, r.app.mgr.resolve(a.ID), a)
-	eq(t, r.app.mgr.resolve(a.ID[:6]), a)
+	eq(t, r.app.mgr.resolve(a.ID[:6]) == nil, true) // a prefix of an id is not an id
 	eq(t, r.app.mgr.resolve("alpha"), a)
 	eq(t, r.app.mgr.resolve("zzz") == nil, true)
 }

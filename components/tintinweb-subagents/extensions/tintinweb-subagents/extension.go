@@ -1,7 +1,6 @@
 package tintinweb_subagents
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -22,42 +21,85 @@ type app struct {
 	mgr *manager
 	mu  sync.Mutex
 
-	cwd             string
-	defaultMaxTurns *int
-	graceTurns      int
-	latest          *sdk.Context
-	timers          map[string]*time.Timer
-	settingsNotice  string
+	cwd         string // the workspace the custom agents were last read for
+	settingsCwd string // the workspace the settings were last applied for
+	rt          runtimeSettings
+	latest      *sdk.Context
+	// timers hold a completion notification for a moment, so a read of the result can cancel it.
+	timers         map[string]func()
+	settingsNotice string
+	loaded         *settings // what `subagents:settings_loaded` still has to announce
+	after          afterFunc
+	groups         *groupJoinManager
+	batch          []batchEntry // the background agents of the turn in progress, for smart and group joins
+	batchStop      func()
+	batchCounter   int
+	rpcOff         []func() // the RPC listeners, registered once the session has started
+	entry          *registryEntry
 }
+
+// agentFileWarn reports an agent file that was skipped (the original's console.warn). A test replaces it.
+var agentFileWarn = func(w string) { fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n", w) }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}}
+	a := &app{e: e, timers: map[string]func(){}, rt: defaultRuntimeSettings(), after: realAfter}
 	a.mgr = newManager(start, a.onSettle)
+	a.groups = newGroupJoinManager(a.deliverGroup, groupJoinTimeout, func(d time.Duration, f func()) func() { return a.after(d, f) })
+	a.entry = claimManagerRegistry(a)
 	return a
 }
 
-// reload re-reads the custom agent files for a workspace.
-func (a *app) reload(cwd string) {
-	st := loadSettings(cwd)
-	if st.MaxConcurrent > 0 {
-		a.mgr.mu.Lock()
-		a.mgr.maxConcurrent = st.MaxConcurrent
-		a.mgr.mu.Unlock()
+// startup reads the settings and the custom agents of the workspace once, before the tools are registered: the
+// description and the schema are fixed once pi has them. An unreadable agent file aborts the load when
+// strictAgentFiles is set, here and nowhere else: a bad edit mid-session must not kill the session on the next
+// unrelated spawn. upstream: index.ts (strictAgentFiles read directly, reloadCustomAgents(strict), applyAndEmitLoaded).
+func (a *app) startup(wd string) {
+	st := loadSettings(wd)
+	setSettingsView(st)
+	custom, warnings, err := loadCustomAgentsStrict(wd, st.strictAgentFiles())
+	if err != nil {
+		panic(fmt.Errorf("[pi-subagents] cannot load the agent file %w", err))
+	}
+	for _, w := range warnings {
+		agentFileWarn(w)
 	}
 	a.mu.Lock()
-	a.defaultMaxTurns = st.DefaultMaxTurns
-	a.graceTurns = st.GraceTurns
+	a.cwd, a.settingsCwd, a.loaded = wd, wd, &st
 	a.mu.Unlock()
-	setFallbackSubagent(st.FallbackSubagent)
-	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
-	custom, warnings := loadCustomAgents(cwd)
-	for _, w := range warnings {
-		fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n", w)
+	registerAgents(custom)
+	applySettings(st, a.appliers())
+}
+
+// reload re-reads the custom agent files for a workspace (a bad file only warns), and the settings when the
+// workspace is not the one they were applied for.
+func (a *app) reload(cwd string) {
+	a.mu.Lock()
+	changed := a.settingsCwd != cwd
+	a.mu.Unlock()
+	if changed {
+		st := loadSettings(cwd)
+		setSettingsView(st)
+		applySettings(st, a.appliers())
+		a.mu.Lock()
+		a.settingsCwd, a.loaded = cwd, &st
+		a.mu.Unlock()
 	}
 	a.mu.Lock()
 	a.cwd = cwd
 	a.mu.Unlock()
+	a.reregisterAgents()
+}
+
+// reregisterAgents reads the custom agent files again and registers them with the defaults.
+func (a *app) reregisterAgents() {
+	a.mu.Lock()
+	cwd := a.cwd
+	a.mu.Unlock()
+	custom, warnings := loadCustomAgents(cwd)
+	for _, w := range warnings {
+		agentFileWarn(w)
+	}
 	registerAgents(custom)
 }
 
@@ -78,8 +120,9 @@ func (a *app) touch(ctx sdk.Context) {
 	c := ctx
 	a.mu.Lock()
 	a.latest = &c
+	cwd := a.cwd
 	a.mu.Unlock()
-	if ctx.Cwd() != a.cwd {
+	if ctx.Cwd() != cwd {
 		a.reload(ctx.Cwd())
 	}
 }
@@ -106,71 +149,140 @@ func Extension() *sdk.Extension {
 }
 
 func (a *app) register(e *sdk.Extension) {
-	a.registerRPC(e.Events())
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
+		// A new session starts clean: what the model has not read yet is kept (the GC evicts it later).
+		a.mgr.clearCompleted(true)
 		a.refuseSettings(ctx)
-		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
-		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
+		a.announce(ctx)
+		return nil, nil
+	})
+	e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		a.mgr.clearCompleted(true)
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.mgr.abortAll()
+		a.shutdown()
 		return nil, nil
 	})
 	a.registerTools(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 
+// announce emits `subagents:settings_loaded` and, once, registers the RPC listeners and announces the extension:
+// both wait for the first session_start (a bound lifecycle event), so a session that filtered this extension out
+// behaves like one without it. upstream: index.ts session_start (#142), applyAndEmitLoaded.
+func (a *app) announce(ctx sdk.Context) {
+	a.mu.Lock()
+	loaded := a.loaded
+	a.loaded = nil
+	first := a.rpcOff == nil
+	a.mu.Unlock()
+	if loaded != nil {
+		_ = ctx.Events().Emit("subagents:settings_loaded", map[string]any{"settings": loaded.payload()})
+	}
+	if !first {
+		return
+	}
+	off := a.registerRPC(ctx.Events())
+	a.mu.Lock()
+	a.rpcOff = off
+	a.mu.Unlock()
+	// Announce this extension, as the original does once its handlers are in place. upstream: index.ts:827.
+	_ = ctx.Events().Emit("subagents:ready", map[string]any{})
+}
+
+// shutdown aborts every agent: with the session going down nobody is left to read a result. upstream: index.ts
+// session_shutdown.
+func (a *app) shutdown() {
+	a.mu.Lock()
+	off := a.rpcOff
+	a.rpcOff = nil
+	a.mu.Unlock()
+	for _, f := range off {
+		f()
+	}
+	releaseManagerRegistry(a.entry)
+	a.mgr.abortAll()
+	a.cancelBatch()
+	a.mu.Lock()
+	for key, stop := range a.timers {
+		stop()
+		delete(a.timers, key)
+	}
+	a.mu.Unlock()
+	a.groups.dispose()
+	a.mgr.dispose()
+}
+
 // onSettle announces a finished agent on the bus and, for a background one, to the model. upstream: index.ts:560-600.
 func (a *app) onSettle(r *agentRecord) {
+	if !r.topLevel() { // an owned child reports through its owner
+		return
+	}
 	ctx, ok := a.context()
 	if !ok {
 		return
 	}
+	a.mgr.mu.Lock()
 	data := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status,
 		"toolUses": r.ToolUses, "durationMs": r.CompletedAt.Sub(r.StartedAt).Milliseconds()}
 	if r.Result != "" {
 		data["result"] = r.Result
 	}
+	status, errText, consumed := r.Status, r.Error, r.Consumed
+	a.mgr.mu.Unlock()
 	channel := "subagents:completed"
-	if isErrorStatus(r.Status) {
+	if isErrorStatus(status) {
 		channel = "subagents:failed"
-		if r.Error != "" {
-			data["error"] = r.Error
+		if errText != "" {
+			data["error"] = errText
 		}
 	}
 	_ = ctx.Events().Emit(channel, data)
-	if !r.Background {
+	// Persist the final record for cross-extension history reconstruction. upstream: index.ts:584-589.
+	a.mgr.mu.Lock()
+	rec := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status, "result": r.Result,
+		"error": r.Error, "startedAt": r.StartedAt.UnixMilli(), "completedAt": r.CompletedAt.UnixMilli()}
+	a.mgr.mu.Unlock()
+	_ = ctx.AppendEntry("subagents:record", rec)
+	if consumed { // the result was already delivered
 		return
 	}
-	a.scheduleNudge(r.ID, func() {
-		a.mgr.mu.Lock()
-		consumed := r.Consumed
-		a.mgr.mu.Unlock()
-		if consumed {
-			return
-		}
-		turn := true
-		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(r, 500), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
-	})
+	// An agent of the batch still being collected is picked up by finalizeBatch.
+	if a.inBatch(r.ID) {
+		return
+	}
+	if a.groups.onAgentComplete(r) == "pass" {
+		a.sendIndividualNudge(r)
+	}
 }
 
 func (a *app) scheduleNudge(key string, send func()) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if t := a.timers[key]; t != nil {
-		t.Stop()
+	if stop := a.timers[key]; stop != nil {
+		stop()
 	}
-	a.timers[key] = time.AfterFunc(nudgeHold, func() {
+	a.timers[key] = a.after(nudgeHold, func() {
 		a.mu.Lock()
 		delete(a.timers, key)
 		a.mu.Unlock()
 		send()
 	})
+}
+
+// cancelNudge cancels a held notification, as a read of the result does.
+func (a *app) cancelNudge(key string) {
+	a.mu.Lock()
+	if stop := a.timers[key]; stop != nil {
+		stop()
+		delete(a.timers, key)
+	}
+	a.mu.Unlock()
 }
 
 // escapeXML escapes &, < and >, as the original does. upstream: src/xml.ts.
@@ -260,5 +372,3 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 		"</task-notification>",
 	), "\n")
 }
-
-var _ = context.Background

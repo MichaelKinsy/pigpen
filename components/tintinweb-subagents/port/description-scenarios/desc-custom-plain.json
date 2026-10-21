@@ -1,0 +1,36 @@
+{
+  "name": "desc-custom-plain",
+  "description": "The Agent tool's request in custom mode with scheduling=False, worktreeIsolation=False, workflows=False.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"toolDescriptionMode\": \"custom\", \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"workflowsEnabled\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agent-tool-description.md": "My agents:\n{{typeList}}\nCompact:\n{{compactTypeList}}\nDir: {{agentDir}}\nRULES:{{scheduleGuideline}}{{isolationGuideline}}\nUnknown: {{nope}}\nCost: $& stays literal"
+  }
+}

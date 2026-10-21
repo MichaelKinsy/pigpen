@@ -1,6 +1,7 @@
 package tintinweb_subagents
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -73,9 +74,10 @@ func TestTheChildGetsTheAgentsPromptAndEnvironment(t *testing.T) {
 
 func TestIsolationFollowsTheAgentFile(t *testing.T) {
 	r := startRig(t)
-	tr := true
-	registerAgents(reg(mk("solo", func(c *agentConfig) { c.Isolated = &tr; c.Extensions = true; c.Skills = true }), mk("noext", func(c *agentConfig) { c.Extensions = false; c.Skills = true }),
-		mk("open", func(c *agentConfig) { c.Extensions = true; c.Skills = true })))
+	cwd := r.Host.opts.Cwd
+	for name, fm := range map[string]string{"solo": "isolated: true\nextensions: true", "noext": "extensions: false", "open": "extensions: true"} {
+		writeSettings(t, filepath.Join(cwd, ".pi", "agents", name+".md"), "---\ndescription: d\n"+fm+"\n---\nBody.\n") // the tool reads the files on every call
+	}
 	for i, name := range []string{"solo", "noext", "open"} {
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": name, "run_in_background": true})
 		eq(t, r.fleet.wait(t, i+1)[i].spec.Isolated, name != "open")
@@ -85,7 +87,7 @@ func TestIsolationFollowsTheAgentFile(t *testing.T) {
 
 func TestQueueIsFirstInFirstOut(t *testing.T) {
 	r := startRig(t)
-	r.app.mgr.maxConcurrent = 1
+	r.app.mgr.setMaxConcurrent(1)
 	r.app.mgr.spawn("Plan", "1", "", childSpec{Prompt: "1"}, true)
 	r.app.mgr.spawn("Plan", "2", "", childSpec{Prompt: "2"}, true)
 	r.app.mgr.spawn("Plan", "3", "", childSpec{Prompt: "3"}, true)
@@ -98,7 +100,7 @@ func TestQueueIsFirstInFirstOut(t *testing.T) {
 
 func TestAbortedQueuedAgentLeavesTheQueue(t *testing.T) {
 	r := startRig(t)
-	r.app.mgr.maxConcurrent = 1
+	r.app.mgr.setMaxConcurrent(1)
 	r.app.mgr.spawn("Plan", "1", "", childSpec{Prompt: "1"}, true)
 	q := r.app.mgr.spawn("Plan", "2", "", childSpec{Prompt: "2"}, true)
 	r.fleet.wait(t, 1)
@@ -114,20 +116,20 @@ func TestManagerSteerRefusesAFinishedAgent(t *testing.T) {
 	c := r.fleet.wait(t, 1)[0]
 	c.finish("x")
 	<-a.done
-	err := r.app.mgr.steer(a, "late")
+	_, err := r.app.mgr.steer(a, "late")
 	eq(t, err != nil && strings.Contains(err.Error(), "is not running (status: completed)"), true)
 	eq(t, c.steered, []string(nil))
 }
 
-func TestAmbiguousReferencesResolveToNothing(t *testing.T) {
+func TestReferencesResolveByIdOrHandle(t *testing.T) {
 	m := newManager(nil, nil)
 	for _, id := range []string{"abc1", "abc2", "xyz9"} {
-		m.records[id] = &agentRecord{ID: id}
+		m.records[id] = &agentRecord{ID: id, Handle: "h-" + id}
 		m.order = append(m.order, id)
 	}
-	eq(t, m.resolve("abc") == nil, true)
+	eq(t, m.resolve("abc") == nil, true) // a prefix of an id is not an id
 	eq(t, m.resolve("abc1").ID, "abc1")
-	eq(t, m.resolve("xy").ID, "xyz9")
+	eq(t, m.resolve("H-XYZ9").ID, "xyz9") // a handle is compared without case
 	eq(t, m.resolve("") == nil, true)
 }
 

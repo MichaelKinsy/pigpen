@@ -1,0 +1,36 @@
+{
+  "name": "tool-tools-custom",
+  "description": "toolDescriptionMode custom: the project's agent-tool-description.md with its placeholders substituted.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"toolDescriptionMode\": \"custom\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agent-tool-description.md": "Custom agents:\n{{typeList}}\n\nCompact:\n{{compactTypeList}}\nDir: {{agentDir}}\nUnknown: {{nope}}\nCost: $& stays literal"
+  }
+}
