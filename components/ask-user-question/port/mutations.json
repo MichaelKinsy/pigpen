@@ -645,7 +645,7 @@
   "name": "refusal-utf16-astral-one-unit",
   "file": "refusal.go",
   "find": "if r > 0xFFFF {",
-  "replace": "if false {"
+  "replace": "if r > 0x10FFFF {"
  },
  {
   "name": "refusal-not-applied-in-fallback",

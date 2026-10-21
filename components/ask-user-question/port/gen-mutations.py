@@ -132,7 +132,7 @@ m("refusal-collapse-key-allowed", "refusal.go", 'if key := resolveCollapseKey();
 m("refusal-off-key-refused", "refusal.go", 'key != defaultCollapseKey && key != collapseKeyOff', 'key != defaultCollapseKey')
 m("refusal-long-preview-allowed", "refusal.go", 'if utf16Len(o.Preview) > maxPreviewChars {', 'if utf16Len(o.Preview) > maxPreviewChars && false {')
 m("refusal-preview-boundary", "refusal.go", 'if utf16Len(o.Preview) > maxPreviewChars {', 'if utf16Len(o.Preview) >= maxPreviewChars {')
-m("refusal-utf16-astral-one-unit", "refusal.go", 'if r > 0xFFFF {', 'if false {')
+m("refusal-utf16-astral-one-unit", "refusal.go", 'if r > 0xFFFF {', 'if r > 0x10FFFF {')
 m("refusal-not-applied-in-fallback", "extension.go", 'if err := refuseUnported(typed); err != nil {', 'if err := refuseUnported(typed); err != nil && false {')
 # keybindings.go
 m("legacy-keybinding-not-migrated", "keybindings.go", 'if migrated, ok := legacyKeybindingNames[key]; ok {', 'if migrated, ok := legacyKeybindingNames[key]; ok && false {')
