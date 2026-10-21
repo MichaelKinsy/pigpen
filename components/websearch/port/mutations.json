@@ -2511,7 +2511,7 @@
   "name": "dfd-registry-domain-match",
   "file": "dfd_ext_registry.go",
   "find": "if strings.Contains(domain, p) {",
-  "replace": "if domain == p {"
+  "replace": "if domain == p && strings.Contains(domain, p) {"
  },
  {
   "name": "dfd-registry-needs-canextract",
