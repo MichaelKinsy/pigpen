@@ -247,6 +247,13 @@ func TestWhatAnAgentOwnsStopsWithIt(t *testing.T) {
 func TestNestedChildrenAreForegroundAndReportOnlyToTheirOwner(t *testing.T) {
 	r, cwd := scoutRig(t)
 	writeAgentFile(t, cwd, "bgfile", "run_in_background: true\n")
+	r.modelState = obj{
+		"models": []any{
+			obj{"id": "pinned", "name": "Pinned", "provider": "provider"},
+			obj{"id": "model", "name": "Model", "provider": "other"},
+		},
+		"providers": obj{"provider": obj{"configured": true}, "other": obj{"configured": true}},
+	}
 	writeAgentFile(t, cwd, "pinned", "model: provider/pinned\nthinking: low\nmax_turns: 3\n")
 
 	// Foreground without a word about it: the call blocks. An explicit true detaches it.
@@ -485,7 +492,7 @@ func TestNestedToolTextIsTheOriginals(t *testing.T) {
 	walk = func(v any) {
 		switch x := v.(type) {
 		case map[string]any:
-			if d, ok := x["description"].(string); ok && !strings.HasPrefix(d, "Allowed nested agent type.") {
+			if d, ok := x["description"].(string); ok && !strings.HasPrefix(d, "Allowed nested agent type.") && d != texts.IsolationParam["description"] { // the isolation text is the top-level tool's own
 				texts = append(texts, d)
 			}
 			for _, c := range x {

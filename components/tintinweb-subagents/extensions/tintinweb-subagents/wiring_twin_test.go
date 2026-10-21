@@ -264,7 +264,7 @@ func TestManagerRegistryGuardTwins(t *testing.T) {
 	tw(t, f, "refuses a forged nesting, so the agent cannot hide under someone else's id", func(t *testing.T) {
 		_, rec := forge(t, obj{"parentAgentId": "victim-agent-id", "depth": 9, "maxSubagentDepth": 99})
 		eq(t, rec != nil, true) // a top-level record: it is reachable through the registry
-		eq(t, [3]any{rec.ParentAgentID, rec.Depth, rec.MaxSubagentDepth}, [3]any{"", 1, 0})
+		eq(t, [3]any{rec.ParentAgentID, rec.Depth, rec.MaxSubagentDepth}, [3]any{"", 1, getMaxSubagentDepth()})
 	})
 	tw(t, f, "refuses a forged transcript directory and config root", func(t *testing.T) {
 		r, rec := forge(t, obj{"rootSessionId": "../../elsewhere", "configCwd": "/etc"})

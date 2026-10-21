@@ -139,7 +139,7 @@ func TestAgentRunnerNestedTwins(t *testing.T) {
 		// register, and none of the three is on offer.
 		spec := childOf(t, "extensions: true\n")
 		eq(t, spec.Allowed, nil)
-		eq(t, strings.Contains(strings.Join(childArgs(spec), " "), "get_subagent_result"), false)
+		eq(t, hasAll(spec.ExcludeTools, nestedToolNames...), true) // all three stay out of the child's scope
 		h := hostFor(t, "1", "2", "")
 		eq(t, len(h.tools), 0)
 	})
@@ -171,8 +171,8 @@ func TestAgentRunnerNestedTwins(t *testing.T) {
 
 	tw(t, f, "injects no nested tools once the effective cap is reached", func(t *testing.T) {
 		// At the cap the agent can never spawn, and so can never own a child to fetch from or steer.
+		setMaxSubagentDepth(1) // read when the agent starts
 		spec := childOf(t, "extensions: false\nallowed_subagents: all\n")
-		spec.Depth, spec.MaxDepth = 1, 1
 		eq(t, spec.nestedActive(), false)
 		eq(t, withTools(childArgs(spec)), false)
 		eq(t, envOf(spec), map[string]string{depthEnv: "1"})
