@@ -134,6 +134,7 @@ func SearchWithTavily(ctx context.Context, query string, o SearchOptions) (*Sear
 		switch status := tavilyErrorStatus(err); {
 		case ctx.Err() != nil || errors.Is(err, context.Canceled):
 			act.complete(0)
+			err = &redactedError{"This operation was aborted", err}
 		case status > 0:
 			act.complete(status)
 		default:
