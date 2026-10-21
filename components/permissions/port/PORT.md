@@ -94,6 +94,8 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M12 | `policy/{permission-manager,permission-resolver,permission-gate,synthesize}.ts`, `session/{active-agent,approval-grant,session-approval,session-approval-recorder,session-identity,session-rules,permission-session}.ts` | `permissionmanager.go`, `permissionresolver.go`, `permissiongate.go`, `synthesize.go`, `sessionactiveagent.go`, `sessionapprovalgrant.go`, `sessionapproval.go`, `sessionrules.go`, `sessionpermission.go` (the rest of `policy/*` is M2) | 411 twins in 12 ledger files; `manager_oracle_test.go` (191 worlds, 10,934 recorded comparisons; 4,003 prompts and 602 entry lists for the active agent); `mutations-policy.json` |
 | M12 | `access-intent/bash/{program,bash-path-resolver}.ts` (`BashProgram`, `BashPathResolver`: command units, external accesses and path-rule candidates from one parse), the wrapper tables of M7 | `bashprogram.go`, `bashpathresolver.go` (root package: they need `PathNormalizer` and `AccessPath`); `bash.go`'s `classifyWrapperWords` now calls `bashanalysis.ClassifyWrapperWords` | 275 twins in 2 ledger files (`bashprogram_test.go`, `bashprogram_external_test.go`); 83,300 recorded inputs under 7 path configurations compared field by field (`bashprogram_oracle_test.go`, `port/bashprogram-diff/`); 123 mutations (`port/gen-mutations-bashprogram.py`) |
 
+| M12 | `access-intent/bash/{program,bash-path-resolver}.ts` (`BashProgram`, `BashPathResolver`: command units, external accesses and path-rule candidates from one parse), the wrapper tables of M7 | `bashprogram.go`, `bashpathresolver.go` (root package: they need `PathNormalizer` and `AccessPath`); `bash.go`'s `classifyWrapperWords` now calls `bashanalysis.ClassifyWrapperWords` | 275 twins in 2 ledger files (`bashprogram_test.go`, `bashprogram_external_test.go`); 83,300 recorded inputs under 7 path configurations compared field by field (`bashprogram_oracle_test.go`, `port/bashprogram-diff/`); 105 mutations plus 18 pruned as equivalent with a reason each (`port/gen-mutations-bashprogram.py`, `port/mutate-full.py`) |
+
 ## Process: what was written before its tests
 
 The rule engine is tests first: the 189 twins were written from the original's tests, with the upstream inputs and assertions,
@@ -734,7 +736,7 @@ How it is checked:
   probe answers as a host with no symlinks and no files (realpath is the identity, lstat finds nothing), and the Go test installs
   the same two hooks (`realpathSync`, `lstatSync`, the latter case exact because macOS answers for `A` when `a` exists), so the
   recording is the same on every host. `HOME` is `/probe-home/user`.
-- Mutations: `port/gen-mutations-bashprogram.py` writes `port/mutations-bashprogram.json`.
+- Mutations: `port/gen-mutations-bashprogram.py` writes `port/mutations-bashprogram.json` (105 mutants) and lists 18 equivalent ones with their reasons (`EQUIVALENT`). `pigeq mutate` gives a mutant 3 minutes, which the full differential does not fit on a loaded host: the pass ran with `PP_DIFF_STRIDE=8` (94 of 123 killed by assertions), then `port/mutate-full.py` re-ran the 29 survivors against the whole suite after extra tests were added: 11 more killed, 18 survive and are the equivalent list.
 
 Differences from the original, on purpose:
 
