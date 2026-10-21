@@ -30,6 +30,7 @@ import { CronStorage } from "../../oracle/src/storage.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const framesDir = path.resolve(here, "..");
+const dataDir = path.resolve(framesDir, "..", "..", "extensions", "schedule-prompt", "testdata", "frames");
 
 if (process.env.TZ !== "UTC") throw new Error("TZ must be UTC (run record.sh)");
 if (!process.env.PI_COMMIT) throw new Error("PI_COMMIT must be set (run record.sh)");
@@ -141,18 +142,18 @@ function norm(job: any) {
 }
 
 const only = process.argv.slice(2);
-mkdirSync(path.join(framesDir, "golden"), { recursive: true });
+mkdirSync(path.join(dataDir, "golden"), { recursive: true });
 let n = 0;
-for (const f of readdirSync(path.join(framesDir, "scenarios")).sort()) {
+for (const f of readdirSync(path.join(dataDir, "scenarios")).sort()) {
 	if (!f.endsWith(".json")) continue;
 	const name = f.replace(/\.json$/, "");
 	if (only.length > 0 && !only.includes(name)) continue;
-	const sc = JSON.parse(readFileSync(path.join(framesDir, "scenarios", f), "utf8"));
+	const sc = JSON.parse(readFileSync(path.join(dataDir, "scenarios", f), "utf8"));
 	const cwd = mkdtempSync(path.join(scratchRoot, "cwd-"));
 	const result = sc.kind === "jobs" ? await recordJobs(sc, cwd) : await recordAddFlow(sc, cwd);
 	rmSync(cwd, { recursive: true, force: true });
 	writeFileSync(
-		path.join(framesDir, "golden", f),
+		path.join(dataDir, "golden", f),
 		JSON.stringify({ recordedWith: { pi: process.env.PI_COMMIT, node: process.version, tz: process.env.TZ }, scenario: name, ...result }, null, 2) + "\n",
 	);
 	n++;

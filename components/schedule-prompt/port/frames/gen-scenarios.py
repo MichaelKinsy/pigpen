@@ -3,7 +3,7 @@
 import json, os
 
 UP, DOWN, ESC = "\u001b[A", "\u001b[B", "\u001b"
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scenarios")
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "extensions", "schedule-prompt", "testdata", "frames", "scenarios")
 os.makedirs(out, exist_ok=True)
 
 

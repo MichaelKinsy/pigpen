@@ -120,13 +120,13 @@ func toPlain(t *testing.T, v any) any {
 func TestFramesAgainstOriginal(t *testing.T) {
 	jsdate.SetLocation(time.UTC)
 	defer jsdate.SetLocation(time.Local)
-	files, _ := filepath.Glob("../../port/frames/scenarios/*.json")
+	files, _ := filepath.Glob("testdata/frames/scenarios/*.json")
 	if len(files) == 0 {
 		t.Fatal("no frame scenarios")
 	}
 	for _, file := range files {
 		name := filepath.Base(file)
-		golden := readJSON(t, filepath.Join("../../port/frames/golden", name))
+		golden := readJSON(t, filepath.Join("testdata/frames/golden", name))
 		sc := readJSON(t, file)
 		t.Run(name[:len(name)-5], func(t *testing.T) {
 			cwd := t.TempDir()
