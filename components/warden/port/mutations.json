@@ -320,7 +320,7 @@
  {
   "name": "evidence-line-numbers-not-normalised",
   "file": "evidence.go",
-  "find": "{&lazyRegexp{expr: `:\\d+(?::\\d+)?\\b`}, \":#\", true},",
+  "find": "{&lazyRegexp{expr: `:\\d+(?::\\d+)?\\b`}, \":#\", noiseColonNumber},",
   "replace": ""
  },
  {
