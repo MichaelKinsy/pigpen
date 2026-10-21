@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-acp",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Agent Client Protocol (ACP) for PiG: pig-acp lets an editor such as Zed drive a PiG agent over stdio JSON-RPC. A Go port of pi-acp.",
   "keywords": [
     "pig-package",

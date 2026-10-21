@@ -16,7 +16,7 @@ func TestMain(m *testing.M) {
 	for k, v := range map[string]string{
 		"HOME": filepath.Join(root, "home"), "PIG_HOME": filepath.Join(root, "pighome"),
 		"PIG_CODING_AGENT_DIR": filepath.Join(root, "agent"), "PI_CODING_AGENT_DIR": filepath.Join(root, "piagent"),
-		"XDG_CONFIG_HOME": filepath.Join(root, "xdg"), "PIG_USE_PI_DIRS": "", "PI_ACP_PI_COMMAND": "", "PIG_ACP_PIG_COMMAND": "",
+		"XDG_CONFIG_HOME": filepath.Join(root, "xdg"), "PIG_USE_PI_DIRS": "", "PIG_OFFLINE": "1", "PI_OFFLINE": "", "PI_SKIP_VERSION_CHECK": "", "PI_ACP_PI_COMMAND": "", "PIG_ACP_PIG_COMMAND": "",
 		"PI_ACP_ENABLE_EMBEDDED_CONTEXT": "", "PIG_ACP_ENABLE_EMBEDDED_CONTEXT": "",
 		"PIG_CODING_AGENT_SESSION_DIR": "", "PI_CODING_AGENT_SESSION_DIR": "",
 	} {

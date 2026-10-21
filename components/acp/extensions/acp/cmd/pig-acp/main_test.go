@@ -28,6 +28,7 @@ func TestMain(m *testing.M) {
 	for _, k := range []string{"HOME", "PIG_HOME", "PIG_CODING_AGENT_DIR", "PI_CODING_AGENT_DIR", "XDG_CONFIG_HOME"} {
 		os.Setenv(k, filepath.Join(root, k))
 	}
+	os.Setenv("PIG_OFFLINE", "1")
 	for _, k := range []string{"PIG_ACP_PIG_COMMAND", "PI_ACP_PI_COMMAND", "PIG_USE_PI_DIRS"} {
 		os.Unsetenv(k)
 	}
