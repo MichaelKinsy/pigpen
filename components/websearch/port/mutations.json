@@ -1322,8 +1322,8 @@
  {
   "name": "summary-prompt-requirements",
   "file": "summary_review.go",
-  "find": "\"- Do not invent sources or claims.\",",
-  "replace": "\"- Invent sources.\","
+  "find": "section(\"- Do not invent sources or claims.\")",
+  "replace": "section(\"- Invent sources.\")"
  },
  {
   "name": "summary-source-cap",
@@ -1372,5 +1372,23 @@
   "file": "extension.go",
   "find": "context.WithCancel(WithSideCallContext(base, sdkSideCall{ctx}))",
   "replace": "context.WithCancel(base)"
+ },
+ {
+  "name": "ascii-run-ignores-high-bit",
+  "file": "jsstr.go",
+  "find": "if w&0x8080808080808080 != 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ascii-run-ignores-limit",
+  "file": "jsstr.go",
+  "find": "for i+asciiBlock <= len(b) && i+asciiBlock <= limit {",
+  "replace": "for i+asciiBlock <= len(b) {"
+ },
+ {
+  "name": "prefix-ascii-run-unbounded",
+  "file": "page_query.go",
+  "find": "asciiRun(s[i:], n-units)",
+  "replace": "asciiRun(s[i:], len(s))"
  }
 ]

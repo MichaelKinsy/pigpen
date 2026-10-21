@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -86,8 +87,33 @@ func estimateTokens(text string) int {
 }
 
 func summarizeQueryResult(result QueryResultData) string {
+	var b strings.Builder
+	b.Grow(queryResultSize(result))
+	writeQueryResult(&b, result)
+	return b.String()
+}
+
+// queryResultSize is a capacity for writeQueryResult: the text it writes, rounded up.
+func queryResultSize(result QueryResultData) int {
+	n := 96 + len(result.Query) + len(result.Provider) + len(result.Answer)
+	if result.Error != nil {
+		n += len(*result.Error)
+	}
+	for _, source := range result.Results {
+		n += 16 + len(source.Title) + len(source.URL)
+	}
+	return n
+}
+
+// writeQueryResult writes the lines of summarizeQueryResult in summary-review.ts:40-62, joined by
+// "\n", straight into b.
+func writeQueryResult(b *strings.Builder, result QueryResultData) {
 	if result.Error != nil && *result.Error != "" {
-		return fmt.Sprintf("Query: %s\nStatus: Error\nError: %s", result.Query, *result.Error)
+		b.WriteString("Query: ")
+		b.WriteString(result.Query)
+		b.WriteString("\nStatus: Error\nError: ")
+		b.WriteString(*result.Error)
+		return
 	}
 	provider := result.Provider
 	if provider == "" {
@@ -97,41 +123,72 @@ func summarizeQueryResult(result QueryResultData) string {
 	if answer == "" {
 		answer = "(no answer text returned)"
 	}
-	lines := []string{"Query: " + result.Query, "Provider: " + provider, "Answer: " + answer}
+	b.WriteString("Query: ")
+	b.WriteString(result.Query)
+	b.WriteString("\nProvider: ")
+	b.WriteString(provider)
+	b.WriteString("\nAnswer: ")
+	b.WriteString(answer)
 	if len(result.Results) == 0 {
-		return strings.Join(append(lines, "Sources: none"), "\n")
+		b.WriteString("\nSources: none")
+		return
 	}
-	lines = append(lines, "Sources:")
+	b.WriteString("\nSources:")
 	for i, source := range result.Results {
-		lines = append(lines, fmt.Sprintf("%d. %s — %s", i+1, source.Title, source.URL))
+		b.WriteByte('\n')
+		b.WriteString(strconv.Itoa(i + 1))
+		b.WriteString(". ")
+		b.WriteString(source.Title)
+		b.WriteString(" \u2014 ")
+		b.WriteString(source.URL)
 	}
-	return strings.Join(lines, "\n")
 }
 
-// BuildSummaryPrompt is the prompt of the summary model (summary-review.ts:66-100).
+// BuildSummaryPrompt is the prompt of the summary model (summary-review.ts:66-100): the sections
+// joined by "\n", written into one buffer.
 func BuildSummaryPrompt(results []QueryResultData, feedback string) string {
-	sections := []string{
-		"You are writing the final web search summary for a coding assistant.",
-		"Write a concise, factual summary using only the provided search results.",
-		"Requirements:",
-		"- Keep it readable and skimmable.",
-		"- Include key findings and caveats.",
-		"- Do not invent sources or claims.",
-		"- If evidence is weak or conflicting, say so explicitly.",
-		"- End with a short \"Sources\" section listing the most relevant URLs.",
+	size := 640 + len(feedback)
+	for _, result := range results {
+		size += 24 + queryResultSize(result)
 	}
+	var b strings.Builder
+	b.Grow(size)
+	first := true
+	section := func(parts ...string) {
+		if !first {
+			b.WriteByte('\n')
+		}
+		first = false
+		for _, part := range parts {
+			b.WriteString(part)
+		}
+	}
+	section("You are writing the final web search summary for a coding assistant.")
+	section("Write a concise, factual summary using only the provided search results.")
+	section("Requirements:")
+	section("- Keep it readable and skimmable.")
+	section("- Include key findings and caveats.")
+	section("- Do not invent sources or claims.")
+	section("- If evidence is weak or conflicting, say so explicitly.")
+	section("- End with a short \"Sources\" section listing the most relevant URLs.")
 	if feedback != "" {
-		sections = append(sections, "- Incorporate the user feedback provided below into the summary.")
+		section("- Incorporate the user feedback provided below into the summary.")
 	}
-	sections = append(sections, "", "<search_results>")
+	section("")
+	section("<search_results>")
 	for i, result := range results {
-		sections = append(sections, fmt.Sprintf("\n[Result %d]", i+1), summarizeQueryResult(result))
+		section("\n[Result ", strconv.Itoa(i+1), "]")
+		section()
+		writeQueryResult(&b, result)
 	}
-	sections = append(sections, "\n</search_results>")
+	section("\n</search_results>")
 	if feedback != "" {
-		sections = append(sections, "", "<user_feedback>", feedback, "</user_feedback>")
+		section("")
+		section("<user_feedback>")
+		section(feedback)
+		section("</user_feedback>")
 	}
-	return strings.Join(sections, "\n")
+	return b.String()
 }
 
 var sourceMarkerPattern = regexp.MustCompile(`(?i)\bSources?\s*:`)
