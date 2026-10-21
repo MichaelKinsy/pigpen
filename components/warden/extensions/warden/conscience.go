@@ -141,6 +141,10 @@ type spliced struct {
 }
 
 func (p *spliced) replace(s string, from, to int, with string) {
+	if !p.any {
+		// The result is about as long as the text: one allocation, not the builder's doubling.
+		p.b.Grow(len(s) + len(with))
+	}
 	p.b.WriteString(s[p.last:from])
 	p.b.WriteString(with)
 	p.last, p.any = to, true
