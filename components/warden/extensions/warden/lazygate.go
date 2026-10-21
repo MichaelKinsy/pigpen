@@ -248,8 +248,11 @@ func compileGated(expr string) (*gatedRegexp, error) {
 
 // MatchString is regexp.Regexp.MatchString after the gate, or the state walk of a glob for a plain path.
 func (g *gatedRegexp) MatchString(s string) bool {
+	if !g.gate.may(s) {
+		return false
+	}
 	if g.glob != nil && plainPath(s) {
 		return g.glob.match(s)
 	}
-	return g.gate.may(s) && g.Regexp.MatchString(s)
+	return g.Regexp.MatchString(s)
 }
