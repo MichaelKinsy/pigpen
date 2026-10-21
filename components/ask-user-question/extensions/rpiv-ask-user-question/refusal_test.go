@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// The refusals of the dialog walker (port/slices.json, slice B): not twins of the original's tests, which
-// have no such case.
+// The refusals of the dialog walker, which answers a terminal host that cannot render the questionnaire (these rigs):
+// not twins of the original's tests, which have no such case.
 
 const refusalTail = " yet. Install the original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG."
 
@@ -49,7 +49,7 @@ func TestRefusesACustomCollapseKey(t *testing.T) {
 		t.Fatalf("got %q, want it to contain %q", got, want)
 	}
 	eq(t, r.dialogCount(), 0, "no dialog is shown")
-	eq(t, len(r.emittedEvents()), 0, "no event is emitted")
+	eq(t, channels(r), "rpiv:ask-user:prompt rpiv:ask-user:blocked rpiv:ask-user:blocked", "only the questionnaire attempt emits")
 }
 
 func TestKeepsDefaultAndOffCollapseKeys(t *testing.T) {
@@ -79,7 +79,7 @@ func TestRefusesAPreviewBeyondTheDialogCut(t *testing.T) {
 		t.Fatalf("got %q, want it to contain %q", got, want)
 	}
 	eq(t, r.dialogCount(), 0, "no dialog is shown")
-	eq(t, len(r.emittedEvents()), 0, "no event is emitted")
+	eq(t, channels(r), "rpiv:ask-user:prompt rpiv:ask-user:blocked rpiv:ask-user:blocked", "only the questionnaire attempt emits")
 }
 
 func TestPreviewLengthIsCountedInUTF16Units(t *testing.T) {
@@ -103,6 +103,15 @@ func TestRefusalDoesNotMaskNoUIOrValidationErrors(t *testing.T) {
 	text, details = r2.ask(askArgs())
 	eq(t, details["error"], "no_questions", "error")
 	_ = text
+}
+
+// channels names the events the questionnaire attempt emitted before the host resolved no component.
+func channels(r *rig) string {
+	var names []string
+	for _, e := range r.emittedEvents() {
+		names = append(names, e.Channel)
+	}
+	return strings.Join(names, " ")
 }
 
 func tuiOpts() HostOptions { return HostOptions{Mode: "tui"} }
