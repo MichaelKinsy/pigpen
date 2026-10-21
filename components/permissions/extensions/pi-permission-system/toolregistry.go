@@ -147,9 +147,9 @@ func CheckRequestedToolRegistration(requestedToolName *string, registeredTools [
 	normalizedToolName := normalizeToolName(requested, aliases)
 	reverseAliases := buildReverseAliases(aliases)
 
-	registeredLookup := map[string]bool{}
-	availableSeen := map[string]bool{}
-	available := []string{}
+	registeredLookup := make(map[string]bool, 2*len(registeredTools))
+	availableSeen := make(map[string]bool, len(registeredTools))
+	available := make([]string, 0, len(registeredTools))
 	for _, tool := range registeredTools {
 		name, ok := GetToolNameFromValue(tool)
 		if !ok {

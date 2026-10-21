@@ -157,7 +157,7 @@ func serializeProperty(b *bytes.Buffer, key string, value any, replacer JSONRepl
 			b.WriteString("null")
 			return true
 		}
-		writeObjectWith(b, x.order(), x.vals, replacer)
+		writeObjectWith(b, x.orderView(), x.vals, replacer)
 	case map[string]any:
 		if x == nil {
 			b.WriteString("null")
@@ -171,7 +171,11 @@ func serializeProperty(b *bytes.Buffer, key string, value any, replacer JSONRepl
 			if i > 0 {
 				b.WriteByte(',')
 			}
-			if !serializeProperty(b, strconv.Itoa(i), e, replacer) {
+			key := ""
+			if replacer != nil { // the index is the replacer's key: nothing else reads it
+				key = strconv.Itoa(i)
+			}
+			if !serializeProperty(b, key, e, replacer) {
 				b.WriteString("null")
 			}
 		}
@@ -235,6 +239,15 @@ func wtfSurrogate(s string, i int) (unit rune, ok bool) {
 func writeWTFString(b *bytes.Buffer, s string) {
 	b.WriteByte('"')
 	for i := 0; i < len(s); {
+		if c := s[i]; c >= 0x20 && c < utf8.RuneSelf && c != '"' && c != '\\' { // a run of ASCII that needs no escape
+			j := i + 1
+			for j < len(s) && s[j] >= 0x20 && s[j] < utf8.RuneSelf && s[j] != '"' && s[j] != '\\' {
+				j++
+			}
+			b.WriteString(s[i:j])
+			i = j
+			continue
+		}
 		if u, ok := wtfSurrogate(s, i); ok {
 			b.WriteString(`\u` + string(hexDigits[u>>12&15]) + string(hexDigits[u>>8&15]) + string(hexDigits[u>>4&15]) + string(hexDigits[u&15]))
 			i += 3
@@ -270,8 +283,12 @@ func writeWTFString(b *bytes.Buffer, s string) {
 
 // utf16LenWTF is the JavaScript `.length` of s.
 func utf16LenWTF(s string) int {
-	n := 0
-	for i := 0; i < len(s); {
+	i := 0
+	for i < len(s) && s[i] < utf8.RuneSelf { // the ASCII prefix is one unit per byte
+		i++
+	}
+	n := i
+	for i < len(s) {
 		if _, ok := wtfSurrogate(s, i); ok {
 			n++
 			i += 3

@@ -2,9 +2,9 @@ package pi_permission_system
 
 import (
 	"math"
+	"runtime"
 	"strings"
 	"testing"
-	"time"
 )
 
 // ppPayload is makePromptPayload (test/helpers/prompt-details-fixtures.ts): a minimal complete payload, with the fixture's defaults
@@ -277,17 +277,20 @@ func TestRenderPromptDialogBoundedWork(t *testing.T) {
 			p.Evidence = append(p.Evidence, evid("external path", "/etc/path-"+jsNumber(float64(i))+strings.Repeat("x", 200), sp("/private/etc/hosts")))
 		}
 	})
-	start := time.Now()
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
 	view := RenderPromptDialog(p, DialogBudget{RenderBudget: DefaultRenderBudget, Width: 80}, nil)
-	elapsed := time.Since(start)
+	runtime.ReadMemStats(&after)
+	mallocs := after.Mallocs - before.Mallocs
 	eq(t, len(view.Lines) <= 24, true, "rows")
 	eq(t, view.Elided, true, "elided")
 	eq(t, view.Lines[len(view.Lines)-1], "\u2026", "marker")
-	// The cap and the labels are one pass over the entries (about 0.1 s here); wrapping every entry would cost far more.
-	if elapsed > 2*time.Second {
-		t.Fatalf("render took %v", elapsed)
+	// The cap and the labels are one pass over the entries (about 10 allocations each); wrapping every entry costs several times
+	// that. Counted in allocations, not wall time, so a loaded or race-instrumented host cannot flake it.
+	if mallocs > 20*200000 {
+		t.Fatalf("render made %d allocations for 200000 entries", mallocs)
 	}
 	if testing.Verbose() {
-		t.Logf("render took %v", elapsed)
+		t.Logf("render made %d allocations", mallocs)
 	}
 }

@@ -134,10 +134,11 @@ func RenderPromptDialog(payload PromptPayload, budget DialogBudget, paint Highli
 // capField narrows one field's text to the budget: a quantity bound applied uniformly, never a content filter. The marker is a
 // bare ellipsis.
 func capField(fact promptFact, fieldMaxWidth float64) cappedFact {
-	if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {
+	length := utf16LenWTF(fact.text)
+	if float64(length) <= fieldMaxWidth {
 		return cappedFact{fact, false}
 	}
-	end := jsSliceEnd(fieldMaxWidth, utf16LenWTF(fact.text))
+	end := jsSliceEnd(fieldMaxWidth, length)
 	return cappedFact{promptFact{fact.label, utf16Prefix(fact.text, end) + elisionMarker}, true}
 }
 
