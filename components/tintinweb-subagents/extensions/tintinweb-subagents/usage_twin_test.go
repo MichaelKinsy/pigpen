@@ -291,13 +291,12 @@ func TestUsageReachesSessionStatsTwins(t *testing.T) {
 // The display readers of usage.test.ts read an in-process session (getSessionStats), which a child process has no
 // Go form of. They are twinned where the readers live, in the ui-core slice (ui_usage.go), which stacks after this one.
 func TestUsageDisplayReadersAreTheUICoreSlices(t *testing.T) {
-	const where = " is twinned in the ui-core slice, with ui_usage.go's "
-	tskip(t, "usage", "uses billed-token semantics (input + output + cacheWrite), not inflated total", "getSessionTokens"+where+"sessionLike reader")
-	tskip(t, "usage", "returns 0 when session is undefined or stats throw", "the no-session and throwing-stats paths of getSessionTokens"+where+"sessionLike reader")
-	tskip(t, "usage", "returns null when contextUsage is unavailable", "getSessionContextPercent with no contextUsage"+where+"sessionLike reader")
-	tskip(t, "usage", "returns null when percent is null (post-compaction)", "getSessionContextPercent with a null percent"+where+"sessionLike reader")
-	tskip(t, "usage", "returns the upstream percent when available", "getSessionContextPercent with a percent"+where+"sessionLike reader")
-	tskip(t, "usage", "sums components and handles undefined", "getLifetimeTotal over absent components"+where+"lifetimeUsage")
-	tskip(t, "usage", "agrees with getSessionTokens pre-compaction, diverges after", "the comparison with getSessionTokens"+where+"sessionLike reader")
-	tskip(t, "usage", "stays monotone across simulated compaction when fed via addUsage-style accumulation", "the compaction simulation over getSessionTokens"+where+"sessionLike reader")
+	tskip(t, "usage", "uses billed-token semantics (input + output + cacheWrite), not inflated total", "getSessionTokens is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "returns 0 when session is undefined or stats throw", "the no-session and throwing-stats paths of getSessionTokens is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "returns null when contextUsage is unavailable", "getSessionContextPercent with no contextUsage is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "returns null when percent is null (post-compaction)", "getSessionContextPercent with a null percent is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "returns the upstream percent when available", "getSessionContextPercent with a percent is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "sums components and handles undefined", "getLifetimeTotal over absent components is twinned in the ui-core slice, with ui_usage.go's lifetimeUsage")
+	tskip(t, "usage", "agrees with getSessionTokens pre-compaction, diverges after", "the comparison with getSessionTokens is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
+	tskip(t, "usage", "stays monotone across simulated compaction when fed via addUsage-style accumulation", "the compaction simulation over getSessionTokens is twinned in the ui-core slice, with ui_usage.go's sessionLike reader")
 }
