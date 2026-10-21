@@ -1,0 +1,542 @@
+[
+ {
+  "name": "hint-text",
+  "file": "model_guard.go",
+  "find": "\"💡 No model preferences set. Run /\"",
+  "replace": "\"No model preferences set. Run /\""
+ },
+ {
+  "name": "hint-condition-inverted",
+  "file": "model_guard.go",
+  "find": "state.ModelGuard.Enabled && len(state.ModelGuard.AllowedModels) == 0 {\n\t\tctx.Notify(\"💡",
+  "replace": "state.ModelGuard.Enabled && len(state.ModelGuard.AllowedModels) != 0 {\n\t\tctx.Notify(\"💡"
+ },
+ {
+  "name": "hint-ignores-enabled",
+  "file": "model_guard.go",
+  "find": "if state.ModelGuard.Enabled && len(state.ModelGuard.AllowedModels) == 0 {\n\t\tctx.Notify(\"💡",
+  "replace": "if len(state.ModelGuard.AllowedModels) == 0 {\n\t\tctx.Notify(\"💡"
+ },
+ {
+  "name": "list-empty-text",
+  "file": "model_guard.go",
+  "find": "\"No model preferences saved. All models allowed.\"",
+  "replace": "\"No model preferences saved.\""
+ },
+ {
+  "name": "list-header-text",
+  "file": "model_guard.go",
+  "find": "\"Guard: %s\\nAllowed models:\\n%s\"",
+  "replace": "\"Guard: %s\\nAllowed:\\n%s\""
+ },
+ {
+  "name": "list-bullet",
+  "file": "model_guard.go",
+  "find": "lines = append(lines, \"  • \"+model.String())",
+  "replace": "lines = append(lines, \"  - \"+model.String())"
+ },
+ {
+  "name": "list-state-not-upper",
+  "file": "model_guard.go",
+  "find": "strings.ToUpper(enabledWord(state.ModelGuard.Enabled)), strings.Join(lines, \"\\n\"))",
+  "replace": "enabledWord(state.ModelGuard.Enabled), strings.Join(lines, \"\\n\"))"
+ },
+ {
+  "name": "onoff-text",
+  "file": "model_guard.go",
+  "find": "ctx.Notify(\"Model guard \"+enabledVerb(enabled), \"info\")",
+  "replace": "ctx.Notify(\"Model guard is \"+enabledVerb(enabled), \"info\")"
+ },
+ {
+  "name": "toggle-not-inverted",
+  "file": "model_guard.go",
+  "find": "enabled := !state.ModelGuard.Enabled",
+  "replace": "enabled := state.ModelGuard.Enabled"
+ },
+ {
+  "name": "sub-not-lowercased",
+  "file": "model_guard.go",
+  "find": "sub := strings.ToLower(strings.TrimSpace(args))\n\t\t\tswitch sub {\n\t\t\tcase \"list\":",
+  "replace": "sub := strings.TrimSpace(args)\n\t\t\tswitch sub {\n\t\t\tcase \"list\":"
+ },
+ {
+  "name": "add-remove-no-models-text",
+  "file": "model_guard.go",
+  "find": "\tmodels := availableModels(ctx)\n\tif len(models) == 0 {\n\t\tctx.Notify(\"No models available. Check your API keys.\", \"warning\")\n\t\treturn nil\n\t}\n\tcurrent := currentAllowed(st)\n\tchosen, ok, err := showPicker(ctx, guardTitle(sub, false)",
+  "replace": "\tmodels := availableModels(ctx)\n\tif len(models) == 0 {\n\t\tctx.Notify(\"No models available. Check API keys.\", \"warning\")\n\t\treturn nil\n\t}\n\tcurrent := currentAllowed(st)\n\tchosen, ok, err := showPicker(ctx, guardTitle(sub, false)"
+ },
+ {
+  "name": "manage-no-models-level",
+  "file": "model_guard.go",
+  "find": "\tmodels := availableModels(ctx)\n\tif len(models) == 0 {\n\t\tctx.Notify(\"No models available. Check your API keys.\", \"warning\")\n\t\treturn nil\n\t}\n\tcurrent := currentAllowed(st)\n\tfirstTime",
+  "replace": "\tmodels := availableModels(ctx)\n\tif len(models) == 0 {\n\t\tctx.Notify(\"No models available. Check your API keys.\", \"info\")\n\t\treturn nil\n\t}\n\tcurrent := currentAllowed(st)\n\tfirstTime"
+ },
+ {
+  "name": "add-cancelled-text",
+  "file": "model_guard.go",
+  "find": "\tif !ok {\n\t\tctx.Notify(\"Cancelled\", \"info\")\n\t\treturn nil\n\t}\n\tif sub == \"add\" {",
+  "replace": "\tif !ok {\n\t\tctx.Notify(\"Canceled\", \"info\")\n\t\treturn nil\n\t}\n\tif sub == \"add\" {"
+ },
+ {
+  "name": "manage-cancelled-silent",
+  "file": "model_guard.go",
+  "find": "\tif !ok {\n\t\tctx.Notify(\"Cancelled\", \"info\")\n\t\treturn nil\n\t}\n\tif firstTime && len(chosen) == 0 {",
+  "replace": "\tif !ok {\n\t\treturn nil\n\t}\n\tif firstTime && len(chosen) == 0 {"
+ },
+ {
+  "name": "add-takes-all-checked",
+  "file": "model_guard.go",
+  "find": "if !slices.Contains(current, value) {",
+  "replace": "if slices.Contains(current, value) {"
+ },
+ {
+  "name": "add-nothing-new-text",
+  "file": "model_guard.go",
+  "find": "\"No new models added\"",
+  "replace": "\"No models added\""
+ },
+ {
+  "name": "added-text",
+  "file": "model_guard.go",
+  "find": "\"Added %d model(s): %s\"",
+  "replace": "\"Added %d models: %s\""
+ },
+ {
+  "name": "remove-keeps-unchecked",
+  "file": "model_guard.go",
+  "find": "if slices.Contains(chosen, model.String()) {\n\t\t\t\tkept",
+  "replace": "if !slices.Contains(chosen, model.String()) {\n\t\t\t\tkept"
+ },
+ {
+  "name": "removed-text",
+  "file": "model_guard.go",
+  "find": "\"Removed %d model(s)\"",
+  "replace": "\"Removed %d models\""
+ },
+ {
+  "name": "none-removed-text",
+  "file": "model_guard.go",
+  "find": "\"No models removed\"",
+  "replace": "\"No model removed\""
+ },
+ {
+  "name": "first-time-detection",
+  "file": "model_guard.go",
+  "find": "firstTime := len(current) == 0",
+  "replace": "firstTime := len(current) < 0"
+ },
+ {
+  "name": "first-time-notice-text",
+  "file": "model_guard.go",
+  "find": "\"No preferences set yet. Pick your preferred models:\"",
+  "replace": "\"No preferences yet. Pick your preferred models:\""
+ },
+ {
+  "name": "first-time-empty-also-later",
+  "file": "model_guard.go",
+  "find": "if firstTime && len(chosen) == 0 {",
+  "replace": "if len(chosen) == 0 {"
+ },
+ {
+  "name": "first-time-empty-text",
+  "file": "model_guard.go",
+  "find": "\"No models selected. All models remain allowed.\"",
+  "replace": "\"No models selected.\""
+ },
+ {
+  "name": "updated-text",
+  "file": "model_guard.go",
+  "find": "\"Updated preferences: %d model(s) allowed\"",
+  "replace": "\"Updated preferences: %d models allowed\""
+ },
+ {
+  "name": "model-value-split-swapped",
+  "file": "model_guard.go",
+  "find": "provider, model, _ := strings.Cut(value, \"/\")",
+  "replace": "model, provider, _ := strings.Cut(value, \"/\")"
+ },
+ {
+  "name": "title-add",
+  "file": "model_guard.go",
+  "find": "return \"Select models to ADD to preferences\"",
+  "replace": "return \"Select models to add\""
+ },
+ {
+  "name": "title-first-time",
+  "file": "model_guard.go",
+  "find": "return \"Select your PREFERRED models\"",
+  "replace": "return \"Select models\""
+ },
+ {
+  "name": "empty-selection-is-cancel",
+  "file": "guard_picker.go",
+  "find": "selected := []string{}",
+  "replace": "var selected []string"
+ },
+ {
+  "name": "remember-toast-text",
+  "file": "remember_model.go",
+  "find": "\"%s: remembered model: %s/%s in settings.json\"",
+  "replace": "\"%s: remembered %s/%s in settings.json\""
+ },
+ {
+  "name": "remember-toast-not-deferred",
+  "file": "remember_model.go",
+  "find": "time.AfterFunc(deferredToastDelay, func() { ctx.Notify(message, \"info\") })",
+  "replace": "ctx.Notify(message, \"info\")"
+ },
+ {
+  "name": "remember-off-text",
+  "file": "remember_model.go",
+  "find": "ctx.Notify(\"remember-model \"+enabledVerb(enabled), \"info\")",
+  "replace": "ctx.Notify(\"remember-model \"+enabledWord(enabled), \"info\")"
+ },
+ {
+  "name": "remember-clear-text",
+  "file": "remember_model.go",
+  "find": "\"Cleared remembered model\"",
+  "replace": "\"Cleared the remembered model\""
+ },
+ {
+  "name": "remember-usage-text",
+  "file": "remember_model.go",
+  "find": "\"remember-model: %s\\nlast: %s\\nUsage: /%s [on|off|clear]\"",
+  "replace": "\"remember-model: %s\\nlast: %s\\nusage: /%s [on|off|clear]\""
+ },
+ {
+  "name": "startup-restore-dropped",
+  "file": "remember_model.go",
+  "find": "if reason != \"new\" && reason != \"startup\" {",
+  "replace": "if reason != \"new\" {"
+ },
+ {
+  "name": "remember-ignores-enabled-at-start",
+  "file": "remember_model.go",
+  "find": "\tstate := st.load()\n\tif !state.RememberModel.Enabled {\n\t\treturn\n\t}\n\treason :=",
+  "replace": "\tstate := st.load()\n\treason :="
+ },
+ {
+  "name": "lock-onoff-text",
+  "file": "openrouter_lock.go",
+  "find": "ctx.Notify(\"openrouter-lock-provider \"+enabledVerb(enabled), \"info\")",
+  "replace": "ctx.Notify(\"openrouter-lock \"+enabledVerb(enabled), \"info\")"
+ },
+ {
+  "name": "lock-list-arrow",
+  "file": "openrouter_lock.go",
+  "find": "\"  • \"+model+\" -> \"+locks[model]",
+  "replace": "\"  • \"+model+\" => \"+locks[model]"
+ },
+ {
+  "name": "lock-list-none",
+  "file": "openrouter_lock.go",
+  "find": "lines := \"  (none)\"",
+  "replace": "lines := \"  none\""
+ },
+ {
+  "name": "lock-list-state-not-upper",
+  "file": "openrouter_lock.go",
+  "find": "strings.ToUpper(enabledWord(state.OpenRouterModelProviderPref.Enabled)), lines)",
+  "replace": "enabledWord(state.OpenRouterModelProviderPref.Enabled), lines)"
+ },
+ {
+  "name": "lock-first-word-only",
+  "file": "openrouter_lock.go",
+  "find": "applyLock(ctx, st, baseID, trimmed)",
+  "replace": "applyLock(ctx, st, baseID, strings.Fields(trimmed)[0])"
+ },
+ {
+  "name": "lock-clear-wrong-provider-allowed",
+  "file": "openrouter_lock.go",
+  "find": "\t\t\tcase \"clear\":\n\t\t\t\t// `clear` clears the lock of the model the session runs.\n\t\t\t\tif ctx.ModelProvider() != openRouterProvider {",
+  "replace": "\t\t\tcase \"clear\":\n\t\t\t\t// `clear` clears the lock of the model the session runs.\n\t\t\t\tif ctx.ModelProvider() == \"\" {"
+ },
+ {
+  "name": "lock-nonrouter-text",
+  "file": "openrouter_lock.go",
+  "find": "\t\t\tif trimmed != \"\" {\n\t\t\t\tif ctx.ModelProvider() != openRouterProvider {\n\t\t\t\t\tctx.Notify(\"Current model is not an OpenRouter model\", \"warning\")",
+  "replace": "\t\t\tif trimmed != \"\" {\n\t\t\t\tif ctx.ModelProvider() != openRouterProvider {\n\t\t\t\t\tctx.Notify(\"Current model is not an OpenRouter model\", \"info\")"
+ },
+ {
+  "name": "lock-usage-text",
+  "file": "openrouter_lock.go",
+  "find": "\"Usage: /\"+lockProviderName+\" <provider> | clear | list | on | off\"",
+  "replace": "\"Usage: /\"+lockProviderName+\" <provider>\""
+ },
+ {
+  "name": "lock-picker-in-any-mode",
+  "file": "openrouter_lock.go",
+  "find": "if ctx.Mode() != modeTUI {\n\t\t\t\tctx.Notify(\"Usage",
+  "replace": "if false {\n\t\t\t\tctx.Notify(\"Usage"
+ },
+ {
+  "name": "lock-picker-no-models-text",
+  "file": "openrouter_lock.go",
+  "find": "\"No OpenRouter models available\"",
+  "replace": "\"No models\""
+ },
+ {
+  "name": "lock-picker-cancel-notifies",
+  "file": "openrouter_lock.go",
+  "find": "\tif selected == \"\" {\n\t\treturn nil\n\t}",
+  "replace": "\tif selected == \"\" {\n\t\tctx.Notify(\"Cancelled\", \"info\")\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "lock-input-title",
+  "file": "openrouter_lock.go",
+  "find": "\"Provider for \"+selected+\" (empty to clear):\"",
+  "replace": "\"Provider for \"+selected+\":\""
+ },
+ {
+  "name": "lock-input-default-placeholder",
+  "file": "openrouter_lock.go",
+  "find": "current = \"deepseek\"",
+  "replace": "current = \"\""
+ },
+ {
+  "name": "lock-input-cancel-clears",
+  "file": "openrouter_lock.go",
+  "find": "\tif !answered {\n\t\treturn nil\n\t}\n\tvalue :=",
+  "replace": "\tif !answered {\n\t\tinput = \"\"\n\t}\n\tvalue :="
+ },
+ {
+  "name": "lock-picker-lock-ids-dropped",
+  "file": "openrouter_lock.go",
+  "find": "for id := range locks {\n\t\tids[id] = true\n\t}",
+  "replace": "for range locks {\n\t}"
+ },
+ {
+  "name": "lock-picker-description",
+  "file": "openrouter_lock.go",
+  "find": "description = \"provider: \" + locks[id]",
+  "replace": "description = \"provider \" + locks[id]"
+ },
+ {
+  "name": "lock-picker-other-providers",
+  "file": "openrouter_lock.go",
+  "find": "if model.Provider == openRouterProvider {\n\t\t\tids[model.Model] = true",
+  "replace": "if model.Provider != \"\" {\n\t\t\tids[model.Model] = true"
+ },
+ {
+  "name": "lock-cleared-text",
+  "file": "openrouter_lock.go",
+  "find": "ctx.Notify(\"Cleared provider lock for \"+selected, \"info\")",
+  "replace": "ctx.Notify(\"Cleared lock for \"+selected, \"info\")"
+ },
+ {
+  "name": "routing-provider-guard",
+  "file": "openrouter_lock.go",
+  "find": "if ctx.ModelProvider() != openRouterProvider {\n\t\t\treturn nil, nil",
+  "replace": "if ctx.ModelProvider() == \"\" {\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "sort-checked-last",
+  "file": "guard_picker.go",
+  "find": "if a.checked {\n\t\t\t\treturn -1\n\t\t\t}\n\t\t\treturn 1",
+  "replace": "if a.checked {\n\t\t\t\treturn 1\n\t\t\t}\n\t\t\treturn -1"
+ },
+ {
+  "name": "sort-bytes-not-locale",
+  "file": "guard_picker.go",
+  "find": "return localeCompare(a.value, b.value)",
+  "replace": "return strings.Compare(a.value, b.value)"
+ },
+ {
+  "name": "locale-case-first",
+  "file": "guard_picker.go",
+  "find": "\t\t// Same letter, different case: lowercase first.\n\t\tif isLower(ra[i]) {",
+  "replace": "\t\t// Same letter, different case: lowercase first.\n\t\tif !isLower(ra[i]) {"
+ },
+ {
+  "name": "picker-rows-ten",
+  "file": "guard_picker.go",
+  "find": "const maxPickerRows = 20",
+  "replace": "const maxPickerRows = 10"
+ },
+ {
+  "name": "space-stays",
+  "file": "guard_picker.go",
+  "find": "if p.cursor < len(filtered)-1 {\n\t\t\tp.cursor++",
+  "replace": "if p.cursor < 0 {\n\t\t\tp.cursor++"
+ },
+ {
+  "name": "esc-cancels-with-search",
+  "file": "guard_picker.go",
+  "find": "case keyEscape:\n\t\tif p.search != \"\" {\n\t\t\tp.resetSearch(\"\")",
+  "replace": "case keyEscape:\n\t\tif p.search != \"\" && false {\n\t\t\tp.resetSearch(\"\")"
+ },
+ {
+  "name": "all-none-in-search",
+  "file": "guard_picker.go",
+  "find": "if p.search == \"\" && (typed == 'a' || typed == 'n') {",
+  "replace": "if typed == 'a' || typed == 'n' {"
+ },
+ {
+  "name": "none-selects-all",
+  "file": "guard_picker.go",
+  "find": "p.items[index].checked = typed == 'a'",
+  "replace": "p.items[index].checked = true"
+ },
+ {
+  "name": "picker-help-text",
+  "file": "guard_picker.go",
+  "find": "\"  Type to search • Space toggle",
+  "replace": "\"  Search • Space toggle"
+ },
+ {
+  "name": "picker-no-key-marker",
+  "file": "guard_picker.go",
+  "find": "label += \" ⚠ no key\"",
+  "replace": "label += \" no key\""
+ },
+ {
+  "name": "picker-selected-count",
+  "file": "guard_picker.go",
+  "find": "\" %d/%d selected, %d shown\", p.checkedCount(), len(p.items), len(filtered)",
+  "replace": "\" %d/%d selected, %d shown\", len(p.items), p.checkedCount(), len(filtered)"
+ },
+ {
+  "name": "picker-search-case-sensitive",
+  "file": "guard_picker.go",
+  "find": "strings.Contains(strings.ToLower(item.value), term)",
+  "replace": "strings.Contains(item.value, p.search)"
+ },
+ {
+  "name": "wrap-breaks-early",
+  "file": "guard_picker.go",
+  "find": "if lineWidth+tokenWidth > width && lineWidth > 0 {",
+  "replace": "if lineWidth+tokenWidth >= width && lineWidth > 0 {"
+ },
+ {
+  "name": "lockpicker-prefix-not-contains",
+  "file": "guard_picker.go",
+  "find": "if strings.HasPrefix(strings.ToLower(item.id), strings.ToLower(search)) {",
+  "replace": "if strings.Contains(strings.ToLower(item.id), strings.ToLower(search)) {"
+ },
+ {
+  "name": "lockpicker-no-wrap",
+  "file": "guard_picker.go",
+  "find": "p.selected = (p.selected - 1 + len(p.filtered)) % len(p.filtered)",
+  "replace": "p.selected = max(p.selected-1, 0)"
+ },
+ {
+  "name": "lockpicker-search-line",
+  "file": "guard_picker.go",
+  "find": "search = \"  search: \" + p.search",
+  "replace": "search = \"  filter: \" + p.search"
+ },
+ {
+  "name": "lockpicker-space-not-search",
+  "file": "guard_picker.go",
+  "find": "case decoded == keySpace || decoded == keyRune && typed >= ' ' && typed < 0x7f:",
+  "replace": "case decoded == keyRune && typed >= ' ' && typed < 0x7f:"
+ },
+ {
+  "name": "legacy-ignored",
+  "file": "store.go",
+  "find": "if migrated := migrateLegacy(filepath.Dir(path)); migrated != nil {",
+  "replace": "if migrated := migrateLegacy(filepath.Dir(path)); migrated != nil && false {"
+ },
+ {
+  "name": "legacy-not-written",
+  "file": "store.go",
+  "find": "if err := writeSettings(path, migrated); err != nil {\n\t\t\t\tlogf(\"write %s: %v\", path, err)\n\t\t\t}\n\t\t\treturn migrated",
+  "replace": "return migrated"
+ },
+ {
+  "name": "legacy-guard-enabled-default",
+  "file": "store.go",
+  "find": "applyModelGuard(out, map[string]any{\"enabled\": section[\"enabled\"], \"allowedModels\": section[\"allowedModels\"]})",
+  "replace": "applyModelGuard(out, map[string]any{\"allowedModels\": section[\"allowedModels\"]})"
+ },
+ {
+  "name": "agent-dir-ignores-host",
+  "file": "store.go",
+  "find": "dir, err := sdk.AgentDir()\n\tif err != nil {",
+  "replace": "dir, err := \"\", error(nil)\n\t_ = err\n\tif true {"
+ },
+ {
+  "name": "persist-base-id-for-lock",
+  "file": "pigsettings.go",
+  "find": "modelID = makeVariantID(baseID, lock)",
+  "replace": "modelID = baseID"
+ },
+ {
+  "name": "persist-variant-for-any-provider",
+  "file": "pigsettings.go",
+  "find": "if provider == openRouterProvider {\n\t\tif lock := lockFor(state, baseID)",
+  "replace": "if provider != \"\" {\n\t\tif lock := lockFor(state, baseID)"
+ },
+ {
+  "name": "persist-lock-ignores-enabled",
+  "file": "pigsettings.go",
+  "find": "lock := lockFor(state, baseID); lock != \"\"",
+  "replace": "lock := state.OpenRouterModelProviderPref.Locks[baseID]; lock != \"\""
+ },
+ {
+  "name": "persist-writes-model-before-provider",
+  "file": "pigsettings.go",
+  "find": "{\"defaultProvider\", provider},\n\t\t{\"defaultModel\", modelID},",
+  "replace": "{\"defaultModel\", modelID},\n\t\t{\"defaultProvider\", provider},"
+ },
+ {
+  "name": "settings-existing-key-duplicated",
+  "file": "pigsettings.go",
+  "find": "if _, seen := values[update[0]]; !seen {\n\t\t\tkeys = append(keys, update[0])\n\t\t}",
+  "replace": "keys = append(keys, update[0])"
+ },
+ {
+  "name": "settings-no-trailing-newline",
+  "file": "pigsettings.go",
+  "find": "out.WriteString(\"}\\n\")",
+  "replace": "out.WriteString(\"}\")"
+ },
+ {
+  "name": "lock-message-base-id",
+  "file": "openrouter_lock.go",
+  "find": "baseID, trimmed, makeVariantID(baseID, trimmed)), \"info\")",
+  "replace": "baseID, trimmed, baseID), \"info\")"
+ },
+ {
+  "name": "lock-message-no-default-line",
+  "file": "openrouter_lock.go",
+  "find": "OpenRouter provider lock for %s: %s\\ndefaultModel -> %s",
+  "replace": "OpenRouter provider lock for %s: %s%.0s"
+ },
+ {
+  "name": "apply-lock-skips-settings",
+  "file": "openrouter_lock.go",
+  "find": "persistDefaultModel(agent, st.load(), openRouterProvider, baseID)",
+  "replace": "_, _ = agent, baseID"
+ },
+ {
+  "name": "remember-toast-base-id",
+  "file": "remember_model.go",
+  "find": "rememberModelName, model.Provider, persisted)",
+  "replace": "rememberModelName, model.Provider, baseID)"
+ },
+ {
+  "name": "remember-persist-stale-state",
+  "file": "remember_model.go",
+  "find": "persistDefaultModel(agent, st.load(), model.Provider, baseID)",
+  "replace": "persistDefaultModel(agent, defaultSettings(), model.Provider, baseID)"
+ },
+ {
+  "name": "select-allowed-text",
+  "file": "model_guard.go",
+  "find": "\"✅ \"+model.String()+\" — in preferred models\"",
+  "replace": "model.String()+\" — in preferred models\""
+ },
+ {
+  "name": "select-not-allowed-text",
+  "file": "model_guard.go",
+  "find": "\"⚠️  \"+model.String()+\" — NOT in preferred models\", \"warning\")",
+  "replace": "\"⚠️ \"+model.String()+\" — NOT in preferred models\", \"warning\")"
+ },
+ {
+  "name": "select-not-allowed-level",
+  "file": "model_guard.go",
+  "find": "\" — NOT in preferred models\", \"warning\")",
+  "replace": "\" — NOT in preferred models\", \"info\")"
+ }
+]

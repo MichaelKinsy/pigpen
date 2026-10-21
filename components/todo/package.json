@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-todo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of @juicesharp/rpiv-todo: a todo tool for the model, the /todos command and a live overlay that survives reload and compaction",
   "keywords": [
     "pig-package",

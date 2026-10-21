@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
@@ -121,6 +122,28 @@ func detectToolchain() toolchain {
 	return tcVal
 }
 
+// newRunRoot makes the lane's scratch directory. It is deliberately short (Unix socket paths are limited)
+// and always the same length: os.MkdirTemp appends a decimal number of one to ten digits, and a path that an
+// extension measures (a tool result quoting the agent directory and its character count) would then differ
+// between lanes by the length of that number.
+func newRunRoot() (string, error) {
+	var b [4]byte
+	for i := 0; i < 100; i++ {
+		if _, err := rand.Read(b[:]); err != nil {
+			return "", err
+		}
+		root := filepath.Join(os.TempDir(), "eq"+hex.EncodeToString(b[:]))
+		err := os.Mkdir(root, 0o700)
+		if err == nil {
+			return root, nil
+		}
+		if !os.IsExist(err) {
+			return "", err
+		}
+	}
+	return "", errors.New("could not create a run directory")
+}
+
 type recorder struct {
 	mu     sync.Mutex
 	step   string
@@ -228,8 +251,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		}
 		baseSystem = b
 	}
-	// The run root is deliberately short: Unix socket paths are limited.
-	root, err := os.MkdirTemp("", "eq")
+	root, err := newRunRoot()
 	if err != nil {
 		return nil, err
 	}
@@ -264,8 +286,14 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	}
 	defer ups.close()
 	ups.normalize(rec.norm)
+	if err := rec.norm.AddRules(sc.Normalize); err != nil {
+		return nil, err
+	}
 
-	if err := writeAgentFiles(agent, sc.AgentFiles, ups); err != nil {
+	if err := writeFilesUnder(agent, sc.AgentFiles, ups); err != nil {
+		return nil, err
+	}
+	if err := writeFilesUnder(laneHome(lane.Host, root), sc.HomeFiles, ups); err != nil {
 		return nil, err
 	}
 	for rel, content := range sc.Files {
@@ -305,11 +333,15 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 
 	args := []string{"--mode", "rpc", "--no-session", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--offline"}
 	if len(sc.LLM) > 0 {
-		llm, err := newFakeLLM(sc.LLM, rec.add)
+		llm, err := newFakeLLM(ups.expandTurns(sc.LLM), rec.add)
 		if err != nil {
 			return nil, err
 		}
 		defer llm.close()
+		// The model server's port differs per lane and reaches the trace wherever the host echoes the model's
+		// base URL (a set_model response), so its address is normalized like a fake server's.
+		rec.norm.AddReplacement("http://"+llm.ln.Addr().String(), "<llm>")
+		rec.norm.AddReplacement(llm.ln.Addr().String(), "<llm>")
 		if capture := opt.baseline; capture != nil {
 			llm.system = func(text string) (any, bool) {
 				capture.once.Do(func() { capture.text = rec.norm.str(text) })

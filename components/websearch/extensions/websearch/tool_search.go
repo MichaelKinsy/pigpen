@@ -79,6 +79,8 @@ type queryResponse struct {
 	result QueryResultData
 	inline []ExtractedContent
 	abort  error
+	// refuse is a refusal of an unported feature: it fails the whole call.
+	refuse error
 }
 
 // abortError keeps the cause but always says "Aborted", as the original's AbortError does.
@@ -120,8 +122,7 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 		return textOutput("Error: No query provided. Use 'query' or 'queries' parameter.", map[string]any{"error": "No query provided"}), nil
 	}
 	if workflow != "none" {
-		msg := fmt.Sprintf(`workflow "%s" (the search curator and generated summaries) is not available in this Go port yet; use workflow "none"`, workflow)
-		return errorOutput(msg, msg, nil), nil
+		return ToolOutput{}, unsupported(fmt.Sprintf(`web_search workflow "%s" (the search curator and generated summaries)`, workflow))
 	}
 
 	provider, err := ResolveRequestedProvider(params["provider"])
@@ -159,6 +160,9 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 				report(fmt.Sprintf("Completed %d/%d searches.", completed, len(queries)), "search", float64(completed)/float64(len(queries)), query)
 			}
 		}()
+		if u := asUnsupported(err); u != nil {
+			return queryResponse{refuse: u}
+		}
 		if err != nil {
 			if isAborted(ctx, err) {
 				return queryResponse{abort: err}
@@ -186,6 +190,9 @@ func (r *Runtime) webSearch(ctx context.Context, params map[string]any, update f
 	var urls []string
 	var inline []ExtractedContent
 	for _, resp := range responses {
+		if resp.refuse != nil {
+			return ToolOutput{}, resp.refuse
+		}
 		if resp.abort != nil {
 			return ToolOutput{}, abortError(resp.abort)
 		}
@@ -557,6 +564,9 @@ func (r *Runtime) sourceCheck(ctx context.Context, params map[string]any, _ func
 		resp, err := Search(ctx, query, FullSearchOptions{SearchOptions: SearchOptions{NumResults: &numResults, RecencyFilter: recency, DomainFilter: domainFilter}, Provider: sel})
 		if ctx.Err() != nil {
 			break
+		}
+		if u := asUnsupported(err); u != nil {
+			return ToolOutput{}, u
 		}
 		if err != nil {
 			if isAbortError(err) {

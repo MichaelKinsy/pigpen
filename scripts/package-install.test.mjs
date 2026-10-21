@@ -44,15 +44,21 @@ test('every component Package installs from its tag with the real pig', { skip: 
     run(pig, siblings, work, 'install', two);
     const first = installedRoot(pig, siblings, work, one);
     assert.equal(installedRoot(pig, siblings, work, two).replace(/jev$/, 'herdr'), first, 'both Packages share one checkout');
-    // Release herdr 0.2.0 in the "remote".
+    // Release a newer herdr in the "remote": the next minor after whatever version the checkout carries now, so a bump
+    // that already landed in the repository (herdr moves on its own) cannot make this release a no-op.
     const clone = join(scratch, 'clone');
     git(scratch, scratch, 'clone', '-q', bare, clone);
     const manifestPath = join(clone, 'components/herdr/package.json');
-    writeFileSync(manifestPath, readFileSync(manifestPath, 'utf8').replace('"version": "0.1.0"', '"version": "0.2.0"'));
-    git(scratch, clone, 'commit', '-qam', 'herdr 0.2.0');
+    const manifestText = readFileSync(manifestPath, 'utf8');
+    const current = JSON.parse(manifestText).version;
+    const [major, minor] = current.split('.').map(Number);
+    const newer = `${major}.${minor + 1}.0`;
+    assert.notEqual(manifestText.replace(`"version": "${current}"`, `"version": "${newer}"`), manifestText, 'the herdr manifest has no "version" line to bump');
+    writeFileSync(manifestPath, manifestText.replace(`"version": "${current}"`, `"version": "${newer}"`));
+    git(scratch, clone, 'commit', '-qam', `herdr ${newer}`);
     git(scratch, clone, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
-    git(scratch, clone, 'tag', packageTag('herdr', '0.2.0'));
-    git(scratch, clone, 'push', '-q', 'origin', packageTag('herdr', '0.2.0'));
+    git(scratch, clone, 'tag', packageTag('herdr', newer));
+    git(scratch, clone, 'push', '-q', 'origin', packageTag('herdr', newer));
     // A pinned tag is not moved by `pig update`.
     // One Package per `pig update`: `pig update --extensions` updates the two Packages of this checkout concurrently and
     // races on the checkout's index.lock (PiG bug B8, fixed on PiG branch fix/package-update-shared-checkout, not yet released).
@@ -61,12 +67,12 @@ test('every component Package installs from its tag with the real pig', { skip: 
     run(pig, siblings, work, 'update', '--extension', two);
     assert.equal(JSON.parse(readFileSync(join(first, 'package.json'), 'utf8')).version, '0.1.0');
     // Installing the new tag replaces the old source of the same Package.
-    const next = packageSpec(repository, 'herdr', '0.2.0');
+    const next = packageSpec(repository, 'herdr', newer);
     run(pig, siblings, work, 'install', next);
     const listed = run(pig, siblings, work, 'package', 'list');
     assert.ok(listed.includes(next), listed);
     assert.ok(!listed.includes(one), listed);
     assert.ok(listed.includes(two), listed);
-    assert.equal(JSON.parse(readFileSync(join(installedRoot(pig, siblings, work, next), 'package.json'), 'utf8')).version, '0.2.0');
+    assert.equal(JSON.parse(readFileSync(join(installedRoot(pig, siblings, work, next), 'package.json'), 'utf8')).version, newer);
   });
 });

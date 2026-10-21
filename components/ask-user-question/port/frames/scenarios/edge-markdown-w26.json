@@ -1,0 +1,31 @@
+{
+	"name": "edge-markdown-w26",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Nested markdown?",
+				"header": "MD",
+				"options": [
+					{
+						"label": "List",
+						"description": "lists",
+						"preview": "1. one\n   - nested a\n   - nested b\n\n> quote that is long enough to wrap in the narrow pane\n\n`code that is long enough to wrap`"
+					},
+					{
+						"label": "B",
+						"description": "b"
+					}
+				]
+			}
+		]
+	},
+	"width": 26,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

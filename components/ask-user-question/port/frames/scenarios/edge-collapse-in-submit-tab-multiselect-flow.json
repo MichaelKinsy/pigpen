@@ -1,0 +1,97 @@
+{
+	"name": "edge-collapse-in-submit-tab-multiselect-flow",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which features do you want to enable?",
+				"header": "Features",
+				"options": [
+					{
+						"label": "Auth",
+						"description": "Sign-in and sessions"
+					},
+					{
+						"label": "Billing",
+						"description": "Plans and invoices"
+					},
+					{
+						"label": "Search",
+						"description": "Full-text search over records"
+					},
+					{
+						"label": "Export",
+						"description": "CSV and JSON download"
+					}
+				],
+				"multiSelect": true
+			},
+			{
+				"question": "Pick the runtime",
+				"header": "Runtime",
+				"options": [
+					{
+						"label": "Node",
+						"description": "JavaScript"
+					},
+					{
+						"label": "Bun",
+						"description": "Fast"
+					},
+					{
+						"label": "Deno",
+						"description": "Secure"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": " ",
+			"label": "space"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\u001d",
+			"label": "ctrl-]"
+		},
+		{
+			"input": "\u001d",
+			"label": "ctrl-]"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

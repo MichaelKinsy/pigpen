@@ -79,7 +79,9 @@ type acpClient struct {
 	nextID int
 	inbox  chan map[string]any
 	exit   chan int
-	seen   []map[string]any
+	// done is closed once run has returned, which is when pig-acp promises its pig children are gone.
+	done chan struct{}
+	seen []map[string]any
 	// onRequest answers requests from the agent (session/request_permission).
 	onRequest func(method string, params map[string]any) map[string]any
 }
@@ -88,8 +90,14 @@ func startPigACP(t *testing.T, args ...string) *acpClient {
 	t.Helper()
 	inR, inW := io.Pipe()
 	outR, outW := io.Pipe()
-	c := &acpClient{t: t, in: inW, inbox: make(chan map[string]any, 4096), exit: make(chan int, 1)}
-	go func() { c.exit <- run(args, inR, outW, os.Stderr); inR.Close(); outW.Close() }()
+	c := &acpClient{t: t, in: inW, inbox: make(chan map[string]any, 4096), exit: make(chan int, 1), done: make(chan struct{})}
+	go func() {
+		code := run(args, inR, outW, os.Stderr)
+		inR.Close()
+		outW.Close()
+		c.exit <- code
+		close(c.done)
+	}()
 	go func() {
 		sc := bufio.NewScanner(outR)
 		sc.Buffer(make([]byte, 1<<20), 1<<26)
@@ -109,7 +117,12 @@ func startPigACP(t *testing.T, args ...string) *acpClient {
 		}
 		close(c.inbox)
 	}()
-	t.Cleanup(func() { inW.Close() })
+	// A scenario's temporary HOME is removed after this cleanup, so pig-acp (and the pig children it disposes
+	// on the way out) must be finished by then: closing its input is not enough, wait for run to return.
+	t.Cleanup(func() {
+		inW.Close()
+		<-c.done
+	})
 	return c
 }
 

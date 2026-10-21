@@ -717,3 +717,259 @@ func TestNormalizerCoversStringSlices(t *testing.T) {
 		t.Fatalf("got %#v, want %#v", got, want)
 	}
 }
+
+// N7: a scenario's own rules hide a value the extension invents on every run (pi-web-access's
+// responseId: Date.now in base 36 plus six random characters), in both lanes and in every kind of
+// event, and nothing else.
+func TestScenarioNormalizeRulesApplyAfterTheBuiltInRulesToEveryString(t *testing.T) {
+	rules := []NormalizeRule{
+		{Pattern: `[a-z0-9]{8,12}-[a-z0-9]{6}`, Replacement: "<id>"},
+		{Pattern: `(?i)id=(\w+)`, Replacement: "ID:$1"},
+		{Pattern: `never matches anything`, Replacement: "x"},
+	}
+	n := NewNormalizer("/tmp/eq1/work", "/tmp/eq1", "/tmp/eq1/home")
+	if err := n.AddRules(rules); err != nil {
+		t.Fatal(err)
+	}
+	got := string(n.Data(map[string]any{
+		"text":             "stored as mfx3k2a9j-q7w8e1 at /tmp/eq1/work/a",
+		"details":          map[string]any{"responseId": "mfx3k2a9j-q7w8e1", "list": []any{"id=abc"}},
+		"mfx3k2a9j-q7w8e1": "a key",
+		"args":             []string{"--id", "mfx3k2a9j-q7w8e1"},
+		"stamp":            "2026-09-29T16:30:24.531Z",
+		"untouched":        "extension text",
+		"number":           7,
+	}))
+	want := `{"<id>":"a key","args":["--id","<id>"],"details":{"list":["ID:abc"],"responseId":"<id>"},"number":7,"stamp":"<time>","text":"stored as <id> at <cwd>/a","untouched":"extension text"}`
+	if got != want {
+		t.Errorf("got  %s\nwant %s", got, want)
+	}
+	// Rules run in list order, after N1 to N3: a later rule sees the earlier rule's output.
+	n = NewNormalizer("", "", "")
+	if err := n.AddRules([]NormalizeRule{{Pattern: `<time>`, Replacement: "T"}, {Pattern: `T`, Replacement: "U"}}); err != nil {
+		t.Fatal(err)
+	}
+	if s := n.str("at 2026-09-29T16:30:24Z"); s != "at U" {
+		t.Errorf("order or stage: %q", s)
+	}
+	// Rules added by separate calls run in call order, and a bad pattern is an error the caller sees.
+	n = NewNormalizer("", "", "")
+	if err := n.AddRules([]NormalizeRule{{Pattern: `a`, Replacement: "b"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := n.AddRules([]NormalizeRule{{Pattern: `b`, Replacement: "c"}}); err != nil {
+		t.Fatal(err)
+	}
+	if s := n.str("a"); s != "c" {
+		t.Errorf("call order: %q", s)
+	}
+	if err := n.AddRules([]NormalizeRule{{Pattern: `(`, Replacement: "x"}}); err == nil {
+		t.Error("AddRules accepted a pattern that does not compile")
+	}
+	if s := n.str("a"); s != "c" {
+		t.Errorf("a rejected list must add nothing: %q", s)
+	}
+	// A normalizer without rules is exactly N1 to N3.
+	if s := NewNormalizer("", "", "").str("mfx3k2a9j-q7w8e1"); s != "mfx3k2a9j-q7w8e1" {
+		t.Errorf("no rules must change nothing: %q", s)
+	}
+}
+
+func TestScenarioNormalizeRulesReachEveryRecordedEvent(t *testing.T) {
+	rec := &recorder{step: "01-x", norm: NewNormalizer("", "", "")}
+	if err := rec.norm.AddRules([]NormalizeRule{{Pattern: `r-[0-9a-f]{6}`, Replacement: "<rid>"}}); err != nil {
+		t.Fatal(err)
+	}
+	rec.add(ChLLM, map[string]any{"messages": []any{map[string]any{"role": "tool", "text": "responseId: r-1a2b3c"}}})
+	rec.add(ChExec, map[string]any{"cmd": "x", "args": []string{"r-9f8e7d"}})
+	v, _ := decodeAny([]byte(`{"type":"tool_execution_end","toolName":"t","isError":false,"result":{"content":[{"type":"text","text":"id r-00ff00"}],"details":{"responseId":"r-00ff00"}}}`))
+	_, data, _ := rec.norm.ProjectHost(v.(map[string]any), DefaultCapture)
+	all := rec.events[0].Data
+	all = append(append(all, rec.events[1].Data...), data...)
+	if s := string(all); strings.Contains(s, "r-1a") || strings.Contains(s, "r-9f") || strings.Contains(s, "r-00") || strings.Count(s, "<rid>") != 4 {
+		t.Errorf("rule missed an event: %s", all)
+	}
+}
+
+func TestScenarioValidatesNormalizeRules(t *testing.T) {
+	ok := func(rules ...NormalizeRule) error {
+		return (&Scenario{Name: "a", Steps: []Step{{RPC: map[string]any{"type": "get_state"}}}, Normalize: rules}).Validate()
+	}
+	if err := ok(NormalizeRule{Pattern: `\b[a-z0-9]{6}\b`, Replacement: "<id>"}, NormalizeRule{Pattern: `matches nothing`, Replacement: ""}); err != nil {
+		t.Fatalf("valid rules rejected: %v", err)
+	}
+	for name, rule := range map[string]NormalizeRule{
+		"a pattern that does not compile": {Pattern: `(unclosed`, Replacement: "x"},
+		"a lookahead (not RE2)":           {Pattern: `a(?=b)`, Replacement: "x"},
+		"an empty pattern":                {Pattern: "", Replacement: "x"},
+	} {
+		err := ok(NormalizeRule{Pattern: `fine`, Replacement: "y"}, rule)
+		if err == nil {
+			t.Errorf("%s: accepted", name)
+		} else if !strings.Contains(err.Error(), "normalize rule 1") {
+			t.Errorf("%s: the error must name the rule: %v", name, err)
+		}
+	}
+}
+
+func TestLoadScenarioReadsNormalizeAndRejectsABadPattern(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, normalize string) string {
+		p := filepath.Join(dir, name+".json")
+		body := `{"name":"` + name + `","steps":[{"rpc":{"type":"get_state"}}],"normalize":` + normalize + `}`
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	sc, err := LoadScenario(write("good", `[{"pattern":"a+","replacement":"A"}]`))
+	if err != nil || len(sc.Normalize) != 1 || sc.Normalize[0].Pattern != "a+" || sc.Normalize[0].Replacement != "A" {
+		t.Fatalf("good: %+v %v", sc, err)
+	}
+	if _, err := LoadScenario(write("bad", `[{"pattern":"(","replacement":"A"}]`)); err == nil || !strings.Contains(err.Error(), "bad.json") || !strings.Contains(err.Error(), "normalize rule 0") {
+		t.Errorf("bad pattern: %v", err)
+	}
+	if _, err := LoadScenario(write("typo", `[{"patern":"a","replacement":"A"}]`)); err == nil {
+		t.Error("an unknown rule field was accepted")
+	}
+}
+
+// An extension may quote a path from the run directory and count its characters (pi-web-access's
+// originalChars in a config error), so every lane's run root must have the same length.
+func TestNewRunRootHasOneLengthAndIsPrivate(t *testing.T) {
+	t.Setenv("TMPDIR", t.TempDir())
+	seen := map[string]bool{}
+	for i := 0; i < 300; i++ {
+		root, err := newRunRoot()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if seen[root] {
+			t.Fatalf("run root %s handed out twice", root)
+		}
+		seen[root] = true
+		if want := len(os.TempDir()) + 1 + len("eq") + 8; len(root) != want {
+			t.Errorf("run root %q has %d characters, want %d", root, len(root), want)
+		}
+		if info, err := os.Stat(root); err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
+			t.Errorf("run root %q: %v %v", root, info, err)
+		}
+	}
+}
+
+// A host's set_model response echoes the scripted model's base URL (data.baseUrl, with the model object
+// around it). Every lane draws its own port, so the address must read the same in every lane.
+func TestProjectHostNormalizesTheScriptedModelAddressInSetModel(t *testing.T) {
+	var got []string
+	for _, addr := range []string{"127.0.0.1:41233", "127.0.0.1:55871"} {
+		n := NewNormalizer("/w", "/t", "/h")
+		n.AddReplacement("http://"+addr, "<llm>")
+		n.AddReplacement(addr, "<llm>")
+		rec, err := decodeAny([]byte(`{"type":"response","id":"eq-2","command":"set_model","success":true,"data":{"id":"eq-1","name":"eq-1","api":"openai-completions","provider":"eq-llm","baseUrl":"http://` + addr + `/v1","reasoning":false,"contextWindow":100000}}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		ch, data, ok := n.ProjectHost(rec.(map[string]any), DefaultCapture)
+		if !ok || ch != ChResponse {
+			t.Fatalf("set_model response not captured: %s %v", ch, ok)
+		}
+		if !strings.Contains(string(data), `"baseUrl":"<llm>/v1"`) || strings.Contains(string(data), "127.0.0.1") {
+			t.Errorf("address not normalized: %s", data)
+		}
+		got = append(got, string(data))
+	}
+	if got[0] != got[1] {
+		t.Errorf("lanes with different ports differ:\n%s\n%s", got[0], got[1])
+	}
+}
+
+// powerline's cd-command.ts:157 switches session with a withSession callback that only notifies, titles and
+// changes directory. The scanner read the word withSession as a use of every `withSession ctx.x` row and
+// reported ReplacedSessionContext.sendUserMessage(options.expandPromptTemplates) there. Those rows describe
+// the replacement context, which exists only inside the callback.
+func TestGapScannerReadsWithSessionRowsOnlyInsideTheCallback(t *testing.T) {
+	const symbol = "withSession ctx.sendUserMessage(options.expandPromptTemplates)"
+	found := func(src string) (Gap, bool) {
+		for _, g := range ScanGaps(src, "") {
+			if g.Symbol == symbol {
+				return g, true
+			}
+		}
+		return Gap{}, false
+	}
+	// The cd-command shape: withSession present, no sendUserMessage in the callback.
+	cd := `import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+export default function (pi: ExtensionAPI) {
+	pi.registerCommand("cd", { handler: async (args, ctx) => {
+		const result = await ctx.switchSession(file, {
+			withSession: async (nextCtx) => {
+				nextCtx.ui.notify("changed", "info");
+				nextCtx.ui.setTitle("t");
+				process.chdir(dir);
+			},
+		});
+	}});
+}`
+	if g, ok := found(cd); ok {
+		t.Errorf("a withSession callback that never sends a message was reported: %+v", g)
+	}
+	// The same file also uses sendUserMessage and expandPromptTemplates, but outside the callback, on pi.
+	outside := cd + `
+function later(pi: ExtensionAPI, ctx: any) {
+	ctx.sendUserMessage("x");
+	const options = { expandPromptTemplates: true };
+}`
+	if g, ok := found(outside); ok {
+		t.Errorf("uses outside the withSession callback were attributed to it: %+v", g)
+	}
+	// Real uses are still reported, whatever the callback calls its context and however it is written.
+	for name, src := range map[string]string{
+		"block body": `export default function (pi: ExtensionAPI) {
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession: async (fresh) => {
+			await fresh.sendUserMessage("hi", { expandPromptTemplates: false });
+		} });
+	}});
+}`,
+		"expression body": `export default function (pi: ExtensionAPI) {
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.fork(id, { withSession: async (c) => c.sendUserMessage("hi", { expandPromptTemplates: true }), position: "at" });
+	}});
+}`,
+		"after a template literal and a string with a comma": "export default function (pi: ExtensionAPI) {\n" +
+			"	pi.registerCommand(\"c\", { handler: async (_a, ctx) => {\n" +
+			"		await ctx.newSession({ withSession: async (c) => { const m = `a ${`b,}`} ,)`; const s = \"x, }\"; await c.sendUserMessage(m + s, { expandPromptTemplates: true }); } });\n" +
+			"	}});\n}",
+		"a callback defined elsewhere": `export default function (pi: ExtensionAPI) {
+	const after = async (c: any) => { await c.sendUserMessage("hi", { expandPromptTemplates: true }); };
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession: after });
+	}});
+}`,
+		"shorthand": `export default function (pi: ExtensionAPI) {
+	const withSession = async (c: any) => { await c.sendUserMessage("hi", { expandPromptTemplates: true }); };
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession });
+	}});
+}`,
+	} {
+		g, ok := found(src)
+		if !ok || g.Severity != "missing" {
+			t.Errorf("%s: a real use of %s was not reported: %+v", name, symbol, g)
+		}
+		if ok && len(g.Lines) == 0 {
+			t.Errorf("%s: no source line reported", name)
+		}
+	}
+	// The line is the use, not the withSession keyword.
+	g, _ := found("export default function (pi: ExtensionAPI) {\n" +
+		"	pi.registerCommand(\"c\", { handler: async (_a, ctx) => {\n" +
+		"		await ctx.newSession({\n" +
+		"			withSession: async (c) => {\n" +
+		"				await c.sendUserMessage(\"hi\", { expandPromptTemplates: true });\n" +
+		"			},\n" +
+		"		});\n	}});\n}")
+	if len(g.Lines) != 1 || g.Lines[0] != 5 {
+		t.Errorf("lines = %v, want [5]", g.Lines)
+	}
+}

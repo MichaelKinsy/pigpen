@@ -1,0 +1,72 @@
+{
+  "name": "scheduler-direct-first-run",
+  "description": "/goal-direct in a fresh session: the kickoff is the session's first run (PiG sends it without a system prompt: see above); the allowance of 2 is spent, /goal-resume renews it.",
+  "llm": [
+    {
+      "text": "Run one."
+    },
+    {
+      "text": "Run two."
+    },
+    {
+      "text": "Run three."
+    },
+    {
+      "text": "Run four."
+    }
+  ],
+  "steps": [
+    {
+      "name": "direct",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-direct Ship the report"
+      },
+      "settleMs": 5000
+    },
+    {
+      "name": "resume",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-resume"
+      },
+      "settleMs": 5000
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 2, \"autoSelectSingleGoal\": true}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end"
+  ]
+}

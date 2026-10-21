@@ -1,30 +1,19 @@
 package pi_goal_x
 
 import (
-	"errors"
+	"context"
 	"fmt"
+	"os"
+	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
-// The goal session state and its service (goal-state.ts, goal-service.ts: the immediate path, no turn buffer) and the commands
-// (goal-commands.ts). The host is a small interface so that the same code runs under the SDK and under the tests.
-
-type host interface {
-	Cwd() string
-	SessionID() string
-	HasUI() bool
-	// Rich reports a host with a footer for a status line (a terminal); an RPC host shows status text as an event only.
-	Rich() bool
-	Notify(msg, level string)
-	SetStatus(key, text string) // empty text clears
-	ClearWidget(key string)
-	Confirm(title, msg string) bool
-	Select(title string, options []string) (string, bool)
-	Branch() []any
-	AppendEntry(customType string, data *jsObject)
-	IsIdle() bool
-	Abort()
-}
+// The kernel: goal-state.ts createGoalCore. All state lives in core; the commands (goal_commands.go), tools (goal_tools.go) and
+// events (goal_events.go) operate on it. core.state() mirrors the original's `state.goal`: reading returns the focused goal,
+// setStateGoal replaces it in the pool and updates the focus. The host is bound at every entry (core.h); handlers run under
+// core.mu, and so do timer callbacks (core.after), as the original runs everything on one thread.
 
 const (
 	focusEntryType = "pi-goal-focus"
@@ -32,41 +21,183 @@ const (
 	widgetKey      = "goal"
 )
 
+// goalDeps is the original's `dependencies`: the injectable completion auditor and the nested-session factory the auditor runs on.
+type goalDeps struct {
+	runCompletionAuditor func(args runGoalCompletionAuditorArgs) goalAuditorResult
+	createSession        auditorSessionFactory
+}
+
+// goalAuditResultCard is core.auditResult: the finished audit card shown briefly before the dashboard returns (§15.4).
+type goalAuditResultCard struct{ verdict, report, at string }
+
+// goalCreationConfig is GoalCreationConfig.
+type goalCreationConfig struct {
+	objective    string
+	autoContinue bool
+	sisyphus     bool
+	skipAuditor  bool
+	taskList     *jsObject
+}
+
 type core struct {
-	h         host
-	st        storage
-	goals     *goalPool
-	focused   *string
-	focusRev  int
-	explicit  bool
-	uiPending bool
+	h host
+	// pi is the extension the registration seams add to (nil under the tests that drive the core through a host only).
+	pi   *goalPi
+	deps goalDeps
+	st   storage
+	mu   sync.Mutex
+	// afterBase starts a timer; tests replace it with a deterministic clock.
+	afterBase func(d time.Duration, f func()) *time.Timer
+
+	goals    *goalPool
+	focused  *string
+	focusRev int
+	// explicit is hasExplicitSessionFocus.
+	explicit bool
+
+	runningGoalID              *string
+	auditProgress              *auditorWidgetProgress
+	auditAnimationStop         func()
+	auditResult                *goalAuditResultCard
+	auditResultTimer           *time.Timer
+	auditAbortController       context.CancelFunc
+	auditAborted               bool
+	goalModalDepth             int
+	goalWorkToolCalledThisTurn bool
+	tasksEnabled               bool
+	debugMode                  bool
+	dashboardExpanded          bool
+	terminalInputUnsubscribe   func()
+	widgetRef                  goalWidgetComponentRef
+
+	goalService   *goalService
+	runtime       *goalRuntime
+	scheduler     *goalScheduler
+	auditMessages *goalAuditMessages
+	accounting    *goalAccounting
+
+	// draft is the active guided draft (goal-drafting.ts activeDrafts.get(core)).
+	draft *activeGoalDraft
+
+	profileInitialized bool
+	draftingProfile    bool
+
+	focusStorageRoot  string
+	externalFocusRoot bool
+
+	lastGoalActivityAt int64
+	stallNotified      bool
+	budgetWarnings     map[string]bool
+
+	uiScheduled      bool
+	lastUI           bool
+	widgetRegistered bool
+	widgetLines      []string
+	widgetWidthOff   func()
+	widgetTUI        *coreWidgetTUI
+	// widgetPushTap observes the widget lines the SDK host forwards (tests).
+	widgetPushTap func(key string, lines []string)
 }
 
-func newCore(h host) *core {
-	return &core{h: h, st: storage{cwd: h.Cwd()}, goals: newPool()}
-}
+func newCore(h host) *core { return newGoalCore(h, goalDeps{}) }
 
-func (c *core) state() *jsObject {
-	if c.focused == nil {
-		return nil
+// newGoalCore is createGoalCore. h may be nil until the first entry binds a host.
+func newGoalCore(h host, deps goalDeps) *core {
+	c := &core{h: h, deps: deps, goals: newPool(), tasksEnabled: true, budgetWarnings: map[string]bool{}}
+	if h != nil {
+		c.st = storage{cwd: h.Cwd()}
 	}
-	return c.goals.get(*c.focused)
+	c.afterBase = time.AfterFunc
+	c.lastGoalActivityAt = clockMs()
+	// Sole mutation boundary for goal records: all goal-file writes, ledger appends and ordered write -> ledger -> memory commits
+	// route through this service; handlers keep validation and runtime/UI effects.
+	c.goalService = newGoalService(coreServiceRef{c})
+	c.runtime = newGoalRuntime(goalRuntimeHooks{
+		authorize:      func(goalRuntimeCtx, *jsObject) *jsObject { return c.scheduler.claim() },
+		recover:        func(goalRuntimeCtx) { c.scheduler.recover() },
+		dispatchFailed: func(goalRuntimeCtx) { c.scheduler.failedDispatch() },
+		sendFollowUp: func(content string, details *jsObject) error {
+			return c.h.SendMessage(goalEventEntry, content, false, details, true, "followUp")
+		},
+		getGoal:      func() *jsObject { return c.state() },
+		isActionable: func(goalID string) bool { return c.isActionableContinuationGoal(&goalID) },
+	})
+	c.runtime.afterFunc = c.after
+	c.accounting = &goalAccounting{}
+	c.auditMessages = &goalAuditMessages{}
+	c.scheduler = newGoalSchedulerFor(c)
+	return c
+}
+
+// after starts a timer whose callback runs under the core's lock, then the queued UI update (the original's one thread).
+func (c *core) after(d time.Duration, f func()) *time.Timer {
+	return c.afterBase(d, func() { c.locked(f) })
+}
+
+// locked runs fn as one unit of work: under the lock, followed by the UI update the original queues as a microtask.
+func (c *core) locked(fn func()) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	fn()
+	c.flush()
+}
+
+// await runs fn, a wait for something outside the core (an auditor run, a model call), with the core's lock released: the original's
+// other handlers run at an `await`, and the key that aborts the wait must not queue behind it. Code after await revalidates what it read
+// before. A host dialog (host.Confirm, Select, Input, Custom) already does this.
+func (c *core) await(fn func()) {
+	c.mu.Unlock()
+	defer c.mu.Lock()
+	fn()
+}
+
+func (c *core) state() *jsObject { return focusedGoalFromPool(c.goals, c.focused) }
+
+func sameFocus(a, b *string) bool {
+	return (a == nil) == (b == nil) && (a == nil || *a == *b)
 }
 
 func (c *core) assignFocused(id *string) {
-	if (c.focused == nil) != (id == nil) || (c.focused != nil && *c.focused != *id) {
+	if !sameFocus(c.focused, id) {
 		c.focusRev++
 	}
 	c.focused = id
+	if c.profileInitialized && !c.draftingProfile {
+		c.installGoalToolProfile(c.tasksEnabled)
+	}
 }
 
-func strp(s string) *string { return &s }
+// setRunningGoalFromState is `runningGoalId = state.goal?.id ?? null`.
+func (c *core) setRunningGoalFromState() {
+	if g := c.state(); g != nil {
+		c.runningGoalID = new(gstr(g, "id"))
+	} else {
+		c.runningGoalID = nil
+	}
+}
+
+func (c *core) focusedOperationToken(goalID string) goalFocusToken {
+	return goalFocusToken{goalId: goalID, revision: c.focusRev}
+}
+
+func (c *core) isFocusedOperationCurrent(token goalFocusToken) bool {
+	return c.focused != nil && *c.focused == token.goalId && c.focusRev == token.revision
+}
+
+// focusedOperationCancelledResult is the terminating tool result of an operation whose focus went away.
+func (c *core) focusedOperationCancelledResult(action string, token goalFocusToken) goalAgentResult {
+	return goalAgentResult{
+		text:      fmt.Sprintf("%s cancelled because goal %s is no longer focused in this session. The shared goal was not modified.", action, token.goalId),
+		details:   goalDetails(c.state(), ""),
+		terminate: true,
+	}
+}
 
 // setStateGoal is the `state.goal = next` setter.
 func (c *core) setStateGoal(next *jsObject) {
 	if next != nil {
 		c.goals.set(gstr(next, "id"), next)
-		c.assignFocused(strp(gstr(next, "id")))
+		c.assignFocused(new(gstr(next, "id")))
 		return
 	}
 	if c.focused != nil {
@@ -75,47 +206,594 @@ func (c *core) setStateGoal(next *jsObject) {
 	c.assignFocused(nil)
 }
 
+// coreServiceRef is the GoalService's view of the core (GoalServiceRef).
+type coreServiceRef struct{ c *core }
+
+func (r coreServiceRef) getFocused() *jsObject   { return r.c.state() }
+func (r coreServiceRef) setFocused(g *jsObject)  { r.c.setStateGoal(g) }
+func (r coreServiceRef) getPool() *goalPool      { return r.c.goals }
+func (r coreServiceRef) replacePool(p *goalPool) { r.c.goals = p }
+func (r coreServiceRef) getFocusedGoalId() string {
+	if r.c.focused == nil {
+		return ""
+	}
+	return *r.c.focused
+}
+func (r coreServiceRef) assignFocusedGoalId(id string) {
+	if id == "" {
+		r.c.assignFocused(nil)
+		return
+	}
+	r.c.assignFocused(&id)
+}
+func (r coreServiceRef) focusToken(id string) goalFocusToken { return r.c.focusedOperationToken(id) }
+func (r coreServiceRef) isTokenCurrent(t goalFocusToken) bool {
+	return r.c.isFocusedOperationCurrent(t)
+}
+func (r coreServiceRef) appendFocusEntry(id string, reason string) {
+	if id == "" {
+		r.c.appendFocusEntry(nil, reason)
+		return
+	}
+	r.c.appendFocusEntry(&id, reason)
+}
+func (r coreServiceRef) onFocusedGoalLost(string, goalServiceContext) {
+	r.c.clearStoppedRuntimeState()
+	r.c.updateUI()
+}
+func (r coreServiceRef) onReconciled(goal *jsObject) {
+	if gstr(goal, "status") != "active" || !gflag(goal, "autoContinue") {
+		r.c.clearContinuationState(true)
+	}
+	if gstr(goal, "status") != "active" {
+		r.c.clearActiveAccounting()
+	}
+}
+func (r coreServiceRef) onFocusChanged(string, string) {
+	r.c.clearContinuationState(true)
+	r.c.clearActiveAccounting()
+}
+
+// onDiagnostic is the non-fatal failure sink: ledger appends never roll back the authoritative state write, but they stay observable.
+func (r coreServiceRef) onDiagnostic(d goalDiagnostic) {
+	fmt.Fprintf(os.Stderr, "[pi-goal] %s diagnostic: %s\n", d.source, d.message)
+}
+
+// ---- tool profile ----
+
+// installGoalToolProfile installs the fixed three/five goal-tool profile. Called only after session initialization and after a
+// settings change that toggles disableTasks. It never mutates the host's ordinary work-tool selection.
+func (c *core) installGoalToolProfile(tasksEnabled bool) {
+	c.profileInitialized = true
+	c.draftingProfile = false
+	c.installTools(applicableGoalTools(c.state(), tasksEnabled))
+	c.tasksEnabled = tasksEnabled
+}
+
+// installDraftingToolProfile is the transient drafting profile, entered only by an explicit user drafting command.
+func (c *core) installDraftingToolProfile() {
+	c.draftingProfile = true
+	c.installTools(draftingGoalTools)
+}
+
+// installTools replaces every known goal tool in the active set by add. Idempotent: a profile that is already installed is neither
+// rebuilt nor re-reported. A host that cannot list its tools is left alone.
+func (c *core) installTools(add []string) {
+	active, err := c.h.GetActiveTools()
+	if err != nil {
+		return
+	}
+	var current []string
+	seen := map[string]bool{}
+	push := func(name string) {
+		if !seen[name] {
+			seen[name] = true
+			current = append(current, name)
+		}
+	}
+	for _, name := range active {
+		push(name)
+	}
+	for _, known := range allRegisteredGoalTools {
+		if seen[known] {
+			seen[known] = false
+			kept := current[:0]
+			for _, n := range current {
+				if n != known {
+					kept = append(kept, n)
+				}
+			}
+			current = kept
+		}
+	}
+	for _, name := range add {
+		push(name)
+	}
+	next := append([]string{}, current...)
+	sort.Strings(next)
+	before := append([]string{}, active...)
+	sort.Strings(before)
+	same := len(next) == len(before)
+	for i := 0; same && i < len(next); i++ {
+		same = next[i] == before[i]
+	}
+	if !same {
+		c.h.SetActiveTools(current)
+	}
+}
+
+// ---- audit state ----
+
+func (c *core) setAuditResult(verdict, report string) {
+	c.auditResult = &goalAuditResultCard{verdict: verdict, report: report, at: nowIso()}
+	if c.auditResultTimer != nil {
+		c.auditResultTimer.Stop()
+	}
+	// Short-lived foreground display (§2.5): the card is visible while the user reads it, then the normal dashboard returns.
+	c.auditResultTimer = c.after(6*time.Second, func() {
+		c.auditResult = nil
+		c.auditResultTimer = nil
+		c.invalidateWidget()
+	})
+	c.invalidateWidget()
+}
+
+func (c *core) clearAuditResult() {
+	if c.auditResultTimer != nil {
+		c.auditResultTimer.Stop()
+	}
+	c.auditResultTimer = nil
+	c.auditResult = nil
+}
+
+func (c *core) stopAuditAnimation() {
+	if c.auditAnimationStop != nil {
+		c.auditAnimationStop()
+		c.auditAnimationStop = nil
+	}
+}
+
+func (c *core) abortAudit() {
+	if c.auditAbortController == nil || c.auditProgress == nil {
+		return
+	}
+	c.auditAbortController()
+	c.auditAbortController = nil
+	c.stopAuditAnimation()
+	c.auditProgress = nil
+	c.invalidateWidget()
+	// Record the abort as transient runtime state only; the completion flow decides the single canonical ledger outcome after the
+	// dialog choice.
+	c.auditAborted = true
+}
+
+func (c *core) enterGoalModal() { c.goalModalDepth++ }
+func (c *core) exitGoalModal() {
+	if c.goalModalDepth > 0 {
+		c.goalModalDepth--
+	}
+}
+
+// toggleDashboardExpanded flips the unified dashboard between compact and expanded task views (§10).
+func (c *core) toggleDashboardExpanded() {
+	c.dashboardExpanded = !c.dashboardExpanded
+	c.invalidateWidget()
+}
+
+func (c *core) isDashboardExpanded() bool { return c.dashboardExpanded }
+
+// ---- runtime glue ----
+
+func (c *core) clearContinuationTimer() { c.runtime.clearContinuationTimer() }
+
+func (c *core) clearContinuationState(resetNetworkErrorBackoff bool) {
+	c.scheduler.cancelTimer()
+	c.runtime.clearContinuationState(resetNetworkErrorBackoff)
+}
+
+func (c *core) clearActiveAccounting() { c.accounting.clear() }
+
+func (c *core) advanceTurnSeq() { c.runtime.advanceTurn() }
+
+func (c *core) currentTurnStoppedGoalId() *string { return c.runtime.currentTurnStoppedGoalId() }
+
+func (c *core) isActionableContinuationGoal(goalID *string) bool {
+	g := c.state()
+	return goalID != nil && *goalID != "" && g != nil && gstr(g, "id") == *goalID && gstr(g, "status") == "active" && gflag(g, "autoContinue")
+}
+
+func (c *core) isStaleCheckpointBlockedToolCall(toolName string) bool {
+	return c.runtime.isStaleCheckpointBlocked(toolName)
+}
+
+func (c *core) clearStoppedRuntimeState() {
+	c.clearContinuationState(true)
+	c.clearActiveAccounting()
+}
+
+func (c *core) openGoals() []*jsObject { return openGoalsFromPool(c.goals) }
+
+func (c *core) reconcileFocusedGoalFromDisk(preserveMemoryUsage bool) bool {
+	return c.goalService.reconcileFocused(c.st, preserveMemoryUsage)
+}
+
+// ---- focus ----
+
+func (c *core) appendFocusEntry(id *string, reason string) {
+	c.explicit = true
+	d := goalFocusDetails(id, reason)
+	if c.externalFocusRoot {
+		d.set("storageRoot", c.focusStorageRoot)
+	}
+	c.h.AppendEntry(focusEntryType, d)
+}
+
+func (c *core) setFocusedGoalId(id *string, reason string, recordLedger bool) {
+	prev := c.focused
+	changed := !sameFocus(prev, id)
+	if changed {
+		c.scheduler.takeover()
+		_, _ = c.goalService.flushTurn(c.st) // P1-3: persist the old buffer before switching focus
+	}
+	if id != nil && c.goals.has(*id) {
+		c.assignFocused(id)
+	} else {
+		c.assignFocused(nil)
+	}
+	if !sameFocus(prev, c.focused) {
+		c.clearContinuationState(true)
+		c.clearActiveAccounting()
+	}
+	c.appendFocusEntry(c.focused, reason)
+	// Ledger append failure must not crash a focus change.
+	if recordLedger && c.focused != nil {
+		c.goalService.appendEvents(c.st, []*jsObject{ledgerEvent("goal_focused", "goalId", *c.focused, "reason", reason, "at", nowIso())})
+	} else if recordLedger && prev != nil {
+		c.goalService.appendEvents(c.st, []*jsObject{ledgerEvent("goal_unfocused", "reason", reason, "at", nowIso())})
+	}
+	c.updateUI()
+}
+
+func (c *core) updateFocusedGoal(next *jsObject, shouldPersist bool) {
+	c.goals.set(gstr(next, "id"), next)
+	c.assignFocused(new(gstr(next, "id")))
+	if shouldPersist {
+		c.persist()
+	}
+	c.updateUI()
+}
+
+func (c *core) armFocusedContinuation() {
+	c.beginAccounting()
+	if g := c.state(); g != nil && gstr(g, "status") == "active" && gflag(g, "autoContinue") {
+		c.scheduler.schedule()
+	}
+}
+
+func (c *core) removeFocusedGoal(reason string) {
+	_, _ = c.goalService.flushTurn(c.st) // P1-3: persist pending mutations before the goal leaves the session
+	if c.focused != nil {
+		c.goals.delete(*c.focused)
+	}
+	c.assignFocused(nil)
+	c.clearStoppedRuntimeState()
+	c.appendFocusEntry(nil, reason)
+	c.updateUI()
+}
+
+// ---- accounting ----
+
+func (c *core) beginAccounting() {
+	g := c.state()
+	if c.scheduler.isWaiting() || g == nil || gstr(g, "status") != "active" {
+		c.clearActiveAccounting()
+		return
+	}
+	c.accounting.begin(new(gstr(g, "id")))
+}
+
+// accountingLive adapts goalAccounting to liveDisplayGoal's view.
+type accountingLive struct{ a *goalAccounting }
+
+func (l accountingLive) isActiveFor(id string) bool { return l.a.isActiveFor(id) }
+func (l accountingLive) liveSeconds() float64       { return l.a.liveSeconds(clockMs()) }
+
+func (c *core) goalForDisplay() *jsObject {
+	return liveDisplayGoal(c.state(), accountingLive{c.accounting})
+}
+
+// accountProgress charges the interval since the last charge to the focused goal (completedTurnTokens: the finished turn's tokens).
+func (c *core) accountProgress(completedTurnTokens float64) {
+	g := c.state()
+	// Skip disk reconciliation for complete goals: they are pending archival at turn_end.
+	if g != nil && g.has("activePath") && truthy(g.vals["activePath"]) && gstr(g, "status") != "complete" && !c.reconcileFocusedGoalFromDisk(true) {
+		return
+	}
+	g = c.state()
+	if g == nil || gstr(g, "status") != "active" || !c.accounting.isActiveFor(gstr(g, "id")) {
+		c.beginAccounting()
+		return
+	}
+	// Serialized idempotent charge: never double-charges the same interval.
+	ch := c.accounting.charge(accountingChargeOpts{completedTurnTokens: completedTurnTokens})
+	if ch.tokens == 0 && ch.seconds == 0 {
+		return
+	}
+	next := cloneGoal(g)
+	usage := goalUsageCopy(next)
+	usage.set("tokensUsed", gnum(usage, "tokensUsed")+ch.tokens)
+	usage.set("activeSeconds", gnum(usage, "activeSeconds")+ch.seconds)
+	next.set("usage", usage)
+	next.set("updatedAt", nowIso())
+	c.setStateGoal(next)
+	c.persist()
+
+	// One warning per accounting update, even when several thresholds are crossed.
+	budgetGoal := c.state()
+	if budgetGoal != nil && gstr(budgetGoal, "status") == "active" && budgetGoal.has("tokenBudget") {
+		budget, isNum := budgetGoal.num("tokenBudget")
+		used := gnum(budgetGoal.obj("usage"), "tokensUsed")
+		if isNum && budget > 0 && used > 0 {
+			pct := used / budget
+			var crossed []float64
+			for _, threshold := range []float64{0.5, 0.75, 0.9} {
+				key := fmt.Sprintf("%s:%s:%s", gstr(budgetGoal, "id"), jsNumber(budget), jsNumber(threshold))
+				if pct >= threshold && !c.budgetWarnings[key] {
+					crossed = append(crossed, threshold)
+				}
+			}
+			for _, threshold := range crossed {
+				c.budgetWarnings[fmt.Sprintf("%s:%s:%s", gstr(budgetGoal, "id"), jsNumber(budget), jsNumber(threshold))] = true
+			}
+			if len(crossed) > 0 {
+				rounded := jsRound(pct * 100)
+				c.goalService.appendEvents(c.st, []*jsObject{ledgerEvent("goal_budget_warning", "goalId", gstr(budgetGoal, "id"), "budget", budget, "tokensUsed", used, "pct", rounded, "at", nowIso())})
+				c.h.Notify(fmt.Sprintf("Token budget %s%% used (%s/%s tokens). Use /goal-tweak to change or remove the budget.", jsNumber(rounded), jsNumber(used), jsNumber(budget)), "warning")
+			}
+		}
+	}
+
+	// Token-budget transition: when accounted usage reaches the budget, mark the goal budget_limited exactly once (status no longer
+	// active, so accounting stops and the transition cannot re-fire), emit the ledger event, arm the one-time wrap-up steering, and
+	// cancel pending continuations.
+	if budgetGoal != nil && gstr(budgetGoal, "status") == "active" {
+		if budget, ok := budgetGoal.num("tokenBudget"); ok && budgetGoal.has("tokenBudget") && budgetReached(budgetGoal) {
+			transition, err := c.goalService.apply(c.st, goalMutationSpec{
+				reconcile: new(false),
+				mutate: func(g *jsObject) *jsObject {
+					return goalWith(g, "status", "budget_limited", "updatedAt", nowIso())
+				},
+				ledgerFn: func(written *jsObject) ([]*jsObject, error) {
+					return []*jsObject{ledgerEvent("goal_budget_limited", "goalId", gstr(written, "id"), "budget", budget,
+						"tokensUsed", gnum(written.obj("usage"), "tokensUsed"), "at", gstr(written, "updatedAt"))}, nil
+				},
+			})
+			if err == nil && transition.ok {
+				c.runtime.armPostBudgetReminder()
+				c.runtime.clearContinuationState(true)
+				c.accounting.clear()
+				c.updateUI()
+			}
+		}
+	}
+}
+
+// budgetReached: the token budget is spent (budgetRemaining() === 0).
+func budgetReached(g *jsObject) bool {
+	remaining, ok := budgetRemaining(g)
+	return ok && remaining == 0
+}
+
+// syncGoalPromptFromDisk merges the objective from the goal file; true when it changed.
+func (c *core) syncGoalPromptFromDisk() bool {
+	g := c.state()
+	if g == nil || gstr(g, "status") == "complete" {
+		return false
+	}
+	previous := gstr(g, "objective")
+	merged := c.st.mergeGoalPromptFromDisk(g)
+	c.setStateGoal(merged)
+	return gstr(merged, "objective") != previous
+}
+
+// persist writes the focused goal back through the service (a new updatedAt, a revision bump when nobody else changed it).
+func (c *core) persist() {
+	if _, err := c.goalService.persist(c.st); err != nil {
+		fmt.Fprintf(os.Stderr, "[pi-goal] persist failed: %v\n", err)
+	}
+	c.updateUI()
+}
+
+func (c *core) refreshGoalDisplayFromDisk() {
+	g := c.state()
+	if g == nil || gstr(g, "status") == "complete" {
+		return
+	}
+	if c.syncGoalPromptFromDisk() {
+		c.setStateGoal(goalWith(c.state(), "updatedAt", nowIso()))
+	}
+	c.updateUI()
+}
+
+// ---- stall detection (F5) ----
+
+// touchGoalActivity bumps the last-activity timestamp (called on real work events).
+func (c *core) touchGoalActivity() {
+	c.lastGoalActivityAt = clockMs()
+	c.stallNotified = false
+}
+
+// checkStall detects a stalled active auto-continue goal; it returns the [GOAL STALLED] steering note ("" when not stalled).
+func (c *core) checkStall() string {
+	g := c.state()
+	if g == nil || gstr(g, "status") != "active" || !gflag(g, "autoContinue") {
+		return ""
+	}
+	timeoutMinutes := loadGoalSettings(c.h.Cwd()).stallTimeoutMinutes
+	if timeoutMinutes <= 0 || c.stallNotified {
+		return ""
+	}
+	if float64(clockMs()-c.lastGoalActivityAt) < timeoutMinutes*60000 {
+		return ""
+	}
+	c.stallNotified = true
+	goalID := gstr(g, "id")
+	plural := "s"
+	if timeoutMinutes == 1 {
+		plural = ""
+	}
+	minutes := fmt.Sprintf("%s minute%s", jsNumber(timeoutMinutes), plural)
+	// Stall detection must never crash the turn.
+	c.goalService.appendEvents(c.st, []*jsObject{ledgerEvent("goal_stalled", "goalId", goalID, "reason", "No continuation or tool activity for "+minutes+".", "at", nowIso())})
+	c.h.Notify("Goal stalled: no activity for "+minutes+".", "warning")
+	return "\n\n[GOAL STALLED goalId=" + goalID + "]\nNo continuation or tool activity for " + minutes + ". Report your progress or ask the user to pause or resume the goal."
+}
+
 // ---- UI ----
 
+// updateUI queues a coalesced widget update (P1-9): several calls in one synchronous block collapse into one render at flush().
 func (c *core) updateUI() {
-	if c.h.HasUI() {
-		c.uiPending = true
+	if !c.h.HasUI() {
+		return
 	}
+	c.lastUI = true
+	c.uiScheduled = true
 }
 
 // flush runs the UI update the original queues as a microtask: once, after the handler's synchronous work.
 func (c *core) flush() {
-	if !c.uiPending {
+	if !c.uiScheduled {
 		return
 	}
-	c.uiPending = false
-	c.renderUI()
+	c.uiScheduled = false
+	if c.lastUI {
+		c.renderUI()
+	}
 }
 
 func (c *core) clearGoalWidget() {
+	c.lastUI = false
 	if c.h.HasUI() {
 		c.h.SetStatus(widgetKey, "")
-		c.h.ClearWidget(widgetKey)
+		c.h.SetWidget(goalWidgetKey, nil)
+	}
+	c.widgetRegistered = false
+	c.widgetRef.current = nil
+	if c.widgetWidthOff != nil {
+		c.widgetWidthOff()
+		c.widgetWidthOff = nil
 	}
 }
 
 func (c *core) renderUI() {
-	g := c.state()
 	totalOpen := otherOpenGoalCount(c.goals, nil)
+	g := c.state()
 	if g == nil && totalOpen == 0 {
 		c.clearGoalWidget()
 		return
 	}
 	if g == nil {
+		// PR #29: layered hideUnfocusedBanner suppresses BOTH the unfocused widget and the status hint. Focused dashboards and audit UI
+		// are unaffected; the model-facing [PI GOAL UNFOCUSED] prompt is unchanged.
+		if loadGoalSettings(c.h.Cwd()).hideUnfocusedBanner {
+			c.clearGoalWidget()
+			return
+		}
 		c.h.SetStatus(widgetKey, fmt.Sprintf("goal: unfocused [%d open] - /goal-focus", totalOpen))
+		c.ensureWidget()
 		return
 	}
-	// The original shows a dashboard component here. A terminal gets one status line instead; an RPC host shows nothing, as Pi does.
-	if c.h.Rich() {
-		c.h.SetStatus(widgetKey, footerStatus(g))
-		return
-	}
+	// The goal widget is the single home for goal status: the status line lives in the compact/expanded dashboard, so the
+	// focused-goal footer segment is cleared; the unfocused branch above sets its own hint.
 	c.h.SetStatus(widgetKey, "")
+	c.ensureWidget()
+}
+
+// ensureWidget registers the dashboard once and refreshes it afterwards.
+func (c *core) ensureWidget() {
+	if c.widgetRegistered {
+		if c.widgetRef.current != nil {
+			c.widgetRef.current.update()
+		}
+		return
+	}
+	cwd := c.h.Cwd()
+	st := c.st
+	factory := makeGoalWidgetFactory(goalWidgetFactoryOptions{
+		getGoal: func() *jsObject {
+			if g := c.goalForDisplay(); g != nil {
+				return g
+			}
+			return c.state()
+		},
+		getOpenGoalCount:   func() int { return otherOpenGoalCount(c.goals, nil) },
+		getAuditorProgress: func() *auditorWidgetProgress { return c.auditProgress },
+		getSettings:        func() goalSettings { return loadGoalSettings(cwd) },
+		getDebugMode:       func() bool { return c.debugMode },
+		getStalled:         func() bool { return c.stallNotified },
+		getExpanded:        func() bool { return c.dashboardExpanded },
+		getLedgerEvents: func() []*jsObject {
+			if g := c.state(); g != nil {
+				return goalActivityEvents(st, gstr(g, "id"))
+			}
+			return nil
+		},
+		getAuditResult: func() *auditResultView {
+			if c.auditResult == nil {
+				return nil
+			}
+			return &auditResultView{verdict: c.auditResult.verdict, report: c.auditResult.report}
+		},
+		componentRef: &c.widgetRef,
+	})
+	c.widgetRegistered = true
+	c.widgetTUI = &coreWidgetTUI{c: c}
+	factory(c.widgetTUI, c.h.Theme())
+	c.pushWidget()
+	if c.widgetWidthOff == nil {
+		c.widgetWidthOff = c.h.OnWidthChange(func(int) {
+			c.locked(func() { c.pushWidget() })
+		})
+	}
+}
+
+// pushWidget lays the dashboard out at the host's width and sends the lines.
+func (c *core) pushWidget() {
+	comp := c.widgetRef.current
+	if comp == nil {
+		return
+	}
+	// The terminal height the component reads while it renders is the host's now: a render kept past the host's lifetime (a deferred
+	// one) must not reach back into it.
+	c.widgetTUI.rows, c.widgetTUI.hasRows = c.h.Height()
+	lines := comp.Render(c.h.Width())
+	if lines == nil {
+		lines = []string{}
+	}
+	c.widgetLines = lines
+	c.h.SetWidget(goalWidgetKey, lines)
+}
+
+// invalidateWidget is goalWidgetComponentRef.current?.invalidate().
+func (c *core) invalidateWidget() {
+	if c.widgetRef.current != nil {
+		c.widgetRef.current.Invalidate()
+	}
+}
+
+// coreWidgetTUI is the TUI object the dashboard factory gets: a render request lays the lines out again and pushes them.
+type coreWidgetTUI struct {
+	c       *core
+	rows    int
+	hasRows bool
+}
+
+func (t *coreWidgetTUI) getShowHardwareCursor() bool { return false }
+func (t *coreWidgetTUI) setShowHardwareCursor(bool)  {}
+func (t *coreWidgetTUI) requestRender()              { t.c.pushWidget() }
+func (t *coreWidgetTUI) terminalRows() (int, bool)   { return t.rows, t.hasRows }
+func (t *coreWidgetTUI) previousLinesLen() (int, bool) {
+	return len(t.c.widgetLines), t.c.widgetLines != nil
 }
 
 func footerStatus(g *jsObject) string {
@@ -138,16 +816,7 @@ func footerStatus(g *jsObject) string {
 	return prefix + ": " + statusLabel(g) + usage + " - " + truncateText(gstr(g, "objective"), 60)
 }
 
-// ---- focus entries and ledger ----
-
-func (c *core) appendFocusEntry(id *string, reason string) {
-	c.explicit = true
-	c.h.AppendEntry(focusEntryType, goalFocusDetails(id, reason))
-}
-
-func (c *core) appendEvents(events ...*jsObject) { _ = c.st.appendGoalEvents(events) }
-
-// ---- session start ----
+// ---- session load ----
 
 func resolveSessionFocus(pool *goalPool, entry *focusEntry, legacy *jsObject, autoSelect bool) *string {
 	var focusedID *string
@@ -171,17 +840,33 @@ func resolveSessionFocus(pool *goalPool, entry *focusEntry, legacy *jsObject, au
 	}
 	if autoSelect {
 		if open := openGoalsFromPool(pool); len(open) == 1 {
-			return strp(gstr(open[0], "id"))
+			return new(gstr(open[0], "id"))
 		}
 	}
 	return nil
 }
 
-func (c *core) loadState() {
+// loadState reads the pool and resolves the session's focus from the branch's focus entry (or the legacy state entry).
+func (c *core) loadState() error {
 	c.clearGoalWidget()
+	// The pool root is resolved here and pinned for the session; an invalid goalsRoot fails the load instead of falling back.
+	st, err := newGoalStorage(&goalStorageContext{cwd: c.h.Cwd(), sessionManager: coreSession{c}})
+	if err != nil {
+		return err
+	}
+	c.st = st
 	root := c.st.root()
-	c.goals = c.st.readActiveGoalPool()
-	c.focusRev++
+	defaultRoot := defaultGoalRoot(c.h.Cwd())
+	c.focusStorageRoot = root
+	c.externalFocusRoot = root != defaultRoot
+	pool, err := c.st.readActiveGoalPoolChecked()
+	if err != nil {
+		return err // an external pool whose root went away fails the load, as readActiveGoalPoolAsync rejects
+	}
+	c.goals = pool
+	invalidateGoalSettingsCache()
+	c.tasksEnabled = !loadGoalSettings(c.h.Cwd()).disableTasks
+	c.focusRev++ // Session reload/tree navigation invalidates pending async focus operations.
 	c.assignFocused(nil)
 	c.explicit = false
 	var entry *focusEntry
@@ -215,17 +900,20 @@ func (c *core) loadState() {
 	}
 	settings := loadGoalSettings(c.h.Cwd())
 	if entry != nil {
-		entryRoot := root
+		entryRoot := defaultRoot
 		if entry.hasStorage {
 			entryRoot = entry.root
 		}
-		if entryRoot != root {
+		if entryRoot != c.focusStorageRoot {
 			entry = &focusEntry{goalID: nil, reason: entry.reason}
 			legacy = nil
 		}
 	}
+	if c.focusStorageRoot != defaultRoot {
+		legacy = nil
+	}
 	c.explicit = entry != nil
-	c.assignFocused(resolveSessionFocus(c.goals, entry, legacy, settings.autoSelectSingle))
+	c.assignFocused(resolveSessionFocus(c.goals, entry, legacy, settings.autoSelectSingleGoal))
 	if entry == nil && c.focused != nil {
 		reason := "selected"
 		if legacy != nil && gstr(legacy, "id") == *c.focused {
@@ -238,520 +926,113 @@ func (c *core) loadState() {
 			c.goals.delete(gstr(g, "id"))
 		}
 	}
-	c.updateUI()
-}
-
-// ---- service ----
-
-type mutation struct {
-	reconcile       bool
-	expectedGoalID  string
-	refreshFromDisk bool
-	mutate          func(*jsObject) (*jsObject, error)
-	ledger          func(written *jsObject) []*jsObject
-	archive         bool
-	noCommitFocused bool
-}
-
-func (c *core) reconcileFocused() bool {
-	current := c.state()
-	source := c.st.readActiveGoalPoolView()
-	unchanged := source.size() == c.goals.size() && (c.focused == nil || source.has(*c.focused))
-	if unchanged {
-		for _, id := range source.ids {
-			if c.goals.get(id) != source.get(id) {
-				unchanged = false
-				break
-			}
-		}
-	}
-	if unchanged {
-		return true
-	}
-	fresh := source.copy()
-	if c.focused == nil {
-		c.goals = fresh
-		return true
-	}
-	disk := fresh.get(*c.focused)
-	if disk == nil {
-		if current != nil && !(current.has("activePath") && truthy(current.vals["activePath"])) {
-			c.goals = fresh
-			fresh.set(gstr(current, "id"), current)
-			c.assignFocused(strp(gstr(current, "id")))
-			return true
-		}
-		c.goals = fresh
-		c.assignFocused(nil)
-		c.updateUI()
-		return false
-	}
-	c.goals = fresh
-	fresh.set(gstr(disk, "id"), disk)
-	c.assignFocused(strp(gstr(disk, "id")))
-	return true
-}
-
-type mutationResult struct {
-	goal         *jsObject
-	focusChanged bool
-}
-
-func (c *core) apply(spec mutation) (*mutationResult, error) {
-	if spec.reconcile && !c.reconcileFocused() {
-		return nil, errors.New("The focused goal was lost during reconciliation; the mutation was not applied.")
-	}
-	current := c.state()
-	if current == nil {
-		return nil, errors.New("No focused goal to mutate.")
-	}
-	if spec.expectedGoalID != "" && gstr(current, "id") != spec.expectedGoalID {
-		return nil, fmt.Errorf("Mutation rejected: expected goal %s but the focused goal is %s.", spec.expectedGoalID, gstr(current, "id"))
-	}
-	captured := gnum(current, "revision")
-	lock, err := c.st.acquireLock(gstr(current, "id"), 0, 0)
-	if err != nil {
-		return nil, err
-	}
-	defer lock.release()
-	var fresh *jsObject
-	if p, ok := current.vals["activePath"].(string); ok {
-		if file, err := c.st.resolveGoalPath(goalsDir, p); err == nil {
-			fresh = parseGoalFile(file)
-		}
-	}
-	if fresh == nil {
-		return nil, fmt.Errorf("Goal %s was deleted or archived by another process while this mutation was in progress; the mutation was not applied.", gstr(current, "id"))
-	}
-	if diskRev := gnum(fresh, "revision"); diskRev != captured {
-		return nil, fmt.Errorf("Goal %s was modified by another process (revision %s -> %s); current revision is %s. Refresh and retry; the mutation was not applied.", gstr(current, "id"), jsNumber(captured), jsNumber(diskRev), jsNumber(diskRev))
-	}
-	base := current
-	if spec.refreshFromDisk {
-		base = c.st.mergeGoalPromptFromDisk(current)
-	}
-	m, err := spec.mutate(cloneGoal(base))
-	if err != nil {
-		return nil, err
-	}
-	mutated := m.clone()
-	mutated.set("revision", captured+1)
-	var written *jsObject
-	if spec.archive {
-		written, err = c.st.archiveGoalFile(mutated)
-	} else {
-		written, err = c.st.writeActiveGoalFile(mutated)
-	}
-	if err != nil {
-		return nil, err
-	}
-	if spec.ledger != nil {
-		c.appendEvents(spec.ledger(written)...)
-	}
-	changed := false
-	if !spec.noCommitFocused {
-		c.setStateGoal(written)
-		changed = gstr(current, "id") != gstr(written, "id")
-	}
-	return &mutationResult{goal: written, focusChanged: changed}, nil
-}
-
-// persist writes the focused goal back (revision + 1, new updatedAt) when nobody else changed it; used when the session ends.
-func (c *core) persist() {
-	cur := c.state()
-	if cur == nil {
-		return
-	}
-	captured := gnum(cur, "revision")
-	lock, err := c.st.acquireLock(gstr(cur, "id"), 4, 25)
-	if err != nil {
-		return
-	}
-	defer lock.release()
-	p, _ := cur.vals["activePath"].(string)
-	file, err := c.st.resolveGoalPath(goalsDir, p)
-	if err != nil {
-		return
-	}
-	fresh := parseGoalFile(file)
-	// A revision that moved belongs to another writer: the original merges only this session's usage delta, which this port
-	// does not track, so there is nothing to write.
-	if fresh == nil || gnum(fresh, "revision") != captured {
-		return
-	}
-	n := cur.clone()
-	n.set("updatedAt", nowIso())
-	n.set("revision", captured+1)
-	merged := c.st.mergeGoalPromptFromDisk(n)
-	var written *jsObject
-	if gstr(merged, "status") == "complete" {
-		written, err = c.st.archiveGoalFile(merged)
-	} else {
-		written, err = c.st.writeActiveGoalFile(merged)
-	}
-	if err == nil {
-		c.setStateGoal(written)
-	}
-}
-
-// shutdown is session_shutdown: persist, then clear the goal UI.
-func (c *core) shutdown() {
-	c.persist()
-	c.clearGoalWidget()
-}
-
-// create writes a new goal's file and ledger and focuses it.
-func (c *core) create(goal *jsObject, events []*jsObject) (*mutationResult, error) {
-	prev := c.state()
-	written, err := c.st.writeActiveGoalFile(goal)
-	if err != nil {
-		return nil, err
-	}
-	c.appendEvents(events...)
-	c.setStateGoal(written)
-	return &mutationResult{goal: written, focusChanged: prev == nil || gstr(prev, "id") != gstr(written, "id")}, nil
-}
-
-// ---- scheduler (the part of goal-scheduler.ts the ported commands reach) ----
-
-var errScheduling = errors.New("Goal scheduling belongs to another session or was interrupted. Use /goal-resume to take ownership.")
-
-func (c *core) schedulerState(g *jsObject) (*jsObject, error) {
-	s := g.obj("scheduler")
-	if !g.has("scheduler") || s == nil {
-		s = newGoalScheduler(c.h.SessionID())
-	}
-	if owner, _ := s.str("owner"); owner != c.h.SessionID() {
-		return nil, errScheduling
-	}
-	if phase, _ := s.str("phase"); phase == "interrupted" {
-		return nil, errScheduling
-	}
-	return s, nil
-}
-
-// schedulerUpdate is scheduler.update: a revision-checked write of the focused goal's scheduler state.
-func (c *core) schedulerUpdate(change func(s *jsObject)) error {
-	cur := c.state()
-	if cur == nil {
-		return errors.New("No focused goal.")
-	}
-	_, err := c.apply(mutation{reconcile: true, expectedGoalID: gstr(cur, "id"), mutate: func(g *jsObject) (*jsObject, error) {
-		s, e := c.schedulerState(g)
-		if e != nil {
-			return nil, e
-		}
-		change(s)
-		n := g.clone()
-		n.set("scheduler", s)
-		return n, nil
-	}, ledger: func(w *jsObject) []*jsObject {
-		// scheduler.write records a pause event for any write that leaves the goal paused, as the original does.
-		if gstr(w, "status") != "paused" {
-			return nil
-		}
-		r := "Scheduling paused"
-		if w.has("pauseReason") && truthy(w.vals["pauseReason"]) {
-			r = gstr(w, "pauseReason")
-		}
-		return []*jsObject{ledgerEvent("goal_paused", "goalId", gstr(w, "id"), "reason", r, "source", "agent", "at", nowIso())}
-	}})
-	if err != nil {
-		return err
-	}
+	c.clearStoppedRuntimeState()
+	c.runningGoalID = nil
 	c.updateUI()
 	return nil
 }
 
-func (c *core) schedulerSafe(fn func() error) {
-	if err := fn(); err != nil {
-		c.h.Notify("Goal scheduling stopped: "+err.Error(), "warning")
-	}
-}
+// coreSession is the session manager the pinned pool root is keyed on: one per core, with the host's current session id.
+type coreSession struct{ c *core }
 
-// takeover supersedes the old scheduling claim of a goal this session owns, when the focus leaves it.
-func (c *core) takeover() {
-	g := c.state()
-	if g == nil || !g.has("scheduler") {
-		return
-	}
-	s := g.obj("scheduler")
-	if s == nil {
-		return
-	}
-	if owner, _ := s.str("owner"); owner != c.h.SessionID() {
-		return
-	}
-	c.schedulerSafe(func() error {
-		return c.schedulerUpdate(func(s *jsObject) {
-			s.set("generation", newUUID())
-			s.set("phase", "idle")
-			s.set("decision", undef{})
-			s.set("dispatch", undef{})
-			s.set("wait", undef{})
-			s.set("repairUsed", false)
-		})
-	})
-}
-
-func allowanceReason(limit *float64) string {
-	if limit != nil && *limit == 0 {
-		return "Automatic continuation disabled by maxAutonomousRuns=0. Change the setting in /goal-settings, then use /goal-resume."
-	}
-	return "Autonomous-run allowance exhausted. Increase or remove maxAutonomousRuns, or use /goal-resume to renew."
-}
-
-// kickoff starts the first autonomous run. This port has no scheduler: with the allowance at 0 it does what the original does
-// (a no-op write and a notice); otherwise it records the goal as ready, as the original would, and says it will not run.
-func (c *core) kickoff() {
-	c.schedulerSafe(func() error {
-		g := c.state()
-		if g == nil || gstr(g, "status") != "active" || !gflag(g, "autoContinue") {
-			return nil
-		}
-		limit := loadGoalSettings(c.h.Cwd()).maxAutonomousRuns
-		if limit != nil && *limit == 0 {
-			if err := c.schedulerUpdate(func(*jsObject) {}); err != nil {
-				return err
-			}
-			c.h.Notify(allowanceReason(limit), "info")
-			return nil
-		}
-		if err := c.schedulerUpdate(func(s *jsObject) {
-			s.set("phase", "ready")
-			d := newObject()
-			d.set("kind", "ready")
-			d.set("purpose", "kickoff")
-			s.set("decision", d)
-		}); err != nil {
-			return err
-		}
-		c.h.Notify("pi-goal-x (Go port): automatic continuation is not ported, so this goal is stored and ready but will not start by itself. Set maxAutonomousRuns to 0 to silence this notice.", "warning")
-		return nil
-	})
-}
-
-// pause is scheduler.pause: the agent-owned stop of a goal whose allowance or wait ran out.
-func (c *core) schedulerPause(reason string) {
-	g := c.state()
-	if g == nil {
-		return
-	}
-	_, err := c.apply(mutation{reconcile: true, expectedGoalID: gstr(g, "id"), mutate: func(g *jsObject) (*jsObject, error) {
-		if s := g.obj("scheduler"); s != nil && g.has("scheduler") {
-			if owner, _ := s.str("owner"); owner != c.h.SessionID() {
-				return nil, errors.New("Scheduling ownership changed; no pause was applied.")
-			}
-		}
-		n := g.clone()
-		n.set("status", "paused")
-		n.set("autoContinue", false)
-		n.set("stopReason", "agent")
-		n.set("pauseReason", reason)
-		if s := g.obj("scheduler"); s != nil && g.has("scheduler") {
-			ns := s.clone()
-			ns.set("generation", newUUID())
-			ns.set("phase", "idle")
-			ns.set("decision", undef{})
-			ns.set("dispatch", undef{})
-			ns.set("wait", undef{})
-			n.set("scheduler", ns)
-		}
-		return n, nil
-	}, ledger: func(w *jsObject) []*jsObject {
-		r := reason
-		if w.has("pauseReason") && truthy(w.vals["pauseReason"]) {
-			r = gstr(w, "pauseReason")
-		}
-		return []*jsObject{ledgerEvent("goal_paused", "goalId", gstr(w, "id"), "reason", r, "source", "agent", "at", nowIso())}
-	}})
-	if err != nil {
-		c.h.Notify("Goal scheduling stopped: "+err.Error(), "warning")
-		return
-	}
-	c.updateUI()
-	c.h.Notify(reason, "warning")
-}
-
-func budgetReached(g *jsObject) bool {
-	b, ok := g.num("tokenBudget")
-	if !ok || !g.has("tokenBudget") {
-		return false
-	}
-	tokens, _ := usageOf(g)
-	return b > 0 && tokens >= b
-}
-
-// sessionStart is the session_start handler: load the goals, let the queued UI update run (the original awaits the load), then
-// restore the scheduler.
-func (c *core) sessionStart() {
-	c.loadState()
-	c.flush()
-	c.restore()
-}
-
-// restore is scheduler.restore at session start: what a session that finds its own goal does about it. The branches that would
-// dispatch a run are not ported: the port says so instead of starting nothing silently.
-func (c *core) restore() {
-	c.schedulerSafe(func() error {
-		c.reconcileFocused()
-		g := c.state()
-		if g == nil || gstr(g, "status") != "active" || !gflag(g, "autoContinue") || !g.has("scheduler") {
-			return nil
-		}
-		s := g.obj("scheduler")
-		if owner, _ := s.str("owner"); owner != c.h.SessionID() {
-			c.h.Notify("Goal owned by another session. Use /goal-resume to take ownership.", "info")
-			return nil
-		}
-		phase, _ := s.str("phase")
-		if inList(phase, "claimed", "running", "interrupted") {
-			c.schedulerPause("Previous autonomous execution was interrupted. Use /goal-resume; its dispatch will not be replayed.")
-			return nil
-		}
-		return c.schedule()
-	})
-}
-
-// schedule is the part of scheduler.schedule that stops the goal; a goal that would run is reported, not run.
-func (c *core) schedule() error {
-	c.reconcileFocused()
-	g := c.state()
-	if g == nil || gstr(g, "status") != "active" || !gflag(g, "autoContinue") || !g.has("scheduler") {
-		return nil
-	}
-	s, err := c.schedulerState(g)
-	if err != nil {
-		return err
-	}
-	// A goal left ready for a repair run goes back to plain ready first (implicitReady), unless the user opted into strict
-	// execution contracts or a wait is pending; the original writes this as its own update.
-	if phase, _ := s.str("phase"); phase == "ready" && repairPending(s) && !c.strict(s) {
-		if err := c.schedulerUpdate(implicitReady); err != nil {
-			return err
-		}
-		if g = c.state(); g == nil {
-			return nil
-		}
-		s = g.obj("scheduler")
-	}
-	if phase, _ := s.str("phase"); phase != "ready" && phase != "waiting" {
-		return nil
-	}
-	if budgetReached(g) {
-		c.schedulerPause("Goal token budget exhausted.")
-		return nil
-	}
-	limit := loadGoalSettings(c.h.Cwd()).maxAutonomousRuns
-	used, _ := s.num("used")
-	if limit != nil && used >= *limit {
-		c.schedulerPause(allowanceReason(limit))
-		return nil
-	}
-	if w := s.obj("wait"); s.has("wait") && w != nil {
-		if dl, _ := w.num("deadline"); float64(clockMs()) >= dl {
-			c.schedulerPause("Wait deadline reached.")
-			return nil
-		}
-	}
-	c.h.Notify("pi-goal-x (Go port): automatic continuation is not ported, so this goal is stored and ready but will not start by itself. Set maxAutonomousRuns to 0 to silence this notice.", "warning")
-	return nil
-}
-
-func repairPending(s *jsObject) bool {
-	d := s.obj("decision")
-	if d == nil {
-		return false
-	}
-	kind, _ := d.str("kind")
-	purpose, _ := d.str("purpose")
-	return kind == "ready" && purpose == "repair"
-}
-
-// strict is the scheduler's strict(): the strictExecutionContract setting, or a pending wait.
-func (c *core) strict(s *jsObject) bool {
-	return loadGoalSettings(c.h.Cwd()).strictExecutionContract || (s.has("wait") && truthy(s.vals["wait"]))
-}
-
-// implicitReady turns a repair decision into a plain ready one with a new generation.
-func implicitReady(s *jsObject) {
-	s.set("phase", "ready")
-	s.set("dispatch", undef{})
-	s.set("generation", newUUID())
-	d := newObject()
-	d.set("kind", "ready")
-	d.set("purpose", "ready")
-	s.set("decision", d)
+func (s coreSession) getSessionId() (string, bool) {
+	id := s.c.h.SessionID()
+	return id, id != ""
 }
 
 // ---- state operations ----
 
-func (c *core) setFocusedGoalID(id *string, reason string, recordLedger bool) {
-	prev := c.focused
-	if (prev == nil) != (id == nil) || (prev != nil && *prev != *id) {
-		c.takeover()
+// setGoal is setGoal(next, ctx, shouldPersist, focusReason): next becomes the focused goal (nil removes the focused one).
+func (c *core) setGoal(next *jsObject, shouldPersist bool, focusReason string) {
+	var previous *string
+	if g := c.state(); g != nil {
+		previous = new(gstr(g, "id"))
 	}
-	if id != nil && c.goals.has(*id) {
-		c.assignFocused(id)
-	} else {
-		c.assignFocused(nil)
+	c.setStateGoal(next)
+	focusChanged := !sameFocus(previous, c.focused)
+	if focusChanged {
+		c.clearContinuationState(true)
+		c.clearActiveAccounting()
 	}
-	c.appendFocusEntry(c.focused, reason)
-	if recordLedger && c.focused != nil {
-		c.appendEvents(ledgerEvent("goal_focused", "goalId", *c.focused, "reason", reason, "at", nowIso()))
-	} else if recordLedger && prev != nil {
-		c.appendEvents(ledgerEvent("goal_unfocused", "reason", reason, "at", nowIso()))
+	if focusReason != "" && focusChanged {
+		c.appendFocusEntry(c.focused, focusReason)
+	}
+	g := c.state()
+	if g == nil || gstr(g, "status") != "active" || !gflag(g, "autoContinue") {
+		c.clearContinuationState(true)
+	}
+	if g == nil || gstr(g, "status") == "paused" || gstr(g, "status") == "complete" {
+		c.clearActiveAccounting()
+	}
+	if shouldPersist {
+		c.persist()
 	}
 	c.updateUI()
 }
 
-func (c *core) openGoals() []*jsObject { return openGoalsFromPool(c.goals) }
-
-func (c *core) replaceGoal(objective string, sisyphus bool, contract string) error {
-	goal := createGoal(objective, true, sisyphus, false, clockMs())
-	goal.set("scheduler", newGoalScheduler(c.h.SessionID()))
-	if contract != "" {
-		goal.set("verificationContract", contract)
+// archiveCurrentGoal archives the focused goal (paused unless complete) with stopReason reason ("" is undefined) and leaves the focus
+// to the caller; nil when it could not be archived.
+func (c *core) archiveCurrentGoal(reason string) *jsObject {
+	if c.state() == nil {
+		return nil
 	}
-	ev := ledgerEvent("goal_created", "goalId", gstr(goal, "id"), "objective", gstr(goal, "objective"), "sisyphus", sisyphus, "autoContinue", true, "at", gstr(goal, "createdAt"))
-	res, err := c.create(goal, []*jsObject{ev})
-	if err != nil {
-		return err
+	result, err := c.goalService.apply(c.st, goalMutationSpec{
+		reconcile:       new(false),
+		refreshFromDisk: true,
+		archive:         true,
+		commitFocused:   new(false),
+		mutate: func(g *jsObject) *jsObject {
+			status := "paused"
+			if gstr(g, "status") == "complete" {
+				status = "complete"
+			}
+			return goalWith(g, "status", status, "stopReason", optReason(reason))
+		},
+	})
+	if err != nil || !result.ok {
+		return nil
 	}
-	if res.focusChanged {
-		c.appendFocusEntry(strp(gstr(res.goal, "id")), "created")
-	}
-	c.h.Notify(buildGoalRunningNotification(objective, sisyphus, true)+"\nBudget: none", "info")
-	if g := c.state(); g != nil && gflag(g, "autoContinue") {
-		c.kickoff()
-	}
-	return nil
+	return result.goal
 }
 
-func (c *core) pauseActiveGoal() {
-	g := c.state()
-	if g == nil || gstr(g, "status") != "active" {
+func optReason(reason string) any {
+	if reason == "" {
+		return undef{}
+	}
+	return reason
+}
+
+// stopActiveGoal stops the focused goal with the given status (paused, complete, budget_limited, ...) and stopReason ("" = undefined).
+func (c *core) stopActiveGoal(status, reason string) {
+	if c.state() == nil {
 		return
 	}
-	next := g.clone()
-	next.set("autoContinue", false)
-	next.set("pauseReason", undef{})
-	next.set("pauseSuggestedAction", undef{})
-	c.setStateGoal(next)
-	res, err := c.apply(mutation{refreshFromDisk: true, mutate: func(g *jsObject) (*jsObject, error) {
-		n := g.clone()
-		n.set("status", "paused")
-		n.set("stopReason", "user")
-		n.set("updatedAt", nowIso())
-		return n, nil
-	}, ledger: func(w *jsObject) []*jsObject {
-		return []*jsObject{ledgerEvent("goal_paused", "goalId", gstr(w, "id"), "reason", "user", "suggestedAction", pickOpt(w, "pauseSuggestedAction"), "status", "paused", "at", gstr(w, "updatedAt"))}
-	}})
-	_ = err
-	if res != nil {
-		c.updateUI()
+	result, err := c.goalService.apply(c.st, goalMutationSpec{
+		reconcile:       new(false),
+		refreshFromDisk: true,
+		mutate: func(g *jsObject) *jsObject {
+			return goalWith(g, "status", status, "stopReason", optReason(reason), "updatedAt", nowIso())
+		},
+		ledgerFn: func(written *jsObject) ([]*jsObject, error) {
+			if status != "paused" {
+				return nil, nil
+			}
+			why := reason
+			if why == "" {
+				why = "unknown"
+			}
+			return []*jsObject{ledgerEvent("goal_paused", "goalId", gstr(written, "id"), "reason", why,
+				"suggestedAction", pickOpt(written, "pauseSuggestedAction"), "status", status, "at", gstr(written, "updatedAt"))}, nil
+		},
+	})
+	if err != nil || !result.ok {
+		return
 	}
-	c.h.Notify("Goal paused.", "info")
+	// setGoal() glue: a stopped goal can no longer queue continuations or accrue time, and the UI must reflect the new status.
+	c.clearContinuationState(true)
+	c.clearActiveAccounting()
+	_, _ = c.goalService.flushTurn(c.st) // P1-3: user-visible status change persists now, not at turn end
+	c.updateUI()
 }
 
 func pickOpt(g *jsObject, k string) any {
@@ -761,198 +1042,122 @@ func pickOpt(g *jsObject, k string) any {
 	return undef{}
 }
 
-func (c *core) archiveCurrentGoal(reason string) *jsObject {
-	if c.state() == nil {
-		return nil
+// pauseActiveGoal is the user-initiated pause (Esc / aborted turn): it clears any stale agent pause reason.
+func (c *core) pauseActiveGoal() {
+	g := c.state()
+	if g == nil || gstr(g, "status") != "active" {
+		return
 	}
-	res, err := c.apply(mutation{refreshFromDisk: true, archive: true, noCommitFocused: true, mutate: func(g *jsObject) (*jsObject, error) {
-		status := "paused"
-		if gstr(g, "status") == "complete" {
-			status = "complete"
-		}
-		n := g.clone()
-		n.set("status", status)
-		n.set("stopReason", reason)
-		return n, nil
-	}})
-	if err != nil {
-		return nil
-	}
-	return res.goal
+	c.setStateGoal(goalWith(g, "autoContinue", false, "pauseReason", undef{}, "pauseSuggestedAction", undef{}))
+	c.stopActiveGoal("paused", "user")
+	c.h.Notify("Goal paused.", "info")
 }
 
-// ---- commands ----
-
-func (c *core) chooseOpenGoal(title string) *jsObject {
-	c.reconcileFocused()
-	if g := c.state(); g != nil && gstr(g, "status") != "complete" {
-		return g
-	}
-	open := c.openGoals()
-	if len(open) == 0 {
-		return nil
-	}
-	if len(open) == 1 {
-		c.setFocusedGoalID(strp(gstr(open[0], "id")), "selected", true)
-		return c.state()
-	}
-	if !c.h.HasUI() {
-		c.h.Notify(buildUnfocusedOpenGoalsSummary(len(open)), "warning")
-		return nil
-	}
-	labels := make([]string, len(open))
-	for i, g := range open {
-		labels[i] = goalSelectorLabel(g, c.focused)
-	}
-	c.flush()
-	picked, ok := c.h.Select(title, labels)
-	var selected *string
-	if ok {
-		for i, l := range labels {
-			if l == picked {
-				selected = strp(gstr(open[i], "id"))
-				break
-			}
-		}
-	}
-	if selected == nil {
-		c.h.Notify("Goal focus unchanged.", "info")
-		return nil
-	}
-	c.setFocusedGoalID(selected, "selected", true)
-	return c.state()
-}
-
-func (c *core) direct(raw string, sisyphus bool) error {
-	raw = jsTrim(raw)
-	if raw == "" {
-		cmd := "/goal <objective>"
-		if sisyphus {
-			cmd = "/sisyphus <objective>"
-		}
-		c.h.Notify("No objective provided. Use "+cmd+".", "warning")
-		return nil
-	}
-	if sisyphus && !sisyphusObjectiveSufficient(raw) {
-		c.h.Notify("A Sisyphus objective needs ordered steps with per-step done criteria. Use /sisyphus for guided drafting, or provide numbered steps (1) ..., 2) ...) in the objective.", "warning")
-		return nil
-	}
-	objective, contract := raw, ""
-	if !loadGoalSettings(c.h.Cwd()).disableContracts {
-		objective, contract = extractVerificationContract(raw)
-	}
-	return c.replaceGoal(objective, sisyphus, contract)
-}
-
-func (c *core) list() {
-	c.reconcileFocused()
-	c.h.Notify(buildGoalListText(c.goals, c.focused), "info")
-	c.updateUI()
-}
-
-func (c *core) pause() {
-	c.reconcileFocused()
-	if c.state() == nil {
-		if otherOpenGoalCount(c.goals, nil) > 0 {
-			picked := c.chooseOpenGoal("Pause which open goal?")
-			c.flush() // the original awaits here, which lets the queued UI update run
-			if picked == nil {
-				return
-			}
-		} else {
-			c.h.Notify("No goal is set.", "warning")
-			return
-		}
-	}
+// toggleGoalAuditor flips the focused goal's independent-auditor setting (§auditor-toggle), persisted per goal.
+func (c *core) toggleGoalAuditor() {
 	g := c.state()
 	if g == nil {
+		c.h.Notify("No focused goal to toggle the auditor for.", "info")
 		return
 	}
-	switch gstr(g, "status") {
-	case "complete":
-		c.h.Notify("Goal is complete.", "warning")
-		return
-	case "paused":
-		c.h.Notify("Goal is already paused. Use /goal-resume to continue.", "info")
+	if gstr(g, "status") == "complete" {
+		c.h.Notify("This goal is complete; the auditor no longer applies.", "info")
 		return
 	}
-	c.pauseActiveGoal()
-}
-
-func (c *core) clear() {
-	c.reconcileFocused()
-	if c.state() == nil && otherOpenGoalCount(c.goals, nil) > 0 {
-		picked := c.chooseOpenGoal("Clear which open goal?")
-		c.flush()
-		if picked == nil {
-			return
-		}
+	nextEnabled := false
+	if v, ok := g.flag("skipAuditor"); ok && v {
+		nextEnabled = true
 	}
-	target := c.state()
-	if target == nil {
-		c.h.Notify(clearGoalCommandMessage(false), "warning")
+	result, err := c.goalService.apply(c.st, goalMutationSpec{
+		reconcile:       new(false),
+		refreshFromDisk: true,
+		mutate: func(g *jsObject) *jsObject {
+			var skip any = true
+			if v, ok := g.flag("skipAuditor"); ok && v {
+				skip = undef{}
+			}
+			return goalWith(g, "skipAuditor", skip, "updatedAt", nowIso())
+		},
+		ledgerFn: func(written *jsObject) ([]*jsObject, error) {
+			return []*jsObject{ledgerEvent("auditor_toggled", "goalId", gstr(written, "id"), "enabled", nextEnabled, "at", gstr(written, "updatedAt"))}, nil
+		},
+	})
+	if err != nil {
+		c.h.Notify("Could not toggle the auditor: "+err.Error(), "error")
 		return
 	}
-	id, rev := gstr(target, "id"), c.focusRev
-	if !c.h.HasUI() {
-		c.h.Notify("Run /goal-clear in an interactive session to confirm clearing: "+oneLineSummary(target), "warning")
+	if !result.ok {
+		c.h.Notify("Could not toggle the auditor: "+result.message, "error")
 		return
 	}
-	c.flush() // awaiting the dialog lets a queued UI update run first
-	if !c.h.Confirm("Clear goal?", oneLineSummary(target)) {
-		c.h.Notify("Goal clear cancelled.", "info")
-		return
-	}
-	c.reconcileFocused()
-	cur := c.state()
-	if c.focused == nil || *c.focused != id || c.focusRev != rev || cur == nil || gstr(cur, "id") != id {
-		c.h.Notify("Goal changed while confirming; nothing was cleared.", "warning")
-		return
-	}
-	archived := c.archiveCurrentGoal("user")
-	c.setGoalNull("cleared")
-	msg := clearGoalCommandMessage(archived != nil)
-	level := "info"
-	if archived == nil {
-		level = "warning"
-	}
-	c.h.Notify(msg, level)
-}
-
-// setGoalNull is setGoal(null, ctx, true, reason): the focus leaves the goal and the session records why.
-func (c *core) setGoalNull(reason string) {
-	prev := c.state()
-	c.setStateGoal(nil)
-	if prev != nil && c.focused == nil {
-		c.appendFocusEntry(nil, reason)
-	}
+	_, _ = c.goalService.flushTurn(c.st) // P1-3: user-visible setting change persists now, not at turn end
 	c.updateUI()
+	if nextEnabled {
+		c.h.Notify("Auditor enabled for this goal.", "info")
+	} else {
+		c.h.Notify("Auditor disabled for this goal.", "info")
+	}
 }
 
-func (c *core) unfocus() {
-	current := c.state()
-	var runtimeID string
-	if current != nil {
-		runtimeID = gstr(current, "id")
+func (c *core) flushGoalTransaction() { _, _ = c.goalService.flushTurn(c.st) }
+
+func (c *core) queueContinuation() { c.scheduler.schedule() }
+
+// replaceGoal creates a new goal from config, focuses it and (startNow) starts it. tokenBudget < 0 means none.
+func (c *core) replaceGoal(config goalCreationConfig, startNow bool, verificationContract string, tokenBudget float64) {
+	goal := createGoal(config.objective, config.autoContinue, config.sisyphus, config.skipAuditor, clockMs())
+	goal.set("scheduler", newGoalScheduler(c.h.SessionID()))
+	if verificationContract != "" {
+		goal.set("verificationContract", verificationContract)
 	}
-	c.reconcileFocused()
-	current = c.state()
-	detached := runtimeID
-	if current != nil {
-		detached = gstr(current, "id")
+	if config.taskList != nil {
+		goal.set("taskList", config.taskList)
 	}
-	busy := !c.h.IsIdle()
-	c.setFocusedGoalID(nil, "unfocused", false)
-	if detached != "" && busy {
-		c.h.Abort()
+	if tokenBudget > 0 {
+		goal.set("tokenBudget", float64(int64(tokenBudget)))
 	}
-	if current == nil {
-		if n := otherOpenGoalCount(c.goals, nil); n > 0 {
-			c.h.Notify(buildUnfocusedOpenGoalsSummary(n), "info")
-		} else {
-			c.h.Notify(detailedSummary(nil), "info")
-		}
+	ledger := []*jsObject{ledgerEvent("goal_created", "goalId", gstr(goal, "id"), "objective", gstr(goal, "objective"),
+		"sisyphus", gflag(goal, "sisyphus"), "autoContinue", gflag(goal, "autoContinue"), "at", gstr(goal, "createdAt"))}
+	if tl := goal.obj("taskList"); tl != nil {
+		tasks, _ := tl.vals["tasks"].([]any)
+		ledger = append(ledger, ledgerEvent("task_list_set", "goalId", gstr(goal, "id"), "taskCount", float64(len(tasks)),
+			"blockCompletion", gflag(tl, "blockCompletion"), "at", gstr(goal, "createdAt")))
+	}
+	result, err := c.goalService.create(c.st, goal, ledger)
+	if err != nil {
+		c.h.Notify("Could not create the goal: "+err.Error(), "error")
 		return
 	}
-	c.h.Notify("Goal unfocused for this session. It remains open in .pi/goals: "+gstr(current, "id"), "info")
+	if result.focusChanged {
+		c.appendFocusEntry(new(result.goalId), "created")
+	}
+	c.beginAccounting()
+	budget := "none"
+	if goal.has("tokenBudget") {
+		budget = jsNumber(gnum(goal, "tokenBudget")) + " tokens"
+	}
+	c.h.Notify(buildGoalRunningNotification(config.objective, config.sisyphus, config.autoContinue)+"\nBudget: "+budget, "info")
+	if g := c.state(); startNow && g != nil && gflag(g, "autoContinue") {
+		c.scheduler.kickoff()
+	}
+}
+
+// shutdown is the session_shutdown handler's work: persist, then clear the goal UI.
+func (c *core) shutdown() {
+	if c.state() != nil {
+		c.persist()
+	}
+	c.clearGoalWidget()
+}
+
+// sessionStart is the session_start handler's work: load the goals, let the queued UI update run (the original awaits the load),
+// then start accounting and restore the scheduler.
+func (c *core) sessionStart() error {
+	if err := c.loadState(); err != nil {
+		return err
+	}
+	c.flush()
+	c.beginAccounting()
+	c.scheduler.restore()
+	return nil
 }

@@ -8,6 +8,8 @@
 // runner (scripts/runners.mjs), so the pin and the target list each have one source. Any other workflow that checks out
 // PiG must use the same pin.
 //
+// Every actions/setup-go step must read the .go-version of the PiG checkout (goToolchainProblems), never a go.mod floor.
+//
 // This checks hardening and drift, not behaviour: what the workflow does is shown by running it.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -55,6 +57,28 @@ export function hardeningProblems(name, text) {
       if (step.uses.startsWith('actions/checkout@') && step.with?.['persist-credentials'] !== false) {
         problems.push(`${name}: job ${id}: a checkout without persist-credentials: false keeps the token on disk`);
       }
+    }
+  }
+  return problems;
+}
+
+/** The one place a workflow reads its Go release: the .go-version of the PiG checkout it builds with. */
+export const GO_VERSION_FILE = '.pig-src/.go-version';
+
+/**
+ * Every actions/setup-go step reads GO_VERSION_FILE. A go.mod (or go.work) names only the language floor, which can be years behind
+ * the patched toolchain, and a literal go-version would be a second pin. PiG's .go-version is its one Go pin (its go.mod toolchain
+ * line equals it), so Pigpen builds with exactly the toolchain PiG builds with.
+ */
+export function goToolchainProblems(name, text) {
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  for (const [id, job] of Object.entries(workflow.jobs ?? {})) {
+    for (const step of job.steps ?? []) {
+      if (!step.uses?.startsWith('actions/setup-go@')) continue;
+      const file = step.with?.['go-version-file'];
+      if (step.with?.['go-version'] !== undefined) problems.push(`${name}: job ${id}: setup-go has a literal go-version; read ${GO_VERSION_FILE}`);
+      if (file !== GO_VERSION_FILE) problems.push(`${name}: job ${id}: setup-go go-version-file is ${file === undefined ? 'unset' : file}, not ${GO_VERSION_FILE} (a go.mod names only the language floor, not the patched toolchain)`);
     }
   }
   return problems;
@@ -189,7 +213,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...npmPublishProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {

@@ -18,6 +18,9 @@ import (
 // as PiG model events. It returns at once; the work runs on its own goroutine,
 // and every failure becomes an error event on the stream.
 func (c *client) stream(model, transcript map[string]any, opts sdk.ProviderStreamOptions) (*sdk.ModelEventStream, error) {
+	if err := refuseHooks(opts); err != nil {
+		return nil, err
+	}
 	out := sdk.CreateAssistantMessageEventStream()
 	ctx := opts.Signal
 	if ctx == nil {
@@ -26,6 +29,24 @@ func (c *client) stream(model, transcript map[string]any, opts sdk.ProviderStrea
 	id, _ := model["id"].(string)
 	go c.run(ctx, out, id, chatRequest(model, transcript, opts), apiKey(opts))
 	return out, nil
+}
+
+// refuseHooks rejects the caller hooks this provider does not run. Running a
+// request without them would silently drop a payload rewrite, a response
+// observer or a header transform the caller asked for.
+func refuseHooks(opts sdk.ProviderStreamOptions) error {
+	var feature string
+	switch {
+	case opts.OnPayload != nil:
+		feature = "the onPayload hook"
+	case opts.OnResponse != nil:
+		feature = "the onResponse hook"
+	case opts.OnProviderStreamEvent != nil:
+		feature = "the onProviderStreamEvent hook"
+	default:
+		return nil
+	}
+	return fmt.Errorf("@pi-in-go/pigpen-ollama-native does not support %s yet. The request was not sent.", feature)
 }
 
 func apiKey(opts sdk.ProviderStreamOptions) string {

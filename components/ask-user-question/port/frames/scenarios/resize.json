@@ -1,0 +1,83 @@
+{
+	"name": "resize",
+	"description": "the terminal is resized between keystrokes",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			},
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down w40",
+			"resize": {
+				"width": 40,
+				"rows": 24
+			}
+		},
+		{
+			"input": "\t",
+			"label": "tab w20 rows10",
+			"resize": {
+				"width": 20,
+				"rows": 10
+			}
+		},
+		{
+			"input": "\r",
+			"label": "enter w100 rows30",
+			"resize": {
+				"width": 100,
+				"rows": 30
+			}
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

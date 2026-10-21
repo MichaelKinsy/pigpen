@@ -1,0 +1,33 @@
+{
+  "name": "command-settings",
+  "description": "/tasks → Settings opens the settings panel through ui.custom. (RPC mode has no custom component: Pi answers undefined, so the panel closes at once and the menu returns; the panel itself is proved by layer-1 tests and a tmux run.)",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    },
+    {
+      "name": "settings",
+      "rpc": {
+        "type": "prompt",
+        "message": "/tasks"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

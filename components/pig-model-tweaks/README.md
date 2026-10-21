@@ -32,19 +32,18 @@ distinct from the original: commands take `pmt-` where the original used `pt-`,
 and the settings file is `pmt-settings.json` where the original wrote
 `pi-tweaks-settings.json`.
 
-The original's fourth extension, `pt-subagent` (added upstream after the pinned
-`v0.1.1` release), is **not** here. It spawns
+The original's fourth extension, `pt-subagent`, was added upstream after the pinned
+`v0.1.1` release, so it is outside this port until the pin moves. It spawns
 isolated child `pi` processes and folds their transcripts back into the session,
-which is a different concern from model selection; it would be a separate
-extension rather than a fourth feature of this one.
+which is a different concern from model selection.
 
 ## Commands
 
 | Command | Description |
 | --- | --- |
 | `/pmt-remember-model [status\|on\|off\|clear]` | Remember and restore the last selected model. |
-| `/pmt-openrouter-lock-provider [list\|on\|off\|clear <model>\|lock <model> <provider>]` | Manage OpenRouter provider locks. With no arguments, asks for a model and then a provider. |
-| `/pmt-model-guard-pref [list\|on\|off\|toggle\|ask\|noask\|add <provider/model>\|remove <provider/model>]` | Manage the allowed-model list, and whether a prompt outside it is refused or asked about. |
+| `/pmt-openrouter-lock-provider [<provider>\|clear\|list\|on\|off]` | Manage OpenRouter provider locks, as the original: `<provider>` (the whole argument) locks the current OpenRouter model, `clear` clears its lock. With no arguments in the TUI, a searchable list of the available OpenRouter models and every locked model (with their `provider: x` / `no provider lock` descriptions) opens, then asks for the provider (empty clears). This port also accepts `clear <model>` and `lock <model> <provider>` to name a model. |
+| `/pmt-model-guard-pref [list\|on\|off\|toggle\|add\|remove]` | Manage the allowed-model list, as the original: with no argument a multi-select over the available models sets the whole list; `add` and `remove` open it to add or remove. This port also accepts `ask`, `noask`, `add <provider/model>` and `remove <provider/model>`. |
 
 `status` is the default for `pmt-remember-model`: no argument reports whether it is
 on and what was remembered.
@@ -56,7 +55,11 @@ applied.
 
 ## Settings
 
-One file, under PiG's agent directory:
+One file, under PiG's agent directory (the host's own answer, Pi's `getAgentDir()`;
+`PIG_HOME/agent` when the host does not give one). When it is absent, the
+per-feature files of earlier versions (`last-model.json`,
+`openrouter-provider-prefs.json`, `model-preferences.json`) seed it, as in the
+original:
 
 ```
 ~/.pig/agent/pmt-settings.json
@@ -121,11 +124,19 @@ this session", not "start the next session on it", so `pmt-settings.json` and
 
 ### openrouter-lock-provider
 
-A lock is expressed two ways. It is appended to the model id written into
-`settings.json` as `base:provider`, and at request time the suffix is stripped
-again while OpenRouter's `provider.order` is set to put the locked provider first.
-The stripping is what keeps the request from 404ing on a model id that OpenRouter
-never heard of.
+A lock is applied at request time, and only for a request whose model is an
+OpenRouter model: the `:provider` suffix is stripped from the model id and
+OpenRouter's `provider.order` is set to put the locked provider first. Requests
+for any other provider are left untouched. The stripping is what keeps the request
+from 404ing on a model id that OpenRouter never heard of. Setting or clearing a
+lock also writes the locked model into `settings.json` as `defaultProvider` and
+`defaultModel`, as the original does: the id written is the `base:provider`
+variant (`deepseek/deepseek-v4.1-flash:deepseek`) while a lock is active, and the
+base id once it is cleared or the feature is off. The lock command's answer names
+it, as the original's does (`defaultModel -> deepseek/deepseek-v4.1-flash:deepseek`).
+`pmt-remember-model` writes the same variant for a remembered selection of a locked
+model, and restores the model itself at session start because the host's default
+resolver cannot read the suffix.
 
 ### model-guard
 
@@ -183,27 +194,44 @@ means *switching back*, which the event's `previousModel` makes possible. The
 switch-back emits its own `model_select`; a flag in the store consumes exactly
 that one event so the restored model is never questioned again in a loop.
 
-## Deliberate differences from the pi original
+## Additions to the pi original
 
-- **No model pickers.** The original opened a filterable multi-select over every
-  available model for `pmt-model-guard-pref`, and a model list for
-  `pmt-openrouter-lock-provider`. PiG's Go SDK cannot enumerate the model registry
-  at the PiG revision this repository's CI pins, so both commands take explicit
-  arguments (`add <provider/model>`, `lock <model> <provider>`) and fall back to
-  asking for the value. `ModelRegistry.GetAvailable()` exists in PiG main; with it
-  the pickers can come back unchanged in behaviour.
-- **No subagent profiles**, as described under provenance.
-- **Selecting a non-preferred model asks; the original only warns.** The Pi
-  original announces a non-preferred `model_select` with a toast and lets the
-  switch stand. Here the switch is confirmed off-loop, a decline changes back,
-  and an approval lasts the session without being remembered — PiG emits
-  `model_select` after applying the model and ignores the handler's result, so
-  "cancel" can only be a switch-back.
+These are additive features of this component, kept on purpose (owner decision,
+2026-10-20). Everything the original's forms do, they still do, with the original's
+texts.
+
+- **The model guard asks, and can name a model.** `ask` and `noask` switch the
+  refusal of a prompt to a yes/no question and back; `add <provider/model>` and
+  `remove <provider/model>` change the list without a picker; an allow-list entry
+  naming only a provider trusts that whole provider; the model the session started
+  on and a model approved for the session are trusted too.
+- **Selecting a non-preferred model asks and can revert.** The Pi original announces
+  a non-preferred `model_select` with a toast and lets the switch stand. Here, in the
+  TUI, the switch is confirmed off-loop, a decline changes back, and an approval
+  lasts the session without being remembered (PiG emits `model_select` after
+  applying the model and ignores the handler's result, so "cancel" can only be a
+  switch-back). Outside the TUI the original's toast is all there is.
+- **The lock command can name a model.** `clear <model>` and `lock <model> <provider>`
+  work without the model being the current one.
+- **Names.** Commands take the `pmt-` prefix where the original used `pt-`, and the
+  settings file is `pmt-settings.json` where the original wrote
+  `pi-tweaks-settings.json`, so this port's identity is distinct from the original
+  it can run beside. The port has no filesystem lock between its features; they are
+  one Go package sharing one store.
+
+## Differences from the pi original that are not additions
+
+- **Pickers are ported, drawn without the host theme's colors.** The multi-select and
+  the lock picker have the original's rows, ordering (checked first, then locale
+  compare), search, keys, scrolling and texts. A Go extension has no theme handle
+  (`ctx.ui.theme` is not in the SDK; SDK item filed), so accent, success, warning and
+  dim styling is missing.
+- **The prompt guard does not confirm inside its input handler.** The original awaits
+  `ctx.ui.confirm` there; PiG dispatches input handlers on the terminal's own
+  goroutine, so the guard refuses with a toast (or, with `ask`, asks after the
+  handler returns and re-sends the accepted prompt). SDK item filed.
 - **Model identity is read from the host event and `getModelInfo`**, since PiG
   exposes models as untyped maps rather than pi's typed objects.
-- **The store is one Go package** rather than pi's shared module: the three
-  features are one factory, so they share a `store` value instead of a filesystem
-  lock.
 
 ## Runtime requirements
 

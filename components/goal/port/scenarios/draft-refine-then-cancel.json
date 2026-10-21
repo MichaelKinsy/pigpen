@@ -1,0 +1,96 @@
+{
+  "name": "draft-refine-then-cancel",
+  "description": "Continue chatting keeps the draft active and keeps the auditor choice; a later Cancel discards it; /goal-cancel then finds nothing.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "propose_goal_draft",
+          "arguments": {
+            "objective": "Improve the docs"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "propose_goal_draft",
+          "arguments": {
+            "objective": "Improve the docs for the CLI"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Cancelled."
+    }
+  ],
+  "steps": [
+    {
+      "name": "draft",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Improve the docs"
+      },
+      "ui": [
+        {
+          "value": "Disabled \u2014 skip the completion audit"
+        },
+        {
+          "value": "2. Continue chatting \u2014 keep refining"
+        },
+        {
+          "value": "Disabled \u2014 skip the completion audit"
+        },
+        {
+          "value": "3. Cancel \u2014 discard this draft"
+        }
+      ],
+      "wait": "agent_end"
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-cancel"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}

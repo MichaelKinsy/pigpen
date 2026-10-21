@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	sdkjson "github.com/MichaelKinsy/PiG/extensions/sdk/json"
 )
 
 // File-backed task store with CRUD, dependency management and file locking. upstream: task-store.ts.
@@ -75,7 +77,8 @@ type taskStore struct {
 }
 
 // newTaskStore opens a store: "" is in memory, an absolute path is that file, anything else a list name under
-// <agent dir>/tasks (the original's ~/.pi/tasks, moved under PiG's agent directory). The directory is created lazily, on the first write. upstream: task-store.ts:101-112.
+// ~/.pi/tasks, where the original keeps shared lists (its TASKS_DIR is homedir()/.pi/tasks, not the agent
+// directory). The directory is created lazily, on the first write. upstream: task-store.ts:15,101-112.
 func newTaskStore(listIDOrPath string) *taskStore {
 	s := &taskStore{nextID: 1, tasks: map[string]*task{}}
 	if listIDOrPath == "" {
@@ -83,7 +86,8 @@ func newTaskStore(listIDOrPath string) *taskStore {
 	}
 	path := listIDOrPath
 	if !filepath.IsAbs(path) {
-		path = filepath.Join(agentDir(), "tasks", listIDOrPath+".json")
+		home, _ := os.UserHomeDir()
+		path = filepath.Join(home, ".pi", "tasks", listIDOrPath+".json")
 	}
 	s.filePath = path
 	s.lockPath = path + ".lock"
@@ -257,15 +261,17 @@ func (s *taskStore) save() error {
 	if err := os.MkdirAll(filepath.Dir(s.filePath), 0o755); err != nil {
 		return err
 	}
+	// JSON.stringify(data, null, 2)
+	compact, err := sdkjson.MarshalStringify(data)
+	if err != nil {
+		return err
+	}
 	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(data); err != nil {
+	if err := json.Indent(&buf, compact, "", "  "); err != nil {
 		return err
 	}
 	tmp := s.filePath + ".tmp"
-	if err := os.WriteFile(tmp, bytes.TrimRight(buf.Bytes(), "\n"), 0o644); err != nil {
+	if err := os.WriteFile(tmp, buf.Bytes(), 0o644); err != nil {
 		return err
 	}
 	if h := renameHookFn.Load(); h != nil {

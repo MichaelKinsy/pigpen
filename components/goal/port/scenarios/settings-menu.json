@@ -1,0 +1,38 @@
+{
+  "name": "settings-menu",
+  "description": "/goal-settings: the menu listing (sections, provenance), leaving at once; then dismissing the selector.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "Done"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

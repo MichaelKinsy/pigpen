@@ -10,11 +10,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -23,8 +26,12 @@ import (
 // test binary re-executed. It appends "started" to the --session file, answers every command
 // with that path as sessionFile, and exits shortly after the first one.
 func TestMain(m *testing.M) {
-	if os.Getenv("PIRPC_FAKE_PI") == "1" {
+	switch os.Getenv("PIRPC_FAKE_PI") {
+	case "1":
 		fakePi()
+		return
+	case "slow-term":
+		fakePiSlowTerm()
 		return
 	}
 	root, _ := os.MkdirTemp("", "pirpc-test-*")
@@ -61,6 +68,30 @@ func fakePi() {
 		time.Sleep(20 * time.Millisecond)
 		os.Exit(0)
 	}
+}
+
+// fakePiSlowTerm is a pi that takes its time to shut down: it records its pid, answers the first command, and on SIGTERM
+// finishes "flushing" (a delay inside this child, as pig's shutdown has) before it writes the marker and exits.
+func fakePiSlowTerm() {
+	marker := os.Getenv("PIRPC_FAKE_MARKER")
+	term := make(chan os.Signal, 1)
+	signal.Notify(term, syscall.SIGTERM)
+	if err := os.WriteFile(marker+".pid", []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil {
+		os.Exit(2)
+	}
+	sc := bufio.NewScanner(os.Stdin)
+	if sc.Scan() {
+		var c map[string]any
+		_ = json.Unmarshal(sc.Bytes(), &c)
+		out, _ := json.Marshal(map[string]any{"type": "response", "id": c["id"], "command": c["type"], "success": true, "data": map[string]any{}})
+		fmt.Println(string(out))
+	}
+	<-term
+	time.Sleep(300 * time.Millisecond)
+	if err := os.WriteFile(marker, []byte("finished"), 0o644); err != nil {
+		os.Exit(2)
+	}
+	os.Exit(0)
 }
 
 // fakeChild is makeFakeChild(): pipes standing in for the child's stdio.
@@ -352,4 +383,42 @@ func TestPiCommand(t *testing.T) {
 			t.Error("override ignored")
 		}
 	})
+}
+
+// Dispose is how pig-acp ends a session's child and how Serve ends every child on shutdown: when it returns the child
+// must be gone (finished and reaped), not merely signalled, or its last writes land after the caller has moved on
+// (a scenario's temporary HOME removed, an editor reusing the session directory).
+func TestDisposeReapsTheChild(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake launcher is a POSIX shell script and SIGTERM is not delivered on Windows")
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	marker := filepath.Join(dir, "marker")
+	t.Setenv("PIRPC_FAKE_MARKER", marker)
+	launcher := filepath.Join(dir, "pi")
+	if err := os.WriteFile(launcher, []byte(fmt.Sprintf("#!/bin/sh\nPIRPC_FAKE_PI=slow-term exec %q \"$@\"\n", exe)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p, err := Spawn(dir, launcher, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pidText, err := os.ReadFile(marker + ".pid")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pid, _ := strconv.Atoi(string(pidText))
+
+	p.Dispose()
+
+	if b, err := os.ReadFile(marker); err != nil || string(b) != "finished" {
+		t.Errorf("Dispose returned before the child finished shutting down: marker %q, %v", b, err)
+	}
+	if err := processExists(pid); err != nil {
+		t.Errorf("the child %d is still there after Dispose (%v); it was not reaped", pid, err)
+	}
 }

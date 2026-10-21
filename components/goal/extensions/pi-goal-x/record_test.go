@@ -83,7 +83,7 @@ func TestGoalRecord(t *testing.T) {
 		eq(t, gflag(g.obj("taskList"), "blockCompletion"), false, "original flag")
 	})
 	tw(t, "goal-record", "goal focus entries persist only session focus metadata", func(t *testing.T) {
-		eq(t, show(goalFocusDetails(strp("goal/123"), "created")), `{"version":1,"focusedGoalId":"goal_123","reason":"created"}`, "created")
+		eq(t, show(goalFocusDetails(new("goal/123"), "created")), `{"version":1,"focusedGoalId":"goal_123","reason":"created"}`, "created")
 		eq(t, show(goalFocusDetails(nil, "cleared")), `{"version":1,"focusedGoalId":null,"reason":"cleared"}`, "cleared")
 		eq(t, show(goalFocusDetails(nil, "unfocused")), `{"version":1,"focusedGoalId":null,"reason":"unfocused"}`, "unfocused")
 		e := normalizeGoalFocusEntry(jo(t, `{"version":1,"focusedGoalId":"abc/def","reason":"resumed"}`))

@@ -1,0 +1,104 @@
+{
+	"name": "preview-notes",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which database fits the workload?",
+				"header": "Database",
+				"options": [
+					{
+						"label": "SQLite",
+						"description": "Embedded, zero setup",
+						"preview": "file.db\n  └─ one file"
+					},
+					{
+						"label": "Postgres",
+						"description": "Server, concurrent writers",
+						"preview": "app ──▶ pg\n       └─ WAL"
+					},
+					{
+						"label": "DuckDB",
+						"description": "Columnar analytics",
+						"preview": "scan ▒▒▒▒▒▒▒▒"
+					}
+				]
+			}
+		]
+	},
+	"width": 100,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "p",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "v",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "i",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "n",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "t",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "e",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

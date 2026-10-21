@@ -363,9 +363,8 @@ func AllowedSearchProviders() ([]string, error) {
 	return ResolvedProviders, nil
 }
 
-func errNotPorted(provider string) *SearchProviderError {
-	label := ProviderLabel(provider)
-	return &SearchProviderError{Provider: provider, Kind: "unsupported", Message: label + " search is not available in this Go port yet (planned for a later slice)"}
+func errNotPorted(provider string) *UnsupportedError {
+	return unsupported(ProviderLabel(provider) + " search provider")
 }
 
 var (
@@ -466,6 +465,13 @@ func searchWithProviders(ctx context.Context, query string, o FullSearchOptions,
 	if len(providers) == 0 {
 		return nil, errors.New(`No configured search provider available for provider "all". Parallel MCP, DuckDuckGo, Kimi, AnySearch, xAI, Mistral, Bright Data, SerpBase, SerpApi, Serper, Serply, You.com, Valyu, and XCrawl are excluded.`)
 	}
+	// A provider this port lacks refuses the whole call before any provider is contacted:
+	// answering from the others would pass for the original's aggregate.
+	for _, p := range providers {
+		if d := providerTable[p]; d == nil || d.search == nil {
+			return nil, errNotPorted(p)
+		}
+	}
 	responses := make([]*ProviderSearchResponse, len(providers))
 	errs := make([]error, len(providers))
 	var wg sync.WaitGroup
@@ -548,6 +554,9 @@ func searchWithConfiguredRouting(ctx context.Context, query string, o FullSearch
 		if err == nil {
 			return &AttributedSearchResponse{SearchResponse: r.SearchResponse, Provider: provider}, nil
 		}
+		if u := asUnsupported(err); u != nil {
+			return nil, u
+		}
 		classified := ClassifyProviderError(provider, err)
 		diagnostics = append(diagnostics, fmt.Sprintf("%s [%s]: %s", provider, classified.Kind, err.Error()))
 		if !sliceHas(routing.FallbackOn, classified.Kind) {
@@ -620,7 +629,7 @@ func searchAuto(ctx context.Context, query string, o FullSearchOptions, cfg *sea
 		r, err := searchWithResolvedProvider(ctx, p, query, o)
 		if err != nil {
 			var credErr *CredentialResolutionError
-			if errors.As(err, &credErr) && p == "exa" || isAbortError(err) {
+			if asUnsupported(err) != nil || errors.As(err, &credErr) && p == "exa" || isAbortError(err) {
 				return nil, err
 			}
 			fallbackErrors = append(fallbackErrors, ProviderLabel(p)+": "+err.Error())

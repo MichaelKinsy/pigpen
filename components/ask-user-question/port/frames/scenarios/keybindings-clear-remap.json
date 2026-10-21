@@ -1,0 +1,71 @@
+{
+	"name": "keybindings-clear-remap",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"keybindings": {
+		"tui.editor.deleteToLineStart": "ctrl+k"
+	},
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "a",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "b",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "c",
+			"label": "type"
+		},
+		{
+			"input": "\u0015",
+			"label": "ctrl-u"
+		},
+		{
+			"input": "\u000b",
+			"label": "ctrl-k"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "guard-commands-seeded",
+  "description": "Guard list/on/off/toggle with two preferred models (no hint at start).",
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"modelGuard\": {\"enabled\": true, \"allowedModels\": [{\"provider\": \"eq-llm\", \"model\": \"eq-1\"}, {\"provider\": \"openai\", \"model\": \"gpt-4o\"}]}}"
+  },
+  "steps": [
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref list"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref off"
+      }
+    },
+    {
+      "name": "list-off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref list"
+      }
+    },
+    {
+      "name": "toggle",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref toggle"
+      }
+    },
+    {
+      "name": "list-on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref list"
+      }
+    }
+  ]
+}

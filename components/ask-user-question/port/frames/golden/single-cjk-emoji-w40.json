@@ -1,0 +1,202 @@
+{
+	"scenario": "single-cjk-emoji-w40",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> 言語 </bg>                                 ",
+				"",
+				" <b>どのライブラリを使いますか？ 日本語と  ",
+				" <b>😀の幅</b>                                 ",
+				"",
+				"<fg:accent><b>❯ 1. 日本語ライブラリ</b></fg>",
+				"     <fg:muted>全角文字の説明文がここに入ります。</fg>",
+				"     <fg:muted>折り返しの確認用です。</fg>",
+				"  2. Emoji 😀🎉 label",
+				"     <fg:muted>A description with emoji 👨‍👩‍👧 and</fg>",
+				"     <fg:muted>combining é marks</fg>",
+				"  3. 한국어",
+				"     <fg:muted>한글 설명 text mixed</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> 言語 </bg>                                 ",
+				"",
+				" <b>どのライブラリを使いますか？ 日本語と  ",
+				" <b>😀の幅</b>                                 ",
+				"",
+				"  1. 日本語ライブラリ",
+				"     <fg:muted>全角文字の説明文がここに入ります。</fg>",
+				"     <fg:muted>折り返しの確認用です。</fg>",
+				"<fg:accent><b>❯ 2. Emoji 😀🎉 label</b></fg>",
+				"     <fg:muted>A description with emoji 👨‍👩‍👧 and</fg>",
+				"     <fg:muted>combining é marks</fg>",
+				"  3. 한국어",
+				"     <fg:muted>한글 설명 text mixed</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> 言語 </bg>                                 ",
+				"",
+				" <b>どのライブラリを使いますか？ 日本語と  ",
+				" <b>😀の幅</b>                                 ",
+				"",
+				"  1. 日本語ライブラリ",
+				"     <fg:muted>全角文字の説明文がここに入ります。</fg>",
+				"     <fg:muted>折り返しの確認用です。</fg>",
+				"  2. Emoji 😀🎉 label",
+				"     <fg:muted>A description with emoji 👨‍👩‍👧 and</fg>",
+				"     <fg:muted>combining é marks</fg>",
+				"<fg:accent><b>❯ 3. 한국어</b></fg>",
+				"     <fg:muted>한글 설명 text mixed</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> 言語 </bg>                                 ",
+				"",
+				" <b>どのライブラリを使いますか？ 日本語と  ",
+				" <b>😀の幅</b>                                 ",
+				"",
+				"  1. 日本語ライブラリ",
+				"     <fg:muted>全角文字の説明文がここに入ります。</fg>",
+				"     <fg:muted>折り返しの確認用です。</fg>",
+				"  2. Emoji 😀🎉 label",
+				"     <fg:muted>A description with emoji 👨‍👩‍👧 and</fg>",
+				"     <fg:muted>combining é marks</fg>",
+				"<fg:accent><b>❯ 3. 한국어 ✔</b></fg>",
+				"     <fg:muted>한글 설명 text mixed</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 4
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "どのライブラリを使いますか？ 日本語と😀の幅",
+				"kind": "option",
+				"answer": "한국어"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"どのライブラリを使いますか？ 日本語と😀の幅\"=\"한국어\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "どのライブラリを使いますか？ 日本語と😀の幅",
+					"kind": "option",
+					"answer": "한국어"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "どのライブラリを使いますか？ 日本語と😀の幅",
+						"header": "言語",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "日本語ライブラリ",
+								"description": "全角文字の説明文がここに入ります。折り返しの確認用です。",
+								"hasPreview": false
+							},
+							{
+								"label": "Emoji 😀🎉 label",
+								"description": "A description with emoji 👨‍👩‍👧 and combining é marks",
+								"hasPreview": false
+							},
+							{
+								"label": "한국어",
+								"description": "한글 설명 text mixed",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

@@ -1,0 +1,65 @@
+{
+	"name": "input-external-editor-key",
+	"description": "Ctrl+G: the editor failure is reported and the draft kept (the notification text differs: known)",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "a",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "b",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "c",
+			"label": "type"
+		},
+		{
+			"input": "\u0007",
+			"label": "ctrl-g",
+			"settle": "notify"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

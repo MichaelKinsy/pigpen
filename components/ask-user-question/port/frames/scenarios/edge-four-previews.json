@@ -1,0 +1,58 @@
+{
+	"name": "edge-four-previews",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Four previews?",
+				"header": "Fours",
+				"options": [
+					{
+						"label": "One",
+						"description": "1",
+						"preview": "alpha\nbeta"
+					},
+					{
+						"label": "Two",
+						"description": "2",
+						"preview": "gamma"
+					},
+					{
+						"label": "Three",
+						"description": "3",
+						"preview": "delta\n\nepsilon"
+					},
+					{
+						"label": "Four",
+						"description": "4",
+						"preview": "zeta"
+					}
+				]
+			}
+		]
+	},
+	"width": 70,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[A",
+			"label": "up"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

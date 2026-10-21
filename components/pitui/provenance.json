@@ -1,0 +1,47 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "Pi",
+      "authors": [
+        "Mario Zechner"
+      ],
+      "url": "https://github.com/earendil-works/pi",
+      "revision": "1402973a9dbe8c627341e04c9744c54953e285ca",
+      "path": "port/oracle/pi",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "PiG",
+      "authors": [
+        "Hewlett Packard Enterprise Development LP"
+      ],
+      "url": "https://github.com/MichaelKinsy/PiG",
+      "revision": "7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d",
+      "path": ".",
+      "license": "MIT",
+      "licenseFile": "licenses/PiG-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "highlight.js",
+      "authors": [
+        "Ivan Sagalaev"
+      ],
+      "url": "https://github.com/highlightjs/highlight.js",
+      "revision": "0c4cc8a1c3aa373aee06796433c1389e4d2a3a45",
+      "license": "BSD-3-Clause",
+      "licenseFile": "licenses/highlight.js-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

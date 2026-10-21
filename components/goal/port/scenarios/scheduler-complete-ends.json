@@ -1,0 +1,70 @@
+{
+  "name": "scheduler-complete-ends",
+  "description": "With the auditor disabled a completion in a continuation run completes the goal and archives it; nothing further is scheduled.",
+  "llm": [
+    {
+      "text": "Renaming."
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "complete",
+            "completion_summary": "Renamed and tests pass"
+          }
+        }
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "name": "user",
+      "rpc": {
+        "type": "prompt",
+        "message": "Get going."
+      },
+      "settleMs": 5000
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 5, \"disabled\": true, \"autoSelectSingleGoal\": true}",
+    ".pi/goals/active_goal_20260102030405_seed-t.md": "{\n  \"version\": 3,\n  \"id\": \"seed-t\",\n  \"objective\": \"Rename the module\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-t.md\"\n}\n\n# Goal Prompt\n\nRename the module\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "archived/goal_\\d{16}_",
+      "replacement": "archived/goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start"
+  ]
+}

@@ -88,6 +88,9 @@ type result struct {
 type Process struct {
 	stdin io.WriteCloser
 	kill  func()
+	// exited is closed once the child has exited and been waited for (reaped); nil for a Process
+	// built around pipes (NewProcess), which has no child of its own.
+	exited chan struct{}
 
 	writeMu sync.Mutex
 
@@ -138,6 +141,9 @@ func (p *Process) readLoop(stdout io.Reader, wait func() error) {
 	p.mu.Unlock()
 	for _, c := range pend {
 		c.ch <- result{err: p.exitErr}
+	}
+	if p.exited != nil {
+		close(p.exited)
 	}
 }
 
@@ -223,7 +229,7 @@ func SpawnWithArgs(cwd, command, sessionPath string, extra []string) (*Process, 
 	if err := cmd.Start(); err != nil {
 		return nil, spawnFailure(cmdName, err)
 	}
-	p := &Process{stdin: stdin, pending: map[string]*pendingCall{}, handlers: map[int]func(map[string]any){}}
+	p := &Process{stdin: stdin, exited: make(chan struct{}), pending: map[string]*pendingCall{}, handlers: map[int]func(map[string]any){}}
 	p.kill = func() { terminate(cmd) }
 	go p.readLoop(stdout, cmd.Wait)
 
@@ -278,10 +284,27 @@ func (p *Process) OnEvent(h func(map[string]any)) func() {
 	}
 }
 
-// Dispose kills the child.
+// disposeWait bounds how long Dispose waits for the child to be gone: terminate escalates to a kill after termGrace,
+// and a killed child exits at once. A child that outlives this (it left a grandchild holding its stdout open, so the
+// reader never sees the end) is left to the operating system, as the original leaves every child at process exit.
+const disposeWait = termGrace + 3*time.Second
+
+// Dispose stops the child (SIGTERM, like the original, then a kill if it lingers) and waits for it to exit, so that
+// when it returns the child can no longer write anything. The original only signals, because it exits right after;
+// Serve returns to a caller that keeps running (the end-to-end tests), which would otherwise see the child still
+// writing into a directory it removes.
 func (p *Process) Dispose() {
 	if p.kill != nil {
 		p.kill()
+	}
+	if p.exited == nil {
+		return
+	}
+	t := time.NewTimer(disposeWait)
+	defer t.Stop()
+	select {
+	case <-p.exited:
+	case <-t.C:
 	}
 }
 

@@ -1,0 +1,98 @@
+{
+  "name": "net-503-recovers",
+  "description": "The provider fails the first run (503 on every Pi retry), then answers: recovery 1 in 1 s succeeds, the backoff is forgotten and the goal carries on under its run limit.",
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "continue working on the task"
+      },
+      "settleMs": 1500
+    },
+    {
+      "name": "recovery",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-list"
+      },
+      "settleMs": 6000
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    }
+  ],
+  "files": {
+    ".pi/goals/active_goal_20260102030405_seed-net.md": "{\n  \"version\": 3,\n  \"id\": \"seed-net\",\n  \"objective\": \"keep making progress despite provider outages\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-net.md\"\n}\n\n# Goal Prompt\n\nkeep making progress despite provider outages\n\n## Progress\n\n- Status: active\n"
+  },
+  "agentFiles": {
+    "settings.json": "{\"defaultProvider\": \"outage\", \"defaultModel\": \"broken\", \"retry\": {\"maxRetries\": 3, \"baseDelayMs\": 10}}",
+    "models.json": "{\"providers\": {\"outage\": {\"baseUrl\": \"{{server:provider}}/v1\", \"api\": \"openai-completions\", \"apiKey\": \"dummy\", \"compat\": {\"supportsDeveloperRole\": false, \"supportsReasoningEffort\": false}, \"models\": [{\"id\": \"broken\", \"name\": \"Broken\"}]}}}",
+    "pi-goal-x-settings.json": "{\"autoSelectSingleGoal\": true, \"maxAutonomousRuns\": 2, \"networkRecovery\": {\"maxDelayMs\": 1000}}"
+  },
+  "servers": {
+    "provider": {
+      "routes": [
+        {
+          "path": "/v1/chat/completions",
+          "status": 503,
+          "json": {
+            "error": {
+              "type": "server_error",
+              "message": "Error from provider (Console): Upstream request failed: Endpoint is unavailable."
+            }
+          },
+          "times": 4
+        },
+        {
+          "path": "/v1/chat/completions",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "data: {\"choices\": [{\"index\": 0, \"delta\": {\"role\": \"assistant\", \"content\": \"\"}, \"finish_reason\": null}], \"id\": \"outage-ok\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"broken\"}\n\ndata: {\"choices\": [{\"index\": 0, \"delta\": {\"content\": \"Recovered.\"}, \"finish_reason\": null}], \"id\": \"outage-ok\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"broken\"}\n\ndata: {\"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"stop\"}], \"id\": \"outage-ok\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"broken\"}\n\ndata: {\"choices\": [], \"usage\": {\"prompt_tokens\": 1, \"completion_tokens\": 1, \"total_tokens\": 2}, \"id\": \"outage-ok\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"broken\"}\n\ndata: [DONE]\n\n"
+        }
+      ]
+    }
+  },
+  "args": [
+    "--system-prompt",
+    "You are the executor of a goal. Work on it with the goal tools and keep every answer short.",
+    "--provider",
+    "outage",
+    "--model",
+    "broken"
+  ],
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start",
+    "tool_execution_end"
+  ]
+}

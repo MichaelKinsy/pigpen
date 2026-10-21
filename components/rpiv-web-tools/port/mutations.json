@@ -640,5 +640,53 @@
   "file": "webtools.go",
   "find": "fetchViaGenericHTML(ctx, target.Href, rawURL, raw)",
   "replace": "fetchViaGenericHTML(ctx, target.Href[:0]+rawURL, rawURL, raw)"
+ },
+ {
+  "name": "refusal-wording",
+  "file": "refusal.go",
+  "find": "\" (Go port) does not support \" + feature",
+  "replace": "\" (Go port) does not handle \" + feature"
+ },
+ {
+  "name": "refusal-install-advice",
+  "file": "refusal.go",
+  "find": "\", which runs unchanged in PiG.\"",
+  "replace": "\".\""
+ },
+ {
+  "name": "refusal-github-gate-dropped",
+  "file": "webtools.go",
+  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "refusal-github-enabled-ignored",
+  "file": "webtools.go",
+  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
+  "replace": "if githubCodeURL(target.Href) {"
+ },
+ {
+  "name": "refusal-github-any-url",
+  "file": "webtools.go",
+  "find": "if githubInterceptorEnabled(cfg) && githubCodeURL(target.Href) {",
+  "replace": "if githubInterceptorEnabled(cfg) {"
+ },
+ {
+  "name": "refusal-github-www-host",
+  "file": "refusal.go",
+  "find": "host != \"github.com\" && host != \"www.github.com\"",
+  "replace": "host != \"github.com\""
+ },
+ {
+  "name": "refusal-github-root-url",
+  "file": "refusal.go",
+  "find": "if len(segments) == 2 {\n\t\treturn true\n\t}",
+  "replace": "if len(segments) == 2 {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "refusal-show-line",
+  "file": "command.go",
+  "find": "\"  github: enabled in config. \" + refusal(githubInterceptorFeature)",
+  "replace": "\"  github: enabled in config. \""
  }
 ]

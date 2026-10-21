@@ -148,5 +148,65 @@
   "file": "kagi.go",
   "find": "{\"Bearer \" + apiKey}",
   "replace": "{\"Bot \" + apiKey}"
- }
+},
+{
+  "name": "refusal-wording",
+  "file": "refusal.go",
+  "find": "\" (Go port) does not support \" + e.Feature",
+  "replace": "\" (Go port) does not handle \" + e.Feature"
+},
+{
+  "name": "refusal-install-advice",
+  "file": "refusal.go",
+  "find": "\", which runs unchanged in PiG.\"",
+  "replace": "\".\""
+},
+{
+  "name": "refusal-fetch-auth-dropped",
+  "file": "tool_fetch.go",
+  "find": "return ToolOutput{}, unsupported(\"authenticated fetch (auth profiles read local browser cookies)\")",
+  "replace": "_ = 0"
+},
+{
+  "name": "refusal-fetch-answer-dropped",
+  "file": "tool_fetch.go",
+  "find": "return ToolOutput{}, unsupported(\"fetch_content mode answer (answering from a page needs a model call)\")",
+  "replace": "_ = 0"
+},
+{
+  "name": "refusal-workflow-dropped",
+  "file": "tool_search.go",
+  "find": "if workflow != \"none\" {",
+  "replace": "if workflow != \"none\" && workflow == \"\" {"
+},
+{
+  "name": "refusal-provider-list-fan-out",
+  "file": "search.go",
+  "find": "if d := providerTable[p]; d == nil || d.search == nil {",
+  "replace": "if d := providerTable[p]; d == nil && false {"
+},
+{
+  "name": "refusal-fetch-extractor-dropped",
+  "file": "extract.go",
+  "find": "return failed(rawURL, unsupported(feature).Error())",
+  "replace": "return failed(rawURL, \"\")"
+},
+{
+  "name": "refusal-hosted-provider-skipped",
+  "file": "extract.go",
+  "find": "if fetchProviderRequested(p) {",
+  "replace": "if false && fetchProviderRequested(p) {"
+},
+{
+  "name": "refusal-pdf-message",
+  "file": "extract.go",
+  "find": "return fail(unsupported(\"PDF text extraction\").Error())",
+  "replace": "return fail(\"PDF extraction failed\")"
+},
+{
+  "name": "refusal-fallback-extractors-unnamed",
+  "file": "extract.go",
+  "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
+  "replace": "msg += \"\""
+}
 ]

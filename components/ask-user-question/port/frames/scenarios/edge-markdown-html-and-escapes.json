@@ -1,0 +1,31 @@
+{
+	"name": "edge-markdown-html-and-escapes",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Escapes?",
+				"header": "Esc",
+				"options": [
+					{
+						"label": "A",
+						"description": "a",
+						"preview": "a *star* \\*escaped\\* <b>html</b> &amp; entity\nhttps://autolink.example.com/path and www.example.org\n\n    indented code block\n\n![image alt](http://x/y.png)"
+					},
+					{
+						"label": "B",
+						"description": "b"
+					}
+				]
+			}
+		]
+	},
+	"width": 70,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

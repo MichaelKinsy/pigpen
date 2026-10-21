@@ -40,7 +40,7 @@ against the original without a person: the rules and the tool gate for what they
 - withholding tools the policy denies outright from the model at `before_agent_start`, and restoring them (the tool-surface
   baseline), the `yolo` status, and the permissive-`*` warning at session start.
 
-**Blocked, fail-closed, with a visible reason** (the original decides these by machinery that is not ported):
+**Refused, fail-closed** (the original decides these by machinery that is not ported). Each is blocked with the Package's one refusal text, `@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` (`refusal.go`; `refusal_test.go` has one exact-text test per refused option and checks the Package name and the pinned original):
 
 - an `ask`: the approval dialog (and its session grants) is not ported, so the call is refused and the message says so.
   `yoloMode` turns asks into allows, as in the original;
@@ -56,7 +56,17 @@ against the original without a person: the rules and the tool gate for what they
   reads by its own rule (`ssh`, `su`, `source`, `command`, `bash script.sh`, ...) is refused when allowed. Both are listed with
   every other refusal in `testdata/port-differences.json`;
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
-- MCP and skill tools.
+- MCP and skill tools;
+- the project scope while the project is trusted (`ctx.IsProjectTrusted`; unknown counts as trusted) and a project config file exists,
+  and the agent scope while the active agent (the last `active_agent` session entry, else the `<active_agent name="...">` tag of the
+  system prompt) has a definition file with a `permission` frontmatter block: every call the port would allow is refused
+  (`unported.go`, `scope_test.go`); a deny the global scope gives stays a deny. Before this the scopes were ignored, which let a call
+  through that a project or agent rule denies;
+- a `/skill:<name>` input: the `input` handler decides it by the skill surface (allow continues, deny is `handled` with the original's
+  notice, an ask or an unreadable scope is `handled` with the refusal text). Before this every input continued, so a denied skill
+  could be invoked;
+- config options the schema accepts and nothing reads yet (dialog, forwarding, logging, limits, `piInfrastructureReadPaths`,
+  `authorizerChain`): a warning at session start names the ones that are set.
 
 **Not ported at all:** project and agent scopes (the project scope is withheld in the original until the project is trusted;
 the port reads the global scope only), session approvals and rules, the review and debug logs, forwarding and subagent authority,

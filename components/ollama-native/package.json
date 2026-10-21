@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-ollama-native",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "PiG model provider (Go extension) for Ollama's native /api/chat, with the model list read from the server",
   "keywords": [
     "pig-package",

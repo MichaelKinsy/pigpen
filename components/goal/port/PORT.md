@@ -1,4 +1,4 @@
-# Port record: pi-goal-x (partial: goal storage and the direct lifecycle)
+# Port record: pi-goal-x (full port, 0.2.0)
 
 | Input | Identity |
 |---|---|
@@ -8,31 +8,73 @@
 | Original's tests | 1049 titles in 83 files. Slice: 45 titles in 8 files, 41 exact twins and 4 named skips; the other 1004 (75 files) are deferred by name in `port/slices.json` |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
-## Scope: what is and is not ported
+## Scope (0.2.0)
 
-pi-goal-x is a runtime, not an extension of one feature: a durable scheduler that starts and continues model runs, an auditor
-child session, goal drafting through LLM tools and a questionnaire, a dashboard widget, 16 commands, goal and task tools, layered
-settings, network recovery. Porting all of it is a project of its own; this port takes the part that can be checked against the
-original without a model: the files and the commands that act on them directly.
+Everything the original registers is ported: the 16 commands, the goal, task and drafting tools, the durable scheduler, accounting,
+prompt injection, compaction, prompt cache shaping, live retention, network recovery, the activity trail, the ledger with checkpoints and
+recovery, layered settings, the dashboard, widgets and overlays, the questionnaire and rpc dialogs, the completion auditor and the
+oracle. The refusal layer of 0.1.1 is removed. Stand-ins (not differences in behavior the model or user can see): the auditor and the
+oracle run in a child `pig` process because the SDK has no child session API (SDK requests C2, C2a to C2c in the owner's core-items
+file: custom tools in the child, compaction off in the child, the parent's model registry in the child); widgets are laid out at the
+terminal width.
 
-**Ported:** the goal record and its normalization; the goal file (Markdown with a JSON header, written byte for byte as the original
-writes it, key order included); the pool of open goals and its snapshot; locks; the event ledger (append); archiving; session
-start with the focus entry (and legacy state); the scheduler restore at session start (a goal this session owns whose allowance,
-token budget or wait deadline is spent is paused, an interrupted one is paused, one owned by another session is reported, and one
-left ready for a repair run is first written back as plain ready); the
-commands `/goal-direct`, `/sisyphus-direct`, `/goal-list`, `/goal-pause`, `/goal-clear`, `/goal-unfocus`; the persist on
-`session_shutdown`; the settings `maxAutonomousRuns`, `disableContracts`, `autoSelectSingleGoal` and `strictExecutionContract` (project
-file, agent-dir file, `PI_GOAL_*` environment).
+**Twins:** 1048 exact twins and 1 named skip of 1049 upstream titles (`pigeq twins check`; the skip is the real-SDK prompt cache e2e), `slices.json` is empty. **Go tests:** `go vet`
+on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds 1999 mutants (every find
+text occurs exactly once; the last 16, `detail-cache-*`, are the detail page cache's, all killed by `goal_detail_cache_test.go`,
+`goal_detail_cache_tool_test.go` and the history twin, run with `pigeq mutate --unit-only` on only those 16). The first `pigeq mutate --unit-only --jobs 10` run over the 2034 original mutants killed 1241, left 740
+alive and found 53 that do not build. The survivors got tests (`mutants_a_test.go` to `mutants_d_test.go`, plain tests, not twins);
+the 53 invalid mutants were rewritten (51) or dropped (2: `health-marker-version-required`, `draft-unavailable`, both equivalent or
+unreachable); 51 building mutants are equivalent (same observable behavior) and are listed with a reason in
+`mutations-equivalent.json`, outside the run list. The rerun of only those lanes' survivors and rewritten mutants left no survivor
+outside that list: slice A 181 mutants (5 equivalent listed), B 214 (19), C 207 (22), D 154 (7). Two Go bugs the survivors exposed
+were fixed: `Date.parse` of `T24:00:00` (`jsDateParse`) and the blocker oracle wait holding the core lock. The lead faithfulness review (five
+reviewers, function by function against the TypeScript) found and fixed: `set_goal_tasks` item schema without `additionalProperties:false`,
+`clearContinuationState` default in the blocked and pause flows, a failed tweak apply propagating as a tool error, the active-pool read
+that must fail for a vanished external root, `timestampForFile` for any ISO form, the external-pool ledger symlink check, stale-lock
+date parsing, quoting of task ids in policy messages, `localeCompare` ordering, and RE2 `\s` against JavaScript `\s` in the
+questionnaire. Not fixed (listed in the status file): a failing authoritative write is logged where the original throws, `format.go`
+`localeCompare` is ASCII-exact only, and the host items noted there.
 
-**Not ported** (each deferred test file is named in `port/slices.json` with this reason): `/goal` and `/sisyphus` drafting (the
-LLM-driven flow, the questionnaire, confirmation); the scheduler's dispatch, continuation, waits and timers; the auditor; the goal
-and task tools (`get_goal`, `create_goal`, `update_goal`, the task tools); the dashboard, widgets and overlays; `/goal-resume`,
-`/goal-focus`, `/goal-settings`, `/goal-tweak`, `/goal-refresh`, `/goal-recovery`; usage and time accounting (usage stays 0);
-`mergeFocusedGoalWithDisk`; ledger reading, checkpoints and recovery; the external `goalsRoot`; settings beyond the four keys and
-the original's settings cache (the port re-reads the file on each call); prompt cache and compaction handling; network recovery.
-With an allowance other than 0 (the default is none), the original would start a run; this port stores the goal as `ready`
-and says so in a warning. It does not pretend to continue. The scenarios and sessions below use `maxAutonomousRuns=0`, where the
-original too starts nothing.
+**pigeq:** scenarios are recorded under Pi 1402973a (`port/scenarios`, `port/golden`, `port/gen-scenarios.py`); the new
+scripted-model scenarios cover the goal tools. The host's own system-prompt documentation block (`Pi documentation ...` against `PiG
+documentation ...`) differs between the hosts and falls inside the delta of a request that adds tool snippets; the scenarios mask it with
+a scenario-level normalize rule (`HOSTDOCS`); the difference is PiG's documented additive difference D22 (PiG's docs bundle named in the system prompt).
+
+**Completion auditor and provider outages (pigeq):** nine scenarios, `audit-*` and `net-*` (the GoalScenAuditNet block of `gen-scenarios.py`), all recorded from the original under Pi 1402973a; the port equals the original on every one, and the two named skips for `tests/e2e/network-recovery-rpc.test.ts` are replaced by Go twins (`goal_events_e2e_test.go`, on the rig's mock clock) plus the live scenarios.
+
+- Auditor: the original runs the auditor on an in-process nested session, the port on a child `pig --mode json` that inherits the lane's agent directory, so it reaches the harness's scripted model server and its requests enter the same trace (messages, the five read-only tool definitions, the auditor's system prompt as the delta against the parent's). `audit-approved`, `audit-rejected-then-approved` (feedback in the tool result, the next turn's `[AUDITOR REJECTION]` block, the second audit's warm context), `audit-tool-calls` (read, grep, ls inside the audit) and `audit-no-marker`. The goal is seeded and auto-selected because `create_goal` ends the run: no scripted parent turn follows it. The scenarios run under `--system-prompt`: the auditor's prompt replaces the host's whole prompt, so the harness records the host's baseline wording as the removed text, and Pi and PiG word it differently; a scenario-chosen base prompt makes that text equal.
+- Difference, not fixable in the port: the original's `update_goal(complete)` returns the completion commit result, which carries `ok: true` beside `content`, `details` and `terminate`, and Pi forwards `ok` in the RPC `tool_execution_end` result. `sdk.ToolResult` has no field for extra properties (SDK request: extra tool result properties). It is not visible to the model; the three scenarios that end in an approval do not capture `tool_execution_end` (the same result stays compared as the `toolResult` message, and `tool_execution_start` as the call).
+- Outages: a scenario server answers 503, 429 or 401 on the provider's route (`net-503-ladder`, `net-429-ladder`, `net-503-recovers`, `net-429-allowance`, `net-401-not-recovered`); the model is not scripted and the request bodies enter the trace. `message_end` is not captured because the recovery checkpoint's `details.timestamp` is a JSON number (`Date.now()`) that the normalizer's string rules do not reach; the checkpoint stays visible as the marker message in the next request body and as the run it starts.
+- Finding about the original under Pi 1402973a (the port equals it): a recovery checkpoint reaches `before_agent_start` as a custom trigger with no `prompt`, so the original's `extractGoalIdFromInjectedMessage(event.prompt)` finds nothing, treats the run as user driven and resets the recovery counter. A live outage therefore announces `5s (recovery 1)` every time; the ladder never escalates and `networkRecovery.maxAttempts` never exhausts. The original's own e2e asserts escalation and cannot hold against this Pi. The Go twins assert the escalation on the event shape the e2e expects (the marker as the prompt); the scenarios pin the live behavior.
+- Host checks: with the base prompt the original under PiG's Node runtime equals Pi on the outage scenarios apart from the factory-widget rows (G3). On the audit scenarios it differs because the nested `createAgentSession` of PiG's Node runtime fails (`Auditor error: this._modelRuntime.hasConfiguredAuth is not a function`): a PiG core finding for the Tern lead, not an extension difference.
+
+
+**pigeq, tasks and scheduler (GoalScenTasksSched):** `tools-tasks`, `tools-tasks-edge`, `tools-tasks-disabled` and nine `scheduler-*` scenarios
+(`gen-scenarios.py`, block `GoalScenTasksSched`; goldens recorded under Pi 1402973a). The earlier note that `set_goal_tasks` never asked its select
+dialog under Pi was a scenario error: `create_goal` ends the model's turn (`terminate: true`), so the scripted `set_goal_tasks` call answered the next prompt
+and never ran. Under Pi's RPC mode `ctx.hasUI` is true and `ctx.mode` is `"rpc"` (`rpc-mode.ts:319-321`, `runner.ts:572-574`, `:628-630`), so
+`showTaskConfirmation` skips `ui.custom` and asks `ui.select("Task list confirmation\n\n<proposal>", ["Confirm task list", "Keep current tasks"])`; PiG binds the
+same (`coding/cli/rpc_mode_runtime.go:196`, `coding/extension/host/inproc/runner.go:736-741`), the original under PiG asks the identical select, and the Go port
+(`goal_task_confirmation.go`) asks it too: no difference. Nine of the twelve scenarios pass `pigeq check` (3 runs in a row). Findings, all PiG against Pi, none normalized
+except where stated:
+
+- **PiG core bug, first run.** A run that an extension starts with `pi.sendMessage(msg, {triggerTurn: true, deliverAs: "followUp"})` as the *first run of a session* sends the
+  model no system prompt under PiG (Pi sends it). Reproduced without the goal extension (a one-tool probe; `before_agent_start` and `turn_start` still see a 2715-character
+  `ctx.getSystemPrompt()`): the request's system text is empty for that run and correct for every later user-started run. Scenario `scheduler-direct-first-run` (the kickoff run of
+  `/goal-direct` is the first run) therefore differs from the Pi golden in the llm channel's `system` field (`inserted ""`, `removed <host prompt>` against the tool snippets).
+- **PiG core bug, stale snippets.** A run started by `sendMessage(triggerTurn)` after a previous run's tool changed the active tools (`pi.setActiveTools` in `execute`, what `create_goal` does) sends the
+  tool list correctly but the system prompt of the previous run: the new tool's snippet is missing (probe: `late_tool` absent from the system text, present in `tools`). A user-started run is
+  correct. Scenario `scheduler-budget` (create_goal, then the scheduler's continuation run) differs the same way (`update_goal` and `set_goal_tasks` snippets missing) and in the same request's `Context snapshot` figure (733 against 1200; not explained, not masked).
+  The other scheduler scenarios keep the goal focused before the first run and start with a user prompt, so no run changes the tool set and they pass.
+- **D22 consequence, masked (`CTXEST`).** The extension prints the host's context estimate (`Context snapshot: N/100000 tokens`). Before the model has reported a usage it includes the host's system prompt, whose wording differs between
+  the hosts (D22; 2666 against 2715 characters in the probe, `pi` against `pig` in the first line and the documentation block), so the figure differs by 12 tokens (2527 against 2539). Only estimates of four or more digits are masked; the figures after a model reply (the
+  scripted usage) are compared exactly.
+- Epoch milliseconds (the checkpoint message's `details.timestamp`, the scheduler's `claimedAt` and `nextCheckAt` in goal tool results) are different in every run and no normalize rule can reach a number, so the scheduler scenarios capture
+  neither `message_end` nor `tool_execution_end`; the model request, the notifications and `tool_execution_start` still show every continuation prompt, scheduler message and tool call.
+- Existing scenarios `tools-create-get`, `tools-blocked` and `tools-pause-and-bad-args` script turns after `create_goal` that are never requested (the turn ends); they only exercise `create_goal`.
+**pigeq, commands (35 scenarios in the `Remaining commands` block of `gen-scenarios.py`):** `/goal-status` (standard, verbose, health), `/goal-focus`, `/goal-settings` (every row kind: boolean, integer, thinking level, model selector with manual entry, Blocker Oracle rows, `disableTasks` changing the next prompt's tool list), `/goal-resume`, `/goal-cancel`, `/goal-recovery` (+ `repair`, declined and confirmed, malformed files, dead and unreadable locks, an orphaned snapshot entry made by the scripted model's `rm`), `/goal-refresh` (pool and ledger changes made by the scripted model's `cp`), `/goal-tweak`, and the guided `/goal` and `/sisyphus` flow with scripted model turns and dialog answers (`goal_question`, `goal_questionnaire`, `propose_goal_draft`: confirm, continue chatting, cancel, mode mismatch, empty objective, budget, tweak of an active and of a paused goal). Goals are seeded files with fixed ids; goldens are recorded under Pi 1402973a. Rules beyond `HOSTDOCS`/ids: `NOW` (wall-clock time of runtime ledger events; seeded events use 2020), `AGE`/`BACKUP` (lock ages and the repair backup stamp), and `CTX`: the goal snapshot quotes `ctx.getContextUsage()`, an estimate over the whole prompt, which differs by a constant 12 tokens between the hosts because of the same D22 docs block, so only the number and percentage are masked.
+Not exercised over RPC: Esc pausing a running goal (`ctx.ui.onTerminalInput` does nothing in RPC mode; twins: `TestGoalModalEscape`, goal-widget twins "escape still pauses a running goal when the dashboard is compact", "Escape with no goal modal open pauses the goal"); the rich terminal questionnaire/proposal dialog (Pi's RPC `ui.custom` resolves to `undefined`, so the original uses its per-question select/input dialogs, which is what the scenarios record; the rich dialog's twins are the goal-questionnaire and goal-rpc-dialogs twins); the settings branch of `/goal-refresh` (the extension re-reads settings on every turn, so an edit made by the scripted model is already loaded when the command runs; twin: the `diffGoalRefreshState` twin).
+**Open:** `/goal-resume` with a nonzero autonomous allowance (continuation turn): under PiG the Go lane's first model request of the resumed run reached the scripted server with the base system prompt removed (system delta empty), 3 of 3 runs, where Pi's carries the extension's tool list; not understood, no scenario recorded. Two adapter fixes came out of the scenarios (twins in `goal_send_user_message_test.go`): `SendUserMessage` releases the core lock (PiG's host prepares the run inside the call and waits for the extension's own `before_agent_start`, where Pi's call returns first: the guided `/goal` deadlocked), and a dialog now emits its request before the handler's queued UI refresh, as Pi's RPC mode does (the SDK has no after-send hook, so the refresh runs when the dialog answers or after 20 ms).
 
 ## Mapping
 
@@ -118,6 +160,153 @@ The review's own changes went red first: the tests in one commit, the fixes in t
 - Size: 3482 hand-written Go lines (non-test), 2181 test lines (548 of them the Skill's fake-host template); nothing is generated except the recorded golden and the case
   files (`testdata/`).
 
+## Performance
+
+Measured on xd670 (Xeon Platinum 8468; the measured processes pinned to CPUs 64-71 inside a container limited to them, other jobs
+running on the host: load average 44 after the run, the first run of this section had 14), 2026-10-20, re-measured after the detail page cache
+(owner decision 2026-10-20, below), 12 interleaved rounds after a warm-up round, medians. Raw numbers,
+per-round values and the host: `port/perf/results.md`. Three subjects: the port (this branch), the previous release (0.1.1,
+`origin/goal-honest-refusal`: the commands it implemented, refuses the rest) and the original under PiG's runtime (Node 24.19 and PiG
+v0.5.0, Pi 1402973a for the pin).
+
+Method (`port/perf/`, one command: `NEW=... OLD=... PIG=... OUT=... CPUS=64-71 bash port/perf/run.sh`, then `summarize.py`):
+
+- **Size**: the extension as PiG builds and caches it (`cache/cells/go/<hash>/runner`), and a single-extension Piglet Binary
+  (`build-piglets.mjs`; the shipped Piglets fuse the extension) against a control Piglet whose extension registers nothing.
+- **In process** (`extensions/pi-goal-x/perf_bench_test.go`, `go test -bench -benchmem`; `bench-original.mjs` for the original on
+  the same fixture and operations; `old_bench_test.go.txt` for 0.1.1): five goals, a twelve-task tree, the same inputs; a mutating
+  operation runs on a freshly booted core over restored files, outside the timed region. The Go side times the core with the replay
+  test's scripted host, so no SDK wire and no host; the original is driven the way its own tests drive it. B/op for the original is V8
+  heap growth with no collection (a lower bound; not comparable with Go's allocated bytes). Rounds alternate port, original, 0.1.1.
+- **Through a real pig** (`rpc.mjs`, RPC mode): cold start is the spawn of pig to the `get_commands` response (pig reads RPC after it
+  has loaded its extensions; the control's span is pig alone). Tools run under a scripted OpenAI-compatible model, timed from
+  `tool_execution_start` to `tool_execution_end`; commands (`prompt` "/name") from the send to the first notification. PiG hosts the Go port
+  as a subprocess and the original as a Node subprocess, so both pay the same IPC.
+
+Size and cold start (bytes, ms):
+
+| | original | 0.1.1 | port | port over 0.1.1 |
+|---|---|---|---|---|
+| extension binary (PiG-built runner) | TypeScript, 807,526 bytes of sources (`du -sb`) | 6,213,792 | 15,532,192 | +150% |
+| single-extension Piglet Binary (control 70,861,063) | not a binary | 71,192,839 | 73,359,623 | +3.0% (+2.17 MB) |
+| cold start, `pig -e <extension>` | 521.6 (first start 1,944: jiti) | 47.6 (first start 288: build) | 93.6 (first start 1,898: build) | +46.0 ms |
+| cold start, fused Piglet (control 31.3) | not applicable | 40.5 | 40.2 | -0.3 ms |
+| pig's own extension span, spawn to handshake | 398.5 | 18.0 | 16.0 | -2.0 ms |
+
+The runner grew by 9.3 MB (this branch's cache adds 12 KB to it): `.rodata` +6.5 MB, of which 6.32 MB are the five word-segmentation dictionaries that `pitui` embeds
+(`wordsegmenter/*.bin`, linked through `pitui.Editor`); `.text` +1.4 MB and `.gopclntab` +0.9 MB are the port's own code (1.11 MB of
+symbols against 0.18 MB in 0.1.1; 0.1.1 only refused) plus `widthx`, `pitui`, `uax29`, `x/text` tables. **Owner decision (2026-10-20):** the
+growth over 10% is the scope of the port (0.1.1 had no tools, dashboard, scheduler or auditor) and a library cost, accepted; the fused
+Piglet, the shipping vehicle, grows 3.0% over 0.1.1. `pitui` keeps its word-segmentation dictionaries in every build: there is no build
+tag and no `pigstrip` switch. The cold-start rise with `-e` is mostly pig hashing and checking the larger source tree (`build-check`
+15 ms against 4 ms, discovery 7 ms against 0 in this run), which a Piglet does not do; in the fused Piglet the whole start is 8.9 ms
+over the control (0.1.1: 9.2 ms), above the 1 ms of the registration allowance, so it is stated here: it is the larger Go program (more type
+data and package initialisers) and the registration of 16 commands and 8 tools.
+
+Per-call cost through pig (ms; port in the `-e` form, the fused Piglet form is 3% to 40% lower than the `-e` form, see `results.md`):
+
+| operation | original | port | |
+|---|---|---|---|
+| create_goal | 4.37 | 2.30 | -47% |
+| set_goal_tasks | 4.23 | 3.33 | -21% |
+| update_goal (pause) | 4.32 | 2.54 | -41% |
+| get_goal / tasks | 2.17 / 2.48 | 1.45 / 1.79 | -33% / -28% |
+| update_goal_task | 0.68 | 0.48 | -30% |
+| /goal-list, /goal-status, status verbose, /goal-refresh | 2.12, 2.94, 3.33, 1.86 | 1.38, 2.24, 2.17, 1.49 | -35%, -24%, -35%, -20% |
+
+0.1.1 has no tools; its commands `/goal-direct` and `/goal-list` are in the in-process table. In pig the port is faster than the original on every
+operation measured, because the original's Node host costs more per call than the Go extension.
+
+In process (median; port against the original, against 0.1.1 where it had the command): see `results.md` for B/op and allocs/op.
+
+| operation | port | original | port/original | 0.1.1 |
+|---|---|---|---|---|
+| session_start (load, widget, input listener) | 341 us | 295 us | +16% | 85 us (+302%) |
+| get_goal summary / tasks | 40 / 41 us | 50 / 28 us | -21% / +47% | n/a (refuses) |
+| create_goal / update_goal pause | 1.11 ms / 858 us | 1.11 ms / 800 us | +0% / +7% | n/a |
+| set_goal_tasks / update_goal_task | 923 / 867 us | 852 / 783 us | +8% / +11% | n/a |
+| /goal-list | 53 us | 7.6 us | +607% | 10.9 us (+391%) |
+| /goal-status, verbose | 85, 84 us | 56, 62 us | +53%, +35% | n/a |
+| /goal-refresh | 245 us | 78 us | +215% | n/a |
+| /goal-direct | 1.06 ms | 1.01 ms | +5% | 839 us (+27%) |
+| dashboard render, compact / expanded (width 100) | 48 / 64 us | 47 / 61 us | +1% / +4% | n/a |
+| terminal key, plain / toggle chord | 1.7 / 54 us | 12.6 / 7.0 us | -86% / +675% | n/a |
+| scheduler tick (begin, ready declaration, settled) | 893 us | 835 us | +7% | n/a |
+| 16,000-event ledger: session_start, /goal-status, update_goal_task | 639 us, 2.17 ms, 1.02 ms | 306 us, 1.48 ms, 831 us | +109%, +46%, +23% | n/a |
+
+The host was busier than in the first run of this section (load average 44 after this run against 14), so absolute numbers are not comparable
+across the two runs; `results.md` also records a same-session control, the previous head (no detail page cache) against this branch,
+interleaved: `get_goal` tasks 95.7 us to 38.3 us (-60%), everything else within -3% to +10% (noise on code this branch did not touch).
+The ratios that moved most against the first run are the original's: its `session_start` went from 1.00 ms (rounds from 419 us to
+1.94 ms) to 295 us (rounds 265 to 347 us), so the first run's `-50%` and `-21%` (16,000-event ledger) were the original's slow, disturbed
+rounds. Against the original's quiet rounds the port's session start is slower by 46 us (an events scan, the pool and the widget; one
+time per session) and 333 us with the 16,000-event ledger (7,600 allocations of ledger replay); both are under the 1 ms allowance for a
+one-time cost and are stated here, not hidden.
+
+Regressions over 10% in process and what is behind them (profiles with `go test -cpuprofile` on the benchmarks):
+
+1. **Quadratic activity sort (fixed).** `/goal-status` on a ledger whose timestamps run backwards took 23.7 ms at 16,000 events;
+   `activitySortStable` was an insertion sort. It is now `slices.SortStableFunc` with the original's comparator (3 ms; twin
+   `TestActivitySortStableMatchesInsertionSort` against the old order, ties included).
+2. **Dashboard laid out on every UI update (owner decision).** The SDK carries no component widget (G1), so the port lays the
+   dashboard out at the host's width and pushes the lines; the original hands the host a component that the host renders per frame.
+   Profile of `/goal-list`: 60% of its time is `pushWidget` and `Render` (about 60 us per update); the toggle chord is the same
+   render. This explains the small commands (`/goal-list`, `/goal-refresh`, the toggle key) and about 60 us of every tool. The cost is
+   bounded (flat over a 16,000-event ledger: 65 us), and the original's component is rendered on every host frame, which this
+   benchmark does not count. In RPC mode the lines are dropped after the layout (G3); skipping the layout there would save the work and
+   was not done because it changes `previousLinesLen` state the faithful twins read.
+3. **`get_goal` tasks and the detail page cache (ported, owner decision 2026-10-20).** The original caches the compiled detail source
+   in a shared page cache (`goal-detail.ts`, `detailCache`); the port had omitted it. It is now ported with the original's keys and
+   bounds (`goal_detail.go`, `goalDetailCompile`): at most 16 entries and 16,000,000 UTF-16 units, oldest evicted first; an entry is
+   found when every input of the original's array is `===`: goal id, section, task_id (absent and "" differ), then the objective and the
+   verification contract by value for section objective, the task index (identity: `taskIndex` already returns one snapshot for equal
+   task content, so an in-place edit or a changed task list misses) and `currentTaskId` for tasks, and for history the ledger's
+   revision object (`readGoalLedger(...).revision`, a pointer the ledger replaces on append, rewrite and invalidation); a history
+   without a revision (a caller's own events) is never cached; a source over the bound is returned in full and not cached; an unknown
+   task id is not cached. The port needed no generation counters on the goal record: the task index and the ledger revision already had
+   stable identities. Measured (control, same session): `get_goal` tasks 95.7 us to 38.3 us (-60%); in the main table +270% became
+   +47% (41 us against the original's 28 us). What is left is not the compile: the profile (single CPU, 54 us per call) puts 31% in
+   `syncGoalPromptFromDisk` (the active file's path check, `isSafeActivePath`, whose path normalisation splits with a regexp), 29% in
+   `goalDetailPage` (the page's UTF-16 to string decode and the cursor) and 25% in `goalDetails` (cloning the goal for the result's
+   details); the summary path pays the same first and last and is 21% faster than the original. The absolute difference is 13 us
+   per call, and through pig the call is 28% faster than the original.
+4. **Ordered-object representation (owner decision).** Remaining differences on pure computation (`/goal-status` +77%, 16,000-event
+   status +39%, `update_goal_task` +27% at 16,000 events, set_goal_tasks +18%) are the `jsObject` maps and the decoder that
+   builds them (`parseJSON` over `encoding/json` tokens) against V8's `JSON.parse`; faithful key order and number text are why
+   they exist (M7). The absolute differences are 10 to 300 microseconds per call, and through pig the port is faster. Re-measured on
+   the second run: `/goal-status` +53%, verbose +35%, 16,000-event status +46%, `update_goal_task` +11% (+23% at 16,000 events),
+   set_goal_tasks +8%.
+5. **What is left of items 2 and 4 after the cache.** `/goal-list` (+607%), `/goal-refresh` (+215%), the toggle chord (+675%) and about
+   40 us of every tool are the dashboard layout the SDK's missing component widget forces (item 2: 41 us of `RenderPush` in this run;
+   the chord and `/goal-list` are one render each). Owner decision 2026-10-20: accepted until PiG core C1 and C3 land (the component
+   widget and the way RPC mode treats it), at which point the port hands the host a component like the original and the layout leaves
+   the update path. Nothing in this branch is left to do for them.
+
+No unbounded work or blocking host call on the render and input paths (read in `core.go`, `goal_widget*.go`, `extension.go`, the SDK
+and PiG's `ui_bridge.go`): a render reads the settings cache and the bounded per-goal ledger projection and makes no host call (width and
+height are fields the SDK keeps); the terminal-input listener is subscribed for the whole TUI session, PiG waits for its verdict on every
+key with no deadline (`handleOnTerminalInput`; the original under PiG pays the same IPC), and the handler takes the core lock, so a key
+waits for the unit of work in flight (the longest in the per-operation benchmarks is 1.4 ms, a tool that writes files; a file lock held by
+another process retries for up to 1 s). Every UI update makes one blocking `SetStatus` round trip (the widget push is one way). The
+sort above was the only unbounded step found. Not measured: the tmux TUI frame cost, and per-event handlers (`context`,
+`before_provider_request`) whose cost is dominated by the SDK's JSON of the payload; they are covered only inside the through-pig numbers.
+
+**Key wait during an audit or an oracle consultation (measured 2026-10-20).** The auditor does not hold the core lock: `core.await`
+releases it around `runAuditor` (`goal_completion.go`) and around `runBlockerOracle` (`goal_core_tools.go`), so a key does not queue
+behind the model run, the child pig or the wait for either. What a key still waits for is the other holders of the lock while the run is
+in flight, each of them a short unit that ends with a UI update (one blocking `SetStatus` round trip): the auditor's progress callback
+(`onProgress` takes `core.locked`; the oracle has none), the 80 ms audit-animation tick, the key's own UI update, and at the end the
+commit of the verdict (files, ledger, UI). Method (`BenchmarkKeyWaitDuringAudit`, `perf_keywait_test.go`, tables in `results.md`): the
+real `update_goal(complete)` path on the replay host with a scripted auditor that reports progress every 1 ms (a stress: a real auditor
+reports on model and tool events) or 50 ms for 600 ms; a key (a plain key and the toggle chord, alternating) goes through the
+listener's `core.locked` every 300 us from the audit's start until `update_goal` returns; `SetStatus` sleeps 0, 200 us or 1 ms to stand
+for the SDK round trip. Ten audits and about 5,200 keys per row: median 26 to 66 us, p99 160 to 267 us, **maximum 3.0 ms with no
+SetStatus delay, 3.2 ms with 200 us, 6.6 ms with 1 ms** (3.3 ms at 50 ms progress). The audit's 600 ms never appears in a key's wait
+(the test fails if a key waits more than 300 ms). The maximum scales with the round trip because the longest unit holds the lock
+across several UI updates; the unit behind the maximum was not profiled separately. The same wait applies to the oracle with fewer lock
+holders (no progress callback, no animation), so the audit is the bound. A host whose `SetStatus` blocks for a long time (a stalled
+RPC peer) holds every key for that long; that is the SDK's synchronous call and part of G1 and C1.
+
 ## Findings (to file against PiG, and notes on the porter)
 
 1. **G1 again: no component widget.** The dashboard is a component factory; the port shows one status line in a terminal and
@@ -166,3 +355,11 @@ The review's own changes went red first: the tests in one commit, the fixes in t
   "invisible over RPC" ports would have saved the most here.
 - The twin ledger (41 titles by hand) and the slice file (76 deferred entries) are tedious to produce by hand: `twins list`
   could write the first draft.
+
+## Refusals (0.1.1)
+
+Until the rest is ported (the inventory is in the owner's parity status file for this component), each unported command,
+setting and mode is refused with `@pi-in-go/pigpen-goal (Go port) does not support <feature> yet. Install the original
+extension, npm:pi-goal-x@0.32.3, which runs unchanged in PiG.` (`refusal.go`; one test per refused option in
+`refusal_test.go`). The earlier notice that a goal "is stored and ready but will not start by itself" is gone: a goal that would
+need a run is not created.

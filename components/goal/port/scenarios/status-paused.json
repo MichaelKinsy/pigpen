@@ -1,0 +1,81 @@
+{
+  "name": "status-paused",
+  "description": "A goal the agent paused with a reason, and a budget-limited goal: standard and verbose status after focusing each.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      },
+      "ui": [
+        {
+          "value": "  seed-p | paused (agent) | goal | Paused by agent .pi/goals/active_goal_20260102030405_seed-p.md"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status verbose"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-unfocus"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      },
+      "ui": [
+        {
+          "value": "  seed-s | budget limited | goal | Over budget .pi/goals/active_goal_20260102030408_seed-s.md"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status health"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-p.md": "{\n  \"version\": 3,\n  \"id\": \"seed-p\",\n  \"objective\": \"Paused by agent\",\n  \"status\": \"paused\",\n  \"autoContinue\": false,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-p.md\",\n  \"stopReason\": \"agent\",\n  \"pauseReason\": \"needs a key\",\n  \"pauseSuggestedAction\": \"ask the owner\"\n}\n\n# Goal Prompt\n\nPaused by agent\n\n## Progress\n\n- Status: paused\n",
+    ".pi/goals/active_goal_20260102030408_seed-s.md": "{\n  \"version\": 3,\n  \"id\": \"seed-s\",\n  \"objective\": \"Over budget\",\n  \"status\": \"budget_limited\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 1200,\n    \"activeSeconds\": 90\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:08.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:08.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030408_seed-s.md\",\n  \"tokenBudget\": 1000\n}\n\n# Goal Prompt\n\nOver budget\n\n## Progress\n\n- Status: budget_limited\n"
+  },
+  "normalize": [
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    }
+  ]
+}

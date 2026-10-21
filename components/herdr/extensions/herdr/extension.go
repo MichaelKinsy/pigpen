@@ -155,7 +155,8 @@ func Extension() *sdk.Extension {
 		if !r.isRoot() {
 			return nil, nil
 		}
-		if idle, err := ctx.IsIdle(); err == nil && !idle {
+		// herdr-pig requires isIdle() === true: a failed check is not idle.
+		if idle, err := ctx.IsIdle(); err != nil || !idle {
 			return nil, nil
 		}
 		r.agentSettled()
@@ -321,10 +322,9 @@ func (r *reporter) isRoot() bool {
 func (r *reporter) start(path, id string, active bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	// A session start opens a fresh reporting epoch.
+	// A session start opens a fresh reporting epoch; the blocked counters carry over, as in herdr-pig.
 	r.rootSession = true
 	r.released = false
-	r.blockedCount, r.blockedMessage = [holderCount]int{}, ""
 	r.sessionPath, r.sessionID = path, id
 	r.agentActive = active
 	r.publishLocked(true)

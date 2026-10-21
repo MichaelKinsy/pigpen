@@ -1,0 +1,36 @@
+{
+	"name": "edge-markdown-nested",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Nested markdown?",
+				"header": "MD",
+				"options": [
+					{
+						"label": "List",
+						"description": "lists",
+						"preview": "1. one\n   - nested a\n   - nested b\n2. two\n\n- [ ] task\n- [x] done\n\n> quote\n> > inner\n\n### h3\n\n#### h4\n\n~~strike~~ and __bold__ and _it_"
+					},
+					{
+						"label": "Table",
+						"description": "table",
+						"preview": "| name | value |\n|------|-------|\n| a    | 1     |\n| long cell here | 22222 |\n\n***\n\nline  \nbreak"
+					}
+				]
+			}
+		]
+	},
+	"width": 90,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

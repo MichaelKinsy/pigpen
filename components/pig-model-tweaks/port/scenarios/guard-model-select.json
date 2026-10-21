@@ -1,0 +1,71 @@
+{
+  "name": "guard-model-select",
+  "description": "Outside the TUI a selection is announced as the original does: in preferred models, NOT in preferred models; a disabled guard and remembering off keep the trace to the announcements.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": false}, \"modelGuard\": {\"enabled\": true, \"allowedModels\": [{\"provider\": \"openai\", \"model\": \"gpt-4o\"}]}}"
+  },
+  "steps": [
+    {
+      "name": "set-allowed",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "set-other",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o-mini"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref off"
+      }
+    },
+    {
+      "name": "set-eq-llm-2",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref on"
+      }
+    },
+    {
+      "name": "set-allowed-2",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o"
+      }
+    }
+  ]
+}

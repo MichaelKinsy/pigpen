@@ -3,6 +3,8 @@ package ask_user_question
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/MichaelKinsy/pigpen/ask-user-question/internal/ui"
 )
 
 const fTypes = "tool/types"
@@ -173,8 +175,8 @@ func TestToolSchema(t *testing.T) {
 func TestSchemaConstantsAndDescriptions(t *testing.T) {
 	tw(t, fTypes, "exports the new schema constants with expected values", func(t *testing.T) {
 		eq(t, []int{maxQuestions, minOptions, maxOptions, maxHeaderLength, maxLabelLength}, []int{4, 2, 4, 16, 60}, "limits")
-		eq(t, labelOther, "Type something.", "other label")
-		eq(t, labelNext, "Next", "next label")
+		eq(t, ui.RowIntent(ui.KindOther).Label, "Type something.", "other label")
+		eq(t, ui.RowIntent(ui.KindNext).Label, "Next", "next label")
 	})
 	tw(t, fTypes, "RESERVED_LABELS includes the Pi sentinels + CC's 'Other'", func(t *testing.T) {
 		eq(t, reservedLabels, []string{"Other", "Type something.", "Next"}, "reserved")

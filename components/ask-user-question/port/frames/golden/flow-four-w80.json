@@ -1,0 +1,504 @@
+{
+	"scenario": "flow-four-w80",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Alpha header </fg></bg> <fg:muted> □ Beta header ok </fg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>First question?</b>                                                                ",
+				"",
+				"<fg:accent><b>❯ 1. A1</b></fg>",
+				"     <fg:muted>a</fg>",
+				"  2. A2",
+				"     <fg:muted>b</fg>",
+				"  3. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Tab to switch questions ·<reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <bg:selectedBg><fg:text> □ Beta header ok </fg></bg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Second question?</b>                                                               ",
+				"",
+				"<fg:accent>❯ </fg>1. <fg:muted>[ ]</fg> <fg:accent><b>B1</b></fg>",
+				"  <fg:muted>a</fg>",
+				"  2. <fg:muted>[ ]</fg> B2",
+				"  <fg:muted>b</fg>",
+				"  3. <fg:muted>[ ]</fg> Type something.",
+				"  Next",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Space to toggle · n to add notes · Tab to <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "space",
+			"input": " ",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <bg:selectedBg><fg:text> ■ Beta header ok </fg></bg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Second question?</b>                                                               ",
+				"",
+				"<fg:accent>❯ </fg>1. <fg:accent>[✔]</fg> <fg:accent><b>B1</b></fg>",
+				"  <fg:muted>a</fg>",
+				"  2. <fg:muted>[ ]</fg> B2",
+				"  <fg:muted>b</fg>",
+				"  3. <fg:muted>[ ]</fg> Type something.",
+				"  Next",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Space to toggle · n to add notes · Tab to <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <bg:selectedBg><fg:text> ■ Beta header ok </fg></bg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Second question?</b>                                                               ",
+				"",
+				"  1. <fg:accent>[✔]</fg> B1",
+				"  <fg:muted>a</fg>",
+				"<fg:accent>❯ </fg>2. <fg:muted>[ ]</fg> <fg:accent><b>B2</b></fg>",
+				"  <fg:muted>b</fg>",
+				"  3. <fg:muted>[ ]</fg> Type something.",
+				"  Next",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Space to toggle · n to add notes · Tab to <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 4
+		},
+		{
+			"step": 4,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <bg:selectedBg><fg:text> ■ Beta header ok </fg></bg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Second question?</b>                                                               ",
+				"",
+				"  1. <fg:accent>[✔]</fg> B1",
+				"  <fg:muted>a</fg>",
+				"  2. <fg:muted>[ ]</fg> B2",
+				"  <fg:muted>b</fg>",
+				"<fg:accent><b><fg:accent>❯ </fg>3. <fg:muted>[ ]</fg> \u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"  Next",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Space to toggle · Tab to switch questions <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 5
+		},
+		{
+			"step": 5,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <bg:selectedBg><fg:text> ■ Beta header ok </fg></bg> <fg:muted> □ Gamma </fg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Second question?</b>                                                               ",
+				"",
+				"  1. <fg:accent>[✔]</fg> B1",
+				"  <fg:muted>a</fg>",
+				"  2. <fg:muted>[ ]</fg> B2",
+				"  <fg:muted>b</fg>",
+				"  3. <fg:muted>[ ]</fg> Type something.",
+				"<fg:accent>❯ </fg><fg:accent><b>Next</b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Space to toggle · n to add notes · Tab to <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 6
+		},
+		{
+			"step": 6,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <fg:success> ■ Beta header ok </fg> <bg:selectedBg><fg:text> □ Gamma </fg></bg> <fg:muted> □ Delta header 16 </fg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Third question?</b>                                                                ",
+				"",
+				"<fg:accent><b>❯ 1. C1</b></fg>",
+				"     <fg:muted>a</fg>",
+				"  2. C2",
+				"     <fg:muted>b</fg>",
+				"  3. Type something.",
+				"",
+				"<fg:accent>┌──────────────────────────────────────────┐</fg>",
+				"<fg:accent>│</fg> <fg:dim>No preview available</fg>                    <reset> <fg:accent>│</fg>",
+				"<fg:accent>└──────────────────────────────────────────┘</fg>",
+				"",
+				"",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Tab to switch questions ·<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 7
+		},
+		{
+			"step": 7,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <fg:success> ■ Beta header ok </fg> <fg:success> ■ Gamma </fg> <bg:selectedBg><fg:text> □ Delta header 16 </fg></bg> <fg:dim> ✓ Submit </fg> <reset>",
+				"",
+				"",
+				" <b>Fourth question?</b>                                                               ",
+				"",
+				"<fg:accent><b>❯ 1. D1</b></fg>",
+				"     <fg:muted>a</fg>",
+				"  2. D2",
+				"     <fg:muted>b</fg>",
+				"  3. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Tab to switch questions ·<reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 8
+		},
+		{
+			"step": 8,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <fg:success> ■ Beta header ok </fg> <fg:success> ■ Gamma </fg> <fg:success> ■ Delta header 16 </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> <reset>",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                                                            ",
+				"",
+				" <fg:muted> ● Alpha header</fg>                                                                ",
+				"    <fg:muted>→</fg> <fg:text>A1</fg>                                                                        ",
+				" <fg:muted> ● Beta header ok</fg>                                                              ",
+				"    <fg:muted>→</fg> <fg:text>B1</fg>                                                                        ",
+				" <fg:muted> ● Gamma</fg>                                                                       ",
+				"    <fg:muted>→</fg> <fg:text>C1</fg>                                                                        ",
+				" <fg:muted> ● Delta header 16</fg>                                                             ",
+				"    <fg:muted>→</fg> <fg:text>D1</fg>                                                                        ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                                                  ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a note · Esc to cancel</fg>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 9
+		},
+		{
+			"step": 9,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Alpha header </fg> <fg:success> ■ Beta header ok </fg> <fg:success> ■ Gamma </fg> <fg:success> ■ Delta header 16 </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> <reset>",
+				"",
+				"",
+				" <b><fg:accent>Review your answers</fg></b>                                                            ",
+				"",
+				" <fg:muted> ● Alpha header</fg>                                                                ",
+				"    <fg:muted>→</fg> <fg:text>A1</fg>                                                                        ",
+				" <fg:muted> ● Beta header ok</fg>                                                              ",
+				"    <fg:muted>→</fg> <fg:text>B1</fg>                                                                        ",
+				" <fg:muted> ● Gamma</fg>                                                                       ",
+				"    <fg:muted>→</fg> <fg:text>C1</fg>                                                                        ",
+				" <fg:muted> ● Delta header 16</fg>                                                             ",
+				"    <fg:muted>→</fg> <fg:text>D1</fg>                                                                        ",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Ready to submit your answers?</fg>                                                  ",
+				"❯ 1. <fg:accent><b>Submit answers</b></fg>",
+				"  2. <fg:text>Cancel</fg>",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add a note · Esc to cancel</fg>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 10
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "First question?",
+				"kind": "option",
+				"answer": "A1"
+			},
+			{
+				"questionIndex": 1,
+				"question": "Second question?",
+				"kind": "multi",
+				"answer": null,
+				"selected": [
+					"B1"
+				]
+			},
+			{
+				"questionIndex": 2,
+				"question": "Third question?",
+				"kind": "option",
+				"answer": "C1"
+			},
+			{
+				"questionIndex": 3,
+				"question": "Fourth question?",
+				"kind": "option",
+				"answer": "D1"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"First question?\"=\"A1\". \"Second question?\"=\"B1\". \"Third question?\"=\"C1\". \"Fourth question?\"=\"D1\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "First question?",
+					"kind": "option",
+					"answer": "A1"
+				},
+				{
+					"questionIndex": 1,
+					"question": "Second question?",
+					"kind": "multi",
+					"answer": null,
+					"selected": [
+						"B1"
+					]
+				},
+				{
+					"questionIndex": 2,
+					"question": "Third question?",
+					"kind": "option",
+					"answer": "C1"
+				},
+				{
+					"questionIndex": 3,
+					"question": "Fourth question?",
+					"kind": "option",
+					"answer": "D1"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "First question?",
+						"header": "Alpha header",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "A1",
+								"description": "a",
+								"hasPreview": false
+							},
+							{
+								"label": "A2",
+								"description": "b",
+								"hasPreview": false
+							}
+						]
+					},
+					{
+						"question": "Second question?",
+						"header": "Beta header ok",
+						"multiSelect": true,
+						"options": [
+							{
+								"label": "B1",
+								"description": "a",
+								"hasPreview": false
+							},
+							{
+								"label": "B2",
+								"description": "b",
+								"hasPreview": false
+							}
+						]
+					},
+					{
+						"question": "Third question?",
+						"header": "Gamma",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "C1",
+								"description": "a",
+								"hasPreview": false
+							},
+							{
+								"label": "C2",
+								"description": "b",
+								"hasPreview": true
+							}
+						]
+					},
+					{
+						"question": "Fourth question?",
+						"header": "Delta header 16",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "D1",
+								"description": "a",
+								"hasPreview": false
+							},
+							{
+								"label": "D2",
+								"description": "b",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

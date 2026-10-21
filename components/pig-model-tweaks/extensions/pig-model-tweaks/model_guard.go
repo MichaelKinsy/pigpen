@@ -2,6 +2,7 @@ package pigmodeltweaks
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -83,7 +84,7 @@ func registerModelGuard(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		if isModelAllowed(state, model) {
-			ctx.Notify("in preferred models: "+model.String(), "info")
+			ctx.Notify("✅ "+model.String()+" — in preferred models", "info")
 			return nil, nil
 		}
 		if sameModel(state, model, st.startupModel()) {
@@ -97,8 +98,8 @@ func registerModelGuard(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		if ctx.Mode() != modeTUI {
-			// RPC and print runs have nobody to ask; announce, as before.
-			ctx.Notify("NOT in preferred models: "+model.String(), "warning")
+			// RPC and print runs have nobody to ask; announce it as the original does.
+			ctx.Notify("⚠️  "+model.String()+" — NOT in preferred models", "warning")
 			return nil, nil
 		}
 		// The host applied the switch before this event and discards the handler's
@@ -109,134 +110,216 @@ func registerModelGuard(ext *sdk.Extension, st *store) {
 		return nil, nil
 	})
 
-	ext.Command(modelGuardName, "Manage the list of models prompts may use without confirmation",
+	ext.Command(modelGuardName, "Manage model preferences (guard against unintended model usage)",
 		func(ctx sdk.Context, args string) error {
 			state := st.load()
-			fields := strings.Fields(strings.TrimSpace(args))
-			sub := ""
-			if len(fields) > 0 {
-				sub = strings.ToLower(fields[0])
-			}
-
+			// The original compares the whole argument string; anything it does
+			// not know opens the picker.
+			sub := strings.ToLower(strings.TrimSpace(args))
 			switch sub {
+			case "list":
+				if len(state.ModelGuard.AllowedModels) == 0 {
+					ctx.Notify("No model preferences saved. All models allowed.", "info")
+					return nil
+				}
+				lines := make([]string, 0, len(state.ModelGuard.AllowedModels))
+				for _, model := range state.ModelGuard.AllowedModels {
+					lines = append(lines, "  • "+model.String())
+				}
+				ctx.Notify(fmt.Sprintf("Guard: %s\nAllowed models:\n%s",
+					strings.ToUpper(enabledWord(state.ModelGuard.Enabled)), strings.Join(lines, "\n")), "info")
+				return nil
 			case "on", "off", "toggle":
-				enabled := state.ModelGuard.Enabled
+				enabled := !state.ModelGuard.Enabled
 				switch sub {
 				case "on":
 					enabled = true
 				case "off":
 					enabled = false
-				case "toggle":
-					enabled = !enabled
 				}
-				updated := st.update(func(draft *settings) { draft.ModelGuard.Enabled = enabled })
-				ctx.Notify(fmt.Sprintf("model guard %s; preferred: %s",
-					enabledWord(enabled), formatAllowList(updated.ModelGuard.AllowedModels)), "info")
+				st.update(func(draft *settings) { draft.ModelGuard.Enabled = enabled })
+				ctx.Notify("Model guard "+enabledVerb(enabled), "info")
 				return nil
-			case "ask", "confirm", "noask":
-				confirm := state.ModelGuard.Confirm
-				switch sub {
-				case "ask", "confirm":
-					confirm = true
-				case "noask":
-					confirm = false
-				}
-				updated := st.update(func(draft *settings) { draft.ModelGuard.Confirm = confirm })
-				ctx.Notify(fmt.Sprintf("model guard %s; asks %s; preferred: %s",
-					enabledWord(updated.ModelGuard.Enabled), askingWord(confirm),
-					formatAllowList(updated.ModelGuard.AllowedModels)), "info")
-				return nil
-			case "list":
-				if len(state.ModelGuard.AllowedModels) == 0 {
-					ctx.Notify("no models preferred: every model is allowed", "info")
-					return nil
-				}
-				ctx.Notify(fmt.Sprintf("model guard %s, asks %s; preferred: %s; the model this session started on is always allowed",
-					enabledWord(state.ModelGuard.Enabled), askingWord(state.ModelGuard.Confirm),
-					formatAllowList(state.ModelGuard.AllowedModels)), "info")
-				return nil
-			case "add":
-				ref, ok := readModelArg(ctx, fields, "provider/model to add")
-				if !ok {
-					return nil
-				}
-				updated := st.update(func(draft *settings) {
-					draft.ModelGuard.AllowedModels = addAllowed(draft.ModelGuard.AllowedModels, ref)
-				})
-				ctx.Notify("preferred models: "+formatAllowList(updated.ModelGuard.AllowedModels), "info")
-				return nil
-			case "remove":
-				ref, ok := readModelArg(ctx, fields, "provider/model to remove")
-				if !ok {
-					return nil
-				}
-				updated := st.update(func(draft *settings) {
-					draft.ModelGuard.AllowedModels = removeAllowed(draft.ModelGuard.AllowedModels, ref)
-				})
-				ctx.Notify("preferred models: "+formatAllowList(updated.ModelGuard.AllowedModels), "info")
-				return nil
+			case "add", "remove":
+				return guardAddRemove(ctx, st, sub)
 			}
 
-			// No arguments: the multi-select the Pi original opened. The catalog
-			// comes from the host when its SDK exposes one, and otherwise from the
-			// models already in play, so the picker is never empty for no reason.
-			checked := make([]string, 0, len(state.ModelGuard.AllowedModels))
-			for _, model := range state.ModelGuard.AllowedModels {
-				checked = append(checked, model.String())
-			}
-			models := pickerCatalog(ctx, state.ModelGuard.AllowedModels)
-			if len(models) == 0 {
-				ctx.Notify(fmt.Sprintf("model guard %s; preferred: %s\nno model catalog is available from this PiG; use /%s add <provider/model>",
-					enabledWord(state.ModelGuard.Enabled), formatAllowList(state.ModelGuard.AllowedModels), modelGuardName), "info")
-				return nil
-			}
-			result, err := ctx.Custom(newModelPicker(models, checked, true), nil)
-			if err != nil {
-				logf("picker: %v", err)
-				return nil
-			}
-			chosen := selection(result)
-			if len(chosen) == 0 {
-				ctx.Notify("nothing changed", "info")
-				return nil
-			}
-			parsed := make([]modelRef, 0, len(chosen))
-			for _, name := range chosen {
-				if model, valid := parseModelRef(name); valid {
-					parsed = append(parsed, model)
+			// This port's own forms, which the original does not have.
+			fields := strings.Fields(strings.TrimSpace(args))
+			if len(fields) > 0 {
+				switch strings.ToLower(fields[0]) {
+				case "ask", "confirm", "noask":
+					confirm := strings.ToLower(fields[0]) != "noask"
+					updated := st.update(func(draft *settings) { draft.ModelGuard.Confirm = confirm })
+					ctx.Notify(fmt.Sprintf("model guard %s; asks %s; preferred: %s",
+						enabledWord(updated.ModelGuard.Enabled), askingWord(confirm),
+						formatAllowList(updated.ModelGuard.AllowedModels)), "info")
+					return nil
+				case "add", "remove":
+					if len(fields) == 2 {
+						return guardNamedModel(ctx, st, strings.ToLower(fields[0]), fields[1])
+					}
 				}
 			}
-			updated := st.update(func(draft *settings) { draft.ModelGuard.AllowedModels = parsed })
-			ctx.Notify("preferred models: "+formatAllowList(updated.ModelGuard.AllowedModels), "info")
-			return nil
+			return guardManage(ctx, st)
 		})
 }
 
-// readModelArg reads a `provider/model` argument, asking for it when the
-// command gave none.
-func readModelArg(ctx sdk.Context, fields []string, placeholder string) (modelRef, bool) {
-	if len(fields) > 1 {
-		if ref, ok := parseModelRef(fields[1]); ok {
-			return ref, true
-		}
-		ctx.Notify("a model looks like provider/model", "warning")
-		return modelRef{}, false
+// hintNoPreferences is the guard's session_start handler: the original tells a
+// user who has no preferences yet where to set them, at every session start
+// while the guard is on.
+func hintNoPreferences(ctx sdk.Context, st *store) {
+	state := st.load()
+	if state.ModelGuard.Enabled && len(state.ModelGuard.AllowedModels) == 0 {
+		ctx.Notify("💡 No model preferences set. Run /"+modelGuardName+" to choose preferred models.", "info")
 	}
-	answer, ok, err := ctx.Input(placeholder, "provider/model")
+}
+
+// showPicker opens the multi-select over the available models. ok is false when
+// it was cancelled, which the original reports as "Cancelled".
+func showPicker(ctx sdk.Context, title string, models []modelRef, checked []string) (chosen []string, ok bool, err error) {
+	result, err := ctx.Custom(newGuardPicker(title, models, checked), nil)
 	if err != nil {
-		logf("input: %v", err)
-		return modelRef{}, false
+		return nil, false, err
+	}
+	chosen, ok = pickerChoice(result)
+	return chosen, ok, nil
+}
+
+// parseModelValue is the original's `value.split("/")`: the provider is the text
+// before the first slash and the model is the rest.
+func parseModelValue(value string) modelRef {
+	provider, model, _ := strings.Cut(value, "/")
+	return modelRef{Provider: provider, Model: model}
+}
+
+func currentAllowed(st *store) []string {
+	state := st.load()
+	current := make([]string, 0, len(state.ModelGuard.AllowedModels))
+	for _, model := range state.ModelGuard.AllowedModels {
+		current = append(current, model.String())
+	}
+	return current
+}
+
+// guardTitle is the multi-select's heading for each way of opening it.
+func guardTitle(sub string, firstTime bool) string {
+	switch {
+	case sub == "add":
+		return "Select models to ADD to preferences"
+	case sub == "remove":
+		return "Select models to REMOVE from preferences"
+	case firstTime:
+		return "Select your PREFERRED models"
+	}
+	return "Toggle model preferences (checked = allowed)"
+}
+
+// guardAddRemove is the `add` and `remove` pickers of pt-model-guard.ts.
+func guardAddRemove(ctx sdk.Context, st *store, sub string) error {
+	models := availableModels(ctx)
+	if len(models) == 0 {
+		ctx.Notify("No models available. Check your API keys.", "warning")
+		return nil
+	}
+	current := currentAllowed(st)
+	chosen, ok, err := showPicker(ctx, guardTitle(sub, false), models, current)
+	if err != nil {
+		return err
 	}
 	if !ok {
-		ctx.Notify("cancelled", "info")
-		return modelRef{}, false
+		ctx.Notify("Cancelled", "info")
+		return nil
 	}
-	ref, valid := parseModelRef(answer)
-	if !valid {
+	if sub == "add" {
+		var added []modelRef
+		for _, value := range chosen {
+			if !slices.Contains(current, value) {
+				added = append(added, parseModelValue(value))
+			}
+		}
+		if len(added) == 0 {
+			ctx.Notify("No new models added", "info")
+			return nil
+		}
+		st.update(func(draft *settings) {
+			draft.ModelGuard.AllowedModels = append(draft.ModelGuard.AllowedModels, added...)
+		})
+		names := make([]string, 0, len(added))
+		for _, model := range added {
+			names = append(names, model.String())
+		}
+		ctx.Notify(fmt.Sprintf("Added %d model(s): %s", len(added), strings.Join(names, ", ")), "info")
+		return nil
+	}
+	before := len(current)
+	next := st.update(func(draft *settings) {
+		kept := draft.ModelGuard.AllowedModels[:0]
+		for _, model := range draft.ModelGuard.AllowedModels {
+			if slices.Contains(chosen, model.String()) {
+				kept = append(kept, model)
+			}
+		}
+		draft.ModelGuard.AllowedModels = kept
+	})
+	if removed := before - len(next.ModelGuard.AllowedModels); removed > 0 {
+		ctx.Notify(fmt.Sprintf("Removed %d model(s)", removed), "info")
+	} else {
+		ctx.Notify("No models removed", "info")
+	}
+	return nil
+}
+
+// guardManage is the bare command: one picker that sets the whole list.
+func guardManage(ctx sdk.Context, st *store) error {
+	models := availableModels(ctx)
+	if len(models) == 0 {
+		ctx.Notify("No models available. Check your API keys.", "warning")
+		return nil
+	}
+	current := currentAllowed(st)
+	firstTime := len(current) == 0
+	if firstTime {
+		ctx.Notify("No preferences set yet. Pick your preferred models:", "info")
+	}
+	chosen, ok, err := showPicker(ctx, guardTitle("", firstTime), models, current)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		ctx.Notify("Cancelled", "info")
+		return nil
+	}
+	if firstTime && len(chosen) == 0 {
+		ctx.Notify("No models selected. All models remain allowed.", "info")
+		return nil
+	}
+	allowed := make([]modelRef, 0, len(chosen))
+	for _, value := range chosen {
+		allowed = append(allowed, parseModelValue(value))
+	}
+	st.update(func(draft *settings) { draft.ModelGuard.AllowedModels = allowed })
+	ctx.Notify(fmt.Sprintf("Updated preferences: %d model(s) allowed", len(allowed)), "info")
+	return nil
+}
+
+// guardNamedModel is this port's `add <provider/model>` and
+// `remove <provider/model>`, which skip the picker.
+func guardNamedModel(ctx sdk.Context, st *store, sub, name string) error {
+	ref, ok := parseModelRef(name)
+	if !ok {
 		ctx.Notify("a model looks like provider/model", "warning")
-		return modelRef{}, false
+		return nil
 	}
-	return ref, true
+	updated := st.update(func(draft *settings) {
+		if sub == "add" {
+			draft.ModelGuard.AllowedModels = addAllowed(draft.ModelGuard.AllowedModels, ref)
+		} else {
+			draft.ModelGuard.AllowedModels = removeAllowed(draft.ModelGuard.AllowedModels, ref)
+		}
+	})
+	ctx.Notify("preferred models: "+formatAllowList(updated.ModelGuard.AllowedModels), "info")
+	return nil
 }
 
 // isModelAllowed reports whether a model may be used without confirmation. An

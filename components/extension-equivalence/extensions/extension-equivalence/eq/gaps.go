@@ -31,7 +31,13 @@ type Gap struct {
 type surfaceRow struct {
 	symbol, goCell string
 	triggers       []*regexp.Regexp
+	// inReplacedContext marks a `withSession ctx.x` row: the replacement context exists only inside the
+	// withSession callback, so the triggers must match there (the callback names it as it likes) and not
+	// anywhere else in the file.
+	inReplacedContext bool
 }
+
+const replacedContextPrefix = "withSession "
 
 var (
 	identRE   = regexp.MustCompile(`[A-Za-z_][A-Za-z0-9_]*`)
@@ -82,7 +88,7 @@ func buildSurface(markdown string) []surfaceRow {
 		if len(trig) == 0 {
 			continue
 		}
-		rows = append(rows, surfaceRow{symbol: symbol, goCell: goCell, triggers: trig})
+		rows = append(rows, surfaceRow{symbol: symbol, goCell: goCell, triggers: trig, inReplacedContext: strings.HasPrefix(symbol, replacedContextPrefix)})
 	}
 	return rows
 }
@@ -95,7 +101,7 @@ func buildSurface(markdown string) []surfaceRow {
 //	pi.on("event")    -> .on("event"
 //	ctx.f(options.o)  -> .f( and the word o
 //	event return.o    -> "event" and the word o
-//	withSession ctx.x -> the word withSession
+//	withSession ctx.x -> the triggers of ctx.x, matched inside the withSession callbacks (surfaceRow.inReplacedContext)
 func triggers(symbol string) []*regexp.Regexp {
 	symbol = strings.SplitN(symbol, " →", 2)[0]
 	compile := func(p string) *regexp.Regexp { return regexp.MustCompile(p) }
@@ -103,8 +109,8 @@ func triggers(symbol string) []*regexp.Regexp {
 	if m := regexp.MustCompile(`^pi\.on\("([^"]+)"\)$`).FindStringSubmatch(symbol); m != nil {
 		return []*regexp.Regexp{compile(`\.on\(\s*["']` + q(m[1]) + `["']`)}
 	}
-	if strings.HasPrefix(symbol, "withSession ") {
-		return []*regexp.Regexp{compile(`\bwithSession\b`)}
+	if rest, ok := strings.CutPrefix(symbol, replacedContextPrefix); ok {
+		return triggers(rest)
 	}
 	if m := regexp.MustCompile(`^([a-z_]+) (?:event|return)\.([A-Za-z_]+)`).FindStringSubmatch(symbol); m != nil && strings.Contains(m[1], "_") {
 		return []*regexp.Regexp{compile(`["']` + q(m[1]) + `["']`), compile(`\b` + q(m[2]) + `\b`)}
@@ -162,10 +168,21 @@ func ScanGaps(tsSource, surfaceMarkdown string) []Gap {
 	lines := strings.Split(source, "\n")
 	var gaps []Gap
 	seen := map[string]int{} // identical triggers report once, with the count of related rows
+	// The withSession callbacks' text with everything else blanked (same offsets and lines), built on first use.
+	var replaced string
+	var replacedLines []string
 	for _, row := range parseSurface(surfaceMarkdown) {
+		text, textLines := source, lines
+		if row.inReplacedContext {
+			if replacedLines == nil {
+				replaced = onlyWithSessionCallbacks(source)
+				replacedLines = strings.Split(replaced, "\n")
+			}
+			text, textLines = replaced, replacedLines
+		}
 		all := true
 		for _, re := range row.triggers {
-			if !re.MatchString(source) {
+			if !re.MatchString(text) {
 				all = false
 				break
 			}
@@ -178,6 +195,9 @@ func ScanGaps(tsSource, surfaceMarkdown string) []Gap {
 			sig = append(sig, re.String())
 		}
 		key := strings.Join(sig, "&") + "|" + row.goCell[:min(7, len(row.goCell))]
+		if row.inReplacedContext {
+			key += "|in withSession callbacks" // the same words elsewhere in the file are another claim
+		}
 		if i, dup := seen[key]; dup {
 			gaps[i].Related++
 			continue
@@ -188,7 +208,7 @@ func ScanGaps(tsSource, surfaceMarkdown string) []Gap {
 			g.Severity = "missing"
 		}
 		first := row.triggers[0]
-		for i, l := range lines {
+		for i, l := range textLines {
 			if first.MatchString(l) {
 				g.Lines = append(g.Lines, i+1)
 			}
@@ -204,6 +224,89 @@ func ScanGaps(tsSource, surfaceMarkdown string) []Gap {
 		return gaps[i].Symbol < gaps[j].Symbol
 	})
 	return gaps
+}
+
+var withSessionRE = regexp.MustCompile(`\bwithSession\b`)
+
+// onlyWithSessionCallbacks returns source with every character outside the withSession callbacks replaced by a
+// space (newlines stay), so a pattern that matches in the result is used inside one. A callback is what follows
+// `withSession:` up to the comma or closing bracket that ends the property. When a withSession is not given an
+// inline function (a shorthand property, a reference to a function defined elsewhere) the callback cannot be
+// located, and the whole source stays in scope: a real use is never hidden.
+func onlyWithSessionCallbacks(source string) string {
+	keep := make([]bool, len(source))
+	for _, m := range withSessionRE.FindAllStringIndex(source, -1) {
+		start, end := m[1], len(source)
+		rest := strings.TrimLeft(source[start:], " \t\r\n")
+		if !strings.HasPrefix(rest, ":") {
+			return source
+		}
+		start = len(source) - len(rest) + 1
+		end = propertyEnd(source, start)
+		body := source[start:end]
+		if !strings.Contains(body, "=>") && !strings.Contains(body, "function") {
+			return source
+		}
+		for i := start; i < end; i++ {
+			keep[i] = true
+		}
+	}
+	out := []byte(source)
+	for i, c := range out {
+		if !keep[i] && c != '\n' {
+			out[i] = ' '
+		}
+	}
+	return string(out)
+}
+
+// propertyEnd returns the offset where the object-literal property value starting at start ends: the first
+// comma at bracket depth 0 or the first closing bracket that has no opener inside the value. Strings and
+// template literals are skipped.
+func propertyEnd(src string, start int) int {
+	depth := 0
+	for i := start; i < len(src); i++ {
+		switch c := src[i]; c {
+		case '"', '\'':
+			for i++; i < len(src) && src[i] != c; i++ {
+				if src[i] == '\\' {
+					i++
+				}
+			}
+		case '`':
+			i = templateEnd(src, i)
+		case '(', '[', '{':
+			depth++
+		case ')', ']', '}':
+			if depth == 0 {
+				return i
+			}
+			depth--
+		case ',':
+			if depth == 0 {
+				return i
+			}
+		}
+	}
+	return len(src)
+}
+
+// templateEnd returns the offset of the backtick that closes the template literal opened at i, skipping
+// ${...} substitutions (which may hold nested templates).
+func templateEnd(src string, i int) int {
+	for i++; i < len(src); i++ {
+		switch src[i] {
+		case '\\':
+			i++
+		case '`':
+			return i
+		case '$':
+			if i+1 < len(src) && src[i+1] == '{' {
+				i = propertyEnd(src, i+2) // ends at the substitution's closing brace
+			}
+		}
+	}
+	return len(src)
 }
 
 var extensionMarkerRE = regexp.MustCompile(`\bExtensionAPI\b|\bExtensionContext\b|\bExtensionCommandContext\b|\b(?:pi|api)\s*\.\s*(?:on|events|exec|register[A-Z]\w*|send(?:User)?Message|appendEntry|setActiveTools|getActiveTools|getAllTools|setModel|setThinkingLevel|setSessionName)\b|\b(?:pi|api)\s*\[|\{[^{}]*\bevents\b[^{}]*\}\s*(?::[^=]*)?=\s*(?:pi|api)\b`)

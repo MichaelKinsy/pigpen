@@ -130,8 +130,10 @@ func TestUnportedProviderFailsWithoutFallback(t *testing.T) {
 	r, err := NewRuntime(&fakeHost{})
 	noErr(t, err)
 	n := searchProviderNet(t)
-	out := run(t, mustTool(t, r, "web_search"), map[string]any{"query": "x", "workflow": "none"})
-	matchRE(t, `SerpBase search is not available in this Go port yet`, out.Text())
+	_, err = mustTool(t, r, "web_search").Execute(bg(), map[string]any{"query": "x", "workflow": "none"}, nil)
+	if want := refusal("SerpBase search provider"); err == nil || err.Error() != want {
+		t.Fatalf("error = %v, want %q", err, want)
+	}
 	wantCalls(t, n)
 }
 

@@ -1,0 +1,51 @@
+{
+  "name": "remember-commands",
+  "description": "pt-remember-model status, off, on, clear and status again, with a remembered model that is not in the registry (startup restore is a no-op).",
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": true, \"last\": {\"provider\": \"acme\", \"modelId\": \"m1\"}}}"
+  },
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model off"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model on"
+      }
+    },
+    {
+      "name": "clear",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model clear"
+      }
+    },
+    {
+      "name": "status-after-clear",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "odd-case",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model  OFF "
+      }
+    }
+  ]
+}
