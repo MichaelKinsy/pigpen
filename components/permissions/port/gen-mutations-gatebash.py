@@ -260,6 +260,16 @@ m("help-first-most-restrictive-least", P, "\t\tif restrictiveness[s] > restricti
 m("help-first-most-restrictive-start", P, "\tworst := 0\n\tfor i, s := range states {", "\tworst := len(states) - 1\n\tfor i, s := range states {")
 m("help-strings-as-json", P, "\t\tout[i] = s\n", "\t\tout[i] = \"\" + s[:0]\n")
 
+# Mutants argued equivalent and left out of the list (each is a mutation of a branch no input reaches, or of a performance-only early exit):
+EQUIVALENT = {
+    "cmd-results-empty-fallback": "unreachable: no units means primary is false, and that branch returns before the loop",
+    "cmd-results-empty-never": "unreachable: same branch",
+    "cmd-results-empty-agent": "unreachable: same branch",
+    "cmd-primary-break": "only stops the scan for a primary unit early",
+    "ext-no-accesses": "with no accesses nothing is uncovered and nothing session-covered, so the gate returns nil either way",
+    "path-ask-state": "a check's state is allow, ask or deny; deny is handled by the branch above, so != allow and == ask select the same checks",
+}
+M = [x for x in M if x["name"] not in EQUIVALENT]
 out = []
 bad = False
 for x in M:
