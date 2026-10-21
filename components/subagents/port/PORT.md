@@ -299,10 +299,27 @@ mission and workflow slices; no `pigeq check` had run since.
 | `schedule.*` answered with the refusal before the original's argument checks | `schedule_validate.go` ports the checks (exactly one of at/every, overlap, catchUp, id, `at`, `every`, required id); a valid call is still refused |
 | `exec-coverage` failed: `/bin/sh` started by path | named once (`posixShell`), as the Windows branch already names `ComSpec` |
 
-Known difference left: a failed foreground or mission result returns `ToolResult{IsError, Details}`; Pi shows a failed result's details as `{}`
-(finding 4 above: `sdk.NewToolError` matches). No scenario reaches it without a child.
+A launch that fails before a child starts (the working directory is missing, a file or unreadable) is a failed tool call in both: the original rejects
+at the tool boundary, so Pi records no details for it, and `sdk.NewToolError` matches. Scenario `run-launch-failure` (golden recorded from the original
+under Pi 1402973a; red log `red-run-launch-failure.log`) pins the foreground run, the same with a mission and the background run: the launch check
+(`preflightRunCwd`) runs after the budget slot is claimed, so the failure carries the `Run fan-out` line, the mission line and, for a background run,
+`Failed to start async run '<id>': `. Twin: `run_launch_failure_test.go`.
 
-Known cost kept: every `session_start` runs `npm root -g` once in the background (`advertise.go`, `resolveGlobalNpmRoot`), and the first prompt and every tool call wait for it. This is the original's behavior (`global-npm-root.ts` runs at every session start and `beforeAgentStart` awaits it), and the twin `TestAdvertisementBarrier` pins a fresh lookup per session (a newer session's root wins over an older lookup that is still running). Caching the root for the process would change that twin, so the cost is not removed; it is the same exec the original pays, off the render path.
+## Mutation kill pass (final tip)
+
+Every mutation of `mutations.json` was run with `pigeq mutate --unit-only`; each survivor got a test, or the code it mutated was dead or redundant and was removed:
+
+| Mutation | Why it survived | What was done |
+|---|---|---|
+| `disc-legacy-skills`, `disc-chain-md`, `agents-mcp-split` | `readDefinitions`, `listFiles`, `splitTools` were unreachable (superseded by `agentmgmt_discover.go`) | deleted; the live checks are mutated instead |
+| `list-sort` | no test ordered agents by name | `TestListOrdersAgentsByName` |
+| `adv-huge-name` | the name guard was redundant with the catalog byte budget | guard removed |
+| `sv-hour`, `sv-minute`, `sv-second`, `sv-month`, `sv-month-days` | `time.Parse` refuses the same dates | the redundant field checks removed; offsets (which Go accepts) stay checked |
+| `val-exclusive` | the public boundary refuses both script sources first | check removed from the validate action |
+| `mis-act-trim-resolution` | `updateMission` trims the resolution again | trim removed from the action |
+| `dl-capacity` | the saturation flag is set when a table fills, so the length guard could not be reached | guard removed |
+| `ref-run-params` | `output` is registered by the run policy | mutation retargeted at an unregistered parameter |
+| 40 mutations whose definition did not build | unused variable after the mutation | definitions repaired in `gen-mutations.py` |
 
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 
