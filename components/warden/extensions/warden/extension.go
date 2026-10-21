@@ -137,12 +137,13 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
 	// Pieces of the message, input and agent_settled events, in upstream's order (supervision.go lists the whole
 	// order). Each lane adds its own line here, above registerSupervisionEvents.
-	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
-	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
-	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
-	w.sup.onMessageEnd(w.learnMessageEnd)                                         // learning: the assistant message settles the watched steers (runs first)
-	w.sup.onMessageEnd(w.contextMessageEnd)                                       // context: the repeated-run cut of a user or custom message (opt-in)
-	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
+	w.sup.onMessageStart(w.onRunawayMessageStart)                                     // security: the runaway guard resets per assistant message
+	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                                   // security: the runaway guard feeds on the stream
+	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")     // rules: /warden init and rules tune
+	w.sup.blockInput(w.auditRunning, "pi-warden is running an audit. Please wait...") // audit: /warden audit
+	w.sup.onMessageEnd(w.learnMessageEnd)                                             // learning: the assistant message settles the watched steers (runs first)
+	w.sup.onMessageEnd(w.contextMessageEnd)                                           // context: the repeated-run cut of a user or custom message (opt-in)
+	w.sup.onSettled(w.checkSubagentReports)                                           // supervision: subagent triage
 	if o.setup != nil {
 		o.setup(w)
 	}
