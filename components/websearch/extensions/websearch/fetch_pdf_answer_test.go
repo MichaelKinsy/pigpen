@@ -82,7 +82,7 @@ func TestUpstream_fetch_pdf_answer(t *testing.T) {
 		if string(saved) != markdown {
 			t.Fatal("the saved file must equal the Markdown the model received")
 		}
-		got, err := execTool(t, r, "get_search_content", map[string]any{"responseId": dStr(out, "responseId"), "urlIndex": 0, "findText": "42 dollars"})
+		got, err := execTool(t, r, "get_search_content", map[string]any{"responseId": dStr(out, "responseId"), "urlIndex": float64(0), "findText": "42 dollars"})
 		noErr(t, err)
 		matchRE(t, `The annual fee is 42 dollars\.`, got.Text())
 	})
@@ -215,8 +215,13 @@ func TestUpstream_fetch_pdf_answer(t *testing.T) {
 		cctx, cancel := context.WithCancel(ctx)
 		cancel()
 		out, err := mustTool(t, r, "fetch_content").Execute(cctx, pdfAnswerParams("https://93.184.216.34/aborted.pdf", "Summarize."), nil)
-		noErr(t, err)
-		matchRE(t, `(?i)abort`, fmt.Sprint(out.Details["error"]))
+		// The original resolves with details.error; a Go tool reports a cancelled call as an error
+		// (tool_fetch.go, shared with every fetch_content cancellation), so either carries the abort.
+		if err != nil {
+			matchRE(t, `(?i)abort`, err.Error())
+		} else {
+			matchRE(t, `(?i)abort`, fmt.Sprint(out.Details["error"]))
+		}
 		if reg.callCount() != 0 || n.count() != 0 {
 			t.Fatalf("%d model calls, %d requests", reg.callCount(), n.count())
 		}

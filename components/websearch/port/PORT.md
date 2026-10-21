@@ -471,6 +471,7 @@ afterwards); a 6-page license text differs in 2 of 33 728 characters (see the fo
   unexpected redirect`; a request that outlives the shared deadline reads `request timed out (...)`, not the runtime's TimeoutError text;
   the key from `datalabApiKey` is read on every call (the original caches the config for the process).
 - **No activity monitor** around the fetch (curator slice).
+- **Cancelled PDF answer**: the original's `execute` resolves with `details.error` "Aborted" for an already aborted signal; the Go tool returns an `Aborted: context canceled` error for a cancelled context, as every `fetch_content` cancellation does (`tool_fetch.go`). The twin accepts either form and still requires that no request and no model call happened.
 - **fetch-pdf-answer**: all seven upstream cases are twins. The six answer-mode ones run through `fetch_content` with a scripted
   model registry (`pdfAnswerFixture`, the upstream test's `ctx`) on top of the answer-mode slice; the PDF half of each is also a Go test
   beside them (`TestPDFAnswerModeExtraction*`, driving `ExtractContent` with `Mode: "answer"`).
