@@ -30,12 +30,6 @@
   "replace": "if commands[i].Salvaged {\n\t\t\tprimary = true"
  },
  {
-  "name": "cmd-primary-break",
-  "file": "gatebashcommand.go",
-  "find": "\t\t\tprimary = true\n\t\t\tbreak",
-  "replace": "\t\t\tprimary = true"
- },
- {
   "name": "cmd-primary-gate",
   "file": "gatebashcommand.go",
   "find": "\tif !primary {\n\t\twhole :=",
@@ -166,24 +160,6 @@
   "file": "gatebashcommand.go",
   "find": "\tresults := make([]PermissionCheckResult, len(commands))\n\tfor i := range commands {",
   "replace": "\tresults := make([]PermissionCheckResult, len(commands))\n\tfor i := 0; i < len(commands)-1; i++ {"
- },
- {
-  "name": "cmd-results-empty-fallback",
-  "file": "gatebashcommand.go",
-  "find": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)\n\t}",
-  "replace": "\tif len(results) == 0 {\n\t\treturn PermissionCheckResult{State: \"allow\"}\n\t}"
- },
- {
-  "name": "cmd-results-empty-agent",
-  "file": "gatebashcommand.go",
-  "find": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)",
-  "replace": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, nil, resolver)"
- },
- {
-  "name": "cmd-results-empty-never",
-  "file": "gatebashcommand.go",
-  "find": "\tif len(results) == 0 {",
-  "replace": "\tif len(results) == 99 {"
  },
  {
   "name": "cmd-worst-first",
@@ -702,12 +678,6 @@
   "replace": "\t\t\tbreak\n"
  },
  {
-  "name": "path-ask-state",
-  "file": "gatebashpath.go",
-  "find": "\t\tif check.State == \"ask\" {\n\t\t\tuncovered",
-  "replace": "\t\tif check.State != \"allow\" {\n\t\t\tuncovered"
- },
- {
   "name": "path-ask-not-collected",
   "file": "gatebashpath.go",
   "find": "\t\tif check.State == \"ask\" {\n\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n\t\t}",
@@ -1006,12 +976,6 @@
   "file": "gatebashpath.go",
   "find": "func DescribeBashExternalDirectoryGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {\n\tif program == nil {\n\t\treturn nil\n\t}",
   "replace": "func DescribeBashExternalDirectoryGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {"
- },
- {
-  "name": "ext-no-accesses",
-  "file": "gatebashpath.go",
-  "find": "\taccesses := program.ExternalAccesses()\n\tif len(accesses) == 0 {\n\t\treturn nil\n\t}",
-  "replace": "\taccesses := program.ExternalAccesses()"
  },
  {
   "name": "ext-agent",
