@@ -137,7 +137,6 @@ m("ext-dedupe", "extension.go", "if !seen[n] {\n\t\t\tseen[n] = true\n\t\t\tuniq
 m("ext-details", "agentmgmt_actions.go", 'obj("mode", "management", "results", []any{})', 'obj("mode", "management")')
 m("ext-refuse", "agentmgmt_actions.go", "return nil, sdk.NewToolError(r.text)", "return textResult(r.text, true), nil")
 m("ext-single-needs-task", "extension.go", '\tif task == "" {\n', '\tif false {\n')
-m("ext-single-agent-type", "extension.go", 'if name == "" {\n\t\treturn nil, sdk.NewToolError("Structured single-child execution', 'if false {\n\t\treturn nil, sdk.NewToolError("Structured single-child execution')
 m("ext-action-type", "extension.go", '!isString || jsTrim(s) == ""', '!isString')
 m("ext-refuse-first", "extension.go", 'if msg := refuseUnsupported(params, action); msg != "" {', 'if msg := refuseUnsupported(params, action); msg != "" && false {')
 m("ext-supervisor", "extension.go", 'refuseTool("the supervisor channel (`subagent_supervisor`)")', 'refuseTool("the supervisor")')

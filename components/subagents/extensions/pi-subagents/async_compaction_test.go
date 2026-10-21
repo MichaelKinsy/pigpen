@@ -155,3 +155,16 @@ func TestSubagentActionRecoveryThroughTheTool(t *testing.T) {
 		}
 	})
 }
+
+// A session shutdown removes the background-run widget (the children live on and the next session draws its own).
+func TestSessionShutdownClearsTheAsyncWidget(t *testing.T) {
+	e := newAsyncEnv(t)
+	t.Setenv("FAKE_PIG_SLEEP", "60")
+	h := e.host(t)
+	h.FireAll("session_start", map[string]any{"reason": "startup"})
+	launch(t, h, map[string]any{})
+	eventually(t, "the widget", func() bool { return asyncWidgetDrawn(h) > 0 })
+	before := asyncWidgetCleared(h)
+	h.FireAll("session_shutdown", nil)
+	eq(t, asyncWidgetCleared(h), before+1, "the widget cleared by the shutdown")
+}

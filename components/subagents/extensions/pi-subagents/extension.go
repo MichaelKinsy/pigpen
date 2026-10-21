@@ -241,10 +241,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		return nil, sdk.NewToolError("Execution requires either { agent, task? } for one child, a named workflow resource, or a non-empty workflowScript or workflowScriptPath for orchestration.")
 	}
 	name, _ := params["agent"].(string)
-	name = jsTrim(name)
-	if name == "" {
-		return nil, sdk.NewToolError("Structured single-child execution requires agent to be a non-empty string.")
-	}
+	name = jsTrim(name) // the public execution normalization has refused a blank or non-string agent
 	task, taskIsString := params["task"].(string)
 	if params["task"] != nil && !taskIsString {
 		return nil, sdk.NewToolError("Structured single-child task must be a string when provided.")
