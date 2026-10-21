@@ -68,6 +68,9 @@ type Scenario struct {
 	// lane's trace after the built-in rules. For values the extension makes up on every run
 	// (a response id), not for text a port is expected to produce.
 	Normalize []NormalizeRule `json:"normalize,omitempty"`
+	// VolatileNumbers lists the exact paths (rule N8) of numbers an extension makes up on every run (a pid, a clock in a
+	// result's details), from the root of an event's data: "result.details.pid", "message.details.tasks.[].startedAt".
+	VolatileNumbers []string `json:"volatileNumbers,omitempty"`
 }
 
 // NormalizeRule is one scenario-level normalization rule (N7): every match of the Go regular
@@ -210,6 +213,9 @@ func (s *Scenario) Validate() error {
 		return err
 	}
 	if _, err := compileRules(s.Normalize); err != nil {
+		return err
+	}
+	if _, err := compileNumberPaths(s.VolatileNumbers); err != nil {
 		return err
 	}
 	for i, step := range s.Steps {

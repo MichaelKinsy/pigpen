@@ -43,6 +43,9 @@ const NormalizerVersion = "v3"
 //	    (UI requests, tool results, messages) keep every key.
 //	N5  the RPC correlation `id` of responses and UI requests is dropped
 //	    (the harness assigns it).
+//	N8  (a scenario's own `volatileNumbers` list, like N7 it does not change the version) the number at each listed
+//	    exact path of an event's data, for example result.details.pid, becomes "<number>"; the segment "[]" stands for every
+//	    element of an array. A key that is missing, one under another name and a value that is not a number are left as they are.
 //	N6  in a tool_execution_end result, structuredContent.wall_time_seconds
 //	    becomes "<seconds>": Pi 1.0's bash tool measures the command's wall
 //	    time (rounded to 0.1 s, pi-coding-agent 1.0.1 dist/core/tools/bash.js
@@ -60,10 +63,11 @@ var (
 // Replacement is one literal N1 rule.
 type Replacement struct{ From, To string }
 
-// Normalizer applies rules N1-N7.
+// Normalizer applies rules N1-N8.
 type Normalizer struct {
 	Replace []Replacement
 	rules   []compiledRule
+	numbers [][]string
 }
 
 type compiledRule struct {
@@ -95,6 +99,73 @@ func (n *Normalizer) AddRules(rules []NormalizeRule) error {
 	}
 	n.rules = append(n.rules, c...)
 	return nil
+}
+
+// compileNumberPaths validates a scenario's N8 paths: dot-separated keys from the root of an event's data, in which the
+// segment "[]" stands for every element of an array.
+func compileNumberPaths(paths []string) ([][]string, error) {
+	var out [][]string
+	for i, p := range paths {
+		if p == "" {
+			return nil, fmt.Errorf("volatileNumbers path %d is empty", i)
+		}
+		segs := strings.Split(p, ".")
+		if slices.Contains(segs, "") {
+			return nil, fmt.Errorf("volatileNumbers path %d (%q) has an empty segment", i, p)
+		}
+		out = append(out, segs)
+	}
+	return out, nil
+}
+
+// AddNumberPaths installs the scenario's N8 paths: the number found at exactly one of them becomes "<number>" (a pid or a
+// clock an extension reports in a result's details, which no string rule can reach). Anything else at a path, and every other
+// key, is left as it is, so a missing key, a key under another name and a value that is not a number all still differ.
+func (n *Normalizer) AddNumberPaths(paths []string) error {
+	c, err := compileNumberPaths(paths)
+	if err != nil {
+		return err
+	}
+	n.numbers = append(n.numbers, c...)
+	return nil
+}
+
+func isNumber(v any) bool {
+	switch v.(type) {
+	case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, json.Number:
+		return true
+	}
+	return false
+}
+
+// maskNumbers returns v with the numbers at the N8 paths replaced; v itself is not changed.
+func maskNumbers(v any, path []string) any {
+	if len(path) == 0 {
+		if isNumber(v) {
+			return "<number>"
+		}
+		return v
+	}
+	switch x := v.(type) {
+	case map[string]any:
+		child, ok := x[path[0]]
+		if !ok || path[0] == "[]" {
+			return v
+		}
+		out := maps.Clone(x)
+		out[path[0]] = maskNumbers(child, path[1:])
+		return out
+	case []any:
+		if path[0] != "[]" {
+			return v
+		}
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = maskNumbers(e, path[1:])
+		}
+		return out
+	}
+	return v
 }
 
 // NewNormalizer builds rule N1 from the run's roots. Symlink-resolved forms are
@@ -172,7 +243,12 @@ func (n *Normalizer) Value(v any) any {
 }
 
 // Data normalizes and canonically encodes an event payload.
-func (n *Normalizer) Data(v any) json.RawMessage { return canonical(n.Value(v)) }
+func (n *Normalizer) Data(v any) json.RawMessage {
+	for _, p := range n.numbers {
+		v = maskNumbers(v, p)
+	}
+	return canonical(n.Value(v))
+}
 
 // ProjectHost maps one raw host RPC record to a trace event, or reports false
 // when the record is not part of the captured set. The projection keeps what

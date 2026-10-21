@@ -289,6 +289,9 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if err := rec.norm.AddRules(sc.Normalize); err != nil {
 		return nil, err
 	}
+	if err := rec.norm.AddNumberPaths(sc.VolatileNumbers); err != nil {
+		return nil, err
+	}
 
 	if err := writeFilesUnder(agent, sc.AgentFiles, ups); err != nil {
 		return nil, err

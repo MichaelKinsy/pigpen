@@ -973,3 +973,48 @@ function later(pi: ExtensionAPI, ctx: any) {
 		t.Errorf("lines = %v, want [5]", g.Lines)
 	}
 }
+
+// N8 replaces the number at an exact path and nothing else.
+func TestScenarioVolatileNumbersMaskOnlyTheListedPaths(t *testing.T) {
+	n := NewNormalizer("", "", "")
+	if err := n.AddNumberPaths([]string{"result.details.pid", "result.details.tasks.[].startedAt"}); err != nil {
+		t.Fatal(err)
+	}
+	event := map[string]any{"result": map[string]any{"details": map[string]any{
+		"pid":   4242.0,
+		"other": 7.0,
+		"tasks": []any{map[string]any{"startedAt": 1.7e12, "pid": 9.0}, map[string]any{"startedAt": "text", "pid": 10.0}, map[string]any{"pid": 11.0}},
+	}}, "pid": 5.0}
+	got := string(n.Data(event))
+	want := `{"pid":5,"result":{"details":{"other":7,"pid":"<number>","tasks":[{"pid":9,"startedAt":"<number>"},{"pid":10,"startedAt":"text"},{"pid":11}]}}}`
+	if got != want {
+		t.Errorf("got  %s\nwant %s", got, want)
+	}
+	// The input is not changed, a path through a string or a missing key changes nothing, and a different value type still differs.
+	if event["result"].(map[string]any)["details"].(map[string]any)["pid"] != 4242.0 {
+		t.Error("the event was modified")
+	}
+	other := NewNormalizer("", "", "")
+	if err := other.AddNumberPaths([]string{"result.details.pid.x", "result.nothing", "result.details.other"}); err != nil {
+		t.Fatal(err)
+	}
+	if s := string(other.Data(map[string]any{"result": map[string]any{"details": map[string]any{"pid": 1.0, "other": "7"}}})); s != `{"result":{"details":{"other":"7","pid":1}}}` {
+		t.Errorf("a missing path, a non-container or a non-number was changed: %s", s)
+	}
+	for _, bad := range []string{"", "a..b", ".a", "a."} {
+		if err := NewNormalizer("", "", "").AddNumberPaths([]string{bad}); err == nil {
+			t.Errorf("accepted the path %q", bad)
+		}
+	}
+	// Without paths the normalizer is exactly N1 to N3.
+	if s := string(NewNormalizer("", "", "").Data(map[string]any{"pid": 1.0})); s != `{"pid":1}` {
+		t.Errorf("no paths must change nothing: %s", s)
+	}
+}
+
+func TestScenarioVolatileNumbersAreValidatedWhenTheScenarioLoads(t *testing.T) {
+	sc := &Scenario{Name: "x", Steps: []Step{{RPC: map[string]any{"type": "prompt"}}}, VolatileNumbers: []string{"a..b"}}
+	if err := sc.Validate(); err == nil || !strings.Contains(err.Error(), "volatileNumbers") {
+		t.Errorf("want a volatileNumbers error, got %v", err)
+	}
+}
