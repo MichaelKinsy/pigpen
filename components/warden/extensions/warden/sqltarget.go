@@ -20,7 +20,8 @@ const (
 )
 
 var (
-	sqlClients = setOf("psql", "mysql", "mariadb", "supabase")
+	sqlClientNames = []string{"psql", "mysql", "mariadb", "supabase"}
+	sqlClients     = setOf(sqlClientNames...)
 	// postgresClients talk to Postgres, which rejects writes inside a read-only transaction.
 	postgresClients = setOf("psql", "supabase")
 	loopbackHosts   = setOf("127.0.0.1", "localhost", "::1")
@@ -46,7 +47,6 @@ var (
 	reAlwaysTrue    = lazyRE(`(?i)^(?:true|not\s+false)$`)
 	reDigitsEq      = lazyRE(`^(\d+)\s*=\s*(\d+)$`)
 	reQuotedEq      = lazyRE(`^'([^']*)'\s*=\s*'([^']*)'$`)
-	reLeadingTabs   = lazyRE(`^\t+`)
 )
 
 type shellWordSQL struct {
@@ -73,33 +73,100 @@ type sqlPendingHeredoc struct {
 	literal   bool
 }
 
+// sqlScan is the state of sqlSegments: the segments so far, the open word, and the heredocs waiting for their bodies.
+// An open word is a slice of the command while its text is contiguous there (the common case: no allocation), and a
+// byte buffer once quotes, escapes or an invalid byte make it differ from the command's bytes.
+type sqlScan struct {
+	command  string
+	segments []*sqlSegment
+	segment  *sqlSegment
+	// words are the finished words of the open segment, copied to the segment when it ends.
+	words []shellWordSQL
+	// The open word: open says there is one (it may be empty, as `''` is), buffered says its text is buf, otherwise
+	// it is command[lo:hi].
+	open, buffered, expanded bool
+	lo, hi                   int
+	buf                      []byte
+	pending                  []sqlPendingHeredoc
+}
+
+func (s *sqlScan) endWord() {
+	if !s.open {
+		return
+	}
+	text := ""
+	if s.buffered {
+		text = string(s.buf)
+	} else {
+		text = s.command[s.lo:s.hi]
+	}
+	s.words = append(s.words, shellWordSQL{text: text, expanded: s.expanded})
+	s.open, s.buffered, s.expanded = false, false, false
+	s.buf = s.buf[:0]
+}
+
+func (s *sqlScan) endSegment(piped bool) {
+	s.endWord()
+	if len(s.words) > 0 {
+		s.segment.words = append([]shellWordSQL(nil), s.words...)
+		s.words = s.words[:0]
+	}
+	if len(s.segment.words) > 0 || len(s.segment.heredocs) > 0 {
+		s.segments = append(s.segments, s.segment)
+	}
+	s.segment = &sqlSegment{stdin: piped}
+}
+
+// appendSlice appends command[a:b] to the open word.
+func (s *sqlScan) appendSlice(a, b int, expanded bool) {
+	s.expanded = s.expanded || expanded
+	switch {
+	case !s.open:
+		s.open, s.lo, s.hi = true, a, b
+	case s.buffered:
+		s.buf = append(s.buf, s.command[a:b]...)
+	case s.hi == a:
+		s.hi = b
+	case a == b:
+	default:
+		s.buf = append(append(s.buf[:0], s.command[s.lo:s.hi]...), s.command[a:b]...)
+		s.buffered = true
+	}
+}
+
+// appendText appends text that is not a slice of the command to the open word.
+func (s *sqlScan) appendText(text string) {
+	if !s.open {
+		s.open, s.buffered, s.buf = true, true, append(s.buf[:0], text...)
+		return
+	}
+	if !s.buffered {
+		s.buf = append(s.buf[:0], s.command[s.lo:s.hi]...)
+		s.buffered = true
+	}
+	s.buf = append(s.buf, text...)
+}
+
+// appendEmpty opens a word of no text (a backslash at the end of the command).
+func (s *sqlScan) appendEmpty() {
+	if !s.open {
+		s.open, s.lo, s.hi = true, 0, 0
+	}
+}
+
+// appendRune appends the rune at command[a:a+size], decoded as r: an invalid byte becomes U+FFFD, as string(r) gives.
+func (s *sqlScan) appendRune(a, size int, r rune) {
+	if r == utf8.RuneError && size == 1 {
+		s.appendText("\uFFFD")
+		return
+	}
+	s.appendSlice(a, a+size, false)
+}
+
 // sqlSegments are shell segments with quotes resolved and heredoc bodies attached to the segment that reads them. Unlike
 // splitShell, a `;` inside quotes does not split, so `psql -c "BEGIN READ ONLY; SELECT 1; ROLLBACK"` stays one segment.
 func sqlSegments(command string) []*sqlSegment {
-	var segments []*sqlSegment
-	segment := &sqlSegment{}
-	var word *shellWordSQL
-	var pending []sqlPendingHeredoc
-	endWord := func() {
-		if word != nil {
-			segment.words = append(segment.words, *word)
-		}
-		word = nil
-	}
-	endSegment := func(piped bool) {
-		endWord()
-		if len(segment.words) > 0 || len(segment.heredocs) > 0 {
-			segments = append(segments, segment)
-		}
-		segment = &sqlSegment{stdin: piped}
-	}
-	appendText := func(text string, expanded bool) {
-		if word == nil {
-			word = &shellWordSQL{}
-		}
-		word.text += text
-		word.expanded = word.expanded || expanded
-	}
+	s := sqlScan{command: command, segment: &sqlSegment{}}
 	at := func(i int) byte {
 		if i >= 0 && i < len(command) {
 			return command[i]
@@ -115,77 +182,95 @@ func sqlSegments(command string) []*sqlSegment {
 			if end >= 0 {
 				stop = index + 1 + end
 			}
-			appendText(command[index+1:stop], false)
+			s.appendSlice(index+1, stop, false)
 			index = stop + 1
 			continue
 		case char == '"':
 			end := index + 1
-			var text strings.Builder
-			expanded := false
+			expanded, escaped := false, false
 			for end < len(command) && command[end] != '"' {
 				if command[end] == '\\' && end+1 < len(command) && strings.IndexByte("\"\\$`", command[end+1]) >= 0 {
-					text.WriteByte(command[end+1])
+					escaped = true
 					end += 2
 					continue
 				}
 				if command[end] == '$' || command[end] == '`' {
 					expanded = true
 				}
-				text.WriteByte(command[end])
 				end++
 			}
-			appendText(text.String(), expanded)
+			if !escaped {
+				s.appendSlice(index+1, end, expanded)
+			} else {
+				s.appendText("")
+				s.expanded = s.expanded || expanded
+				for k := index + 1; k < end; {
+					if command[k] == '\\' && k+1 < len(command) && strings.IndexByte("\"\\$`", command[k+1]) >= 0 {
+						s.buf = append(s.buf, command[k+1])
+						k += 2
+						continue
+					}
+					s.buf = append(s.buf, command[k])
+					k++
+				}
+			}
 			index = end + 1
 			continue
 		case char == '\\':
 			if at(index+1) != '\n' {
 				if index+1 < len(command) {
 					r, size := utf8.DecodeRuneInString(command[index+1:])
-					appendText(string(r), false)
+					s.appendRune(index+1, size, r)
 					index += 1 + size
 					continue
 				}
-				appendText("", false)
+				s.appendEmpty()
 			}
 			index += 2
 			continue
-		case char == '#' && word == nil:
+		case char == '#' && !s.open:
 			for index < len(command) && command[index] != '\n' {
 				index++
 			}
 			continue
 		case char == '\n':
-			endSegment(false)
+			s.endSegment(false)
 			index++
-			for _, heredoc := range pending {
-				var body []string
+			for _, heredoc := range s.pending {
+				bodyStart, bodyEnd, any := 0, 0, false
 				for index < len(command) {
 					lineEnd := strings.IndexByte(command[index:], '\n')
 					stop := len(command)
 					if lineEnd >= 0 {
 						stop = index + lineEnd
 					}
-					line := command[index:stop]
+					start := index
+					cmp := command[start:stop]
 					index = stop + 1
-					cmp := line
 					if heredoc.tabs {
-						cmp = reLeadingTabs.ReplaceAllString(line, "")
+						cmp = strings.TrimLeft(cmp, "\t")
 					}
 					if cmp == heredoc.delimiter {
 						break
 					}
-					body = append(body, line)
+					if !any {
+						bodyStart, any = start, true
+					}
+					bodyEnd = stop
 				}
-				text := strings.Join(body, "\n")
+				text := ""
+				if any {
+					text = command[bodyStart:bodyEnd]
+				}
 				heredoc.segment.heredocs = append(heredoc.segment.heredocs, sqlHeredoc{body: text, expanded: !heredoc.literal && strings.ContainsAny(text, "$`\\")})
 			}
-			pending = nil
+			s.pending = nil
 			continue
 		case char == '<' && strings.HasPrefix(command[index:], "<<") && !strings.HasPrefix(command[index:], "<<<"):
-			endWord()
+			s.endWord()
 			m := reHeredocStart.get().FindStringSubmatchIndex(command[index:])
 			if m == nil {
-				segment.stdin = true
+				s.segment.stdin = true
 				index += 2
 				continue
 			}
@@ -206,12 +291,12 @@ func sqlSegments(command string) []*sqlSegment {
 			}
 			_, hasUnquoted := group(4)
 			dash, _ := group(1)
-			pending = append(pending, sqlPendingHeredoc{segment: segment, delimiter: delimiter, tabs: dash == "-", literal: !hasUnquoted || strings.Contains(rest[m[0]:m[1]], "\\")})
+			s.pending = append(s.pending, sqlPendingHeredoc{segment: s.segment, delimiter: delimiter, tabs: dash == "-", literal: !hasUnquoted || strings.Contains(rest[m[0]:m[1]], "\\")})
 			index += m[1]
 			continue
 		case char == '<':
-			endWord()
-			segment.stdin = true
+			s.endWord()
+			s.segment.stdin = true
 			if strings.HasPrefix(command[index:], "<<<") {
 				index += 3
 			} else {
@@ -219,11 +304,11 @@ func sqlSegments(command string) []*sqlSegment {
 			}
 			continue
 		case char == '&' && (at(index-1) == '>' || at(index+1) == '>'):
-			appendText("&", false)
+			s.appendSlice(index, index+1, false)
 			index++
 			continue
 		case char == '$' || char == '`':
-			appendText(string(char), true)
+			s.appendSlice(index, index+1, true)
 			index++
 			continue
 		case char == ';' || char == '&' || char == '|' || char == '(' || char == ')':
@@ -231,20 +316,23 @@ func sqlSegments(command string) []*sqlSegment {
 			if strings.HasPrefix(command[index:], "&&") || strings.HasPrefix(command[index:], "||") {
 				operator = 2
 			}
-			endSegment(char == '|' && operator == 1)
+			s.endSegment(char == '|' && operator == 1)
 			index += operator
 			continue
 		}
-		r, size := utf8.DecodeRuneInString(command[index:])
+		r, size := rune(char), 1
+		if char >= utf8.RuneSelf {
+			r, size = utf8.DecodeRuneInString(command[index:])
+		}
 		if isJSSpace(r) {
-			endWord()
+			s.endWord()
 		} else {
-			appendText(string(r), false)
+			s.appendRune(index, size, r)
 		}
 		index += size
 	}
-	endSegment(false)
-	return segments
+	s.endSegment(false)
+	return s.segments
 }
 
 // sqlHeadIndex is the index of the command word: leading assignments and wrappers are skipped, as headOf does.
@@ -274,6 +362,8 @@ var (
 	sqlFileFlags = map[string][]string{"psql": {"-f", "--file"}, "mysql": {}, "mariadb": {}, "supabase": {}}
 	// Option spellings that name the server: psql's `-S` is single-line mode, mysql's is the socket path.
 	sqlHostFlags = map[string][]string{"psql": {"-h", "--host"}, "mysql": {"-h", "--host", "-S", "--socket"}, "mariadb": {"-h", "--host", "-S", "--socket"}, "supabase": {}}
+	dbnameFlags  = []string{"-d", "--dbname", "--db-url"}
+	targetFlags  = []string{"--target"}
 )
 
 type sqlCall struct {
@@ -286,30 +376,33 @@ type sqlCall struct {
 	text              string
 }
 
+// optionResult is an option found at a word: its value (absent for `-c` as the last word) and the index after it.
 type optionResult struct {
-	value *shellWordSQL
-	next  int
+	found    bool
+	hasValue bool
+	value    shellWordSQL
+	next     int
 }
 
-// optionValue is the value of an option at index: `-c X`, `-cX`, `--command X`, or `--command=X`. nil when the word is not the option.
-func optionValue(words []shellWordSQL, index int, flags []string) *optionResult {
+// optionValue is the value of an option at index: `-c X`, `-cX`, `--command X`, or `--command=X`. found is false when
+// the word is not the option.
+func optionValue(words []shellWordSQL, index int, flags []string) optionResult {
 	text := words[index].text
 	for _, flag := range flags {
 		if text == flag {
-			var v *shellWordSQL
 			if index+1 < len(words) {
-				v = &words[index+1]
+				return optionResult{found: true, hasValue: true, value: words[index+1], next: index + 2}
 			}
-			return &optionResult{v, index + 2}
+			return optionResult{found: true, next: index + 2}
 		}
-		if strings.HasPrefix(flag, "--") && strings.HasPrefix(text, flag+"=") {
-			return &optionResult{&shellWordSQL{text[len(flag)+1:], words[index].expanded}, index + 1}
+		if strings.HasPrefix(flag, "--") && len(text) > len(flag) && text[len(flag)] == '=' && strings.HasPrefix(text, flag) {
+			return optionResult{found: true, hasValue: true, value: shellWordSQL{text[len(flag)+1:], words[index].expanded}, next: index + 1}
 		}
 		if !strings.HasPrefix(flag, "--") && strings.HasPrefix(text, flag) && len(text) > len(flag) {
-			return &optionResult{&shellWordSQL{text[len(flag):], words[index].expanded}, index + 1}
+			return optionResult{found: true, hasValue: true, value: shellWordSQL{text[len(flag):], words[index].expanded}, next: index + 1}
 		}
 	}
-	return nil
+	return optionResult{}
 }
 
 // queryParam is URLSearchParams(query).get(name): the first value, percent-decoded, `+` read as a space.
@@ -358,14 +451,7 @@ func readSqlCall(segment *sqlSegment) *sqlCall {
 	}
 	words := segment.words
 	head := sqlHeadIndex(words)
-	var all []string
-	for _, w := range words {
-		all = append(all, w.text)
-	}
-	for _, h := range segment.heredocs {
-		all = append(all, h.body)
-	}
-	text := strings.Join(all, " ")
+	text := segmentText(segment)
 	var hosts, sql []string
 	sqlReadable := !segment.stdin
 	variable, singleTransaction := false, false
@@ -381,10 +467,11 @@ func readSqlCall(segment *sqlSegment) *sqlCall {
 			hosts = append(hosts, m[2])
 		}
 	}
+	textFlags, fileFlags, hostFlags := sqlTextFlags[client], sqlFileFlags[client], sqlHostFlags[client]
 	for index := head + 1; index < len(words); {
 		word := words[index]
-		if sqlText := optionValue(words, index, sqlTextFlags[client]); sqlText != nil {
-			if sqlText.value == nil || sqlText.value.expanded {
+		if sqlText := optionValue(words, index, textFlags); sqlText.found {
+			if !sqlText.hasValue || sqlText.value.expanded {
 				sqlReadable = false
 			} else {
 				sql = append(sql, sqlText.value.text)
@@ -392,7 +479,7 @@ func readSqlCall(segment *sqlSegment) *sqlCall {
 			index = sqlText.next
 			continue
 		}
-		if file := optionValue(words, index, sqlFileFlags[client]); file != nil {
+		if file := optionValue(words, index, fileFlags); file.found {
 			sqlReadable = false
 			index = file.next
 			continue
@@ -402,32 +489,32 @@ func readSqlCall(segment *sqlSegment) *sqlCall {
 			index++
 			continue
 		}
-		host := optionValue(words, index, sqlHostFlags[client])
-		dbname := optionValue(words, index, []string{"-d", "--dbname", "--db-url"})
-		var target *optionResult
+		host := optionValue(words, index, hostFlags)
+		dbname := optionValue(words, index, dbnameFlags)
+		var target optionResult
 		if client == "supabase" {
-			target = optionValue(words, index, []string{"--target"})
+			target = optionValue(words, index, targetFlags)
 		}
 		option := host
-		if option == nil {
+		if !option.found {
 			option = dbname
 		}
-		if option == nil {
+		if !option.found {
 			option = target
 		}
 		switch {
-		case option != nil && option.value != nil && option.value.expanded:
+		case option.found && option.hasValue && option.value.expanded:
 			variable = true
-		case host != nil:
-			if host.value != nil {
+		case host.found:
+			if host.hasValue {
 				hosts = append(hosts, host.value.text)
 			}
-		case dbname != nil:
-			if dbname.value != nil {
+		case dbname.found:
+			if dbname.hasValue {
 				hosts = append(hosts, connectionHosts(dbname.value.text)...)
 			}
-		case target != nil:
-			if target.value != nil && target.value.text != "local" && hosted == "" {
+		case target.found:
+			if target.hasValue && target.value.text != "local" && hosted == "" {
 				hosted = "Supabase target " + target.value.text
 			}
 		case client == "supabase" && word.text == "--linked":
@@ -439,7 +526,7 @@ func readSqlCall(segment *sqlSegment) *sqlCall {
 		case strings.Contains(word.text, "://"):
 			hosts = append(hosts, connectionHosts(word.text)...)
 		}
-		if option != nil {
+		if option.found {
 			index = option.next
 		} else {
 			index++
@@ -617,14 +704,65 @@ func (e sqlEntry) text() string {
 	if e.call != nil {
 		return e.call.text
 	}
-	var all []string
-	for _, w := range e.segment.words {
-		all = append(all, w.text)
+	return segmentText(e.segment)
+}
+
+// segmentText is the words and heredoc bodies of a segment joined by spaces.
+func segmentText(segment *sqlSegment) string {
+	n := len(segment.words) + len(segment.heredocs)
+	switch n {
+	case 0:
+		return ""
+	case 1:
+		if len(segment.words) == 1 {
+			return segment.words[0].text
+		}
+		return segment.heredocs[0].body
 	}
-	for _, h := range e.segment.heredocs {
-		all = append(all, h.body)
+	size := n - 1
+	for _, w := range segment.words {
+		size += len(w.text)
 	}
-	return strings.Join(all, " ")
+	for _, h := range segment.heredocs {
+		size += len(h.body)
+	}
+	var b strings.Builder
+	b.Grow(size)
+	for i, w := range segment.words {
+		if i > 0 {
+			b.WriteByte(' ')
+		}
+		b.WriteString(w.text)
+	}
+	for i, h := range segment.heredocs {
+		if i > 0 || len(segment.words) > 0 {
+			b.WriteByte(' ')
+		}
+		b.WriteString(h.body)
+	}
+	return b.String()
+}
+
+// mayHaveSqlClient is a necessary condition for any segment of command to be a SQL client call: the client's name is
+// the text of a word, and a word's text is made of bytes of the command in order (quotes and backslashes only drop
+// bytes), so the name is a subsequence of the command. Without a client call applySqlTargets changes no hit.
+func mayHaveSqlClient(command string) bool {
+	for _, name := range sqlClientNames {
+		rest := command
+		found := true
+		for i := range len(name) {
+			at := strings.IndexByte(rest, name[i])
+			if at < 0 {
+				found = false
+				break
+			}
+			rest = rest[at+1:]
+		}
+		if found {
+			return true
+		}
+	}
+	return false
 }
 
 func (e sqlEntry) readOnlyHosted() bool {
@@ -633,6 +771,9 @@ func (e sqlEntry) readOnlyHosted() bool {
 
 // applySqlTargets replaces or drops the SQL pattern hits and adds the target hits, from the raw command (heredoc bodies included).
 func applySqlTargets(raw string, hits *hitSet, exempt map[string]bool) {
+	if !mayHaveSqlClient(raw) {
+		return
+	}
 	var entries []sqlEntry
 	for _, s := range sqlSegments(raw) {
 		entries = append(entries, sqlEntry{s, readSqlCall(s)})
