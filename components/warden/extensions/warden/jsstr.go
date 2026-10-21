@@ -51,11 +51,23 @@ func utf16Slice(s string, from, to int) string {
 	return string(utf16.Decode(units[from:to]))
 }
 
+// le64 is the eight bytes at the start of s as one little-endian word; the compiler turns it into one load.
+func le64(s string) uint64 {
+	_ = s[7]
+	return uint64(s[0]) | uint64(s[1])<<8 | uint64(s[2])<<16 | uint64(s[3])<<24 | uint64(s[4])<<32 | uint64(s[5])<<40 | uint64(s[6])<<48 | uint64(s[7])<<56
+}
+
 func isASCII(s string) bool {
+	const high = 0x8080808080808080
 	i := 0
-	// Eight bytes at a time: tool output is long and almost always ASCII.
+	// Thirty-two bytes a step: tool output is long and almost always ASCII.
+	for ; i+32 <= len(s); i += 32 {
+		if (le64(s[i:])|le64(s[i+8:])|le64(s[i+16:])|le64(s[i+24:]))&high != 0 {
+			return false
+		}
+	}
 	for ; i+8 <= len(s); i += 8 {
-		if (s[i]|s[i+1]|s[i+2]|s[i+3]|s[i+4]|s[i+5]|s[i+6]|s[i+7])&0x80 != 0 {
+		if le64(s[i:])&high != 0 {
 			return false
 		}
 	}

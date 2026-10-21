@@ -257,36 +257,3 @@ func TestCompressionLearnerPrefersTheRetentionTheAgentDidNotGoBackFor(t *testing
 		t.Errorf("a recall marks the latest outcome of the tool: %+v", s)
 	}
 }
-
-// TestDiagnosticFlagsEqualTheLineByLineScan: the one-pass scan of a whole text marks the lines the per-line scan accepts.
-func TestDiagnosticFlagsEqualTheLineByLineScan(t *testing.T) {
-	words := []string{"error", "Error", "fail", "failed", "failure", "failing", "warn", "warning", "warnings", "fatal", "exception", "exit", "exited", "summary", "x", "_", "-", " ", ".", "\n", "\n", "1", "progress", "compiled"}
-	rng := rand.New(rand.NewSource(9))
-	marked := 0
-	for range 3000 {
-		var b strings.Builder
-		for range rng.Intn(30) + 1 {
-			b.WriteString(words[rng.Intn(len(words))])
-		}
-		text := b.String()
-		lines := strings.Split(text, "\n")
-		flags := diagnosticFlags(text, lines)
-		if flags == nil || len(flags) != len(lines) {
-			t.Fatalf("no flags for %q", text)
-		}
-		for i, line := range lines {
-			if flags[i] != diagnosticLine(line) {
-				t.Fatalf("line %d %q of %q: flag %v, scan %v", i, line, text, flags[i], diagnosticLine(line))
-			}
-			if flags[i] {
-				marked++
-			}
-		}
-	}
-	if marked == 0 {
-		t.Fatal("never marked a line: the test proves nothing")
-	}
-	if diagnosticFlags("é error", []string{"é error"}) != nil {
-		t.Error("a text with other characters is scanned line by line")
-	}
-}

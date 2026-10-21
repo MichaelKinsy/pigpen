@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/bits"
 	"os"
 	"path/filepath"
 	"strings"
@@ -256,45 +257,73 @@ func diagnosticLine(line string) bool {
 	return false
 }
 
-// diagnosticFlags marks the lines of an ASCII text that diagnosticLine accepts, scanning the whole lower-cased text once
-// per stem instead of every line once per stem (nil for a text with other characters: the caller asks line by line).
-func diagnosticFlags(text string, lines []string) []bool {
-	if !isASCII(text) {
-		return nil
+// diagnosticWordAt reports whether a whole diagnostic word of reDiagnostic starts at text[i], a word boundary.
+func diagnosticWordAt(text string, i int) bool {
+	rest := text[i:]
+	atBoundary := func(n int) bool { return n == len(rest) || !isWordByte(rest[n]) }
+	switch rest[0] | 0x20 {
+	case 'e':
+		return hasPrefixFold(rest, "error") && atBoundary(5) ||
+			hasPrefixFold(rest, "exception") && atBoundary(9) ||
+			hasPrefixFold(rest, "exit") && (atBoundary(4) || hasPrefixFold(rest[4:], "ed") && atBoundary(6))
+	case 'f':
+		return hasPrefixFold(rest, "fail") && (atBoundary(4) || hasPrefixFold(rest[4:], "ed") && atBoundary(6) || hasPrefixFold(rest[4:], "ure") && atBoundary(7)) ||
+			hasPrefixFold(rest, "fatal") && atBoundary(5)
+	case 'w':
+		return hasPrefixFold(rest, "warn") && (atBoundary(4) || hasPrefixFold(rest[4:], "ing") && atBoundary(7))
+	case 's':
+		return hasPrefixFold(rest, "summary") && atBoundary(7)
 	}
-	starts := make([]int, len(lines))
-	offset := 0
-	for i, l := range lines {
-		starts[i] = offset
-		offset += len(l) + 1
+	return false
+}
+
+// nextDiagnosticLine is the first line of an ASCII text, at or after from (a line start), that diagnosticLine
+// accepts: its start and end (the newline or the end of the text), or -1 and -1. The lines before the first hit are
+// never split off: eight positions at a time, a word can start where the two letters are the first two of a stem
+// (er, fa, wa, ex, su, either case), found with word-wide tests; each such position is then checked whole.
+func nextDiagnosticLine(text string, from int) (int, int) {
+	const (
+		ones = 0x0101010101010101
+		high = 0x8080808080808080
+		fold = ones * 0x20
+	)
+	// has is high bits where a byte of x may equal c: exact for the lowest such byte, and a byte above it can be a
+	// false alarm, which the whole-word check turns down.
+	has := func(x uint64, c byte) uint64 {
+		t := x ^ (ones * uint64(c))
+		return (t - ones) &^ t & high
 	}
-	flags := make([]bool, len(lines))
-	line := 0
-	for i := 0; i < len(text); i++ {
-		first := text[i] | 0x20 // lower case for a letter; a byte that is no letter never becomes one
-		if first != 'e' && first != 'f' && first != 'w' && first != 's' {
-			continue
+	hit := func(i int) (int, int, bool) {
+		if (i != 0 && isWordByte(text[i-1])) || !diagnosticWordAt(text, i) {
+			return 0, 0, false
 		}
-		if i > 0 && isWordByte(text[i-1]) {
-			continue
+		start, end := from, len(text)
+		if k := strings.LastIndexByte(text[from:i], '\n'); k >= 0 {
+			start = from + k + 1
 		}
-		for _, d := range diagnosticStems {
-			if d.stem[0] != first || !hasPrefixFold(text[i:], d.stem) {
-				continue
+		if k := strings.IndexByte(text[i:], '\n'); k >= 0 {
+			end = i + k
+		}
+		return start, end, true
+	}
+	i := from
+	for ; i+9 <= len(text); i += 8 {
+		a, b := le64(text[i:])|fold, le64(text[i+1:])|fold
+		m := has(a, 'e')&(has(b, 'r')|has(b, 'x')) | (has(a, 'f')|has(a, 'w'))&has(b, 'a') | has(a, 's')&has(b, 'u')
+		for ; m != 0; m &= m - 1 {
+			if start, end, ok := hit(i + bits.TrailingZeros64(m)>>3); ok {
+				return start, end
 			}
-			after := text[i+len(d.stem):]
-			for _, end := range d.ends {
-				if hasPrefixFold(after, end) && (len(after) == len(end) || !isWordByte(after[len(end)])) {
-					for line+1 < len(starts) && starts[line+1] <= i {
-						line++
-					}
-					flags[line] = true
-					break
-				}
+		}
+	}
+	for ; i < len(text); i++ {
+		if c := text[i] | 0x20; c == 'e' || c == 'f' || c == 'w' || c == 's' {
+			if start, end, ok := hit(i); ok {
+				return start, end
 			}
 		}
 	}
-	return flags
+	return -1, -1
 }
 
 // hasPrefixFold reports whether s starts with lit, which is lower-case ASCII letters, ignoring the case of s.
@@ -316,15 +345,23 @@ var reDiagnostic = jsRE(`(?i)\b(?:error|fail(?:ed|ure)?|warn(?:ing)?|fatal|excep
 // CompressOutput is the deterministic excerpt, not an AI-written summary: at most 6K characters, including
 // diagnostic lines. A recognised `format` uses its parser (exact failing tests, errors with file:line, changed
 // files); otherwise head/diagnostics/tail. False when the output stays whole.
+//
+// An ASCII text (nearly every tool output) is measured and cut as bytes and scanned for diagnostic lines in place, one
+// line at a time and only as far as the 2,000-character budget needs; any other text takes the UTF-16 route line by
+// line (compressOutputReference in the tests is the original's loop both are held to).
 func CompressOutput(text string, retention Retention, format OutputFormat) (string, bool) {
 	if retention == RetentionAll {
 		return "", false
 	}
-	lines := strings.Split(text, "\n")
-	total := utf16Len(text)
+	ascii := isASCII(text)
+	total := len(text)
+	if !ascii {
+		total = utf16LenRunes(text)
+	}
+	lineCount := strings.Count(text, "\n") + 1
 	if format != "" {
 		if parsed, ok := FormatExcerpt(text, format); ok {
-			result := fmt.Sprintf("[pi-warden: %s; %d original characters, %d lines. Exact lines selected for the %s format; omitted text is in the full-output file.]\n%s", retention, total, len(lines), format, parsed)
+			result := fmt.Sprintf("[pi-warden: %s; %d original characters, %d lines. Exact lines selected for the %s format; omitted text is in the full-output file.]\n%s", retention, total, lineCount, format, parsed)
 			if total-utf16Len(result) >= 1000 {
 				return result, true
 			}
@@ -333,44 +370,87 @@ func CompressOutput(text string, retention Retention, format OutputFormat) (stri
 	}
 	head := ""
 	if retention == RetentionErrorsAndSummary {
-		head = utf16Slice(text, 0, 1000)
+		head = excerptSlice(text, ascii, 0, 1000)
 	}
 	tail := text
 	if total > 2000 {
-		tail = utf16Slice(text, total-2000, -1)
+		tail = excerptSlice(text, ascii, total-2000, -1)
 	}
 	var diagnostics []string
 	diagnosticChars := 0
-	flags := diagnosticFlags(text, lines)
 	// Keep diagnostic evidence even if the classifier selected summary_only for a failed run.
-	for i, line := range lines {
-		if flags != nil {
-			if !flags[i] {
-				continue
-			}
-		} else if !diagnosticLine(line) {
-			continue
-		}
-		clipped := utf16Slice(line, 0, 500)
+	add := func(line string) bool {
+		clipped := excerptSlice(line, ascii, 0, 500)
 		if diagnosticChars+utf16Len(clipped)+1 > 2000 {
-			break
+			return false
 		}
 		diagnostics = append(diagnostics, clipped)
 		diagnosticChars += utf16Len(clipped) + 1
+		return true
 	}
-	var body []string
+	if ascii {
+		for from := 0; from < len(text); {
+			start, end := nextDiagnosticLine(text, from)
+			if start < 0 || !add(text[start:end]) {
+				break
+			}
+			from = end + 1
+		}
+	} else {
+		for _, line := range strings.Split(text, "\n") {
+			if diagnosticLine(line) && !add(line) {
+				break
+			}
+		}
+	}
+	size := len(ExcerptNote) + 128 + len(head) + len(tail)
+	for _, d := range diagnostics {
+		size += len(d) + 1
+	}
+	var b strings.Builder
+	b.Grow(size)
+	b.WriteString("[pi-warden: ")
+	b.WriteString(string(retention))
+	b.WriteString("; ")
+	b.WriteString(itoaInt(total))
+	b.WriteString(" original characters, ")
+	b.WriteString(itoaInt(lineCount))
+	b.WriteString(" lines. ")
+	b.WriteString(ExcerptNote)
+	b.WriteString("]\n")
 	if head != "" {
-		body = append(body, "[head excerpt]\n"+head)
+		b.WriteString("[head excerpt]\n")
+		b.WriteString(head)
+		b.WriteString("\n\n")
 	}
 	if len(diagnostics) > 0 {
-		body = append(body, "[diagnostic excerpts; may be incomplete]\n"+strings.Join(diagnostics, "\n"))
+		b.WriteString("[diagnostic excerpts; may be incomplete]\n")
+		for i, d := range diagnostics {
+			if i > 0 {
+				b.WriteByte('\n')
+			}
+			b.WriteString(d)
+		}
+		b.WriteString("\n\n")
 	}
-	body = append(body, "[tail excerpt]\n"+tail)
-	result := fmt.Sprintf("[pi-warden: %s; %d original characters, %d lines. %s]\n%s", retention, total, len(lines), ExcerptNote, strings.Join(body, "\n\n"))
+	b.WriteString("[tail excerpt]\n")
+	b.WriteString(tail)
+	result := b.String()
 	if total-utf16Len(result) >= 1000 {
 		return result, true
 	}
 	return "", false
+}
+
+// excerptSlice is s.slice(from, to) in UTF-16 units; ascii says s has only bytes below 0x80, so the units are bytes.
+func excerptSlice(s string, ascii bool, from, to int) string {
+	if !ascii {
+		return utf16Slice(s, from, to)
+	}
+	if to < 0 || to > len(s) {
+		to = len(s)
+	}
+	return s[min(from, to):to]
 }
 
 var reANSI = jsRE(`\x{1b}\[[0-9;]*[A-Za-z]`)
