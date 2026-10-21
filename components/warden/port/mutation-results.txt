@@ -449,6 +449,7 @@ findprojects-enters-dot-dirs: KILLED --- FAIL: TestFindProjectsIgnoresDotDirecto
 audit-runs-without-confirm: KILLED --- FAIL: TestAuditDeclinedSendsNothing (0.00s)
 audit-runs-headless: KILLED --- FAIL: TestAuditHeadlessNeedsInteractiveSession (0.01s)
 audit-input-not-blocked: KILLED --- FAIL: TestAuditBlocksUserInputWhileRunning (0.00s)
+input-extension-source-blocked: KILLED --- FAIL: TestAuditBlocksUserInputWhileRunning (0.00s)
 audit-flag-left-on: KILLED --- FAIL: TestAuditBlocksUserInputWhileRunning (0.00s)
 audit-failure-not-reported: KILLED --- FAIL: TestAuditFailureIsReportedThenOutcomeStillChecked (0.00s)
 audit-stale-message-changed: KILLED --- FAIL: TestAuditStaleReport (0.00s)
