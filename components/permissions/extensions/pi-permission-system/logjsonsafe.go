@@ -74,6 +74,10 @@ func CreateJSONSafeReplacer(transform JSONValueTransform) JSONReplacer {
 		if transform != nil {
 			value = transform(key, raw)
 		}
+		switch value.(type) {
+		case string, float64, bool, nil:
+			return value // the common leaves: neither an Error, a bigint nor an object, so skip the interface checks below
+		}
 		switch e := value.(type) {
 		case *JSError:
 			if e != nil {
