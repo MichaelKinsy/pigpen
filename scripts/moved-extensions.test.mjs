@@ -4,7 +4,7 @@
 // SDK) and a Go toolchain: the Packages build on first use. Never reads real credentials.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -130,5 +130,8 @@ test('session-ingest, context-info and dev-skills run in a real pig', { skip: !p
   });
   assert.equal(skillRun.status, 0, skillRun.stdout + skillRun.stderr);
   const sent = requests.slice(before).flatMap((request) => request.messages).flatMap((message) => typeof message.content === 'string' ? [message.content] : (message.content ?? []).map((part) => part.text ?? '')).join('\n');
-  assert.ok(sent.includes('Mutation gate.') && sent.includes('Adapted from Matt Pocock'), 'the pigpen-tdd Skill body reaches the model');
+  // The attribution line is read from the shipped Skill, so a re-based adaptation that rewords its note does not break this test.
+  const note = readFileSync(join(root, 'components/dev-skills/skills/pigpen-tdd/SKILL.md'), 'utf8').split('\n').find((line) => line.startsWith('Adapted from'));
+  assert.ok(note, 'the pigpen-tdd Skill opens with its attribution note');
+  assert.ok(sent.includes('Mutation gate.') && sent.includes(note), 'the pigpen-tdd Skill body reaches the model');
 });
