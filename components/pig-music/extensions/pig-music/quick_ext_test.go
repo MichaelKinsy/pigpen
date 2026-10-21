@@ -63,7 +63,7 @@ func TestQuickSettingsSaveTheEngineWithANoteAndKeepTheOtherKeys(t *testing.T) {
 		h.input("j") // down to Engine
 	}
 	h.input("l") // auto -> mpv
-	h.waitSnapshot("the note", hasText("pigmusic only"))
+	h.waitSnapshot("the note", hasText("pigmusic program"))
 	data, err := os.ReadFile(settingsFile(env))
 	if err != nil || !strings.Contains(string(data), `"engine": "mpv"`) || !strings.Contains(string(data), `"future"`) {
 		t.Errorf("%s %v", data, err)

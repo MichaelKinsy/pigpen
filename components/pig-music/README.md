@@ -273,22 +273,25 @@ pigmusic serve --opener synthetic --output null     # offline test tone through 
 
 Library and liked songs, PO tokens and age-restricted tracks are not supported by the native engine (they report why).
 
-The engine choice is wired into `pigmusic` only. The `/music` player inside PiG, and its quick commands, only drive mpv: with
-`engine` (or `PIG_MUSIC_ENGINE`) set to `native` they are refused with an error, not run on mpv anyway (`/music settings` still saves it
-for `pigmusic`), and
-`/music doctor` does not show the native engine's health yet (`pigmusic check` does); connecting both is a follow-up. The program
-that runs the native player is found through `PIG_MUSIC_SERVE`, then `nativePath`, then a `pigmusic` next to the running program,
-then PATH.
+The `/music` player inside PiG and its quick commands honor `engine` (and `PIG_MUSIC_ENGINE`) as `pigmusic` does, choosing the engine
+with the same code: `mpv` drives mpv with yt-dlp; `native` attaches to a `pigmusic serve` daemon (and starts it when none runs); `auto`
+controls the mpv or native player that is already running, else uses mpv when it and yt-dlp are healthy, else the native engine.
+The footer, the widget, `/music stop`, `stopOnExit` and a `/reload` that finds the music still playing work the same on either
+engine, and `/music settings` shows the choice at once (the next `/music` command builds the player for it). `engine = native`
+without the `pigmusic` program is refused with the one message that says how to get it; Termux is mpv only. The native engine has
+no signed-in account: the Library tab and liked songs report why, and cookies are never read for it. `/music doctor` shows the
+native engine's health beside mpv's (platform, audio output, the player program); when `engine` is `native` it shows that alone
+and runs the stream probe through the `pigmusic` program, and `/music setup` has nothing to download. The program that runs the
+native player is found through `PIG_MUSIC_SERVE`, then `nativePath`, then a `pigmusic` next to the running program, then PATH.
 **Where the engine lives (milestone 9b).** WaxTap (with its JavaScript engine), WaxFlow and oto are linked into the `pigmusic`
 program only (`cmd/pigmusic`, package `native/wax`). The extension, and the `/music` quick commands that run the command line
-in-process, link none of it. Inside PiG they drive mpv only (see above), so a PiG session never starts or asks `pigmusic`. What the
-native client keeps (the `pigmusic serve` socket client, and `pigmusic native playlist|probe <id>`, a one-shot helper that prints one
-versioned JSON document for what needs WaxTap besides playing) is used by the `pigmusic` program itself. So a PiG session that
-selects pig-music pays about 1 MB of Binary and no measurable memory, and the native engine needs the `pigmusic` program: build it
+in-process, link none of it. Inside PiG the native engine is reached through the `pigmusic serve` socket client, and `pigmusic native
+playlist|probe <id>`, a one-shot helper that prints one versioned JSON document for what needs WaxTap besides playing, runs the
+doctor's stream probe. A PiG session that selects pig-music pays about 1 MB of Binary and no measurable memory for the client, and
+the native engine needs the `pigmusic` program: build it
 from this checkout (`cd components/pig-music/extensions/pig-music/cmd/pigmusic && go build -o ~/.local/bin/pigmusic .`, Go 1.26 or
 later) and put it on PATH, or set `PIG_MUSIC_SERVE` or `nativePath` to an absolute path (a relative path is refused: it would
-resolve against the working directory). No doctor inside PiG says this yet; `pigmusic check` does when it cannot find a
-`pigmusic serve`. A test keeps the engine out of the extension's dependencies.
+resolve against the working directory). `/music doctor` says so when it cannot find one (`pigmusic check` does too). A test keeps the engine out of the extension's dependencies.
 The audio device (oto) is part of that program only: oto's purego would make the PiG Binary that the extension is fused into (pig-with-batteries) a dynamically linked executable that needs glibc to start.
 See `docs/plan/progress/pig-music-native.md`.
 
@@ -319,8 +322,7 @@ as it is.
 the extension, so both behave the same (`pigmusic vol`, `now`, `shuffle`, `repeat` are new too). `play <number>` takes the result
 number from your last search, in the player or on the command line. Liking a song is not offered: it would write to your account
 (`/music like` says so). Any other word after `/music` gets one line naming the commands; `/music` alone opens the player.
-Inside PiG they always use mpv, like the player. Answers are notifications, which are not sent to the model.
-number from your last search, in the player or on the command line. Liking a song is not offered: it would write to your account.
+They use the engine the player does (`engine`, see the native engine). Answers are notifications, which are not sent to the model.
 
 ## Vibes: a palette from the cover (milestone 8a)
 

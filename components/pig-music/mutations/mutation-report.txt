@@ -1,0 +1,41 @@
+KILLED   ensure-ignores-the-chosen-engine
+         unit test: --- FAIL: TestNativeEngineDrivesThePlayerScreen (10.01s)
+KILLED   native-player-not-used
+         unit test: --- FAIL: TestNativeEngineDrivesThePlayerScreen (10.01s)
+KILLED   native-source-not-used
+         unit test: --- FAIL: TestNativeEngineSourceListsPlaylistsThroughThePigmusicProgram (0.05s)
+KILLED   auto-ignores-a-running-native-player
+         unit test: --- FAIL: TestAutoEngineControlsARunningNativePlayerEvenWhenMPVIsHealthy (10.01s)
+KILLED   auto-ignores-a-running-mpv
+         unit test: --- FAIL: TestAutoEngineControlsARunningMPVAheadOfARunningNativePlayer (10.01s)
+KILLED   auto-failure-is-returned-instead-of-mpv
+         unit test: --- FAIL: TestMissingProgramsAreNamedWithAFixAndNothingOpens (0.00s)
+KILLED   auto-never-falls-back-to-native
+         unit test: --- FAIL: TestNativeEngineDrivesThePlayerScreen (10.01s)
+KILLED   engine-setting-change-not-noticed
+         unit test: --- FAIL: TestSwitchingTheEngineInTheSettingsMovesThePlayerFromMPVToNative (10.31s)
+KILLED   native-change-not-noticed
+         unit test: --- FAIL: TestSwitchingTheEngineInTheSettingsMovesThePlayerFromMPVToNative (10.31s)
+KILLED   mpv-change-not-noticed
+         unit test: --- FAIL: TestSwitchingTheEngineInTheSettingsMovesThePlayerFromNativeToMPV (10.32s)
+KILLED   termux-not-mpv-only
+         unit test: panic: test timed out after 3m0s
+KILLED   running-ignores-a-native-player
+         unit test: --- FAIL: TestNativeMusicThatKeptPlayingIsFoundAfterAReload (10.01s)
+KILLED   stop-ignores-a-native-player
+         unit test: --- FAIL: TestNativeEngineQuitStopsTheMusicThisPiGOwns (5.55s)
+KILLED   quick-commands-forced-to-mpv
+         unit test: --- FAIL: TestNativeEngineQuickCommandsDriveTheNativePlayer (0.01s)
+KILLED   doctor-native-engine-without-probe
+         unit test: --- FAIL: TestDoctorShowsTheNativeEnginesHealth (0.01s)
+KILLED   doctor-native-engine-runs-the-mpv-doctor
+         unit test: --- FAIL: TestDoctorShowsTheNativeEnginesHealth (0.02s)
+KILLED   doctor-on-mpv-has-no-native-health
+         unit test: --- FAIL: TestDoctorOnTheMPVEngineStillShowsTheNativeEnginesHealthAsInformation (10.01s)
+KILLED   doctor-on-mpv-probes-the-network
+         unit test: --- FAIL: TestDoctorOnTheMPVEngineStillShowsTheNativeEnginesHealthAsInformation (75.02s)
+KILLED   doctor-native-failure-not-an-error
+         unit test: --- FAIL: TestDoctorSaysErrorWhenTheNativeEngineInUseIsBrokenAndWarningWhenItIsOnlyTheFallback (0.04s)
+KILLED   engine-note-lost
+         unit test: --- FAIL: TestQuickSettingsSaveTheEngineWithANoteAndKeepTheOtherKeys (10.02s)
+20 mutation(s), 0 not killed
