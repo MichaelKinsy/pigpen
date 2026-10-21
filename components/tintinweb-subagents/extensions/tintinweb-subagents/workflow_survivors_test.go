@@ -161,7 +161,7 @@ func TestWorkflowSmallPieces(t *testing.T) {
 }
 
 func TestWorkflowSettingsNoticeOnce(t *testing.T) {
-	r := settingsRig(t, `{"schedulingEnabled": true}`)
+	r := settingsRig(t, `{"worktreeIsolation": true}`) // scheduling is ported, so only an unported setting is announced
 	r.Fire("session_start", obj{"reason": "reload"})
 	eq(t, len(notices(r)), 1)
 }
