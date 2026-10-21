@@ -37,11 +37,9 @@ func uniqueJoin(lists ...[]string) []string {
 // resolveExtensionLaunchPlan is the extension decisions of resolvePiLaunchToolPlan for one agent definition.
 func resolveExtensionLaunchPlan(a AgentConfig, denyExtensions bool) extensionLaunchPlan {
 	var toolExt []string
-	if !denyExtensions {
-		for _, t := range a.Tools {
-			if !builtinChildTools[t] && (strings.Contains(t, "/") || strings.HasSuffix(t, ".ts") || strings.HasSuffix(t, ".js")) {
-				toolExt = append(toolExt, t)
-			}
+	for _, t := range a.Tools {
+		if !builtinChildTools[t] && (strings.Contains(t, "/") || strings.HasSuffix(t, ".ts") || strings.HasSuffix(t, ".js")) {
+			toolExt = append(toolExt, t)
 		}
 	}
 	disable := denyExtensions || a.Extensions != nil

@@ -1194,12 +1194,6 @@
   "replace": "disable := denyExtensions"
  },
  {
-  "name": "plan-deny",
-  "file": "extension_plan.go",
-  "find": "if !denyExtensions {\n\t\tfor _, t := range a.Tools {",
-  "replace": "if true {\n\t\tfor _, t := range a.Tools {"
- },
- {
   "name": "plan-fast-prefix",
   "file": "extension_plan.go",
   "find": "const fastModeProviderPrefix = \"openai-codex/\"",
@@ -1209,7 +1203,7 @@
   "name": "plan-thinking-suffix",
   "file": "extension_plan.go",
   "find": "if base, suffix := splitKnownThinkingSuffix(model); suffix != \"\" {",
-  "replace": "if false {"
+  "replace": "if base, suffix := splitKnownThinkingSuffix(model); suffix != \"\" && false {"
  },
  {
   "name": "refine-evidence-cap",

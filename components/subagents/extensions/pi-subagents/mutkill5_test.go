@@ -28,3 +28,20 @@ func TestAdvertisementRefreshBypassesTheDiscoveryCache(t *testing.T) {
 	a.refresh()
 	eq(t, len(a.snapshot()), 1, "the same-size, same-time edit is seen")
 }
+
+// The fast mode rewrite answers a copy; the request it was given keeps its own fields.
+func TestFastModeRewriteLeavesThePayloadAlone(t *testing.T) {
+	in := map[string]any{"model": "m"}
+	out := rewriteFastModeProviderRequest(in).(map[string]any)
+	eq(t, out["service_tier"], any("priority"), "the copy")
+	if _, ok := in["service_tier"]; ok {
+		t.Errorf("the given payload was changed: %v", in)
+	}
+}
+
+// A model that already carries a thinking level keeps it unless the level is replaced.
+func TestThinkingSuffixOfAModelThatHasOne(t *testing.T) {
+	eq(t, applyThinkingSuffix("gpt-5:high", "low", false), "gpt-5:high", "kept")
+	eq(t, applyThinkingSuffix("gpt-5:high", "low", true), "gpt-5:low", "replaced")
+	eq(t, applyThinkingSuffix("gpt-5", "low", false), "gpt-5:low", "added")
+}
