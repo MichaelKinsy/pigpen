@@ -217,6 +217,9 @@ func (a *app) settingsItems() []*settingItem {
 // unportedSettingNotice is the refusal for a change that asks for a feature this port does not have: the same text
 // the next session start would announce for the file this change writes. "" when the value is one the port matches.
 func unportedSettingNotice(key string, value any) string {
+	if n, ok := value.(int); ok {
+		value = float64(n) // the rules read a number as decoded JSON does
+	}
 	for _, r := range settingRules {
 		if r.key == key && r.unported(value) {
 			return refusalText("this subagents.json setting (" + key + ": " + compactJSON(value) + ")")

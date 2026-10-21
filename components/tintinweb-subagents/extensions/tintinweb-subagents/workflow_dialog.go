@@ -867,12 +867,13 @@ type workflowDialog struct {
 func newWorkflowDialog(host viewerHost, source func() workflowDialogSource, th uiTheme, done func(), actions workflowDialogActions, initialPhaseIndex int) *workflowDialog {
 	d := &workflowDialog{host: host, source: source, theme: th, done: done, actions: actions, state: initialWorkflowDialogState(initialPhaseIndex),
 		stop: make(chan struct{})}
+	stop := d.stop
 	safeGo("workflow dialog spinner", func() {
 		ticker := time.NewTicker(workflowDialogSpinnerMs * time.Millisecond)
 		defer ticker.Stop()
 		for {
 			select {
-			case <-d.stop:
+			case <-stop:
 				return
 			case <-ticker.C:
 				d.mu.Lock()
