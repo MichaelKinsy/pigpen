@@ -148,7 +148,7 @@ func TestEveryCommandIsRegisteredAndAnswers(t *testing.T) {
 	}
 }
 
-func TestDashboardAndWidgetShortcutsAreStillRefused(t *testing.T) {
+func TestDashboardAndWidgetShortcutsAreRegistered(t *testing.T) {
 	h := started(t, nil)
 	for _, key := range []string{"alt+shift+h", "f5", "alt+h"} {
 		known, failure := h.shortcut(key)

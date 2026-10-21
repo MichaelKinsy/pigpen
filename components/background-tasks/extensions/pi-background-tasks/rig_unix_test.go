@@ -47,7 +47,9 @@ func (r *rigged) wakeLogs() []string { return r.rig.WakeLogs() }
 
 func rigHost(t *testing.T, o rigOptions) *rigged {
 	t.Helper()
-	config := map[string]any{"resourceControlEnabled": false}
+	// The original's fixtures run with showWidget false (spawn-child-runner.ts), so the widget's expiry timer is not among the timers
+	// they count; the widget twins turn it on.
+	config := map[string]any{"resourceControlEnabled": false, "showWidget": false}
 	for k, v := range o.config {
 		config[k] = v
 	}

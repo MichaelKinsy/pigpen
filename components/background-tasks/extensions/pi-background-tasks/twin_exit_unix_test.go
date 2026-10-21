@@ -157,11 +157,6 @@ func TestTwinExitReads(t *testing.T) {
 		}
 		for _, row := range rows {
 			t.Run(row.producer+": "+row.action, func(t *testing.T) {
-				if row.producer == "mixed" {
-					// Open item (PORT.md): the tool's read of bg-65 and the exit read of bg-65 race for the same admission slot, so which
-					// of them takes a released open is not fixed, and this row fails about one run in five on a busy host.
-					t.Skip("flaky: the tool read and the exit read of one task race for the admission slot; see PORT.md, open items")
-				}
 				var gone atomic.Bool
 				bg.ProbeHooks(t, func(pid int) (string, string, bool) { return "12345", "fixture-child", !gone.Load() }, func(string) bool { return true })
 				const session = "spawn-hardening-private-session"
@@ -259,17 +254,51 @@ func TestTwinExitReads(t *testing.T) {
 						logDone = r.toolAsync("bg_task", map[string]any{"action": "log", "id": "bg-65"})
 						total++
 					}
+					bg65Opens := func() int {
+						n := 0
+						for _, p := range opens.Requested() {
+							if strings.Contains(filepath.Base(p), "bg-65-") {
+								n++
+							}
+						}
+						return n
+					}
+					bg65Delivered := func() bool {
+						for _, m := range r.exitMessages() {
+							if m.taskID == "bg-65" {
+								return true
+							}
+						}
+						return false
+					}
+					toolDone := func() bool {
+						select {
+						case <-logDone:
+							return true
+						default:
+							return false
+						}
+					}
+					toolTaken := false
 					for delivered := 0; delivered < total; delivered++ {
 						waitFor(t, "a held open", func() bool { return opens.Held() > 0 })
-						if logDone != nil && delivered == total-1 {
-							// The last exit read and the tool's own read of the same log are both admitted; either may take a single
-							// release first (the original's queue always served the exit first), so both go.
-							waitFor(t, "both reads to hold", func() bool { return opens.Held() == 2 })
-							opens.Release(2)
-						} else {
+						opens.Release(1)
+						for {
+							waitFor(t, fmt.Sprintf("an exit delivery %d (requested %d, held %d, passed %d, active %d)", delivered+1, len(opens.Requested()), opens.Held(), opens.Passed(), opens.Active()), func() bool {
+								return len(r.exitMessages()) == delivered+1 || (logDone != nil && !toolTaken && toolDone())
+							})
+							if len(r.exitMessages()) == delivered+1 {
+								break
+							}
+							// The release went to the tool's own reopen of bg-65, which only follows the exit read of that task.
+							toolTaken = true
+							waitFor(t, "a held open", func() bool { return opens.Held() > 0 })
 							opens.Release(1)
 						}
-						waitFor(t, fmt.Sprintf("an exit delivery %d (requested %d, held %d, passed %d, active %d)", delivered+1, len(opens.Requested()), opens.Held(), opens.Passed(), opens.Active()), func() bool { return len(r.exitMessages()) == delivered+1 })
+						if logDone != nil && !bg65Delivered() {
+							// The tool's read joins the exit read of bg-65: the log is not opened a second time before that exit is delivered.
+							eq(t, bg65Opens() <= 1, true, "the tool read must wait for the exit read of its task")
+						}
 						eq(t, opens.MaxActive() <= 4, true, "aggregate acquisition must stay bounded through delivery")
 						notified := map[string]bool{}
 						for _, m := range r.exitMessages() {
@@ -286,6 +315,12 @@ func TestTwinExitReads(t *testing.T) {
 						}
 					}
 					if logDone != nil {
+						if !toolTaken {
+							// The tool's read of bg-65 started after the task's exit read did, so it joined that read and opens the log once
+							// more only after it: a single held open, taken last.
+							waitFor(t, "mixed tool read must acquire", func() bool { return opens.Held() == 1 })
+							opens.Release(1)
+						}
 						<-logDone
 					}
 					distinct := map[string]bool{}

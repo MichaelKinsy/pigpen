@@ -1,6 +1,6 @@
 {
-  "name": "list-log-stop",
-  "description": "bg_task list, log and stop of a running task, and the stop of a task that already ended.",
+  "name": "fork-restore",
+  "description": "A running task survives a forked session: the fork restores it from the branch and lists it.",
   "commands": {
     "sh": {
       "mode": "real"
@@ -41,15 +41,15 @@
           "name": "bg_task",
           "arguments": {
             "action": "spawn",
-            "command": "echo up; sleep 30",
-            "title": "long",
+            "command": "sleep 60",
+            "title": "survivor",
             "notifyOnExit": false
           }
         }
       ]
     },
     {
-      "text": "1"
+      "text": "started"
     },
     {
       "toolCalls": [
@@ -62,62 +62,7 @@
       ]
     },
     {
-      "text": "2"
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bg_task",
-          "arguments": {
-            "action": "log",
-            "id": "bg-1"
-          }
-        }
-      ]
-    },
-    {
-      "text": "3"
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bg_task",
-          "arguments": {
-            "action": "stop",
-            "id": "bg-1"
-          }
-        }
-      ]
-    },
-    {
-      "text": "4"
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bg_task",
-          "arguments": {
-            "action": "stop",
-            "id": "bg-1"
-          }
-        }
-      ]
-    },
-    {
-      "text": "5"
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bg_task",
-          "arguments": {
-            "action": "clear"
-          }
-        }
-      ]
-    },
-    {
-      "text": "6"
+      "text": "listed"
     }
   ],
   "steps": [
@@ -125,7 +70,28 @@
       "name": "prompt",
       "rpc": {
         "type": "prompt",
-        "message": "go"
+        "message": "start it"
+      }
+    },
+    {
+      "name": "fork",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-fork"
+      }
+    },
+    {
+      "name": "list-in-fork",
+      "rpc": {
+        "type": "prompt",
+        "message": "list them"
+      }
+    },
+    {
+      "name": "stop",
+      "rpc": {
+        "type": "prompt",
+        "message": "/bg:stop bg-1"
       }
     }
   ],
@@ -142,6 +108,10 @@
     "message_end"
   ],
   "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*?(?:</docs>|$)",
+      "replacement": "<docs>"
+    },
     {
       "pattern": "\\(pid \\d+\\)",
       "replacement": "(pid <pid>)"

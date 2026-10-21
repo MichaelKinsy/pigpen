@@ -146,23 +146,23 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 			Name: name, Label: d.Label, Description: d.Description, PromptSnippet: d.PromptSnippet, PromptGuidelines: d.PromptGuidelines,
 			Parameters: d.Parameters, RenderShell: sdk.ToolRenderShellSelf, Execute: execute[name],
 		})
+		e.SetToolRenderers(name, sdk.ToolRenderers{Shell: sdk.ToolRenderShellSelf, Call: renderToolCall, Result: renderToolResult})
 	}
+	e.MessageRenderer(bgMessageType, renderEventMessage)
 
 	e.RegisterCommand(bgCommand, sdk.CommandOptions{Description: "Background shell task dashboard and controls.", GetArgumentCompletions: rt.bgCompletions, Handler: rt.bgHandler()})
 	rt.simpleCommands(e)
 
 	// upstream: registrations.ts:276-309. Shortcuts register at load from the settings read then; "none" disables one.
-	refused := func(feature string) sdk.ShortcutFunc {
-		return func(ctx sdk.Context) error {
-			ctx.Notify(refusal(feature), "warning")
-			return nil
-		}
+	openDashboardShortcut := func(ctx sdk.Context) error {
+		rt.adopt(ctx)
+		return rt.openDashboard(ctx, "")
 	}
 	if rt.dashboardShortcut != "none" {
-		e.Shortcut(rt.dashboardShortcut, "Open the background task dashboard", refused("the background task dashboard"))
+		e.Shortcut(rt.dashboardShortcut, "Open the background task dashboard", openDashboardShortcut)
 	}
 	if strings.ToLower(rt.dashboardShortcut) != "f5" {
-		e.Shortcut("f5", "Open the background task dashboard", refused("the background task dashboard"))
+		e.Shortcut("f5", "Open the background task dashboard", openDashboardShortcut)
 	}
 	if rt.backgroundBashShortcut != "none" {
 		e.Shortcut(rt.backgroundBashShortcut, "Move the next not-yet-started bash command to a background task", func(ctx sdk.Context) error {
@@ -172,7 +172,10 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 		})
 	}
 	if rt.widgetToggleShortcut != "none" {
-		e.Shortcut(rt.widgetToggleShortcut, "Toggle background task mini-dashboard", refused("the background task widget"))
+		e.Shortcut(rt.widgetToggleShortcut, "Toggle background task mini-dashboard", func(ctx sdk.Context) error {
+			rt.toggleWidgetShortcut(ctx)
+			return nil
+		})
 	}
 
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, data map[string]any) (any, error) {
@@ -184,13 +187,17 @@ func extensionFor(e *sdk.Extension, rt *bgRuntime) *sdk.Extension {
 		rt.mu.Lock()
 		settings.recordProjectTrust(ctx.Cwd(), ctx.IsProjectTrusted)
 		rt.setContext(ctx)
+		if host := rt.currentHost(); host != nil {
+			rt.syncWidget(host)
+		}
 		rt.mu.Unlock()
+		rt.settle()
 		appendInstructions(data)
 		return nil, nil
 	})
 	for _, event := range []string{sdk.EventSessionTree, sdk.EventSessionCompact} {
 		e.OnEvent(event, func(ctx sdk.Context, data map[string]any) (any, error) {
-			rt.adopt(ctx)
+			rt.adoptAndSync(ctx)
 			return nil, nil
 		})
 	}

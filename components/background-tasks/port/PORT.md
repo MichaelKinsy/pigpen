@@ -15,8 +15,8 @@
 | 1 | Inventory, honest-refusal skeleton, settings reader, package metadata | merged-ready (`parity/background-tasks-1`) |
 | 2a | Leaf modules and their twins: format, wake events, snapshots and restore, lifecycle, orphan watcher, resource control, probes, log writer and tail, lanes, persistence, matcher, activity | this revision: 58 exact twins, 1 named skip (below); the tool, commands and shortcuts stay refused until 2b |
 | 2b | The task runtime through the host: spawn, stop, wakes, restore, retention, auto-background; twins and mutations | this revision (0.2.0): 77 exact twins, 10 named skips; scenarios wait for slice 3 (see Slice 2b evidence) |
-| 3 | Widget, dashboard, renderers, shortcuts | refused until then; drafts of widget.go, dashboard.go, render.go, glyphs.go are in the lane notes, not in the tree |
-| 4 | Process-tree cleanup on stop and shutdown on Linux and macOS (Windows by vet and reasoning), the performance table | |
+| 3 | Widget, dashboard, renderers, shortcuts | this revision: in the tree with twins and mutants; `tool-definitions`, `list-log-stop` and `fork-restore` equal to Pi; four scenarios pending (see Slice 3 evidence) |
+| 4 | Process-tree cleanup on stop and shutdown on Linux and macOS (Windows by vet and reasoning), the performance table | cleanup evidence on Linux and macOS (below); performance table (below) |
 
 ## Inventory
 
@@ -130,17 +130,57 @@ all `PARTIAL` stand-ins:
   the SIGKILL escalation line is counted by the stalled-log marker; `restore` probes count the identity and unit probes, not the systemctl
   availability probe (twinned in `TestTwinSystemdUnitProbe`); the Windows spawn row and the widget counts of the exit-held row wait for the
   Windows host and slice 3.
-- **Open items.** (1) `exit-reads` row `mixed: delivered` is skipped: the tool read and the exit read of one task race for the same
-  admission slot (flaky about 1 run in 5 on a busy host). (2) Scenarios: six were drafted (`port/scenarios-slice3/`: spawn-exit-wake, output-match-wake,
-  list-log-stop, bg-commands, auto-background, fork-restore) and run with a pigeq built from `pigeq-normalize-numbers` (rule N8). They do
-  not pass the host check yet: the original under PiG draws the mini-dashboard widget (`setWidget`, frames) which the port refuses until slice 3, so the traces of
-  Pi and PiG differ at the first widget event; `bg-commands` also showed the `nice`/`ionice` exec event ordered after the widget event. They are kept out of
-  `port/scenarios` so the gates stay green; with the widget ported they are the equivalence evidence. Harness limitation recorded: exec-shim events
-  are not ordered against host output, so LLM-driven scenarios set `resourceControlEnabled: false` and `bg-commands` (no LLM turn) covers resource control.
-  (3) Slices 3 and 4 (cleanup evidence on Linux and macOS, perf table) are not done.
-- **Gate state (decision needed).** `pigeq check` tool-definitions fails on this branch: the harness shows the extension's contribution to the system
-  prompt, the original under Pi contributes none (its postinstall does not run in the harness) and the port contributes the instructions block. Putting the
-  installed block into `APPEND_SYSTEM.md` of the scenario makes the port add nothing, but then the original under PiG differs from the original under Pi
-  (a host difference in the `<addendum>` section; the host check fails before the port is compared). Options for the lead: a harness field that
-  lets a scenario name a lane-specific expected prompt addition, or PiG support for the manifest's `appendSystem`. The equality of the text itself is proved by
-  `TestInstructionsAreWhatTheOriginalsInstallStepWrites`.
+- **Open items of 2b, closed in slice 3.** (1) `exit-reads` row `mixed: delivered` is no longer skipped (see Slice 3 evidence: the original orders its
+  tool read and its exit read deterministically, and the port now does the same). (2) The `tool-definitions` gate: with the installed state in
+  `APPEND_SYSTEM.md` the original under PiG and under Pi agree on the whole `<addendum>`; the only difference is the `<docs>` block (D22), masked by a
+  scenario rule that stops at `</docs>` (see below). Not a PiG bug, so no B-number.
+
+## Slice 3 evidence (widget, dashboard, renderers, shortcuts)
+
+- **Ported:** `widget.go` (visibility, expiry timer, the stack of mini-dashboards, `syncWidget` on every `refreshUi` and on `session_start`,
+  `before_agent_start`, `session_tree`, `session_compact`; cleared at `session_shutdown`), `dashboard.go` (the overlay as a `RemoteComponent` through `ctx.Custom`, panes,
+  scroll, follow, `s`, `c`, `x`, a read of the log tail that never blocks a frame, the command layout cache), `render.go` (frames, tool renderers, the
+  `kendex-background-tasks:event` message renderer), `glyphs.go`, and the shortcuts and `/bg` entry points that open them. The shared pi-tui subset
+  (`components/pitui`, `widthx`) comes in through `go.work` as in ask-user-question and goal.
+- **Widget as the host sees it.** A kit view of rows laid out at the terminal's width (the kit form of the factory the original registers; it is laid
+  out again on a width change, `OnWidthChange`), not cut at ten rows. In Pi's RPC mode a component widget is not rendered and the original's stack never
+  marks itself active, so it sends nothing there, not even its removal; the port sends nothing in RPC mode either. The original under PiG's Node runtime
+  still emits `widgetLines` there (core bug B2), so the host check of every scenario with a widget fails and the goldens are recorded with the host
+  check ignored, as the tintinweb-tasks lane does.
+- **Twins:** `widget-visibility` (2), `widget-expiry` (2), `active-context` (2), `widget-lifecycle` (the ten scenarios, on a pinned clock and the rig's timers, the
+  stack's entries read through a test seam), `dashboard` (the cache and the late-read guard; the two must-fail titles are named skips tied to the mutants
+  `dashboard-command-cache-bypassed` and `dashboard-selected-task-guard-dropped`), `component-benchmark` (a 50 MB log, 30+10+10+10+10+1+1 frames: opens,
+  reads, bytes and command wraps per phase; its must-fail title is a named skip tied to the same cache mutant). Seven new mutants: the two above and `widget-expiry-*`,
+  `widget-toggle-forgets-mode`, `widget-hidden-renders`. The original's twelve fixtures run with `showWidget: false`, so the rig's default config sets it; the widget twins turn it on.
+- **`mixed: delivered` of exit-reads.** The original is single-threaded: `finalize` registers the task's exit read (it owns the task's tail and its place in the
+  admission queue) in the same tick as the child's `close`, and a tool read of the same task started afterwards joins that read and opens the log once more only after
+  it. The port started the exit read on a new goroutine, so the tool read could win. Now `taskOutputReader.start` decides the owner and the queue position
+  synchronously, in call order, under the runtime lock (exit wake, output wake, tool read, dashboard read), and a slot of the shared limit is handed to the first
+  queued read when one finishes (FIFO, as the original's queue). The twin row asserts the order (no second open of the task's log before its exit is delivered); the test hook releases
+  held opens in arrival order. The mutant `exit-read-started-later` restores the old order. `Rig` opens are counted, not timed.
+- **Scenarios (Pi against the port, pigeq 0.4.1 = N8 branch + main 101eaf99, rule N8 for the numbers the extension makes up):** `tool-definitions` (installed state),
+  `list-log-stop` and `fork-restore` are equal to the original under Pi (`port: pig-go == pi-ts`, 10, 17 and 35 events). Four are not yet:
+  `spawn-exit-wake` (the exit wake of a task that exits at once reaches the host before `agent_end` in the port and after it in Pi, where the identity probe `ps -o lstart=,comm=`
+  of the gone pid also runs; the port reads `/proc`), `output-match-wake` (a difference inside the wake message, not yet isolated), `bg-commands` (the `nice`/`ionice` exec shim
+  event lands two events later, and the exit wake of the stopped task starts its turn in step `03-stop` instead of `04-list-after-stop`) and `auto-background`
+  (`procIdent.comm` of a `tail -f` task is `bash` or `tail` depending on whether the shell has exec'd yet when the identity is read). They stay in `port/scenarios-slice3/` so the gates stay green.
+- **`<addendum>` and the tool-definitions gate.** The scenario holds the installed block in `APPEND_SYSTEM.md` (what the original's postinstall leaves). `pigeq lane` of the original under Pi and
+  under PiG gives the same 3634 bytes from `<addendum>` to the end of the prompt, and the port adds nothing of its own. The `system` delta of the harness reaches back to the tool snippet once an addendum
+  exists, so the `<docs>` block (D22: PiG names its docs bundle where Pi names its source tree) falls inside it; the scenario's rule `(?s)<docs>\n(?:PiG|Pi) documentation.*?(?:</docs>|$)` masks that block and only it.
+
+## Slice 4 evidence (process cleanup, performance)
+
+- `TestProcessTreeCleanup` (`cleanup_unix_test.go`): a task starts a tree of three descendants (two below a subshell); `stop` and `session_shutdown` each end the whole tree, also when the
+  descendants ignore SIGTERM (the SIGKILL after `forceKillGraceMs`). Linux (xd670, tern-ci:v3): passes. macOS (Darwin arm64): the test binary was cross-compiled on xd670
+  (`GOOS=darwin GOARCH=arm64 go test -c`), only that binary was copied to a scratch directory of the Mac, run three times (12 of 12 subtests pass) and deleted. Windows: `taskkill /T /F` by reasoning and `GOOS=windows go vet`.
+- **Performance, chatty tasks** (`port/perf/perf-chatty.json`: four tasks of 3,000,000 lines each spawned in one turn, `showWidget` off, resource control off). xd670, tern-ci:v3, cores 0-63 under the perf lock,
+  three runs each of one `pigeq lane -host pig` (the whole lane: pigeq, pig, the extension, the scripted model, shutdown). The original runs under PiG's Node runtime, the port as a Go extension. `peak RSS` is the
+  largest single process the lane started (`RUSAGE_CHILDREN`), not a sum; the port's lane also includes a `go build` of the extension from a warm cache, so its CPU is an upper bound.
+
+  | | wall (s) | CPU user+sys (s) | peak RSS of one process (MB) |
+  |---|---|---|---|
+  | original (Node runtime) | 5.26, 5.25, 5.54 | 2.94, 2.99, 2.70 | 119, 118, 116 |
+  | port (Go) | 3.05, 3.06, 3.06 | 3.48, 3.12, 2.95 | 152, 142, 149 |
+
+  Read it as: the port finishes the lane about 2 s sooner; CPU is the same within the noise of the build step; the largest process is bigger by about 30 MB (the Go host side plus the `go build`),
+  which a per-process sampling run would separate. That separation was not done.

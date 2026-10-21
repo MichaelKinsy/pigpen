@@ -42,8 +42,11 @@ func (rt *bgRuntime) sendTaskEvent(eventType string, t *task, o sendTaskWakeOpti
 			return false
 		}
 		rt.exitWakeDue[t] = true
+		// The read is started here, under the lock: its place among the task's other readers and in the admission queue is
+		// the order of the calls, as in the original, whatever the goroutine below does first.
+		read := rt.reader.start(t, alertMax, t.output)
 		go func() {
-			tail := rt.reader.readTail(t, alertMax)
+			tail := read.wait()
 			rt.loop.post(func() {
 				rt.run(func() {
 					defer rt.releaseExit(t)
@@ -123,8 +126,9 @@ func (rt *bgRuntime) onOutputSettled(t *task, pending wakePending) {
 	}
 	maxChars := settingNumber("outputBufferMaxChars", defaultOutputBufferMaxChars, rt.cwd())
 	// The read waits for the log and the admission queue, so it runs without the lock; the decision continues on the loop.
+	read := rt.reader.start(t, maxChars, t.output)
 	go func() {
-		output := rt.reader.read(t, maxChars)
+		output := read.wait().text
 		rt.loop.post(func() { rt.run(func() { rt.decideOutputWake(t, pending, output) }) })
 	}()
 }

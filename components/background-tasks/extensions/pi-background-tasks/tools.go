@@ -59,9 +59,13 @@ func (rt *bgRuntime) listResult() sdk.ToolResult {
 	return toolResult(rt.formatTaskListText(), listDetails{Action: "list", Tasks: bgToolResultTasks(snaps, toolResultOptions{})})
 }
 
-// readTaskOutput is getTaskOutput: the task's output, from memory or its log. It must be called without the lock.
+// readTaskOutput is getTaskOutput: the task's output, from memory or its log. It must be called without the lock; the read
+// is started under it, so it takes its place among the task's other reads when the call is made.
 func (rt *bgRuntime) readTaskOutput(t *task, maxChars float64) string {
-	return rt.reader.read(t, maxChars)
+	rt.mu.Lock()
+	read := rt.reader.start(t, maxChars, t.output)
+	rt.mu.Unlock()
+	return read.wait().text
 }
 
 func (rt *bgRuntime) outputBufferMax() float64 {
@@ -495,15 +499,14 @@ func (rt *bgRuntime) stopFor(token string) {
 	})
 }
 
-// bgHandler is the handler of /bg. The dashboard it opens is refused until the slice that ports it.
+// bgHandler is the handler of /bg.
 func (rt *bgRuntime) bgHandler() sdk.CommandFunc {
 	return func(ctx sdk.Context, args string) error {
 		rt.adopt(ctx)
 		trimmed := jsTrim(args)
 		switch {
 		case trimmed == "":
-			ctx.Notify(refusal("the background task dashboard"), "warning")
-			return nil
+			return rt.openDashboard(ctx, "")
 		case trimmed == "list":
 			rt.withLock(func() { rt.notify(rt.formatTaskListText(), "info") })
 			return nil
@@ -535,9 +538,7 @@ func (rt *bgRuntime) bgHandler() sdk.CommandFunc {
 				rt.notifyLocked(formatTaskLog(output, t.LogFile, ctx.Cwd()), "info")
 				return nil
 			}
-			// watch opens the dashboard (slice 3)
-			ctx.Notify(refusal("the background task dashboard"), "warning")
-			return nil
+			return rt.openDashboard(ctx, t.ID)
 		}
 		if strings.HasPrefix(trimmed, "stop ") {
 			rt.stopFor(jsTrim(trimmed[5:]))

@@ -26,14 +26,14 @@
  {
   "name": "logtail-queued-validity",
   "file": "logtail.go",
-  "find": "if r.tails[t] != owned || !current {",
-  "replace": "if false && (r.tails[t] != owned || !current) {"
+  "find": "stale := r.tails[t] != owned || !current",
+  "replace": "stale := r.tails[t] != owned && false && !current"
  },
  {
   "name": "logtail-close-ownership",
   "file": "logtail.go",
-  "find": "\t\t// The descriptor closes before the admission is released.\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n\t\tr.mu.Lock()\n\t\tr.active--\n\t\tvar wake chan struct{}\n\t\tif len(r.queued) > 0 {\n\t\t\twake = r.queued[0]\n\t\t\tr.queued = r.queued[1:]\n\t\t}\n\t\tr.mu.Unlock()\n\t\tif wake != nil {\n\t\t\tclose(wake)\n\t\t}\n",
-  "replace": "\t\tr.mu.Lock()\n\t\tr.active--\n\t\tvar wake chan struct{}\n\t\tif len(r.queued) > 0 {\n\t\t\twake = r.queued[0]\n\t\t\tr.queued = r.queued[1:]\n\t\t}\n\t\tr.mu.Unlock()\n\t\tif wake != nil {\n\t\t\tclose(wake)\n\t\t}\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n"
+  "find": "\t\t// The descriptor closes before the admission is released.\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n\t\tr.release()\n",
+  "replace": "\t\tr.release()\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n"
  },
  {
   "name": "logtail-clear-ownership",
@@ -94,5 +94,53 @@
   "file": "matcher.go",
   "find": "re.test(text, outputMatcherDeadline)",
   "replace": "re.test(text, 0)"
+ },
+ {
+  "name": "exit-read-started-later",
+  "file": "wakeflow.go",
+  "find": "\t\tread := rt.reader.start(t, alertMax, t.output)\n\t\tgo func() {\n\t\t\ttail := read.wait()\n",
+  "replace": "\t\tgo func() {\n\t\t\ttime.Sleep(100 * time.Millisecond)\n\t\t\ttail := rt.reader.start(t, alertMax, \"\").wait()\n"
+ },
+ {
+  "name": "dashboard-command-cache-bypassed",
+  "file": "dashboard.go",
+  "find": "if !ok || cached.value != value || cached.width != width {",
+  "replace": "if true || !ok || cached.value != value || cached.width != width {"
+ },
+ {
+  "name": "dashboard-selected-task-guard-dropped",
+  "file": "dashboard.go",
+  "find": "if d.disposed || !d.hasOutput || d.outputID != id || d.outputText == text {",
+  "replace": "if d.disposed || !d.hasOutput || d.outputText == text {"
+ },
+ {
+  "name": "widget-expiry-deadline-exclusive",
+  "file": "widget.go",
+  "find": "\t\tif remaining < 0 {",
+  "replace": "\t\tif remaining <= 0 {"
+ },
+ {
+  "name": "widget-expiry-unbounded-delay",
+  "file": "widget.go",
+  "find": "\tdelay = min(delay, maxTimerDelayMs)\n",
+  "replace": ""
+ },
+ {
+  "name": "widget-toggle-forgets-mode",
+  "file": "widget.go",
+  "find": "\t\tv.mode = v.lastVisibleMode\n",
+  "replace": "\t\tv.mode = widgetModeCompact\n"
+ },
+ {
+  "name": "widget-hidden-renders",
+  "file": "widget.go",
+  "find": "showWidget && mode != widgetModeHidden",
+  "replace": "showWidget"
+ },
+ {
+  "name": "widget-expiry-timer-kept",
+  "file": "widget.go",
+  "find": "\tw.clearLocked()\n\tdelay, ok := nextWidgetExpiryDelay",
+  "replace": "\tdelay, ok := nextWidgetExpiryDelay"
  }
 ]

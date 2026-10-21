@@ -39,6 +39,24 @@ type tailState struct {
 	pending *future
 }
 
+// admission is one read's place in the shared limit: a slot taken at once or a position in the queue. A queued read is handed
+// the slot of the read that finishes (granted), or woken without one when the reader is cleared.
+type admission struct {
+	wake    chan struct{}
+	granted bool
+}
+
+// tailRead is a read that has been started; wait is its result.
+type tailRead struct {
+	done chan struct{}
+	out  outputTail
+}
+
+func (p *tailRead) wait() outputTail {
+	<-p.done
+	return p.out
+}
+
 // taskOutputReader reads the end of a task's log, at most probeConcurrency reads at once across every task, and keeps the
 // last tail of each task until its log changes.
 type taskOutputReader struct {
@@ -55,7 +73,7 @@ type taskOutputReader struct {
 	mu     sync.Mutex
 	tails  map[*task]*tailState
 	active int
-	queued []chan struct{}
+	queued []*admission
 	// joins counts the reads that found another read of their task in flight and waited for it.
 	joins int
 }
@@ -75,63 +93,103 @@ func (r *taskOutputReader) read(t *task, maxChars float64) string {
 
 // readTail keeps the disk omission information for consumers that format a bounded excerpt.
 func (r *taskOutputReader) readTail(t *task, maxChars float64) outputTail {
-	for {
-		if out := r.inMemory(t); len(out) > 0 {
-			return outputTail{text: out}
-		}
-		r.mu.Lock()
-		state := r.tails[t]
-		if state == nil {
-			state = &tailState{}
-			r.tails[t] = state
-		}
-		if state.pending != nil {
-			pending := state.pending
-			r.joins++
-			r.mu.Unlock()
+	return r.start(t, maxChars, r.inMemory(t)).wait()
+}
+
+// start begins a read and returns at once. Which read owns a task's tail and where a read stands in the admission queue are
+// decided here, in call order, as the original's promises decide them in one tick: a caller that holds the runtime's lock
+// starts its reads in the order the lock was taken, and a read that starts later cannot overtake one that started before it.
+// inMemory is the task's in-memory output as the caller saw it; start never takes the runtime's lock, so the caller may hold it.
+func (r *taskOutputReader) start(t *task, maxChars float64, inMemory string) *tailRead {
+	op := &tailRead{done: make(chan struct{})}
+	if len(inMemory) > 0 {
+		op.out = outputTail{text: inMemory}
+		close(op.done)
+		return op
+	}
+	r.mu.Lock()
+	state := r.tails[t]
+	if state == nil {
+		state = &tailState{}
+		r.tails[t] = state
+	}
+	if state.pending != nil {
+		pending := state.pending
+		r.joins++
+		r.mu.Unlock()
+		go func() {
 			pending.wait()
 			r.mu.Lock()
 			stale := r.tails[t] != state
 			r.mu.Unlock()
 			if stale || !r.isCurrent(t) {
-				return outputTail{}
+				op.out = outputTail{}
+			} else {
+				// A concurrent caller can ask for a different tail limit.
+				op.out = r.readTail(t, maxChars)
 			}
-			// A concurrent caller can ask for a different tail limit.
-			continue
-		}
-		owned := state
-		done := newFuture()
-		owned.pending = done
-		r.mu.Unlock()
-		out := r.load(t, owned, maxChars)
+			close(op.done)
+		}()
+		return op
+	}
+	owned := state
+	done := newFuture()
+	owned.pending = done
+	slot := r.admitLocked()
+	r.mu.Unlock()
+	go func() {
+		op.out = r.load(t, owned, maxChars, slot)
 		r.mu.Lock()
 		owned.pending = nil
 		r.mu.Unlock()
 		done.resolve()
-		return out
+		close(op.done)
+	}()
+	return op
+}
+
+// admitLocked takes a slot of the shared limit or a place in its queue.
+func (r *taskOutputReader) admitLocked() *admission {
+	slot := &admission{wake: make(chan struct{})}
+	if r.active < probeConcurrency {
+		r.active++
+		slot.granted = true
+		close(slot.wake)
+	} else {
+		r.queued = append(r.queued, slot)
+	}
+	return slot
+}
+
+// release gives the slot to the first queued read, or frees it.
+func (r *taskOutputReader) release() {
+	r.mu.Lock()
+	var next *admission
+	if len(r.queued) > 0 {
+		next = r.queued[0]
+		r.queued = r.queued[1:]
+		next.granted = true
+	} else {
+		r.active--
+	}
+	r.mu.Unlock()
+	if next != nil {
+		close(next.wake)
 	}
 }
 
-func (r *taskOutputReader) load(t *task, owned *tailState, maxChars float64) outputTail {
+func (r *taskOutputReader) load(t *task, owned *tailState, maxChars float64, slot *admission) outputTail {
 	lengthLimit := max(1, jsToInt(math.Floor(maxChars)))
-	// Admission: wait while the shared limit is in use, and read only while the request is still current.
-	for {
-		current := r.isCurrent(t)
-		r.mu.Lock()
-		if r.tails[t] != owned || !current {
-			r.mu.Unlock()
-			return outputTail{}
-		}
-		if r.active < probeConcurrency {
-			r.active++
-			r.mu.Unlock()
-			break
-		}
-		wake := make(chan struct{})
-		r.queued = append(r.queued, wake)
-		r.mu.Unlock()
-		<-wake
+	// Admission: wait for the slot, and read only while the request is still current.
+	<-slot.wake
+	r.mu.Lock()
+	granted := slot.granted
+	r.mu.Unlock()
+	if !granted {
+		// The reader was cleared while this read queued: it holds no slot.
+		return outputTail{}
 	}
+	current := r.isCurrent(t)
 	logFile := r.logFile(t)
 	var f readableFile
 	defer func() {
@@ -139,18 +197,14 @@ func (r *taskOutputReader) load(t *task, owned *tailState, maxChars float64) out
 		if f != nil {
 			_ = f.Close()
 		}
-		r.mu.Lock()
-		r.active--
-		var wake chan struct{}
-		if len(r.queued) > 0 {
-			wake = r.queued[0]
-			r.queued = r.queued[1:]
-		}
-		r.mu.Unlock()
-		if wake != nil {
-			close(wake)
-		}
+		r.release()
 	}()
+	r.mu.Lock()
+	stale := r.tails[t] != owned || !current
+	r.mu.Unlock()
+	if stale {
+		return outputTail{}
+	}
 	tail, err := r.readFile(&f, logFile, lengthLimit, owned)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
@@ -228,7 +282,7 @@ func (r *taskOutputReader) clear() {
 	r.queued = nil
 	r.mu.Unlock()
 	for _, w := range queued {
-		close(w)
+		close(w.wake)
 	}
 }
 

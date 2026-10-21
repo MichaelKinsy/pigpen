@@ -90,6 +90,10 @@
   ],
   "normalize": [
     {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*?(?:</docs>|$)",
+      "replacement": "<docs>"
+    },
+    {
       "pattern": "\\(pid \\d+\\)",
       "replacement": "(pid <pid>)"
     },

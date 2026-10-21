@@ -167,6 +167,13 @@ type bgRuntime struct {
 	hooks       lifecycleHooks
 
 	unsubscribeSettings func()
+
+	// The mini-dashboard: its mode, the one-shot expiry timer of finished tasks and the stack that shares the host widget.
+	visibility widgetVisibility
+	expiry     *widgetExpiry
+	stack      *miniStack
+	// unwatchWidth ends the subscription to terminal width changes.
+	unwatchWidth func()
 }
 
 func newRuntime(tm timers) *bgRuntime {
@@ -176,6 +183,15 @@ func newRuntime(tm timers) *bgRuntime {
 		dashboardShortcut:      settingString("dashboardShortcut", defaultDashboardShortcut, ""),
 		widgetToggleShortcut:   settingString("widgetToggleShortcut", defaultWidgetToggleShortcut, ""),
 	}
+	rt.visibility = newWidgetVisibility(settingEnum("widgetDefaultMode", []string{widgetModeCompact, widgetModeExpanded, widgetModeHidden}, widgetModeCompact, ""))
+	rt.stack = newMiniStack()
+	rt.expiry = newWidgetExpiry(func() {
+		rt.run(func() {
+			if host := rt.currentHost(); host != nil {
+				rt.syncWidget(host)
+			}
+		})
+	}, tm)
 	rt.hooks = lifecycleHooks{
 		rememberSnapshot: rememberSnapshot,
 		persistSnapshots: func() { rt.persistNow() },
@@ -345,11 +361,14 @@ func (rt *bgRuntime) persistNow() persistResult {
 	return rt.persistence.persistSnapshots()
 }
 
-// refreshUI is refreshUi(): the live snapshots are renewed; the widget follows in the slice that ports it.
+// refreshUI is refreshUi(): the live snapshots are renewed and the widget follows the tasks.
 func (rt *bgRuntime) refreshUI() {
 	rt.uiRefresh.cancel()
 	for _, t := range rt.tasks.values() {
 		rememberSnapshot(t)
+	}
+	if host := rt.currentHost(); host != nil {
+		rt.syncWidget(host)
 	}
 }
 
@@ -492,6 +511,7 @@ func (rt *bgRuntime) onSessionStart(ctx sdk.Context) {
 	rt.shuttingDown = false
 	settings.recordProjectTrust(ctx.Cwd(), ctx.IsProjectTrusted)
 	rt.setContext(ctx)
+	rt.watchWidth(ctx)
 	rt.mu.Unlock()
 	if rt.unsubscribeSettings == nil {
 		if off, err := ctx.Events().On(settingsChangedEvent, func(sdk.Context, any) error { settings.clear(); return nil }); err == nil {
@@ -510,6 +530,9 @@ func (rt *bgRuntime) onSessionStart(ctx sdk.Context) {
 	}
 	// Restore just probed every task the watcher would check, so the first pass waits one poll interval.
 	rt.ensureOrphanWatcher()
+	if host := rt.currentHost(); host != nil {
+		rt.syncWidget(host)
+	}
 	rt.mu.Unlock()
 }
 
@@ -552,7 +575,12 @@ func (rt *bgRuntime) onSessionShutdown() {
 	rt.persistNow()
 	// The persisted snapshots carry the tasks to the next session_start.
 	rt.tasks.clear()
+	rt.clearWidget(rt.currentHost())
 	rt.reader.clear()
+	if rt.unwatchWidth != nil {
+		rt.unwatchWidth()
+		rt.unwatchWidth = nil
+	}
 	rt.active = false
 	rt.mu.Unlock()
 	if rt.unsubscribeSettings != nil {

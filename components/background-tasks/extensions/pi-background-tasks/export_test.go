@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/components/pitui/widthx"
 )
 
 // Test seams: the refusal text and the embedded tool definitions.
@@ -290,9 +292,9 @@ type LogOpens struct {
 	held      int
 	active    int
 	maxActive int
-	tokens    chan struct{}
+	waiting   []chan struct{}
+	credit    int
 	open      bool
-	closed    chan struct{}
 }
 
 type countedFile struct {
@@ -308,20 +310,25 @@ func (c *countedFile) Close() error {
 
 // HoldLogOpens makes every log open of the rig's reader wait for ReleaseLogOpens.
 func (r *Rig) HoldLogOpens() *LogOpens {
-	o := &LogOpens{tokens: make(chan struct{}, 1<<16), closed: make(chan struct{})}
+	o := &LogOpens{}
 	r.rt.reader.open = func(path string) (readableFile, error) {
 		o.mu.Lock()
 		o.requested = append(o.requested, path)
-		o.held++
 		o.active++
 		o.maxActive = max(o.maxActive, o.active)
-		o.mu.Unlock()
-		select {
-		case <-o.tokens:
-		case <-o.closed:
+		switch {
+		case o.open:
+		case o.credit > 0:
+			o.credit--
+		default:
+			turn := make(chan struct{})
+			o.waiting = append(o.waiting, turn)
+			o.held++
+			o.mu.Unlock()
+			<-turn
+			o.mu.Lock()
+			o.held--
 		}
-		o.mu.Lock()
-		o.held--
 		o.passed++
 		o.mu.Unlock()
 		f, err := os.Open(path)
@@ -336,14 +343,26 @@ func (r *Rig) HoldLogOpens() *LogOpens {
 	return o
 }
 
-// Release lets n held opens proceed; n < 0 lets every open proceed from now on.
+// Release lets n held opens proceed, the earliest arrival first (the original's fake host resolves its held opens in order), and
+// lets the next n opens that arrive pass at once when fewer are held; n < 0 lets every open proceed from now on.
 func (o *LogOpens) Release(n int) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
 	if n < 0 {
-		close(o.closed)
+		o.open = true
+		for _, turn := range o.waiting {
+			close(turn)
+		}
+		o.waiting = nil
 		return
 	}
-	for i := 0; i < n; i++ {
-		o.tokens <- struct{}{}
+	for range n {
+		if len(o.waiting) > 0 {
+			close(o.waiting[0])
+			o.waiting = o.waiting[1:]
+			continue
+		}
+		o.credit++
 	}
 }
 
@@ -379,4 +398,157 @@ func (r *Rig) WakeLogs() []string {
 	r.wakeMu.Lock()
 	defer r.wakeMu.Unlock()
 	return append([]string{}, r.wakeLogs...)
+}
+
+// SetClock pins the clock of the lifecycle and the widget (the original's fixtures replace Date.now) until the test ends.
+func SetClock(t testing.TB, now func() int64) {
+	prev := clockNow
+	clockNow = now
+	t.Cleanup(func() { clockNow = prev })
+}
+
+// WidgetEntries is the keys of the entries of the mini-dashboard stack.
+func (r *Rig) WidgetEntries() []string {
+	r.rt.stack.mu.Lock()
+	defer r.rt.stack.mu.Unlock()
+	keys := []string{}
+	for k := range r.rt.stack.entries {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// StackLines is what the stack draws at placement and width now, as the host's component renders it.
+func (r *Rig) StackLines(placement string, width int) []string {
+	r.rt.mu.Lock()
+	defer r.rt.mu.Unlock()
+	host := r.rt.currentHost()
+	return r.rt.stack.lines(placement, width, 40, host.theme())
+}
+
+// SetSibling adds, replaces or (with nil lines) removes an entry that another extension's mini-dashboard would put in the stack.
+func (r *Rig) SetSibling(rank int, lines []string, placement string) {
+	r.rt.withLock(func() {
+		host := r.rt.currentHost()
+		var render func(width, rows int, theme uiTheme) []string
+		if lines != nil {
+			render = func(int, int, uiTheme) []string { return lines }
+		}
+		r.rt.stack.set(host, "sibling", rank, render, placement)
+	})
+}
+
+// LogIO counts what the rig's task output reader asks of the files: opens, reads and the bytes they return.
+type LogIO struct {
+	mu    sync.Mutex
+	opens int
+	reads int
+	bytes int64
+}
+
+type countingFile struct {
+	readableFile
+	io *LogIO
+}
+
+func (c countingFile) ReadAt(p []byte, off int64) (int, error) {
+	n, err := c.readableFile.ReadAt(p, off)
+	c.io.mu.Lock()
+	c.io.reads++
+	c.io.bytes += int64(n)
+	c.io.mu.Unlock()
+	return n, err
+}
+
+// CountLogIO makes the rig's reader count its opens, reads and bytes.
+func (r *Rig) CountLogIO() *LogIO {
+	io := &LogIO{}
+	r.rt.reader.open = func(path string) (readableFile, error) {
+		f, err := os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+		io.mu.Lock()
+		io.opens++
+		io.mu.Unlock()
+		return countingFile{readableFile: f, io: io}, nil
+	}
+	return io
+}
+
+// Counts is the opens, reads and bytes so far.
+func (l *LogIO) Counts() (opens, reads int, bytes int64) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.opens, l.reads, l.bytes
+}
+
+// Dashboard is the dashboard of the rig's runtime with the terminal replaced by a test: plain colors, the host's render request
+// counted, and the wrap of the command (a text that starts with "cache-me") counted.
+type Dashboard struct {
+	d       *dashboard
+	reads   sync.WaitGroup
+	mu      sync.Mutex
+	renders int
+	wraps   int
+}
+
+// plainTheme styles nothing, as the original's fixtures' theme.
+type plainTheme struct{}
+
+func (plainTheme) Fg(_, text string) string { return text }
+func (plainTheme) Bg(_, text string) string { return text }
+func (plainTheme) Bold(text string) string  { return text }
+func (plainTheme) Inverse(text string) string {
+	return text
+}
+
+// OpenDashboard opens the dashboard on the rig's tasks at a terminal of 40 rows.
+func (r *Rig) OpenDashboard() *Dashboard {
+	out := &Dashboard{}
+	deps := r.rt.dashboardDeps()
+	read := deps.getTaskOutput
+	// Every read is waited for between frames, as the original's fixture does (`await Promise.all([...pendingReads])`).
+	deps.getTaskOutput = func(id string, done func(string)) {
+		out.reads.Add(1)
+		read(id, func(text string) {
+			done(text)
+			out.reads.Done()
+		})
+	}
+	wrap := func(text string, width int) []string {
+		if strings.HasPrefix(text, "cache-me") {
+			out.mu.Lock()
+			out.wraps++
+			out.mu.Unlock()
+		}
+		return widthx.WrapTextWithAnsi(text, width)
+	}
+	out.d = newDashboard(deps, plainTheme{}, "", func() int { return 40 }, wrap)
+	out.d.SetInvalidate(func() {
+		out.mu.Lock()
+		out.renders++
+		out.mu.Unlock()
+	})
+	return out
+}
+
+func (d *Dashboard) Render(width int) []string { return d.d.Render(width) }
+func (d *Dashboard) Input(data string)         { _, _ = d.d.HandleInput(data) }
+func (d *Dashboard) Invalidate()               { d.d.resetTheme() }
+func (d *Dashboard) Dispose()                  { d.d.Dispose() }
+
+// WaitReads waits for the log reads the frames started.
+func (d *Dashboard) WaitReads() { d.reads.Wait() }
+
+// CommandWraps is how many times a command was wrapped.
+func (d *Dashboard) CommandWraps() int { d.mu.Lock(); defer d.mu.Unlock(); return d.wraps }
+
+// Renders is how many redraws the dashboard asked the host for.
+func (d *Dashboard) Renders() int { d.mu.Lock(); defer d.mu.Unlock(); return d.renders }
+
+// AppendToCommand changes the command of a task, as the original's fixture does to its task.
+func (r *Rig) AppendToCommand(id, text string) {
+	r.rt.withLock(func() { r.rt.tasks.get(id).Command += text })
 }
