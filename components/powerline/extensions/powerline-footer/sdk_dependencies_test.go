@@ -8,12 +8,13 @@ import (
 	"testing"
 )
 
-// The Go SDK has no keybinding lookup, no getEditorComponent and no tui.hasOverlay(), and its SetEditorComponent refuses every
-// component. Nothing in the extension may depend on them: a call would fail or silently return nil at run time, so a feature
-// that needs one has to be refused (see refusal_test.go) instead of half working. This test reads every non-test source file,
-// drops the comments, and fails when the code reaches for one of those host capabilities.
-func TestNoCodePathDependsOnAnEditorOrKeybindingCapabilityTheSdkLacks(t *testing.T) {
-	forbidden := regexp.MustCompile(`(?i)\b(SetEditorComponent|GetEditorComponent|getEditorComponent|hasOverlay|KeybindingsManager|keybindings\.matches|GetKeybindings|Keybinding(s)?\w*)\b`)
+// The Go SDK has no keybinding lookup (E10) and no tui.hasOverlay(). Nothing in the extension may depend on them: a call would
+// fail or silently return nothing at run time, so a feature that needs one has to be refused (see refusal_test.go) or replaced by
+// a documented stand-in instead of half working. This test reads every non-test source file, drops the comments, and fails when
+// the code reaches for one of those host capabilities. (SetEditorComponent and GetEditorComponent exist since PiG v0.5.0 and are
+// allowed.)
+func TestNoCodePathDependsOnAKeybindingOrOverlayCapabilityTheSdkLacks(t *testing.T) {
+	forbidden := regexp.MustCompile(`(?i)\b(hasOverlay|KeybindingsManager|keybindings\.matches|GetKeybindings|Keybinding(s)?\w*)\b`)
 	files, err := filepath.Glob("*.go")
 	if err != nil || len(files) == 0 {
 		t.Fatalf("no sources found: %v", err)

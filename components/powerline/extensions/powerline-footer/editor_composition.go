@@ -9,7 +9,7 @@ import sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 // property implements autocompleteProviderHolder, one that has setAutocompleteProvider implements autocompleteProviderSetter.
 //
 // Nothing in the extension calls these yet. The caller is the editor setup (index.ts, setupCustomEditor), which needs the SDK's
-// setEditorComponent and getEditorComponent; PiG v0.5.0 returns ErrUnsupportedSubprocessUI for the first and nil for the second.
+// setEditorComponent (available since PiG v0.5.0) and getEditorComponent (it returns only this extension's own editor factory).
 
 // autocompleteProviderHolder is an editor that exposes its provider (Editor.autocompleteProvider).
 type autocompleteProviderHolder interface {

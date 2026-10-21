@@ -12,7 +12,7 @@ import (
 // pi-tui's AutocompleteProvider is modelled by the SDK's sdk.AutocompleteProvider (the one a Go extension can reach). A pi-tui
 // editor is any Go value: one that has the provider property implements AutocompleteProvider(), one that has
 // setAutocompleteProvider implements SetAutocompleteProvider(p). The callbacks take a zero sdk.Context, which these providers
-// never read. No Go editor exists to pass in until the SDK gets setEditorComponent, so nothing in the extension calls these yet.
+// never read. No Go editor is passed in until the editor slice installs one with setEditorComponent, so nothing in the extension calls these yet.
 
 func baseProvider() *sdk.AutocompleteProvider {
 	return &sdk.AutocompleteProvider{

@@ -11,8 +11,8 @@ import (
 // rows and the shell_mode segment's data. upstream: index.ts 1240-1243 (state), 1280-1281, 1354-1420 (setBashModeActive,
 // runShellCommand), 2683-2737 (the commands), 2935-2938 (segment data), 3060-3090 (renderBashTranscriptLines).
 //
-// Bash mode needs the bash editor (a replacement of Pi's input editor, installed through ctx.ui.setEditorComponent), which the
-// Go SDK cannot install; without it the user cannot type into the mode, so the extension keeps /bash-mode, /bash-reset and the
+// Bash mode needs the bash editor (a replacement of Pi's input editor, installed through ctx.ui.setEditorComponent). The Go
+// SDK offers that since PiG v0.5.0 and the editor is the next slice; until it lands the user cannot type into the mode, so the extension keeps /bash-mode, /bash-reset and the
 // bashMode setting refused (refusal.go) and does not construct a bashMode. This type is the complete logic behind them, tested
 // on its own, so the editor lands on top of it: its editor hooks are the two functions of bashEditorHooks.
 

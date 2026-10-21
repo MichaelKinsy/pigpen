@@ -14,8 +14,8 @@ import (
 // The editor-independent parts of the bash mode editor: input classification, dropped file paths, the ghost suggestion
 // scheduler, accepting and drawing a ghost, shell history browsing and the fast ASCII line edits. upstream:
 // bash-mode/editor.ts. The BashModeEditor itself subclasses Pi's CustomEditor and is installed through
-// ctx.ui.setEditorComponent, which the Go SDK does not offer (Context.SetEditorComponent returns ErrUnsupportedSubprocessUI), so
-// the editor is not ported; these are the pieces it is built from, ready for it. Columns count UTF-16 code units as in pi-tui.
+// ctx.ui.setEditorComponent, which the Go SDK offers since PiG v0.5.0; the editor is the next slice and
+// these are the pieces it is built from, ready for it. Columns count UTF-16 code units as in pi-tui.
 
 const (
 	ghostUpdateDebounce = 50 * time.Millisecond // GHOST_UPDATE_DEBOUNCE_MS

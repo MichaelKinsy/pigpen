@@ -11,8 +11,8 @@ import (
 
 // The editor performance profiler's options and counters. upstream: editor-performance.ts.
 //
-// The profiler measures the editor's render and input (index.ts 3323-3500), which needs a Go-reachable editor, and the
-// SDK's setEditorComponent (PiG v0.5.0 returns ErrUnsupportedSubprocessUI for it). Until that exists only the options are used:
+// The profiler measures the editor's render and input (index.ts 3323-3500), which needs the editor installed through the
+// SDK's setEditorComponent (available since PiG v0.5.0; wiring it in is the next slice). Until then only the options are used:
 // refusal.go reads them to refuse POWERLINE_DEBUG_PERF, and /powerline-perf stays refused. The profiler is kept here, proven
 // by twins, so the editor port finds it done.
 

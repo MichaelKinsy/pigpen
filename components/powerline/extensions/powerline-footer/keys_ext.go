@@ -11,7 +11,7 @@ import (
 // upstream: index.ts setupCustomEditor (3190-3220: ctx.ui.onTerminalInput), registerCommand("stash-history") (2670), the stash
 // parts of session_start and session_shutdown.
 //
-// Blocked by the SDK (no setEditorComponent, so no focused editor): Ctrl+S, which the original handles only inside the focused
+// Not ported yet (needs the focused editor of the next slice, setEditorComponent): Ctrl+S, which the original handles only inside the focused
 // editor (index.ts 3388) so that Pi's selectors keep it; the printable shortcuts are handled by the terminal listener alone.
 // The reply, bashMode and queueOpen actions are filled by the features that own them (keysExt.setHook).
 

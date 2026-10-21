@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (everything the SDK allows; the editor features are refused)
+# Port record: pi-powerline-footer (everything except the editor features, which are the next slices; they are refused meanwhile)
 
 | Input | Identity |
 |---|---|
@@ -28,7 +28,7 @@ never visible (the first needs bash mode, the second renders nothing in the orig
 
 ### Ported in PR 4 (bashmode, version 0.4.0)
 
-the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `completion.ts`, the pure parts of `editor.ts`) in `bash_*.go`: the shell session over `os/exec` (process group signals, hidden console on Windows), the completion engine and its providers over the SDK's `AutocompleteProvider`, the transcript store and widget, the `shell_mode` segment. The editor (`BashModeEditor`) needs `setEditorComponent`: `/bash-mode`, `/bash-reset` and the `bashMode` setting stay refused, and 28 twins of editor cases are named skips with their reasons.
+the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `completion.ts`, the pure parts of `editor.ts`) in `bash_*.go`: the shell session over `os/exec` (process group signals, hidden console on Windows), the completion engine and its providers over the SDK's `AutocompleteProvider`, the transcript store and widget, the `shell_mode` segment. The editor (`BashModeEditor`) is the next slice (`setEditorComponent` is in PiG v0.5.0): `/bash-mode`, `/bash-reset` and the `bashMode` setting stay refused, and 28 twins of editor cases are named skips with their reasons.
 
 ### Ported in PR 5 (vibes, version 0.5.0)
 

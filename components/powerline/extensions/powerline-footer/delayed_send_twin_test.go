@@ -3,8 +3,8 @@ package powerline_footer
 import "testing"
 
 // Twins of port/oracle/tests/delayed-send.test.ts. Both cases type into Pi's real CustomEditor (editor.handleInput, the
-// editor's onSubmit) with powerline.sendDelayMs set. An extension cannot replace or wrap the editor (Context.SetEditorComponent
-// refuses a component), so powerline.sendDelayMs stays refused (refusal.go) and the cases are skipped. The countdown logic itself
+// editor's onSubmit) with powerline.sendDelayMs set. The editor slice that installs the editor (Context.SetEditorComponent, PiG v0.5.0) is not ported yet, so
+// powerline.sendDelayMs stays refused (refusal.go) and the cases are skipped until it lands. The countdown logic itself
 // (submitWithDelay, takePendingSend, restorePendingSend, sendPendingNow) is ported and tested in queue_editor_test.go.
 func TestDelayedSendTwins(t *testing.T) {
 	tskip(t, "delayed-send", "Esc during the send delay returns the prompt to the editor without sending it",

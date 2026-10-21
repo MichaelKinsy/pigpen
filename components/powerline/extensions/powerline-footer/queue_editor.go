@@ -10,9 +10,9 @@ import (
 // session compacts. upstream: index.ts 1554-1603 (pending send), 3335-3384 (the editor's handleInput wrapper) and 3052-3058.
 //
 // Both need Pi's editor: its submit path (onSubmit, handleInput, getExpandedText, setText, addToHistory) and its keybindings.
-// The Go SDK has no way for an extension to replace or wrap the editor (Context.SetEditorComponent refuses a component), so
+// The editor hook is Context.SetEditorComponent (PiG v0.5.0), which the next slice wires in; until then
 // nothing calls this code outside the tests, powerline.sendDelayMs stays refused (refusal.go) and the typed-prompt capture is
-// not active. The code is here, with the original's logic and its own tests, for the day an editor hook exists.
+// not active. The code is here, with the original's logic and its own tests, for that slice.
 
 // queueEditor is the part of Pi's editor the queue uses.
 type queueEditor interface {
