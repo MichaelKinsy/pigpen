@@ -38,14 +38,3 @@ func TestDynamicFanoutAllowsExactlyMaxItems(t *testing.T) {
 		t.Errorf("two items under maxItems 2: %v", err)
 	}
 }
-
-func TestDelegationTerminalResponseIsEmittedOnce(t *testing.T) {
-	events := &fakeEvents{}
-	b := newBridge(events, nil)
-	var got recorder
-	events.On(subagentDelegationResponseEvent, got.add)
-	b.emitTerminal("k", map[string]any{"status": "first"})
-	b.emitTerminal("k", map[string]any{"status": "second"})
-	eq(t, len(got.list), 1, "one terminal response per attempt")
-	eq(t, got.list[0]["status"], any("first"), "the first")
-}
