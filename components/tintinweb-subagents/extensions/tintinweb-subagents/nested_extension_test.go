@@ -231,15 +231,15 @@ func TestWhatAnAgentOwnsStopsWithIt(t *testing.T) {
 	t.Run("agent_settled stops the children this agent owns, and only them", func(t *testing.T) {
 		r, mine, other := setup(t)
 		r.Fire(sdk.EventAgentSettled, obj{})
-		settled(t, mine)
+		settledRec(t, mine)
 		eq(t, mine.Status, statusStopped)
 		eq(t, other.Status, statusRunning)
 	})
 	t.Run("session_shutdown stops every child", func(t *testing.T) {
 		r, mine, other := setup(t)
 		r.Fire(sdk.EventSessionShutdown, obj{"reason": "quit"})
-		settled(t, mine)
-		settled(t, other)
+		settledRec(t, mine)
+		settledRec(t, other)
 		eq(t, []string{mine.Status, other.Status}, []string{statusStopped, statusStopped})
 	})
 }

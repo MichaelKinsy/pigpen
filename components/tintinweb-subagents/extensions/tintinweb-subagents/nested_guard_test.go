@@ -46,14 +46,14 @@ func TestAPanicInAnAgentsRunSettlesItAndFreesItsSlot(t *testing.T) {
 	}
 	first := r.app.mgr.spawn("general-purpose", "first", "", childSpec{Prompt: "first"}, true)
 	second := r.app.mgr.spawn("general-purpose", "second", "", childSpec{Prompt: "second"}, true)
-	settled(t, first)
+	settledRec(t, first)
 	eq(t, first.Status, statusError)
 	eq(t, first.Error, "internal error in the agent run")
 	// The queue moved on: the second agent started in the freed slot, and the count is right.
 	c := r.fleet.waitPrompt(t, "second")
 	eq(t, second.Status, statusRunning)
 	c.finish("ok")
-	settled(t, second)
+	settledRec(t, second)
 	eq(t, second.Status, statusCompleted)
 	eq(t, r.app.mgr.runningBackground, 0)
 }
@@ -78,16 +78,16 @@ func TestASettledOwnerStopsOnlyItsOwnChildren(t *testing.T) {
 	ofB := r.app.mgr.spawnOwned("scout", "of-b", "", childSpec{Prompt: "of-b"}, true, &owner{ParentID: b.ID, Depth: 2, MaxDepth: 3})
 	r.fleet.wait(t, 4)
 	r.fleet.waitPrompt(t, "a").finish("done")
-	settled(t, a)
-	settled(t, ofA)
+	settledRec(t, a)
+	settledRec(t, ofA)
 	eq(t, ofA.Status, statusStopped)
 	r.app.mgr.mu.Lock()
 	status := ofB.Status
 	r.app.mgr.mu.Unlock()
 	eq(t, status, statusRunning) // b's child is not a's to stop
 	r.fleet.waitPrompt(t, "b").finish("done")
-	settled(t, b)
-	settled(t, ofB)
+	settledRec(t, b)
+	settledRec(t, ofB)
 }
 
 // Whoever is released by "started" finds a child that could not start already failed (the nested Agent tool answers a

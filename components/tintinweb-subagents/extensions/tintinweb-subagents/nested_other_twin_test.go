@@ -317,7 +317,7 @@ func TestStatusNoteWiringNestedTwins(t *testing.T) {
 		eq(t, child.Status, statusRunning)
 
 		r.fleet.waitPrompt(t, "nested").finish("nested result")
-		settled(t, child)
+		settledRec(t, child)
 		eq(t, r.emitCount(), emitsBefore) // no started, completed or failed event for it
 		eq(t, len(r.messages()), msgsBefore)
 		eq(t, r.emitted("subagents:completed"), false)
@@ -350,7 +350,7 @@ func TestUsageAndGCNestedTwins(t *testing.T) {
 		top := r.app.mgr.spawn("general-purpose", "top", "", childSpec{Prompt: "top"}, true)
 		child := r.app.mgr.spawnOwned("general-purpose", "nested", "", childSpec{Prompt: "nested"}, true, &owner{ParentID: top.ID, Depth: 2, MaxDepth: 3})
 		r.fleet.waitPrompt(t, "nested").finish("x")
-		settled(t, child)
+		settledRec(t, child)
 		eq(t, seen, 0)
 	})
 	tskip(t, "agent-manager-gc", "ignores a reclaim on a nested child, which has no name to hold",
