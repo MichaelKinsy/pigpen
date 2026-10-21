@@ -782,10 +782,6 @@ func (b *delegationBridge) rememberIdentity(m map[string]bool, key string) {
 	if m[key] || b.identitySaturated {
 		return
 	}
-	if len(m) >= maxDelegationIdentities {
-		b.identitySaturated = true
-		return
-	}
 	m[key] = true
 	if len(m) == maxDelegationIdentities {
 		// Exact cancellation and terminal-attempt facts are security state, not an LRU cache: once full, fail closed.

@@ -233,9 +233,6 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	}
 	name, _ := params["agent"].(string)
 	name = jsTrim(name)
-	if name == "" {
-		return nil, sdk.NewToolError("Structured single-child execution requires agent to be a non-empty string.")
-	}
 	task, taskIsString := params["task"].(string)
 	if params["task"] != nil && !taskIsString {
 		return nil, sdk.NewToolError("Structured single-child task must be a string when provided.")
