@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-tintinweb-tasks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of @tintinweb/pi-tasks: Claude Code-style task tracking for PiG (seven task tools, /tasks, a live widget, reminders, and task execution through @tintinweb/pi-subagents)",
   "keywords": [
     "pig-package",
