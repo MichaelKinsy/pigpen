@@ -29,7 +29,7 @@ import (
 const TraceDirEnv = "PIGPEN_WARDEN_TRACE_DIR"
 
 // PackageVersion is the version in package.json (the trace file's `wardenVersion`); a test keeps the two equal.
-const PackageVersion = "0.1.12"
+const PackageVersion = "0.1.13"
 
 // JudgmentsOffReason is why no judge is available (backend.ts JudgmentsOffReason).
 type JudgmentsOffReason string
