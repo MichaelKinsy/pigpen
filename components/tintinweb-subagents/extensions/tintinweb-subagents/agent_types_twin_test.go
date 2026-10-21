@@ -33,6 +33,7 @@ func eq(t *testing.T, got, want any) {
 }
 
 func resetTypes() {
+	setWorktreeIsolationEnabled(true)
 	setFallbackSubagent(nil)
 	setDefaultsDisabled(false)
 	registerAgents(newRegistry())

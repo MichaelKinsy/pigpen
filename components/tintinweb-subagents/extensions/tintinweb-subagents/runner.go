@@ -59,6 +59,13 @@ type childSpec struct {
 	SessionID  string
 	// Hooks receives what the child's event stream carries (usage, compaction, every event). Set by the manager.
 	Hooks *childHooks
+	// Worktree asks for `isolation: "worktree"`: the manager runs the child in a temporary git worktree made from Cwd
+	// (when the project allows it) and commits what it changed to a branch. upstream: agent-manager.ts startAgent.
+	Worktree bool
+	// Prepare builds the parts of the spec that depend on where the child runs (its system prompt), once the worktree,
+	// if any, exists: cwd is the directory the child works in, worktreeBase the directory a worktree copy was made
+	// from ("" without one). An error fails the agent. upstream: agent-runner.ts runAgent.
+	Prepare func(spec *childSpec, cwd, worktreeBase string) error
 }
 
 // childResult is what a finished child reports.

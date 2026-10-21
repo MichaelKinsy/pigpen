@@ -231,6 +231,11 @@ func (a *app) shutdown() {
 	}
 	releaseManagerRegistry(a.entry)
 	a.mgr.abortAll()
+	// Prune orphaned git worktrees (crash recovery). upstream: agent-manager.ts dispose.
+	a.mu.Lock()
+	cwd := a.cwd
+	a.mu.Unlock()
+	a.mgr.pruneAll(cwd)
 	a.cancelBatch()
 	a.mu.Lock()
 	for key, stop := range a.timers {

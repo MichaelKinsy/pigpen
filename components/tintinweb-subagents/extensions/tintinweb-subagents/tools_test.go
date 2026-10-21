@@ -61,6 +61,7 @@ func TestConsumedResultSkipsTheNotification(t *testing.T) {
 	c.finish("done")
 	out := r.must("get_subagent_result", obj{"agent_id": id, "wait": true}) // consumes before the hold ends
 	eq(t, strings.HasSuffix(out, "done"), true)
+	eq(t, r.app.mgr.get(id).Consumed, true)
 	time.Sleep(nudgeHold + 300*time.Millisecond)
 	eq(t, len(r.messages()), 0)
 }

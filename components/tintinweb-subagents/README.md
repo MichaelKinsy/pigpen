@@ -92,6 +92,7 @@ original; all 24 keys are parsed alike, and a value of the wrong shape is droppe
 | `toolDescriptionMode` (`full`) | `compact` is the short Agent description; `custom` renders `.pi/agent-tool-description.md` (else `<agent dir>/agent-tool-description.md`) with `{{typeList}}`, `{{compactTypeList}}`, `{{agentDir}}`, `{{scheduleGuideline}}` and `{{isolationGuideline}}`; read once at registration |
 | `fallbackSubagent`, `disableDefaultAgents` | an unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused; the three default agents can be switched off |
 | `rememberAgents` (true) | an agent's conversation is a pi session file (see Sessions, resume and context below); `false` keeps it in the child's memory |
+| `worktreeIsolation` (true) | `false` drops the `isolation` parameter and its guideline from the Agent text, and a worktree any caller asks for (the call, an agent file, the spawn RPC) is dropped, not refused |
 
 A model named by the call (or by an agent file) is resolved against the models with credentials: `provider/modelId`, else
 a fuzzy match (`haiku`, `sonnet 4.5`, a dot or a dash in a version); one that matches nothing is an error result for the
@@ -114,16 +115,33 @@ a pi `usage`. `reportUsage: true` attaches the agents' spend to the next tool re
 `showCost: true` adds `~$0.0042` to the tool results and `<estimated_cost_usd>` to the notification; the widgets that
 show it are another slice, so the setting is still announced as not fully supported.
 
+## Worktree isolation and persistent memory
+
+`isolation: "worktree"` (an Agent call parameter, an agent-file field, or the `isolation` option of `subagents:rpc:spawn`)
+runs the agent in a temporary detached `git worktree` of the workspace, at the same subdirectory when the workspace is
+deeper than the repository root. It is strict: outside a git repository, with no commit, or when `git worktree add`
+fails, the call fails and nothing runs in the main checkout. When the agent finishes, an unchanged worktree is removed;
+changes are committed to a branch `pi-agent-<id>` that the result names, and the worktree is removed. An agent file's
+`isolation` outranks the call's. `worktreeIsolation: false` in `subagents.json` drops the parameter and the guideline
+from the tool text and drops a worktree any caller asks for. Orphaned worktrees are pruned when the session shuts down.
+`git` must be on the PATH.
+
+`memory: user | project | local` in an agent file gives the agent a persistent directory (`<agent dir>/agent-memory/<name>/`,
+`.pi/agent-memory/<name>/`, `.pi/agent-memory-local/<name>/`; the legacy `~/.pi/agent-memory/<name>/` is still used when
+it exists and the new one does not). The first 200 lines of its `MEMORY.md` go into the system prompt; an agent without
+write or edit tools gets a read-only block and the directory is not created. Names that are not plain are refused and a
+symlinked memory directory is never used.
+
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
-mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, and the settings
+[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, `@name`
+mentions, the widget, fleet and conversation-viewer UI, nested delegation, and the settings
 menu (the store can write `.pi/subagents.json`, nothing calls it yet). The `Agent` tool is advertised with the
-original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
-`SubagentWorkflow` is not registered. (The text for every combination of those three features and the three
-`toolDescriptionMode`s is built and proved against what Pi sends, so a slice that ports a feature only switches it on in
-`features.go`.)
+original's text and schema as it is with workflows and scheduling switched off (worktree isolation is on, as in the
+original), and `SubagentWorkflow` is not registered. (The text for every combination of those three features and the
+three `toolDescriptionMode`s is built and proved against what Pi sends, so a slice that ports a feature only switches it
+on in `features.go`.)
 
 Nothing that is not ported is accepted and quietly ignored. Each of these is refused with one message, a tool error
 (for the settings, a notification when a session starts):
@@ -131,15 +149,15 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > @pi-in-go/pigpen-tintinweb-subagents (Go port) does not support _the feature_ yet. Install the original extension,
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
-- Agent call parameters `schedule` and `isolation: "worktree"`.
-- Agent file fields that ask for an unported feature: `isolation: worktree`, `memory`, `allowed_subagents`.
-- `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolated`,
+- The Agent call parameter `schedule`.
+- The agent file field `allowed_subagents`.
+- `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolation`, `isolated`,
   `inheritContext`, `bypassQueue` and `isBackground`. (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
   `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim` and `blocking` are dropped, as the original drops what a
   caller sends: only the extension itself may set them. `isolated`, `inheritContext` and `bypassQueue` count when truthy,
   as in JavaScript.)
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `worktreeIsolation: true`, `widgetMode` other than `off`, and so on). The settings the
+  `workflowsEnabled: true`, `widgetMode` other than `off`, and so on). The settings the
   port matches are not flagged: `false` for the switches the port does not have, and the ones it honors.
 
 The proof that the shipped slice matches the original is in

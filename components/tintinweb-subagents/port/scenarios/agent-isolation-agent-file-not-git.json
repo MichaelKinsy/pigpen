@@ -1,0 +1,49 @@
+{
+  "name": "agent-isolation-agent-file-not-git",
+  "description": "An agent file with isolation: worktree outside a git repository fails the tool call (strict).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "Create the marker file.",
+            "description": "worktree work",
+            "subagent_type": "wt",
+            "run_in_background": false
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"fleetView\": false, \"widgetMode\": \"off\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "real"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/agents/wt.md": "---\ndescription: Isolated worker\nisolation: worktree\n---\nWork in your copy.\n"
+  }
+}

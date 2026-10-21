@@ -287,9 +287,14 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		sessionID = id
 	}
 	r, err := a.start(ctx, startRequest{Type: resolved, Prompt: prompt, Description: description, Model: model, Thinking: inv.thinking,
-		MaxTurns: inv.maxTurns, Isolated: inv.isolated, InheritContext: inv.inheritContext, Spawn: opts,
+		MaxTurns: inv.maxTurns, Isolated: inv.isolated, InheritContext: inv.inheritContext, Worktree: inv.isolation == "worktree", Spawn: opts,
 		Transcript: transcript, SessionID: sessionID})
 	if err != nil {
+		return nil, err
+	}
+	// With isolation the agent is not running yet: the repo copy is a git call. A strict-isolation failure fails THIS
+	// tool call, not an agent that ran. upstream: index.ts (#179).
+	if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {
 		return nil, err
 	}
 	if background {

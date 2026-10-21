@@ -5,6 +5,6 @@ package tintinweb_subagents
 // from subagents.json (descriptionFlagsNow). Each constant is on its own line so slices do not conflict.
 var (
 	featureScheduling        = false // the `schedule` parameter, the scheduler. upstream: schedule.ts
-	featureWorktreeIsolation = false // the `isolation` parameter, worktrees. upstream: worktree.ts
+	featureWorktreeIsolation = true  // the `isolation` parameter, worktrees. upstream: worktree.ts
 	featureWorkflows         = false // the SubagentWorkflow tool. upstream: workflow/*
 )

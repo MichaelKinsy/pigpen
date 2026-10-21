@@ -33,11 +33,14 @@ extension cannot host a Pi session, so the shipped slice is the part that has a 
 - `/agents`: the types and the agents of the session;
 - sessions: an agent's conversation is a pi session file (`rememberAgents`, `persist_session`, `session_dir`), `resume`
   continues the same conversation, `inherit_context` puts the parent conversation in front of the task, and the agent's
-  skills, extensions, `ext:` tool selectors, `disallowed_tools` and `isolated` choose what its child loads.
+  skills, extensions, `ext:` tool selectors, `disallowed_tools` and `isolated` choose what its child loads;
+- worktree isolation (`isolation: "worktree"` from the call, an agent file or the spawn RPC; strict, the branch commit) and
+  persistent agent memory (`memory:` user, project, local, `MEMORY.md` injection, the legacy fallback), both twinned from
+  the original's tests.
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
-original advertises it with workflows, scheduling and worktree isolation switched off** (`.pi/subagents.json`:
-`workflowsEnabled`, `schedulingEnabled`, `worktreeIsolation` all `false`), which is exactly what this port offers.
+original advertises it with workflows and scheduling switched off** (`.pi/subagents.json`: `workflowsEnabled`,
+`schedulingEnabled` both `false`; worktree isolation is on, as it is by default), which is what this port offers.
 
 ## Mapping
 
@@ -110,25 +113,25 @@ components; this port registers none.
    environment block and the agent's prompt), after a fix this comparison found (a blank line in the replace-mode header).
    The harness's `removed` part is the host's own default system prompt, which says `pi` under Pi and `pig` under PiG, so
    that comparison cannot pass and the scenario is not kept (`port/gen-scenarios.py` says so).
-3. **Unsupported parameters of `Agent` are refused.** `schedule` and `isolation: "worktree"` are tool errors with the
-   message in the README (`refuse.go`). `inherit_context`, `resume`, `skills`, `extensions`, `disallowed_tools` and
-   `isolated` are ported (see 11); the first version answered `inherit_context` with plain text and emulated `resume` by
+3. **Unsupported parameters of `Agent` are refused.** `schedule` is a tool error with the message in the README
+   (`refuse.go`). `inherit_context`, `resume`, `skills`, `extensions`, `disallowed_tools`, `isolated` and `isolation` are
+   ported (see 11 and 12); the first version answered `inherit_context` with plain text and emulated `resume` by
    starting a new agent with the old answer in its prompt, a partial run, now removed. The tool text is the original's, so
    the model is told about these; a call that uses an unported one gets the refusal.
 4. **Agent files** are read at start-up (the workspace of an extension process is fixed; with `strictAgentFiles` an
    unreadable one aborts the load, as a throw from the factory does: here a panic out of `Extension()`, the way the SDK
    itself fails a bad registration), and again on every `Agent` call, as the original does, so a file added mid-session is
    usable at once. The tool *description* is fixed at registration, as in the original.
-5. **Settings.** All 24 keys are parsed and stored (`rememberAgents` is applied by the sessions slice) (`settings.go`); `subagents.json` is read once at start-up (and again
+5. **Settings.** All 24 keys are parsed and stored (`rememberAgents` is applied by the sessions slice, `worktreeIsolation` by the worktree slice) (`settings.go`); `subagents.json` is read once at start-up (and again
    only when the session's workspace differs from it), as the original reads it once. The keys of other slices
-   (`schedulingEnabled`, `worktreeIsolation`, `workflowsEnabled`, `maxSubagentDepth`, `agentMentions`,
+   (`schedulingEnabled`, `workflowsEnabled`, `maxSubagentDepth`, `agentMentions`,
    `widgetMode`, `fleetView`, `showCost`, `showModel`, `viewerMarkdown`, `outputTranscript`, `reportUsage`) keep being
    refused by `settingRules` until their slice lands; they are read through `settingsView()`. A malformed value is
    ignored silently, as in the original; a malformed file warns on stderr. `subagents:settings_loaded` is emitted at the
    first `session_start` (the original emits it from the factory, where the SDK has no connection yet), before
    `subagents:ready`. `saveSettings` writes the project file for the settings menu (G5), which does not exist yet.
-6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, the settings menu, and the widgets that show
+6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, `@mentions`,
+   widget, fleet and conversation viewer, nested delegation, the settings menu, and the widgets that show
    cost and model. Output transcripts, structured output (`childSpec.Schema`, for the workflow slice), usage reporting and
    the cost texts are ported (M19-M21).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
@@ -188,6 +191,26 @@ components; this port registers none.
       truthy.
     - **The cleanup timer starts at the first `session_start`** and stops at `session_shutdown`, because an extension
       process can outlive a session in PiG; the original starts it in the manager's constructor and stops it in `dispose`.
+12. **Worktree isolation and memory, differences.** Git runs through `os/exec` in the extension process (the original's
+    `pi.exec`; the SDK has no exec call), killed by the same per-call timeouts; the twins replace that seam with a fake.
+    The agent's system prompt is built when its run starts (`childSpec.Prepare`), after the worktree copy exists, so its
+    environment block and its `memory:` directory are those of the copy (the original's `effectiveCwd` and `configCwd` of
+    a worktree spawn). The extension and tool scope is planned before the copy exists, from the workspace (`childScope`'s
+    `configCwd`); the original plans it in the copy. `MEMORY.md` is decoded like Node's utf-8 decoder, one U+FFFD for each
+    maximal subpart of an ill-formed sequence (`decodeUTF8Lossy`); Go's `strings.ToValidUTF8` would replace a whole run of
+    bad bytes with one. Not applicable because the feature is not ported: `SpawnOptions.cwd` and its `workPath` note,
+    `onBeforeWorktreeCleanup` (workflows). A resume continues the conversation where it ran and makes no worktree.
+13. **Worktree and memory: evidence and measurements.** `pigeq` scenarios exist for what is observable without a child
+    model: the `isolation` parameter and guideline in the tool text (`tool-tools-isolation`) and the strict failure
+    outside a git repository, from the call and from an agent file (`agent-isolation-not-git`,
+    `agent-isolation-agent-file-not-git`). A scenario in which an isolated or memory agent runs a child model cannot match
+    (F2: the child's host prompt names pig; a worktree path carries a random agent id), and an agent that fails reports
+    `details` (agent id, duration) that this port's failure result does not carry (a base-slice difference, not
+    specific to memory), so those behaviors are pinned by the twins and by `worktree_feature_test.go`. Measured on
+    imladris (Xeon 6746E, `go test -bench`, real git 20 iterations): create, edit, commit to a branch and remove a worktree of a
+    one-file repository 27.4 ms/op, 95 KB, 966 allocs; the memory block of a 300-line MEMORY.md 57 us/op, 33 KB, 28 allocs.
+    The original runs only under Node (the same git calls through `pi.exec`), so no side-by-side figure is claimed. None of
+    this is on the TUI input or render path: it runs in the agent's start and settle goroutines.
 
 
 ## Slice: settings store, dispatch policy, tool description modes (G10, G13, G14, G18, G19)

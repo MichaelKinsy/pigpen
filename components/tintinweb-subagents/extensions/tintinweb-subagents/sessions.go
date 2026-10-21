@@ -98,6 +98,11 @@ func (m *manager) reopen(ctx context.Context, r *agentRecord, rr *resumeRun) (ch
 		return nil, errors.New("the agent has no session to resume")
 	}
 	spec.ResumeFile, spec.Prompt, spec.MaxTurns, spec.InheritContext = file, rr.prompt, 0, nil // the conversation has its context already
+	if spec.Prepare != nil { // the system prompt is built when a run starts; a reopened conversation gets it again
+		if err := spec.Prepare(&spec, spec.Cwd, ""); err != nil {
+			return nil, err
+		}
+	}
 	return m.start(ctx, spec)
 }
 

@@ -78,6 +78,9 @@ func TestInvocationConfigTwins(t *testing.T) {
 	tw(t, f, "defaults booleans to false when neither config nor params set them", func(t *testing.T) {
 		r := resolveInvocationConfig(invConfig(func(c *agentConfig) { c.InheritContext, c.RunInBackground, c.Isolated = nil, nil, nil }), invocationParams{}, invocationOptions{})
 		eq(t, [3]bool{r.inheritContext, r.runInBackground, r.isolated}, [3]bool{false, false, false})
+		// the caller's default for an unqualified spawn applies to run_in_background only
+		r = resolveInvocationConfig(invConfig(func(c *agentConfig) { c.RunInBackground = nil }), invocationParams{}, invocationOptions{defaultRunInBackground: true})
+		eq(t, r.runInBackground, true)
 	})
 	tw(t, f, "collapses a param isolation of \"off\" to undefined", func(t *testing.T) {
 		eq(t, resolveInvocationConfig(invConfig(func(c *agentConfig) { c.Isolation = "" }), invocationParams{Isolation: "off"}, invocationOptions{}).isolation, "")

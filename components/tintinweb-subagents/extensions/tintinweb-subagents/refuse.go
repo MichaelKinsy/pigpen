@@ -28,13 +28,10 @@ func refusalText(feature string) string {
 }
 
 // unportedCallParam names the first Agent parameter of the original that is not ported, or "".
-// upstream: index.ts Agent parameters (schedule, isolation).
+// upstream: index.ts Agent parameters (schedule).
 func unportedCallParam(p map[string]any) string {
 	if v, ok := p["schedule"]; ok && v != nil {
 		return "scheduled agent runs (the schedule parameter)"
-	}
-	if v, _ := p["isolation"].(string); v != "" && v != "off" {
-		return `worktree isolation (isolation: "` + v + `")`
 	}
 	return ""
 }
@@ -43,10 +40,6 @@ func unportedCallParam(p map[string]any) string {
 // upstream: src/custom-agents.ts, src/types.ts AgentConfig.
 func unportedAgentFeature(cfg *agentConfig) string {
 	switch {
-	case cfg.Isolation == "worktree":
-		return "worktree isolation (isolation: worktree in the agent file)"
-	case cfg.Memory != "":
-		return "persistent agent memory (memory: " + cfg.Memory + ")"
 	case cfg.AllowedSubagents != nil:
 		return "nested delegation (allowed_subagents)"
 	}
@@ -54,7 +47,7 @@ func unportedAgentFeature(cfg *agentConfig) string {
 }
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isolated, inheritContext, bypassQueue, isBackground;
+// Honored: description, model, maxTurns, name, thinkingLevel, isolation, isolated, inheritContext, bypassQueue, isBackground;
 // dropped, as the original drops them: parentAgentId, workflowId, depth, maxSubagentDepth, configCwd, rootSessionId,
 // resumeSessionFile, reclaim, blocking. upstream: agent-manager.ts SpawnOptions, index.ts spawnTopLevel.
 func unportedSpawnOption(opts map[string]any) string {
@@ -69,7 +62,7 @@ func unportedSpawnOption(opts map[string]any) string {
 			continue
 		}
 		switch k {
-		case "description", "model", "maxTurns", "name", "thinkingLevel", "isolated", "inheritContext", "bypassQueue", "isBackground":
+		case "description", "model", "maxTurns", "name", "thinkingLevel", "isolation", "isolated", "inheritContext", "bypassQueue", "isBackground":
 		case "parentAgentId", "workflowId", "depth", "maxSubagentDepth", "configCwd", "rootSessionId", "resumeSessionFile", "reclaim", "blocking":
 			// Internal capabilities: the original drops what a caller sends (index.ts spawnTopLevel), so do we.
 		default:
@@ -96,7 +89,6 @@ var settingRules = []settingRule{
 	{key: "fleetView", kind: "bool", okBool: false},
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
-	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "showCost", kind: "bool", okBool: false, note: " (only its widget display; the cost in the notification, result and steer texts is shown)"},

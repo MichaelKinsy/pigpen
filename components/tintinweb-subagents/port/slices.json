@@ -22,9 +22,6 @@
  "fleet-list": "slice 2: the widget, fleet and conversation-viewer UI (TUI components) is not ported; the Go SDK has no component API",
  "fleet-wiring": "slice 2: the widget, fleet and conversation-viewer UI (TUI components) is not ported; the Go SDK has no component API",
  "foreground-concurrency-print-mode-e2e": "slice 2: foreground concurrency e2e",
- "isolation-param": "slice 2: worktree isolation is not ported",
- "memory": "slice 2: persistent agent memory is not ported",
- "memory-legacy-fallback": "slice 2: persistent agent memory is not ported",
  "mention": "slice 2: @-mention agent invocation is not ported",
  "mention-clone": "slice 2: @-mention agent invocation is not ported",
  "mention-start-notification": "slice 2: @-mention agent invocation is not ported",
@@ -58,7 +55,5 @@
  "workflow-runtime": "slice 2: the JS workflow runtime (a Node-hosted script engine) is not ported",
  "workflow-task": "slice 2: the JS workflow runtime (a Node-hosted script engine) is not ported",
  "workflow-tool": "slice 2: the JS workflow runtime (a Node-hosted script engine) is not ported",
- "workflow-tool-description": "slice 2: the JS workflow runtime (a Node-hosted script engine) is not ported",
- "worktree": "slice 2: worktree isolation is not ported",
- "worktree-isolation-e2e": "slice 2: worktree isolation is not ported"
+ "workflow-tool-description": "slice 2: the JS workflow runtime (a Node-hosted script engine) is not ported"
 }

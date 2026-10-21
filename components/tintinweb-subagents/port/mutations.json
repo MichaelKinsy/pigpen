@@ -600,18 +600,6 @@
   "replace": "if v, ok := p[\"schedule\"]; ok && v == nil {"
  },
  {
-  "name": "worktree-param-accepted",
-  "file": "refuse.go",
-  "find": "v != \"\" && v != \"off\" {",
-  "replace": "v != \"\" && v != \"worktree\" {"
- },
- {
-  "name": "memory-field-accepted",
-  "file": "refuse.go",
-  "find": "case cfg.Memory != \"\":",
-  "replace": "case false:"
- },
- {
   "name": "nested-field-accepted",
   "file": "refuse.go",
   "find": "case cfg.AllowedSubagents != nil:",
@@ -1484,7 +1472,7 @@
  {
   "name": "rpc-model-error-swallowed",
   "file": "bus.go",
-  "find": "return \"\", errors.New(msg) // surfaced",
+  "find": "return nil, errors.New(msg) // surfaced",
   "replace": "_ = msg // surfaced"
  },
  {
@@ -2648,8 +2636,8 @@
  {
   "name": "rpc-spawn-transcript",
   "file": "bus.go",
-  "find": "Isolated: isolated, InheritContext: inherit, Spawn:",
-  "replace": "Isolated: isolated, InheritContext: inherit, Transcript: true, Spawn:"
+  "find": "InheritContext: inherit, Worktree: isolation == \"worktree\", Spawn:",
+  "replace": "InheritContext: inherit, Worktree: isolation == \"worktree\", Transcript: true, Spawn:"
  },
  {
   "name": "spec-transcript-dropped",
@@ -2770,5 +2758,443 @@
   "file": "sessions.go",
   "find": "newTranscriptStream(r.OutputFile, r.ID, r.spec.Cwd, 0)",
   "replace": "newTranscriptStream(r.OutputFile, r.ID, r.spec.Cwd, 1)"
+ },
+ {
+  "name": "mem-name-limit",
+  "file": "memory.go",
+  "find": "len(utf16.Encode([]rune(name))) > 128",
+  "replace": "len(utf16.Encode([]rune(name))) > 129"
+ },
+ {
+  "name": "mem-leading-dot-ok",
+  "file": "memory.go",
+  "find": "^[a-zA-Z0-9][a-zA-Z0-9._-]*$",
+  "replace": "^[a-zA-Z0-9._][a-zA-Z0-9._-]*$"
+ },
+ {
+  "name": "mem-symlink-inverted",
+  "file": "memory.go",
+  "find": "fi.Mode()&os.ModeSymlink != 0",
+  "replace": "fi.Mode()&os.ModeSymlink == 0"
+ },
+ {
+  "name": "mem-read-follows-symlink",
+  "file": "memory.go",
+  "find": "if isSymlink(path) {\n\t\treturn \"\", false\n\t}\n\tdata",
+  "replace": "data"
+ },
+ {
+  "name": "mem-legacy-symlink-ok",
+  "file": "memory.go",
+  "find": "exists(legacy) && !isSymlink(legacy)",
+  "replace": "exists(legacy)"
+ },
+ {
+  "name": "mem-legacy-over-current",
+  "file": "memory.go",
+  "find": "!exists(current) && exists(legacy)",
+  "replace": "exists(legacy)"
+ },
+ {
+  "name": "mem-project-dir",
+  "file": "memory.go",
+  "find": "filepath.Join(cwd, \".pi\", \"agent-memory\", agentName)",
+  "replace": "filepath.Join(cwd, \".pi\", \"agent-memory-local\", agentName)"
+ },
+ {
+  "name": "mem-ensure-follows-symlink",
+  "file": "memory.go",
+  "find": "if isSymlink(dir) {\n\t\t\treturn errors.New(",
+  "replace": "if false {\n\t\t\treturn errors.New("
+ },
+ {
+  "name": "mem-ensure-creates-nothing",
+  "file": "memory.go",
+  "find": "return os.MkdirAll(dir, 0o777)",
+  "replace": "return nil"
+ },
+ {
+  "name": "mem-index-follows-symlinked-dir",
+  "file": "memory.go",
+  "find": "if isSymlink(dir) {\n\t\treturn \"\", false\n\t}\n\tcontent",
+  "replace": "content"
+ },
+ {
+  "name": "mem-index-limit-off-by-one",
+  "file": "memory.go",
+  "find": "len(lines) > maxMemoryLines",
+  "replace": "len(lines) >= maxMemoryLines"
+ },
+ {
+  "name": "mem-index-limit",
+  "file": "memory.go",
+  "find": "maxMemoryLines = 200",
+  "replace": "maxMemoryLines = 201"
+ },
+ {
+  "name": "mem-block-no-dir",
+  "file": "memory.go",
+  "find": "if err := ensureMemoryDir(memoryDir); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "mem-block-tools-text",
+  "file": "memory.go",
+  "find": "You have Read, Write, and Edit tools",
+  "replace": "You have Read and Write tools"
+ },
+ {
+  "name": "mem-block-create-hint",
+  "file": "memory.go",
+  "find": "No MEMORY.md exists yet. Create one at ",
+  "replace": "No MEMORY.md exists yet. Make one at "
+ },
+ {
+  "name": "mem-readonly-creates-dir",
+  "file": "memory.go",
+  "find": "existing, ok := readMemoryIndex(memoryDir)\n\theader := \"# Agent Memory (read-only)",
+  "replace": "ensureMemoryDir(memoryDir)\n\texisting, ok := readMemoryIndex(memoryDir)\n\theader := \"# Agent Memory (read-only)"
+ },
+ {
+  "name": "mem-readonly-text",
+  "file": "memory.go",
+  "find": "No memory is available yet.",
+  "replace": "No memory is there yet."
+ },
+ {
+  "name": "mem-denylist-ignored",
+  "file": "memory.go",
+  "find": "denied[n] = true",
+  "replace": "denied[n] = false"
+ },
+ {
+  "name": "mem-readonly-tools",
+  "file": "memory.go",
+  "find": "extra = getReadOnlyMemoryToolNames(existing)",
+  "replace": "extra = getMemoryToolNames(existing)"
+ },
+ {
+  "name": "mem-scope-unknown-ok",
+  "file": "memory.go",
+  "find": "return \"\", fmt.Errorf(\"unknown memory scope %q\", scope)",
+  "replace": "return filepath.Join(cwd, \".pi\", \"agent-memory\", agentName), nil"
+ },
+ {
+  "name": "wt-killed-ignored",
+  "file": "worktree.go",
+  "find": "if r.Killed || r.Code != 0 {",
+  "replace": "if r.Code != 0 {"
+ },
+ {
+  "name": "wt-code-ignored",
+  "file": "worktree.go",
+  "find": "if r.Killed || r.Code != 0 {",
+  "replace": "if r.Killed {"
+ },
+ {
+  "name": "wt-stderr-message",
+  "file": "worktree.go",
+  "find": "return \"\", errors.New(msg)",
+  "replace": "return \"\", errors.New(\"x\")"
+ },
+ {
+  "name": "wt-timeout-not-killed",
+  "file": "worktree.go",
+  "find": "res.Killed = true",
+  "replace": "res.Killed = false"
+ },
+ {
+  "name": "wt-exit-code-lost",
+  "file": "worktree.go",
+  "find": "res.Code = exitErr.ExitCode()",
+  "replace": "res.Code = 0"
+ },
+ {
+  "name": "wt-subdir-lost",
+  "file": "worktree.go",
+  "find": "work = filepath.Join(path, subdir)",
+  "replace": "work = path"
+ },
+ {
+  "name": "wt-branch-name",
+  "file": "worktree.go",
+  "find": "Branch: \"pi-agent-\" + agentID",
+  "replace": "Branch: \"agent-\" + agentID"
+ },
+ {
+  "name": "wt-path-not-unique",
+  "file": "worktree.go",
+  "find": "filepath.Join(os.TempDir(), \"pi-agent-\"+agentID+\"-\"+hex.EncodeToString(suffix))",
+  "replace": "filepath.Join(os.TempDir(), \"pi-agent-\"+agentID+\"-\"+hex.EncodeToString(suffix[:0]))"
+ },
+ {
+  "name": "wt-gone-not-short-circuited",
+  "file": "worktree.go",
+  "find": "if !exists(wt.Path) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wt-failure-keeps-worktree",
+  "file": "worktree.go",
+  "find": "removeWorktree(run, cwd, wt.Path) // best effort",
+  "replace": ""
+ },
+ {
+  "name": "wt-hook-runs",
+  "file": "worktree.go",
+  "find": "\"commit\", \"--no-verify\", \"-m\"",
+  "replace": "\"commit\", \"-m\""
+ },
+ {
+  "name": "wt-message-limit",
+  "file": "worktree.go",
+  "find": "cutUTF16(description, 200)",
+  "replace": "cutUTF16(description, 201)"
+ },
+ {
+  "name": "wt-message-prefix",
+  "file": "worktree.go",
+  "find": "\"pi-agent: \" + cutUTF16",
+  "replace": "\"agent: \" + cutUTF16"
+ },
+ {
+  "name": "wt-unchanged-kept",
+  "file": "worktree.go",
+  "find": "if current == wt.BaseSHA {",
+  "replace": "if current != wt.BaseSHA {"
+ },
+ {
+  "name": "wt-branch-overwritten",
+  "file": "worktree.go",
+  "find": "name = wt.Branch + \"-\" + strconv.FormatInt(time.Now().UnixMilli(), 10)",
+  "replace": "name = wt.Branch + strconv.FormatInt(0*time.Now().UnixMilli(), 10)[:0]"
+ },
+ {
+  "name": "wt-branch-name-not-reported",
+  "file": "worktree.go",
+  "find": "wt.Branch = name\n",
+  "replace": "_ = name\n"
+ },
+ {
+  "name": "wt-not-removed-after-branch",
+  "file": "worktree.go",
+  "find": "removeWorktree(run, cwd, wt.Path) // the branch persists in the main repo",
+  "replace": ""
+ },
+ {
+  "name": "wt-remove-not-pruned",
+  "file": "worktree.go",
+  "find": "err != nil {\n\t\t_, _ = git(run, cwd, []string{\"worktree\", \"prune\"}, 5000)",
+  "replace": "err != nil {\n\t\t_ = 0"
+ },
+ {
+  "name": "wt-prune-skipped",
+  "file": "worktree.go",
+  "find": "func pruneWorktrees(run gitFn, cwd string) {\n\t_, _ = git(run, cwd, []string{\"worktree\", \"prune\"}, 5000)",
+  "replace": "func pruneWorktrees(run gitFn, cwd string) {"
+ },
+ {
+  "name": "wt-switch-inverted",
+  "file": "worktree.go",
+  "find": "worktreeIsolationDisabled.Store(!enabled)",
+  "replace": "worktreeIsolationDisabled.Store(enabled)"
+ },
+ {
+  "name": "wt-switch-default-off",
+  "file": "worktree.go",
+  "find": "return !worktreeIsolationDisabled.Load() }",
+  "replace": "return worktreeIsolationDisabled.Load() }"
+ },
+ {
+  "name": "wt-startup-error-text",
+  "file": "worktree.go",
+  "find": "or omit `isolation`.",
+  "replace": "or omit isolation."
+ },
+ {
+  "name": "iso-startup-failure-swallowed",
+  "file": "tools.go",
+  "find": "if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "iso-rpc-setup-not-awaited",
+  "file": "bus.go",
+  "find": "if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "iso-shutdown-prune-skipped",
+  "file": "extension.go",
+  "find": "a.mgr.pruneAll(cwd)",
+  "replace": "_ = cwd"
+ },
+ {
+  "name": "iso-copy-not-used",
+  "file": "manager.go",
+  "find": "spec.Cwd = wt.Path",
+  "replace": "spec.Cwd = base"
+ },
+ {
+  "name": "iso-no-branch-note",
+  "file": "manager.go",
+  "find": "res != nil && wtRes.HasChanges && wtRes.Branch != \"\"",
+  "replace": "res != nil && false"
+ },
+ {
+  "name": "iso-note-text",
+  "file": "manager.go",
+  "find": "Merge with: `git merge ",
+  "replace": "Merge with: `git switch "
+ },
+ {
+  "name": "iso-repo-not-pruned",
+  "file": "manager.go",
+  "find": "m.wtRepos[base] = true",
+  "replace": ""
+ },
+ {
+  "name": "iso-prune-workspace-skipped",
+  "file": "manager.go",
+  "find": "repos := []string{cwd}",
+  "replace": "repos := []string{}"
+ },
+ {
+  "name": "iso-failed-queued-silent",
+  "file": "manager.go",
+  "find": "if queued && m.onSettle != nil {",
+  "replace": "if m.onSettle != nil && false {"
+ },
+ {
+  "name": "iso-failed-queued-not-error",
+  "file": "manager.go",
+  "find": "if queued {\n\t\tr.Status, r.Error = statusError, err.Error()",
+  "replace": "if false {\n\t\tr.Status, r.Error = statusError, err.Error()"
+ },
+ {
+  "name": "iso-prompt-block-text",
+  "file": "prompts.go",
+  "find": "Work only inside it — never in ",
+  "replace": "Work inside it — never in "
+ },
+ {
+  "name": "mem-write-needs-both",
+  "file": "memory.go",
+  "find": "if writes = has(\"write\") || has(\"edit\"); writes {",
+  "replace": "if writes = has(\"write\") && has(\"edit\"); writes {"
+ },
+ {
+  "name": "mem-tools-not-extended",
+  "file": "memory.go",
+  "find": "out = append(append([]string{}, toolNames...), extra...)",
+  "replace": "out = toolNames"
+ },
+ {
+  "name": "mem-agent-file-tools-ignored",
+  "file": "bus.go",
+  "find": "if cfg.Memory != \"\" {\n\t\ttoolNames, memoryWrites",
+  "replace": "if false {\n\t\ttoolNames, memoryWrites"
+ },
+ {
+  "name": "mem-agent-file-block-ignored",
+  "file": "bus.go",
+  "find": "if cfg.Memory != \"\" {\n\t\t\tvar err error",
+  "replace": "if false {\n\t\t\tvar err error"
+ },
+ {
+  "name": "iso-rpc-option-ignored",
+  "file": "bus.go",
+  "find": "Worktree: isolation == \"worktree\", Spawn:",
+  "replace": "Worktree: false, Spawn:"
+ },
+ {
+  "name": "iso-env-from-main-checkout",
+  "file": "bus.go",
+  "find": "env = detectEnvVia(a.mgr.git, workCwd)",
+  "replace": "_ = workCwd"
+ },
+ {
+  "name": "iso-call-param-ignored",
+  "file": "tools.go",
+  "find": "Worktree: inv.isolation == \"worktree\"",
+  "replace": "Worktree: false"
+ },
+ {
+  "name": "iso-switch-not-applied",
+  "file": "settings_apply.go",
+  "find": "ap.SetWorktreeIsolation = setWorktreeIsolationEnabled",
+  "replace": "ap.SetWorktreeIsolation = func(b bool) { setWorktreeIsolationEnabled(!b) }"
+ },
+ {
+  "name": "iso-rpc-option-refused",
+  "file": "refuse.go",
+  "find": "\"thinkingLevel\", \"isolation\", \"isolated\"",
+  "replace": "\"thinkingLevel\", \"isolated\""
+ },
+ {
+  "name": "iso-manager-switch-ignored",
+  "file": "manager.go",
+  "find": "if rr == nil && spec.Worktree && isWorktreeIsolationEnabled() {",
+  "replace": "if rr == nil && spec.Worktree {"
+ },
+ {
+  "name": "iso-stop-while-copying-runs",
+  "file": "manager.go",
+  "find": "case stoppedInSetup && wt != nil:",
+  "replace": "case stoppedInSetup && wt != nil && false:"
+ },
+ {
+  "name": "iso-resume-makes-worktree",
+  "file": "manager.go",
+  "find": "if rr == nil && spec.Worktree && isWorktreeIsolationEnabled() {",
+  "replace": "if spec.Worktree && isWorktreeIsolationEnabled() {"
+ },
+ {
+  "name": "iso-failed-slot-kept",
+  "file": "manager.go",
+  "find": "m.releasePoolLocked(r)\n\tr.cancel = nil",
+  "replace": "r.cancel = nil"
+ },
+ {
+  "name": "iso-failed-record-kept",
+  "file": "manager.go",
+  "find": "delete(m.records, r.ID)\n\t\tfor i, id := range m.order {",
+  "replace": "_ = r\n\t\tfor i, id := range m.order {"
+ },
+ {
+  "name": "iso-queue-start-not-marked",
+  "file": "manager.go",
+  "find": "next.fromQueue = true",
+  "replace": ""
+ },
+ {
+  "name": "iso-prepare-skipped",
+  "file": "manager.go",
+  "find": "if spec.Prepare != nil { // the parts of the spec that depend on where the child runs",
+  "replace": "if false { // the parts of the spec that depend on where the child runs"
+ },
+ {
+  "name": "iso-prompt-block-text",
+  "file": "prompts.go",
+  "find": "Work only inside it — never in ",
+  "replace": "Work inside it — never in "
+ },
+ {
+  "name": "iso-prompt-block-order",
+  "file": "prompts.go",
+  "find": "envBlock + worktreeBlock + workflowBlock + custom + suffix",
+  "replace": "envBlock + custom + worktreeBlock + workflowBlock + suffix"
+ },
+ {
+  "name": "iso-prompt-replace-block-lost",
+  "file": "prompts.go",
+  "find": "return tag + header + worktreeBlock + workflowBlock + \"\\n\\n\" + c.SystemPrompt + suffix",
+  "replace": "return tag + header + workflowBlock + \"\\n\\n\" + c.SystemPrompt + suffix"
+ },
+ {
+  "name": "mem-prompt-suffix-lost",
+  "file": "prompts.go",
+  "find": "suffix = \"\\n\\n\" + strings.Join(sections, \"\\n\")",
+  "replace": "suffix = \"\""
  }
 ]

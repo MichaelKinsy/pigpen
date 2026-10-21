@@ -46,7 +46,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 		feature string
 	}{
 		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
-		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -85,8 +84,6 @@ func agentFileRig(t *testing.T, frontmatter string) *rig {
 
 func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 	cases := []struct{ name, frontmatter, feature string }{
-		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
-		{"memory", "memory: project", "persistent agent memory (memory: project)"},
 		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
 	}
 	for _, c := range cases {
@@ -118,7 +115,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		options obj
 		feature string
 	}{
-		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -179,7 +175,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
-		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"showCost", `{"showCost": true}`, "showCost: true (only its widget display; the cost in the notification, result and steer texts is shown)"},

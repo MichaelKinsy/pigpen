@@ -80,6 +80,10 @@ type agentRecord struct {
 	cancel        context.CancelFunc // ends the context the child was started with: its process lives no longer
 	stopped       bool               // stopped by the user or the parent (not a failure)
 	started       chan struct{}
+	// setup is closed once the agent's startup (the worktree copy, if any) has finished, or failed with startErr.
+	setup     chan struct{}
+	startErr  error
+	fromQueue bool // started from the queue, minutes after its caller returned
 	settled       bool     // the run has settled: its status, result and slot are final (a resume waits for it)
 	pool          pool     // the pool this run was charged to when it started
 	pendingSteers []string // steers that arrived before the child existed
@@ -97,6 +101,7 @@ func (r *agentRecord) topLevel() bool { return r.ParentAgentID == "" && r.Workfl
 func (r *agentRecord) closeGate()    { closeOnce(r.startGate) }
 func (r *agentRecord) closeStarted() { closeOnce(r.started) }
 func (r *agentRecord) closeDone() {
+	closeOnce(r.setup)
 	closeOnce(r.started)
 	closeOnce(r.done)
 }
@@ -193,6 +198,9 @@ type manager struct {
 	now      func() time.Time
 	stopGC   chan struct{}
 	gcDone   chan struct{}
+	// git runs git for worktree isolation; wtRepos are the repositories worktrees were made in (pruned at shutdown).
+	git     gitFn
+	wtRepos map[string]bool
 }
 
 // hooksFor is what the record's child reports into. upstream: agent-manager.ts onAssistantUsage, onCompaction.
@@ -233,7 +241,7 @@ func (m *manager) closeTranscript(r *agentRecord) {
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
 	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent,
-		maxConcurrentForeground: defaultMaxConcurrentForeground, start: start, onSettle: onSettle, now: time.Now}
+		maxConcurrentForeground: defaultMaxConcurrentForeground, start: start, onSettle: onSettle, now: time.Now, git: osGit, wtRepos: map[string]bool{}}
 }
 
 // startGC sweeps old records every interval until dispose (once: a second call while a sweep runs keeps it). The
@@ -488,7 +496,7 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 	}
 	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: o.Name, Background: o.Background, Blocking: o.Blocking,
 		ParentAgentID: o.ParentAgentID, WorkflowID: o.WorkflowID, Depth: max(1, o.Depth), MaxSubagentDepth: o.MaxSubagentDepth, spec: spec, onSpawned: o.OnSpawned,
-		done: make(chan struct{}), started: make(chan struct{}), startGate: make(chan struct{}), StartedAt: m.now()}
+		done: make(chan struct{}), started: make(chan struct{}), setup: make(chan struct{}), startGate: make(chan struct{}), StartedAt: m.now()}
 	if spec.SessionName != "" { // upstream: session.setSessionName(`${name}#${agentId.slice(0, 8)}`)
 		r.spec.SessionName = spec.SessionName + "#" + r.ID[:min(8, len(r.ID))]
 	}
@@ -683,6 +691,7 @@ func (m *manager) drainLocked() []func() {
 			continue
 		}
 		m.claimLocked(next)
+		next.fromQueue = true
 		after = append(after, func() {
 			if m.onStart != nil {
 				m.onStart(next)
@@ -704,12 +713,43 @@ func (m *manager) run(r *agentRecord) {
 	rr := r.resume
 	spec := r.spec
 	m.mu.Unlock()
+	// Worktree isolation is strict: no worktree is a failed start, never a silent run in the main checkout. The switch
+	// is checked here as well as at the tool because the spawn RPC forwards its options unvalidated. A resume continues
+	// the conversation it already has, wherever that ran. upstream: agent-manager.ts startAgent.
+	var wt *worktreeInfo
+	base := ""
+	if rr == nil && spec.Worktree && isWorktreeIsolationEnabled() {
+		base = spec.Cwd
+		if wt = createWorktree(m.git, base, r.ID); wt == nil {
+			cancel()
+			m.failStartup(r, errors.New(worktreeStartupError))
+			return
+		}
+		m.mu.Lock()
+		m.wtRepos[base] = true
+		m.mu.Unlock()
+		spec.Cwd = wt.Path
+	}
+	m.mu.Lock()
+	closeOnce(r.setup)
+	stoppedInSetup := r.stopped
+	m.mu.Unlock()
 	var c child
 	var err error
-	if rr != nil {
+	switch {
+	case rr != nil:
 		c, err = m.reopen(ctx, r, rr)
-	} else {
-		if spec.InheritContext != nil { // built when the run starts, so a queued agent sees the later conversation
+	case stoppedInSetup && wt != nil:
+		// A stop landed while the copy was being made: nobody is waiting for the work, so the fresh (unchanged)
+		// worktree is discarded instead of launching the run.
+		cleanupWorktree(m.git, base, wt, r.Description)
+		wt = nil
+		err = errStoppedBeforeStart
+	default:
+		if spec.Prepare != nil { // the parts of the spec that depend on where the child runs
+			err = spec.Prepare(&spec, spec.Cwd, base)
+		}
+		if err == nil && spec.InheritContext != nil { // built when the run starts, so a queued agent sees the later conversation
 			var pc string
 			if pc, err = spec.InheritContext(); err == nil {
 				spec.Prompt = pc + spec.Prompt
@@ -765,6 +805,13 @@ func (m *manager) run(r *agentRecord) {
 			c.abort()
 		}
 		res, err = c.wait()
+	}
+	if wt != nil {
+		wtRes := cleanupWorktree(m.git, base, wt, r.Description)
+		if res != nil && wtRes.HasChanges && wtRes.Branch != "" {
+			// The branch is in the repository the worktree was made from.
+			res.Text += "\n\n---\nChanges saved to branch `" + wtRes.Branch + "`. Merge with: `git merge " + wtRes.Branch + "`"
+		}
 	}
 	m.closeTranscript(r)
 	alive := c != nil && err == nil && c.alive() // an in-memory conversation outlives its run
@@ -1171,4 +1218,75 @@ func (m *manager) isConsumed(r *agentRecord) bool {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return r.Consumed
+}
+
+// errStoppedBeforeStart settles an agent that was stopped while its worktree was being made.
+var errStoppedBeforeStart = errors.New("stopped before it started")
+
+// failStartup ends an agent whose startup failed (strict worktree isolation). An agent started at once is dropped, as if
+// the spawn had thrown: no record, and its handle goes back. A queued one started minutes after its caller returned, so
+// the failure lives on the record as an error. Either way the slot is handed back. upstream: agent-manager.ts launch.
+func (m *manager) failStartup(r *agentRecord, err error) {
+	m.mu.Lock()
+	r.startErr = err
+	r.CompletedAt = m.now()
+	queued := r.fromQueue
+	if queued {
+		r.Status, r.Error = statusError, err.Error()
+		if !r.Background {
+			r.Consumed = true
+		}
+	} else {
+		delete(m.records, r.ID)
+		for i, id := range m.order {
+			if id == r.ID {
+				m.order = append(m.order[:i], m.order[i+1:]...)
+				break
+			}
+		}
+	}
+	r.resume, r.settled = nil, true
+	m.releasePoolLocked(r)
+	r.cancel = nil
+	r.closeDone()
+	after := m.drainLocked()
+	m.mu.Unlock()
+	m.closeTranscript(r)
+	if queued && m.onSettle != nil {
+		m.onSettle(r)
+	}
+	runAll(after)
+}
+
+// awaitSetup waits until the agent has really started (its worktree is made) and returns the startup failure. A queued
+// agent has not started: it returns at once, as the original's awaitStartup does. upstream: agent-manager.ts awaitStartup.
+func (m *manager) awaitSetup(cancelled <-chan struct{}, r *agentRecord) error {
+	m.mu.Lock()
+	queued, setup, done := r.Status == statusQueued, r.setup, r.done
+	m.mu.Unlock()
+	if queued {
+		return nil
+	}
+	select {
+	case <-setup:
+	case <-done:
+	case <-cancelled:
+		return nil
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return r.startErr
+}
+
+// pruneAll prunes orphaned worktrees of the workspace and of every repository an agent made one in (crash recovery).
+func (m *manager) pruneAll(cwd string) {
+	m.mu.Lock()
+	repos := []string{cwd}
+	for repo := range m.wtRepos {
+		repos = append(repos, repo)
+	}
+	m.mu.Unlock()
+	for _, repo := range repos {
+		pruneWorktrees(m.git, repo)
+	}
 }

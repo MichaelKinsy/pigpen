@@ -157,6 +157,9 @@ func sanitizeSettings(raw any) settings {
 	if b, ok := r["showCost"].(bool); ok {
 		out.ShowCost = &b
 	}
+	if b, ok := r["worktreeIsolation"].(bool); ok {
+		out.WorktreeIsolation = &b
+	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
 		if !v { // `false` is a spelling of "none": dropped, it would silently leave the permissive default

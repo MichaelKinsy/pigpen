@@ -74,26 +74,30 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	typ, _ := p["type"].(string)
 	prompt, _ := p["prompt"].(string)
 	opts, _ := p["options"].(map[string]any)
-	id, err := a.spawnTopLevel(ctx, typ, prompt, opts)
+	r, err := a.spawnTopLevel(ctx, typ, prompt, opts)
 	if err != nil {
 		return nil, err
 	}
-	r := a.mgr.get(id)
 	if err := a.mgr.awaitStartup(r, 30*time.Second); err != nil {
 		return nil, err
 	}
-	return map[string]any{"id": id}, nil
+	// With isolation the agent is not running yet: the repo copy is a git call, and a strict-isolation failure fails
+	// the spawn. upstream: agent-manager.ts awaitStartup.
+	if err := a.mgr.awaitSetup(ctx.Done(), r); err != nil {
+		return nil, err
+	}
+	return map[string]any{"id": r.ID}, nil
 }
 
 // spawnTopLevel is the one door for a spawn that comes from outside the Agent tool (the RPC, the registry): the
 // internal capabilities are dropped, an unsupported option is refused, the agent type goes through the same dispatch
-// as the model's, and a model override is resolved and scope-checked like Agent({ model }). It returns the agent's id.
+// as the model's, and a model override is resolved and scope-checked like Agent({ model }). It returns the agent's record.
 // upstream: index.ts spawnTopLevel and spawnResolved, cross-extension-rpc.ts (the model override).
-func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[string]any) (string, error) {
+func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[string]any) (*agentRecord, error) {
 	a.reregisterAgents() // an agent file added mid-session is spawnable here too. upstream: index.ts spawnResolved reloadCustomAgents.
 	opts := stripInternalSpawnOptions(options)
 	if feature := unportedSpawnOption(opts); feature != "" {
-		return "", refusal(feature)
+		return nil, refusal(feature)
 	}
 	description, _ := opts["description"].(string)
 	name, _ := opts["name"].(string)
@@ -109,13 +113,13 @@ func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[str
 		reg := registryOf(ctx)
 		found, msg := resolveModel(override, reg)
 		if msg != "" {
-			return "", errors.New(msg) // surfaced, so the caller sees the auth or typo problem instead of a silent fallback
+			return nil, errors.New(msg) // surfaced, so the caller sees the auth or typo problem instead of a silent fallback
 		}
 		// A model on the RPC payload is an orchestrator's choice, exactly like Agent({ model }): the hard error, never the warn.
 		verdict := checkModelScope(modelScopeCheck{provider: str(found["provider"]), id: str(found["id"]), cwd: ctx.Cwd(), registry: reg,
 			callerSupplied: true, agentLabel: typ, modelInput: override})
 		if verdict.kind == "error" {
-			return "", errors.New(verdict.message)
+			return nil, errors.New(verdict.message)
 		}
 		model = str(found["provider"]) + "/" + str(found["id"])
 	}
@@ -124,12 +128,14 @@ func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[str
 	background, _ := opts["isBackground"].(bool)
 	// The original takes these as truthy values, not as booleans.
 	isolated, inherit, bypass := jsTruthy(opts["isolated"]), jsTruthy(opts["inheritContext"]), jsTruthy(opts["bypassQueue"])
+	// The option goes straight to the manager: it skips the resolver, the manager's own switch gates it.
+	isolation, _ := opts["isolation"].(string)
 	r, err := a.start(ctx, startRequest{Type: typ, Prompt: prompt, Description: description, Model: model, Thinking: thinking, MaxTurns: maxTurns,
-		Isolated: isolated, InheritContext: inherit, Spawn: spawnOptions{Name: name, Background: background, BypassQueue: bypass}})
+		Isolated: isolated, InheritContext: inherit, Worktree: isolation == "worktree", Spawn: spawnOptions{Name: name, Background: background, BypassQueue: bypass}})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return r.ID, nil
+	return r, nil
 }
 
 // resolveDefaultModel is the model an agent runs when nothing overrides it: its file's `model:` when that is exactly
@@ -153,6 +159,7 @@ type startRequest struct {
 	Type, Prompt, Description, Model, Thinking string
 	MaxTurns                                   *int
 	Isolated, InheritContext                   bool
+	Worktree                                   bool         // run in a temporary git worktree (isolation: "worktree")
 	Spawn                                      spawnOptions // the name, the pool and the signal of the spawn
 	// Per-call settings that only the Agent tool has (the RPC spawn path takes none).
 	Transcript bool // write a `.output` transcript (the Agent tool's decision: the agent file, else the default)
@@ -189,18 +196,44 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	if q.Isolated {
 		skills = false
 	}
-	var extras promptExtras
+	var skillBlocks []preloadedSkill
 	if names, ok := skills.([]string); ok {
-		extras.SkillBlocks = preloadSkills(names, cwd)
+		skillBlocks = preloadSkills(names, cwd)
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt, extras)
-	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, getToolNamesForType(resolved), cwd, nil)
+	// Persistent memory adds the tools it needs to the agent's list before the scope is planned. upstream: agent-runner.ts runAgent.
+	toolNames := getToolNamesForType(resolved)
+	memoryWrites := false
+	if cfg.Memory != "" {
+		toolNames, memoryWrites = memoryTools(cfg, toolNames)
+	}
+	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, toolNames, cwd, nil)
 	if err != nil {
 		return nil, err
 	}
-	spec := childSpec{Prompt: q.Prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
+	// The environment of an agent that runs in this workspace is read now; one in a worktree copy is read once the
+	// copy exists (it is another directory).
+	var eagerEnv envInfo
+	if !q.Worktree {
+		eagerEnv = detectEnv(ctx, cwd)
+	}
+	spec := childSpec{Prompt: q.Prompt, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking, Worktree: q.Worktree,
 		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
 		NoSkills: skills != true, Warnings: plan.Warnings, Transcript: q.Transcript, SessionID: q.SessionID}
+	spec.Prepare = func(spec *childSpec, workCwd, worktreeBase string) error {
+		env := eagerEnv
+		if q.Worktree {
+			env = detectEnvVia(a.mgr.git, workCwd)
+		}
+		extras := promptExtras{SkillBlocks: skillBlocks, WorktreeBase: worktreeBase}
+		if cfg.Memory != "" {
+			var err error
+			if extras.MemoryBlock, err = memoryBlockFor(cfg, memoryWrites, workCwd); err != nil {
+				return err
+			}
+		}
+		spec.SystemPrompt = buildAgentPrompt(cfg, workCwd, env, parentPrompt, extras)
+		return nil
+	}
 	if trusted, err := ctx.IsProjectTrusted(); err == nil {
 		spec.Trust = "no-approve"
 		if trusted {
