@@ -96,3 +96,18 @@ func TestMissionReceiptUrlAndObjectiveText(t *testing.T) {
 	eq(t, err, nil, "record")
 	eq(t, r.Objective, "O", "the objective is trimmed")
 }
+
+func TestMissionDecisionsMoveAnActiveMissionToNeedsDecision(t *testing.T) {
+	f := newMissionFixture(t)
+	m := mkMission(t, f.loc, MissionCreateInput{Title: "T", Objective: "O", Status: "active"})
+	u := updMission(t, f.loc, m.ID, MissionUpdateInput{AddDecisions: []MissionDecisionInput{{Title: "Pick", Prompt: "Which?", Options: []string{"a", "b"}}}})
+	eq(t, u.Status, "needs_decision", "an open decision on an active mission")
+	u = updMission(t, f.loc, m.ID, MissionUpdateInput{ResolveDecision: &MissionResolveDecision{ID: u.Decisions[0].ID, Resolution: "  a  "}})
+	eq(t, u.Status, "active", "the last open decision resolved")
+	eq(t, u.Decisions[0].Resolution, "a", "the resolution is trimmed")
+}
+
+func TestPromptChainSplitsOnSpacedArrowsOnly(t *testing.T) {
+	eq(t, splitPromptChain("a ->b -> c"), []string{"a ->b", "c"}, "an arrow without a following space stays in the segment")
+	eq(t, splitPromptChain(" a ->  -> b "), []string{"a", "b"}, "blank segments are dropped")
+}

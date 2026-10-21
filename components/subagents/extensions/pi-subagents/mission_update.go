@@ -110,15 +110,11 @@ func mergeWorkflowChild(existing, parsed MissionWorkflowChild) (MissionWorkflowC
 		merged.set(k, over.vals[k])
 	}
 	merged.set("startedAt", existing.StartedAt)
-	seen := map[string]bool{}
-	union := []any{}
+	union := make([]any, 0, len(existing.ArtifactPaths)+len(parsed.ArtifactPaths))
 	for _, p := range append(append([]string{}, existing.ArtifactPaths...), parsed.ArtifactPaths...) {
-		if !seen[p] {
-			seen[p] = true
-			union = append(union, p)
-		}
+		union = append(union, p)
 	}
-	merged.set("artifactPaths", union)
+	merged.set("artifactPaths", union) // the parse below keeps each path once
 	return parseMissionWorkflowChild(merged, "mission.update.upsertWorkflowChildren[]")
 }
 
