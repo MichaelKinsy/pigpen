@@ -3,7 +3,7 @@
   "name": "leaf-is-first-entry",
   "file": "extension.go",
   "find": "for i := tip; i >= 0; i = nodes[i].parent {",
-  "replace": "for i := 0; i >= 0; i = nodes[i].parent {"
+  "replace": "for i := tip * 0; i >= 0; i = nodes[i].parent {"
  },
  {
   "name": "branch-not-followed",
@@ -183,7 +183,7 @@
   "name": "unknown-leaf-not-an-error",
   "file": "extension.go",
   "find": "\t\tif !known {\n",
-  "replace": "\t\tif false {\n"
+  "replace": "\t\tif false && !known {\n"
  },
  {
   "name": "leaf-not-reported",
