@@ -59,3 +59,10 @@ func TestToolBoundaryOfListAndSingleRuns(t *testing.T) {
 		eq(t, failure, "Structured single-child execution requires agent to be a non-empty string.", fmt.Sprint("agent ", agent))
 	}
 }
+
+func TestValidateRefusesBothScriptSources(t *testing.T) {
+	withTempHome(t)
+	h := StartHost(t, Extension(), HostOptions{Cwd: tmp(t)})
+	_, failure := h.Tool("subagent", map[string]any{"action": "validate", "workflowScript": "return 1;", "workflowScriptPath": "flow.js"})
+	eq(t, failure, "workflowScript and workflowScriptPath are mutually exclusive.", "both sources")
+}

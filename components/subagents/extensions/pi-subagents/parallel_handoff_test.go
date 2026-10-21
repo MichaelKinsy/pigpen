@@ -266,6 +266,13 @@ func TestParallelHandoffTwins(t *testing.T) {
 			rcFails(t, err, "active child owner")
 		}
 	})
+	tw(t, f, "refuses a supersession by the lane itself", func(t *testing.T) {
+		dir := tmp(t)
+		manifestPath := filepath.Join(dir, "handoff.json")
+		laneWrite(t, dir, "lane-self", "foreground", "base-1", "completed", "partial")
+		_, err := RecordParallelHandoffSupersession(manifestPath, "lane-self", jo("supersededBy", "lane-self", "attestedBy", "nicobailon", "attestedAt", "2026-08-27T16:23:00.000Z"), nil)
+		rcFails(t, err, "must identify a different replacement lane")
+	})
 	tw(t, f, "records supersession evidence as an eligible stored state", func(t *testing.T) {
 		dir := tmp(t)
 		manifestPath := filepath.Join(dir, "handoff.json")

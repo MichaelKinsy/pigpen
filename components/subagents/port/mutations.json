@@ -807,7 +807,7 @@
   "name": "accept-none-reason",
   "file": "policy_acceptance.go",
   "find": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && jsTrim(reasonStr) != \"\") {",
-  "replace": "if levelStr == \"none\" && levelIsStr && !reasonIsStr {"
+  "replace": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && len(reasonStr) > 0) {"
  },
  {
   "name": "accept-false-shorthand",
@@ -957,7 +957,7 @@
   "name": "adv-selected",
   "file": "advertise.go",
   "find": "has = has || n == subagentName",
-  "replace": "has = has || true"
+  "replace": "has = has || n == subagentName || true"
  },
  {
   "name": "adv-loader-catalog",
