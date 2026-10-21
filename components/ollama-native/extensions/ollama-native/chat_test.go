@@ -285,3 +285,18 @@ func TestAPIKeyOnlyWhenOneIsConfigured(t *testing.T) {
 		t.Errorf("Authorization headers = %q", auth)
 	}
 }
+
+func TestStreamRefusesUnportedHooks(t *testing.T) {
+	cases := map[string]sdk.ProviderStreamOptions{
+		"the onPayload hook":             {OnPayload: func(v any, _ map[string]any) (any, error) { return v, nil }},
+		"the onResponse hook":            {OnResponse: func(map[string]any, map[string]any) error { return nil }},
+		"the onProviderStreamEvent hook": {OnProviderStreamEvent: func(any, map[string]any) error { return nil }},
+	}
+	for feature, opts := range cases {
+		stream, err := (&client{}).stream(map[string]any{"id": "m"}, map[string]any{}, opts)
+		want := "@pi-in-go/pigpen-ollama-native does not support " + feature + " yet. The request was not sent."
+		if stream != nil || err == nil || err.Error() != want {
+			t.Fatalf("%s: stream=%v err=%v", feature, stream, err)
+		}
+	}
+}
