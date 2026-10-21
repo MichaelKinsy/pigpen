@@ -10,6 +10,6 @@ const (
 // Unsupported is the one wording of a refusal of something pi-ahp does and this port does not
 // (yet): it names the feature and the original.
 func Unsupported(feature string) string {
-	return PackageName + " (Go port) does not support " + feature + " yet. Install the original extension, " +
-		OriginalSpec + ", which runs unchanged in PiG."
+	return PackageName + " (Go port) does not support " + feature + " yet. The original, " +
+		OriginalSpec + ", is a standalone Node host and runs on its own, outside PiG."
 }

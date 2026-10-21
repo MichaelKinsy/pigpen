@@ -91,9 +91,7 @@ session. The equivalence method is therefore three layers, not the scenario harn
    read from their files (browse, history); starting a turn on one fails with a clear error.
    `createSession` is accepted and registers the channel (only the first working directory is used, as
    in pi-ahp), but the storage factory then refuses it, so a client cannot get a usable new session. That refusal, and the one for a
-   turn on a catalogue session, use the program's single wording (`pi.Unsupported`: "... does not support <feature> yet. Install the
-   original extension, git:github.com/Qusic/pi-ahp@4065e98..., which runs unchanged in PiG."; pi-ahp is a standalone host, so the install
-   advice is the owner-chosen template, not a literal instruction). `chat/truncated`, fork and tree navigation are refused: the
+   turn on a catalogue session, use the program's single wording (`pi.Unsupported`: "@pi-in-go/pigpen-ahp (Go port) does not support <feature> yet. The original, git:github.com/Qusic/pi-ahp@4065e98..., is a standalone Node host and runs on its own, outside PiG.": the original is not a Pi extension, so no install advice is given). `chat/truncated`, fork and tree navigation are refused: the
    SDK offers `NewSession`, `Fork` and `NavigateTree` to commands only.
 2. **Session replacement.** Contexts retained from `session_start` belong to their runtime. On
    `new`, `resume`, `fork` and `reload`, PiG emits `session_shutdown` and runs the extension factory

@@ -608,8 +608,8 @@
  {
   "name": "refusal-wording-changed",
   "file": "internal/pi/refusal.go",
-  "find": "\", which runs unchanged in PiG.\"",
-  "replace": "\", which runs in PiG.\""
+  "find": "\", is a standalone Node host and runs on its own, outside PiG.\"",
+  "replace": "\", is a Node host.\""
  },
  {
   "name": "refusal-original-spec-changed",
