@@ -183,7 +183,7 @@ func TestFastRenderWrapsAVeryLongLine(t *testing.T) {
 	if len(got) != 7+2 {
 		t.Fatalf("%d rows:\n%q", len(got), got)
 	}
-	if !strings.Contains(got[0], "↑") || !strings.Contains(got[len(got)-1], "↓") && false {
+	if !strings.Contains(got[0], "↑") || !strings.Contains(got[len(got)-1], "↓") {
 		t.Errorf("marks %q %q", got[0], got[len(got)-1])
 	}
 }
