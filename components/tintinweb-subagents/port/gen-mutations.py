@@ -318,6 +318,9 @@ m("show-cost-notice-unnamed", "refuse.go", 'out = append(out, fmt.Sprintf("%s: %
 
 m("structured-retry-after-stop", "runner.go", "return nothingValidated && !aborted && !killed", "return nothingValidated && !aborted")
 
+m("session-id-never-cached", "tools.go", "\tif id != \"\" {\n\t\treturn id, nil\n\t}\n\tid, err := ctx.GetSessionID()", "\t_ = id\n\tid, err := ctx.GetSessionID()")
+m("session-id-kept-across-sessions", "extension.go", 'a.sessionID = "" // a new', 'a.sessionID = a.sessionID // a new')
+
 M = [x for x in M if x]
 by_file = {}
 for x in M:

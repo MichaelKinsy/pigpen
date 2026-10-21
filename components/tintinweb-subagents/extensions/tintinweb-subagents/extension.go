@@ -28,6 +28,7 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
+	sessionID       string // the host session id, fetched on the first transcript of a session (a host round trip)
 	obs             obsState
 }
 
@@ -51,7 +52,7 @@ func (a *app) reload(cwd string) {
 	a.defaultMaxTurns = st.DefaultMaxTurns
 	a.graceTurns = st.GraceTurns
 	a.mu.Unlock()
-	a.reloadObs(cwd)
+	a.reloadObs(st)
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
 	custom, warnings := loadCustomAgents(cwd)
@@ -119,6 +120,9 @@ func Extension() *sdk.Extension {
 func (a *app) register(e *sdk.Extension) {
 	a.registerRPC(e.Events())
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		a.mu.Lock()
+		a.sessionID = "" // a new, resumed or forked session has another id
+		a.mu.Unlock()
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)

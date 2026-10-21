@@ -1612,5 +1612,17 @@
   "file": "runner.go",
   "find": "return nothingValidated && !aborted && !killed",
   "replace": "return nothingValidated && !aborted"
+ },
+ {
+  "name": "session-id-never-cached",
+  "file": "tools.go",
+  "find": "\tif id != \"\" {\n\t\treturn id, nil\n\t}\n\tid, err := ctx.GetSessionID()",
+  "replace": "\t_ = id\n\tid, err := ctx.GetSessionID()"
+ },
+ {
+  "name": "session-id-kept-across-sessions",
+  "file": "extension.go",
+  "find": "a.sessionID = \"\" // a new",
+  "replace": "a.sessionID = a.sessionID // a new"
  }
 ]

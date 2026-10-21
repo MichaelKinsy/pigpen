@@ -135,6 +135,24 @@ func (a *app) registerTools(e *sdk.Extension) {
 	})
 }
 
+// sessionIDOf is the host's session id, asked once per session (session_start clears it): the id names the
+// transcript directory of every agent, and asking costs a host round trip on the start path.
+func (a *app) sessionIDOf(ctx sdk.Context) (string, error) {
+	a.mu.Lock()
+	id := a.sessionID
+	a.mu.Unlock()
+	if id != "" {
+		return id, nil
+	}
+	id, err := ctx.GetSessionID()
+	if err == nil && id != "" {
+		a.mu.Lock()
+		a.sessionID = id
+		a.mu.Unlock()
+	}
+	return id, err
+}
+
 // formatMs is seconds with one decimal. upstream: ui/agent-widget.ts formatMs.
 func formatMs(ms int64) string { return jsToFixed(float64(ms)/1000, 1) + "s" }
 
@@ -211,7 +229,7 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if extras.Transcript {
 		// The original always has a session id; without one there is no session directory to write under, so the
 		// agent runs without a transcript (reported on stderr, like a transcript path that cannot be made).
-		id, err := ctx.GetSessionID()
+		id, err := a.sessionIDOf(ctx)
 		if err != nil || id == "" {
 			fmt.Fprintf(os.Stderr, "[pi-subagents] no transcript: the session id is not available (%v)\n", err)
 			extras.Transcript = false

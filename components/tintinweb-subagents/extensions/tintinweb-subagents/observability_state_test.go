@@ -231,7 +231,19 @@ func TestUsageIsPooledOnlyWhileReportingIsOn(t *testing.T) {
 		_, c := runningAgent(t, r)
 		c.spend(lifetimeUsage{Input: 100, Output: 50})
 		must(t, os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"reportUsage": false}`), 0o644))
-		r.app.reloadObs(cwd)
+		r.app.reloadObs(loadSettings(cwd))
 		eq(t, r.app.obs.pool.drain() == nil, true)
 	})
+}
+
+func TestTheSessionIDIsAskedOncePerSession(t *testing.T) {
+	r := startObsRig(t, obsWorkspace(t, "", ""))
+	asked := func() int { return len(r.CallsTo("getSessionID")) }
+	before := asked()
+	runningAgent(t, r)
+	runningAgent(t, r)
+	eq(t, asked()-before, 1)
+	r.Fire("session_start", obj{"reason": "new"}) // another session has another id
+	runningAgent(t, r)
+	eq(t, asked()-before, 2)
 }

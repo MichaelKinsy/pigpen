@@ -23,9 +23,8 @@ type obsState struct {
 	pool                  pendingUsagePool
 }
 
-// reloadObs applies the settings of a workspace.
-func (a *app) reloadObs(cwd string) {
-	s := loadSettings(cwd)
+// reloadObs applies the observability settings (read once with the others by reload).
+func (a *app) reloadObs(s settings) {
 	a.obs.mu.Lock()
 	a.obs.noTranscript = s.OutputTranscript != nil && !*s.OutputTranscript
 	a.obs.reportUsage = s.ReportUsage != nil && *s.ReportUsage
