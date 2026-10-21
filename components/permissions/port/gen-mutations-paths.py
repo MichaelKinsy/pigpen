@@ -298,6 +298,7 @@ m("mcp-pi-split", G, "sanitizedServer = jsSlice(rest, 0, jsIndexOf(rest, \"__\")
 m("mcp-pi-tool", G, "jsSlice(rest, jsLen(sanitizedServer)+2, jsEnd)", "jsSlice(rest, jsLen(sanitizedServer)+1, jsEnd)")
 m("mcp-pi-order", G, "\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t\ttargets.Add(server)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))", "\t\ttargets.Add(server)\n\t\ttargets.Add(server + \"_\" + tool)\n\t\ttargets.Add(server + \":\" + tool)\n\t}\n\ttargets.Add(tool)\n\ttargets.Add(jsTrim(toolName))")
 m("mcp-pi-sanitize", G, "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z')) {", "if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z')) {")
+m("mcp-pi-sanitize-ascii", G, "if c := name[i]; c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {", "if c := name[i]; c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') {")
 m("mcp-pi-units", G, "units := utf16.Encode([]rune(name))\n\tvar b strings.Builder\n\tfor _, u := range units {", "_ = utf16.Encode\n\tvar b strings.Builder\n\tfor _, r := range []rune(name) {\n\t\tu := uint16(r)")
 
 # inputnormalizer.go

@@ -44,7 +44,7 @@ func TestJSSliceAndSanitizeAgreeAcrossTheASCIIFastPath(t *testing.T) {
 			}
 		}
 	}
-	for in, want := range map[string]string{"": "", "danger-srv": "danger_srv", "a.b c": "a_b_c", "ok_09AZ": "ok_09AZ", "é": "_", "a😀b": "a__b"} {
+	for in, want := range map[string]string{"": "", "danger-srv": "danger_srv", "a.b c": "a_b_c", "ok_09AZ": "ok_09AZ", "é": "_", "a😀b": "a__b", "Aé B": "A__B", "Ab-Cd": "Ab_Cd"} {
 		if got := sanitizePiMcpName(in); got != want {
 			t.Errorf("sanitizePiMcpName(%q) = %q, want %q", in, got, want)
 		}

@@ -1672,5 +1672,11 @@
   "file": "requestid.go",
   "find": "b[6] = b[6]&0x0f | 0x40",
   "replace": "b[6] = b[6]&0x0f | 0x40\n\tb = [16]byte{}"
+ },
+ {
+  "name": "mcp-pi-sanitize-ascii",
+  "file": "mcptargets.go",
+  "find": "if c := name[i]; c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {",
+  "replace": "if c := name[i]; c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') {"
  }
 ]
