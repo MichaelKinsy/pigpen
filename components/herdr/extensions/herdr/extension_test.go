@@ -1,19 +1,14 @@
 package herdr_test
 
-// Ported case for case from components/herdr/tests/herdr.test.ts (35 tests, at
-// 6685dcd): same inputs, same expectations, driven through the real Go SDK.
-//
-// The `herdr:blocked` bus event, which the TypeScript suite drove through
-// pi.events, goes through the Go SDK's bridge (Extension.Events) here; the
-// listener is ported from herdr-pig.
-//
-// TestReviewAdditions holds cases the TypeScript suite did not have; each one
-// fails on a mutation the ported cases let through.
+// Layer-1 cases beyond the original's seven: the request line a socket carries, the 0.5 s then 1.5 s retry, the
+// dedupe and queue rules of publishState and drainStateQueue, the herdr:blocked counter with JavaScript's truthiness
+// and strict equality, the session lifecycle, release, and the gate of the PiG-only prompt-based blocked state.
+// Each case cites the line of extensions/herdr-agent-state.ts it holds (port/oracle).
 
 import (
-	"math"
+	"io"
 	"os"
-	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -22,790 +17,827 @@ import (
 	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
 
-func start(t *testing.T, mode string) (*fakeHost, *fakeHerdr) {
-	t.Helper()
-	h := installFakeHerdr(t)
-	return startHost(t, herdr.Extension(), mode), h
+func TestMain(m *testing.M) {
+	// The attempt bounds are the original's 0.5 s and 1.5 s in production. A test on a loaded host must not lose a
+	// request to them; the tests about the bounds set their own.
+	*herdr.FirstAttempt, *herdr.RetryAttempt = 5*time.Second, 5*time.Second
+	os.Exit(m.Run())
 }
 
-func startTUI(t *testing.T) (*fakeHost, *fakeHerdr) {
+// shortAttempts gives a test about a hung or failing herdr short bounds.
+func shortAttempts(t *testing.T, first, retry time.Duration) {
 	t.Helper()
-	return start(t, "tui")
+	pf, pr := *herdr.FirstAttempt, *herdr.RetryAttempt
+	*herdr.FirstAttempt, *herdr.RetryAttempt = first, retry
+	t.Cleanup(func() { *herdr.FirstAttempt, *herdr.RetryAttempt = pf, pr })
 }
 
 func startSession(t *testing.T) (*fakeHost, *fakeHerdr) {
 	t.Helper()
 	host, h := startTUI(t)
 	host.fire("session_start", map[string]any{"reason": "startup"})
+	h.waitFor(1)
 	return host, h
 }
 
-func eq(t *testing.T, got, want []string) {
+func param(t *testing.T, r herdrRequest, key string) any {
 	t.Helper()
-	if strings.Join(got, "|") != strings.Join(want, "|") || len(got) != len(want) {
-		t.Fatalf("got %q, want %q", got, want)
-	}
+	return r.Params[key]
 }
 
-func mustFlag(t *testing.T, c call, name string) string {
-	t.Helper()
-	v, ok := flag(c, name)
-	if !ok {
-		t.Fatalf("%s missing from %q", name, c.args)
-	}
-	return v
+func hasParam(r herdrRequest, key string) bool {
+	_, ok := r.Params[key]
+	return ok
 }
 
-func absent(t *testing.T, c call, name string) {
-	t.Helper()
-	if v, ok := flag(c, name); ok {
-		t.Fatalf("%s = %q, want it omitted (%q)", name, v, c.args)
-	}
-}
-
-func TestOutsideHerdr(t *testing.T) {
-	for _, tc := range []struct {
-		name   string
-		mutate func(t *testing.T)
-	}{
-		{"HERDR_ENV unset", func(t *testing.T) { unset(t, "HERDR_ENV") }},
-		{"HERDR_ENV is not 1", func(t *testing.T) { t.Setenv("HERDR_ENV", "0") }},
-		{"HERDR_PANE_ID unset", func(t *testing.T) { unset(t, "HERDR_PANE_ID") }},
-		{"HERDR_BIN_PATH unset", func(t *testing.T) { unset(t, "HERDR_BIN_PATH") }},
-		{"HERDR_BIN_PATH empty", func(t *testing.T) { t.Setenv("HERDR_BIN_PATH", "") }},
-		{"HERDR_SOCKET_PATH unset", func(t *testing.T) { unset(t, "HERDR_SOCKET_PATH") }},
-		{"HERDR_SOCKET_PATH empty", func(t *testing.T) { t.Setenv("HERDR_SOCKET_PATH", "") }},
-	} {
-		t.Run("registers nothing and calls nothing when "+tc.name, func(t *testing.T) {
-			h := installFakeHerdr(t)
-			tc.mutate(t)
-			host := startHost(t, herdr.Extension(), "tui")
-			if n := len(host.register.Handlers); n != 0 {
-				t.Fatalf("registered %d handlers outside herdr", n)
-			}
-			if len(host.register.Tools) != 0 || len(host.register.Commands) != 0 {
-				t.Fatalf("registered tools or commands outside herdr")
-			}
-			host.fire("session_start", map[string]any{"reason": "startup"})
-			host.fire("agent_start", nil)
-			settle()
-			if got := h.calls(); len(got) != 0 {
-				t.Fatalf("herdr called outside herdr: %v", got)
-			}
-		})
-	}
-}
-
-func TestHeadlessModes(t *testing.T) {
-	for _, mode := range []string{"rpc", "json", "print"} {
-		t.Run("reports nothing in "+mode+" mode", func(t *testing.T) {
-			host, h := start(t, mode)
-			host.fire("session_start", map[string]any{"reason": "startup"})
-			host.fire("agent_start", nil)
-			host.fire("ui_prompt_start", map[string]any{"kind": "confirm"})
-			settle()
-			if got := h.calls(); len(got) != 0 {
-				t.Fatalf("reported in %s mode: %v", mode, got)
-			}
-		})
-	}
-}
-
-func TestStateReports(t *testing.T) {
-	t.Run("reports idle, working, idle in order with the pig identity and an increasing seq", func(t *testing.T) {
-		host, h := startTUI(t)
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		h.waitForCalls(1)
-		host.fire("agent_start", nil)
-		h.waitForCalls(2)
-		host.fire("agent_settled", nil)
-		all := h.waitForCalls(3)
-
-		eq(t, states(all), []string{"idle", "working", "idle"})
-		for _, c := range all {
-			eq(t, c.args[:3], []string{"pane", "report-agent", "p_7"})
-			if got := mustFlag(t, c, "--source"); got != "custom:pig" {
-				t.Fatalf("source = %q", got)
-			}
-			if got := mustFlag(t, c, "--agent"); got != "pig" {
-				t.Fatalf("agent = %q", got)
-			}
+func TestRequestShape(t *testing.T) {
+	// herdr-agent-state.ts:120-143: params in the order pane_id, source, agent, state, message, seq, resume_argv; the
+	// request is {id, method, params} on one line.
+	t.Run("a state report is one JSON line in the original's key order", func(t *testing.T) {
+		host, h := startSession(t)
+		got := h.requests()[0].Raw
+		want := regexp.MustCompile(`^\{"id":"pig:state:\d+:[0-9a-z]+","method":"pane\.report_agent","params":\{"pane_id":"w1:p1","source":"pig","agent":"pig","state":"idle","seq":\d+,"resume_argv":\["pig","--session","/home/user/\.pig/agent/sessions/one\.jsonl"\]\}\}$`)
+		if !want.MatchString(got) {
+			t.Fatalf("request = %s", got)
 		}
-		order := seqs(t, all)
-		for i, n := range order {
-			if n <= 0 || n > 1<<53-1 {
-				t.Fatalf("seq %d is not a safe positive integer", n)
-			}
-			if i > 0 && n <= order[i-1] {
-				t.Fatalf("seq not increasing: %v", order)
-			}
+		_ = host
+	})
+
+	t.Run("a release is {pane_id, source, agent, seq} with a release id and no resume command", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		got := h.waitFor(2)[1].Raw
+		want := regexp.MustCompile(`^\{"id":"pig:release:\d+:[0-9a-z]+","method":"pane\.release_agent","params":\{"pane_id":"w1:p1","source":"pig","agent":"pig","seq":\d+\}\}$`)
+		if !want.MatchString(got) {
+			t.Fatalf("release = %s", got)
 		}
 	})
 
+	t.Run("every request has its own id", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("agent_start", nil)
+		all := h.waitFor(2)
+		if all[0].ID == all[1].ID || all[0].ID == "" {
+			t.Fatalf("ids %q and %q", all[0].ID, all[1].ID)
+		}
+	})
+
+	// JSON.stringify drops an undefined message and keeps null, a number and "" (herdr-agent-state.ts:123-127, 232-233).
+	for _, tc := range []struct {
+		name    string
+		payload map[string]any
+		want    string // the message member as it appears in the request, "" when absent
+	}{
+		{"a string label", map[string]any{"active": true, "label": "approve"}, `"message":"approve",`},
+		{"an empty label", map[string]any{"active": true, "label": ""}, `"message":"",`},
+		{"a null label", map[string]any{"active": true, "label": nil}, `"message":null,`},
+		{"a number label", map[string]any{"active": true, "label": 7}, `"message":7,`},
+		{"a missing label", map[string]any{"active": true}, ``},
+		{"a label with markup", map[string]any{"active": true, "label": "a<b>&c\nd"}, `"message":"a<b>&c\nd",`},
+		{"a label that spells a line-separator escape", map[string]any{"active": true, "label": `\u2028`}, `"message":"\\u2028",`},
+	} {
+		t.Run("blocked with "+tc.name, func(t *testing.T) {
+			host, h := startSession(t)
+			host.emit("herdr:blocked", tc.payload)
+			raw := h.waitFor(2)[1].Raw
+			if !strings.Contains(raw, `"state":"blocked",`) {
+				t.Fatalf("request = %s", raw)
+			}
+			if tc.want == "" {
+				if strings.Contains(raw, `"message"`) {
+					t.Fatalf("message present: %s", raw)
+				}
+			} else if !strings.Contains(raw, tc.want) {
+				t.Fatalf("want %s in %s", tc.want, raw)
+			}
+		})
+	}
+}
+
+func TestTransport(t *testing.T) {
+	t.Run("production keeps the original's 0.5 s then 1.5 s attempt bounds", func(t *testing.T) {
+		if herdr.OriginalFirstAttempt != 500*time.Millisecond || herdr.OriginalRetryAttempt != 1500*time.Millisecond {
+			t.Fatalf("bounds %v and %v, want 500ms and 1.5s", herdr.OriginalFirstAttempt, herdr.OriginalRetryAttempt)
+		}
+	})
+
+	t.Run("a delivered request is sent once", func(t *testing.T) {
+		_, h := startSession(t)
+		settle()
+		if n := h.connections(); n != 1 {
+			t.Fatalf("%d connections for one request", n)
+		}
+	})
+
+	t.Run("a connection that ends without an answer is retried once with the same request", func(t *testing.T) {
+		host, h := startTUI(t)
+		h.setBehave(func(n int) behavior { return behavior{Close: n == 0} })
+		host.fire("session_start", nil)
+		all := h.waitFor(2)
+		settle()
+		if all[0].Raw != all[1].Raw {
+			t.Fatalf("retry differs from the first attempt:\n%s\n%s", all[0].Raw, all[1].Raw)
+		}
+		if n := h.connections(); n != 2 {
+			t.Fatalf("%d connections, want 2", n)
+		}
+	})
+
+	t.Run("an attempt that gets no answer in time is retried", func(t *testing.T) {
+		shortAttempts(t, 100*time.Millisecond, 2*time.Second)
+		host, h := startTUI(t)
+		h.setBehave(func(n int) behavior { return behavior{Silent: n == 0} })
+		begin := time.Now()
+		host.fire("session_start", nil)
+		h.waitFor(2)
+		if took := time.Since(begin); took < 90*time.Millisecond {
+			t.Fatalf("retried after %v, before the first attempt's bound", took)
+		}
+	})
+
+	t.Run("a late answer still counts when it comes within the bound", func(t *testing.T) {
+		shortAttempts(t, 2*time.Second, 2*time.Second)
+		host, h := startTUI(t)
+		h.setBehave(func(int) behavior { return behavior{Delay: 150 * time.Millisecond} })
+		host.fire("session_start", nil)
+		h.waitFor(1)
+		time.Sleep(400 * time.Millisecond)
+		if n := h.connections(); n != 1 {
+			t.Fatalf("%d connections, want 1", n)
+		}
+	})
+
+	t.Run("a herdr that never answers gets two attempts and no third, and quit still releases", func(t *testing.T) {
+		shortAttempts(t, 80*time.Millisecond, 120*time.Millisecond)
+		host, h := startTUI(t)
+		h.setBehave(func(int) behavior { return behavior{Silent: true} })
+		host.fire("session_start", nil)
+		time.Sleep(500 * time.Millisecond)
+		if n := h.connections(); n != 2 {
+			t.Fatalf("%d connections for one report, want 2", n)
+		}
+		begin := time.Now()
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		if took := time.Since(begin); took > 2*time.Second {
+			t.Fatalf("quit took %v behind a hung herdr", took)
+		}
+		all := h.requests()
+		if last := all[len(all)-1]; last.Method != "pane.release_agent" {
+			t.Fatalf("last request = %s", last.Raw)
+		}
+	})
+
+	t.Run("survives a herdr that is not listening", func(t *testing.T) {
+		shortAttempts(t, 200*time.Millisecond, 200*time.Millisecond)
+		host, h := startTUI(t)
+		_ = h.ln.Close()
+		host.fire("session_start", nil)
+		host.fire("agent_start", nil)
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+	})
+
+	t.Run("socket endpoint: the path as is, a Windows pipe name under \\\\.\\pipe\\", func(t *testing.T) {
+		if got := herdr.Endpoint("linux", "/run/herdr.sock"); got != "/run/herdr.sock" {
+			t.Fatalf("linux endpoint %q", got)
+		}
+		if got := herdr.Endpoint("darwin", "/run/herdr.sock"); got != "/run/herdr.sock" {
+			t.Fatalf("darwin endpoint %q", got)
+		}
+		if got := herdr.Endpoint("windows", "herdr-1234.sock"); got != `\\.\pipe\herdr-1234.sock` {
+			t.Fatalf("windows endpoint %q", got)
+		}
+	})
+}
+
+func TestDiagnostic(t *testing.T) {
+	captureStderr := func(t *testing.T) func() string {
+		t.Helper()
+		orig := os.Stderr
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		os.Stderr = w
+		t.Cleanup(func() { os.Stderr = orig })
+		return func() string {
+			settle()
+			os.Stderr = orig
+			_ = w.Close()
+			b, _ := io.ReadAll(r)
+			return string(b)
+		}
+	}
+
+	t.Run("a request herdr never took is written once to stderr, and not again until one is delivered", func(t *testing.T) {
+		shortAttempts(t, 60*time.Millisecond, 60*time.Millisecond)
+		host, h := startTUI(t)
+		h.setBehave(func(int) behavior { return behavior{Close: true} })
+		read := captureStderr(t)
+		host.fire("session_start", nil)
+		host.fire("agent_start", nil)
+		host.fire("agent_settled", nil)
+		time.Sleep(800 * time.Millisecond)
+		got := read()
+		if n := strings.Count(got, "herdr: pane.report_agent failed"); n != 1 {
+			t.Fatalf("diagnostic written %d times: %q", n, got)
+		}
+	})
+
+	t.Run("a healthy herdr is silent", func(t *testing.T) {
+		host, h := startTUI(t)
+		read := captureStderr(t)
+		host.fire("session_start", nil)
+		h.waitFor(1)
+		if got := read(); got != "" {
+			t.Fatalf("stderr = %q", got)
+		}
+	})
+}
+
+func TestStateReports(t *testing.T) {
+	// publishState, herdr-agent-state.ts:200-215.
 	t.Run("does not repeat an unchanged state", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_settled", nil)
 		host.fire("agent_settled", nil)
 		settle()
-		eq(t, states(h.calls()), []string{"idle"})
+		equalStrings(t, states(h.requests()), []string{"idle"})
+	})
+
+	t.Run("does not report working twice for two agent_start events", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("agent_start", nil)
+		h.waitFor(2)
+		host.fire("agent_start", nil)
+		settle()
+		equalStrings(t, states(h.requests()), []string{"idle", "working"})
+	})
+
+	t.Run("reports an unchanged state again when the resume command changed", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("agent_start", nil)
+		h.waitFor(2)
+		host.setState(func(s *hostState) { s.sessionFile = "/home/user/.pig/agent/sessions/two.jsonl" })
+		host.fire("agent_start", nil)
+		all := h.waitFor(3)
+		equalStrings(t, states(all), []string{"idle", "working", "working"})
+		resume, _ := all[2].Params["resume_argv"].([]any)
+		if len(resume) != 3 || resume[2] != "/home/user/.pig/agent/sessions/two.jsonl" {
+			t.Fatalf("resume_argv = %v", resume)
+		}
+	})
+
+	t.Run("session_start reports even when nothing changed", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("session_start", nil)
+		equalStrings(t, states(h.waitFor(2)), []string{"idle", "idle"})
 	})
 
 	t.Run("does not report idle while the agent is still running", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_start", nil)
-		h.waitForCalls(2)
+		h.waitFor(2)
 		host.setState(func(s *hostState) { s.idle = false })
 		host.fire("agent_settled", nil)
 		settle()
-		eq(t, states(h.calls()), []string{"idle", "working"})
+		equalStrings(t, states(h.requests()), []string{"idle", "working"})
 	})
 
-	t.Run("does not report idle when the idle check fails (herdr-pig requires isIdle() === true)", func(t *testing.T) {
+	t.Run("a failed idle check at agent_settled reports nothing and the handler fails, as an isIdle that throws does", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_start", nil)
-		h.waitForCalls(2)
+		h.waitFor(2)
 		host.setState(func(s *hostState) { s.idleFailure = true })
-		host.fire("agent_settled", nil)
+		if _, failed := host.fireResult("agent_settled", nil); !failed {
+			t.Fatal("the handler did not fail")
+		}
 		settle()
-		eq(t, states(h.calls()), []string{"idle", "working"})
+		equalStrings(t, states(h.requests()), []string{"idle", "working"})
+	})
+
+	t.Run("a failed idle check at session_start fails the handler but the session still reports from the next turn", func(t *testing.T) {
+		host, h := startTUI(t)
+		host.setState(func(s *hostState) { s.idleFailure = true })
+		if _, failed := host.fireResult("session_start", nil); !failed {
+			t.Fatal("the handler did not fail")
+		}
+		settle()
+		if n := len(h.requests()); n != 0 {
+			t.Fatalf("%d requests from a failed session_start", n)
+		}
+		host.fire("agent_start", nil)
+		equalStrings(t, states(h.waitFor(1)), []string{"working"})
 	})
 
 	t.Run("starts as working when a reload lands mid-turn", func(t *testing.T) {
 		host, h := startTUI(t)
 		host.setState(func(s *hostState) { s.idle = false })
 		host.fire("session_start", map[string]any{"reason": "reload"})
-		eq(t, states(h.waitForCalls(1)), []string{"working"})
+		equalStrings(t, states(h.waitFor(1)), []string{"working"})
 	})
 
-	t.Run("keeps seq increasing across reporter instances in one process", func(t *testing.T) {
+	t.Run("seq is a safe integer seeded from the clock in microseconds and increases", func(t *testing.T) {
+		before := time.Now().UnixMicro()
 		host, h := startSession(t)
-		h.waitForCalls(1)
+		host.fire("agent_start", nil)
+		order := seqs(t, h.waitFor(2))
+		if order[0] < float64(before) || order[0] > 1<<53-1 {
+			t.Fatalf("seq %v is not a safe integer at or above the clock %d", order[0], before)
+		}
+		if order[1] <= order[0] {
+			t.Fatalf("seq not increasing: %v", order)
+		}
+	})
+
+	t.Run("keeps seq increasing across extension instances in one process", func(t *testing.T) {
+		host, h := startSession(t)
 		host.fire("session_shutdown", map[string]any{"reason": "new"})
 		second := startHost(t, herdr.Extension(), "tui")
 		second.fire("session_start", map[string]any{"reason": "new"})
-		all := h.waitForCalls(2)
-		order := seqs(t, all)
+		order := seqs(t, h.waitFor(2))
 		if order[1] <= order[0] {
 			t.Fatalf("seq did not increase across instances: %v", order)
 		}
 	})
 
-	t.Run("sends only the newest state when calls queue behind a slow herdr, still in order", func(t *testing.T) {
+	// queueState and drainStateQueue, herdr-agent-state.ts:145-174: calls never overlap and only the newest state is kept.
+	t.Run("sends only the newest state when requests queue behind a slow herdr, still in order", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.slow(300 * time.Millisecond)
-		host.fire("session_start", map[string]any{"reason": "startup"})                     // in flight
-		host.fire("agent_start", nil)                                                       // queued, then replaced
-		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "Run it?"}) // queued, then replaced
-		host.fire("ui_prompt_end", map[string]any{"kind": "confirm", "title": "Run it?"})
-		host.fire("agent_settled", nil) // the newest state
-		h.waitForCalls(2)
+		h.setBehave(func(int) behavior { return behavior{Delay: 300 * time.Millisecond} })
+		host.fire("session_start", nil)                                          // in flight
+		host.fire("agent_start", nil)                                            // queued, then replaced
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"}) // queued, then replaced
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		host.fire("agent_settled", nil) // the newest state: idle
+		h.waitFor(2)
 		settle()
-		final := h.calls()
-		eq(t, states(final), []string{"idle", "idle"})
-		if len(final) != 2 {
-			t.Fatalf("intermediate states must be dropped, got %d calls", len(final))
-		}
+		final := h.requests()
+		equalStrings(t, states(final), []string{"idle", "idle"})
 		order := seqs(t, final)
 		if order[1] <= order[0] {
 			t.Fatalf("seq not increasing: %v", order)
 		}
 	})
 
-	t.Run("survives a herdr that fails", func(t *testing.T) {
+	t.Run("a queued state carries the resume command current when it is sent", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.failWith(3)
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		host.fire("agent_start", nil)
-		h.waitForCalls(1)
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		all := h.calls()
-		if got := all[len(all)-1].verb(); got != "release-agent" {
-			t.Fatalf("last call = %q, want release-agent", got)
-		}
-	})
-
-	t.Run("survives a herdr binary that does not exist", func(t *testing.T) {
-		installFakeHerdr(t)
-		t.Setenv("HERDR_BIN_PATH", filepath.Join(t.TempDir(), "missing"))
-		host := startHost(t, herdr.Extension(), "tui")
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-	})
-}
-
-// TestResumeCommand covers the published "Report the resume command" contract
-// (https://herdr.dev/docs/add-herdr-support/): the command after `--`, next to
-// --agent-session-id, on every state report; first word a plain command; no
-// apostrophe or control character; at most 64 arguments and 8 KiB.
-func TestResumeCommand(t *testing.T) {
-	t.Run("attaches the exact session file to every state report, after all options", func(t *testing.T) {
-		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.fire("agent_start", nil)
-		h.waitForCalls(2)
-		host.fire("agent_settled", nil)
-		all := h.waitForCalls(3)
-		for _, c := range all {
-			argv, ok := c.resume()
-			if !ok {
-				t.Fatalf("no resume command in %q", c.args)
-			}
-			eq(t, argv, []string{"pig", "--session", "/home/u/.pig/sessions/s1.jsonl"})
-			if got := mustFlag(t, c, "--agent-session-id"); got != "s1" {
-				t.Fatalf("session id = %q", got)
-			}
-			// Everything before the separator is an option of report-agent, so the separator is last-but-the-command.
-			if i := len(c.args) - 4; c.args[i] != "--" {
-				t.Fatalf("`--` is not directly before the command: %q", c.args)
-			}
-		}
-	})
-
-	t.Run("does not use a model flag (herdr's own pi integration does not)", func(t *testing.T) {
-		host, h := startSession(t)
-		argv, _ := h.waitForCalls(1)[0].resume()
-		for _, a := range argv {
-			if strings.HasPrefix(a, "--model") || strings.HasPrefix(a, "-m") {
-				t.Fatalf("resume command carries a model flag: %q", argv)
-			}
-		}
-		_ = host
-	})
-
-	t.Run("follows a session replacement", func(t *testing.T) {
-		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s2.jsonl", "s2" })
-		host.fire("session_start", map[string]any{"reason": "new"})
-		argv, _ := h.waitForCalls(2)[1].resume()
-		eq(t, argv, []string{"pig", "--session", "/x/s2.jsonl"})
-	})
-
-	t.Run("a Windows session file is a plain argument", func(t *testing.T) {
-		host, h := startTUI(t)
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = `C:\Users\me\.pig\s3.jsonl`, "s3" })
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		argv, _ := h.waitForCalls(1)[0].resume()
-		eq(t, argv, []string{"pig", "--session", `C:\Users\me\.pig\s3.jsonl`})
-	})
-
-	// `pig --no-session` has an id but no session file. `pig --session-id <id>`
-	// would not bring that session back: it creates a new, persisted session with
-	// the id, against the user's --no-session. So there is nothing to resume.
-	t.Run("an in-memory session (an id, no session file) reports no command", func(t *testing.T) {
-		host, h := startTUI(t)
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "", "abc-123_x.y" })
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		c := h.waitForCalls(1)[0]
-		if argv, ok := c.resume(); ok {
-			t.Fatalf("sent a resume command for an in-memory session: %q", argv)
-		}
-		if got := mustFlag(t, c, "--agent-session-id"); got != "abc-123_x.y" {
-			t.Fatalf("session id = %q", got)
-		}
-	})
-
-	for _, tc := range []struct {
-		name, file string
-	}{
-		{"an apostrophe", "/home/o'brien/.pig/sessions/s1.jsonl"},
-		{"a control character", "/home/u/.pig/sessions/s\x07.jsonl"},
-		{"a C1 control character", "/home/u/.pig/sessions/s\u0085.jsonl"},
-		{"a DEL", "/home/u/.pig/sessions/s\x7f.jsonl"},
-		{"more than 8 KiB", "/" + strings.Repeat("d", 9000) + "/s1.jsonl"},
-	} {
-		t.Run("falls back to --session-id when the session file has "+tc.name, func(t *testing.T) {
-			host, h := startTUI(t)
-			host.setState(func(s *hostState) { s.sessionFile, s.sessionID = tc.file, "s1" })
-			host.fire("session_start", map[string]any{"reason": "startup"})
-			argv, ok := h.waitForCalls(1)[0].resume()
-			if !ok {
-				t.Fatal("no resume command")
-			}
-			eq(t, argv, []string{"pig", "--session-id", "s1"})
-		})
-	}
-
-	for _, tc := range []struct{ name, file, id string }{
-		{"nothing known", "", ""},
-		{"relative file, no id", "rel.jsonl", ""},
-		{"apostrophe file, id with a space", "/a/b'c.jsonl", "has space"},
-		{"apostrophe file, id with an apostrophe", "/a/b'c.jsonl", "it's"},
-		{"no file, id that starts with a dash", "", "-rf"},
-		{"no file, id with a control character", "", "a\x01b"},
-	} {
-		t.Run("sends no command when neither the file nor the id can be used: "+tc.name, func(t *testing.T) {
-			host, h := startTUI(t)
-			host.setState(func(s *hostState) { s.sessionFile, s.sessionID = tc.file, tc.id })
-			host.fire("session_start", map[string]any{"reason": "startup"})
-			c := h.waitForCalls(1)[0]
-			if argv, ok := c.resume(); ok {
-				t.Fatalf("sent a resume command %q", argv)
-			}
-			mustFlag(t, c, "--state")
-		})
-	}
-
-	t.Run("never sends a resume command with the release", func(t *testing.T) {
-		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		all := h.waitForCalls(2)
-		if _, ok := all[1].resume(); ok || all[1].verb() != "release-agent" {
-			t.Fatalf("release carries a resume command or is not last: %q", all[1].args)
-		}
-	})
-
-	t.Run("herdr before 0.9.2 rejects `--`: retries the same report once without it, then stops sending it", func(t *testing.T) {
-		host, h := startTUI(t)
-		h.refuseResume("old")
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		all := h.waitForCalls(2)
-		if _, ok := all[0].resume(); !ok {
-			t.Fatalf("first attempt has no resume command: %q", all[0].args)
-		}
-		if _, ok := all[1].resume(); ok {
-			t.Fatalf("retry still has the resume command: %q", all[1].args)
-		}
-		eq(t, states(all), []string{"idle", "idle"})
-		if a, b := mustFlag(t, all[0], "--seq"), mustFlag(t, all[1], "--seq"); a != b {
-			t.Fatalf("retry seq %s != first seq %s (the refused report was not applied)", b, a)
-		}
-		if got := mustFlag(t, all[1], "--agent-session-id"); got != "s1" {
-			t.Fatalf("retry lost the session id: %q", all[1].args)
-		}
-		host.fire("agent_start", nil)
-		h.waitForCalls(3)
-		host.fire("agent_settled", nil)
-		h.waitForCalls(4)
-		settle()
-		all = h.calls()
-		if len(all) != 4 {
-			t.Fatalf("expected exactly 4 calls (no further retries): %v", all)
-		}
-		for _, c := range all[2:] {
-			if _, ok := c.resume(); ok {
-				t.Fatalf("a later report still carries the resume command: %q", c.args)
-			}
-		}
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		rel := h.waitForCalls(5)[4]
-		if rel.verb() != "release-agent" {
-			t.Fatalf("calls = %v", verbs(h.calls()))
-		}
-	})
-
-	t.Run("invalid_resume_argv from herdr 0.9.2+ gets the same one silent fallback", func(t *testing.T) {
-		host, h := startTUI(t)
-		h.refuseResume("invalid")
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		all := h.waitForCalls(2)
-		if _, ok := all[1].resume(); ok {
-			t.Fatalf("retry still has the resume command: %q", all[1].args)
-		}
-		host.fire("agent_start", nil)
-		h.waitForCalls(3)
-		settle()
-		all = h.calls()
-		if len(all) != 3 {
-			t.Fatalf("expected 3 calls: %v", all)
-		}
-		if _, ok := all[2].resume(); ok {
-			t.Fatalf("later report carries the refused command: %q", all[2].args)
-		}
-	})
-
-	t.Run("an unknown-option failure that is not about `--` is not a verdict on resume", func(t *testing.T) {
-		host, h := startTUI(t)
-		h.refuseResume("message-option") // herdr before 0.9.0 rejecting an attached --message=value
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		h.waitForCalls(1)
-		settle()
-		if n := len(h.calls()); n != 1 {
-			t.Fatalf("retried: %d calls", n)
-		}
-		host.fire("agent_start", nil)
-		c := h.waitForCalls(2)[1]
-		if _, ok := c.resume(); !ok {
-			t.Fatalf("gave up on resume: %q", c.args)
-		}
-	})
-
-	t.Run("an unrelated failure neither retries nor gives up on resume", func(t *testing.T) {
-		host, h := startTUI(t)
-		h.refuseResume("broken")
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		h.waitForCalls(1)
-		settle()
-		if n := len(h.calls()); n != 1 {
-			t.Fatalf("retried an unrelated failure: %d calls", n)
-		}
-		host.fire("agent_start", nil)
-		c := h.waitForCalls(2)[1]
-		if _, ok := c.resume(); !ok {
-			t.Fatalf("stopped sending the resume command after an unrelated failure: %q", c.args)
-		}
-	})
-
-	t.Run("a hung herdr is not retried and the timeout still ends the call", func(t *testing.T) {
-		useProductionCallTimeout(t)
-		host, h := startTUI(t)
-		h.hang()
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		begin := time.Now()
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		if took := time.Since(begin); took > 8*time.Second {
-			t.Fatalf("quit took %v behind a hung herdr", took)
-		}
-		for _, c := range h.calls() {
-			if c.verb() == "report-agent" {
-				t.Fatalf("a hung report was logged: %q", c.args)
-			}
+		h.setBehave(func(int) behavior { return behavior{Delay: 300 * time.Millisecond} })
+		host.fire("session_start", nil) // in flight, with one.jsonl
+		host.setState(func(s *hostState) { s.sessionFile = "/home/user/.pig/agent/sessions/two.jsonl" })
+		host.fire("agent_start", nil) // queued; the session identity changes before it is sent
+		all := h.waitFor(2)
+		resume, _ := all[1].Params["resume_argv"].([]any)
+		if len(resume) != 3 || resume[2] != "/home/user/.pig/agent/sessions/two.jsonl" {
+			t.Fatalf("resume_argv = %v", resume)
 		}
 	})
 }
 
 func TestBlocked(t *testing.T) {
-	t.Run("reports blocked with the prompt title while a confirmation is open, then resumes", func(t *testing.T) {
+	// herdr-agent-state.ts:217-235: a counter, the last label, and `!data?.active` (JavaScript truthiness).
+	t.Run("stays blocked until every holder let go, and keeps the latest label", func(t *testing.T) {
+		host, h := startSession(t)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"})
+		h.waitFor(2)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "B"})
+		h.waitFor(3)
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		settle()
+		all := h.requests()
+		equalStrings(t, states(all), []string{"idle", "blocked", "blocked"})
+		if param(t, all[2], "message") != "B" {
+			t.Fatalf("message = %v", param(t, all[2], "message"))
+		}
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		all = h.waitFor(4)
+		equalStrings(t, states(all), []string{"idle", "blocked", "blocked", "idle"})
+		if hasParam(all[3], "message") {
+			t.Fatalf("message after the last release: %s", all[3].Raw)
+		}
+	})
+
+	t.Run("a release with nothing held keeps the counter at zero", func(t *testing.T) {
+		host, h := startSession(t)
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"})
+		all := h.waitFor(2)
+		equalStrings(t, states(all), []string{"idle", "blocked"})
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		equalStrings(t, states(h.waitFor(3)), []string{"idle", "blocked", "idle"})
+	})
+
+	t.Run("returns to working, not idle, while a turn runs", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_start", nil)
-		h.waitForCalls(2)
-		prompt := map[string]any{"reason": "ui_prompt", "kind": "confirm", "title": "Allow rm -rf build?"}
-		host.fire("ui_prompt_start", prompt)
-		blocked := h.waitForCalls(3)
-		if got := mustFlag(t, blocked[2], "--state"); got != "blocked" {
-			t.Fatalf("state = %q", got)
-		}
-		if got := mustFlag(t, blocked[2], "--message"); got != "Allow rm -rf build?" {
-			t.Fatalf("message = %q", got)
-		}
-
-		host.fire("ui_prompt_end", prompt)
-		resumed := h.waitForCalls(4)
-		if got := mustFlag(t, resumed[3], "--state"); got != "working" {
-			t.Fatalf("state = %q", got)
-		}
-		absent(t, resumed[3], "--message")
+		h.waitFor(2)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "A"})
+		h.waitFor(3)
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		equalStrings(t, states(h.waitFor(4)), []string{"idle", "working", "blocked", "working"})
 	})
 
-	t.Run("reports blocked for an untitled custom prompt using its kind and returns to idle", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("ui_prompt_start", map[string]any{"kind": "custom"})
-		all := h.waitForCalls(2)
-		if got := mustFlag(t, all[1], "--message"); got != "custom" {
-			t.Fatalf("message = %q", got)
-		}
-		host.fire("ui_prompt_end", map[string]any{"kind": "custom"})
-		eq(t, states(h.waitForCalls(3)), []string{"idle", "blocked", "idle"})
-	})
-
-	t.Run("sends an ordinary message as two arguments, the only form herdr before 0.9.0 parses", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "Apply the plan?"})
-		all := h.waitForCalls(2)
-		i := -1
-		for n, arg := range all[1].args {
-			if strings.HasPrefix(arg, "--message=") {
-				t.Fatalf("attached form %q is unknown to herdr before 0.9.0: %q", arg, all[1].args)
-			}
-			if arg == "--message" {
-				i = n
-			}
-		}
-		if i < 0 || all[1].args[i+1] != "Apply the plan?" {
-			t.Fatalf("no --message <value> pair in %q", all[1].args)
-		}
-	})
-
-	// Every herdr CLI (0.6 to 0.9.3) takes the argument after --message as its
-	// value whatever it starts with, but herdr before 0.9.0 refuses the attached
-	// --message=<text> form ("unknown option") and drops the whole report.
-	for _, title := range []string{"--force?", "-n: dry run first?", "-"} {
-		t.Run("sends a message that starts with a dash as --message <text>, which every herdr parses: "+title, func(t *testing.T) {
+	// `!data?.active`: falsy releases, truthy blocks.
+	for _, tc := range []struct {
+		name    string
+		payload any
+		blocks  bool
+	}{
+		{"active true", map[string]any{"active": true}, true},
+		{"active 1", map[string]any{"active": 1}, true},
+		{"active a non-empty string", map[string]any{"active": "yes"}, true},
+		{"active an object", map[string]any{"active": map[string]any{}}, true},
+		{"active 0", map[string]any{"active": 0}, false},
+		{"active an empty string", map[string]any{"active": ""}, false},
+		{"active null", map[string]any{"active": nil}, false},
+		{"active false", map[string]any{"active": false}, false},
+		{"no active member", map[string]any{"label": "x"}, false},
+		{"a string payload", "active", false},
+		{"a null payload", nil, false},
+		{"an array payload", []any{true}, false},
+	} {
+		t.Run("truthiness: "+tc.name, func(t *testing.T) {
 			host, h := startSession(t)
-			host.fire("ui_prompt_start", map[string]any{"kind": "input", "title": title})
-			all := h.waitForCalls(2)
-			for n, arg := range all[1].args {
-				if strings.HasPrefix(arg, "--message=") {
-					t.Fatalf("attached form %q is unknown to herdr before 0.9.0: %q", arg, all[1].args)
-				}
-				if arg == "--message" && n+1 < len(all[1].args) && all[1].args[n+1] == title {
-					return
-				}
+			host.emit("herdr:blocked", tc.payload)
+			if tc.blocks {
+				equalStrings(t, states(h.waitFor(2)), []string{"idle", "blocked"})
+				return
 			}
-			t.Fatalf("no --message %q pair in %q", title, all[1].args)
+			settle()
+			equalStrings(t, states(h.requests()), []string{"idle"})
 		})
 	}
 
-	t.Run("sends a message that is exactly -- attached, so herdr 0.9.2+ cannot take it for the resume separator", func(t *testing.T) {
+	t.Run("equal string labels are not reported twice, a label object is a new value every time", func(t *testing.T) {
 		host, h := startSession(t)
-		host.fire("ui_prompt_start", map[string]any{"kind": "input", "title": "--"})
-		c := h.waitForCalls(2)[1]
-		if !slices.Contains(c.args, "--message=--") {
-			t.Fatalf("no --message=-- in %q", c.args)
-		}
-		// herdr splits at the first `--`: it must be the separator before the command.
-		argv, _ := c.resume()
-		eq(t, argv, []string{"pig", "--session", "/home/u/.pig/sessions/s1.jsonl"})
-	})
-
-	t.Run("shortens a long multi-line title to one line", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("ui_prompt_start", map[string]any{"kind": "editor", "title": "first line\n" + strings.Repeat("x", 400)})
-		message := mustFlag(t, h.waitForCalls(2)[1], "--message")
-		if strings.Contains(message, "\n") {
-			t.Fatalf("message has a newline: %q", message)
-		}
-		if n := len([]rune(message)); n > 120 {
-			t.Fatalf("message is %d characters, want at most 120", n)
-		}
-		if !strings.HasPrefix(message, "first line x") {
-			t.Fatalf("message = %q", message)
-		}
-	})
-
-	t.Run("stays blocked until every overlapping block ends", func(t *testing.T) {
-		// TypeScript overlaps a prompt with a `herdr:blocked` bus block. The Go SDK
-		// has no bus, so two overlapping prompts exercise the same counting.
-		host, h := startSession(t)
-		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "A"})
-		h.waitForCalls(2)
-		host.fire("ui_prompt_start", map[string]any{"kind": "select", "title": "approval"})
-		h.waitForCalls(3)
-		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "same"})
+		h.waitFor(2)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "same"})
 		settle()
-		eq(t, states(h.calls()), []string{"idle", "blocked", "blocked"})
-		host.fire("ui_prompt_end", map[string]any{"kind": "select"})
-		all := h.waitForCalls(4)
-		eq(t, states(all), []string{"idle", "blocked", "blocked", "idle"})
-		if got := mustFlag(t, all[2], "--message"); got != "approval" {
-			t.Fatalf("message = %q", got)
+		equalStrings(t, states(h.requests()), []string{"idle", "blocked"})
+		// JavaScript compares objects by reference: two label objects are never ===.
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": map[string]any{"k": 1}})
+		h.waitFor(3)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": map[string]any{"k": 1}})
+		equalStrings(t, states(h.waitFor(4)), []string{"idle", "blocked", "blocked", "blocked"})
+	})
+
+	t.Run("a null label then a missing label are two different messages", func(t *testing.T) {
+		host, h := startSession(t)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": nil})
+		h.waitFor(2)
+		host.emit("herdr:blocked", map[string]any{"active": true})
+		all := h.waitFor(3)
+		if hasParam(all[2], "message") || !hasParam(all[1], "message") {
+			t.Fatalf("requests %s then %s", all[1].Raw, all[2].Raw)
 		}
 	})
 
-	t.Run("ignores an unmatched prompt end", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
+	t.Run("ignores the signal before a TUI session started and in other modes", func(t *testing.T) {
+		host, h := startTUI(t)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "early"})
 		settle()
-		eq(t, states(h.calls()), []string{"idle"})
+		if n := len(h.requests()); n != 0 {
+			t.Fatalf("%d requests before session_start", n)
+		}
+		rpc := startHost(t, herdr.Extension(), "rpc")
+		rpc.fire("session_start", nil)
+		rpc.emit("herdr:blocked", map[string]any{"active": true, "label": "rpc"})
+		settle()
+		if n := len(h.requests()); n != 0 {
+			t.Fatalf("%d requests from an rpc session", n)
+		}
+	})
+}
+
+func TestResumeCommand(t *testing.T) {
+	// resumeArgvFor, herdr-agent-state.ts:86-118.
+	for _, tc := range []struct {
+		name  string
+		state hostState
+		want  []string // nil: no resume_argv member
+	}{
+		{"an absolute posix file", hostState{sessionFile: "/h/s.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "/h/s.jsonl"}},
+		{"an absolute Windows file", hostState{sessionFile: `C:\Users\u\s.jsonl`, sessionID: "abc", idle: true}, []string{"pig", "--session", `C:\Users\u\s.jsonl`}},
+		{"a Windows file with a forward slash", hostState{sessionFile: `D:/u/s.jsonl`, sessionID: "abc", idle: true}, []string{"pig", "--session", `D:/u/s.jsonl`}},
+		{"a UNC file", hostState{sessionFile: `\\srv\share\s.jsonl`, sessionID: "abc", idle: true}, []string{"pig", "--session", `\\srv\share\s.jsonl`}},
+		{"a relative file falls back to the id", hostState{sessionFile: "s.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"a drive without a separator is relative", hostState{sessionFile: "C:s.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"an apostrophe in the file falls back to the id", hostState{sessionFile: "/h/o'b/s.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"a control character in the file falls back to the id", hostState{sessionFile: "/h/a\x01b.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"DEL in the file falls back to the id", hostState{sessionFile: "/h/a\x7fb.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"a C1 control is allowed", hostState{sessionFile: "/h/a\u0085b.jsonl", sessionID: "abc", idle: true}, []string{"pig", "--session", "/h/a\u0085b.jsonl"}},
+		{"an in-memory session resumes by its id, as the original does", hostState{noFile: true, sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"a file whose lookup fails falls back to the id", hostState{fileFailure: true, sessionID: "abc", idle: true}, []string{"pig", "--session", "abc"}},
+		{"an unsafe id and an unsafe file: no command", hostState{sessionFile: "/h/o'b/s.jsonl", sessionID: "it's", idle: true}, nil},
+		{"no id and no file: no command", hostState{noFile: true, noID: true, idle: true}, nil},
+		{"both lookups fail: no command", hostState{fileFailure: true, idFailure: true, idle: true}, nil},
+		{"an empty id: no command", hostState{noFile: true, sessionID: "", idle: true}, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			host, h := startTUI(t)
+			host.setState(func(s *hostState) { *s = tc.state })
+			host.fire("session_start", nil)
+			r := h.waitFor(1)[0]
+			if tc.want == nil {
+				if hasParam(r, "resume_argv") {
+					t.Fatalf("resume_argv present: %s", r.Raw)
+				}
+				return
+			}
+			got, _ := r.Params["resume_argv"].([]any)
+			var gs []string
+			for _, v := range got {
+				s, _ := v.(string)
+				gs = append(gs, s)
+			}
+			equalStrings(t, gs, tc.want)
+		})
+	}
+
+	t.Run("a safe resume argument is any non-empty string without an apostrophe or ASCII control", func(t *testing.T) {
+		for _, v := range []string{"abc", "a b", "é", "a\u0085b", "a\u2028b", "\"q\""} {
+			if !herdr.IsSafeResumeArg(v) {
+				t.Errorf("%q should be safe", v)
+			}
+		}
+		for _, v := range []string{"", "'", "a'b", "a\x00b", "a\tb", "a\nb", "a\x1fb", "a\x7fb"} {
+			if herdr.IsSafeResumeArg(v) {
+				t.Errorf("%q should be unsafe", v)
+			}
+		}
 	})
 
-	t.Run("herdr:blocked bus block overlaps a prompt", func(t *testing.T) {
-		host, h := startSession(t)
-		host.emit("herdr:blocked", map[string]any{"active": true, "label": "waiting on review"})
-		all := h.waitForCalls(2)
-		if got := mustFlag(t, all[1], "--message"); got != "waiting on review" {
-			t.Fatalf("message = %q", got)
+	t.Run("there is no length or argument-count rule: the original sends what it was given", func(t *testing.T) {
+		long := "/h/" + strings.Repeat("x", 9000) + ".jsonl"
+		got := herdr.ResumeArgvFor(&long, nil)
+		if len(got) != 3 || got[2] != long {
+			t.Fatalf("argv = %d items", len(got))
 		}
-		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "A"})
-		h.waitForCalls(3)
-		// The bus holder lets go; the open prompt keeps the pane blocked.
-		host.emit("herdr:blocked", map[string]any{"active": false})
-		settle()
-		eq(t, states(h.calls()), []string{"idle", "blocked", "blocked"})
-		// A second bus release cannot end the prompt's block.
-		host.emit("herdr:blocked", map[string]any{"active": false})
-		settle()
-		eq(t, states(h.calls()), []string{"idle", "blocked", "blocked"})
-		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
-		eq(t, states(h.waitForCalls(4)), []string{"idle", "blocked", "blocked", "idle"})
-	})
-
-	t.Run("session_start keeps the blocked counters (herdr-pig does not reset them)", func(t *testing.T) {
-		host, h := startSession(t)
-		host.emit("herdr:blocked", map[string]any{"active": true, "label": "waiting on review"})
-		h.waitForCalls(2)
-		host.fire("session_start", map[string]any{"reason": "reload"})
-		all := h.waitForCalls(3)
-		eq(t, states(all), []string{"idle", "blocked", "blocked"})
-		if got := mustFlag(t, all[2], "--message"); got != "waiting on review" {
-			t.Fatalf("message = %q", got)
-		}
-		host.emit("herdr:blocked", map[string]any{"active": false})
-		eq(t, states(h.waitForCalls(4)), []string{"idle", "blocked", "blocked", "idle"})
 	})
 }
 
 func TestSession(t *testing.T) {
-	t.Run("reports the session file and id with every state", func(t *testing.T) {
+	t.Run("agent_start refreshes the resume command from the current session", func(t *testing.T) {
 		host, h := startSession(t)
+		host.setState(func(s *hostState) { s.sessionFile = "/x/s3.jsonl" })
 		host.fire("agent_start", nil)
-		for _, c := range h.waitForCalls(2) {
-			if got := mustFlag(t, c, "--agent-session-path"); got != "/home/u/.pig/sessions/s1.jsonl" {
-				t.Fatalf("session path = %q", got)
-			}
-			if got := mustFlag(t, c, "--agent-session-id"); got != "s1" {
-				t.Fatalf("session id = %q", got)
-			}
+		resume, _ := h.waitFor(2)[1].Params["resume_argv"].([]any)
+		if len(resume) != 3 || resume[2] != "/x/s3.jsonl" {
+			t.Fatalf("resume_argv = %v", resume)
 		}
 	})
 
-	t.Run("follows a session replacement", func(t *testing.T) {
+	t.Run("a shutdown that is not a quit changes nothing, and a second session_start keeps the blocked counters, as the original does", func(t *testing.T) {
+		// The original does not reset anything at session_start (ts:237-247) and does nothing at a shutdown that is not a
+		// quit (ts:266-269). Under Pi each session gets a fresh copy of the module (core/extensions/loader.ts moduleCache:
+		// false, after session_shutdown in core/agent-session-runtime.ts); a host that keeps the Go extension alive carries
+		// a block over, as the original would on one instance.
 		host, h := startSession(t)
-		h.waitForCalls(1)
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "held"})
+		h.waitFor(2)
+		host.fire("session_shutdown", map[string]any{"reason": "new"})
+		host.fire("agent_start", nil)
+		settle()
+		equalStrings(t, states(h.requests()), []string{"idle", "blocked"})
 		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s2.jsonl", "s2" })
 		host.fire("session_start", map[string]any{"reason": "new"})
-		all := h.waitForCalls(2)
-		if got := mustFlag(t, all[1], "--agent-session-path"); got != "/x/s2.jsonl" {
-			t.Fatalf("session path = %q", got)
+		all := h.waitFor(3)
+		equalStrings(t, states(all), []string{"idle", "blocked", "blocked"})
+		if all[2].Params["message"] != "held" {
+			t.Fatalf("message = %v", all[2].Params["message"])
 		}
-		if got := mustFlag(t, all[1], "--agent-session-id"); got != "s2" {
-			t.Fatalf("session id = %q", got)
+		resume, _ := all[2].Params["resume_argv"].([]any)
+		if len(resume) != 3 || resume[2] != "/x/s2.jsonl" {
+			t.Fatalf("resume_argv = %v", resume)
 		}
+		// session_start set agentActive from isIdle() (true here), so the release returns to idle.
+		host.emit("herdr:blocked", map[string]any{"active": false})
+		equalStrings(t, states(h.waitFor(4)), []string{"idle", "blocked", "blocked", "idle"})
 	})
 
-	t.Run("omits a relative session path and an unavailable session", func(t *testing.T) {
+	t.Run("agent events before session_start report nothing", func(t *testing.T) {
 		host, h := startTUI(t)
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "relative.jsonl", "" })
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		first := h.waitForCalls(1)[0]
-		absent(t, first, "--agent-session-path")
-		absent(t, first, "--agent-session-id")
-	})
-
-	t.Run("tolerates a session manager that throws", func(t *testing.T) {
-		host, h := startTUI(t)
-		host.setState(func(s *hostState) { s.sessionFailure = true })
-		host.fire("session_start", map[string]any{"reason": "startup"})
-		eq(t, states(h.waitForCalls(1)), []string{"idle"})
+		host.fire("agent_start", nil)
+		host.fire("agent_settled", nil)
+		settle()
+		if n := len(h.requests()); n != 0 {
+			t.Fatalf("%d requests before session_start", n)
+		}
 	})
 }
 
 func TestRelease(t *testing.T) {
-	t.Run("releases the pane on quit as the last call, with a higher seq", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("agent_start", nil)
-		h.waitForCalls(2)
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		all := h.calls()
-		release := all[len(all)-1]
-		eq(t, release.args[:3], []string{"pane", "release-agent", "p_7"})
-		if got := mustFlag(t, release, "--source"); got != "custom:pig" {
-			t.Fatalf("source = %q", got)
-		}
-		if got := mustFlag(t, release, "--agent"); got != "pig" {
-			t.Fatalf("agent = %q", got)
-		}
-		order := seqs(t, all)
-		var most int64 = math.MinInt64
-		for _, n := range order[:len(order)-1] {
-			most = max(most, n)
-		}
-		if order[len(order)-1] <= most {
-			t.Fatalf("release seq %d is not above the reports %v", order[len(order)-1], order)
-		}
-	})
-
-	t.Run("waits for an in-flight report and drops a queued one so the release is last", func(t *testing.T) {
-		host, h := startTUI(t)
-		h.slow(300 * time.Millisecond)
-		host.fire("session_start", map[string]any{"reason": "startup"}) // in flight
-		host.fire("agent_start", nil)                                   // queued; must be dropped
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		eq(t, verbs(h.calls()), []string{"report-agent", "release-agent"})
-	})
+	// session_shutdown, herdr-agent-state.ts:266-275.
+	for _, reason := range []string{"reload", "new", "resume", "fork", "", "other"} {
+		t.Run("does not release on shutdown reason "+reason, func(t *testing.T) {
+			host, h := startSession(t)
+			data := map[string]any{"reason": reason}
+			if reason == "" {
+				data = nil
+			}
+			host.fire("session_shutdown", data)
+			settle()
+			equalStrings(t, states(h.requests()), []string{"idle"})
+		})
+	}
 
 	t.Run("sends no report after the release", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
 		host.fire("agent_start", nil)
 		host.fire("agent_settled", nil)
-		settle()
-		eq(t, verbs(h.calls()), []string{"report-agent", "release-agent"})
-	})
-
-	for _, reason := range []string{"reload", "new", "resume", "fork"} {
-		t.Run("does not release on "+reason+", and goes quiet so it cannot race its successor", func(t *testing.T) {
-			host, h := startSession(t)
-			h.waitForCalls(1)
-			host.fire("session_shutdown", map[string]any{"reason": reason})
-			host.fire("agent_start", nil)
-			settle()
-			eq(t, verbs(h.calls()), []string{"report-agent"})
-		})
-	}
-
-	t.Run("ignores herdr:blocked after shutdown", func(t *testing.T) {
-		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		h.waitForCalls(2)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "late"})
 		settle()
-		eq(t, verbs(h.calls()), []string{"report-agent", "release-agent"})
+		equalStrings(t, states(h.requests()), []string{"idle", "release"})
 	})
 
 	t.Run("does not release a pane it never reported on", func(t *testing.T) {
-		host, h := start(t, "print")
+		h := installFakeHerdr(t)
+		host := startHost(t, herdr.Extension(), "print")
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
 		settle()
-		if got := h.calls(); len(got) != 0 {
-			t.Fatalf("released a pane it never reported on: %v", got)
+		if n := len(h.requests()); n != 0 {
+			t.Fatalf("%d requests from a print-mode session", n)
+		}
+	})
+
+	t.Run("quit twice releases once", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		settle()
+		equalStrings(t, states(h.requests()), []string{"idle", "release"})
+	})
+
+	t.Run("drops a queued report and does not wait for the one in flight", func(t *testing.T) {
+		host, h := startTUI(t)
+		h.setBehave(func(n int) behavior {
+			if n == 0 {
+				return behavior{Delay: 600 * time.Millisecond}
+			}
+			return behavior{}
+		})
+		host.fire("session_start", nil) // in flight, answered after 600 ms
+		host.fire("agent_start", nil)   // queued: must be dropped
+		begin := time.Now()
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		if took := time.Since(begin); took > 400*time.Millisecond {
+			t.Fatalf("quit waited %v for the in-flight report", took)
+		}
+		time.Sleep(900 * time.Millisecond)
+		// The report in flight and the release run concurrently, as in the original: either may arrive first.
+		got := states(h.requests())
+		slices.Sort(got)
+		if !slices.Equal(got, []string{"idle", "release"}) {
+			t.Fatalf("requests = %v, want the in-flight report and the release", got)
+		}
+	})
+
+	t.Run("the release seq is above every report's", func(t *testing.T) {
+		host, h := startSession(t)
+		host.fire("agent_start", nil)
+		h.waitFor(2)
+		host.fire("session_shutdown", map[string]any{"reason": "quit"})
+		order := seqs(t, h.waitFor(3))
+		if order[2] <= order[1] || order[1] <= order[0] {
+			t.Fatalf("seq %v", order)
 		}
 	})
 }
 
-func TestReviewAdditions(t *testing.T) {
-	t.Run("reports again after a session replacement in the same extension instance", func(t *testing.T) {
-		// A host may keep the extension alive across /new, /resume, /fork and
-		// /reload: the shutdown silences it, and the next session_start must
-		// open a fresh reporting epoch.
+func TestPromptBlocked(t *testing.T) {
+	// ui_prompt_start and ui_prompt_end are PiG's; Pi has no such event and the original never reports a prompt. The
+	// state is therefore opt-in (PIGPEN_HERDR_UI_PROMPTS=1), so that by default the port reports exactly what the
+	// original does in the same session.
+	prompt := map[string]any{"reason": "ui_prompt", "kind": "confirm", "title": "Allow rm -rf build?"}
+
+	t.Run("is off by default: no handler, no report", func(t *testing.T) {
 		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.fire("session_shutdown", map[string]any{"reason": "new"})
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s2.jsonl", "s2" })
-		host.fire("session_start", map[string]any{"reason": "new"})
-		all := h.waitForCalls(2)
-		if got := mustFlag(t, all[1], "--agent-session-id"); got != "s2" {
-			t.Fatalf("session id = %q", got)
+		if host.registered("ui_prompt_start") || host.registered("ui_prompt_end") {
+			t.Fatal("prompt handlers registered without the opt-in")
 		}
+		host.fire("ui_prompt_start", prompt)
+		settle()
+		equalStrings(t, states(h.requests()), []string{"idle"})
+	})
+
+	t.Run("anything but 1 leaves it off", func(t *testing.T) {
+		h := installFakeHerdr(t)
+		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "true")
+		host := startHost(t, herdr.Extension(), "tui")
+		if host.registered("ui_prompt_start") {
+			t.Fatal("registered for PIGPEN_HERDR_UI_PROMPTS=true")
+		}
+		_ = h
+	})
+
+	t.Run("with the opt-in, a prompt is blocked with its title and then restores the state", func(t *testing.T) {
+		h := installFakeHerdr(t)
+		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
+		host := startHost(t, herdr.Extension(), "tui")
+		host.fire("session_start", nil)
 		host.fire("agent_start", nil)
-		eq(t, states(h.waitForCalls(3)), []string{"idle", "idle", "working"})
-	})
-
-	t.Run("an unmatched prompt end does not hide the next prompt", func(t *testing.T) {
-		host, h := startSession(t)
-		host.fire("ui_prompt_end", map[string]any{"kind": "confirm"})
-		host.fire("ui_prompt_start", map[string]any{"kind": "confirm", "title": "Run it?"})
-		all := h.waitForCalls(2)
-		eq(t, states(all), []string{"idle", "blocked"})
-	})
-
-	t.Run("seeds seq from the clock so it keeps increasing across restarts", func(t *testing.T) {
-		// herdr keeps the highest seq per source across agent restarts; a
-		// restarted process must not start below it.
-		before := time.Now().UnixMicro()
-		_, h := startSession(t)
-		if got := seqs(t, h.waitForCalls(1))[0]; got < before {
-			t.Fatalf("seq %d is below the clock %d (microseconds)", got, before)
+		h.waitFor(2)
+		host.fire("ui_prompt_start", prompt)
+		all := h.waitFor(3)
+		if all[2].Params["state"] != "blocked" || all[2].Params["message"] != "Allow rm -rf build?" {
+			t.Fatalf("request = %s", all[2].Raw)
 		}
+		host.fire("ui_prompt_end", prompt)
+		equalStrings(t, states(h.waitFor(4)), []string{"idle", "working", "blocked", "working"})
 	})
 
-	t.Run("refreshes the session identity when a turn starts", func(t *testing.T) {
-		host, h := startSession(t)
-		h.waitForCalls(1)
-		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s3.jsonl", "s3" })
-		host.fire("agent_start", nil)
-		working := h.waitForCalls(2)[1]
-		if got := mustFlag(t, working, "--agent-session-path"); got != "/x/s3.jsonl" {
-			t.Fatalf("session path = %q", got)
+	t.Run("with the opt-in, an untitled prompt uses its kind, a long title is one short line, and holders do not release each other", func(t *testing.T) {
+		h := installFakeHerdr(t)
+		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
+		host := startHost(t, herdr.Extension(), "tui")
+		host.fire("session_start", nil)
+		h.waitFor(1)
+		host.fire("ui_prompt_start", map[string]any{"kind": "custom"})
+		if got := h.waitFor(2)[1].Params["message"]; got != "custom" {
+			t.Fatalf("message = %v", got)
 		}
+		host.fire("ui_prompt_end", map[string]any{"kind": "custom"})
+		h.waitFor(3)
+		host.fire("ui_prompt_start", map[string]any{"kind": "editor", "title": "first line\n" + strings.Repeat("x", 400)})
+		message, _ := h.waitFor(4)[3].Params["message"].(string)
+		if strings.Contains(message, "\n") || len([]rune(message)) > 120 || !strings.HasPrefix(message, "first line x") {
+			t.Fatalf("message = %q", message)
+		}
+		host.emit("herdr:blocked", map[string]any{"active": true, "label": "bus"})
+		h.waitFor(5)
+		host.emit("herdr:blocked", map[string]any{"active": false}) // the prompt's block stays
+		settle()
+		equalStrings(t, states(h.requests()), []string{"idle", "blocked", "idle", "blocked", "blocked"})
+		host.fire("ui_prompt_end", nil)
+		equalStrings(t, states(h.waitFor(6)), []string{"idle", "blocked", "idle", "blocked", "blocked", "idle"})
 	})
 
-	t.Run("bounds a hung herdr call so quit still releases", func(t *testing.T) {
-		useProductionCallTimeout(t)
-		// Inherently about 3 s: the bound under test is the 3 s call timeout.
-		host, h := startTUI(t)
-		h.hang()
-		host.fire("session_start", map[string]any{"reason": "startup"}) // hangs until killed
-		begin := time.Now()
-		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		if took := time.Since(begin); took > 8*time.Second {
-			t.Fatalf("quit took %v behind a hung herdr", took)
-		}
-		all := h.calls()
-		if len(all) == 0 || all[len(all)-1].verb() != "release-agent" {
-			t.Fatalf("calls = %v, want the release last", all)
+	t.Run("with the opt-in, an unmatched prompt end is ignored", func(t *testing.T) {
+		h := installFakeHerdr(t)
+		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
+		host := startHost(t, herdr.Extension(), "tui")
+		host.fire("session_start", nil)
+		h.waitFor(1)
+		host.fire("ui_prompt_end", prompt)
+		host.fire("ui_prompt_start", prompt)
+		equalStrings(t, states(h.waitFor(2)), []string{"idle", "blocked"})
+	})
+}
+
+func TestOutsideHerdr(t *testing.T) {
+	// enabled(), herdr-agent-state.ts:25-27: HERDR_ENV=1 and a socket path and a pane id. HERDR_BIN_PATH is not part of it.
+	for _, tc := range []struct {
+		name   string
+		mutate func(t *testing.T)
+		active bool
+	}{
+		{"HERDR_ENV unset", func(t *testing.T) { unset(t, "HERDR_ENV") }, false},
+		{"HERDR_ENV is not 1", func(t *testing.T) { t.Setenv("HERDR_ENV", "0") }, false},
+		{"HERDR_ENV is true", func(t *testing.T) { t.Setenv("HERDR_ENV", "true") }, false},
+		{"HERDR_PANE_ID unset", func(t *testing.T) { unset(t, "HERDR_PANE_ID") }, false},
+		{"HERDR_PANE_ID empty", func(t *testing.T) { t.Setenv("HERDR_PANE_ID", "") }, false},
+		{"HERDR_SOCKET_PATH unset", func(t *testing.T) { unset(t, "HERDR_SOCKET_PATH") }, false},
+		{"HERDR_SOCKET_PATH empty", func(t *testing.T) { t.Setenv("HERDR_SOCKET_PATH", "") }, false},
+		{"HERDR_BIN_PATH unset (the original does not need it)", func(t *testing.T) { unset(t, "HERDR_BIN_PATH") }, true},
+	} {
+		t.Run("when "+tc.name, func(t *testing.T) {
+			h := installFakeHerdr(t)
+			tc.mutate(t)
+			host := startHost(t, herdr.Extension(), "tui")
+			if got := len(host.register.Handlers) != 0; got != tc.active {
+				t.Fatalf("handlers registered = %v, want %v", got, tc.active)
+			}
+			if len(host.register.Tools) != 0 || len(host.register.Commands) != 0 {
+				t.Fatal("registered tools or commands")
+			}
+			host.fire("session_start", nil)
+			if tc.active {
+				h.waitFor(1)
+				return
+			}
+			settle()
+			if n := len(h.requests()); n != 0 {
+				t.Fatalf("%d requests outside herdr", n)
+			}
+		})
+	}
+
+	t.Run("the headless modes report nothing", func(t *testing.T) {
+		for _, mode := range []string{"rpc", "json", "print"} {
+			h := installFakeHerdr(t)
+			t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
+			host := startHost(t, herdr.Extension(), mode)
+			host.fire("session_start", nil)
+			host.fire("agent_start", nil)
+			host.fire("ui_prompt_start", map[string]any{"kind": "confirm"})
+			host.emit("herdr:blocked", map[string]any{"active": true, "label": "x"})
+			host.fire("session_shutdown", map[string]any{"reason": "quit"})
+			settle()
+			if n := len(h.requests()); n != 0 {
+				t.Fatalf("%d requests in %s mode", n, mode)
+			}
 		}
 	})
 }
@@ -815,20 +847,5 @@ func unset(t *testing.T, name string) {
 	t.Setenv(name, "") // registers the restore
 	if err := os.Unsetenv(name); err != nil {
 		t.Fatal(err)
-	}
-}
-
-// useProductionCallTimeout restores the production bound on a herdr call for a test about that bound.
-func useProductionCallTimeout(t *testing.T) {
-	t.Helper()
-	previous := *herdr.CallTimeout
-	*herdr.CallTimeout = herdr.OriginalCallTimeout
-	t.Cleanup(func() { *herdr.CallTimeout = previous })
-}
-
-// The ported tests give the call a long timeout (TestMain); this pins the production value the hung-herdr tests run with.
-func TestCallTimeoutKeepsTheProductionValue(t *testing.T) {
-	if herdr.OriginalCallTimeout != 3*time.Second {
-		t.Fatalf("callTimeout = %v, want 3s", herdr.OriginalCallTimeout)
 	}
 }

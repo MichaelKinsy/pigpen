@@ -9,7 +9,7 @@
       "authors": ["Christian Polzer", "Hai-Fai Solutions"],
       "url": "https://github.com/Hai-Fai-Solutions/herdr-pig",
       "revision": "3ec680471e8282e0a8a64545781069f822c0c212",
-      "path": "extensions/herdr",
+      "path": "port/oracle/herdr-agent-state.ts",
       "license": "Apache-2.0",
       "licenseFile": "LICENSE-herdr-pig",
       "attributionFile": "NOTICE"

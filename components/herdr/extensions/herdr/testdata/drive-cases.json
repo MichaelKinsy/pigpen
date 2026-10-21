@@ -1,0 +1,1793 @@
+[
+ {
+  "name": "outside-herdr",
+  "description": "no herdr variables",
+  "env": {
+   "HERDR_ENV": null,
+   "HERDR_SOCKET_PATH": null,
+   "HERDR_PANE_ID": null
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "env-not-1",
+  "description": "HERDR_ENV=0",
+  "env": {
+   "HERDR_ENV": "0"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "env-true",
+  "description": "HERDR_ENV=true is not 1",
+  "env": {
+   "HERDR_ENV": "true"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "no-pane-id",
+  "description": "HERDR_PANE_ID unset",
+  "env": {
+   "HERDR_PANE_ID": null
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "empty-pane-id",
+  "description": "HERDR_PANE_ID empty",
+  "env": {
+   "HERDR_PANE_ID": ""
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "no-socket-path",
+  "description": "HERDR_SOCKET_PATH unset",
+  "env": {
+   "HERDR_SOCKET_PATH": null
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "empty-socket-path",
+  "description": "HERDR_SOCKET_PATH empty",
+  "env": {
+   "HERDR_SOCKET_PATH": ""
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "bin-path-not-needed",
+  "description": "HERDR_BIN_PATH is not part of the original's contract",
+  "env": {
+   "HERDR_BIN_PATH": null
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "other-pane-id",
+  "description": "the pane id is sent as given",
+  "env": {
+   "HERDR_PANE_ID": "w9:p3"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "mode-rpc",
+  "description": "a rpc session reports nothing, and does not release",
+  "mode": "rpc",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "x"
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "mode-json",
+  "description": "a json session reports nothing, and does not release",
+  "mode": "json",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "x"
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "mode-print",
+  "description": "a print session reports nothing, and does not release",
+  "mode": "print",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "x"
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "startup-idle",
+  "description": "session_start reports idle with the resume command",
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "turn",
+  "description": "idle, working, idle",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   }
+  ]
+ },
+ {
+  "name": "turn-repeated-events",
+  "description": "repeated events send nothing new",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "agent_settled"
+   }
+  ]
+ },
+ {
+  "name": "start-twice",
+  "description": "session_start always reports",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "start-mid-turn",
+  "description": "a reload mid-turn starts as working",
+  "ctx": {
+   "idle": false
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_settled",
+    "ctx": {
+     "idle": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "settled-while-running",
+  "description": "agent_settled with isIdle() false is ignored",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled",
+    "ctx": {
+     "idle": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "settled-idle-throws",
+  "description": "isIdle() throws at agent_settled",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled",
+    "ctx": {
+     "idle": "throws"
+    }
+   },
+   {
+    "op": "agent_settled",
+    "ctx": {
+     "idle": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "start-idle-throws",
+  "description": "isIdle() throws at session_start: the handler fails, the session is still the root",
+  "ctx": {
+   "idle": "throws"
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled",
+    "ctx": {
+     "idle": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "events-before-start",
+  "description": "agent events before session_start are ignored",
+  "steps": [
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "early"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "resume-changes-mid-turn",
+  "description": "the same state is reported again when the resume command changed",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_start",
+    "ctx": {
+     "file": "/home/user/.pig/agent/sessions/two.jsonl"
+    }
+   },
+   {
+    "op": "agent_start",
+    "ctx": {
+     "file": "/home/user/.pig/agent/sessions/two.jsonl"
+    }
+   },
+   {
+    "op": "agent_settled"
+   }
+  ]
+ },
+ {
+  "name": "resume-posix-file",
+  "description": "an absolute posix file",
+  "ctx": {
+   "file": "/h/s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-windows-file",
+  "description": "an absolute Windows file",
+  "ctx": {
+   "file": "C:\\Users\\u\\s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-windows-forward",
+  "description": "a Windows file with forward slashes",
+  "ctx": {
+   "file": "D:/u/s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-unc",
+  "description": "a UNC file",
+  "ctx": {
+   "file": "\\\\srv\\share\\s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-relative",
+  "description": "a relative file falls back to the id",
+  "ctx": {
+   "file": "s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-drive-relative",
+  "description": "C:s.jsonl is relative",
+  "ctx": {
+   "file": "C:s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-apostrophe",
+  "description": "an apostrophe in the file",
+  "ctx": {
+   "file": "/h/o'b/s.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-control",
+  "description": "a control character in the file",
+  "ctx": {
+   "file": "/h/a\u0001b.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-tab",
+  "description": "a tab in the file",
+  "ctx": {
+   "file": "/h/a\tb.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-del",
+  "description": "DEL in the file",
+  "ctx": {
+   "file": "/h/ab.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-c1",
+  "description": "a C1 control is allowed",
+  "ctx": {
+   "file": "/h/ab.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-line-separator",
+  "description": "U+2028 in the file is allowed and sent raw",
+  "ctx": {
+   "file": "/h/a b.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-quote-and-unicode",
+  "description": "quotes and non-ASCII",
+  "ctx": {
+   "file": "/h/\"q\" é 😀.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-in-memory",
+  "description": "no file: pig --session <id>",
+  "ctx": {
+   "file": null,
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-file-throws",
+  "description": "getSessionFile throws",
+  "ctx": {
+   "file": "throws",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-id-throws",
+  "description": "getSessionId throws, the file is fine",
+  "ctx": {
+   "file": "/h/s.jsonl",
+   "id": "throws"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-both-throw",
+  "description": "both throw: no resume command",
+  "ctx": {
+   "file": "throws",
+   "id": "throws"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-unsafe-both",
+  "description": "an unsafe file and an unsafe id",
+  "ctx": {
+   "file": "/h/o'b/s.jsonl",
+   "id": "it's"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-none",
+  "description": "neither a file nor an id",
+  "ctx": {
+   "file": null,
+   "id": null
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-empty-id",
+  "description": "an empty id",
+  "ctx": {
+   "file": null,
+   "id": ""
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-id-with-space",
+  "description": "an id with a space is safe",
+  "ctx": {
+   "file": null,
+   "id": "a b"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "resume-long-file",
+  "description": "no length rule",
+  "ctx": {
+   "file": "/h/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.jsonl",
+   "id": "abc"
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ]
+ },
+ {
+  "name": "bus-basic",
+  "description": "blocked with a label, then idle",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "approve command"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-while-working",
+  "description": "blocked during a turn returns to working",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "agent_settled"
+   }
+  ]
+ },
+ {
+  "name": "bus-counter",
+  "description": "two holders, the latest label, then released",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "B"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "C"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-same-label-twice",
+  "description": "an equal string label is not reported twice",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "same"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "same"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-object-label-twice",
+  "description": "label objects are never ===",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": {
+      "k": 1
+     }
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": {
+      "k": 1
+     }
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-array-label",
+  "description": "an array label",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": [
+      1,
+      "a"
+     ]
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-null-then-missing",
+  "description": "a null label then a missing label",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": null
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-empty",
+  "description": "label empty",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": ""
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-number",
+  "description": "label number",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": 7
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-fraction",
+  "description": "label fraction",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": 1.5
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-big",
+  "description": "label big",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": 12345678901234567000
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-negative-zero",
+  "description": "label negative-zero",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": 0
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-true",
+  "description": "label true",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": true
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-specials",
+  "description": "label specials",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "a<b>&c\nd\te f g\u0001hi\"j\\k"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-unicode",
+  "description": "label unicode",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "é 😀"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-label-long",
+  "description": "label long",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-true",
+  "description": "active true",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-one",
+  "description": "active 1",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": 1,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-string",
+  "description": "active \"yes\"",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": "yes",
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-object",
+  "description": "active {}",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": {},
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-array",
+  "description": "active []",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": [],
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-zero",
+  "description": "active 0",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": 0,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-empty-string",
+  "description": "active \"\"",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": "",
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-null",
+  "description": "active null",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": null,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-false",
+  "description": "active false",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-negative",
+  "description": "active -1",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": -1,
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-active-text-false",
+  "description": "active \"false\"",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": "false",
+     "label": "L"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-no-active",
+  "description": "no active member releases",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "label": "x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-payload-string",
+  "description": "a string payload",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": "active"
+   }
+  ]
+ },
+ {
+  "name": "bus-payload-number",
+  "description": "a number payload",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": 3
+   }
+  ]
+ },
+ {
+  "name": "bus-payload-null",
+  "description": "a null payload",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": null
+   }
+  ]
+ },
+ {
+  "name": "bus-payload-array",
+  "description": "a array payload",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": [
+     true
+    ]
+   }
+  ]
+ },
+ {
+  "name": "bus-payload-true",
+  "description": "a true payload",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": true
+   }
+  ]
+ },
+ {
+  "name": "bus-release-with-nothing",
+  "description": "a release with nothing held keeps the counter at zero",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   }
+  ]
+ },
+ {
+  "name": "bus-in-rpc",
+  "description": "the signal in rpc mode",
+  "mode": "rpc",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "x"
+    }
+   }
+  ]
+ },
+ {
+  "name": "shutdown-reload",
+  "description": "shutdown reason reload does not release",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "reload"
+   },
+   {
+    "op": "agent_start"
+   }
+  ]
+ },
+ {
+  "name": "shutdown-new",
+  "description": "shutdown reason new does not release",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "new"
+   },
+   {
+    "op": "agent_start"
+   }
+  ]
+ },
+ {
+  "name": "shutdown-resume",
+  "description": "shutdown reason resume does not release",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "resume"
+   },
+   {
+    "op": "agent_start"
+   }
+  ]
+ },
+ {
+  "name": "shutdown-fork",
+  "description": "shutdown reason fork does not release",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "fork"
+   },
+   {
+    "op": "agent_start"
+   }
+  ]
+ },
+ {
+  "name": "shutdown-other",
+  "description": "shutdown reason other does not release",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "other"
+   },
+   {
+    "op": "agent_start"
+   }
+  ]
+ },
+ {
+  "name": "shutdown-no-reason",
+  "description": "a shutdown without a reason",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown"
+   }
+  ]
+ },
+ {
+  "name": "quit",
+  "description": "quit releases once",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "agent_settled"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "late"
+    }
+   }
+  ]
+ },
+ {
+  "name": "quit-after-resume-shutdown",
+  "description": "a resume shutdown and then quit, as the original's test does",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "resume"
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "quit-never-started",
+  "description": "quit before any session_start",
+  "steps": [
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "quit-blocked",
+  "description": "quit while blocked drops nothing queued after it",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit"
+   }
+  ]
+ },
+ {
+  "name": "second-session-start",
+  "description": "a second session_start on one instance does not reset the blocked counters: it reports blocked with the new resume command",
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "held"
+    }
+   },
+   {
+    "op": "shutdown",
+    "reason": "new"
+   },
+   {
+    "op": "start",
+    "ctx": {
+     "file": "/x/s2.jsonl",
+     "id": "s2"
+    }
+   },
+   {
+    "op": "agent_start"
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    }
+   },
+   {
+    "op": "agent_settled"
+   }
+  ]
+ },
+ {
+  "name": "retry-after-close",
+  "description": "the first connection ends without an answer",
+  "server": {
+   "behaviors": [
+    "close"
+   ]
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start",
+    "waitMs": 200
+   }
+  ],
+  "finalMs": 300
+ },
+ {
+  "name": "retry-after-silence",
+  "description": "the first attempt gets no answer in 0.5 s",
+  "server": {
+   "behaviors": [
+    "silent"
+   ]
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ],
+  "finalMs": 1000
+ },
+ {
+  "name": "both-attempts-fail",
+  "description": "no answer twice: two attempts and no third",
+  "server": {
+   "behaviors": [
+    "silent",
+    "silent"
+   ]
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ],
+  "finalMs": 2400
+ },
+ {
+  "name": "both-close",
+  "description": "the connection ends twice",
+  "server": {
+   "behaviors": [
+    "close",
+    "close"
+   ]
+  },
+  "steps": [
+   {
+    "op": "start"
+   }
+  ],
+  "finalMs": 300
+ },
+ {
+  "name": "quit-behind-hung-herdr",
+  "description": "release behind a hung herdr",
+  "server": {
+   "behaviors": [
+    "silent",
+    "silent",
+    "silent",
+    "silent"
+   ]
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit",
+    "waitMs": 100
+   }
+  ],
+  "finalMs": 4500
+ },
+ {
+  "name": "coalesce-behind-slow-herdr",
+  "description": "only the newest state is sent behind a slow herdr",
+  "server": {
+   "delayMs": 300
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start",
+    "waitMs": 0
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": true,
+     "label": "A"
+    },
+    "waitMs": 0
+   },
+   {
+    "op": "bus",
+    "data": {
+     "active": false
+    },
+    "waitMs": 0
+   },
+   {
+    "op": "agent_settled",
+    "waitMs": 0
+   }
+  ],
+  "finalMs": 900
+ },
+ {
+  "name": "queued-resume-at-send",
+  "description": "a queued state carries the resume command current when it is sent",
+  "server": {
+   "delayMs": 300
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start",
+    "ctx": {
+     "file": "/h/two.jsonl"
+    },
+    "waitMs": 0
+   }
+  ],
+  "finalMs": 700
+ },
+ {
+  "name": "quit-drops-queued",
+  "description": "quit drops a queued report; the release does not wait for the one in flight",
+  "server": {
+   "delayMs": 400
+  },
+  "steps": [
+   {
+    "op": "start"
+   },
+   {
+    "op": "agent_start",
+    "waitMs": 0
+   },
+   {
+    "op": "shutdown",
+    "reason": "quit",
+    "waitMs": 0
+   }
+  ],
+  "finalMs": 1000
+ }
+]
