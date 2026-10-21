@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strings"
 	"unicode/utf16"
+	"unicode/utf8"
+	"unsafe"
 )
 
 // Port of the parts of Node's `path` module (lib/path.js, v24) the original reads through `PathFlavor.impl`: resolve, normalize,
@@ -628,8 +630,38 @@ func (p *PlatformPath) Relative(from, to string) string {
 	return out + to[toStart+lastCommonSep:]
 }
 
-func u16(s string) []uint16 { return utf16.Encode([]rune(s)) }
-func s16(u []uint16) string { return string(utf16.Decode(u)) }
+// u16 is the UTF-16 code units of s (an invalid byte reads as U+FFFD, as []rune does). A path is nearly always ASCII, which is one unit per
+// byte: the loop skips the rune slice and the encoder (two allocations and two passes) that the general case needs.
+func u16(s string) []uint16 {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return utf16.Encode([]rune(s))
+		}
+	}
+	u := make([]uint16, len(s))
+	for i := 0; i < len(s); i++ {
+		u[i] = uint16(s[i])
+	}
+	return u
+}
+
+// s16 is the string of UTF-16 code units u (a lone surrogate reads as U+FFFD, as utf16.Decode does). All units below 0x80 become the
+// bytes of the string with one allocation.
+func s16(u []uint16) string {
+	for _, c := range u {
+		if c >= utf8.RuneSelf {
+			return string(utf16.Decode(u))
+		}
+	}
+	if len(u) == 0 {
+		return ""
+	}
+	b := make([]byte, len(u))
+	for i, c := range u {
+		b[i] = byte(c)
+	}
+	return unsafe.String(&b[0], len(b))
+}
 
 func win32Relative(fromArg, toArg string) string {
 	if fromArg == toArg {
