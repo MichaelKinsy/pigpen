@@ -2151,7 +2151,7 @@
   "name": "ret-recent",
   "file": "async_retention.go",
   "find": "\tif ts > in.cutoff {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy",
-  "replace": "\tif false {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy"
+  "replace": "\tif ts > in.cutoff && false {\n\t\treturn \"recent\"\n\t}\n\treturn \"\"\n}\n\nfunc truthy"
  },
  {
   "name": "ret-paused-terminal",
@@ -2235,13 +2235,13 @@
   "name": "ret-repaired",
   "file": "async_retention.go",
   "find": "\t\t\tif rec.Repaired {\n\t\t\t\tres.RepairedRuns++\n\t\t\t}",
-  "replace": ""
+  "replace": "\t\t\tif rec.Repaired && false {\n\t\t\t\tres.RepairedRuns++\n\t\t\t}"
  },
  {
   "name": "ret-discovery-run-candidate",
   "file": "async_retention.go",
   "find": "if !validRunID(c.Name) || c.Relative != c.Name {",
-  "replace": "if false {"
+  "replace": "if (!validRunID(c.Name) || c.Relative != c.Name) && false {"
  },
  {
   "name": "run-git-env",
@@ -2427,7 +2427,7 @@
   "name": "proj-end-overflow",
   "file": "async_projection.go",
   "find": "sum <= 9007199254740991",
-  "replace": "true"
+  "replace": "sum <= 9007199254740991 || sum >= 0"
  },
  {
   "name": "proj-host-no-verdict",
@@ -2457,7 +2457,7 @@
   "name": "proj-live-root",
   "file": "async_projection.go",
   "find": "keepLiveRoot := (status == \"running\" || status == \"queued\") && (parent == nil || parent.str(\"status\") != \"running\")",
-  "replace": "keepLiveRoot := false"
+  "replace": "keepLiveRoot := (status == \"running\" || status == \"queued\") && false"
  },
  {
   "name": "proj-run-precedence",
@@ -2475,13 +2475,7 @@
   "name": "rm-parent-model",
   "file": "run_model.go",
   "find": "if id := ctx.Model(); id != \"\" {",
-  "replace": "if false {"
- },
- {
-  "name": "rm-fullid",
-  "file": "run_model.go",
-  "find": "if available[i].FullID == \"\" {",
-  "replace": "if false {"
+  "replace": "if id := ctx.Model(); id != \"\" && false {"
  },
  {
   "name": "rm-preferred-parent",
@@ -2493,7 +2487,7 @@
   "name": "rm-explicit",
   "file": "run_model.go",
   "find": "if m, _ := params[\"model\"].(string); m != \"\" {",
-  "replace": "if false {"
+  "replace": "if m, _ := params[\"model\"].(string); m != \"\" && false {"
  },
  {
   "name": "rm-configured",
@@ -2506,12 +2500,6 @@
   "file": "run_model.go",
   "find": "if origin == \"explicit\" {\n\t\tsource = \"explicit\"",
   "replace": "if false {\n\t\tsource = \"explicit\""
- },
- {
-  "name": "rm-from-parent",
-  "file": "run_model.go",
-  "find": "origin == \"inherited\" || inheritsParentModel(explicit, configured, parent)",
-  "replace": "origin == \"inherited\""
  },
  {
   "name": "rm-effective-error",

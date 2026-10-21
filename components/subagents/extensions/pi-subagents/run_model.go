@@ -14,11 +14,6 @@ func resolveRunModel(ctx sdk.Context, d Discovery, a *AgentConfig, params map[st
 		parent = &ParentModel{Provider: ctx.ModelProvider(), ID: id}
 	}
 	available := availableModels(ctx)
-	for i := range available {
-		if available[i].FullID == "" {
-			available[i].FullID = available[i].Provider + "/" + available[i].ID
-		}
-	}
 	preferred := a.ModelProvider
 	if preferred == "" && parent != nil {
 		preferred = parent.Provider
@@ -41,7 +36,7 @@ func resolveRunModel(ctx sdk.Context, d Discovery, a *AgentConfig, params map[st
 		return "", err
 	}
 	selection, err := resolveModelSelection(primary, available, preferred, &ResolveModelSelectionOptions{Scope: scopes,
-		PrimaryModelFromParent: origin == "inherited" || inheritsParentModel(explicit, configured, parent), Origin: origin})
+		PrimaryModelFromParent: origin == "inherited", Origin: origin})
 	if err != nil {
 		return "", err
 	}

@@ -182,7 +182,7 @@ func TestAsyncResumeTwins(t *testing.T) {
 		writeJ(t, filepath.Join(r.asyncRoot, "run-stopped", "status.json"), jm{"runId": "run-stopped", "mode": "single", "state": "stopped", "stopped": true, "startedAt": 100, "endedAt": 200, "lastUpdate": 200, "cwd": r.root,
 			"sessionFile": sf, "steps": []any{jm{"agent": "worker", "status": "stopped", "stopped": true, "sessionFile": sf}}})
 		_, err := resolve(r, id("run-stopped"), resumeOptions{})
-		wantErr(t, err, `stopped and cannot be resumed`)
+		wantErr(t, err, `Async run 'run-stopped' was stopped and cannot be resumed\. Start a new run instead`)
 	})
 	tw(t, f, "rejects ambiguous run id prefixes", func(t *testing.T) {
 		r := mk(t)
