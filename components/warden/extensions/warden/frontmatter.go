@@ -110,7 +110,7 @@ func yamlKey(raw string) (string, error) {
 // yamlValue resolves one value: rest is what follows the colon, block the lines nested under the key.
 func yamlValue(rest string, block []string) (any, error) {
 	if rest == "" || strings.HasPrefix(rest, "#") {
-		if hasContent(block) {
+		if yamlHasContent(block) {
 			return []any{}, nil // a nested mapping or list: not a string, not true
 		}
 		return nil, nil
@@ -144,7 +144,7 @@ func yamlValue(rest string, block []string) (any, error) {
 	case '&', '*', '!':
 		return nil, errFrontmatter
 	}
-	if hasContent(block) && strings.HasPrefix(strings.TrimSpace(firstContent(block)), "- ") {
+	if yamlHasContent(block) && strings.HasPrefix(strings.TrimSpace(firstContent(block)), "- ") {
 		return nil, errFrontmatter
 	}
 	// Plain scalar, folded over its continuation lines.
@@ -160,7 +160,7 @@ func yamlValue(rest string, block []string) (any, error) {
 	return yamlPlain(text), nil
 }
 
-func hasContent(block []string) bool { return firstContent(block) != "" }
+func yamlHasContent(block []string) bool { return firstContent(block) != "" }
 
 func firstContent(block []string) string {
 	for _, l := range block {

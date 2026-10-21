@@ -75,11 +75,11 @@ func TestConscienceSelectedToolFailureTriggersOneTurnEndReassessment(t *testing.
 	if _, content, ok := csMessage(r); !ok || !strings.Contains(content, `"search_graph" tool`) {
 		t.Fatalf("a tool is recommended: %v", r)
 	}
-	before := len(e.requests())
+	before := len(e.conscienceRequests())
 	e.toolCall("search_graph", "t1", map[string]any{"q": "x"})
 	e.toolResult("search_graph", map[string]any{"q": "x"}, "boom", true)
 	e.host.Fire("turn_end", map[string]any{"turnIndex": 1})
-	if len(e.requests()) <= before {
+	if len(e.conscienceRequests()) <= before {
 		t.Error("the failure earns a re-assessment")
 	}
 	tr := e.traceText()
@@ -95,11 +95,11 @@ func TestConscienceSelectedToolFailureTriggersOneTurnEndReassessment(t *testing.
 	e2.mu.Unlock()
 	e2.set(csAdvance(3))
 	e2.prompt("find the loader", nil)
-	b2 := len(e2.requests())
+	b2 := len(e2.conscienceRequests())
 	e2.toolCall("search_graph", "t1", map[string]any{"q": "x"})
 	e2.toolResult("search_graph", map[string]any{"q": "x"}, "found", false)
 	e2.host.Fire("turn_end", map[string]any{"turnIndex": 1})
-	if len(e2.requests()) != b2 || !strings.Contains(e2.traceText(), "tool_succeeded: search_graph") {
+	if len(e2.conscienceRequests()) != b2 || !strings.Contains(e2.traceText(), "tool_succeeded: search_graph") {
 		t.Errorf("a success needs no re-assessment:\n%s", e2.traceText())
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -855,14 +854,6 @@ var platformOnlyDescriptions = []struct {
 }{
 	{"win32", lazyRE(`(?i)\bwindows[- ]only\b|\bonly (?:on|for) windows\b`)},
 	{"darwin", lazyRE(`(?i)\b(?:macos|mac os|os x)[- ]only\b|\bonly (?:on|for) (?:macos|mac os|os x)\b`)},
-}
-
-// nodePlatform is process.platform for this process.
-func nodePlatform() string {
-	if runtime.GOOS == "windows" {
-		return "win32"
-	}
-	return runtime.GOOS
 }
 
 // isPlatformIneligibleTool: the tool name or a description binds it to a platform other than `platform`.

@@ -90,6 +90,17 @@ func (e *csExt) judge(Config, *Budget) (Judge, error) {
 	}), nil
 }
 
+// conscienceRequests are the judge requests that are the conscience's (the other guards share the judge).
+func (e *csExt) conscienceRequests() []Request {
+	var out []Request
+	for _, r := range e.requests() {
+		if _, ok := r.Questions[conscienceDispositionID]; ok {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
 func (e *csExt) set(answers map[string]any) {
 	e.mu.Lock()
 	e.answers = answers
