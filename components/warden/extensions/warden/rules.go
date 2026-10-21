@@ -145,9 +145,12 @@ func severityOf(s string) int {
 }
 
 func slug(name string, used map[string]bool) string {
-	// JavaScript's toLowerCase maps İ to "i" and a combining dot; Go's maps it to a bare "i".
-	full := reNonSlug.ReplaceAllString(strings.ToLower(strings.ReplaceAll(name, "İ", "i\u0307")), "-")
-	full = strings.Trim(full, "-")
+	full, ascii := slugText(name)
+	if !ascii {
+		// JavaScript's toLowerCase maps İ to "i" and a combining dot; Go's maps it to a bare "i".
+		full = reNonSlug.ReplaceAllString(strings.ToLower(strings.ReplaceAll(name, "İ", "i\u0307")), "-")
+		full = strings.Trim(full, "-")
+	}
 	base := full
 	if len(full) > ruleIDLimit {
 		// Cut at a word boundary so a long heading keeps whole words in its id.
@@ -206,22 +209,6 @@ func taggedLines(markdown string) []taggedLine {
 	return out
 }
 
-// headingMatch is reHeading.FindStringSubmatch: a heading starts with `#` at the first byte of the line.
-func headingMatch(text string) []string {
-	if text == "" || text[0] != '#' {
-		return nil
-	}
-	return reHeading.FindStringSubmatch(text)
-}
-
-// headerMatch is re.FindStringSubmatch for the header-line expressions, each of which needs a colon.
-func headerMatch(re *lazyRegexp, line string) []string {
-	if strings.IndexByte(line, ':') < 0 {
-		return nil
-	}
-	return re.FindStringSubmatch(line)
-}
-
 // condense cuts a fallback document to limit characters while keeping its shape: every heading stays and each section
 // keeps its head, so a rule stated in the last section of a very long AGENTS.md is still seen.
 func condense(text string, limit int) string {
@@ -235,7 +222,7 @@ func condense(text string, limit int) string {
 	}
 	sections := []*section{{}}
 	for _, line := range taggedLines(text) {
-		if !line.fenced && headingMatch(line.text) != nil {
+		if _, isHeading := headingMatch(line.text); !line.fenced && isHeading {
 			sections = append(sections, &section{heading: line.text, hasHeading: true})
 		} else {
 			last := sections[len(sections)-1]
@@ -279,7 +266,7 @@ func ruleLevel(lines []taggedLine) int {
 		if line.fenced {
 			continue
 		}
-		if m := headingMatch(line.text); m != nil && len(m[1]) < level {
+		if m, ok := headingMatch(line.text); ok && len(m[1]) < level {
 			level = len(m[1])
 		}
 	}
@@ -350,7 +337,7 @@ func parseRules(markdown string) []Rule {
 	var drafts []*draft
 	for _, line := range lines {
 		if !line.fenced {
-			if m := headingMatch(line.text); m != nil && len(m[1]) == level {
+			if m, ok := headingMatch(line.text); ok && len(m[1]) == level {
 				drafts = append(drafts, &draft{name: m[2]})
 				continue
 			}
@@ -382,7 +369,7 @@ func parseRules(markdown string) []Rule {
 			}
 			line := body[first]
 			remove := func() { body = append(body[:first], body[first+1:]...) }
-			if m := headerMatch(rePathsLine, line); m != nil {
+			if m, ok := headerMatch(headerPaths, line); ok {
 				remove()
 				if seenPaths {
 					warnings = append(warnings, "paths: appears more than once; the first is kept")
@@ -397,7 +384,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := headerMatch(reThresholdLn, line); m != nil {
+			if m, ok := headerMatch(headerThreshold, line); ok {
 				remove()
 				raw := jsTrim(cutBackticks(m[1]))
 				value := jsToNumber(raw)
@@ -416,7 +403,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := headerMatch(reSeverityLine, line); m != nil {
+			if m, ok := headerMatch(headerSeverity, line); ok {
 				remove()
 				raw := strings.ToLower(jsTrim(m[1]))
 				if seenSeverity {
@@ -434,7 +421,7 @@ func parseRules(markdown string) []Rule {
 				continue
 			}
 			// One small block for the `source: <file>:<line>` citation header, beside the other header lines.
-			if m := headerMatch(reSourceRef, line); m != nil {
+			if m, ok := headerMatch(headerSource, line); ok {
 				remove()
 				raw := jsTrim(cutBackticks(m[1]))
 				ref := reRefParts.FindStringSubmatch(raw)
@@ -458,7 +445,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := headerMatch(reWhenLine, line); m != nil {
+			if m, ok := headerMatch(headerWhen, line); ok {
 				remove()
 				raw := strings.ToLower(jsTrim(m[1]))
 				if seenWhen {
@@ -501,7 +488,7 @@ func isRuleShaped(markdown string) bool {
 		if line.fenced {
 			continue
 		}
-		if m := headingMatch(line.text); m != nil && len(m[1]) == level {
+		if m, ok := headingMatch(line.text); ok && len(m[1]) == level {
 			inSection = true
 			inBody = 0
 			continue
