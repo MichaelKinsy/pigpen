@@ -3,6 +3,7 @@ package tintinweb_subagents
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -46,6 +47,7 @@ type mentionRig struct {
 	cloneRan []mentionCloneOptions
 	cloneRes mentionCloneResult
 	cloneGo  chan struct{} // when set, the clone waits for it
+	over     chan struct{} // closed when the test ends: a call the host still owes the extension is dropped, not failed
 	ready    chan struct{} // closed once the rig is built: the host answers a call made while the session starts
 	provider string        // the id of the stacked autocomplete provider
 	below    func(op string) any
@@ -72,7 +74,7 @@ func startMention(t *testing.T, b mentionBoot) *mentionRig {
 	for name, body := range b.agentFiles {
 		writeFile(t, filepath.Join(cwd, ".pi", "agents", name+".md"), body)
 	}
-	m := &mentionRig{cwd: cwd, conv: []any{}, ready: make(chan struct{}), cloneRes: mentionCloneResult{Spawned: true}}
+	m := &mentionRig{cwd: cwd, conv: []any{}, over: make(chan struct{}), ready: make(chan struct{}), cloneRes: mentionCloneResult{Spawned: true}}
 	m.rig = startRigIn2(t, cwd, b.mode, func(a *app) {
 		if !b.realClone {
 			a.cloneFn = func(ctx context.Context, o mentionCloneOptions) mentionCloneResult {
@@ -91,6 +93,7 @@ func startMention(t *testing.T, b mentionBoot) *mentionRig {
 	m.fleet.session = b.session
 	m.fleet.mu.Unlock()
 	close(m.ready)
+	t.Cleanup(func() { close(m.over) })
 	return m
 }
 
@@ -110,10 +113,10 @@ func (m *mentionRig) host(method string, args map[string]any) (any, string, bool
 		// The editor installs its rebuilt chain before the call returns: the extension drops a factory the host
 		// never invoked. The host answers calls off its read loop, so waiting here holds nothing.
 		<-m.ready
-		raw, failure := m.rig.Host.roundTrip(obj{"method": "autocomplete.sync", "args": obj{
+		raw, failure, ok := m.rig.Host.roundTripUntil(m.over, obj{"method": "autocomplete.sync", "args": obj{
 			"id": "wrap-" + id, "factoryId": id, "operation": "wrap",
 			"current": obj{"id": "below", "triggerCharacters": []string{"@", "#"}, "hasFileTrigger": false}}})
-		if failure == "" {
+		if ok && failure == "" {
 			var d struct {
 				ID string `json:"id"`
 			}
@@ -324,4 +327,26 @@ func (m *mentionRig) firstRequest(t *testing.T, seen *[]map[string]any) map[stri
 	}
 	t.Fatalf("the model was never asked; notifications: %q", m.notifies())
 	return nil
+}
+
+// roundTripUntil is roundTrip for a request made off the test's goroutine: it gives up quietly when stop closes, where
+// roundTrip would fail a test that has already ended.
+func (h *Host) roundTripUntil(stop <-chan struct{}, request map[string]any) (json.RawMessage, string, bool) {
+	h.mu.Lock()
+	h.nextID++
+	id := fmt.Sprintf("r%d", h.nextID)
+	ch := make(chan json.RawMessage, 1)
+	h.pending[id] = ch
+	h.mu.Unlock()
+	h.write(map[string]any{"type": "request", "id": id, "request": request})
+	select {
+	case result := <-ch:
+		h.mu.Lock()
+		failure := h.failures[id]
+		h.mu.Unlock()
+		return result, failure, true
+	case <-stop:
+	case <-time.After(10 * time.Second):
+	}
+	return nil, "", false
 }
