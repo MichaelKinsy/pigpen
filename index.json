@@ -419,7 +419,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-popular"
       },
-      "manifestSha256": "a0fd8e11ca9df082ee2d384087bc5f26721b01ad060a25d48b57d3b0b9f9afe7",
+      "manifestSha256": "4cfaed4f6e86e4719a203640eb274eeb5841375d41468eed5834c5d4d349ec88",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
