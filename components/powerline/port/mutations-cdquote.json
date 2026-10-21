@@ -1044,21 +1044,15 @@
   "replace": "sdk.WidgetOptions{\"placement\": \"aboveEditor\"}"
  },
  {
-  "name": "wire-dedupe-width",
-  "file": "cdquote_ext.go",
-  "find": "q.pushedAt == width && equalLines(q.pushed, lines)",
-  "replace": "equalLines(q.pushed, lines)"
- },
- {
   "name": "wire-dedupe-lines",
   "file": "cdquote_ext.go",
-  "find": "q.pushedAt == width && equalLines(q.pushed, lines)",
-  "replace": "q.pushedAt == width"
+  "find": "q.pushed != nil && equalLines(q.pushed, lines)",
+  "replace": "q.pushed != nil"
  },
  {
   "name": "wire-no-dedupe",
   "file": "cdquote_ext.go",
-  "find": "if !force && q.pushed != nil && q.pushedAt == width && equalLines(q.pushed, lines) {",
+  "find": "if !force && q.pushed != nil && equalLines(q.pushed, lines) {",
   "replace": "if false {"
  },
  {
