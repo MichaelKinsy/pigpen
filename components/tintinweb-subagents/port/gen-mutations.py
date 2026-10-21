@@ -324,7 +324,7 @@ m("stop-grace-missing", "runner.go", "case <-time.After(c.abortWait):\n\t\t\tc.k
 m("queued-abort-closes-unlocked", "manager.go", "r.closeDone() // under the lock: a resume that lands once the record is stopped replaces the channels\n\t\tm.mu.Unlock()", "m.mu.Unlock()\n\t\tr.closeDone()")
 m("run-panic-unrecovered", "manager.go", "if guard(\"agent run\", func() { m.run(r) }) {\n\t\t\tm.settlePanicked(r)\n\t\t}", "m.run(r)")
 m("panicked-run-keeps-its-slot", "manager.go", "m.releasePoolLocked(r)\n\tc, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()", "c, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()")
-m("cleanup-timer-not-started", "extension.go", "\t\ta.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))\n", "")
+m("cleanup-timer-not-started", "extension.go", "\t\ta.mgr.startGC(a.cleanupEvery)", "\t\t_ = a.cleanupEvery")
 m("cleanup-every-hour", "extension.go", "cleanupEvery    = time.Minute ", "cleanupEvery    = time.Hour ")
 m("cleanup-ignores-age", "manager.go", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) && false {\n\t\t\tcontinue")
 m("cleanup-removes-running", "manager.go", "if r.Status == statusRunning || r.Status == statusQueued {\n\t\t\tcontinue\n\t\t}\n\t\tif !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {", "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {")
