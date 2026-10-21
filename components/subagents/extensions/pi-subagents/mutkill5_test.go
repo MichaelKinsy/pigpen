@@ -64,3 +64,9 @@ func TestAdvertisementRefreshReadsAnEditThatKeepsSizeAndTime(t *testing.T) {
 	a.refresh()
 	eq(t, a.snapshot()[0].Description, "BBB", "the refresh rediscovers from the files")
 }
+
+func TestThinkingSuffixOfAModelThatCarriesOne(t *testing.T) {
+	eq(t, applyThinkingSuffix("glm-5.2:high", "low", false), "glm-5.2:high", "an existing level stays")
+	eq(t, applyThinkingSuffix("glm-5.2:high", "low", true), "glm-5.2:low", "an existing level is replaced on request")
+	eq(t, applyThinkingSuffix("glm-5.2", "low", false), "glm-5.2:low", "a level is added")
+}
