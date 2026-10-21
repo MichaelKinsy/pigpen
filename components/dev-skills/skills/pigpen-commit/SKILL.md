@@ -4,8 +4,8 @@ description: "Read this skill before making git commits"
 license: Apache-2.0
 ---
 
-Adapted from mitsuhiko/agent-stuff `skills/commit` (Apache-2.0); see the Package's
-CREDITS.md. **This file was changed from the original:** the body is strongly
+Adapted from `skills/commit/SKILL.md` of mitsuhiko/agent-stuff at 0865c84 (Apache-2.0); see
+the Package's CREDITS.md. **This file was changed from the original:** the body is strongly
 encouraged rather than optional, and the format rules were tightened.
 
 Create a git commit for the current changes using Conventional Commits format with a **polished, highly descriptive** message.
