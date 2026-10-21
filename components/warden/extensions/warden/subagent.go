@@ -72,27 +72,82 @@ func NewReports(entries []SubagentEntry, seen map[string]bool, limit int) []Suba
 // deserve a turn of their own.
 var reTrouble = &lazyRegexp{expr: `(?i)\b(?:fail(?:ed|ure|s)?|error(?:s|ed)?|blocked|stopped|crash(?:ed)?|timeout|timed out|aborted|interrupted|declined|denied|could not|couldn't|cannot|incomplete|unfinished|non-?zero|exit(?:ed)? (?:code )?[1-9])\b|\bneeds (?:a )?(?:decision|answer|input|approval|attention|clarification)\b|\bwaiting (?:for|on) (?:you|the user|input|instructions)\b|\b(?:asks|requires) (?:you|the user)\b`}
 
-// troubleRoots are literal starts of the alternatives of reTrouble, lower case: a text with none of them cannot match.
-var troubleRoots = []string{"fail", "error", "block", "stop", "crash", "timeout", "timed out", "abort", "interrupt", "declined", "denied", "could not", "couldn't", "cannot", "incomplete", "unfinished", "non", "exit", "needs", "waiting", "asks you", "asks the user", "requires you", "requires the user"}
+// troubleWordStart reports whether the ASCII text s, which starts at a word start, begins like one of the
+// alternatives of reTrouble (every alternative starts with `\b` and a letter): a text without such a word cannot
+// match.
+func troubleWordStart(s string) bool {
+	switch s[0] | 0x20 {
+	case 'f':
+		return foldPrefix(s, "fail")
+	case 'e':
+		return foldPrefix(s, "error") || foldPrefix(s, "exit")
+	case 'b':
+		return foldPrefix(s, "block")
+	case 's':
+		return foldPrefix(s, "stop")
+	case 'c':
+		return foldPrefix(s, "crash") || foldPrefix(s, "could not") || foldPrefix(s, "couldn't") || foldPrefix(s, "cannot")
+	case 't':
+		return foldPrefix(s, "timeout") || foldPrefix(s, "timed out")
+	case 'a':
+		return foldPrefix(s, "abort") || foldPrefix(s, "asks you") || foldPrefix(s, "asks the user")
+	case 'i':
+		return foldPrefix(s, "interrupt") || foldPrefix(s, "incomplete")
+	case 'd':
+		return foldPrefix(s, "declined") || foldPrefix(s, "denied")
+	case 'u':
+		return foldPrefix(s, "unfinished")
+	case 'n':
+		return foldPrefix(s, "non") || foldPrefix(s, "needs")
+	case 'w':
+		return foldPrefix(s, "waiting")
+	case 'r':
+		return foldPrefix(s, "requires you") || foldPrefix(s, "requires the user")
+	}
+	return false
+}
+
+// troublePairs holds, per first byte (either case), the bit set of second letters with which an alternative of
+// reTrouble can start (fa, er, ex, bl, st, cr, co, ca, ti, ab, as, in, de, un, no, ne, wa, re): most words of a
+// report fail this test and cost no call. troubleWord is `\w` for ASCII bytes.
+var troublePairs, troubleWord = func() (pairs [256]uint32, word [256]bool) {
+	for _, p := range []string{"fa", "er", "ex", "bl", "st", "cr", "co", "ca", "ti", "ab", "as", "in", "de", "un", "no", "ne", "wa", "re"} {
+		bit := uint32(1) << (p[1] - 'a')
+		pairs[p[0]] |= bit
+		pairs[p[0]-'a'+'A'] |= bit
+	}
+	for c := range 128 {
+		word[c] = isWordByte(byte(c))
+	}
+	return pairs, word
+}()
 
 // MentionsTrouble reports whether the text names a failure, blocker or question. A report is read once per
-// settle and is mostly clean, so a plain ASCII text without any of the alternatives' first words skips the
-// regular expression (case folding of non-ASCII text is left to it).
+// settle and is mostly clean, so one pass over an ASCII text looks for a word that starts like an alternative and
+// calls the regular expression only then. A non-ASCII text goes straight to it (its case folding is the
+// expression's).
 func MentionsTrouble(text string) bool {
-	if isASCII(text) {
-		lower := strings.ToLower(text)
-		found := false
-		for _, r := range troubleRoots {
-			if strings.Contains(lower, r) {
-				found = true
-				break
+	for i := 0; i < len(text); {
+		c := text[i]
+		if c >= 0x80 {
+			return reTrouble.MatchString(text)
+		}
+		if !troubleWord[c] {
+			i++
+			continue
+		}
+		// A word starts here (the byte before is not a word byte): test it, then skip to its end.
+		if mask := troublePairs[c]; mask != 0 && i+1 < len(text) {
+			if d := (text[i+1] | 0x20) - 'a'; d < 26 && mask>>d&1 != 0 && troubleWordStart(text[i:]) {
+				return reTrouble.MatchString(text)
 			}
 		}
-		if !found {
-			return false
+		i++
+		for i < len(text) && troubleWord[text[i]] {
+			i++
 		}
 	}
-	return reTrouble.MatchString(text)
+	return false
 }
 
 // triageQuestions is the one question asked about a report (subagent.ts `triageQuestion`).
