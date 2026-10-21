@@ -5,10 +5,13 @@
 set -u
 ROUNDS=${1:-10}
 NCPU=${2:-4}
-W=/work/components/permissions
+W=${W:-/work/components/permissions}
+ORACLE=${ORACLE:-$W/port/oracle}
 cd $W/extensions/pi-permission-system
-printf 'go 1.26\nuse %s/extensions/pi-permission-system\nreplace github.com/MichaelKinsy/PiG/extensions/sdk => %s\n' "$W" "${PIG_SDK_DIR:-/pigsrc/extensions/sdk}" > /tmp/go.work.bpb
-export GOWORK=/tmp/go.work.bpb
+if [ -z "${GOWORK:-}" ]; then  # a caller that has a go.work (the repo's scripts/go-modules.mjs writes one) exports GOWORK
+  printf 'go 1.26\nuse %s/extensions/pi-permission-system\nreplace github.com/MichaelKinsy/PiG/extensions/sdk => %s\n' "$W" "${PIG_SDK_DIR:-/pigsrc/extensions/sdk}" > /tmp/go.work.bpb
+  export GOWORK=/tmp/go.work.bpb
+fi
 go test -c -o /tmp/bpb.test . 2>&1 | tail -3
 SET=$(python3 - "$NCPU" <<'PY'
 import sys, time, os
@@ -27,12 +30,14 @@ print(",".join(map(str, sorted(best))))
 PY
 )
 echo "CPUSET $SET"; cat /proc/loadavg
-pkg=$W/port/oracle/packages/pi-permission-system
+pkg=$ORACLE/packages/pi-permission-system
 cp $W/port/bashprogram-diff/bench.test.ts $pkg/test/zz-bashprogram-bench.test.ts
 trap 'rm -f $pkg/test/zz-bashprogram-bench.test.ts' EXIT
 for r in $(seq 1 "$ROUNDS"); do
   echo "GO round $r"; taskset -c "$SET" /tmp/bpb.test -test.run XXX -test.bench BenchmarkBashProgram -test.benchtime 300ms 2>&1 | grep -E "^Benchmark"
-  echo "NODE round $r"; (cd $pkg && BENCH_IN=$W/port/bashprogram-diff/bench-inputs.json taskset -c "$SET" node_modules/.bin/vitest run test/zz-bashprogram-bench.test.ts 2>&1 | grep '^BENCH')
+  echo "NODE round $r"; rm -f /tmp/bpb-node.json
+  (cd $pkg && BENCH_OUT=/tmp/bpb-node.json BENCH_IN=$W/port/bashprogram-diff/bench-inputs.json taskset -c "$SET" node_modules/.bin/vitest run test/zz-bashprogram-bench.test.ts > /tmp/bpb-node.log 2>&1)
+  if [ -s /tmp/bpb-node.json ]; then echo "BENCH $(cat /tmp/bpb-node.json)"; else echo "NODE ROUND FAILED (no result file); vitest output:"; cat /tmp/bpb-node.log; fi
 done
 cat /proc/loadavg
 echo "== done"
