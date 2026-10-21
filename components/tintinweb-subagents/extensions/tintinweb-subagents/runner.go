@@ -585,18 +585,11 @@ var abortGrace = 10 * time.Second
 // the agent can be resumed (the original's `session.abort()` leaves the session as it is); one whose conversation is in
 // a file, which a resume reopens, is ended. upstream: agent-manager.ts abort.
 func (c *rpcChild) abort() {
+	c.readPercentBeforeStop()
 	if !c.keep {
 		c.mu.Lock()
 		c.killed = true // before the abort is sent: the process may exit on it, and the run is then aborted, not lost
 		c.mu.Unlock()
-		// The kill ends the child: read what a stopped agent still reports (its context percent) while it can answer.
-		if m, err := c.callWithin(map[string]any{"type": "get_session_stats"}, 2*time.Second); err == nil {
-			d, _ := m["data"].(map[string]any)
-			p := contextPercentOf(d)
-			c.mu.Lock()
-			c.percent = p
-			c.mu.Unlock()
-		}
 		_, _ = c.call(map[string]any{"type": "abort"})
 		terminate(c.cmd)
 		return
@@ -614,6 +607,18 @@ func (c *rpcChild) abort() {
 			c.kill()
 		}
 	})
+}
+
+// readPercentBeforeStop reads what a stopped agent still reports (its context percent) while the child can answer: a
+// kill ends it, and an in-memory conversation may be ended later by the grace.
+func (c *rpcChild) readPercentBeforeStop() {
+	if m, err := c.callWithin(map[string]any{"type": "get_session_stats"}, 2*time.Second); err == nil {
+		d, _ := m["data"].(map[string]any)
+		p := contextPercentOf(d)
+		c.mu.Lock()
+		c.percent = p
+		c.mu.Unlock()
+	}
 }
 
 // kill ends the child's process, and with it its conversation.

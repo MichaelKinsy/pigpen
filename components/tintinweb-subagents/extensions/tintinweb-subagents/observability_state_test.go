@@ -206,7 +206,7 @@ func TestReadingAFinishedResultMarksItConsumed(t *testing.T) {
 }
 
 func TestTheSettingsNoticeIsShownOncePerText(t *testing.T) {
-	r := startObsRig(t, obsWorkspace(t, `{"scopeModels": true}`, ""))
+	r := startObsRig(t, obsWorkspace(t, `{"showModel": true}`, ""))
 	eq(t, len(notices(r)), 1)
 	r.Fire("session_start", obj{"reason": "reload"})
 	r.Fire("session_start", obj{"reason": "reload"})

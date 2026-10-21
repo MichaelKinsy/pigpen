@@ -200,6 +200,7 @@ func TestAChildReadsItsSchemaFromAPrivateFileOfAnyLength(t *testing.T) {
 	_, _ = c.wait()
 	b, _ := os.ReadFile(seen)
 	eq(t, string(b), schema)
+	c.close() // an in-memory conversation outlives its run: the process ends when the manager closes it
 	for _, kv := range os.Environ() {
 		eq(t, strings.HasPrefix(kv, structuredSchemaFileEnv+"="), false) // the parent's own environment is untouched
 	}

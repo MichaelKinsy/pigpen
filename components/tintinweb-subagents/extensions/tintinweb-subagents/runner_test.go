@@ -240,7 +240,7 @@ func fakePig(mode string) {
 			out.Encode(map[string]any{"type": "tool_execution_start"})
 			// Two assistant messages with usage, as a provider reports them.
 			for i := 0; i < 2; i++ {
-				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "step"}},
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "fake answer to " + os.Getenv("FAKE_PIG_TAG")}},
 					"usage": map[string]any{"input": 30, "output": 12, "cacheRead": 5, "cacheWrite": 3, "cost": map[string]any{"total": 0.01}}}})
 				out.Encode(map[string]any{"type": "turn_end"})
 			}
