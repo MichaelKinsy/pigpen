@@ -1,8 +1,6 @@
 package websearch
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -84,19 +82,10 @@ func loadBrowserCookieSelection() (BrowserCookieSelection, error) {
 		return *geminiWebConfigCached, nil
 	}
 	path := ConfigPath()
-	data, err := os.ReadFile(path)
+	raw, err := readLenientConfig()
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			geminiWebConfigCached = &BrowserCookieSelection{}
-			return BrowserCookieSelection{}, nil
-		}
 		return BrowserCookieSelection{}, err
 	}
-	var parsed any
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return BrowserCookieSelection{}, fmt.Errorf("Failed to parse %s: %s", path, jsonErrorText(err))
-	}
-	raw, _ := parsed.(map[string]any)
 	if _, has := raw["chromeProfile"]; has {
 		return BrowserCookieSelection{}, fmt.Errorf("chromeProfile in %s is no longer supported; use browserCookies.profile", path)
 	}
@@ -116,23 +105,15 @@ func BrowserCookieSelectionFromConfig() (BrowserCookieSelection, error) {
 
 // IsBrowserCookieAccessAllowed is isBrowserCookieAccessAllowed: browser cookies are read only
 // when the user switched them on, by environment or by allowBrowserCookies. It reads the
-// configuration at every call and validates nothing but its JSON syntax.
+// configuration at every call (through the stat-validated config cache) and validates nothing
+// but its JSON syntax.
 func IsBrowserCookieAccessAllowed() (bool, error) {
 	if os.Getenv("PI_ALLOW_BROWSER_COOKIES") == "1" || os.Getenv("FEYNMAN_ALLOW_BROWSER_COOKIES") == "1" {
 		return true, nil
 	}
-	path := ConfigPath()
-	data, err := os.ReadFile(path)
+	raw, err := readLenientConfig()
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return false, nil
-		}
 		return false, err
 	}
-	var parsed any
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return false, fmt.Errorf("Failed to parse %s: %s", path, jsonErrorText(err))
-	}
-	raw, _ := parsed.(map[string]any)
 	return raw["allowBrowserCookies"] == true, nil
 }
