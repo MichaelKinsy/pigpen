@@ -35,7 +35,7 @@ var (
 func isEditTool(tool string) bool { return tool == "edit" || tool == "write" }
 
 func evClip(value string, limit int) string {
-	v := jsTrim(reJSSpace.ReplaceAllString(value, " "))
+	v := jsTrim(collapseSpaceRuns(value))
 	return utf16Slice(v, 0, limit)
 }
 
@@ -85,11 +85,16 @@ type ParsedFailure struct {
 var reEvExitCode = &lazyRegexp{expr: `(?im)(?:exited with code|exit code:?|exit status|Error)\s+(\d+)\s*$`}
 
 func evExitCode(text string) *int {
-	m := reEvExitCode.FindAllStringSubmatch(text, -1)
-	if len(m) == 0 {
+	digits := ""
+	if isASCII(text) {
+		digits = asciiExitCode(text)
+	} else if m := reEvExitCode.FindAllStringSubmatch(text, -1); len(m) > 0 {
+		digits = m[len(m)-1][1]
+	}
+	if digits == "" {
 		return nil
 	}
-	n, err := strconv.Atoi(m[len(m)-1][1])
+	n, err := strconv.Atoi(digits)
 	if err != nil {
 		return nil
 	}
@@ -154,11 +159,6 @@ var (
 	reCargoPanic   = &lazyRegexp{expr: `panicked at (\S+?):\n((?:.+\n?){1,3})`}
 	reCargoSummary = &lazyRegexp{expr: `(?m)^test result: FAILED\. (.+?); finished`}
 	reNotePrefix   = &lazyRegexp{expr: `^note:`}
-	reGoFail       = &lazyRegexp{expr: `(?m)^\s*--- FAIL: (\S+)`}
-	reGoBuild      = &lazyRegexp{expr: `(?m)^(\S+\.go):(\d+):(\d+): (.+)$`}
-	reGoDetail     = &lazyRegexp{expr: `(?m)^\s+(\S+_test\.go:\d+): (.+)$`}
-	reGoPackage    = &lazyRegexp{expr: `(?m)^FAIL\t(\S+)(?:\t| \[)`}
-	reGoBuildFail  = &lazyRegexp{expr: `\[build failed\]`}
 	rePyFailed     = &lazyRegexp{expr: `(?m)^(?:FAILED|ERROR) (\S+)(?: - (.+))?$`}
 	rePySummary    = &lazyRegexp{expr: `(\d+ failed(?:, \d+ passed)?(?:, \d+ errors?)?) in [\d.]+s`}
 	rePyE          = &lazyRegexp{expr: `(?m)^E[ \t]+(\S.*)$`}
@@ -177,8 +177,6 @@ var (
 	reTapLocation  = &lazyRegexp{expr: `(?m)^\s+location:\s*'?(.+?)'?$`}
 	reTapSpec      = &lazyRegexp{expr: `(?m)^\s*✖ (.+?)(?: \([\d.]+m?s\))?$`}
 	reTapSpecSkip  = &lazyRegexp{expr: `(?i)^failing tests:?$|^\d+ problems? \(`}
-	reTapFail      = &lazyRegexp{expr: `(?m)^# fail (\d+)$`}
-	reTapTests     = &lazyRegexp{expr: `(?m)^# tests (\d+)$`}
 	rePwHead       = &lazyRegexp{expr: `(?m)^\s+\d+\) \[([^\]]+)\] › (.+?) ─+$`}
 	rePwHeadLine   = &lazyRegexp{expr: `^\s+\d+\) \[[^\]]+\] › `}
 	rePwStop       = &lazyRegexp{expr: `^\s+\d+\) \[|^\s+\d+ failed$`}
@@ -285,38 +283,54 @@ var evParsers = []evParser{
 		return parsedFields{failing: tests, errors: errs, location: loc, summary: summary}, true
 	}},
 	{"go", []string{"--- FAIL:", ".go:"}, func(text string) (parsedFields, bool) {
-		fails := col(subs(reGoFail, text), 1)
-		build := subs(reGoBuild, text)
+		var fails, detailMsgs, packages []string
+		type buildError struct{ file, line, msg string }
+		var build []buildError
+		detailLoc := ""
+		var seen map[string]bool
+		eachLine(text, func(line string, _ int, prevBlank bool) bool {
+			if name, ok := goFailName(line); ok {
+				fails = append(fails, name)
+			}
+			if file, ln, _, msg, ok := goBuildError(line); ok {
+				build = append(build, buildError{file, ln, msg})
+			}
+			if loc, msg, ok := goTestDetail(line, prevBlank); ok {
+				if len(detailMsgs) == 0 {
+					detailLoc = loc
+				}
+				detailMsgs = append(detailMsgs, msg)
+			}
+			if pkg, ok := goFailPackage(line); ok && !seen[pkg] {
+				if seen == nil {
+					seen = map[string]bool{}
+				}
+				seen[pkg] = true
+				packages = append(packages, pkg)
+			}
+			return true
+		})
 		if len(fails) == 0 && len(build) == 0 {
 			return parsedFields{}, false
 		}
-		details := subs(reGoDetail, text)
-		var packages []string
-		seen := map[string]bool{}
-		for _, m := range subs(reGoPackage, text) {
-			if !seen[m[1]] {
-				seen[m[1]] = true
-				packages = append(packages, m[1])
-			}
-		}
 		var errs []string
-		if len(details) > 0 {
-			errs = col(details, 2)
+		if len(detailMsgs) > 0 {
+			errs = detailMsgs
 		} else {
 			for _, m := range build {
-				errs = append(errs, m[1]+": "+m[4])
+				errs = append(errs, m.file+": "+m.msg)
 			}
 		}
 		loc := ""
-		if len(details) > 0 {
-			loc = details[0][1]
+		if len(detailMsgs) > 0 {
+			loc = detailLoc
 		} else if len(build) > 0 {
-			loc = build[0][1] + ":" + build[0][2]
+			loc = build[0].file + ":" + build[0].line
 		}
 		summary := ""
 		if len(packages) > 0 {
 			summary = "FAIL " + strings.Join(packages, ", ")
-			if reGoBuildFail.MatchString(text) {
+			if strings.Contains(text, "[build failed]") {
 				summary += " [build failed]"
 			}
 		}
@@ -421,10 +435,10 @@ var evParsers = []evParser{
 		if len(failing) == 0 && len(spec) == 0 {
 			return parsedFields{}, false
 		}
-		fail := firstGroup(reTapFail, text)
+		fail := lineDigitsAfter(text, "# fail ")
 		summary := ""
 		if fail != "" {
-			tests := firstGroup(reTapTests, text)
+			tests := lineDigitsAfter(text, "# tests ")
 			if tests == "" {
 				tests = "undefined"
 			}
@@ -621,48 +635,38 @@ func ParseFailure(text string) ParsedFailure {
 var failureNoise = []struct {
 	re   *lazyRegexp
 	repl string
-	// digits: the expression needs a digit to match, so a text without one skips it.
-	digits bool
+	// need is the bit of noiseFlags that the expression cannot match without: a text without it skips the step.
+	need uint32
 }{
-	{&lazyRegexp{expr: `(?:/private)?/(?:tmp|var/folders)/[^\s'"):]+`}, "<tmp>", false},
-	{&lazyRegexp{expr: `\bpytest-\d+\b`}, "pytest-#", true},
-	{&lazyRegexp{expr: `\.tmp[0-9a-zA-Z]+`}, ".tmp#", false},
-	{&lazyRegexp{expr: `\b\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?Z?`}, "<time>", true},
-	{&lazyRegexp{expr: `\b\d{2}:\d{2}:\d{2}\b`}, "<time>", true},
-	{&lazyRegexp{expr: `\brun=[0-9a-f]{6,}\b`}, "run=#", false},
-	{&lazyRegexp{expr: `\b\d+(?:\.\d+)?\s*(?:ms|s|m|h|µs|us|ns)\b`}, "#t", true},
-	{&lazyRegexp{expr: `0x[0-9a-fA-F]+`}, "0x#", true},
-	{&lazyRegexp{expr: `\(\d+\)`}, "(#)", true},
-	{&lazyRegexp{expr: `\d{5,}`}, "#", true},
-	{&lazyRegexp{expr: `:\d+(?::\d+)?\b`}, ":#", true},
-	{&lazyRegexp{expr: `\(\d+,\d+\)`}, "(#)", true},
-}
-
-func hasDigit(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] >= '0' && s[i] <= '9' {
-			return true
-		}
-	}
-	return false
+	{&lazyRegexp{expr: `(?:/private)?/(?:tmp|var/folders)/[^\s'"):]+`}, "<tmp>", noiseTmp},
+	{&lazyRegexp{expr: `\bpytest-\d+\b`}, "pytest-#", noisePytest},
+	{&lazyRegexp{expr: `\.tmp[0-9a-zA-Z]+`}, ".tmp#", noiseDotTmp},
+	{&lazyRegexp{expr: `\b\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:[.,]\d+)?)?Z?`}, "<time>", noiseDate},
+	{&lazyRegexp{expr: `\b\d{2}:\d{2}:\d{2}\b`}, "<time>", noiseTime},
+	{&lazyRegexp{expr: `\brun=[0-9a-f]{6,}\b`}, "run=#", noiseRun},
+	{&lazyRegexp{expr: `\b\d+(?:\.\d+)?\s*(?:ms|s|m|h|µs|us|ns)\b`}, "#t", noiseDuration},
+	{&lazyRegexp{expr: `0x[0-9a-fA-F]+`}, "0x#", noiseHex},
+	{&lazyRegexp{expr: `\(\d+\)`}, "(#)", noiseParenNumber},
+	{&lazyRegexp{expr: `\d{5,}`}, "#", noiseFiveDigits},
+	{&lazyRegexp{expr: `:\d+(?::\d+)?\b`}, ":#", noiseColonNumber},
+	{&lazyRegexp{expr: `\(\d+,\d+\)`}, "(#)", noiseParenPair},
 }
 
 // NormaliseFailureText normalises what changes between identical runs: durations, clock times and dates,
 // addresses, long numbers, thread ids, temp paths, and line:column positions. Other digits stay, so "expected 3"
 // and "expected 4" still differ.
 func NormaliseFailureText(value string) string {
-	digits := hasDigit(value)
+	flags := noiseFlags(value)
 	for _, n := range failureNoise {
-		if n.digits && !digits {
+		if flags&n.need == 0 {
 			continue
 		}
-		value = n.re.ReplaceAllString(value, n.repl)
-		if n.repl == "<tmp>" || n.repl == ".tmp#" {
-			// A replacement can add digits, never remove the need: recompute only when it matters.
-			digits = hasDigit(value)
+		if next := n.re.ReplaceAllString(value, n.repl); next != value {
+			value = next
+			flags = noiseFlags(value)
 		}
 	}
-	return jsTrim(reJSSpace.ReplaceAllString(value, " "))
+	return jsTrim(collapseSpaceRuns(value))
 }
 
 // marshalPlain is JSON.stringify: no HTML escaping.
