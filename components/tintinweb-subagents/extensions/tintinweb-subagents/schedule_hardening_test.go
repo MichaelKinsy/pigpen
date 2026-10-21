@@ -492,7 +492,7 @@ func TestTheScheduleParameterTextIsTheOriginals(t *testing.T) {
 
 func TestADateStringIsAOneShotCronAsCronerReadsIt(t *testing.T) {
 	withLocal(t, "UTC")
-	now := time.Date(2029, 12, 31, 8, 30, 0, 0, time.UTC)
+	now := time.Date(2030, 1, 1, 8, 30, 0, 0, time.UTC)
 	for in, want := range map[string]string{
 		"Tue Jan 01 2030 10:00:00 GMT+0100": "2030-01-01T09:00:00.000Z",
 		"Tue, 01 Jan 2030 10:00:00 GMT":     "2030-01-01T10:00:00.000Z",
