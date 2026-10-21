@@ -253,6 +253,8 @@ func TestGhostUpdaterCoalescesUpdates(t *testing.T) {
 	bashWaitFor(t, func() bool { return slow.current() != nil })
 	eq(t, slow.current().Value, "fresh", "the newer result wins")
 	bashWaitFor(t, cancelled.Load)
+	time.Sleep(150 * time.Millisecond) // the cancelled update has returned by now; its result must not replace the newer one
+	eq(t, slow.current().Value, "fresh", "a stale result is dropped")
 
 	// clear cancels the context of an update that is in flight.
 	inflight := make(chan context.Context, 1)

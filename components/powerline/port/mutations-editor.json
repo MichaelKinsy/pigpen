@@ -27,7 +27,7 @@
   "name": "fast-autocomplete-guard",
   "file": "editor_chrome.go",
   "find": "if err != nil || showing {",
-  "replace": "if err != nil {"
+  "replace": "if err != nil || (showing && false) {"
  },
  {
   "name": "fast-cursor-column-threshold",
