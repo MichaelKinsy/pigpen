@@ -44,5 +44,6 @@ func (a *app) appliers() settingsAppliers {
 	ap.SetDisableDefaultAgents = func(b bool) { setDefaultsDisabled(b); a.reregisterAgents() }
 	ap.SetToolDescriptionMode = func(mode string) { a.update(func(rt *runtimeSettings) { rt.toolDescriptionMode = mode }) }
 	ap.SetFallbackSubagent = func(v string) { setFallbackSubagent(&v) }
+	ap.SetRememberAgents = func(b bool) { a.mu.Lock(); a.rememberAgents = b; a.mu.Unlock() }
 	return ap
 }

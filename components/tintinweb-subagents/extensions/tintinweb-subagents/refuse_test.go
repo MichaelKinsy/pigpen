@@ -44,8 +44,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 	}{
 		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
 		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
-		{"inherit_context", obj{"inherit_context": true}, "inheriting the parent conversation (inherit_context)"},
-		{"resume", obj{"resume": "explore"}, "resuming a finished agent's session (resume)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -84,19 +82,10 @@ func agentFileRig(t *testing.T, frontmatter string) *rig {
 
 func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 	cases := []struct{ name, frontmatter, feature string }{
-		{"inherit_context", "inherit_context: true", "inheriting the parent conversation (inherit_context in the agent file)"},
 		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
 		{"memory", "memory: project", "persistent agent memory (memory: project)"},
 		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
-		{"ext selectors", "tools: read, ext:web", "extension tool selectors (ext: in tools)"},
-		{"disallowed_tools", "disallowed_tools: bash", "disallowed_tools"},
-		{"extensions list", "extensions: foo, bar", "an extension allow-list (extensions)"},
-		{"exclude_extensions", "exclude_extensions: foo", "exclude_extensions"},
-		{"skills false", "skills: false", "skill selection (skills)"},
-		{"skills list", "skills: a, b", "skill selection (skills)"},
-		{"persist_session", "persist_session: true", "persisted agent sessions (persist_session)"},
 		{"output_transcript", "output_transcript: true", "output transcripts (output_transcript)"},
-		{"session_dir", "session_dir: /tmp/x", "a session directory (session_dir)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -116,7 +105,7 @@ func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 		r := agentFileRig(t, "extensions: false\nskills: true\npersist_session: false\noutput_transcript: false\nisolation: off\ninherit_context: false\nmemory: none\nmax_turns: 4")
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "custom"})
 		c := r.fleet.wait(t, 1)[0]
-		eq(t, c.spec.Isolated, true)
+		eq(t, c.spec.NoExtensions, true)
 		eq(t, c.spec.MaxTurns, 4)
 	})
 }
@@ -127,10 +116,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		options obj
 		feature string
 	}{
-		{"isolated", obj{"isolated": true}, `the spawn RPC option "isolated"`},
 		{"isolation", obj{"isolation": "worktree"}, `the spawn RPC option "isolation"`},
-		{"inheritContext", obj{"inheritContext": true}, `the spawn RPC option "inheritContext"`},
-		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -153,7 +139,10 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		eq(t, r.app.mgr.list()[0].Alias, "scout") // the name option is honored
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
-		eq(t, r.app.mgr.resolve("scout") != nil, true) // the name reaches the record
+		recs := r.app.mgr.list()
+		eq(t, recs[0].Name, "scout") // the name is the agent's, and addresses it
+		eq(t, recs[0].Alias, "scout")
+		eq(t, r.app.mgr.resolve("scout") != nil, true)
 	})
 }
 
@@ -186,7 +175,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
-		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
@@ -211,6 +199,12 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true, "reportUsage": true}`)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true, showCost: true)")})
+	})
+	t.Run("the same settings are announced once", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		r.Fire("session_start", obj{"reason": "resume"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()

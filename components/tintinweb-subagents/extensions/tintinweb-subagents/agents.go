@@ -45,7 +45,7 @@ var readOnlyTools = []string{"read", "bash", "grep", "find", "ls"}
 func defaultAgents() *agentRegistry {
 	r := newRegistry()
 	r.set(&agentConfig{Name: "general-purpose", DisplayName: "Agent", Description: defaultGeneralPurposeDescription, Extensions: true, Skills: true,
-		SystemPrompt: defaultGeneralPurposePrompt, PromptMode: "append", IsDefault: true, Enabled: true})
+		SystemPrompt: "", PromptMode: "append", IsDefault: true, Enabled: true})
 	r.set(&agentConfig{Name: "Explore", DisplayName: "Explore", Description: defaultExploreDescription, BuiltinToolNames: readOnlyTools, Extensions: true, Skills: true,
 		Model: "anthropic/claude-haiku-4-5", SystemPrompt: defaultExplorePrompt, PromptMode: "replace", IsDefault: true, Enabled: true})
 	r.set(&agentConfig{Name: "Plan", DisplayName: "Plan", Description: defaultPlanDescription, BuiltinToolNames: readOnlyTools, Extensions: true, Skills: true,

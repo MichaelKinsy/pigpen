@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -27,7 +28,6 @@ const (
 	defaultMaxConcurrent           = 10 // background agents running at once. upstream: agent-manager.ts DEFAULT_MAX_CONCURRENT
 	defaultMaxConcurrentForeground = 0  // 0: unlimited. upstream: DEFAULT_MAX_CONCURRENT_FOREGROUND
 	recordRetention                = 10 * time.Minute
-	cleanupInterval                = time.Minute
 	maxTombstones                  = 100 // evicted agents that stay addressable by name. upstream: MAX_TOMBSTONES
 )
 
@@ -56,32 +56,44 @@ type agentRecord struct {
 	ToolUses, Tokens, Turns     int
 	WrappedUp                   bool
 	Consumed                    bool   // the result was handed to the model, so its notification is not sent
-	SessionFile                 string // the conversation on disk, for a tombstone to reopen
+	SessionFile                 string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
 	JoinMode, GroupID           string // how the completion of a background agent is announced
 
 	spec          childSpec
 	child         child
-	done          chan struct{} // closed once the record is final (settled, or stopped while queued)
+	done          chan struct{} // closed once the record is final (settled, or stopped while queued); a resume replaces it
 	startGate     chan struct{} // closed when the record leaves the queue (started, stopped or the manager disposed)
-	gateOnce      sync.Once
-	doneOnce      sync.Once
-	cancel        context.CancelFunc
-	stopped       bool // stopped by the user or the parent (not a failure)
+	cancel        context.CancelFunc // ends the context the child was started with: its process lives no longer
+	stopped       bool               // stopped by the user or the parent (not a failure)
 	started       chan struct{}
-	startedOnce   sync.Once
+	settled       bool     // the run has settled: its status, result and slot are final (a resume waits for it)
 	pool          pool     // the pool this run was charged to when it started
 	pendingSteers []string // steers that arrived before the child existed
 	onSpawned     func(id string)
+	// resume is set while a resume of this agent is queued or running. foreground: the caller awaits the run and no
+	// notification is sent. upstream: agent-manager.ts resume, startResume.
+	resume *resumeRun
 }
 
 // topLevel: one of the session's own agents, not something another agent or a workflow owns. upstream: isTopLevelAgent.
 func (r *agentRecord) topLevel() bool { return r.ParentAgentID == "" && r.WorkflowID == "" }
 
-func (r *agentRecord) closeGate() { r.gateOnce.Do(func() { close(r.startGate) }) }
-
+// closeGate, closeStarted and closeDone close a record's channels unless they are closed. The caller holds m.mu, which
+// every close is under: a resume that lands once the record has settled replaces the channels.
+func (r *agentRecord) closeGate()    { closeOnce(r.startGate) }
+func (r *agentRecord) closeStarted() { closeOnce(r.started) }
 func (r *agentRecord) closeDone() {
-	r.startedOnce.Do(func() { close(r.started) })
-	r.doneOnce.Do(func() { close(r.done) })
+	closeOnce(r.started)
+	closeOnce(r.done)
+}
+
+// closeOnce closes ch unless it is closed. The caller holds m.mu.
+func closeOnce(ch chan struct{}) {
+	select {
+	case <-ch:
+	default:
+		close(ch)
+	}
 }
 
 type pool int
@@ -131,6 +143,13 @@ type spawnOptions struct {
 	OnQueued         func(id string, ahead int)
 	OnSpawned        func(id string) // the run was kicked off (also when it started from the queue)
 	Reclaim          *reclaim        // reopen a conversation under the handle it had
+	ResumeFile       string          // reopen this pi session file instead of starting a conversation
+}
+
+// resumeRun is one resume of an agent's conversation.
+type resumeRun struct {
+	prompt     string
+	background bool
 }
 
 type reclaim struct{ Handle, Alias string }
@@ -144,9 +163,10 @@ type manager struct {
 	runningBackground       int
 	runningForeground       int
 	queue                   []queueEntry
-	tombstones              map[string]*tombstone
-	tombOrder               []string // insertion order, which breaks ties for the oldest
+	tombstones              []*tombstone // evicted agents that can still be reopened, in the order they were evicted
 	start                   childStarter
+	// disposed is set when the session ends: a child that settles after it is closed, not kept.
+	disposed bool
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
 	now      func() time.Time
@@ -155,31 +175,41 @@ type manager struct {
 }
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
-	m := &manager{records: map[string]*agentRecord{}, tombstones: map[string]*tombstone{}, maxConcurrent: defaultMaxConcurrent,
+	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent,
 		maxConcurrentForeground: defaultMaxConcurrentForeground, start: start, onSettle: onSettle, now: time.Now}
-	m.startGC(cleanupInterval)
-	return m
 }
 
-// startGC sweeps old records every interval until dispose. upstream: the 60 s setInterval of the constructor.
+// startGC sweeps old records every interval until dispose (once: a second call while a sweep runs keeps it). The
+// session starts it. upstream: the 60 s setInterval of the constructor.
 func (m *manager) startGC(interval time.Duration) {
 	m.mu.Lock()
+	if m.stopGC != nil {
+		m.mu.Unlock()
+		return
+	}
 	m.stopGC, m.gcDone = make(chan struct{}), make(chan struct{})
 	stop, done := m.stopGC, m.gcDone
 	m.mu.Unlock()
-	go func() {
+	goGuarded("agent cleanup timer", func() {
 		defer close(done)
 		t := time.NewTicker(interval)
 		defer t.Stop()
 		for {
 			select {
 			case <-t.C:
-				m.cleanup()
+				guard("agent cleanup", m.cleanup)
 			case <-stop:
 				return
 			}
 		}
-	}()
+	})
+}
+
+// gcRunning reports whether the sweep runs.
+func (m *manager) gcRunning() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.stopGC != nil
 }
 
 func (m *manager) stopGCLoop() {
@@ -329,9 +359,10 @@ func (m *manager) resolveMention(name string) (live *agentRecord, tomb *tombston
 		return r, nil
 	}
 	wanted := strings.ToLower(name)
-	for _, t := range m.tombstones {
+	for _, t := range m.tombstones { // in the order they were evicted: the first that matches answers
 		if strings.ToLower(t.Handle) == wanted || strings.ToLower(t.Alias) == wanted || t.ID == name {
-			return nil, t
+			c := *t
+			return nil, &c
 		}
 	}
 	return nil, nil
@@ -344,13 +375,14 @@ func (m *manager) dropTombstone(handle string) {
 	m.mu.Unlock()
 }
 
-// listTombstones: the evicted agents whose conversation can still be reopened, newest first.
-func (m *manager) listTombstones() []*tombstone {
+// listTombstones: the evicted agents whose conversation can still be reopened, newest first (equal ages in the order
+// they were evicted).
+func (m *manager) listTombstones() []tombstone {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	out := make([]*tombstone, 0, len(m.tombstones))
+	out := make([]tombstone, 0, len(m.tombstones))
 	for _, t := range m.tombstones {
-		out = append(out, t)
+		out = append(out, *t)
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].CompletedAt.After(out[j].CompletedAt) })
 	return out
@@ -394,9 +426,15 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 // spawnWith creates an agent: it starts at once, or waits in the queue when its pool is full. A foreground agent is
 // not limited unless maxConcurrentForeground is set. upstream: agent-manager.ts spawn.
 func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOptions) *agentRecord {
+	if o.ResumeFile != "" {
+		spec.ResumeFile = o.ResumeFile
+	}
 	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: o.Name, Background: o.Background, Blocking: o.Blocking,
 		ParentAgentID: o.ParentAgentID, WorkflowID: o.WorkflowID, Depth: max(1, o.Depth), MaxSubagentDepth: o.MaxSubagentDepth, spec: spec, onSpawned: o.OnSpawned,
 		done: make(chan struct{}), started: make(chan struct{}), startGate: make(chan struct{}), StartedAt: m.now()}
+	if spec.SessionName != "" { // upstream: session.setSessionName(`${name}#${agentId.slice(0, 8)}`)
+		r.spec.SessionName = spec.SessionName + "#" + r.ID[:min(8, len(r.ID))]
+	}
 	r.Status = statusRunning
 	if o.Background {
 		r.Status = statusQueued
@@ -421,7 +459,7 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 		r.Status = statusQueued
 		if signalDone(o.Signal) {
 			// Never enqueue a spawn whose signal is already aborted: nothing would ever release it.
-			r.stopped, r.Status, r.CompletedAt = true, statusStopped, m.now()
+			r.stopped, r.Status, r.CompletedAt, r.settled = true, statusStopped, m.now(), true
 			r.closeGate()
 			r.closeDone()
 			m.mu.Unlock()
@@ -449,9 +487,54 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 	} else {
 		m.watchSignal(r, o.Signal)
 	}
-	go m.run(r)
+	m.launch(r)
 	r.fireSpawned()
 	return r
+}
+
+// launch runs an agent in a goroutine of its own. A panic in the run settles the agent as failed rather than ending
+// the extension.
+func (m *manager) launch(r *agentRecord) {
+	go func() {
+		if guard("agent run", func() { m.run(r) }) {
+			m.settlePanicked(r)
+		}
+	}()
+}
+
+// settlePanicked settles an agent whose run panicked, releasing what the run held and starting what that frees.
+func (m *manager) settlePanicked(r *agentRecord) {
+	m.mu.Lock()
+	if r.settled { // the run had settled: the panic was in what announces it
+		m.mu.Unlock()
+		return
+	}
+	r.Status, r.Error, r.CompletedAt, r.resume, r.settled = statusError, "internal error in the agent run", m.now(), nil, true
+	m.releasePoolLocked(r)
+	c, cancel := r.child, r.cancel
+	r.child, r.cancel = nil, nil
+	r.closeDone()
+	after := m.drainLocked()
+	m.mu.Unlock()
+	if c != nil {
+		c.close()
+	}
+	if cancel != nil {
+		cancel()
+	}
+	runAll(after)
+}
+
+// releasePoolLocked gives back the slot of the pool the record was charged to when its run started. The caller holds
+// m.mu. A released record has no pool: the release happens once, here and nowhere else.
+func (m *manager) releasePoolLocked(r *agentRecord) {
+	switch r.pool {
+	case poolBackground:
+		m.runningBackground--
+	case poolForeground:
+		m.runningForeground--
+	}
+	r.pool = poolNone
 }
 
 func signalDone(sig <-chan struct{}) bool {
@@ -483,6 +566,7 @@ func (m *manager) watchSignal(r *agentRecord, sig <-chan struct{}) {
 func (m *manager) claimLocked(r *agentRecord) {
 	r.pool = m.poolFor(r)
 	r.Status = statusRunning
+	r.settled = false
 	r.StartedAt = m.now()
 	switch r.pool {
 	case poolBackground:
@@ -524,26 +608,75 @@ func (m *manager) drainLocked() []func() {
 			continue
 		}
 		m.claimLocked(next)
-		after = append(after, func() { go m.run(next); next.fireSpawned() })
+		after = append(after, func() { m.launch(next); next.fireSpawned() })
 	}
 }
 
-// run executes one agent to completion, then releases its slot and starts the next queued agent.
+// run executes one agent to completion, then releases its slot and starts the next queued agent. The child is bound to
+// a context that lives until the child is closed: a child that keeps its conversation in memory outlives the run, so
+// that resume can continue it (the original keeps the AgentSession on the record until cleanup).
 func (m *manager) run(r *agentRecord) {
 	ctx, cancel := context.WithCancel(context.Background())
 	m.mu.Lock()
-	r.cancel = cancel // abort reads it under the lock
+	old, oldCancel := r.child, r.cancel // the child of an earlier run, which a resume may continue
+	r.cancel = cancel                   // abort reads it under the lock, while the child starts
+	rr := r.resume
+	spec := r.spec
 	m.mu.Unlock()
-	c, err := m.start(ctx, r.spec)
-	r.startedOnce.Do(func() { close(r.started) })
+	var c child
+	var err error
+	if rr != nil {
+		c, err = m.reopen(ctx, r, rr)
+	} else {
+		if spec.InheritContext != nil { // built when the run starts, so a queued agent sees the later conversation
+			var pc string
+			if pc, err = spec.InheritContext(); err == nil {
+				spec.Prompt = pc + spec.Prompt
+			}
+		}
+		if err == nil {
+			c, err = m.start(ctx, spec)
+		}
+	}
+	var replaced child
+	var replacedCancel context.CancelFunc
+	unused := cancel // the context of this run when the child it started is not the one the agent holds
+	m.mu.Lock()
+	switch {
+	case err != nil:
+		r.cancel = oldCancel
+	case c == old: // the same process took the prompt
+		r.cancel = oldCancel
+	default:
+		r.cancel, unused = cancel, nil
+		if old != nil {
+			replaced, replacedCancel = old, oldCancel
+		}
+	}
+	var steers []string
+	if err == nil {
+		r.child = c
+		if f := c.sessionFile(); f != "" {
+			r.SessionFile = f
+		}
+		steers = r.pendingSteers
+		r.pendingSteers = nil
+	}
+	stop := r.stopped
+	done := r.done // this run's: a resume that lands once the record has settled replaces it
+	r.closeStarted()
+	m.mu.Unlock()
+	if replaced != nil {
+		replaced.close()
+	}
+	if replacedCancel != nil {
+		replacedCancel()
+	}
+	if unused != nil {
+		unused()
+	}
 	var res *childResult
 	if err == nil {
-		m.mu.Lock()
-		r.child = c
-		stop := r.stopped
-		steers := r.pendingSteers
-		r.pendingSteers = nil
-		m.mu.Unlock()
 		for _, msg := range steers { // the steers that arrived before the child existed, in order
 			_ = c.steer(msg)
 		}
@@ -552,6 +685,7 @@ func (m *manager) run(r *agentRecord) {
 		}
 		res, err = c.wait()
 	}
+	alive := c != nil && err == nil && c.alive() // an in-memory conversation outlives its run
 	m.mu.Lock()
 	if r.CompletedAt.IsZero() {
 		r.CompletedAt = m.now()
@@ -575,28 +709,38 @@ func (m *manager) run(r *agentRecord) {
 		r.Status = statusCompleted
 	}
 	if res != nil {
-		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
+		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Tokens, res.Turns, res.WrappedUp
 	}
 	// A foreground agent's result is delivered inline, so nothing is left to announce.
 	if !r.Background {
 		r.Consumed = true
 	}
-	switch r.pool { // released here and nowhere else: abort only fires the child's stop, so freeing in both would double-free
-	case poolBackground:
-		m.runningBackground--
-	case poolForeground:
-		m.runningForeground--
+	r.resume, r.settled = nil, true
+	m.releasePoolLocked(r) // released here and nowhere else: abort only fires the child's stop, so freeing in both would double-free
+	// The process ends with its run unless the agent still holds a conversation in it (and the session is going on).
+	var closing child
+	var closingCancel context.CancelFunc
+	if c != nil && (!alive || m.disposed) {
+		closingCancel, r.cancel = r.cancel, nil
+		if alive {
+			closing = c
+		}
 	}
 	m.mu.Unlock()
-	cancel()
+	if closing != nil {
+		closing.close()
+	}
+	if closingCancel != nil {
+		closingCancel()
+	}
 	m.abortOwnedChildren(r.ID)
-	if m.onSettle != nil {
+	if m.onSettle != nil && (rr == nil || rr.background) { // a foreground resume is not announced
 		m.onSettle(r)
 	}
 	m.mu.Lock()
 	after := m.drainLocked()
+	closeOnce(done)
 	m.mu.Unlock()
-	r.closeDone()
 	runAll(after)
 }
 
@@ -610,12 +754,19 @@ func (m *manager) abortOwnedChildren(parentID string) {
 	}
 }
 
-// awaitStartup waits until the agent has been started (it may be queued first), or fails.
+// awaitStartup waits until the agent has been started, or fails. An agent that is still queued is not waited for: the
+// original resolves at once for one that is already running, still queued or unknown (agent-manager.ts awaitStartup).
 func (m *manager) awaitStartup(r *agentRecord, timeout time.Duration) error {
-	select {
-	case <-r.started:
+	m.mu.Lock()
+	queued, started, done := r.Status == statusQueued, r.started, r.done
+	m.mu.Unlock()
+	if queued {
 		return nil
-	case <-r.done:
+	}
+	select {
+	case <-started:
+		return nil
+	case <-done:
 		return nil
 	case <-time.After(timeout):
 		return errors.New("the agent did not start in time")
@@ -635,21 +786,22 @@ func (m *manager) spawnAndWait(typ, description string, spec childSpec, o spawnO
 // an error: a failing tool call would reject pi's whole batch of tool calls.
 func (m *manager) wait(r *agentRecord) {
 	m.mu.Lock()
-	queued := r.Status == statusQueued
+	queued, gate := r.Status == statusQueued, r.startGate
 	m.mu.Unlock()
 	if queued {
-		<-r.startGate
+		<-gate
 	}
 	m.mu.Lock()
-	disposed := r.Status == statusQueued // left the queue without starting: the manager was disposed
+	disposed, done := r.Status == statusQueued, r.done // left the queue without starting: the manager was disposed
 	m.mu.Unlock()
 	if !disposed {
-		<-r.done
+		<-done
 	}
 }
 
 // abort stops a running or queued agent; it reports false for one that is not. A running one is marked stopped at
-// once and settles when its child ends.
+// once and settles when its child ends; a child that keeps its conversation in memory is only told to stop its run:
+// the conversation stays resumable, as `session.abort()` leaves it in the original (agent-manager.ts abort).
 func (m *manager) abort(r *agentRecord) bool {
 	m.mu.Lock()
 	switch r.Status {
@@ -657,9 +809,9 @@ func (m *manager) abort(r *agentRecord) bool {
 		// No slot was taken, so none is freed, and no completion is announced: the blocking caller learns of the
 		// stop from its own tool result.
 		m.dequeueLocked(func(q queueEntry) bool { return q.r == r })
-		r.stopped, r.Status, r.CompletedAt = true, statusStopped, m.now()
+		r.stopped, r.Status, r.CompletedAt, r.resume, r.settled = true, statusStopped, m.now(), nil, true
+		r.closeDone() // under the lock: a resume that lands once the record is stopped replaces the channels
 		m.mu.Unlock()
-		r.closeDone()
 		return true
 	case statusRunning:
 		r.stopped, r.Status, r.CompletedAt = true, statusStopped, m.now()
@@ -721,13 +873,17 @@ func (m *manager) consume(id string) bool {
 	return true
 }
 
-// cleanup evicts the records that settled before the retention window. A running or queued record is never evicted,
-// however old its timestamp. upstream: agent-manager.ts cleanup.
-func (m *manager) cleanup() {
-	cutoff := m.now().Add(-recordRetention)
+// cleanup evicts the records that settled before the retention window, which also ends the processes that kept their
+// conversations. A running or queued record is never evicted, however old its timestamp. upstream: agent-manager.ts
+// cleanup (run every minute).
+func (m *manager) cleanup() { m.cleanupAt(m.now()) }
+
+// cleanupAt is cleanup for the clock reading `now`.
+func (m *manager) cleanupAt(now time.Time) {
+	cutoff := now.Add(-recordRetention)
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	for _, id := range append([]string{}, m.order...) {
+	var gone []string
+	for _, id := range m.order {
 		r := m.records[id]
 		if r.Status == statusRunning || r.Status == statusQueued {
 			continue
@@ -735,7 +891,11 @@ func (m *manager) cleanup() {
 		if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {
 			continue
 		}
-		m.removeLocked(r)
+		gone = append(gone, id)
+	}
+	m.mu.Unlock()
+	for _, id := range gone {
+		m.removeRecord(id)
 	}
 }
 
@@ -744,8 +904,8 @@ func (m *manager) cleanup() {
 // always go: a new session means new handles. upstream: agent-manager.ts clearCompleted.
 func (m *manager) clearCompleted(skipUnconsumed bool) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	for _, id := range append([]string{}, m.order...) {
+	var gone []string
+	for _, id := range m.order {
 		r := m.records[id]
 		if r.Status == statusRunning || r.Status == statusQueued {
 			continue
@@ -753,25 +913,49 @@ func (m *manager) clearCompleted(skipUnconsumed bool) {
 		if skipUnconsumed && !r.Consumed {
 			continue
 		}
-		m.removeLocked(r)
+		gone = append(gone, id)
 	}
-	m.tombstones, m.tombOrder = map[string]*tombstone{}, nil
+	m.mu.Unlock()
+	for _, id := range gone {
+		m.removeRecord(id)
+	}
+	m.mu.Lock()
+	m.tombstones = nil
+	m.mu.Unlock()
 }
 
-// removeLocked drops a record, leaving a tombstone when its conversation can be reopened. The caller holds m.mu.
-func (m *manager) removeLocked(r *agentRecord) {
+// removeRecord forgets an agent: its record, and the process that holds its conversation. What is left of it is a
+// tombstone when it has a handle and a session file. The caller holds no lock. upstream: agent-manager.ts removeRecord.
+func (m *manager) removeRecord(id string) {
+	m.mu.Lock()
+	r := m.records[id]
+	if r == nil {
+		m.mu.Unlock()
+		return
+	}
 	m.tombstoneLocked(r)
-	delete(m.records, r.ID)
-	for i, id := range m.order {
-		if id == r.ID {
+	delete(m.records, id)
+	for i, o := range m.order {
+		if o == id {
 			m.order = append(m.order[:i], m.order[i+1:]...)
 			break
 		}
 	}
+	c, cancel := r.child, r.cancel
+	r.child, r.cancel = nil, nil
+	m.mu.Unlock()
+	if c != nil {
+		c.close()
+	}
+	if cancel != nil {
+		cancel()
+	}
 }
 
 // tombstoneLocked keeps enough of a departing record for `@handle` to reopen its conversation: it needs a handle to
-// be addressed by and a session file to reopen. The oldest go once there are more than maxTombstones.
+// be addressed by and a session file to reopen (an in-memory session leaves no transcript). A handle that has a
+// tombstone keeps its place in the order (a JS Map.set). The oldest go first past the bound; of equal ages the
+// earliest kept. The caller holds m.mu.
 func (m *manager) tombstoneLocked(r *agentRecord) {
 	if r.Handle == "" || r.SessionFile == "" {
 		return
@@ -780,28 +964,30 @@ func (m *manager) tombstoneLocked(r *agentRecord) {
 	if completed.IsZero() {
 		completed = m.now()
 	}
-	if _, exists := m.tombstones[r.Handle]; !exists {
-		m.tombOrder = append(m.tombOrder, r.Handle)
+	t := &tombstone{Handle: r.Handle, Alias: r.Alias, ID: r.ID, Type: r.Type, Description: r.Description, SessionFile: r.SessionFile, CompletedAt: completed}
+	if i := m.tombstoneIndex(r.Handle); i >= 0 {
+		m.tombstones[i] = t
+	} else {
+		m.tombstones = append(m.tombstones, t)
 	}
-	m.tombstones[r.Handle] = &tombstone{Handle: r.Handle, Alias: r.Alias, ID: r.ID, Type: r.Type, Description: r.Description, SessionFile: r.SessionFile, CompletedAt: completed}
 	for len(m.tombstones) > maxTombstones {
-		oldest := m.tombstones[m.tombOrder[0]]
-		for _, h := range m.tombOrder {
-			if t := m.tombstones[h]; t.CompletedAt.Before(oldest.CompletedAt) {
-				oldest = t
+		oldest := 0
+		for i, o := range m.tombstones {
+			if o.CompletedAt.Before(m.tombstones[oldest].CompletedAt) {
+				oldest = i
 			}
 		}
-		m.dropTombstoneLocked(oldest.Handle)
+		m.tombstones = slices.Delete(m.tombstones, oldest, oldest+1)
 	}
 }
 
+func (m *manager) tombstoneIndex(handle string) int {
+	return slices.IndexFunc(m.tombstones, func(t *tombstone) bool { return t.Handle == handle })
+}
+
 func (m *manager) dropTombstoneLocked(handle string) {
-	delete(m.tombstones, handle)
-	for i, h := range m.tombOrder {
-		if h == handle {
-			m.tombOrder = append(m.tombOrder[:i], m.tombOrder[i+1:]...)
-			break
-		}
+	if i := m.tombstoneIndex(handle); i >= 0 {
+		m.tombstones = slices.Delete(m.tombstones, i, i+1)
 	}
 }
 
@@ -844,20 +1030,50 @@ func (m *manager) waitForAll() {
 			return
 		}
 		for _, r := range pending {
-			<-r.done
+			<-m.doneOf(r)
 		}
 	}
 }
 
-// dispose releases everyone waiting in the queue (a blocked caller must not hang), stops the GC and forgets the
-// records. upstream: agent-manager.ts dispose.
+// open starts a session on the manager: a child that settles from now on is kept again, if it holds a conversation.
+func (m *manager) open() {
+	m.mu.Lock()
+	m.disposed = false
+	m.mu.Unlock()
+}
+
+// dispose ends the session: every agent is stopped, every process that holds a conversation is closed, everyone waiting
+// in the queue is released (a blocked caller must not hang), the GC stops and the records are forgotten. upstream:
+// agent-manager.ts abortAll, dispose (index.ts session_shutdown).
 func (m *manager) dispose() {
 	m.stopGCLoop()
 	m.mu.Lock()
-	m.dequeueLocked(func(queueEntry) bool { return true })
-	m.records = map[string]*agentRecord{}
-	m.order = nil
+	m.disposed = true // a run that settles after this closes its child
 	m.mu.Unlock()
+	m.abortAll()
+	type held struct {
+		c      child
+		cancel context.CancelFunc
+	}
+	var all []held
+	m.mu.Lock()
+	m.dequeueLocked(func(queueEntry) bool { return true })
+	for _, r := range m.records {
+		if r.child != nil || r.cancel != nil {
+			all = append(all, held{r.child, r.cancel})
+			r.child, r.cancel = nil, nil
+		}
+	}
+	m.records, m.order, m.queue = map[string]*agentRecord{}, nil, nil
+	m.mu.Unlock()
+	for _, h := range all {
+		if h.c != nil {
+			h.c.close()
+		}
+		if h.cancel != nil {
+			h.cancel()
+		}
+	}
 }
 
 // isConsumed: whether the result was handed to the model.

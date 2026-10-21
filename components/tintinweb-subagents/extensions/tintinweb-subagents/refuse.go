@@ -28,19 +28,13 @@ func refusalText(feature string) string {
 }
 
 // unportedCallParam names the first Agent parameter of the original that is not ported, or "".
-// upstream: index.ts Agent parameters (schedule, isolation, resume, inherit_context).
+// upstream: index.ts Agent parameters (schedule, isolation).
 func unportedCallParam(p map[string]any) string {
 	if v, ok := p["schedule"]; ok && v != nil {
 		return "scheduled agent runs (the schedule parameter)"
 	}
 	if v, _ := p["isolation"].(string); v != "" && v != "off" {
 		return `worktree isolation (isolation: "` + v + `")`
-	}
-	if v, _ := p["inherit_context"].(bool); v {
-		return "inheriting the parent conversation (inherit_context)"
-	}
-	if v, _ := p["resume"].(string); v != "" {
-		return "resuming a finished agent's session (resume)"
 	}
 	return ""
 }
@@ -49,51 +43,22 @@ func unportedCallParam(p map[string]any) string {
 // upstream: src/custom-agents.ts, src/types.ts AgentConfig.
 func unportedAgentFeature(cfg *agentConfig) string {
 	switch {
-	case cfg.InheritContext != nil && *cfg.InheritContext:
-		return "inheriting the parent conversation (inherit_context in the agent file)"
 	case cfg.Isolation == "worktree":
 		return "worktree isolation (isolation: worktree in the agent file)"
 	case cfg.Memory != "":
 		return "persistent agent memory (memory: " + cfg.Memory + ")"
 	case cfg.AllowedSubagents != nil:
 		return "nested delegation (allowed_subagents)"
-	case len(cfg.ExtSelectors) > 0:
-		return "extension tool selectors (ext: in tools)"
-	case len(cfg.DisallowedTools) > 0:
-		return "disallowed_tools"
-	case !extensionsSupported(cfg.Extensions):
-		return "an extension allow-list (extensions)"
-	case len(cfg.ExcludeExtensions) > 0:
-		return "exclude_extensions"
-	case !skillsSupported(cfg.Skills):
-		return "skill selection (skills)"
-	case cfg.PersistSession != nil && *cfg.PersistSession:
-		return "persisted agent sessions (persist_session)"
 	case cfg.OutputTranscript != nil && *cfg.OutputTranscript:
 		return "output transcripts (output_transcript)"
-	case cfg.SessionDir != "":
-		return "a session directory (session_dir)"
 	}
 	return ""
 }
 
-// extensionsSupported: unset, true and false are honored (false starts the child with no extensions); a list is not.
-func extensionsSupported(v any) bool {
-	switch v.(type) {
-	case nil, bool:
-		return true
-	}
-	return false
-}
-
-// skillsSupported: unset and true (the child loads its own skills) are honored; false and a list are not.
-func skillsSupported(v any) bool {
-	b, ok := v.(bool)
-	return v == nil || (ok && b)
-}
-
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isBackground. upstream: agent-manager.ts SpawnOptions.
+// Honored: description, model, maxTurns, name, thinkingLevel, isolated, inheritContext, bypassQueue, isBackground;
+// dropped, as the original drops them: parentAgentId, workflowId, depth, maxSubagentDepth, configCwd, rootSessionId,
+// resumeSessionFile, reclaim, blocking. upstream: agent-manager.ts SpawnOptions, index.ts spawnTopLevel.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -106,7 +71,9 @@ func unportedSpawnOption(opts map[string]any) string {
 			continue
 		}
 		switch k {
-		case "description", "model", "maxTurns", "name", "thinkingLevel", "isBackground":
+		case "description", "model", "maxTurns", "name", "thinkingLevel", "isolated", "inheritContext", "bypassQueue", "isBackground":
+		case "parentAgentId", "workflowId", "depth", "maxSubagentDepth", "configCwd", "rootSessionId", "resumeSessionFile", "reclaim", "blocking":
+			// Internal capabilities: the original drops what a caller sends (index.ts spawnTopLevel), so do we.
 		default:
 			return "the spawn RPC option \"" + k + "\""
 		}
@@ -129,7 +96,6 @@ var settingRules = []settingRule{
 	{key: "schedulingEnabled", kind: "bool", okBool: false},
 	{key: "fleetView", kind: "bool", okBool: false},
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
-	{key: "rememberAgents", kind: "bool", okBool: false},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
 	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},

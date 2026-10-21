@@ -1,0 +1,46 @@
+{
+  "name": "agent-resume-ignores-type",
+  "description": "resume replays a stored session and ignores subagent_type: an unusable type does not stop it, even with fallbackSubagent none.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "x",
+            "description": "d",
+            "subagent_type": "typoo",
+            "resume": "nope"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"fallbackSubagent\": \"none\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

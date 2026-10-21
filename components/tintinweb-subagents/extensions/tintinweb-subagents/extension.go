@@ -1,6 +1,7 @@
 package tintinweb_subagents
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +14,7 @@ import (
 const (
 	protocolVersion = 2
 	nudgeHold       = 200 * time.Millisecond // a completion notification is held this long for a consume. upstream: index.ts NUDGE_HOLD_MS
+	cleanupEvery    = time.Minute            // how often finished agents are looked at for removal. upstream: agent-manager.ts:428
 )
 
 // app is the extension. upstream: src/index.ts.
@@ -36,6 +38,11 @@ type app struct {
 	batchCounter   int
 	rpcOff         []func() // the RPC listeners, registered once the session has started
 	entry          *registryEntry
+
+	rememberAgents bool // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
+	cleanupEvery   time.Duration
+	disc           discoverCache
+	listExtensions func(ctx context.Context, cwd string) ([]string, error)
 }
 
 // agentFileWarn reports an agent file that was skipped (the original's console.warn). A test replaces it.
@@ -43,7 +50,7 @@ var agentFileWarn = func(w string) { fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]func(){}, rt: defaultRuntimeSettings(), after: realAfter}
+	a := &app{e: e, timers: map[string]func(){}, rt: defaultRuntimeSettings(), after: realAfter, rememberAgents: true, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
 	a.mgr = newManager(start, a.onSettle)
 	a.groups = newGroupJoinManager(a.deliverGroup, groupJoinTimeout, func(d time.Duration, f func()) func() { return a.after(d, f) })
 	a.entry = claimManagerRegistry(a)
@@ -152,20 +159,22 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
-		// A new session starts clean: what the model has not read yet is kept (the GC evicts it later).
-		a.mgr.clearCompleted(true)
+		a.disc.reset()
+		a.mgr.open()
+		guard("session start cleanup", func() { a.mgr.clearCompleted(true) }) // the agents of the session before are not this one's
+		a.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))
 		a.refuseSettings(ctx)
 		a.announce(ctx)
 		return nil, nil
 	})
-	e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.mgr.clearCompleted(true)
-		return nil, nil
-	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
+	e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		guard("session switch cleanup", func() { a.mgr.clearCompleted(true) })
+		return nil, nil
+	})
 	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.shutdown()
+		guard("session shutdown", a.shutdown)
 		return nil, nil
 	})
 	a.registerTools(e)
@@ -195,12 +204,13 @@ func (a *app) announce(ctx sdk.Context) {
 	_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 }
 
-// shutdown aborts every agent: with the session going down nobody is left to read a result. upstream: index.ts
-// session_shutdown.
+// shutdown ends the session: the timers stop, every agent is stopped and every process that holds a conversation is
+// closed (nobody is left to read a result). upstream: index.ts session_shutdown (abortAll, pending nudges, manager.dispose).
 func (a *app) shutdown() {
 	a.mu.Lock()
 	off := a.rpcOff
 	a.rpcOff = nil
+	a.latest = nil // nothing is announced to a session that is over
 	a.mu.Unlock()
 	for _, f := range off {
 		f()
@@ -268,10 +278,12 @@ func (a *app) scheduleNudge(key string, send func()) {
 		stop()
 	}
 	a.timers[key] = a.after(nudgeHold, func() {
-		a.mu.Lock()
-		delete(a.timers, key)
-		a.mu.Unlock()
-		send()
+		guard("completion notice", func() {
+			a.mu.Lock()
+			delete(a.timers, key)
+			a.mu.Unlock()
+			send()
+		})
 	})
 }
 

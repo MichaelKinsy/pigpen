@@ -64,7 +64,9 @@ func (a *app) registerRPC(bus sdk.EventBus) []func() {
 	return offs
 }
 
-// rpcSpawn starts a background agent for another extension (pi-tasks' TaskExecute).
+// rpcSpawn starts a background agent for another extension (pi-tasks' TaskExecute). The options a caller cannot be
+// trusted with are dropped, as in the original: they name a file to open and replay, a handle to take over, an owner
+// or a pool to be charged to. upstream: index.ts spawnTopLevel.
 func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	if _, ok := a.context(); !ok {
 		return nil, errors.New("No active session")
@@ -120,7 +122,10 @@ func (a *app) spawnTopLevel(ctx sdk.Context, typ, prompt string, options map[str
 	// Like the original, only isBackground: true makes the spawn a pooled background one; absent or false is detached,
 	// holds no pool slot and is not announced to the model (agent-manager.ts:520-540, :969).
 	background, _ := opts["isBackground"].(bool)
-	r, err := a.start(ctx, typ, prompt, description, model, thinking, maxTurns, false, spawnOptions{Name: name, Background: background})
+	// The original takes these as truthy values, not as booleans.
+	isolated, inherit, bypass := jsTruthy(opts["isolated"]), jsTruthy(opts["inheritContext"]), jsTruthy(opts["bypassQueue"])
+	r, err := a.start(ctx, startRequest{Type: typ, Prompt: prompt, Description: description, Model: model, Thinking: thinking, MaxTurns: maxTurns,
+		Isolated: isolated, InheritContext: inherit, Spawn: spawnOptions{Name: name, Background: background, BypassQueue: bypass}})
 	if err != nil {
 		return "", err
 	}
@@ -140,13 +145,23 @@ func resolveDefaultModel(parent string, reg modelRegistry, configModel string) s
 	return parent
 }
 
-// start builds the child's spec from the agent type and spawns it. model is the override already resolved to
-// "provider/id" ("" for none); the parent's model and thinking level are the last resort.
-func (a *app) start(ctx sdk.Context, typ, prompt, description, model, thinking string, maxTurns *int, isolated bool, o spawnOptions) (*agentRecord, error) {
+// startRequest is one spawn: what the Agent tool or the spawn RPC asked for, already resolved against the agent
+// file where the original resolves it (isolated and inherit_context in the Agent tool; the RPC states them itself).
+// Model is the override already resolved to "provider/id" ("" for none); the parent's model and thinking level are
+// the last resort.
+type startRequest struct {
+	Type, Prompt, Description, Model, Thinking string
+	MaxTurns                                   *int
+	Isolated, InheritContext                   bool
+	Spawn                                      spawnOptions // the name, the pool and the signal of the spawn
+}
+
+// start builds the child's spec from the agent type and spawns it.
+func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	a.mu.Lock()
-	cwd := a.cwd
+	cwd, remember := a.cwd, a.rememberAgents
 	a.mu.Unlock()
-	res := resolveSpawnType(typ)
+	res := resolveSpawnType(q.Type)
 	if !res.OK {
 		return nil, errors.New(res.Message)
 	}
@@ -166,10 +181,44 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, model, thinking s
 	if cfg.PromptMode == "append" {
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
-	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: thinking, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
+	// isolated overrides the agent file's extensions and skills.
+	skills := cfg.Skills
+	if q.Isolated {
+		skills = false
+	}
+	var extras promptExtras
+	if names, ok := skills.([]string); ok {
+		extras.SkillBlocks = preloadSkills(names, cwd)
+	}
+	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt, extras)
+	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, getToolNamesForType(resolved), cwd, nil)
+	if err != nil {
+		return nil, err
+	}
+	spec := childSpec{Prompt: q.Prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
+		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
+		NoSkills: skills != true, Warnings: plan.Warnings}
+	if trusted, err := ctx.IsProjectTrusted(); err == nil {
+		spec.Trust = "no-approve"
+		if trusted {
+			spec.Trust = "approve"
+		}
+	}
+	if sessionPersisted(cfg, false, remember) {
+		spec.Persist = true
+		spec.SessionDir = resolveConfiguredSessionDir(cfg.SessionDir, cwd)
+		if f, err := ctx.GetSessionFile(); err == nil && f != nil {
+			spec.ParentSession = *f
+		}
+	}
+	if q.InheritContext {
+		// The conversation is read when the run starts, not now: an agent queued at the concurrency limit sees what was
+		// said while it waited. upstream: agent-runner.ts:1101-1105.
+		spec.InheritContext = func() (string, error) { return parentContext(ctx) }
+	}
+	spec.SessionName = cfg.Name
 	// The model: the override, else the agent file's (when it is exactly an available model), else the parent's.
-	spec.Model = model
+	spec.Model = q.Model
 	if spec.Model == "" {
 		spec.Model = resolveDefaultModel(ctx.ModelQualified(), registryOf(ctx), cfg.Model)
 	}
@@ -183,8 +232,8 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, model, thinking s
 		}
 	}
 	switch {
-	case maxTurns != nil:
-		spec.MaxTurns = *maxTurns
+	case q.MaxTurns != nil:
+		spec.MaxTurns = *q.MaxTurns
 	case cfg.MaxTurns != nil:
 		spec.MaxTurns = *cfg.MaxTurns
 	default:
@@ -193,8 +242,25 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, model, thinking s
 		}
 	}
 	spec.GraceTurns = a.runtime().graceTurns
+	description := q.Description
 	if description == "" {
-		description = strings.Join(strings.Fields(prompt)[:min(5, len(strings.Fields(prompt)))], " ")
+		description = strings.Join(strings.Fields(q.Prompt)[:min(5, len(strings.Fields(q.Prompt)))], " ")
 	}
-	return a.mgr.spawnWith(resolved, description, spec, o), nil
+	return a.mgr.spawnWith(resolved, description, spec, q.Spawn), nil
+}
+
+// jsTruthy is JS truthiness of a decoded JSON value: false, 0, "" and null are falsy; anything else, including an empty
+// array or object, is truthy.
+func jsTruthy(v any) bool {
+	switch x := v.(type) {
+	case nil:
+		return false
+	case bool:
+		return x
+	case float64:
+		return x != 0
+	case string:
+		return x != ""
+	}
+	return true
 }
