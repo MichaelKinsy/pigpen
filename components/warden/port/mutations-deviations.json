@@ -3,6 +3,6 @@
   "name": "audit-extension-input-blocked",
   "file": "supervision.go",
   "find": "if !fromExtension && b.busy() {",
-  "replace": "if b.busy() {"
+  "replace": "if !(fromExtension && false) && b.busy() {"
  }
 ]
