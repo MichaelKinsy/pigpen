@@ -524,3 +524,57 @@ func TestADateStringIsAOneShotCronAsCronerReadsIt(t *testing.T) {
 	clock.advance(time.Hour)
 	eq(t, len(r.manager.spawned()), 1)
 }
+
+func TestADisabledJobIsNeverArmed(t *testing.T) {
+	clock := newFakeClock()
+	r := startSched(t, clock, newMockManager())
+	for _, spec := range []string{"1h", "0 0 * * * *", "+2h"} {
+		job := makeJob(func(j *scheduledSubagent) {
+			j.ID, j.Name, j.Schedule, j.Enabled = "off-"+spec, "off-"+spec, spec, false
+			switch spec {
+			case "0 0 * * * *":
+				j.ScheduleType, j.IntervalMs = "cron", nil
+			case "+2h":
+				j.ScheduleType, j.IntervalMs, j.Schedule = "once", nil, isoString(clock.now().Add(2*time.Hour))
+			}
+		})
+		eq(t, r.store.add(job), nil)
+	}
+	r.sched.stop()
+	r.sched.start(r.manager, r.store, r.events.emit) // /resume: the file lists three disabled jobs
+	eq(t, len(r.sched.crons)+len(r.sched.intervals), 0)
+	// Switching a live job off drops its timer, and switching it on arms one.
+	job, _ := r.sched.addJob(input("live", "0 0 * * * *"))
+	eq(t, len(r.sched.crons), 1)
+	_, _, _ = r.sched.updateJob(job.ID, func(j *scheduledSubagent) { j.Enabled = false })
+	eq(t, len(r.sched.crons)+len(r.sched.intervals), 0)
+	_, _, _ = r.sched.updateJob(job.ID, func(j *scheduledSubagent) { j.Enabled = true })
+	eq(t, len(r.sched.crons), 1)
+}
+
+func TestStoppingTheSchedulerCancelsCronTimersToo(t *testing.T) {
+	clock := newFakeClock()
+	r := startSched(t, clock, newMockManager())
+	_, _ = r.sched.addJob(input("cron", "0 0 * * * *"))
+	_, _ = r.sched.addJob(input("every", "1h"))
+	r.sched.stop()
+	clock.mu.Lock()
+	for _, tm := range clock.timers {
+		eq(t, tm.stopped, true)
+	}
+	clock.mu.Unlock()
+	clock.advance(48 * time.Hour)
+	eq(t, len(r.manager.spawned()), 0)
+}
+
+func TestAFinishedRunRecordsTheNextRun(t *testing.T) {
+	start := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
+	clock := newFakeClockAt(start)
+	r := startSched(t, clock, newFaithfulManager("completed", true))
+	job, _ := r.sched.addJob(input("every", "1m"))
+	clock.advance(time.Minute)
+	waitFor(t, 5*time.Second, "outcome", func() bool { return r.job(t, job.ID).RunCount == 1 })
+	got := r.job(t, job.ID)
+	eq(t, got.LastRun, isoString(start.Add(time.Minute)))
+	eq(t, got.NextRun, isoString(start.Add(2*time.Minute))) // one interval after the base the original uses: the clock now
+}
