@@ -434,8 +434,6 @@ learn-status-flush-skipped: KILLED --- FAIL: TestWiringStatusWaitsForTheQueuedDa
 learn-agent-end-reading-missing: KILLED --- FAIL: TestExtensionHoldFeedbackWithJevTheRegretQuestionRidesTheFirstRequestAfterTheReply (0.06s)
 learn-off-warden-opens-database: KILLED --- FAIL: TestWiringAWardenThatIsOffTouchesNoDatabaseAndOnceOnItCreatesIt (0.01s)
 holds-log-key-renamed: KILLED --- FAIL: TestHoldLogIsOneJSONLinePerCall (0.00s)
-budget-off-by-one: KILLED --- FAIL: TestBudgetStopsTheRequestsAndSaysSo (0.01s)
-budget-available-allows-spent: KILLED --- FAIL: TestSteerBudgetStopsNonCriticalAtTheLimit (0.00s)
 audit-stale-counts-as-written: KILLED --- FAIL: TestAuditStaleReport (0.00s)
 audit-new-file-not-written: SURVIVED (equivalent mutant: a missing file snapshots with mtime 0 and an existing one has a positive mtime, so `after.MtimeMs > before.MtimeMs` alone already says written; `!before.Exists` is the original's explicit form)
 audit-missing-report-ignored: KILLED --- FAIL: TestAuditMissingReport (0.00s)
