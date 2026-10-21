@@ -1,6 +1,6 @@
 {
-  "name": "auto-background",
-  "description": "A bash tool call that follows a log is moved into a background task and acknowledged; an ordinary command runs as usual; the user's own !command is moved too.",
+  "name": "spawn-exit-wake",
+  "description": "bg_task spawn of a short command, then the exit wake starts a turn that reaches the model.",
   "commands": {
     "sh": {
       "mode": "real"
@@ -38,35 +38,20 @@
     {
       "toolCalls": [
         {
-          "name": "bash",
-          "arguments": {
-            "command": "tail -f /dev/null"
-          }
-        }
-      ]
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bash",
-          "arguments": {
-            "command": "echo ordinary"
-          }
-        }
-      ]
-    },
-    {
-      "toolCalls": [
-        {
           "name": "bg_task",
           "arguments": {
-            "action": "list"
+            "action": "spawn",
+            "command": "sleep 0.5; printf 'hello\\n'",
+            "title": "say hello"
           }
         }
       ]
     },
     {
-      "text": "done"
+      "text": "started"
+    },
+    {
+      "text": "the task finished"
     }
   ],
   "steps": [
@@ -74,22 +59,9 @@
       "name": "prompt",
       "rpc": {
         "type": "prompt",
-        "message": "follow it"
-      }
-    },
-    {
-      "name": "user-bash",
-      "rpc": {
-        "type": "bash",
-        "command": "tail -f /dev/null"
-      }
-    },
-    {
-      "name": "list",
-      "rpc": {
-        "type": "prompt",
-        "message": "/bg:list"
-      }
+        "message": "run it in the background"
+      },
+      "settleMs": 1500
     }
   ],
   "capture": [
@@ -124,6 +96,10 @@
     {
       "pattern": "pid \\d+",
       "replacement": "pid <pid>"
+    },
+    {
+      "pattern": "^\\d{7,}$",
+      "replacement": "<start-token>"
     }
   ],
   "volatileNumbers": [
@@ -136,11 +112,21 @@
     "result.details.tasks.[].startedAt",
     "result.details.tasks.[].updatedAt",
     "result.details.tasks.[].lastOutputAt",
+    "result.details.task.procIdent.pid",
+    "result.details.tasks.[].procIdent.pid",
+    "message.details.tasks.[].pid",
+    "message.details.task.procIdent.pid",
+    "message.details.tasks.[].procIdent.pid",
+    "message.details.tasks.[].startedAt",
+    "message.details.tasks.[].updatedAt",
+    "message.details.tasks.[].lastOutputAt",
+    "message.details.tasks.[].expiresAt",
     "message.details.task.pid",
     "message.details.task.startedAt",
     "message.details.task.updatedAt",
     "message.details.task.lastOutputAt",
     "message.details.eventAt",
+    "message.details.deliveredAt",
     "message.details.timestamp"
   ]
 }

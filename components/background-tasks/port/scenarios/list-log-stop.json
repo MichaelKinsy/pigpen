@@ -161,6 +161,10 @@
     {
       "pattern": "pid \\d+",
       "replacement": "pid <pid>"
+    },
+    {
+      "pattern": "^\\d{7,}$",
+      "replacement": "<start-token>"
     }
   ],
   "volatileNumbers": [
@@ -173,11 +177,21 @@
     "result.details.tasks.[].startedAt",
     "result.details.tasks.[].updatedAt",
     "result.details.tasks.[].lastOutputAt",
+    "result.details.task.procIdent.pid",
+    "result.details.tasks.[].procIdent.pid",
+    "message.details.tasks.[].pid",
+    "message.details.task.procIdent.pid",
+    "message.details.tasks.[].procIdent.pid",
+    "message.details.tasks.[].startedAt",
+    "message.details.tasks.[].updatedAt",
+    "message.details.tasks.[].lastOutputAt",
+    "message.details.tasks.[].expiresAt",
     "message.details.task.pid",
     "message.details.task.startedAt",
     "message.details.task.updatedAt",
     "message.details.task.lastOutputAt",
     "message.details.eventAt",
+    "message.details.deliveredAt",
     "message.details.timestamp"
   ]
 }

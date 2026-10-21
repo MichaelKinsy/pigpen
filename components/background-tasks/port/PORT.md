@@ -15,8 +15,8 @@
 | 1 | Inventory, honest-refusal skeleton, settings reader, package metadata | merged-ready (`parity/background-tasks-1`) |
 | 2a | Leaf modules and their twins: format, wake events, snapshots and restore, lifecycle, orphan watcher, resource control, probes, log writer and tail, lanes, persistence, matcher, activity | this revision: 58 exact twins, 1 named skip (below); the tool, commands and shortcuts stay refused until 2b |
 | 2b | The task runtime through the host: spawn, stop, wakes, restore, retention, auto-background; twins and mutations | this revision (0.2.0): 77 exact twins, 10 named skips; scenarios wait for slice 3 (see Slice 2b evidence) |
-| 3 | Widget, dashboard, renderers, shortcuts | this revision: in the tree with twins and mutants; `tool-definitions`, `list-log-stop` and `fork-restore` equal to Pi; four scenarios pending (see Slice 3 evidence) |
-| 4 | Process-tree cleanup on stop and shutdown on Linux and macOS (Windows by vet and reasoning), the performance table | cleanup evidence on Linux and macOS (below); performance table (below) |
+| 3 | Widget, dashboard, renderers, shortcuts | this revision: in the tree with twins and mutants; six of the seven scenarios equal to Pi under PiG main (`bg-commands` waits for core bug B5; see Slice 3 evidence) |
+| 4 | Process-tree cleanup on stop and shutdown on Linux and macOS (Windows by vet and reasoning), the performance table | cleanup evidence on Linux and macOS; per-process performance table (below) |
 
 ## Inventory
 
@@ -158,12 +158,26 @@ all `PARTIAL` stand-ins:
   synchronously, in call order, under the runtime lock (exit wake, output wake, tool read, dashboard read), and a slot of the shared limit is handed to the first
   queued read when one finishes (FIFO, as the original's queue). The twin row asserts the order (no second open of the task's log before its exit is delivered); the test hook releases
   held opens in arrival order. The mutant `exit-read-started-later` restores the old order. `Rig` opens are counted, not timed.
-- **Scenarios (Pi against the port, pigeq 0.4.1 = N8 branch + main 101eaf99, rule N8 for the numbers the extension makes up):** `tool-definitions` (installed state),
-  `list-log-stop` and `fork-restore` are equal to the original under Pi (`port: pig-go == pi-ts`, 10, 17 and 35 events). Four are not yet:
-  `spawn-exit-wake` (the exit wake of a task that exits at once reaches the host before `agent_end` in the port and after it in Pi, where the identity probe `ps -o lstart=,comm=`
-  of the gone pid also runs; the port reads `/proc`), `output-match-wake` (a difference inside the wake message, not yet isolated), `bg-commands` (the `nice`/`ionice` exec shim
-  event lands two events later, and the exit wake of the stopped task starts its turn in step `03-stop` instead of `04-list-after-stop`) and `auto-background`
-  (`procIdent.comm` of a `tail -f` task is `bash` or `tail` depending on whether the shell has exec'd yet when the identity is read). They stay in `port/scenarios-slice3/` so the gates stay green.
+- **Scenarios against Pi** (original under Pi 1.3.0+1402973a against the port under PiG, `pigeq-merge run`, host check skipped for B2; rule N8 for the numbers the extension makes up).
+  Four PiG builds were tried: `orig` = the v0.5.0 tag the earlier runs used; `main` = origin/main 3ee123c6 (the train); `D5` = `ordering/d5-timer-calls` 7109a92a; `comb` = D5 merged with `fix/custom-message-first-run-system-prompt` (B5; the merge conflicts only in `test/parity/normalization-inventory.json`, which is not code).
+
+  | Scenario | orig | main | D5 | comb (D5 + B5) | Cause of a difference |
+  |---|---|---|---|---|---|
+  | `tool-definitions` | equal (10) | equal | equal | equal | |
+  | `list-log-stop` | equal (17) | equal | equal | equal | |
+  | `fork-restore` | equal (35) | equal | equal | equal | |
+  | `spawn-exit-wake` | equal (24) | equal | equal | equal | |
+  | `output-match-wake` | equal (24) | equal | equal | equal | |
+  | `auto-background` | equal (36) | equal | equal | equal | |
+  | `bg-commands` (pending, `port/scenarios-slice3/`) | differs | differs | differs | equal (19) | B5: the first run of the session is started by an extension's `sendMessage`; PiG sends it without the system prompt (`system.inserted` empty, `removed` the whole base prompt). Nothing before that request differs on any of the four |
+
+  `check` against the recorded goldens passes six of six on `orig` and on `main` (the `bg-commands` golden waits for B5). What the earlier round called differences was, item by item:
+  - **`output-match-wake`:** the wake message carries `details.deliveredAt`, a clock reading the scenario did not list as volatile. The generator now lists it (with the other clock and pid fields of listed tasks); nothing in the port changed for it.
+  - **`auto-background`:** `procIdent.comm` of `tail -f` read `bash` in the port and `tail` in the original. See "When the original reads the identity" below; the port now reads at the same point. `procIdent.pid` and `procIdent.startToken` (the kernel's start time in ticks, kept as a string; the rule matches a string of seven or more digits and nothing else) are numbers the kernel makes up, listed as volatile; `comm` is compared.
+  - **`spawn-exit-wake`:** the scenario as first written (`printf 'hello\n'`, the task ends within a millisecond of its spawn) is a race inside Pi itself. Eight lanes of the original under Pi gave eight different event orders: whether the exit wake joins the running turn or starts its own, and where the `ps -o lstart=,comm= -p <pid>` probe (the original's identity read hits ESRCH on the pid that is being reaped and falls through to `ps`) and its `exec_end` fall among `agent_end`, `agent_start` and the wake's `message_end`; eight lanes of the port under PiG gave one order. Such a scenario cannot be equal to a moving target, so the task now ends 0.5 s after its spawn (`sleep 0.5; printf 'hello\n'`, the step waits 1.5 s): the wake always starts a turn of its own after `agent_end`, and that order is equal on every build. The immediate-exit orders are pinned by the twins (`wake-defaults`, `restored-exit`, `exit-reads`), not by a scenario.
+  - **`bg-commands`:** the earlier difference in the order of the `nice`/`ionice` exec shim event against the `ui` notification is two processes writing to the harness (README, Limits: "Parallel exec calls arrive in a nondeterministic order"): in five lanes of each side, Pi gave two orders (1 and 4) and the port three (3, 1, 1), the same orders on both. The scenario now runs with resource control off; the `nice`/`ionice`/`systemd-run` plans are pinned by the resource twins (`resource-control`, `resource-stop`, `systemd-probe`). The earlier "the stopped task's exit-wake turn lands one step early" is gone on every build: it was the `nice` shim path, not a port difference.
+- **D5 (`ordering/d5-timer-calls`): the port deadlocked on it; fixed in the port.** Against D5 the lane of every scenario with a wake timed out at the first prompt (`timed out after 1m0s waiting for eq-2`, no stderr). A goroutine dump of the extension showed the `bg_task` handler in `settle()` waiting for the outbox, and the outbox's worker in `AppendEntry` waiting for the host. D5's SDK marks every host call made through the context of a request that has already returned (`CallPayload.Timer`) and the host holds it until Pi's event loop would turn (the loop turns at a model response, a built-in tool's run, a dialog, or the end of `agent_settled`). The port made the persist call of a tool handler through the context it keeps from an earlier request (`rt.last`, the original's `activeCtx`), which is such a request; the host held it, the handler waited for it, and the host waited for the handler to return. Now (`runtime.go`): a handler's host calls go through a request that is still running when the call is made (`rt.live`, registered by every handler of the SDK), and the host calls of a loop job (a wake, a persist, a refresh) go through a second queue (`timerOut`) that no handler waits for. Under D5 those calls are held until the loop turns, which is where Pi runs them. The change is invisible to older hosts (the unit suite and the six scenarios are equal before and after).
+- **When the original reads the identity.** `spawnTask` calls `defaultReadProcessIdentity(pid)` in its synchronous part, but `readFile("/proc/<pid>/stat")` is four thread-pool calls (open, fstat, read, close), each carried on by one turn of Node's event loop, and the loop turns only after the handler's synchronous work and its result have gone back to Pi. Measured on xd670 (the original with the call timed, twelve `tail -f` spawns under Pi): the read resolved 2.1 ms to 22 ms after the spawn (median 16 ms; 37 ms to 51 ms for six `printf` spawns), after the shell had exec'd `tail`: `comm` was `tail` in 12 of 12, although `bash` was still the name at the spawn in 5 of 12. In a bare Node script with no handler to finish (40 spawns of the same shell) the read found `tail` 22 times and `bash` 18 times: the value is a race against the shell's `exec`, which the original wins because its loop is busy. The port read at once on a goroutine (`bash` in 3 of 15 lanes; Pi: `tail` in 15 of 15). It now starts the read when the handler that spawned the task returns, and no earlier than `identityReadFloor` (10 ms, below the smallest delay seen under Pi) after the spawn: `tail` in 25 of 25 lanes. A task that ends before the read gets `gone` (ENOENT) in the port; in Pi the same read ends in ESRCH and then in the `ps` probe about as often (see `spawn-exit-wake` above), which no scenario pins.
 - **`<addendum>` and the tool-definitions gate.** The scenario holds the installed block in `APPEND_SYSTEM.md` (what the original's postinstall leaves). `pigeq lane` of the original under Pi and
   under PiG gives the same 3634 bytes from `<addendum>` to the end of the prompt, and the port adds nothing of its own. The `system` delta of the harness reaches back to the tool snippet once an addendum
   exists, so the `<docs>` block (D22: PiG names its docs bundle where Pi names its source tree) falls inside it; the scenario's rule `(?s)<docs>\n(?:PiG|Pi) documentation.*?(?:</docs>|$)` masks that block and only it.
@@ -173,14 +187,40 @@ all `PARTIAL` stand-ins:
 - `TestProcessTreeCleanup` (`cleanup_unix_test.go`): a task starts a tree of three descendants (two below a subshell); `stop` and `session_shutdown` each end the whole tree, also when the
   descendants ignore SIGTERM (the SIGKILL after `forceKillGraceMs`). Linux (xd670, tern-ci:v3): passes. macOS (Darwin arm64): the test binary was cross-compiled on xd670
   (`GOOS=darwin GOARCH=arm64 go test -c`), only that binary was copied to a scratch directory of the Mac, run three times (12 of 12 subtests pass) and deleted. Windows: `taskkill /T /F` by reasoning and `GOOS=windows go vet`.
-- **Performance, chatty tasks** (`port/perf/perf-chatty.json`: four tasks of 3,000,000 lines each spawned in one turn, `showWidget` off, resource control off). xd670, tern-ci:v3, cores 0-63 under the perf lock,
-  three runs each of one `pigeq lane -host pig` (the whole lane: pigeq, pig, the extension, the scripted model, shutdown). The original runs under PiG's Node runtime, the port as a Go extension. `peak RSS` is the
-  largest single process the lane started (`RUSAGE_CHILDREN`), not a sum; the port's lane also includes a `go build` of the extension from a warm cache, so its CPU is an upper bound.
+- **Performance, chatty tasks, per process** (`port/perf/perf-chatty.json`: four tasks of `seq 1 3000000` spawned in one turn, `showWidget` off, resource control off). xd670, tern-ci:v3, cores 0-63 under the perf lock,
+  PiG main 3ee123c6. One `pigeq lane -host pig` per run, five runs per side after one unmeasured warm-up of each, original and port alternating. A sampler reads `/proc/<pid>/stat` and `status`
+  of every descendant of the lane every 20 ms (CPU = utime + stime at its last sample; RSS = VmRSS). The original runs as a Node extension in PiG's Node runtime (one `node` process); the
+  port is a Go extension (one `runner` process). The `go build` of the lane's shim and of the extension (`go`, `compile`, `link`; 0.4-0.6 s CPU for the original's shim, 1.2-1.5 s for the shim plus the extension) is
+  excluded. Per run:
 
-  | | wall (s) | CPU user+sys (s) | peak RSS of one process (MB) |
-  |---|---|---|---|
-  | original (Node runtime) | 5.26, 5.25, 5.54 | 2.94, 2.99, 2.70 | 119, 118, 116 |
-  | port (Go) | 3.05, 3.06, 3.06 | 3.48, 3.12, 2.95 | 152, 142, 149 |
+  | | run | wall (s) | extension process CPU (s) | extension peak RSS (MB) | PiG host CPU (s) | PiG host peak RSS (MB) | task children CPU (s) |
+  |---|---|---|---|---|---|---|---|
+  | original (Node) | 1 | 4.05 | 3.81 | 464 | 0.97 | 136 | 0.15 |
+  | | 2 | 4.38 | 4.25 | 466 | 1.25 | 136 | 0.13 |
+  | | 3 | 4.46 | 4.20 | 473 | 1.19 | 136 | 0.12 |
+  | | 4 | 4.27 | 3.93 | 469 | 1.40 | 136 | 0.15 |
+  | | 5 | 4.12 | 3.84 | 467 | 1.21 | 138 | 0.13 |
+  | port (Go) | 1 | 2.51 | 1.53 | 39 | 0.14 | 70 | 0.00 |
+  | | 2 | 2.62 | 1.56 | 44 | 0.15 | 73 | 0.00 |
+  | | 3 | 2.66 | 1.52 | 41 | 0.16 | 69 | 0.00 |
+  | | 4 | 2.59 | 1.55 | 40 | 0.16 | 70 | 0.00 |
+  | | 5 | 2.52 | 1.62 | 39 | 0.14 | 68 | 0.02 |
+  | **median, original** | | 4.27 | 3.93 | 467 | 1.21 | 136 | 0.13 |
+  | **median, port** | | 2.59 | 1.55 | 40 | 0.15 | 70 | 0.00 |
 
-  Read it as: the port finishes the lane about 2 s sooner; CPU is the same within the noise of the build step; the largest process is bigger by about 30 MB (the Go host side plus the `go build`),
-  which a per-process sampling run would separate. That separation was not done.
+  Over time (run 1, the extension process; CPU in percent of one core per half second, RSS at the window's end): original 150%, 148%, 134%, 72%, 110%, 116% and 134, 197, 262, 333, 397, 432 MB;
+  port 82%, 128% and 33, 33 MB. In the first 3 s the original's resident set grows by about 100 MB per second while the tasks write; the port's stays flat. The first
+  attempt at this table (whole-lane `RUSAGE_CHILDREN`, 118 MB against 148 MB "largest process") understated the original by a factor of four; I did not establish why `RUSAGE_CHILDREN` missed the Node process (one possibility: a process still running when the lane ends is not counted until it is waited for). The extension process of the port uses 39% of the original's CPU and 9% of its memory; with the host
+  side (the Node runtime's protocol work shows as 1.21 s of host CPU against 0.15 s) the lane costs 5.1 s of CPU against 1.7 s.
+
+## Reliability (slice 4)
+
+All on xd670, tern-ci:v3, cores 64-191, `nice -n 10`, `-p 8 -parallel 8`.
+
+- **`go test -race -count=1 ./...`** over the whole module: green on the final head (246 s; 275 s on an earlier head of this round); `go test -count=1 ./...` 44 s; `go vet` clean for linux, windows and darwin; `pigeq twins check`: **86 exact twins, 13 skipped** (the thirteen must-fail titles, each tied to a mutant); `package validate`: valid.
+- **The `mixed: delivered` row of exit-reads, repeated.** `go test -count=50 -run 'TestTwinExitReads/.*/mixed'` with 64 busy loops (`while :; do :; done`) in the container: the first batch of 50 had one failed run (I did not keep its log and could not tell its message), the next five batches of 50 gave 250 of 250.
+  With 128 busy loops (one per CPU of the container) the row took 10-24 s a run and failed 2 of 98 runs with `timed out waiting for the first reads`, the 20 s bound of the test helper `eventually`; no assertion about the order of the reads or of the deliveries failed in
+  those runs. The helper's bound is a hang detector, so it is now 60 s, and the same load gave 100 of 100. The race-instrumented row under 128 busy loops took about three minutes a run; that
+  batch was stopped after 9 runs (all passed) and not repeated.
+- **Mutants:** `pigeq mutate --unit-only` on the whole of `port/mutations.json`: **24 of 24 killed** (the 24th, `logtail-queued-validity`, which did not build in the previous run, is killed by `TestTwinLogTail`). `matcher-deadline-removed` is still killed by the 3 minute test timeout and
+  `restored-exit-queue-unprotected` by a 60 s wait, which are kills, not clean assertions.
