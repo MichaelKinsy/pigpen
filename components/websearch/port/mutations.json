@@ -162,12 +162,6 @@
   "replace": "if workflow != \"none\" && workflow == \"\" {"
  },
  {
-  "name": "refusal-fetch-extractor-dropped",
-  "file": "extract.go",
-  "find": "return failed(rawURL, unsupported(feature).Error())",
-  "replace": "return failed(rawURL, \"\")"
- },
- {
   "name": "refusal-fallback-extractors-unnamed",
   "file": "extract.go",
   "find": "msg += \"\\n\\n\" + unsupported(\"the RSC payload and Defuddle fallback extractors\").Error()",
@@ -1040,8 +1034,8 @@
  {
   "name": "tool-call-without-extension-context",
   "file": "extension.go",
-  "find": "context.WithCancel(WithExtensionContext(context.Background(), sdkExtensionContext{ctx}))",
-  "replace": "context.WithCancel(base)"
+  "find": "base := WithExtensionContext(context.Background(), sdkExtensionContext{ctx})",
+  "replace": "base := context.Background()"
  },
  {
   "name": "session-id-dropped",
@@ -1064,8 +1058,8 @@
  {
   "name": "auto-guidance-renumbered",
   "file": "search.go",
-  "find": "\"  5. Explicitly select provider:",
-  "replace": "\"  6. Explicitly select provider:"
+  "find": "\"  6. Explicitly select provider:",
+  "replace": "\"  7. Explicitly select provider:"
  },
  {
   "name": "answer-output-tokens",
