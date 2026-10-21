@@ -1,0 +1,28 @@
+{
+  "name": "tool-definition",
+  "description": "The model request carries the schedule_prompt tool's full definition; a list on an empty store.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

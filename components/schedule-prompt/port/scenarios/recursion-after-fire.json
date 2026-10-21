@@ -1,0 +1,74 @@
+{
+  "name": "recursion-after-fire",
+  "description": "A job added after a scheduled prompt ran is accepted: the original's guard looks for a `custom` entry, not the custom_message one a marker is.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "remove",
+            "jobId": "cron000011"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "child",
+            "schedule": "0 0 0 * * *",
+            "prompt": "scheduled by a scheduled prompt"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "wait",
+      "rpc": {
+        "type": "get_state"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000011\",\n      \"name\": \"parent\",\n      \"schedule\": \"* * * * * *\",\n      \"prompt\": \"scheduled tick\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  },
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ],
+  "settleMs": 1500,
+  "tailMs": 500
+}

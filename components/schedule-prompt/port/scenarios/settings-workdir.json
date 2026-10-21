@@ -1,0 +1,65 @@
+{
+  "name": "settings-workdir",
+  "description": "defaultJobScope=workdir in the project settings file overrides the global one: a new job has no session.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "shared",
+            "schedule": "0 0 0 * * *",
+            "prompt": "for every pi here"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts-settings.json": "{\"defaultJobScope\": \"workdir\"}"
+  },
+  "agentFiles": {
+    "schedule-prompts-settings.json": "{\"defaultJobScope\": \"session\", \"widgetVisible\": false}"
+  },
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ]
+}

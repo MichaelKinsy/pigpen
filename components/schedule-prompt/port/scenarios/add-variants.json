@@ -1,0 +1,129 @@
+{
+  "name": "add-variants",
+  "description": "Add a cron, an interval, relative one-shots and a described job; list them; read the store file back.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "five",
+            "schedule": "0 */5 * * * *",
+            "prompt": "check the build"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "every-five",
+            "schedule": "5m",
+            "type": "interval",
+            "prompt": "heartbeat",
+            "description": "a heartbeat"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "+20d",
+            "type": "once",
+            "prompt": "remind me in twenty days"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "inline-notify",
+            "schedule": "0 0 0 * * 1-5",
+            "prompt": "weekday midnight",
+            "notify": true
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "ext-skills",
+            "schedule": "0 0 12 * * *",
+            "prompt": "noon",
+            "extensions": [
+              "a",
+              "b"
+            ],
+            "skills": true
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ]
+}

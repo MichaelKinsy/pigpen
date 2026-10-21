@@ -1,0 +1,72 @@
+{
+  "name": "corrupt-store",
+  "description": "A store file that is not JSON reads as empty; the next add replaces it.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "fresh",
+            "schedule": "0 0 0 * * *",
+            "prompt": "after corruption"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{not json"
+  },
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ]
+}

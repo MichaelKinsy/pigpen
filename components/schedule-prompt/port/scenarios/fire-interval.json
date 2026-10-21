@@ -1,0 +1,37 @@
+{
+  "name": "fire-interval",
+  "description": "An interval job fires after its interval; the model removes it.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "remove",
+            "jobId": "intv000010"
+          }
+        }
+      ]
+    },
+    {
+      "text": "removed"
+    },
+    {
+      "text": "after"
+    }
+  ],
+  "steps": [
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "after"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"intv000010\",\n      \"name\": \"beat\",\n      \"schedule\": \"1s\",\n      \"prompt\": \"scheduled tick\",\n      \"enabled\": true,\n      \"type\": \"interval\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"intervalMs\": 1000\n    }\n  ],\n  \"version\": 1\n}"
+  },
+  "settleMs": 1500,
+  "tailMs": 500
+}

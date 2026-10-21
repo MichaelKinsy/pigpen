@@ -1,0 +1,38 @@
+{
+  "name": "session-new-cleanup",
+  "description": "A new session removes this session's and the unbound disabled jobs and keeps the foreign ones.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "new",
+      "rpc": {
+        "type": "prompt",
+        "message": "/eq-new"
+      }
+    },
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "after"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000001\",\n      \"name\": \"hourly\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"hourly prompt\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 4,\n      \"lastStatus\": \"success\",\n      \"lastRun\": \"2026-01-01T00:00:00.000Z\",\n      \"description\": \"the hourly one\"\n    },\n    {\n      \"id\": \"cron000002\",\n      \"name\": \"off\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"weekday nine\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"once000001\",\n      \"name\": \"later\",\n      \"schedule\": \"2999-01-01T00:00:00.000Z\",\n      \"prompt\": \"far\",\n      \"enabled\": false,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"intv000001\",\n      \"name\": \"beat\",\n      \"schedule\": \"30m\",\n      \"prompt\": \"beat prompt\",\n      \"enabled\": true,\n      \"type\": \"interval\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"intervalMs\": 1800000\n    },\n    {\n      \"id\": \"fore000001\",\n      \"name\": \"foreign\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"someone else's\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"another-session\"\n    },\n    {\n      \"id\": \"fore000002\",\n      \"name\": \"foreign-off\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"someone else's, off\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"another-session\"\n    }\n  ],\n  \"version\": 1\n}"
+  }
+}

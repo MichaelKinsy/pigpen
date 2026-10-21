@@ -1,0 +1,41 @@
+{
+  "name": "past-once-on-start",
+  "description": "A once job whose time has passed is disabled with an error status when the session starts.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"once000002\",\n      \"name\": \"missed\",\n      \"schedule\": \"2020-01-01T00:00:00.000Z\",\n      \"prompt\": \"was due\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  }
+}

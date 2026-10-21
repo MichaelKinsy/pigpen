@@ -1,0 +1,37 @@
+{
+  "name": "fire-cron",
+  "description": "An every-second cron job fires: the marker, then the prompt as a user message; the model removes the job.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "remove",
+            "jobId": "cron000010"
+          }
+        }
+      ]
+    },
+    {
+      "text": "removed"
+    },
+    {
+      "text": "after"
+    }
+  ],
+  "steps": [
+    {
+      "name": "after",
+      "rpc": {
+        "type": "prompt",
+        "message": "after"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000010\",\n      \"name\": \"tick\",\n      \"schedule\": \"* * * * * *\",\n      \"prompt\": \"scheduled tick\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  },
+  "settleMs": 1500,
+  "tailMs": 500
+}

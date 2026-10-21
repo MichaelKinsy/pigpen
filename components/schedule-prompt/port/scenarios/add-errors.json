@@ -1,0 +1,373 @@
+{
+  "name": "add-errors",
+  "description": "Every rejection of add and the validation messages: missing parameters, a duplicate name, malformed cron, interval, once, past and unparseable timestamps.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "+10s"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "taken",
+            "schedule": "0 0 * * * *",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 9 * * *",
+            "prompt": "five fields"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "61 * * * * *",
+            "prompt": "second 61"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 0 0 32 * *",
+            "prompt": "day 32"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 0 0 * 13 *",
+            "prompt": "month 13"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 0 0 * * 8",
+            "prompt": "weekday 8"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 */0 * * * *",
+            "prompt": "step zero"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 5/10 * * * *",
+            "prompt": "numeric step prefix"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 0 0 * * FRI#9",
+            "prompt": "nth 9"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0 0 12:30 * * *",
+            "prompt": "colon"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "@daily x x x x",
+            "prompt": "nickname"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "every five minutes",
+            "type": "interval",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "0s",
+            "type": "interval",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "2000-01-01T00:00:00Z",
+            "type": "once",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "Feb 13 2000 3:30 PM GMT",
+            "type": "once",
+            "prompt": "legacy date format"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "tomorrow",
+            "type": "once",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "+99999999999999d",
+            "type": "once",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "schedule": "+5m",
+            "type": "cron",
+            "prompt": "relative as cron"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "model": "",
+            "schedule": "+10s",
+            "type": "once",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "update",
+            "jobId": "nope",
+            "prompt": "x"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "remove"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "remove",
+            "jobId": "nope"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "enable"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "disable",
+            "jobId": "nope"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "update"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"seed000001\",\n      \"name\": \"taken\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  },
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+{
+  "ctx.ui.custom(options.onHandle)": "The Jobs overlay (slice 3) hides itself while its add flow's dialogs are open through onHandle. The Go SDK of PiG 0.5.0 (source 7a5422f6) has it: extensions/sdk/overlay_handle.go, RemoteOverlayOptions.OnHandle with OverlayHandle.SetHidden and Focus; the embedded surface table still lists the row as an exception (reported to the Tern lead). Not an owner approval: a stale table row."
+}

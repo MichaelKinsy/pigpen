@@ -1,0 +1,1850 @@
+[
+ {
+  "name": "unit-minute-wrong",
+  "file": "schedule.go",
+  "find": "\"m\": 60 * 1000, \"h\"",
+  "replace": "\"m\": 6 * 1000, \"h\""
+ },
+ {
+  "name": "unit-day-wrong",
+  "file": "schedule.go",
+  "find": "\"d\": 24 * 60 * 60 * 1000}",
+  "replace": "\"d\": 12 * 60 * 60 * 1000}"
+ },
+ {
+  "name": "interval-zero-accepted",
+  "file": "schedule.go",
+  "find": "if !ok || ms == 0 {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "interval-regex-loose",
+  "file": "schedule.go",
+  "find": "`^([0-9]+)(s|m|h|d)$`",
+  "replace": "`([0-9]+)(s|m|h|d)`"
+ },
+ {
+  "name": "relative-regex-loose",
+  "file": "schedule.go",
+  "find": "`^\\+([0-9]+)(s|m|h|d)$`",
+  "replace": "`\\+([0-9]+)(s|m|h|d)`"
+ },
+ {
+  "name": "cron-field-count-five",
+  "file": "schedule.go",
+  "find": "if n != 6 {",
+  "replace": "if n != 5 {"
+ },
+ {
+  "name": "cron-empty-counts-zero",
+  "file": "schedule.go",
+  "find": "n = 1 // \"\".split(/\\s+/) is [\"\"]",
+  "replace": "n = 0"
+ },
+ {
+  "name": "past-check-inclusive",
+  "file": "schedule.go",
+  "find": "if delay < 0 {",
+  "replace": "if delay <= 0 {"
+ },
+ {
+  "name": "too-soon-threshold",
+  "file": "schedule.go",
+  "find": "if delay < 5000 {",
+  "replace": "if delay < 4000 {"
+ },
+ {
+  "name": "too-soon-round-down",
+  "file": "schedule.go",
+  "find": "jsNumber(math.Floor(delay/1000+0.5))",
+  "replace": "jsNumber(math.Floor(delay/1000))"
+ },
+ {
+  "name": "too-soon-hint-floor",
+  "file": "schedule.go",
+  "find": "jsNumber(math.Ceil(delay/1000)) + \"s' instead",
+  "replace": "jsNumber(math.Floor(delay/1000)) + \"s' instead"
+ },
+ {
+  "name": "once-iso-not-normalized",
+  "file": "schedule.go",
+  "find": "return validated{ok: true, schedule: iso}, nil",
+  "replace": "return validated{ok: true, schedule: schedule}, nil"
+ },
+ {
+  "name": "relative-not-resolved",
+  "file": "schedule.go",
+  "find": "return validated{ok: true, schedule: rel}, nil",
+  "replace": "return validated{ok: true, schedule: schedule}, nil"
+ },
+ {
+  "name": "invalid-timestamp-text",
+  "file": "schedule.go",
+  "find": "\"Invalid timestamp: %. Use ISO format or relative time like '+10s', '+5m'\"",
+  "replace": "\"Invalid timestamp: %. Use ISO format\""
+ },
+ {
+  "name": "invalid-interval-text",
+  "file": "schedule.go",
+  "find": "\"Invalid interval format: %. Use format like '5m', '1h', '30s'\"",
+  "replace": "\"Invalid interval format: %.\""
+ },
+ {
+  "name": "cron-error-prefix",
+  "file": "schedule.go",
+  "find": "\"Invalid cron expression: %\"",
+  "replace": "\"Invalid cron: %\""
+ },
+ {
+  "name": "describe-interval-prefix",
+  "file": "schedule.go",
+  "find": "return \"every \" + schedule",
+  "replace": "return \"each \" + schedule"
+ },
+ {
+  "name": "describe-once-raw",
+  "file": "schedule.go",
+  "find": "return formatISOShortMs(d)\n\t}\n\treturn humanizeCron(schedule)",
+  "replace": "return schedule\n\t}\n\treturn humanizeCron(schedule)"
+ },
+ {
+  "name": "humanize-no-trim",
+  "file": "schedule.go",
+  "find": "normalized := croner.JSTrim(expression)\n\tif s, ok",
+  "replace": "normalized := expression\n\tif s, ok"
+ },
+ {
+  "name": "humanize-table-daily",
+  "file": "schedule.go",
+  "find": "\"0 0 0 * * *\":    \"daily\",",
+  "replace": "\"0 0 0 * * *\":    \"every day\","
+ },
+ {
+  "name": "humanize-table-weekdays",
+  "file": "schedule.go",
+  "find": "\"0 0 9 * * 1-5\":  \"9am weekdays\",",
+  "replace": "\"0 0 9 * * 1-5\":  \"weekdays 9am\","
+ },
+ {
+  "name": "humanize-every-min-text",
+  "file": "schedule.go",
+  "find": "return \"every \" + m[1] + \" min\"",
+  "replace": "return \"every \" + m[1] + \" minutes\""
+ },
+ {
+  "name": "humanize-every-hour-text",
+  "file": "schedule.go",
+  "find": "return \"every \" + m[1] + \"h\"",
+  "replace": "return \"every \" + m[1] + \" h\""
+ },
+ {
+  "name": "humanize-daily-at-padded",
+  "file": "schedule.go",
+  "find": "f, _ := strconv.ParseFloat(m[1], 64)\n\t\treturn \"daily at \" + jsNumber(f) + \":00\"",
+  "replace": "return \"daily at \" + m[1] + \":00\""
+ },
+ {
+  "name": "format-month-off-by-one",
+  "file": "schedule.go",
+  "find": "monthNames[f.Month] + \" \"",
+  "replace": "monthNames[(f.Month+1)%12] + \" \""
+ },
+ {
+  "name": "format-minute-unpadded",
+  "file": "schedule.go",
+  "find": "pad2(f.Hour) + \":\" + pad2(f.Minute)",
+  "replace": "pad2(f.Hour) + \":\" + strconv.FormatInt(f.Minute, 10)"
+ },
+ {
+  "name": "loaded-for-always",
+  "file": "scheduler.go",
+  "find": "return !truthy(session) || strictEqualString(session, sessionID)",
+  "replace": "return true"
+ },
+ {
+  "name": "loaded-for-unbound-never",
+  "file": "scheduler.go",
+  "find": "return !truthy(session) || strictEqualString(session, sessionID)",
+  "replace": "return strictEqualString(session, sessionID)"
+ },
+ {
+  "name": "start-keeps-stale-running",
+  "file": "scheduler.go",
+  "find": "if strictEqualString(job.Get(\"lastStatus\"), \"running\") {\n\t\t\tpartial",
+  "replace": "if false {\n\t\t\tpartial"
+ },
+ {
+  "name": "start-sweeps-foreign",
+  "file": "scheduler.go",
+  "find": "\t\tif !isLoadedFor(job, mySessionID) {\n\t\t\tcontinue\n\t\t}\n\t\tif strictEqualString(job.Get(\"lastStatus\")",
+  "replace": "\t\tif strictEqualString(job.Get(\"lastStatus\")"
+ },
+ {
+  "name": "start-schedules-disabled",
+  "file": "scheduler.go",
+  "find": "if truthy(job.Get(\"enabled\")) {\n\t\t\ts.scheduleJob(job)",
+  "replace": "if true {\n\t\t\ts.scheduleJob(job)"
+ },
+ {
+  "name": "stop-keeps-crons",
+  "file": "scheduler.go",
+  "find": "\tfor _, c := range crons {\n\t\tc.Stop()\n\t}",
+  "replace": "\t_ = crons"
+ },
+ {
+  "name": "stop-keeps-intervals",
+  "file": "scheduler.go",
+  "find": "\tfor _, t := range timers {\n\t\tt.stop()\n\t}",
+  "replace": "\t_ = timers"
+ },
+ {
+  "name": "stop-keeps-subagents",
+  "file": "scheduler.go",
+  "find": "\t\tc.abort()\n\t}\n}",
+  "replace": "\t\t_ = c\n\t}\n}"
+ },
+ {
+  "name": "add-schedules-disabled",
+  "file": "scheduler.go",
+  "find": "func (s *scheduler) addJob(job *jsobj.Object) {\n\tif truthy(job.Get(\"enabled\")) {",
+  "replace": "func (s *scheduler) addJob(job *jsobj.Object) {\n\tif true {"
+ },
+ {
+  "name": "add-event-type",
+  "file": "scheduler.go",
+  "find": "ev.Set(\"type\", \"add\")",
+  "replace": "ev.Set(\"type\", \"added\")"
+ },
+ {
+  "name": "remove-event-type",
+  "file": "scheduler.go",
+  "find": "ev.Set(\"type\", \"remove\")",
+  "replace": "ev.Set(\"type\", \"removed\")"
+ },
+ {
+  "name": "remove-event-jobid",
+  "file": "scheduler.go",
+  "find": "ev.Set(\"jobId\", id)\n\ts.emitChange(ev)\n}\n\nfunc (s *scheduler) updateJob",
+  "replace": "s.emitChange(ev)\n}\n\nfunc (s *scheduler) updateJob"
+ },
+ {
+  "name": "update-schedules-disabled",
+  "file": "scheduler.go",
+  "find": "if truthy(updated.Get(\"enabled\")) {\n\t\ts.scheduleJob(updated)",
+  "replace": "if true {\n\t\ts.scheduleJob(updated)"
+ },
+ {
+  "name": "update-keeps-old-timer",
+  "file": "scheduler.go",
+  "find": "func (s *scheduler) updateJob(id string, updated *jsobj.Object) {\n\ts.unscheduleJob(id)",
+  "replace": "func (s *scheduler) updateJob(id string, updated *jsobj.Object) {"
+ },
+ {
+  "name": "update-event-type",
+  "file": "scheduler.go",
+  "find": "ev := jsobj.New()\n\tev.Set(\"type\", \"update\")\n\tev.Set(\"job\", updated)",
+  "replace": "ev := jsobj.New()\n\tev.Set(\"type\", \"change\")\n\tev.Set(\"job\", updated)"
+ },
+ {
+  "name": "emit-not-on-bus",
+  "file": "scheduler.go",
+  "find": "s.pi.Emit(\"cron:change\", event)",
+  "replace": "_ = event"
+ },
+ {
+  "name": "interval-needs-ms-dropped",
+  "file": "scheduler.go",
+  "find": "case strictEqualString(job.Get(\"type\"), \"interval\") && truthy(job.Get(\"intervalMs\")):",
+  "replace": "case strictEqualString(job.Get(\"type\"), \"interval\"):"
+ },
+ {
+  "name": "interval-min-one",
+  "file": "scheduler.go",
+  "find": "if !(ms >= 1) {\n\t\t\tms = 1",
+  "replace": "if !(ms >= 1) {\n\t\t\tms = 1000"
+ },
+ {
+  "name": "once-past-not-disabled",
+  "file": "scheduler.go",
+  "find": "partial := jsobj.New()\n\t\t\tpartial.Set(\"enabled\", false)\n\t\t\tpartial.Set(\"lastStatus\", \"error\")",
+  "replace": "partial := jsobj.New()\n\t\t\tpartial.Set(\"lastStatus\", \"error\")"
+ },
+ {
+  "name": "once-past-status",
+  "file": "scheduler.go",
+  "find": "partial.Set(\"lastStatus\", \"error\")\n\t\t\t_, _ = s.storage.UpdateJob(id, partial)",
+  "replace": "partial.Set(\"lastStatus\", \"success\")\n\t\t\t_, _ = s.storage.UpdateJob(id, partial)"
+ },
+ {
+  "name": "once-past-error-text",
+  "file": "scheduler.go",
+  "find": "\"Scheduled time \"+jsStr(job.Get(\"schedule\"))+\" is in the past\"",
+  "replace": "\"Scheduled time is in the past\""
+ },
+ {
+  "name": "once-not-auto-disabled",
+  "file": "scheduler.go",
+  "find": "off.Set(\"enabled\", false)",
+  "replace": "off.Set(\"enabled\", true)"
+ },
+ {
+  "name": "once-update-event-job-enabled",
+  "file": "scheduler.go",
+  "find": "j := job.Clone()\n\t\t\t\tj.Set(\"enabled\", false)",
+  "replace": "j := job.Clone()"
+ },
+ {
+  "name": "once-delay-zero-fires",
+  "file": "scheduler.go",
+  "find": "if delay > 0 {",
+  "replace": "if delay >= 0 {"
+ },
+ {
+  "name": "cron-schedule-failure-silent",
+  "file": "scheduler.go",
+  "find": "logf(\"Failed to schedule job %s: %v\", id, err)\n\t\t\ts.emitChange(errorEvent(id, err.Error()))",
+  "replace": "logf(\"Failed to schedule job %s: %v\", id, err)"
+ },
+ {
+  "name": "cron-schedule-failure-text",
+  "file": "scheduler.go",
+  "find": "logf(\"Failed to schedule job %s: %v\", id, err)",
+  "replace": "logf(\"Could not schedule job %s: %v\", id, err)"
+ },
+ {
+  "name": "unschedule-keeps-cron",
+  "file": "scheduler.go",
+  "find": "\tif c != nil {\n\t\tc.Stop()\n\t}\n\tif t != nil {",
+  "replace": "\tif t != nil {"
+ },
+ {
+  "name": "unschedule-keeps-timer",
+  "file": "scheduler.go",
+  "find": "\tif t != nil {\n\t\tt.stop()\n\t}\n}\n\n// storageFailure",
+  "replace": "}\n\n// storageFailure"
+ },
+ {
+  "name": "fire-fresh-ignored-disabled",
+  "file": "scheduler.go",
+  "find": "if fresh == nil || !truthy(fresh.Get(\"enabled\")) {",
+  "replace": "if fresh == nil {"
+ },
+ {
+  "name": "fire-fresh-ignored-session",
+  "file": "scheduler.go",
+  "find": "\tif !isLoadedFor(fresh, s.sess.SessionID()) {\n\t\treturn\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "fire-model-branch-dropped",
+  "file": "scheduler.go",
+  "find": "if truthy(job.Get(\"model\")) {\n\t\ts.executeJobInSubagent(job)",
+  "replace": "if false {\n\t\ts.executeJobInSubagent(job)"
+ },
+ {
+  "name": "fire-running-status-dropped",
+  "file": "scheduler.go",
+  "find": "running := jsobj.New()\n\t\trunning.Set(\"lastStatus\", \"running\")\n\t\tif _, err := s.storage.UpdateJob(id, running); err != nil {\n\t\t\treturn err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "fire-marker-content",
+  "file": "scheduler.go",
+  "find": "Content: []any{}, Display: true, Details: details}, nil)",
+  "replace": "Content: textBlock(jsStr(job.Get(\"prompt\"))), Display: true, Details: details}, nil)"
+ },
+ {
+  "name": "fire-marker-hidden",
+  "file": "scheduler.go",
+  "find": "Content: []any{}, Display: true, Details: details}, nil)",
+  "replace": "Content: []any{}, Display: false, Details: details}, nil)"
+ },
+ {
+  "name": "fire-marker-type",
+  "file": "scheduler.go",
+  "find": "customMessage{CustomType: \"scheduled_prompt\", Content: []any{}",
+  "replace": "customMessage{CustomType: \"scheduled-prompt\", Content: []any{}"
+ },
+ {
+  "name": "fire-details-prompt",
+  "file": "scheduler.go",
+  "find": "details.Set(\"prompt\", job.Get(\"prompt\"))\n\t\tif err",
+  "replace": "if err"
+ },
+ {
+  "name": "fire-deliver-as",
+  "file": "scheduler.go",
+  "find": "s.pi.SendUserMessage(jsStr(job.Get(\"prompt\")), \"followUp\")",
+  "replace": "s.pi.SendUserMessage(jsStr(job.Get(\"prompt\")), \"steer\")"
+ },
+ {
+  "name": "fire-runcount-stale",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"runCount\", toNumber(current)+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {",
+  "replace": "stats.Set(\"runCount\", toNumber(job.Get(\"runCount\"))+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {"
+ },
+ {
+  "name": "fire-runcount-two",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"runCount\", toNumber(current)+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {",
+  "replace": "stats.Set(\"runCount\", toNumber(current)+2)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {"
+ },
+ {
+  "name": "fire-nextrun-dropped",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {",
+  "replace": "if _, err := s.storage.UpdateJob(id, stats); err != nil {"
+ },
+ {
+  "name": "fire-status-success",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"lastStatus\", \"success\")\n\t\tstats.Set(\"runCount\", toNumber(current)+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err",
+  "replace": "stats.Set(\"lastStatus\", \"ok\")\n\t\tstats.Set(\"runCount\", toNumber(current)+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err"
+ },
+ {
+  "name": "fire-second-event-dropped",
+  "file": "scheduler.go",
+  "find": "\t\tev2 := jsobj.New()\n\t\tev2.Set(\"type\", \"fire\")\n\t\tev2.Set(\"job\", job)\n\t\ts.emitChange(ev2)\n\t\treturn nil",
+  "replace": "\t\treturn nil"
+ },
+ {
+  "name": "fire-error-status",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"lastStatus\", \"error\")\n\t\ts.updateStats(id, stats)\n\t\ts.emitChange(errorEvent(id, err.Error()))\n\t}\n}\n\n// nextRunISO",
+  "replace": "stats.Set(\"lastStatus\", \"success\")\n\t\ts.updateStats(id, stats)\n\t\ts.emitChange(errorEvent(id, err.Error()))\n\t}\n}\n\n// nextRunISO"
+ },
+ {
+  "name": "fire-error-event-dropped",
+  "file": "scheduler.go",
+  "find": "stats.Set(\"lastStatus\", \"error\")\n\t\ts.updateStats(id, stats)\n\t\ts.emitChange(errorEvent(id, err.Error()))\n\t}\n}\n\n// nextRunISO",
+  "replace": "stats.Set(\"lastStatus\", \"error\")\n\t\ts.updateStats(id, stats)\n\t}\n}\n\n// nextRunISO"
+ },
+ {
+  "name": "fire-error-log-text",
+  "file": "scheduler.go",
+  "find": "logf(\"Failed to execute job %s: %v\", id, err)",
+  "replace": "logf(\"Job %s failed: %v\", id, err)"
+ },
+ {
+  "name": "nextrun-iso-undefined",
+  "file": "scheduler.go",
+  "find": "if s, ok := isoString(ms); ok {\n\t\treturn s\n\t}\n\treturn jsobj.Undefined",
+  "replace": "return jsobj.Undefined"
+ },
+ {
+  "name": "subagent-snippet-length",
+  "file": "scheduler.go",
+  "find": "const subagentOutputSnippetLength = 500",
+  "replace": "const subagentOutputSnippetLength = 400"
+ },
+ {
+  "name": "subagent-snippet-ellipsis",
+  "file": "scheduler.go",
+  "find": "+ \"…\"\n\t}\n\treturn text",
+  "replace": "+ \"...\"\n\t}\n\treturn text"
+ },
+ {
+  "name": "subagent-running-status",
+  "file": "scheduler.go",
+  "find": "running.Set(\"lastStatus\", \"running\")\n\ts.updateStats(id, running)",
+  "replace": "running.Set(\"lastStatus\", \"success\")\n\ts.updateStats(id, running)"
+ },
+ {
+  "name": "subagent-start-text",
+  "file": "scheduler.go",
+  "find": "\"🕐 Scheduled (subagent: \" + model + \"): \"",
+  "replace": "\"Scheduled (subagent: \" + model + \"): \""
+ },
+ {
+  "name": "subagent-start-mode",
+  "file": "scheduler.go",
+  "find": "markerDetails(job, \"subagent_start\", model)",
+  "replace": "markerDetails(job, \"subagent_started\", model)"
+ },
+ {
+  "name": "subagent-notify-strict",
+  "file": "scheduler.go",
+  "find": "notify := job.Get(\"notify\") == true",
+  "replace": "notify := truthy(job.Get(\"notify\"))"
+ },
+ {
+  "name": "subagent-wake-turn",
+  "file": "scheduler.go",
+  "find": "wake = &deliverOptions{DeliverAs: \"followUp\", TriggerTurn: true}",
+  "replace": "wake = &deliverOptions{DeliverAs: \"followUp\", TriggerTurn: false}"
+ },
+ {
+  "name": "subagent-wake-always",
+  "file": "scheduler.go",
+  "find": "\tvar wake *deliverOptions\n\tif notify {",
+  "replace": "\tvar wake *deliverOptions\n\tif true {"
+ },
+ {
+  "name": "subagent-aborted-posts",
+  "file": "scheduler.go",
+  "find": "\t\tif ctl.aborted.Load() {\n\t\t\treturn\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "subagent-active-not-cleared",
+  "file": "scheduler.go",
+  "find": "\t\ts.abortActive(ctl)\n",
+  "replace": ""
+ },
+ {
+  "name": "subagent-no-placeholder-output",
+  "file": "scheduler.go",
+  "find": "output = \"(subagent produced no text output)\"",
+  "replace": "output = \"\""
+ },
+ {
+  "name": "subagent-no-placeholder-error",
+  "file": "scheduler.go",
+  "find": "errText = \"(subagent failed with empty error)\"",
+  "replace": "errText = \"\""
+ },
+ {
+  "name": "subagent-output-untrimmed",
+  "file": "scheduler.go",
+  "find": "output := snippet(jsTrim(result.Text))",
+  "replace": "output := snippet(result.Text)"
+ },
+ {
+  "name": "subagent-error-untrimmed",
+  "file": "scheduler.go",
+  "find": "errText := snippet(jsTrim(result.Error))",
+  "replace": "errText := snippet(result.Error)"
+ },
+ {
+  "name": "subagent-success-runcount",
+  "file": "scheduler.go",
+  "find": "\t\t\tstats.Set(\"runCount\", toNumber(current)+1)\n\t\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\t\ts.updateStats(id, stats)",
+  "replace": "\t\t\tstats.Set(\"runCount\", toNumber(current))\n\t\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\t\ts.updateStats(id, stats)"
+ },
+ {
+  "name": "subagent-error-runcount",
+  "file": "scheduler.go",
+  "find": "\t\tstats.Set(\"lastStatus\", \"error\")\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\ts.updateStats(id, stats)\n\t\ts.emitChange(errorEvent(id, errText))",
+  "replace": "\t\tstats.Set(\"lastStatus\", \"error\")\n\t\tstats.Set(\"runCount\", toNumber(job.Get(\"runCount\"))+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\ts.updateStats(id, stats)\n\t\ts.emitChange(errorEvent(id, errText))"
+ },
+ {
+  "name": "subagent-marker-failure-text",
+  "file": "scheduler.go",
+  "find": "logf(\"Failed to post subagent_done marker for job %s: %v\", id, err)",
+  "replace": "logf(\"Could not post the done marker for job %s: %v\", id, err)"
+ },
+ {
+  "name": "subagent-error-marker-text",
+  "file": "scheduler.go",
+  "find": "logf(\"Failed to post subagent_error marker for job %s: %v\", id, err)",
+  "replace": "logf(\"Could not post the error marker for job %s: %v\", id, err)"
+ },
+ {
+  "name": "subagent-error-detail-dropped",
+  "file": "scheduler.go",
+  "find": "details.Set(\"error\", errText)",
+  "replace": "details.Set(\"err\", errText)"
+ },
+ {
+  "name": "subagent-output-detail-dropped",
+  "file": "scheduler.go",
+  "find": "details.Set(\"output\", output)",
+  "replace": "details.Set(\"out\", output)"
+ },
+ {
+  "name": "subagent-extensions-option",
+  "file": "scheduler.go",
+  "find": "subagentOptions{Extensions: undefinedToNil(job.Get(\"extensions\")), Skills: undefinedToNil(job.Get(\"skills\"))}",
+  "replace": "subagentOptions{Extensions: undefinedToNil(job.Get(\"skills\")), Skills: undefinedToNil(job.Get(\"extensions\"))}"
+ },
+ {
+  "name": "tool-guard-entry-type",
+  "file": "tool.go",
+  "find": "entry[\"type\"] == \"custom\" &&",
+  "replace": "entry[\"type\"] == \"custom_message\" &&"
+ },
+ {
+  "name": "tool-guard-window",
+  "file": "tool.go",
+  "find": "if len(entries) > 10 {\n\t\treturn entries[len(entries)-10:]",
+  "replace": "if len(entries) > 9 {\n\t\treturn entries[len(entries)-9:]"
+ },
+ {
+  "name": "tool-guard-all-actions",
+  "file": "tool.go",
+  "find": "if action == \"add\" {\n\t\tentries, err",
+  "replace": "if action != \"\" {\n\t\tentries, err"
+ },
+ {
+  "name": "tool-guard-text",
+  "file": "tool.go",
+  "find": "\"Cannot create scheduled prompts from within a scheduled prompt execution. This prevents infinite loops.\"",
+  "replace": "\"Cannot create scheduled prompts from within a scheduled prompt execution.\""
+ },
+ {
+  "name": "tool-error-not-text",
+  "file": "tool.go",
+  "find": "details.Set(\"error\", err.Error())\n\t\treturn toolOutput{Text: \"✗ Error: \" + err.Error(), Details: details}, nil",
+  "replace": "return toolOutput{}, err"
+ },
+ {
+  "name": "tool-error-prefix",
+  "file": "tool.go",
+  "find": "Text: \"✗ Error: \" + err.Error()",
+  "replace": "Text: \"Error: \" + err.Error()"
+ },
+ {
+  "name": "tool-unknown-action-text",
+  "file": "tool.go",
+  "find": "\"Unknown action: \" + action",
+  "replace": "\"Unknown: \" + action"
+ },
+ {
+  "name": "tool-missing-schedule-check",
+  "file": "tool.go",
+  "find": "if !pTruthy(params, \"schedule\") || !pTruthy(params, \"prompt\") {",
+  "replace": "if !pTruthy(params, \"prompt\") {"
+ },
+ {
+  "name": "tool-missing-prompt-check",
+  "file": "tool.go",
+  "find": "if !pTruthy(params, \"schedule\") || !pTruthy(params, \"prompt\") {",
+  "replace": "if !pTruthy(params, \"schedule\") {"
+ },
+ {
+  "name": "tool-missing-join",
+  "file": "tool.go",
+  "find": "strings.Join(missing, \" and \")",
+  "replace": "strings.Join(missing, \", \")"
+ },
+ {
+  "name": "tool-missing-text",
+  "file": "tool.go",
+  "find": "You must provide both schedule (e.g., '+10s', '*/5 * * * * *') and prompt (the text to execute).",
+  "replace": "You must provide both schedule and prompt."
+ },
+ {
+  "name": "tool-empty-model-add-text",
+  "file": "tool.go",
+  "find": "\"'model' must be a non-empty string. Omit the field for inline (no-model) jobs.\"",
+  "replace": "\"'model' must be non-empty.\""
+ },
+ {
+  "name": "tool-empty-model-update-text",
+  "file": "tool.go",
+  "find": "\"'model' must be a non-empty string. To switch a job from subagent back to inline, remove and re-add it without a model.\"",
+  "replace": "\"'model' must be non-empty.\""
+ },
+ {
+  "name": "tool-model-refusal-add-dropped",
+  "file": "tool.go",
+  "find": "\t\treturn toolOutput{}, refuse(modelFeature)\n\t}\n\n\tjobName := ",
+  "replace": "\t}\n\n\tjobName := "
+ },
+ {
+  "name": "tool-model-refusal-update-dropped",
+  "file": "tool.go",
+  "find": "\t\treturn toolOutput{}, refuse(modelFeature)\n\t}\n\n\tupdates := jsobj.New()",
+  "replace": "\t}\n\n\tupdates := jsobj.New()"
+ },
+ {
+  "name": "tool-refusal-as-text",
+  "file": "tool.go",
+  "find": "func refuse(feature string) error { return &refusalError{unsupported(feature)} }",
+  "replace": "func refuse(feature string) error { return unsupported(feature) }"
+ },
+ {
+  "name": "tool-name-generated",
+  "file": "tool.go",
+  "find": "jobName = \"job-\" + nanoid(6)",
+  "replace": "jobName = \"job-\" + nanoid(8)"
+ },
+ {
+  "name": "tool-duplicate-allowed",
+  "file": "tool.go",
+  "find": "\tif dup {\n\t\treturn toolOutput{}, errors.New(",
+  "replace": "\tif false {\n\t\treturn toolOutput{}, errors.New("
+ },
+ {
+  "name": "tool-duplicate-text",
+  "file": "tool.go",
+  "find": " + `\" already exists. Please use a different name or remove the existing job first.`",
+  "replace": " + `\" already exists.`"
+ },
+ {
+  "name": "tool-type-default",
+  "file": "tool.go",
+  "find": "typ := \"cron\"\n\tif pTruthy",
+  "replace": "typ := \"once\"\n\tif pTruthy"
+ },
+ {
+  "name": "tool-scope-inverted",
+  "file": "tool.go",
+  "find": "if d.defaultScope() == \"session\" {",
+  "replace": "if d.defaultScope() != \"session\" {"
+ },
+ {
+  "name": "tool-job-enabled",
+  "file": "tool.go",
+  "find": "job.Set(\"enabled\", true)",
+  "replace": "job.Set(\"enabled\", false)"
+ },
+ {
+  "name": "tool-job-runcount",
+  "file": "tool.go",
+  "find": "job.Set(\"runCount\", float64(0))",
+  "replace": "job.Set(\"runCount\", float64(1))"
+ },
+ {
+  "name": "tool-job-created-at",
+  "file": "tool.go",
+  "find": "job.Set(\"createdAt\", isoNow())",
+  "replace": "job.Set(\"createdAt\", \"\")"
+ },
+ {
+  "name": "tool-job-id-size",
+  "file": "tool.go",
+  "find": "job.Set(\"id\", nanoid(10))",
+  "replace": "job.Set(\"id\", nanoid(8))"
+ },
+ {
+  "name": "tool-job-interval-ms",
+  "file": "tool.go",
+  "find": "job.Set(\"intervalMs\", *v.intervalMs)\n\t} else {",
+  "replace": "job.Set(\"intervalMs\", jsobj.Undefined)\n\t} else {"
+ },
+ {
+  "name": "tool-add-not-scheduled",
+  "file": "tool.go",
+  "find": "\tsched.addJob(job)\n\tdetails.Set(\"jobs\", []any{job})",
+  "replace": "\tdetails.Set(\"jobs\", []any{job})"
+ },
+ {
+  "name": "tool-add-not-stored",
+  "file": "tool.go",
+  "find": "\tif err := storage.AddJob(job); err != nil {\n\t\treturn toolOutput{}, err\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "tool-add-text",
+  "file": "tool.go",
+  "find": "`✓ Created cron job \"`",
+  "replace": "`✓ Created job \"`"
+ },
+ {
+  "name": "tool-add-details-jobname",
+  "file": "tool.go",
+  "find": "details.Set(\"jobName\", job.Get(\"name\"))\n\n\ttext :=",
+  "replace": "\n\ttext :="
+ },
+ {
+  "name": "tool-add-optional-fields",
+  "file": "tool.go",
+  "find": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\", \"skills\"} {",
+  "replace": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\"} {"
+ },
+ {
+  "name": "tool-remove-needs-id-text",
+  "file": "tool.go",
+  "find": "\"jobId is required for remove action\"",
+  "replace": "\"jobId is required\""
+ },
+ {
+  "name": "tool-remove-not-found-text",
+  "file": "tool.go",
+  "find": "\"Job not found: \" + jobIDStr",
+  "replace": "\"Not found: \" + jobIDStr"
+ },
+ {
+  "name": "tool-remove-not-unscheduled",
+  "file": "tool.go",
+  "find": "\t\tsched.removeJob(jobIDStr)\n",
+  "replace": ""
+ },
+ {
+  "name": "tool-remove-text",
+  "file": "tool.go",
+  "find": "`✓ Removed cron job \"`",
+  "replace": "`✓ Removed job \"`"
+ },
+ {
+  "name": "tool-enable-text",
+  "file": "tool.go",
+  "find": "word := \"Disabled\"\n\tif enabled {\n\t\tword = \"Enabled\"",
+  "replace": "word := \"Enabled\"\n\tif enabled {\n\t\tword = \"Disabled\""
+ },
+ {
+  "name": "tool-enable-flag",
+  "file": "tool.go",
+  "find": "enabled := action == \"enable\"",
+  "replace": "enabled := action == \"disable\""
+ },
+ {
+  "name": "tool-enable-not-stored",
+  "file": "tool.go",
+  "find": "\tif _, err := storage.UpdateJob(id, partial); err != nil {\n\t\treturn toolOutput{}, err\n\t}\n\tupdated := job.Clone()\n\tupdated.Set(\"enabled\", enabled)",
+  "replace": "\tupdated := job.Clone()\n\tupdated.Set(\"enabled\", enabled)"
+ },
+ {
+  "name": "tool-enable-not-rescheduled",
+  "file": "tool.go",
+  "find": "\tupdated.Set(\"enabled\", enabled)\n\tsched.updateJob(id, updated)",
+  "replace": "\tupdated.Set(\"enabled\", enabled)"
+ },
+ {
+  "name": "tool-cleanup-all-sessions",
+  "file": "tool.go",
+  "find": "if !truthy(j.Get(\"enabled\")) && isLoadedFor(j, mySessionID) {\n\t\t\tdisabled",
+  "replace": "if !truthy(j.Get(\"enabled\")) {\n\t\t\tdisabled"
+ },
+ {
+  "name": "tool-cleanup-enabled",
+  "file": "tool.go",
+  "find": "if !truthy(j.Get(\"enabled\")) && isLoadedFor(j, mySessionID) {\n\t\t\tdisabled",
+  "replace": "if isLoadedFor(j, mySessionID) {\n\t\t\tdisabled"
+ },
+ {
+  "name": "tool-cleanup-empty-text",
+  "file": "tool.go",
+  "find": "\"No disabled jobs to clean up\"",
+  "replace": "\"Nothing to clean up\""
+ },
+ {
+  "name": "tool-cleanup-text",
+  "file": "tool.go",
+  "find": "\"✓ Removed \" + strconv.Itoa(len(disabled)) + \" disabled job(s):\\n\"",
+  "replace": "\"✓ Removed \" + strconv.Itoa(len(disabled)) + \" job(s):\\n\""
+ },
+ {
+  "name": "tool-cleanup-line",
+  "file": "tool.go",
+  "find": "lines[i] = \"  - \" +",
+  "replace": "lines[i] = \"- \" +"
+ },
+ {
+  "name": "tool-cleanup-not-unscheduled",
+  "file": "tool.go",
+  "find": "\t\tsched.removeJob(jobID(j))\n\t}\n\tdetails.Set",
+  "replace": "\t}\n\tdetails.Set"
+ },
+ {
+  "name": "tool-update-name-falsy",
+  "file": "tool.go",
+  "find": "if pTruthy(params, \"name\") {\n\t\tupdates.Set(\"name\"",
+  "replace": "if _, ok := pOpt(params, \"name\"); ok {\n\t\tupdates.Set(\"name\""
+ },
+ {
+  "name": "tool-update-description-order",
+  "file": "tool.go",
+  "find": "for _, key := range []string{\"description\", \"notify\", \"extensions\", \"skills\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set",
+  "replace": "for _, key := range []string{\"description\", \"notify\", \"extensions\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set"
+ },
+ {
+  "name": "tool-update-type-of-job",
+  "file": "tool.go",
+  "find": "validateSchedule(jsStr(job.Get(\"type\")), pStr(params, \"schedule\"))",
+  "replace": "validateSchedule(\"cron\", pStr(params, \"schedule\"))"
+ },
+ {
+  "name": "tool-update-interval-ms",
+  "file": "tool.go",
+  "find": "\t\tif v.intervalMs != nil {\n\t\t\tupdates.Set(\"intervalMs\", *v.intervalMs)\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "tool-update-text",
+  "file": "tool.go",
+  "find": "`✓ Updated cron job \"`",
+  "replace": "`✓ Updated job \"`"
+ },
+ {
+  "name": "tool-update-not-rescheduled",
+  "file": "tool.go",
+  "find": "\tupdated.Assign(updates)\n\tsched.updateJob(id, updated)",
+  "replace": "\tupdated.Assign(updates)"
+ },
+ {
+  "name": "tool-update-needs-id-text",
+  "file": "tool.go",
+  "find": "\"jobId is required for update action\"",
+  "replace": "\"jobId is required\""
+ },
+ {
+  "name": "tool-list-filter",
+  "file": "tool.go",
+  "find": "\t\tif isLoadedFor(j, mySessionID) {\n\t\t\tjobs = append(jobs, j)",
+  "replace": "\t\tif true {\n\t\t\tjobs = append(jobs, j)"
+ },
+ {
+  "name": "tool-list-empty-text",
+  "file": "tool.go",
+  "find": "\"No cron jobs configured.\"",
+  "replace": "\"No jobs.\""
+ },
+ {
+  "name": "tool-list-header",
+  "file": "tool.go",
+  "find": "lines := []string{\"Configured cron jobs:\", \"\"}",
+  "replace": "lines := []string{\"Cron jobs:\", \"\"}"
+ },
+ {
+  "name": "tool-list-disabled-icon",
+  "file": "tool.go",
+  "find": "status := \"✗\"\n\t\tif truthy(job.Get(\"enabled\")) {\n\t\t\tstatus = \"✓\"",
+  "replace": "status := \"✓\"\n\t\tif truthy(job.Get(\"enabled\")) {\n\t\t\tstatus = \"✗\""
+ },
+ {
+  "name": "tool-list-next",
+  "file": "tool.go",
+  "find": "nextStr = \"Next: \" + iso",
+  "replace": "nextStr = \"Next \" + iso"
+ },
+ {
+  "name": "tool-list-never-run",
+  "file": "tool.go",
+  "find": "lastStr := \"Never run\"",
+  "replace": "lastStr := \"Never\""
+ },
+ {
+  "name": "tool-list-model-line",
+  "file": "tool.go",
+  "find": "lines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\"))+\" (runs in subagent\"+notify+ext+skills+\")\")",
+  "replace": "lines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\")))"
+ },
+ {
+  "name": "tool-list-notify-text",
+  "file": "tool.go",
+  "find": "notify = \", notifies parent\"",
+  "replace": "notify = \", notifies\""
+ },
+ {
+  "name": "tool-list-description",
+  "file": "tool.go",
+  "find": "lines = append(lines, \"  Description: \"+jsStr(job.Get(\"description\")))",
+  "replace": "_ = lines"
+ },
+ {
+  "name": "tool-list-status-default",
+  "file": "tool.go",
+  "find": "status2 := \"pending\"",
+  "replace": "status2 := \"none\""
+ },
+ {
+  "name": "tool-list-tail",
+  "file": "tool.go",
+  "find": "tail = \"| \" + nextStr",
+  "replace": "tail = nextStr"
+ },
+ {
+  "name": "settings-scope-typo-accepted",
+  "file": "settings.go",
+  "find": "ok && (s == \"session\" || s == \"workdir\")",
+  "replace": "ok"
+ },
+ {
+  "name": "settings-scope-workdir-dropped",
+  "file": "settings.go",
+  "find": "ok && (s == \"session\" || s == \"workdir\")",
+  "replace": "ok && s == \"session\""
+ },
+ {
+  "name": "settings-widget-visible-string",
+  "file": "settings.go",
+  "find": "if b, ok := o.Get(\"widgetVisible\").(bool); ok {",
+  "replace": "if b, ok := o.Get(\"widgetVisible\").(bool); ok || true {"
+ },
+ {
+  "name": "settings-project-not-overriding",
+  "file": "settings.go",
+  "find": "\tif project.defaultJobScope != \"\" {\n\t\tout.defaultJobScope = project.defaultJobScope\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "settings-project-widget-not-overriding",
+  "file": "settings.go",
+  "find": "\tif project.widgetVisible != nil {\n\t\tout.widgetVisible = project.widgetVisible\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "settings-save-pins-merged",
+  "file": "settings.go",
+  "find": "\t\t\tif cur.widgetVisible != nil {\n\t\t\t\tobj.Set(\"widgetVisible\", *cur.widgetVisible)\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "settings-save-replaces",
+  "file": "settings.go",
+  "find": "\t\t\tif cur.defaultJobScope != \"\" {\n\t\t\t\tobj.Set(\"defaultJobScope\", cur.defaultJobScope)\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "settings-save-failure-ignored",
+  "file": "settings.go",
+  "find": "return os.WriteFile(path, []byte(text), 0o666) == nil",
+  "replace": "_ = os.WriteFile(path, []byte(text), 0o666)\n\treturn true"
+ },
+ {
+  "name": "settings-global-file-name",
+  "file": "settings.go",
+  "find": "const settingsFile = \"schedule-prompts-settings.json\"",
+  "replace": "const settingsFile = \"schedule-settings.json\""
+ },
+ {
+  "name": "settings-malformed-warning",
+  "file": "settings.go",
+  "find": "logf(\"[pi-schedule-prompt] Ignoring malformed settings at %s: %v\", path, err)\n\t\treturn settings{}",
+  "replace": "return settings{}"
+ },
+ {
+  "name": "storage-not-atomic",
+  "file": "storage.go",
+  "find": "tmp := s.storePath + \".tmp\"\n\t\tif err = os.WriteFile(tmp, []byte(text), 0o666); err == nil {\n\t\t\terr = os.Rename(tmp, s.storePath)\n\t\t}",
+  "replace": "err = os.WriteFile(s.storePath, []byte(text), 0o666)"
+ },
+ {
+  "name": "storage-no-mkdir",
+  "file": "storage.go",
+  "find": "err = os.MkdirAll(s.piDir, 0o777)",
+  "replace": "err = nil"
+ },
+ {
+  "name": "storage-empty-version",
+  "file": "storage.go",
+  "find": "root.Set(\"version\", float64(1))",
+  "replace": "root.Set(\"version\", float64(2))"
+ },
+ {
+  "name": "storage-corrupt-error",
+  "file": "storage.go",
+  "find": "logf(\"Failed to load scheduled prompts: %v\", err)\n\t\treturn emptyStore(), nil\n\t}\n\troot, ok",
+  "replace": "return nil, err\n\t}\n\troot, ok"
+ },
+ {
+  "name": "storage-bad-shape-accepted",
+  "file": "storage.go",
+  "find": "\tjobs, ok := root.Get(\"jobs\").([]any)\n\tif !ok {\n\t\treturn nil, errBadStore(s.storePath)\n\t}",
+  "replace": "\tjobs, _ := root.Get(\"jobs\").([]any)"
+ },
+ {
+  "name": "storage-remove-all",
+  "file": "storage.go",
+  "find": "if !strictEqualString(j.Get(\"id\"), id) {\n\t\t\tkept = append(kept, j)",
+  "replace": "if true {\n\t\t\tkept = append(kept, j)"
+ },
+ {
+  "name": "storage-update-first-only",
+  "file": "storage.go",
+  "find": "\t\t\tj.Assign(partial)\n\t\t\treturn true, s.save(st)",
+  "replace": "\t\t\tj.Assign(partial)\n\t\t\treturn true, nil"
+ },
+ {
+  "name": "storage-has-name-id",
+  "file": "storage.go",
+  "find": "if strictEqualString(j.Get(\"name\"), name) {",
+  "replace": "if strictEqualString(j.Get(\"id\"), name) {"
+ },
+ {
+  "name": "storage-file-name",
+  "file": "storage.go",
+  "find": "filepath.Join(piDir, \"schedule-prompts.json\")",
+  "replace": "filepath.Join(piDir, \"scheduled-prompts.json\")"
+ },
+ {
+  "name": "storage-dir-name",
+  "file": "storage.go",
+  "find": "piDir := filepath.Join(cwd, \".pi\")",
+  "replace": "piDir := filepath.Join(cwd, \".pig\")"
+ },
+ {
+  "name": "widget-show-when-empty",
+  "file": "widget.go",
+  "find": "if !w.isVisible() || len(jobs) == 0 {",
+  "replace": "if !w.isVisible() {"
+ },
+ {
+  "name": "widget-ignores-visibility",
+  "file": "widget.go",
+  "find": "if !w.isVisible() || len(jobs) == 0 {",
+  "replace": "if len(jobs) == 0 {"
+ },
+ {
+  "name": "widget-key",
+  "file": "widget.go",
+  "find": "const widgetID = \"schedule-prompts\"",
+  "replace": "const widgetID = \"schedule-prompt\""
+ },
+ {
+  "name": "widget-placement",
+  "file": "widget.go",
+  "find": "ui.SetWidget(widgetID, &view, \"belowEditor\")",
+  "replace": "ui.SetWidget(widgetID, &view, \"aboveEditor\")"
+ },
+ {
+  "name": "widget-foreign-jobs",
+  "file": "widget.go",
+  "find": "\t\tif isLoadedFor(j, w.sessionID) {\n\t\t\tout = append(out, j)\n\t\t}",
+  "replace": "\t\tout = append(out, j)"
+ },
+ {
+  "name": "widget-hide-keeps-ticker",
+  "file": "widget.go",
+  "find": "\tui.SetWidget(widgetID, nil, \"\")\n\tif w.ticker != nil {\n\t\tclose(w.ticker)\n\t\tw.ticker = nil\n\t}",
+  "replace": "\tui.SetWidget(widgetID, nil, \"\")"
+ },
+ {
+  "name": "widget-refresh-seconds",
+  "file": "widget.go",
+  "find": "const widgetRefresh = 30 * time.Second",
+  "replace": "const widgetRefresh = 3 * time.Second"
+ },
+ {
+  "name": "widget-refresh-after-destroy",
+  "file": "widget.go",
+  "find": "\tw.ui = nil\n}",
+  "replace": "}"
+ },
+ {
+  "name": "widget-dedupe-first-value",
+  "file": "widget.go",
+  "find": "\t\t\tout[i] = j\n\t\t\tcontinue",
+  "replace": "\t\t\tcontinue"
+ },
+ {
+  "name": "widget-name-width",
+  "file": "widget.go",
+  "find": "jsPadEnd(truncCol(jsStr(job.Get(\"name\")), 15, 12), 15)",
+  "replace": "jsPadEnd(truncCol(jsStr(job.Get(\"name\")), 15, 12), 16)"
+ },
+ {
+  "name": "widget-name-cut",
+  "file": "widget.go",
+  "find": "truncCol(jsStr(job.Get(\"name\")), 15, 12)",
+  "replace": "truncCol(jsStr(job.Get(\"name\")), 15, 13)"
+ },
+ {
+  "name": "widget-prompt-width",
+  "file": "widget.go",
+  "find": "jsPadEnd(truncCol(jsStr(job.Get(\"prompt\")), 25, 22), 25)",
+  "replace": "jsPadEnd(truncCol(jsStr(job.Get(\"prompt\")), 25, 22), 24)"
+ },
+ {
+  "name": "widget-schedule-cut",
+  "file": "widget.go",
+  "find": "jsPadEnd(truncCol(schedule, 15, 12), 15)",
+  "replace": "jsPadEnd(truncCol(schedule, 15, 11), 15)"
+ },
+ {
+  "name": "widget-next-width",
+  "file": "widget.go",
+  "find": "nextText := jsPadEnd(nextRaw, 10)",
+  "replace": "nextText := jsPadEnd(nextRaw, 9)"
+ },
+ {
+  "name": "widget-last-width",
+  "file": "widget.go",
+  "find": "lastPadded := jsPadEnd(lastRaw, 10)",
+  "replace": "lastPadded := jsPadEnd(lastRaw, 9)"
+ },
+ {
+  "name": "widget-count-width",
+  "file": "widget.go",
+  "find": "jsPadEnd(jsStr(count), 3)",
+  "replace": "jsPadEnd(jsStr(count), 2)"
+ },
+ {
+  "name": "widget-status-running",
+  "file": "widget.go",
+  "find": "statusIcon = theme.Fg(\"warning\", \"⟳\")",
+  "replace": "statusIcon = theme.Fg(\"warning\", \"*\")"
+ },
+ {
+  "name": "widget-status-error",
+  "file": "widget.go",
+  "find": "statusIcon = theme.Fg(\"error\", \"!\")",
+  "replace": "statusIcon = theme.Fg(\"error\", \"x\")"
+ },
+ {
+  "name": "widget-status-disabled",
+  "file": "widget.go",
+  "find": "statusIcon = theme.Fg(\"muted\", \"✗\")",
+  "replace": "statusIcon = theme.Fg(\"muted\", \"-\")"
+ },
+ {
+  "name": "widget-cron-humanized",
+  "file": "widget.go",
+  "find": "schedule = humanizeCron(schedStr)",
+  "replace": "schedule = schedStr"
+ },
+ {
+  "name": "widget-once-short",
+  "file": "widget.go",
+  "find": "schedule = formatISOShort(schedStr)",
+  "replace": "schedule = schedStr"
+ },
+ {
+  "name": "widget-last-run-never",
+  "file": "widget.go",
+  "find": "lastRaw := \"never\"",
+  "replace": "lastRaw := \"-\""
+ },
+ {
+  "name": "widget-badge-bang",
+  "file": "widget.go",
+  "find": "bang = \"!\"",
+  "replace": "bang = \"*\""
+ },
+ {
+  "name": "widget-badge-cut",
+  "file": "widget.go",
+  "find": "truncCol(jsStr(job.Get(\"model\")), 12, 9)",
+  "replace": "truncCol(jsStr(job.Get(\"model\")), 12, 8)"
+ },
+ {
+  "name": "widget-relative-days",
+  "file": "widget.go",
+  "find": "timeStr = jsNumber(days) + \"d\"",
+  "replace": "timeStr = jsNumber(hours) + \"h\""
+ },
+ {
+  "name": "widget-relative-direction",
+  "file": "widget.go",
+  "find": "if diff > 0 {\n\t\treturn \"in \" + timeStr",
+  "replace": "if diff >= 0 {\n\t\treturn \"in \" + timeStr"
+ },
+ {
+  "name": "widget-header",
+  "file": "widget.go",
+  "find": "theme.Fg(\"dim\", \" (\"+jsNumber(float64(len(jobs)))+\" jobs)\")",
+  "replace": "theme.Fg(\"dim\", \" (\"+jsNumber(float64(len(jobs)))+\")\")"
+ },
+ {
+  "name": "widget-title",
+  "file": "widget.go",
+  "find": "theme.Bold(\"Scheduled Prompts\")",
+  "replace": "theme.Bold(\"Schedules\")"
+ },
+ {
+  "name": "widget-rpc-rows",
+  "file": "widget.go",
+  "find": "if u.ctx.Mode() == \"rpc\" {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "widget-no-ui-guard",
+  "file": "widget.go",
+  "find": "\tif !u.ctx.HasUI() {\n\t\treturn\n\t}\n\tif view == nil {",
+  "replace": "\tif view == nil {"
+ },
+ {
+  "name": "render-default-name",
+  "file": "render.go",
+  "find": "orDefault(details, \"jobName\", \"Unknown\")",
+  "replace": "orDefault(details, \"jobName\", \"unknown\")"
+ },
+ {
+  "name": "render-model-tag",
+  "file": "render.go",
+  "find": "tag = \" (subagent: \" + model + \")\"",
+  "replace": "tag = \" (\" + model + \")\""
+ },
+ {
+  "name": "render-start-prompt",
+  "file": "render.go",
+  "find": "line = theme.Fg(\"accent\", \"🕐 Scheduled\"+tag+\": \"+jobName)\n\t\tif prompt != \"\" {\n\t\t\tline += theme.Fg(\"dim\", ` → \"`+prompt+`\"`)\n\t\t}\n\tcase \"subagent_done\"",
+  "replace": "line = theme.Fg(\"accent\", \"🕐 Scheduled\"+tag+\": \"+jobName)\n\tcase \"subagent_done\""
+ },
+ {
+  "name": "render-done-text",
+  "file": "render.go",
+  "find": "\"✓ Scheduled\"+tag+\" finished: \"+jobName",
+  "replace": "\"✓ Scheduled\"+tag+\" done: \"+jobName"
+ },
+ {
+  "name": "render-error-text",
+  "file": "render.go",
+  "find": "\"✗ Scheduled\"+tag+\" failed: \"+jobName",
+  "replace": "\"✗ Scheduled\"+tag+\" error: \"+jobName"
+ },
+ {
+  "name": "render-error-color",
+  "file": "render.go",
+  "find": "line = theme.Fg(\"error\", \"✗ Scheduled\"",
+  "replace": "line = theme.Fg(\"accent\", \"✗ Scheduled\""
+ },
+ {
+  "name": "render-inline-prompt-quotes",
+  "file": "render.go",
+  "find": "line += theme.Fg(\"dim\", ` → \"`+prompt+`\"`)\n\t\t}\n\t}\n\treturn renderText(line, width)",
+  "replace": "line += theme.Fg(\"dim\", \" → \"+prompt)\n\t\t}\n\t}\n\treturn renderText(line, width)"
+ },
+ {
+  "name": "render-call-add",
+  "file": "render.go",
+  "find": "text = \"Adding cron job: \" + nameText",
+  "replace": "text = \"Add cron job: \" + nameText"
+ },
+ {
+  "name": "render-call-name-fallback",
+  "file": "render.go",
+  "find": "orDefault(args, \"name\", orDefault(args, \"jobId\", \"\"))",
+  "replace": "orDefault(args, \"name\", \"\")"
+ },
+ {
+  "name": "render-call-capitalize",
+  "file": "render.go",
+  "find": "text = capitalize(actionText) + \" job: \" + nameText",
+  "replace": "text = actionText + \" job: \" + nameText"
+ },
+ {
+  "name": "render-call-default",
+  "file": "render.go",
+  "find": "text = actionText + \" cron job\"",
+  "replace": "text = actionText + \" job\""
+ },
+ {
+  "name": "render-result-check",
+  "file": "render.go",
+  "find": "theme.Fg(\"success\", \"✓ \"+jsStr(details[\"action\"])+\" \"+jobName)",
+  "replace": "theme.Fg(\"success\", \"✓ \"+jobName)"
+ },
+ {
+  "name": "render-result-list-header",
+  "file": "render.go",
+  "find": "theme.Bold(\"Cron Jobs:\")",
+  "replace": "theme.Bold(\"Jobs:\")"
+ },
+ {
+  "name": "render-result-subagent-tag",
+  "file": "render.go",
+  "find": "subagentTag = \"(subagent, notifies parent)\"",
+  "replace": "subagentTag = \"(subagent, notifies)\""
+ },
+ {
+  "name": "render-result-tags-join",
+  "file": "render.go",
+  "find": "strings.Join(tags, \" + \")",
+  "replace": "strings.Join(tags, \", \")"
+ },
+ {
+  "name": "render-result-last-run",
+  "file": "render.go",
+  "find": "if truthy(job[\"lastRun\"]) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ext-startup-cleanup",
+  "file": "extension.go",
+  "find": "if reason != \"startup\" {\n\t\ta.autoCleanupDisabledJobs(ctx)",
+  "replace": "if true {\n\t\ta.autoCleanupDisabledJobs(ctx)"
+ },
+ {
+  "name": "ext-switch-no-cleanup",
+  "file": "extension.go",
+  "find": "if reason != \"startup\" {\n\t\ta.autoCleanupDisabledJobs(ctx)",
+  "replace": "if false {\n\t\ta.autoCleanupDisabledJobs(ctx)"
+ },
+ {
+  "name": "ext-shutdown-no-cleanup",
+  "file": "extension.go",
+  "find": "\ta.autoCleanupDisabledJobs(ctx)\n\ta.cleanupSession(ctx)\n\treturn nil, nil\n}\n\nfunc (a *app) toolDeps",
+  "replace": "\ta.cleanupSession(ctx)\n\treturn nil, nil\n}\n\nfunc (a *app) toolDeps"
+ },
+ {
+  "name": "ext-shutdown-keeps-scheduler",
+  "file": "extension.go",
+  "find": "\tif a.sched != nil {\n\t\ta.sched.stop()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-shutdown-keeps-widget",
+  "file": "extension.go",
+  "find": "\t\ta.widget.hide(sdkWidgetUI{ctx})\n\t\ta.widget.destroy()",
+  "replace": "\t\ta.widget.destroy()"
+ },
+ {
+  "name": "ext-cleanup-foreign",
+  "file": "extension.go",
+  "find": "if !truthy(j.Get(\"enabled\")) && isLoadedFor(j, my) {",
+  "replace": "if !truthy(j.Get(\"enabled\")) {"
+ },
+ {
+  "name": "ext-reinit-keeps-scheduler",
+  "file": "extension.go",
+  "find": "\ta.cleanupSession(ctx)\n\ta.settings = loadSettings(ctx.Cwd())",
+  "replace": "\ta.settings = loadSettings(ctx.Cwd())"
+ },
+ {
+  "name": "ext-widget-not-shown",
+  "file": "extension.go",
+  "find": "\tif a.isWidgetVisible() {\n\t\ta.widget.show(sdkWidgetUI{ctx})\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-widget-not-refreshed",
+  "file": "extension.go",
+  "find": "a.sched.onChange(func(*jsobj.Object) { w.refresh() })",
+  "replace": "_ = w"
+ },
+ {
+  "name": "ext-scope-default",
+  "file": "extension.go",
+  "find": "if a.settings.defaultJobScope == \"\" {\n\t\treturn \"session\"",
+  "replace": "if a.settings.defaultJobScope == \"\" {\n\t\treturn \"workdir\""
+ },
+ {
+  "name": "ext-widget-default-visible",
+  "file": "extension.go",
+  "find": "a.widgetOn.Store(a.settings.widgetVisible == nil || *a.settings.widgetVisible)",
+  "replace": "a.widgetOn.Store(a.settings.widgetVisible != nil && *a.settings.widgetVisible)"
+ },
+ {
+  "name": "ext-marker-delivery-all",
+  "file": "extension.go",
+  "find": "\tif opts != nil {\n\t\to.DeliverAs = opts.DeliverAs",
+  "replace": "\tif opts != nil || true {\n\t\to.DeliverAs = \"followUp\""
+ },
+ {
+  "name": "ext-sendmessage-trigger",
+  "file": "extension.go",
+  "find": "\t\tif opts.TriggerTurn {\n\t\t\to.TriggerTurn = sdk.Bool(true)\n\t\t}",
+  "replace": "\t\to.TriggerTurn = sdk.Bool(false)"
+ },
+ {
+  "name": "ext-tool-name",
+  "file": "schema.go",
+  "find": "toolName  = \"schedule_prompt\"",
+  "replace": "toolName  = \"schedule-prompt\""
+ },
+ {
+  "name": "ext-tool-description",
+  "file": "schema.go",
+  "find": "Actions: add (needs schedule+prompt), list, remove/enable/disable/update (need jobId), cleanup.",
+  "replace": "Actions: add, list, remove, enable, disable, update, cleanup."
+ },
+ {
+  "name": "ext-tool-required",
+  "file": "schema.go",
+  "find": "\"required\": []any{\"action\"},",
+  "replace": "\"required\": []any{\"action\", \"prompt\"},"
+ },
+ {
+  "name": "ext-tool-model-min-length",
+  "file": "schema.go",
+  "find": "\"minLength\": 1,",
+  "replace": "\"minLength\": 0,"
+ },
+ {
+  "name": "ext-command-refusal",
+  "file": "extension.go",
+  "find": "ctx.Notify(unsupported(commandFeature).Error(), \"error\")",
+  "replace": "_ = commandFeature"
+ },
+ {
+  "name": "nanoid-alphabet",
+  "file": "nanoid.go",
+  "find": "out[i] = nanoidAlphabet[v&63]",
+  "replace": "out[i] = nanoidAlphabet[v&31]"
+ },
+ {
+  "name": "js-truthy-zero",
+  "file": "js.go",
+  "find": "return t != 0 && !math.IsNaN(t)",
+  "replace": "return !math.IsNaN(t)"
+ },
+ {
+  "name": "js-truthy-empty-string",
+  "file": "js.go",
+  "find": "case string:\n\t\treturn t != \"\"",
+  "replace": "case string:\n\t\treturn true"
+ },
+ {
+  "name": "js-number-exponent",
+  "file": "js.go",
+  "find": "if math.Abs(f) < 1e21 && math.Abs(f) >= 1e-6 {",
+  "replace": "if math.Abs(f) < 1e12 && math.Abs(f) >= 1e-6 {"
+ },
+ {
+  "name": "js-str-null",
+  "file": "js.go",
+  "find": "case nil:\n\t\treturn \"null\"",
+  "replace": "case nil:\n\t\treturn \"\""
+ },
+ {
+  "name": "js-substring-utf16",
+  "file": "js.go",
+  "find": "u := utf16.Encode([]rune(s))\n\tend = min(end, len(u))",
+  "replace": "u := []uint16([]uint16(nil))\n\tfor _, b := range []byte(s) {\n\t\tu = append(u, uint16(b))\n\t}\n\tend = min(end, len(u))"
+ },
+ {
+  "name": "js-len-astral",
+  "file": "js.go",
+  "find": "\t\tif r > 0xFFFF {\n\t\t\tn++\n\t\t}\n\t}\n\treturn n\n}\n\n// jsSubstring",
+  "replace": "\t}\n\treturn n\n}\n\n// jsSubstring"
+ },
+ {
+  "name": "js-pad-end",
+  "file": "js.go",
+  "find": "if l := jsLen(s); l < n {",
+  "replace": "if l := jsLen(s); l <= n {"
+ },
+ {
+  "name": "croner-dom-dow-and",
+  "file": "internal/croner/date.go",
+  "find": "case !p.starDOM:\n\t\t\t\tmatch = match || dowMatch != 0",
+  "replace": "case p.starDOM:\n\t\t\t\tmatch = match || dowMatch != 0"
+ },
+ {
+  "name": "croner-and-logic-ignored",
+  "file": "internal/croner/date.go",
+  "find": "case p.useAndLogic:\n\t\t\t\tmatch = match && dowMatch != 0",
+  "replace": "case false:\n\t\t\t\tmatch = match && dowMatch != 0"
+ },
+ {
+  "name": "croner-last-weekday-sunday",
+  "file": "internal/croner/date.go",
+  "find": "case 0:\n\t\treturn last - 2",
+  "replace": "case 0:\n\t\treturn last - 1"
+ },
+ {
+  "name": "croner-last-weekday-saturday",
+  "file": "internal/croner/date.go",
+  "find": "case 6:\n\t\treturn last - 1",
+  "replace": "case 6:\n\t\treturn last - 2"
+ },
+ {
+  "name": "croner-nearest-first",
+  "file": "internal/croner/date.go",
+  "find": "case 6:\n\t\tif day == 1 {\n\t\t\treturn day + 2",
+  "replace": "case 6:\n\t\tif day == 1 {\n\t\t\treturn day + 1"
+ },
+ {
+  "name": "croner-nearest-last-sunday",
+  "file": "internal/croner/date.go",
+  "find": "if day == dim {\n\t\t\treturn day - 2",
+  "replace": "if day == dim {\n\t\t\treturn day - 1"
+ },
+ {
+  "name": "croner-nearest-missing-day",
+  "file": "internal/croner/date.go",
+  "find": "if day > dim {\n\t\treturn -1",
+  "replace": "if day > dim+1 {\n\t\treturn -1"
+ },
+ {
+  "name": "croner-nth-last",
+  "file": "internal/croner/date.go",
+  "find": "if utcWeekday(year, month, dd) == weekday {\n\t\t\t\treturn false",
+  "replace": "if utcWeekday(year, month, dd) == weekday {\n\t\t\t\treturn true"
+ },
+ {
+  "name": "croner-nth-count",
+  "file": "internal/croner/date.go",
+  "find": "if utcWeekday(year, month, dd) == weekday {\n\t\t\tcount++",
+  "replace": "if utcWeekday(year, month, dd) == weekday {\n\t\t\tcount += 2"
+ },
+ {
+  "name": "croner-february-length",
+  "file": "internal/croner/date.go",
+  "find": "var daysOfMonth = [12]int{31, 28, 31,",
+  "replace": "var daysOfMonth = [12]int{31, 29, 31,"
+ },
+ {
+  "name": "croner-increment-second",
+  "file": "internal/croner/date.go",
+  "find": "d.f[fSecond]++\n\td.f[fMs] = 0",
+  "replace": "d.f[fSecond] += 2\n\td.f[fMs] = 0"
+ },
+ {
+  "name": "croner-increment-ms",
+  "file": "internal/croner/date.go",
+  "find": "d.f[fSecond]++\n\td.f[fMs] = 0",
+  "replace": "d.f[fSecond]++"
+ },
+ {
+  "name": "croner-reset-lower",
+  "file": "internal/croner/date.go",
+  "find": "d.f[recursionSteps[reset].target] = -recursionSteps[reset].offset",
+  "replace": "d.f[recursionSteps[reset].target] = 0"
+ },
+ {
+  "name": "croner-parent-increment",
+  "file": "internal/croner/date.go",
+  "find": "d.f[step.parent]++",
+  "replace": "d.f[step.parent] += 2"
+ },
+ {
+  "name": "croner-depth-limit",
+  "file": "internal/croner/date.go",
+  "find": "const MaxRecurseDepth = 7300",
+  "replace": "const MaxRecurseDepth = 3000"
+ },
+ {
+  "name": "croner-year-limit",
+  "file": "internal/croner/date.go",
+  "find": "} else if d.f[fYear] >= 3000 {",
+  "replace": "} else if d.f[fYear] >= 2030 {"
+ },
+ {
+  "name": "croner-month-names",
+  "file": "internal/croner/pattern.go",
+  "find": "\"jan\", \"feb\", \"mar\", \"apr\", \"may\", \"jun\", \"jul\", \"aug\", \"sep\", \"oct\", \"nov\", \"dec\"} {\n\t\tconf = replaceFold(conf, m, strconv.Itoa(i+1))",
+  "replace": "\"jan\", \"feb\", \"mar\", \"apr\", \"may\", \"jun\", \"jul\", \"aug\", \"sep\", \"oct\", \"nov\", \"dec\"} {\n\t\tconf = replaceFold(conf, m, strconv.Itoa(i))"
+ },
+ {
+  "name": "croner-day-names",
+  "file": "internal/croner/pattern.go",
+  "find": "for i, d := range []string{\"sun\", \"mon\", \"tue\", \"wed\", \"thu\", \"fri\", \"sat\"} {\n\t\tconf = replaceFold(conf, d, strconv.Itoa(i))",
+  "replace": "for i, d := range []string{\"sun\", \"mon\", \"tue\", \"wed\", \"thu\", \"fri\", \"sat\"} {\n\t\tconf = replaceFold(conf, d, strconv.Itoa(i+1))"
+ },
+ {
+  "name": "croner-sunday-range-end",
+  "file": "internal/croner/pattern.go",
+  "find": "conf = replaceFold(conf, \"-sun\", \"-7\")",
+  "replace": "conf = replaceFold(conf, \"-sun\", \"-0\")"
+ },
+ {
+  "name": "croner-fold-case",
+  "file": "internal/croner/pattern.go",
+  "find": "if c >= 'A' && c <= 'Z' {\n\t\t\tc |= 0x20\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "croner-seven-is-sunday",
+  "file": "internal/croner/pattern.go",
+  "find": "if index == 7 {\n\t\t\tindex = 0\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "croner-step-over-length",
+  "file": "internal/croner/pattern.go",
+  "find": "if *steps > float64(partLength[typ]) {",
+  "replace": "if *steps > float64(partLength[typ])+1 {"
+ },
+ {
+  "name": "croner-step-zero",
+  "file": "internal/croner/pattern.go",
+  "find": "if *steps == 0 {",
+  "replace": "if *steps == -1 {"
+ },
+ {
+  "name": "croner-range-order",
+  "file": "internal/croner/pattern.go",
+  "find": "if lower > upper {\n\t\treturn perr(\"CronPattern: From value is larger than to value: '%'\", conf)",
+  "replace": "if lower >= upper {\n\t\treturn perr(\"CronPattern: From value is larger than to value: '%'\", conf)"
+ },
+ {
+  "name": "croner-question-mark",
+  "file": "internal/croner/pattern.go",
+  "find": "parts[i] = strings.ReplaceAll(parts[i], \"?\", \"*\")",
+  "replace": "parts[i] = parts[i]"
+ },
+ {
+  "name": "croner-lw",
+  "file": "internal/croner/pattern.go",
+  "find": "if strings.ToUpper(parts[3]) == \"LW\" {",
+  "replace": "if strings.ToUpper(parts[3]) == \"LWX\" {"
+ },
+ {
+  "name": "croner-dow-plus",
+  "file": "internal/croner/pattern.go",
+  "find": "if strings.HasPrefix(parts[5], \"+\") {",
+  "replace": "if strings.HasPrefix(parts[5], \"-\") {"
+ },
+ {
+  "name": "croner-nick-weekly",
+  "file": "internal/croner/pattern.go",
+  "find": "case \"@weekly\":\n\t\treturn \"0 0 * * 0\", nil",
+  "replace": "case \"@weekly\":\n\t\treturn \"0 0 * * 1\", nil"
+ },
+ {
+  "name": "croner-illegal-text",
+  "file": "internal/croner/pattern.go",
+  "find": "\"CronPattern: configuration entry % (%) contains illegal characters.\"",
+  "replace": "\"CronPattern: configuration entry % (%) is illegal.\""
+ },
+ {
+  "name": "croner-empty-text",
+  "file": "internal/croner/pattern.go",
+  "find": "is empty, check for trailing spaces.",
+  "replace": "is empty."
+ },
+ {
+  "name": "croner-nth-text",
+  "file": "internal/croner/pattern.go",
+  "find": "\"CronPattern: nth weekday out of range, should be 1-5 or L. Value: %, Type: string\"",
+  "replace": "\"CronPattern: nth weekday out of range. Value: %, Type: string\""
+ },
+ {
+  "name": "croner-nth-fraction",
+  "file": "internal/croner/pattern.go",
+  "find": "if f == math.Trunc(f) {\n\t\t\t\tp.dayOfWeek[index] |= occurrenceBitmasks[int(f)-1]\n\t\t\t}",
+  "replace": "p.dayOfWeek[index] |= occurrenceBitmasks[int(f)-1]"
+ },
+ {
+  "name": "croner-colon-is-date",
+  "file": "internal/croner/cron.go",
+  "find": "if i := strings.IndexByte(pattern, ':'); pattern != \"\" && i > 0 {",
+  "replace": "if i := strings.IndexByte(pattern, ':'); pattern != \"\" && i > 5 {"
+ },
+ {
+  "name": "croner-fromtz-overlap",
+  "file": "internal/croner/date.go",
+  "find": "if altCheck.same(tp) {\n\t\t\treturn alt, nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "croner-fromtz-gap",
+  "file": "internal/croner/date.go",
+  "find": "if guess > guess2 {\n\t\treturn guess, nil\n\t}\n\treturn guess2, nil",
+  "replace": "return guess, nil"
+ },
+ {
+  "name": "croner-kill-keeps-next",
+  "file": "internal/croner/cron.go",
+  "find": "if nextRun == nil || c.kill {",
+  "replace": "if nextRun == nil {"
+ },
+ {
+  "name": "croner-once-past",
+  "file": "internal/croner/cron.go",
+  "find": "if c.once != nil && c.once.Date() <= previousRun.Date() {",
+  "replace": "if c.once != nil && c.once.Date() < previousRun.Date() {"
+ },
+ {
+  "name": "croner-max-delay",
+  "file": "internal/croner/cron.go",
+  "find": "const maxDelay = 30 * 1000",
+  "replace": "const maxDelay = 1000"
+ },
+ {
+  "name": "croner-reschedule",
+  "file": "internal/croner/cron.go",
+  "find": "_ = c.scheduleLocked() // croner's timer callback",
+  "replace": "// croner's timer callback"
+ },
+ {
+  "name": "croner-trigger-early",
+  "file": "internal/croner/cron.go",
+  "find": "shouldRun := jsdate.Now() >= target",
+  "replace": "shouldRun := jsdate.Now() >= target-500"
+ },
+ {
+  "name": "croner-validate-search",
+  "file": "internal/croner/cron.go",
+  "find": "_, err = c.next(nil)\n\treturn err",
+  "replace": "return nil"
+ },
+ {
+  "name": "jsdate-former-offset",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "if candBefore < candAfter {\n\t\t\treturn candBefore\n\t\t}\n\t\treturn candAfter",
+  "replace": "if candBefore > candAfter {\n\t\t\treturn candBefore\n\t\t}\n\t\treturn candAfter"
+ },
+ {
+  "name": "jsdate-gap-offset",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "\t}\n\treturn candBefore\n}",
+  "replace": "\t}\n\treturn candAfter\n}"
+ },
+ {
+  "name": "jsdate-year-map",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "func LocalDate(year, month, day, hour, minute, second, ms int64) float64 {\n\tif year >= 0 && year <= 99 {",
+  "replace": "func LocalDate(year, month, day, hour, minute, second, ms int64) float64 {\n\tif year >= 0 && year <= 50 {"
+ },
+ {
+  "name": "jsdate-weekday",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "Weekday: floorMod(days+4, 7),\n\t}\n}\n\n// UTCFields",
+  "replace": "Weekday: floorMod(days+3, 7),\n\t}\n}\n\n// UTCFields"
+ },
+ {
+  "name": "jsdate-iso-pad",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "pad(f.Ms, 3) + \"Z\"",
+  "replace": "pad(f.Ms, 2) + \"Z\""
+ },
+ {
+  "name": "jsdate-iso-year",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "case f.Year < 0:\n\t\tyear = \"-\" + pad(-f.Year, 6)",
+  "replace": "case f.Year < 0:\n\t\tyear = \"-\" + pad(-f.Year, 4)"
+ },
+ {
+  "name": "jsdate-time-clip",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "math.Abs(t) > maxTimeMs",
+  "replace": "math.Abs(t) >= maxTimeMs"
+ },
+ {
+  "name": "jsdate-makeday-month",
+  "file": "internal/jsdate/jsdate.go",
+  "find": "ym := year + floorDiv(month, 12)",
+  "replace": "ym := year + month/12"
+ },
+ {
+  "name": "jsdate-parse-keyword-pm",
+  "file": "internal/jsdate/parse.go",
+  "find": "{[3]uint32{'p', 'm', 0}, kwAmPm, 12},",
+  "replace": "{[3]uint32{'p', 'm', 0}, kwAmPm, 0},"
+ },
+ {
+  "name": "jsdate-parse-keyword-est",
+  "file": "internal/jsdate/parse.go",
+  "find": "{[3]uint32{'e', 's', 't'}, kwTimeZoneName, -5},",
+  "replace": "{[3]uint32{'e', 's', 't'}, kwTimeZoneName, -4},"
+ },
+ {
+  "name": "jsdate-parse-month-prefix",
+  "file": "internal/jsdate/parse.go",
+  "find": "(length <= 3 || k.typ == kwMonthName)",
+  "replace": "(length <= 3)"
+ },
+ {
+  "name": "jsdate-parse-two-digit-year",
+  "file": "internal/jsdate/parse.go",
+  "find": "if between(year, 50, 99) {\n\t\t\tyear += 1900",
+  "replace": "if between(year, 50, 99) {\n\t\t\tyear += 2000"
+ },
+ {
+  "name": "jsdate-parse-ms-digits",
+  "file": "internal/jsdate/parse.go",
+  "find": "if length == 1 {\n\t\t\tnumber *= 100",
+  "replace": "if length == 1 {\n\t\t\tnumber *= 10"
+ },
+ {
+  "name": "jsdate-parse-iso-local",
+  "file": "internal/jsdate/parse.go",
+  "find": "if tz.isEmpty() && tm.isEmpty() {\n\t\ttz.set(0)",
+  "replace": "if tz.isEmpty() {\n\t\ttz.set(0)"
+ },
+ {
+  "name": "jsdate-parse-hour24",
+  "file": "internal/jsdate/parse.go",
+  "find": "hourIs24 := sc.peek().value == 24",
+  "replace": "hourIs24 := false"
+ },
+ {
+  "name": "jsdate-parse-sign-year",
+  "file": "internal/jsdate/parse.go",
+  "find": "if sign < 0 && year == 0 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "jsdate-parse-whitespace",
+  "file": "internal/jsdate/parse.go",
+  "find": "case 0x09, 0x0B, 0x0C, 0x20, 0xA0, 0xFEFF, 0x1680, 0x202F, 0x205F, 0x3000:",
+  "replace": "case 0x09, 0x0B, 0x0C, 0x20, 0xFEFF, 0x1680, 0x202F, 0x205F, 0x3000:"
+ },
+ {
+  "name": "jsdate-parse-paren",
+  "file": "internal/jsdate/parse.go",
+  "find": "balance := 0\n\tfor {\n\t\tif r.ch == ')' {\n\t\t\tbalance--",
+  "replace": "balance := 0\n\tfor {\n\t\tif r.ch == ')' {\n\t\t\tbalance++"
+ },
+ {
+  "name": "jsdate-parse-tz-offset",
+  "file": "internal/jsdate/parse.go",
+  "find": "date -= utcOffset * 1000",
+  "replace": "date += utcOffset * 1000"
+ }
+]

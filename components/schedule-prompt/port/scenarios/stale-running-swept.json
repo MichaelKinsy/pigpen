@@ -1,0 +1,41 @@
+{
+  "name": "stale-running-swept",
+  "description": "A lastStatus of running left by an interrupted run is cleared at start; a foreign session's is not.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "list"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000003\",\n      \"name\": \"stuck\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"fore000003\",\n      \"name\": \"theirs\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"lastStatus\": \"running\",\n      \"session\": \"another-session\"\n    }\n  ],\n  \"version\": 1\n}"
+  }
+}
