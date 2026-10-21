@@ -89,10 +89,7 @@ func buildAdvertisedAgentCatalog(agents []AgentConfig, ceiling *resolvedCeiling)
 		if len(entries) == maxAdvertisedAgents {
 			break
 		}
-		// Never truncate canonical IDs into names that cannot be resolved.
-		if len(a.Name) > maxCatalogBytes {
-			continue
-		}
+		// A name is never truncated into one that cannot be resolved: an entry that does not fit the budget is left out whole.
 		entry := strings.Join([]string{
 			"  <subagent>",
 			"    <name>" + escapeXML(a.Name) + "</name>",
