@@ -1686,12 +1686,6 @@
   "replace": "h.fleet.onAgentFinished(r.ID)"
  },
  {
-  "name": "hub-viewer-persist",
-  "file": "ui_runtime.go",
-  "find": "persisted := persistViewerMarkdown(cwd, mode)",
-  "replace": "persisted := true"
- },
- {
   "name": "hub-dispose-keeps-fleet",
   "file": "ui_runtime.go",
   "find": "h.fleet.dispose()\n\th.mu.Lock()",
@@ -1756,12 +1750,6 @@
   "file": "ui_settings.go",
   "find": "case widgetModeAll, widgetModeBackground, widgetModeOff:\n\t\t\ts.widgetMode = m",
   "replace": "default:\n\t\t\ts.widgetMode = m"
- },
- {
-  "name": "settings-persist-overwrites",
-  "file": "ui_settings.go",
-  "find": "raw := map[string]any{}\n\tif data, err := os.ReadFile(path); err == nil {\n\t\t_ = json.Unmarshal(data, &raw)\n\t}",
-  "replace": "raw := map[string]any{}"
  },
  {
   "name": "start-model-precedence",
@@ -2092,18 +2080,6 @@
   "file": "ui_invocation.go",
   "find": "if res.maxTurns != nil && *res.maxTurns > 0 {",
   "replace": "if res.maxTurns != nil {"
- },
- {
-  "name": "persist-failure-text",
-  "file": "ui_runtime.go",
-  "find": "\" (session only; failed to persist)\"",
-  "replace": "\" (could not be saved)\""
- },
- {
-  "name": "persist-no-event",
-  "file": "ui_runtime.go",
-  "find": "_ = ctx.Events().Emit(\"subagents:settings_changed\", map[string]any{\"settings\": snapshot.asMap(), \"persisted\": persisted})",
-  "replace": "_ = snapshot"
  },
  {
   "name": "shutdown-keeps-nudges",
@@ -3858,12 +3834,6 @@
   "replace": ""
  },
  {
-  "name": "agents-menu-not-refused",
-  "file": "tools.go",
-  "find": "lines = append(lines, \"  \"+refusalText(",
-  "replace": "_ = (refusalText("
- },
- {
   "name": "resume-target-names-menu",
   "file": "workflow_task.go",
   "find": "Resume it once it has finished.`",
@@ -4530,18 +4500,6 @@
   "replace": "a.scheduler().start(scheduleManagerOf{a}, store, func(scheduleChange) {})"
  },
  {
-  "name": "schedule-switch-keeps-timers",
-  "file": "schedule_tool.go",
-  "find": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()",
-  "replace": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\t"
- },
- {
-  "name": "schedule-shutdown-keeps-timers",
-  "file": "schedule_tool.go",
-  "find": "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()",
-  "replace": "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\t"
- },
- {
   "name": "schedule-setting-ignored",
   "file": "schedule_feature.go",
   "find": "if b, ok := raw[\"schedulingEnabled\"].(bool); ok {",
@@ -4570,12 +4528,6 @@
   "file": "schedule_feature.go",
   "find": "props[\"schedule\"] = map[string]any{\"type\": \"string\", \"description\": scheduleParamDescription}",
   "replace": "props[\"schedule\"] = map[string]any{\"type\": \"string\"}"
- },
- {
-  "name": "schedule-listing-dropped",
-  "file": "tools.go",
-  "find": "lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)",
-  "replace": ""
  },
  {
   "name": "menu-rel-time-minute",
@@ -4612,6 +4564,246 @@
   "file": "schedule_menu_data.go",
   "find": "fmt.Sprintf(\"Scheduled jobs (%d)\", len(a.scheduler().list()))",
   "replace": "fmt.Sprintf(\"Scheduled jobs (%d)\", 0)"
+ },
+ {
+  "name": "hub-viewer-persist",
+  "file": "ui_runtime.go",
+  "find": "h.app.persistSettings(func(message, level string) { guard(func() { ctx.Notify(message, level) }) }, \"Viewer markdown set to \"+string(mode))",
+  "replace": "_ = ctx"
+ },
+ {
+  "name": "persist-event-dropped",
+  "file": "settings_menu.go",
+  "find": "_ = ctx.Events().Emit(\"subagents:settings_changed\", map[string]any{\"settings\": settingsAsMap(snapshot), \"persisted\": persisted})",
+  "replace": "_ = snapshot"
+ },
+ {
+  "name": "schedule-switch-keeps-timers",
+  "file": "extension.go",
+  "find": "// A session switch: schedules reset on /new and are restored on /resume (the store is per session).\n\t\ta.scheduler().stop()\n",
+  "replace": ""
+ },
+ {
+  "name": "schedule-shutdown-keeps-timers",
+  "file": "extension.go",
+  "find": "a.stopNudges()\n\t\ta.scheduler().stop()\n",
+  "replace": "a.stopNudges()\n"
+ },
+ {
+  "name": "schedule-session-start-unbound",
+  "file": "extension.go",
+  "find": "\t\ta.scheduleSessionStart(ctx)\n",
+  "replace": ""
+ },
+ {
+  "name": "toggle-enable-skips-first-line",
+  "file": "agent_file_toggle.go",
+  "find": "if i > 0 && i < block.closeIdx && enabledFalseLine",
+  "replace": "if i > 1 && i < block.closeIdx && enabledFalseLine"
+ },
+ {
+  "name": "toggle-crlf-lost",
+  "file": "agent_file_toggle.go",
+  "find": "if strings.HasSuffix(lines[0], \"\\r\\n\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "toggle-disable-twice",
+  "file": "agent_file_toggle.go",
+  "find": "if isDisabledContent(content) {\n\t\treturn content, outcomeAlreadyDisabled",
+  "replace": "if false {\n\t\treturn content, outcomeAlreadyDisabled"
+ },
+ {
+  "name": "toggle-bom-breaks-fence",
+  "file": "agent_file_toggle.go",
+  "find": "trimEOL(strings.TrimPrefix(first, \"\\ufeff\"))",
+  "replace": "trimEOL(first)"
+ },
+ {
+  "name": "toggle-classify-workspace-as-project",
+  "file": "agent_file_toggle.go",
+  "find": "case strings.HasPrefix(path, workspaceAgentsDir(cwd)+sep):",
+  "replace": "case strings.HasPrefix(path, projectAgentsDir(cwd)+sep):"
+ },
+ {
+  "name": "toggle-workspace-labelled-project",
+  "file": "agent_file_toggle.go",
+  "find": "return &agentFile{p, locationWorkspace}",
+  "replace": "return &agentFile{p, locationProject}"
+ },
+ {
+  "name": "toggle-stub-needs-newline",
+  "file": "agent_file_toggle.go",
+  "find": "== \"---\\n---\"",
+  "replace": "== \"---\\n---\\n\""
+ },
+ {
+  "name": "wizard-description-unquoted",
+  "file": "agent_file_toggle.go",
+  "find": "\"---\\ndescription: \" + jsonString(in.Description)",
+  "replace": "\"---\\ndescription: \" + in.Description"
+ },
+ {
+  "name": "wizard-model-unquoted",
+  "file": "agent_file_toggle.go",
+  "find": "modelLine = \"\\nmodel: \" + jsonString(in.Model)",
+  "replace": "modelLine = \"\\nmodel: \" + in.Model"
+ },
+ {
+  "name": "card-label-column-uncapped-wrong",
+  "file": "workflow_card.go",
+  "find": "workflowLabelColumnMax = 28",
+  "replace": "workflowLabelColumnMax = 5"
+ },
+ {
+  "name": "card-first-group-closed",
+  "file": "workflow_card.go",
+  "find": "case groupIndex == 0:\n\t\t\topener = g.groupTop",
+  "replace": "case false:\n\t\t\topener = g.groupTop"
+ },
+ {
+  "name": "card-replayed-after-stats",
+  "file": "workflow_card.go",
+  "find": "statParts = append([]string{workflowReplayedAnnotation}, statParts...)",
+  "replace": "statParts = append(statParts, workflowReplayedAnnotation)"
+ },
+ {
+  "name": "card-tool-title-inverted",
+  "file": "workflow_card.go",
+  "find": "if in.ShowToolTitle {\n\t\tleft =",
+  "replace": "if !in.ShowToolTitle {\n\t\tleft ="
+ },
+ {
+  "name": "card-fallback-same-model",
+  "file": "workflow_card.go",
+  "find": "entry.FallbackModel != \"\" && model != entry.FallbackModel:",
+  "replace": "entry.FallbackModel != \"\":"
+ },
+ {
+  "name": "card-asked-always",
+  "file": "workflow_card.go",
+  "find": "entry.RequestedModel != \"\" && entry.RequestedModel != primary",
+  "replace": "entry.RequestedModel != \"\""
+ },
+ {
+  "name": "card-thinking-asked-always",
+  "file": "workflow_card.go",
+  "find": "entry.RequestedThinking != \"\" && entry.RequestedThinking != entry.Thinking",
+  "replace": "entry.RequestedThinking != \"\""
+ },
+ {
+  "name": "card-warning-text",
+  "file": "workflow_card.go",
+  "find": "Large workflow · /agents → Workflows to stop",
+  "replace": "Large workflow"
+ },
+ {
+  "name": "dialog-left-pane-width",
+  "file": "workflow_dialog.go",
+  "find": "workflowLeftPaneWidth = 18",
+  "replace": "workflowLeftPaneWidth = 17"
+ },
+ {
+  "name": "dialog-ctrl-c-ignored",
+  "file": "workflow_dialog.go",
+  "find": "if tui.MatchesKey(data, \"ctrl+c\") {",
+  "replace": "if false && tui.MatchesKey(data, \"ctrl+c\") {"
+ },
+ {
+  "name": "dialog-stop-on-settled-run",
+  "file": "workflow_dialog.go",
+  "find": "if tui.MatchesKey(data, \"x\") {\n\t\tif view.WorkflowActive {",
+  "replace": "if tui.MatchesKey(data, \"x\") {\n\t\tif true {"
+ },
+ {
+  "name": "dialog-retry-needs-no-child",
+  "file": "workflow_dialog.go",
+  "find": "state == displayQueued || state == displayRunning, state == displayRunning",
+  "replace": "state == displayQueued || state == displayRunning, state == displayQueued || state == displayRunning"
+ },
+ {
+  "name": "dialog-filter-order",
+  "file": "workflow_dialog.go",
+  "find": "{\"all\", displayRunning, displayQueued,",
+  "replace": "{\"all\", displayQueued, displayRunning,"
+ },
+ {
+  "name": "dialog-min-rows",
+  "file": "workflow_dialog.go",
+  "find": "minPaneBodyRows = 6",
+  "replace": "minPaneBodyRows = 5"
+ },
+ {
+  "name": "dialog-content-width",
+  "file": "workflow_dialog.go",
+  "find": "max(12, terminalWidth-6)",
+  "replace": "max(12, terminalWidth-5)"
+ },
+ {
+  "name": "dialog-prompt-lines",
+  "file": "workflow_dialog.go",
+  "find": "promptCollapsedLines = 4",
+  "replace": "promptCollapsedLines = 5"
+ },
+ {
+  "name": "dialog-open-without-record",
+  "file": "workflow_dialog.go",
+  "find": "if view.SelectedEntry == nil || view.SelectedEntry.RecordID == \"\" {",
+  "replace": "if view.SelectedEntry == nil {"
+ },
+ {
+  "name": "dialog-escape-closes-from-agent",
+  "file": "workflow_dialog.go",
+  "find": "if state.Level == dialogLevelAgent {\n\t\t\tnext := state\n\t\t\tnext.Level, next.PromptExpanded = dialogLevelPhases, false\n\t\t\treturn &workflowDialogKeyResult{State: next}\n\t\t}\n\t\treturn act",
+  "replace": "return act"
+ },
+ {
+  "name": "dialog-spinner-static",
+  "file": "workflow_dialog.go",
+  "find": "Text: g.spinner[spinnerFrame%len(g.spinner)]",
+  "replace": "Text: g.spinner[0]"
+ },
+ {
+  "name": "settings-workflows-always-written",
+  "file": "settings_menu.go",
+  "find": "if value, write := a.workflows().settingValue(); write {",
+  "replace": "if value, _ := a.workflows().settingValue(); true {"
+ },
+ {
+  "name": "settings-persist-toast",
+  "file": "settings_store.go",
+  "find": "\" (session only; failed to persist)\", \"warning\"",
+  "replace": "\" (could not be saved)\", \"warning\""
+ },
+ {
+  "name": "settings-unported-not-announced",
+  "file": "settings_menu.go",
+  "find": "if r.key == key && r.unported(value) {",
+  "replace": "if r.key == key && !r.unported(value) {"
+ },
+ {
+  "name": "settings-max-concurrency-text",
+  "file": "settings_menu.go",
+  "find": "fmt.Sprintf(\"Max concurrency set to %d\", n)",
+  "replace": "fmt.Sprintf(\"Max concurrency %d\", n)"
+ },
+ {
+  "name": "schedule-menu-cancels-without-confirm",
+  "file": "agents_menu.go",
+  "find": "if err != nil || !confirmed {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob",
+  "replace": "if err != nil {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob"
+ },
+ {
+  "name": "clear-completed-drops-unread",
+  "file": "manager_clear.go",
+  "find": "(skipUnconsumed && r.Background && !r.Consumed)",
+  "replace": "false"
+ },
+ {
+  "name": "wizard-overwrite-unasked",
+  "file": "agents_menu.go",
+  "find": "if fileExists(targetPath) {\n\t\tif overwrite, err := m.ui.Confirm(\"Overwrite\", targetPath+\" already exists. Overwrite?\"); err != nil || !overwrite {\n\t\t\treturn\n\t\t}\n\t}\n\tif !m.write(targetPath, serializeAgentFile(cfg))",
+  "replace": "if !m.write(targetPath, serializeAgentFile(cfg))"
  },
  {
   "name": "worker-array-methods-not-captured",

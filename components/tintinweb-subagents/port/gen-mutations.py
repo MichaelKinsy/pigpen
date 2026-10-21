@@ -327,7 +327,6 @@ m("hub-live-tool-uses", "ui_runtime.go", "if p.v.Status == statusRunning && p.u.
 m("hub-abort-unknown", "ui_runtime.go", "return r != nil && h.app.mgr.abort(r)", "return h.app.mgr.abort(r)")
 m("hub-session-unknown", "ui_runtime.go", "if u == nil {\n\t\treturn emptySession{}\n\t}\n\treturn u", "return u")
 m("hub-settle-no-finish-mark", "ui_runtime.go", "h.widget.markFinished(r.ID)\n\th.fleet.onAgentFinished(r.ID)", "h.fleet.onAgentFinished(r.ID)")
-m("hub-viewer-persist", "ui_runtime.go", 'persisted := persistViewerMarkdown(cwd, mode)', 'persisted := true')
 m("hub-dispose-keeps-fleet", "ui_runtime.go", "h.fleet.dispose()\n\th.mu.Lock()", "h.mu.Lock()")
 m("hub-bind-without-ui", "ui_runtime.go", "if !safeHasUI(ctx) {", "if false {")
 m("ui-widget-placement-dropped", "ui_runtime.go", '"placement": w.placement', '"placement": "aboveEditor"')
@@ -339,7 +338,6 @@ m("settings-widget-default", "ui_settings.go", "widgetMode: widgetModeBackground
 m("settings-markdown-default", "ui_settings.go", "viewerMarkdown: viewerMarkdownAssistant}", "viewerMarkdown: viewerMarkdownAll}")
 m("settings-project-first", "ui_settings.go", '[]string{filepath.Join(agentDir(), "subagents.json"), filepath.Join(cwd, ".pi", "subagents.json")}', '[]string{filepath.Join(cwd, ".pi", "subagents.json"), filepath.Join(agentDir(), "subagents.json")}')
 m("settings-bad-mode-kept", "ui_settings.go", "case widgetModeAll, widgetModeBackground, widgetModeOff:\n\t\t\ts.widgetMode = m", "default:\n\t\t\ts.widgetMode = m")
-m("settings-persist-overwrites", "ui_settings.go", "raw := map[string]any{}\n\tif data, err := os.ReadFile(path); err == nil {\n\t\t_ = json.Unmarshal(data, &raw)\n\t}", "raw := map[string]any{}")
 m("start-model-precedence", "bus.go", "spec.Model, spec.Thinking = inv.modelInput, inv.thinking", "spec.Model, spec.Thinking = model, thinking")
 m("start-no-observer", "bus.go", "spec.Observer = obs", "")
 m("runner-observer-hook", "runner.go", "safeCall(\"agent observer\", func() { c.observer.observe(m, c.query) })", "")
@@ -398,8 +396,6 @@ m("stop-blocks-input", "fleet_list.go", 'safeGo("viewer stop", func() {', 'safeC
 m("stop-notice-escaped", "fleet_list.go", 'ui.Notify("Stopped \\""+description+"\\".", "info")', 'ui.Notify(fmt.Sprintf("Stopped %q.", description), "info")')
 m("viewer-activity-not-held", "fleet_list.go", "\t\t\theld = cur\n", "")
 m("max-turns-zero-disclosed", "ui_invocation.go", "if res.maxTurns != nil && *res.maxTurns > 0 {", "if res.maxTurns != nil {")
-m("persist-failure-text", "ui_runtime.go", '" (session only; failed to persist)"', '" (could not be saved)"')
-m("persist-no-event", "ui_runtime.go", '_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": snapshot.asMap(), "persisted": persisted})', "_ = snapshot")
 m("shutdown-keeps-nudges", "extension.go", "a.stopNudges()\n", "")
 # workflow_journal.go: the key, the file, the replay record
 m("journal-key-label-slot-dropped", "workflow_journal.go", "wfJSQuoteOrNull(in.Label), ", "")
@@ -851,14 +847,11 @@ m("schedule-events-channel", "schedule_tool.go", '"subagents:scheduled"', '"suba
 m("schedule-ready-event-count", "schedule_tool.go", '"jobCount": len(store.list())', '"jobCount": 0')
 m("schedule-starts-without-session-id", "schedule_tool.go", 'if err != nil || sessionID == "" {', "if err != nil {")
 m("schedule-start-silent", "schedule_tool.go", "a.scheduler().start(scheduleManagerOf{a}, store, a.emitScheduled)", "a.scheduler().start(scheduleManagerOf{a}, store, func(scheduleChange) {})")
-m("schedule-switch-keeps-timers", "schedule_tool.go", "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()", "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\t")
-m("schedule-shutdown-keeps-timers", "schedule_tool.go", "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()", "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\t")
 m("schedule-setting-ignored", "schedule_feature.go", 'if b, ok := raw["schedulingEnabled"].(bool); ok {', 'if b, ok := raw["schedulingEnabled"].(bool); ok && false {')
 m("schedule-setting-global-wins", "schedule_feature.go", 'for _, path := range []string{filepath.Join(agentDir(), "subagents.json"), filepath.Join(cwd, ".pi", "subagents.json")} {', 'for _, path := range []string{filepath.Join(cwd, ".pi", "subagents.json"), filepath.Join(agentDir(), "subagents.json")} {')
 m("schedule-guideline-anchor", "schedule_feature.go", 'const anchor = "\\n\\n## Writing the prompt"', 'const anchor = "\\n\\n## Writing the promptX"')
 m("schedule-param-text", "schedule_feature.go", "Returns job ID.", "Returns the job ID.")
 m("schedule-param-shape", "schedule_feature.go", 'props["schedule"] = map[string]any{"type": "string", "description": scheduleParamDescription}', 'props["schedule"] = map[string]any{"type": "string"}')
-m("schedule-listing-dropped", "tools.go", "lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)", "")
 
 # schedule_menu_data.go: the data of the Scheduled jobs menu
 m("menu-rel-time-minute", "schedule_menu_data.go", "if abs < 60_000 {", "if abs <= 60_000 {")
@@ -867,6 +860,55 @@ m("menu-error-icon", "schedule_menu_data.go", 'case j.LastStatus == "error":\n\t
 m("menu-details-prompt-length", "schedule_menu_data.go", "if len(prompt) > 200 {", "if len(prompt) > 201 {")
 m("menu-name-width", "schedule_menu_data.go", "utf16Fit(j.Name, 18)", "utf16Fit(j.Name, 17)")
 m("menu-entry-count", "schedule_menu_data.go", 'fmt.Sprintf("Scheduled jobs (%d)", len(a.scheduler().list()))', 'fmt.Sprintf("Scheduled jobs (%d)", 0)')
+
+
+m("hub-viewer-persist", "ui_runtime.go", 'h.app.persistSettings(func(message, level string) { guard(func() { ctx.Notify(message, level) }) }, "Viewer markdown set to "+string(mode))', "_ = ctx")
+m("persist-event-dropped", "settings_menu.go", '_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": settingsAsMap(snapshot), "persisted": persisted})', "_ = snapshot")
+m("schedule-switch-keeps-timers", "extension.go", "// A session switch: schedules reset on /new and are restored on /resume (the store is per session).\n\t\ta.scheduler().stop()\n", "")
+m("schedule-shutdown-keeps-timers", "extension.go", "a.stopNudges()\n\t\ta.scheduler().stop()\n", "a.stopNudges()\n")
+m("schedule-session-start-unbound", "extension.go", "\t\ta.scheduleSessionStart(ctx)\n", "")
+# agent_file_toggle.go: the file toggles and the wizard's file
+m("toggle-enable-skips-first-line", "agent_file_toggle.go", "if i > 0 && i < block.closeIdx && enabledFalseLine", "if i > 1 && i < block.closeIdx && enabledFalseLine")
+m("toggle-crlf-lost", "agent_file_toggle.go", 'if strings.HasSuffix(lines[0], "\\r\\n") {', "if false {")
+m("toggle-disable-twice", "agent_file_toggle.go", "if isDisabledContent(content) {\n\t\treturn content, outcomeAlreadyDisabled", "if false {\n\t\treturn content, outcomeAlreadyDisabled")
+m("toggle-bom-breaks-fence", "agent_file_toggle.go", 'trimEOL(strings.TrimPrefix(first, "\\ufeff"))', "trimEOL(first)")
+m("toggle-classify-workspace-as-project", "agent_file_toggle.go", "case strings.HasPrefix(path, workspaceAgentsDir(cwd)+sep):", "case strings.HasPrefix(path, projectAgentsDir(cwd)+sep):")
+m("toggle-workspace-labelled-project", "agent_file_toggle.go", "return &agentFile{p, locationWorkspace}", "return &agentFile{p, locationProject}")
+m("toggle-stub-needs-newline", "agent_file_toggle.go", '== "---\\n---"', '== "---\\n---\\n"')
+m("wizard-description-unquoted", "agent_file_toggle.go", '"---\\ndescription: " + jsonString(in.Description)', '"---\\ndescription: " + in.Description')
+m("wizard-model-unquoted", "agent_file_toggle.go", 'modelLine = "\\nmodel: " + jsonString(in.Model)', 'modelLine = "\\nmodel: " + in.Model')
+
+# workflow_card.go: the inline card
+m("card-label-column-uncapped-wrong", "workflow_card.go", "workflowLabelColumnMax = 28", "workflowLabelColumnMax = 5")
+m("card-first-group-closed", "workflow_card.go", "case groupIndex == 0:\n\t\t\topener = g.groupTop", "case false:\n\t\t\topener = g.groupTop")
+m("card-replayed-after-stats", "workflow_card.go", "statParts = append([]string{workflowReplayedAnnotation}, statParts...)", "statParts = append(statParts, workflowReplayedAnnotation)")
+m("card-tool-title-inverted", "workflow_card.go", "if in.ShowToolTitle {\n\t\tleft =", "if !in.ShowToolTitle {\n\t\tleft =")
+m("card-fallback-same-model", "workflow_card.go", 'entry.FallbackModel != "" && model != entry.FallbackModel:', 'entry.FallbackModel != "":')
+m("card-asked-always", "workflow_card.go", 'entry.RequestedModel != "" && entry.RequestedModel != primary', 'entry.RequestedModel != ""')
+m("card-thinking-asked-always", "workflow_card.go", 'entry.RequestedThinking != "" && entry.RequestedThinking != entry.Thinking', 'entry.RequestedThinking != ""')
+m("card-warning-text", "workflow_card.go", "Large workflow · /agents → Workflows to stop", "Large workflow")
+
+# workflow_dialog.go: the inspector
+m("dialog-left-pane-width", "workflow_dialog.go", "workflowLeftPaneWidth = 18", "workflowLeftPaneWidth = 17")
+m("dialog-ctrl-c-ignored", "workflow_dialog.go", 'if tui.MatchesKey(data, "ctrl+c") {', 'if false && tui.MatchesKey(data, "ctrl+c") {')
+m("dialog-stop-on-settled-run", "workflow_dialog.go", 'if tui.MatchesKey(data, "x") {\n\t\tif view.WorkflowActive {', 'if tui.MatchesKey(data, "x") {\n\t\tif true {')
+m("dialog-retry-needs-no-child", "workflow_dialog.go", "state == displayQueued || state == displayRunning, state == displayRunning", "state == displayQueued || state == displayRunning, state == displayQueued || state == displayRunning")
+m("dialog-filter-order", "workflow_dialog.go", "{\"all\", displayRunning, displayQueued,", "{\"all\", displayQueued, displayRunning,")
+m("dialog-min-rows", "workflow_dialog.go", "minPaneBodyRows = 6", "minPaneBodyRows = 5")
+m("dialog-content-width", "workflow_dialog.go", "max(12, terminalWidth-6)", "max(12, terminalWidth-5)")
+m("dialog-prompt-lines", "workflow_dialog.go", "promptCollapsedLines = 4", "promptCollapsedLines = 5")
+m("dialog-open-without-record", "workflow_dialog.go", 'if view.SelectedEntry == nil || view.SelectedEntry.RecordID == "" {', "if view.SelectedEntry == nil {")
+m("dialog-escape-closes-from-agent", "workflow_dialog.go", "if state.Level == dialogLevelAgent {\n\t\t\tnext := state\n\t\t\tnext.Level, next.PromptExpanded = dialogLevelPhases, false\n\t\t\treturn &workflowDialogKeyResult{State: next}\n\t\t}\n\t\treturn act", "return act")
+m("dialog-spinner-static", "workflow_dialog.go", "Text: g.spinner[spinnerFrame%len(g.spinner)]", "Text: g.spinner[0]")
+
+# settings and menus
+m("settings-workflows-always-written", "settings_menu.go", "if value, write := a.workflows().settingValue(); write {", "if value, _ := a.workflows().settingValue(); true {")
+m("settings-persist-toast", "settings_store.go", '" (session only; failed to persist)", "warning"', '" (could not be saved)", "warning"')
+m("settings-unported-not-announced", "settings_menu.go", "if r.key == key && r.unported(value) {", "if r.key == key && !r.unported(value) {")
+m("settings-max-concurrency-text", "settings_menu.go", 'fmt.Sprintf("Max concurrency set to %d", n)', 'fmt.Sprintf("Max concurrency %d", n)')
+m("schedule-menu-cancels-without-confirm", "agents_menu.go", "if err != nil || !confirmed {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob", "if err != nil {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob")
+m("clear-completed-drops-unread", "manager_clear.go", "(skipUnconsumed && r.Background && !r.Consumed)", "false")
+m("wizard-overwrite-unasked", "agents_menu.go", 'if fileExists(targetPath) {\n\t\tif overwrite, err := m.ui.Confirm("Overwrite", targetPath+" already exists. Overwrite?"); err != nil || !overwrite {\n\t\t\treturn\n\t\t}\n\t}\n\tif !m.write(targetPath, serializeAgentFile(cfg))', 'if !m.write(targetPath, serializeAgentFile(cfg))')
 
 M = [x for x in M if x]
 # Compile-safe forms (the first form of these left a variable or an import unused, so the mutant did not build).
