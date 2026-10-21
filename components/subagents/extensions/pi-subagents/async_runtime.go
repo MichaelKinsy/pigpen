@@ -35,6 +35,7 @@ func init() {
 	registerAction("interrupt", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.interruptAction(ctx, p) })
 	registerAction("stop", []string{"id", "runId", "dir"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.stopAction(ctx, p) })
 	registerAction("resume", []string{"id", "runId", "dir", "message", "task"}, func(ctx sdk.Context, p map[string]any) (any, error) { return bgRT.resumeAction(ctx, p) })
+	toolHooks = append(toolHooks, installAsyncTools)
 	extensionHooks = append(extensionHooks, installAsyncRuntime)
 }
 
@@ -103,13 +104,20 @@ type asyncRuntime struct {
 	hasUI    bool
 }
 
-func installAsyncRuntime(e *sdk.Extension) {
+// installAsyncTools builds the runtime and registers bg_wait. The original registers bg_wait before subagents_enable, and the
+// model sees tools in registration order, so this runs from toolHooks (before the base tools) while installAsyncRuntime adds
+// the rest from extensionHooks.
+func installAsyncTools(e *sdk.Extension) {
+	cfg := loadAsyncConfig()
 	rt := &asyncRuntime{state: newSubagentState(), dirs: defaultAsyncDirs(), bus: newLocalBus(), ownerID: completionOwnerID(), handles: map[string]*RunHandle{}, capacity: map[string]*ActiveAsyncCapacityHandle{}}
 	bgRT = rt
-	rt.notifier = newCompletionNotifier(rt.sendNotice, NotifierOptions{BatchConfig: loadAsyncConfig().CompletionBatch,
+	rt.notifier = newCompletionNotifier(rt.sendNotice, NotifierOptions{BatchConfig: cfg.CompletionBatch,
 		Owns: rt.ownsResult, CurrentSessionID: func() string { rt.mu.Lock(); defer rt.mu.Unlock(); return rt.state.CurrentSessionID }})
-	cfg := loadAsyncConfig()
 	e.RegisterTool(bgWaitToolDef(rt, cfg))
+}
+
+func installAsyncRuntime(e *sdk.Extension) {
+	rt := bgRT
 	e.MessageRenderer(notifyMessageType, renderNotifyMessage)
 	e.OnEvent(sdk.EventSessionStart, rt.onSessionStart)
 	e.OnEvent(sdk.EventSessionShutdown, rt.onSessionShutdown)

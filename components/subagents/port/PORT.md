@@ -1,4 +1,4 @@
-# Port record: pi-subagents (partial: definitions, discovery, list and get, single-agent and chain runs)
+# Port record: pi-subagents (partial: agent management, background runs, run policy, single-agent and chain runs)
 
 | Input | Identity |
 |---|---|
@@ -58,23 +58,18 @@ to this program, else `PATH`. A Piglet Binary as the child refuses `--system-pro
 
 **Background runs (async_*.go).** An omitted `async` runs in the background (`asyncByDefault`, config key in `~/.pi/agent/extensions/subagent/config.json`); `async: false` or `asyncByDefault: false` blocks the parent. The child stays a detached `pig` process (own process group) supervised by goroutines of the extension; the state lives in the original's layout (`status.json`, `events.jsonl`, `output-N.log`, `process-terminal.json`, `recovery-descriptor.json`, result files) so a later session adopts a run (stale-run reconciliation, `async_state.go`/`async_resume.go`). Ported: the actions `status`, `interrupt`, `resume`, `stop`, the `bg_wait` tool, the completion notification (batched, deduplicated, replayed, delivered with `SendCustomMessage` + triggerTurn), the `subagent-async` widget with suspension during compaction, the active-capacity slots, auto-drain at `agent_end`, retention, and unknown-action recovery. On platforms without detachable children (Windows) the child is started directly and a run ends with its supervisor.
 
-**Not ported:** parallel runs; scripted workflows (they need the original's JavaScript
-workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
-commands other than `/run-chain`; steering and the supervisor channel (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
-the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
-dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
-agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
-document features that are not ported); the original's session-resume memory of whether `subagent` was enabled.
+**Not ported (refused):** parallel and chained runs and scripted workflows (`workflow`, `workflowScript`, `workflowScriptPath`, and the
+legacy `tasks`, `chain`, `parallel`), the `validate` action, missions, council mode, worktree isolation and lanes, the fleet and status
+views, steering and the supervisor channel (the `subagent_supervisor` tool), the watchdog, external CLI and external job runners, and the
+management and control actions not registered by the agent management, refinement, doctor/guide and background-run slices.
 
-**Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
-accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model`, `async` and the parameters of the background actions; for `list` and `get`, `action`, `agent` and `agentScope`), `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
-other than `list`, `get`, `status`, `interrupt`, `resume` and `stop`, a run without `task`, and the tool `subagent_supervisor` (declared, as the
-original's request shows it). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
-<feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
-original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. The `asyncByDefault` difference is gone: an omitted `async` runs in the background as in the original.
+**Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything not ported is refused, never accepted and ignored: a call to
+`subagent` that sets a parameter or names an action the port does not run (the accepted parameters are registered by the slice that
+runs them: `registerRunParams`, `registerAction`), a run without `task`, and the tool `subagent_supervisor` (declared, as the original's
+request shows it). The original's other slash commands are not registered: a command the port lacks is not offered. The text is always
+`@pi-in-go/pigpen-subagents (Go port) does not support <feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which
+runs unchanged in PiG.`; a tool refuses with an error. The original's own errors for an empty call, a blank agent, a non-string task and
+a blank action are kept verbatim. Checked by `refuse_test.go` (every parameter of the original's schema, one case each) and mutations.
 
 ## Mapping
 
@@ -193,6 +188,25 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 10. **An extension process's environment carries the host's internals** (`PIG_EXT_SOCKET_<name>`, `PIG_EXT_PACKED_CELL`,
    `PIG_HARNESS_ARGV_FILE`, ...), and a program the extension starts inherits them unless it removes them; the SDK could
    offer the environment for a child process, or the variables could be documented as not to be passed on.
+
+## The pigeq equivalence pass at this tip (scenarios recorded from the original under Pi 1402973a)
+
+`pigeq check` runs every scenario in `port/scenarios` against the original under Pi and against the port under PiG and compares the
+recorded events. Four goldens were added (`advertise-catalog`, `manage-create-update`, `manage-delete`, `manage-disable-enable`);
+`manage-reset` is host-bound (the original's `get` prints its install path) and lives with `get-builtin` in `port/host-bound/`, with
+the path recorded as `<oracle>`; `builtin_test.go` replays the original's answers (`testdata/*.jsonl`) against the port.
+
+| Difference from the original the equivalence pass found | Fix |
+|---|---|
+| `bg_wait` registered after `subagents_enable` (the model sees tools in registration order) | `toolHooks` registers it first (`async_runtime.go`) |
+| two `setWidget` calls per session start and shutdown (the base handlers and the async runtime) | the base handlers no longer clear the widget |
+| a single run never resolved its model against the registry: an unknown model started a child | `run_model.go`: `resolveEffectiveSubagentModel` then `resolveModelSelection`, thrown (foreground) or a failed launch (background) |
+| no run fan-out budget on a single run | `run_fanout.go`: claim `single`, the first line `Run fan-out: n/limit used, r remaining` and `details.runFanoutBudget`; the active-run capacity refusal comes before the claim and carries no line. **Not ported: inheriting a parent run's budget in a nested child.** |
+| order of checks of a foreground run | gate and acceptance, deadline, agentContract, spawn budget, claim, output options, model (`policy_run.go`) |
+| `status`: spawn budget line fixed to "unlimited", no `spawnBudget`/`activeAsyncCapacity` details, `isError` fields | `run_budget_status.go` (`spawnBudgetDetails`, `statusBudget`); a failed status or wait is a failed tool call |
+| `/bin/sh` started by path (the exec-coverage scan reads literal command names) | named once (`posixShell`) |
+
+Known difference left: a failed foreground result returns `ToolResult{IsError, Details}`; Pi shows a failed result's details as `{}`.
 
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 

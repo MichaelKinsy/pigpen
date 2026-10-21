@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-subagents",
   "version": "0.2.0",
-  "description": "Go port of pi-subagents: agent and chain definitions, their discovery, the subagent tool's list and get actions, and single-agent and chain runs through a child pig process (partial: no parallel, async, workflow, worktree or fleet features)",
+  "description": "Go port of pi-subagents: agent and chain definitions and their discovery, agent management (create, update, delete, eject, disable, enable, reset, models), refinement, doctor and guide actions, subagent profiles, the advertised agent catalog, single-agent and chain runs through child pig processes, background runs with status, interrupt, stop, resume and bg_wait, and the run policy (output, acceptance, gates, deadlines, spawn budget). Workflows, parallel runs, missions, worktrees, steering and the fleet views are refused (partial)",
   "keywords": [
     "pig-package",
     "subagents",

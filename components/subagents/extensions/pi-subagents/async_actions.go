@@ -77,10 +77,14 @@ func (rt *asyncRuntime) bgWait(ctx sdk.Context, p map[string]any) (any, error) {
 	signal, stop := cancellation(ctx)
 	defer stop()
 	res := waitForSubagents(params, signal, deps)
-	return waitToolResult(res), nil
+	return waitToolResult(res)
 }
 
-func waitToolResult(r WaitResult) any {
+// waitToolResult is the tool result of a wait; a failed wait is a failed tool call (the host drops the details of a failed result).
+func waitToolResult(r WaitResult) (any, error) {
+	if r.IsError {
+		return nil, sdk.NewToolError(r.Text)
+	}
 	details := map[string]any{"mode": "management", "results": []any{}}
 	if len(r.Completions) > 0 {
 		details["completions"] = r.Completions
@@ -88,11 +92,11 @@ func waitToolResult(r WaitResult) any {
 	if r.Wait != nil {
 		details["wait"] = r.Wait
 	}
-	tr := sdk.ToolResult{Content: r.Text, Details: details, IsError: r.IsError}
+	tr := sdk.ToolResult{Content: r.Text, Details: details}
 	if r.Usage != nil {
 		tr.Usage = r.Usage
 	}
-	return tr
+	return tr, nil
 }
 
 // ── the notification renderer ──
@@ -291,19 +295,6 @@ func runnerIDOf(st *AsyncStatus) string {
 	return ""
 }
 
-func (rt *asyncRuntime) spawnBudgetPrefix(sessionID string) string {
-	cfg := loadAsyncConfig()
-	used := capacitySnapshotFor(sessionID, cfg.MaxActiveAsync, CapacityOptions{}.root())
-	if sessionID != "" {
-		used = reconcileActiveAsyncCapacity(sessionID, cfg.MaxActiveAsync, CapacityOptions{AbandonedSlotReleaseAfterMs: cfg.AbandonedSlotRelease})
-	}
-	limit := "unlimited"
-	if used.Limit > 0 {
-		limit = fmt.Sprint(used.Limit)
-	}
-	return fmt.Sprintf("Spawn budget: unlimited\nActive async capacity: %d/%s used", used.Used, limit)
-}
-
 func (rt *asyncRuntime) statusAction(ctx sdk.Context, p map[string]any) (any, error) {
 	rt.setCtx(ctx)
 	sessionID := currentSessionID(ctx)
@@ -312,12 +303,15 @@ func (rt *asyncRuntime) statusAction(ctx sdk.Context, p map[string]any) (any, er
 	rt.mu.Unlock()
 	targetID := firstNonEmpty(strParam(p, "id"), strParam(p, "runId"))
 	dir := strParam(p, "dir")
+	// withBudget (subagent-executor.ts): the target label, the budget lines and the budget details; a failed status is a failed tool
+	// call (the host drops the result's details).
 	wrap := func(text string, isErr bool) (any, error) {
-		full := fmt.Sprintf("%s\n%s\n%s", formatStatusTargetLabel(targetID, dir), rt.spawnBudgetPrefix(sessionID), text)
+		budget, spawnBudget, capacity := statusBudget(sessionID)
+		full := fmt.Sprintf("%s\n%s\n%s", formatStatusTargetLabel(targetID, dir), budget, text)
 		if isErr {
-			return sdk.ToolResult{Content: full, IsError: true, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
+			return nil, sdk.NewToolError(full)
 		}
-		return explicitOK{Content: full, Details: map[string]any{"mode": "single", "results": []any{}}}, nil
+		return sdk.ToolResult{Content: full, Details: obj("mode", "single", "results", []any{}, "spawnBudget", spawnBudget, "activeAsyncCapacity", capacity)}, nil
 	}
 	if targetID == "" && dir == "" {
 		runs, err := listAsyncRuns(rt.dirs.Async, AsyncRunListOptions{States: activeWaitStates, SessionID: sessionID, ResultsDir: rt.dirs.Results})
