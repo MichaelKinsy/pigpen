@@ -253,7 +253,12 @@ func dotEnvPath(s string) bool {
 }
 
 // SensitivePath reports whether text names a secrets or credentials file.
-func SensitivePath(s string) bool { return dotEnvPath(s) || reSensitiveRest.MatchString(s) }
+func SensitivePath(s string) bool {
+	if isASCII(s) && !sensitiveMayMatch(s) {
+		return false
+	}
+	return sensitivePathFull(s)
+}
 
 // ---------------------------------------------------------------------------
 // rm classifier.
