@@ -422,8 +422,8 @@
  {
   "name": "cr-skills-not-written-back",
   "file": "extension.go",
-  "find": "\t\twriteBackSkills(data, payload.Options)\n",
-  "replace": ""
+  "find": "\twriteBackSkills(data, payload.Options)\n\treturn nil\n",
+  "replace": "\treturn nil\n"
  },
  {
   "name": "cr-timeout-default",

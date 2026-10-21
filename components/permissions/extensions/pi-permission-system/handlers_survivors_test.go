@@ -87,3 +87,32 @@ func TestTurnPrepStopsWhenActivationFails(t *testing.T) {
 	eq(t, issues.reports, 0, "no report")
 	eq(t, len(announcer.ctxs), 0, "no ready announcement for a node that could not activate")
 }
+
+// The before_agent_start handler writes the narrowed skill catalogue back into the host's options (mutant cr-skills-not-written-back): a
+// skill the policy denies is gone from systemPromptOptions.skills after the handler, which is what Pi renders `<skills>` from. The fake
+// host cannot carry the SDK's section object through its JSON wire, so the handler's own step is driven directly.
+func TestHandleBeforeAgentStartWritesTheNarrowedSkillsBack(t *testing.T) {
+	compEnv(t)
+	n := newCompNode(t, "read")
+	ctx := makeChildCtx(t.TempDir(), "s1")
+	n.sessionStart(ctx)
+	options := map[string]any{
+		"sections": &apSections{values: map[string]string{}},
+		"skills":   []any{map[string]any{"name": "alpha"}, map[string]any{"name": "beta"}},
+	}
+	data := map[string]any{"systemPrompt": "x", "systemPromptOptions": options}
+	payload := BeforeAgentStartPayload{SystemPrompt: "x", Options: promptOptionsOf(data)}
+	if payload.Options == nil || len(payload.Options.Skills) != 2 {
+		t.Fatalf("the options were not read: %+v", payload.Options)
+	}
+	// the agent prep narrows the catalogue to the skills the policy lets the model use: take one out as it would
+	payload.Options.Skills = payload.Options.Skills[1:]
+	if err := n.p.handleBeforeAgentStart(payload, ctx, data); err != nil {
+		t.Fatal(err)
+	}
+	kept, _ := options["skills"].([]any)
+	eq(t, len(kept), 1, "the host's catalogue is the narrowed one")
+	if len(kept) == 1 {
+		eq(t, kept[0].(map[string]any)["name"], "beta", "the kept skill")
+	}
+}

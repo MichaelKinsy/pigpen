@@ -451,11 +451,7 @@ func newExtensionWith(opts buildOptions) (*sdk.Extension, *permissionSystem) {
 		if err != nil {
 			return nil, err
 		}
-		if err := p.agentPrep.Handle(payload, p.contextOf(ctx)); err != nil {
-			return nil, err
-		}
-		writeBackSkills(data, payload.Options)
-		return nil, nil
+		return nil, p.handleBeforeAgentStart(payload, p.contextOf(ctx), data)
 	})
 	ext.OnEvent(sdk.EventInput, func(ctx sdk.Context, data map[string]any) (any, error) {
 		p.binder.bind(ctx)
@@ -551,6 +547,15 @@ func promptOptionsOf(data map[string]any) *PromptOptions {
 		}
 	}
 	return view
+}
+
+// handleBeforeAgentStart prepares the turn and then writes the narrowed skill catalogue back into the host's options.
+func (p *permissionSystem) handleBeforeAgentStart(payload BeforeAgentStartPayload, ctx SessionContext, data map[string]any) error {
+	if err := p.agentPrep.Handle(payload, ctx); err != nil {
+		return err
+	}
+	writeBackSkills(data, payload.Options)
+	return nil
 }
 
 // writeBackSkills stores the narrowed catalogue in the host's options, which Pi renders `<skills>` from after the chain.
