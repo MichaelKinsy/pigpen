@@ -18,7 +18,8 @@ func TestPromptAssembly(t *testing.T) {
 	app := buildAgentPrompt(gp, "/w", env, "PARENT PROMPT", promptExtras{})
 	eq(t, strings.HasPrefix(app, "PARENT PROMPT\n\n<sub_agent_context>\nYou are operating as a sub-agent invoked to handle a specific task.\n- Use the read tool"), true)
 	eq(t, strings.Contains(app, "</sub_agent_context>\n\n<active_agent name=\"general-purpose\"/>\n\n# Environment\nWorking directory: /w\nNot a git repository\nPlatform: linux"), true)
-	eq(t, strings.Contains(app, "<agent_instructions>\n"+gp.SystemPrompt+"\n</agent_instructions>"), true)
+	// general-purpose has no instructions of its own, so no section
+	eq(t, strings.Contains(app, "agent_instructions"), false)
 	// without a parent prompt the generic base is the identity; an agent with no instructions adds no section
 	bare := buildAgentPrompt(&agentConfig{Name: "bare", PromptMode: "append"}, "/w", env, "", promptExtras{})
 	eq(t, strings.HasPrefix(bare, genericBase+"\n\n<sub_agent_context>"), true)

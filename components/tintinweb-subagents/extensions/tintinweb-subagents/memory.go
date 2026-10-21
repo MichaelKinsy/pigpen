@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf16"
+	"unicode/utf8"
 )
 
 // Persistent agent memory: per-agent memory directories that persist across sessions. upstream: src/memory.ts.
@@ -47,7 +48,54 @@ func safeReadFile(path string) (string, bool) {
 	if err != nil {
 		return "", false
 	}
-	return strings.ToValidUTF8(string(data), "\uFFFD"), true
+	return decodeUTF8Lossy(data), true
+}
+
+// decodeUTF8Lossy decodes like Node's utf-8 decoder: one U+FFFD for each maximal subpart of an ill-formed sequence
+// (Go's ToValidUTF8 would replace a whole run of bad bytes with one).
+func decodeUTF8Lossy(data []byte) string {
+	if utf8.Valid(data) {
+		return string(data)
+	}
+	var b strings.Builder
+	for i := 0; i < len(data); {
+		if data[i] < utf8.RuneSelf {
+			b.WriteByte(data[i])
+			i++
+			continue
+		}
+		if r, n := utf8.DecodeRune(data[i:]); r != utf8.RuneError || n > 1 {
+			b.Write(data[i : i+n])
+			i += n
+			continue
+		}
+		// the longest prefix of a well-formed multi-byte sequence starting here
+		lo, hi := byte(0x80), byte(0xBF)
+		need := 0
+		switch c := data[i]; {
+		case c >= 0xC2 && c <= 0xDF:
+			need = 1
+		case c == 0xE0:
+			need, lo = 2, 0xA0
+		case c == 0xED:
+			need, hi = 2, 0x9F
+		case c >= 0xE1 && c <= 0xEF:
+			need = 2
+		case c == 0xF0:
+			need, lo = 3, 0x90
+		case c == 0xF4:
+			need, hi = 3, 0x8F
+		case c >= 0xF1 && c <= 0xF3:
+			need = 3
+		}
+		i++
+		for ; need > 0 && i < len(data) && data[i] >= lo && data[i] <= hi; need-- {
+			i++
+			lo, hi = 0x80, 0xBF
+		}
+		b.WriteString("\uFFFD")
+	}
+	return b.String()
 }
 
 // resolveMemoryDir is the memory directory of an agent for a scope; an unsafe name is an error.

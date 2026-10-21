@@ -25,10 +25,16 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 }
 
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
+	if _, err := os.Stat("../../package.json"); err != nil {
+		t.Skip("the package files are outside this copy of the module (a mutation sandbox holds only the module directory)")
+	}
 	pkg := readJSONFile(t, "../../package.json")
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])
 	eq(t, originalSpec, "npm:"+orig["name"].(string)+"@"+orig["version"].(string))
+}
+
+func TestRefusalMessageText(t *testing.T) {
 	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
 }
 
@@ -203,6 +209,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 			eq(t, notices(r), []string{refusalText("these subagents.json settings (" + c.listed + ")")})
 		})
 	}
+	t.Run("the same notice is not repeated by the next session start", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "resume"})
+		eq(t, len(notices(r)), 1)
+	})
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true, "scopeModels": true}`)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true)")})

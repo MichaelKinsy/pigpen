@@ -43,37 +43,17 @@ WRITE_MARKER = [{"toolCalls": [call("bash", command="echo isolated > agent-work.
 
 scenario("tool-tools-isolation", "With worktree isolation on (the default) the Agent tool carries the isolation parameter and its guideline.", [],
          settings=ISO_SETTINGS, commands=GIT_REAL, steps=[{"name": "prompt", "rpc": {"type": "prompt", "message": "hello"}}])
-scenario("agent-isolation-worktree", "A foreground agent with isolation worktree runs in a copy; its changes land on a branch the result names.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL, setup_extra=REPO,
-         llm=[{"toolCalls": [isolated(isolation="worktree")]}] + WRITE_MARKER + [{"text": "done"}])
-scenario("agent-isolation-unchanged", "A worktree agent that changes nothing leaves no branch and no note.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL, setup_extra=REPO,
-         llm=[{"toolCalls": [isolated(isolation="worktree")]}, {"text": "NOTHING-TO-CHANGE"}, {"text": "done"}])
 scenario("agent-isolation-not-git", "isolation worktree outside a git repository fails the tool call (strict).", [],
          settings=ISO_SETTINGS, commands=GIT_REAL,
          llm=[{"toolCalls": [isolated(isolation="worktree")]}, {"text": "done"}])
-scenario("agent-isolation-off", "isolation off runs the agent in the checkout.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL, setup_extra=REPO,
-         llm=[{"toolCalls": [isolated(isolation="off")]}] + WRITE_MARKER + [{"text": "done"}])
-scenario("agent-isolation-setting-off", "worktreeIsolation false drops a requested worktree: the agent runs in the checkout.", [],
-         settings={**ISO_SETTINGS, "worktreeIsolation": False}, commands=GIT_REAL, setup_extra=REPO,
-         llm=[{"toolCalls": [isolated(isolation="worktree")]}] + WRITE_MARKER + [{"text": "done"}])
+# Not generated: a worktree agent or a memory agent that runs a child model. The child's request cannot match under
+# PiG (its host system prompt names pig where the original's names pi: F2 in PORT.md), and a worktree path carries a
+# random agent id, so the worktree behavior is pinned by the unit tests (worktree_feature_test.go, worktree_twin_test.go,
+# worktree_e2e_twin_test.go) instead. What is observable without a child is generated here.
 WT_AGENT = "---\ndescription: Isolated worker\nisolation: worktree\n---\nWork in your copy.\n"
-NOWT_AGENT = "---\ndescription: Never isolated\nisolation: off\n---\nWork in place.\n"
-scenario("agent-isolation-agent-file", "An agent file with isolation: worktree isolates a call that did not ask.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL, setup_extra=REPO, files={".pi/agents/wt.md": WT_AGENT},
-         llm=[{"toolCalls": [call("Agent", prompt=CHILD_PROMPT, description="worktree work", subagent_type="wt", run_in_background=False)]}] + WRITE_MARKER + [{"text": "done"}])
-scenario("agent-isolation-agent-file-off", "An agent file with isolation: off vetoes the call's worktree.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL, setup_extra=REPO, files={".pi/agents/nowt.md": NOWT_AGENT},
-         llm=[{"toolCalls": [call("Agent", prompt=CHILD_PROMPT, description="worktree work", subagent_type="nowt", run_in_background=False, isolation="worktree")]}] + WRITE_MARKER + [{"text": "done"}])
-MEM_PROJECT = "---\ndescription: Remembers\nmemory: project\n---\nRemember things.\n"
-MEM_RO = "---\ndescription: Reads memory\ntools: read, grep\nmemory: local\n---\nRead memory.\n"
-MEMORY_MD = "# Memory\n- the build needs RUN_ME=1\n"
-scenario("agent-memory-project", "An agent with memory: project gets the memory block with its MEMORY.md in its system prompt.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL,
-         files={".pi/agents/mem.md": MEM_PROJECT, ".pi/agent-memory/mem/MEMORY.md": MEMORY_MD},
-         llm=[{"toolCalls": [call("Agent", prompt="Recall.", description="recall", subagent_type="mem", run_in_background=False)]}, {"text": "REMEMBERED"}, {"text": "done"}])
-scenario("agent-memory-readonly", "An agent that cannot write gets the read-only memory block.", [],
-         settings=ISO_SETTINGS, commands=GIT_REAL,
-         files={".pi/agents/ro.md": MEM_RO, ".pi/agent-memory-local/ro/MEMORY.md": MEMORY_MD},
-         llm=[{"toolCalls": [call("Agent", prompt="Recall.", description="recall", subagent_type="ro", run_in_background=False)]}, {"text": "REMEMBERED"}, {"text": "done"}])
+scenario("agent-isolation-agent-file-not-git", "An agent file with isolation: worktree outside a git repository fails the tool call (strict).", [],
+         settings=ISO_SETTINGS, commands=GIT_REAL, files={".pi/agents/wt.md": WT_AGENT},
+         llm=[{"toolCalls": [call("Agent", prompt=CHILD_PROMPT, description="worktree work", subagent_type="wt", run_in_background=False)]}, {"text": "done"}])
+# Memory is the same: an agent with `memory:` that fails still reports a random agent id and a duration in the tool
+# result's details, which this port's failure result does not carry, so the memory behavior is pinned by memory_twin_test.go
+# and worktree_feature_test.go (TestMemoryThroughTheAgentTool).

@@ -45,16 +45,33 @@ and `<workspace>/.pi/agents/` (later ones win), exactly as in the original: `nam
 (`all`, `none`, a list, `ext:` selectors), `model`, `thinking`, `max_turns`, `prompt_mode`, `run_in_background`,
 `enabled`, `disallowed_tools`, `extensions`, `skills`, `isolated` and the rest are parsed the same way (the 76 cases of
 the original's `custom-agents` tests are twinned). Settings come from `<agent dir>/subagents.json` and
-`<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `fallbackSubagent` (an
+`<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `worktreeIsolation`, `fallbackSubagent` (an
 unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused) and `disableDefaultAgents`.
+
+## Worktree isolation and persistent memory
+
+`isolation: "worktree"` (an Agent call parameter, an agent-file field, or the `isolation` option of `subagents:rpc:spawn`)
+runs the agent in a temporary detached `git worktree` of the workspace, at the same subdirectory when the workspace is
+deeper than the repository root. It is strict: outside a git repository, with no commit, or when `git worktree add`
+fails, the call fails and nothing runs in the main checkout. When the agent finishes, an unchanged worktree is removed;
+changes are committed to a branch `pi-agent-<id>` that the result names, and the worktree is removed. An agent file's
+`isolation` outranks the call's. `worktreeIsolation: false` in `subagents.json` drops the parameter and the guideline
+from the tool text and refuses a worktree from any caller. Orphaned worktrees are pruned when the session shuts down.
+`git` must be on the PATH.
+
+`memory: user | project | local` in an agent file gives the agent a persistent directory (`<agent dir>/agent-memory/<name>/`,
+`.pi/agent-memory/<name>/`, `.pi/agent-memory-local/<name>/`; the legacy `~/.pi/agent-memory/<name>/` is still used when
+it exists and the new one does not). The first 200 lines of its `MEMORY.md` go into the system prompt; an agent without
+write or edit tools gets a read-only block and the directory is not created. Names that are not plain are refused and a
+symlinked memory directory is never used.
 
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
-mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, `inherit_context`,
+[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, `@name`
+mentions, the widget, fleet and conversation-viewer UI, nested delegation, `inherit_context`,
 resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
-original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
+original's text and schema as it is with workflows and scheduling switched off (worktree isolation is on, as in the original), and
 `SubagentWorkflow` is not registered.
 
 Nothing that is not ported is accepted and quietly ignored. Each of these is refused with one message, a tool error
@@ -63,16 +80,16 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > @pi-in-go/pigpen-tintinweb-subagents (Go port) does not support _the feature_ yet. Install the original extension,
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
-- Agent call parameters `schedule`, `isolation: "worktree"`, `inherit_context: true` and `resume`.
-- Agent file fields that ask for an unported feature: `inherit_context: true`, `isolation: worktree`, `memory`,
+- Agent call parameters `schedule`, `inherit_context: true` and `resume`.
+- Agent file fields that ask for an unported feature: `inherit_context: true`,
   `allowed_subagents`, `ext:` tool selectors, `disallowed_tools`, an `extensions` list, `exclude_extensions`, `skills` as
   `false` or a list, `persist_session: true`, `output_transcript: true`, `session_dir`.
-- `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
+- `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolation` and
   `isBackground: true`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, `widgetMode`
+  `workflowsEnabled: true`, `scopeModels: true`, `defaultJoinMode: "group"`, `widgetMode`
   other than `off`, and so on). The settings the port matches are not flagged: `false` for the switches the port does
-  not have, and the five it honors.
+  not have, and the six it honors (`worktreeIsolation` among them).
 
 `isolated: true` starts the child with no extensions. The proof that the shipped slice matches the original is in
 [port/PORT.md](port/PORT.md).

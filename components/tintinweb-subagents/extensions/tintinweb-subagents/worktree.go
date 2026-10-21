@@ -56,6 +56,7 @@ func osGit(args []string, cwd string, timeoutMS int) execResult {
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = cwd
+	cmd.WaitDelay = 500 * time.Millisecond // a child of git (a hook, an alias shell) that outlives the kill must not hold the call up
 	var out, errOut bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &errOut
 	err := cmd.Run()

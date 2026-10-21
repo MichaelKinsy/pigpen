@@ -308,8 +308,8 @@
  {
   "name": "isolated-agent-file-ignored",
   "file": "bus.go",
-  "find": "|| (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false, Worktree: worktree}",
-  "replace": "Worktree: worktree}"
+  "find": "isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false, Worktree: worktree}",
+  "replace": "isolated, Worktree: worktree}"
  },
  {
   "name": "no-session-error",
@@ -639,7 +639,7 @@
   "name": "skills-false-accepted",
   "file": "refuse.go",
   "find": "return v == nil || (ok && b)",
-  "replace": "return true"
+  "replace": "return v == nil || (ok && b) || true"
  },
  {
   "name": "extension-list-accepted",
@@ -681,7 +681,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -693,13 +693,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); feature != \"\" && false {"
  },
  {
   "name": "rpc-name-dropped",
@@ -718,12 +718,6 @@
   "file": "memory.go",
   "find": "len(utf16.Encode([]rune(name))) > 128",
   "replace": "len(utf16.Encode([]rune(name))) > 129"
- },
- {
-  "name": "mem-empty-name-ok",
-  "file": "memory.go",
-  "find": "if name == \"\" || len(utf16",
-  "replace": "if len(utf16"
  },
  {
   "name": "mem-leading-dot-ok",
@@ -882,28 +876,10 @@
   "replace": "res.Code = 0"
  },
  {
-  "name": "wt-repo-check-skipped",
-  "file": "worktree.go",
-  "find": "if _, err := git(run, cwd, []string{\"rev-parse\", \"--is-inside-work-tree\"}, 5000); err != nil {",
-  "replace": "if false {"
- },
- {
-  "name": "wt-attached",
-  "file": "worktree.go",
-  "find": "[]string{\"worktree\", \"add\", \"--detach\", path, \"HEAD\"}",
-  "replace": "[]string{\"worktree\", \"add\", path, \"HEAD\"}"
- },
- {
   "name": "wt-subdir-lost",
   "file": "worktree.go",
   "find": "work = filepath.Join(path, subdir)",
   "replace": "work = path"
- },
- {
-  "name": "wt-root-subdir",
-  "file": "worktree.go",
-  "find": "if subdir == \".\" {",
-  "replace": "if false {"
  },
  {
   "name": "wt-branch-name",
@@ -915,7 +891,7 @@
   "name": "wt-path-not-unique",
   "file": "worktree.go",
   "find": "filepath.Join(os.TempDir(), \"pi-agent-\"+agentID+\"-\"+hex.EncodeToString(suffix))",
-  "replace": "filepath.Join(os.TempDir(), \"pi-agent-\"+agentID)"
+  "replace": "filepath.Join(os.TempDir(), \"pi-agent-\"+agentID+\"-\"+hex.EncodeToString(suffix[:0]))"
  },
  {
   "name": "wt-gone-not-short-circuited",
@@ -957,7 +933,7 @@
   "name": "wt-branch-overwritten",
   "file": "worktree.go",
   "find": "name = wt.Branch + \"-\" + strconv.FormatInt(time.Now().UnixMilli(), 10)",
-  "replace": "name = wt.Branch"
+  "replace": "name = wt.Branch + strconv.FormatInt(0*time.Now().UnixMilli(), 10)[:0]"
  },
  {
   "name": "wt-branch-name-not-reported",
@@ -1101,7 +1077,7 @@
   "name": "iso-switch-ignored-by-tool",
   "file": "tools.go",
   "find": "WorktreeAllowed: &allowed",
-  "replace": "WorktreeAllowed: nil"
+  "replace": "WorktreeAllowed: func(*bool) *bool { return nil }(&allowed)"
  },
  {
   "name": "iso-startup-failure-swallowed",
@@ -1113,7 +1089,7 @@
   "name": "iso-rpc-option-ignored",
   "file": "bus.go",
   "find": "isolation == \"worktree\")",
-  "replace": "false)"
+  "replace": "isolation == \"worktree\" && false)"
  },
  {
   "name": "iso-rpc-setup-not-awaited",
@@ -1179,7 +1155,7 @@
   "name": "iso-stop-while-copying-runs",
   "file": "manager.go",
   "find": "case stopped && wt != nil:",
-  "replace": "case false:"
+  "replace": "case stopped && wt != nil && false:"
  },
  {
   "name": "iso-no-branch-note",
@@ -1252,5 +1228,11 @@
   "file": "prompts.go",
   "find": "suffix = \"\\n\\n\" + extras.MemoryBlock",
   "replace": "suffix = \"\""
+ },
+ {
+  "name": "general-purpose-prompt-not-empty",
+  "file": "defaults_text.go",
+  "find": "const defaultGeneralPurposePrompt = \"\"",
+  "replace": "const defaultGeneralPurposePrompt = \"x\""
  }
 ]

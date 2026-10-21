@@ -1,6 +1,6 @@
 {
-  "name": "agent-isolation-worktree",
-  "description": "A foreground agent with isolation worktree runs in a copy; its changes land on a branch the result names.",
+  "name": "agent-isolation-agent-file-not-git",
+  "description": "An agent file with isolation: worktree outside a git repository fails the tool call (strict).",
   "llm": [
     {
       "toolCalls": [
@@ -9,25 +9,11 @@
           "arguments": {
             "prompt": "Create the marker file.",
             "description": "worktree work",
-            "subagent_type": "general-purpose",
-            "run_in_background": false,
-            "isolation": "worktree"
+            "subagent_type": "wt",
+            "run_in_background": false
           }
         }
       ]
-    },
-    {
-      "toolCalls": [
-        {
-          "name": "bash",
-          "arguments": {
-            "command": "echo isolated > agent-work.txt"
-          }
-        }
-      ]
-    },
-    {
-      "text": "CHILD-EDITED-ITS-TREE"
     },
     {
       "text": "done"
@@ -38,11 +24,6 @@
       "sh",
       "-c",
       "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"fleetView\": false, \"widgetMode\": \"off\"}' > .pi/subagents.json"
-    ],
-    [
-      "sh",
-      "-c",
-      "git init -q && echo '# repo' > README.md && git add README.md && git commit -q -m initial"
     ]
   ],
   "commands": {
@@ -61,5 +42,8 @@
         "message": "go"
       }
     }
-  ]
+  ],
+  "files": {
+    ".pi/agents/wt.md": "---\ndescription: Isolated worker\nisolation: worktree\n---\nWork in your copy.\n"
+  }
 }

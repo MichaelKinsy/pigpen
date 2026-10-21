@@ -21,7 +21,7 @@ func TestBusProtocol(t *testing.T) {
 		}
 	})
 	t.Run("spawn returns the agent id and starts a background agent", func(t *testing.T) {
-		reply := r.request("subagents:rpc:spawn", obj{"type": "general-purpose", "prompt": "do stuff", "options": obj{"description": "search", "maxTurns": float64(5)}})
+		reply := r.request("subagents:rpc:spawn", obj{"type": "general-purpose", "prompt": "do stuff", "options": obj{"description": "search", "name": "scout", "maxTurns": float64(5)}})
 		eq(t, reply["success"], true)
 		id, _ := reply["data"].(map[string]any)["id"].(string)
 		eq(t, id != "", true)
@@ -31,6 +31,7 @@ func TestBusProtocol(t *testing.T) {
 		rec := r.app.mgr.get(id)
 		eq(t, rec.Background, true)
 		eq(t, rec.Description, "search")
+		eq(t, rec.Name, "scout")
 		t.Run("consume refuses a running agent and accepts a finished one", func(t *testing.T) {
 			eq(t, r.request("subagents:rpc:consume", obj{"agentId": id}), obj{"success": false, "error": "Agent not found or still running"})
 			c.finish("r")

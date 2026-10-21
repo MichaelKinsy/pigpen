@@ -17,14 +17,16 @@ extension cannot host a Pi session, so the shipped slice is the part that has a 
 
 - the three tools `Agent`, `get_subagent_result`, `steer_subagent` with the original's text and schemas;
 - agent types: the three defaults, custom agent files (three directories, strict mode, warn-once), settings
-  (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`), the spawn policy (#183);
+  (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`, `worktreeIsolation`), the spawn policy (#183);
+- worktree isolation (`isolation: "worktree"`, strict, the branch commit) and persistent agent memory (`memory:` user,
+  project, local, `MEMORY.md` injection, the legacy fallback), both twinned from the original's tests;
 - background by default, a concurrency limit and a FIFO queue, handles (`explore`, `explore-2`) and names, a held
   completion notification that a read of the result cancels, the event-bus protocol v2 `pi-tasks` speaks;
 - `/agents`: the types and the agents of the session.
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
-original advertises it with workflows, scheduling and worktree isolation switched off** (`.pi/subagents.json`:
-`workflowsEnabled`, `schedulingEnabled`, `worktreeIsolation` all `false`), which is exactly what this port offers.
+original advertises it with workflows and scheduling switched off** (`.pi/subagents.json`: `workflowsEnabled`,
+`schedulingEnabled` both `false`; worktree isolation is on, as it is by default), which is what this port offers.
 
 ## Mapping
 
@@ -77,21 +79,21 @@ components; this port registers none.
    environment block and the agent's prompt), after a fix this comparison found (a blank line in the replace-mode header).
    The harness's `removed` part is the host's own default system prompt, which says `pi` under Pi and `pig` under PiG, so
    that comparison cannot pass and the scenario is not kept (`port/gen-scenarios.py` says so).
-3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume`, `schedule` and
-   `isolation: "worktree"` are tool errors with the message in the README (`refuse.go`; the first version answered
+3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume` and `schedule`
+   are tool errors with the message in the README (`refuse.go`; the first version answered
    `inherit_context` with plain text and emulated `resume` by starting a new agent with the old answer in its prompt, a
    partial run, now removed). `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the
    model is told about these; a call that uses one gets the refusal.
 4. **Agent files are read at start-up for the tool text** (the workspace of an extension process is fixed), and again when
    the session starts and when the workspace differs. A file added later reaches `/agents` and the `subagent_type`
    check on the next session event, not the tool description of the running session.
-5. **Settings.** Five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
-   `fallbackSubagent`, `disableDefaultAgents`). A value of any other field that asks for an unported feature is
+5. **Settings.** Six of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
+   `fallbackSubagent`, `disableDefaultAgents`, `worktreeIsolation`). A value of any other field that asks for an unported feature is
    announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
-6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
+6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, `@mentions`,
+   widget, fleet and conversation viewer, nested delegation, output transcripts, structured output, the
    settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
@@ -120,3 +122,19 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+11. **Worktree isolation and memory, differences.** Git runs through `os/exec` in the extension process (the original's
+    `pi.exec`; the SDK has no exec call), killed by the same per-call timeouts; the twins replace that seam with a fake.
+    `memory:` reads the workspace directory (the original's `configCwd`, equal to the agent's own cwd here, which is the
+    worktree copy for an isolated agent). Not applicable because the feature is not ported: `SpawnOptions.cwd` and its
+    `workPath` note, `onBeforeWorktreeCleanup` (workflows).
+12. **Worktree and memory: evidence and measurements.** `pigeq` scenarios exist for what is observable without a child
+    model: the `isolation` parameter and guideline in the tool text (`tool-tools-isolation`) and the strict failure
+    outside a git repository, from the call and from an agent file (`agent-isolation-not-git`,
+    `agent-isolation-agent-file-not-git`). A scenario in which an isolated or memory agent runs a child model cannot match
+    (F2: the child's host prompt names pig; a worktree path carries a random agent id), and an agent that fails reports
+    `details` (agent id, duration) that this port's failure result does not carry (a base-slice difference, not
+    specific to memory), so those behaviors are pinned by the twins and by `worktree_feature_test.go`. Measured on
+    imladris (Xeon 6746E, `go test -bench`, real git 20 iterations): create, edit, commit to a branch and remove a worktree of a
+    one-file repository 27.4 ms/op, 95 KB, 966 allocs; the memory block of a 300-line MEMORY.md 57 us/op, 33 KB, 28 allocs.
+    The original runs only under Node (the same git calls through `pi.exec`), so no side-by-side figure is claimed. None of
+    this is on the TUI input or render path: it runs in the agent's start and settle goroutines.

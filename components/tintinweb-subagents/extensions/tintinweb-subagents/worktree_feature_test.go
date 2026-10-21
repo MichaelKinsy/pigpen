@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -63,6 +64,16 @@ func TestIsolationStrictFailure(t *testing.T) {
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 		r := startRigIn(t, t.TempDir())
 		r.app.mgr.maxConcurrent = 1
+		var settled atomic.Int32
+		inner := r.app.mgr.onSettle
+		r.app.mgr.onSettle = func(rec *agentRecord) {
+			if rec.Description == "second" {
+				settled.Add(1)
+			}
+			if inner != nil {
+				inner(rec)
+			}
+		}
 		r.must("Agent", obj{"prompt": "p", "description": "first", "subagent_type": "Plan"})
 		out := r.must("Agent", obj{"prompt": "p", "description": "second", "subagent_type": "Plan", "isolation": "worktree"})
 		eq(t, strings.Contains(out, "queued"), true)
@@ -72,6 +83,8 @@ func TestIsolationStrictFailure(t *testing.T) {
 		eq(t, queued.Status, statusError)
 		eq(t, queued.Error, worktreeStartupError)
 		eq(t, r.fleet.count(), 1)
+		// the failure is announced like any other end of a queued agent
+		eq(t, settled.Load(), int32(1))
 	})
 }
 
@@ -211,6 +224,38 @@ func TestShutdownPrunesWorktrees(t *testing.T) {
 	eq(t, calls, [][]string{{repo, "worktree", "prune"}})
 }
 
+func TestTheSwitchDropsAWorktreeAtTheToolToo(t *testing.T) {
+	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
+	r := startRigIn(t, t.TempDir())
+	setWorktreeIsolationEnabled(false)
+	defer setWorktreeIsolationEnabled(true)
+	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolation": "worktree"})
+	eq(t, r.fleet.wait(t, 1)[0].spec.Worktree, false)
+}
+
+func TestShutdownPrunesTheReposAgentsWereIsolatedIn(t *testing.T) {
+	repo := agentFilesRepo(t, nil, "")
+	other := initGitRepo(t)
+	r := startRigIn(t, repo)
+	rec := r.app.mgr.spawn("Plan", "d", "", childSpec{Prompt: "p", Cwd: other, Worktree: true}, true)
+	r.fleet.wait(t, 1)[0].finish("done")
+	<-rec.done
+	var mu sync.Mutex
+	pruned := map[string]bool{}
+	r.app.mgr.git = func(args []string, cwd string, timeoutMS int) execResult {
+		if len(args) == 2 && args[0] == "worktree" && args[1] == "prune" {
+			mu.Lock()
+			pruned[cwd] = true
+			mu.Unlock()
+		}
+		return osGit(args, cwd, timeoutMS)
+	}
+	r.Fire("session_shutdown", obj{"reason": "quit"})
+	mu.Lock()
+	defer mu.Unlock()
+	eq(t, pruned, map[string]bool{repo: true, other: true})
+}
+
 func TestAStopWhileTheCopyIsMadeDiscardsIt(t *testing.T) {
 	repo := agentFilesRepo(t, nil, "")
 	r := startRigIn(t, repo)
@@ -314,4 +359,16 @@ func TestMemoryThroughTheAgentTool(t *testing.T) {
 		eq(t, strings.Contains(gitOut(t, repo, "ls-tree", "-r", "--name-only", m), ".pi/agent-memory/mem/MEMORY.md"), true)
 		eq(t, exists(filepath.Join(repo, ".pi", "agent-memory", "mem")), false)
 	})
+}
+
+func TestTwoWorktreesOfOneAgentIdGetDistinctDirectories(t *testing.T) {
+	repo := initGitRepo(t)
+	a := createWorktree(osGit, repo, "same")
+	b := createWorktree(osGit, repo, "same")
+	if a == nil || b == nil {
+		t.Fatalf("worktrees: %v %v", a, b)
+	}
+	defer removeWorktree(osGit, repo, a.Path)
+	defer removeWorktree(osGit, repo, b.Path)
+	eq(t, a.Path != b.Path, true)
 }
