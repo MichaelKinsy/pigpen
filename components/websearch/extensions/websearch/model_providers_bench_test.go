@@ -20,7 +20,7 @@ func writeBenchConfig(dir, json string, age time.Duration) error {
 	return os.Chtimes(path, when, when)
 }
 
-// The model-backed providers on the inputs of the wire fixtures (port/fixtures): one search each,
+// The model-backed providers on the inputs of the wire fixtures (testdata/model-provider-requests.json): one search each,
 // registry lookups included, against an in-process fake endpoint.
 
 const (

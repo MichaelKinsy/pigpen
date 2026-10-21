@@ -335,7 +335,7 @@ cannot be redirected to a pigeq server under the unmodified original; only OpenA
 `-alpha`, `-registry-key` (the key held in `auth.json` reaches the request under Pi and PiG alike), `-http-error`) and the
 credential and configuration errors of all four providers (`web-search-model-providers-unavailable`, `-bad-config`).
 For the fixed endpoints, `port/record-model-requests.mjs` runs the original modules with a recording `fetch` and checks in
-`port/fixtures/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
+`extensions/websearch/testdata/model-provider-requests.json` (18 cases: method, URL, headers, raw body, result or error);
 `TestModelProviderWireFixtures` replays every case against the port and requires the same.
 
 **Deliberate differences**
@@ -705,7 +705,7 @@ allocs; renderCall of fetch_content 1.8-2.9 us, 0.8 KB, 26 allocs. The embedded 
 extension binary (curator_page.html).
 Activity logging: every provider and fetch path calls the monitor where its original does (`grep -n activityMonitor
 port/oracle/<file>.ts`). The recorders record the original's entries (testdata/provider-requests.json, provider-wire.json,
-gemini-wire.json, port/fixtures/model-provider-requests.json) and the replays compare them; activity_providers_test.go
+gemini-wire.json, testdata/model-provider-requests.json) and the replays compare them; activity_providers_test.go
 adds the failure paths the fixtures do not reach.
 Seams are installed: `/google-account` reads the cookie reader of the auth-cookies slice, the curator default provider
 uses the OpenAI eligibility check (`modelHostedSearchEligible`).

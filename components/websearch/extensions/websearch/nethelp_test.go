@@ -38,6 +38,8 @@ type netReply struct {
 	Err    error
 	// Hang holds the request until its context ends, like a server that never answers.
 	Hang bool
+	// BodyErr makes reading the body fail after the status and headers arrived.
+	BodyErr error
 }
 
 func reply(status int, body string) netReply { return netReply{Status: status, Body: body} }
@@ -71,7 +73,11 @@ func (f *fakeNet) Do(r *http.Request) (*http.Response, error) {
 	if h == nil {
 		h = http.Header{}
 	}
-	return &http.Response{StatusCode: rep.Status, Status: http.StatusText(rep.Status), Header: h, Body: io.NopCloser(strings.NewReader(rep.Body)), Request: r}, nil
+	var respBody io.ReadCloser = io.NopCloser(strings.NewReader(rep.Body))
+	if rep.BodyErr != nil {
+		respBody = brokenBody{rep.BodyErr}
+	}
+	return &http.Response{StatusCode: rep.Status, Status: http.StatusText(rep.Status), Header: h, Body: respBody, Request: r}, nil
 }
 
 // useNet installs a fake transport for the test.
