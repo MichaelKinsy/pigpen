@@ -735,7 +735,7 @@
   "name": "ref-run-params",
   "file": "refuse.go",
   "find": "\"cwd\": true, \"model\": true, \"async\": true}",
-  "replace": "\"cwd\": true, \"model\": true, \"async\": true, \"output\": true}"
+  "replace": "\"cwd\": true, \"model\": true, \"async\": true, \"worktree\": true}"
  },
  {
   "name": "ext-run-depth",
@@ -801,13 +801,13 @@
   "name": "accept-evidence-kind",
   "file": "policy_acceptance.go",
   "find": "return ok && validAcceptanceEvidence[s]",
-  "replace": "return ok"
+  "replace": "return ok && s != \"\""
  },
  {
   "name": "accept-none-reason",
   "file": "policy_acceptance.go",
   "find": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && jsTrim(reasonStr) != \"\") {",
-  "replace": "if false {"
+  "replace": "if levelStr == \"none\" && levelIsStr && !reasonIsStr {"
  },
  {
   "name": "accept-false-shorthand",
@@ -837,7 +837,7 @@
   "name": "perm-allow-dropped",
   "file": "policy_permissions.go",
   "find": "if v == \"allow\" {\n\t\t\tdelete(merged, k)",
-  "replace": "if false {\n\t\t\tdelete(merged, k)"
+  "replace": "if v == \"allow\" && false {\n\t\t\tdelete(merged, k)"
  },
  {
   "name": "perm-preview-cap",
@@ -930,22 +930,16 @@
   "replace": "if false {"
  },
  {
-  "name": "adv-huge-name",
-  "file": "advertise.go",
-  "find": "if len(a.Name) > maxCatalogBytes {",
-  "replace": "if false {"
- },
- {
   "name": "adv-stale-generation",
   "file": "advertise.go",
   "find": "if gen != a.generation {",
-  "replace": "if false {"
+  "replace": "if gen != a.generation && false {"
  },
  {
   "name": "adv-wait-error",
   "file": "advertise.go",
   "find": "if same {\n\t\t\treturn err",
-  "replace": "if same {\n\t\t\treturn nil"
+  "replace": "if same {\n\t\t\t_ = err\n\t\t\treturn nil"
  },
  {
   "name": "adv-refresh-cache",
@@ -963,7 +957,7 @@
   "name": "adv-selected",
   "file": "advertise.go",
   "find": "has = has || n == subagentName",
-  "replace": "has = true"
+  "replace": "has = has || true"
  },
  {
   "name": "adv-loader-catalog",
@@ -2920,5 +2914,29 @@
   "file": "schedule_validate.go",
   "find": "trimmed := jsTrim(at)",
   "replace": "trimmed := at"
+ },
+ {
+  "name": "ld-task-digest",
+  "file": "extbindings.go",
+  "find": "out[\"taskDigest\"] = stableJSONDigest(*in.Task)",
+  "replace": "_ = in.Task"
+ },
+ {
+  "name": "eb-properties",
+  "file": "extbindings.go",
+  "find": "if *props > maxExtensionBindingsProperties {",
+  "replace": "if *props > maxExtensionBindingsProperties+1 {"
+ },
+ {
+  "name": "rf-source",
+  "file": "agentmgmt_refine.go",
+  "find": "if source != \"builtin\" && source != \"package\" && source != \"user\" && source != \"project\" {",
+  "replace": "if source != \"builtin\" && source != \"package\" && source != \"user\" && source != \"project\" && source != \"nowhere\" {"
+ },
+ {
+  "name": "rf-empty-current",
+  "file": "agentmgmt_refine.go",
+  "find": "current := jsTrim(parsed.Current)\n\tif current == \"\" {",
+  "replace": "current := parsed.Current\n\tif current == \"\" {"
  }
 ]
