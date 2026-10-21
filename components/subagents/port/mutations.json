@@ -1017,7 +1017,7 @@
   "name": "ack-dotdot",
   "file": "runtimeack.go",
   "find": "!strings.Contains(s, \"..\")",
-  "replace": "!strings.Contains(s, \"\u0000\")"
+  "replace": "!strings.Contains(s, \"...\")"
  },
  {
   "name": "ack-dedupe",
