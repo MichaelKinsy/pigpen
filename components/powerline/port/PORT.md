@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial, stacked PR 5 of 8)
+# Port record: pi-powerline-footer (partial, stacked PR 6 of 8)
 
 | Input | Identity |
 |---|---|
@@ -34,9 +34,13 @@ the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `
 
 `working-vibes.ts` and the vibe wiring of `index.ts` in `working_vibes*.go` (model registry `Complete`, `SetWorkingMessage`): manager, themes, file and generate modes, prompt template, rate limit, `parseVibeGenerateArgs`, `generateVibesBatch`, and the `before_agent_start`, `agent_start`, `tool_call`, `agent_end` handlers. 9 twins.
 
+### Ported in PR 6 (cdquote, version 0.6.0)
+
+`cd-command.ts` (target resolution, argument completions, the forked session file written byte for byte as `SessionManager.forkFrom` writes it, checked against a file Pi wrote; `SwitchSession` with the notification and the `pi - <dir>` title), `quote-reply.ts` (candidate list, `formatQuote`, the picker through `Custom` and the select fallback) and the last-prompt line, in `cd_command.go`, `quote_reply.go`, `quote_picker.go`, `cdquote_ext.go`. One difference: the original calls `process.chdir(nextCtx.cwd)`; a Go extension has no host process cwd to change (PiG core item C3; `TestCdDoesNotChangeTheProcessCwd`). PiG replaces the session's cwd on `switchSession`, so tools, the footer and `Context.Cwd()` follow the new directory.
+
 ### Refusal of what is not ported
 
-Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`, `/cd`) with an error notification and each unported setting (see the README) with a
+Until the rest is ported, `refusal.go` refuses each unported command (`/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`) with an error notification and each unported setting (see the README) with a
 warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
 npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
 The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
