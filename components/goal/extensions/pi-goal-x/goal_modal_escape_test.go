@@ -19,7 +19,7 @@ const (
 // modalEscapeRig is createHarness + startSession of the original: a TUI session with the golden fixture goal active.
 func modalEscapeRig(t *testing.T, custom func(map[string]any) map[string]any) *goalRig {
 	t.Helper()
-	fixture, err := os.ReadFile("../../port/oracle/tests/fixtures/goals/active_goal_fixture.md")
+	fixture, err := os.ReadFile("testdata/fixtures/goals/active_goal_fixture.md")
 	if err != nil {
 		t.Fatal(err)
 	}

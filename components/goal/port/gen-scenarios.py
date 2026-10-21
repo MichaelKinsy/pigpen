@@ -88,4 +88,59 @@ scenario("unfocus-seeded-session", "A new session after a goal exists starts unf
          [step("/goal-direct Created here"), {"name": "new", "rpc": {"type": "new_session"}}, step("/goal-pause")])
 scenario("direct-limit-unset-is-not-run", "Settings with an unknown key: the original rejects the whole file; direct goals still work.",
          [step("/goal-direct Odd settings")], {".pi/pi-goal-x-settings.json": json.dumps({"maxAutonomousRuns": 0, "nonsense": 1})})
+
+# ---- scripted-model scenarios (the port runs the original's tools, scheduler and commands; the model is the harness's scripted server) ----
+
+# Values the extension makes up on every run (goal ids from the clock and Math.random, timestamps): not text a port is expected to produce.
+# HOSTDOCS: PiG's system prompt names PiG's own documentation bundle ("PiG documentation ... <home>/docs/bundle-...") where Pi names
+# its source tree. That is PiG's documented additive difference D22, not an extension difference, and it falls inside the
+# system-prompt delta of every request that adds tool snippets. The scenario-level rule masks only that block (cf. D22).
+HOSTDOCS = {"pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*", "replacement": "<docs>"}
+IDS = [HOSTDOCS, {"pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b", "replacement": "${1}<goal-id>"},
+       {"pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z", "replacement": "<iso>"},
+       {"pattern": "active_goal_\\d{16}_", "replacement": "active_goal_<stamp>_"}]
+
+
+def call(name, **arguments):
+    return {"name": name, "arguments": arguments}
+
+
+def turn(*calls, text=None):
+    t = {}
+    if text:
+        t["text"] = text
+    if calls:
+        t["toolCalls"] = list(calls)
+    return t
+
+
+def prompt(msg, ui=None, name="prompt", **extra):
+    s = {"name": name, "rpc": {"type": "prompt", "message": msg}}
+    if ui:
+        s["ui"] = ui
+    s.update(extra)
+    return s
+
+
+confirm_tasks = [{"value": "Confirm task list"}]
+
+scenario("tools-create-get", "The model creates a goal with create_goal and reads it with get_goal (summary, then the objective page).",
+         [prompt("Start working on the report.")],
+         llm=[turn(call("create_goal", objective="Write the quarterly report\nSuccess criteria: three sections")),
+              turn(call("get_goal", section="objective")), turn(call("get_goal")), turn(text="The goal is set.")],
+         normalize=IDS)
+scenario("tools-blocked", "update_goal reports a blocker: the goal is blocked with the reason, attempted actions and suggested action.",
+         [prompt("Do it.")],
+         llm=[turn(call("create_goal", objective="Deploy to production")),
+              turn(call("update_goal", status="blocked", reason="The deploy key is missing", attempted_actions=["searched the vault"], suggested_action="Add DEPLOY_KEY")),
+              turn(text="Blocked.")],
+         normalize=IDS)
+scenario("tools-pause-and-bad-args", "update_goal pause, then an invalid combination and a missing reason.",
+         [prompt("Go.")],
+         llm=[turn(call("create_goal", objective="Migrate the data")),
+              turn(call("update_goal", status="paused")),
+              turn(call("update_goal", status="paused", reason="Waiting for the maintenance window", suggested_action="Resume after 22:00")),
+              turn(text="Paused.")],
+         normalize=IDS)
+
 print(len(os.listdir(out)), "scenarios")

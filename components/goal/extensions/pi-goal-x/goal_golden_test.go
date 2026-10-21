@@ -12,7 +12,7 @@ import (
 const goldenFixtureRel = ".pi/goals/active_goal_fixture.md"
 
 func goldenFixtureDir(rel string) string {
-	return filepath.Join("..", "..", "port", "oracle", "tests", "fixtures", rel)
+	return filepath.Join("testdata", "fixtures", rel) // copies of port/oracle/tests/fixtures
 }
 
 func goldenTempCwd(t *testing.T) string {

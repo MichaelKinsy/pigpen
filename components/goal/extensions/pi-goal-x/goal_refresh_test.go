@@ -4,6 +4,7 @@ package pi_goal_x_test
 
 import (
 	"bytes"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
@@ -78,6 +79,9 @@ func TestGoalHarnessShell(t *testing.T) {
 		script, err := filepath.Abs("../../port/oracle/tests/shell/harness.test.sh")
 		if err != nil {
 			t.Fatal(err)
+		}
+		if _, err := os.Stat(script); err != nil {
+			t.Skip("the original's harness (port/oracle) is not beside the extension (a mutation copy has only the extension)")
 		}
 		cmd := exec.Command("bash", script)
 		var out, errOut bytes.Buffer

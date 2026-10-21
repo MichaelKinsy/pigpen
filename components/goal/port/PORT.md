@@ -1,4 +1,4 @@
-# Port record: pi-goal-x (partial: goal storage and the direct lifecycle)
+# Port record: pi-goal-x (full port, 0.2.0)
 
 | Input | Identity |
 |---|---|
@@ -8,31 +8,30 @@
 | Original's tests | 1049 titles in 83 files. Slice: 45 titles in 8 files, 41 exact twins and 4 named skips; the other 1004 (75 files) are deferred by name in `port/slices.json` |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
-## Scope: what is and is not ported
+## Scope (0.2.0)
 
-pi-goal-x is a runtime, not an extension of one feature: a durable scheduler that starts and continues model runs, an auditor
-child session, goal drafting through LLM tools and a questionnaire, a dashboard widget, 16 commands, goal and task tools, layered
-settings, network recovery. Porting all of it is a project of its own; this port takes the part that can be checked against the
-original without a model: the files and the commands that act on them directly.
+Everything the original registers is ported: the 16 commands, the goal, task and drafting tools, the durable scheduler, accounting,
+prompt injection, compaction, prompt cache shaping, live retention, network recovery, the activity trail, the ledger with checkpoints and
+recovery, layered settings, the dashboard, widgets and overlays, the questionnaire and rpc dialogs, the completion auditor and the
+oracle. The refusal layer of 0.1.1 is removed. Stand-ins (not differences in behavior the model or user can see): the auditor and the
+oracle run in a child `pig` process because the SDK has no child session API (SDK requests C2, C2a to C2c in the owner's core-items
+file: custom tools in the child, compaction off in the child, the parent's model registry in the child); widgets are laid out at the
+terminal width.
 
-**Ported:** the goal record and its normalization; the goal file (Markdown with a JSON header, written byte for byte as the original
-writes it, key order included); the pool of open goals and its snapshot; locks; the event ledger (append); archiving; session
-start with the focus entry (and legacy state); the scheduler restore at session start (a goal this session owns whose allowance,
-token budget or wait deadline is spent is paused, an interrupted one is paused, one owned by another session is reported, and one
-left ready for a repair run is first written back as plain ready); the
-commands `/goal-direct`, `/sisyphus-direct`, `/goal-list`, `/goal-pause`, `/goal-clear`, `/goal-unfocus`; the persist on
-`session_shutdown`; the settings `maxAutonomousRuns`, `disableContracts`, `autoSelectSingleGoal` and `strictExecutionContract` (project
-file, agent-dir file, `PI_GOAL_*` environment).
+**Twins:** 1046 exact twins and 3 named skips of 1049 upstream titles (`pigeq twins check`), `slices.json` is empty. **Go tests:** `go vet`
+on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds one list of
+2034 mutants (every find text occurs exactly once); the run results are in the PR bodies. The lead faithfulness review (five
+reviewers, function by function against the TypeScript) found and fixed: `set_goal_tasks` item schema without `additionalProperties:false`,
+`clearContinuationState` default in the blocked and pause flows, a failed tweak apply propagating as a tool error, the active-pool read
+that must fail for a vanished external root, `timestampForFile` for any ISO form, the external-pool ledger symlink check, stale-lock
+date parsing, quoting of task ids in policy messages, `localeCompare` ordering, and RE2 `\s` against JavaScript `\s` in the
+questionnaire. Not fixed (listed in the status file): a failing authoritative write is logged where the original throws, `format.go`
+`localeCompare` is ASCII-exact only, and the host items noted there.
 
-**Not ported** (each deferred test file is named in `port/slices.json` with this reason): `/goal` and `/sisyphus` drafting (the
-LLM-driven flow, the questionnaire, confirmation); the scheduler's dispatch, continuation, waits and timers; the auditor; the goal
-and task tools (`get_goal`, `create_goal`, `update_goal`, the task tools); the dashboard, widgets and overlays; `/goal-resume`,
-`/goal-focus`, `/goal-settings`, `/goal-tweak`, `/goal-refresh`, `/goal-recovery`; usage and time accounting (usage stays 0);
-`mergeFocusedGoalWithDisk`; ledger reading, checkpoints and recovery; the external `goalsRoot`; settings beyond the four keys and
-the original's settings cache (the port re-reads the file on each call); prompt cache and compaction handling; network recovery.
-With an allowance other than 0 (the default is none), the original would start a run; this port stores the goal as `ready`
-and says so in a warning. It does not pretend to continue. The scenarios and sessions below use `maxAutonomousRuns=0`, where the
-original too starts nothing.
+**pigeq:** scenarios are recorded under Pi 1402973a (`port/scenarios`, `port/golden`, `port/gen-scenarios.py`); the new
+scripted-model scenarios cover the goal tools. The host's own system-prompt documentation block (`Pi documentation ...` against `PiG
+documentation ...`) differs between the hosts and falls inside the delta of a request that adds tool snippets; the scenarios mask it with
+a scenario-level normalize rule (`HOSTDOCS`); the difference is PiG's documented additive difference D22 (PiG's docs bundle named in the system prompt).
 
 ## Mapping
 
