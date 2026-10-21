@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -190,16 +189,6 @@ func indentJSON(raw json.RawMessage) string {
 		return string(raw)
 	}
 	return b.String()
-}
-
-// jsToNumber is Number(s) for a string: ok is false for NaN.
-func jsToNumber(s string) (float64, bool) {
-	t := jsTrim(s)
-	if t == "" {
-		return 0, true
-	}
-	n, err := strconv.ParseFloat(t, 64)
-	return n, err == nil
 }
 
 // parseJSONObjectLoose decodes a JSON object body; any other JSON value decodes to nil like
