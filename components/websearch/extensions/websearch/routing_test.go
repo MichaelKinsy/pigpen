@@ -227,8 +227,47 @@ func providerNames(rs []ProviderSearchResponse) []string {
 func TestUpstream_all_provider(t *testing.T) {
 	const f = "all-provider"
 
-	tskip(t, f, `provider "all" starts every eligible provider together, excludes AnySearch, and deduplicates sources`,
-		"needs the TinyFish and Search1API providers (slice 2); the same behaviour is covered by TestAllProviderStartsEligibleProvidersTogether with Exa, Brave and Tavily")
+	tw(t, f, `provider "all" starts every eligible provider together, excludes AnySearch, and deduplicates sources`, func(t *testing.T) {
+		isolate(t)
+		t.Setenv("BRAVE_API_KEY", "brave-test-key")
+		t.Setenv("TINYFISH_API_KEY", "tinyfish-test-key")
+		t.Setenv("SEARCH1API_KEY", "search1api-test-key")
+		g := newGate("exa", "brave", "tinyfish", "search1api")
+		useNet(t, func(c netCall) netReply {
+			switch {
+			case strings.HasPrefix(c.URL, "https://api.anysearch.com/"):
+				return netReply{Err: errors.New("AnySearch must not run for provider all")}
+			case strings.HasPrefix(c.URL, "https://mcp.exa.ai/mcp"):
+				g.wait(t, "exa")
+				return exaMCPText("Title: Shared result\nURL: https://example.com/shared\nText: Exa answer\n---")
+			case strings.HasPrefix(c.URL, "https://api.search.brave.com/"):
+				g.wait(t, "brave")
+				return braveOK("Shared result", "https://example.com/shared", "Brave answer")
+			case strings.HasPrefix(c.URL, "https://api.search.tinyfish.ai"):
+				g.wait(t, "tinyfish")
+				return reply(200, `{"query":"combined","results":[{"title":"TinyFish result","url":"https://example.com/tinyfish","snippet":"TinyFish answer"}],"total_results":1,"page":0}`)
+			case c.URL == "https://api.search1api.com/search":
+				g.wait(t, "search1api")
+				return reply(200, `{"searchParameters":{"query":"combined"},"results":[{"title":"Search1API result","link":"https://example.com/search1api","snippet":"Search1API answer"}]}`)
+			}
+			return netReply{Err: errors.New("Unexpected fetch " + c.URL)}
+		})
+		r, err := Search(bg(), "combined", FullSearchOptions{Provider: ProviderSelection{Name: "all"}})
+		noErr(t, err)
+		if r.Provider != "all" || !eqStrings(g.sorted(), []string{"brave", "exa", "search1api", "tinyfish"}) ||
+			!eqStrings(providerNames(r.ProviderResponses), []string{"exa", "brave", "tinyfish", "search1api"}) ||
+			!eqStrings(urlsOf(r.Results), []string{"https://example.com/shared", "https://example.com/tinyfish", "https://example.com/search1api"}) {
+			t.Fatalf("%+v", r)
+		}
+		for _, h := range []string{"## Exa", "## Brave", "## TinyFish", "## Search1API"} {
+			if !strings.Contains(r.Answer, h) {
+				t.Fatalf("missing %s in %q", h, r.Answer)
+			}
+		}
+		if strings.Contains(r.Answer, "AnySearch") {
+			t.Fatal("AnySearch must be excluded")
+		}
+	})
 
 	tw(t, f, `provider array searches only the selected providers concurrently and preserves their order`, func(t *testing.T) {
 		isolate(t)
