@@ -744,5 +744,13 @@
   "find": "\t\tenv = \"PI_CODING_AGENT_SESSION_DIR\"",
   "replace": "\t\tenv = \"PIG_CODING_AGENT_SESSION_DIR\"",
   "why": "review: shared mode reads PI_CODING_AGENT_SESSION_DIR"
+ },
+ {
+  "name": "review-dispose-does-not-wait",
+  "module": "cmd",
+  "file": "internal/pirpc/process.go",
+  "find": "\tif p.exited == nil {\n\t\treturn\n\t}",
+  "replace": "\tif true {\n\t\treturn\n\t}",
+  "why": "review: Dispose only signals the child, so Serve returns while pig still writes (the train 45 acp E2E cleanup failures)"
  }
 ]

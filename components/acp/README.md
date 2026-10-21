@@ -79,7 +79,7 @@ audio), `sessionCapabilities` `list` and `delete`, MCP `http` and `sse` **false*
   sent back to the extension. A client that fails or cancels means "cancelled". Nothing is ever executed locally in place of an
   editor's answer. `input` and `editor` dialogs are cancelled with a visible notice; `notify` becomes a chunk with its level.
 - One live pig child per ACP connection: a new session or load closes the previous child. Closing stdin (or SIGINT/SIGTERM)
-  stops every child and exits 0. Nothing but protocol messages is written to stdout.
+  stops every child (SIGTERM, then a kill if it lingers), waits for each to exit, and exits 0. Nothing but protocol messages is written to stdout.
 
 ## Not supported (by design, as upstream)
 
@@ -104,7 +104,7 @@ Everything below was first run on PiG 0.3.0 and re-run on 0.4.0 (the 11 end-to-e
   `PIG_ACP=<pig-acp> PIG=<pig or Binary> PIGEQ=<pigeq> npm run test:acp-interop`. The run needs the `pigeq` built from
   this repository (`PIG_BIN=<pig> npm run build:pigeq` writes `dist/bin/pigeq`), which has the `llm` command; so does the twin
   ledger check (`pigeq twins check`).
-- **Mutations:** 105 deliberate defects (`port/mutations.json`, `node components/acp/port/mutate.mjs`), 104 killed and 1 documented
+- **Mutations:** 106 deliberate defects (`port/mutations.json`, `node components/acp/port/mutate.mjs`), 105 killed and 1 documented
   equivalent; results in `port/mutation-results.txt`.
 
 **Not verified:** Zed and JetBrains themselves (no editor could be run here). The reference client is the interop evidence.

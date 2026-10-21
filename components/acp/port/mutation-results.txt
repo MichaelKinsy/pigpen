@@ -103,5 +103,6 @@ KILLED   review-login-drops-piglet  (--- FAIL: TestTerminalAuthMethodKeepsTheAge
 KILLED   review-shared-map-under-pi  (--- FAIL: TestPigDirectories (0.00s))
 KILLED   review-session-dir-env-no-tilde  (--- FAIL: TestPigDirectories (0.00s))
 KILLED   review-shared-session-dir-env-ignored  (--- FAIL: TestPigDirectories (0.00s))
+KILLED   review-dispose-does-not-wait  (--- FAIL: TestDisposeReapsTheChild (0.00s))
 
-104 killed, 1 equivalent, 0 survived, 0 invalid of 105
+105 killed, 1 equivalent, 0 survived, 0 invalid of 106

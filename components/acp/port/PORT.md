@@ -31,7 +31,7 @@ built Piglet Binary. See "Results" below.
 |---|---|---|---|---|---|
 | A1 | `index.ts` stdio wiring | ndjson JSON-RPC 2.0 on stdin/stdout, one message per line, serialized writes | `internal/jsonrpc` | `jsonrpc_test.go`, `main_test.go` | mapped |
 | A2 | `index.ts` stdout writer | a destroyed stdout never crashes; the run ends with exit 0 | `jsonrpc.Conn`, `main.run` | "stdout writer: resolves even if stdout is destroyed" (twin), `TestServing` | mapped |
-| A3 | `index.ts` shutdown | stdin `end`/`close`, SIGINT, SIGTERM dispose every pi child, exit 0 | `Serve`, `main` | `TestServeSessionFlow` "closing stdin disposes every pi child", `TestE2EClosingStdinStopsThePigChild` | mapped |
+| A3 | `index.ts` shutdown | stdin `end`/`close`, SIGINT, SIGTERM dispose every pi child, exit 0 | `Serve`, `main` | `TestServeSessionFlow` "closing stdin disposes every pi child", `TestE2EClosingStdinStopsThePigChild`, `TestDisposeReapsTheChild` | mapped |
 | A4 | `index.ts` `--terminal-login` | starts the pi executable with inherited stdio, returns its status; ENOENT prints how to install and exits 1 | `main.run` | `TestTerminalLogin` | mapped (text says PiG) |
 | A5 | `agent.ts` `initialize` | protocol version 1 only; `agentInfo`; capabilities: `loadSession`, `mcpCapabilities {http:false, sse:false}`, `promptCapabilities {image, audio:false, embeddedContext:<env>}`, `sessionCapabilities {list, delete}` | `Agent.Initialize` | `TestServeInitialize`, embedded-context twins | mapped; env `PIG_ACP_ENABLE_EMBEDDED_CONTEXT`, `PI_ACP_ENABLE_EMBEDDED_CONTEXT` still accepted |
 | A6 | `auth.ts` | one terminal auth method; `_meta["terminal-auth"]` only when the client asks | `AuthMethods` | auth-methods twins | mapped (label `Launch pig`) |
@@ -106,6 +106,7 @@ built Piglet Binary. See "Results" below.
 | D8 | agent name `pi-acp`, "Launch pi", "not supported by pi-acp" | `pig-acp`, "Launch pig", "not supported by pig-acp" | identity. File names (`pi-session-<id>.html`) and the words "pi" in `/export` and `/name` messages are unchanged |
 | D9 | `PI_ACP_PI_COMMAND`, `PI_ACP_ENABLE_EMBEDDED_CONTEXT` | `PIG_ACP_PIG_COMMAND`, `PIG_ACP_ENABLE_EMBEDDED_CONTEXT`; the `PI_ACP_*` names are still read | migration |
 | D10 | no flags beyond `--terminal-login` | `--pig`, `--piglet`, `--pig-arg`, `--version`, `--help`; the advertised terminal auth method repeats them, so a login starts the agent the sessions use | drive a Piglet Binary; explicit entrypoint |
+| D11 | `dispose()` sends SIGTERM and `index.ts` calls `process.exit(0)` at once; the operating system reaps the children | `Process.Dispose` sends SIGTERM (a kill after 5 s), then waits for the child to exit (at most 8 s), so `Serve` returns only when every pig child is gone | `Serve` is a function: a caller that outlives it (the end-to-end tests) must not see a child still writing into directories it removes (`TestDisposeReapsTheChild`) |
 | D11 | `startupInfo` header `pi v<version>` from `pi --version` | `pig v<version>` from `pig --version` (`0.3.0+0.87.1`) | identity |
 | D12 | npm update notice, also under `quietStartup` | none (named skip) | see F2 |
 | D13 | `/changelog` finds the npm package's file | looks for `CHANGELOG.md` beside the executable (one level up first) | PiG binaries carry none; the answer is then "Changelog not found" |
@@ -123,7 +124,7 @@ compaction event names (F1). Not verified in a real Windows or macOS run; `go ve
 | End to end against real `pig` 0.3.0 | 11 of 11 |
 | End to end against the built `acp` Piglet Binary (57.6 MB, `pig piglet build ... --format binary`, fused Go extension, 44 s) | 11 of 11 |
 | Reference client run (`port/interop/run.mjs`) against `pig-acp` and the Piglet Binary | 12 checks, 30 messages schema-valid, exit 0 |
-| Mutations (`port/mutate.mjs`) | 105 mutants (100 from the port, 5 from its review): 104 killed, 1 equivalent (`state-auth-error-ignored`: the same error is caught again by the configuration branch below), 0 survived, 0 invalid |
+| Mutations (`port/mutate.mjs`) | 106 mutants (100 from the port, 6 from its review): 105 killed, 1 equivalent (`state-auth-error-ignored`: the same error is caught again by the configuration branch below), 0 survived, 0 invalid |
 | `GOOS=windows|darwin|linux go vet ./...` | pass |
 
 The first mutation run left 10 mutants alive; six needed a new test (`internal/acp/mutation_extra_test.go`), two needed a corrected
