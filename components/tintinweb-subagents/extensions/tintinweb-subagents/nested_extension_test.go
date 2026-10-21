@@ -487,13 +487,13 @@ func TestNestedToolTextIsTheOriginals(t *testing.T) {
 	r, cwd := scoutRig(t)
 	defs := r.app.nestedToolDefs(r.app.nested)
 	_ = cwd
-	var texts []string
+	var strs []string
 	var walk func(v any)
 	walk = func(v any) {
 		switch x := v.(type) {
 		case map[string]any:
 			if d, ok := x["description"].(string); ok && !strings.HasPrefix(d, "Allowed nested agent type.") && d != texts.IsolationParam["description"] { // the isolation text is the top-level tool's own
-				texts = append(texts, d)
+				strs = append(strs, d)
 			}
 			for _, c := range x {
 				walk(c)
@@ -501,14 +501,14 @@ func TestNestedToolTextIsTheOriginals(t *testing.T) {
 		}
 	}
 	for _, d := range defs {
-		texts = append(texts, d.Label, d.Name)
+		strs = append(strs, d.Label, d.Name)
 		walk(map[string]any(d.Parameters))
 		for _, part := range strings.SplitAfter(d.Description, ". ") {
-			texts = append(texts, strings.TrimSuffix(part, " "))
+			strs = append(strs, strings.TrimSuffix(part, " "))
 		}
 	}
 	eq(t, len(defs), 3)
-	for _, text := range texts {
+	for _, text := range strs {
 		if !literals[text] && !literals[text+" "] {
 			t.Errorf("not a string of nested-tools.ts: %q", text)
 		}
