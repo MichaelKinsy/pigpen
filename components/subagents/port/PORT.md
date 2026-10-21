@@ -5,7 +5,7 @@
 | Original | `pi-subagents` 0.73.1 by Nico Bailon, https://github.com/nicobailon/pi-subagents, commit `8a403efba6975988cc0488ec8bb941db5ef1a19e`, MIT (its LICENSE file) |
 | Oracle | Pi 1.0.0, Node 24.19.0; the original, unmodified except one image (`port/oracle/UPSTREAM.md`; the shim's `dist/` and `node_modules/` under `test/fixtures` are committed with `git add -f`, past this repository's ignore rules); its own suite: 3442 tests, 3428 pass, 13 skipped, 1 fails (`profiles helpers`, the same in a pristine clone) |
 | Target | PiG 0.4.0+1.0.0, go1.27.1 |
-| Original's tests | 3317 titles in 267 files (102,676 lines of source). Slice: 41 exact twins in 5 files; the other 264 files (and the untwinned part of two of them) are deferred by name in `port/slices.json` |
+| Original's tests | 3317 titles in 267 files (102,676 lines of source). Slice at this tip: 1358 exact twins and 83 individually skipped cases (`pigeq twins check --ledger port/upstream-tests.json --deferred port/slices.json`: exit 0); the remaining 162 slices are deferred by name in `port/slices.json` |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
 ## Scope: what is and is not ported
