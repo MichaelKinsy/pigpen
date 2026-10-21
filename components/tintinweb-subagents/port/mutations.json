@@ -1647,7 +1647,7 @@
   "name": "cleanup-ignores-age",
   "file": "manager.go",
   "find": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue",
-  "replace": "if !r.CompletedAt.IsZero() && false {\n\t\t\tcontinue"
+  "replace": "if !r.CompletedAt.IsZero() && false && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue"
  },
  {
   "name": "cleanup-removes-running",
@@ -3399,7 +3399,7 @@
   "name": "iso-rpc-option-ignored",
   "file": "bus.go",
   "find": "Worktree: isolation == \"worktree\", Spawn:",
-  "replace": "Worktree: false, Spawn:"
+  "replace": "Worktree: isolation == \"worktree\" && false, Spawn:"
  },
  {
   "name": "iso-env-from-main-checkout",

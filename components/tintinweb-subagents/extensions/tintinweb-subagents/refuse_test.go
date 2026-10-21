@@ -78,7 +78,9 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		name    string
 		options obj
 		feature string
-	}{}
+	}{
+		{"an option the port does not know", obj{"mystery": true}, `the spawn RPC option "mystery"`},
+	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := startRig(t)
