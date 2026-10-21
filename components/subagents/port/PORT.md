@@ -295,6 +295,8 @@ Workaround here: the copy of the original's prompt templates the binary embeds m
 
 Known difference left: a failed foreground or mission result returns `ToolResult{IsError, Details}`; Pi shows a failed result's details as `{}`.
 
+Known cost kept: every `session_start` runs `npm root -g` once in the background (`advertise.go`, `resolveGlobalNpmRoot`), and the first prompt and every tool call wait for it. This is the original's behavior (`global-npm-root.ts` runs at every session start and `beforeAgentStart` awaits it), and the twin `TestAdvertisementBarrier` pins a fresh lookup per session (a newer session's root wins over an older lookup that is still running). Caching the root for the process would change that twin, so the cost is not removed; it is the same exec the original pays, off the render path.
+
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 
 - Module, `Extension()`, event and tool registration; the tool definition from a JSON Schema (here read from the original).
