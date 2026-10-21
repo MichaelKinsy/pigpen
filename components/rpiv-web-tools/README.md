@@ -42,9 +42,13 @@ file whose path is in the result.
 
 ## Differences from the original
 
-- **No GitHub interceptor.** The original can answer a `github.com` URL from a cached shallow clone (opt-in,
-  `interceptors.github`). This port does not implement it: such a URL is fetched like any other page, and
-  `/web-tools --show` says so when the option is on. See [port/PORT.md](port/PORT.md) (slice 2).
+- **No GitHub interceptor yet.** The original can answer a `github.com` URL from a cached shallow clone (opt-in,
+  `interceptors.github`). This port does not implement it, so while the option is on, `web_fetch` of a repository
+  root, blob or tree URL is refused with a tool error, not fetched like any other page:
+  `@pi-in-go/pigpen-rpiv-web-tools (Go port) does not support the GitHub URL interceptor (interceptors.github) yet.
+  Install the original extension, npm:@juicesharp/rpiv-web-tools@2.12.0, which runs unchanged in PiG.`
+  `/web-tools --show` says so too. With the option off (the default) nothing changes. See
+  [port/PORT.md](port/PORT.md) (slice 2).
 - **Renderers return lines** (the Go SDK cannot return a TUI component), laid out at the width the host gives.
 - **Network failures read as in Node.** A transport failure reads `fetch failed`, as Node's fetch reports it.
 

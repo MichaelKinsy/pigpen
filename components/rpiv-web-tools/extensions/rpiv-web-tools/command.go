@@ -163,10 +163,11 @@ func formatShowConfigMessage(cfg webToolsConfig) string {
 
 func hasString(cfg webToolsConfig, key string) bool { _, ok := cfg[key].(string); return ok }
 
-// githubInterceptorLines reports the interceptor: this port does not implement it (PORT.md, slice 2).
+// githubInterceptorLines reports the interceptor: this port does not implement it (PORT.md, slice 2),
+// so a github.com URL is refused while it is enabled.
 func githubInterceptorLines(cfg webToolsConfig) []string {
 	if githubInterceptorEnabled(cfg) {
-		return []string{"  github: enabled in config, but this Go port does not implement the interceptor: github.com URLs are fetched like any other page"}
+		return []string{"  github: enabled in config. " + refusal(githubInterceptorFeature)}
 	}
 	return []string{
 		"  github: disabled",
