@@ -479,13 +479,13 @@ func TestAssessReturnsUnclearWhenChoiceAnswerHasNoChoiceField(t *testing.T) {
 	}
 }
 
-func near(a, b float64) bool { return math.Abs(a-b) < 0.001 }
+func nearTo(a, b float64) bool { return math.Abs(a-b) < 0.001 }
 
 // twin: tests/conscience.test.ts:466
 func TestPUsefulNowSumsTheLastTwoScoreLevels(t *testing.T) {
 	j := csSelection("advance", "c1", 3, []float64{0.05, 0.1, 0.6, 0.25}, 1)
 	r := csAssess(t, "design a UI", "", csDefaultSkills, csDefaultTools, nil, nil, csDeps(j, func(c *ConscienceConfig) { c.RecommendThreshold = 0.5 }), nil)
-	if r.Selected == nil || r.Selected.ID != "impeccable" || !near(r.Usefulness, 0.85) {
+	if r.Selected == nil || r.Selected.ID != "impeccable" || !nearTo(r.Usefulness, 0.85) {
 		t.Errorf("%+v %v", r.Selected, r.Usefulness)
 	}
 }
@@ -494,7 +494,7 @@ func TestPUsefulNowSumsTheLastTwoScoreLevels(t *testing.T) {
 func TestPUsefulNowIsLowWhenOnlyLevelOneHasHighProbability(t *testing.T) {
 	j := csSelection("advance", "c1", 1, []float64{0.1, 0.7, 0.1, 0.05}, 1)
 	r := csAssess(t, "test", "", csDefaultSkills, csDefaultTools, nil, nil, csDeps(j, func(c *ConscienceConfig) { c.RecommendThreshold = 0.5 }), nil)
-	if !near(r.Usefulness, 0.15) {
+	if !nearTo(r.Usefulness, 0.15) {
 		t.Errorf("%v", r.Usefulness)
 	}
 }
