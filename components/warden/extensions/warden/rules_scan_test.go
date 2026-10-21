@@ -105,3 +105,17 @@ func TestSlugAgreesWithTheReference(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitPathListAgreesWithTheExpression(t *testing.T) {
+	r := rand.New(rand.NewPCG(54, 54))
+	pieces := []string{"src/**/*.ts", "a.go", "`b`", ",", ", ", " ", "  ", "\t", "\f", "\v", "\u00a0", "\u3000", "é", "x", ",,", "", "`"}
+	for i := range 300000 {
+		s := genText(r, pieces, 8)
+		if r.IntN(10) == 0 {
+			s = ""
+		}
+		if got, want := splitPathList(s), rePathSep.Split(s, -1); !reflect.DeepEqual(got, want) {
+			t.Fatalf("case %d %q: got %q want %q", i, s, got, want)
+		}
+	}
+}

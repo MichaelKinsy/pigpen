@@ -182,3 +182,26 @@ func slugText(name string) (string, bool) {
 	}
 	return strings.Trim(string(out), "-"), true
 }
+
+// splitPathList is rePathSep.Split(s, -1): the pieces of s between runs of commas and spaces, the empty ends included.
+func splitPathList(s string) []string {
+	if !plainLine(s) {
+		return rePathSep.Split(s, -1)
+	}
+	isSep := func(c byte) bool { return c == ',' || isHSpace(c) }
+	out := make([]string, 0, 4)
+	start := 0
+	for i := 0; i < len(s); {
+		if !isSep(s[i]) {
+			i++
+			continue
+		}
+		j := i
+		for j < len(s) && isSep(s[j]) {
+			j++
+		}
+		out = append(out, s[start:i])
+		start, i = j, j
+	}
+	return append(out, s[start:])
+}

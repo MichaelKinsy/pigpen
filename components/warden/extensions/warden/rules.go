@@ -376,7 +376,7 @@ func parseRules(markdown string) []Rule {
 				} else {
 					seenPaths = true
 					rule.Paths = nil
-					for _, glob := range rePathSep.Split(m[1], -1) {
+					for _, glob := range splitPathList(m[1]) {
 						if glob = cutBackticks(glob); glob != "" {
 							rule.Paths = append(rule.Paths, glob)
 						}
