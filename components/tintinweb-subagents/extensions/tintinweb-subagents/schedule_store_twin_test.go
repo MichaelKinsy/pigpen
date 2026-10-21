@@ -10,8 +10,6 @@ import (
 // Twins of the original's test/schedule-store.test.ts.
 const fScheduleStore = "schedule-store"
 
-func exists(path string) bool { _, err := os.Stat(path); return err == nil }
-
 func TestScheduleStore(t *testing.T) {
 	tw(t, fScheduleStore, "resolveStorePath produces session-scoped path under .pi/subagent-schedules/", func(t *testing.T) {
 		eq(t, resolveStorePath(filepath.FromSlash("/repo"), "abc123"), filepath.FromSlash("/repo/.pi/subagent-schedules/abc123.json"))

@@ -56,9 +56,6 @@ func jsSpace(r rune) bool {
 // jsFields splits on runs of JavaScript whitespace: `s.match(/\S+/g) || []`.
 func jsFields(s string) []string { return strings.FieldsFunc(s, jsSpace) }
 
-// jsTrim is String.prototype.trim.
-func jsTrim(s string) string { return strings.TrimFunc(s, jsSpace) }
-
 // cronPattern is croner's CronPattern for the six-field form. upstream: pattern.ts.
 type cronPattern struct {
 	second, minute, hour, day, month, dayOfWeek, nearestWeekdays []int

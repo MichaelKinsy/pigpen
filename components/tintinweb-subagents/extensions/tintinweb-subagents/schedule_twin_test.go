@@ -8,7 +8,7 @@ import (
 )
 
 // Twins of the original's test/schedule.test.ts. The original runs the fire path on vitest's fake timers and a mocked
-// AgentManager; here the same is a fakeClock and a mockManager (schedule_helpers_test.go). A mutation is a function that
+// AgentManager; here the same is a schedClock and a mockManager (schedule_helpers_test.go). A mutation is a function that
 // patches the job, since a JavaScript patch object cannot say "unset" the way a Go struct needs.
 const fSchedule = "schedule"
 
@@ -166,7 +166,7 @@ func TestSchedulerLifecycle(t *testing.T) {
 
 func TestSchedulerFirePath(t *testing.T) {
 	// start is the original's beforeEach/afterEach: fake timers, a mock manager, and strict dispatch restored afterwards.
-	start := func(t *testing.T, manager *mockManager) (*schedRig, *fakeClock) {
+	start := func(t *testing.T, manager *mockManager) (*schedRig, *schedClock) {
 		clock := newFakeClock()
 		t.Cleanup(func() {
 			setFallbackSubagent(nil)

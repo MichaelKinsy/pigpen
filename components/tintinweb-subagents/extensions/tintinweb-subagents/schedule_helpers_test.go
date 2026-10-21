@@ -10,47 +10,47 @@ import (
 
 // ---- a fake clock: the original's schedule tests run on vitest's fake timers (vi.useFakeTimers) ----
 
-type fakeTimer struct {
+type schedTimer struct {
 	at      time.Time
 	f       func()
-	clock   *fakeClock
+	clock   *schedClock
 	stopped bool
 	seq     int
 }
 
-func (t *fakeTimer) stop() {
+func (t *schedTimer) stop() {
 	t.clock.mu.Lock()
 	t.stopped = true
 	t.clock.mu.Unlock()
 }
 
-// fakeClock is time that moves only when advance says so; timers fire in order as it passes them.
-type fakeClock struct {
+// schedClock is time that moves only when advance says so; timers fire in order as it passes them.
+type schedClock struct {
 	mu     sync.Mutex
 	t      time.Time
-	timers []*fakeTimer
+	timers []*schedTimer
 	seq    int
 }
 
-func newFakeClock() *fakeClock { return &fakeClock{t: time.Now().Truncate(time.Millisecond)} }
+func newFakeClock() *schedClock { return &schedClock{t: time.Now().Truncate(time.Millisecond)} }
 
-func (c *fakeClock) now() time.Time {
+func (c *schedClock) now() time.Time {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.t
 }
 
-func (c *fakeClock) afterFunc(d time.Duration, f func()) interface{ stop() } {
+func (c *schedClock) afterFunc(d time.Duration, f func()) interface{ stop() } {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.seq++
-	t := &fakeTimer{at: c.t.Add(d), f: f, clock: c, seq: c.seq}
+	t := &schedTimer{at: c.t.Add(d), f: f, clock: c, seq: c.seq}
 	c.timers = append(c.timers, t)
 	return t
 }
 
 // advance moves the clock by d, firing every timer that falls due (including the ones the callbacks arm).
-func (c *fakeClock) advance(d time.Duration) {
+func (c *schedClock) advance(d time.Duration) {
 	c.mu.Lock()
 	target := c.t.Add(d)
 	c.mu.Unlock()
@@ -62,7 +62,7 @@ func (c *fakeClock) advance(d time.Duration) {
 			}
 			return c.timers[i].seq < c.timers[j].seq
 		})
-		var next *fakeTimer
+		var next *schedTimer
 		for len(c.timers) > 0 {
 			head := c.timers[0]
 			if head.stopped {
