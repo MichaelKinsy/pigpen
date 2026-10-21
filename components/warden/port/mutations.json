@@ -572,7 +572,7 @@
  {
   "name": "audit-input-not-blocked",
   "file": "audit_cmd.go",
-  "find": "if !w.auditState.running.Load() {\n\t\treturn nil, nil",
-  "replace": "if true {\n\t\treturn nil, nil"
+  "find": "func (w *warden) auditRunning() bool { return w.auditState.running.Load() }",
+  "replace": "func (w *warden) auditRunning() bool { return false }"
  }
 ]
