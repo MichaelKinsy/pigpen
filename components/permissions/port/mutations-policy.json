@@ -780,6 +780,18 @@
   "replace": "return PermissionGateResult{Action: \"allow\", DecidedBy: DecisionSource{}}, nil\n}"
  },
  {
+  "name": "fam-members-order",
+  "file": "pathsurfaces.go",
+  "find": "f + \"_\" + string(capabilityDirections[0]), f + \"_\" + string(capabilityDirections[1])",
+  "replace": "f + \"_\" + string(capabilityDirections[1]), f + \"_\" + string(capabilityDirections[0])"
+ },
+ {
+  "name": "fam-members-one",
+  "file": "pathsurfaces.go",
+  "find": "m[f] = [2]string{",
+  "replace": "m[f+\"x\"] = [2]string{"
+ },
+ {
   "name": "sr-expand",
   "file": "sessionrules.go",
   "find": "if members, ok := SurfaceFamilyMembers(surface); ok {",

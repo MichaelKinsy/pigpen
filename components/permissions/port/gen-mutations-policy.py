@@ -158,6 +158,10 @@ m("gate-ask-decider", GT, 'return PermissionGateResult{Action: "allow", DecidedB
 m("gate-fail-closed", GT, 'if p.State != "allow" {', 'if false {')
 m("gate-allow-decider", GT, 'return PermissionGateResult{Action: "allow", DecidedBy: p.DecidedByRule}, nil\n}', 'return PermissionGateResult{Action: "allow", DecidedBy: DecisionSource{}}, nil\n}')
 
+PS = "pathsurfaces.go"
+m("fam-members-order", PS, 'f + "_" + string(capabilityDirections[0]), f + "_" + string(capabilityDirections[1])', 'f + "_" + string(capabilityDirections[1]), f + "_" + string(capabilityDirections[0])')
+m("fam-members-one", PS, 'm[f] = [2]string{', 'm[f+"x"] = [2]string{')
+
 SR = "sessionrules.go"
 m("sr-expand", SR, 'if members, ok := SurfaceFamilyMembers(surface); ok {', 'if members, ok := SurfaceFamilyMembers(surface); ok && false {')
 m("sr-expand-one", SR, 'for _, target := range members {', 'for _, target := range members[:1] {')
