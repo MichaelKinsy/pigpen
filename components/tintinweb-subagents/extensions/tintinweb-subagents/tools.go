@@ -174,30 +174,42 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	}
 	// Reload the agent files so a file added mid-session is picked up (a bad one only warns).
 	a.reregisterAgents()
+	// `resume` replays a stored session and ignores subagent_type entirely, so only a real spawn is gated on it.
+	// upstream: index.ts:1785.
+	resumeID, _ := p["resume"].(string)
 	res := resolveSpawnType(typ)
-	if !res.OK {
+	if !res.OK && resumeID == "" {
 		return textResult(res.Message), nil
+	}
+	subagentType := res.Type
+	if !res.OK {
+		subagentType = typ
 	}
 	reg := currentRegistry()
 	resolved, fellBack := res.Type, res.FellBackFrom
 	// A fallback happened when the requested type itself is not an enabled type (a blank request included).
 	// upstream: index.ts:1796-1798.
 	fallbackNote := ""
-	if resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
+	if res.OK && resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
 		using := "the fallback agent config"
 		if resolveType(resolved) != "" {
 			using = resolved
 		}
 		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + using + ".\n\n"
 	}
+	rt := a.runtime()
+	invOpts := invocationOptions{worktreeDisallowed: !settingsView().worktreeIsolation(), defaultRunInBackground: rt.backgroundByDefault}
+	if resumeID != "" {
+		// Resume replays a stored session: the agent file of the type named (as given, when it is not a known type)
+		// decides whether it runs in the background. upstream: index.ts Agent execute (Resume existing agent).
+		return a.resumeTool(ctx, resumeID, prompt, resolveInvocationConfig(reg.get(subagentType), invocationParamsOf(p), invOpts).runInBackground)
+	}
 	cfg := reg.get(resolved)
 	cfgModel := ""
 	if cfg != nil {
 		cfgModel = cfg.Model
 	}
-	rt := a.runtime()
-	inv := resolveInvocationConfig(cfg, invocationParamsOf(p), invocationOptions{
-		worktreeDisallowed: !settingsView().worktreeIsolation(), defaultRunInBackground: rt.backgroundByDefault})
+	inv := resolveInvocationConfig(cfg, invocationParamsOf(p), invOpts)
 
 	// The model: the agent file's first, the call's only fills the gap. One that does not resolve is an error for the
 	// call's (the orchestrator can pick again) and a silent fallback to the parent's for the file's.
@@ -240,7 +252,8 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if !background {
 		opts.Signal = ctx.Done() // the turn is interrupted: stop the agent, queued or running
 	}
-	r, err := a.start(ctx, resolved, prompt, description, model, inv.thinking, inv.maxTurns, inv.isolated, opts)
+	r, err := a.start(ctx, startRequest{Type: resolved, Prompt: prompt, Description: description, Model: model, Thinking: inv.thinking,
+		MaxTurns: inv.maxTurns, Isolated: inv.isolated, InheritContext: inv.inheritContext, Spawn: opts})
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +327,7 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 		a.mgr.mu.Unlock()
 		if active {
 			select {
-			case <-r.done:
+			case <-a.mgr.doneOf(r):
 			case <-ctx.Done():
 				return nil, context.Canceled
 			}

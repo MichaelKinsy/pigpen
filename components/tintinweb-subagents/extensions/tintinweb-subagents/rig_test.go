@@ -15,20 +15,27 @@ import (
 
 type obj = map[string]any
 
-// fakeChild is a scripted child: it settles when released, or when aborted.
+// fakeChild is a scripted child: it settles when released, or when aborted. A resumed run is released again.
 type fakeChild struct {
 	spec    childSpec
 	release chan struct{}
 	res     *childResult
 	err     error
+	session string // the session file it reports ("": in memory)
+	dead    bool   // the process has ended: it cannot take a prompt
 
 	mu      sync.Mutex
 	steered []string
 	aborted bool
+	resumed []string
+	closed  bool
 }
 
 func (c *fakeChild) wait() (*childResult, error) {
-	<-c.release
+	c.mu.Lock()
+	release := c.release
+	c.mu.Unlock()
+	<-release
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.aborted {
@@ -46,6 +53,11 @@ func (c *fakeChild) abort() {
 	c.mu.Lock()
 	c.aborted = true
 	c.mu.Unlock()
+	c.releaseNow()
+}
+func (c *fakeChild) releaseNow() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	select {
 	case <-c.release:
 	default:
@@ -53,8 +65,34 @@ func (c *fakeChild) abort() {
 	}
 }
 func (c *fakeChild) finish(text string) {
+	c.mu.Lock()
 	c.res = &childResult{Text: text, ToolUses: 3, Tokens: 1500, Turns: 2}
-	close(c.release)
+	c.mu.Unlock()
+	c.releaseNow()
+}
+// die is the process ending because its context ended: the run in progress fails and no more prompts are taken.
+func (c *fakeChild) die() {
+	c.mu.Lock()
+	c.dead = true
+	if c.res == nil {
+		c.err = errors.New("the child exited")
+	}
+	c.mu.Unlock()
+	c.releaseNow()
+}
+func (c *fakeChild) sessionFile() string { return c.session }
+func (c *fakeChild) alive() bool         { c.mu.Lock(); defer c.mu.Unlock(); return !c.dead && !c.closed }
+func (c *fakeChild) close()              { c.mu.Lock(); c.closed = true; c.mu.Unlock() }
+func (c *fakeChild) resume(prompt string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.dead || c.closed {
+		return errors.New("the agent's process has ended")
+	}
+	c.resumed = append(c.resumed, prompt)
+	c.aborted = false
+	c.release = make(chan struct{})
+	return nil
 }
 
 // fleet starts fake children and remembers them.
@@ -62,16 +100,23 @@ type fleet struct {
 	mu       sync.Mutex
 	children []*fakeChild
 	failWith error
+	session  string // the session file every child reports
 }
 
-func (f *fleet) start(_ context.Context, spec childSpec) (child, error) {
+// start is a childStarter whose children are bound to ctx, as a process started with exec.CommandContext is: when the
+// context ends the child dies, whatever it was doing and whether or not a run is in progress.
+func (f *fleet) start(ctx context.Context, spec childSpec) (child, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.failWith != nil {
 		return nil, f.failWith
 	}
-	c := &fakeChild{spec: spec, release: make(chan struct{})}
+	c := &fakeChild{spec: spec, release: make(chan struct{}), session: f.session}
 	f.children = append(f.children, c)
+	go func() {
+		<-ctx.Done()
+		c.die()
+	}()
 	return c, nil
 }
 
@@ -102,16 +147,24 @@ type rig struct {
 	exec func(command string, args []string) (stdout string, code int)
 	// modelState answers the host's model registry (`ctx.ModelRegistry()`): {"models": [...], "providers": {...}}.
 	modelState any
-	mu         sync.Mutex
-	extBus     map[string][]string
-	goBus      map[string][]func(any)
-	emits      []string
+	// What the host answers about the parent session.
+	sessionFile string // getSessionFile
+	branch      []any  // sessionRead getBranch
+	registry    []any  // getAllTools
+	trusted     bool   // isProjectTrusted
+	mu          sync.Mutex
+	extBus      map[string][]string
+	goBus       map[string][]func(any)
+	emits       []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
 
 // startRigIn is startRig with the workspace the session starts in.
-func startRigIn(t *testing.T, cwd string) *rig {
+func startRigIn(t *testing.T, cwd string) *rig { return startRigTuned(t, cwd, nil) }
+
+// startRigTuned is startRigIn with a change to the app made before the session starts.
+func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
@@ -123,10 +176,13 @@ func startRigIn(t *testing.T, cwd string) *rig {
 	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
+	if tune != nil {
+		tune(r.app)
+	}
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
 	r.Fire("session_start", obj{"reason": "startup"})
-	t.Cleanup(func() { r.app.mgr.abortAll() })
+	t.Cleanup(func() { r.app.shutdown() })
 	return r
 }
 
@@ -138,6 +194,16 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 		if r.modelState != nil {
 			return r.modelState, ""
 		}
+	case "sessionRead":
+		if args["method"] == "getBranch" {
+			return append([]any{}, r.branch...), ""
+		}
+	case "getSessionFile":
+		return obj{"sessionFile": r.sessionFile}, ""
+	case "isProjectTrusted":
+		return obj{"trusted": r.trusted}, ""
+	case "getAllTools":
+		return obj{"tools": append([]any{}, r.registry...)}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string

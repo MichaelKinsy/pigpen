@@ -145,6 +145,9 @@ func sanitizeSettings(raw any) settings {
 	} else {
 		out.AgentMentions = enumOf(r["agentMentions"], validAgentMentionModes)
 	}
+	if b, ok := r["rememberAgents"].(bool); ok {
+		out.RememberAgents = &b
+	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
 		if !v { // `false` is a spelling of "none": dropped, it would silently leave the permissive default

@@ -301,9 +301,9 @@
  },
  {
   "name": "isolated-agent-file-ignored",
-  "file": "bus.go",
-  "find": "|| (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}",
-  "replace": "}"
+  "file": "invocation.go",
+  "find": "out.isolated = boolFirst(cfg.Isolated, p.Isolated, false)",
+  "replace": "out.isolated = boolFirst(nil, p.Isolated, false)"
  },
  {
   "name": "no-session-error",
@@ -612,18 +612,6 @@
   "replace": "v != \"\" && v != \"worktree\" {"
  },
  {
-  "name": "inherit-context-accepted",
-  "file": "refuse.go",
-  "find": "if v, _ := p[\"inherit_context\"].(bool); v {",
-  "replace": "if v, _ := p[\"inherit_context\"].(bool); !v {"
- },
- {
-  "name": "resume-accepted",
-  "file": "refuse.go",
-  "find": "if v, _ := p[\"resume\"].(string); v != \"\" {",
-  "replace": "if v, _ := p[\"resume\"].(string); v == \"never\" {"
- },
- {
   "name": "memory-field-accepted",
   "file": "refuse.go",
   "find": "case cfg.Memory != \"\":",
@@ -634,24 +622,6 @@
   "file": "refuse.go",
   "find": "case cfg.AllowedSubagents != nil:",
   "replace": "case false:"
- },
- {
-  "name": "disallowed-tools-accepted",
-  "file": "refuse.go",
-  "find": "case len(cfg.DisallowedTools) > 0:",
-  "replace": "case false:"
- },
- {
-  "name": "skills-false-accepted",
-  "file": "refuse.go",
-  "find": "return v == nil || (ok && b)",
-  "replace": "return v == nil || (ok && b) || true"
- },
- {
-  "name": "extension-list-accepted",
-  "file": "refuse.go",
-  "find": "case nil, bool:\n\t\treturn true",
-  "replace": "case nil, bool, []string:\n\t\treturn true"
  },
  {
   "name": "rpc-option-accepted",
@@ -1334,14 +1304,14 @@
  {
   "name": "dispose-keeps-waiters",
   "file": "manager.go",
-  "find": "m.dequeueLocked(func(queueEntry) bool { return true })\n\tm.records",
-  "replace": "m.records"
+  "find": "m.dequeueLocked(func(queueEntry) bool { return true })\n\tfor _, r := range m.records {",
+  "replace": "for _, r := range m.records {"
  },
  {
   "name": "retention-doubled",
   "file": "manager.go",
-  "find": "cutoff := m.now().Add(-recordRetention)",
-  "replace": "cutoff := m.now().Add(-2 * recordRetention)"
+  "find": "cutoff := now.Add(-recordRetention)",
+  "replace": "cutoff := now.Add(-2 * recordRetention)"
  },
  {
   "name": "gc-evicts-running",
@@ -1352,7 +1322,7 @@
  {
   "name": "gc-never-sweeps",
   "file": "manager.go",
-  "find": "case <-t.C:\n\t\t\t\tm.cleanup()",
+  "find": "case <-t.C:\n\t\t\t\tguard(\"agent cleanup\", m.cleanup)",
   "replace": "case <-t.C:\n\t\t\t\t_ = m"
  },
  {
@@ -1364,8 +1334,8 @@
  {
   "name": "clear-keeps-names",
   "file": "manager.go",
-  "find": "m.tombstones, m.tombOrder = map[string]*tombstone{}, nil",
-  "replace": "_ = m"
+  "find": "m.mu.Lock()\n\tm.tombstones = nil\n\tm.mu.Unlock()",
+  "replace": "m.mu.Lock()\n\tm.mu.Unlock()"
  },
  {
   "name": "tombstone-without-session",
@@ -1400,8 +1370,8 @@
  {
   "name": "steers-not-flushed",
   "file": "manager.go",
-  "find": "steers := r.pendingSteers\n\t\tr.pendingSteers = nil",
-  "replace": "steers := []string(nil)\n\t\tr.pendingSteers = nil"
+  "find": "steers = r.pendingSteers\n\t\tr.pendingSteers = nil",
+  "replace": "steers = []string(nil)\n\t\tr.pendingSteers = nil"
  },
  {
   "name": "steer-queue-replaces",
@@ -1454,14 +1424,14 @@
  {
   "name": "session-start-wipes-unread",
   "file": "extension.go",
-  "find": "a.mgr.clearCompleted(true)\n\t\ta.refuseSettings(ctx)",
-  "replace": "a.mgr.clearCompleted(false)\n\t\ta.refuseSettings(ctx)"
+  "find": "guard(\"session start cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "guard(\"session start cleanup\", func() { a.mgr.clearCompleted(false) })"
  },
  {
   "name": "session-switch-keeps-records",
   "file": "extension.go",
-  "find": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\ta.mgr.clearCompleted(true)",
-  "replace": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\t_ = a"
+  "find": "guard(\"session switch cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "guard(\"session switch cleanup\", func() {})"
  },
  {
   "name": "rpc-announced-every-session",
@@ -1532,8 +1502,8 @@
  {
   "name": "background-default-ignored",
   "file": "tools.go",
-  "find": "defaultRunInBackground: rt.backgroundByDefault})",
-  "replace": "defaultRunInBackground: true})"
+  "find": "defaultRunInBackground: rt.backgroundByDefault}",
+  "replace": "defaultRunInBackground: true}"
  },
  {
   "name": "file-model-error-surfaced",
@@ -1550,8 +1520,8 @@
  {
   "name": "agent-files-not-reloaded",
   "file": "tools.go",
-  "find": "a.reregisterAgents()\n\tres := resolveSpawnType(typ)",
-  "replace": "res := resolveSpawnType(typ)"
+  "find": "a.reregisterAgents()\n\t// `resume` replays",
+  "replace": "// `resume` replays"
  },
  {
   "name": "join-mode-ignored",
@@ -1648,5 +1618,245 @@
   "file": "tools.go",
   "find": "func displayName(typ string) string { return getConfig(typ).DisplayName }",
   "replace": "func displayName(typ string) string {\n\tif c := getAgentConfig(typ); c != nil {\n\t\treturn c.Name\n\t}\n\treturn typ\n}"
+ },
+ {
+  "name": "kept-child-ended-with-its-run",
+  "file": "manager.go",
+  "find": "if c != nil && (!alive || m.disposed) {",
+  "replace": "if c != nil {"
+ },
+ {
+  "name": "child-context-cancel-leaves-process",
+  "file": "runner.go",
+  "find": "cmd.Cancel = func() error { terminate(cmd); return nil }",
+  "replace": "cmd.Cancel = func() error { return nil }"
+ },
+ {
+  "name": "child-context-cancel-kills-leader-only",
+  "file": "runner.go",
+  "find": "cmd.Cancel = func() error { terminate(cmd); return nil }",
+  "replace": "cmd.Cancel = func() error { return cmd.Process.Kill() }"
+ },
+ {
+  "name": "stop-ends-in-memory-conversation",
+  "file": "runner.go",
+  "find": "\tif !c.keep {\n\t\tc.mu.Lock()\n\t\tc.killed = true",
+  "replace": "\tif true {\n\t\tc.mu.Lock()\n\t\tc.killed = true"
+ },
+ {
+  "name": "stop-grace-missing",
+  "file": "runner.go",
+  "find": "case <-time.After(c.abortWait):\n\t\t\tc.kill()",
+  "replace": "case <-time.After(c.abortWait):"
+ },
+ {
+  "name": "queued-abort-closes-unlocked",
+  "file": "manager.go",
+  "find": "r.closeDone() // under the lock: a resume that lands once the record is stopped replaces the channels\n\t\tm.mu.Unlock()",
+  "replace": "m.mu.Unlock()\n\t\tr.closeDone()"
+ },
+ {
+  "name": "run-panic-unrecovered",
+  "file": "manager.go",
+  "find": "if guard(\"agent run\", func() { m.run(r) }) {\n\t\t\tm.settlePanicked(r)\n\t\t}",
+  "replace": "m.run(r)"
+ },
+ {
+  "name": "panicked-run-keeps-its-slot",
+  "file": "manager.go",
+  "find": "m.releasePoolLocked(r)\n\tc, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()",
+  "replace": "c, cancel := r.child, r.cancel\n\tr.child, r.cancel = nil, nil\n\tr.closeDone()"
+ },
+ {
+  "name": "cleanup-timer-not-started",
+  "file": "extension.go",
+  "find": "\t\ta.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))\n",
+  "replace": ""
+ },
+ {
+  "name": "cleanup-every-hour",
+  "file": "extension.go",
+  "find": "cleanupEvery    = time.Minute ",
+  "replace": "cleanupEvery    = time.Hour "
+ },
+ {
+  "name": "cleanup-ignores-age",
+  "file": "manager.go",
+  "find": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue",
+  "replace": "if !r.CompletedAt.IsZero() && false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "cleanup-removes-running",
+  "file": "manager.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued {\n\t\t\tcontinue\n\t\t}\n\t\tif !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {",
+  "replace": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {"
+ },
+ {
+  "name": "shutdown-keeps-children",
+  "file": "manager.go",
+  "find": "if h.c != nil {\n\t\t\th.c.close()\n\t\t}",
+  "replace": "if h.c != nil {\n\t\t}"
+ },
+ {
+  "name": "shutdown-keeps-ticker",
+  "file": "manager.go",
+  "find": "func (m *manager) dispose() {\n\tm.stopGCLoop()",
+  "replace": "func (m *manager) dispose() {"
+ },
+ {
+  "name": "shutdown-keeps-notices",
+  "file": "extension.go",
+  "find": "for key, stop := range a.timers {\n\t\tstop()\n",
+  "replace": "for key, stop := range a.timers {\n\t\t_ = stop\n"
+ },
+ {
+  "name": "settle-after-shutdown-keeps-child",
+  "file": "manager.go",
+  "find": "(!alive || m.disposed)",
+  "replace": "(!alive)"
+ },
+ {
+  "name": "session-start-not-reopened",
+  "file": "extension.go",
+  "find": "\t\ta.mgr.open()\n",
+  "replace": ""
+ },
+ {
+  "name": "session-start-keeps-old-agents",
+  "file": "extension.go",
+  "find": "guard(\"session start cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "session-switch-keeps-old-agents",
+  "file": "extension.go",
+  "find": "guard(\"session switch cleanup\", func() { a.mgr.clearCompleted(true) })",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "clear-completed-reads-unconsumed",
+  "file": "manager.go",
+  "find": "if skipUnconsumed && !r.Consumed {\n\t\t\tcontinue",
+  "replace": "if false {\n\t\t\tcontinue"
+ },
+ {
+  "name": "clear-completed-ignores-unconsumed-flag",
+  "file": "manager.go",
+  "find": "if skipUnconsumed && !r.Consumed {\n\t\t\tcontinue",
+  "replace": "if !r.Consumed {\n\t\t\tcontinue"
+ },
+ {
+  "name": "clear-completed-removes-running",
+  "file": "manager.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued {\n\t\t\tcontinue\n\t\t}\n\t\tif skipUnconsumed && !r.Consumed {",
+  "replace": "if skipUnconsumed && !r.Consumed {"
+ },
+ {
+  "name": "clear-completed-keeps-tombstones",
+  "file": "manager.go",
+  "find": "m.mu.Lock()\n\tm.tombstones = nil\n\tm.mu.Unlock()",
+  "replace": "m.mu.Lock()\n\tm.mu.Unlock()"
+ },
+ {
+  "name": "session-name-not-set",
+  "file": "runner.go",
+  "find": "_, _ = c.call(map[string]any{\"type\": \"set_session_name\", \"name\": spec.SessionName})",
+  "replace": "_ = spec.SessionName"
+ },
+ {
+  "name": "append-system-md-discovered",
+  "file": "runner.go",
+  "find": "\"--no-themes\", \"--append-system-prompt\", \"\")",
+  "replace": "\"--no-themes\")"
+ },
+ {
+  "name": "wildcard-drops-extension-paths",
+  "file": "discover.go",
+  "find": "if inSurvivors && !slices.Contains(s.ExtensionPaths, path) {",
+  "replace": "if false && inSurvivors && !slices.Contains(s.ExtensionPaths, path) {"
+ },
+ {
+  "name": "wildcard-narrows-the-load",
+  "file": "discover.go",
+  "find": "if !p.LoadAll {\n\t\ts.NoExtensions = true",
+  "replace": "if true {\n\t\ts.NoExtensions = true"
+ },
+ {
+  "name": "skill-trim-is-go-trim",
+  "file": "skills.go",
+  "find": "return jsTrim(flat), true",
+  "replace": "return strings.TrimSpace(flat), true"
+ },
+ {
+  "name": "parent-context-trim-is-go-trim",
+  "file": "context.go",
+  "find": "if t := jsTrim(text); t != \"\" {",
+  "replace": "if t := strings.TrimSpace(text); t != \"\" {"
+ },
+ {
+  "name": "rooted-ignores-windows-backslash",
+  "file": "sessions.go",
+  "find": "|| (windows && strings.HasPrefix(p, `\\`))",
+  "replace": "|| false"
+ },
+ {
+  "name": "package-json-shape-keeps-climbing",
+  "file": "scope.go",
+  "find": "return \"\" // the first package.json is the package root: decide here",
+  "replace": "if parent := filepath.Dir(dir); parent != dir {\n\t\t\tdir = parent\n\t\t\tcontinue\n\t\t}\n\t\treturn \"\""
+ },
+ {
+  "name": "tombstone-rewrite-moves-to-end",
+  "file": "manager.go",
+  "find": "m.tombstones[i] = t",
+  "replace": "m.tombstones = append(slices.Delete(m.tombstones, i, i+1), t)"
+ },
+ {
+  "name": "tombstone-eviction-takes-the-last-tie",
+  "file": "manager.go",
+  "find": "if o.CompletedAt.Before(m.tombstones[oldest].CompletedAt) {",
+  "replace": "if !o.CompletedAt.After(m.tombstones[oldest].CompletedAt) {"
+ },
+ {
+  "name": "mention-empty-matches-aliasless",
+  "file": "manager.go",
+  "find": "(r.Alias == \"\" || strings.ToLower(r.Alias) != wanted)",
+  "replace": "(strings.ToLower(r.Alias) != wanted)"
+ },
+ {
+  "name": "inherit-context-built-at-spawn",
+  "file": "bus.go",
+  "find": "spec.InheritContext = func() (string, error) { return parentContext(ctx) }",
+  "replace": "pc, _ := parentContext(ctx)\n\t\tspec.InheritContext = func() (string, error) { return pc, nil }"
+ },
+ {
+  "name": "rpc-internal-option-refused",
+  "file": "refuse.go",
+  "find": "\"parentAgentId\", \"workflowId\", \"depth\"",
+  "replace": "\"parentAgentId\", \"depth\""
+ },
+ {
+  "name": "rpc-truthy-isolated-needs-bool",
+  "file": "bus.go",
+  "find": "jsTruthy(opts[\"isolated\"])",
+  "replace": "opts[\"isolated\"] == true"
+ },
+ {
+  "name": "exclude-typo-checks-defaults-only",
+  "file": "scope.go",
+  "find": "which an exclude may name.\n\t\t\tfor _, e := range all {",
+  "replace": "which an exclude may name.\n\t\t\tfor _, e := range in.Discovered {"
+ },
+ {
+  "name": "refused-resume-rewrites-tool-call-id",
+  "file": "sessions.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued || !r.settled { // not settled: a stopped run is still ending\n\t\tm.mu.Unlock()",
+  "replace": "if r.Status == statusRunning || r.Status == statusQueued || !r.settled { // not settled: a stopped run is still ending\n\t\tr.ToolCallID = toolCallID\n\t\tm.mu.Unlock()"
+ },
+ {
+  "name": "remember-agents-resets-when-unset",
+  "file": "settings.go",
+  "find": "applyBool(s.RememberAgents, ap.SetRememberAgents)",
+  "replace": "if s.RememberAgents == nil && ap.SetRememberAgents != nil {\n\t\tap.SetRememberAgents(true)\n\t}\n\tapplyBool(s.RememberAgents, ap.SetRememberAgents)"
  }
 ]

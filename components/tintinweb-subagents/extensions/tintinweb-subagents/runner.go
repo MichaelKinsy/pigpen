@@ -28,11 +28,28 @@ type childSpec struct {
 	PromptMode   string // "replace" or "append"
 	Model        string
 	Thinking     string
-	Tools        []string // nil: the child's default tools
 	Cwd          string
 	MaxTurns     int
-	GraceTurns   int  // turns allowed after the wrap-up steer before the run is aborted (0: the default, 5)
-	Isolated     bool // no extensions (and so no extension tools) in the child
+	GraceTurns   int // turns allowed after the wrap-up steer before the run is aborted (0: the default, 5)
+	// InheritContext, when set, gives the text of the parent conversation that goes in front of the prompt. It is
+	// called when the run starts. upstream: agent-runner.ts runAgent (options.inheritContext).
+	InheritContext func() (string, error)
+
+	// Tool, extension and skill scope, from planScope.
+	NoExtensions   bool     // --no-extensions: no extension (and so no extension or MCP tool) is loaded
+	ExtensionPaths []string // --extension: extensions loaded when the defaults are not
+	AllowTools     []string // --tools, a strict allowlist; nil: unset, an empty list: --no-tools
+	ExcludeTools   []string // --exclude-tools
+	NoSkills       bool     // --no-skills: the skills the agent needs are in its system prompt, or it gets none
+	Trust          string   // "approve" or "no-approve": the child trusts the project when the parent does
+	Warnings       []string // misconfigurations of the scope, each counted like a tool use of the run
+
+	// Session. upstream: agent-runner.ts (SessionManager.create, open, inMemory).
+	Persist       bool   // the conversation is a pi session file (the original's persist_session / rememberAgents)
+	SessionDir    string // --session-dir: where that file goes; "": pi's normal session directory
+	ResumeFile    string // --session: reopen this session file instead of starting a conversation
+	ParentSession string // the parent's session file, recorded in the new session's header so /resume nests it
+	SessionName   string // --name
 }
 
 // childResult is what a finished child reports.
@@ -53,12 +70,21 @@ const defaultGraceTurns = 5
 // turnLimitSteer is the message an agent gets when it reaches its turn limit. upstream: agent-runner.ts:1061.
 const turnLimitSteer = "You have reached your turn limit. Wrap up immediately — provide your final answer now."
 
-// child is a running agent that can be steered and stopped.
+// child is a running agent that can be steered, stopped and resumed.
 type child interface {
-	// wait blocks until the child has settled (or failed), and reports its outcome.
+	// wait blocks until the current run has settled (or failed), and reports its outcome.
 	wait() (*childResult, error)
 	steer(message string) error
 	abort()
+	// sessionFile is the pi session file of the conversation, "" when it lives in this child only.
+	sessionFile() string
+	// resume sends a new prompt into the same conversation and starts a new run; wait reports that run.
+	// upstream: agent-runner.ts resumeAgent.
+	resume(prompt string) error
+	// close ends the child process.
+	close()
+	// alive reports a child that can still take a prompt: a process that holds its conversation in memory.
+	alive() bool
 }
 
 // childStarter starts a child (the real one starts a process; a test replaces it).
@@ -117,11 +143,39 @@ func isPig(path string) bool {
 	return err == nil && version.Match(bytes.TrimSpace(out))
 }
 
-// childArgs is the command line of a child. upstream: agent-runner.ts (the session options the child is given).
+// childArgs is the command line of a child. upstream: agent-runner.ts (the loader, the session and the tool options
+// runAgent builds: no context files, prompt templates or themes; the scope of planScope; the session manager).
 func childArgs(spec childSpec) []string {
-	args := []string{"--mode", "rpc", "--no-session"}
-	if spec.Isolated {
+	args := []string{"--mode", "rpc"}
+	switch {
+	case spec.ResumeFile != "":
+		args = append(args, "--session", spec.ResumeFile)
+	case !spec.Persist:
+		args = append(args, "--no-session")
+	}
+	if spec.SessionDir != "" {
+		args = append(args, "--session-dir", spec.SessionDir)
+	}
+	if spec.SessionName != "" {
+		args = append(args, "--name", spec.SessionName)
+	}
+	// An explicit empty append keeps pig from discovering the global or project APPEND_SYSTEM.md, which the original's
+	// loader suppresses too (appendSystemPromptOverride) so that prompt_mode: replace and isolated are not defeated.
+	args = append(args, "--no-context-files", "--no-prompt-templates", "--no-themes", "--append-system-prompt", "")
+	switch spec.Trust {
+	case "approve":
+		args = append(args, "--approve")
+	case "no-approve":
+		args = append(args, "--no-approve")
+	}
+	if spec.NoExtensions {
 		args = append(args, "--no-extensions")
+	}
+	for _, p := range spec.ExtensionPaths {
+		args = append(args, "--extension", p)
+	}
+	if spec.NoSkills {
+		args = append(args, "--no-skills")
 	}
 	if spec.Model != "" {
 		args = append(args, "--model", spec.Model)
@@ -129,12 +183,15 @@ func childArgs(spec childSpec) []string {
 	if spec.Thinking != "" {
 		args = append(args, "--thinking", spec.Thinking)
 	}
-	if spec.Tools != nil {
-		if len(spec.Tools) == 0 {
+	if spec.AllowTools != nil {
+		if len(spec.AllowTools) == 0 {
 			args = append(args, "--no-tools")
 		} else {
-			args = append(args, "--tools", strings.Join(spec.Tools, ","))
+			args = append(args, "--tools", strings.Join(spec.AllowTools, ","))
 		}
+	}
+	if len(spec.ExcludeTools) > 0 {
+		args = append(args, "--exclude-tools", strings.Join(spec.ExcludeTools, ","))
 	}
 	if strings.TrimSpace(spec.SystemPrompt) != "" {
 		if spec.PromptMode == "append" {
@@ -149,27 +206,35 @@ func childArgs(spec childSpec) []string {
 // depthEnv marks a child: it registers no agent tools, so there is no nesting.
 const depthEnv = "TINTINWEB_SUBAGENT_DEPTH"
 
+// rpcChild is a child pig process. A run is one prompt and what follows until the agent settles; the child lives
+// on after a run when its conversation exists nowhere else, so that resume can continue it.
 type rpcChild struct {
 	cmd     *exec.Cmd
 	stdin   io.WriteCloser
 	mu      sync.Mutex
 	nextID  int
 	pending map[string]chan map[string]any
-	settled chan struct{}
-	errc    chan error
-	events  []map[string]any
-	toolUse int
-	turns   int
-	maxTurn int
-	grace   int
-	wrapped bool
-	aborted bool // the run was aborted at maxTurn+grace turns
+	exited  chan struct{} // closed when the child's output ends
+	exitErr chan error    // why the child ended, when the run had not settled
+	keep    bool          // the conversation is in memory only: the process outlives a run
+	session string        // the pi session file, "" for an in-memory conversation
 	killed  bool
-	// The last assistant message of the run: its stop reason, error and text. upstream: finalTurnError.
-	lastStop, lastError, lastText string
-	exited                        chan struct{} // closed when the child's output ends
 	// limits carries the turn-limit commands (the wrap-up steer, then the abort) to one sender, in order.
 	limits chan map[string]any
+	grace  int
+	// abortWait is abortGrace as it was when the child started.
+	abortWait time.Duration
+
+	// The current run. upstream: agent-runner.ts runAgent / resumeAgent.
+	settled        chan struct{}
+	runErr         error
+	toolUse, turns int
+	maxTurn        int
+	wrapped        bool
+	aborted        bool // the run was aborted at maxTurn+grace turns
+	first          bool // the run is the child's first (the RPC text fallback is for it only)
+	// The last assistant message of the run: its stop reason, error and text, and the last text of any of its messages.
+	lastStop, lastError, lastText, lastNonEmpty string
 }
 
 func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
@@ -177,7 +242,10 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	if err != nil {
 		return nil, err
 	}
+	// The child lives as long as ctx: the manager ends the context when it closes the child, not when a run settles, so
+	// that a conversation that exists only in this process outlives the run. A cancel takes the whole process group.
 	cmd := exec.CommandContext(ctx, bin, childArgs(spec)...)
+	cmd.Cancel = func() error { terminate(cmd); return nil }
 	cmd.Dir = spec.Cwd
 	cmd.Env = append(os.Environ(), depthEnv+"=1")
 	setProcessGroup(cmd)
@@ -194,55 +262,127 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, settled: make(chan struct{}), errc: make(chan error, 1), maxTurn: spec.MaxTurns, grace: spec.GraceTurns, exited: make(chan struct{})}
+	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, exited: make(chan struct{}), exitErr: make(chan error, 1),
+		grace: spec.GraceTurns, abortWait: abortGrace, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == ""}
 	if c.grace <= 0 {
 		c.grace = defaultGraceTurns
 	}
-	c.limits = make(chan map[string]any, 2) // at most one steer and one abort are ever sent
-	go func() {
+	c.begin(spec.MaxTurns)
+	c.limits = make(chan map[string]any, 2) // at most one steer and one abort are ever sent per run
+	goGuarded("child turn limit", func() {
 		for {
 			select {
 			case cmd := <-c.limits:
-				_, _ = c.call(cmd)
+				guard("child turn limit command", func() { _, _ = c.call(cmd) })
 			case <-c.exited:
 				return
 			}
 		}
-	}()
-	go func() {
+	})
+	goGuarded("child reader", func() {
 		sc := bufio.NewScanner(stdout)
 		sc.Buffer(make([]byte, 1<<20), 64<<20)
-		for sc.Scan() {
-			var m map[string]any
-			if json.Unmarshal(sc.Bytes(), &m) != nil {
-				continue
+		if guard("child output", func() {
+			for sc.Scan() {
+				var m map[string]any
+				if json.Unmarshal(sc.Bytes(), &m) != nil {
+					continue
+				}
+				c.handle(m)
 			}
-			c.handle(m)
+		}) {
+			terminate(cmd) // an output the reader could not handle: end the child, which settles the run with an error
 		}
 		err := cmd.Wait()
 		close(c.exited)
 		c.mu.Lock()
 		killed := c.killed
+		settled := c.settled
 		c.mu.Unlock()
 		select {
-		case <-c.settled:
+		case <-settled:
 		default:
+			c.mu.Lock()
 			switch {
 			case killed:
-				c.errc <- errors.New("aborted")
+				c.runErr = errors.New("aborted")
 			case err != nil:
-				c.errc <- fmt.Errorf("the child exited: %v: %s", err, strings.TrimSpace(stderr.String()))
+				c.runErr = fmt.Errorf("the child exited: %v: %s", err, strings.TrimSpace(stderr.String()))
 			default:
-				c.errc <- errors.New("the child exited before the agent settled")
+				c.runErr = errors.New("the child exited before the agent settled")
 			}
-			close(c.settled)
+			c.mu.Unlock()
+			close(settled)
 		}
-	}()
+	})
+	// A new persisted conversation is linked to the parent's, which nests it under the parent in pi's /resume.
+	if spec.Persist && spec.ResumeFile == "" && spec.ParentSession != "" {
+		if _, err := c.call(map[string]any{"type": "new_session", "parentSession": spec.ParentSession}); err != nil {
+			c.kill()
+			return nil, err
+		}
+	}
+	// The name goes on the session the agent runs in: --name names the process's first session only, and the one
+	// new_session started replaces it. A name that cannot be set does not stop the agent. upstream: agent-runner.ts:1010-1013.
+	if spec.SessionName != "" {
+		_, _ = c.call(map[string]any{"type": "set_session_name", "name": spec.SessionName})
+	}
+	if spec.Persist || spec.ResumeFile != "" {
+		m, err := c.call(map[string]any{"type": "get_state"})
+		if err != nil {
+			c.kill()
+			return nil, err
+		}
+		if d, ok := m["data"].(map[string]any); ok {
+			c.session, _ = d["sessionFile"].(string)
+		}
+	}
 	if _, err := c.call(map[string]any{"type": "prompt", "message": spec.Prompt}); err != nil {
-		c.abort()
+		c.kill()
 		return nil, err
 	}
 	return c, nil
+}
+
+// begin resets the state of a run. maxTurns 0 is no limit.
+func (c *rpcChild) begin(maxTurns int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.settled = make(chan struct{})
+	c.runErr = nil
+	c.toolUse, c.turns, c.maxTurn = 0, 0, maxTurns
+	c.wrapped, c.aborted = false, false
+	c.lastStop, c.lastError, c.lastText, c.lastNonEmpty = "", "", "", ""
+}
+
+func (c *rpcChild) sessionFile() string { return c.session }
+
+// resume sends a new prompt into the conversation. A resumed turn has no turn limit, as in the original
+// (resumeAgent counts no turns). upstream: agent-runner.ts resumeAgent.
+func (c *rpcChild) resume(prompt string) error {
+	if !c.alive() {
+		return errors.New("the agent's process has ended")
+	}
+	c.begin(0)
+	c.mu.Lock()
+	c.first = false
+	c.mu.Unlock()
+	_, err := c.call(map[string]any{"type": "prompt", "message": prompt})
+	return err
+}
+
+func (c *rpcChild) alive() bool {
+	select {
+	case <-c.exited:
+		return false
+	default:
+		return c.keep
+	}
+}
+
+func (c *rpcChild) close() {
+	_ = c.stdin.Close()
+	terminate(c.cmd)
 }
 
 func (c *rpcChild) handle(m map[string]any) {
@@ -284,15 +424,22 @@ func (c *rpcChild) handle(m map[string]any) {
 		if msg, ok := m["message"].(map[string]any); ok && msg["role"] == "assistant" {
 			stop, _ := msg["stopReason"].(string)
 			errText, _ := msg["errorMessage"].(string)
+			text := assistantText(msg["content"])
 			c.mu.Lock()
-			c.lastStop, c.lastError, c.lastText = stop, errText, assistantText(msg["content"])
+			c.lastStop, c.lastError, c.lastText = stop, errText, text
+			if strings.TrimSpace(text) != "" {
+				c.lastNonEmpty = text
+			}
 			c.mu.Unlock()
 		}
 	case "agent_settled":
+		c.mu.Lock()
+		settled := c.settled
+		c.mu.Unlock()
 		select {
-		case <-c.settled:
+		case <-settled:
 		default:
-			close(c.settled)
+			close(settled)
 		}
 	}
 }
@@ -328,25 +475,70 @@ func (c *rpcChild) steer(message string) error {
 	return err
 }
 
+// abortGrace is how long a child that keeps its conversation in memory has to settle after an abort before its
+// process is ended.
+var abortGrace = 10 * time.Second
+
+// abort stops the current run. A child that keeps its conversation in memory is told to stop and lives on, so that
+// the agent can be resumed (the original's `session.abort()` leaves the session as it is); one whose conversation is in
+// a file, which a resume reopens, is ended. upstream: agent-manager.ts abort.
 func (c *rpcChild) abort() {
+	if !c.keep {
+		c.mu.Lock()
+		c.killed = true // before the abort is sent: the process may exit on it, and the run is then aborted, not lost
+		c.mu.Unlock()
+		_, _ = c.call(map[string]any{"type": "abort"})
+		terminate(c.cmd)
+		return
+	}
+	c.mu.Lock()
+	settled := c.settled
+	c.mu.Unlock()
+	_, _ = c.call(map[string]any{"type": "abort"})
+	// A run that never settles must not hold its agent forever: past the grace the process goes.
+	goGuarded("child abort", func() {
+		select {
+		case <-settled:
+		case <-c.exited:
+		case <-time.After(c.abortWait):
+			c.kill()
+		}
+	})
+}
+
+// kill ends the child's process, and with it its conversation.
+func (c *rpcChild) kill() {
 	c.mu.Lock()
 	c.killed = true
 	c.mu.Unlock()
-	_, _ = c.call(map[string]any{"type": "abort"})
 	terminate(c.cmd)
 }
 
 func (c *rpcChild) wait() (*childResult, error) {
-	<-c.settled
-	select {
-	case err := <-c.errc:
+	c.mu.Lock()
+	settled := c.settled
+	c.mu.Unlock()
+	<-settled
+	c.mu.Lock()
+	err := c.runErr
+	c.mu.Unlock()
+	if err != nil {
 		return nil, err
-	default:
 	}
 	res := &childResult{}
-	if m, err := c.call(map[string]any{"type": "get_last_assistant_text"}); err == nil {
-		if d, ok := m["data"].(map[string]any); ok {
-			res.Text, _ = d["text"].(string)
+	c.mu.Lock()
+	res.Text = strings.TrimSpace(c.lastText)
+	if res.Text == "" {
+		res.Text = strings.TrimSpace(c.lastNonEmpty)
+	}
+	first := c.first
+	c.mu.Unlock()
+	if res.Text == "" && first { // a resumed run never takes the previous turn's answer (#144)
+		if m, err := c.call(map[string]any{"type": "get_last_assistant_text"}); err == nil {
+			if d, ok := m["data"].(map[string]any); ok {
+				t, _ := d["text"].(string)
+				res.Text = strings.TrimSpace(t)
+			}
 		}
 	}
 	if m, err := c.call(map[string]any{"type": "get_session_stats"}); err == nil {
@@ -374,9 +566,11 @@ func (c *rpcChild) wait() (*childResult, error) {
 	if res.ToolUses == 0 {
 		res.ToolUses = c.toolUse
 	}
+	keep := c.keep
 	c.mu.Unlock()
-	c.stdin.Close()
-	terminate(c.cmd)
+	if !keep { // a persisted conversation is reopened from its file by resume
+		c.close()
+	}
 	return res, nil
 }
 

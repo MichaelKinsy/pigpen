@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -45,19 +46,43 @@ func fakePig(mode string) {
 	}
 	var outMu sync.Mutex
 	enc := json.NewEncoder(os.Stdout)
+	logCmd := func(cmd map[string]any) { // FAKE_PIG_LOG: every command, in order, as `type` or `type name`
+		p := os.Getenv("FAKE_PIG_LOG")
+		if p == "" {
+			return
+		}
+		line, _ := cmd["type"].(string)
+		if n, ok := cmd["name"].(string); ok {
+			line += " " + n
+		}
+		f, _ := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		f.WriteString(line + "\n")
+		f.Close()
+	}
 	out := lockedEncoder{enc: enc, mu: &outMu}
 	var aborted atomic.Bool
+	n := 0 // prompts answered
 	sc := bufio.NewScanner(os.Stdin)
 	for sc.Scan() {
 		var cmd map[string]any
 		json.Unmarshal(sc.Bytes(), &cmd)
+		logCmd(cmd)
 		resp := func(data any) {
 			out.Encode(map[string]any{"type": "response", "id": cmd["id"], "command": cmd["type"], "success": true, "data": data})
 		}
 		switch cmd["type"] {
 		case "prompt":
 			resp(nil)
-			if mode == "hang" {
+			if mode == "hang" || mode == "deaf" {
+				continue
+			}
+			if mode == "stoppable" { // the first run hangs until it is aborted; later runs answer, as in "events"
+				n++
+				if n == 1 {
+					continue
+				}
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "stopReason": "stop", "content": []any{map[string]any{"type": "text", "text": "answer " + strconv.Itoa(n) + " to " + cmd["message"].(string)}}}})
+				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
 			if mode == "hang-grandchild" { // starts a process of its own, as a bash tool call would, and keeps working
@@ -94,10 +119,56 @@ func fakePig(mode string) {
 				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
+			if mode == "events" { // answers each prompt with a message of its own, as pig does
+				n++
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "stopReason": "stop", "content": []any{map[string]any{"type": "text", "text": "answer " + strconv.Itoa(n) + " to " + cmd["message"].(string)}}}})
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
+			if mode == "resume-fail-empty" || mode == "resume-fail-partial" { // a good first turn, then a failed resume
+				n++
+				text := func(role, s string, extra map[string]any) {
+					msg := map[string]any{"role": role, "content": []any{map[string]any{"type": "text", "text": s}}}
+					for k, v := range extra {
+						msg[k] = v
+					}
+					out.Encode(map[string]any{"type": "message_end", "message": msg})
+				}
+				switch {
+				case n == 1:
+					text("assistant", "PREVIOUS ANSWER", map[string]any{"stopReason": "stop"})
+				case mode == "resume-fail-partial":
+					text("assistant", "new partial", nil)
+					out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "toolResult", "content": []any{}}})
+					fallthrough
+				default:
+					out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{}, "stopReason": "error", "errorMessage": "retries exhausted: 529 overloaded"}})
+				}
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
+			if mode == "events-silent" { // the second run produces no message at all
+				n++
+				if n == 1 {
+					out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "stopReason": "stop", "content": []any{map[string]any{"type": "text", "text": "first answer"}}}})
+				}
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
 			out.Encode(map[string]any{"type": "tool_execution_start"})
 			out.Encode(map[string]any{"type": "turn_end"})
 			out.Encode(map[string]any{"type": "turn_end"})
 			out.Encode(map[string]any{"type": "agent_settled"})
+		case "set_session_name":
+			resp(nil)
+		case "get_state":
+			resp(map[string]any{"sessionFile": os.Getenv("FAKE_PIG_SESSION")})
+		case "new_session":
+			if p := os.Getenv("FAKE_PIG_NEWSESSION"); p != "" {
+				b, _ := json.Marshal(cmd)
+				os.WriteFile(p, b, 0o644)
+			}
+			resp(map[string]any{"cancelled": false})
 		case "get_last_assistant_text":
 			resp(map[string]any{"text": "fake answer to " + os.Getenv("FAKE_PIG_TAG")})
 		case "get_session_stats":
@@ -111,6 +182,13 @@ func fakePig(mode string) {
 			resp(nil)
 		case "abort":
 			resp(nil)
+			if mode == "deaf" { // never settles, never exits: only a kill ends it
+				continue
+			}
+			if mode == "stoppable" { // an abort ends the run, not the process
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
 			if mode == "runaway" { // an abort ends the run, not the process
 				aborted.Store(true)
 				if p := os.Getenv("FAKE_PIG_STEER"); p != "" {
@@ -149,17 +227,18 @@ func useFakePig(t *testing.T, mode string) string {
 }
 
 func TestChildArgs(t *testing.T) {
-	eq(t, childArgs(childSpec{}), []string{"--mode", "rpc", "--no-session"})
-	eq(t, childArgs(childSpec{Model: "p/m", Thinking: "high", Tools: []string{"read", "grep"}, SystemPrompt: "SP", PromptMode: "replace"}),
-		[]string{"--mode", "rpc", "--no-session", "--model", "p/m", "--thinking", "high", "--tools", "read,grep", "--system-prompt", "SP"})
-	eq(t, childArgs(childSpec{Tools: []string{}, SystemPrompt: "SP", PromptMode: "append"}),
-		[]string{"--mode", "rpc", "--no-session", "--no-tools", "--append-system-prompt", "SP"})
-	eq(t, childArgs(childSpec{SystemPrompt: "   ", PromptMode: "replace"}), []string{"--mode", "rpc", "--no-session"})
+	base := []string{"--mode", "rpc", "--no-session", "--no-context-files", "--no-prompt-templates", "--no-themes", "--append-system-prompt", ""}
+	eq(t, childArgs(childSpec{}), base)
+	eq(t, childArgs(childSpec{Model: "p/m", Thinking: "high", AllowTools: []string{"read", "grep"}, NoExtensions: true, SystemPrompt: "SP", PromptMode: "replace"}),
+		append(slices.Clone(base), "--no-extensions", "--model", "p/m", "--thinking", "high", "--tools", "read,grep", "--system-prompt", "SP"))
+	eq(t, childArgs(childSpec{AllowTools: []string{}, SystemPrompt: "SP", PromptMode: "append"}),
+		append(slices.Clone(base), "--no-tools", "--append-system-prompt", "SP"))
+	eq(t, childArgs(childSpec{SystemPrompt: "   ", PromptMode: "replace"}), base)
 }
 
 func TestRPCChildRunsToCompletion(t *testing.T) {
 	argsFile := useFakePig(t, "ok")
-	c, err := startRPCChild(context.Background(), childSpec{Prompt: "Task: x", Tools: []string{"read"}, Cwd: t.TempDir()})
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "Task: x", AllowTools: []string{"read"}, Cwd: t.TempDir()})
 	eq(t, err, nil)
 	res, err := c.wait()
 	eq(t, err, nil)
@@ -168,7 +247,7 @@ func TestRPCChildRunsToCompletion(t *testing.T) {
 	eq(t, res.ToolUses, 2)
 	eq(t, res.Turns, 2)
 	got, _ := os.ReadFile(argsFile)
-	eq(t, strings.Contains(string(got), "--mode\nrpc\n--no-session\n--tools\nread"), true)
+	eq(t, strings.Contains(string(got), "--no-session\n--no-context-files\n--no-prompt-templates\n--no-themes\n--append-system-prompt\n\n--tools\nread"), true)
 	eq(t, strings.HasSuffix(string(got), "DEPTH=1"), true) // a child registers no agent tools
 }
 
@@ -255,4 +334,89 @@ func TestThePigThatStartedTheExtensionIsPreferred(t *testing.T) {
 		t.Fatal("no pig was found")
 	}
 	eq(t, got, harness)
+}
+
+func TestRPCChildPersistedStartLinksTheParentAndReportsItsSessionFile(t *testing.T) {
+	argsFile := useFakePig(t, "ok")
+	t.Setenv("FAKE_PIG_SESSION", "/sessions/child.jsonl")
+	newSession := t.TempDir() + "/new"
+	t.Setenv("FAKE_PIG_NEWSESSION", newSession)
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "p", Cwd: t.TempDir(), Persist: true, ParentSession: "/sessions/parent.jsonl", SessionName: "Explore#abcd1234"})
+	eq(t, err, nil)
+	eq(t, c.sessionFile(), "/sessions/child.jsonl")
+	b, _ := os.ReadFile(newSession)
+	var cmd map[string]any
+	_ = json.Unmarshal(b, &cmd)
+	eq(t, cmd["parentSession"], "/sessions/parent.jsonl")
+	got, _ := os.ReadFile(argsFile)
+	eq(t, strings.Contains(string(got), "--name\nExplore#abcd1234\n"), true)
+	eq(t, strings.Contains(string(got), "--no-session"), false)
+	res, err := c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "fake answer to the task")
+	// A persisted conversation is reopened from its file, so its process ends with the run.
+	eq(t, c.(*rpcChild).alive(), false)
+	eq(t, c.resume("more") != nil, true)
+}
+
+func TestRPCChildReopensAFile(t *testing.T) {
+	argsFile := useFakePig(t, "events")
+	t.Setenv("FAKE_PIG_SESSION", "/sessions/child.jsonl")
+	newSession := t.TempDir() + "/new"
+	t.Setenv("FAKE_PIG_NEWSESSION", newSession)
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "carry on", Cwd: t.TempDir(), ResumeFile: "/sessions/child.jsonl", Persist: true, ParentSession: "/sessions/parent.jsonl"})
+	eq(t, err, nil)
+	got, _ := os.ReadFile(argsFile)
+	eq(t, strings.Contains(string(got), "--session\n/sessions/child.jsonl\n"), true)
+	_, statErr := os.Stat(newSession)
+	eq(t, os.IsNotExist(statErr), true) // a reopened conversation keeps its own header: no new session, no parent link
+	res, err := c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "answer 1 to carry on")
+	eq(t, res.Turns, 0)
+}
+
+func TestRPCChildInMemoryConversationOutlivesARunAndTakesAResume(t *testing.T) {
+	useFakePig(t, "events")
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "one", Cwd: t.TempDir(), MaxTurns: 1})
+	eq(t, err, nil)
+	t.Cleanup(c.close)
+	eq(t, c.sessionFile(), "")
+	res, err := c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "answer 1 to one")
+	eq(t, c.alive(), true) // the conversation lives in this process alone
+	eq(t, c.resume("two"), nil)
+	res, err = c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "answer 2 to two") // the same session answered, not a new process
+	eq(t, c.alive(), true)
+}
+
+func TestARunThatProducesNothingNeverReturnsThePreviousAnswer(t *testing.T) {
+	useFakePig(t, "events-silent")
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "one", Cwd: t.TempDir()})
+	eq(t, err, nil)
+	t.Cleanup(c.close)
+	res, err := c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "first answer")
+	eq(t, c.resume("two"), nil)
+	res, err = c.wait()
+	eq(t, err, nil)
+	eq(t, res.Text, "") // #144: a resume that failed empty does not inherit the prior turn's text
+}
+
+func TestAChildThatEndsCannotBeResumed(t *testing.T) {
+	useFakePig(t, "events")
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "one", Cwd: t.TempDir()})
+	eq(t, err, nil)
+	_, err = c.wait()
+	eq(t, err, nil)
+	c.close()
+	for i := 0; i < 500 && c.alive(); i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	eq(t, c.alive(), false)
+	eq(t, c.resume("two") != nil, true)
 }

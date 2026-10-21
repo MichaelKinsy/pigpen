@@ -17,8 +17,8 @@ func terminate(cmd *exec.Cmd) {
 		return
 	}
 	_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
-	go func() {
+	goGuarded("child kill", func() {
 		time.Sleep(5 * time.Second)
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	}()
+	})
 }

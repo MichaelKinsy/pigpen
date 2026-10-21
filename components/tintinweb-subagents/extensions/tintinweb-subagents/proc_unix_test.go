@@ -35,7 +35,8 @@ func stopGrandchild(t *testing.T, ignoresTerm bool, deadline time.Duration) (tim
 	if ignoresTerm {
 		t.Setenv("FAKE_PIG_GRANDCHILD_IGNORES_TERM", "1")
 	}
-	c, err := startRPCChild(context.Background(), childSpec{Prompt: "p", Cwd: t.TempDir()})
+	// A persisted conversation: a stop ends the process (an in-memory one outlives a stop, see lifecycle_test.go).
+	c, err := startRPCChild(context.Background(), childSpec{Prompt: "p", Cwd: t.TempDir(), Persist: true})
 	eq(t, err, nil)
 	var pid int
 	for i := 0; i < 500 && pid == 0; i++ {
@@ -74,4 +75,32 @@ func TestAProcessThatIgnoresTheStopIsKilled(t *testing.T) {
 	if took < 4*time.Second {
 		t.Fatalf("gone after %v: it should have ignored the SIGTERM", took)
 	}
+}
+
+// A cancelled context takes the child's whole process group, not only the process pig itself.
+func TestCancellingTheContextStopsTheProcessGroup(t *testing.T) {
+	useFakePig(t, "hang-grandchild")
+	pidFile := t.TempDir() + "/grandchild"
+	t.Setenv("FAKE_PIG_GRANDCHILD", pidFile)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	c, err := startRPCChild(ctx, childSpec{Prompt: "p", Cwd: t.TempDir()})
+	eq(t, err, nil)
+	var pid int
+	for i := 0; i < 500 && pid == 0; i++ {
+		b, _ := os.ReadFile(pidFile)
+		pid, _ = strconv.Atoi(string(b))
+		time.Sleep(10 * time.Millisecond)
+	}
+	if pid == 0 {
+		t.Fatal("the child started no process")
+	}
+	t.Cleanup(func() { syscall.Kill(pid, syscall.SIGKILL) })
+	eq(t, alive(pid), true)
+	cancel()
+	_, _ = c.wait()
+	for i := 0; i < 300 && alive(pid); i++ {
+		time.Sleep(10 * time.Millisecond)
+	}
+	eq(t, alive(pid), false)
 }
