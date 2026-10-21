@@ -8,9 +8,10 @@ build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused
 packages:
-  # typesafe is a Go library Package, not a member: warden imports it through the go.work beside the extension,
-  # which resolves to packages/typesafe in the staged Piglet.
+  # typesafe and pitui are Go library Packages, not members: warden imports them through the go.work beside the
+  # extension, which resolves to packages/typesafe and packages/pitui in the staged Piglet (pitui draws the panels).
   typesafe: local:../../components/typesafe
+  pitui: local:../../components/pitui
   warden: local:../../components/warden
 extensions:
   # /warden and the tool_call, tool_result and agent_end guards. Registers no tool. Does nothing until enabled.
