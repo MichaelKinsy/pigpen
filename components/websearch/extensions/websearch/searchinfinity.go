@@ -85,66 +85,69 @@ func SearchWithSearchinfinity(ctx context.Context, query string, o SearchOptions
 	if err != nil {
 		return nil, err
 	}
-	data, err := hostedJSON(ctx, "Searchinfinity Search", hostedCall{URL: searchinfinityURL, Body: jsonBytes(searchinfinityBody(query, o)), Key: key, Timeout: searchinfinityTimeout,
-		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}})
-	if err != nil {
-		return nil, err
-	}
-	root := asMap(data)
-	if be := asMap(asMap(root["ResponseMetadata"])["Error"]); be != nil {
-		codeStr, _ := strField(be, "Code")
-		msgStr, _ := strField(be, "Message")
-		if codeStr != "" || msgStr != "" {
-			code := "unknown"
-			if codeStr != "" {
-				code = codeStr
+	act := logAPIStart(query)
+	return logged(act, key, func() (*SearchResponse, error) {
+		data, err := hostedJSON(ctx, "Searchinfinity Search", hostedCall{URL: searchinfinityURL, Body: jsonBytes(searchinfinityBody(query, o)), Key: key, Timeout: searchinfinityTimeout,
+			Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}})
+		if err != nil {
+			return nil, err
+		}
+		root := asMap(data)
+		if be := asMap(asMap(root["ResponseMetadata"])["Error"]); be != nil {
+			codeStr, _ := strField(be, "Code")
+			msgStr, _ := strField(be, "Message")
+			if codeStr != "" || msgStr != "" {
+				code := "unknown"
+				if codeStr != "" {
+					code = codeStr
+				}
+				message := "unknown error"
+				if msgStr != "" {
+					message = msgStr
+				}
+				var codeN *float64
+				if n, ok := be["CodeN"].(float64); ok {
+					codeN = &n
+				}
+				status := "unknown"
+				if s := searchinfinityStatus(codeN, code, message); s != 0 {
+					status = fmt.Sprint(s)
+				}
+				label := code
+				if codeN != nil {
+					label = jsNumber(*codeN) + " " + code
+				}
+				return nil, fmt.Errorf("Searchinfinity Search API error %s: %s (code %s)", status, message, label)
 			}
-			message := "unknown error"
-			if msgStr != "" {
-				message = msgStr
+		}
+		items, ok := asMap(root["Result"])["WebResults"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("Searchinfinity Search API returned an unexpected response shape")
+		}
+		results := []SearchResult{}
+		for _, it := range items {
+			item := asMap(it)
+			u, ok := strField(item, "Url")
+			if !ok || jsTrim(u) == "" {
+				continue
 			}
-			var codeN *float64
-			if n, ok := be["CodeN"].(float64); ok {
-				codeN = &n
+			u = jsTrim(u)
+			title := u
+			if t, ok := strField(item, "Title"); ok && jsTrim(t) != "" {
+				title = jsTrim(t)
 			}
-			status := "unknown"
-			if s := searchinfinityStatus(codeN, code, message); s != 0 {
-				status = fmt.Sprint(s)
+			summary, snippet := "", ""
+			if s, ok := strField(item, "Summary"); ok {
+				summary = collapseWS(s)
 			}
-			label := code
-			if codeN != nil {
-				label = jsNumber(*codeN) + " " + code
+			if s, ok := strField(item, "Snippet"); ok {
+				snippet = collapseWS(s)
 			}
-			return nil, fmt.Errorf("Searchinfinity Search API error %s: %s (code %s)", status, message, label)
+			if summary != "" {
+				snippet = summary
+			}
+			results = append(results, SearchResult{Title: title, URL: u, Snippet: snippet})
 		}
-	}
-	items, ok := asMap(root["Result"])["WebResults"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("Searchinfinity Search API returned an unexpected response shape")
-	}
-	results := []SearchResult{}
-	for _, it := range items {
-		item := asMap(it)
-		u, ok := strField(item, "Url")
-		if !ok || jsTrim(u) == "" {
-			continue
-		}
-		u = jsTrim(u)
-		title := u
-		if t, ok := strField(item, "Title"); ok && jsTrim(t) != "" {
-			title = jsTrim(t)
-		}
-		summary, snippet := "", ""
-		if s, ok := strField(item, "Summary"); ok {
-			summary = collapseWS(s)
-		}
-		if s, ok := strField(item, "Snippet"); ok {
-			snippet = collapseWS(s)
-		}
-		if summary != "" {
-			snippet = summary
-		}
-		results = append(results, SearchResult{Title: title, URL: u, Snippet: snippet})
-	}
-	return &SearchResponse{Answer: sourceLines(results), Results: results}, nil
+		return &SearchResponse{Answer: sourceLines(results), Results: results}, nil
+	})
 }

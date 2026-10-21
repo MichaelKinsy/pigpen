@@ -83,6 +83,7 @@ func ExtractWithCrawl4ai(ctx context.Context, rawURL string, o ExtractOptions, s
 	if u, err := ParseURL(requestURL, nil); err == nil {
 		origin = Origin(u)
 	}
+	act := logFetchStart(requestURL)
 	resp, tctx, cancel, err := guardedAPI(ctx, requestURL, init, timeoutMsOr(o.TimeoutMs, crawl4aiTimeout), FetchRemoteOptions{
 		ValidationOptions: ssrfValidation(ssrf, o.Lookup, isLoopbackHost(requestURL)),
 		OnRedirectErr: func(a RedirectArgs) (RequestInit, error) {
@@ -102,26 +103,26 @@ func ExtractWithCrawl4ai(ctx context.Context, rawURL string, o ExtractOptions, s
 	})
 	defer cancel()
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return nil, act.failedBy(ctx, timeoutFix(ctx, tctx, err), "")
 	}
 	text, rerr := readBody(resp)
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		if rerr != nil {
 			text = ""
 		}
-		return nil, fmt.Errorf("Crawl4AI md error %d: %s", resp.StatusCode, jsSlice(redact(text), 0, 300))
+		return nil, act.failedBy(ctx, fmt.Errorf("Crawl4AI md error %d: %s", resp.StatusCode, jsSlice(redact(text), 0, 300)), "")
 	}
 	if rerr != nil {
-		return nil, timeoutFix(ctx, tctx, rerr)
+		return nil, act.failedBy(ctx, timeoutFix(ctx, tctx, rerr), "")
 	}
 	data, err := decodeAny(text)
 	if err != nil {
 		// The parser message quotes the body, which can echo the token.
-		return nil, errors.New("Crawl4AI md returned invalid JSON")
+		return nil, act.failedBy(ctx, errors.New("Crawl4AI md returned invalid JSON"), "")
 	}
 	env := asMap(data)
 	if env == nil {
-		return nil, errors.New("Crawl4AI md returned an unexpected response shape")
+		return nil, act.failedBy(ctx, errors.New("Crawl4AI md returned an unexpected response shape"), "")
 	}
 	switch env["success"] {
 	case false:
@@ -136,15 +137,16 @@ func ExtractWithCrawl4ai(ctx context.Context, rawURL string, o ExtractOptions, s
 		} else {
 			detail = jsTrim(detail)
 		}
-		return nil, fmt.Errorf("Crawl4AI md unsuccessful: %s", redact(detail))
+		return nil, act.failedBy(ctx, fmt.Errorf("Crawl4AI md unsuccessful: %s", redact(detail)), "")
 	case true:
 	default:
-		return nil, errors.New("Crawl4AI md returned an unexpected response shape")
+		return nil, act.failedBy(ctx, errors.New("Crawl4AI md returned an unexpected response shape"), "")
 	}
 	md, ok := strField(env, "markdown")
 	if !ok {
-		return nil, errors.New("Crawl4AI md returned markdown in an unexpected shape")
+		return nil, act.failedBy(ctx, errors.New("Crawl4AI md returned markdown in an unexpected shape"), "")
 	}
+	act.complete(resp.StatusCode)
 	content := jsTrim(md)
 	if content == "" {
 		return nil, nil

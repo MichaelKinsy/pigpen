@@ -179,16 +179,3 @@ func buildFrameResult(url, label string, requested int, frames []VideoFrame, err
 		Duration: duration,
 	}
 }
-
-// jsToFixed1 is n.toFixed(1) for a non-negative finite n: ties go up, as the exact decimal
-// expansion of the double decides.
-func jsToFixed1(n float64) string {
-	r := new(big.Rat).SetFloat64(n)
-	r.Mul(r, big.NewRat(10, 1))
-	scaled := new(big.Int).Div(new(big.Int).Add(new(big.Int).Mul(r.Num(), big.NewInt(2)), r.Denom()), new(big.Int).Mul(r.Denom(), big.NewInt(2)))
-	s := scaled.String()
-	if len(s) < 2 {
-		s = "0" + s
-	}
-	return s[:len(s)-1] + "." + s[len(s)-1:]
-}

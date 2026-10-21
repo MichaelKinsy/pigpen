@@ -216,6 +216,8 @@ func SearchWithMistral(ctx context.Context, query string, o SearchOptions) (*Sea
 	headers.set("Authorization", "Bearer "+apiKey)
 	headers.set("Content-Type", "application/json")
 
+	act := logAPIStart(query)
+	status := 0
 	tctx, cancel := withTimeout(ctx, mistralSearchTimeout)
 	defer cancel()
 	result, err := func() (*SearchResponse, error) {
@@ -223,6 +225,7 @@ func SearchWithMistral(ctx context.Context, query string, o SearchOptions) (*Sea
 		if err != nil {
 			return nil, timeoutFix(ctx, tctx, err)
 		}
+		status = resp.StatusCode
 		text, err := readBody(resp)
 		if err != nil {
 			return nil, timeoutFix(ctx, tctx, err)
@@ -237,7 +240,8 @@ func SearchWithMistral(ctx context.Context, query string, o SearchOptions) (*Sea
 		return parseMistralConversation(parsed, o, numResults)
 	}()
 	if err != nil {
-		return nil, redactErr(err, apiKey)
+		return nil, act.failedErr(redactErr(err, apiKey))
 	}
+	act.complete(status)
 	return result, nil
 }

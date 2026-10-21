@@ -50,14 +50,19 @@ func jsEncodeURIComponent(s string) string {
 // jinaRequestFailure is rethrowRequestError (jina-search.ts:139): Jina's own deadline is an HTTP
 // 408 (transient), never a cancellation; a cancellation keeps the abort message; anything else has
 // the credential removed.
-func jinaRequestFailure(ctx, tctx context.Context, apiKey string, err error) error {
+func jinaRequestFailure(ctx, tctx context.Context, act activityRef, apiKey string, err error) error {
 	if isProviderTimeout(ctx, tctx, err) {
+		act.complete(408)
 		return errors.New("Jina Search API error 408: request timed out")
 	}
 	if ctx.Err() != nil {
-		return &redactedError{"This operation was aborted", err}
+		out := &redactedError{"This operation was aborted", err}
+		act.failed(out.Error())
+		return out
 	}
-	return redactErr(transportFailure(err, false), apiKey)
+	out := redactErr(transportFailure(err, false), apiKey)
+	act.failed(out.Error())
+	return out
 }
 
 type jinaItem struct{ title, url, snippet, content string }
@@ -87,29 +92,35 @@ func SearchWithJina(ctx context.Context, query string, o SearchOptions) (*Search
 	if o.IncludeContent {
 		respond = "content"
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
 	resp, err := FetchWithCredentialRedirects(tctx, rawURL, RequestInit{Method: "GET", Header: http.Header{
 		"Accept": {"application/json"}, "Authorization": {"Bearer " + apiKey}, "User-Agent": {"pi-web-access"},
 		"X-Respond-With": {respond}, "X-Retain-Images": {"none"}}}, []string{"Authorization"})
 	if err != nil {
-		return nil, jinaRequestFailure(ctx, tctx, apiKey, err)
+		return nil, jinaRequestFailure(ctx, tctx, act, apiKey, err)
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, jinaRequestFailure(ctx, tctx, apiKey, transportFailure(err, true))
+		return nil, jinaRequestFailure(ctx, tctx, act, apiKey, transportFailure(err, true))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Jina Search API error %d: %s", resp.StatusCode, slice300(RedactCredential(text, apiKey)))
 	}
 	raw, err := decodeJSON(text)
 	if err != nil {
+		act.complete(resp.StatusCode)
 		return nil, errors.New("Jina Search API returned invalid JSON")
 	}
 	items, err := parseJinaItems(raw)
 	if err != nil {
-		return nil, redactErr(err, apiKey)
+		err = redactErr(err, apiKey)
+		act.logError(err.Error())
+		return nil, err
 	}
+	act.complete(resp.StatusCode)
 	out := &SearchResponse{Results: []SearchResult{}}
 	var content []ExtractedContent
 	seen := map[string]bool{}

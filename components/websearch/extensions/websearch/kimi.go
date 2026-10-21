@@ -160,12 +160,18 @@ func SearchWithKimi(ctx context.Context, query string, o SearchOptions) (*Search
 	if err != nil {
 		return nil, err
 	}
+	act := logAPIStart(query)
+	status := 0
 	tctx, cancel := withTimeout(ctx, kimiSearchTimeout)
 	defer cancel()
 	result, err := func() (*SearchResponse, error) {
 		resp, err := FetchWithCredentialRedirects(tctx, kimiSearchURL, RequestInit{Method: "POST", Header: kimiRequestHeaders(auth).http(), Body: payload}, plainFetchCredentialHeaders)
 		if err != nil {
 			return nil, err
+		}
+		status = resp.StatusCode
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
 		}
 		text, err := readBody(resp)
 		if err != nil {
@@ -188,10 +194,19 @@ func SearchWithKimi(ctx context.Context, query string, o SearchOptions) (*Search
 		return &SearchResponse{Answer: sourceLines(results), Results: results}, nil
 	}()
 	if err != nil {
-		if ctx.Err() == nil && (tctx.Err() == context.DeadlineExceeded || isTimeout(err)) {
+		// The catch block of kimi-search.ts:191-210: the caller's abort, the provider's own timeout, then the message.
+		if ctx.Err() != nil {
+			act.complete(0)
+		} else if tctx.Err() == context.DeadlineExceeded || isTimeout(err) {
+			act.logError("Kimi Code search API timed out")
 			return nil, errors.New("Kimi Code search API timed out")
 		}
-		return nil, redactErr(err, auth.apiKey)
+		out := redactErr(err, auth.apiKey)
+		if ctx.Err() == nil {
+			act.failed(out.Error())
+		}
+		return nil, out
 	}
+	act.complete(status)
 	return result, nil
 }

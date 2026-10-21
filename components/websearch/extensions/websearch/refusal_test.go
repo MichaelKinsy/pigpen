@@ -72,8 +72,6 @@ func providerRuntime(t *testing.T, cfg string, env map[string]string) *Runtime {
 	return r
 }
 
-}
-
 func TestRefusalFetchHostedProviders(t *testing.T) {
 	t.Run("a provider that is not configured is skipped as in the original", func(t *testing.T) {
 		r, _ := newRuntime(t, "")

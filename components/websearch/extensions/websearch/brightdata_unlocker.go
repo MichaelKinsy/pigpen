@@ -79,24 +79,26 @@ func ExtractWithBrightDataUnlocker(ctx context.Context, rawURL string, o Extract
 	if err != nil {
 		return nil, err
 	}
+	act := logFetchStart(rawURL)
 	tctx, cancel := withTimeout(ctx, timeoutMsOr(o.TimeoutMs, brightdataUnlockTimeout))
 	defer cancel()
 	body := jsonBytes(map[string]any{"url": rawURL, "zone": zone, "format": "raw", "data_format": "markdown"})
 	resp, err := fetchAPIManual(tctx, brightdataRequestURL, RequestInit{Method: "POST", Body: body,
 		Header: http.Header{"Content-Type": {"application/json"}, "Authorization": {"Bearer " + key}}}, ssrfValidation(ssrf, o.Lookup, false))
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
+		return nil, act.failedBy(ctx, redactErr(timeoutFix(ctx, tctx, err), key), key)
 	}
 	text, rerr := readBody(resp)
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		if rerr != nil {
 			text = ""
 		}
-		return nil, fmt.Errorf("Bright Data Web Unlocker error %d: %s", resp.StatusCode, jsSlice(RedactCredential(text, key), 0, 300))
+		return nil, act.failedBy(ctx, fmt.Errorf("Bright Data Web Unlocker error %d: %s", resp.StatusCode, jsSlice(RedactCredential(text, key), 0, 300)), key)
 	}
 	if rerr != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, rerr), key)
+		return nil, act.failedBy(ctx, redactErr(timeoutFix(ctx, tctx, rerr), key), key)
 	}
+	act.complete(resp.StatusCode)
 	// Bright Data bills a request whatever its length, so short content is returned, not dropped.
 	content := jsTrim(text)
 	if content == "" {

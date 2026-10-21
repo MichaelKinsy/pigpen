@@ -404,11 +404,6 @@ func GetProviderAvailability() (ProviderAvailability, error) {
 	return out, nil
 }
 
-// currentModelHostedSearchEligible is isCurrentModelHostedSearchEligible(ctx): whether the
-// session's model can run OpenAI hosted search itself. OpenAI hosted search belongs to the model
-// provider slice, which installs the real check; without it no model is eligible.
-var currentModelHostedSearchEligible = func(model map[string]any) bool { return false }
-
 type curatorDefaultOptions struct {
 	numResults *float64
 	recency    string
@@ -469,7 +464,7 @@ func resolveCuratorProvider(provider ProviderSelection, avail ProviderAvailabili
 		cfg, err := loadSearchConfig()
 		if err == nil && cfg.routing != nil {
 			eligible := func(candidate string) bool {
-				return !(candidate == "openai" && cfg.routing.UseCurrentModel != nil && *cfg.routing.UseCurrentModel && !currentModelHostedSearchEligible(model))
+				return !(candidate == "openai" && cfg.routing.UseCurrentModel != nil && *cfg.routing.UseCurrentModel && !modelHostedSearchEligible(model))
 			}
 			for _, candidate := range cfg.routing.Providers {
 				if !eligible(candidate) {

@@ -53,42 +53,45 @@ func SearchWithSearch1API(ctx context.Context, query string, o SearchOptions) (*
 	if err != nil {
 		return nil, err
 	}
-	data, err := search1apiRequest(ctx, "Search", search1apiSearchURL, key, search1apiBody(query, o), search1apiSearchTimeout)
-	if err != nil {
-		return nil, err
-	}
-	items, ok := asMap(data)["results"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("Search1API Search API returned an unexpected response shape")
-	}
-	results := []SearchResult{}
-	var inline []ExtractedContent
-	for _, it := range items {
-		item := asMap(it)
-		link, ok := strField(item, "link")
-		if !ok || jsTrim(link) == "" {
-			continue
+	act := logAPIStart(query)
+	return logged(act, key, func() (*SearchResponse, error) {
+		data, err := search1apiRequest(ctx, "Search", search1apiSearchURL, key, search1apiBody(query, o), search1apiSearchTimeout)
+		if err != nil {
+			return nil, err
 		}
-		link = jsTrim(link)
-		title := link
-		if t, ok := strField(item, "title"); ok && jsTrim(t) != "" {
-			title = jsTrim(t)
+		items, ok := asMap(data)["results"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("Search1API Search API returned an unexpected response shape")
 		}
-		snippet := ""
-		if s, ok := strField(item, "snippet"); ok {
-			snippet = collapseWS(s)
+		results := []SearchResult{}
+		var inline []ExtractedContent
+		for _, it := range items {
+			item := asMap(it)
+			link, ok := strField(item, "link")
+			if !ok || jsTrim(link) == "" {
+				continue
+			}
+			link = jsTrim(link)
+			title := link
+			if t, ok := strField(item, "title"); ok && jsTrim(t) != "" {
+				title = jsTrim(t)
+			}
+			snippet := ""
+			if s, ok := strField(item, "snippet"); ok {
+				snippet = collapseWS(s)
+			}
+			results = append(results, SearchResult{Title: title, URL: link, Snippet: snippet})
+			if c, ok := strField(item, "content"); ok && jsTrim(c) != "" {
+				t, _ := strField(item, "title")
+				inline = append(inline, ExtractedContent{URL: link, Title: jsTrim(t), Content: c})
+			}
 		}
-		results = append(results, SearchResult{Title: title, URL: link, Snippet: snippet})
-		if c, ok := strField(item, "content"); ok && jsTrim(c) != "" {
-			t, _ := strField(item, "title")
-			inline = append(inline, ExtractedContent{URL: link, Title: jsTrim(t), Content: c})
+		resp := &SearchResponse{Answer: sourceLines(results), Results: results}
+		if o.IncludeContent && len(inline) > 0 {
+			resp.InlineContent = inline
 		}
-	}
-	resp := &SearchResponse{Answer: sourceLines(results), Results: results}
-	if o.IncludeContent && len(inline) > 0 {
-		resp.InlineContent = inline
-	}
-	return resp, nil
+		return resp, nil
+	})
 }
 
 // ExtractWithSearch1API fetches one URL through Search1API Crawl.
@@ -97,23 +100,26 @@ func ExtractWithSearch1API(ctx context.Context, rawURL string, o ExtractOptions)
 	if err != nil {
 		return nil, err
 	}
-	timeout := search1apiCrawlTimeout
-	if o.TimeoutMs != nil {
-		timeout = time.Duration(max(int64(1), *o.TimeoutMs)) * time.Millisecond
-	}
-	data, err := search1apiRequest(ctx, "Crawl", search1apiCrawlURL, key, map[string]any{"url": rawURL}, timeout)
-	if err != nil {
-		return nil, err
-	}
-	result := asMap(asMap(data)["results"])
-	if result == nil {
-		return nil, fmt.Errorf("Search1API Crawl API returned an unexpected response shape")
-	}
-	c, _ := strField(result, "content")
-	content := jsTrim(c)
-	if content == "" {
-		return nil, nil
-	}
-	t, _ := strField(result, "title")
-	return &ExtractedContent{URL: rawURL, Title: jsTrim(t), Content: content}, nil
+	act := logFetchStart(rawURL)
+	return logged(act, key, func() (*ExtractedContent, error) {
+		timeout := search1apiCrawlTimeout
+		if o.TimeoutMs != nil {
+			timeout = time.Duration(max(int64(1), *o.TimeoutMs)) * time.Millisecond
+		}
+		data, err := search1apiRequest(ctx, "Crawl", search1apiCrawlURL, key, map[string]any{"url": rawURL}, timeout)
+		if err != nil {
+			return nil, err
+		}
+		result := asMap(asMap(data)["results"])
+		if result == nil {
+			return nil, fmt.Errorf("Search1API Crawl API returned an unexpected response shape")
+		}
+		c, _ := strField(result, "content")
+		content := jsTrim(c)
+		if content == "" {
+			return nil, nil
+		}
+		t, _ := strField(result, "title")
+		return &ExtractedContent{URL: rawURL, Title: jsTrim(t), Content: content}, nil
+	})
 }

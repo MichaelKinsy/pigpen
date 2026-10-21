@@ -194,30 +194,45 @@ func googleRequestCount(o SearchOptions, numResults int) int {
 // anysearch.ts: a transport failure has the credential removed, a non-2xx status quotes up to 300
 // characters of the (redacted) body, and a body that is not JSON is "<api> returned invalid JSON".
 // api is the upstream name ("Serper API"). The caller owns the deadline context (tctx).
-func restCallA(ctx, tctx context.Context, api, apiKey, rawURL string, init RequestInit, credentialHeaders []string) (any, error) {
+//
+// The activity entry act is closed as those files do: a transport failure through the catch block
+// (an abort completes it with status 0, anything else records the redacted message), a non-2xx
+// status and an invalid JSON body complete it with the status. A successful call returns the status
+// and leaves the entry open: the caller completes it once its envelope check ran.
+func restCallA(ctx, tctx context.Context, act activityRef, api, apiKey, rawURL string, init RequestInit, credentialHeaders []string) (any, int, error) {
 	resp, err := FetchWithCredentialRedirects(tctx, rawURL, init, credentialHeaders)
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey)
+		return nil, 0, act.failedErr(redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey))
 	}
 	text, err := readBody(resp)
+	ok := resp.StatusCode >= 200 && resp.StatusCode <= 299
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, transportFailure(err, true)), apiKey)
+		if ok {
+			act.complete(resp.StatusCode)
+		}
+		return nil, 0, redactErr(timeoutFix(ctx, tctx, transportFailure(err, true)), apiKey)
 	}
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("%s error %d: %s", api, resp.StatusCode, slice300(RedactCredential(text, apiKey)))
+	if !ok {
+		act.complete(resp.StatusCode)
+		return nil, 0, fmt.Errorf("%s error %d: %s", api, resp.StatusCode, slice300(RedactCredential(text, apiKey)))
 	}
 	data, err := decodeJSON(text)
 	if err != nil {
-		return nil, fmt.Errorf("%s returned invalid JSON: %v", api, err)
+		act.complete(resp.StatusCode)
+		return nil, 0, fmt.Errorf("%s returned invalid JSON: %v", api, err)
 	}
-	return data, nil
+	return data, resp.StatusCode, nil
 }
 
 // restCallB is the request/response mechanics of serpapi.ts, serply.ts and you.ts: the same
 // status and JSON handling, with every failure (including the caller's envelope check, passed as
-// check) going through restFailure so a deadline or a cancellation keeps its own message.
-func restCallB(ctx, tctx context.Context, name, apiKey, rawURL string, init RequestInit, credentialHeaders []string, check func(any) error) (any, error) {
-	fail := func(err error) (any, error) { return nil, restFailure(ctx, tctx, name, apiKey, err) }
+// check) going through restFailure so a deadline or a cancellation keeps its own message. The
+// activity entry is closed in the same catch block: a caller that cancelled completes it with
+// status 0, any other failure records the message, and success completes it with the status.
+func restCallB(ctx, tctx context.Context, act activityRef, name, apiKey, rawURL string, init RequestInit, credentialHeaders []string, check func(any) error) (any, error) {
+	fail := func(err error) (any, error) {
+		return nil, act.failedBy(ctx, restFailure(ctx, tctx, name, apiKey, err), apiKey)
+	}
 	resp, err := FetchWithCredentialRedirects(tctx, rawURL, init, credentialHeaders)
 	if err != nil {
 		return fail(err)
@@ -236,6 +251,7 @@ func restCallB(ctx, tctx context.Context, name, apiKey, rawURL string, init Requ
 	if err := check(data); err != nil {
 		return fail(err)
 	}
+	act.complete(resp.StatusCode)
 	return data, nil
 }
 

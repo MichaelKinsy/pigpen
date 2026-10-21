@@ -235,41 +235,44 @@ func SearchWithTinyFish(ctx context.Context, query string, o SearchOptions) (*Se
 		return nil, err
 	}
 	numResults := NormalizeSearchResultCount(o.NumResults)
-	combined := []SearchResult{}
-	pages := 1
-	if numResults > 10 {
-		pages = 2
-	}
-	for page := 0; page < pages; page++ {
-		data, err := tinyfishRequest(ctx, "Search", tinyfishSearchURLFor(query, o, page), "GET", key, nil, tinyfishSearchTimeout)
-		if err != nil {
-			return nil, err
+	act := logAPIStart(query)
+	return logged(act, key, func() (*SearchResponse, error) {
+		combined := []SearchResult{}
+		pages := 1
+		if numResults > 10 {
+			pages = 2
 		}
-		results, ok := asMap(data)["results"].([]any)
-		if !ok {
-			return nil, fmt.Errorf("TinyFish Search API returned an unexpected response shape")
+		for page := 0; page < pages; page++ {
+			data, err := tinyfishRequest(ctx, "Search", tinyfishSearchURLFor(query, o, page), "GET", key, nil, tinyfishSearchTimeout)
+			if err != nil {
+				return nil, err
+			}
+			results, ok := asMap(data)["results"].([]any)
+			if !ok {
+				return nil, fmt.Errorf("TinyFish Search API returned an unexpected response shape")
+			}
+			combined = append(combined, tinyfishMapSearch(results)...)
+			if len(results) < 10 {
+				break
+			}
 		}
-		combined = append(combined, tinyfishMapSearch(results)...)
-		if len(results) < 10 {
-			break
+		results := dedupeResults(combined, numResults)
+		resp := &SearchResponse{Answer: sourceLines(results), Results: results}
+		if o.IncludeContent && len(results) > 0 {
+			urls := make([]string, len(results))
+			for i, r := range results {
+				urls[i] = r.URL
+			}
+			inline, err := tinyfishInline(ctx, urls, key)
+			if err != nil {
+				return nil, err
+			}
+			if len(inline) > 0 {
+				resp.InlineContent = inline
+			}
 		}
-	}
-	results := dedupeResults(combined, numResults)
-	resp := &SearchResponse{Answer: sourceLines(results), Results: results}
-	if o.IncludeContent && len(results) > 0 {
-		urls := make([]string, len(results))
-		for i, r := range results {
-			urls[i] = r.URL
-		}
-		inline, err := tinyfishInline(ctx, urls, key)
-		if err != nil {
-			return nil, err
-		}
-		if len(inline) > 0 {
-			resp.InlineContent = inline
-		}
-	}
-	return resp, nil
+		return resp, nil
+	})
 }
 
 // ExtractWithTinyFish fetches one URL through TinyFish Fetch.
@@ -278,40 +281,43 @@ func ExtractWithTinyFish(ctx context.Context, rawURL string, o ExtractOptions) (
 	if err != nil {
 		return nil, err
 	}
-	data, err := tinyfishFetchBatch(ctx, []string{rawURL}, key, o)
-	if err != nil {
-		return nil, err
-	}
-	if err := data.shapeOK(); err != nil {
-		return nil, err
-	}
-	result := findFetchResult(data.Results, rawURL)
-	if result == nil && len(data.Results) > 0 {
-		result = data.Results[0]
-	}
-	if m := tinyfishMapFetch(result, rawURL); m != nil {
-		return m, nil
-	}
-	var fetchErr map[string]any
-	for _, e := range data.Errors {
-		if u, _ := e["url"].(string); u == rawURL {
-			fetchErr = e
-			break
+	act := logFetchStart(rawURL)
+	return logged(act, key, func() (*ExtractedContent, error) {
+		data, err := tinyfishFetchBatch(ctx, []string{rawURL}, key, o)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if fetchErr == nil && len(data.Errors) > 0 {
-		fetchErr = data.Errors[0]
-	}
-	if fetchErr != nil {
-		status := ""
-		if n, ok := fetchErr["status"].(float64); ok {
-			status = " (HTTP " + jsNumber(n) + ")"
+		if err := data.shapeOK(); err != nil {
+			return nil, err
 		}
-		msg := "unknown error"
-		if s, _ := fetchErr["error"].(string); s != "" {
-			msg = s
+		result := findFetchResult(data.Results, rawURL)
+		if result == nil && len(data.Results) > 0 {
+			result = data.Results[0]
 		}
-		return nil, fmt.Errorf("TinyFish Fetch failed for %s: %s%s", rawURL, msg, status)
-	}
-	return nil, nil
+		if m := tinyfishMapFetch(result, rawURL); m != nil {
+			return m, nil
+		}
+		var fetchErr map[string]any
+		for _, e := range data.Errors {
+			if u, _ := e["url"].(string); u == rawURL {
+				fetchErr = e
+				break
+			}
+		}
+		if fetchErr == nil && len(data.Errors) > 0 {
+			fetchErr = data.Errors[0]
+		}
+		if fetchErr != nil {
+			status := ""
+			if n, ok := fetchErr["status"].(float64); ok {
+				status = " (HTTP " + jsNumber(n) + ")"
+			}
+			msg := "unknown error"
+			if s, _ := fetchErr["error"].(string); s != "" {
+				msg = s
+			}
+			return nil, fmt.Errorf("TinyFish Fetch failed for %s: %s%s", rawURL, msg, status)
+		}
+		return nil, nil
+	})
 }

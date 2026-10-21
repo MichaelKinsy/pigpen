@@ -60,13 +60,16 @@ func SearchWithValyu(ctx context.Context, query string, o SearchOptions) (*Searc
 	if days, ok := map[string]int{"day": 1, "week": 7, "month": 30, "year": 365}[o.RecencyFilter]; ok {
 		body.StartDate = restNow().Add(-time.Duration(days) * 24 * time.Hour).UTC().Format(valyuRecencyLayout)
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
-	data, err := restCallA(ctx, tctx, "Valyu API", apiKey, valyuSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
+	data, status, err := restCallA(ctx, tctx, act, "Valyu API", apiKey, valyuSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
 		Header: headerOf("x-api-key", apiKey, "Content-Type", "application/json", "Accept", "application/json")}, []string{"x-api-key"})
 	if err != nil {
 		return nil, err
 	}
+	// Every outcome after a readable body completes the entry with the status, whatever the envelope check says.
+	act.complete(status)
 	envelope, ok := jsonObject(data)
 	if !ok {
 		return nil, fmt.Errorf("Valyu API returned invalid response: expected an object envelope")

@@ -173,22 +173,25 @@ func ExtractWithKagi(ctx context.Context, rawURL string, o ExtractOptions, ssrf 
 	if err != nil {
 		return nil, err
 	}
+	act := logAPIStart("kagi extract: " + rawURL)
 	resp, tctx, cancel, err := guardedAPI(ctx, kagiExtractURL, RequestInit{Method: "POST", Body: jsonBytes(map[string]any{"pages": []any{map[string]any{"url": rawURL}}}),
 		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}},
 		timeoutMsOr(o.TimeoutMs, kagiSearchTimeout), FetchRemoteOptions{ValidationOptions: ssrfValidation(ssrf, o.Lookup, false), OnRedirect: redirectKeepsOnlyJSON(true)})
 	defer cancel()
 	if err != nil {
-		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
+		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), key))
 	}
 	body, err := readBody(resp)
 	if err != nil {
 		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Kagi Extract API error %d: %s", resp.StatusCode, slice300(RedactCredential(body, key)))
 	}
 	var raw any
 	if err := json.Unmarshal([]byte(body), &raw); err != nil {
+		act.complete(resp.StatusCode)
 		return nil, fmt.Errorf("Kagi Extract API returned invalid JSON: %v", err)
 	}
 	env, ok := raw.(map[string]any)
@@ -198,6 +201,7 @@ func ExtractWithKagi(ctx context.Context, rawURL string, o ExtractOptions, ssrf 
 	if msg := kagiErrors(env); msg != "" {
 		return nil, kagiInvalidResponse(msg)
 	}
+	act.complete(resp.StatusCode)
 	candidates, isList := env["data"].([]any)
 	if !isList {
 		if d, ok := env["data"]; ok && d != nil {

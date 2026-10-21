@@ -241,6 +241,43 @@ func (a activityRef) failedErr(err error) error {
 	return err
 }
 
+// failedBy is the catch block of the providers that tell the caller's cancellation from their own
+// failure (`if (options.signal?.aborted)`): a cancelled caller completes the entry with status 0,
+// anything else records the message with the credential removed. It returns err for `return nil, ...`.
+func (a activityRef) failedBy(parent context.Context, err error, secret string) error {
+	if parent.Err() != nil {
+		a.complete(0)
+		return err
+	}
+	a.logError(RedactCredential(err.Error(), secret))
+	return err
+}
+
+// logged runs fn as the try block of the providers that complete their entry with status 200 when
+// it returns and send a failure through their catch block: the message with the credential removed
+// closes the entry as aborted (status 0) when it mentions an abort, else it is recorded.
+func logged[T any](act activityRef, secret string, fn func() (T, error)) (T, error) {
+	v, err := fn()
+	if err != nil {
+		var zero T
+		return zero, act.failedErr(redactErr(err, secret))
+	}
+	act.complete(200)
+	return v, nil
+}
+
+// loggedBy is logged for the providers whose catch block asks the caller's signal instead of the message
+// (`if (options.signal?.aborted)`).
+func loggedBy[T any](act activityRef, parent context.Context, secret string, fn func() (T, error)) (T, error) {
+	v, err := fn()
+	if err != nil {
+		var zero T
+		return zero, act.failedBy(parent, redactErr(err, secret), secret)
+	}
+	act.complete(200)
+	return v, nil
+}
+
 // ---- the widget -----------------------------------------------------------------------------
 
 // WidgetTheme is the part of the UI theme the widget and the renderers use (theme.fg, theme.bg,

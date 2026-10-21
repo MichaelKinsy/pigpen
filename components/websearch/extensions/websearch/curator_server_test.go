@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -100,6 +101,26 @@ func postRaw(t *testing.T, target, raw string) (int, map[string]any) {
 	var out map[string]any
 	_ = json.Unmarshal(data, &out)
 	return resp.StatusCode, out
+}
+
+// postUnanswered posts raw and reports what the server answered within 250 ms ("" when it kept the request open).
+func postUnanswered(t *testing.T, target, raw string) string {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, strings.NewReader(raw))
+	noErr(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return ""
+		}
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	data, _ := io.ReadAll(resp.Body)
+	return fmt.Sprintf("%d %s", resp.StatusCode, data)
 }
 
 func getJSON(t *testing.T, target string) (int, map[string]any) {
@@ -378,10 +399,22 @@ func TestCuratorServerRequestValidation(t *testing.T) {
 	if status, body = postJSON(t, u("/search"), map[string]any{"token": "wrong", "query": "q"}); status != 403 || body["error"] != "Invalid session" {
 		t.Fatalf("%d %v", status, body)
 	}
-	for _, raw := range []string{`"text"`, `7`, `null`, `false`} {
+	for _, raw := range []string{`"text"`, `7`, `true`, `-1.5`} {
 		if status, body = postRaw(t, u("/search"), raw); status != 400 || body["error"] != "Invalid body" {
 			t.Fatalf("%s: %d %v", raw, status, body)
 		}
+	}
+	// A falsy body is never answered (`if (!body) return` in every handler of curator-server.ts): the request stays
+	// open until the client gives up, and the server keeps serving others meanwhile.
+	for _, raw := range []string{`null`, `false`, `0`, `-0`, `0.0`, `""`} {
+		for _, path := range []string{"/heartbeat", "/provider", "/search", "/summarize", "/rewrite", "/submit", "/cancel"} {
+			if answered := postUnanswered(t, u(path), raw); answered != "" {
+				t.Fatalf("%s %s was answered: %s", path, raw, answered)
+			}
+		}
+	}
+	if status, body = postRaw(t, u("/search"), `[]`); status != 403 {
+		t.Fatalf("server stuck after unanswered requests: %d %v", status, body)
 	}
 	if status, body = postRaw(t, u("/search"), `[]`); status != 403 {
 		t.Fatalf("%d %v", status, body)

@@ -180,59 +180,62 @@ func SearchWithQuerit(ctx context.Context, query string, o SearchOptions) (*Sear
 	if err != nil {
 		return nil, err
 	}
-	data, err := queritRequest(ctx, "Search", queritSearchURL, key, queritBody(query, o), queritSearchTimeout)
-	if err != nil {
-		return nil, err
-	}
-	if err := queritAssertSuccess("Search", data); err != nil {
-		return nil, err
-	}
-	items, ok := asMap(asMap(data)["results"])["result"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("Querit Search API returned an unexpected response shape")
-	}
-	results := []SearchResult{}
-	for _, it := range items {
-		item := asMap(it)
-		u, ok := strField(item, "url")
-		if !ok || jsTrim(u) == "" {
-			continue
+	act := logAPIStart(query)
+	return loggedBy(act, ctx, key, func() (*SearchResponse, error) {
+		data, err := queritRequest(ctx, "Search", queritSearchURL, key, queritBody(query, o), queritSearchTimeout)
+		if err != nil {
+			return nil, err
 		}
-		u = jsTrim(u)
-		title := u
-		if t, ok := strField(item, "title"); ok && jsTrim(t) != "" {
-			title = jsTrim(t)
+		if err := queritAssertSuccess("Search", data); err != nil {
+			return nil, err
 		}
-		snippet := ""
-		if s, ok := strField(item, "snippet"); ok {
-			snippet = collapseWS(s)
+		items, ok := asMap(asMap(data)["results"])["result"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("Querit Search API returned an unexpected response shape")
 		}
-		results = append(results, SearchResult{Title: title, URL: u, Snippet: snippet})
-	}
-	resp := &SearchResponse{Answer: sourceLines(results), Results: results}
-	if o.IncludeContent && len(results) > 0 {
-		var inline []ExtractedContent
-		for offset := 0; offset < len(results); offset += queritMaxContentURLs {
-			end := min(offset+queritMaxContentURLs, len(results))
-			batch := make([]string, 0, end-offset)
-			for _, r := range results[offset:end] {
-				batch = append(batch, r.URL)
+		results := []SearchResult{}
+		for _, it := range items {
+			item := asMap(it)
+			u, ok := strField(item, "url")
+			if !ok || jsTrim(u) == "" {
+				continue
 			}
-			d, err := queritFetchBatch(ctx, batch, key, ExtractOptions{})
-			if err != nil {
-				return nil, err
+			u = jsTrim(u)
+			title := u
+			if t, ok := strField(item, "title"); ok && jsTrim(t) != "" {
+				title = jsTrim(t)
 			}
-			for i, u := range batch {
-				if m := queritMap(queritFindResult(d, u, i, len(batch)), u); m != nil {
-					inline = append(inline, *m)
+			snippet := ""
+			if s, ok := strField(item, "snippet"); ok {
+				snippet = collapseWS(s)
+			}
+			results = append(results, SearchResult{Title: title, URL: u, Snippet: snippet})
+		}
+		resp := &SearchResponse{Answer: sourceLines(results), Results: results}
+		if o.IncludeContent && len(results) > 0 {
+			var inline []ExtractedContent
+			for offset := 0; offset < len(results); offset += queritMaxContentURLs {
+				end := min(offset+queritMaxContentURLs, len(results))
+				batch := make([]string, 0, end-offset)
+				for _, r := range results[offset:end] {
+					batch = append(batch, r.URL)
+				}
+				d, err := queritFetchBatch(ctx, batch, key, ExtractOptions{})
+				if err != nil {
+					return nil, err
+				}
+				for i, u := range batch {
+					if m := queritMap(queritFindResult(d, u, i, len(batch)), u); m != nil {
+						inline = append(inline, *m)
+					}
 				}
 			}
+			if len(inline) > 0 {
+				resp.InlineContent = inline
+			}
 		}
-		if len(inline) > 0 {
-			resp.InlineContent = inline
-		}
-	}
-	return resp, nil
+		return resp, nil
+	})
 }
 
 // ExtractWithQuerit fetches one URL through Querit Contents.
@@ -241,16 +244,19 @@ func ExtractWithQuerit(ctx context.Context, rawURL string, o ExtractOptions) (*E
 	if err != nil {
 		return nil, err
 	}
-	d, err := queritFetchBatch(ctx, []string{rawURL}, key, o)
-	if err != nil {
-		return nil, err
-	}
-	result := queritFindResult(d, rawURL, 0, 1)
-	if m := queritMap(result, rawURL); m != nil {
-		return m, nil
-	}
-	if queritFailedStatus(d, result, 0) {
-		return nil, fmt.Errorf("Querit Contents API failed to crawl %s", rawURL)
-	}
-	return nil, nil
+	act := logFetchStart(rawURL)
+	return loggedBy(act, ctx, key, func() (*ExtractedContent, error) {
+		d, err := queritFetchBatch(ctx, []string{rawURL}, key, o)
+		if err != nil {
+			return nil, err
+		}
+		result := queritFindResult(d, rawURL, 0, 1)
+		if m := queritMap(result, rawURL); m != nil {
+			return m, nil
+		}
+		if queritFailedStatus(d, result, 0) {
+			return nil, fmt.Errorf("Querit Contents API failed to crawl %s", rawURL)
+		}
+		return nil, nil
+	})
 }

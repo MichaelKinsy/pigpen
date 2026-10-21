@@ -106,7 +106,9 @@ function run(c) {
 				? `result = await mod.${c.fn}(${JSON.stringify(c.args[0])}, ${opts});`
 				: `result = await mod.${c.fn}(${JSON.stringify(c.url)}, undefined, { ...${opts}${c.lookup ? `, lookup: ${lookupSrc}` : ""} });`}
 		} catch (e) { error = e.message; }
-		console.log(JSON.stringify({ calls, result, error }));
+		const { activityMonitor } = await import(${JSON.stringify(join(oracle, "activity.ts"))});
+		const activity = activityMonitor.getEntries().map(({ type, query, url, status, error }) => ({ type, query, url, status, error }));
+		console.log(JSON.stringify({ calls, result, error, activity }));
 	`;
 	const env = { PATH: process.env.PATH, HOME: home, USERPROFILE: home, PI_CODING_AGENT_DIR: agent, ...c.env };
 	const r = spawnSync(process.execPath, ["--input-type=module"], { input: script, encoding: "utf8", env, maxBuffer: 4 << 20 });
