@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -607,7 +606,7 @@ type userRuleKey struct {
 // not compile them again. A configuration holds a handful of rules; the cache is cleared if edits ever pile up.
 var userRuleCache struct {
 	mu sync.Mutex
-	m  map[userRuleKey]*regexp.Regexp
+	m  map[userRuleKey]*gatedRegexp
 }
 
 const userRuleCacheMax = 256
@@ -615,7 +614,7 @@ const userRuleCacheMax = 256
 // compileUserRule compiles a user rule. Rules use Go (RE2) regular expression syntax, not JavaScript's:
 // a pattern that does not compile is skipped (the same outcome as an invalid JavaScript pattern upstream).
 // The result is cached, so the hold check pays for compilation once per rule, not once per tool call.
-func compileUserRule(r CommandRule) *regexp.Regexp {
+func compileUserRule(r CommandRule) *gatedRegexp {
 	key := userRuleKey{r.Pattern, r.CaseSensitive}
 	userRuleCache.mu.Lock()
 	defer userRuleCache.mu.Unlock()
@@ -626,12 +625,12 @@ func compileUserRule(r CommandRule) *regexp.Regexp {
 	if !r.CaseSensitive {
 		pattern = "(?i)" + pattern
 	}
-	c, err := regexp.Compile(pattern)
+	c, err := compileGated(pattern)
 	if err != nil {
 		c = nil
 	}
 	if userRuleCache.m == nil || len(userRuleCache.m) >= userRuleCacheMax {
-		userRuleCache.m = map[userRuleKey]*regexp.Regexp{}
+		userRuleCache.m = map[userRuleKey]*gatedRegexp{}
 	}
 	userRuleCache.m[key] = c
 	return c

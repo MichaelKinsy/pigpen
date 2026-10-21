@@ -181,7 +181,7 @@ func expandBraces(pattern string) []string {
 //
 // The result is cached by pattern: RecordUI asks about every changed path against the same globs, and compiling
 // them each time cost about 180 us per path.
-func globToRegexp(pattern string) *regexp.Regexp {
+func globToRegexp(pattern string) *gatedRegexp {
 	globCache.mu.Lock()
 	defer globCache.mu.Unlock()
 	if re, ok := globCache.m[pattern]; ok {
@@ -189,7 +189,7 @@ func globToRegexp(pattern string) *regexp.Regexp {
 	}
 	re := compileGlob(pattern)
 	if globCache.m == nil || len(globCache.m) >= 512 {
-		globCache.m = map[string]*regexp.Regexp{}
+		globCache.m = map[string]*gatedRegexp{}
 	}
 	globCache.m[pattern] = re
 	return re
@@ -197,7 +197,7 @@ func globToRegexp(pattern string) *regexp.Regexp {
 
 var globCache struct {
 	mu sync.Mutex
-	m  map[string]*regexp.Regexp
+	m  map[string]*gatedRegexp
 }
 
 // globBody is the regular expression between the anchors of a glob: `**/` any directories, `**` anything, `*` within a
@@ -227,10 +227,10 @@ func globBody(pattern string) string {
 	return out.String()
 }
 
-func compileGlob(pattern string) *regexp.Regexp {
-	re, err := regexp.Compile("^(?:.*/)?" + globBody(pattern) + "$")
+func compileGlob(pattern string) *gatedRegexp {
+	re, err := compileGated("^(?:.*/)?" + globBody(pattern) + "$")
 	if err != nil {
-		return regexp.MustCompile(`\A\z\A`)
+		return &gatedRegexp{Regexp: regexp.MustCompile(`\A\z\A`)}
 	}
 	return re
 }
