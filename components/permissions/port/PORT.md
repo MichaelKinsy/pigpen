@@ -706,3 +706,36 @@ Differences from the original, on purpose:
   immutable.
 - A command `parser.parse` cannot produce a tree for yields the empty program with its command text, as the original.
 - `tree.delete()` has no counterpart: nodes are garbage collected.
+
+## Gate core (lane `gatecore`: the gate pipeline and the permission gate handler)
+
+Ported from `src/handlers/gates/{types,descriptor,runner,helpers,path,external-directory,external-directory-policy,skill-read,skill-input,skill-input-gate-pipeline,tool,tool-call-gate-pipeline}.ts` and `src/handlers/permission-gate-handler.ts`. The three bash gate producers (`bash-command`, `bash-path`, `bash-external-directory`) belong to lane `gatebash`; the pipeline calls them through `gatebashpending.go`'s fail-closed stand-ins (a call with a parsed program panics, and the tool-call boundary turns a panic into a block) until that lane replaces the file.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| G1 | `handlers/gates/types.ts` (`GateOutcome`, `ToolCallContext`) | `types.go` | every twin |
+| G2 | `handlers/gates/descriptor.ts` (`GateDescriptor`, `GateBypass`, `GateResult`, `preResolvedCheckOf`, `isUnconditionalDeny`, `orderDenyFirst`) | `gatedescriptor.go` (`GateResult` is `nil`, a `*GateDescriptor` or a `*GateBypass`) | 15 twins |
+| G3 | `handlers/gates/helpers.ts` | `gatehelpers.go` | 20 twins |
+| G4 | `handlers/gates/runner.ts` (`GateRunner`) | `gaterunner.go` | 59 twins; the differential |
+| G5 | `handlers/gates/path.ts`, `external-directory.ts`, `external-directory-policy.ts` | `gatepath.go`, `gateexternaldirectory.go`, `gateexternaldirectorypolicy.go` | 27 + 29 + 11 twins; the differential |
+| G6 | `handlers/gates/skill-read.ts`, `skill-input.ts`, `skill-input-gate-pipeline.ts` | `gateskillread.go`, `gateskillinput.go`, `gateskillinputpipeline.go` | 14 + 12 + 10 twins; the differential |
+| G7 | `handlers/gates/tool.ts` | `gatetool.go` | 24 twins; the differential |
+| G8 | `handlers/gates/tool-call-gate-pipeline.ts` | `gatetoolcallpipeline.go` | 23 + 1 twins; the differential |
+| G9 | `handlers/permission-gate-handler.ts` | `permissiongatehandler.go` | 26 + 18 + 9 + 7 + 10 + 6 + 7 twins (tool-call, input, tool-call-events, input-events, validate-requested-tool, native-tool-target, shell-tool-alias) and 27 + 18 + 4 integration twins (external-directory); the differential |
+
+Seams that differ from the original on purpose (each is an interface or a field where the original has a concrete class or a module mock):
+
+- `GateRunning` (`Run(gate, agentName)`) stands for the `GateRunner` the pipelines receive, so a twin can spy on `run` as the original's tests do; `ToolCallEvaluator`, `SkillInputEvaluator` and `GateHandlerSession` are the same for the handler's collaborators.
+- The pipeline's BashProgram parse and its three bash producers are fields (`parseBash`, `bashExternalDirectoryGate`, `bashPathGate`, `bashCommandCheck`), which the twins replace where the original mocks `BashProgram.parse` and `#src/handlers/gates/bash-path`.
+- Sync instead of `async`: `Evaluate` and `Run` return `(GateOutcome, error)`. A rejected escalation is the error; a throw is a panic. The tool-call boundary blocks on either, so no failure is an allow (gate-producer-failure twin).
+- `SessionApproval` and the descriptor's `PromptDetails` use the port's typed structs, so the original's excess `origin` key on the tool gate's prompt details (a spread of the log context) is not carried.
+- The resolver's raw check with no session rules is `ResolverSkillInputInputs`, because the original's resolver satisfies `SkillInputGateInputs` structurally with an optional fourth argument.
+- `PermissionGateHandler.HandleToolCall` and `HandleInput` take the port's `SessionContext` (the integration lane builds it from the SDK context).
+
+The twins that mock `node:fs`'s `realpathSync` mock the package's `realpathSync` hook; the ones the original runs on a real filesystem (the symlink acceptance, the native-target acceptance, the session-dedup directory cases) run on a temporary directory.
+
+### Differential
+
+`port/record-gatecore-probe.sh` runs `port/probe/gatecore-probe.test.ts` inside the original's package over `testdata/gatecore-cases.json` (`port/probe/gen-gatecore-cases.py`: 1010 worlds) and writes `testdata/gatecore-oracle.json`. A world is a global config file, agent files, session rules, the registered tools, the active skills, `shellTools`, yolo, the active agent, a file layout under four temporary directories (files, directories, symlinks), scripted prompt answers and a sequence of `tool_call` and `input` events. The probe drives the original's real stack (`PermissionManager` over the files, `PermissionSession`, `PermissionResolver`, both pipelines, `GateRunner`, `PermissionGateHandler`, `GateDecisionReporter`) and records every answer, the prompts raised (the whole payload and details), the review-log entries, the decision events, the UI notifications and the final session rules. `gatecore_oracle_test.go` runs the same worlds through the port; a difference in any of them fails the test, and the key order of the review entries and decision events is compared as well.
+
+The worlds cover: every path-bearing tool inside and outside the working directory under every `external_directory` and tool state and each prompt answer; the `path` gate with each state; directional and bare surfaces; MCP proxy and Pi MCP tools; extension tools with a `path` input; real symlinks (typed and resolved allows, dangling links, links inside the working directory); session rules of every surface and width, and sequences that grant for the session at the proven and the family width; infrastructure reads under every kind of deny and ask; native tool targets (file URLs, percent escapes, no-break spaces, curly quotes, AM/PM spaces, `..` escapes); skill reads and `/skill:` inputs under every state, with agents, sessions and no UI; per-agent overrides; yolo over every state; unknown, missing, mistyped and odd tool names and event shapes; and bash commands and shell-tool aliases under seven configurations.
