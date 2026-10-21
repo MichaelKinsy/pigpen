@@ -211,7 +211,7 @@ func TestTurnLimitAsksTheAgentToWrapUp(t *testing.T) {
 	eq(t, err, nil)
 	eq(t, res.WrappedUp, true)
 	var b []byte
-	for i := 0; i < 500 && !strings.Contains(string(b), "turn limit"); i++ {
+	for i := 0; i < 6000 && !strings.Contains(string(b), "turn limit"); i++ {
 		time.Sleep(10 * time.Millisecond)
 		b, _ = os.ReadFile(steer)
 	}

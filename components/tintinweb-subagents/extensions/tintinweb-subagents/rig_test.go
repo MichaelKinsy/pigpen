@@ -105,7 +105,10 @@ type rig struct {
 	emits  []string
 }
 
-func startRig(t *testing.T) *rig {
+func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
+
+// startRigIn is startRig with the workspace the session starts in.
+func startRigIn(t *testing.T, cwd string) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
@@ -113,7 +116,7 @@ func startRig(t *testing.T) *rig {
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
 	r.app.register(e)
-	r.Host = StartHost(t, e, HostOptions{Cwd: t.TempDir(), OnCallValue: r.answer})
+	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
 	r.Fire("session_start", obj{"reason": "startup"})
 	t.Cleanup(func() { r.app.mgr.abortAll() })
 	return r

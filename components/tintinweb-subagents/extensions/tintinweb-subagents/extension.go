@@ -27,6 +27,7 @@ type app struct {
 	graceTurns      int
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
+	settingsNotice  string
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
@@ -58,6 +59,19 @@ func (a *app) reload(cwd string) {
 	a.cwd = cwd
 	a.mu.Unlock()
 	registerAgents(custom)
+}
+
+// refuseSettings tells the user once per distinct text that a setting of subagents.json asks for a feature that is
+// not ported. The setting has no effect (the port does what it did without it); it is never taken for a partial run.
+func (a *app) refuseSettings(ctx sdk.Context) {
+	text := settingsRefusal(ctx.Cwd())
+	a.mu.Lock()
+	same := text == a.settingsNotice
+	a.settingsNotice = text
+	a.mu.Unlock()
+	if text != "" && !same {
+		ctx.Notify(text, "warning")
+	}
 }
 
 func (a *app) touch(ctx sdk.Context) {
@@ -96,6 +110,7 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
+		a.refuseSettings(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
