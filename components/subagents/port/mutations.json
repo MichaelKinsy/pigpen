@@ -1728,12 +1728,6 @@
   "replace": "if false {"
  },
  {
-  "name": "mis-update-auto-decision",
-  "file": "mission_update.go",
-  "find": "len(update.AddDecisions) > 0 && current.Status == \"active\"",
-  "replace": "false"
- },
- {
   "name": "mis-update-reactivate",
   "file": "mission_update.go",
   "find": "update.ResolveDecision != nil && current.Status == \"needs_decision\" && !hasOpenDecisions",

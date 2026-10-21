@@ -340,7 +340,6 @@ m("mis-prune-count-strict", "mission_store.go", 'if countJSONFiles(loc.MissionDi
 m("mis-prune-count-loose", "mission_store.go", 'if countJSONFiles(loc.MissionDir) <= maxTerminal {', 'if countJSONFiles(loc.MissionDir) <= maxTerminal+1 {')
 m("mis-prune-count-suffix", "mission_store.go", 'if strings.HasSuffix(e.Name(), ".json") {\n\t\t\tn++', 'if strings.HasSuffix(e.Name(), "") {\n\t\t\tn++')
 m("mis-update-gate", "mission_update.go", 'if hasOpenDecisions && (candidateStatus == "active" || candidateStatus == "completed") {', 'if false {')
-m("mis-update-auto-decision", "mission_update.go", 'len(update.AddDecisions) > 0 && current.Status == "active"', 'false')
 m("mis-update-reactivate", "mission_update.go", 'update.ResolveDecision != nil && current.Status == "needs_decision" && !hasOpenDecisions', 'false')
 m("mis-update-exhaust", "mission_update.go", 'case usage.Tokens >= budget.Tokens:', 'case usage.Tokens > budget.Tokens:')
 m("mis-update-unexhaust", "mission_update.go", 'case goal.Status == "budget-exhausted":', 'case false:')

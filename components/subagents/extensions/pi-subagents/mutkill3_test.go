@@ -95,3 +95,15 @@ func TestMissionUpdateKeepsReceiptTimeAndOpensDecisionOnActiveMissions(t *testin
 	eq(t, err, nil, "read")
 	eq(t, rec.Objective, "Ship it", "a stored objective is trimmed when read")
 }
+
+func TestMissionWorkflowChildMergeDeduplicatesArtifactPaths(t *testing.T) {
+	existing := MissionWorkflowChild{WorkflowRunID: "w", Key: "k", Status: "running", StartedAt: "2026-01-01T00:00:00.000Z", UpdatedAt: "2026-01-01T00:00:00.000Z", ArtifactPaths: []string{"a", "b"}}
+	merged, err := mergeWorkflowChild(existing, MissionWorkflowChild{WorkflowRunID: "w", Key: "k", Status: "running", StartedAt: "2026-01-01T00:00:00.000Z", UpdatedAt: "2026-01-02T00:00:00.000Z", ArtifactPaths: []string{"b", "c"}})
+	eq(t, err, nil, "merge")
+	eq(t, merged.ArtifactPaths, []string{"a", "b", "c"}, "union without repeats")
+}
+
+func TestMissionReceiptUrlMustBeAbsolute(t *testing.T) {
+	_, err := parseMissionReceipt(jo("kind", "pull_request", "status", "ready", "title", "PR", "url", "pull/1"), "receipt")
+	matchesRe(t, err, `receipt\.url must be an absolute URL`)
+}
