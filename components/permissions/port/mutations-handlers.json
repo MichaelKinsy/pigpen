@@ -45,7 +45,7 @@
   "name": "lc-no-issue-warn",
   "file": "lifecyclehandler.go",
   "find": "\t\th.logger.Warn(issue)\n",
-  "replace": ""
+  "replace": "\t\t_ = issue\n"
  },
  {
   "name": "lc-reload-debug-always",
@@ -375,7 +375,7 @@
   "name": "ba-warm-ignored",
   "file": "bashadvisory.go",
   "find": "if !warm {",
-  "replace": "if true {"
+  "replace": "if !warm || true {"
  },
  {
   "name": "ev-ready-channel",
@@ -399,7 +399,7 @@
   "name": "cr-trust-default",
   "file": "extension.go",
   "find": "return err == nil && trusted\n\t\t},",
-  "replace": "return true\n\t\t},"
+  "replace": "return err == nil || trusted\n\t\t},"
  },
  {
   "name": "cr-input-error-allows",
@@ -411,19 +411,19 @@
   "name": "cr-input-handled-allows",
   "file": "extension.go",
   "find": "\t\tif result.Action == \"handled\" {\n\t\t\treturn map[string]any{\"action\": \"handled\"}, nil\n\t\t}",
-  "replace": ""
+  "replace": "\t\t_ = result\n"
  },
  {
   "name": "cr-flavor-posix",
   "file": "extension.go",
   "find": "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)",
-  "replace": "p.hostFlavor = PathFlavorForPlatform(\"linux\")"
+  "replace": "p.hostFlavor = PathFlavorForPlatform(\"linux\" + runtime.GOOS[:0])"
  },
  {
   "name": "cr-lifecycle-bus-unsubscribed",
   "file": "extension.go",
   "find": "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, []func(){unsubSubagentLifecycle})",
-  "replace": "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, nil)"
+  "replace": "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, func() []func() { _ = unsubSubagentLifecycle; return nil }())"
  },
  {
   "name": "cr-service-not-observed",
@@ -447,6 +447,6 @@
   "name": "cr-warm-sync",
   "file": "extension.go",
   "find": "func() { go bashparse.WarmBashParser() }",
-  "replace": "func() {}"
+  "replace": "func() { _ = bashparse.WarmBashParser }"
  }
 ]

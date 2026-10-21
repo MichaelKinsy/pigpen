@@ -22,7 +22,7 @@ m("lc-report-before-refresh", LC, "\th.session.RefreshConfig(&ctx, projectTruste
 m("lc-trust-warn-always", LC, "\tif !projectTrusted {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")", "\tif true {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")")
 m("lc-trust-warn-never", LC, "\tif !projectTrusted {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")", "\tif false {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")")
 m("lc-agent-error-swallowed", LC, "\tagentName, err := h.session.ResolveAgentName(ctx, \"\")\n\tif err != nil {\n\t\treturn err\n\t}", "\tagentName, _ := h.session.ResolveAgentName(ctx, \"\")")
-m("lc-no-issue-warn", LC, "\t\th.logger.Warn(issue)\n", "")
+m("lc-no-issue-warn", LC, "\t\th.logger.Warn(issue)\n", "\t\t_ = issue\n")
 m("lc-reload-debug-always", LC, 'if event.Reason == "reload" {', "if true {")
 m("lc-reload-debug-never", LC, 'if event.Reason == "reload" {', "if false {")
 m("lc-service-not-activated", LC, "\th.serviceLifecycle.Activate(ctx)\n\treturn nil", "\treturn nil")
@@ -91,7 +91,7 @@ m("ps-extractor-unwrapped", PS, "if resolved := s.accessExtractors.Resolve(toolN
 
 BA = "bashadvisory.go"
 m("ba-cold-agent-dropped", BA, "Input: o, AgentName: agentName})", "Input: o})")
-m("ba-warm-ignored", BA, "if !warm {", "if true {")
+m("ba-warm-ignored", BA, "if !warm {", "if !warm || true {")
 
 EV = "permissionevents.go"
 m("ev-ready-channel", EV, 'const PermissionsReadyChannel = "permissions:ready"', 'const PermissionsReadyChannel = "permissions:ready "')
@@ -99,15 +99,15 @@ m("ev-ready-unrecovered", EV, "func EmitReadyEvent(events PermissionEventBus, ev
 
 CR = "extension.go"
 m("cr-yolo-never", CR, "isYoloEnabled := func() bool { return isYoloModeEnabled(p.configStore.Current()) }", "isYoloEnabled := func() bool { return false }")
-m("cr-trust-default", CR, "return err == nil && trusted\n\t\t},", "return true\n\t\t},")
+m("cr-trust-default", CR, "return err == nil && trusted\n\t\t},", "return err == nil || trusted\n\t\t},")
 m("cr-input-error-allows", CR, '\t\t\tctx.Notify(UntrustedInputMessage(err), "warning")\n\t\t\treturn map[string]any{"action": "handled"}, nil', "\t\t\treturn nil, nil")
-m("cr-input-handled-allows", CR, '\t\tif result.Action == "handled" {\n\t\t\treturn map[string]any{"action": "handled"}, nil\n\t\t}', "")
-m("cr-flavor-posix", CR, "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)", "p.hostFlavor = PathFlavorForPlatform(\"linux\")")
-m("cr-lifecycle-bus-unsubscribed", CR, "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, []func(){unsubSubagentLifecycle})", "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, nil)")
+m("cr-input-handled-allows", CR, '\t\tif result.Action == "handled" {\n\t\t\treturn map[string]any{"action": "handled"}, nil\n\t\t}', "\t\t_ = result\n")
+m("cr-flavor-posix", CR, "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)", "p.hostFlavor = PathFlavorForPlatform(\"linux\" + runtime.GOOS[:0])")
+m("cr-lifecycle-bus-unsubscribed", CR, "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, []func(){unsubSubagentLifecycle})", "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, func() []func() { _ = unsubSubagentLifecycle; return nil }())")
 m("cr-service-not-observed", CR, "NewObservedAuthorizerRegistrar(authorizerRegistry, p.selection, p.logger))", "authorizerRegistry)")
 m("cr-skills-not-written-back", CR, "\t\twriteBackSkills(data, payload.Options)\n", "")
 m("cr-timeout-default", CR, "return PermissionForwardingTimeoutMs\n\t\t\t},", "return 0\n\t\t\t},")
-m("cr-warm-sync", CR, "func() { go bashparse.WarmBashParser() }", "func() {}")
+m("cr-warm-sync", CR, "func() { go bashparse.WarmBashParser() }", "func() { _ = bashparse.WarmBashParser }")
 
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mutations-handlers.json")
 seen = set()
