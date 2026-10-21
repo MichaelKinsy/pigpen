@@ -72,7 +72,7 @@ func startMention(t *testing.T, b mentionBoot) *mentionRig {
 	for name, body := range b.agentFiles {
 		writeFile(t, filepath.Join(cwd, ".pi", "agents", name+".md"), body)
 	}
-	m := &mentionRig{cwd: cwd, ready: make(chan struct{}), cloneRes: mentionCloneResult{Spawned: true}}
+	m := &mentionRig{cwd: cwd, conv: []any{}, ready: make(chan struct{}), cloneRes: mentionCloneResult{Spawned: true}}
 	m.rig = startRigIn2(t, cwd, b.mode, func(a *app) {
 		if !b.realClone {
 			a.cloneFn = func(ctx context.Context, o mentionCloneOptions) mentionCloneResult {
@@ -107,14 +107,13 @@ func (m *mentionRig) host(method string, args map[string]any) (any, string, bool
 	switch method {
 	case "ui.addAutocompleteProvider":
 		id, _ := args["factoryId"].(string)
-		go func() {
-			<-m.ready
-			raw, failure := m.rig.Host.roundTrip(obj{"method": "autocomplete.sync", "args": obj{
-				"id": "wrap-" + id, "factoryId": id, "operation": "wrap",
-				"current": obj{"id": "below", "triggerCharacters": []string{"@", "#"}, "hasFileTrigger": false}}})
-			if failure != "" {
-				return
-			}
+		// The editor installs its rebuilt chain before the call returns: the extension drops a factory the host
+		// never invoked. The host answers calls off its read loop, so waiting here holds nothing.
+		<-m.ready
+		raw, failure := m.rig.Host.roundTrip(obj{"method": "autocomplete.sync", "args": obj{
+			"id": "wrap-" + id, "factoryId": id, "operation": "wrap",
+			"current": obj{"id": "below", "triggerCharacters": []string{"@", "#"}, "hasFileTrigger": false}}})
+		if failure == "" {
 			var d struct {
 				ID string `json:"id"`
 			}
@@ -122,7 +121,7 @@ func (m *mentionRig) host(method string, args map[string]any) (any, string, bool
 			m.mu.Lock()
 			m.provider = d.ID
 			m.mu.Unlock()
-		}()
+		}
 		return obj{}, "", true
 	case "getThinkingLevel":
 		m.mu.Lock()
@@ -312,4 +311,17 @@ func writeFile(t *testing.T, path, body string) {
 	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// firstRequest is the first request the model was asked, or a failure that says what happened instead.
+func (m *mentionRig) firstRequest(t *testing.T, seen *[]map[string]any) map[string]any {
+	t.Helper()
+	for i := 0; i < 400; i++ {
+		if reqs := m.requests(seen); len(reqs) > 0 {
+			return reqs[0]
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("the model was never asked; notifications: %q", m.notifies())
+	return nil
 }

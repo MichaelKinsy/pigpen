@@ -33,12 +33,13 @@ type rosterSource interface {
 	listTombstones() []tombstone         // newest completed first
 }
 
-// mentionTarget is one thing `@` can address and what sending to it will do. kind is "record", "tombstone" or "type".
+// mentionTarget is one thing `@` can address and what sending to it will do. Kind is "record", "tombstone" or "type".
+// It is kept small: the roster holds one per agent and is rebuilt for each keystroke that can name an agent.
 type mentionTarget struct {
 	Kind, Handle, TypeLabel string
-	Record                  mentionRecord
-	Entry                   tombstone
-	Type, Description       string
+	Status                  string // a record's status
+	Description             string // a record's or tombstone's description, a type's own
+	Aliased, Live           bool   // a record listed under its alias; a record that is running or queued
 }
 
 // typeInfo is the registry's facts the roster needs.
@@ -78,8 +79,9 @@ func mentionRoster(src rosterSource, types []typeInfo, displayNameOf func(string
 		}
 		return a.StartedAt < b.StartedAt
 	})
-	taken := map[string]bool{}
-	var targets []mentionTarget
+	tombs := src.listTombstones()
+	taken := make(map[string]bool, 2*len(records)+2*len(tombs)+len(types))
+	targets := make([]mentionTarget, 0, len(records)+len(tombs)+len(types))
 	for _, r := range records {
 		handle := r.Alias
 		if handle == "" {
@@ -87,9 +89,10 @@ func mentionRoster(src rosterSource, types []typeInfo, displayNameOf func(string
 		}
 		taken[strings.ToLower(handle)] = true
 		taken[strings.ToLower(r.Handle)] = true
-		targets = append(targets, mentionTarget{Kind: "record", Handle: handle, Record: r, TypeLabel: displayNameOf(r.Type)})
+		targets = append(targets, mentionTarget{Kind: "record", Handle: handle, TypeLabel: displayNameOf(r.Type),
+			Status: r.Status, Description: r.Description, Aliased: r.Alias != "", Live: r.live()})
 	}
-	for _, e := range src.listTombstones() {
+	for _, e := range tombs {
 		handle := e.Alias
 		if handle == "" {
 			handle = e.Handle
@@ -99,7 +102,7 @@ func mentionRoster(src rosterSource, types []typeInfo, displayNameOf func(string
 		}
 		taken[strings.ToLower(handle)] = true
 		taken[strings.ToLower(e.Handle)] = true
-		targets = append(targets, mentionTarget{Kind: "tombstone", Handle: handle, Entry: e, TypeLabel: displayNameOf(e.Type)})
+		targets = append(targets, mentionTarget{Kind: "tombstone", Handle: handle, TypeLabel: displayNameOf(e.Type), Description: e.Description})
 	}
 	for _, t := range types {
 		handle := handleBase(t.Name)
@@ -107,7 +110,7 @@ func mentionRoster(src rosterSource, types []typeInfo, displayNameOf func(string
 			continue
 		}
 		taken[handle] = true
-		targets = append(targets, mentionTarget{Kind: "type", Handle: handle, Type: t.Name, Description: t.Description})
+		targets = append(targets, mentionTarget{Kind: "type", Handle: handle, Description: t.Description})
 	}
 	return targets
 }
@@ -139,19 +142,18 @@ func describeTarget(t mentionTarget) string {
 		return "start agent · " + summarize(t.Description)
 	case "tombstone":
 		// No status: the record is gone, and "completed" would imply one is still tracked.
-		return "resume · " + t.TypeLabel + " · " + t.Entry.Description
+		return "resume · " + t.TypeLabel + " · " + t.Description
 	}
-	r := t.Record
 	action := "resume"
-	if r.live() {
+	if t.Live {
 		action = "send message"
 	}
 	// A row listed under its alias has lost the type its handle would have shown, so name it.
 	identity := ""
-	if r.Alias != "" {
+	if t.Aliased {
 		identity = t.TypeLabel + " · "
 	}
-	return action + " · " + identity + r.Status + " · " + r.Description
+	return action + " · " + identity + t.Status + " · " + t.Description
 }
 
 // summarize is the first sentence of an agent description, clipped: these run to paragraphs. A sentence ends at

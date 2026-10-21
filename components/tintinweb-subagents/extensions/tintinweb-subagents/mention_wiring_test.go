@@ -53,8 +53,7 @@ func TestMentionCloneThroughTheHost(t *testing.T) {
 		seen := m.scriptModel(toolCallEvents(agent))
 		eq(t, m.send("@explore find the flaky test"), handled)
 		c := m.fleet.wait(t, 1)[0]
-		reqs := m.requests(seen)
-		req := reqs[0]
+		req := m.firstRequest(t, seen)
 		eq(t, req["reasoning"], "high")
 		eq(t, req["apiKey"], "the-key")
 		eq(t, req["systemPrompt"], "the live system prompt")
@@ -79,7 +78,7 @@ func TestMentionCloneThroughTheHost(t *testing.T) {
 		seen := m.scriptModel(toolCallEvents(agent))
 		m.send("@explore go")
 		m.fleet.wait(t, 1)
-		_, has := m.requests(seen)[0]["reasoning"]
+		_, has := m.firstRequest(t, seen)["reasoning"]
 		eq(t, has, false)
 	})
 	t.Run("the clone's turn after its spawn is answered, as Pi's loop would", func(t *testing.T) {
