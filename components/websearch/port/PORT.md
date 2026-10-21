@@ -8,7 +8,7 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (768 exact twins, 107 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (772 exact twins, 103 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
@@ -397,10 +397,10 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 768 exact + 107 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 772 exact + 103 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 367 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, and the decoder, body read and domain fast paths); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, the 33 of the browser cookie slice again at this head |
+| Mutation | `mutations.json`: 392 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, video, and the decoder, body read and domain fast paths); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, and the whole file again at this head (cumulative run) |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 
@@ -604,6 +604,9 @@ analysis` and `video frame and timestamp extraction` are removed (`youtube_extra
 - Programs: `yt-dlp`, `ffmpeg` and `ffprobe` with the original's arguments, timeouts (15 s, 30 s, 10 s) and 5 MiB frame limit.
   `exec:yt-dlp`, `exec:ffmpeg` and `exec:ffprobe` are no longer accepted gaps: the scenarios declare them.
 - `GeminiWebClient` gained `QueryWithOptions` (model, YouTube URL, files to attach).
+- Stack integration: the cookie client of the browser cookie slice (`cookieGeminiWeb`) implements `QueryWithOptions` by passing the
+  options to `QueryGeminiWebWithCookies`; the hosted slice's `jsToNumber` was dropped for the video slice's (`frames.go`), which
+  follows `Number()` (no `inf`, `nan`, hex floats or underscores); `fetch_unported.go` is gone because no URL kind is refused any more.
 
 Proof:
 
@@ -634,5 +637,6 @@ Deliberate differences:
 - Frames are read one after another, which is what the original's `Promise.all` over synchronous calls does.
 - The file deletion after a Gemini upload ignores the caller's cancellation, as the original, with a 5 minute bound; its failure
   is dropped (the original prints it to the console).
-- Config is read at each call (the original caches it).
+- Config is read through the stat-validated cache of `config.go` (`readLenientConfig`), so a call does not re-read or re-parse
+  `web-search.json` while it is unchanged; an edit is seen on the next call.
 - The activity monitor is not ported, so nothing is logged around extraction.
