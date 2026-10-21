@@ -3,7 +3,6 @@ package powerline_footer_test
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -36,12 +35,8 @@ func TestTheReplyShortcutRunsReply(t *testing.T) {
 	if !r.input(t, "\x1b[114;7u") { // ctrl+alt+r
 		t.Fatal("the reply shortcut was not consumed")
 	}
-	waitUntil(t, "reply to say there is nothing to quote", func() bool {
-		for _, n := range r.notes() {
-			if strings.Contains(n, "message") {
-				return true
-			}
-		}
-		return false
-	})
+	waitUntil(t, "reply to answer", func() bool { return len(r.notes()) > 0 })
+	if got := len(baseCalls(r.h, "handleInput")); got != 0 {
+		t.Errorf("the shortcut also reached the default editor (%d calls)", got)
+	}
 }
