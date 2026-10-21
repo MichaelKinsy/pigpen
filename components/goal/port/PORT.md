@@ -19,8 +19,9 @@ file: custom tools in the child, compaction off in the child, the parent's model
 terminal width.
 
 **Twins:** 1048 exact twins and 1 named skip of 1049 upstream titles (`pigeq twins check`; the skip is the real-SDK prompt cache e2e), `slices.json` is empty. **Go tests:** `go vet`
-on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds 1983 mutants (every find
-text occurs exactly once). The first `pigeq mutate --unit-only --jobs 10` run over the 2034 original mutants killed 1241, left 740
+on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds 1999 mutants (every find
+text occurs exactly once; the last 16, `detail-cache-*`, are the detail page cache's, all killed by `goal_detail_cache_test.go`,
+`goal_detail_cache_tool_test.go` and the history twin, run with `pigeq mutate --unit-only` on only those 16). The first `pigeq mutate --unit-only --jobs 10` run over the 2034 original mutants killed 1241, left 740
 alive and found 53 that do not build. The survivors got tests (`mutants_a_test.go` to `mutants_d_test.go`, plain tests, not twins);
 the 53 invalid mutants were rewritten (51) or dropped (2: `health-marker-version-required`, `draft-unavailable`, both equivalent or
 unreachable); 51 building mutants are equivalent (same observable behavior) and are listed with a reason in
@@ -162,7 +163,8 @@ The review's own changes went red first: the tests in one commit, the fixes in t
 ## Performance
 
 Measured on xd670 (Xeon Platinum 8468; the measured processes pinned to CPUs 64-71 inside a container limited to them, other jobs
-running on the host: load average 14 at the end), 2026-10-20, 12 interleaved rounds after a warm-up round, medians. Raw numbers,
+running on the host: load average 44 after the run, the first run of this section had 14), 2026-10-20, re-measured after the detail page cache
+(owner decision 2026-10-20, below), 12 interleaved rounds after a warm-up round, medians. Raw numbers,
 per-round values and the host: `port/perf/results.md`. Three subjects: the port (this branch), the previous release (0.1.1,
 `origin/goal-honest-refusal`: the commands it implemented, refuses the rest) and the original under PiG's runtime (Node 24.19 and PiG
 v0.5.0, Pi 1402973a for the pin).
@@ -185,33 +187,32 @@ Size and cold start (bytes, ms):
 
 | | original | 0.1.1 | port | port over 0.1.1 |
 |---|---|---|---|---|
-| extension binary (PiG-built runner) | TypeScript, 807,526 bytes of sources (`du -sb`) | 6,213,792 | 15,519,904 | +150% |
-| single-extension Piglet Binary (control 70,861,063) | not a binary | 71,192,839 | 73,347,335 | +3.0% (+2.15 MB) |
-| cold start, `pig -e <extension>` | 683.5 (first start 2,064: jiti) | 51.4 (first start 410: build) | 121.8 (first start 593: build) | +70.4 ms |
-| cold start, fused Piglet (control 33.9) | not applicable | 40.9 | 50.1 | +9.2 ms |
-| pig's own extension span, spawn to handshake | 532.0 | 15.0 | 19.0 | +4.0 ms |
+| extension binary (PiG-built runner) | TypeScript, 807,526 bytes of sources (`du -sb`) | 6,213,792 | 15,532,192 | +150% |
+| single-extension Piglet Binary (control 70,861,063) | not a binary | 71,192,839 | 73,359,623 | +3.0% (+2.17 MB) |
+| cold start, `pig -e <extension>` | 521.6 (first start 1,944: jiti) | 47.6 (first start 288: build) | 93.6 (first start 1,898: build) | +46.0 ms |
+| cold start, fused Piglet (control 31.3) | not applicable | 40.5 | 40.2 | -0.3 ms |
+| pig's own extension span, spawn to handshake | 398.5 | 18.0 | 16.0 | -2.0 ms |
 
-The runner grew by 9.3 MB: `.rodata` +6.5 MB, of which 6.32 MB are the five word-segmentation dictionaries that `pitui` embeds
+The runner grew by 9.3 MB (this branch's cache adds 12 KB to it): `.rodata` +6.5 MB, of which 6.32 MB are the five word-segmentation dictionaries that `pitui` embeds
 (`wordsegmenter/*.bin`, linked through `pitui.Editor`); `.text` +1.4 MB and `.gopclntab` +0.9 MB are the port's own code (1.11 MB of
-symbols against 0.18 MB in 0.1.1; 0.1.1 only refused) plus `widthx`, `pitui`, `uax29`, `x/text` tables. **Owner decision needed:** the growth
-over 10% is the scope of the port (0.1.1 had no tools, dashboard, scheduler or auditor) and a library cost; the fused Piglet, the
-shipping vehicle, grows 3.0%. A `pitui` build tag that drops the dictionaries (PiG's `pigstrip` switch, removed from the copy) would
-cut 6.3 MB from every port that links `pitui.Editor`; that is the `pitui` lane's change. The cold-start rise with `-e` is mostly
-pig hashing and checking the larger source tree (`build-check` 21 ms against 4 ms, discovery 48 against 12), which a Piglet does not
-do; in the fused Piglet the extension's own span is 3.0 ms against 2.0 ms and the whole start 9.2 ms over the control (0.1.1: 7.0 ms), above
-the 1 ms of the registration allowance, so it is stated here: it is the larger Go program (more type data and package initialisers) and
-the registration of 16 commands and 8 tools.
+symbols against 0.18 MB in 0.1.1; 0.1.1 only refused) plus `widthx`, `pitui`, `uax29`, `x/text` tables. **Owner decision (2026-10-20):** the
+growth over 10% is the scope of the port (0.1.1 had no tools, dashboard, scheduler or auditor) and a library cost, accepted; the fused
+Piglet, the shipping vehicle, grows 3.0% over 0.1.1. `pitui` keeps its word-segmentation dictionaries in every build: there is no build
+tag and no `pigstrip` switch. The cold-start rise with `-e` is mostly pig hashing and checking the larger source tree (`build-check`
+15 ms against 4 ms, discovery 7 ms against 0 in this run), which a Piglet does not do; in the fused Piglet the whole start is 8.9 ms
+over the control (0.1.1: 9.2 ms), above the 1 ms of the registration allowance, so it is stated here: it is the larger Go program (more type
+data and package initialisers) and the registration of 16 commands and 8 tools.
 
-Per-call cost through pig (ms; port in the `-e` form, the fused Piglet form is between 24% lower and 4% higher, see `results.md`):
+Per-call cost through pig (ms; port in the `-e` form, the fused Piglet form is 3% to 40% lower than the `-e` form, see `results.md`):
 
 | operation | original | port | |
 |---|---|---|---|
-| create_goal | 5.01 | 2.79 | -44% |
-| set_goal_tasks | 5.01 | 4.15 | -17% |
-| update_goal (pause) | 3.79 | 2.20 | -42% |
-| get_goal / tasks | 2.94 / 3.24 | 1.74 / 2.31 | -41% / -29% |
-| update_goal_task | 0.84 | 0.52 | -38% |
-| /goal-list, /goal-status, status verbose, /goal-refresh | 2.62, 3.72, 4.06, 2.53 | 1.69, 2.70, 2.43, 1.94 | -36%, -27%, -40%, -23% |
+| create_goal | 4.37 | 2.30 | -47% |
+| set_goal_tasks | 4.23 | 3.33 | -21% |
+| update_goal (pause) | 4.32 | 2.54 | -41% |
+| get_goal / tasks | 2.17 / 2.48 | 1.45 / 1.79 | -33% / -28% |
+| update_goal_task | 0.68 | 0.48 | -30% |
+| /goal-list, /goal-status, status verbose, /goal-refresh | 2.12, 2.94, 3.33, 1.86 | 1.38, 2.24, 2.17, 1.49 | -35%, -24%, -35%, -20% |
 
 0.1.1 has no tools; its commands `/goal-direct` and `/goal-list` are in the in-process table. In pig the port is faster than the original on every
 operation measured, because the original's Node host costs more per call than the Go extension.
@@ -220,18 +221,27 @@ In process (median; port against the original, against 0.1.1 where it had the co
 
 | operation | port | original | port/original | 0.1.1 |
 |---|---|---|---|---|
-| session_start (load, widget, input listener) | 506 us | 1.00 ms | -50% | 131 us (+286%) |
-| get_goal summary / tasks | 65 / 150 us | 71 / 41 us | -9% / +270% | n/a (refuses) |
-| create_goal / update_goal pause | 1.49 / 1.11 ms | 1.56 / 1.02 ms | -4% / +9% | n/a |
-| set_goal_tasks / update_goal_task | 1.22 / 1.16 ms | 1.03 / 1.06 ms | +18% / +10% | n/a |
-| /goal-list | 79 us | 12.6 us | +528% | 16.7 us (+373%) |
-| /goal-status, verbose | 137, 142 us | 78, 90 us | +77%, +58% | n/a |
-| /goal-refresh | 383 us | 111 us | +245% | n/a |
-| /goal-direct | 1.43 ms | 1.39 ms | +3% | 1.14 ms (+25%) |
-| dashboard render, compact / expanded (width 100) | 74 / 101 us | 67 / 91 us | +9% / +11% | n/a |
-| terminal key, plain / toggle chord | 2.5 / 81 us | 17.6 / 10.5 us | -86% / +673% | n/a |
-| scheduler tick (begin, ready declaration, settled) | 1.20 ms | 1.15 ms | +5% | n/a |
-| 16,000-event ledger: session_start, /goal-status, update_goal_task | 1.01, 2.92, 1.34 ms | 1.28, 2.09, 1.06 ms | -21%, +39%, +27% | n/a |
+| session_start (load, widget, input listener) | 341 us | 295 us | +16% | 85 us (+302%) |
+| get_goal summary / tasks | 40 / 41 us | 50 / 28 us | -21% / +47% | n/a (refuses) |
+| create_goal / update_goal pause | 1.11 ms / 858 us | 1.11 ms / 800 us | +0% / +7% | n/a |
+| set_goal_tasks / update_goal_task | 923 / 867 us | 852 / 783 us | +8% / +11% | n/a |
+| /goal-list | 53 us | 7.6 us | +607% | 10.9 us (+391%) |
+| /goal-status, verbose | 85, 84 us | 56, 62 us | +53%, +35% | n/a |
+| /goal-refresh | 245 us | 78 us | +215% | n/a |
+| /goal-direct | 1.06 ms | 1.01 ms | +5% | 839 us (+27%) |
+| dashboard render, compact / expanded (width 100) | 48 / 64 us | 47 / 61 us | +1% / +4% | n/a |
+| terminal key, plain / toggle chord | 1.7 / 54 us | 12.6 / 7.0 us | -86% / +675% | n/a |
+| scheduler tick (begin, ready declaration, settled) | 893 us | 835 us | +7% | n/a |
+| 16,000-event ledger: session_start, /goal-status, update_goal_task | 639 us, 2.17 ms, 1.02 ms | 306 us, 1.48 ms, 831 us | +109%, +46%, +23% | n/a |
+
+The host was busier than in the first run of this section (load average 44 after this run against 14), so absolute numbers are not comparable
+across the two runs; `results.md` also records a same-session control, the previous head (no detail page cache) against this branch,
+interleaved: `get_goal` tasks 95.7 us to 38.3 us (-60%), everything else within -3% to +10% (noise on code this branch did not touch).
+The ratios that moved most against the first run are the original's: its `session_start` went from 1.00 ms (rounds from 419 us to
+1.94 ms) to 295 us (rounds 265 to 347 us), so the first run's `-50%` and `-21%` (16,000-event ledger) were the original's slow, disturbed
+rounds. Against the original's quiet rounds the port's session start is slower by 46 us (an events scan, the pool and the widget; one
+time per session) and 333 us with the 16,000-event ledger (7,600 allocations of ledger replay); both are under the 1 ms allowance for a
+one-time cost and are stated here, not hidden.
 
 Regressions over 10% in process and what is behind them (profiles with `go test -cpuprofile` on the benchmarks):
 
@@ -245,25 +255,57 @@ Regressions over 10% in process and what is behind them (profiles with `go test 
    bounded (flat over a 16,000-event ledger: 65 us), and the original's component is rendered on every host frame, which this
    benchmark does not count. In RPC mode the lines are dropped after the layout (G3); skipping the layout there would save the work and
    was not done because it changes `previousLinesLen` state the faithful twins read.
-3. **`get_goal` tasks and the detail page cache (owner decision).** The original caches the compiled detail source by object
-   identity; the port omitted the cache (`goal_detail.go`: "it only reuses pure results"). Profile: half of the call is
-   `goalDetailSource` (marshalling every task). Repeated identical reads are 3.7 times the original's cache hit; paging a long history
-   recompiles the source on every page. Porting the cache needs generation counters on the goal record (identity is not stable in
-   the port), so it is listed rather than done.
+3. **`get_goal` tasks and the detail page cache (ported, owner decision 2026-10-20).** The original caches the compiled detail source
+   in a shared page cache (`goal-detail.ts`, `detailCache`); the port had omitted it. It is now ported with the original's keys and
+   bounds (`goal_detail.go`, `goalDetailCompile`): at most 16 entries and 16,000,000 UTF-16 units, oldest evicted first; an entry is
+   found when every input of the original's array is `===`: goal id, section, task_id (absent and "" differ), then the objective and the
+   verification contract by value for section objective, the task index (identity: `taskIndex` already returns one snapshot for equal
+   task content, so an in-place edit or a changed task list misses) and `currentTaskId` for tasks, and for history the ledger's
+   revision object (`readGoalLedger(...).revision`, a pointer the ledger replaces on append, rewrite and invalidation); a history
+   without a revision (a caller's own events) is never cached; a source over the bound is returned in full and not cached; an unknown
+   task id is not cached. The port needed no generation counters on the goal record: the task index and the ledger revision already had
+   stable identities. Measured (control, same session): `get_goal` tasks 95.7 us to 38.3 us (-60%); in the main table +270% became
+   +47% (41 us against the original's 28 us). What is left is not the compile: the profile (single CPU, 54 us per call) puts 31% in
+   `syncGoalPromptFromDisk` (the active file's path check, `isSafeActivePath`, whose path normalisation splits with a regexp), 29% in
+   `goalDetailPage` (the page's UTF-16 to string decode and the cursor) and 25% in `goalDetails` (cloning the goal for the result's
+   details); the summary path pays the same first and last and is 21% faster than the original. The absolute difference is 13 us
+   per call, and through pig the call is 28% faster than the original.
 4. **Ordered-object representation (owner decision).** Remaining differences on pure computation (`/goal-status` +77%, 16,000-event
    status +39%, `update_goal_task` +27% at 16,000 events, set_goal_tasks +18%) are the `jsObject` maps and the decoder that
    builds them (`parseJSON` over `encoding/json` tokens) against V8's `JSON.parse`; faithful key order and number text are why
-   they exist (M7). The absolute differences are 10 to 300 microseconds per call, and through pig the port is faster.
+   they exist (M7). The absolute differences are 10 to 300 microseconds per call, and through pig the port is faster. Re-measured on
+   the second run: `/goal-status` +53%, verbose +35%, 16,000-event status +46%, `update_goal_task` +11% (+23% at 16,000 events),
+   set_goal_tasks +8%.
+5. **What is left of items 2 and 4 after the cache.** `/goal-list` (+607%), `/goal-refresh` (+215%), the toggle chord (+675%) and about
+   40 us of every tool are the dashboard layout the SDK's missing component widget forces (item 2: 41 us of `RenderPush` in this run;
+   the chord and `/goal-list` are one render each). Owner decision 2026-10-20: accepted until PiG core C1 and C3 land (the component
+   widget and the way RPC mode treats it), at which point the port hands the host a component like the original and the layout leaves
+   the update path. Nothing in this branch is left to do for them.
 
 No unbounded work or blocking host call on the render and input paths (read in `core.go`, `goal_widget*.go`, `extension.go`, the SDK
 and PiG's `ui_bridge.go`): a render reads the settings cache and the bounded per-goal ledger projection and makes no host call (width and
 height are fields the SDK keeps); the terminal-input listener is subscribed for the whole TUI session, PiG waits for its verdict on every
 key with no deadline (`handleOnTerminalInput`; the original under PiG pays the same IPC), and the handler takes the core lock, so a key
-waits for the unit of work in flight (the longest measured is 1.4 ms, a tool that writes files; a file lock held by another process
-retries for up to 1 s). Every UI update makes one blocking `SetStatus` round trip (the widget push is one way). The sort above was the
-only unbounded step found. Not measured: `update_goal` complete and the auditor and oracle (they start a child pig and a model call),
-the tmux TUI frame cost, and per-event handlers (`context`, `before_provider_request`) whose cost is dominated by the SDK's
-JSON of the payload; they are covered only inside the through-pig numbers.
+waits for the unit of work in flight (the longest in the per-operation benchmarks is 1.4 ms, a tool that writes files; a file lock held by
+another process retries for up to 1 s). Every UI update makes one blocking `SetStatus` round trip (the widget push is one way). The
+sort above was the only unbounded step found. Not measured: the tmux TUI frame cost, and per-event handlers (`context`,
+`before_provider_request`) whose cost is dominated by the SDK's JSON of the payload; they are covered only inside the through-pig numbers.
+
+**Key wait during an audit or an oracle consultation (measured 2026-10-20).** The auditor does not hold the core lock: `core.await`
+releases it around `runAuditor` (`goal_completion.go`) and around `runBlockerOracle` (`goal_core_tools.go`), so a key does not queue
+behind the model run, the child pig or the wait for either. What a key still waits for is the other holders of the lock while the run is
+in flight, each of them a short unit that ends with a UI update (one blocking `SetStatus` round trip): the auditor's progress callback
+(`onProgress` takes `core.locked`; the oracle has none), the 80 ms audit-animation tick, the key's own UI update, and at the end the
+commit of the verdict (files, ledger, UI). Method (`BenchmarkKeyWaitDuringAudit`, `perf_keywait_test.go`, tables in `results.md`): the
+real `update_goal(complete)` path on the replay host with a scripted auditor that reports progress every 1 ms (a stress: a real auditor
+reports on model and tool events) or 50 ms for 600 ms; a key (a plain key and the toggle chord, alternating) goes through the
+listener's `core.locked` every 300 us from the audit's start until `update_goal` returns; `SetStatus` sleeps 0, 200 us or 1 ms to stand
+for the SDK round trip. Ten audits and about 5,200 keys per row: median 26 to 66 us, p99 160 to 267 us, **maximum 3.0 ms with no
+SetStatus delay, 3.2 ms with 200 us, 6.6 ms with 1 ms** (3.3 ms at 50 ms progress). The audit's 600 ms never appears in a key's wait
+(the test fails if a key waits more than 300 ms). The maximum scales with the round trip because the longest unit holds the lock
+across several UI updates; the unit behind the maximum was not profiled separately. The same wait applies to the oracle with fewer lock
+holders (no progress callback, no animation), so the audit is the bound. A host whose `SetStatus` blocks for a long time (a stalled
+RPC peer) holds every key for that long; that is the SDK's synchronous call and part of G1 and C1.
 
 ## Findings (to file against PiG, and notes on the porter)
 

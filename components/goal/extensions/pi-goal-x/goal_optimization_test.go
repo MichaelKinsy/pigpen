@@ -51,7 +51,7 @@ func TestGoalOptimization(t *testing.T) {
 		goal.set("verificationContract", strings.Repeat("C", 4500))
 		cursor, text, firstCursor := "", "", ""
 		for {
-			page := goalDetailPage(goal, goalDetailQuery{section: "objective", cursor: cursor}, nil)
+			page := goalDetailPage(goal, goalDetailQuery{section: "objective", cursor: cursor}, nil, nil)
 			assertTrue(t, page.ok, "page ok")
 			assertTrue(t, utf16Len(page.content) <= 4000, "page bounded")
 			assertTrue(t, utf8.ValidString(page.content) && !strings.HasSuffix(page.content, "\ufffd"), "no split surrogate pair")
@@ -67,12 +67,12 @@ func TestGoalOptimization(t *testing.T) {
 		assertEq(t, text, gstr(goal, "objective")+"\n\nVerification contract:\n"+gstr(goal, "verificationContract"), "lossless")
 		changed := cloneGoal(goal)
 		changed.set("objective", gstr(goal, "objective")+"changed")
-		assertEq(t, goalDetailPage(changed, goalDetailQuery{section: "objective", cursor: firstCursor}, nil).ok, false, "changed objective")
+		assertEq(t, goalDetailPage(changed, goalDetailQuery{section: "objective", cursor: firstCursor}, nil, nil).ok, false, "changed objective")
 		other := cloneGoal(goal)
 		other.set("id", "another-goal")
-		assertEq(t, goalDetailPage(other, goalDetailQuery{section: "objective", cursor: firstCursor}, nil).ok, false, "another goal")
-		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "tasks", cursor: firstCursor}, nil).ok, false, "another section")
-		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "objective", cursor: "bad"}, nil).ok, false, "bad cursor")
+		assertEq(t, goalDetailPage(other, goalDetailQuery{section: "objective", cursor: firstCursor}, nil, nil).ok, false, "another goal")
+		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "tasks", cursor: firstCursor}, nil, nil).ok, false, "another section")
+		assertEq(t, goalDetailPage(goal, goalDetailQuery{section: "objective", cursor: "bad"}, nil, nil).ok, false, "bad cursor")
 	})
 
 	tw(t, f, "indexed activity matches append-order deduplication with out-of-order and equal timestamps", func(t *testing.T) {

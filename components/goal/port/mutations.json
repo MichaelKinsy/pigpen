@@ -11896,5 +11896,101 @@
   "file": "goal_auditor.go",
   "find": "!disableTasks && tl != nil",
   "replace": "!disableTasks"
+ },
+ {
+  "name": "detail-cache-no-hit",
+  "file": "goal_detail.go",
+  "find": "if goalDetailCache[i].inputs.equal(in) {",
+  "replace": "if false && goalDetailCache[i].inputs.equal(in) {"
+ },
+ {
+  "name": "detail-cache-id-ignored",
+  "file": "goal_detail.go",
+  "find": "goalDetailEqual(a.id, b.id) &&",
+  "replace": "true &&"
+ },
+ {
+  "name": "detail-cache-taskid-ignored",
+  "file": "goal_detail.go",
+  "find": "goalDetailEqual(a.taskId, b.taskId) &&",
+  "replace": "true &&"
+ },
+ {
+  "name": "detail-cache-v1-ignored",
+  "file": "goal_detail.go",
+  "find": "goalDetailEqual(a.v1, b.v1) && goalDetailEqual(a.v2, b.v2)",
+  "replace": "goalDetailEqual(a.v2, b.v2)"
+ },
+ {
+  "name": "detail-cache-v2-ignored",
+  "file": "goal_detail.go",
+  "find": "goalDetailEqual(a.v1, b.v1) && goalDetailEqual(a.v2, b.v2)",
+  "replace": "goalDetailEqual(a.v1, b.v1)"
+ },
+ {
+  "name": "detail-cache-history-always",
+  "file": "goal_detail.go",
+  "find": "cacheable := q.section != \"history\" || revision != nil",
+  "replace": "cacheable := true"
+ },
+ {
+  "name": "detail-cache-revision-dropped",
+  "file": "goal_detail.go",
+  "find": "\t\tif revision != nil {\n\t\t\tin.v1 = revision\n\t\t}\n",
+  "replace": "\t\t_ = revision\n"
+ },
+ {
+  "name": "detail-cache-index-dropped",
+  "file": "goal_detail.go",
+  "find": "in.v1, in.v2 = index, taskFieldValue",
+  "replace": "in.v1, in.v2 = nil, taskFieldValue"
+ },
+ {
+  "name": "detail-cache-current-dropped",
+  "file": "goal_detail.go",
+  "find": "in.v1, in.v2 = index, taskFieldValue(goal, \"currentTaskId\")",
+  "replace": "in.v1, in.v2 = index, nil"
+ },
+ {
+  "name": "detail-cache-absent-taskid",
+  "file": "goal_detail.go",
+  "find": "section: q.section, taskId: undef{}}",
+  "replace": "section: q.section, taskId: \"\"}"
+ },
+ {
+  "name": "detail-cache-entries-17",
+  "file": "goal_detail.go",
+  "find": "goalDetailCacheEntries = 16",
+  "replace": "goalDetailCacheEntries = 17"
+ },
+ {
+  "name": "detail-cache-chars-17m",
+  "file": "goal_detail.go",
+  "find": "goalDetailCacheChars   = 16_000_000",
+  "replace": "goalDetailCacheChars   = 17_000_000"
+ },
+ {
+  "name": "detail-cache-evict-unaccounted",
+  "file": "goal_detail.go",
+  "find": "\t\t\tgoalDetailCachedUnit -= len(goalDetailCache[0].result.units)\n",
+  "replace": ""
+ },
+ {
+  "name": "detail-cache-oversized-cached",
+  "file": "goal_detail.go",
+  "find": "if cacheable && len(units) <= goalDetailCacheChars {",
+  "replace": "if cacheable {"
+ },
+ {
+  "name": "detail-cache-list-equal",
+  "file": "goal_detail.go",
+  "find": "return !aList && !bList && a == b",
+  "replace": "return !aList && !bList"
+ },
+ {
+  "name": "detail-cache-tool-revision",
+  "file": "goal_core_tools.go",
+  "find": "events, historyRevision = history.events, history.revision",
+  "replace": "events, historyRevision = history.events, nil"
  }
 ]

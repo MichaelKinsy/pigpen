@@ -9,7 +9,7 @@ import (
 	"unicode/utf16"
 )
 
-// ported from goal-detail.ts (the shared page cache is omitted: it only reuses pure results)
+// ported from goal-detail.ts, including its shared page cache (detailCache)
 
 const goalDetailPageChars = 4000
 
@@ -30,8 +30,99 @@ type goalDetailResult struct {
 	totalChars int
 }
 
-// goalDetailSource compiles the section text and its key; ok=false when the task id is unknown.
-func goalDetailSource(goal *jsObject, q goalDetailQuery, events []*jsObject) (source, key string, ok bool) {
+// goalDetailCacheEntries and goalDetailCacheChars bound the shared cache like the original (16 entries, 16,000,000 chars).
+const (
+	goalDetailCacheEntries = 16
+	goalDetailCacheChars   = 16_000_000
+)
+
+// goalDetailInputs is the original's inputs array: [goal.id, section, task_id, ...section inputs], compared with ===.
+// objective: v1 = objective, v2 = verificationContract; tasks: v1 = the task index (identity), v2 = currentTaskId;
+// history: v1 = the ledger revision (identity), v2 unused.
+type goalDetailInputs struct {
+	id, taskId, v1, v2 any
+	section            string
+}
+
+// goalDetailCompiled is DetailSource plus the source's UTF-16 units, which every page slices.
+type goalDetailCompiled struct {
+	source, key string
+	units       []uint16
+}
+
+type goalDetailCacheEntry struct {
+	inputs goalDetailInputs
+	result *goalDetailCompiled
+}
+
+var (
+	goalDetailCache      []goalDetailCacheEntry
+	goalDetailCachedUnit int
+)
+
+// goalDetailEqual is JavaScript's === on the values a goal record holds; values it cannot compare cheaply never match.
+func goalDetailEqual(a, b any) bool {
+	_, aList := a.([]any)
+	_, bList := b.([]any)
+	return !aList && !bList && a == b
+}
+
+func (a goalDetailInputs) equal(b goalDetailInputs) bool {
+	return a.section == b.section && goalDetailEqual(a.id, b.id) && goalDetailEqual(a.taskId, b.taskId) &&
+		goalDetailEqual(a.v1, b.v1) && goalDetailEqual(a.v2, b.v2)
+}
+
+// goalDetailCompile is compiledSource: the cached compilation of a section, or nil when the task id is unknown.
+func goalDetailCompile(goal *jsObject, q goalDetailQuery, events []*jsObject, revision *ledgerRevision) *goalDetailCompiled {
+	var index *goalTaskIndex
+	in := goalDetailInputs{id: taskFieldValue(goal, "id"), section: q.section, taskId: undef{}}
+	if q.taskId != nil {
+		in.taskId = *q.taskId
+	}
+	switch q.section {
+	case "objective":
+		in.v1, in.v2 = taskFieldValue(goal, "objective"), taskFieldValue(goal, "verificationContract")
+	case "tasks":
+		var tasks []any
+		if tl := goal.obj("taskList"); tl != nil {
+			tasks, _ = tl.vals["tasks"].([]any)
+		}
+		index = taskIndex(tasks)
+		in.v1, in.v2 = index, taskFieldValue(goal, "currentTaskId")
+	default:
+		if revision != nil {
+			in.v1 = revision
+		}
+	}
+	// Arbitrary caller-owned histories remain content checked; only the ledger can supply a generation.
+	cacheable := q.section != "history" || revision != nil
+	if cacheable {
+		for i := len(goalDetailCache) - 1; i >= 0; i-- {
+			if goalDetailCache[i].inputs.equal(in) {
+				return goalDetailCache[i].result
+			}
+		}
+	}
+	source, key, ok := goalDetailSource(goal, q, events, index)
+	if !ok {
+		return nil
+	}
+	units := utf16.Encode([]rune(source))
+	res := &goalDetailCompiled{source: source, key: key, units: units}
+	// Full data remains available even when it exceeds the bounded shared page cache.
+	if cacheable && len(units) <= goalDetailCacheChars {
+		for len(goalDetailCache) >= goalDetailCacheEntries || goalDetailCachedUnit+len(units) > goalDetailCacheChars {
+			goalDetailCachedUnit -= len(goalDetailCache[0].result.units)
+			goalDetailCache = goalDetailCache[1:]
+		}
+		goalDetailCache = append(goalDetailCache, goalDetailCacheEntry{in, res})
+		goalDetailCachedUnit += len(units)
+	}
+	return res
+}
+
+// goalDetailSource compiles the section text and its key; ok=false when the task id is unknown. index is the task index for section tasks.
+func goalDetailSource(goal *jsObject, q goalDetailQuery, events []*jsObject, index *goalTaskIndex) (source, key string, ok bool) {
 	switch q.section {
 	case "objective":
 		source = gstr(goal, "objective")
@@ -47,11 +138,7 @@ func goalDetailSource(goal *jsObject, q goalDetailQuery, events []*jsObject) (so
 		}
 		source = strings.Join(parts, "\n")
 	default:
-		var tasks []any
-		if tl := goal.obj("taskList"); tl != nil {
-			tasks, _ = tl.vals["tasks"].([]any)
-		}
-		rows := taskIndex(tasks).ordered
+		rows := index.ordered
 		if q.taskId != nil && *q.taskId != "" {
 			var sel *goalTaskRow
 			for i := range rows {
@@ -91,15 +178,15 @@ func goalDetailSource(goal *jsObject, q goalDetailQuery, events []*jsObject) (so
 }
 
 // goalDetailPage returns a stable, lossless page of detail text. Offsets are UTF-16 units like the original.
-func goalDetailPage(goal *jsObject, q goalDetailQuery, events []*jsObject) goalDetailResult {
+func goalDetailPage(goal *jsObject, q goalDetailQuery, events []*jsObject, historyRevision *ledgerRevision) goalDetailResult {
 	if q.taskId != nil && q.section != "tasks" {
 		return goalDetailResult{text: "task_id requires section=tasks."}
 	}
-	source, key, ok := goalDetailSource(goal, q, events)
-	if !ok {
+	compiled := goalDetailCompile(goal, q, events, historyRevision)
+	if compiled == nil {
 		return goalDetailResult{text: "Task \"" + *q.taskId + "\" not found."}
 	}
-	units := utf16.Encode([]rune(source))
+	key, units := compiled.key, compiled.units
 	offset := 0
 	if q.cursor != "" {
 		o, valid := goalDetailParseCursor(q.cursor, key, len(units))

@@ -162,13 +162,13 @@ func TestGoalComprehensiveOptimization(t *testing.T) {
 		appendGoalEvents(f.ctx, events)
 		read := readGoalLedger(f.ctx)
 		q := goalDetailQuery{section: "history"}
-		first := goalDetailPage(f.goal, q, read.events)
+		first := goalDetailPage(f.goal, q, read.events, read.revision)
 		if !first.ok || first.nextCursor == "" {
 			t.Fatal("first page")
 		}
 		cursor, content := "", ""
 		for {
-			page := goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: cursor}, read.events)
+			page := goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: cursor}, read.events, read.revision)
 			if !page.ok {
 				t.Fatal("page not ok")
 			}
@@ -192,22 +192,22 @@ func TestGoalComprehensiveOptimization(t *testing.T) {
 		if appended.revision == read.revision {
 			t.Error("revision unchanged after append")
 		}
-		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: first.nextCursor}, appended.events).ok {
+		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: first.nextCursor}, appended.events, appended.revision).ok {
 			t.Error("stale cursor accepted after append")
 		}
 		gcoWrite(t, filepath.Join(f.cwd, ".pi/goals/goal_events.jsonl"), marshalJSON(events[0], "")+"\n")
 		invalidateGoalLedgerCache()
 		refreshed := readGoalLedger(f.ctx)
-		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: first.nextCursor}, refreshed.events).ok {
+		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: first.nextCursor}, refreshed.events, refreshed.revision).ok {
 			t.Error("stale cursor accepted after refresh")
 		}
 		own := append([]*jsObject{}, events...)
-		ownPage := goalDetailPage(f.goal, q, own)
+		ownPage := goalDetailPage(f.goal, q, own, nil)
 		if !ownPage.ok {
 			t.Fatal("own page")
 		}
 		own = own[:len(own)-1]
-		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: ownPage.nextCursor}, own).ok {
+		if goalDetailPage(f.goal, goalDetailQuery{section: "history", cursor: ownPage.nextCursor}, own, nil).ok {
 			t.Error("stale cursor accepted for edited own events")
 		}
 	})
@@ -421,7 +421,7 @@ func TestGoalComprehensiveOptimization(t *testing.T) {
 			t.Error("delta must point to get_goal(section=\"tasks\")")
 		}
 		tid := "task"
-		detail := goalDetailPage(goal, goalDetailQuery{section: "tasks", taskId: &tid}, nil)
+		detail := goalDetailPage(goal, goalDetailQuery{section: "tasks", taskId: &tid}, nil, nil)
 		if !detail.ok || detail.nextCursor == "" || detail.totalChars <= utf16Len(contract) {
 			t.Errorf("detail ok=%v cursor=%q total=%d", detail.ok, detail.nextCursor, detail.totalChars)
 		}
