@@ -146,3 +146,10 @@ func TestEditorKeyDelaysAPromptAndKeepsItInHistory(t *testing.T) {
 	r.q.mu.Unlock()
 	eq(t, len(lines), 1, "the pending-send widget has a row")
 }
+
+func TestEditorKeyCtrlJIsANewLineNotASubmit(t *testing.T) {
+	r := newKeyRig(t, 4000)
+	r.typeText("two\nlines")
+	eq(t, r.key("\n"), editorContinue, "ctrl+j goes to the editor, which makes a new line")
+	eq(t, r.q.pendingSend == nil, true, "and nothing waits")
+}

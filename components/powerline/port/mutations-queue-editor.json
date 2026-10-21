@@ -12,12 +12,6 @@
   "replace": "Submit:         piKeyMatches(data, \"tui.input.submit\"),"
  },
  {
-  "name": "queue-key-early-out",
-  "file": "queue_editor.go",
-  "find": "if !in.Interrupt && !in.Submit && !in.FollowUpSubmit {\n\t\treturn editorContinue\n\t}",
-  "replace": ""
- },
- {
   "name": "queue-key-autocomplete",
   "file": "queue_editor.go",
   "find": "in.AutocompleteShowing = ed.ShowingAutocomplete()",
