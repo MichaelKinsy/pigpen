@@ -50,7 +50,7 @@ func TestAgentTypeFileToggles(t *testing.T) {
 	// A disabled default with a file offers Enable, and enabling a bare stub removes the file.
 	ui.pick = answer(map[string]string{"Plan": "Enable"})
 	m.showAgentDetail("Plan")
-	eq(t, ui.selects[len(ui.selects)-1].Options, []string{"Enable", "Edit", "Reset to default", "Delete", "Back"})
+	eq(t, ui.selects[len(ui.selects)-1].Options, []string{"Enable", "Edit", "Delete", "Back"}) // a file override loads as a custom agent, as in the original
 	_, err = os.Stat(stub)
 	eq(t, os.IsNotExist(err), true)
 	eq(t, getAgentConfig("Plan").Enabled, true)
@@ -209,14 +209,14 @@ func completedUnread(t *testing.T) (*rig, string) {
 func TestClearCompletedWiring(t *testing.T) {
 	tw(t, fClear, "session_before_switch (user switches sessions) does NOT wipe the unread result", func(t *testing.T) {
 		r, id := completedUnread(t)
-		r.Fire("session_before_switch", obj{})
+		r.FireAll("session_before_switch", obj{})
 		out := r.must("get_subagent_result", obj{"agent_id": id})
 		lacksStr(t, out, "Agent not found")
 		hasStr(t, out, "THE-RESULT-PAYLOAD")
 	})
 	tw(t, fClear, "session_start (/resume) does NOT wipe the unread result", func(t *testing.T) {
 		r, id := completedUnread(t)
-		r.Fire("session_start", obj{})
+		r.FireAll("session_start", obj{})
 		out := r.must("get_subagent_result", obj{"agent_id": id})
 		lacksStr(t, out, "Agent not found")
 		hasStr(t, out, "THE-RESULT-PAYLOAD")
@@ -224,7 +224,7 @@ func TestClearCompletedWiring(t *testing.T) {
 	tw(t, fClear, "once read, a session switch DOES evict it — the fix stays surgical, no leak", func(t *testing.T) {
 		r, id := completedUnread(t)
 		hasStr(t, r.must("get_subagent_result", obj{"agent_id": id}), "THE-RESULT-PAYLOAD")
-		r.Fire("session_before_switch", obj{})
+		r.FireAll("session_before_switch", obj{})
 		hasStr(t, r.must("get_subagent_result", obj{"agent_id": id}), "Agent not found")
 	})
 }
