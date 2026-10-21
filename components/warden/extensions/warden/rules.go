@@ -684,13 +684,22 @@ func newRuleSet(sources, texts []string, maxChars int) *RuleSet {
 }
 
 // rulesFor are the rules that apply to a path: unscoped rules plus those whose `paths` match.
-func rulesFor(set *RuleSet, path string) []Rule {
+func rulesFor(set *RuleSet, path string) []Rule { return scopedRules(set, path, false) }
+
+// editRulesFor are the rules asked about a write or edit: those that apply to the path without a `when: turn` header.
+func editRulesFor(set *RuleSet, path string) []Rule { return scopedRules(set, path, true) }
+
+// scopedRules are the rules that apply to a path, copied once; skipTurn leaves out those with a `when: turn` header.
+func scopedRules(set *RuleSet, path string, skipTurn bool) []Rule {
 	var out []Rule
 	// Rules of a file commonly share one `paths:` list: the answer for the list just asked about is reused.
 	var lastPaths []string
 	lastMatch, asked := false, false
 	for i := range set.Rules {
 		rule := &set.Rules[i]
+		if skipTurn && rule.When == "turn" {
+			continue
+		}
 		keep := len(rule.Paths) == 0
 		if !keep {
 			if !asked || !slices.Equal(rule.Paths, lastPaths) {
@@ -704,21 +713,6 @@ func rulesFor(set *RuleSet, path string) []Rule {
 				out = make([]Rule, 0, len(set.Rules))
 			}
 			out = append(out, *rule)
-		}
-	}
-	return out
-}
-
-// editRulesFor are the rules asked about a write or edit: those that apply to the path without a `when: turn` header.
-func editRulesFor(set *RuleSet, path string) []Rule {
-	scoped := rulesFor(set, path)
-	var out []Rule
-	for i := range scoped {
-		if scoped[i].When != "turn" {
-			if out == nil {
-				out = make([]Rule, 0, len(scoped))
-			}
-			out = append(out, scoped[i])
 		}
 	}
 	return out
@@ -979,6 +973,42 @@ func ruleQuestion(rule Rule) Question {
 	return outcomeChoice(ruleQuestionText(rulesQuestions().ruleFrame, rule))
 }
 
+// A rule's question and its key in the request are a pure function of the rule's id, name and body, and the rules of a
+// file do not change between its judgments, so each is built once: building them was most of a request's allocations.
+type ruleQuestionKey struct{ id, name, body string }
+
+type ruleQuestionEntry struct {
+	key      string
+	question Question
+}
+
+const ruleQuestionCacheCap = 1024
+
+var ruleQuestionCache struct {
+	mu sync.Mutex
+	m  map[ruleQuestionKey]ruleQuestionEntry
+}
+
+// addRuleQuestions puts the question of each rule in questions under its key.
+func addRuleQuestions(questions Questions, rules []Rule) {
+	c := &ruleQuestionCache
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i := range rules {
+		rule := &rules[i]
+		k := ruleQuestionKey{rule.ID, rule.Name, rule.Body}
+		e, ok := c.m[k]
+		if !ok {
+			e = ruleQuestionEntry{key: "rule_" + rule.ID, question: ruleQuestion(*rule)}
+			if c.m == nil || len(c.m) >= ruleQuestionCacheCap {
+				c.m = make(map[ruleQuestionKey]ruleQuestionEntry, 64)
+			}
+			c.m[k] = e
+		}
+		questions[e.key] = e.question
+	}
+}
+
 // RulesRequest is the judge request for one write or edit and what it asks about.
 type RulesRequest struct {
 	State     map[string]any
@@ -1000,9 +1030,7 @@ func buildRulesRequest(target *RulesTarget, set *RuleSet) RulesRequest {
 	}
 	dropped := len(scoped) - len(applicable)
 	questions := make(Questions, len(applicable)+2)
-	for _, rule := range applicable {
-		questions["rule_"+rule.ID] = ruleQuestion(rule)
-	}
+	addRuleQuestions(questions, applicable)
 	if set.isAggregate() {
 		questions[aggregateQuestion] = rulesQuestions().aggregate
 	}
