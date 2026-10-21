@@ -160,15 +160,15 @@ m("gate-allow-decider", GT, 'return PermissionGateResult{Action: "allow", Decide
 
 SR = "sessionrules.go"
 m("sr-expand", SR, 'if members, ok := SurfaceFamilyMembers(surface); ok {', 'if members, ok := SurfaceFamilyMembers(surface); ok && false {')
-m("sr-expand-one", SR, 'targets = members[:]', 'targets = members[:1]')
+m("sr-expand-one", SR, 'for _, target := range members {', 'for _, target := range members[:1] {')
 m("sr-action", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "ask", Layer: "session", Origin: "session"')
 m("sr-layer", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "allow", Layer: "config", Origin: "session"')
 m("sr-origin", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "allow", Layer: "session", Origin: "global"')
-m("sr-pattern", SR, 'Surface: target, Pattern: pattern,', 'Surface: target, Pattern: surface,')
+m("sr-pattern", SR, 'Surface: surface, Pattern: pattern,', 'Surface: surface, Pattern: surface,')
 m("sr-ruleset-copy", SR, 'return append(Ruleset{}, s.rules...)', 'return s.rules')
 m("sr-ruleset-nil", SR, 'return append(Ruleset{}, s.rules...)', 'return append(Ruleset(nil), s.rules...)')
-m("sr-record", SR, 'for _, g := range approval.Grants {\n\t\ts.Approve(g.Surface, g.Pattern)', 'for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.Approve(g.Surface, g.Pattern)')
-m("sr-record-surface", SR, 's.Approve(g.Surface, g.Pattern)', 's.Approve(SurfaceFamilyOf(g.Surface), g.Pattern)')
+m("sr-record", SR, 'for _, g := range approval.Grants {\n\t\ts.approveLocked(g.Surface, g.Pattern)', 'for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.approveLocked(g.Surface, g.Pattern)')
+m("sr-record-surface", SR, 's.approveLocked(g.Surface, g.Pattern)', 's.approveLocked(SurfaceFamilyOf(g.Surface), g.Pattern)')
 m("sr-clear", SR, 's.rules = nil\n\ts.mu.Unlock()', 's.mu.Unlock()')
 
 AG = "sessionapprovalgrant.go"

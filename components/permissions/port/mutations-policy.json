@@ -788,8 +788,8 @@
  {
   "name": "sr-expand-one",
   "file": "sessionrules.go",
-  "find": "targets = members[:]",
-  "replace": "targets = members[:1]"
+  "find": "for _, target := range members {",
+  "replace": "for _, target := range members[:1] {"
  },
  {
   "name": "sr-action",
@@ -812,8 +812,8 @@
  {
   "name": "sr-pattern",
   "file": "sessionrules.go",
-  "find": "Surface: target, Pattern: pattern,",
-  "replace": "Surface: target, Pattern: surface,"
+  "find": "Surface: surface, Pattern: pattern,",
+  "replace": "Surface: surface, Pattern: surface,"
  },
  {
   "name": "sr-ruleset-copy",
@@ -830,14 +830,14 @@
  {
   "name": "sr-record",
   "file": "sessionrules.go",
-  "find": "for _, g := range approval.Grants {\n\t\ts.Approve(g.Surface, g.Pattern)",
-  "replace": "for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.Approve(g.Surface, g.Pattern)"
+  "find": "for _, g := range approval.Grants {\n\t\ts.approveLocked(g.Surface, g.Pattern)",
+  "replace": "for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.approveLocked(g.Surface, g.Pattern)"
  },
  {
   "name": "sr-record-surface",
   "file": "sessionrules.go",
-  "find": "s.Approve(g.Surface, g.Pattern)",
-  "replace": "s.Approve(SurfaceFamilyOf(g.Surface), g.Pattern)"
+  "find": "s.approveLocked(g.Surface, g.Pattern)",
+  "replace": "s.approveLocked(SurfaceFamilyOf(g.Surface), g.Pattern)"
  },
  {
   "name": "sr-clear",
