@@ -1,0 +1,104 @@
+[
+ {
+  "name": "perf-widgets-switch",
+  "file": "core.go",
+  "find": "if perf.Widgets { //",
+  "replace": "if true { //"
+ },
+ {
+  "name": "perf-bash-widgets-switch",
+  "file": "core.go",
+  "find": "if perf.BashWidgets {",
+  "replace": "if true {"
+ },
+ {
+  "name": "perf-measure-widget-gate",
+  "file": "perf_ext.go",
+  "find": "if p.perf == nil || !p.perf.options.Enabled {\n\t\treturn render()",
+  "replace": "if true {\n\t\treturn render()"
+ },
+ {
+  "name": "perf-measure-context-gate",
+  "file": "perf_ext.go",
+  "find": "if p.perf == nil || !p.perf.options.Enabled {\n\t\treturn build()",
+  "replace": "if true {\n\t\treturn build()"
+ },
+ {
+  "name": "perf-widget-name",
+  "file": "perf_ext.go",
+  "find": "\"widget.\"+name",
+  "replace": "\"widget.\""
+ },
+ {
+  "name": "perf-reset",
+  "file": "perf_ext.go",
+  "find": "\t\ta.perf.reset()\n",
+  "replace": ""
+ },
+ {
+  "name": "perf-command-off",
+  "file": "perf_ext.go",
+  "find": "if !a.perf.options.Enabled {",
+  "replace": "if a.perf.options.Enabled {"
+ },
+ {
+  "name": "perf-input-total",
+  "file": "editor_ext.go",
+  "find": "\"input.total\"",
+  "replace": "\"input.totalx\""
+ },
+ {
+  "name": "perf-observe-draft",
+  "file": "editor_ext.go",
+  "find": "\t\te.perf.observeDraft(lines)\n",
+  "replace": ""
+ },
+ {
+  "name": "perf-render-total",
+  "file": "editor_ext.go",
+  "find": "\"editor.render.total\"",
+  "replace": "\"editor.render.totalx\""
+ },
+ {
+  "name": "perf-fast-hit",
+  "file": "editor_chrome.go",
+  "find": "\t\t\t\to.perf.count(\"editor.render.fast-hit\")\n",
+  "replace": ""
+ },
+ {
+  "name": "perf-fast-probe",
+  "file": "editor_chrome.go",
+  "find": "\"editor.render.fast-probe\"",
+  "replace": "\"editor.render.fast-probex\""
+ },
+ {
+  "name": "perf-chrome-switch",
+  "file": "editor_chrome.go",
+  "find": "\tif !o.chrome {",
+  "replace": "\tif o.chrome {"
+ },
+ {
+  "name": "perf-fast-switch",
+  "file": "editor_chrome.go",
+  "find": "\tif o.fast {",
+  "replace": "\tif !o.fast {"
+ },
+ {
+  "name": "perf-base-input",
+  "file": "perf_ext.go",
+  "find": "\"input.base-editor\"",
+  "replace": "\"input.base-editorx\""
+ },
+ {
+  "name": "perf-base-render",
+  "file": "perf_ext.go",
+  "find": "\"editor.render.base\"",
+  "replace": "\"editor.render.basex\""
+ },
+ {
+  "name": "perf-editor-wrap",
+  "file": "editor_ext.go",
+  "find": "\t\t\tpb = perfBase{base, perf}\n",
+  "replace": ""
+ }
+]
