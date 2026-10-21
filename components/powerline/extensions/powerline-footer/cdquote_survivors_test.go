@@ -86,7 +86,7 @@ func TestPickerTypingResetsTheSelectionToTheFirstMatch(t *testing.T) {
 	p := newQuotePicker(candidates, pickerPlainTheme{}, time.Now, nil, nil)
 	p.HandleInput("\x1b[B")
 	p.HandleInput("\x1b[B") // third candidate selected
-	p.HandleInput("m")       // every candidate still matches
+	p.HandleInput("m")      // every candidate still matches
 	selected, _ := p.HandleInput("\r")
 	if selected == nil || selected.ID != "c0" {
 		t.Errorf("Enter after typing chose %+v, want the first match c0", selected)
