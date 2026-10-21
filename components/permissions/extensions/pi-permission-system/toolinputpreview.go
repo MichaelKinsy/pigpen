@@ -1,0 +1,97 @@
+package pi_permission_system
+
+import (
+	"strings"
+	"unicode/utf8"
+)
+
+// Port of src/tool-input/tool-input-preview.ts: the inline text helpers and the serialization of a tool input for a prompt (shown
+// unredacted, so the approver sees what will run) and for the review log (sensitive-keyed values masked).
+
+// ToolInputPreviewMaxLength and ToolTextSummaryMaxLength are the built-in preview limits.
+const (
+	ToolInputPreviewMaxLength = 200
+	ToolTextSummaryMaxLength  = 80
+)
+
+// safeJSONStringify is the serializer the prompt preview delegates to (the original's imported safeJsonStringify); tests replace
+// it where the original's tests mock that module.
+var safeJSONStringify = SafeJSONStringify
+
+// TruncateInlineText is truncateInlineText: the text unchanged when it is at most maxLength UTF-16 units, else its first maxLength
+// units and an ellipsis.
+func TruncateInlineText(value string, maxLength float64) string {
+	n := utf16LenWTF(value)
+	if float64(n) <= maxLength {
+		return value
+	}
+	return toWellFormed(utf16Prefix(value, jsSliceEnd(maxLength, n)) + "\u2026")
+}
+
+// CountTextLines is countTextLines: 0 for an empty string, else the number of lines split on CRLF, CR or LF.
+func CountTextLines(value string) int {
+	if value == "" {
+		return 0
+	}
+	lines := 1
+	for i := 0; i < len(value); i++ {
+		switch value[i] {
+		case '\r':
+			if i+1 < len(value) && value[i+1] == '\n' {
+				i++
+			}
+			lines++
+		case '\n':
+			lines++
+		}
+	}
+	return lines
+}
+
+// FormatCount is formatCount: `1 line`, `0 lines`.
+func FormatCount(value int, singular, plural string) string {
+	word := plural
+	if value == 1 {
+		word = singular
+	}
+	return jsNumber(float64(value)) + " " + word
+}
+
+// SerializeToolInputPreview serializes tool input for display in a permission prompt, unredacted.
+func SerializeToolInputPreview(input any) string {
+	return normalizeSerializedPreview(safeJSONStringify(input))
+}
+
+// SerializeRedactedToolInputPreview serializes tool input for the review log, masking sensitive-keyed values. The log path needs
+// its own entry point because the input is flattened to a string here: by the time it reaches the writer its keys are gone.
+func SerializeRedactedToolInputPreview(input any) string {
+	return normalizeSerializedPreview(RedactedJSONStringify(input))
+}
+
+func normalizeSerializedPreview(serialized string, ok bool) string {
+	if !ok || serialized == "" || serialized == "{}" || serialized == "null" {
+		return ""
+	}
+	return jsTrim(collapseJSWhitespace(serialized))
+}
+
+// collapseJSWhitespace is s.replace(/\s+/g, " "): every run of JavaScript whitespace becomes one space.
+func collapseJSWhitespace(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	inSpace := false
+	for i := 0; i < len(s); {
+		r, size := utf8.DecodeRuneInString(s[i:])
+		if isJSSpace(r) {
+			if !inSpace {
+				b.WriteByte(' ')
+			}
+			inSpace = true
+		} else {
+			inSpace = false
+			b.WriteString(s[i : i+size])
+		}
+		i += size
+	}
+	return b.String()
+}

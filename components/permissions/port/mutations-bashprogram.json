@@ -1,0 +1,740 @@
+[
+ {
+  "name": "bashprogram-program-no-salvage-roots",
+  "file": "bashprogram.go",
+  "find": "roots := append([]*bashparse.Node{tree.Root}, salvaged...)",
+  "replace": "roots := []*bashparse.Node{tree.Root}"
+ },
+ {
+  "name": "bashprogram-program-no-salvaged-commands",
+  "file": "bashprogram.go",
+  "find": "units = append(units, bashanalysis.CollectSalvagedCommands(root, words)...)",
+  "replace": "_ = root"
+ },
+ {
+  "name": "bashprogram-program-salvaged-not-walked",
+  "file": "bashprogram.go",
+  "find": "Resolve(tree.Root, salvaged)",
+  "replace": "Resolve(tree.Root, nil)"
+ },
+ {
+  "name": "bashprogram-program-workdir-dropped",
+  "file": "bashprogram.go",
+  "find": "workdir = options.Workdir",
+  "replace": "workdir = nil"
+ },
+ {
+  "name": "bashprogram-program-commands-shared",
+  "file": "bashprogram.go",
+  "find": "return append([]BashCommand{}, p.commandUnits...)",
+  "replace": "return p.commandUnits"
+ },
+ {
+  "name": "bashprogram-program-externals-shared",
+  "file": "bashprogram.go",
+  "find": "return append([]BashExternalPath{}, p.externals...)",
+  "replace": "return p.externals"
+ },
+ {
+  "name": "bashprogram-program-candidates-shared",
+  "file": "bashprogram.go",
+  "find": "return append([]BashPathRuleCandidate{}, p.candidates...)",
+  "replace": "return p.candidates"
+ },
+ {
+  "name": "bashprogram-program-unparsed-keeps-text",
+  "file": "bashprogram.go",
+  "find": "return &BashProgram{sourceCommand: command}, nil\n\t}\n\tvar workdir",
+  "replace": "return &BashProgram{}, nil\n\t}\n\tvar workdir"
+ },
+ {
+  "name": "bashprogram-program-parser-error",
+  "file": "bashprogram.go",
+  "find": "if err != nil {\n\t\treturn nil, err\n\t}\n\ttree",
+  "replace": "if err != nil {\n\t\treturn &BashProgram{}, nil\n\t}\n\ttree"
+ },
+ {
+  "name": "bashprogram-resolve-no-seed",
+  "file": "bashpathresolver.go",
+  "find": "initialBase = r.deriveBaseFromCdTarget(cwdBase, *r.workdir)",
+  "replace": "initialBase = cwdBase"
+ },
+ {
+  "name": "bashprogram-resolve-salvage-known-base",
+  "file": "bashpathresolver.go",
+  "find": "r.walkForCandidates(salvaged, unknownBase, &collected)",
+  "replace": "r.walkForCandidates(salvaged, initialBase, &collected)"
+ },
+ {
+  "name": "bashprogram-resolve-rebound-home-kept",
+  "file": "bashpathresolver.go",
+  "find": "if !r.words.SpellsReboundHome(c.token) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "bashprogram-resolve-externals-skip-workdir",
+  "file": "bashpathresolver.go",
+  "find": "ExternalAccesses: r.withWorkdirExternal(r.projectExternalPaths(candidates)),",
+  "replace": "ExternalAccesses: r.projectExternalPaths(candidates),"
+ },
+ {
+  "name": "bashprogram-workdir-always-external",
+  "file": "bashpathresolver.go",
+  "find": "if !isExternal {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)",
+  "replace": "if false {\n\t\treturn append([]BashExternalPath{}, tokenExternals...)"
+ },
+ {
+  "name": "bashprogram-workdir-no-canonical-gate",
+  "file": "bashpathresolver.go",
+  "find": "canonical := wdPath.BoundaryValue()\n\tisExternal := true\n\tif canonical != \"\" {\n\t\tisExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(canonical)\n\t}\n",
+  "replace": "canonical := wdPath.BoundaryValue()\n\tisExternal := true\n"
+ },
+ {
+  "name": "bashprogram-workdir-literal-only-internal",
+  "file": "bashpathresolver.go",
+  "find": "canonical := wdPath.BoundaryValue()\n\tisExternal := true",
+  "replace": "canonical := wdPath.BoundaryValue()\n\tisExternal := false"
+ },
+ {
+  "name": "bashprogram-workdir-key-lexical",
+  "file": "bashpathresolver.go",
+  "find": "key := canonical\n\tif key == \"\" {\n\t\tkey = wdPath.Value()\n\t}\n\tfor",
+  "replace": "key := wdPath.Value()\n\tfor"
+ },
+ {
+  "name": "bashprogram-workdir-dedup-lexical",
+  "file": "bashpathresolver.go",
+  "find": "identity := e.Path.BoundaryValue()\n\t\tif identity == \"\" {\n\t\t\tidentity = e.Path.Value()\n\t\t}\n\t\tif identity == key {",
+  "replace": "if e.Path.Value() == key {"
+ },
+ {
+  "name": "bashprogram-workdir-no-dedup",
+  "file": "bashpathresolver.go",
+  "find": "if identity == key {\n\t\t\treturn",
+  "replace": "if false {\n\t\t\treturn"
+ },
+ {
+  "name": "bashprogram-workdir-effect-read",
+  "file": "bashpathresolver.go",
+  "find": "{Path: wdPath, Effect: UnprovenEffect}}",
+  "replace": "{Path: wdPath, Effect: TokenEffect{Effect: EffectRead, Source: SourceCore}}}"
+ },
+ {
+  "name": "bashprogram-workdir-appended",
+  "file": "bashpathresolver.go",
+  "find": "return append([]BashExternalPath{{Path: wdPath, Effect: UnprovenEffect}}, tokenExternals...)",
+  "replace": "return append(append([]BashExternalPath{}, tokenExternals...), BashExternalPath{Path: wdPath, Effect: UnprovenEffect})"
+ },
+ {
+  "name": "bashprogram-workdir-token-resolved",
+  "file": "bashpathresolver.go",
+  "find": "wdPath := r.normalizer.ForBashToken(*r.workdir, nil)",
+  "replace": "wdPath := r.normalizer.ForPath(*r.workdir, nil)"
+ },
+ {
+  "name": "bashprogram-walk-program-not-sequence",
+  "file": "bashpathresolver.go",
+  "find": "case \"program\", \"list\", \"redirected_statement\":",
+  "replace": "case \"program\", \"list\":"
+ },
+ {
+  "name": "bashprogram-walk-list-not-sequence",
+  "file": "bashpathresolver.go",
+  "find": "case \"program\", \"list\", \"redirected_statement\":",
+  "replace": "case \"program\", \"redirected_statement\":"
+ },
+ {
+  "name": "bashprogram-walk-command-no-fold",
+  "file": "bashpathresolver.go",
+  "find": "return r.foldCd(node, base)\n\tcase \"pipeline\":",
+  "replace": "return base\n\tcase \"pipeline\":"
+ },
+ {
+  "name": "bashprogram-walk-pipeline-default",
+  "file": "bashpathresolver.go",
+  "find": "return r.walkPipeline(node, base, out)\n\tcase \"subshell\":",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(node, r.words), base, out)\n\t\treturn base\n\tcase \"subshell\":"
+ },
+ {
+  "name": "bashprogram-walk-subshell-leaks",
+  "file": "bashpathresolver.go",
+  "find": "r.walkCurrentShellSequence(node, base, out)\n\t\treturn base\n\tcase \"compound_statement\":",
+  "replace": "return r.walkCurrentShellSequence(node, base, out)\n\tcase \"compound_statement\":"
+ },
+ {
+  "name": "bashprogram-walk-brace-group-isolated",
+  "file": "bashpathresolver.go",
+  "find": "// folded base.\n\t\treturn r.walkCurrentShellSequence(node, base, out)",
+  "replace": "// folded base.\n\t\tr.walkCurrentShellSequence(node, base, out)\n\t\treturn base"
+ },
+ {
+  "name": "bashprogram-walk-default-folds",
+  "file": "bashpathresolver.go",
+  "find": "tagTokens(bashanalysis.CollectPathCandidateTokens(node, r.words), base, out)\n\t\treturn base\n\t}\n}",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(node, r.words), base, out)\n\t\treturn r.foldCd(node, base)\n\t}\n}"
+ },
+ {
+  "name": "bashprogram-seq-unnamed-children",
+  "file": "bashpathresolver.go",
+  "find": "if !child.IsNamed() || bashparse.SkipSubtreeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tafter :=",
+  "replace": "if bashparse.SkipSubtreeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tafter :="
+ },
+ {
+  "name": "bashprogram-seq-skip-types",
+  "file": "bashpathresolver.go",
+  "find": "if !child.IsNamed() || bashparse.SkipSubtreeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tafter :=",
+  "replace": "if !child.IsNamed() {\n\t\t\tcontinue\n\t\t}\n\t\tafter :="
+ },
+ {
+  "name": "bashprogram-seq-background-folds",
+  "file": "bashpathresolver.go",
+  "find": "if !isBackgrounded(seqNode, i) {\n\t\t\tcurrent = after\n\t\t}",
+  "replace": "current = after"
+ },
+ {
+  "name": "bashprogram-seq-never-folds",
+  "file": "bashpathresolver.go",
+  "find": "if !isBackgrounded(seqNode, i) {\n\t\t\tcurrent = after\n\t\t}",
+  "replace": "_ = after"
+ },
+ {
+  "name": "bashprogram-background-named",
+  "file": "bashpathresolver.go",
+  "find": "if next == nil || next.IsNamed() {",
+  "replace": "if next == nil {"
+ },
+ {
+  "name": "bashprogram-background-operator",
+  "file": "bashpathresolver.go",
+  "find": "return next.Type() == \"&\"",
+  "replace": "return next.Type() == \"&&\""
+ },
+ {
+  "name": "bashprogram-pipeline-first-subshell",
+  "file": "bashpathresolver.go",
+  "find": "current = r.foldPipelineFirstStage(child, current, out)\n\t\t\tfirst = false",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), current, out)\n\t\t\tfirst = false"
+ },
+ {
+  "name": "bashprogram-pipeline-downstream-folds",
+  "file": "bashpathresolver.go",
+  "find": "// Downstream stage (after a `|`): subshell. Collect against the folded base, do not fold.\n\t\ttagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), current, out)",
+  "replace": "current = r.walkForCandidates(child, current, out)"
+ },
+ {
+  "name": "bashprogram-pipeline-downstream-base",
+  "file": "bashpathresolver.go",
+  "find": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), current, out)\n\t}\n\treturn current",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), base, out)\n\t}\n\treturn current"
+ },
+ {
+  "name": "bashprogram-pipeline-returns-input",
+  "file": "bashpathresolver.go",
+  "find": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), current, out)\n\t}\n\treturn current",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), current, out)\n\t}\n\treturn base"
+ },
+ {
+  "name": "bashprogram-pipeline-skip-types",
+  "file": "bashpathresolver.go",
+  "find": "func (r *BashPathResolver) walkPipeline(node *bashparse.Node, base effectiveBase, out *[]pathCandidate) effectiveBase {\n\tcurrent := base\n\tfirst := true\n\tfor i := range node.ChildCount() {\n\t\tchild := node.Child(i)\n\t\tif !child.IsNamed() || bashparse.SkipSubtreeTypes[child.Type()] {",
+  "replace": "func (r *BashPathResolver) walkPipeline(node *bashparse.Node, base effectiveBase, out *[]pathCandidate) effectiveBase {\n\tcurrent := base\n\tfirst := true\n\tfor i := range node.ChildCount() {\n\t\tchild := node.Child(i)\n\t\tif !child.IsNamed() {"
+ },
+ {
+  "name": "bashprogram-first-stage-list",
+  "file": "bashpathresolver.go",
+  "find": "if node.Type() == \"list\" {\n\t\treturn r.foldListExceptTerminal",
+  "replace": "if node.Type() == \"listx\" {\n\t\treturn r.foldListExceptTerminal"
+ },
+ {
+  "name": "bashprogram-first-stage-redirected",
+  "file": "bashpathresolver.go",
+  "find": "if node.Type() == \"redirected_statement\" {\n\t\tcurrent := base",
+  "replace": "if node.Type() == \"redirected_statementx\" {\n\t\tcurrent := base"
+ },
+ {
+  "name": "bashprogram-first-stage-redirect-fold",
+  "file": "bashpathresolver.go",
+  "find": "if child.Type() == \"file_redirect\" {",
+  "replace": "if child.Type() == \"file_redirectx\" {"
+ },
+ {
+  "name": "bashprogram-first-stage-redirect-unnamed",
+  "file": "bashpathresolver.go",
+  "find": "child := node.Child(i)\n\t\t\tif !child.IsNamed() {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tif child.Type() == \"file_redirect\"",
+  "replace": "child := node.Child(i)\n\t\t\tif child.Type() == \"file_redirect\""
+ },
+ {
+  "name": "bashprogram-first-stage-bare-folds",
+  "file": "bashpathresolver.go",
+  "find": "// Bare `command` or any other shape: a true subshell first stage.\n\ttagTokens(bashanalysis.CollectPathCandidateTokens(node, r.words), base, out)\n\treturn base",
+  "replace": "// Bare `command` or any other shape: a true subshell first stage.\n\ttagTokens(bashanalysis.CollectPathCandidateTokens(node, r.words), base, out)\n\treturn r.foldCd(node, base)"
+ },
+ {
+  "name": "bashprogram-list-terminal-folds",
+  "file": "bashpathresolver.go",
+  "find": "if i < len(namedChildren)-1 {",
+  "replace": "if i < len(namedChildren) {"
+ },
+ {
+  "name": "bashprogram-list-terminal-skipped",
+  "file": "bashpathresolver.go",
+  "find": "if i < len(namedChildren)-1 {",
+  "replace": "if i < len(namedChildren)-2 {"
+ },
+ {
+  "name": "bashprogram-list-skip-types",
+  "file": "bashpathresolver.go",
+  "find": "if child.IsNamed() && !bashparse.SkipSubtreeTypes[child.Type()] {\n\t\t\tnamedChildren",
+  "replace": "if child.IsNamed() {\n\t\t\tnamedChildren"
+ },
+ {
+  "name": "bashprogram-cd-name",
+  "file": "bashpathresolver.go",
+  "find": "name != \"cd\" {",
+  "replace": "name != \"cdx\" {"
+ },
+ {
+  "name": "bashprogram-cd-name-missing-folds",
+  "file": "bashpathresolver.go",
+  "find": "if name, ok := bashanalysis.ExtractCommandName(commandNode, r.words); !ok || name != \"cd\" {",
+  "replace": "if name, _ := bashanalysis.ExtractCommandName(commandNode, r.words); name != \"cd\" {"
+ },
+ {
+  "name": "bashprogram-cd-nonliteral-keeps-base",
+  "file": "bashpathresolver.go",
+  "find": "if !ok {\n\t\treturn unknownBase\n\t}\n\treturn r.deriveBaseFromCdTarget(base, target)",
+  "replace": "if !ok {\n\t\treturn base\n\t}\n\treturn r.deriveBaseFromCdTarget(base, target)"
+ },
+ {
+  "name": "bashprogram-cd-absolute-unknown",
+  "file": "bashpathresolver.go",
+  "find": "case \"absolute\":\n\t\treturn effectiveBase{known: true, offset: interpreted.Value}",
+  "replace": "case \"absolute\":\n\t\treturn unknownBase"
+ },
+ {
+  "name": "bashprogram-cd-absolute-joins",
+  "file": "bashpathresolver.go",
+  "find": "case \"absolute\":\n\t\treturn effectiveBase{known: true, offset: interpreted.Value}",
+  "replace": "case \"absolute\":\n\t\treturn effectiveBase{known: true, offset: r.normalizer.JoinBase(base.offset, interpreted.Value)}"
+ },
+ {
+  "name": "bashprogram-cd-relative-recovers",
+  "file": "bashpathresolver.go",
+  "find": "case \"relative\":\n\t\tif !base.known {\n\t\t\treturn unknownBase\n\t\t}",
+  "replace": "case \"relative\":\n\t\tif !base.known {\n\t\t\treturn effectiveBase{known: true, offset: target}\n\t\t}"
+ },
+ {
+  "name": "bashprogram-cd-relative-target",
+  "file": "bashpathresolver.go",
+  "find": "offset: r.normalizer.JoinBase(base.offset, target)}",
+  "replace": "offset: r.normalizer.JoinBase(base.offset, interpreted.Value)}"
+ },
+ {
+  "name": "bashprogram-cd-relative-replaces",
+  "file": "bashpathresolver.go",
+  "find": "offset: r.normalizer.JoinBase(base.offset, target)}",
+  "replace": "offset: target}"
+ },
+ {
+  "name": "bashprogram-cd-unknown-kind-known",
+  "file": "bashpathresolver.go",
+  "find": "\treturn unknownBase\n}\n\n// \u2500\u2500 Projection",
+  "replace": "\treturn base\n}\n\n// \u2500\u2500 Projection"
+ },
+ {
+  "name": "bashprogram-cd-prefix-types",
+  "file": "bashpathresolver.go",
+  "find": "if bashanalysis.CommandPrefixTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\t// A redirect",
+  "replace": "// A redirect"
+ },
+ {
+  "name": "bashprogram-cd-redirect-types",
+  "file": "bashpathresolver.go",
+  "find": "if bashparse.RedirectNodeTypes[child.Type()] {\n\t\t\tcontinue\n\t\t}\n\t\tif !child.IsNamed()",
+  "replace": "if !child.IsNamed()"
+ },
+ {
+  "name": "bashprogram-cd-unnamed-children",
+  "file": "bashpathresolver.go",
+  "find": "if !child.IsNamed() {\n\t\t\tcontinue\n\t\t}\n\t\t// Skip the `--`",
+  "replace": "// Skip the `--`"
+ },
+ {
+  "name": "bashprogram-cd-dashdash",
+  "file": "bashpathresolver.go",
+  "find": "if child.Type() == \"word\" && child.Text() == \"--\" {",
+  "replace": "if child.Type() == \"word\" && child.Text() == \"---\" {"
+ },
+ {
+  "name": "bashprogram-cd-arg-types",
+  "file": "bashpathresolver.go",
+  "find": "if !bashparse.ArgNodeTypes[child.Type()] {\n\t\t\treturn \"\", false\n\t\t}\n\t\treturn literalTextOf(child)",
+  "replace": "return literalTextOf(child)"
+ },
+ {
+  "name": "bashprogram-cd-no-target",
+  "file": "bashpathresolver.go",
+  "find": "\t\treturn literalTextOf(child)\n\t}\n\treturn \"\", false",
+  "replace": "\t\treturn literalTextOf(child)\n\t}\n\treturn \".\", true"
+ },
+ {
+  "name": "bashprogram-literal-dash",
+  "file": "bashpathresolver.go",
+  "find": "if text == \"-\" || strings.HasPrefix(text, \"~\") {",
+  "replace": "if strings.HasPrefix(text, \"~\") {"
+ },
+ {
+  "name": "bashprogram-literal-tilde",
+  "file": "bashpathresolver.go",
+  "find": "if text == \"-\" || strings.HasPrefix(text, \"~\") {",
+  "replace": "if text == \"-\" {"
+ },
+ {
+  "name": "bashprogram-literal-raw-strip",
+  "file": "bashpathresolver.go",
+  "find": "return text[1 : len(text)-1], true",
+  "replace": "return text, true"
+ },
+ {
+  "name": "bashprogram-literal-raw-length",
+  "file": "bashpathresolver.go",
+  "find": "if len(text) >= 2 && strings.HasPrefix(text, \"'\") && strings.HasSuffix(text, \"'\") {",
+  "replace": "if len(text) >= 1 && strings.HasPrefix(text, \"'\") && strings.HasSuffix(text, \"'\") {"
+ },
+ {
+  "name": "bashprogram-literal-raw-suffix",
+  "file": "bashpathresolver.go",
+  "find": "strings.HasPrefix(text, \"'\") && strings.HasSuffix(text, \"'\") {",
+  "replace": "strings.HasPrefix(text, \"'\") {"
+ },
+ {
+  "name": "bashprogram-literal-concat-null",
+  "file": "bashpathresolver.go",
+  "find": "part, ok := literalTextOf(child)\n\t\t\tif !ok {\n\t\t\t\treturn \"\", false\n\t\t\t}",
+  "replace": "part, _ := literalTextOf(child)"
+ },
+ {
+  "name": "bashprogram-literal-string-quote",
+  "file": "bashpathresolver.go",
+  "find": "if child.Type() == `\"` {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashprogram-literal-string-content",
+  "file": "bashpathresolver.go",
+  "find": "if child.Type() != \"string_content\" {\n\t\t\t\treturn \"\", false\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashprogram-literal-default",
+  "file": "bashpathresolver.go",
+  "find": "result.WriteString(child.Text())\n\t\t}\n\t\treturn result.String(), true\n\t}\n\treturn \"\", false\n}",
+  "replace": "result.WriteString(child.Text())\n\t\t}\n\t\treturn result.String(), true\n\t}\n\treturn node.Text(), true\n}"
+ },
+ {
+  "name": "bashprogram-ext-role-admits",
+  "file": "bashpathresolver.go",
+  "find": "func admittedByRole(role bashanalysis.TokenRole) bool {\n\treturn role == bashanalysis.RoleRedirectDestination",
+  "replace": "func admittedByRole(role bashanalysis.TokenRole) bool {\n\treturn false"
+ },
+ {
+  "name": "bashprogram-ext-role-all",
+  "file": "bashpathresolver.go",
+  "find": "return role == bashanalysis.RoleRedirectDestination",
+  "replace": "return role != bashanalysis.RoleOperand || true"
+ },
+ {
+  "name": "bashprogram-ext-strict-classifier",
+  "file": "bashpathresolver.go",
+  "find": "candidate, _ = bashanalysis.ClassifyTokenAsPathCandidate(c.token)",
+  "replace": "candidate, _ = bashanalysis.ClassifyTokenAsRuleCandidate(c.token, r.normalizer.Flavor)"
+ },
+ {
+  "name": "bashprogram-ext-empty-candidate",
+  "file": "bashpathresolver.go",
+  "find": "// JavaScript's `!candidate`: null and the empty string alike.\n\t\tif candidate == \"\" {",
+  "replace": "// JavaScript's `!candidate`: null and the empty string alike.\n\t\tif false {"
+ },
+ {
+  "name": "bashprogram-ext-no-probe",
+  "file": "bashpathresolver.go",
+  "find": "if probed := r.probeBareToken(c.token, c.base); probed != nil {\n\t\t\t\tr.collectIfExternal",
+  "replace": "if probed := r.probeBareToken(c.token, c.base); probed != nil && false {\n\t\t\t\tr.collectIfExternal"
+ },
+ {
+  "name": "bashprogram-ext-probe-effect",
+  "file": "bashpathresolver.go",
+  "find": "r.collectIfExternal(probed.path, c.effect, seen, &externalPaths)",
+  "replace": "r.collectIfExternal(probed.path, UnprovenEffect, seen, &externalPaths)"
+ },
+ {
+  "name": "bashprogram-ext-unknown-relative",
+  "file": "bashpathresolver.go",
+  "find": "if !c.base.known && r.isRelativeCandidate(candidate) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "bashprogram-ext-unknown-all",
+  "file": "bashpathresolver.go",
+  "find": "if !c.base.known && r.isRelativeCandidate(candidate) {",
+  "replace": "if !c.base.known {"
+ },
+ {
+  "name": "bashprogram-ext-unknown-safe",
+  "file": "bashpathresolver.go",
+  "find": "if canonical != \"\" && !IsSafeSystemPath(canonical) {",
+  "replace": "if canonical != \"\" {"
+ },
+ {
+  "name": "bashprogram-ext-unknown-no-canonical",
+  "file": "bashpathresolver.go",
+  "find": "if canonical != \"\" && !IsSafeSystemPath(canonical) {",
+  "replace": "if !IsSafeSystemPath(canonical) {"
+ },
+ {
+  "name": "bashprogram-ext-unknown-forliteral",
+  "file": "bashpathresolver.go",
+  "find": "accessPath := r.normalizer.ForPath(candidate, nil)\n\t\t\tcanonical",
+  "replace": "accessPath := r.normalizer.ForLiteral(candidate)\n\t\t\tcanonical"
+ },
+ {
+  "name": "bashprogram-ext-unknown-key",
+  "file": "bashpathresolver.go",
+  "find": "recordExternal(accessPath, c.effect, canonical, seen, &externalPaths)",
+  "replace": "recordExternal(accessPath, c.effect, accessPath.Value(), seen, &externalPaths)"
+ },
+ {
+  "name": "bashprogram-ext-base-ignored",
+  "file": "bashpathresolver.go",
+  "find": "if c.base.known {\n\t\t\trb := r.normalizer.ResolveBase(c.base.offset)\n\t\t\tresolveBase = &rb\n\t\t}\n\t\tr.collectIfExternal",
+  "replace": "r.collectIfExternal"
+ },
+ {
+  "name": "bashprogram-ext-base-bash-token",
+  "file": "bashpathresolver.go",
+  "find": "r.collectIfExternal(r.normalizer.ForBashToken(candidate, resolveBase), c.effect, seen, &externalPaths)",
+  "replace": "r.collectIfExternal(r.normalizer.ForPath(candidate, resolveBase), c.effect, seen, &externalPaths)"
+ },
+ {
+  "name": "bashprogram-ext-lexical-empty",
+  "file": "bashpathresolver.go",
+  "find": "lexical := accessPath.Value()\n\tif lexical == \"\" {\n\t\treturn\n\t}",
+  "replace": "lexical := accessPath.Value()"
+ },
+ {
+  "name": "bashprogram-ext-literal-internal",
+  "file": "bashpathresolver.go",
+  "find": "isExternal := true\n\tif canonical != \"\" {\n\t\tisExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(canonical)\n\t}\n\tif !isExternal {\n\t\treturn\n\t}\n\tkey",
+  "replace": "isExternal := false\n\tif canonical != \"\" {\n\t\tisExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(canonical)\n\t}\n\tif !isExternal {\n\t\treturn\n\t}\n\tkey"
+ },
+ {
+  "name": "bashprogram-ext-boundary-lexical",
+  "file": "bashpathresolver.go",
+  "find": "isExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(canonical)\n\t}\n\tif !isExternal {\n\t\treturn\n\t}\n\tkey",
+  "replace": "isExternal = r.normalizer.IsBoundaryOutsideWorkingDirectory(lexical)\n\t}\n\tif !isExternal {\n\t\treturn\n\t}\n\tkey"
+ },
+ {
+  "name": "bashprogram-ext-key-lexical",
+  "file": "bashpathresolver.go",
+  "find": "key := canonical\n\tif key == \"\" {\n\t\tkey = lexical\n\t}\n\trecordExternal",
+  "replace": "key := lexical\n\trecordExternal"
+ },
+ {
+  "name": "bashprogram-ext-key-canonical-only",
+  "file": "bashpathresolver.go",
+  "find": "key := canonical\n\tif key == \"\" {\n\t\tkey = lexical\n\t}\n\trecordExternal",
+  "replace": "key := canonical\n\trecordExternal"
+ },
+ {
+  "name": "bashprogram-ext-record-no-merge",
+  "file": "bashpathresolver.go",
+  "find": "(*out)[index] = BashExternalPath{Path: existing.Path, Effect: MergeTokenEffects(existing.Effect, effect)}",
+  "replace": "(*out)[index] = BashExternalPath{Path: existing.Path, Effect: effect}"
+ },
+ {
+  "name": "bashprogram-ext-record-keeps-new-path",
+  "file": "bashpathresolver.go",
+  "find": "(*out)[index] = BashExternalPath{Path: existing.Path, Effect: MergeTokenEffects(existing.Effect, effect)}",
+  "replace": "(*out)[index] = BashExternalPath{Path: accessPath, Effect: MergeTokenEffects(existing.Effect, effect)}"
+ },
+ {
+  "name": "bashprogram-ext-record-duplicates",
+  "file": "bashpathresolver.go",
+  "find": "index, found := seen[dedupKey]\n\tif !found {",
+  "replace": "index, found := seen[dedupKey]\n\tif !found || true {"
+ },
+ {
+  "name": "bashprogram-rule-role-ignored",
+  "file": "bashpathresolver.go",
+  "find": "shaped, ok := c.token, true\n\t\tif !admittedByRole(c.role) {",
+  "replace": "shaped, ok := c.token, true\n\t\tif true {"
+ },
+ {
+  "name": "bashprogram-rule-strict-classifier",
+  "file": "bashpathresolver.go",
+  "find": "shaped, ok = bashanalysis.ClassifyTokenAsRuleCandidate(c.token, r.normalizer.Flavor)",
+  "replace": "shaped, ok = bashanalysis.ClassifyTokenAsPathCandidate(c.token)"
+ },
+ {
+  "name": "bashprogram-rule-posix-flavor",
+  "file": "bashpathresolver.go",
+  "find": "ClassifyTokenAsRuleCandidate(c.token, r.normalizer.Flavor)",
+  "replace": "ClassifyTokenAsRuleCandidate(c.token, PosixPathFlavor)"
+ },
+ {
+  "name": "bashprogram-rule-no-probe",
+  "file": "bashpathresolver.go",
+  "find": "if !ok {\n\t\t\tprobed = r.probeBareToken(c.token, c.base)",
+  "replace": "if !ok {\n\t\t\tprobed = nil"
+ },
+ {
+  "name": "bashprogram-rule-probe-token",
+  "file": "bashpathresolver.go",
+  "find": "probed = &probedToken{token: shaped, path: r.buildRuleCandidatePath(shaped, c.base)}",
+  "replace": "probed = &probedToken{token: c.token, path: r.buildRuleCandidatePath(shaped, c.base)}"
+ },
+ {
+  "name": "bashprogram-rule-empty-values",
+  "file": "bashpathresolver.go",
+  "find": "if len(matchValues) == 0 {\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "bashprogram-rule-key-separator",
+  "file": "bashpathresolver.go",
+  "find": "key := strings.Join(matchValues, \"\\x00\")",
+  "replace": "key := strings.Join(matchValues, \"\")"
+ },
+ {
+  "name": "bashprogram-rule-key-first",
+  "file": "bashpathresolver.go",
+  "find": "key := strings.Join(matchValues, \"\\x00\")",
+  "replace": "key := matchValues[0]"
+ },
+ {
+  "name": "bashprogram-rule-no-merge",
+  "file": "bashpathresolver.go",
+  "find": "result[index].Effect = MergeTokenEffects(result[index].Effect, c.effect)",
+  "replace": "result[index].Effect = c.effect"
+ },
+ {
+  "name": "bashprogram-rule-merge-keeps-first",
+  "file": "bashpathresolver.go",
+  "find": "result[index].Effect = MergeTokenEffects(result[index].Effect, c.effect)",
+  "replace": "_ = index"
+ },
+ {
+  "name": "bashprogram-rule-no-dedup",
+  "file": "bashpathresolver.go",
+  "find": "if index, found := seen[key]; found {",
+  "replace": "if index, found := seen[key]; found && false {"
+ },
+ {
+  "name": "bashprogram-rule-effect-dropped",
+  "file": "bashpathresolver.go",
+  "find": "result = append(result, BashPathRuleCandidate{Token: probed.token, Path: probed.path, Effect: c.effect})",
+  "replace": "result = append(result, BashPathRuleCandidate{Token: probed.token, Path: probed.path, Effect: UnprovenEffect})"
+ },
+ {
+  "name": "bashprogram-probe-shape",
+  "file": "bashpathresolver.go",
+  "find": "bare, ok := bashanalysis.ClassifyBareTokenCandidate(token)\n\tif !ok || !base.known {",
+  "replace": "bare, ok := token, true\n\tif !ok || !base.known {"
+ },
+ {
+  "name": "bashprogram-probe-unknown-base",
+  "file": "bashpathresolver.go",
+  "find": "if !ok || !base.known {\n\t\treturn nil\n\t}\n\trb",
+  "replace": "if !ok {\n\t\treturn nil\n\t}\n\trb"
+ },
+ {
+  "name": "bashprogram-probe-base-ignored",
+  "file": "bashpathresolver.go",
+  "find": "rb := r.normalizer.ResolveBase(base.offset)\n\tpath := r.normalizer.ForBashToken(bare, &rb)",
+  "replace": "path := r.normalizer.ForBashToken(bare, nil)"
+ },
+ {
+  "name": "bashprogram-probe-exists",
+  "file": "bashpathresolver.go",
+  "find": "if lexical == \"\" || !r.normalizer.EntryExists(lexical) {",
+  "replace": "if lexical == \"\" {"
+ },
+ {
+  "name": "bashprogram-probe-lexical",
+  "file": "bashpathresolver.go",
+  "find": "if lexical == \"\" || !r.normalizer.EntryExists(lexical) {",
+  "replace": "if lexical == \"\" || !r.normalizer.EntryExists(path.BoundaryValue()) {"
+ },
+ {
+  "name": "bashprogram-probe-returns-token",
+  "file": "bashpathresolver.go",
+  "find": "return &probedToken{token: bare, path: path}",
+  "replace": "return &probedToken{token: token + \"x\", path: path}"
+ },
+ {
+  "name": "bashprogram-rulepath-unknown-literal",
+  "file": "bashpathresolver.go",
+  "find": "if !base.known && r.isRelativeCandidate(candidate) {\n\t\treturn r.normalizer.ForLiteral(NormalizePathPolicyLiteral(candidate))",
+  "replace": "if !base.known && r.isRelativeCandidate(candidate) {\n\t\treturn r.normalizer.ForPath(candidate, nil)"
+ },
+ {
+  "name": "bashprogram-rulepath-unknown-unnormalized",
+  "file": "bashpathresolver.go",
+  "find": "return r.normalizer.ForLiteral(NormalizePathPolicyLiteral(candidate))",
+  "replace": "return r.normalizer.ForLiteral(candidate)"
+ },
+ {
+  "name": "bashprogram-rulepath-unknown-all",
+  "file": "bashpathresolver.go",
+  "find": "if !base.known && r.isRelativeCandidate(candidate) {\n\t\treturn r.normalizer.ForLiteral",
+  "replace": "if !base.known {\n\t\treturn r.normalizer.ForLiteral"
+ },
+ {
+  "name": "bashprogram-rulepath-base",
+  "file": "bashpathresolver.go",
+  "find": "var resolveBase *string\n\tif base.known {\n\t\trb := r.normalizer.ResolveBase(base.offset)\n\t\tresolveBase = &rb\n\t}\n\treturn r.normalizer.ForBashToken(candidate, resolveBase)",
+  "replace": "return r.normalizer.ForBashToken(candidate, nil)"
+ },
+ {
+  "name": "bashprogram-rulepath-bash-token",
+  "file": "bashpathresolver.go",
+  "find": "return r.normalizer.ForBashToken(candidate, resolveBase)\n}",
+  "replace": "return r.normalizer.ForPath(candidate, resolveBase)\n}"
+ },
+ {
+  "name": "bashprogram-relative-absolute",
+  "file": "bashpathresolver.go",
+  "find": "return !r.normalizer.IsAbsolute(candidate) && !strings.HasPrefix(candidate, \"~\")",
+  "replace": "return !strings.HasPrefix(candidate, \"/\") && !strings.HasPrefix(candidate, \"~\")"
+ },
+ {
+  "name": "bashprogram-relative-home",
+  "file": "bashpathresolver.go",
+  "find": "return !r.normalizer.IsAbsolute(candidate) && !strings.HasPrefix(candidate, \"~\")",
+  "replace": "return !r.normalizer.IsAbsolute(candidate)"
+ },
+ {
+  "name": "bashprogram-tag-effect",
+  "file": "bashpathresolver.go",
+  "find": "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}",
+  "replace": "pathCandidate{token: t.Token, base: base, effect: UnprovenEffect, role: t.Role}"
+ },
+ {
+  "name": "bashprogram-tag-role",
+  "file": "bashpathresolver.go",
+  "find": "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}",
+  "replace": "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: bashanalysis.RoleOperand}"
+ },
+ {
+  "name": "bashprogram-tag-base",
+  "file": "bashpathresolver.go",
+  "find": "pathCandidate{token: t.Token, base: base, effect: t.Effect, role: t.Role}",
+  "replace": "pathCandidate{token: t.Token, base: cwdBase, effect: t.Effect, role: t.Role}"
+ },
+ {
+  "name": "bashprogram-pipe-redirect-collector",
+  "file": "bashpathresolver.go",
+  "find": "tagTokens(bashanalysis.CollectRedirectTokens(child, r.words), current, out)\n\t\t\t\tcontinue",
+  "replace": "tagTokens(bashanalysis.CollectPathCandidateTokens(child, r.words), base, out)\n\t\t\t\tcontinue"
+ }
+]

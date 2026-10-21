@@ -70,8 +70,8 @@ against the original without a person: the rules and the tool gate for what they
 
 **Not ported at all:** the project and agent scopes of the permission policy itself (the config system reads them, see "The config
 system" below; the policy that consumes `FilePolicyLoader` is the policy lane's), session approvals and rules, the review and debug logs, forwarding and subagent authority,
-the cross-extension service, removing denied skills from the system prompt (`withoutDeniedSkills`: a denied
-skill stays listed, and its files are not gated by the skill-read gate, as in the original). A file that does not parse warns with the original's text, V8's JSON.parse message included. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
+the cross-extension service. (`withoutDeniedSkills` is ported as a function, see "Presentation" below; the root gate does not call it yet: a denied
+skill stays listed, and its files are not gated by the skill-read gate, as in the original.) A file that does not parse warns with the original's text, V8's JSON.parse message included. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
 name (or the `*` fallback), not by the bash rules; deny it, or name it in `shellTools`, which makes the port refuse it.
 
 ## Mapping
@@ -91,6 +91,8 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M9 | `handlers/gates/skill-read.ts`, `exposure/skill-prompt-sanitizer.ts` (parsing, visibility, path match) | `skills.go` | 15 twins; `skills_test.go`; `adapter_test.go` |
 | M10 | `access-intent/bash/{command-enumeration,wrapper-analysis,command-effects,bash-arity,sed-invocation,awk-invocation,sync-commands,token-classification,token-collection}.ts` | `bashanalysis/` (subpackage; reads trees through `bashparse/`; `wrapper-analysis.ts` moves here from M7's `bash.go` once the lead swaps callers; `path/path-flavor.ts`'s `hasPathSeparator` is a minimal copy for the classifiers) | 298 twins in 9 ledger files; 42,038 recorded inputs compared field by field with the original (`bashanalysis/differential_test.go`, `port/bashanalysis-diff/`); `bashanalysis/extras_test.go`; 383 mutations (`port/gen-mutations-bashanalysis.py`) |
 | M11 | `logging/*` (debug and review JSONL writers, redaction, field cap, JSON-safe stringify, file modes, session logger, decision audit and reporter, command masking), `presentation/review-log-renderer.ts`, `presentation/fact-vocabulary.ts`, `handlers/tool-call-boundary.ts` | `logjsonsafe.go`, `logredaction.go`, `logfieldcap.go`, `logperms.go`, `logging.go`, `sessionlogger.go`, `decisionaudit.go`, `decisionreporter.go`, `permissionevents.go`, `commandredaction.go`, `reviewlogrenderer.go`, `factvocabulary.go`, `toolcallboundary.go` (lane-local stand-ins in `logging_deps.go`) | 135 twins (`logging/*`, the two presentation files, `handlers/tool-call-boundary`); the differential `testdata/logging-oracle.json` |
+| M12 | `policy/{permission-manager,permission-resolver,permission-gate,synthesize}.ts`, `session/{active-agent,approval-grant,session-approval,session-approval-recorder,session-identity,session-rules,permission-session}.ts` | `permissionmanager.go`, `permissionresolver.go`, `permissiongate.go`, `synthesize.go`, `sessionactiveagent.go`, `sessionapprovalgrant.go`, `sessionapproval.go`, `sessionrules.go`, `sessionpermission.go` (the rest of `policy/*` is M2) | 411 twins in 12 ledger files; `manager_oracle_test.go` (191 worlds, 10,934 recorded comparisons; 4,003 prompts and 602 entry lists for the active agent); `mutations-policy.json` |
+| M12 | `access-intent/bash/{program,bash-path-resolver}.ts` (`BashProgram`, `BashPathResolver`: command units, external accesses and path-rule candidates from one parse), the wrapper tables of M7 | `bashprogram.go`, `bashpathresolver.go` (root package: they need `PathNormalizer` and `AccessPath`); `bash.go`'s `classifyWrapperWords` now calls `bashanalysis.ClassifyWrapperWords` | 275 twins in 2 ledger files (`bashprogram_test.go`, `bashprogram_external_test.go`); 83,300 recorded inputs under 7 path configurations compared field by field (`bashprogram_oracle_test.go`, `port/bashprogram-diff/`); 123 mutations (`port/gen-mutations-bashprogram.py`) |
 
 ## Process: what was written before its tests
 
@@ -423,3 +425,330 @@ the first branch where it broke: `surface-path` and `surface-options-only-path` 
 (`schema-proto` and `schema-proto-validate`; `skill-reset` and `skill-reset-discover`), and `icu-accent-case` is new. The one
 that survived, `skill-reset-discover` (a resources reload forgetting the listed skills), got a test in `TestAdapterSkillRead`. The
 static check is `python3 checkfinds.py` over every list: each `find` occurs once in its file.
+
+## Approval dialog and authorizer chain (lane `authority`: `src/authority`, the approval-dialog half)
+
+Lane `authority` (branch `perm-authority-1`). The original asks a human with an inline `ctx.ui.custom` dialog (or `select`/`input` outside
+the TUI), serializes those dialogs, runs the operator's `authorizerChain` before the terminal authorizer, and a subagent escalates to
+its parent. This lane ports that whole half as library code in the module root (`auth_*.go`, `uiprompt.go`); `Extension()` does not
+call it yet (the gate lane wires it), so the root gate still refuses what it cannot read. It replaces the authority stand-ins of
+`fwd_stub_authority.go` (decision source, decision resolution, prompt decision, `AskEscalator`, authorizer types) in the same
+commit; the forwarding twins pass unchanged.
+
+| ID | Original (`src/authority/`) | Go | Checked by |
+|---|---|---|---|
+| A1 | `decision-source.ts`, `decision-resolution.ts` | `auth_decision_source.go`, `auth_resolution.go` | 10 + 18 twins; the forwarding differential |
+| A2 | `permission-dialog.ts` | `auth_permission_dialog.go` | 31 twins; the differential (975 scripted answers) |
+| A3 | `permission-prompt-decision.ts` | `auth_prompt_model.go` | 32 twins; the differential (7,200 event sequences, 16 configs) |
+| A4 | `permission-prompt-component.ts`, `bracketed-paste.ts`, pi-tui `Input` | `auth_prompt_component.go`, `auth_input.go`, `auth_bracketed_paste.go` | 39 + 8 twins; the differential (368 key-sequence scenarios, every frame at two widths, byte for byte: 0 differences) |
+| A5 | `authorizer.ts`, `denying-authorizer.ts`, `authorizer-chain.ts`, `authorizer-chain-audit.ts`, `authorizer-registry.ts`, `authorizer-selection.ts` | `auth_authorizer.go`, `auth_chain.go`, `auth_chain_audit.go`, `auth_registry.go`, `auth_selection.go` | 15 + 2 + 7 + 8 + 12 + 34 twins; the differential (940 chains, 72 selections: 0 differences) |
+| A6 | `local-user-authorizer.ts`, `ask-dialog-queue.ts`, `permission-prompter.ts` | `auth_local_user.go`, `auth_queue.go`, `auth_prompter.go` | 24 + 8 + 17 twins; the differential (458 asks, 180 review entries) |
+| A7 | `approval-escalator.ts` (`ParentAuthorizer`) | `auth_escalator.go` | 26 twins on the real filesystem and clock |
+| A8 | `service/permission-ui-prompt.ts`, the `permissions:ui_prompt` half of `service/permission-events.ts` | `uiprompt.go` | 8 + 3 twins; the differential (96 events) |
+| A9 | the host seam of `ctx.ui.custom` | `auth_sdk_ui.go` (a `sdk.RemoteComponent` over `Context.Custom`) | `auth_sdk_ui_test.go` |
+
+**Twins:** `pigeq twins check --files <the 16 authority files and service/permission-ui-prompt> --deferred port/slices.json`: 299 exact
+twins, 0 skips; the 16 `authority/*` entries and `service/permission-ui-prompt` are removed from `port/slices.json`, and
+`service/permission-events` is narrowed (its `ui_prompt` cases are twinned, the ready and decision halves are not). The `it.each` rows
+with a `%s` title (malformed decision sources, "returns a %s source unchanged") run as plain subtests.
+
+**Differential against the original's own modules, recorded: 10,613 cases, 0 unexplained differences** (`port/probe/gen-authority-cases.py` makes `testdata/authority-cases.json`;
+`port/record-authority-probe.sh` runs `port/probe/authority-probe.test.ts` inside an installed copy of the oracle and writes
+`testdata/authority_oracle.json`; `auth_oracle_test.go` replays it): the dialog model, the `select`/`input` fallback, the chain, the
+bracketed-paste collapse, `LocalUserAuthorizer` (the `permissions:ui_prompt` event, the notice, the request options), the prompter's
+review entries, `selectAuthorizer`, `buildUiPrompt`, `requestPermissionDecision`'s fallback, and the inline component under key
+sequences: for each key, the rendered lines at widths 30 and 80 (a tag theme marks every colored span with its token), the render
+requests, the tool-expansion toggles, the terminal writes and the decision. The sequences include the decision keys under every key
+set, uppercase, control and alt chords, Kitty CSI-u presses, shifted presses and releases, bracketed pastes (stray, multi-line,
+partial), and the reason editor's keys (cursor, word, kill, yank, undo, wide and combining characters, a paste longer than the row).
+
+**Mutations:** `port/gen-mutations-authority.py` writes `port/mutations-authority.json` (287 mutations, one per behaviour); run
+`pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-authority.json`.
+
+### How the original's promises and callbacks map
+
+- A promise is a blocking call. `AskDialogQueue` hands out an `AdmittedAsk` (admission order is the call order) whose `Wait` blocks;
+  `ReleaseAll` settles every outstanding ask with its own released value, a stale presentation that returns after its release is
+  discarded, and a panicking presentation rejects only its own ask.
+- `ctx.ui.custom(factory)` is `PermissionPromptUi.Custom(factory, options)`: the factory receives the same four things (the TUI's
+  render request and terminal write, the theme, the keybindings, `done`) and the call blocks until `done`. A dialog the host closed
+  without a decision is an error (`errDialogClosed`), never an approval; the gate turns an error into a block.
+- Every host effect of the component (render request, tool-expansion toggle, terminal write) runs outside its lock, and `Render` is a
+  pure function of the state (no host call): a host that repaints synchronously from the render request cannot deadlock.
+- `UnattributedDecision` is a type of its own (the original's `Omit<PermissionPromptDecision, "decidedBy">`): a producer that only
+  states an outcome cannot be handed on as a decided one, so the "decider is never missing" guarantee is the compiler's, as in TypeScript.
+
+### Differences from the original
+
+- A chain link's error (the original's rejected promise) is returned as an error and decides nothing: the chain stops, no later link and
+  not the terminal runs, nothing is allowed. The original's `undefined` verdict throws a `TypeError` that rejects the ask; the port's zero
+  verdict (`Kind` empty) is an error too (fixed in this lane; it used to defer). Both are in the differential (140 chains with links that
+  reject or answer undefined: same consulted links, terminal not run, ask rejected). The gate propagates the rejection in both.
+- `AuthorizerRegistry`'s disposer is guarded by the registration, not by the function value, because Go functions are not comparable
+  (a code-pointer compare would evict another closure's registration, which the original does not). They agree whenever the later
+  registration is a different function (differential case 1). Registering the same function again and calling the first disposer a second
+  time evicts it in the original (recorded, case 2) and not here; that is the guard's documented intent ("a stale call cannot evict a
+  later registration"), cannot be reproduced exactly, and only ever leaves a registered link in place (the operator's chain still names it).
+- The oracle's installed pi-tui (1.0.0) writes the reason editor's cursor as `ESC[7m..ESC[27m`; the pinned Pi's `Input` writes the
+  fake-cursor APC markers its TUI resolves to the same bytes (the PiG host resolves them too). The replay resolves the port's frame with
+  `widthx.ResolveFakeCursors` before comparing, so the comparison is exact otherwise.
+- The component asks the host for as many repaints as the original has `requestRender` calls (a reason-editor callback plus the keystroke:
+  two). Found by the differential (57 scenarios), fixed.
+- `PromptPermissionDetails.Surface` and `.Value` are `*string`: an explicit `null` display override on a direct ask (the original
+  distinguishes it from "derive") is not representable. No producer sets it: the serving node builds details with no tool, command,
+  path, target or skill name, so deriving yields the same `null`. Recorded by the differential's excluded corpus.
+- `AuthorizerSelection.Activate` returns the error of a failing subagent detection (a session-directory read) instead of throwing, and
+  stores no selection then.
+- The original's `Input` reads pi-tui's global keybindings manager on every key; so does `LineInput` (`tui.GetKeybindings`). A host
+  adapter that wants the user's keybinding overrides must `tui.SetKeybindings` once.
+- pi-tui has no Go counterpart for `Input` (pitui ports the `Editor` only), so `LineInput` (`auth_input.go`) is a port of `input.ts`
+  from the pinned Pi over pitui's kill ring, key matcher, word navigation and width helpers; its mouse handler is not ported (the dialog
+  never routes a mouse event to it).
+
+### SDK gaps (reported to the Tern lead, not worked around)
+
+- `tui.terminal.write` (the prompt notification's raw bytes: bell, OSC 9, OSC 777): the SDK has no terminal write. `NewSDKPromptUi`
+  takes an optional `write` callback; with `nil` the notification is dropped. The gate lane must refuse a configured
+  `promptNotifications` until the SDK has it, or take the gap.
+- The host's `KeybindingsManager.matches` (the `app.tools.expand` action and pi-tui's global manager with the user's overrides): the
+  adapter takes a `tui.Keybindings`; the caller builds it from `<agent dir>/keybindings.json` as the questionnaire does.
+- `ctx.ui.custom`'s theme is `Context.UITheme()` (present), its `tui.requestRender` is the remote component's invalidation callback
+  (present).
+
+### Findings
+
+- The differential (recorded on imladris from the unmodified original, replayed by `auth_oracle_test.go`) found three things, all fixed or explained above: the repaint count, the fake-cursor representation, and a harness ordering bug of the replay itself. The default focus is identical: in all 368 scenarios the original's first frame highlights `Yes` (approve), and the 9 scenarios whose first key is Enter all approve in the original (4 with double-press on); the port's frames and decisions are equal.
+- Inherited from the original, by design: the decision step opens with `approve` highlighted and Enter confirms the highlight in one
+  press even with double-press confirmation on, so a stray Enter at the moment the dialog opens approves. The port keeps it (a
+  difference would be a policy change); see the security review in the PR body.
+
+## Policy and session (lane `policy`)
+
+Lane `policy` (branch `perm-policy-1`). The permission manager, the resolver, the gate and the session objects; the rest of
+`src/policy` (rule, wildcard matcher, merge, normalize, restrictiveness) was already ported (M1, M2). Nothing here is wired into
+`extension.go`: the root gate still decides with the old code and still refuses what it cannot read (`unported.go`) until the gate lane
+swaps it for this layer.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| Y1 | `policy/synthesize.ts` | `synthesize.go` | 21 twins |
+| Y2 | `policy/permission-manager.ts` (agent scopes, session rules, fail-closed floor, MCP baseline, yolo, the Pi MCP tool relocation) | `permissionmanager.go` | 227 twins in 3 files; the differential below |
+| Y3 | `policy/permission-resolver.ts` | `permissionresolver.go` | 22 twins |
+| Y4 | `policy/permission-gate.ts` | `permissiongate.go` | 19 twins |
+| Y5 | `session/active-agent.ts`, `session-identity.ts` | `sessionactiveagent.go` (`ReadSessionID` was already in `subagent_context.go`) | 23 twins; 4,003 prompts and 602 entry lists against the original |
+| Y6 | `session/approval-grant.ts`, `session-approval.ts`, `session-approval-recorder.ts`, `session-rules.ts` | `sessionapprovalgrant.go`, `sessionapproval.go`, `sessionrules.go` (they replace the forwarding lane's stand-ins in `fwd_stub_authority.go`) | 54 twins |
+| Y7 | `session/permission-session.ts` | `sessionpermission.go` | 45 twins |
+
+### API for the gate lane
+
+- `NewPermissionManager(PermissionManagerOptions{AgentDir: ..., Flavor: PathFlavorForPlatform(runtime.GOOS), IsYoloEnabled: ...})` builds the
+  manager the way the composition root does (`AgentDir` derives every loader path and enables `ConfigureForCwd`); `PolicyLoader` replaces the
+  file loader; with neither, `PolicyLoaderOptions` apply. The zero `Flavor` is POSIX: a Windows host must pass `PathFlavorForPlatform`.
+- `ScopedPermissionManager` (`ConfigureForCwd(cwd)`, `Check(intent, sessionRules)`, `GetToolPermission`, `IsToolFullyDenied`,
+  `GetConfigIssues`); `*PermissionManager` also has `GetComposedConfigRules` and `GetResolvedPolicyPaths`. An agent name is a `*string`
+  (nil is undefined); `ConfigureForCwd("")` is the original's `undefined`.
+- `NewPermissionResolver(manager, sessionRules)`: `Resolve(AccessIntent)` is the gate-facing entry (it folds a bare `path` or
+  `external_directory` surface over its two directional members, most restrictive); `ResolvePrefixed(PathValuesAccessIntent)` is the
+  forwarded-serving producer's wider entry; `CheckPermission` is the no-session-rules check of the skill input gate.
+- `ApplyPermissionGate(PermissionGateParams) (PermissionGateResult, error)`: `PromptForApproval` returns `(decision, error)` (the error is the
+  original's rejected promise and propagates).
+- `NewPermissionSession(paths, forwarding, manager, sessionRules, configStore, authorizerSelection, flavor)`. The host context is
+  `SessionContext` (a `ForwarderContext` plus a `Notifier` with `Notify` and `SetStatus`; its `GetEntries` makes it an `ActiveAgentContext`).
+  `AuthorizerSelectionLifecycle` is `Activate(SessionContext)` and `Deactivate()`; the authority lane's selection type must satisfy it
+  (or the session takes its adapter). `ToolSurfaceResolution` is the exposure baseline's answer (`exposure.go`).
+- **Errors are not "no agent".** `GetActiveAgentName` and `PermissionSession.ResolveAgentName` return the session manager's error (the
+  original's throw). A caller must refuse the call on an error: reading it as "no agent" would apply the global scope, which an agent
+  scope can only tighten.
+- A panic is what an unknown intent type is (the original's TypeError); the gate pipeline's per-handler recover must turn it into a
+  block, never an allow.
+
+### Differences from the original (on purpose)
+
+- `ApplyPermissionGate`: a state other than `allow`, `deny` or `ask` blocks with the deny reason (the original's types admit only the three
+  and would allow). Fail closed.
+- `SessionRules` is safe for concurrent use (the original is single-threaded): the approval path writes it while the resolver reads it.
+- The agent-name lookups take an interface and return the manager's error (above); the original lets the throw propagate.
+- Harness: `createManager` pins `McpServerNames: []` when a test gives none, where the original reads the host's `mcp.json`; the two
+  `win32` twins that parse `ls /tmp` and `echo hi > /dev/null` with `BashProgram` build the token's `AccessPath` with
+  `PathNormalizer.ForBashToken` (`BashProgram` is the bash program lane's, not on this branch); the parse step is that lane's twin.
+- `SkillPromptEntry` and `ToolPreviewFormatterOptions` (with `ResolveToolPreviewLimits`) are declared in `sessionpermission.go`; the
+  exposure and presentation lanes own the originals and replace them at integration.
+- `it.each` blocks whose titles are not in the ledger (`source is 'special' for a config-matched %s rule`, `denies on an mcp rule naming %s`,
+  `denies the named server for %s`, `lets a trailing catch-all override the server rule for %s`, `denies when the key is written %s the
+  mcp catch-all`, `still denies a non-Pi tool named mcp__foo through %s`) are plain subtests, not twins.
+
+### How it is checked
+
+- `port/record-manager-probe.sh <installed oracle>` runs `port/probe/manager-probe.test.ts` inside the original's package over the 191 worlds
+  of `testdata/manager-cases.json` (generated by `port/probe/gen-manager-cases.py`: real config files, project files, agent files with
+  frontmatter, an invalid project scope, unreadable agent definitions, session rules, yolo, MCP servers; 8,786 intents of the three kinds)
+  and writes `testdata/manager-oracle.json` (the full `PermissionCheckResult` of every intent, and per agent the tool permission, the
+  fully-denied answer, the config issues and the composed config rules). `manager_oracle_test.go` replays it: zero differences. The same
+  probe records `testdata/active-agent-oracle.json`.
+- Mutations: `port/gen-mutations-policy.py` writes `port/mutations-policy.json`; run `pigeq mutate --unit-only --go
+  extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-policy.json --jobs 4`.
+- Performance: `port/bench-manager.sh <installed oracle>` interleaves `go test -bench` (`pol_bench_test.go`) with
+  `port/probe/manager-bench.test.ts`.
+
+
+## Presentation, tool input and exposure (lane `presentation`)
+
+The pure rendering layer the dialog, the forwarded asks and the agent-facing denials are built from: `src/presentation/*`,
+`src/tool-input/*` and `src/exposure/*`. Everything here is a function over strings and values: no host call, no clock, no file.
+The root gate still decides with the old simple code and refuses what it cannot read (`unported.go`); wiring these functions into
+the gate is the gate lane's. Twins first (379 exact twins, 0 skipped, in 20 ledger files; `pigeq twins check` is green), then the
+code, then a differential against the original's own functions.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| R1 | `presentation/prompt-payload.ts` (the payload family, `asPromptPayload`, `localRequester`, `findEvidence`, `allEvidence`) | `promptpayload.go` (replaces the stand-in in `logging_deps.go` and `fwd_prompt_payload.go`) | twins of the forwarding and logging lanes; every payload of the differential goes through `AsPromptPayload` |
+| R2 | `presentation/line-fitting.ts` (pi-tui `wrapTextWithAnsi`, `truncateToWidth`) | `linefitting.go` over `components/pitui/widthx` | 182 recorded `fitLinesToWidth` answers |
+| R3 | `presentation/dialog-renderer.ts` | `dialogrenderer.go` | 28 twins; 1,332 recorded renders (widths -1 to 200, row budgets -1 to Infinity, field caps -1 to Infinity, 3 paints, unicode width, ANSI, CJK, ZWJ, very long and multi-line fields) |
+| R4 | `presentation/agent-renderer.ts` | `agentrenderer.go` | 48 twins; 800 recorded refusals (7 renderers, 16 decisions, 9 payload kinds, 8 field budgets) |
+| R5 | `presentation/prompt-notification.ts` | `promptnotification.go` | 20 twins; 450 recorded notices with their bytes |
+| R6 | `presentation/pattern-suggest.ts` (and `session/approval-grant.ts` `grantTargets`) | `patternsuggest.go`, `GrantTargets` in `fwd_stub_authority.go` | 46 twins; 1,355 suggestions and labels in the corpus |
+| R7 | `presentation/{tool,path,skill,forwarded}-ask-payload.ts`, `permission-prompts.ts` | `toolaskpayload.go`, `pathaskpayload.go`, `skillaskpayload.go`, `forwardedaskpayload.go`, `permissionprompts.go` | 37 twins; 830 recorded payloads, each also rendered |
+| R8 | `tool-input/{tool-input-preview,tool-input-prompt-formatters,builtin-tool-input-formatters,tool-preview-formatter}.ts` | `toolinputpreview.go`, `toolinputpromptformatters.go`, `builtintoolinputformatters.go`, `toolpreviewformatter.go` | 85 twins; 561 inputs through the prompt, built-in-registry and log previews, 165 MCP argument sets, 357 sanitized texts, 360 truncations, 350 log previews |
+| R9 | `tool-input/{tool-input-formatter-registry,tool-access-extractor-registry}.ts` | `toolinputformatterregistry.go`, `toolaccessextractorregistry.go` (replace the stand-ins in `fwd_stub_authority.go`) | 14 twins (the forwarding twins stay green) |
+| R10 | `exposure/{tool-registry,tool-surface-prompt,skill-prompt-sanitizer}.ts` (`tool-surface-baseline.ts` was ported with the first slice) | `toolregistry.go`, `toolsurfaceprompt.go`, `skillpromptsanitizer.go` | 73 twins; 1,062 registry cases, 500 surfaces, 720 skill-prompt cases in the corpus |
+
+How it is checked (STATUS at this commit: the differential ran: 9,209 answers compared with the original's own, 0 differences. The mutation run, the race/vet/npm run and the Node-vs-Go benchmarks are queued on imladris and have NOT been run; the counts below are corpus sizes):
+
+- `port/record-presentation-probe.sh <installed oracle>` runs `port/probe/presentation-probe.test.ts` inside the original's package on
+  `testdata/presentation-cases.json` (written by `gen-presentation-cases.py`, seeded) and writes `testdata/presentation-oracle.json`;
+  `presentation_oracle_test.go` replays it and compares each answer as compact JSON. Two kinds of recorded answer are not compared byte for byte, on purpose: one function-valued MCP argument (`String(fn)` is source text; not reachable from a JSON tool input) and the home directory inside `~` skill locations (read on the host running the test). `gen-presentation-cases.py` no longer produces either, so the next recording needs neither exception; the committed oracle was recorded from the previous corpus. Every string is well-formed on both sides
+  (the probe applies `toWellFormed()`; see "Differences" for why).
+- Mutations: `port/gen-mutations-presentation.py` writes `port/mutations-presentation.json` (392 mutations, one per behaviour of
+  the files above); run `pigeq mutate --unit-only --go extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-presentation.json --jobs 4`.
+- `port/bench-presentation.sh` and `presentation_bench_test.go` time the same operations under Node and in Go (see the PR body for numbers).
+
+Security reading of the slice: the original's dialog shows the approver the command, the flagged paths, the executed unit and the
+evidence, and elides only by a quantity cap (never by content) with a marker; the agent-facing denial never echoes a bash command.
+The port renders through the same two caps (`promptFieldMaxWidth` per field, `promptMaxRows` for the evidence) and marks every cut
+with the same ellipsis, `Elided` is true whenever a field was shortened or an entry dropped, and the complete view
+(`CompleteViewBudget`) elides nothing. The differential covers: field caps of -1, 0, 1, 3, 5, 12, 50, 400, 2.5 and Infinity, a cap
+that splits an astral character, row budgets from -1 to Infinity, widths -1 to 200 (a width of zero or less renders no row, as
+in the original), wrapped and unwrapped, ANSI and OSC 8 sequences inside fields (kept, not interpreted), CJK and ZWJ clusters,
+newlines and carriage returns in a field, tokens a flagged element must not paint inside (`ls` in `lsof`), and 200,000-entry
+evidence lists. A prompt notification never carries the request value (it takes the labels only: the type has no field for it).
+
+Differences from the original, on purpose:
+
+- **Lazy evidence layout.** The original wraps every evidence entry, then drops what does not fit; `RenderPromptDialog` stops wrapping
+  once the rows counted overrun the budget. The answer is the same (the differential has the cases at maxRows 0 to 100 with widths
+  that wrap to zero rows) and a hostile forwarded payload with 200,000 entries renders in about 0.1 s instead of wrapping all of them.
+- **A lone surrogate reads as U+FFFD at the renderers' output.** Slicing at a field cap inside an astral character leaves a lone high
+  surrogate in the original; a terminal (UTF-8) and the host's JSON decoder show it as one U+FFFD. Go strings are UTF-8, so the
+  renderers (`RenderPromptDialog`, `Render*Denial`) hand back well-formed strings (`toWellFormed`). The differential compares the
+  original's output after `toWellFormed()`. A tool_call block reason that goes through JSON.stringify in Pi carries the escape
+  `\ud83d` where the port carries the replacement character: a difference between Pi and PiG's host protocol, not between the
+  extension logic.
+- **Inherited object properties.** The original's `aliases[toolName] || toolName` and `toolSnippets[toolName]` read a plain object, so
+  a tool named `constructor`, `toString`, `__proto__` and the like with no own alias answers a function or the prototype instead of a
+  name. In `checkRequestedToolRegistration` it changes only `normalizedToolName` (not a string there, and no caller reads it: the
+  status and the `requestedToolName` the callers read are equal). The differential maps the original's value to `<non-string>` and the port's to the same marker for exactly those cases (counted in the test log). In
+  `renderToolSurfaceSections` such a tool would list `- constructor: function Object() { [native code] }` in the system prompt; the
+  port lists it with no snippet, i.e. not at all. Neither can make a tool registered or exposed that was not.
+- The sort of the available tool names (it orders the list shown in the "unknown tool" block reason) uses the module's own `icuCompare`,
+  the approximation of ICU's root collation that the config lane checked against Node's `localeCompare` (the same function orders
+  MCP server names), not `components/pitui`'s `jsstring.LocaleCompare` (golang.org/x/text collation, whose tables add 1.45 MB to the
+  binary). Tool names are ASCII in practice; the corpus has `-`, `_`, `:`, spaces, digits, mixed case, `\u00e9` and CJK names.
+- A formatter or extractor is a pointer (`NewToolInputFormatter`, `NewToolAccessExtractor`), so two registrations compare by
+  identity as the original's functions do. Registering twice returns the original's message as an error where the original throws.
+- Tool input is an ordered `*jsObject` (keys in `Object.keys` order). The SDK's `tool_call` handler receives the input as a Go map, so
+  the member order the model wrote is lost there and `ToRecord(map)` sorts the keys: previews of a host-supplied input list members in
+  sorted order where Pi lists them in arrival order. That is an SDK gap (a raw or ordered input on the tool_call event, the Pi API
+  `event.input` being a JavaScript object), reported in the PR body; the renderers are exact for any ordered input they are given.
+- The root gate keeps its own gate-local skill code (`skills.go`: `visibleSkillEntries`, `findSkillPathMatch`, `skillRead`) until the
+  gate lane wires `VisibleSkillPromptEntries`, `FindSkillPathMatch` and `WithoutDeniedSkills` in; the twins of
+  `exposure/skill-prompt-sanitizer` are on the real functions.
+- Library: `components/pitui` (the pi-tui subset: `widthx.WrapTextWithAnsi`, `TruncateToWidth`) is a sibling Package the extension
+  now requires (`go.work` and `go.mod`, the way `ask-user-question` does); a Piglet that selects this Package must select `pitui`
+  too. Cost: see the PR body (binary size and cold start).
+
+### Authority lane: evidence run on imladris (CPUs 96-151)
+
+- Original's own suite for the 17 files (`vitest run`, `~/pp-auth-orig-tests.log`): 17 files, 337 tests passed.
+- Differential: 10,613 cases recorded from the unmodified original, replayed by `auth_oracle_test.go`, 0 unexplained differences (see Differences above).
+- verify (`~/pp-auth-verify.log`): go vet linux, windows, darwin clean; `npm run check` and `npm run generate` clean (no diff); `pig package validate` valid; `scripts/go-modules.mjs` accepts the pitui wiring (scoped module set). `go test -race ./...`: everything passes except the presentation lane's wall-clock test `TestRenderPromptDialogBoundedWork` (2.9 s against a 2 s bound under -race on the loaded shared set; reported to that lane). A rerun that skips it is `~/pp-auth-race.log`.
+- Interleaved benchmark (`port/bench-authority.sh` equivalent, 12 rounds, one CPU, Node 24.19 vs Go, Xeon 6746E), median ns/op go vs node: render of a path ask 9,384 vs 63,531; forwarded 200-line command render 153,712 vs 163,180; full session 21,924 vs 161,451; type one reason character and render 48,501 vs 359,528 (2000 iterations each); model event 77 vs 1,299; chain of three links 924 vs 2,659; prompter 5,254 vs 6,818. Slower than the original: bracketed-paste collapse 5,918 vs 4,972 (1.19x) and one local ask through the queue 13,330 vs 5,139 (2.6x). Profile of the local ask (Mac): about a third is GC and most of the rest goroutine hand-off, because the queue runs each presentation on its own goroutine so that a release can settle an ask whose host call is still pending. It is per human-answered ask (microseconds against seconds) and not on a render or key path; recorded as an owner decision, not optimized.
+- Binary size and cold start (linux/amd64, stripped probes): the extension with `Extension()` only 6,758,663 bytes; with the dialog reached through the SDK adapter 13,570,311 bytes (+6.81 MB, +101%). Cold start of the two probes: 6.5-7.2 ms vs 7.0-7.3 ms per run (300 runs each, three alternations; no measurable difference). The 6.8 MB is pitui's embedded ICU word dictionaries (CJK 4.2 MB, Khmer 1.0 MB, Burmese 0.5 MB, Lao 0.3 MB, Thai 0.3 MB) used by the reason editor's word keys. Tried: embedding them gzip-compressed and inflating on first use (a scratch copy of pitui, all pitui tests pass): 9.6 MB (darwin/arm64 probe, versus 13.3 MB), saves 3.7 MB, but the first word-movement key on CJK text costs 20 ms (Thai 1.5 ms, Lao 1.8, Khmer 4.8, Burmese 2.4) and 4.2 MB of heap, and it still leaves +3.1 MB (+48%). Not applied (a shared pitui change with a first-use stall on the key path). `pig_strip_word_dictionaries` does not build in this pitui copy (its stub is supplied elsewhere) and would change word movement for CJK and Southeast Asian text. Owner decision: accept +6.8 MB, take the gzip variant (-3.7 MB, 20 ms first use), or strip.
+- Mutations: `port/mutations-authority.json` now has 290 (two for the repaint count, one for the silent link). The run (`~/pp-auth-mut.log`, clone `~/pp-perm2-authority-mut`) was still executing when this was written; no result is claimed.
+- Security review: approving paths are (1) hotkeys approve/session/both (bound key, second press under double-press, decision step only), (2) Enter on the highlight, (3) a chain link's `allow` through the delegation envelope, (4) the select fallback's exact option strings, (5) the parent's response in `ParentAuthorizer` (validated: approved flag, state, responder). Failures (closed dialog, released ask, panicking presentation, failing or silent link, unreadable response) deny or error. The dialog opens with approve highlighted exactly as the original: all 368 recorded scenarios show `Yes` highlighted first and the 9 whose first key is Enter approve in both (4 with double-press on).
+
+
+## BashProgram and the path resolver (lane `bashprogram`)
+
+`BashProgram.parse` parses a command once and hands the gates three slices that always agree: the command units (the bash rules
+match them), the external accesses (what resolves outside the cwd) and the path-rule candidates (what the `path` rules match).
+`BashPathResolver` folds `cd` through the command stream (current-shell sequences, brace groups, the first stage of a pipeline,
+subshells and backgrounding), applies the strict and the broad token classifiers, probes the filesystem for a bare token that
+names a real entry (a symlink out of the tree), and merges two proofs for one path. Both live in the root package because they
+need `PathNormalizer` and `AccessPath`; the walk reads trees through `bashparse/` and tokens through `bashanalysis/`.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| B1 | `access-intent/bash/program.ts` | `bashprogram.go`: `ParseBashProgram(command, normalizer, *BashProgramOptions) (*BashProgram, error)`, `Commands()`, `ExternalAccesses()`, `PathRuleCandidates()`, `CommandText()` | 151 twins |
+| B2 | `access-intent/bash/bash-path-resolver.ts` | `bashpathresolver.go`: `BashPathResolver.Resolve`, `BashExternalPath`, `BashPathRuleCandidate`, `ResolvedBashPaths` | 124 twins (`program-external-accesses`) and the differential |
+| B3 | `access-intent/effect.ts` types | `effect.go`: `TokenEffect`, `AttributedEffect`, `EffectSource` are now aliases of `bashparse`'s (one type, no conversion at the seam) | the paths lane's effect twins |
+| B4 | `access-intent/bash/wrapper-analysis.ts` | already in `bashanalysis/wrapper.go` (16 twins, in the differential of M10); `bash.go`'s duplicated tables are gone, `classifyWrapperWords` is a call | `oracle_test.go` (646 recorded decisions) still pass |
+
+How it is checked:
+
+- `port/bashprogram-diff/run.sh` runs `probe.test.ts` inside the original's package. Inputs: every input of the bash analysis
+  differential (42,038: the strings of the original's tests, `port/probe/cases.json`, generated wrapper, command, redirect, sed,
+  awk and option shapes, error-recovery variants) plus 41,262 path-bearing commands of `gen-paths.mjs` (redirects of every
+  operator, cd chains of every fold shape, wrappers, heredocs and their tails, env assignments, globs, `HOME` and `PWD`
+  spellings, drive paths, symlinks). Each is parsed under seven configurations (the fixture root as cwd, a fake POSIX cwd, a win32
+  cwd, the same three with a `workdir`, and the fake cwd with an empty `workdir`), and the units, the external accesses (value, boundary, effect, source) and the rule
+  candidates (token, value, boundary, match values, effect, source) are written to
+  `testdata/bashprogram-oracle.jsonl.gz`. `bashprogram_oracle_test.go` replays it; any difference fails the test.
+- The probe's filesystem is a fixture (files, directories, symlinks to an outside directory, a dangling link, a link whose name
+  holds `..`) 16 directories below its temporary base, so no `..` chain of the corpus leaves the base. Outside the fixture the
+  probe answers as a host with no symlinks and no files (realpath is the identity, lstat finds nothing), and the Go test installs
+  the same two hooks (`realpathSync`, `lstatSync`, the latter case exact because macOS answers for `A` when `a` exists), so the
+  recording is the same on every host. `HOME` is `/probe-home/user`.
+- Mutations: `port/gen-mutations-bashprogram.py` writes `port/mutations-bashprogram.json`.
+
+Differences from the original, on purpose:
+
+- `ParseBashProgram` returns an error where `parse()` rejects (the parser failing to initialize), and takes a `*BashProgramOptions`
+  where the original takes `{ workdir?: string }` (`nil` is no options; a `nil` `Workdir` is `undefined`, an empty one is the empty
+  string the original would also seed).
+- The accessors return fresh slices, as the original's spread copies do; the elements share their `AccessPath`s, which are
+  immutable.
+- A command `parser.parse` cannot produce a tree for yields the empty program with its command text, as the original.
+- `tree.delete()` has no counterpart: nodes are garbage collected.
+
+## Gate core (lane `gatecore`: the gate pipeline and the permission gate handler)
+
+Ported from `src/handlers/gates/{types,descriptor,runner,helpers,path,external-directory,external-directory-policy,skill-read,skill-input,skill-input-gate-pipeline,tool,tool-call-gate-pipeline}.ts` and `src/handlers/permission-gate-handler.ts`. The three bash gate producers (`bash-command`, `bash-path`, `bash-external-directory`) belong to lane `gatebash`; the pipeline calls them through `gatebashpending.go`'s fail-closed stand-ins (a call with a parsed program panics, and the tool-call boundary turns a panic into a block) until that lane replaces the file.
+
+| ID | Original | Go | Checked by |
+|---|---|---|---|
+| G1 | `handlers/gates/types.ts` (`GateOutcome`, `ToolCallContext`) | `types.go` | every twin |
+| G2 | `handlers/gates/descriptor.ts` (`GateDescriptor`, `GateBypass`, `GateResult`, `preResolvedCheckOf`, `isUnconditionalDeny`, `orderDenyFirst`) | `gatedescriptor.go` (`GateResult` is `nil`, a `*GateDescriptor` or a `*GateBypass`) | 15 twins |
+| G3 | `handlers/gates/helpers.ts` | `gatehelpers.go` | 20 twins |
+| G4 | `handlers/gates/runner.ts` (`GateRunner`) | `gaterunner.go` | 59 twins; the differential |
+| G5 | `handlers/gates/path.ts`, `external-directory.ts`, `external-directory-policy.ts` | `gatepath.go`, `gateexternaldirectory.go`, `gateexternaldirectorypolicy.go` | 27 + 29 + 11 twins; the differential |
+| G6 | `handlers/gates/skill-read.ts`, `skill-input.ts`, `skill-input-gate-pipeline.ts` | `gateskillread.go`, `gateskillinput.go`, `gateskillinputpipeline.go` | 14 + 12 + 10 twins; the differential |
+| G7 | `handlers/gates/tool.ts` | `gatetool.go` | 24 twins; the differential |
+| G8 | `handlers/gates/tool-call-gate-pipeline.ts` | `gatetoolcallpipeline.go` | 23 + 1 twins; the differential |
+| G9 | `handlers/permission-gate-handler.ts` | `permissiongatehandler.go` | 26 + 18 + 9 + 7 + 10 + 6 + 7 twins (tool-call, input, tool-call-events, input-events, validate-requested-tool, native-tool-target, shell-tool-alias) and 27 + 18 + 4 integration twins (external-directory); the differential |
+
+Seams that differ from the original on purpose (each is an interface or a field where the original has a concrete class or a module mock):
+
+- `GateRunning` (`Run(gate, agentName)`) stands for the `GateRunner` the pipelines receive, so a twin can spy on `run` as the original's tests do; `ToolCallEvaluator`, `SkillInputEvaluator` and `GateHandlerSession` are the same for the handler's collaborators.
+- The pipeline's BashProgram parse and its three bash producers are fields (`parseBash`, `bashExternalDirectoryGate`, `bashPathGate`, `bashCommandCheck`), which the twins replace where the original mocks `BashProgram.parse` and `#src/handlers/gates/bash-path`.
+- Sync instead of `async`: `Evaluate` and `Run` return `(GateOutcome, error)`. A rejected escalation is the error; a throw is a panic. The tool-call boundary blocks on either, so no failure is an allow (gate-producer-failure twin).
+- `SessionApproval` and the descriptor's `PromptDetails` use the port's typed structs, so the original's excess `origin` key on the tool gate's prompt details (a spread of the log context) is not carried.
+- The resolver's raw check with no session rules is `ResolverSkillInputInputs`, because the original's resolver satisfies `SkillInputGateInputs` structurally with an optional fourth argument.
+- `PermissionGateHandler.HandleToolCall` and `HandleInput` take the port's `SessionContext` (the integration lane builds it from the SDK context).
+
+The twins that mock `node:fs`'s `realpathSync` mock the package's `realpathSync` hook; the ones the original runs on a real filesystem (the symlink acceptance, the native-target acceptance, the session-dedup directory cases) run on a temporary directory.
+
+### Differential
+
+`port/record-gatecore-probe.sh` runs `port/probe/gatecore-probe.test.ts` inside the original's package over `testdata/gatecore-cases.json` (`port/probe/gen-gatecore-cases.py`: 1010 worlds) and writes `testdata/gatecore-oracle.json`. A world is a global config file, agent files, session rules, the registered tools, the active skills, `shellTools`, yolo, the active agent, a file layout under four temporary directories (files, directories, symlinks), scripted prompt answers and a sequence of `tool_call` and `input` events. The probe drives the original's real stack (`PermissionManager` over the files, `PermissionSession`, `PermissionResolver`, both pipelines, `GateRunner`, `PermissionGateHandler`, `GateDecisionReporter`) and records every answer, the prompts raised (the whole payload and details), the review-log entries, the decision events, the UI notifications and the final session rules. `gatecore_oracle_test.go` runs the same worlds through the port; a difference in any of them fails the test, and the key order of the review entries and decision events is compared as well.
+
+The worlds cover: every path-bearing tool inside and outside the working directory under every `external_directory` and tool state and each prompt answer; the `path` gate with each state; directional and bare surfaces; MCP proxy and Pi MCP tools; extension tools with a `path` input; real symlinks (typed and resolved allows, dangling links, links inside the working directory); session rules of every surface and width, and sequences that grant for the session at the proven and the family width; infrastructure reads under every kind of deny and ask; native tool targets (file URLs, percent escapes, no-break spaces, curly quotes, AM/PM spaces, `..` escapes); skill reads and `/skill:` inputs under every state, with agents, sessions and no UI; per-agent overrides; yolo over every state; unknown, missing, mistyped and odd tool names and event shapes; and bash commands and shell-tool aliases under seven configurations.

@@ -303,9 +303,7 @@ func (s *ForwardedRequestServer) resolveDecision(request *ForwardedPermissionReq
 			}
 			// A deny-with-reason rule's text is the operator's own explanation, and the requesting session relays it to its agent, so
 			// it travels with the verdict rather than stopping at the node that holds the config (#844).
-			denied := CreateDeniedPermissionDecision(check.Reason)
-			denied.DecidedBy = decidedBy
-			return denied
+			return CreateDeniedPermissionDecision(check.Reason).Attribute(decidedBy)
 		}
 	}
 

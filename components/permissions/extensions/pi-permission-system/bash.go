@@ -1,25 +1,14 @@
 package pi_permission_system
 
-import "strings"
+import (
+	"strings"
 
-// Port of the parts of the bash surface's decision that need no parser: classifyWrapperWords from
-// src/access-intent/bash/wrapper-analysis.ts, and resolveBashCommandCheck (src/handlers/gates/bash-command.ts) for a chain of
-// simple commands.
+	"github.com/MichaelKinsy/pigpen/pi-permission-system/bashanalysis"
+)
 
-// shellWrapperNames run an inline program after a -c flag cluster (wrapper-analysis.ts SHELL_WRAPPER_NAMES).
-var shellWrapperNames = map[string]bool{"bash": true, "sh": true, "dash": true, "zsh": true, "ksh": true}
-
-// indirectionWrapperNames always run a following command (wrapper-analysis.ts INDIRECTION_WRAPPER_NAMES).
-var indirectionWrapperNames = map[string]bool{
-	"sudo": true, "env": true, "xargs": true, "time": true, "nohup": true, "timeout": true, "nice": true, "parallel": true,
-	"rust-parallel": true, "rush": true, "doas": true, "setsid": true, "stdbuf": true, "watch": true, "flock": true,
-}
-
-// execConditionalWrappers run a command per result only with one of these flags (wrapper-analysis.ts EXEC_CONDITIONAL_WRAPPERS).
-var execConditionalWrappers = map[string]map[string]bool{
-	"find": {"-exec": true, "-execdir": true, "-ok": true, "-okdir": true},
-	"fd":   {"-x": true, "--exec": true, "-X": true, "--exec-batch": true},
-}
+// The parts of the bash surface's decision that need no parser: resolveBashCommandCheck (src/handlers/gates/bash-command.ts) for a
+// chain of simple commands. The wrapper classification of src/access-intent/bash/wrapper-analysis.ts lives in the bashanalysis
+// package; classifyWrapperWords is the gate's string-word view of it.
 
 // portGuardWords are commands that run another command which the original does not floor (it reads them by their own rule).
 // The port refuses to allow them: it is stricter here than the original, on purpose.
@@ -37,43 +26,15 @@ func commandBasename(name string) string {
 	return name
 }
 
-// shortFlagCIndex is the index in args of a short-flag cluster holding c (-c, -ec, -xc) before any --, or -1.
-func shortFlagCIndex(args []string) int {
-	for i, a := range args {
-		if a == "--" {
-			return -1
-		}
-		if strings.HasPrefix(a, "-") && !strings.HasPrefix(a, "--") && strings.Contains(a, "c") {
-			return i
-		}
-	}
-	return -1
-}
-
 // classifyWrapperWords reports why a command unit's allow is floored to ask: "opaque-payload" (eval, or a shell with a -c flag
 // cluster), "indirection" (a wrapper that always runs a following command, or find/fd with an exec flag), or "" for an ordinary
-// command. words[0] is the command name, matched on its basename.
+// command. words[0] is the command name, matched on its basename. The classification is bashanalysis.ClassifyWrapperWords.
 func classifyWrapperWords(words []string) string {
-	if len(words) == 0 {
-		return ""
+	commandWords := make([]bashanalysis.CommandWord, len(words))
+	for i, word := range words {
+		commandWords[i] = bashanalysis.CommandWord{Text: word}
 	}
-	name, args := commandBasename(words[0]), words[1:]
-	switch {
-	case name == "eval":
-		return "opaque-payload"
-	case shellWrapperNames[name] && shortFlagCIndex(args) != -1:
-		return "opaque-payload"
-	case indirectionWrapperNames[name]:
-		return "indirection"
-	}
-	if flags := execConditionalWrappers[name]; flags != nil {
-		for _, a := range args {
-			if flags[a] {
-				return "indirection"
-			}
-		}
-	}
-	return ""
+	return string(bashanalysis.ClassifyWrapperWords(commandWords))
 }
 
 // bashUnits splits a command into its units when it is simple commands joined by &&, ||, ;, | or a newline: the units the

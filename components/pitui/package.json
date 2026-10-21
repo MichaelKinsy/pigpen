@@ -1,0 +1,45 @@
+{
+  "name": "@pi-in-go/pigpen-pitui",
+  "version": "0.1.0",
+  "description": "Shared Go library: the subset of pi-tui (Editor, Markdown, Text, Container, Spacer, DynamicBorder, keys, keybindings, width helpers) that Pigpen extensions need, adapted from PiG's tui. A stopgap until PiG ships tui as a standalone module. Library only, no extension of its own.",
+  "keywords": [
+    "pig-package",
+    "pi-tui",
+    "tui",
+    "library",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pitui"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pitui#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "jsnumber",
+    "jsstring",
+    "latex",
+    "lazyregexp",
+    "licenses",
+    "port",
+    "testdata",
+    "widthx",
+    "wordsegmenter",
+    "*.go",
+    "go.mod",
+    "go.sum",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {}
+}

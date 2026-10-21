@@ -927,7 +927,7 @@ func fwEnclose(verdict AuthorizerVerdict) (AuthorizeFunc, *fwLink) {
 
 func TestEncloseInDelegationEnvelope(t *testing.T) {
 	const f = "authority/delegation-envelope"
-	query, log := new(int), new(int)
+	query, log := PermissionQuery(nopQuery{}), AuthorizerLog(nopAuthLog{})
 	verdictOf := func(t *testing.T, kind string, reason *string, details *PromptPermissionDetails) AuthorizerVerdict {
 		t.Helper()
 		enclosed, _ := fwEnclose(AuthorizerVerdict{Kind: kind, Reason: reason})

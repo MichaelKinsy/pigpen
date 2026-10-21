@@ -1,0 +1,1742 @@
+[
+ {
+  "name": "pm-narrow-roster",
+  "file": "auth_prompt_model.go",
+  "find": "var narrowOptionOrder = []PromptAction{ActionApprove, ActionApproveSession, ActionDeny, ActionDenyWithReason}",
+  "replace": "var narrowOptionOrder = []PromptAction{ActionApprove, ActionApproveSession, ActionApproveSessionBoth, ActionDeny, ActionDenyWithReason}"
+ },
+ {
+  "name": "pm-wide-roster-order",
+  "file": "auth_prompt_model.go",
+  "find": "var optionOrder = []PromptAction{ActionApprove, ActionApproveSession, ActionApproveSessionBoth, ActionDeny, ActionDenyWithReason}",
+  "replace": "var optionOrder = []PromptAction{ActionApprove, ActionApproveSessionBoth, ActionApproveSession, ActionDeny, ActionDenyWithReason}"
+ },
+ {
+  "name": "pm-width-needs-label",
+  "file": "auth_prompt_model.go",
+  "find": "if config.WidthLabel != \"\" {\n\t\treturn optionOrder",
+  "replace": "if config.WidthLabel == \"\" {\n\t\treturn optionOrder"
+ },
+ {
+  "name": "pm-verb-session",
+  "file": "auth_prompt_model.go",
+  "find": "ActionApproveSession:     \"approve for this session\",",
+  "replace": "ActionApproveSession:     \"approve\","
+ },
+ {
+  "name": "pm-verb-both",
+  "file": "auth_prompt_model.go",
+  "find": "\"approve both directions for this session\"",
+  "replace": "\"approve both directions\""
+ },
+ {
+  "name": "pm-verb-reason",
+  "file": "auth_prompt_model.go",
+  "find": "ActionDenyWithReason:     \"deny with a reason\",",
+  "replace": "ActionDenyWithReason:     \"deny\","
+ },
+ {
+  "name": "pm-initial-highlight",
+  "file": "auth_prompt_model.go",
+  "find": "HighlightedAction: ActionApprove, GrantWidth:",
+  "replace": "HighlightedAction: ActionDeny, GrantWidth:"
+ },
+ {
+  "name": "pm-initial-width",
+  "file": "auth_prompt_model.go",
+  "find": "GrantWidth: \"proven\"}\n}",
+  "replace": "GrantWidth: \"family\"}\n}"
+ },
+ {
+  "name": "pm-nav-disarms",
+  "file": "auth_prompt_model.go",
+  "find": "next.ArmedAction = \"\"\n\t\tnext.Hint = \"\"\n\t\treturn renderOutcome(next)\n\tcase EventHotkey:",
+  "replace": "return renderOutcome(next)\n\tcase EventHotkey:"
+ },
+ {
+  "name": "pm-hotkey-roster",
+  "file": "auth_prompt_model.go",
+  "find": "for _, a := range VisibleActions(config) {\n\t\t\tif a == event.Action {",
+  "replace": "for _, a := range optionOrder {\n\t\t\tif a == event.Action {"
+ },
+ {
+  "name": "pm-confirm-highlight",
+  "file": "auth_prompt_model.go",
+  "find": "return commit(config, state, state.HighlightedAction)",
+  "replace": "return commit(config, state, ActionApprove)"
+ },
+ {
+  "name": "pm-cancel-denies",
+  "file": "auth_prompt_model.go",
+  "find": "case EventCancel:\n\t\treturn decisionOutcome(CreateDeniedPermissionDecision(nil))",
+  "replace": "case EventCancel:\n\t\treturn decisionOutcome(UnattributedDecision{Approved: true, State: DecisionApproved})"
+ },
+ {
+  "name": "pm-double-press",
+  "file": "auth_prompt_model.go",
+  "find": "if !config.DoublePressToConfirm || state.ArmedAction == action {",
+  "replace": "if !config.DoublePressToConfirm {"
+ },
+ {
+  "name": "pm-double-press-same",
+  "file": "auth_prompt_model.go",
+  "find": "state.ArmedAction == action {",
+  "replace": "state.ArmedAction != \"\" {"
+ },
+ {
+  "name": "pm-arm-highlights",
+  "file": "auth_prompt_model.go",
+  "find": "next.HighlightedAction = action\n\tnext.ArmedAction = action",
+  "replace": "next.ArmedAction = action"
+ },
+ {
+  "name": "pm-hint-key",
+  "file": "auth_prompt_model.go",
+  "find": "next.Hint = \"Press \" + key + \" again to \" + optionVerbs[action] + \".\"",
+  "replace": "next.Hint = \"Press \" + string(action) + \" again to \" + optionVerbs[action] + \".\""
+ },
+ {
+  "name": "pm-approve-state",
+  "file": "auth_prompt_model.go",
+  "find": "return decisionOutcome(UnattributedDecision{Approved: true, State: DecisionApproved})\n\tcase ActionDeny:",
+  "replace": "return decisionOutcome(UnattributedDecision{Approved: true, State: DecisionApprovedForSession})\n\tcase ActionDeny:"
+ },
+ {
+  "name": "pm-deny-commit",
+  "file": "auth_prompt_model.go",
+  "find": "case ActionDeny:\n\t\treturn decisionOutcome(CreateDeniedPermissionDecision(nil))",
+  "replace": "case ActionDeny:\n\t\treturn decisionOutcome(UnattributedDecision{Approved: true, State: DecisionApproved})"
+ },
+ {
+  "name": "pm-reason-step",
+  "file": "auth_prompt_model.go",
+  "find": "next.Step = StepReason\n",
+  "replace": "next.Step = StepDecision\n"
+ },
+ {
+  "name": "pm-reason-clears-error",
+  "file": "auth_prompt_model.go",
+  "find": "next.Hint = \"\"\n\t\tnext.ReasonError = \"\"\n\t\treturn renderOutcome(next)\n\tcase ActionApproveSession",
+  "replace": "next.Hint = \"\"\n\t\treturn renderOutcome(next)\n\tcase ActionApproveSession"
+ },
+ {
+  "name": "pm-width-family",
+  "file": "auth_prompt_model.go",
+  "find": "if action == ActionApproveSessionBoth {\n\t\t\twidth = \"family\"",
+  "replace": "if action == ActionApproveSession {\n\t\t\twidth = \"family\""
+ },
+ {
+  "name": "pm-scope-step",
+  "file": "auth_prompt_model.go",
+  "find": "if config.SessionScope != nil {\n\t\t\tnext := state",
+  "replace": "if config.SessionScope == nil {\n\t\t\tnext := state"
+ },
+ {
+  "name": "pm-scope-default",
+  "file": "auth_prompt_model.go",
+  "find": "next.ScopeServing = false\n\t\t\tnext.GrantWidth = width",
+  "replace": "next.ScopeServing = true\n\t\t\tnext.GrantWidth = width"
+ },
+ {
+  "name": "pm-session-state",
+  "file": "auth_prompt_model.go",
+  "find": "decisionOutcome(sessionApprovalDecision(DecisionApprovedForSession, width))",
+  "replace": "decisionOutcome(sessionApprovalDecision(DecisionApprovedForServingSess, width))"
+ },
+ {
+  "name": "pm-reason-cancel-width",
+  "file": "auth_prompt_model.go",
+  "find": "next.ReasonError = \"\"\n\t\tnext.GrantWidth = \"proven\"\n\t\treturn renderOutcome(next)\n\t}\n\tif event.Type == EventSubmitReason",
+  "replace": "next.ReasonError = \"\"\n\t\treturn renderOutcome(next)\n\t}\n\tif event.Type == EventSubmitReason"
+ },
+ {
+  "name": "pm-reason-required",
+  "file": "auth_prompt_model.go",
+  "find": "if reason == nil {\n\t\t\tnext := state",
+  "replace": "if reason != nil {\n\t\t\tnext := state"
+ },
+ {
+  "name": "pm-reason-message",
+  "file": "auth_prompt_model.go",
+  "find": "next.ReasonError = \"A reason is required.\"",
+  "replace": "next.ReasonError = \"A reason is needed.\""
+ },
+ {
+  "name": "pm-reason-ignores-nav",
+  "file": "auth_prompt_model.go",
+  "find": "if event.Type == EventCancel {\n\t\tnext := state\n\t\tnext.Step = StepDecision",
+  "replace": "if event.Type == EventCancel || event.Type == EventNav {\n\t\tnext := state\n\t\tnext.Step = StepDecision"
+ },
+ {
+  "name": "pm-scope-nav",
+  "file": "auth_prompt_model.go",
+  "find": "next.ScopeServing = event.Direction == \"down\"",
+  "replace": "next.ScopeServing = event.Direction == \"up\""
+ },
+ {
+  "name": "pm-scope-confirm",
+  "file": "auth_prompt_model.go",
+  "find": "if state.ScopeServing {\n\t\t\tdecisionState = DecisionApprovedForServingSess",
+  "replace": "if !state.ScopeServing {\n\t\t\tdecisionState = DecisionApprovedForServingSess"
+ },
+ {
+  "name": "pm-scope-confirm-width",
+  "file": "auth_prompt_model.go",
+  "find": "sessionApprovalDecision(decisionState, state.GrantWidth)",
+  "replace": "sessionApprovalDecision(decisionState, \"proven\")"
+ },
+ {
+  "name": "pm-scope-cancel-width",
+  "file": "auth_prompt_model.go",
+  "find": "next.Hint = \"\"\n\t\tnext.GrantWidth = \"proven\"\n\t\treturn renderOutcome(next)\n\t}\n\treturn renderOutcome(state)\n}\n\nfunc shiftAction",
+  "replace": "next.Hint = \"\"\n\t\treturn renderOutcome(next)\n\t}\n\treturn renderOutcome(state)\n}\n\nfunc shiftAction"
+ },
+ {
+  "name": "pm-shift-direction",
+  "file": "auth_prompt_model.go",
+  "find": "if direction == \"down\" {\n\t\tdelta = 1",
+  "replace": "if direction == \"up\" {\n\t\tdelta = 1"
+ },
+ {
+  "name": "pm-shift-wrap",
+  "file": "auth_prompt_model.go",
+  "find": "next := (index + delta + len(actions)) % len(actions)",
+  "replace": "next := (index + delta + len(actions)) % (len(actions) + 1)"
+ },
+ {
+  "name": "pd-state-approved",
+  "file": "auth_permission_dialog.go",
+  "find": "DecisionApproved               PermissionDecisionState = \"approved\"",
+  "replace": "DecisionApproved               PermissionDecisionState = \"approve\""
+ },
+ {
+  "name": "pd-state-serving",
+  "file": "auth_permission_dialog.go",
+  "find": "DecisionApprovedForServingSess PermissionDecisionState = \"approved_for_serving_session\"",
+  "replace": "DecisionApprovedForServingSess PermissionDecisionState = \"approved_for_serving\""
+ },
+ {
+  "name": "pd-is-state",
+  "file": "auth_permission_dialog.go",
+  "find": "case DecisionApproved, DecisionApprovedForSession, DecisionApprovedForServingSess, DecisionDenied, DecisionDeniedWithReason:\n\t\treturn true",
+  "replace": "case DecisionApproved, DecisionApprovedForSession, DecisionDenied, DecisionDeniedWithReason:\n\t\treturn true"
+ },
+ {
+  "name": "pd-attribute-width",
+  "file": "auth_permission_dialog.go",
+  "find": "SessionGrantWidth:       d.SessionGrantWidth,\n\t\tDecidedBy:",
+  "replace": "DecidedBy:"
+ },
+ {
+  "name": "pd-attribute-unavailable",
+  "file": "auth_permission_dialog.go",
+  "find": "ConfirmationUnavailable: d.ConfirmationUnavailable,\n\t\tSessionGrantWidth:       d.SessionGrantWidth,\n\t\tDecidedBy:",
+  "replace": "SessionGrantWidth:       d.SessionGrantWidth,\n\t\tDecidedBy:"
+ },
+ {
+  "name": "pd-attribute-reason",
+  "file": "auth_permission_dialog.go",
+  "find": "DenialReason:            d.DenialReason,\n\t\tConfirmationUnavailable: d.ConfirmationUnavailable,\n\t\tSessionGrantWidth:       d.SessionGrantWidth,\n\t\tDecidedBy:",
+  "replace": "ConfirmationUnavailable: d.ConfirmationUnavailable,\n\t\tSessionGrantWidth:       d.SessionGrantWidth,\n\t\tDecidedBy:"
+ },
+ {
+  "name": "pd-normalize-trim",
+  "file": "auth_permission_dialog.go",
+  "find": "t := jsTrim(*v)",
+  "replace": "t := *v"
+ },
+ {
+  "name": "pd-normalize-empty",
+  "file": "auth_permission_dialog.go",
+  "find": "if len(t) == 0 {",
+  "replace": "if len(t) < 0 {"
+ },
+ {
+  "name": "pd-denied-reason-state",
+  "file": "auth_permission_dialog.go",
+  "find": "State: DecisionDeniedWithReason, DenialReason: reason}",
+  "replace": "State: DecisionDenied, DenialReason: reason}"
+ },
+ {
+  "name": "pd-width-family-only",
+  "file": "auth_permission_dialog.go",
+  "find": "if width == \"family\" {\n\t\td.SessionGrantWidth = width",
+  "replace": "if width != \"\" {\n\t\td.SessionGrantWidth = width"
+ },
+ {
+  "name": "pd-option-yes",
+  "file": "auth_permission_dialog.go",
+  "find": "approveOption           = \"Yes\"",
+  "replace": "approveOption           = \"Yes \""
+ },
+ {
+  "name": "pd-option-session",
+  "file": "auth_permission_dialog.go",
+  "find": "approveForSessionOption = \"Yes, for this session\"",
+  "replace": "approveForSessionOption = \"Yes, this session\""
+ },
+ {
+  "name": "pd-option-reason",
+  "file": "auth_permission_dialog.go",
+  "find": "denyWithReasonOption    = \"No, provide reason\"",
+  "replace": "denyWithReasonOption    = \"No, give reason\""
+ },
+ {
+  "name": "pd-session-label",
+  "file": "auth_permission_dialog.go",
+  "find": "sessionOption = *options.SessionLabel",
+  "replace": "sessionOption = approveForSessionOption"
+ },
+ {
+  "name": "pd-width-empty",
+  "file": "auth_permission_dialog.go",
+  "find": "if widthOption != \"\" {\n\t\tdecisionOptions = append(decisionOptions, widthOption)",
+  "replace": "if options != nil && options.SessionWidth != nil {\n\t\tdecisionOptions = append(decisionOptions, widthOption)"
+ },
+ {
+  "name": "pd-title",
+  "file": "auth_permission_dialog.go",
+  "find": "ui.Select(title+\"\\n\"+message, decisionOptions)",
+  "replace": "ui.Select(title, decisionOptions)"
+ },
+ {
+  "name": "pd-select-error",
+  "file": "auth_permission_dialog.go",
+  "find": "selected, ok, err := ui.Select(title+\"\\n\"+message, decisionOptions)\n\tif err != nil {\n\t\treturn UnattributedDecision{}, err\n\t}",
+  "replace": "selected, ok, _ := ui.Select(title+\"\\n\"+message, decisionOptions)"
+ },
+ {
+  "name": "pd-approve-needs-ok",
+  "file": "auth_permission_dialog.go",
+  "find": "if ok && selected == approveOption {",
+  "replace": "if selected == approveOption {"
+ },
+ {
+  "name": "pd-session-needs-ok",
+  "file": "auth_permission_dialog.go",
+  "find": "if ok && (selected == sessionOption",
+  "replace": "if (selected == sessionOption"
+ },
+ {
+  "name": "pd-width-family",
+  "file": "auth_permission_dialog.go",
+  "find": "if widthOption != \"\" && selected == widthOption {\n\t\t\twidth = \"family\"",
+  "replace": "if widthOption != \"\" && selected == sessionOption {\n\t\t\twidth = \"family\""
+ },
+ {
+  "name": "pd-width-match",
+  "file": "auth_permission_dialog.go",
+  "find": "(widthOption != \"\" && selected == widthOption)) {",
+  "replace": "(selected == widthOption)) {"
+ },
+ {
+  "name": "pd-scope-title",
+  "file": "auth_permission_dialog.go",
+  "find": "title+\"\\nApply this session grant to:\"",
+  "replace": "title+\"\\nApply to:\""
+ },
+ {
+  "name": "pd-scope-options",
+  "file": "auth_permission_dialog.go",
+  "find": "[]string{options.SessionScope.SubagentLabel, options.SessionScope.ServingSessionLabel})",
+  "replace": "[]string{options.SessionScope.ServingSessionLabel, options.SessionScope.SubagentLabel})"
+ },
+ {
+  "name": "pd-scope-serving",
+  "file": "auth_permission_dialog.go",
+  "find": "if scopeOK && scope == options.SessionScope.ServingSessionLabel {",
+  "replace": "if scope == options.SessionScope.ServingSessionLabel {"
+ },
+ {
+  "name": "pd-scope-default",
+  "file": "auth_permission_dialog.go",
+  "find": "state := DecisionApprovedForSession\n\t\t\t// A cancelled",
+  "replace": "state := DecisionApprovedForServingSess\n\t\t\t// A cancelled"
+ },
+ {
+  "name": "pd-scope-width",
+  "file": "auth_permission_dialog.go",
+  "find": "return sessionApprovalDecision(state, width), nil",
+  "replace": "return sessionApprovalDecision(state, \"proven\"), nil"
+ },
+ {
+  "name": "pd-reason-title",
+  "file": "auth_permission_dialog.go",
+  "find": "title+\"\\nShare why this request was denied (optional).\"",
+  "replace": "title+\"\\nWhy?\""
+ },
+ {
+  "name": "pd-reason-placeholder",
+  "file": "auth_permission_dialog.go",
+  "find": "\"Reason shown back to the agent\"",
+  "replace": "\"Reason\""
+ },
+ {
+  "name": "pd-reason-normalized",
+  "file": "auth_permission_dialog.go",
+  "find": "return CreateDeniedPermissionDecision(NormalizePermissionDenialReason(reason)), nil",
+  "replace": "return CreateDeniedPermissionDecision(reason), nil"
+ },
+ {
+  "name": "pd-reason-ok",
+  "file": "auth_permission_dialog.go",
+  "find": "if valueOK {\n\t\t\treason = &value",
+  "replace": "if true {\n\t\t\treason = &value"
+ },
+ {
+  "name": "pd-default-deny",
+  "file": "auth_permission_dialog.go",
+  "find": "return CreateDeniedPermissionDecision(nil), nil\n}",
+  "replace": "return UnattributedDecision{Approved: true, State: DecisionApproved}, nil\n}"
+ },
+ {
+  "name": "ds-depth",
+  "file": "auth_decision_source.go",
+  "find": "const MaxDecisionSourceDepth = 4",
+  "replace": "const MaxDecisionSourceDepth = 5"
+ },
+ {
+  "name": "ds-user-surface",
+  "file": "auth_decision_source.go",
+  "find": "if via == \"dialog\" || via == \"select\" {",
+  "replace": "if via == \"dialog\" || via == \"select\" || via == \"rpc\" {"
+ },
+ {
+  "name": "ds-authorizer-verdict",
+  "file": "auth_decision_source.go",
+  "find": "if (verdict == \"allow\" || verdict == \"deny\") && hasName && okReason {",
+  "replace": "if (verdict == \"allow\" || verdict == \"deny\" || verdict == \"defer\") && hasName && okReason {"
+ },
+ {
+  "name": "ds-authorizer-name",
+  "file": "auth_decision_source.go",
+  "find": "&& hasName && okReason {",
+  "replace": "&& okReason {"
+ },
+ {
+  "name": "ds-rule-origin",
+  "file": "auth_decision_source.go",
+  "find": "if hasSurface && okP && okO {",
+  "replace": "if hasSurface && okP {"
+ },
+ {
+  "name": "ds-yolo-pattern",
+  "file": "auth_decision_source.go",
+  "find": "if pattern, okP := nullableString(c, \"pattern\"); okP {",
+  "replace": "if pattern, _ := nullableString(c, \"pattern\"); true {"
+ },
+ {
+  "name": "ds-forwarded-budget",
+  "file": "auth_decision_source.go",
+  "find": "if budget <= 0 || !okR {",
+  "replace": "if budget < 0 || !okR {"
+ },
+ {
+  "name": "ds-forwarded-inner-budget",
+  "file": "auth_decision_source.go",
+  "find": "inner := narrowDecisionSource(raw, budget-1)",
+  "replace": "inner := narrowDecisionSource(raw, budget)"
+ },
+ {
+  "name": "ds-forwarded-null",
+  "file": "auth_decision_source.go",
+  "find": "if present && raw == nil {",
+  "replace": "if raw == nil {"
+ },
+ {
+  "name": "ds-effective-bound",
+  "file": "auth_decision_source.go",
+  "find": "for hop := 0; hop < MaxDecisionSourceDepth; hop++ {",
+  "replace": "for hop := 0; hop < MaxDecisionSourceDepth+3; hop++ {"
+ },
+ {
+  "name": "ds-effective-null",
+  "file": "auth_decision_source.go",
+  "find": "if decider.Kind != \"forwarded\" || decider.Decision == nil {",
+  "replace": "if decider.Kind != \"forwarded\" {"
+ },
+ {
+  "name": "rs-rule-allow",
+  "file": "auth_resolution.go",
+  "find": "if outcome.Approved {\n\t\t\treturn \"policy_allow\"",
+  "replace": "if !outcome.Approved {\n\t\t\treturn \"policy_allow\""
+ },
+ {
+  "name": "rs-session",
+  "file": "auth_resolution.go",
+  "find": "return \"session_approved\"",
+  "replace": "return \"user_approved\""
+ },
+ {
+  "name": "rs-infra",
+  "file": "auth_resolution.go",
+  "find": "return \"infrastructure_auto_allowed\"",
+  "replace": "return \"auto_approved\""
+ },
+ {
+  "name": "rs-yolo",
+  "file": "auth_resolution.go",
+  "find": "return \"auto_approved\"",
+  "replace": "return \"policy_allow\""
+ },
+ {
+  "name": "rs-authorizer",
+  "file": "auth_resolution.go",
+  "find": "if outcome.Approved {\n\t\t\treturn \"authorizer_allowed\"",
+  "replace": "if !outcome.Approved {\n\t\t\treturn \"authorizer_allowed\""
+ },
+ {
+  "name": "rs-unavailable",
+  "file": "auth_resolution.go",
+  "find": "return \"confirmation_unavailable\"",
+  "replace": "return \"user_denied\""
+ },
+ {
+  "name": "rs-gate-error",
+  "file": "auth_resolution.go",
+  "find": "return \"gate_error\"",
+  "replace": "return \"user_denied\""
+ },
+ {
+  "name": "rs-user-denied",
+  "file": "auth_resolution.go",
+  "find": "if !outcome.Approved {\n\t\treturn \"user_denied\"",
+  "replace": "if outcome.Approved {\n\t\treturn \"user_denied\""
+ },
+ {
+  "name": "rs-for-session",
+  "file": "auth_resolution.go",
+  "find": "if outcome.ForSession {",
+  "replace": "if !outcome.ForSession {"
+ },
+ {
+  "name": "rs-effective",
+  "file": "auth_resolution.go",
+  "find": "decider := EffectiveDecider(decidedBy)",
+  "replace": "decider := decidedBy"
+ },
+ {
+  "name": "ch-identity",
+  "file": "auth_chain.go",
+  "find": "if len(links) == 0 {\n\t\treturn terminal",
+  "replace": "if len(links) < 0 {\n\t\treturn terminal"
+ },
+ {
+  "name": "ch-error",
+  "file": "auth_chain.go",
+  "find": "if err != nil {\n\t\t\treturn PermissionPromptDecision{}, err\n\t\t}",
+  "replace": "_ = err"
+ },
+ {
+  "name": "ch-allow-state",
+  "file": "auth_chain.go",
+  "find": "Approved: true, State: DecisionApproved, DecidedBy: decidedByLink(name, \"allow\", nil)}",
+  "replace": "Approved: true, State: DecisionApprovedForSession, DecidedBy: decidedByLink(name, \"allow\", nil)}"
+ },
+ {
+  "name": "ch-allow-decider",
+  "file": "auth_chain.go",
+  "find": "decidedByLink(name, \"allow\", nil)",
+  "replace": "decidedByLink(name, \"deny\", nil)"
+ },
+ {
+  "name": "ch-deny-reason",
+  "file": "auth_chain.go",
+  "find": "decidedByLink(name, \"deny\", verdict.Reason)",
+  "replace": "decidedByLink(name, \"deny\", nil)"
+ },
+ {
+  "name": "ch-deny-normalize",
+  "file": "auth_chain.go",
+  "find": "CreateDeniedPermissionDecision(verdict.Reason).Attribute",
+  "replace": "CreateDeniedPermissionDecision(nil).Attribute"
+ },
+ {
+  "name": "ch-defer-next",
+  "file": "auth_chain.go",
+  "find": "if decision, decided := decideFromVerdict(link.Name, verdict); decided {\n\t\t\treturn decision, nil\n\t\t}",
+  "replace": "if decision, decided := decideFromVerdict(link.Name, verdict); decided {\n\t\t\t_ = decision\n\t\t}"
+ },
+ {
+  "name": "ch-unknown-allow",
+  "file": "auth_chain.go",
+  "find": "\t}\n\treturn PermissionPromptDecision{}, false\n}",
+  "replace": "\t}\n\treturn PermissionPromptDecision{Approved: true, State: DecisionApproved}, true\n}"
+ },
+ {
+  "name": "ch-terminal",
+  "file": "auth_chain.go",
+  "find": "return c.terminal.Authorize(details)",
+  "replace": "return PermissionPromptDecision{Approved: true, State: DecisionApproved}, nil"
+ },
+ {
+  "name": "ch-silent-link",
+  "file": "auth_chain.go",
+  "find": "if verdict.Kind == \"\" {",
+  "replace": "if verdict.Kind == \"\\x00\" {"
+ },
+ {
+  "name": "ch-link-args",
+  "file": "auth_chain.go",
+  "find": "link.Authorize(details, c.query, c.log)",
+  "replace": "link.Authorize(details, nil, nil)"
+ },
+ {
+  "name": "ch-decider-kind",
+  "file": "auth_chain.go",
+  "find": "DecisionSource{Kind: \"authorizer\", Name: name, Verdict: verdict, Reason: reason}",
+  "replace": "DecisionSource{Kind: \"user\", Name: name, Verdict: verdict, Reason: reason}"
+ },
+ {
+  "name": "dn-reason",
+  "file": "auth_authorizer.go",
+  "find": "const noAuthorityReason = \"No live authority was reachable for this session\"",
+  "replace": "const noAuthorityReason = \"No authority was reachable\""
+ },
+ {
+  "name": "dn-unavailable",
+  "file": "auth_authorizer.go",
+  "find": "ConfirmationUnavailable: true,\n\t\tDecidedBy: ",
+  "replace": "ConfirmationUnavailable: false,\n\t\tDecidedBy: "
+ },
+ {
+  "name": "dn-approved",
+  "file": "auth_authorizer.go",
+  "find": "Approved:                false,\n\t\tState:                   DecisionDenied,",
+  "replace": "Approved:                true,\n\t\tState:                   DecisionApproved,"
+ },
+ {
+  "name": "dn-decider",
+  "file": "auth_authorizer.go",
+  "find": "DecisionSource{Kind: \"unavailable\", Reason: &reason}",
+  "replace": "DecisionSource{Kind: \"user\", Via: \"dialog\"}"
+ },
+ {
+  "name": "rg-duplicate",
+  "file": "auth_registry.go",
+  "find": "if _, dup := r.links[name]; dup {",
+  "replace": "if _, dup := r.links[name]; dup && false {"
+ },
+ {
+  "name": "rg-message",
+  "file": "auth_registry.go",
+  "find": "An authorizer is already registered for '%s'.",
+  "replace": "An authorizer is registered for '%s'."
+ },
+ {
+  "name": "rg-dispose-identity",
+  "file": "auth_registry.go",
+  "find": "if r.links[name] == entry {",
+  "replace": "if r.links[name] != nil {"
+ },
+ {
+  "name": "rg-dispose",
+  "file": "auth_registry.go",
+  "find": "\t\tif r.links[name] == entry {\n\t\t\tdelete(r.links, name)\n\t\t}",
+  "replace": "\t\tr.links[name] = nil"
+ },
+ {
+  "name": "rg-observed-role",
+  "file": "auth_registry.go",
+  "find": "if !o.role.AdjudicatesLocally() {",
+  "replace": "if o.role.AdjudicatesLocally() {"
+ },
+ {
+  "name": "rg-observed-error",
+  "file": "auth_registry.go",
+  "find": "if err != nil {\n\t\treturn nil, err\n\t}\n\tif !o.role",
+  "replace": "if err != nil {\n\t\t_ = err\n\t}\n\tif !o.role"
+ },
+ {
+  "name": "rg-observed-event",
+  "file": "auth_registry.go",
+  "find": "o.logger.Review(\"authorizer_link_vacant\", entry)",
+  "replace": "o.logger.Review(\"authorizer_link_vacated\", entry)"
+ },
+ {
+  "name": "au-latch",
+  "file": "auth_chain_audit.go",
+  "find": "if a.warned[link.Name] {",
+  "replace": "if a.warned[link.Name] && false {"
+ },
+ {
+  "name": "au-latch-set",
+  "file": "auth_chain_audit.go",
+  "find": "a.warned[link.Name] = true",
+  "replace": "a.warned[\"\"] = true"
+ },
+ {
+  "name": "au-review-event",
+  "file": "auth_chain_audit.go",
+  "find": "a.log.Review(\"authorizer_chain_unregistered_link\", entry)",
+  "replace": "a.log.Review(\"authorizer_chain_unregistered\", entry)"
+ },
+ {
+  "name": "au-review-name",
+  "file": "auth_chain_audit.go",
+  "find": "entry.set(\"name\", link.Name)",
+  "replace": "entry.set(\"name\", link.RequestID)"
+ },
+ {
+  "name": "au-message-excluded",
+  "file": "auth_chain_audit.go",
+  "find": "(a subagent child's excludedExtensionPackages does this)",
+  "replace": "(a subagent child does this)"
+ },
+ {
+  "name": "au-message-cause",
+  "file": "auth_chain_audit.go",
+  "find": "\"also have failed to load, or declined to register because it has no \"",
+  "replace": "\"also have failed to load, or declined to register because it has a \""
+ },
+ {
+  "name": "qu-settled-skip",
+  "file": "auth_queue.go",
+  "find": "if ask.isSettled() {\n\t\t\treturn\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "qu-first-settle",
+  "file": "auth_queue.go",
+  "find": "if a.settled {\n\t\treturn\n\t}\n\ta.settled = true",
+  "replace": "a.settled = true"
+ },
+ {
+  "name": "qu-release-tail",
+  "file": "auth_queue.go",
+  "find": "q.tail = closedTail\n\tq.mu.Unlock()",
+  "replace": "q.mu.Unlock()"
+ },
+ {
+  "name": "qu-release-clear",
+  "file": "auth_queue.go",
+  "find": "releasing := q.outstanding\n\tq.outstanding = nil",
+  "replace": "releasing := q.outstanding"
+ },
+ {
+  "name": "qu-serialize",
+  "file": "auth_queue.go",
+  "find": "<-prev\n",
+  "replace": ""
+ },
+ {
+  "name": "qu-panic",
+  "file": "auth_queue.go",
+  "find": "if r := recover(); r != nil {",
+  "replace": "if r := recover(); r != nil && false {"
+ },
+ {
+  "name": "qu-release-order",
+  "file": "auth_queue.go",
+  "find": "for _, entry := range releasing {\n\t\tentry.release(reason)",
+  "replace": "for i := len(releasing) - 1; i >= 0; i-- {\n\t\treleasing[i].release(reason)"
+ },
+ {
+  "name": "bp-start",
+  "file": "auth_bracketed_paste.go",
+  "find": "pasteStart = \"\\x1b[200~\"",
+  "replace": "pasteStart = \"\\x1b[201~\""
+ },
+ {
+  "name": "bp-end",
+  "file": "auth_bracketed_paste.go",
+  "find": "pasteEnd   = \"\\x1b[201~\"",
+  "replace": "pasteEnd   = \"\\x1b[200~\""
+ },
+ {
+  "name": "bp-no-start",
+  "file": "auth_bracketed_paste.go",
+  "find": "if start == -1 {\n\t\treturn data",
+  "replace": "if start == -2 {\n\t\treturn data"
+ },
+ {
+  "name": "bp-no-end",
+  "file": "auth_bracketed_paste.go",
+  "find": "if rel == -1 {\n\t\treturn data",
+  "replace": "if rel == -2 {\n\t\treturn data"
+ },
+ {
+  "name": "bp-cr",
+  "file": "auth_bracketed_paste.go",
+  "find": "if content[i] == '\\r' || content[i] == '\\n' {",
+  "replace": "if content[i] == '\\n' {"
+ },
+ {
+  "name": "bp-run",
+  "file": "auth_bracketed_paste.go",
+  "find": "for i < len(content) && (content[i] == '\\r' || content[i] == '\\n') {\n\t\t\t\ti++\n\t\t\t}",
+  "replace": "i++"
+ },
+ {
+  "name": "bp-space",
+  "file": "auth_bracketed_paste.go",
+  "find": "b.WriteByte(' ')",
+  "replace": "b.WriteByte('_')"
+ },
+ {
+  "name": "bp-tail",
+  "file": "auth_bracketed_paste.go",
+  "find": "b.WriteString(data[contentEnd:])",
+  "replace": ""
+ },
+ {
+  "name": "pr-width-default",
+  "file": "auth_prompter.go",
+  "find": "if d.SessionGrantWidth == \"\" {\n\t\treturn \"proven\"",
+  "replace": "if d.SessionGrantWidth == \"\" {\n\t\treturn \"\""
+ },
+ {
+  "name": "pr-width-serving",
+  "file": "auth_prompter.go",
+  "find": "d.State != DecisionApprovedForSession && d.State != DecisionApprovedForServingSess {",
+  "replace": "d.State != DecisionApprovedForSession {"
+ },
+ {
+  "name": "pr-width-states",
+  "file": "auth_prompter.go",
+  "find": "d.State != DecisionApprovedForSession && d.State != DecisionApprovedForServingSess {\n\t\treturn \"\"",
+  "replace": "false {\n\t\treturn \"\""
+ },
+ {
+  "name": "pr-waiting-first",
+  "file": "auth_prompter.go",
+  "find": "p.writeReviewEntry(\"permission_request.waiting\", details, nil)\n\n\tdecision, err",
+  "replace": "decision, err"
+ },
+ {
+  "name": "pr-error",
+  "file": "auth_prompter.go",
+  "find": "if err != nil {\n\t\treturn PermissionPromptDecision{}, err\n\t}",
+  "replace": "_ = err"
+ },
+ {
+  "name": "pr-event",
+  "file": "auth_prompter.go",
+  "find": "event := \"permission_request.denied\"\n\tif decision.Approved {",
+  "replace": "event := \"permission_request.approved\"\n\tif decision.Approved {"
+ },
+ {
+  "name": "pr-unavailable",
+  "file": "auth_prompter.go",
+  "find": "if decision.ConfirmationUnavailable {\n\t\tresolution = \"confirmation_unavailable\"",
+  "replace": "if false {\n\t\tresolution = \"confirmation_unavailable\""
+ },
+ {
+  "name": "pr-waiting-decider",
+  "file": "auth_prompter.go",
+  "find": "if outcome != nil {\n\t\tif outcome.decidedBy.Kind != \"\" {",
+  "replace": "if true {\n\t\tif outcome != nil && outcome.decidedBy.Kind != \"\" {"
+ },
+ {
+  "name": "pr-denial-reason",
+  "file": "auth_prompter.go",
+  "find": "entry.set(\"denialReason\", strOrNull(outcome.denialReason))",
+  "replace": "entry.set(\"denialReason\", nil)"
+ },
+ {
+  "name": "pr-null-fields",
+  "file": "auth_prompter.go",
+  "find": "entry.set(\"toolCallId\", strOrNull(details.ToolCallID))",
+  "replace": "entry.set(\"toolCallId\", nil)"
+ },
+ {
+  "name": "pr-facts",
+  "file": "auth_prompter.go",
+  "find": "facts := RenderReviewLogFacts(details.Payload)\n\tfor _, k := range facts.keys {\n\t\tentry.set(k, facts.vals[k])\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "pr-agent",
+  "file": "auth_prompter.go",
+  "find": "entry.set(\"agentName\", strOrNull(details.AgentName))",
+  "replace": "entry.set(\"agentName\", nil)"
+ },
+ {
+  "name": "lu-queue",
+  "file": "auth_local_user.go",
+  "find": "return a.deps.Dialogs.RunDecision(func() (PermissionPromptDecision, error) { return a.present(details) }, unansweredDecision)",
+  "replace": "return a.present(details)"
+ },
+ {
+  "name": "lu-emit-first",
+  "file": "auth_local_user.go",
+  "find": "EmitUiPromptEvent(a.deps.Events, BuildUiPromptFromDetails(details))\n\ttitle := ",
+  "replace": "title := "
+ },
+ {
+  "name": "lu-title",
+  "file": "auth_local_user.go",
+  "find": "title := \"Permission Required\"\n\tif details.Forwarding != nil {",
+  "replace": "title := \"Permission Required\"\n\tif details.Forwarding == nil {"
+ },
+ {
+  "name": "lu-title-text",
+  "file": "auth_local_user.go",
+  "find": "title = \"Permission Required (Subagent)\"",
+  "replace": "title = \"Permission Required (subagent)\""
+ },
+ {
+  "name": "lu-session-read",
+  "file": "auth_local_user.go",
+  "find": "a.deps.DescribeSession())",
+  "replace": "NotificationSession{})"
+ },
+ {
+  "name": "lu-mode",
+  "file": "auth_local_user.go",
+  "find": "Mode:              a.deps.Mode,",
+  "replace": "Mode:              \"tui\","
+ },
+ {
+  "name": "lu-unanswered-unavailable",
+  "file": "auth_local_user.go",
+  "find": "ConfirmationUnavailable: true,\n\t\tDenialReason:            &reason,",
+  "replace": "ConfirmationUnavailable: false,\n\t\tDenialReason:            &reason,"
+ },
+ {
+  "name": "lu-unanswered-decider",
+  "file": "auth_local_user.go",
+  "find": "DecidedBy:               DecisionSource{Kind: \"unavailable\", Reason: &reason},",
+  "replace": "DecidedBy:               DecisionSource{Kind: \"user\", Via: \"dialog\"},"
+ },
+ {
+  "name": "lu-unanswered-approved",
+  "file": "auth_local_user.go",
+  "find": "\t\tApproved:                false,\n\t\tState:                   DecisionDenied,\n\t\tConfirmationUnavailable: true,\n\t\tDenialReason:",
+  "replace": "\t\tApproved:                true,\n\t\tState:                   DecisionApproved,\n\t\tConfirmationUnavailable: true,\n\t\tDenialReason:"
+ },
+ {
+  "name": "lu-widths",
+  "file": "auth_local_user.go",
+  "find": "if direction, ok := ProvenDirectionOf(grants); ok {",
+  "replace": "if direction, ok := ProvenDirectionOf(grants); !ok {"
+ },
+ {
+  "name": "lu-label-precedence",
+  "file": "auth_local_user.go",
+  "find": "case widths != nil:\n\t\tsessionLabel = &widths.SessionLabel\n\tcase details.SessionLabel != nil:",
+  "replace": "case details.SessionLabel != nil:\n\t\tsessionLabel = details.SessionLabel\n\tcase widths != nil:"
+ },
+ {
+  "name": "lu-label-fallback",
+  "file": "auth_local_user.go",
+  "find": "default:\n\t\tsessionLabel = BuildPathAccessSessionLabel(grants)",
+  "replace": "default:\n\t\tsessionLabel = nil"
+ },
+ {
+  "name": "lu-label-empty",
+  "file": "auth_local_user.go",
+  "find": "if sessionLabel != nil && *sessionLabel != \"\" {",
+  "replace": "if sessionLabel != nil {"
+ },
+ {
+  "name": "lu-width-label",
+  "file": "auth_local_user.go",
+  "find": "options.SessionWidth = &SessionWidthOption{Label: widths.WidenedLabel}",
+  "replace": "options.SessionWidth = &SessionWidthOption{Label: widths.SessionLabel}"
+ },
+ {
+  "name": "lu-scope-forwarding",
+  "file": "auth_local_user.go",
+  "find": "if details.Forwarding != nil && len(grants) > 0 {",
+  "replace": "if len(grants) > 0 {"
+ },
+ {
+  "name": "lu-scope-grants",
+  "file": "auth_local_user.go",
+  "find": "if details.Forwarding != nil && len(grants) > 0 {",
+  "replace": "if details.Forwarding != nil {"
+ },
+ {
+  "name": "lu-offered",
+  "file": "auth_local_user.go",
+  "find": "if !offered {\n\t\treturn nil",
+  "replace": "if offered && false {\n\t\treturn nil"
+ },
+ {
+  "name": "up-channel",
+  "file": "uiprompt.go",
+  "find": "const PermissionsUIPromptChannel = \"permissions:ui_prompt\"",
+  "replace": "const PermissionsUIPromptChannel = \"permissions:ui-prompt\""
+ },
+ {
+  "name": "up-skill-surface",
+  "file": "uiprompt.go",
+  "find": "if input.Source == \"skill_input\" || input.Source == \"skill_read\" {",
+  "replace": "if input.Source == \"skill_input\" {"
+ },
+ {
+  "name": "up-value-order",
+  "file": "uiprompt.go",
+  "find": "[]*string{input.Command, input.Path, input.Target, input.SkillName, input.ToolName}",
+  "replace": "[]*string{input.Path, input.Command, input.Target, input.SkillName, input.ToolName}"
+ },
+ {
+  "name": "up-explicit-surface",
+  "file": "uiprompt.go",
+  "find": "if !input.Surface.Set {\n\t\tsurface = directSurface(input)",
+  "replace": "if input.Surface.Value == nil {\n\t\tsurface = directSurface(input)"
+ },
+ {
+  "name": "up-explicit-value",
+  "file": "uiprompt.go",
+  "find": "if !input.Value.Set {\n\t\tvalue = directValue(input)",
+  "replace": "if input.Value.Value == nil {\n\t\tvalue = directValue(input)"
+ },
+ {
+  "name": "up-details-surface",
+  "file": "uiprompt.go",
+  "find": "if d.Surface != nil {\n\t\tinput.Surface",
+  "replace": "if d.Surface == nil {\n\t\tinput.Surface"
+ },
+ {
+  "name": "up-forwarding",
+  "file": "uiprompt.go",
+  "find": "if d.Forwarding != nil {\n\t\tinput.Forwarding",
+  "replace": "if d.Forwarding == nil {\n\t\tinput.Forwarding"
+ },
+ {
+  "name": "up-panic",
+  "file": "uiprompt.go",
+  "find": "defer func() { _ = recover() }()",
+  "replace": ""
+ },
+ {
+  "name": "up-request-only",
+  "file": "uiprompt.go",
+  "find": "o.set(\"request\", PromptPayload{Request: e.Request}.JS().obj(\"request\"))",
+  "replace": "o.set(\"request\", PromptPayload{Request: e.Request}.JS())"
+ },
+ {
+  "name": "es-abandon-unavailable",
+  "file": "auth_escalator.go",
+  "find": "ConfirmationUnavailable: true,\n\t\tDenialReason:            &denialReason,",
+  "replace": "ConfirmationUnavailable: false,\n\t\tDenialReason:            &denialReason,"
+ },
+ {
+  "name": "es-abandon-approved",
+  "file": "auth_escalator.go",
+  "find": "\t\tApproved:                false,\n\t\tState:                   DecisionDenied,\n\t\tConfirmationUnavailable: true,\n\t\tDenialReason:            &denialReason,",
+  "replace": "\t\tApproved:                true,\n\t\tState:                   DecisionApproved,\n\t\tConfirmationUnavailable: true,\n\t\tDenialReason:            &denialReason,"
+ },
+ {
+  "name": "es-abandon-decider",
+  "file": "auth_escalator.go",
+  "find": "DecidedBy:               DecisionSource{Kind: \"unavailable\", Reason: &denialReason},",
+  "replace": "DecidedBy:               DecisionSource{Kind: \"gate_error\", Reason: &denialReason},"
+ },
+ {
+  "name": "es-relay-width",
+  "file": "auth_escalator.go",
+  "find": "SessionGrantWidth: response.SessionGrantWidth,\n\t\tDecidedBy:         DecisionSource{Kind: \"forwarded\"",
+  "replace": "DecidedBy:         DecisionSource{Kind: \"forwarded\""
+ },
+ {
+  "name": "es-relay-reason",
+  "file": "auth_escalator.go",
+  "find": "DenialReason:      response.DenialReason,\n\t\tSessionGrantWidth",
+  "replace": "SessionGrantWidth"
+ },
+ {
+  "name": "es-relay-decision",
+  "file": "auth_escalator.go",
+  "find": "Decision: response.DecidedBy}",
+  "replace": "Decision: nil}"
+ },
+ {
+  "name": "es-relay-responder",
+  "file": "auth_escalator.go",
+  "find": "responder := response.ResponderSessionID",
+  "replace": "responder := \"\""
+ },
+ {
+  "name": "es-id-safe",
+  "file": "auth_escalator.go",
+  "find": "`^[A-Za-z0-9._-]+$`",
+  "replace": "`^[A-Za-z0-9._/-]+$`"
+ },
+ {
+  "name": "es-id-fresh",
+  "file": "auth_escalator.go",
+  "find": "return CreatePermissionRequestId()\n}",
+  "replace": "return requesterRequestID\n}"
+ },
+ {
+  "name": "es-subagent",
+  "file": "auth_escalator.go",
+  "find": "IsSubagent:       true,",
+  "replace": "IsSubagent:       false,"
+ },
+ {
+  "name": "es-target-message",
+  "file": "auth_escalator.go",
+  "find": "return abandon(\"Could not resolve a parent session to forward this permission request to\"), nil",
+  "replace": "return abandon(\"No parent\"), nil"
+ },
+ {
+  "name": "es-dirs-message",
+  "file": "auth_escalator.go",
+  "find": "\"Permission forwarding directories could not be prepared for session '\" + target.SessionID + \"'\"",
+  "replace": "\"Permission forwarding directories could not be prepared\""
+ },
+ {
+  "name": "es-write-failure",
+  "file": "auth_escalator.go",
+  "find": "CleanupPermissionForwardingLocationIfEmpty(p.logger, location)\n\t\treturn abandon(\"The forwarded permission request could not be written\"), nil",
+  "replace": "return abandon(\"The forwarded permission request could not be written\"), nil"
+ },
+ {
+  "name": "es-intent-cwd",
+  "file": "auth_escalator.go",
+  "find": "RequesterCwd:         GetCwd(ctx),",
+  "replace": "RequesterCwd:         \"\","
+ },
+ {
+  "name": "es-intent-principal",
+  "file": "auth_escalator.go",
+  "find": "Principal:            ForwardedPrincipal{SessionID: requesterSessionID, AgentName: requesterAgentName},",
+  "replace": "Principal:            ForwardedPrincipal{SessionID: targetSessionID, AgentName: requesterAgentName},"
+ },
+ {
+  "name": "es-agent-order",
+  "file": "auth_escalator.go",
+  "find": "return \"unknown\", nil\n}",
+  "replace": "return \"\", nil\n}"
+ },
+ {
+  "name": "es-agent-prompt",
+  "file": "auth_escalator.go",
+  "find": "if systemPrompt, ok := getContextSystemPrompt(p.getSystemPrompt); ok {",
+  "replace": "if systemPrompt, ok := getContextSystemPrompt(p.getSystemPrompt); false && ok {"
+ },
+ {
+  "name": "es-display",
+  "file": "auth_escalator.go",
+  "find": "request.Source = facts.display.source",
+  "replace": "request.Source = \"tool_call\""
+ },
+ {
+  "name": "es-poll-existing",
+  "file": "auth_escalator.go",
+  "find": "if _, err := os.Stat(responsePath); err == nil {",
+  "replace": "if _, err := os.Stat(responsePath); err != nil {"
+ },
+ {
+  "name": "es-unreadable",
+  "file": "auth_escalator.go",
+  "find": "return abandon(\"The parent session's permission response could not be read\")",
+  "replace": "return PermissionPromptDecision{Approved: true, State: DecisionApproved}"
+ },
+ {
+  "name": "es-discard-response",
+  "file": "auth_escalator.go",
+  "find": "SafeDeleteFile(p.logger, responsePath, \"forwarded permission response\")",
+  "replace": ""
+ },
+ {
+  "name": "es-discard-request",
+  "file": "auth_escalator.go",
+  "find": "SafeDeleteFile(p.logger, requestPath, \"forwarded permission request\")",
+  "replace": ""
+ },
+ {
+  "name": "es-grace",
+  "file": "auth_escalator.go",
+  "find": "time.Now().UnixMilli()-unservedSince >= PermissionForwardingServingGraceMs",
+  "replace": "time.Now().UnixMilli()-unservedSince >= 0"
+ },
+ {
+  "name": "es-unknown-serving",
+  "file": "auth_escalator.go",
+  "find": "if serving, known := p.serving.IsServing(target); known && !serving {",
+  "replace": "if serving, _ := p.serving.IsServing(target); !serving {"
+ },
+ {
+  "name": "es-unserved-reset",
+  "file": "auth_escalator.go",
+  "find": "\t\treturn time.Now().UnixMilli()\n\t}\n\treturn -1",
+  "replace": "\t\treturn time.Now().UnixMilli()\n\t}\n\treturn unservedSince"
+ },
+ {
+  "name": "es-timeout-message",
+  "file": "auth_escalator.go",
+  "find": "\"s\")\n}\n\n// checkServingLiveness",
+  "replace": "\"ms\")\n}\n\n// checkServingLiveness"
+ },
+ {
+  "name": "es-timeout-deadline",
+  "file": "auth_escalator.go",
+  "find": "for float64(time.Now().UnixMilli()) < deadline {",
+  "replace": "for float64(time.Now().UnixMilli()) < deadline*2 {"
+ },
+ {
+  "name": "es-poll-sleep",
+  "file": "auth_escalator.go",
+  "find": "time.Sleep(PermissionForwardingPollIntervalMs * time.Millisecond)",
+  "replace": "time.Sleep(PermissionForwardingPollIntervalMs * time.Microsecond)"
+ },
+ {
+  "name": "es-serving-log",
+  "file": "auth_escalator.go",
+  "find": "p.logger.Review(\"forwarded_permission.no_serving_session\", entry)",
+  "replace": ""
+ },
+ {
+  "name": "es-created-log",
+  "file": "auth_escalator.go",
+  "find": "p.logger.Review(\"forwarded_permission.request_created\", created)",
+  "replace": ""
+ },
+ {
+  "name": "es-received-log",
+  "file": "auth_escalator.go",
+  "find": "p.logger.Review(\"forwarded_permission.response_received\", received)",
+  "replace": ""
+ },
+ {
+  "name": "se-ui-local",
+  "file": "auth_selection.go",
+  "find": "AdjudicatesLocally: true,\n\t\t\t}, nil\n\t\t}\n\t\treturn SelectedAuthority{Terminal: buildParentAuthorizer",
+  "replace": "AdjudicatesLocally: false,\n\t\t\t}, nil\n\t\t}\n\t\treturn SelectedAuthority{Terminal: buildParentAuthorizer"
+ },
+ {
+  "name": "se-relay-role",
+  "file": "auth_selection.go",
+  "find": "Terminal: buildParentAuthorizer(ctx, deps), AdjudicatesLocally: false, RelayTarget: relayTarget}",
+  "replace": "Terminal: buildParentAuthorizer(ctx, deps), AdjudicatesLocally: true, RelayTarget: relayTarget}"
+ },
+ {
+  "name": "se-headless-role",
+  "file": "auth_selection.go",
+  "find": "return SelectedAuthority{Terminal: buildParentAuthorizer(ctx, deps), AdjudicatesLocally: false}, nil",
+  "replace": "return SelectedAuthority{Terminal: buildParentAuthorizer(ctx, deps), AdjudicatesLocally: true}, nil"
+ },
+ {
+  "name": "se-deny-terminal",
+  "file": "auth_selection.go",
+  "find": "return SelectedAuthority{Terminal: DenyingAuthorizer{}, AdjudicatesLocally: true}, nil",
+  "replace": "return SelectedAuthority{Terminal: DenyingAuthorizer{}, AdjudicatesLocally: false}, nil"
+ },
+ {
+  "name": "se-headless-subagent",
+  "file": "auth_selection.go",
+  "find": "if isSubagent {\n\t\treturn SelectedAuthority{Terminal: buildParentAuthorizer",
+  "replace": "if !isSubagent {\n\t\treturn SelectedAuthority{Terminal: buildParentAuthorizer"
+ },
+ {
+  "name": "se-relay-needs-serving",
+  "file": "auth_selection.go",
+  "find": "if serving, known := deps.Serving.IsServing(target); !known || !serving {",
+  "replace": "if serving, _ := deps.Serving.IsServing(target); !serving && false {"
+ },
+ {
+  "name": "se-relay-known",
+  "file": "auth_selection.go",
+  "find": "if serving, known := deps.Serving.IsServing(target); !known || !serving {",
+  "replace": "if serving, known := deps.Serving.IsServing(target); known && !serving {"
+ },
+ {
+  "name": "se-relay-subagent",
+  "file": "auth_selection.go",
+  "find": "IsSubagent:       isSubagent,\n\t\tCurrentSessionID: sessionID,\n\t\tSessionID:        sessionID,\n\t\tRegistry:         deps.Registry,\n\t})\n\tif !found {\n\t\treturn nil, nil",
+  "replace": "IsSubagent:       true,\n\t\tCurrentSessionID: sessionID,\n\t\tSessionID:        sessionID,\n\t\tRegistry:         deps.Registry,\n\t})\n\tif !found {\n\t\treturn nil, nil"
+ },
+ {
+  "name": "se-detection-error",
+  "file": "auth_selection.go",
+  "find": "isSubagent, err := deps.Detection.IsSubagent(detectionContext(ctx))\n\tif err != nil {\n\t\treturn SelectedAuthority{}, err\n\t}",
+  "replace": "isSubagent, _ := deps.Detection.IsSubagent(detectionContext(ctx))"
+ },
+ {
+  "name": "se-not-activated",
+  "file": "auth_selection.go",
+  "find": "errors.New(\"escalate called before the session was activated\")",
+  "replace": "errors.New(\"escalate called before activation\")"
+ },
+ {
+  "name": "se-escalate-nil",
+  "file": "auth_selection.go",
+  "find": "if authority == nil {\n\t\treturn PermissionPromptDecision{}, errNotActivated",
+  "replace": "if authority == nil && false {\n\t\treturn PermissionPromptDecision{}, errNotActivated"
+ },
+ {
+  "name": "se-deactivate",
+  "file": "auth_selection.go",
+  "find": "s.recordRelayTransition(nil)\n\ts.authority = nil",
+  "replace": "s.recordRelayTransition(nil)"
+ },
+ {
+  "name": "se-role-default",
+  "file": "auth_selection.go",
+  "find": "if s.authority == nil {\n\t\treturn true",
+  "replace": "if s.authority == nil {\n\t\treturn false"
+ },
+ {
+  "name": "se-transition-same",
+  "file": "auth_selection.go",
+  "find": "(previous == nil || previous.SessionID == target.SessionID) {",
+  "replace": "(previous == nil || previous.SessionID != target.SessionID) {"
+ },
+ {
+  "name": "se-transition-stop",
+  "file": "auth_selection.go",
+  "find": "if previous != nil {\n\t\tentry := newObject()\n\t\tentry.set(\"targetSessionId\", previous.SessionID)",
+  "replace": "if previous != nil && false {\n\t\tentry := newObject()\n\t\tentry.set(\"targetSessionId\", previous.SessionID)"
+ },
+ {
+  "name": "se-transition-channel",
+  "file": "auth_selection.go",
+  "find": "entry.set(\"channel\", string(target.Source))",
+  "replace": "entry.set(\"channel\", \"env\")"
+ },
+ {
+  "name": "se-links-relay",
+  "file": "auth_selection.go",
+  "find": "if !authority.AdjudicatesLocally {\n\t\tlinks := make",
+  "replace": "if authority.AdjudicatesLocally {\n\t\tlinks := make"
+ },
+ {
+  "name": "se-links-empty",
+  "file": "auth_selection.go",
+  "find": "if len(configured) == 0 {\n\t\treturn nil",
+  "replace": "if len(configured) < 0 {\n\t\treturn nil"
+ },
+ {
+  "name": "se-unregistered",
+  "file": "auth_selection.go",
+  "find": "if authorize == nil {\n\t\t\ts.deps.ChainAudit",
+  "replace": "if authorize != nil {\n\t\t\ts.deps.ChainAudit"
+ },
+ {
+  "name": "se-envelope",
+  "file": "auth_selection.go",
+  "find": "Authorize: EncloseInDelegationEnvelope(authorize)}",
+  "replace": "Authorize: authorize}"
+ },
+ {
+  "name": "se-resolved-log",
+  "file": "auth_selection.go",
+  "find": "if len(resolved) > 0 {",
+  "replace": "if len(resolved) >= 0 {"
+ },
+ {
+  "name": "se-query",
+  "file": "auth_selection.go",
+  "find": "s.deps.GetPermissionQuery(), s.deps.Logger)",
+  "replace": "nil, s.deps.Logger)"
+ },
+ {
+  "name": "se-prompter",
+  "file": "auth_selection.go",
+  "find": "return s.deps.Prompter.Prompt(chain, details)",
+  "replace": "return chain.Authorize(details)"
+ },
+ {
+  "name": "se-session-name",
+  "file": "auth_selection.go",
+  "find": "name = ctx.SessionName()",
+  "replace": "name = nil"
+ },
+ {
+  "name": "se-system-prompt",
+  "file": "auth_selection.go",
+  "find": "GetSystemPrompt: ctx.GetSystemPrompt,",
+  "replace": ""
+ },
+ {
+  "name": "pc-reason-render-request",
+  "file": "auth_prompt_component.go",
+  "find": "// The editor mutates its own buffer silently; only the dialog can repaint.\n\tc.renderRequests++",
+  "replace": "// The editor mutates its own buffer silently; only the dialog can repaint."
+ },
+ {
+  "name": "pc-render-requests-once",
+  "file": "auth_prompt_component.go",
+  "find": "for ; renders > 0; renders-- {",
+  "replace": "for ; renders > 1; renders-- {"
+ },
+ {
+  "name": "pc-mode",
+  "file": "auth_prompt_component.go",
+  "find": "if view.Mode == \"tui\" {",
+  "replace": "if view.Mode != \"rpc\" {"
+ },
+ {
+  "name": "pc-dialog-via",
+  "file": "auth_prompt_component.go",
+  "find": "Via: \"dialog\"}",
+  "replace": "Via: \"select\"}"
+ },
+ {
+  "name": "pc-select-via",
+  "file": "auth_prompt_component.go",
+  "find": "Via: \"select\"}), nil",
+  "replace": "Via: \"dialog\"}), nil"
+ },
+ {
+  "name": "pc-fallback-width",
+  "file": "auth_prompt_component.go",
+  "find": "const fallbackRenderWidth = 80",
+  "replace": "const fallbackRenderWidth = 120"
+ },
+ {
+  "name": "pc-fallback-budget",
+  "file": "auth_prompt_component.go",
+  "find": "Width: fallbackRenderWidth}",
+  "replace": "Width: 1000}"
+ },
+ {
+  "name": "pc-fallback-join",
+  "file": "auth_prompt_component.go",
+  "find": "message += \"\\n\"",
+  "replace": "message += \" \""
+ },
+ {
+  "name": "pc-default-label",
+  "file": "auth_prompt_component.go",
+  "find": "const defaultSessionLabel = \"Yes, for this session\"",
+  "replace": "const defaultSessionLabel = \"Yes, this session\""
+ },
+ {
+  "name": "pc-both-label",
+  "file": "auth_prompt_component.go",
+  "find": "ActionApproveSessionBoth: \"Yes, for this session in both directions\",",
+  "replace": "ActionApproveSessionBoth: \"Yes, for this session\","
+ },
+ {
+  "name": "pc-closed",
+  "file": "auth_prompt_component.go",
+  "find": "if !ok {\n\t\treturn UnattributedDecision{}, errDialogClosed",
+  "replace": "if !ok && false {\n\t\treturn UnattributedDecision{}, errDialogClosed"
+ },
+ {
+  "name": "pc-closed-denies",
+  "file": "auth_prompt_component.go",
+  "find": "return UnattributedDecision{}, errDialogClosed\n\t}\n\treturn decision, nil",
+  "replace": "return UnattributedDecision{Approved: true, State: DecisionApproved}, nil\n\t}\n\treturn decision, nil"
+ },
+ {
+  "name": "pc-overlay",
+  "file": "auth_prompt_component.go",
+  "find": "PromptCustomOptions{Overlay: false}",
+  "replace": "PromptCustomOptions{Overlay: true}"
+ },
+ {
+  "name": "pc-notification-once",
+  "file": "auth_prompt_component.go",
+  "find": "if notification := RenderPromptNotification(view.PromptNotifications, view.Notice); notification != \"\" {",
+  "replace": "if notification := RenderPromptNotification(view.PromptNotifications, view.Notice); false && notification != \"\" {"
+ },
+ {
+  "name": "pc-notice-source",
+  "file": "auth_prompt_component.go",
+  "find": "RenderPromptNotification(view.PromptNotifications, view.Notice)",
+  "replace": "RenderPromptNotification(view.PromptNotifications, PromptNotice{Title: title, Body: title})"
+ },
+ {
+  "name": "pc-label-option",
+  "file": "auth_prompt_component.go",
+  "find": "config.SessionLabel = *options.SessionLabel",
+  "replace": "config.SessionLabel = defaultSessionLabel"
+ },
+ {
+  "name": "pc-width-option",
+  "file": "auth_prompt_component.go",
+  "find": "config.WidthLabel = options.SessionWidth.Label",
+  "replace": "config.WidthLabel = \"\""
+ },
+ {
+  "name": "pc-scope-option",
+  "file": "auth_prompt_component.go",
+  "find": "config.SessionScope = options.SessionScope",
+  "replace": "config.SessionScope = nil"
+ },
+ {
+  "name": "pc-expand-action",
+  "file": "auth_prompt_component.go",
+  "find": "t.keys.Matches(data, \"app.tools.expand\")",
+  "replace": "t.keys.Matches(data, \"app.tools.collapse\")"
+ },
+ {
+  "name": "pc-expand-toggle",
+  "file": "auth_prompt_component.go",
+  "find": "t.ui.SetToolsExpanded(!t.ui.GetToolsExpanded())",
+  "replace": "t.ui.SetToolsExpanded(true)"
+ },
+ {
+  "name": "pc-finished",
+  "file": "auth_prompt_component.go",
+  "find": "if !c.finished {\n\t\tc.handleInputLocked(data)\n\t}",
+  "replace": "c.handleInputLocked(data)"
+ },
+ {
+  "name": "pc-apply-once",
+  "file": "auth_prompt_component.go",
+  "find": "if !c.finished {\n\t\t\tc.finished = true\n\t\t\tc.done(outcome.Decision)\n\t\t}",
+  "replace": "c.finished = true\n\t\tc.done(outcome.Decision)"
+ },
+ {
+  "name": "pc-reason-delegate",
+  "file": "auth_prompt_component.go",
+  "find": "c.reason.HandleInput(CollapsePastedNewlines(data))",
+  "replace": "c.reason.HandleInput(data)"
+ },
+ {
+  "name": "pc-reason-expand",
+  "file": "auth_prompt_component.go",
+  "find": "if c.state.Step == StepReason {\n\t\tc.handleReasonInput(data)\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "pc-reason-fresh",
+  "file": "auth_prompt_component.go",
+  "find": "if outcome.State.Step == StepReason && c.state.Step != StepReason {\n\t\tc.reason = c.createReasonEditor()",
+  "replace": "if outcome.State.Step == StepReason && c.state.Step != StepReason && false {\n\t\tc.reason = c.createReasonEditor()"
+ },
+ {
+  "name": "pc-reason-focused",
+  "file": "auth_prompt_component.go",
+  "find": "editor.Focused = true",
+  "replace": "editor.Focused = false"
+ },
+ {
+  "name": "pc-reason-submit",
+  "file": "auth_prompt_component.go",
+  "find": "c.apply(PromptEvent{Type: EventSubmitReason, Draft: draft})",
+  "replace": "c.apply(PromptEvent{Type: EventConfirm})"
+ },
+ {
+  "name": "pc-reason-escape",
+  "file": "auth_prompt_component.go",
+  "find": "editor.OnEscape = func() { c.apply(PromptEvent{Type: EventCancel}) }",
+  "replace": "editor.OnEscape = func() { c.apply(PromptEvent{Type: EventConfirm}) }"
+ },
+ {
+  "name": "pc-key-up",
+  "file": "auth_prompt_component.go",
+  "find": "tui.MatchesKey(data, \"up\") || tui.MatchesKey(data, \"k\")",
+  "replace": "tui.MatchesKey(data, \"up\")"
+ },
+ {
+  "name": "pc-key-down",
+  "file": "auth_prompt_component.go",
+  "find": "tui.MatchesKey(data, \"down\") || tui.MatchesKey(data, \"j\")",
+  "replace": "tui.MatchesKey(data, \"down\")"
+ },
+ {
+  "name": "pc-key-enter",
+  "file": "auth_prompt_component.go",
+  "find": "if tui.MatchesKey(data, \"enter\") {",
+  "replace": "if tui.MatchesKey(data, \"enter\") || tui.MatchesKey(data, \"space\") {"
+ },
+ {
+  "name": "pc-key-escape",
+  "file": "auth_prompt_component.go",
+  "find": "if tui.MatchesKey(data, \"escape\") {",
+  "replace": "if tui.MatchesKey(data, \"escape\") || tui.MatchesKey(data, \"q\") {"
+ },
+ {
+  "name": "pc-hotkey-step",
+  "file": "auth_prompt_component.go",
+  "find": "if c.state.Step == StepDecision {\n\t\tfor _, option := range VisibleActions(c.config) {",
+  "replace": "{\n\t\tfor _, option := range VisibleActions(c.config) {"
+ },
+ {
+  "name": "pc-hotkey-roster",
+  "file": "auth_prompt_component.go",
+  "find": "for _, option := range VisibleActions(c.config) {\n\t\t\tif tui.MatchesKey",
+  "replace": "for _, option := range optionOrder {\n\t\t\tif tui.MatchesKey"
+ },
+ {
+  "name": "pc-hotkey-binding",
+  "file": "auth_prompt_component.go",
+  "find": "tui.MatchesKey(data, c.config.Keys[option])",
+  "replace": "tui.MatchesKey(data, string(option)[:1])"
+ },
+ {
+  "name": "pc-requests-render",
+  "file": "auth_prompt_component.go",
+  "find": "if c.requestRender != nil {\n\t\tfor ; renders > 0;",
+  "replace": "if false && c.requestRender != nil {\n\t\tfor ; renders > 0;"
+ },
+ {
+  "name": "pc-hint-expanded",
+  "file": "auth_prompt_component.go",
+  "find": "if c.expanded {\n\t\tkeys = append(keys, \"ctrl+o collapse\")",
+  "replace": "if !c.expanded {\n\t\tkeys = append(keys, \"ctrl+o collapse\")"
+ },
+ {
+  "name": "pc-hint-elided",
+  "file": "auth_prompt_component.go",
+  "find": "} else if view.Elided {",
+  "replace": "} else if !view.Elided {"
+ },
+ {
+  "name": "pc-budget-expanded",
+  "file": "auth_prompt_component.go",
+  "find": "if c.expanded {\n\t\tbudget = CompleteViewBudget(width)",
+  "replace": "if !c.expanded {\n\t\tbudget = CompleteViewBudget(width)"
+ },
+ {
+  "name": "pc-warning",
+  "file": "auth_prompt_component.go",
+  "find": "c.theme.Fg(\"warning\", text)",
+  "replace": "c.theme.Fg(\"accent\", text)"
+ },
+ {
+  "name": "pc-title-color",
+  "file": "auth_prompt_component.go",
+  "find": "lines := append([]string{c.theme.Fg(\"accent\", c.title)}, ask.Lines...)",
+  "replace": "lines := append([]string{c.title}, ask.Lines...)"
+ },
+ {
+  "name": "pc-marker",
+  "file": "auth_prompt_component.go",
+  "find": "marker = \"▶\"\n\t\t}\n\t\trow := ",
+  "replace": "marker = \">\"\n\t\t}\n\t\trow := "
+ },
+ {
+  "name": "pc-row",
+  "file": "auth_prompt_component.go",
+  "find": "row := marker + \" (\" + c.config.Keys[action] + \") \" + label",
+  "replace": "row := marker + \" \" + label"
+ },
+ {
+  "name": "pc-hint-state",
+  "file": "auth_prompt_component.go",
+  "find": "if c.state.Hint != \"\" {\n\t\tlines = append(lines, c.state.Hint)",
+  "replace": "if false {\n\t\tlines = append(lines, c.state.Hint)"
+ },
+ {
+  "name": "pc-label-session",
+  "file": "auth_prompt_component.go",
+  "find": "if action == ActionApproveSession {\n\t\treturn c.config.SessionLabel",
+  "replace": "if action == ActionApproveSession {\n\t\treturn defaultSessionLabel"
+ },
+ {
+  "name": "pc-label-width",
+  "file": "auth_prompt_component.go",
+  "find": "if action == ActionApproveSessionBoth && c.config.WidthLabel != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pc-reason-error",
+  "file": "auth_prompt_component.go",
+  "find": "c.theme.Fg(\"error\", c.state.ReasonError)",
+  "replace": "c.theme.Fg(\"warning\", c.state.ReasonError)"
+ },
+ {
+  "name": "pc-reason-label",
+  "file": "auth_prompt_component.go",
+  "find": "lines = append(lines, \"\", \"Reason (required):\")",
+  "replace": "lines = append(lines, \"\", \"Reason:\")"
+ },
+ {
+  "name": "pc-scope-labels",
+  "file": "auth_prompt_component.go",
+  "find": "subagentLabel, servingLabel := \"This subagent only\", \"The whole session\"",
+  "replace": "subagentLabel, servingLabel := \"Subagent\", \"Session\""
+ },
+ {
+  "name": "pc-scope-default-row",
+  "file": "auth_prompt_component.go",
+  "find": "selected := c.state.ScopeServing == row.serving",
+  "replace": "selected := c.state.ScopeServing != row.serving"
+ },
+ {
+  "name": "pc-fit-width",
+  "file": "auth_prompt_component.go",
+  "find": "return FitLinesToWidth(c.renderStep(width), width)",
+  "replace": "return c.renderStep(width)"
+ },
+ {
+  "name": "li-submit-newline",
+  "file": "auth_input.go",
+  "find": "in.matches(data, tui.KBInputSubmit) || data == \"\\n\"",
+  "replace": "in.matches(data, tui.KBInputSubmit)"
+ },
+ {
+  "name": "li-cancel",
+  "file": "auth_input.go",
+  "find": "case in.matches(data, tui.KBSelectCancel):",
+  "replace": "case in.matches(data, tui.KBSelectCancel) && false:"
+ },
+ {
+  "name": "li-paste-start",
+  "file": "auth_input.go",
+  "find": "if strings.Contains(data, \"\\x1b[200~\") {",
+  "replace": "if strings.Contains(data, \"\\x1b[2000~\") {"
+ },
+ {
+  "name": "li-paste-newlines",
+  "file": "auth_input.go",
+  "find": "clean = strings.ReplaceAll(clean, \"\\n\", \"\")",
+  "replace": ""
+ },
+ {
+  "name": "li-paste-tabs",
+  "file": "auth_input.go",
+  "find": "strings.ReplaceAll(clean, \"\\t\", \"    \")",
+  "replace": "strings.ReplaceAll(clean, \"\\t\", \" \")"
+ },
+ {
+  "name": "li-control-chars",
+  "file": "auth_input.go",
+  "find": "if r < 32 || r == 0x7f || (r >= 0x80 && r <= 0x9f) {",
+  "replace": "if r < 32 || r == 0x7f {"
+ },
+ {
+  "name": "li-kitty",
+  "file": "auth_input.go",
+  "find": "if printable, ok := tui.DecodeKittyPrintable(data); ok {",
+  "replace": "if printable, ok := tui.DecodeKittyPrintable(data); false && ok {"
+ },
+ {
+  "name": "li-undo-coalesce",
+  "file": "auth_input.go",
+  "find": "if isWhitespaceText(char) || in.lastAction != actionTypeWord {",
+  "replace": "if true {"
+ },
+ {
+  "name": "li-backspace-grapheme",
+  "file": "auth_input.go",
+  "find": "n := lastGraphemeLength(in.head())\n\t\tin.value = jsstring.Slice(in.value, 0, in.cursor-n)",
+  "replace": "n := 1\n\t\tin.value = jsstring.Slice(in.value, 0, in.cursor-n)"
+ },
+ {
+  "name": "li-kill-accumulate",
+  "file": "auth_input.go",
+  "find": "in.killRing.Push(deleted, true, in.lastAction == actionKill)\n\tin.lastAction = actionKill\n\tin.value = in.tail()",
+  "replace": "in.killRing.Push(deleted, true, false)\n\tin.lastAction = actionKill\n\tin.value = in.tail()"
+ },
+ {
+  "name": "li-yank-pop",
+  "file": "auth_input.go",
+  "find": "if in.lastAction != actionYank || in.killRing.Length() <= 1 {",
+  "replace": "if in.killRing.Length() <= 1 {"
+ },
+ {
+  "name": "li-render-scroll",
+  "file": "auth_input.go",
+  "find": "if totalWidth < availableWidth {",
+  "replace": "if totalWidth < 10000 {"
+ },
+ {
+  "name": "li-render-marker",
+  "file": "auth_input.go",
+  "find": "if in.Focused {\n\t\tmarker = widthx.CursorMarker\n\t}\n\ttextWithCursor := beforeCursor",
+  "replace": "textWithCursor := beforeCursor"
+ },
+ {
+  "name": "li-render-end-reserve",
+  "file": "auth_input.go",
+  "find": "scrollWidth = availableWidth - 1",
+  "replace": "scrollWidth = availableWidth"
+ },
+ {
+  "name": "li-render-prompt",
+  "file": "auth_input.go",
+  "find": "return &LineInput{prompt: \"> \", keys: keys}",
+  "replace": "return &LineInput{prompt: \">\", keys: keys}"
+ }
+]
