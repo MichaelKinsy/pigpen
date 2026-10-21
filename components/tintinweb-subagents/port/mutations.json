@@ -500,14 +500,14 @@
  {
   "name": "duration-format",
   "file": "tools.go",
-  "find": "fmt.Sprintf(\"%.1fs\", float64(ms)/1000)",
-  "replace": "fmt.Sprintf(\"%.2fs\", float64(ms)/1000)"
+  "find": "jsToFixed(float64(ms)/1000, 1) + \"s\"",
+  "replace": "jsToFixed(float64(ms)/1000, 2) + \"s\""
  },
  {
   "name": "tokens-format",
   "file": "tools.go",
-  "find": "fmt.Sprintf(\"%.1fk token\", float64(n)/1000)",
-  "replace": "fmt.Sprintf(\"%.2fk token\", float64(n)/1000)"
+  "find": "jsToFixed(float64(n)/1000, 1) + \"k token\"",
+  "replace": "jsToFixed(float64(n)/1000, 2) + \"k token\""
  },
  {
   "name": "tokens-millions",
@@ -645,7 +645,7 @@
   "name": "skills-false-accepted",
   "file": "refuse.go",
   "find": "return v == nil || (ok && b)",
-  "replace": "return true"
+  "replace": "return v == nil || (ok && (b || !b))"
  },
  {
   "name": "extension-list-accepted",
@@ -687,7 +687,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -699,13 +699,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); false && feature != \"\" {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); false && feature != \"\" {"
  },
  {
   "name": "rpc-name-dropped",
@@ -738,12 +738,6 @@
   "replace": "regexp.MustCompile(`[/]`)"
  },
  {
-  "name": "transcript-root-world-readable",
-  "file": "output_file.go",
-  "find": "os.MkdirAll(root, 0o700)",
-  "replace": "os.MkdirAll(root, 0o755)"
- },
- {
   "name": "transcript-root-not-tightened",
   "file": "output_file.go",
   "find": "os.Chmod(root, 0o700)",
@@ -753,7 +747,7 @@
   "name": "transcript-root-without-uid",
   "file": "output_file.go",
   "find": "\"pi-subagents-\"+strconv.Itoa(uid)",
-  "replace": "\"pi-subagents\""
+  "replace": "\"pi-subagents\"+strconv.Itoa(uid)[:0]"
  },
  {
   "name": "transcript-dir-without-session",
@@ -766,12 +760,6 @@
   "file": "output_file.go",
   "find": "agentID+\".output\"",
   "replace": "agentID+\".out\""
- },
- {
-  "name": "ensure-truncates",
-  "file": "output_file.go",
-  "find": "func ensureOutputFile(path string) {\n\tif f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666)",
-  "replace": "func ensureOutputFile(path string) {\n\tif f, err := os.OpenFile(path, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0o666)"
  },
  {
   "name": "initial-entry-not-sidechain",
@@ -794,8 +782,8 @@
  {
   "name": "stream-anchor-ignored",
   "file": "output_file.go",
-  "find": "written: startIndex}",
-  "replace": "written: 0}"
+  "find": "skip: startIndex}",
+  "replace": "skip: 0}"
  },
  {
   "name": "tool-message-typed-user",
@@ -806,8 +794,8 @@
  {
   "name": "assistant-message-typed-user",
   "file": "output_file.go",
-  "find": "case \"assistant\":\n\t\t\tkind = \"assistant\"",
-  "replace": "case \"assistant\":\n\t\t\tkind = \"user\""
+  "find": "case \"assistant\":\n\t\t\t\tkind = \"assistant\"",
+  "replace": "case \"assistant\":\n\t\t\t\tkind = \"user\""
  },
  {
   "name": "no-flush-at-turn-end",
@@ -824,20 +812,20 @@
  {
   "name": "no-reanchor-after-compaction",
   "file": "output_file.go",
-  "find": "!aborted && result != nil {\n\t\t\tt.written = len(t.messages)",
+  "find": "!aborted && result != nil {\n\t\t\tt.tail, t.skip = nil, 0",
   "replace": "!aborted && result != nil {\n\t\t\t_ = result"
  },
  {
   "name": "reanchor-on-failed-compaction",
   "file": "output_file.go",
   "find": "!aborted && result != nil {",
-  "replace": "!aborted {"
+  "replace": "!aborted && (result != nil || true) {"
  },
  {
   "name": "reanchor-on-aborted-compaction",
   "file": "output_file.go",
   "find": "!aborted && result != nil {",
-  "replace": "result != nil || true {"
+  "replace": "(!aborted || true) && result != nil {"
  },
  {
   "name": "stream-writes-after-close",
@@ -850,12 +838,6 @@
   "file": "output_file.go",
   "find": "t.flushLocked()\n\tt.closed = true",
   "replace": "t.closed = true"
- },
- {
-  "name": "transcript-includes-system-message",
-  "file": "output_file.go",
-  "find": "ok && msg[\"role\"] != \"system\" {",
-  "replace": "ok {"
  },
  {
   "name": "structured-first-valid-wins",
@@ -930,78 +912,6 @@
   "replace": "\tif true {\n\t\treturn \"\"\n\t}"
  },
  {
-  "name": "schema-required-message",
-  "file": "json_schema.go",
-  "find": "\"must have required properties \"",
-  "replace": "\"must have properties \""
- },
- {
-  "name": "schema-path-pointer",
-  "file": "json_schema.go",
-  "find": "strings.ReplaceAll(e.path, \"/\", \".\")",
-  "replace": "e.path"
- },
- {
-  "name": "schema-reports-all",
-  "file": "json_schema.go",
-  "find": "if len(reported) >= maxReportedSchemaE {",
-  "replace": "if len(reported) >= 100 {"
- },
- {
-  "name": "schema-minimum-inclusive",
-  "file": "json_schema.go",
-  "find": "x < m {\n\t\t\tadd(\"must be >= \"",
-  "replace": "x <= m {\n\t\t\tadd(\"must be >= \""
- },
- {
-  "name": "schema-integer-any-number",
-  "file": "json_schema.go",
-  "find": "if x == math.Trunc(x) && !math.IsInf(x, 0) {\n\t\t\treturn \"integer\"",
-  "replace": "if false {\n\t\t\treturn \"integer\""
- },
- {
-  "name": "schema-additional-allowed",
-  "file": "json_schema.go",
-  "find": "\t\t\t\tif !ap {\n\t\t\t\t\textra = true",
-  "replace": "\t\t\t\tif ap {\n\t\t\t\t\textra = true"
- },
- {
-  "name": "schema-unique-ignored",
-  "file": "json_schema.go",
-  "find": "if u, _ := s[\"uniqueItems\"].(bool); u {",
-  "replace": "if u, _ := s[\"uniqueItems\"].(bool); u && false {"
- },
- {
-  "name": "schema-const-ignored",
-  "file": "json_schema.go",
-  "find": "if c, ok := s[\"const\"]; ok && !reflect.DeepEqual",
-  "replace": "if c, ok := s[\"const\"]; ok && false && !reflect.DeepEqual"
- },
- {
-  "name": "schema-ref-unchecked",
-  "file": "json_schema.go",
-  "find": "if ref, ok := n[\"$ref\"].(string); ok {\n\t\t\tv.resolve(ref)",
-  "replace": "if ref, ok := n[\"$ref\"].(string); ok {\n\t\t\t_ = ref"
- },
- {
-  "name": "schema-root-not-object",
-  "file": "json_schema.go",
-  "find": "if root[\"type\"] != \"object\" {",
-  "replace": "if false {"
- },
- {
-  "name": "schema-size-limit",
-  "file": "json_schema.go",
-  "find": "n > maxSchemaBytes",
-  "replace": "n > 10*maxSchemaBytes"
- },
- {
-  "name": "schema-anyof-needs-all",
-  "file": "json_schema.go",
-  "find": "\t\tif n == 0 {\n\t\t\tadd(\"must match a schema in anyOf\")",
-  "replace": "\t\tif n != len(anyOf) {\n\t\t\tadd(\"must match a schema in anyOf\")"
- },
- {
   "name": "usage-cache-read-dropped",
   "file": "usage.go",
   "find": "into.CacheRead += delta.CacheRead",
@@ -1034,19 +944,7 @@
  {
   "name": "usage-pool-not-reset",
   "file": "usage.go",
-  "find": "p.pending, p.dirty = lifetimeUsage{}, false",
-  "replace": "p.dirty = false"
- },
- {
-  "name": "usage-pool-never-empties",
-  "file": "usage.go",
-  "find": "p.pending, p.dirty = lifetimeUsage{}, false",
-  "replace": "p.pending = lifetimeUsage{}"
- },
- {
-  "name": "usage-pool-reports-when-clean",
-  "file": "usage.go",
-  "find": "if !p.dirty {\n\t\treturn nil\n\t}",
+  "find": "p.pending = lifetimeUsage{}\n",
   "replace": ""
  },
  {
@@ -1070,8 +968,8 @@
  {
   "name": "cost-dollar-decimals",
   "file": "usage_display.go",
-  "find": "return fmt.Sprintf(\"~$%.2f\", cost)",
-  "replace": "return fmt.Sprintf(\"~$%.4f\", cost)"
+  "find": "return \"~$\" + jsToFixed(cost, 2)",
+  "replace": "return \"~$\" + jsToFixed(cost, 4)"
  },
  {
   "name": "cost-min-decimals",
@@ -1095,7 +993,7 @@
   "name": "usage-cost-not-read",
   "file": "runner.go",
   "find": "cost, _ = c[\"total\"].(float64)",
-  "replace": "cost = 0"
+  "replace": "cost, _ = c[\"total\"].(float64); cost = 0"
  },
  {
   "name": "usage-cache-write-not-read",
@@ -1106,14 +1004,14 @@
  {
   "name": "usage-only-assistant-messages",
   "file": "runner.go",
-  "find": "if msg, ok := m[\"message\"].(map[string]any); ok && msg[\"role\"] == \"assistant\" {\n\t\t\tstop,",
-  "replace": "if msg, ok := m[\"message\"].(map[string]any); ok {\n\t\t\tstop,"
+  "find": "if ok && msg[\"role\"] == \"assistant\" {\n\t\t\tstop,",
+  "replace": "if ok {\n\t\t\tstop,"
  },
  {
   "name": "compaction-aborted-counted",
   "file": "runner.go",
   "find": "if aborted, _ := m[\"aborted\"].(bool); !aborted && c.hooks",
-  "replace": "if aborted, _ := m[\"aborted\"].(bool); c.hooks"
+  "replace": "if aborted, _ := m[\"aborted\"].(bool); (aborted || true) && c.hooks"
  },
  {
   "name": "compaction-without-result-counted",
@@ -1154,14 +1052,14 @@
  {
   "name": "messages-not-read",
   "file": "runner.go",
-  "find": "if m, err := c.call(map[string]any{\"type\": \"get_messages\"}); err == nil {\n\t\tif d, ok := m[\"data\"].(map[string]any); ok {\n\t\t\tfor",
-  "replace": "if m, err := c.call(map[string]any{\"type\": \"get_messages\"}); err != nil {\n\t\tif d, ok := m[\"data\"].(map[string]any); ok {\n\t\t\tfor"
+  "find": "messages := c.messages()",
+  "replace": "var messages []map[string]any"
  },
  {
   "name": "text-not-recovered-from-history",
   "file": "runner.go",
-  "find": "if strings.TrimSpace(res.Text) == \"\" {\n\t\tres.Text = lastAssistantText(res.Messages)",
-  "replace": "if false {\n\t\tres.Text = lastAssistantText(res.Messages)"
+  "find": "if strings.TrimSpace(res.Text) == \"\" {\n\t\tres.Text = lastAssistantText(messages)",
+  "replace": "if false {\n\t\tres.Text = lastAssistantText(messages)"
  },
  {
   "name": "last-text-takes-empty",
@@ -1172,20 +1070,20 @@
  {
   "name": "structured-no-retry",
   "file": "runner.go",
-  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
+  "find": "again := structuredRetryWanted(c.capture.JSONUnset(), c.aborted, c.killed)",
   "replace": "again := false"
  },
  {
   "name": "structured-retry-after-abort",
   "file": "runner.go",
-  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
-  "replace": "again := c.capture.JSONUnset()"
+  "find": "return nothingValidated && !aborted && !killed",
+  "replace": "return nothingValidated && !killed"
  },
  {
   "name": "structured-retry-when-valid",
   "file": "runner.go",
-  "find": "again := c.capture.JSONUnset() && !c.aborted && !c.killed",
-  "replace": "again := !c.aborted && !c.killed"
+  "find": "return nothingValidated && !aborted && !killed",
+  "replace": "return !aborted && !killed"
  },
  {
   "name": "structured-failure-not-reported",
@@ -1214,8 +1112,8 @@
  {
   "name": "structured-schema-not-passed",
   "file": "runner.go",
-  "find": "cmd.Env = append(cmd.Env, structuredSchemaEnv+\"=\"+spec.Schema)",
-  "replace": "_ = spec.Schema"
+  "find": "cmd.Env = append(cmd.Env, structuredSchemaFileEnv+\"=\"+schemaFile)",
+  "replace": "_ = schemaFile"
  },
  {
   "name": "structured-isolated-allowed",
@@ -1250,8 +1148,8 @@
  {
   "name": "manager-transcript-events-dropped",
   "file": "manager.go",
-  "find": "if tr != nil {\n\t\t\t\ttr.onEvent(ev)",
-  "replace": "if tr != nil && false {\n\t\t\t\ttr.onEvent(ev)"
+  "find": "if r.transcript != nil {\n\t\tr.spec.Hooks.Event = r.transcript.onEvent\n\t}",
+  "replace": ""
  },
  {
   "name": "manager-transcript-not-closed",
@@ -1286,56 +1184,56 @@
  {
   "name": "manager-context-percent-dropped",
   "file": "manager.go",
-  "find": "r.ContextPercent, r.Messages, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Messages, res.StructuredJSON, res.StructuredRetried",
-  "replace": "r.Messages = res.Messages"
+  "find": "r.ContextPercent, r.Conversation, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Conversation, res.StructuredJSON, res.StructuredRetried",
+  "replace": "r.Conversation = res.Conversation"
  },
  {
   "name": "transcript-default-off",
   "file": "observability_app.go",
-  "find": "a.obs.noTranscript = s.outputTranscript != nil && !*s.outputTranscript",
-  "replace": "a.obs.noTranscript = s.outputTranscript == nil || !*s.outputTranscript"
+  "find": "a.obs.noTranscript = s.OutputTranscript != nil && !*s.OutputTranscript",
+  "replace": "a.obs.noTranscript = s.OutputTranscript == nil || !*s.OutputTranscript"
  },
  {
   "name": "transcript-setting-ignored",
   "file": "observability_app.go",
-  "find": "a.obs.noTranscript = s.outputTranscript != nil && !*s.outputTranscript",
+  "find": "a.obs.noTranscript = s.OutputTranscript != nil && !*s.OutputTranscript",
   "replace": "a.obs.noTranscript = false"
  },
  {
   "name": "report-usage-default-on",
   "file": "observability_app.go",
-  "find": "a.obs.reportUsage = s.reportUsage != nil && *s.reportUsage",
-  "replace": "a.obs.reportUsage = s.reportUsage == nil || *s.reportUsage"
+  "find": "a.obs.reportUsage = s.ReportUsage != nil && *s.ReportUsage",
+  "replace": "a.obs.reportUsage = s.ReportUsage == nil || *s.ReportUsage"
  },
  {
   "name": "show-cost-default-on",
   "file": "observability_app.go",
-  "find": "a.obs.showCost = s.showCost != nil && *s.showCost",
-  "replace": "a.obs.showCost = s.showCost == nil || *s.showCost"
+  "find": "a.obs.showCost = s.ShowCost != nil && *s.ShowCost",
+  "replace": "a.obs.showCost = s.ShowCost == nil || *s.ShowCost"
  },
  {
   "name": "settings-project-loses",
-  "file": "observability_app.go",
-  "find": "pick := func(project, global *bool) *bool {\n\t\tif project != nil {\n\t\t\treturn project\n\t\t}\n\t\treturn global",
-  "replace": "pick := func(project, global *bool) *bool {\n\t\tif global != nil {\n\t\t\treturn global\n\t\t}\n\t\treturn project"
+  "file": "settings.go",
+  "find": "if p.OutputTranscript != nil {\n\t\ts.OutputTranscript = p.OutputTranscript\n\t}",
+  "replace": ""
  },
  {
   "name": "pool-kept-when-reporting-off",
   "file": "observability_app.go",
   "find": "if !report {\n\t\t// Whatever",
-  "replace": "if false {\n\t\t// Whatever"
+  "replace": "if !report && false {\n\t\t// Whatever"
  },
  {
   "name": "usage-pooled-when-off",
   "file": "observability_app.go",
   "find": "if on {\n\t\t\ta.obs.pool.add(u)",
-  "replace": "if true {\n\t\t\ta.obs.pool.add(u)"
+  "replace": "if on || true {\n\t\t\ta.obs.pool.add(u)"
  },
  {
   "name": "usage-attached-when-off",
   "file": "observability_app.go",
   "find": "if !on || ctx.ToolCallID() == \"\" {",
-  "replace": "if ctx.ToolCallID() == \"\" {"
+  "replace": "if (!on && false) || ctx.ToolCallID() == \"\" {"
  },
  {
   "name": "usage-attached-without-call-id",
@@ -1401,13 +1299,13 @@
   "name": "context-percent-rounds-down",
   "file": "observability_app.go",
   "find": "int(math.Floor(p + 0.5))",
-  "replace": "int(p)"
+  "replace": "int(p + 0*math.Floor(p))"
  },
  {
   "name": "context-percent-running-stale",
   "file": "observability_app.go",
-  "find": "if status == statusRunning {\n\t\tif lc, ok := c.(liveChild); ok {\n\t\t\treturn lc.stats()\n\t\t}\n\t\treturn nil\n\t}\n\treturn done",
-  "replace": "return done"
+  "find": "if status == statusRunning {\n\t\tif lc, ok := c.(liveChild); ok {\n\t\t\treturn lc.stats()",
+  "replace": "if status == statusRunning && false {\n\t\tif lc, ok := c.(liveChild); ok {\n\t\t\treturn lc.stats()"
  },
  {
   "name": "conversation-tool-result-untruncated",
@@ -1424,8 +1322,8 @@
  {
   "name": "conversation-user-untrimmed",
   "file": "observability_app.go",
-  "find": "if t := strings.TrimSpace(text); t != \"\" {\n\t\t\t\tparts = append(parts, \"[User]: \"+t)",
-  "replace": "if t := text; t != \"\" {\n\t\t\t\tparts = append(parts, \"[User]: \"+t)"
+  "find": "if t := strings.TrimSpace(text); t != \"\" {\n\t\t\tparts = append(parts, \"[User]: \"+t)",
+  "replace": "if t := text; t != \"\" {\n\t\t\tparts = append(parts, \"[User]: \"+t)"
  },
  {
   "name": "conversation-separator",
@@ -1490,14 +1388,14 @@
  {
   "name": "notification-cost-decimals",
   "file": "extension.go",
-  "find": "\"<estimated_cost_usd>%.4f</estimated_cost_usd>\"",
-  "replace": "\"<estimated_cost_usd>%.2f</estimated_cost_usd>\""
+  "find": "\"<estimated_cost_usd>\" + jsToFixed(cost, 4) + \"</estimated_cost_usd>\"",
+  "replace": "\"<estimated_cost_usd>\" + jsToFixed(cost, 2) + \"</estimated_cost_usd>\""
  },
  {
   "name": "notification-usage-order",
   "file": "extension.go",
-  "find": "<total_tokens>%d</total_tokens><tool_uses>%d</tool_uses>%s%s%s<duration_ms>%d</duration_ms>",
-  "replace": "<total_tokens>%d</total_tokens><tool_uses>%d</tool_uses><duration_ms>%d</duration_ms>%s%s%s"
+  "find": "</tool_uses>%s%s%s<duration_ms>%d</duration_ms></usage>\", getLifetimeTotal(r.Usage), r.ToolUses, ctxXML, compactXML, costXML, dur)",
+  "replace": "</tool_uses><duration_ms>%d</duration_ms>%s%s%s</usage>\", getLifetimeTotal(r.Usage), r.ToolUses, dur, ctxXML, compactXML, costXML)"
  },
  {
   "name": "notification-footer-missing",
@@ -1514,8 +1412,8 @@
  {
   "name": "child-registers-no-structured-tool",
   "file": "extension.go",
-  "find": "if schema := os.Getenv(structuredSchemaEnv); schema != \"\" {",
-  "replace": "if schema := os.Getenv(structuredSchemaEnv); false {"
+  "find": "if path := os.Getenv(structuredSchemaFileEnv); path != \"\" {",
+  "replace": "if path := os.Getenv(structuredSchemaFileEnv); false {"
  },
  {
   "name": "tool-output-file-line-missing",
@@ -1538,7 +1436,7 @@
  {
   "name": "tool-session-id-dropped",
   "file": "tools.go",
-  "find": "extras.SessionID, _ = ctx.GetSessionID()",
+  "find": "extras.SessionID = id",
   "replace": ""
  },
  {
@@ -1630,5 +1528,89 @@
   "file": "refuse.go",
   "find": "\tcase cfg.SessionDir != \"\":",
   "replace": "\tcase cfg.OutputTranscript != nil && *cfg.OutputTranscript:\n\t\treturn \"output transcripts (output_transcript)\"\n\tcase cfg.SessionDir != \"\":"
+ },
+ {
+  "name": "stream-keeps-flushed-messages",
+  "file": "output_file.go",
+  "find": "\t\tf.Close()\n\t}\n\tt.tail = nil\n}",
+  "replace": "\t\tf.Close()\n\t}\n}"
+ },
+ {
+  "name": "stream-skip-not-consumed",
+  "file": "output_file.go",
+  "find": "case t.skip > 0:\n\t\t\tt.skip--",
+  "replace": "case t.skip > 0:"
+ },
+ {
+  "name": "transcript-system-message-dropped",
+  "file": "output_file.go",
+  "find": "case !ok:\n\t\tcase t.skip > 0:",
+  "replace": "case !ok || msg[\"role\"] == \"system\":\n\t\tcase t.skip > 0:"
+ },
+ {
+  "name": "record-keeps-closed-stream",
+  "file": "manager.go",
+  "find": "tr := r.transcript\n\tr.transcript = nil\n",
+  "replace": "tr := r.transcript\n"
+ },
+ {
+  "name": "stopped-agent-loses-conversation",
+  "file": "manager.go",
+  "find": "r.Conversation, r.ContextPercent = sc.snapshot()",
+  "replace": "_ = sc"
+ },
+ {
+  "name": "abort-does-not-read-context",
+  "file": "runner.go",
+  "find": "c.percent = p\n",
+  "replace": "_ = p\n"
+ },
+ {
+  "name": "stream-conversation-not-kept",
+  "file": "runner.go",
+  "find": "c.conv.add(msg)",
+  "replace": "_ = msg"
+ },
+ {
+  "name": "conversation-unbounded",
+  "file": "observability.go",
+  "find": "for l.bytes > maxConversationBytes && len(l.parts) > 1 {",
+  "replace": "for l.bytes > 1000*maxConversationBytes && len(l.parts) > 1 {"
+ },
+ {
+  "name": "conversation-drop-unmarked",
+  "file": "observability.go",
+  "find": "return \"[earlier messages omitted]\\n\\n\" + text",
+  "replace": "return text"
+ },
+ {
+  "name": "schema-file-left-behind",
+  "file": "runner.go",
+  "find": "\t\tif schemaFile != \"\" {\n\t\t\t_ = os.Remove(schemaFile)\n\t\t}",
+  "replace": "\t\t_ = schemaFile"
+ },
+ {
+  "name": "tofixed-truncates",
+  "file": "usage_display.go",
+  "find": "r.Add(r, big.NewRat(1, 2))",
+  "replace": ""
+ },
+ {
+  "name": "transcript-without-session-id",
+  "file": "tools.go",
+  "find": "if err != nil || id == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "show-cost-notice-unnamed",
+  "file": "refuse.go",
+  "find": "out = append(out, fmt.Sprintf(\"%s: %s%s\", r.key, compactJSON(v), r.note))",
+  "replace": "out = append(out, fmt.Sprintf(\"%s: %s\", r.key, compactJSON(v)))"
+ },
+ {
+  "name": "structured-retry-after-stop",
+  "file": "runner.go",
+  "find": "return nothingValidated && !aborted && !killed",
+  "replace": "return nothingValidated && !aborted"
  }
 ]

@@ -1,0 +1,7 @@
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"message":{"content":"","role":"system"},"type":"message_end"}
+{"message":{"content":[{"text":"hello","type":"text"}],"role":"user"},"type":"message_end"}
+{"message":{"content":[{"text":"done","type":"text"}],"role":"assistant","stopReason":"stop"},"type":"message_end"}
+{"type":"turn_end"}
+{"type":"agent_end"}

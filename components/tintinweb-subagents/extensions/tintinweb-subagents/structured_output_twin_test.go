@@ -21,10 +21,11 @@ var structuredSchema = map[string]any{
 
 func buildStructured(t *testing.T) (sdk.ToolDefinition, *structuredCapture) {
 	t.Helper()
-	compiled, problem := compileJSONSchema(structuredSchema)
-	if compiled == nil {
-		t.Fatal(problem)
+	c := compileWorkflowSchema(structuredSchema)
+	if !c.OK {
+		t.Fatal(c.Message)
 	}
+	compiled := c.Compiled
 	capture := &structuredCapture{}
 	return structuredOutputTool(compiled, capture), capture
 }
@@ -115,39 +116,4 @@ func TestStructuredRetryPromptTwins(t *testing.T) {
 			eq(t, strings.Contains(structuredRetryPrompt(c), "Call StructuredOutput now"), true)
 		}
 	})
-}
-
-// The validator is this port's own (the original's is typebox); these pin the messages the model reads and the
-// path notation, as workflow-json-schema.test.ts does for the original's.
-func TestJSONSchemaValidator(t *testing.T) {
-	findings := map[string]any{"type": "object", "properties": map[string]any{
-		"findings": map[string]any{"type": "array", "items": map[string]any{"type": "object", "required": []any{"file"},
-			"properties": map[string]any{"file": map[string]any{"type": "string"}, "line": map[string]any{"type": "integer", "minimum": float64(1)}}}}},
-		"required": []any{"findings"}}
-	c, problem := compileJSONSchema(findings)
-	eq(t, problem, "")
-	if msg, ok := c.check(map[string]any{"findings": []any{map[string]any{"file": "a.ts", "line": float64(3)}}}); !ok {
-		t.Fatal(msg)
-	}
-	msg, ok := c.check(map[string]any{})
-	eq(t, ok, false)
-	eq(t, msg, "$: must have required properties findings")
-	msg, _ = c.check(map[string]any{"findings": []any{map[string]any{"file": "a.ts", "line": float64(0)}}})
-	eq(t, msg, "$.findings.0.line: must be >= 1")
-	_, ok = c.check("not an object")
-	eq(t, ok, false)
-	_, ok = c.check(nil)
-	eq(t, ok, false)
-	for _, bad := range []any{nil, "x", []any{}, map[string]any{"type": "string"}, map[string]any{}} {
-		got, p := compileJSONSchema(bad)
-		eq(t, got == nil && p != "", true)
-	}
-	_, p := compileJSONSchema(map[string]any{"type": "object", "properties": map[string]any{"a": map[string]any{"$ref": "#/nope"}}})
-	eq(t, strings.HasPrefix(p, "agent() opts.schema is not a schema this runtime can validate"), true)
-	_, p = compileJSONSchema(map[string]any{"type": "object", "description": strings.Repeat("x", 70000)})
-	eq(t, strings.Contains(p, "too large"), true)
-	// Every missing property is named; distinct problems are reported separately, each with its path.
-	c, _ = compileJSONSchema(map[string]any{"type": "object", "required": []any{"a", "b", "c"}, "properties": map[string]any{"n": map[string]any{"type": "number"}}})
-	msg, _ = c.check(map[string]any{"n": "x"})
-	eq(t, msg, "$: must have required properties a, b, c; $.n: must be number")
 }

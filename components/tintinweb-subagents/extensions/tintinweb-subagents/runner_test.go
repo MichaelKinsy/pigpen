@@ -47,6 +47,10 @@ func fakePig(mode string) {
 	if p := os.Getenv("FAKE_PIG_ARGS"); p != "" {
 		os.WriteFile(p, []byte(strings.Join(os.Args[1:], "\n")+"\nDEPTH="+os.Getenv(depthEnv)), 0o644)
 	}
+	if p, f := os.Getenv("FAKE_PIG_SCHEMA"), os.Getenv(structuredSchemaFileEnv); p != "" && f != "" { // what the child would read
+		b, _ := os.ReadFile(f)
+		os.WriteFile(p, b, 0o644)
+	}
 	if mode == "crash" {
 		os.Stderr.WriteString("no such model")
 		os.Exit(3)
@@ -68,6 +72,16 @@ func fakePig(mode string) {
 		case "prompt":
 			resp(nil)
 			if mode == "hang" {
+				continue
+			}
+			if mode == "hang-partial" || mode == "die-partial" { // a run that has said something, then stalls or dies
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "system", "content": "SYSTEM PROMPT"}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "user", "content": "the task"}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "partial findings"}, map[string]any{"type": "toolCall", "name": "bash"}}}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "toolResult", "toolName": "bash", "content": []any{map[string]any{"type": "text", "text": "listing"}}}})
+				if mode == "die-partial" {
+					os.Exit(2)
+				}
 				continue
 			}
 			if mode == "hang-grandchild" { // starts a process of its own, as a bash tool call would, and keeps working
@@ -101,6 +115,8 @@ func fakePig(mode string) {
 					ex("question "+strconv.Itoa(i), "answer-"+strconv.Itoa(i)+" filler")
 				}
 				out.Encode(map[string]any{"type": "compaction_start", "reason": "manual"})
+				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": true, "result": map[string]any{"summary": "never kept", "tokensBefore": 1}})
+				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": false, "errorMessage": "failed", "tokensBefore": 2})
 				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": false, "willRetry": false, "result": map[string]any{"summary": "summary of everything so far", "tokensBefore": 4321}})
 				ex("final question", "POST-COMPACTION-ANSWER")
 				out.Encode(map[string]any{"type": "agent_settled"})
@@ -151,6 +167,12 @@ func fakePig(mode string) {
 				}
 				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "user", "content": "x"}})
 				out.Encode(map[string]any{"type": "message_end", "message": msg})
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
+			if mode == "usage-nonassistant" { // a tool result that carries a usage object is not an assistant message's spend
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "toolResult", "toolName": "bash", "usage": map[string]any{"input": 999, "output": 999}, "content": []any{}}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "ok"}}, "usage": map[string]any{"input": 7, "output": 3}}})
 				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}

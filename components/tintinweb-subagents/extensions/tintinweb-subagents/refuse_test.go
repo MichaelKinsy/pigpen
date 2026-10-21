@@ -155,6 +155,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
+		eq(t, r.app.mgr.get(reply["data"].(map[string]any)["id"].(string)).Name, "scout")
 	})
 }
 
@@ -198,7 +199,7 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
-		{"showCost", `{"showCost": true}`, "showCost: true"},
+		{"showCost", `{"showCost": true}`, "showCost: true (only its widget display; the cost in the notification, result and steer texts is shown)"},
 		{"showModel", `{"showModel": true}`, "showModel: true"},
 		{"viewerMarkdown", `{"viewerMarkdown": "all"}`, `viewerMarkdown: "all"`},
 	}
@@ -210,7 +211,7 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	}
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true, "scopeModels": true}`)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()

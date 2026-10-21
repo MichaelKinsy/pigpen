@@ -3,7 +3,6 @@ package tintinweb_subagents
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 )
@@ -21,7 +20,7 @@ func TestRPCChildReportsUsageAndCompactionFromItsStream(t *testing.T) {
 	// One delta per assistant message, with cacheRead and cost.total read the way agent-runner.ts:1082 reads them.
 	eq(t, spent, []lifetimeUsage{{30, 12, 3, 5, 0.01}, {30, 12, 3, 5, 0.01}})
 	eq(t, *res.ContextPercent, 10.4)
-	eq(t, len(res.Messages), 2)
+	eq(t, res.Conversation, "[User]: x\n\n[Assistant]: step")
 }
 
 func TestRPCChildReportsOnlySuccessfulCompactions(t *testing.T) {
@@ -78,7 +77,9 @@ func TestStructuredOutputRetryAndFailure(t *testing.T) {
 
 func TestAChildWithASchemaRegistersTheTool(t *testing.T) {
 	t.Setenv(depthEnv, "1")
-	t.Setenv(structuredSchemaEnv, `{"type":"object","required":["a"]}`)
+	schemaFile := filepath.Join(t.TempDir(), "schema.json")
+	must(t, os.WriteFile(schemaFile, []byte(`{"type":"object","required":["a"]}`), 0o600))
+	t.Setenv(structuredSchemaFileEnv, schemaFile)
 	e := Extension()
 	h := StartHost(t, e, HostOptions{})
 	res, failure := h.Tool("StructuredOutput", obj{"a": 1})
@@ -117,11 +118,11 @@ func TestResultAndSteerShowContextCompactionsAndTheConversation(t *testing.T) {
 	steer := r.must("steer_subagent", obj{"agent_id": id, "message": "left"})
 	eq(t, strings.HasSuffix(steer, "Current state: 1.2k token · 0 tool uses · 2 compactions"), true)
 	pct := 7.5
-	c.finishWith(&childResult{Text: "answer", ContextPercent: &pct, Messages: []map[string]any{
+	c.finishWith(&childResult{Text: "answer", ContextPercent: &pct, Conversation: getAgentConversation([]map[string]any{
 		{"role": "user", "content": []any{map[string]any{"type": "text", "text": " hi "}}},
 		{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "yo"}, map[string]any{"type": "toolCall", "name": "bash"}}},
 		{"role": "toolResult", "toolName": "bash", "content": []any{map[string]any{"type": "text", "text": strings.Repeat("z", 250)}}},
-	}})
+	})})
 	<-r.app.mgr.get(id).done
 	out := r.must("get_subagent_result", obj{"agent_id": id, "verbose": true})
 	eq(t, strings.Contains(out, "| 1.2k token | Context: 8% | Compactions: 2 | Duration: "), true)
@@ -152,17 +153,6 @@ func TestSettingsOfThisSliceAreHonoredNotRefused(t *testing.T) {
 }
 
 func TestTranscriptFileDetails(t *testing.T) {
-	t.Run("ensureOutputFile creates the file and never truncates it", func(t *testing.T) {
-		path := filepath.Join(t.TempDir(), "a.output")
-		ensureOutputFile(path)
-		st, err := os.Stat(path)
-		eq(t, err, nil)
-		eq(t, st.Size(), int64(0))
-		must(t, os.WriteFile(path, []byte("kept\n"), 0o644))
-		ensureOutputFile(path)
-		b, _ := os.ReadFile(path)
-		eq(t, string(b), "kept\n")
-	})
 	t.Run("lines are JSON as JavaScript writes it: no HTML escaping, ISO millisecond timestamps", func(t *testing.T) {
 		s, path := streamFixture(t, 1, user("go"))
 		s.push(assistant("a < b && c > d"))
@@ -193,77 +183,4 @@ func TestTranscriptFileDetails(t *testing.T) {
 		eq(t, e["cwd"], "/work")
 		eq(t, e["message"], any(obj{"role": "user", "content": "do the thing"}))
 	})
-}
-
-func TestJSONSchemaKeywords(t *testing.T) {
-	cases := []struct {
-		name   string
-		schema map[string]any
-		value  any
-		want   string // "" is valid
-	}{
-		{"type union", obj{"type": []any{"string", "null"}}, 1.0, "$: must be either string or null"},
-		{"type integer", obj{"type": "integer"}, 1.5, "$: must be integer"},
-		{"type boolean", obj{"type": "boolean"}, "x", "$: must be boolean"},
-		{"enum", obj{"enum": []any{"a", "b"}}, "c", "$: must be equal to one of the allowed values"},
-		{"enum ok", obj{"enum": []any{"a", 1.0}}, 1.0, ""},
-		{"const", obj{"const": "a"}, "b", "$: must be equal to constant"},
-		{"additionalProperties false", obj{"type": "object", "properties": obj{"a": obj{}}, "additionalProperties": false}, obj{"a": 1.0, "b": 2.0}, "$: must not have additional properties"},
-		{"additionalProperties schema", obj{"type": "object", "additionalProperties": obj{"type": "string"}}, obj{"k": 1.0}, "$.k: must be string"},
-		{"items", obj{"type": "array", "items": obj{"type": "string"}}, []any{"a", 1.0}, "$.1: must be string"},
-		{"minItems", obj{"type": "array", "minItems": 2.0}, []any{1.0}, "$: must not have fewer than 2 items"},
-		{"maxItems", obj{"type": "array", "maxItems": 1.0}, []any{1.0, 2.0}, "$: must not have more than 1 items"},
-		{"uniqueItems", obj{"type": "array", "uniqueItems": true}, []any{1.0, 1.0}, "$: must not have duplicate items"},
-		{"minLength", obj{"type": "string", "minLength": 3.0}, "ab", "$: must not have fewer than 3 characters"},
-		{"maxLength", obj{"type": "string", "maxLength": 1.0}, "ab", "$: must not have more than 1 characters"},
-		{"pattern", obj{"type": "string", "pattern": "^a+$"}, "b", `$: must match pattern "^a+$"`},
-		{"maximum", obj{"type": "number", "maximum": 5.0}, 6.0, "$: must be <= 5"},
-		{"exclusiveMinimum", obj{"type": "number", "exclusiveMinimum": 5.0}, 5.0, "$: must be > 5"},
-		{"exclusiveMaximum", obj{"type": "number", "exclusiveMaximum": 5.0}, 5.0, "$: must be < 5"},
-		{"multipleOf", obj{"type": "number", "multipleOf": 3.0}, 7.0, "$: must be multiple of 3"},
-		{"multipleOf ok", obj{"type": "number", "multipleOf": 3.0}, 9.0, ""},
-		{"minProperties", obj{"type": "object", "minProperties": 1.0}, obj{}, "$: must not have fewer than 1 properties"},
-		{"anyOf", obj{"anyOf": []any{obj{"type": "string"}, obj{"type": "number"}}}, true, "$: must match a schema in anyOf"},
-		{"oneOf", obj{"oneOf": []any{obj{"type": "number"}, obj{"type": "integer"}}}, 1.0, "$: must match exactly one schema in oneOf"},
-		{"allOf", obj{"allOf": []any{obj{"type": "number"}, obj{"minimum": 3.0}}}, 1.0, "$: must be >= 3"},
-		{"not", obj{"not": obj{"type": "string"}}, "x", "$: must not be valid"},
-		{"ref", obj{"type": "object", "properties": obj{"a": obj{"$ref": "#/$defs/n"}}, "$defs": obj{"n": obj{"type": "number"}}}, obj{"a": "x"}, "$.a: must be number"},
-		{"false schema", obj{"type": "object", "properties": obj{"a": false}}, obj{"a": 1.0}, "$.a: schema is false"},
-		{"at most five reported", obj{"type": "array", "items": obj{"type": "string"}}, []any{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-			"$.0: must be string; $.1: must be string; $.2: must be string; $.3: must be string; $.4: must be string"},
-		{"integer-valued float is an integer", obj{"type": "integer"}, 3.0, ""},
-		{"a key with a slash is a JSON Pointer escape, as the original reports it", obj{"type": "object", "properties": obj{"a/b": obj{"type": "string"}}}, obj{"a/b": 1.0}, "$.a~1b: must be string"},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			schema := c.schema
-			if schema["type"] != "object" {
-				schema = obj{"type": "object", "properties": obj{"v": c.schema}}
-				c.value = obj{"v": c.value}
-				if c.want != "" {
-					c.want = regexp.MustCompile(`\$([.:])`).ReplaceAllStringFunc(c.want, func(m string) string { // the paths only: they gain the property name
-						if m == "$:" {
-							return "$.v:"
-						}
-						return "$.v."
-					})
-				}
-			}
-			compiled, problem := compileJSONSchema(schema)
-			eq(t, problem, "")
-			msg, ok := compiled.check(c.value)
-			eq(t, msg, c.want)
-			eq(t, ok, c.want == "")
-		})
-	}
-}
-
-func TestTheSystemPromptMessageOfPigsStreamIsNotATranscriptEntry(t *testing.T) {
-	// A real `pig --mode rpc` emits the system prompt as the first message_end; the prompt entry is the second.
-	s, path := streamFixture(t, 1, map[string]any{"role": "system", "content": ""}, user("do the thing"))
-	s.push(assistant("ok"))
-	s.fire(obj{"type": "turn_end"})
-	entries := readEntries(t, path)
-	eq(t, len(entries), 2)
-	eq(t, entries[1]["type"], "assistant")
 }

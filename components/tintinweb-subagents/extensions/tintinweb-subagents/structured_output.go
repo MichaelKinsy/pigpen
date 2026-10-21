@@ -2,6 +2,7 @@ package tintinweb_subagents
 
 import (
 	"encoding/json"
+	"os"
 	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -14,8 +15,26 @@ import (
 // structuredOutputToolName is deliberately not an excluded or built-in tool name. upstream: STRUCTURED_OUTPUT_TOOL_NAME.
 const structuredOutputToolName = "StructuredOutput"
 
-// structuredSchemaEnv carries the caller's schema (JSON) to a child, which registers the tool when it is set.
-const structuredSchemaEnv = "TINTINWEB_SUBAGENT_STRUCTURED_SCHEMA"
+// structuredSchemaFileEnv names the file that holds the caller's schema (JSON) for a child, which registers the tool
+// when it is set. A file, not the schema itself: an environment string is capped far below the schema limit.
+const structuredSchemaFileEnv = "TINTINWEB_SUBAGENT_STRUCTURED_SCHEMA_FILE"
+
+// writeSchemaFile stores a schema in a private temp file (0600) and returns its path; the caller removes it.
+func writeSchemaFile(schema string) (string, error) {
+	f, err := os.CreateTemp("", "pi-subagents-schema-*.json")
+	if err != nil {
+		return "", err
+	}
+	_, werr := f.WriteString(schema)
+	if cerr := f.Close(); werr == nil {
+		werr = cerr
+	}
+	if werr != nil {
+		_ = os.Remove(f.Name())
+		return "", werr
+	}
+	return f.Name(), nil
+}
 
 // structuredCapture is what the child produced, filled in as the tool is called. upstream: StructuredCapture.
 type structuredCapture struct {
@@ -51,11 +70,11 @@ func prepareStructuredArguments(args any) any {
 
 // execute is the tool's body: validate, record the last valid call, answer a bad payload in-band so the model can
 // correct itself inside the run. upstream: createStructuredOutputTool execute.
-func (c *structuredCapture) execute(compiled *compiledSchema, params any) (text string, isError bool, canonical string) {
+func (c *structuredCapture) execute(compiled *workflowCompiledSchema, params any) (text string, isError bool, canonical string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.Called = true
-	if verdict, ok := compiled.check(params); !ok {
+	if verdict := compiled.Check(params); verdict != "" {
 		c.LastError, c.HasError = verdict, true
 		return "StructuredOutput did not match the required schema:\n" + verdict + "\nCall it again with a corrected value.", true, ""
 	}
@@ -99,7 +118,7 @@ func structuredFailure(c *structuredCapture) string {
 
 // structuredOutputTool builds the tool for one child: the caller's schema is its parameters verbatim; sampling is
 // constrained when the provider can, not required. upstream: createStructuredOutputTool.
-func structuredOutputTool(compiled *compiledSchema, capture *structuredCapture) sdk.ToolDefinition {
+func structuredOutputTool(compiled *workflowCompiledSchema, capture *structuredCapture) sdk.ToolDefinition {
 	return sdk.ToolDefinition{
 		Name: structuredOutputToolName, Label: "Structured Output", Description: structuredToolDescription,
 		PromptSnippet:    structuredToolSnippet,
@@ -121,7 +140,7 @@ func registerStructuredOutput(e *sdk.Extension, schemaJSON string) {
 	if json.Unmarshal([]byte(schemaJSON), &raw) != nil {
 		return
 	}
-	if compiled, _ := compileJSONSchema(raw); compiled != nil {
-		e.RegisterTool(structuredOutputTool(compiled, &structuredCapture{}))
+	if c := compileWorkflowSchema(raw); c.OK {
+		e.RegisterTool(structuredOutputTool(c.Compiled, &structuredCapture{}))
 	}
 }

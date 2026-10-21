@@ -65,7 +65,9 @@ func (a *app) reload(cwd string) {
 }
 
 // refuseSettings tells the user once per distinct text that a setting of subagents.json asks for a feature that is
-// not ported. The setting has no effect (the port does what it did without it); it is never taken for a partial run.
+// not ported. The setting has no effect for the unported part (the port does what it did without it), which the
+// notice names when the setting is honored in part (showCost: the texts show the cost, the widget does not); it is
+// never taken for a full run.
 func (a *app) refuseSettings(ctx sdk.Context) {
 	text := settingsRefusal(ctx.Cwd())
 	a.mu.Lock()
@@ -102,8 +104,10 @@ func Extension() *sdk.Extension {
 	e := sdk.New("tintinweb-subagents")
 	if os.Getenv(depthEnv) != "" {
 		// A schema-bound child reports through a StructuredOutput tool and registers nothing else.
-		if schema := os.Getenv(structuredSchemaEnv); schema != "" {
-			registerStructuredOutput(e, schema)
+		if path := os.Getenv(structuredSchemaFileEnv); path != "" {
+			if schema, err := os.ReadFile(path); err == nil {
+				registerStructuredOutput(e, string(schema))
+			}
 		}
 		return e
 	}
@@ -288,7 +292,7 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int, showCost bool) str
 	// Only under showCost: this is LLM context, and a figure the orchestrator did not ask for is a figure it may
 	// start reporting unprompted.
 	if cost := getLifetimeCost(r.Usage); showCost && cost > 0 {
-		costXML = fmt.Sprintf("<estimated_cost_usd>%.4f</estimated_cost_usd>", cost)
+		costXML = "<estimated_cost_usd>" + jsToFixed(cost, 4) + "</estimated_cost_usd>"
 	}
 	return strings.Join(append(lines,
 		"<status>"+escapeXML(statusLabel(r))+"</status>",

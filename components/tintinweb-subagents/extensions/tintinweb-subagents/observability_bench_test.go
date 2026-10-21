@@ -27,15 +27,14 @@ func BenchmarkFormatTaskNotification(b *testing.B) {
 	}
 }
 
+// A streamed delta goes straight to the stream (the manager passes it in as the child's Event hook): one mutex, no
+// manager lock.
 func BenchmarkChildEventThroughHooks(b *testing.B) {
-	m := newManager(nil, nil)
-	r := &agentRecord{ID: "a"}
-	hooks := m.hooksFor(r)
-	r.transcript = newTranscriptStream(filepath.Join(b.TempDir(), "a.output"), "a", "/w", 1)
+	hook := newTranscriptStream(filepath.Join(b.TempDir(), "a.output"), "a", "/w", 1).onEvent
 	delta := obj{"type": "message_update", "delta": "x"}
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		hooks.Event(delta)
+		hook(delta)
 	}
 }
 
@@ -81,11 +80,11 @@ func BenchmarkAgentConversation(b *testing.B) {
 }
 
 func BenchmarkSchemaCheck(b *testing.B) {
-	c, _ := compileJSONSchema(structuredSchema)
+	c := compileWorkflowSchema(structuredSchema).Compiled
 	v := obj{"file": "a.ts", "line": 3.0}
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		_, _ = c.check(v)
+		_ = c.Check(v)
 	}
 }
 

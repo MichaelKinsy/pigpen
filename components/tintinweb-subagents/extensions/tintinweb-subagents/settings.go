@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent and
-// disableDefaultAgents. The global file (<agent dir>/subagents.json) is read first, the project file
+// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent,
+// disableDefaultAgents, outputTranscript, reportUsage and showCost. The global file (<agent dir>/subagents.json) is read first, the project file
 // (<cwd>/.pi/subagents.json) overrides it. A field of the wrong shape is dropped, silently, as in the original.
 // upstream: src/settings.ts (sanitize, loadSettings).
 type settings struct {
@@ -18,6 +18,9 @@ type settings struct {
 	GraceTurns           int // 0: unset
 	FallbackSubagent     *string
 	DisableDefaultAgents *bool
+	OutputTranscript     *bool
+	ReportUsage          *bool
+	ShowCost             *bool
 }
 
 const (
@@ -51,6 +54,15 @@ func sanitizeSettings(raw any) settings {
 	}
 	if b, ok := r["disableDefaultAgents"].(bool); ok {
 		out.DisableDefaultAgents = &b
+	}
+	if b, ok := r["outputTranscript"].(bool); ok {
+		out.OutputTranscript = &b
+	}
+	if b, ok := r["reportUsage"].(bool); ok {
+		out.ReportUsage = &b
+	}
+	if b, ok := r["showCost"].(bool); ok {
+		out.ShowCost = &b
 	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
@@ -96,6 +108,15 @@ func loadSettings(cwd string) settings {
 	}
 	if p.DisableDefaultAgents != nil {
 		s.DisableDefaultAgents = p.DisableDefaultAgents
+	}
+	if p.OutputTranscript != nil {
+		s.OutputTranscript = p.OutputTranscript
+	}
+	if p.ReportUsage != nil {
+		s.ReportUsage = p.ReportUsage
+	}
+	if p.ShowCost != nil {
+		s.ShowCost = p.ShowCost
 	}
 	return s
 }

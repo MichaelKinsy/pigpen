@@ -46,7 +46,7 @@ type agentRecord struct {
 	CompactionCount   int      // successful compactions of the agent's session
 	ContextPercent    *float64 // context-window utilization when the agent settled, nil when unavailable
 	OutputFile        string   // the `.output` transcript, "" when none is written
-	Messages          []map[string]any
+	Conversation      string // the agent's conversation as get_subagent_result verbose prints it, "" when it has none
 	StructuredJSON    string // the validated StructuredOutput payload, when a schema was asked for
 	StructuredRetried bool
 	transcript        *transcriptStream
@@ -104,21 +104,15 @@ func (m *manager) hooksFor(r *agentRecord) *childHooks {
 				m.onCompact(r, reason, tokensBefore, count)
 			}
 		},
-		Event: func(ev map[string]any) {
-			m.mu.Lock()
-			tr := r.transcript
-			m.mu.Unlock()
-			if tr != nil {
-				tr.onEvent(ev)
-			}
-		},
 	}
 }
 
-// closeTranscript does the transcript's final flush and detaches it. upstream: record.outputCleanup.
+// closeTranscript does the transcript's final flush and lets go of it (the record keeps no stream and so none of
+// its messages). upstream: record.outputCleanup.
 func (m *manager) closeTranscript(r *agentRecord) {
 	m.mu.Lock()
 	tr := r.transcript
+	r.transcript = nil
 	m.mu.Unlock()
 	if tr != nil {
 		tr.close()
@@ -211,6 +205,10 @@ func (m *manager) spawn(typ, description, name string, spec childSpec, backgroun
 		m.onSpawn(r)
 	}
 	m.mu.Lock()
+	// The stream is fixed from here on: the child's events go straight to it, with no lock per event.
+	if r.transcript != nil {
+		r.spec.Hooks.Event = r.transcript.onEvent
+	}
 	if background && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)
 		m.mu.Unlock()
@@ -251,6 +249,12 @@ func (m *manager) run(r *agentRecord) {
 	m.closeTranscript(r)
 	m.mu.Lock()
 	r.CompletedAt = time.Now()
+	if res == nil {
+		// A stopped or failed child cannot be asked any more: what its stream carried stays.
+		if sc, ok := r.child.(settledChild); ok {
+			r.Conversation, r.ContextPercent = sc.snapshot()
+		}
+	}
 	switch {
 	case r.stopped:
 		r.Status = statusStopped
@@ -274,7 +278,7 @@ func (m *manager) run(r *agentRecord) {
 	}
 	if res != nil {
 		r.Result, r.ToolUses, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Turns, res.WrappedUp
-		r.ContextPercent, r.Messages, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Messages, res.StructuredJSON, res.StructuredRetried
+		r.ContextPercent, r.Conversation, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Conversation, res.StructuredJSON, res.StructuredRetried
 	}
 	if r.Background {
 		m.running--

@@ -58,14 +58,6 @@ func createOutputFilePath(cwd, agentID, sessionID string) (string, error) {
 	return filepath.Join(dir, agentID+".output"), nil
 }
 
-// ensureOutputFile makes sure a transcript file exists without touching what is in it (a resume reuses it).
-// upstream: output-file.ts ensureOutputFile.
-func ensureOutputFile(path string) {
-	if f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666); err == nil {
-		f.Close()
-	}
-}
-
 // jsTimestamp is `new Date().toISOString()`: UTC, millisecond precision.
 func jsTimestamp() string { return time.Now().UTC().Format("2006-01-02T15:04:05.000Z") }
 
@@ -94,44 +86,49 @@ func writeInitialEntry(path, agentID, prompt, cwd string) {
 }
 
 // transcriptStream is the Go form of streamToOutputFile. The original reads `session.messages`; a child process
-// has no such array, so the stream keeps the one its message_end events build (every message of the run, in order)
-// and flushes the not-yet-written tail at turn_end, as the original does. Compaction replaces the array in Pi, so
-// a successful compaction re-anchors at the end of what has been seen.
+// has no such array, so the stream follows the messages its message_end events carry, in order, and flushes the
+// not-yet-written tail at turn_end, as the original does. Only that tail is kept: a flushed message is never read
+// again, and a successful compaction (which replaces Pi's array) drops whatever was seen since the last flush, as
+// the original's re-anchor to the rebuilt array does. Every message counts, a system message included: Pi's
+// session.messages holds the system prompt at index 0 (pi 1402973a, packages/agent/src/agent.ts and the recorded
+// goldens), so the original's start index 1 skips it and writes the user prompt a second time.
 type transcriptStream struct {
-	mu       sync.Mutex
-	path     string
-	agentID  string
-	cwd      string
-	messages []map[string]any
-	written  int
-	closed   bool
+	mu      sync.Mutex
+	path    string
+	agentID string
+	cwd     string
+	skip    int // messages still to be seen but not written: the ones before the start index
+	tail    []map[string]any
+	closed  bool
 }
 
 // newTranscriptStream streams to path. startIndex is the index of the first message it is responsible for: a spawn
-// writes messages[0] (the prompt) as the initial entry, so it starts at 1; a resume passes the session's length.
+// writes messages[0] as the initial entry, so it starts at 1; a resume passes the session's length.
 // upstream: output-file.ts streamToOutputFile (startIndex).
 func newTranscriptStream(path, agentID, cwd string, startIndex int) *transcriptStream {
-	return &transcriptStream{path: path, agentID: agentID, cwd: cwd, written: startIndex}
+	return &transcriptStream{path: path, agentID: agentID, cwd: cwd, skip: startIndex}
 }
 
-// flushLocked writes every message from the anchor on. The caller holds t.mu.
+// flushLocked appends the unwritten tail to the file and forgets it. The caller holds t.mu.
 func (t *transcriptStream) flushLocked() {
-	for t.written < len(t.messages) {
-		msg := t.messages[t.written]
-		kind := "toolResult"
-		switch msg["role"] {
-		case "assistant":
-			kind = "assistant"
-		case "user":
-			kind = "user"
-		}
-		line := jsonLine(transcriptEntry{true, t.agentID, kind, msg, jsTimestamp(), t.cwd})
-		if f, err := os.OpenFile(t.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666); err == nil {
-			_, _ = f.Write(line)
-			f.Close()
-		}
-		t.written++
+	if len(t.tail) == 0 {
+		return
 	}
+	f, err := os.OpenFile(t.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666)
+	if err == nil {
+		for _, msg := range t.tail {
+			kind := "toolResult"
+			switch msg["role"] {
+			case "assistant":
+				kind = "assistant"
+			case "user":
+				kind = "user"
+			}
+			_, _ = f.Write(jsonLine(transcriptEntry{true, t.agentID, kind, msg, jsTimestamp(), t.cwd}))
+		}
+		f.Close()
+	}
+	t.tail = nil
 }
 
 // onEvent feeds one event of the child's RPC stream.
@@ -143,10 +140,13 @@ func (t *transcriptStream) onEvent(ev map[string]any) {
 	}
 	switch ev["type"] {
 	case "message_end":
-		// PiG's rpc stream also carries the system prompt as a message (role "system"); Pi's session.messages does
-		// not hold one, and neither does the transcript.
-		if msg, ok := ev["message"].(map[string]any); ok && msg["role"] != "system" {
-			t.messages = append(t.messages, msg)
+		msg, ok := ev["message"].(map[string]any)
+		switch {
+		case !ok:
+		case t.skip > 0:
+			t.skip--
+		default:
+			t.tail = append(t.tail, msg)
 		}
 	case "turn_end":
 		t.flushLocked()
@@ -154,9 +154,11 @@ func (t *transcriptStream) onEvent(ev map[string]any) {
 		// Flush before the history is rewritten so a tail that never saw a turn_end still reaches the file.
 		t.flushLocked()
 	case "compaction_end":
+		// The array was rebuilt: what was seen since the flush belongs to the old one. Aborted or failed compactions
+		// leave it alone.
 		aborted, _ := ev["aborted"].(bool)
 		if result, _ := ev["result"].(map[string]any); !aborted && result != nil {
-			t.written = len(t.messages)
+			t.tail, t.skip = nil, 0
 		}
 	}
 }

@@ -125,6 +125,7 @@ type settingRule struct {
 	okInts []int
 	enum   []string // the valid strings of an enum setting
 	okEnum []string
+	note   string // names the part that is not ported when the setting is partly honored
 }
 
 var settingRules = []settingRule{
@@ -142,7 +143,7 @@ var settingRules = []settingRule{
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
-	{key: "showCost", kind: "bool", okBool: false},
+	{key: "showCost", kind: "bool", okBool: false, note: " (only its widget display; the cost in the notification, result and steer texts is shown)"},
 	{key: "showModel", kind: "bool", okBool: false},
 	{key: "viewerMarkdown", kind: "enum", enum: []string{"assistant", "all", "off"}},
 }
@@ -205,7 +206,7 @@ func unportedSettings(cwd string) []string {
 	var out []string
 	for _, r := range settingRules {
 		if v, ok := merged[r.key]; ok && r.unported(v) {
-			out = append(out, fmt.Sprintf("%s: %s", r.key, compactJSON(v)))
+			out = append(out, fmt.Sprintf("%s: %s%s", r.key, compactJSON(v), r.note))
 		}
 	}
 	return out

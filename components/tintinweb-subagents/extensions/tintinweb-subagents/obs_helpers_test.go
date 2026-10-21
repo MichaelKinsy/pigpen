@@ -15,6 +15,12 @@ import (
 // startObsRig is startRigIn with the host answering getSessionID, which the transcript path needs.
 func startObsRig(t *testing.T, cwd string, starter ...childStarter) *rig {
 	t.Helper()
+	return startObsRigWith(t, cwd, "", starter...)
+}
+
+// startObsRigWith is startObsRig whose host fails getSessionID with sessionFailure when it is not "".
+func startObsRigWith(t *testing.T, cwd, sessionFailure string, starter ...childStarter) *rig {
+	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
 	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
@@ -27,6 +33,9 @@ func startObsRig(t *testing.T, cwd string, starter ...childStarter) *rig {
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
 		if method == "getSessionID" {
+			if sessionFailure != "" {
+				return nil, sessionFailure
+			}
 			return obj{"sessionId": "session-1"}, ""
 		}
 		return r.answer(method, args)

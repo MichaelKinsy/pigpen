@@ -99,17 +99,22 @@ func TestStreamToOutputFileTwins(t *testing.T) {
 		eq(t, strings.Contains(string(jsonLine(entries[len(entries)-1])), "tail-before-compact"), true)
 	})
 	tw(t, "output-file", "re-anchors after the overflow-retry trim, not at compaction_end (#145)", func(t *testing.T) {
-		// Pi emits compaction_end and trims the trailing error message afterwards; here the stream only sees what the
-		// child's events carry, so the first message after compaction must still be written.
+		// Pi emits compaction_end and trims the trailing error message afterwards, then anchors on the rebuilt array.
+		// The stream sees the error message between compaction_start and compaction_end: it belongs to the array that
+		// is replaced, so it is never written, while the retry's answer after the re-anchor is.
 		s, path := streamFixture(t, 1, user("go"))
 		s.push(assistant("big"))
 		s.fire(obj{"type": "turn_end"})
 		s.fire(obj{"type": "compaction_start", "reason": "overflow"})
+		s.push(assistant("OVERFLOW-ERROR-TRIMMED"))
 		s.fire(obj{"type": "compaction_end", "reason": "overflow", "aborted": false, "result": obj{"summary": "s"}, "willRetry": true})
 		s.push(assistant("RETRY-ANSWER"))
 		s.fire(obj{"type": "turn_end"})
 		entries := readEntries(t, path)
-		eq(t, strings.Contains(string(jsonLine(entries[len(entries)-1])), "RETRY-ANSWER"), true)
+		eq(t, len(entries), 3) // initial + big + RETRY-ANSWER
+		body := string(jsonLine(entries))
+		eq(t, strings.Contains(body, "RETRY-ANSWER"), true)
+		eq(t, strings.Contains(body, "OVERFLOW-ERROR-TRIMMED"), false)
 	})
 	tw(t, "output-file", "does not re-anchor on aborted or failed compaction (#145)", func(t *testing.T) {
 		s, path := streamFixture(t, 1, user("go"))
@@ -258,7 +263,6 @@ func TestOutputTranscriptWiringTwins(t *testing.T) {
 	tw(t, "output-transcript-wiring", "keeps transcript creation as the default", func(t *testing.T) {
 		rec := run(t, "", "", false)
 		eq(t, rec.OutputFile != "", true)
-		eq(t, rec.transcript != nil, true)
 		entries := readEntries(t, rec.OutputFile)
 		eq(t, entries[0]["agentId"], rec.ID)
 		eq(t, entries[0]["message"], obj{"role": "user", "content": "process the data"})
@@ -271,7 +275,6 @@ func TestOutputTranscriptWiringTwins(t *testing.T) {
 	tw(t, "output-transcript-wiring", "lets agent frontmatter output_transcript true override a project outputTranscript false", func(t *testing.T) {
 		rec := run(t, `{"outputTranscript": false}`, "output_transcript: true", false)
 		eq(t, rec.OutputFile != "", true)
-		eq(t, rec.transcript != nil, true)
 	})
 }
 

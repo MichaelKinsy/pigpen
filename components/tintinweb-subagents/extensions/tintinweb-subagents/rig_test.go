@@ -24,6 +24,20 @@ type fakeChild struct {
 	mu      sync.Mutex
 	steered []string
 	aborted bool
+	// what a live child reports (liveChild): the context percent and the conversation so far
+	livePercent  *float64
+	liveMessages []map[string]any
+}
+
+func (c *fakeChild) stats() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.livePercent
+}
+func (c *fakeChild) messages() []map[string]any {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.liveMessages
 }
 
 func (c *fakeChild) wait() (*childResult, error) {
@@ -127,6 +141,8 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {
+	case "getSessionID":
+		return obj{"sessionId": "session-1"}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string

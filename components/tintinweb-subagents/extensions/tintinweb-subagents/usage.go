@@ -53,24 +53,19 @@ func toReportedUsage(u lifetimeUsage) *reportedUsage {
 type pendingUsagePool struct {
 	mu      sync.Mutex
 	pending lifetimeUsage
-	dirty   bool
 }
 
 func (p *pendingUsagePool) add(delta lifetimeUsage) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	addUsage(&p.pending, delta)
-	p.dirty = true
 }
 
 // drain takes everything accumulated so far as a pi Usage, resetting the pool; nil when nothing is pending.
 func (p *pendingUsagePool) drain() *reportedUsage {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if !p.dirty {
-		return nil
-	}
 	drained := toReportedUsage(p.pending)
-	p.pending, p.dirty = lifetimeUsage{}, false
+	p.pending = lifetimeUsage{}
 	return drained
 }

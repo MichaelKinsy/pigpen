@@ -136,7 +136,7 @@ func (a *app) registerTools(e *sdk.Extension) {
 }
 
 // formatMs is seconds with one decimal. upstream: ui/agent-widget.ts formatMs.
-func formatMs(ms int64) string { return fmt.Sprintf("%.1fs", float64(ms)/1000) }
+func formatMs(ms int64) string { return jsToFixed(float64(ms)/1000, 1) + "s" }
 
 // formatTokens is "" for no tokens, else the count. upstream: index.ts formatLifetimeTokens, ui/agent-widget.ts formatTokens.
 func formatTokens(n int) string {
@@ -144,9 +144,9 @@ func formatTokens(n int) string {
 	case n <= 0:
 		return ""
 	case n >= 1_000_000:
-		return fmt.Sprintf("%.1fM token", float64(n)/1_000_000)
+		return jsToFixed(float64(n)/1_000_000, 1) + "M token"
 	case n >= 1000:
-		return fmt.Sprintf("%.1fk token", float64(n)/1000)
+		return jsToFixed(float64(n)/1000, 1) + "k token"
 	}
 	return fmt.Sprintf("%d token", n)
 }
@@ -209,7 +209,14 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		extras.Transcript = *cfg.OutputTranscript
 	}
 	if extras.Transcript {
-		extras.SessionID, _ = ctx.GetSessionID()
+		// The original always has a session id; without one there is no session directory to write under, so the
+		// agent runs without a transcript (reported on stderr, like a transcript path that cannot be made).
+		id, err := ctx.GetSessionID()
+		if err != nil || id == "" {
+			fmt.Fprintf(os.Stderr, "[pi-subagents] no transcript: the session id is not available (%v)\n", err)
+			extras.Transcript = false
+		}
+		extras.SessionID = id
 	}
 	r, err := a.startWith(ctx, extras, resolved, prompt, description, name, model, thinking, maxTurns, background, isolated)
 	if err != nil {

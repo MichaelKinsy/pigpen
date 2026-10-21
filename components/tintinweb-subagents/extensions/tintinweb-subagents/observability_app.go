@@ -1,11 +1,9 @@
 package tintinweb_subagents
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -16,7 +14,7 @@ import (
 // texts, the `subagents:started` and `subagents:compacted` events and the live stats of an agent. upstream:
 // src/index.ts (attachTranscript, withUsageReporting, buildEventData, formatTaskNotification), src/output-file.ts.
 
-// obsState is the settings of this slice, read from subagents.json, and the usage pool. Defaults: transcripts on,
+// obsState is the settings of this slice (settings.go) and the usage pool. Defaults: transcripts on,
 // usage reporting and cost display off. upstream: output-file.ts getOutputTranscriptDefault; index.ts reportUsage, showCost.
 type obsState struct {
 	mu                    sync.Mutex
@@ -25,49 +23,13 @@ type obsState struct {
 	pool                  pendingUsagePool
 }
 
-// obsSettings are the fields of subagents.json this slice honors, global then project, the project winning.
-type obsSettings struct {
-	outputTranscript, reportUsage, showCost *bool
-}
-
-func readObsSettings(path string) obsSettings {
-	var out obsSettings
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return out
-	}
-	var raw map[string]any
-	if json.Unmarshal(data, &raw) != nil {
-		return out
-	}
-	get := func(k string) *bool {
-		if b, ok := raw[k].(bool); ok {
-			return &b
-		}
-		return nil
-	}
-	return obsSettings{get("outputTranscript"), get("reportUsage"), get("showCost")}
-}
-
-func loadObsSettings(cwd string) obsSettings {
-	g := readObsSettings(filepath.Join(agentDir(), "subagents.json"))
-	p := readObsSettings(filepath.Join(cwd, ".pi", "subagents.json"))
-	pick := func(project, global *bool) *bool {
-		if project != nil {
-			return project
-		}
-		return global
-	}
-	return obsSettings{pick(p.outputTranscript, g.outputTranscript), pick(p.reportUsage, g.reportUsage), pick(p.showCost, g.showCost)}
-}
-
 // reloadObs applies the settings of a workspace.
 func (a *app) reloadObs(cwd string) {
-	s := loadObsSettings(cwd)
+	s := loadSettings(cwd)
 	a.obs.mu.Lock()
-	a.obs.noTranscript = s.outputTranscript != nil && !*s.outputTranscript
-	a.obs.reportUsage = s.reportUsage != nil && *s.reportUsage
-	a.obs.showCost = s.showCost != nil && *s.showCost
+	a.obs.noTranscript = s.OutputTranscript != nil && !*s.OutputTranscript
+	a.obs.reportUsage = s.ReportUsage != nil && *s.ReportUsage
+	a.obs.showCost = s.ShowCost != nil && *s.ShowCost
 	report := a.obs.reportUsage
 	a.obs.mu.Unlock()
 	if !report {
@@ -179,16 +141,16 @@ func roundPercent(p float64) int { return int(math.Floor(p + 0.5)) }
 // conversation is the agent's messages as text, for get_subagent_result's verbose. "" when it has none.
 func (a *app) conversation(r *agentRecord) string {
 	a.mgr.mu.Lock()
-	c, status, msgs := r.child, r.Status, r.Messages
+	c, status, settled := r.child, r.Status, r.Conversation
 	a.mgr.mu.Unlock()
 	if status == statusRunning {
 		lc, ok := c.(liveChild)
 		if !ok {
 			return ""
 		}
-		msgs = lc.messages()
+		return conversationOf(lc.messages())
 	}
-	return getAgentConversation(msgs)
+	return settled
 }
 
 // contentText is context.ts extractText: the text parts of a content array, joined by newlines.
@@ -207,52 +169,59 @@ func contentText(content any) string {
 func getAgentConversation(messages []map[string]any) string {
 	var parts []string
 	for _, msg := range messages {
-		switch msg["role"] {
-		case "user":
-			text, ok := msg["content"].(string)
-			if !ok {
-				text = contentText(msg["content"])
-			}
-			if t := strings.TrimSpace(text); t != "" {
-				parts = append(parts, "[User]: "+t)
-			}
-		case "assistant":
-			var texts, calls []string
-			for _, x := range asList(msg["content"]) {
-				c, _ := x.(map[string]any)
-				switch c["type"] {
-				case "text":
-					if t, _ := c["text"].(string); t != "" {
-						texts = append(texts, t)
-					}
-				case "toolCall":
-					name, _ := c["name"].(string)
-					if name == "" {
-						name, _ = c["toolName"].(string)
-					}
-					if name == "" {
-						name = "unknown"
-					}
-					calls = append(calls, "  Tool: "+name)
-				}
-			}
-			if len(texts) > 0 {
-				parts = append(parts, "[Assistant]: "+strings.Join(texts, "\n"))
-			}
-			if len(calls) > 0 {
-				parts = append(parts, "[Tool Calls]:\n"+strings.Join(calls, "\n"))
-			}
-		case "toolResult":
-			text := contentText(msg["content"])
-			if u := []rune(text); len(u) > 200 { // JavaScript counts UTF-16 units; the two agree below the astral plane
-				text = string(u[:200]) + "..."
-			}
-			name, ok := msg["toolName"].(string)
-			if !ok {
-				name = "undefined" // as a template literal prints a missing name
-			}
-			parts = append(parts, "[Tool Result ("+name+")]: "+text)
-		}
+		parts = append(parts, conversationParts(msg)...)
 	}
 	return strings.Join(parts, "\n\n")
+}
+
+// conversationParts is what one message adds to the conversation text (nothing for a system message or an empty one).
+func conversationParts(msg map[string]any) []string {
+	var parts []string
+	switch msg["role"] {
+	case "user":
+		text, ok := msg["content"].(string)
+		if !ok {
+			text = contentText(msg["content"])
+		}
+		if t := strings.TrimSpace(text); t != "" {
+			parts = append(parts, "[User]: "+t)
+		}
+	case "assistant":
+		var texts, calls []string
+		for _, x := range asList(msg["content"]) {
+			c, _ := x.(map[string]any)
+			switch c["type"] {
+			case "text":
+				if t, _ := c["text"].(string); t != "" {
+					texts = append(texts, t)
+				}
+			case "toolCall":
+				name, _ := c["name"].(string)
+				if name == "" {
+					name, _ = c["toolName"].(string)
+				}
+				if name == "" {
+					name = "unknown"
+				}
+				calls = append(calls, "  Tool: "+name)
+			}
+		}
+		if len(texts) > 0 {
+			parts = append(parts, "[Assistant]: "+strings.Join(texts, "\n"))
+		}
+		if len(calls) > 0 {
+			parts = append(parts, "[Tool Calls]:\n"+strings.Join(calls, "\n"))
+		}
+	case "toolResult":
+		text := contentText(msg["content"])
+		if u := []rune(text); len(u) > 200 { // JavaScript counts UTF-16 units; the two agree below the astral plane
+			text = string(u[:200]) + "..."
+		}
+		name, ok := msg["toolName"].(string)
+		if !ok {
+			name = "undefined" // as a template literal prints a missing name
+		}
+		parts = append(parts, "[Tool Result ("+name+")]: "+text)
+	}
+	return parts
 }
