@@ -3,7 +3,7 @@
 name: pig-warden
 description: "PiG with warden: irreversible calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Off until /warden enable; it shows what leaves the machine before anything does; judged by TypeSafe Jev or your own session model."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-extension-port",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Test-first, proof-checked procedure for porting Pi TypeScript extensions to native Go PiG extensions",
   "keywords": [
     "pig-package",

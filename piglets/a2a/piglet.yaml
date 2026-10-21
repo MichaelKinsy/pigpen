@@ -3,7 +3,7 @@
 name: a2a
 description: "PiG that speaks A2A (Agent2Agent): call remote A2A agents from tools, and serve PiG tasks to A2A agents when you configure a listener. Off until configured."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

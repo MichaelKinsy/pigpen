@@ -4,7 +4,7 @@
 name: pig-typesafe
 description: "The typesafe_evaluate tool and /typesafe command (Go port of pi-typesafe). Off until enabled; content goes to api.typesafe.ai unless the own-model backend (the model PiG is configured with) is selected."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

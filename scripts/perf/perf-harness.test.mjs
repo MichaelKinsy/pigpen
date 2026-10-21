@@ -12,6 +12,11 @@ const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'pigpen-perf-test-')));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 const required = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8')).pig;
 const has = (command) => spawnSync('sh', ['-c', `command -v ${command}`]).status === 0;
+// measure.mjs pins the pig it starts with `taskset -c <cpus>`, which fails for a CPU outside the CPUs this process may
+// run on (a container with a cpuset, a CI job restricted to a CPU range): the pig never starts and the measurement waits
+// out its 30 s. The tests are about what the harness does with a pig, not about which CPU it ran on, so they pin to the
+// first CPU they are allowed.
+const allowedCpu = () => /^Cpus_allowed_list:\s*(\d+)/m.exec(readFileSync('/proc/self/status', 'utf8'))?.[1] ?? '0';
 
 describe('build-singles', () => {
   it('builds with a scratch PiG home, never the user\'s ~/.pig', () => {
@@ -51,7 +56,7 @@ describe('measure', { skip: !(has('tmux') && has('taskset')) && 'needs tmux and 
       + 'trap \'i=0; while [ $i -lt 20 ]; do mkdir -p "$HOME/agent/s$i"; : > "$HOME/agent/s$i/state"; i=$((i+1)); sleep 0.01; done; exit 0\' HUP TERM\n'
       + "printf 'ready\\n  faux-1\\n'\nwhile :; do sleep 0.01; done\n");
     chmodSync(fake, 0o755);
-    const r = spawnSync(process.execPath, [join(root, 'scripts/perf/measure.mjs'), 'startup', '--mode', 'tmux', '--n', '3', '--cpus', '0', `fake=${fake}`], {
+    const r = spawnSync(process.execPath, [join(root, 'scripts/perf/measure.mjs'), 'startup', '--mode', 'tmux', '--n', '3', '--cpus', allowedCpu(), `fake=${fake}`], {
       cwd: scratch, encoding: 'utf8', env: { ...process.env, TMPDIR: tmp }, timeout: 60000,
     });
     assert.equal(r.status, 0, r.stdout + r.stderr);
@@ -69,7 +74,7 @@ describe('measure', { skip: !(has('tmux') && has('taskset')) && 'needs tmux and 
     writeFileSync(fake, '#!/bin/sh\nstty -echo -icanon min 1\nprintf \'ready\\n  faux-1\\n\'\nsleep 0.3\n'
       + 'typed=$(dd bs=1 count=5 2>/dev/null)\nprintf \'%s\\n\' "$typed"\nwhile :; do sleep 0.01; done\n');
     chmodSync(fake, 0o755);
-    const r = spawnSync(process.execPath, [join(root, 'scripts/perf/measure.mjs'), 'startup', '--mode', 'tmux', '--n', '2', '--cpus', '0', `fake=${fake}`], {
+    const r = spawnSync(process.execPath, [join(root, 'scripts/perf/measure.mjs'), 'startup', '--mode', 'tmux', '--n', '2', '--cpus', allowedCpu(), `fake=${fake}`], {
       cwd: scratch, encoding: 'utf8', env: { ...process.env, TMPDIR: join(scratch, 'tmp') }, timeout: 60000,
     });
     assert.equal(r.status, 0, r.stdout + r.stderr);
