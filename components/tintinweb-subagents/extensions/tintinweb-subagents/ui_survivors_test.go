@@ -338,3 +338,74 @@ func TestConsecutiveWordKillsAccumulateInOneYank(t *testing.T) {
 	in.handleInput("\x19") // ctrl+y yanks both words as one entry
 	eqStr(t, in.value, "one two three")
 }
+
+func TestAskedAnnotationOnlyWhenTheValuesDiffer(t *testing.T) {
+	eqStr(t, asked("m", "m"), "m")
+	eqStr(t, asked("m", ""), "m")
+	eqStr(t, asked("m", "x"), "m (asked x)")
+}
+
+func TestARefusedSettingIsAnnouncedOncePerText(t *testing.T) {
+	r := settingsRig(t, `{"scopeModels": true}`)
+	count := func() int {
+		n := 0
+		for _, m := range notices(r) {
+			if strings.Contains(m, "scopeModels") {
+				n++
+			}
+		}
+		return n
+	}
+	eq(t, count(), 1)
+	r.Fire("session_start", obj{"reason": "reload"})
+	eq(t, count(), 1)
+}
+
+func TestRunningDetailsCarryTheTurnCount(t *testing.T) {
+	r := startRig(t)
+	rec := &agentRecord{ID: "q", Status: statusRunning, StartedAt: time.Now()}
+	d := r.app.runningDetails(rec, "general-purpose", "d", 0)
+	if d.TurnCount == nil || *d.TurnCount != 1 {
+		t.Errorf("turn count %v", d.TurnCount)
+	}
+}
+
+func TestModelNotFoundListsTheAvailableModelsSorted(t *testing.T) {
+	_, msg := resolveModelAmong("nonesuch", []map[string]any{
+		{"provider": "z", "id": "last"}, {"provider": "a", "id": "first"}})
+	hasStr(t, msg, "Available models:\n  a/first\n  z/last")
+}
+
+func TestUnresolvedAskedModelIsDisclosedEvenAgainstAnEmptyWinner(t *testing.T) {
+	eqStr(t, requestedModel("nonesuch", nil, map[string]any{}), "nonesuch")
+}
+
+func TestNoUIMeansNoSurfaceIsBound(t *testing.T) {
+	cwd := t.TempDir()
+	resetTypes()
+	t.Cleanup(resetTypes)
+	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	e := sdk.New("tintinweb-subagents")
+	r.app = newApp(e, r.fleet.start)
+	r.app.register(e)
+	no := false
+	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer, HasUI: &no})
+	r.Fire("session_start", obj{"reason": "startup"})
+	r.Fire("tool_execution_start", obj{})
+	r.app.ui.fleet.mu.Lock()
+	bound := r.app.ui.fleet.ui != nil
+	r.app.ui.fleet.mu.Unlock()
+	if bound {
+		t.Error("the fleet list was bound to a UI that does not exist")
+	}
+}
+
+func TestAnUnchangedWidgetIsNotSentAgain(t *testing.T) {
+	r := startRig(t)
+	r.Fire("tool_execution_start", obj{})
+	r.app.ui.ui.SetWidget("probe", func(int, uiTheme) []string { return []string{"same rows"} }, aboveEditor)
+	for range 3 {
+		r.app.ui.ui.RequestRender()
+	}
+	eq(t, len(r.widgetCalls("probe")), 1)
+}

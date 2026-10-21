@@ -231,7 +231,6 @@ m("fleet-workflow-clock-runs", "fleet_list.go", "end := w.CompletedAt\n", "end :
 m("fleet-elapsed-negative", "fleet_list.go", "if s < 0 {\n\t\ts = 0", "if s < -1e18 {\n\t\ts = 0")
 m("fleet-steer-agent", "fleet_list.go", "_ = f.manager.steer(id, message)", '_ = f.manager.steer("", message)')
 m("fleet-timer-not-rearmed", "fleet_list.go", "if f.stopTimer == nil { // keep stats", "if false { // keep stats")
-m("fleet-disabled-active", "fleet_list.go", "if !enabled {\n\t\tf.active = false\n\t}", "if !enabled {\n\t}")
 m("fleet-widget-placement", "fleet_list.go", "ui.SetWidget(fleetKey, f.renderBar, belowEditor)", "ui.SetWidget(fleetKey, f.renderBar, aboveEditor)")
 m("fleet-dispose-keeps-widget", "fleet_list.go", "if ui != nil && registered {\n\t\tui.SetWidget(fleetKey, nil, \"\")", "if ui != nil && registered && false {\n\t\tui.SetWidget(fleetKey, nil, \"\")")
 m("fleet-workflow-open-ignored", "fleet_list.go", "open(id, f.clearViewer)", "_ = id\n\t\t\tf.clearViewer()")

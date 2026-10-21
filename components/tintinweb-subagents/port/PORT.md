@@ -188,4 +188,6 @@ How it differs from the original, and why:
   whole settings snapshot) and emits `subagents:settings_changed` with the five display settings and `persisted`; a
   failed write warns `Viewer markdown set to <mode> (session only; failed to persist)`. A settings writer that owns the
   snapshot replaces `persistViewerMarkdown`.
+- **Equivalent mutant.** Clearing `active` in `fleetList.setEnabled(false)` cannot be told from the original: the
+  `update()` it calls clears `active` whenever no rows are listed. The mutant is removed from `port/gen-mutations.py`.
 - **Skipped twin:** "renders the reopened session's settings, not the resume call's": `resume` is refused by this port.

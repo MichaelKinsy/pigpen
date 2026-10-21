@@ -1146,12 +1146,6 @@
   "replace": "if false { // keep stats"
  },
  {
-  "name": "fleet-disabled-active",
-  "file": "fleet_list.go",
-  "find": "if !enabled {\n\t\tf.active = false\n\t}",
-  "replace": "if !enabled {\n\t}"
- },
- {
   "name": "fleet-widget-placement",
   "file": "fleet_list.go",
   "find": "ui.SetWidget(fleetKey, f.renderBar, belowEditor)",
