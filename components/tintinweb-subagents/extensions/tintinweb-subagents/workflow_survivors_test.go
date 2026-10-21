@@ -27,6 +27,7 @@ func TestWorkflowWorkerScopes(t *testing.T) {
 		rows := lastRowByIndex(res.Progress)
 		eq(t, rows[0].PhaseTitle, "B")
 		eq(t, rows[1].PhaseTitle, "A")
+		eq(t, *rows[0].PhaseIndex != *rows[1].PhaseIndex, true)
 	})
 	t.Run("the phase that named an agent reaches the host ahead of its row", func(t *testing.T) {
 		res := wfRun(t, "phase(\"A\");\nawait agent(\"x\");\nreturn 1;", stub)
@@ -105,6 +106,30 @@ func TestWorkflowRunBudgetAndControl(t *testing.T) {
 		wfUntil(t, func() bool { return len(stub.Started()) == 1 }, "the agent to start")
 		stub.Finish("wf-agent-0", "ok")
 		eq(t, (<-done).Value, "ok")
+	})
+	t.Run("a skipped agent's row says skipped", func(t *testing.T) {
+		stub := newControllableHost()
+		ctl := make(chan workflowControl, 1)
+		done := make(chan *workflowRunResult, 1)
+		go func() {
+			done <- wfRun(t, "return await agent('one');", func(o *workflowRunOptions) {
+				o.Host = stub
+				o.OnControl = func(c workflowControl) { c.Pause(); ctl <- c }
+			})
+		}()
+		control := <-ctl
+		wfUntil(t, func() bool { return control.Skip(0) }, "the held agent to be skippable")
+		res := <-done
+		eq(t, res.Value, nil)
+		eq(t, wfLastRow(res.Progress).Skipped, true)
+	})
+	t.Run("a host's record id reaches the row", func(t *testing.T) {
+		host := wfStubHost(func(r *workflowSpawnRequest) workflowSpawnResult {
+			r.OnResolved(workflowResolvedInfo{RecordID: "rec-1"})
+			return workflowSpawnResult{OK: true, Text: "ok"}
+		})
+		res := wfRun(t, "return await agent('one');", func(o *workflowRunOptions) { o.Host = host })
+		eq(t, wfLastRow(res.Progress).RecordID, "rec-1")
 	})
 	t.Run("the boundary refuses NaN", func(t *testing.T) {
 		eq(t, walkWorkflowBoundary(reflect.ValueOf(math.NaN()), "args", map[uintptr]bool{}) != nil, true)

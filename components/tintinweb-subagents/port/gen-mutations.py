@@ -275,7 +275,7 @@ m("worker-eval-allowed", "workflow_worker.js", "define(globalThis, \"eval\", ban
 m("worker-function-ctor-allowed", "workflow_worker.js", "define(FunctionPrototype, \"constructor\", banned);", "")
 m("worker-log-unprefixed", "workflow_worker.js", "return scope.prefix === \"\" ? \"\" : scope.prefix + \": \";", "return \"\";")
 m("worker-schema-parse-lost", "workflow_worker.js", "if (schema === undefined) return result;\n    try {\n      return realmParse(result);", "return result;\n    try {\n      return realmParse(result);")
-m("worker-schema-key-order", "workflow_worker.js", "schemaJson: schema === undefined ? undefined : realmStringify(schema),", "schemaJson: schema === undefined ? undefined : realmStringify(Object.assign({}, schema, { type: schema.type })),")
+m("worker-schema-key-order", "workflow_worker.js", "schemaJson: schema === undefined ? undefined : realmStringify(schema),", "schemaJson: schema === undefined ? undefined : realmStringify(Object.assign({ type: schema.type }, schema)),")
 m("worker-progress-not-flushed-before-call", "workflow_worker.js", "    // Drain first, so the phase() that named this agent reaches the host ahead of the agent entry.\n    flushProgress();", "")
 
 # workflow_engine.go: the engine

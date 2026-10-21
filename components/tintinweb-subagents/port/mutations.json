@@ -1389,7 +1389,7 @@
   "name": "worker-schema-key-order",
   "file": "workflow_worker.js",
   "find": "schemaJson: schema === undefined ? undefined : realmStringify(schema),",
-  "replace": "schemaJson: schema === undefined ? undefined : realmStringify(Object.assign({}, schema, { type: schema.type })),"
+  "replace": "schemaJson: schema === undefined ? undefined : realmStringify(Object.assign({ type: schema.type }, schema)),"
  },
  {
   "name": "worker-progress-not-flushed-before-call",
