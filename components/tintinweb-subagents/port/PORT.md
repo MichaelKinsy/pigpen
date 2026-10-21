@@ -189,14 +189,19 @@ components; this port registers none.
   (event order between the model request and a host event) and passed in the three final ones.
 - `go test -race ./...` and `go vet` for linux, windows and darwin: exit 0 (the runner prints `GOOS evidence: requested
   windows -> go env GOOS prints windows`, likewise darwin and linux).
-- `pigeq mutate --unit-only`: 269 mutations. The last full run before the final test additions left 5 surviving
-  (`result-consumed-not-marked`, `setting-notice-repeats`, `pool-kept-when-reporting-off`, `usage-pooled-when-off`,
-  `usage-attached-when-off`) and 0 invalid; each has a test since (`observability_state_test.go`). That last test addition
-  was not re-run under `mutate` at the time of writing.
-- Latency (median of 3 runs, this revision vs PR 1 d710533, same `TestPerfReport`): registration 1.05 ms vs 1.05 ms,
-  `get_subagent_result` 62 us vs 60 us, `agent-not-found` 57 us vs 55 us, `steer_subagent` 120 us vs 115 us,
-  background start-and-finish 0.68 ms vs 0.40 ms (the transcript file: directory, chmod, open, initial entry; 900 vs 670
-  allocations). Benchmarks: transcript turn 31 us, streamed delta through the stream 39 ns with no allocation, usage
-  hook 24 ns, schema check 1.8 us.
-- `npm run check` and `npm run generate` could not be run in the runner's copy without git history (the package records
-  of other components name commits it lacks); a run in a copy with history was queued and had not started.
+- `pigeq mutate --unit-only` at head 925c048: 271 mutations, 0 not killed (exit 0). One earlier attempt at the same head stopped
+  because the unmutated baseline failed `TestBusProtocol` once (a timing flake under lane load; it then passed `-count=8` and the
+  rerun).
+- Latency at head 925c048 (median of 10 interleaved runs of the same `TestPerfReport`, this revision vs PR 1 d710533, one
+  job): `agent-not-found` 61 us vs 64 us, `get_subagent_result` 65 us vs 64 us, `steer_subagent` 122 us vs 121 us,
+  registration 1143 us vs 1170 us, all within 5%. Background start-and-finish is **714 us vs 416 us (+72%, 819 vs 670
+  allocations)**, which exceeds 10% and is justified by behavior the original performs on every spawn and PR 1 did not:
+  the `.output` transcript (directory check, initial entry file: `BenchmarkAttachTranscriptFiles` 95 us, 34 allocations,
+  measured) and the `subagents:started` event (one more host round trip on the start path; the rest of the gap, about
+  200 us, is [INFERENCE] this host call and the usage wrapper, not separately measured). Two avoidable costs were
+  removed by profiling the path: the root directory mkdir and chmod (skipped when the root is already owner-only) and the
+  per-spawn `getSessionID` host call (now once per session, cleared at `session_start`; 892 to 819 allocations).
+  Benchmarks: streamed delta through the stream 39 ns, 0 allocations; transcript turn 33 us; usage hook 24 ns.
+- `npm run check` and `npm run generate` (in a copy with full git history): both exit 0, no tracked file changed.
+- The 5 mutants named above are killed in the final run (269 of 269 at ea1cb54; the two mutants for the session-id
+  cache were added after).
