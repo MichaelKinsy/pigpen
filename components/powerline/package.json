@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-powerline",
-  "version": "0.7.0",
-  "description": "Go port of pi-powerline-footer: a powerline-style status bar of configurable segments (model, path, git, tokens, cost, context, time) with presets, separators and /powerline (partial: the bar, not the custom editor)",
+  "version": "0.8.0",
+  "description": "Go port of pi-powerline-footer: a powerline-style status bar of configurable segments (model, path, git, tokens, cost, context, time) with presets, separators, /powerline, the prompt queue, stash, welcome, vibes, /cd and /reply (the custom editor features are refused until the PiG SDK can host an editor)",
   "keywords": [
     "pig-package",
     "statusline",

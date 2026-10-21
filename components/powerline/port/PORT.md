@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial, stacked PR 7 of 8)
+# Port record: pi-powerline-footer (everything the SDK allows; the editor features are refused)
 
 | Input | Identity |
 |---|---|
@@ -42,9 +42,13 @@ the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `
 
 `welcome.ts` and `index.ts` (1882-1890, 2184-2202, 3539-3666) in `welcome.go` and `welcome_ext.go`: the header through `SetHeaderRenderer`, the 30 second non-capturing overlay through `Custom` (the SDK v0.5.0 `OverlayHandle`, while `go.mod` still requires v0.4.1) with a terminal-input listener standing in for the editor's key forwarding, and the dismissals (`agent_start`, `tool_call`, `session_shutdown`, `/powerline` off, any typing). The lifecycle tests assert the welcome's own start and stop of watching the keyboard through a test hook, because the SDK shares one host subscription between the extension's listeners.
 
+### Ported in PR 8 (queue, version 0.8.0)
+
+`queue/store.ts`, `queue/types.ts` and the queue parts of `index.ts` in `queue_*.go`, `select_overlay.go`: the inbox store (aliases, ids, statuses, locking, delivery text, the `/compact <prompt>` parse), the `queue` segment and the preview and pending-send widgets, `/queue`, the picker overlay, and delivery after a compaction (timers, block on failure, 60 second requeue, session generation). Typing a prompt during a compaction and delayed send need the editor's submit path and stay refused (`sendDelayMs`). The scenario `queue-post-compaction` is parked in `port/scenarios-pending`: PiG's compaction request prompt says "pig" where Pi says "pi" (PiG core bug). The adapter sends a widget only when its lines or placement changed and reads the session id once per repaint.
+
 ### Refusal of what is not ported
 
-Until the rest is ported, `refusal.go` refuses each unported command (`/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`) with an error notification and each unported setting (see the README) with a
+Until the rest is ported, `refusal.go` refuses each unported command (`/bash-mode`, `/bash-reset`, `/powerline-perf`) with an error notification and each unported setting (see the README) with a
 warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
 npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
 The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
