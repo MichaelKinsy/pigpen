@@ -2416,5 +2416,11 @@
   "file": "rsc_extract.go",
   "find": "key := jsSlice(p.text, 0, 150)",
   "replace": "key := p.text[:0]"
+ },
+ {
+  "name": "defuddle-refusal-unnamed",
+  "file": "extract.go",
+  "find": "msg += \"\\n\\n\" + defuddleRefusal.Error()",
+  "replace": "msg += \"\""
  }
 ]
