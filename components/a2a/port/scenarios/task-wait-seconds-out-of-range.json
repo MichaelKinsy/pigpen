@@ -1,0 +1,11 @@
+{
+  "name": "task-wait-seconds-out-of-range",
+  "description": "a2a_task wait with a waitSeconds outside 1 to 3600 is an error the model sees, before any remote is contacted.",
+  "llm": [
+    {"toolCalls": [{"name": "a2a_task", "arguments": {"agent": "peer", "action": "wait", "taskId": "t", "waitSeconds": 100000}}]},
+    {"text": "done"}
+  ],
+  "steps": [
+    {"name": "prompt", "rpc": {"type": "prompt", "message": "wait for the peer"}}
+  ]
+}

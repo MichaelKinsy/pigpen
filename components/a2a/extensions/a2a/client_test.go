@@ -27,6 +27,7 @@ type fakeRemote struct {
 	cardPath    bool
 	interface_  []*a2a.AgentInterface
 	requireAuth string
+	noStream    bool // the card does not advertise streaming
 }
 
 // remoteUser makes every caller the same authenticated user: the upstream in-memory task store
@@ -79,7 +80,7 @@ func newFakeRemote(t *testing.T) *fakeRemote {
 			Name: "fake-remote", Description: "a fake remote agent", Version: "9",
 			SupportedInterfaces: r.interface_, DefaultInputModes: []string{"text/plain"}, DefaultOutputModes: []string{"text/plain"},
 			Skills:       []a2a.AgentSkill{{ID: "chat", Name: "Chat", Description: "chats", Tags: []string{"chat"}}},
-			Capabilities: a2a.AgentCapabilities{Streaming: true},
+			Capabilities: a2a.AgentCapabilities{Streaming: !r.noStream},
 		}
 		a2asrv.NewStaticAgentCardHandler(card).ServeHTTP(w, req)
 	})
