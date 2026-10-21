@@ -643,6 +643,7 @@ func TestUpstream_tavily_key_pool(t *testing.T) {
 		}
 	})
 	tw(t, f, "the standalone environment key is tried after the pool and logs one activity entry", func(t *testing.T) {
+		Activity.Clear()
 		o := run(t, "", map[string]string{"TAVILY_API_KEY": "solo", "TAVILY_API_KEY_1": "key-1"}, "", 429)
 		if !eqStrings(o.keys, []string{"key-1", "solo"}) {
 			t.Fatalf("%+v", o)
