@@ -18,10 +18,10 @@ import (
 // agent, scripted prompt answers, a sequence of tool_call and input events) every answer, the prompts raised, the review-log entries,
 // the decision events, the notifications and the final session rules. The port runs the same worlds through the same stack.
 
-type gcDirs struct{ cwd, out, els, agent, cfg string }
+type gcDirs struct{ cwd, out, els, agent, cfg, base, home string }
 
 func (d gcDirs) pairs() [][2]string {
-	return [][2]string{{"$CWD", d.cwd}, {"$OUT", d.out}, {"$ELSE", d.els}, {"$AGENT", d.agent}, {"$CFG", d.cfg}}
+	return [][2]string{{"$CWD", d.cwd}, {"$OUT", d.out}, {"$ELSE", d.els}, {"$AGENT", d.agent}, {"$CFG", d.cfg}, {"$BASE", d.base}, {"$HOME", d.home}}
 }
 
 func (d gcDirs) sub(text string) string {
@@ -66,6 +66,16 @@ func gcDecision(o *jsObject) PermissionPromptDecision {
 		d.DecidedBy = *by
 	}
 	return d
+}
+
+// gcHome is the host's home directory, which `~` paths expand to; it is scrubbed to $HOME like the temporary directories.
+func gcHome(t *testing.T) string {
+	t.Helper()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return home
 }
 
 // gcPromptJS is the prompt details as the original's escalate receives them, a JSON object (undefined fields left out).
@@ -115,7 +125,7 @@ func gcRun(t *testing.T, raw *jsObject) (record *jsObject) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dirs := gcDirs{cwd: filepath.Join(base, "cwd"), out: filepath.Join(base, "out"), els: filepath.Join(base, "else"), agent: filepath.Join(base, "agent"), cfg: filepath.Join(base, "cfg")}
+	dirs := gcDirs{cwd: filepath.Join(base, "cwd"), out: filepath.Join(base, "out"), els: filepath.Join(base, "else"), agent: filepath.Join(base, "agent"), cfg: filepath.Join(base, "cfg"), base: base, home: gcHome(t)}
 	for _, p := range dirs.pairs() {
 		if err := os.MkdirAll(p[1], 0o777); err != nil {
 			t.Fatal(err)
@@ -368,11 +378,17 @@ func TestGateCoreOracle(t *testing.T) {
 	if len(oracle) != len(cases) {
 		t.Fatalf("oracle has %d cases, the corpus %d", len(oracle), len(cases))
 	}
-	diffs, orderDiffs := 0, 0
+	diffs, orderDiffs, pending := 0, 0, 0
 	for _, c := range cases {
 		co := c.(*jsObject)
 		id, _ := co.str("id")
 		got, want := gcRun(t, co), oracle[id]
+		// A world the fail-closed stand-ins of the bash gates blocked (gatebashpending.go) is not a difference of the gate core; it is
+		// counted apart and fails the test unless GATECORE_ALLOW_PENDING is set.
+		if strings.Contains(marshalJSON(got.vals["answers"], ""), pendingBashGates) {
+			pending++
+			continue
+		}
 		for _, part := range []string{"answers", "prompts", "reviews", "decisions", "notes", "rules"} {
 			if gcCanon(got.vals[part]) != gcCanon(want.vals[part]) {
 				diffs++
@@ -387,8 +403,11 @@ func TestGateCoreOracle(t *testing.T) {
 			}
 		}
 	}
+	if pending > 0 && os.Getenv("GATECORE_ALLOW_PENDING") == "" {
+		t.Errorf("%d worlds reached a bash gate stand-in", pending)
+	}
 	if diffs+orderDiffs > 0 {
 		t.Fatalf("%d content differences, %d key-order differences over %d cases", diffs, orderDiffs, len(cases))
 	}
-	t.Logf("%d worlds, zero differences", len(cases))
+	t.Logf("%d worlds, %d pending on the bash gates, zero differences", len(cases), pending)
 }

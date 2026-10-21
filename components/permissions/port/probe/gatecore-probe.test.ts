@@ -4,7 +4,7 @@
 // decision events, for the Go differential (extensions/pi-permission-system/testdata/gatecore-oracle.json). Copied into an installed
 // copy of the original by port/record-gatecore-probe.sh and never runs from here; the port itself has no Node.
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { it } from "vitest";
 import type { AskEscalator } from "#src/authority/authorizer-selection";
@@ -58,7 +58,7 @@ it("records the gate core corpus", async () => {
   const results: unknown[] = [];
   for (const c of cases) {
     const base = realpathSync(mkdtempSync(join(tmpdir(), "pp-gatecore-probe-")));
-    const dirs = { $CWD: join(base, "cwd"), $OUT: join(base, "out"), $ELSE: join(base, "else"), $AGENT: join(base, "agent"), $CFG: join(base, "cfg") };
+    const dirs = { $CWD: join(base, "cwd"), $OUT: join(base, "out"), $ELSE: join(base, "else"), $AGENT: join(base, "agent"), $CFG: join(base, "cfg"), $BASE: base, $HOME: homedir() };
     for (const d of Object.values(dirs)) mkdirSync(d, { recursive: true });
     const sub = (text: string): string => {
       let out = text;
