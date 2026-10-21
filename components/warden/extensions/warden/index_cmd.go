@@ -132,9 +132,17 @@ func readIndex(path string) *IndexFile {
 	if err != nil {
 		return nil
 	}
+	// The plain shape the port and the original write is read in one pass over the text (index_decode.go).
+	if f, ok := decodeIndexFast(nodeUTF8(raw)); ok {
+		return f
+	}
+	return readIndexGeneric(path, raw)
+}
+
+// readIndexGeneric is readIndex for any text, the final say on what a file means: the generic decoder reads it into
+// the typed shape; a file with an entry of another type takes the route that drops the entries it cannot read.
+func readIndexGeneric(path string, raw []byte) *IndexFile {
 	text := []byte(nodeUTF8(raw))
-	// The usual file decodes in one pass into the typed shape; one that does not (an entry of another type) takes the
-	// generic route, which drops the entries it cannot read.
 	var wire struct {
 		FormatVersion *float64      `json:"formatVersion"`
 		BuiltAt       *string       `json:"builtAt"`
