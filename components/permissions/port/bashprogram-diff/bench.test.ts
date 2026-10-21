@@ -32,5 +32,8 @@ it("times BashProgram.parse", { timeout: 0 }, async () => {
     runs.sort((a, b) => a - b);
     out[name] = runs[Math.floor(runs.length / 2)];
   }
+  // The result goes to a file (BENCH_OUT) the round driver reads: vitest's reporter owns stdout, and scraping the BENCH line out of it
+  // printed nothing in the interleaved rounds. The line is still logged for a run by hand.
+  if (process.env.BENCH_OUT) writeFileSync(process.env.BENCH_OUT, `${JSON.stringify(out)}\n`);
   console.log(`BENCH ${JSON.stringify(out)}`);
 });
