@@ -249,10 +249,14 @@ func (s *upstream) describe(r *http.Request, body []byte, matched bool) map[stri
 	return out
 }
 
-// writeAgentFiles writes the scenario's agentFiles under the lane's agent directory.
-func writeAgentFiles(agent string, files map[string]string, ups *upstreams) error {
+// writeFilesUnder writes files (relative paths, {{server:NAME}} expanded) under dir. A path that is
+// absolute or leaves dir is refused, so a lane's scenario cannot place a file outside the root it names.
+func writeFilesUnder(dir string, files map[string]string, ups *upstreams) error {
 	for rel, content := range files {
-		p := filepath.Join(agent, rel)
+		if err := confinedPath(rel); err != nil {
+			return err
+		}
+		p := filepath.Join(dir, rel)
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			return err
 		}
@@ -261,6 +265,23 @@ func writeAgentFiles(agent string, files map[string]string, ups *upstreams) erro
 		}
 	}
 	return nil
+}
+
+// confinedPath reports why rel is not a path strictly inside the directory it is joined to.
+func confinedPath(rel string) error {
+	clean := filepath.ToSlash(filepath.Clean(rel))
+	if rel == "" || filepath.IsAbs(rel) || clean == "." || clean == ".." || strings.HasPrefix(clean, "../") {
+		return fmt.Errorf("file %q must stay inside its directory", rel)
+	}
+	return nil
+}
+
+// laneHome is where a lane's host keeps its own state: PIG_HOME for pig, ~/.pi for pi.
+func laneHome(host, root string) string {
+	if host == "pig" {
+		return filepath.Join(root, "pighome")
+	}
+	return filepath.Join(root, "home", ".pi")
 }
 
 // validate checks the scenario's servers, env and {{server:...}} references.
@@ -309,14 +330,22 @@ func (s *Scenario) validateServers() error {
 		}
 	}
 	for k, v := range s.AgentFiles {
-		clean := filepath.ToSlash(filepath.Clean(k))
-		if filepath.IsAbs(k) || clean == ".." || strings.HasPrefix(clean, "../") {
+		if confinedPath(k) != nil {
 			return fmt.Errorf("agent file %q must stay inside the agent directory", k)
 		}
+		clean := filepath.ToSlash(filepath.Clean(k))
 		if len(s.LLM) > 0 && clean == "models.json" {
 			return errors.New("agent file models.json is written by the harness when the scenario scripts the model")
 		}
 		if err := check("agent file "+k, v); err != nil {
+			return err
+		}
+	}
+	for k, v := range s.HomeFiles {
+		if confinedPath(k) != nil {
+			return fmt.Errorf("home file %q must stay inside the host home", k)
+		}
+		if err := check("home file "+k, v); err != nil {
 			return err
 		}
 	}

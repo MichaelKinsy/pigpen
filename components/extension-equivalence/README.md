@@ -72,6 +72,7 @@ configuration). The scenario is data (see [scenarios](extensions/extension-equiv
 - `llm`: scripted model turns served by a local OpenAI-compatible server (so tool calls,
   `tool_call`/`tool_result`/`context` events and turn order are exercised without a model);
 - `agentFiles`: files written under the lane's agent directory before the host starts (an extension's user-level config; `{{server:NAME}}` expanded).
+- `homeFiles`: files written under the lane's host home before the host starts, for a port whose own configuration lives outside the agent directory: `<PIG_HOME>` on a pig lane, `<HOME>/.pi` on a pi lane (`{{server:NAME}}` expanded). Paths are relative and must stay inside that home: an absolute path, `..`, `.` or an empty path is a load error (and `writeFilesUnder` refuses them again at write time). The original under Pi and the port under PiG are each given the file in their own home from one entry.
 - `servers`, `env`: fake HTTP upstreams for an extension that calls an API (a search provider, a judge
   model, a remote agent). Each server has routes (method, exact or prefix path, required query
   parameters, status, headers, `body` or `json`, `delayMs`, `times`, `drop`) and gets its own loopback

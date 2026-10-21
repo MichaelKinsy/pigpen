@@ -856,3 +856,120 @@ func TestNewRunRootHasOneLengthAndIsPrivate(t *testing.T) {
 		}
 	}
 }
+
+// A host's set_model response echoes the scripted model's base URL (data.baseUrl, with the model object
+// around it). Every lane draws its own port, so the address must read the same in every lane.
+func TestProjectHostNormalizesTheScriptedModelAddressInSetModel(t *testing.T) {
+	var got []string
+	for _, addr := range []string{"127.0.0.1:41233", "127.0.0.1:55871"} {
+		n := NewNormalizer("/w", "/t", "/h")
+		n.AddReplacement("http://"+addr, "<llm>")
+		n.AddReplacement(addr, "<llm>")
+		rec, err := decodeAny([]byte(`{"type":"response","id":"eq-2","command":"set_model","success":true,"data":{"id":"eq-1","name":"eq-1","api":"openai-completions","provider":"eq-llm","baseUrl":"http://` + addr + `/v1","reasoning":false,"contextWindow":100000}}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		ch, data, ok := n.ProjectHost(rec.(map[string]any), DefaultCapture)
+		if !ok || ch != ChResponse {
+			t.Fatalf("set_model response not captured: %s %v", ch, ok)
+		}
+		if !strings.Contains(string(data), `"baseUrl":"<llm>/v1"`) || strings.Contains(string(data), "127.0.0.1") {
+			t.Errorf("address not normalized: %s", data)
+		}
+		got = append(got, string(data))
+	}
+	if got[0] != got[1] {
+		t.Errorf("lanes with different ports differ:\n%s\n%s", got[0], got[1])
+	}
+}
+
+// powerline's cd-command.ts:157 switches session with a withSession callback that only notifies, titles and
+// changes directory. The scanner read the word withSession as a use of every `withSession ctx.x` row and
+// reported ReplacedSessionContext.sendUserMessage(options.expandPromptTemplates) there. Those rows describe
+// the replacement context, which exists only inside the callback.
+func TestGapScannerReadsWithSessionRowsOnlyInsideTheCallback(t *testing.T) {
+	const symbol = "withSession ctx.sendUserMessage(options.expandPromptTemplates)"
+	found := func(src string) (Gap, bool) {
+		for _, g := range ScanGaps(src, "") {
+			if g.Symbol == symbol {
+				return g, true
+			}
+		}
+		return Gap{}, false
+	}
+	// The cd-command shape: withSession present, no sendUserMessage in the callback.
+	cd := `import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+export default function (pi: ExtensionAPI) {
+	pi.registerCommand("cd", { handler: async (args, ctx) => {
+		const result = await ctx.switchSession(file, {
+			withSession: async (nextCtx) => {
+				nextCtx.ui.notify("changed", "info");
+				nextCtx.ui.setTitle("t");
+				process.chdir(dir);
+			},
+		});
+	}});
+}`
+	if g, ok := found(cd); ok {
+		t.Errorf("a withSession callback that never sends a message was reported: %+v", g)
+	}
+	// The same file also uses sendUserMessage and expandPromptTemplates, but outside the callback, on pi.
+	outside := cd + `
+function later(pi: ExtensionAPI, ctx: any) {
+	ctx.sendUserMessage("x");
+	const options = { expandPromptTemplates: true };
+}`
+	if g, ok := found(outside); ok {
+		t.Errorf("uses outside the withSession callback were attributed to it: %+v", g)
+	}
+	// Real uses are still reported, whatever the callback calls its context and however it is written.
+	for name, src := range map[string]string{
+		"block body": `export default function (pi: ExtensionAPI) {
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession: async (fresh) => {
+			await fresh.sendUserMessage("hi", { expandPromptTemplates: false });
+		} });
+	}});
+}`,
+		"expression body": `export default function (pi: ExtensionAPI) {
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.fork(id, { withSession: async (c) => c.sendUserMessage("hi", { expandPromptTemplates: true }), position: "at" });
+	}});
+}`,
+		"after a template literal and a string with a comma": "export default function (pi: ExtensionAPI) {\n" +
+			"	pi.registerCommand(\"c\", { handler: async (_a, ctx) => {\n" +
+			"		await ctx.newSession({ withSession: async (c) => { const m = `a ${`b,}`} ,)`; const s = \"x, }\"; await c.sendUserMessage(m + s, { expandPromptTemplates: true }); } });\n" +
+			"	}});\n}",
+		"a callback defined elsewhere": `export default function (pi: ExtensionAPI) {
+	const after = async (c: any) => { await c.sendUserMessage("hi", { expandPromptTemplates: true }); };
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession: after });
+	}});
+}`,
+		"shorthand": `export default function (pi: ExtensionAPI) {
+	const withSession = async (c: any) => { await c.sendUserMessage("hi", { expandPromptTemplates: true }); };
+	pi.registerCommand("c", { handler: async (_a, ctx) => {
+		await ctx.newSession({ withSession });
+	}});
+}`,
+	} {
+		g, ok := found(src)
+		if !ok || g.Severity != "missing" {
+			t.Errorf("%s: a real use of %s was not reported: %+v", name, symbol, g)
+		}
+		if ok && len(g.Lines) == 0 {
+			t.Errorf("%s: no source line reported", name)
+		}
+	}
+	// The line is the use, not the withSession keyword.
+	g, _ := found("export default function (pi: ExtensionAPI) {\n" +
+		"	pi.registerCommand(\"c\", { handler: async (_a, ctx) => {\n" +
+		"		await ctx.newSession({\n" +
+		"			withSession: async (c) => {\n" +
+		"				await c.sendUserMessage(\"hi\", { expandPromptTemplates: true });\n" +
+		"			},\n" +
+		"		});\n	}});\n}")
+	if len(g.Lines) != 1 || g.Lines[0] != 5 {
+		t.Errorf("lines = %v, want [5]", g.Lines)
+	}
+}
