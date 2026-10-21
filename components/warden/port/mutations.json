@@ -510,18 +510,6 @@
   "replace": "\t\tif !already {\n\t\t\tif msg, ok := w.conscienceLoad(ctx, cfg, data, result, effectiveTimeout, start); ok {\n\t\t\t\treturn msg, nil\n\t\t\t}\n\t\t\treturn nil, nil\n\t\t}"
  },
  {
-  "name": "load-consent-not-required",
-  "file": "conscience_load.go",
-  "find": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ConsentGiven, !opts.ProjectTrusted:",
-  "replace": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ProjectTrusted:"
- },
- {
-  "name": "load-off-mode-loads",
-  "file": "conscience_load.go",
-  "find": "case !cfg.Enabled, cfg.Skills.Mode != \"load\", !opts.ConsentGiven, !opts.ProjectTrusted:",
-  "replace": "case !cfg.Enabled, !opts.ConsentGiven, !opts.ProjectTrusted:"
- },
- {
   "name": "conscience-recommendation-wording",
   "file": "conscience_state.go",
   "find": "\"Consider using the \\\"\"",
