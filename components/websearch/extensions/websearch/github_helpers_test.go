@@ -93,7 +93,7 @@ func clonedPath(r *ExtractedContent) string {
 	return m[1]
 }
 
-func pathExists(p string) bool {
+func lstatExists(p string) bool {
 	_, err := os.Lstat(p)
 	return err == nil
 }

@@ -67,11 +67,11 @@ printf fixture > "$dest/README.md"`)
 			t.Fatalf("no clone: %+v", first)
 		}
 		firstRuntime := filepath.Dir(firstPath)
-		if !pathExists(firstRuntime) {
+		if !lstatExists(firstRuntime) {
 			t.Fatal("the runtime directory is missing before the clear")
 		}
 		s.clearCloneCache()
-		if pathExists(firstRuntime) {
+		if lstatExists(firstRuntime) {
 			t.Fatal("the runtime directory survived the clear")
 		}
 		second, err := s.extractGitHub(bg(), "https://github.com/owner/repo", false)
@@ -81,7 +81,7 @@ printf fixture > "$dest/README.md"`)
 			t.Fatalf("second clone %q reused %q", secondPath, firstRuntime)
 		}
 		s.clearCloneCache()
-		if pathExists(filepath.Dir(secondPath)) {
+		if lstatExists(filepath.Dir(secondPath)) {
 			t.Fatal("the second runtime directory survived the clear")
 		}
 		if readFile(t, sibling) != "preserve" {
@@ -105,7 +105,7 @@ exit 1`)
 		if _, err := s.extractGitHub(bg(), "https://github.com/owner/repo", false); err != nil {
 			t.Fatal(err)
 		}
-		if pathExists(readFile(t, destinationFile)) {
+		if lstatExists(readFile(t, destinationFile)) {
 			t.Fatal("the symlink survived the failed clone")
 		}
 		if readFile(t, filepath.Join(outside, "marker.txt")) != "preserve" {
@@ -135,17 +135,17 @@ exit 1`)
 			defer wg.Done()
 			aRes, _ = a.extractGitHub(bg(), "https://github.com/owner/repo", true)
 		}()
-		waitUntil(t, "the first clone", func() bool { return pathExists(filepath.Join(ctl, "ready-1")) })
+		waitUntil(t, "the first clone", func() bool { return lstatExists(filepath.Join(ctl, "ready-1")) })
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			bRes, _ = b.extractGitHub(bg(), "https://github.com/owner/repo", true)
 		}()
-		waitUntil(t, "the second clone", func() bool { return pathExists(filepath.Join(ctl, "ready-2")) })
+		waitUntil(t, "the second clone", func() bool { return lstatExists(filepath.Join(ctl, "ready-2")) })
 		aPath, bPath := readFile(t, filepath.Join(ctl, "ready-1")), readFile(t, filepath.Join(ctl, "ready-2"))
 		release("2")
-		waitUntil(t, "the failed clone's cleanup", func() bool { return !pathExists(bPath) })
-		if !pathExists(aPath) {
+		waitUntil(t, "the failed clone's cleanup", func() bool { return !lstatExists(bPath) })
+		if !lstatExists(aPath) {
 			t.Fatal("the failure cleaned up the other process's destination")
 		}
 		release("1")
@@ -156,7 +156,7 @@ exit 1`)
 		if bRes != nil {
 			t.Fatalf("the failed clone returned %+v", bRes)
 		}
-		if clonedPath(aRes) != aPath || !pathExists(aPath) || !strings.Contains(aRes.Content, "runtime-a") {
+		if clonedPath(aRes) != aPath || !lstatExists(aPath) || !strings.Contains(aRes.Content, "runtime-a") {
 			t.Fatalf("first result %+v", aRes)
 		}
 	})
@@ -199,10 +199,10 @@ exit 1`)
 			}
 		}
 		b.clearCloneCache()
-		if pathExists(filepath.Dir(bPath)) {
+		if lstatExists(filepath.Dir(bPath)) {
 			t.Fatal("the second process's runtime survived its clear")
 		}
-		if !pathExists(firstPath) || readFile(t, filepath.Join(firstPath, "README.md")) != "runtime-a" {
+		if !lstatExists(firstPath) || readFile(t, filepath.Join(firstPath, "README.md")) != "runtime-a" {
 			t.Fatal("the first process's clone was touched")
 		}
 		if st, err := os.Stat(filepath.Dir(firstPath)); err != nil || st.Mode().Perm()&0o077 != 0 {
@@ -237,7 +237,7 @@ exit 1`)
 			t.Fatal("the background cleanup never started")
 		}
 		p := clonedPath(res)
-		if p == "" || !pathExists(p) {
+		if p == "" || !lstatExists(p) {
 			t.Fatalf("no clone while the cleanup was gated: %+v", res)
 		}
 		close(release)
@@ -282,15 +282,15 @@ exit 1`)
 		noErr(t, err)
 		current.sweeps.Wait()
 		for _, p := range append([]string{staleRuntime}, stalePaths...) {
-			if pathExists(p) {
+			if lstatExists(p) {
 				t.Fatalf("the dead runtime %s survived the cleanup", p)
 			}
 		}
-		if !pathExists(clonedPath(cur)) {
+		if !lstatExists(clonedPath(cur)) {
 			t.Fatal("the current runtime was removed")
 		}
 		for _, n := range []string{"runtime-preserved-000", "runtime-preserved-511"} {
-			if !pathExists(filepath.Join(w.clonePath, n)) {
+			if !lstatExists(filepath.Join(w.clonePath, n)) {
 				t.Fatalf("%s was removed", n)
 			}
 		}
@@ -307,10 +307,10 @@ exit 1`)
 		res, err := s.extractGitHub(bg(), "https://github.com/owner/repo", true)
 		noErr(t, err)
 		s.sweeps.Wait()
-		if pathExists(dead) {
+		if lstatExists(dead) {
 			t.Fatal("the dead runtime survived")
 		}
-		if !pathExists(clonedPath(res)) || !pathExists(malformed) {
+		if !lstatExists(clonedPath(res)) || !lstatExists(malformed) {
 			t.Fatal("a live or malformed runtime was removed")
 		}
 	})
@@ -339,11 +339,11 @@ exit 1`)
 			t.Fatal(err)
 		}
 		current.sweeps.Wait()
-		if pathExists(dead) {
+		if lstatExists(dead) {
 			t.Fatal("the dead runtime survived")
 		}
 		for _, p := range []string{filepath.Dir(clonedPath(liveRes)), unknown, symlink} {
-			if !pathExists(p) {
+			if !lstatExists(p) {
 				t.Fatalf("%s was removed", p)
 			}
 		}

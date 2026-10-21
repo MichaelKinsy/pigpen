@@ -25,11 +25,11 @@ func TestGitHubSessionHooksClearTheCloneCache(t *testing.T) {
 			t.Fatal(*res.Error)
 		}
 		runtimeDir := clonedPathDir(&res)
-		if runtimeDir == "" || !pathExists(runtimeDir) {
+		if runtimeDir == "" || !lstatExists(runtimeDir) {
 			t.Fatalf("no clone: %+v", res)
 		}
 		hook()
-		if pathExists(runtimeDir) {
+		if lstatExists(runtimeDir) {
 			t.Fatal("the session hook left the runtime directory behind")
 		}
 	}
