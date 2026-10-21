@@ -169,16 +169,16 @@ type rig struct {
 	// modelState answers the host's model registry (`ctx.ModelRegistry()`): {"models": [...], "providers": {...}}.
 	modelState any
 	// What the host answers about the parent session.
-	sessionFile string // getSessionFile
-	branch      []any  // sessionRead getBranch
-	registry    []any  // getAllTools
-	trusted     bool   // isProjectTrusted
+	sessionFile  string // getSessionFile
+	branch       []any  // sessionRead getBranch
+	registry     []any  // getAllTools
+	trusted      bool   // isProjectTrusted
 	systemPrompt string // getSystemPrompt
 	noSession    bool   // the host has no session id yet
-	mu          sync.Mutex
-	extBus      map[string][]string
-	goBus       map[string][]func(any)
-	emits       []string
+	mu           sync.Mutex
+	extBus       map[string][]string
+	goBus        map[string][]func(any)
+	emits        []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
@@ -192,7 +192,9 @@ func startRigWith(t *testing.T, cwd string, noSession bool) *rig {
 }
 
 // startRigTuned is startRigIn with a change to the app made before the session starts.
-func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig { return startRigFull(t, cwd, tune, false) }
+func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
+	return startRigFull(t, cwd, tune, false)
+}
 
 func startRigFull(t *testing.T, cwd string, tune func(*app), noSession bool) *rig {
 	t.Helper()

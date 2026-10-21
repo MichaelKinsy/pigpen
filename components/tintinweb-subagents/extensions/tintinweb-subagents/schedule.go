@@ -740,7 +740,9 @@ type cronValidation struct {
 
 // validateCronExpression: 6-field cron, "second minute hour dom month dow", judged at this moment.
 // upstream: schedule.ts validateCronExpression.
-func validateCronExpression(expr string) cronValidation { return validateCronExpressionAt(expr, time.Now()) }
+func validateCronExpression(expr string) cronValidation {
+	return validateCronExpressionAt(expr, time.Now())
+}
 
 // validateCronExpressionAt is validateCronExpression at the instant now: constructing a Cron searches for its first
 // run from then, which is what a pattern that never runs can fail on (cronStackLimit).
