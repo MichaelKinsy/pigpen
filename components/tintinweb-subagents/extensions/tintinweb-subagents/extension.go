@@ -131,11 +131,14 @@ func (a *app) register(e *sdk.Extension) {
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)
 		a.workflowSessionStart(ctx)
+		a.scheduleSessionStart(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
 	}))
 	e.OnEvent(sdk.EventSessionBeforeSwitch, protect("session_before_switch", func(sdk.Context, map[string]any) (any, error) {
+		// A session switch: schedules reset on /new and are restored on /resume (the store is per session).
+		a.scheduler().stop()
 		a.clearCompleted(true)
 		return nil, nil
 	}))
@@ -148,6 +151,7 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnSessionShutdown(protect("session_shutdown", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		// Pending completion nudges die with the session (upstream clears pendingNudges), then the agents and the list.
 		a.stopNudges()
+		a.scheduler().stop()
 		a.shutdownWorkflows()
 		a.mgr.abortAll()
 		a.ui.dispose()
@@ -156,7 +160,6 @@ func (a *app) register(e *sdk.Extension) {
 	a.registerTools(e)
 	a.registerRenderers(e)
 	a.wireWorkflowFleet()
-	a.registerSchedule(e)
 	e.Command("agents", "List the agent types and the running agents", protectCommand("/agents", a.agentsCommand))
 }
 

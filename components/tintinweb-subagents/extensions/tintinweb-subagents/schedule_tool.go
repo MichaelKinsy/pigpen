@@ -49,23 +49,13 @@ func (a *app) setSchedulingEnabled(on bool) {
 // scheduler is the session's scheduler, for the `/agents` Scheduled jobs menu: isActive, list, getNextRun, removeJob.
 func (a *app) scheduler() *subagentScheduler { return a.schedule.sched }
 
-func (a *app) registerSchedule(e *sdk.Extension) {
-	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.setSchedulingEnabled(scheduleSettingEnabled(ctx.Cwd()))
-		if a.schedulingOn() && !a.scheduler().isActive() {
-			a.startScheduler(ctx)
-		}
-		return nil, nil
-	})
-	// A session switch: schedules reset on /new and are restored on /resume (the store is per session).
-	e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {
-		a.scheduler().stop()
-		return nil, nil
-	})
-	e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {
-		a.scheduler().stop()
-		return nil, nil
-	})
+// scheduleSessionStart binds the scheduler to the session when scheduling is on. Called from the one session_start
+// handler of extension.go: the test host reaches a single handler per event, and so does the original (one pi.on).
+func (a *app) scheduleSessionStart(ctx sdk.Context) {
+	a.setSchedulingEnabled(scheduleSettingEnabled(ctx.Cwd()))
+	if a.schedulingOn() && !a.scheduler().isActive() {
+		a.startScheduler(ctx)
+	}
 }
 
 // startScheduler binds the scheduler to the store of the session. upstream: index.ts startScheduler.
