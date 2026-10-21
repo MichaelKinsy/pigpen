@@ -138,16 +138,16 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	e.OnEvent(sdk.EventSessionCompact, w.onSessionCompact)
 	// Pieces of the message, input and agent_settled events, in upstream's order (supervision.go lists the whole
 	// order). Each lane adds its own line here, above registerSupervisionEvents.
-	w.sup.onMessageStart(w.onRunawayMessageStart)                                 // security: the runaway guard resets per assistant message
-	w.sup.onMessageStart(w.conscienceMessageStart) // conscience: delivery observed, queued-prompt admission
-	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                               // security: the runaway guard feeds on the stream
-	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...") // rules: /warden init and rules tune
+	w.sup.onMessageStart(w.onRunawayMessageStart)                                                         // security: the runaway guard resets per assistant message
+	w.sup.onMessageStart(w.conscienceMessageStart)                                                        // conscience: delivery observed, queued-prompt admission
+	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                                                       // security: the runaway guard feeds on the stream
+	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")                         // rules: /warden init and rules tune
 	w.sup.blockInput(w.conscienceIndexBusy, "pi-warden is building the capability index. Please wait...") // conscience: /warden index
-	w.sup.onInputPass(w.conscienceInputPass) // conscience: operator input makes assessments in flight stale
-	w.sup.onMessageEnd(w.learnMessageEnd)                                         // learning: the assistant message settles the watched steers (runs first)
-	w.sup.onMessageEnd(w.contextMessageEnd)                                       // context: the repeated-run cut of a user or custom message (opt-in)
-	w.sup.onSettled(w.checkSubagentReports)                                       // supervision: subagent triage
-	w.sup.onSettled(w.conscienceSettled)                                          // conscience: the prompt's settled trace line
+	w.sup.onInputPass(w.conscienceInputPass)                                                              // conscience: operator input makes assessments in flight stale
+	w.sup.onMessageEnd(w.learnMessageEnd)                                                                 // learning: the assistant message settles the watched steers (runs first)
+	w.sup.onMessageEnd(w.contextMessageEnd)                                                               // context: the repeated-run cut of a user or custom message (opt-in)
+	w.sup.onSettled(w.checkSubagentReports)                                                               // supervision: subagent triage
+	w.sup.onSettled(w.conscienceSettled)                                                                  // conscience: the prompt's settled trace line
 	if o.setup != nil {
 		o.setup(w)
 	}
@@ -333,9 +333,9 @@ func (w *warden) onSessionStart(ctx sdk.Context, data map[string]any) (any, erro
 	w.guard.Reset()
 	w.sec.resetSession() // SECURITY: runaway, prose trend, restatement window, notifier probe
 	w.gcSessionStart(ctx)
-	w.rulesSessionStart(ctx) // rules guard: reset and open the verdict log
+	w.rulesSessionStart(ctx)      // rules guard: reset and open the verdict log
 	w.conscienceSessionStart(ctx) // CONSCIENCE-LANE HOOK: the generation and the capability indexes (conscience_state.go)
-	w.learnSessionStart(ctx) // learning lane: hold feedback, schema, cooldown reset
+	w.learnSessionStart(ctx)      // learning lane: hold feedback, schema, cooldown reset
 	if loadErr != "" {
 		w.say(ctx, loadErr, "warning")
 	}
