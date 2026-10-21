@@ -136,6 +136,31 @@ func BenchmarkConscienceWriteAndReadIndex200Entries(b *testing.B) {
 	}
 }
 
+func BenchmarkConscienceWriteIndex200Entries(b *testing.B) {
+	file := validateIndex(map[string]any{"formatVersion": float64(1), "builtAt": "t", "model": "m", "entries": benchIndexEntries(200)}).File
+	path := filepath.Join(b.TempDir(), "global.json")
+	b.ReportAllocs()
+	for b.Loop() {
+		if err := writeIndex(path, file); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkConscienceReadIndex200Entries(b *testing.B) {
+	file := validateIndex(map[string]any{"formatVersion": float64(1), "builtAt": "t", "model": "m", "entries": benchIndexEntries(200)}).File
+	path := filepath.Join(b.TempDir(), "global.json")
+	if err := writeIndex(path, file); err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	for b.Loop() {
+		if readIndex(path) == nil {
+			b.Fatal("unreadable")
+		}
+	}
+}
+
 func BenchmarkConscienceBuildIndexPrompt100Skills60Tools(b *testing.B) {
 	skills := make([]IndexSkill, 100)
 	for i := range skills {
