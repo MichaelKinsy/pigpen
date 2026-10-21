@@ -358,7 +358,9 @@ func TestWorkflowHostResults(t *testing.T) {
 	})
 	t.Run("a model the script named that cannot be resolved fails that agent", func(t *testing.T) {
 		m := newStubManager(nil)
-		h := hostWith(m, func(d *workflowHostDeps) { d.Registry = fakeRegistry{models: []*workflowModel{{Provider: "p", ID: "x"}}} })
+		h := hostWith(m, func(d *workflowHostDeps) {
+			d.Registry = fakeRegistry{models: []*workflowModel{{Provider: "p", ID: "x"}}}
+		})
 		res, _ := h.SpawnAgent(wfRequest(func(r *workflowSpawnRequest) { r.Model = "no-such-model-anywhere" }))
 		eq(t, res.OK, false)
 		eq(t, strings.Contains(res.Error, "Model not found"), true)
