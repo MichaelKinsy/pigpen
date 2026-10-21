@@ -1,0 +1,165 @@
+{
+  "description": "Maps every file of components/dev-skills/skills to the upstream file it was adapted from, at the pinned commit. Checked by scripts/dev-skills-drift.mjs; the CREDITS.md table is generated from it.",
+  "sources": {
+    "mattpocock/skills": {
+      "url": "https://github.com/mattpocock/skills",
+      "commit": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+    },
+    "mitsuhiko/agent-stuff": {
+      "url": "https://github.com/mitsuhiko/agent-stuff",
+      "commit": "0865c849befd2021490679f96a8dee58c84ac857"
+    }
+  },
+  "skills": [
+    {
+      "shipped": "skills/pigpen-tdd/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/tdd/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/tdd.md",
+      "upstreamBlob": "250871ccdfefa7525309acfebda090edf4046882",
+      "adaptedSha256": "be053ab1a06cbf2f7208fced1151462511dadf806530d3d1aa0fc830b442be87",
+      "adaptations": [
+        "Renamed `pigpen-tdd`; an opening note names the source and the pin.",
+        "Added a paragraph that makes it an explicit test-first mode (load it when asked for TDD, or when an accepted plan selects red-green-refactor).",
+        "Reads `CONTEXT.md` as well as `GLOSSARY.md`.",
+        "Added the independent-oracle rule to *What a good test is*, and \"prefer existing seams, and the highest seam possible\" to *Seams*.",
+        "Removed the pointers to `tests.md` and `mocking.md` and the paragraph that calls the `codebase-design` Skill: none of them is shipped.",
+        "*Rules of the loop*: added the mutation gate, the cover-the-edges rule and the never-bend-a-test rule; the review reference names `pigpen-code-review`."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-diagnosing-bugs/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/diagnosing-bugs.md",
+      "upstreamBlob": "1b929e29fb519c26b500d3eda744177986883ac8",
+      "adaptedSha256": "352853d0f185e5b22382cd5a1a309ff2ac5f4139d118a82f31dcd71c6a4cceb2",
+      "adaptations": [
+        "Renamed `pigpen-diagnosing-bugs`; an opening note names the source and the pin.",
+        "Condensed: the phase prose is shortened and the checklists became bullets or prose. The ten-way loop list, *Redact*, minimise, ranked hypotheses, tagged debug logs and the cleanup list keep their content.",
+        "Reads `CONTEXT.md` as well as `GLOSSARY.md`, and notes that a surprising behavior may be a decision that was written down.",
+        "Loop step 10 drives a human with a small prompting script; the `scripts/hitl-loop.template.sh` of the original is not shipped (both mentions removed).",
+        "Phase 5: after the fix passes, revert it and confirm the regression test goes red; added \"fix the cause, not the symptom\" and \"report an out-of-scope defect plainly\"."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-handoff/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/productivity/handoff/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/handoff.md",
+      "upstreamBlob": "2eb98a51b97bb5bac461a26ad14828eeac827909",
+      "adaptedSha256": "4e1ce10247a781097bbb5faf0645d1afca95a693e9b6f45ef5ed32a5b38ca7f3",
+      "adaptations": [
+        "Renamed `pigpen-handoff`; an opening note names the source and the pin. The rest of the frontmatter is the original's.",
+        "Added that a handoff is session memory, not a deliverable, and is not committed.",
+        "Added the index-not-store paragraph: durable knowledge is referenced, only what exists nowhere else yet goes inline, and anything worth keeping is filed first.",
+        "The suggested-skills section names the skills the next agent should load (PiG has no Skill tool) and the ticket to pick up."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-research/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/research/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/research.md",
+      "upstreamBlob": "fecee97e9457ba039678d2fcf1b1bc9fca78307d",
+      "adaptedSha256": "9d34c1394bae63f1cfcbedc449d3d8cf34ee032bf98b38e76930849a935b6665",
+      "adaptations": [
+        "Renamed `pigpen-research`; an opening note names the source and the pin.",
+        "The description and body no longer require a background agent or a Markdown file in the repository: a background agent is used only when the setup has subagents.",
+        "Added claim records (value, source, basis, reasoning), the rules against presenting an inference as stated and against silently merging conflicting claims, and a delegation brief.",
+        "Replaced \"write a single Markdown file\" with an order for where findings go: the reply, the issue or decision record, the project's established place for research notes; never a loose report file."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-grilling/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/productivity/grilling/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/grilling.md",
+      "upstreamBlob": "8ca78c6d8f901aab0c5a1f896034b70e666ff2a3",
+      "adaptedSha256": "4bc5687a5c3b4893df044a525d070d141536075b8f34e836f706634b6f8b82e4",
+      "adaptations": [
+        "Renamed `pigpen-grilling`; an opening note names the source and the pin. The description is the original's.",
+        "One question at a time instead of a numbered round of the whole frontier: the question that most unblocks the rest is asked, the answer awaited, the frontier recomputed.",
+        "Uses a structured-question tool such as `ask_user_question` when one is available; always allows a free-text answer; proposes a concrete criterion rather than an open question.",
+        "Facts are looked up in the environment (a sub-agent only if the setup has them); never ask the human for a revision, a path, a retry or a validation fix.",
+        "Uses the project glossary's terms (`GLOSSARY.md` or `CONTEXT.md`) and records accepted answers where the project keeps decisions. The `---` rule between questions of the format block is gone with the rounds."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-prototype/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/prototype/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/prototype.md",
+      "upstreamBlob": "a0044501fe0d385b4d8575b610188ede9b236ccf",
+      "adaptedSha256": "494dfa796780770875398951218877da747ed53ee0f68942e178d89140619889",
+      "adaptations": [
+        "Renamed `pigpen-prototype`; an opening note names the source and the pin.",
+        "Rule 6 points at \"the ticket the prototype answers\" instead of the implementation issue, and adds a decision record for a decision that is hard to reverse and surprising. Everything else is the original's."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-prototype/LOGIC.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/prototype/LOGIC.md",
+      "vendored": "upstream/mattpocock-skills/prototype-LOGIC.md",
+      "upstreamBlob": "32be86a0a5d9928db84b3988e55f9debe476ab40",
+      "adaptedSha256": "f8e1fdeb41f5894f9803a1826fe4be6b0b4af4022e4eb58ca37ca1e546e87075",
+      "adaptations": [
+        "Condensed: the *When this is the right shape* list keeps its examples; steps 2 to 5 lose their elaboration. The single shareable HTML file, the portable pure module, the layout (title, state panel, free-play buttons, tabbed walkthroughs) and the anti-patterns are the original's.",
+        "Step 1 uses the project glossary's terms; step 3 says an illegal action explains why it is illegal. The pointer to the prototype Skill names `SKILL.md`."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-prototype/UI.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/prototype/UI.md",
+      "vendored": "upstream/mattpocock-skills/prototype-UI.md",
+      "upstreamBlob": "3977951663490882c2632b40695d9f59a2fe2408",
+      "adaptedSha256": "92aef82c33f29d164c8e9ce0999d86b01056ce3edfbea5c6979c04bdf42770e9",
+      "adaptations": [
+        "Condensed: the two sub-shapes, the switcher component and the anti-patterns keep the original's content; the process steps are shorter.",
+        "Step 2 adds fake data with realistic shapes and awkward lengths and wiring only the interactions the question is about."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-code-review/SKILL.md",
+      "source": "mattpocock/skills",
+      "path": "skills/engineering/code-review/SKILL.md",
+      "vendored": "upstream/mattpocock-skills/code-review.md",
+      "upstreamBlob": "e28d7acbf7b3bb4d7817b7eb5d9c105af03f6ec4",
+      "adaptedSha256": "6854475efead2aa1e05ff43c616faba17961ade03329ce5ab86868cdc7cf5e7a",
+      "adaptations": [
+        "Renamed `pigpen-code-review`; an opening note names the source and the pin. The description drops \"in parallel sub-agents\".",
+        "The two axes run as parallel sub-agents when subagents are available, one after the other otherwise.",
+        "Added a paragraph that the review follows evidence that the change works and reports its absence instead of running a broad suite.",
+        "Removed the requirement for `docs/agents/issue-tracker.md` and the pointer to `/setup-matt-pocock-skills`: the spec is fetched through the project's issue tracker. The standards sources also name agent instructions and lint rules.",
+        "The smell baseline, the two briefs, the aggregation rules and *Why two axes* are the original's; the aggregation adds that each finding is tied to a file and line and that whether a defect can wait is the user's call."
+      ]
+    },
+    {
+      "shipped": "skills/pigpen-commit/SKILL.md",
+      "source": "mitsuhiko/agent-stuff",
+      "path": "skills/commit/SKILL.md",
+      "vendored": "upstream/mitsuhiko-agent-stuff/commit.md",
+      "upstreamBlob": "3b7a4f1d3b92eed939eb5ef805a503238674239e",
+      "adaptedSha256": "62c8b265d127b5a2d5f0937c8f35896fde509031598bddcb1d9c17cf91671c5f",
+      "adaptations": [
+        "Renamed `pigpen-commit`; added `license: Apache-2.0` to the frontmatter and an opening note that states the file was changed, as Apache-2.0 section 4(b) requires.",
+        "The subject line asks for a polished, highly descriptive message; the body is strongly encouraged rather than optional (what, why, approach, decisions).",
+        "No sign-offs unless the project requires them."
+      ]
+    }
+  ],
+  "licenses": {
+    "mattpocock/skills": {
+      "path": "LICENSE",
+      "vendored": "upstream/mattpocock-skills/LICENSE",
+      "upstreamBlob": "f1dd2c09108dde1a5f56097cee8461b3ea834499"
+    },
+    "mitsuhiko/agent-stuff": {
+      "path": "LICENSE",
+      "vendored": "upstream/mitsuhiko-agent-stuff/LICENSE",
+      "upstreamBlob": "16fe87b06e802f094b3fbb0894b137bca2b16ef1"
+    }
+  }
+}
