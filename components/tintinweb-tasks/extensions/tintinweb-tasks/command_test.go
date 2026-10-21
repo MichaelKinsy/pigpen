@@ -38,8 +38,16 @@ func TestTasksCommand(t *testing.T) {
 		r, _ := runTasks(t, obj{}, []any{nil}, doneAndOpen)
 		eqv(t, r.selects[0].Choices, []string{"View all tasks (2)", "Create task", "Clear completed (1)", "Clear all (2)", "Settings"})
 	})
-	tskip(t, f, "opens the settings panel and returns to the main menu afterwards",
-		"the original counts ui.custom() calls of a SettingsList component; the Go SDK cannot run that TUI component, so the settings panel is a chain of selects (tested in settings_test.go)")
+	tw(t, f, "opens the settings panel and returns to the main menu afterwards", func(t *testing.T) {
+		// upstream counts the ui.custom() calls (one SettingsList component) and the selects (the menu twice).
+		r, _ := runTasks(t, obj{}, []any{"Settings", nil}, nil)
+		customs := r.CallsTo("ui.custom")
+		eqv(t, len(customs), 1)
+		_, overlay := customs[0].Args["overlay"]
+		eqv(t, overlay, false) // ui.custom(factory) with no options: the panel replaces the editor inline
+		eqv(t, len(r.selects), 2)
+		eqv(t, r.selects[1].Title, "Tasks")
+	})
 	tw(t, f, "starts a pending task", func(t *testing.T) {
 		r, _ := runTasks(t, obj{}, []any{0, 0, "▸ Start (in_progress)"}, create("Work"))
 		eqv(t, contains(r.must("TaskGet", obj{"taskId": "1"}), "Status: in_progress"), true)
