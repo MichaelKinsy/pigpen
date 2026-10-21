@@ -2,6 +2,7 @@ package pi_permission_system
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -117,10 +118,15 @@ func readTextFile(path string) (string, error) {
 		return "", errors.New(nodeFsMessage(err, "open", path))
 	}
 	defer f.Close()
-	if st, err := f.Stat(); err == nil && st.IsDir() {
-		return "", errors.New(nodeFsMessage(syscall.EISDIR, "read", ""))
+	size := 0
+	if st, err := f.Stat(); err == nil {
+		if st.IsDir() {
+			return "", errors.New(nodeFsMessage(syscall.EISDIR, "read", ""))
+		}
+		size = int(min(st.Size(), 1<<30))
 	}
-	b, err := os.ReadFile(path)
+	// Read through the handle already open: reading by path opened and stat'ed the file a second time (three more system calls).
+	b, err := readAllSized(f, size)
 	if err != nil {
 		return "", errors.New(nodeFsMessage(err, "read", ""))
 	}
@@ -141,4 +147,22 @@ func fileStamp(path string) string {
 	}
 	t := st.ModTime()
 	return jsNumber(float64(t.Unix())*1e3 + float64(t.Nanosecond())/1e6)
+}
+
+// readAllSized is io.ReadAll for a file of about size bytes: one buffer with room for the end-of-file read, grown only if the file grew.
+func readAllSized(f *os.File, size int) ([]byte, error) {
+	b := make([]byte, 0, size+512)
+	for {
+		n, err := f.Read(b[len(b):cap(b)])
+		b = b[:len(b)+n]
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			return b, err
+		}
+		if len(b) == cap(b) {
+			b = append(b, 0)[:len(b)]
+		}
+	}
 }
