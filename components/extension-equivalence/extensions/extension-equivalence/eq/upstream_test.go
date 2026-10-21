@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -276,6 +277,179 @@ func TestScenarioEnvReachesEveryLaneAndKeepsTheHostHermetic(t *testing.T) {
 		}
 		if !strings.Contains(env, "PIG_HOME=") || !strings.Contains(env, "NO_COLOR=1") {
 			t.Errorf("%s: the harness's fixed variables are missing:\n%s", host, env)
+		}
+	}
+}
+
+// pigpen-websearch: the model's tool-call arguments must be able to name a fake server (fetch_content's
+// url), so {{server:NAME}} is expanded in the LLM script too: turn text and every string value of the
+// arguments, at any depth. The scenario is shared by the lanes and must stay unexpanded.
+func TestExpandTurnsExpandsServersInTextAndNestedArgumentsWithoutChangingTheScenario(t *testing.T) {
+	u, _ := startUp(t, map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}, "api": {Routes: []Route{{Path: "/y", Body: "ok"}}}})
+	turns := []Turn{
+		{Text: "fetching {{server:web}}/page", ToolCalls: []ToolCall{
+			{Name: "fetch_content", Arguments: map[string]any{
+				"url":    "{{server:web}}/page",
+				"urls":   []any{"{{server:web}}/a", "{{server:api}}/b", 7, true, nil},
+				"nested": map[string]any{"deep": []any{map[string]any{"u": "x {{server:api}} y"}}},
+				"n":      3,
+			}},
+			{Name: "get_search_content"}, // no arguments
+		}},
+		{Text: "done"},
+	}
+	got := u.expandTurns(turns)
+	web, api := u.URL("web"), u.URL("api")
+	b, _ := json.Marshal(got)
+	want := `[{"text":"fetching ` + web + `/page","toolCalls":[{"name":"fetch_content","arguments":{"n":3,"nested":{"deep":[{"u":"x ` + api + ` y"}]},"url":"` + web + `/page","urls":["` + web + `/a","` + api + `/b",7,true,null]}},{"name":"get_search_content","arguments":null}]},{"text":"done"}]`
+	if string(b) != want {
+		t.Errorf("got  %s\nwant %s", b, want)
+	}
+	orig, _ := json.Marshal(turns)
+	if !strings.Contains(string(orig), "{{server:web}}/page") || strings.Contains(string(orig), web) {
+		t.Errorf("the shared scenario was changed: %s", orig)
+	}
+	// An unknown name is left as written (validation rejects it earlier).
+	if g := u.expandTurns([]Turn{{Text: "{{server:nope}}"}}); g[0].Text != "{{server:nope}}" {
+		t.Errorf("unknown reference: %q", g[0].Text)
+	}
+}
+
+// The expanded URL is what the model script puts on the wire, and a URL the extension echoes back is
+// normalized to <server:NAME>, so the trace of each lane (its own ports) is the same.
+func TestExpandedScriptReachesTheWireAndNormalizesToTheServerName(t *testing.T) {
+	u, _ := startUp(t, map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}})
+	llm, err := newFakeLLM(u.expandTurns([]Turn{{ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}}), func(string, any) {})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer llm.close()
+	resp, err := http.Post(llm.baseURL()+"/chat/completions", "application/json", strings.NewReader(`{"messages":[{"role":"user","content":"go"}]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	out, _ := io.ReadAll(resp.Body)
+	if !strings.Contains(string(out), `\"url\":\"`+u.URL("web")+`/page\"`) {
+		t.Errorf("the wire lacks the expanded URL: %s", out)
+	}
+	n := NewNormalizer("", "", "")
+	u.normalize(n)
+	if s := string(n.Data(map[string]any{"arguments": `{"url":"` + u.URL("web") + `/page"}`})); !strings.Contains(s, `<server:web>/page`) || strings.Contains(s, "127.0.0.1") {
+		t.Errorf("normalized = %s", s)
+	}
+}
+
+func TestScenarioValidatesServerReferencesInTheLLMScript(t *testing.T) {
+	ok := func(mod func(*Scenario)) error {
+		sc := &Scenario{Name: "a", Steps: []Step{{RPC: map[string]any{"type": "prompt", "message": "x"}}},
+			Servers: map[string]ServerSpec{"web": {Routes: []Route{{Path: "/x", Body: "ok"}}}},
+			LLM:     []Turn{{Text: "see {{server:web}}", ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}, {Text: "done"}}}
+		mod(sc)
+		return sc.Validate()
+	}
+	if err := ok(func(*Scenario) {}); err != nil {
+		t.Fatalf("valid script rejected: %v", err)
+	}
+	for name, c := range map[string]struct {
+		mod  func(*Scenario)
+		want string
+	}{
+		"unknown server in turn text":   {func(s *Scenario) { s.LLM[1].Text = "{{server:nope}}" }, "llm turn 2 text"},
+		"unknown server in an argument": {func(s *Scenario) { s.LLM[0].ToolCalls[0].Arguments["url"] = "{{server:nope}}/p" }, `llm turn 1 tool call 1 (fetch_content) arguments refers to server "nope"`},
+		"unknown server in a nested array": {func(s *Scenario) {
+			s.LLM[0].ToolCalls[0].Arguments["urls"] = []any{map[string]any{"u": []any{"{{server:nope}}"}}}
+		}, `server "nope"`},
+		"server reference with no servers": {func(s *Scenario) { s.Servers = nil }, `server "web"`},
+	} {
+		err := ok(c.mod)
+		if err == nil {
+			t.Errorf("%s: accepted", name)
+		} else if !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: error %q lacks %q", name, err, c.want)
+		}
+	}
+}
+
+// The whole path in one lane: RunLane starts the scenario's fake servers, expands the LLM script with
+// their URLs, and records the model request through the scenario's N7 rules. The host is a script that
+// asks the scripted model once, like a real host would.
+func TestRunLaneExpandsTheScriptNormalizesRulesAndTheModelAddress(t *testing.T) {
+	if _, err := exec.LookPath("curl"); err != nil {
+		t.Skip("the fake host needs curl")
+	}
+	sc := &Scenario{Name: "wire", Steps: []Step{{RPC: map[string]any{"type": "set_model", "provider": "eq-llm", "modelId": "eq-1"}}, {RPC: map[string]any{"type": "prompt", "message": "go"}}},
+		Servers: map[string]ServerSpec{"web": {Routes: []Route{{Path: "/page", Body: "ok"}}}},
+		LLM:     []Turn{{Text: "see {{server:web}}", ToolCalls: []ToolCall{{Name: "fetch_content", Arguments: map[string]any{"url": "{{server:web}}/page"}}}}},
+		TailMs:  -1, SettleMs: 10, Normalize: []NormalizeRule{{Pattern: `r-[0-9a-f]{6}`, Replacement: "<rid>"}}}
+	if err := sc.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	for _, host := range []string{"pi", "pig"} {
+		dir := t.TempDir()
+		bin := filepath.Join(t.TempDir(), host)
+		// A minimal RPC host: it answers get_state, and on a prompt asks the scripted model once and ends the run.
+		script := `#!/bin/sh
+[ "$1" = "--version" ] && exit 0
+printf '%s' "$PI_CODING_AGENT_DIR" > '` + dir + `'/agentdir.$$
+base=$(sed -n 's/.*"baseUrl":"\([^"]*\)".*/\1/p' "$PI_CODING_AGENT_DIR/models.json")
+while IFS= read -r line; do
+  id=$(printf '%s' "$line" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+  case "$line" in
+    *'"type":"get_state"'*) printf '{"type":"response","id":"%s","command":"get_state","success":true}\n' "$id" ;;
+    *'"type":"set_model"'*) printf '{"type":"response","id":"%s","command":"set_model","success":true,"data":{"id":"eq-1","baseUrl":"%s","note":"dial %s"}}\n' "$id" "$base" "${base#http://}" ;;
+    *'"type":"prompt"'*)
+      printf '{"type":"response","id":"%s","command":"prompt","success":true}\n' "$id"
+      curl -s -X POST "$base/chat/completions" -d '{"messages":[{"role":"user","content":"responseId r-1a2b3c"}]}' > '` + dir + `'/answer.$$
+      printf '{"type":"agent_end"}\n' ;;
+  esac
+done
+`
+		if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		tr, err := RunLane(sc, Lane{Name: host + "-lane", Host: host, Bin: bin}, Options{})
+		if err != nil {
+			t.Fatalf("%s: %v", host, err)
+		}
+		// Every host start (the baseline run included) sees an agent directory of the same shape and length.
+		dirs, _ := filepath.Glob(filepath.Join(dir, "agentdir.*"))
+		if len(dirs) < 2 {
+			t.Errorf("%s: expected the lane and its baseline run, got %d host starts", host, len(dirs))
+		}
+		for _, f := range dirs {
+			b, _ := os.ReadFile(f)
+			if !regexp.MustCompile(`/eq[0-9a-f]{8}/agent$`).Match(b) {
+				t.Errorf("%s: agent directory %q is not <tmp>/eq<8 hex>/agent", host, b)
+			}
+		}
+		var answers string
+		files, _ := filepath.Glob(filepath.Join(dir, "answer.*"))
+		for _, f := range files {
+			b, _ := os.ReadFile(f)
+			answers += string(b)
+		}
+		if !regexp.MustCompile(`see http://127\.0\.0\.1:\d+`).MatchString(answers) || !regexp.MustCompile(`\\"url\\":\\"http://127\.0\.0\.1:\d+/page\\"`).MatchString(answers) {
+			t.Errorf("%s: the model's answer lacks the expanded server URL (%d answers): %s", host, len(files), answers)
+		}
+		var llm []string
+		for _, e := range tr.Events {
+			if e.Ch == ChLLM {
+				llm = append(llm, string(e.Data))
+			}
+		}
+		// The host echoes the model's base URL in a set_model response; each lane's scripted model has its own port.
+		var setModel string
+		for _, e := range tr.Events {
+			if e.Ch == ChResponse && strings.Contains(string(e.Data), `"set_model"`) {
+				setModel = string(e.Data)
+			}
+		}
+		if !strings.Contains(setModel, `"baseUrl":"<llm>/v1"`) || !strings.Contains(setModel, `"note":"dial <llm>/v1"`) || strings.Contains(setModel, "127.0.0.1") {
+			t.Errorf("%s: the scripted model's address was not normalized: %s", host, setModel)
+		}
+		if len(llm) != 1 || !strings.Contains(llm[0], "responseId <rid>") || strings.Contains(llm[0], "r-1a2b3c") {
+			t.Errorf("%s: the model request was not normalized by the scenario's rule: %q", host, llm)
 		}
 	}
 }

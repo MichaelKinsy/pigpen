@@ -2,6 +2,7 @@ package eq
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
 	"path/filepath"
 	"regexp"
@@ -21,6 +22,9 @@ import (
 //	    records late effects before shutdown.
 //	v3  N6 (Pi 1.0's bash tool reports its wall time in a tool result's
 //	    structuredContent).
+//
+// N7 (a scenario's own `normalize` list) does not change the version: a scenario without the field
+// produces the same trace as under v3, and only a harness that knows the field can load one with it.
 const NormalizerVersion = "v3"
 
 // The normalizer removes only values that are different in every run by
@@ -29,6 +33,9 @@ const NormalizerVersion = "v3"
 //
 //	N1  literal roots: the workspace, the run's temp root and HOME become
 //	    <cwd>, <tmp> and <home> (longest first).
+//	    The loopback address of each fake server and of the scripted model
+//	    server (http://127.0.0.1:PORT, and 127.0.0.1:PORT) becomes
+//	    <server:NAME> and <llm>: every lane draws its own ports.
 //	N2  UUIDs become <uuid>.
 //	N3  ISO-8601 timestamps become <time>.
 //	N4  in an RPC response's data only, keys that carry clocks or host
@@ -53,8 +60,42 @@ var (
 // Replacement is one literal N1 rule.
 type Replacement struct{ From, To string }
 
-// Normalizer applies rules N1-N6.
-type Normalizer struct{ Replace []Replacement }
+// Normalizer applies rules N1-N7.
+type Normalizer struct {
+	Replace []Replacement
+	rules   []compiledRule
+}
+
+type compiledRule struct {
+	re   *regexp.Regexp
+	repl string
+}
+
+// compileRules validates and compiles a scenario's N7 rules.
+func compileRules(rules []NormalizeRule) ([]compiledRule, error) {
+	var out []compiledRule
+	for i, r := range rules {
+		if r.Pattern == "" {
+			return nil, fmt.Errorf("normalize rule %d: pattern is empty (it would match between every character)", i)
+		}
+		re, err := regexp.Compile(r.Pattern)
+		if err != nil {
+			return nil, fmt.Errorf("normalize rule %d: pattern %q: %w", i, r.Pattern, err)
+		}
+		out = append(out, compiledRule{re, r.Replacement})
+	}
+	return out, nil
+}
+
+// AddRules installs the scenario's N7 rules; they run after N1 to N3, in the given order.
+func (n *Normalizer) AddRules(rules []NormalizeRule) error {
+	c, err := compileRules(rules)
+	if err != nil {
+		return err
+	}
+	n.rules = append(n.rules, c...)
+	return nil
+}
 
 // NewNormalizer builds rule N1 from the run's roots. Symlink-resolved forms are
 // added because hosts report either.
@@ -90,10 +131,14 @@ func (n *Normalizer) str(s string) string {
 		s = strings.ReplaceAll(s, r.From, r.To)
 	}
 	s = uuidRE.ReplaceAllString(s, "<uuid>")
-	return timeRE.ReplaceAllString(s, "<time>")
+	s = timeRE.ReplaceAllString(s, "<time>")
+	for _, r := range n.rules {
+		s = r.re.ReplaceAllString(s, r.repl)
+	}
+	return s
 }
 
-// Value applies N1-N3 to a decoded JSON value.
+// Value applies N1-N3 and N7 to a decoded JSON value.
 func (n *Normalizer) Value(v any) any {
 	switch x := v.(type) {
 	case string:

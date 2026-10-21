@@ -75,14 +75,16 @@ configuration). The scenario is data (see [scenarios](extensions/extension-equiv
 - `servers`, `env`: fake HTTP upstreams for an extension that calls an API (a search provider, a judge
   model, a remote agent). Each server has routes (method, exact or prefix path, required query
   parameters, status, headers, `body` or `json`, `delayMs`, `times`, `drop`) and gets its own loopback
-  port per lane. `{{server:NAME}}` in `env`, `files` and `args` is its base URL, so provider base URLs
-  and fake credentials can point at it. Every request it receives enters the trace (`http`: method,
+  port per lane. `{{server:NAME}}` in `env`, `files`, `agentFiles`, `args` and the `llm` script is its base URL, so provider base URLs
+  and fake credentials can point at it, and the model's own tool call can name it (see below). Every request it receives enters the trace (`http`: method,
   path, query, body decoded, content type and the headers listed in `recordHeaders`; user agents and
   other runtime-specific headers stay out), and a URL an extension echoes back is normalized to
   `<server:NAME>`. Verified live: a TypeScript extension under Pi and its Go port under PiG send the
   same request and produce identical traces, and a port that sends another header fails at the request.
   Parallel requests arrive in a nondeterministic order. A port whose SSRF guard refuses loopback needs the
   extension's own allow-list for the fake server's range, written with `agentFiles` (pigpen-websearch: `ssrf.allowRanges` in its `web-search.json`).
+- `llm` text and tool-call arguments may contain `{{server:NAME}}`: it is expanded in the text of a turn and in every string value of a tool call's `arguments`, at any depth (objects and arrays included; keys are not expanded), so a scripted `fetch_content` can ask for `{{server:web}}/page`. The harness expands a copy per lane (each lane's fake server has its own port); the scenario file is not changed. A name the scenario does not declare is a load error (`llm turn 2 tool call 1 (fetch_content) arguments refers to server "nope", which the scenario does not declare`), like in `env` and `files`. A URL that later turns carry back (the model request's messages, a tool's echo) is normalized to `<server:NAME>` as before.
+- `normalize`: extra normalization rules for values the extension invents on every run (rule N7 below): `"normalize": [{"pattern": "[a-z0-9]{8,12}-[a-z0-9]{6}", "replacement": "<response-id>"}]`. `pattern` is a Go (RE2) regular expression, validated when the scenario loads (an empty or non-compiling pattern is a load error that names the rule); `replacement` may use `$1` and `${name}` for capture groups and `$$` for a dollar sign. Rules run in list order on every string (object keys included) of every event of both lanes, after the built-in N1 to N3. A rule that matches nothing is not an error. The rules belong to the scenario, so the golden trace was normalized by exactly the rules the port is checked with; a scenario edit that changes a rule needs `record` again.
 - `env` alone (no servers) switches an opt-in extension on: `"env": {"PIGPEN_WARDEN_ENABLED": "1"}` reaches the host process of every lane, the original under Pi and the port under PiG alike, on top of the hermetic environment (the harness's own variables and the test process's environment do not leak in). `PATH`, `HOME`, `TMPDIR`, `LANG`, `TERM`, `NO_COLOR`, the Go toolchain variables (`GOROOT`, `GOCACHE`, `GOMODCACHE`, `GOPATH`, `GOFLAGS`, `GOPROXY`, `GONOSUMDB`, `GONOSUMCHECK`, `GOSUMDB`, `GOTOOLCHAIN`), `GOWORK`, `GOENV` and every `EQ_*`, `PIG_*`, `PI_*` and `GIT_*` name are the harness's and are rejected. Tested with a fake host that records its environment (`TestScenarioEnvReachesEveryLaneAndKeepsTheHostHermetic`).
 - `steps`: RPC commands, and the answers to the dialogs they raise. Session operations
   that only an extension command context can start (`new session`, `fork`) go through a
@@ -94,10 +96,18 @@ messages, every tool's full definition, and the extension's part of the system p
 its difference from the same host's baseline prompt without the extension), tool
 executions and results, agent and turn lifecycle, `extension_error`, command responses,
 and the host exit. After the last step a final quiet period (`tailMs`, default 1000 ms)
-records late effects instead of losing them at shutdown. The normalizer removes only values that differ on every run
+records late effects instead of losing them at shutdown. Every lane runs in a scratch directory of one fixed length (`<tmp>/eq` and eight hex digits), so an extension that
+quotes a path and counts its characters gets the same number in every lane. The loopback address of each fake server and of
+the scripted model server (a `set_model` response echoes the model's base URL) is normalized to `<server:NAME>` and `<llm>`.
+The normalizer removes only values that differ on every run
 (paths, UUIDs, timestamps, host session ids, the bash tool's measured wall time); its rules N1 to N6 are listed in
 [normalize.go](extensions/extension-equivalence/eq/normalize.go) and versioned, and a
-golden trace recorded under another version is refused.
+golden trace recorded under another version is refused. Rule N7 is the scenario's own `normalize` list
+(above): the one place where a scenario author, not the harness, decides that a value differs on every run.
+It is a reviewed hole in the comparison, so write the narrowest pattern that matches only the invented
+value (an id's exact shape, not `.*`), keep the extension's own text out of it, and read the recorded
+trace once to see the placeholder where the value was. N7 changes no trace of a scenario without the
+field, so it does not change the normalizer version.
 
 ## Limits
 
