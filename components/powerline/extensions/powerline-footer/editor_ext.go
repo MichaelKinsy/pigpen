@@ -73,7 +73,7 @@ func (e *powerlineEditor) pass(data string) error {
 
 func (e *powerlineEditor) Render(width int) ([]string, error) {
 	completions := e.k.ensure(e.ctx).completionsEnabled()
-	base := e.base
+	var base editorBase = e.base
 	active := false
 	if e.bash != nil {
 		base = ghostBase{base, e.bash}
