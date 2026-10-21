@@ -60,3 +60,12 @@ scenario("fetch-pdf-datalab-fallback", "With a Datalab key the conversion is tri
 		routes: [{ method: "POST", path: "/api/v1/files/upload", status: 401, json: { detail: "invalid api key" } }],
 	},
 });
+// The failures of a bad or an oversized PDF end with the fetch "Fallback options" list, which is
+// the hosted-provider guidance of extract.ts, so these two run on a stack that has it.
+scenario("fetch-pdf-corrupt", "A response that is not a PDF fails with the extraction error and the fetch fallback guidance.", {
+	route: pdfRoute(fixture("not-a-pdf.pdf")),
+});
+scenario("fetch-pdf-oversized", "A PDF above pdf.maxSizeMB fails with the limit and the fetch fallback guidance.", {
+	config: { pdf: { provider: "unpdf", maxSizeMB: 0.001 } },
+	route: pdfRoute(fixture("multipage.pdf")),
+});

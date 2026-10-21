@@ -1,0 +1,58 @@
+{
+ "name": "fetch-pdf-corrupt",
+ "description": "A response that is not a PDF fails with the extraction error and the fetch fallback guidance.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\":\"eager\",\"ssrf\":{\"allowRanges\":[\"127.0.0.0/8\"]},\"pdf\":{\"provider\":\"unpdf\"}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/docs/report.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/docs/report.pdf",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": "This is plain text, not a PDF document.\n"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "(saved to: )[^\"\\\\ ]+?/(pi-web-pdf/)",
+   "replacement": "${1}<tmp>/${2}"
+  }
+ ]
+}

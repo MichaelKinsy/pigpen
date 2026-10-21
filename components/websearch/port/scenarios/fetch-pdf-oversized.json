@@ -1,0 +1,58 @@
+{
+ "name": "fetch-pdf-oversized",
+ "description": "A PDF above pdf.maxSizeMB fails with the limit and the fetch fallback guidance.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\":\"eager\",\"ssrf\":{\"allowRanges\":[\"127.0.0.0/8\"]},\"pdf\":{\"provider\":\"unpdf\",\"maxSizeMB\":0.001}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/docs/report.pdf"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/docs/report.pdf",
+     "headers": {
+      "content-type": "application/pdf"
+     },
+     "body": "%PDF-1.7\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 4 0 R >>\nendobj\n4 0 obj\n<<  /Length 73 >>\nstream\nBT /F1 12 Tf 14 TL 72 720 Td (First page) Tj T* (with two lines) Tj T* ET\nendstream\nendobj\n5 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R >>\nendobj\n6 0 obj\n<<  /Length 28 >>\nstream\nq 0.9 g 72 72 100 100 re f Q\nendstream\nendobj\n7 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 8 0 R >>\nendobj\n8 0 obj\n<<  /Length 55 >>\nstream\nBT /F1 12 Tf 14 TL 72 720 Td (Third page text) Tj T* ET\nendstream\nendobj\n9 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n10 0 obj\n<< /Title <2020517561727465726c79205265706f72742020> /Author <412e20577269746572> >>\nendobj\nxref\n0 11\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000127 00000 n \n0000000253 00000 n \n0000000377 00000 n \n0000000503 00000 n \n0000000582 00000 n \n0000000708 00000 n \n0000000814 00000 n \n0000000911 00000 n \ntrailer\n<< /Size 11 /Root 1 0 R /Info 10 0 R /ID [<0123456789abcdef0123456789abcdef> <0123456789abcdef0123456789abcdef>] >>\nstartxref\n1012\n%%EOF\n"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  },
+  {
+   "pattern": "(saved to: )[^\"\\\\ ]+?/(pi-web-pdf/)",
+   "replacement": "${1}<tmp>/${2}"
+  }
+ ]
+}
