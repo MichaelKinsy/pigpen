@@ -175,12 +175,16 @@ func TestWorkflowToolPaths(t *testing.T) {
 		id := w.taskID(w.run(obj{"script": inlineScript, "args": nil}))
 		eq(t, w.app.workflows().tasks.get(id).HasArgs, true)
 	})
-	t.Run("resuming reuses the earlier run's script and says how much can replay", func(t *testing.T) {
+	t.Run("resuming reuses the earlier run's script, and says what it replays", func(t *testing.T) {
 		w := startWfRig(t, wfRigOptions{})
 		id := w.taskID(w.run(obj{"script": inlineScript + "return 1;\n"}))
 		w.notification(id)
-		text := w.run(obj{"resumeFromRunId": id})
-		eq(t, strings.Contains(text, "Resuming "+id+": 0 recorded call(s) available to replay."), true)
+		eq(t, strings.Contains(w.run(obj{"resumeFromRunId": id}), "Nothing to replay from "+id), true)
+
+		id2 := w.taskID(w.run(obj{"script": inlineScript + "await agent(\"x\");\nreturn 1;\n"}))
+		w.fleet.wait(t, 1)[0].finish("done")
+		w.notification(id2)
+		eq(t, strings.Contains(w.run(obj{"resumeFromRunId": id2}), "Resuming "+id2+": 1 recorded call(s) available to replay."), true)
 	})
 }
 
