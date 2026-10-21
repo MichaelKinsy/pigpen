@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -53,8 +54,21 @@ type agentRecord struct {
 	ParentAgentID, WorkflowID   string // an owned child reports through its owner, not to the session
 	Depth, MaxSubagentDepth     int
 	StartedAt, CompletedAt      time.Time
-	ToolUses, Tokens, Turns     int
+	ToolUses, Turns             int
 	WrappedUp                   bool
+	// Usage is what the agent's assistant messages spent, lifetime (it survives compaction); getLifetimeTotal is its
+	// display total (input + output + cacheWrite). upstream: types.ts AgentRecord.lifetimeUsage.
+	Usage             lifetimeUsage
+	CompactionCount   int      // successful compactions of the agent's session
+	ContextPercent    *float64 // context-window utilization when the agent settled, nil when unavailable
+	OutputFile        string   // the `.output` transcript, "" when none is written
+	Conversation      string   // the agent's conversation as get_subagent_result verbose prints it, "" when it has none
+	StructuredJSON    string   // the validated StructuredOutput payload, when a schema was asked for
+	StructuredRetried bool
+	transcript        *transcriptStream
+	// stream is the transcript the child's events go to: the stream of the run in progress, nil between runs. A resume
+	// replaces it, so the hook the child holds is fixed once and reads it with no lock per event.
+	stream atomic.Pointer[transcriptStream]
 	Consumed                    bool   // the result was handed to the model, so its notification is not sent
 	SessionFile                 string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
 	JoinMode, GroupID           string // how the completion of a background agent is announced
@@ -169,9 +183,52 @@ type manager struct {
 	disposed bool
 	// onSettle runs once a record has settled (completed, stopped or failed).
 	onSettle func(*agentRecord)
+	// onSpawn runs synchronously once a record exists, before it is queued or started (the transcript is attached
+	// here). onStart runs when an agent starts running, immediately or when it leaves the queue. onCompact and
+	// onUsage run as the child's stream reports them. upstream: agent-manager.ts OnAgentStart, OnAgentCompact, OnAgentUsage.
+	onSpawn   func(*agentRecord)
+	onStart   func(*agentRecord)
+	onCompact func(r *agentRecord, reason string, tokensBefore, count int)
+	onUsage   func(*agentRecord, lifetimeUsage)
 	now      func() time.Time
 	stopGC   chan struct{}
 	gcDone   chan struct{}
+}
+
+// hooksFor is what the record's child reports into. upstream: agent-manager.ts onAssistantUsage, onCompaction.
+func (m *manager) hooksFor(r *agentRecord) *childHooks {
+	return &childHooks{
+		Usage: func(u lifetimeUsage) {
+			m.mu.Lock()
+			addUsage(&r.Usage, u)
+			m.mu.Unlock()
+			if m.onUsage != nil {
+				m.onUsage(r, u)
+			}
+		},
+		Compaction: func(reason string, tokensBefore int) {
+			m.mu.Lock()
+			r.CompactionCount++
+			count := r.CompactionCount
+			m.mu.Unlock()
+			if m.onCompact != nil {
+				m.onCompact(r, reason, tokensBefore, count)
+			}
+		},
+	}
+}
+
+// closeTranscript does the transcript's final flush and lets go of it (the record keeps no stream and so none of
+// its messages). upstream: record.outputCleanup.
+func (m *manager) closeTranscript(r *agentRecord) {
+	m.mu.Lock()
+	tr := r.transcript
+	r.transcript = nil
+	m.mu.Unlock()
+	r.stream.Store(nil)
+	if tr != nil {
+		tr.close()
+	}
 }
 
 func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
@@ -454,6 +511,21 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 			r.Alias = m.assignHandle(handleBase(o.Name))
 		}
 	}
+	r.spec.Hooks = m.hooksFor(r)
+	m.mu.Unlock()
+	if m.onSpawn != nil {
+		m.onSpawn(r)
+	}
+	m.mu.Lock()
+	// The stream is fixed from here on: the child's events go straight to it, with no lock per event.
+	if r.transcript != nil {
+		r.stream.Store(r.transcript)
+		r.spec.Hooks.Event = func(ev map[string]any) {
+			if t := r.stream.Load(); t != nil {
+				t.onEvent(ev)
+			}
+		}
+	}
 	p := m.poolFor(r)
 	if p != poolNone && !o.BypassQueue && !m.poolHasRoom(p) {
 		r.Status = statusQueued
@@ -486,6 +558,9 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 		m.abort(r)
 	} else {
 		m.watchSignal(r, o.Signal)
+	}
+	if m.onStart != nil {
+		m.onStart(r)
 	}
 	m.launch(r)
 	r.fireSpawned()
@@ -608,7 +683,13 @@ func (m *manager) drainLocked() []func() {
 			continue
 		}
 		m.claimLocked(next)
-		after = append(after, func() { m.launch(next); next.fireSpawned() })
+		after = append(after, func() {
+			if m.onStart != nil {
+				m.onStart(next)
+			}
+			m.launch(next)
+			next.fireSpawned()
+		})
 	}
 }
 
@@ -685,10 +766,17 @@ func (m *manager) run(r *agentRecord) {
 		}
 		res, err = c.wait()
 	}
+	m.closeTranscript(r)
 	alive := c != nil && err == nil && c.alive() // an in-memory conversation outlives its run
 	m.mu.Lock()
 	if r.CompletedAt.IsZero() {
 		r.CompletedAt = m.now()
+	}
+	if res == nil && c != nil {
+		// A stopped or failed child cannot be asked any more: what its stream carried stays.
+		if sc, ok := c.(settledChild); ok {
+			r.Conversation, r.ContextPercent = sc.snapshot()
+		}
 	}
 	switch {
 	case r.stopped: // abort already marked it stopped; the run settles on its own
@@ -709,7 +797,8 @@ func (m *manager) run(r *agentRecord) {
 		r.Status = statusCompleted
 	}
 	if res != nil {
-		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Tokens, res.Turns, res.WrappedUp
+		r.Result, r.ToolUses, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Turns, res.WrappedUp
+		r.ContextPercent, r.Conversation, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Conversation, res.StructuredJSON, res.StructuredRetried
 	}
 	// A foreground agent's result is delivered inline, so nothing is left to announce.
 	if !r.Background {
@@ -812,6 +901,7 @@ func (m *manager) abort(r *agentRecord) bool {
 		r.stopped, r.Status, r.CompletedAt, r.resume, r.settled = true, statusStopped, m.now(), nil, true
 		r.closeDone() // under the lock: a resume that lands once the record is stopped replaces the channels
 		m.mu.Unlock()
+		m.closeTranscript(r)
 		return true
 	case statusRunning:
 		r.stopped, r.Status, r.CompletedAt = true, statusStopped, m.now()

@@ -61,6 +61,9 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M16 | `agent-manager.ts` resume, startResume, tombstones, cleanup (the 60 s timer), `clearCompleted`, `abortAll`, `dispose`, `resumeSessionFile`, `reclaim`, `bypassQueue`; `index.ts` Agent `resume` branch, `spawnTopLevel`, and the `session_start`, `session_before_switch` and `session_shutdown` handlers | `sessions.go`, `sessions_tool.go`, `extension.go` (timer, shutdown, session boundaries) | `agent_manager_twin_test.go`, `sessions_test.go`, `lifecycle_test.go`; `agent-resume-not-found`, `agent-resume-ignores-type` |
 | M17 | `agent-runner.ts` extension and tool scope (`extensionCanonicalName(s)`, `parseExtensionsSpec`, `parseExtSelectors`, the loader filter, `inScope`), `persist_session`, session choice | `scope.go`, `discover.go` (the parent's tool registry and `pig status --json` stand for the loader's extension list) | `scope_twin_test.go`, `sessions_test.go`, `lifecycle_test.go` (the flags a scope becomes, asserted on `childArgs`) |
 | M18 | `context.ts` (`inherit_context`), `skill-loader.ts` (`skills:`), `env.ts`, `prompts.ts` extras | `context.go`, `skills.go`, `skillfs.go`, `prompts.go` | `context_twin_test.go`, `skills_twin_test.go`, `env_twin_test.go`, `prompts_twin_test.go` |
+| M19 | `output-file.ts`: the `.output` transcript, path rules, compaction handling | `output_file.go`, `observability_app.go` | 20 + 3 + 1 + 5 twins (`output_file_twin_test.go`); `obs-agent-file-output-transcript` |
+| M20 | `structured-output.ts`, `workflow/json-schema.ts`: the StructuredOutput tool and its validator | `structured_output.go`, `workflow_jsonschema.go` (the one validator, shared with the workflow slice), `runner.go` (retry prompt, capture) | 11 twins (`structured_output_twin_test.go`), `workflow_jsonschema_twin_test.go`, `observability_test.go` |
+| M21 | `usage.ts`, `index.ts`: usage accounting, `reportUsage`, `showCost` text, `<context_percent>`, `<compactions>`, cost, `subagents:started`/`compacted`, `get_subagent_result` verbose | `usage.go`, `usage_display.go`, `observability_app.go`, `extension.go`, `tools.go` | twins of `usage` (accumulator, pool), `usage-reporting`, `cost-display`, `status-note-wiring`, `subagent-error-status-e2e`, `agent-startup-error`; `obs-settings-honored` |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -125,8 +128,9 @@ components; this port registers none.
    first `session_start` (the original emits it from the factory, where the SDK has no connection yet), before
    `subagents:ready`. `saveSettings` writes the project file for the settings menu (G5), which does not exist yet.
 6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
-   widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
-   settings menu, usage and cost display.
+   widget, fleet and conversation viewer, agent memory, nested delegation, the settings menu, and the widgets that show
+   cost and model. Output transcripts, structured output (`childSpec.Schema`, for the workflow slice), usage reporting and
+   the cost texts are ported (M19-M21).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
    commit for this port; the substitute proof is the 122 twins (two of them found real defects: an empty frontmatter
    block panicked the parser, and a plain value with `: ` was accepted where the original refuses it), the recorded
@@ -152,8 +156,7 @@ components; this port registers none.
    `PIG_HARNESS_BINARY`, and the extension's own executable with the extension's socket in its environment; (e) had no
    test that a stop reaches the child's process group (a mutant that removed the signals survived). Each is fixed with a
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
-   The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
-   features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+   The remaining difference of the notification: a 500-character preview counted in code points where JavaScript counts UTF-16 units.
 11. **Sessions (reviewed by RvSessions, fixed in this revision).** What differs from the original on purpose or for want
     of a capability:
     - **Tool scope is applied at the child's start, over the tools the parent knows (M5).** `ext:` narrowing and
@@ -240,3 +243,86 @@ are proved by their twins and `policy_test.go`, not by a scenario. Scenarios cov
 (`tool-tools*`), the model error (`agent-model-not-found`) and, for every combination of the three optional features,
 `port/description-golden` (recorded from the original under Pi, read by `description_golden_test.go`; the port refuses
 those features, so `pigeq check` cannot run them).
+
+## Observability slice (M19-M21): what differs from the original
+
+- **Where the data comes from.** Usage is summed from each assistant `message_end` of the child's rpc stream (input,
+  output, cacheWrite for the display total; cacheRead and cost for the reported `usage`), compactions from
+  `compaction_end` (not aborted, with a result), the transcript from `message_end` flushed at `turn_end` and
+  `compaction_start`. Pi's `session.messages` array has no Go form, so the stream follows the messages it has seen and
+  keeps only the unwritten tail; a successful compaction drops what was seen since the last flush (the original's
+  re-anchor to the rebuilt array). `get_subagent_result verbose` reads the child's `get_messages` for a running agent and
+  the formatted conversation for a settled one.
+- **The system message is a message (H1).** Under Pi 1402973a `session.messages` starts with `{"role":"system"}`
+  (`packages/agent/src/agent.ts`; the `message_end` is in every golden of this port). The original's start index 1 skips
+  it, writes the user prompt a second time after the initial entry, and types a later system message `toolResult`. The
+  port does exactly that; `TestTranscriptOfPisEventOrderMatchesTheOriginal` replays the events of
+  `golden/obs-agent-file-output-transcript.jsonl` (recorded under Pi) through the stream. PiG's stream carries the same
+  system message, so there is no PiG-vs-Pi difference here. A whole child run cannot be a golden (F2 below).
+- **Memory (H2).** The stream keeps only its unwritten tail and the record drops the stream when the run ends. The record
+  keeps the conversation as the text `get_subagent_result verbose` prints (tool results already cut to 200 characters),
+  not the raw messages, bounded to 1 MiB (`maxConversationBytes`; the oldest messages go first, marked
+  `[earlier messages omitted]`). This bound is a difference from the original, which holds the whole session until the
+  manager removes the record 10 minutes after it finished; that removal is gap G18, open, and its Go form belongs to
+  the settings slice.
+- **A stopped or failed agent (M1).** The original keeps `record.session`. Here the child's event stream builds the
+  conversation as it goes, and `abort` reads `get_session_stats` (2 s limit) before the kill, so a stopped agent keeps
+  its conversation and context percent. A child that dies on its own keeps its conversation but has no context percent
+  (the process cannot be asked). A run that settles keeps `get_messages` as before (after any compaction).
+- **Settings reader (L1).** `outputTranscript`, `reportUsage` and `showCost` are fields of `settings.go`, read with the
+  other five.
+- **`showCost` (L3).** The cost appears in the notification, the result and the steer texts; the widget's cost display is
+  the UI slice's. The notice for `showCost: true` says so.
+- **No session id (L7).** If the host cannot name the session, the agent runs without a transcript and a line goes to
+  stderr (the original always has an id).
+- **Rounding (L9).** `toFixed` is `jsToFixed`: an exact decimal tie takes the larger neighbor (`(1.25).toFixed(1)` is
+  `1.3`), where Go's `%f` gives `1.2`. It is used for the cost, the duration and the token counts.
+- **Resume.** A background resume of an agent that has a transcript streams the resumed run into the same `.output` file
+  (`index.ts:1321` `onStarted`); `ensureOutputFile`'s other caller, the foreground resume, writes nothing, as in the original.
+- **Harness limit.** A scenario that runs a child cannot be compared whole (F2: the child's request carries the host's own
+  system prompt, which differs between Pi and PiG), and the scripted model reports 1 input and 1 output token and no
+  prices, so usage, cost and context numbers are proven by the twins and by `observability_test.go` against a scripted
+  child process, not by a golden. The scenarios `obs-settings-honored`, `obs-agent-file-output-transcript` and
+  `agent-result-verbose-not-found` compare what the parent sees at session start.
+- **JSON key order.** A transcript line is `JSON.stringify` in the original (keys in insertion order); Go marshals a map's
+  keys sorted. The entries are equal as JSON.
+- **StructuredOutput.** The canonical payload is the validated arguments with sorted keys. The validator is the
+  workflow slice's `workflow_jsonschema.go` (`compileWorkflowSchema`, twinned against `workflow-json-schema.test.ts`):
+  the original has one validator, `workflow/json-schema.ts`, and so does the port. The file is the same in both
+  branches, so the stack merges it as one. In the original only the workflow host sets `schema` (`agent({ schema })`),
+  so nothing in this slice's tools passes one; `childSpec.Schema` is the workflow slice's input. A schema-bound child
+  cannot be isolated (its tool is an extension tool). The schema reaches the child in a private temp file named by
+  `TINTINWEB_SUBAGENT_STRUCTURED_SCHEMA_FILE` (an environment string is capped at 32,767 characters on Windows and
+  128 KiB on Linux); the parent removes it when the child exits. SDK gap: `sdk.ToolPrepareArgumentsFunc` is
+  `func(map[string]any) (map[string]any, error)` while Pi's `ToolDefinition.prepareArguments(args: unknown)` also
+  receives a payload a model sent as one JSON string, so `prepareStructuredArguments` is twinned but cannot be wired.
+- **Transcript path errors.** A temp directory that cannot be created skips the transcript with a message on stderr; the
+  original's call would throw.
+- **Notification details.** The `details` object of the `subagent-notification` message (for the renderer) is the UI
+  slice's; this slice changes its text (`<output-file>`, `<context_percent>`, `<compactions>`, cost, the footer).
+- **Context percent.** The percentage is the child's `get_session_stats` `contextUsage.percent`, read live for a running
+  agent and when the agent settles.
+
+## Observability slice: verification record of the slice branch before the stack (superseded by the stack results below)
+
+- `pigeq check`: 8 of 8 (port-gaps, exec-coverage and six scenarios), three runs in a row; the transcript goldens carry
+  Pi 1.3.0.1402973a's system `message_end`. `agent-unknown-type-strict` failed in two earlier runs under heavy lane load
+  (event order between the model request and a host event) and passed in the three final ones.
+- `go test -race ./...` and `go vet` for linux, windows and darwin: exit 0 (the runner prints `GOOS evidence: requested
+  windows -> go env GOOS prints windows`, likewise darwin and linux).
+- `pigeq mutate --unit-only` at head 925c048: 271 mutations, 0 not killed (exit 0). One earlier attempt at the same head stopped
+  because the unmutated baseline failed `TestBusProtocol` once (a timing flake under lane load; it then passed `-count=8` and the
+  rerun).
+- Latency at head 925c048 (median of 10 interleaved runs of the same `TestPerfReport`, this revision vs PR 1 d710533, one
+  job): `agent-not-found` 61 us vs 64 us, `get_subagent_result` 65 us vs 64 us, `steer_subagent` 122 us vs 121 us,
+  registration 1143 us vs 1170 us, all within 5%. Background start-and-finish is **714 us vs 416 us (+72%, 819 vs 670
+  allocations)**, which exceeds 10% and is justified by behavior the original performs on every spawn and PR 1 did not:
+  the `.output` transcript (directory check, initial entry file: `BenchmarkAttachTranscriptFiles` 95 us, 34 allocations,
+  measured) and the `subagents:started` event (one more host round trip on the start path; the rest of the gap, about
+  200 us, is [INFERENCE] this host call and the usage wrapper, not separately measured). Two avoidable costs were
+  removed by profiling the path: the root directory mkdir and chmod (skipped when the root is already owner-only) and the
+  per-spawn `getSessionID` host call (now once per session, cleared at `session_start`; 892 to 819 allocations).
+  Benchmarks: streamed delta through the stream 39 ns, 0 allocations; transcript turn 33 us; usage hook 24 ns.
+- `npm run check` and `npm run generate` (in a copy with full git history): both exit 0, no tracked file changed.
+- The 5 mutants named above are killed in the final run (269 of 269 at ea1cb54; the two mutants for the session-id
+  cache were added after).

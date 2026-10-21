@@ -127,7 +127,7 @@ func (a *app) emitIndividualNudge(r *agentRecord) {
 	if !ok {
 		return
 	}
-	a.followUp(ctx, formatTaskNotification(r, 500))
+	a.followUp(ctx, formatTaskNotification(r, 500, a.showCost())+outputFooter(r))
 }
 
 // deliverGroup is the group join's callback: one consolidated notification for the agents that finished.
@@ -152,7 +152,7 @@ func (a *app) deliverGroup(records []*agentRecord, partial bool) {
 		}
 		notifications := make([]string, len(unconsumed))
 		for i, r := range unconsumed {
-			notifications[i] = formatTaskNotification(r, 300)
+			notifications[i] = formatTaskNotification(r, 300, a.showCost())
 		}
 		label := fmt.Sprintf("%d agent(s) finished", len(unconsumed))
 		if partial {

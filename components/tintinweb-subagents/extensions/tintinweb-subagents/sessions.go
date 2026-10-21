@@ -45,17 +45,25 @@ func (m *manager) resume(r *agentRecord, prompt string, background bool, toolCal
 	r.CompletedAt = time.Time{}
 	r.stopped = false
 	r.done, r.started, r.startGate = make(chan struct{}), make(chan struct{}), make(chan struct{})
+	announce := false // a run that starts now (not a queued or a foreground one) is announced as started
 	if background {
 		r.Background = true
 		r.Consumed = false
 		r.ToolCallID = toolCallID // the completion notification names the call that started this run
 		r.Status = statusQueued
+		// The resumed run streams into the same `.output` file: only the messages it produces are written, the resumed
+		// prompt among them. upstream: index.ts resume (onStarted, streamToOutputFile).
+		if r.OutputFile != "" && r.spec.Hooks != nil && r.spec.Hooks.Event != nil {
+			r.transcript = newTranscriptStream(r.OutputFile, r.ID, r.spec.Cwd, 0)
+			r.stream.Store(r.transcript)
+		}
 		if p := m.poolFor(r); p != poolNone && !m.poolHasRoom(p) {
 			m.queue = append(m.queue, queueEntry{r: r, pool: p})
 			m.mu.Unlock()
 			return true
 		}
 		m.claimLocked(r)
+		announce = true
 	} else {
 		r.pool, r.settled = poolNone, false
 		r.Status = statusRunning
@@ -63,6 +71,9 @@ func (m *manager) resume(r *agentRecord, prompt string, background bool, toolCal
 		r.closeGate()
 	}
 	m.mu.Unlock()
+	if announce && m.onStart != nil {
+		m.onStart(r)
+	}
 	m.launch(r)
 	return true
 }

@@ -154,6 +154,9 @@ type startRequest struct {
 	MaxTurns                                   *int
 	Isolated, InheritContext                   bool
 	Spawn                                      spawnOptions // the name, the pool and the signal of the spawn
+	// Per-call settings that only the Agent tool has (the RPC spawn path takes none).
+	Transcript bool // write a `.output` transcript (the Agent tool's decision: the agent file, else the default)
+	SessionID  string
 }
 
 // start builds the child's spec from the agent type and spawns it.
@@ -197,7 +200,7 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	}
 	spec := childSpec{Prompt: q.Prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking,
 		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
-		NoSkills: skills != true, Warnings: plan.Warnings}
+		NoSkills: skills != true, Warnings: plan.Warnings, Transcript: q.Transcript, SessionID: q.SessionID}
 	if trusted, err := ctx.IsProjectTrusted(); err == nil {
 		spec.Trust = "no-approve"
 		if trusted {
