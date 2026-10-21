@@ -19,6 +19,16 @@ describe('publishPlan', () => {
     assert.ok(real.slice(0, firstPiglet).every((e) => e.kind === 'package' && /^@pi-in-go\/pigpen-[a-z0-9-]+$/.test(e.name)));
     assert.ok(real.slice(firstPiglet).every((e) => e.kind === 'piglet' && e.name.startsWith('@pi-in-go/pigpen-piglet-')));
   });
+  it('publishes a shared library Package before every Package that depends on it', () => {
+    const real = publishPlan('/nonexistent-build-dir', { skipBuild: true });
+    const at = (name) => real.findIndex((e) => e.name === name);
+    const runner = real[at('@pi-in-go/pigpen-pig-runner')];
+    assert.deepEqual(runner.needs.map((n) => n.replace(/@\^.*$/, '')), ['npm:@pi-in-go/pigpen-pig-play']);
+    assert.ok(at('@pi-in-go/pigpen-pig-play') < at('@pi-in-go/pigpen-pig-runner'));
+    assert.ok(at('@pi-in-go/pigpen-pig-play') < at('@pi-in-go/pigpen-angry-pigs'));
+    assert.ok(at('@pi-in-go/pigpen-typesafe') < at('@pi-in-go/pigpen-pi-typesafe'));
+    assert.ok(at('@pi-in-go/pigpen-pi-typesafe-api') < at('@pi-in-go/pigpen-pi-typesafe'));
+  });
 });
 
 describe('publishAll', () => {
