@@ -2844,7 +2844,7 @@
   "replace": "_ = ap"
  },
  {
-  "name": "owned-child-announced",
+  "name": "nested-owned-child-announced",
   "file": "extension.go",
   "find": "if !r.topLevel() { // an owned child reports through its owner",
   "replace": "if false { // an owned child reports through its owner"
@@ -2928,7 +2928,7 @@
   "replace": "math.Ceil(n)))"
  },
  {
-  "name": "depth-default",
+  "name": "nested-depth-default",
   "file": "nested.go",
   "find": "maxSubagentDepth.Store(defaultMaxSubagentDepth)",
   "replace": "maxSubagentDepth.Store(3)"
