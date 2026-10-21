@@ -870,7 +870,7 @@ func dfdSelectBestSource(sources []*ldNode) *ldNode {
 			width := jsParseInt(wm[1])
 			dpr := 1.0
 			if dm := reDprPattern.FindStringSubmatch(srcset); dm != nil {
-				dpr = jsParseFloat(dm[1])
+				dpr = jsParseFloatNaN(dm[1])
 			}
 			if res := width * dpr; res > maxRes {
 				maxRes = res

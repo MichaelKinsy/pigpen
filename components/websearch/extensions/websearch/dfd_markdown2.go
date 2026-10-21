@@ -210,7 +210,7 @@ func (svc *dfdTurndown) listItemRule(content string, node *html.Node) string {
 		}
 		num := ""
 		if start != "" {
-			num = jsNumberString(jsToNumber(start) + float64(index) - 1)
+			num = jsNumberString(jsToNumberNaN(start) + float64(index) - 1)
 		} else {
 			num = strconv.Itoa(index)
 		}

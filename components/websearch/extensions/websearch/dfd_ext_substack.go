@@ -240,7 +240,7 @@ func (e *dfdSubstack) getLargestSrc(img *ldNode) string {
 			if n > 0 {
 				url = reSubstackComma.ReplaceAllLiteralString(url, "")
 			}
-			if width := jsParseFloat(m[2]); url != "" && width > bestWidth {
+			if width := jsParseFloatNaN(m[2]); url != "" && width > bestWidth {
 				bestWidth, bestURL = width, url
 			}
 		}
