@@ -8,7 +8,18 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (853 exact twins, 22 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (857 exact twins, 18 named skips, each with its own reason). The stack is complete: every provider, fetch
+path, command, widget and renderer of the original is ported.
+
+The 18 named skips, by category (each has a case-specific reason in `deferred_test.go` or its twin file):
+- npm packaging of the original, with no counterpart in a Go Package (6): the typebox peer dependency and the five publish-wrapper cases.
+- Node and library internals the Go port does not have (4): the ambient `fetch` fallback of the Gemini transport, the Node 22
+  `Promise.try` shim and the PDF.js verbosity option of `unpdf`, and the global `fetch` wrapping of the proxy transport.
+- Assertions on the original's TypeScript source text (2): the index.ts regexes of the curated provider resolution and the background
+  fetch notification strings.
+- Redirect hops of the original's own fetch wrapper (2): the port makes single-hop proxied requests; redirect handling is covered by the
+  `FetchRemoteURL` and `FetchWithCredentialRedirects` twins.
+- A real Pi host or an older host (4): the two native Pi session cases, the imported Pi version probe, and the host older than 0.86.0.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
