@@ -11,6 +11,8 @@ build:
 packages:
   tasks: local:../../components/tintinweb-tasks
   ask-user-question: local:../../components/ask-user-question
+  # pitui is a Go library Package, not a member: ask-user-question imports it through a go.work that resolves to packages/pitui in the staged Piglet.
+  pitui: local:../../components/pitui
   superpowers: local:../../components/superpowers
   web-tools: local:../../components/rpiv-web-tools
   subagents: local:../../components/tintinweb-subagents

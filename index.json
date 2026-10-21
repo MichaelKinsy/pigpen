@@ -311,7 +311,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-essentials"
       },
-      "manifestSha256": "8d8276bfcd823849435c99f7b99bb805d30402c27eaf6a08cc49909000f6d89c",
+      "manifestSha256": "dda80528638e808f7ca735d1941730359ac19578faa97a490d1a440cf8cd231d",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
