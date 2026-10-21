@@ -458,14 +458,14 @@
  {
   "name": "load-credential-body-loads",
   "file": "conscience_load.go",
-  "find": "if findSecretsInBody(body) || rePathInBody.MatchString(body) {",
-  "replace": "if rePathInBody.MatchString(body) {"
+  "find": "if len(FindSecrets(body)) > 0 || hasAbsolutePath(body) {",
+  "replace": "if hasAbsolutePath(body) {"
  },
  {
   "name": "load-path-in-body-loads",
   "file": "conscience_load.go",
-  "find": "if findSecretsInBody(body) || rePathInBody.MatchString(body) {",
-  "replace": "if findSecretsInBody(body) {"
+  "find": "if len(FindSecrets(body)) > 0 || hasAbsolutePath(body) {",
+  "replace": "if len(FindSecrets(body)) > 0 {"
  },
  {
   "name": "load-read-bound-off-by-one",
