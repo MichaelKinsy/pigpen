@@ -203,6 +203,16 @@ func slice2(s string, i int) string {
 // and their `=` forms) across the whole command. It reads quotes before separators, so a body that holds
 // `;`, `&&` or new lines stays one value. A value with `$(`, backticks or an unclosed quote is kept.
 func blankMessageFlags(command string) string {
+	// A message flag belongs to a `git` or `gh` command word, spelled with those letters in the command; without them
+	// no value is blanked, and the scan below writes the command back byte for byte.
+	if !strings.Contains(command, "git") && !strings.Contains(command, "gh") {
+		return command
+	}
+	return blankMessageFlagsScan(command)
+}
+
+// blankMessageFlagsScan is the scan of blankMessageFlags over the whole command.
+func blankMessageFlagsScan(command string) string {
 	var out strings.Builder
 	var words []string
 	word := ""
