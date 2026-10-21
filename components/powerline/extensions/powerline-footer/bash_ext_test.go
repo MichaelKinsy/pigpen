@@ -17,6 +17,13 @@ type bashHost struct {
 	h    *Host
 	mu   sync.Mutex
 	text string
+	ops  []string // what the powerline editor asked of the default editor: "setText:...", "handleInput:...", "addToHistory:..."
+}
+
+func (b *bashHost) opsLog() []string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return append([]string(nil), b.ops...)
 }
 
 func startBashHost(t *testing.T, settings string) *bashHost {
@@ -57,6 +64,17 @@ func startBashHost(t *testing.T, settings string) *bashHost {
 			case "setText":
 				if a, ok := args["args"].(map[string]any); ok {
 					b.text, _ = a["text"].(string)
+					b.ops = append(b.ops, "setText:"+b.text)
+				}
+			case "handleInput":
+				if a, ok := args["args"].(map[string]any); ok {
+					data, _ := a["data"].(string)
+					b.ops = append(b.ops, "handleInput:"+data)
+				}
+			case "addToHistory":
+				if a, ok := args["args"].(map[string]any); ok {
+					text, _ := a["text"].(string)
+					b.ops = append(b.ops, "addToHistory:"+text)
 				}
 			}
 		case "ui.getEditorText":
