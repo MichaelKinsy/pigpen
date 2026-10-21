@@ -2,6 +2,7 @@ package powerline_footer_test
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -25,7 +26,11 @@ func startBashHost(t *testing.T, settings string) *bashHost {
 	t.Setenv("HOME", home)
 	t.Setenv("PI_CODING_AGENT_DIR", agent)
 	t.Setenv("POWERLINE_NERD_FONTS", "0")
-	t.Setenv("SHELL", "/bin/sh")
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Skip("bash is not installed")
+	}
+	t.Setenv("SHELL", bash)
 	os.MkdirAll(agent, 0o755)
 	os.WriteFile(filepath.Join(agent, "settings.json"), []byte(settings), 0o644)
 	b := &bashHost{}
