@@ -27,15 +27,6 @@ func refusalText(feature string) string {
 	return portName + " (Go port) does not support " + feature + " yet. Install the original extension, " + originalSpec + ", which runs unchanged in PiG."
 }
 
-// unportedCallParam names the first Agent parameter of the original that is not ported, or "".
-// upstream: index.ts Agent parameters (schedule).
-func unportedCallParam(p map[string]any) string {
-	if v, ok := p["schedule"]; ok && v != nil {
-		return "scheduled agent runs (the schedule parameter)"
-	}
-	return ""
-}
-
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
 // Honored: description, model, maxTurns, name, thinkingLevel, isolation, isolated, inheritContext, bypassQueue, isBackground;
 // dropped, as the original drops them: parentAgentId, workflowId, depth, maxSubagentDepth, configCwd, rootSessionId,
@@ -75,7 +66,6 @@ type settingRule struct {
 }
 
 var settingRules = []settingRule{
-	{key: "schedulingEnabled", kind: "bool", okBool: false},
 	{key: "fleetView", kind: "bool", okBool: false},
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},

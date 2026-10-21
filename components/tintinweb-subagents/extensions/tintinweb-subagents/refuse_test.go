@@ -39,32 +39,11 @@ func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
 	eq(t, originalSpec, "npm:"+orig["name"].(string)+"@"+orig["version"].(string))
 }
 
-func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
-	cases := []struct {
-		name    string
-		params  obj
-		feature string
-	}{
-		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			r := startRig(t)
-			params := obj{"prompt": "p", "description": "d", "subagent_type": "Plan"}
-			for k, v := range c.params {
-				params[k] = v
-			}
-			text, failure := r.tool("Agent", params)
-			eq(t, text, "")
-			eq(t, strings.Contains(failure, refusalText(c.feature)), true)
-			eq(t, r.fleet.count(), 0)
-		})
-	}
-	t.Run("values that mean nothing are not refused", func(t *testing.T) {
-		r := startRig(t)
-		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolation": "off", "inherit_context": false, "resume": ""})
-		r.fleet.wait(t, 1)
-	})
+// Every Agent call parameter is ported (schedule included): "values that mean nothing" run like any call.
+func TestAgentCallParametersThatMeanNothingRun(t *testing.T) {
+	r := startRig(t)
+	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolation": "off", "inherit_context": false, "resume": ""})
+	r.fleet.wait(t, 1)
 }
 
 // agentFileRig starts a session whose workspace holds one custom agent, "custom", with the given frontmatter lines.
@@ -155,7 +134,6 @@ func notices(r *rig) []string {
 
 func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	cases := []struct{ name, json, listed string }{
-		{"schedulingEnabled", `{"schedulingEnabled": true}`, "schedulingEnabled: true"},
 		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
@@ -201,6 +179,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
 		r.Fire("session_start", obj{"reason": "new"})
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
+	})
+	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
 	})
 }
 

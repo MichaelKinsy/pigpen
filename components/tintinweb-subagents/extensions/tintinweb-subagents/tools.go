@@ -187,8 +187,9 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	description, _ := p["description"].(string)
 	typ, _ := p["subagent_type"].(string)
 	name, _ := p["name"].(string)
-	if feature := unportedCallParam(p); feature != "" {
-		return nil, refusal(feature)
+	// Schedule: register a job, don't spawn now. upstream: index.ts.
+	if schedule, _ := p["schedule"].(string); schedule != "" {
+		return a.scheduleCall(p, schedule)
 	}
 	// Reload the agent files so a file added mid-session is picked up (a bad one only warns).
 	a.reregisterAgents()
@@ -517,6 +518,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(r.Type), r.Status, r.Description))
 		a.mgr.mu.Unlock()
 	}
+	lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)
 	ctx.Notify(strings.Join(lines, "\n"), "info")
 	return nil
 }

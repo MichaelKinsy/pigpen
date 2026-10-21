@@ -15,6 +15,9 @@ import (
 
 type obj = map[string]any
 
+// rigSessionID is the session id the fake host reports; the scheduler keeps its jobs in a file named after it.
+const rigSessionID = "sched-wiring-session"
+
 // fakeChild is a scripted child: it settles when released, or when aborted. A resumed run is released again.
 type fakeChild struct {
 	spec    childSpec
@@ -171,6 +174,7 @@ type rig struct {
 	registry    []any  // getAllTools
 	trusted     bool   // isProjectTrusted
 	systemPrompt string // getSystemPrompt
+	noSession    bool   // the host has no session id yet
 	mu          sync.Mutex
 	extBus      map[string][]string
 	goBus       map[string][]func(any)
@@ -180,10 +184,17 @@ type rig struct {
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
 
 // startRigIn is startRig with the workspace the session starts in.
-func startRigIn(t *testing.T, cwd string) *rig { return startRigTuned(t, cwd, nil) }
+func startRigIn(t *testing.T, cwd string) *rig { return startRigWith(t, cwd, false) }
+
+// startRigWith is startRigIn, with the host answering getSessionID with an empty id when noSession is set.
+func startRigWith(t *testing.T, cwd string, noSession bool) *rig {
+	return startRigFull(t, cwd, nil, noSession)
+}
 
 // startRigTuned is startRigIn with a change to the app made before the session starts.
-func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
+func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig { return startRigFull(t, cwd, tune, false) }
+
+func startRigFull(t *testing.T, cwd string, tune func(*app), noSession bool) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
@@ -192,7 +203,7 @@ func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
 		t.Setenv("PIG_USE_PI_DIRS", "")
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 	}
-	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}, noSession: noSession}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
 	if tune != nil {
@@ -200,8 +211,8 @@ func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
 	}
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
-	r.Fire("session_start", obj{"reason": "startup"})
-	t.Cleanup(func() { r.app.shutdown() })
+	r.FireAll("session_start", obj{"reason": "startup"})
+	t.Cleanup(func() { r.app.shutdown(); r.app.scheduler().stop() })
 	return r
 }
 
@@ -228,7 +239,10 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 			return obj{"prompt": r.systemPrompt}, ""
 		}
 	case "getSessionID":
-		return obj{"sessionId": "session-1"}, ""
+		if r.noSession {
+			return obj{"sessionId": ""}, ""
+		}
+		return obj{"sessionId": rigSessionID}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string

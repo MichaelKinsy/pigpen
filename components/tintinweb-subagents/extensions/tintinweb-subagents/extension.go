@@ -40,6 +40,7 @@ type app struct {
 	batchCounter   int
 	rpcOff         []func() // the RPC listeners, registered once the session has started
 	entry          *registryEntry
+	schedule       scheduleState
 
 	rememberAgents bool // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
 	cleanupEvery   time.Duration
@@ -60,6 +61,7 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 	a.entry = claimManagerRegistry(a)
 	a.wireObs()
 	a.mgr.account = a.accountNested
+	a.initSchedule()
 	return a
 }
 
@@ -199,6 +201,7 @@ func (a *app) register(e *sdk.Extension) {
 		return nil, nil
 	})
 	a.registerTools(e)
+	a.registerSchedule(e)
 	e.Command("agents", "List the agent types and the running agents", a.agentsCommand)
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-tintinweb-subagents",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Go port of @tintinweb/pi-subagents (partial): Claude Code-style subagents for PiG (the Agent tool, get_subagent_result, steer_subagent, /agents, the event-bus protocol pi-tasks uses), each agent a child pig process",
   "keywords": [
     "pig-package",

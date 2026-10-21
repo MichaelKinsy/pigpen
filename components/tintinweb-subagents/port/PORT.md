@@ -78,6 +78,23 @@ is accepted in `port/accepted-gaps.json` with the approval it rests on: the lane
 MDT to ship a tested slice and defer the rest by name. `PARTIAL tool.renderResult`: the original's renderers return TUI
 components; this port registers none.
 
+## Performance of scheduled runs
+
+Measured on imladris (Xeon 6746E, `go test -bench`, 200 iterations; two runs agree within 30%). The baseline is a
+session with nothing loaded: the scheduler is started over an empty store.
+
+| Start-up with | time |
+|---|---|
+| no jobs (baseline) | 4 us |
+| 10 jobs on disk (a third each cron, interval, one-shot) | 0.3 ms |
+| 100 jobs on disk | 2-4 ms |
+
+That is the cost of reading the session's file and arming one timer per enabled job; with no jobs nothing is armed and
+no goroutine starts (`TestAnIdleSchedulerHoldsNoTimer`). Package initialisation adds a dozen compiled regular
+expressions. croner's next-run search takes about 2 us for an ordinary pattern, and about 1 ms for a pattern that never
+runs (the search to the year 3000), once when the job is added or armed. A cron job wakes every 30 s (as croner does)
+to check the clock; an interval or one-shot wakes once per due time, at most once a day while waiting.
+
 ## Results (this revision)
 
 - Scoped checks for the final head: `go vet` clean, `go test -race -count=1 ./...` passes; GOOS evidence from
@@ -395,3 +412,15 @@ those features, so `pigeq check` cannot run them).
   child's own messages only.
 - **Not ported: `beforeToolCall` runtime gate** for a denied nested tool (the in-process session hook PiG does not
   expose); the denial is the child's scope flags.
+
+## Scheduled runs: stack merge notes
+
+- The schedule slice's temporary stand-in for the setting (`scheduleSettingEnabled`, `withScheduleParam`,
+  `withScheduleGuideline`, `scheduleFeatureOn`) is gone: the parameter and guideline come from `descriptionFlags`
+  (`featureScheduling` is on, the `schedulingEnabled` setting reads through the settings store and its applier), and a job
+  fires through `spawnTopLevel`, the spawn RPC's door, so its model is resolved and scope-checked, its worktree option is
+  gated by `worktreeIsolation`, and `bypassQueue` is the manager's own option.
+- A job keeps the `isolation` the call or the agent file resolved (`resolveInvocationConfig`); the refusals the slice made
+  for a job that asked for a worktree, `inherit_context` or `resume` are gone with the features they refused (`schedule`
+  with `resume` or `inherit_context` is still answered with the original's "Cannot combine" texts).
+- The interactive `Scheduled jobs` menu (cancel and confirm dialogs over `ctx.ui`) is the one part not ported; its rows are.

@@ -112,6 +112,7 @@ original; all 24 keys are parsed alike, and a value of the wrong shape is droppe
 | `fallbackSubagent`, `disableDefaultAgents` | an unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused; the three default agents can be switched off |
 | `rememberAgents` (true) | an agent's conversation is a pi session file (see Sessions, resume and context below); `false` keeps it in the child's memory |
 | `maxSubagentDepth` (2) | the branch cap: main session 0, its agents 1, their children 2; `0` or `1` switch nesting off; at most 16 |
+| `schedulingEnabled` (true) | `false` takes the `schedule` parameter and its guideline out of the Agent text and answers a call that passes it anyway with "Scheduling is disabled in this project" |
 | `worktreeIsolation` (true) | `false` drops the `isolation` parameter and its guideline from the Agent text, and a worktree any caller asks for (the call, an agent file, the spawn RPC) is dropped, not refused |
 
 A model named by the call (or by an agent file) is resolved against the models with credentials: `provider/modelId`, else
@@ -146,6 +147,19 @@ owns, down the tree. A nested agent's spend (and its own children's) is added to
 record counts the whole tree; its transcript is filed under the top-level session. `disallowed_tools` takes a nested tool
 back. Nothing nested is announced to the model or on the bus.
 
+## Scheduled runs
+
+The `Agent` tool takes an optional `schedule` that registers a job instead of starting an agent now: a 6-field cron
+expression (`"0 0 9 * * 1"`, second minute hour day-of-month month day-of-week, with croner's `L`, `W`, `#` and `+`
+extensions and its local-time-zone rules), an interval (`"5m"`, `"1h"`, `"2d"`) or a one-shot (`"+10m"` or an ISO
+timestamp). The call answers with the job's id and next run. A job fires as a background agent that bypasses the
+concurrency limit; its completion reaches you as the usual notification. Jobs belong to a session and are kept in
+`<workspace>/.pi/subagent-schedules/<session id>.json` (written atomically, under a lock file, in the original's
+format): `/new` starts empty, `/resume` brings the session's jobs back. The `subagents:scheduled` and
+`subagents:scheduler_ready` events are published as in the original. `/agents` lists the jobs. A job fires through the
+same door as the spawn RPC, so its model is resolved and scope-checked and its worktree option is gated by
+`worktreeIsolation`. `schedule` cannot be combined with `resume`, `inherit_context` or `run_in_background: false`.
+
 ## Worktree isolation and persistent memory
 
 `isolation: "worktree"` (an Agent call parameter, an agent-file field, or the `isolation` option of `subagents:rpc:spawn`)
@@ -166,10 +180,10 @@ symlinked memory directory is never used.
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, `@name`
+[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, the interactive `Scheduled jobs` menu (cancelling a job), `@name`
 mentions, the widget, fleet and conversation-viewer UI, nested delegation, and the settings
 menu (the store can write `.pi/subagents.json`, nothing calls it yet). The `Agent` tool is advertised with the
-original's text and schema as it is with workflows and scheduling switched off (worktree isolation is on, as in the
+original's text and schema as it is with workflows switched off (worktree isolation and scheduling are on, as in the
 original), and `SubagentWorkflow` is not registered. (The text for every combination of those three features and the
 three `toolDescriptionMode`s is built and proved against what Pi sends, so a slice that ports a feature only switches it
 on in `features.go`.)
@@ -180,14 +194,12 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > @pi-in-go/pigpen-tintinweb-subagents (Go port) does not support _the feature_ yet. Install the original extension,
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
-- The Agent call parameter `schedule`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolation`, `isolated`,
   `inheritContext`, `bypassQueue` and `isBackground`. (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
   `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim` and `blocking` are dropped, as the original drops what a
   caller sends: only the extension itself may set them. `isolated`, `inheritContext` and `bypassQueue` count when truthy,
   as in JavaScript.)
-- `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `widgetMode` other than `off`, and so on). The settings the
+- `subagents.json` settings with a value that asks for an unported feature (`workflowsEnabled: true`, `widgetMode` other than `off`, and so on). The settings the
   port matches are not flagged: `false` for the switches the port does not have, and the ones it honors.
 
 The proof that the shipped slice matches the original is in
