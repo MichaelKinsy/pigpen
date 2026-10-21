@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial, stacked PR 3 of 8)
+# Port record: pi-powerline-footer (partial, stacked PR 4 of 8)
 
 | Input | Identity |
 |---|---|
@@ -25,6 +25,10 @@ never visible (the first needs bash mode, the second renders nothing in the orig
 ### Ported in PR 3 (keys, version 0.3.0)
 
 `shortcuts.ts`, the shortcut config of `index.ts`, the stash and restore, `/stash-history`, copy and cut, `render-scheduler.ts`, `lifecycle.ts` in `shortcuts.go`, `shortcut_config.go`, `keymatch.go`, `keys.go`, `keys_ext.go`, `stash_history.go`, `stash_reload.go`, `clipboard.go`, `render_scheduler.go`. The input listener is `ctx.OnTerminalInput` and takes no core lock. `ctrl+s` is handled by the original only inside the focused editor; a Go extension has no editor, so the listener leaves it to Pi (`TestTerminalInputLeavesCtrlS`). Key matching has no keybinding lookup, so Pi's default keys are used.
+
+### Ported in PR 4 (bashmode, version 0.4.0)
+
+the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `completion.ts`, the pure parts of `editor.ts`) in `bash_*.go`: the shell session over `os/exec` (process group signals, hidden console on Windows), the completion engine and its providers over the SDK's `AutocompleteProvider`, the transcript store and widget, the `shell_mode` segment. The editor (`BashModeEditor`) needs `setEditorComponent`: `/bash-mode`, `/bash-reset` and the `bashMode` setting stay refused, and 28 twins of editor cases are named skips with their reasons.
 
 ### Refusal of what is not ported
 
