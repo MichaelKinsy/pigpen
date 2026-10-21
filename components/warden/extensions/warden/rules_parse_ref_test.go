@@ -182,7 +182,7 @@ func parseRulesRef(markdown string) []Rule {
 			}
 			break
 		}
-		rule.ID = slug(d.name, used)
+		rule.ID = slugRef(d.name, used)
 		rule.Name = jsTrim(d.name)
 		rule.Body = jsTrim(strings.Join(body, "\n"))
 		rule.HeaderWarnings = warnings
@@ -270,4 +270,24 @@ func condenseRef(text string, limit int) string {
 		return out
 	}
 	return utf16Slice(out, 0, limit) + "… [" + itoaInt(utf16Len(text)-limit) + " more chars in the document]"
+}
+
+func slugRef(name string, used map[string]bool) string {
+	// JavaScript's toLowerCase maps İ to "i" and a combining dot; Go's maps it to a bare "i".
+	full := reNonSlug.ReplaceAllString(strings.ToLower(strings.ReplaceAll(name, "İ", "i\u0307")), "-")
+	full = strings.Trim(full, "-")
+	base := full
+	if len(full) > ruleIDLimit {
+		// Cut at a word boundary so a long heading keeps whole words in its id.
+		base = reSlugTail.ReplaceAllString(full[:ruleIDLimit], "")
+	}
+	if base == "" {
+		base = "rule"
+	}
+	candidate := base
+	for n := 2; used[candidate]; n++ {
+		candidate = base + "-" + strconv.Itoa(n)
+	}
+	used[candidate] = true
+	return candidate
 }
