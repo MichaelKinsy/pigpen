@@ -553,7 +553,10 @@ func TestWaitCompletionProjection(t *testing.T) {
 		eq(t, recordWaitCompletion(state, "missing", map[string]any{"runId": "missing"}, nowMs(), 60_000, nil), false, "no session")
 		eq(t, recordWaitCompletion(state, "expected-run", map[string]any{"runId": "foreign-run", "sessionId": "session-a", "agent": "foreign-agent"}, nowMs(), 60_000, nil), false, "foreign run")
 		eq(t, recordWaitCompletion(state, "mismatch", map[string]any{"runId": "mismatch", "sessionId": "session-a"}, nowMs(), 60_000, &struct{ ResultsDir, SessionID string }{resultsDir, "session-b"}), false, "persistence owner")
-		eq(t, state.CompletedResults == nil, true, "store untouched")
+		for _, id := range []string{"missing", "expected-run", "mismatch", "foreign-run"} {
+			_, held := state.CompletedResults.Get(id)
+			eq(t, held, false, "store untouched: "+id)
+		}
 		eq(t, regularFileExists(filepath.Join(resultsDir, "completion-replay")), false, "no replay directory")
 		_, err := os.Stat(filepath.Join(resultsDir, "completion-replay"))
 		eq(t, os.IsNotExist(err), true, "no replay directory on disk")

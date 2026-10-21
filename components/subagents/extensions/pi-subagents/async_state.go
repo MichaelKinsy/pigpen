@@ -90,7 +90,7 @@ type SubagentState struct {
 }
 
 func newSubagentState() *SubagentState {
-	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, FleetJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}}
+	return &SubagentState{AsyncJobs: map[string]*AsyncJobState{}, FleetJobs: map[string]*AsyncJobState{}, CompletionSeen: map[string]int64{}, CompletedResults: newCompletedStore()}
 }
 
 const maxRecentFleetJobs = 20
@@ -203,9 +203,6 @@ func recordWaitCompletion(state *SubagentState, runID string, data map[string]an
 	if persistence != nil && persistence.SessionID != sessionID {
 		return false
 	}
-	if state.CompletedResults == nil {
-		state.CompletedResults = newCompletedStore()
-	}
 	state.CompletedResults.Prune(now, ttlMs)
 	completion, err := toWaitCompletion(data, runID)
 	if err != nil {
@@ -242,7 +239,7 @@ func collectWaitCompletions(terminal []AsyncRunSummary, state *SubagentState, re
 		return readCompletionReplay(resultsDir, run.ID, run.SessionID, 0)
 	}
 	recorded := func(id string) (completedResult, bool) {
-		if state == nil || state.CompletedResults == nil {
+		if state == nil {
 			return completedResult{}, false
 		}
 		return state.CompletedResults.Get(id)
