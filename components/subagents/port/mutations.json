@@ -1725,7 +1725,7 @@
   "name": "mis-prune-count-suffix",
   "file": "mission_store.go",
   "find": "if strings.HasSuffix(e.Name(), \".json\") {\n\t\t\tn++",
-  "replace": "if true {\n\t\t\tn++"
+  "replace": "if strings.HasSuffix(e.Name(), \"\") {\n\t\t\tn++"
  },
  {
   "name": "mis-update-gate",
