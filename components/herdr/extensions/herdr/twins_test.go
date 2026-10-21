@@ -10,7 +10,6 @@ import (
 	"os"
 	"slices"
 	"testing"
-	"time"
 
 	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
@@ -20,7 +19,7 @@ const upstreamFile = "herdr-agent-state"
 func startTUI(t *testing.T) (*fakeHost, *fakeHerdr) {
 	t.Helper()
 	h := installFakeHerdr(t)
-	return startHost(t, herdr.Extension(), "tui"), h
+	return startHost(t, herdr.ExtensionFor(os.Getenv), "tui"), h
 }
 
 func equalStrings(t *testing.T, got, want []string) {
@@ -39,7 +38,7 @@ func TestHerdrAgentStateTwins(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 
 		if n := len(host.register.Handlers); n != 0 {
 			t.Fatalf("registered %d handlers outside herdr", n)
@@ -86,11 +85,11 @@ func TestHerdrAgentStateTwins(t *testing.T) {
 
 	tw(t, upstreamFile, "stays silent in non-TUI modes", func(t *testing.T) {
 		h := installFakeHerdr(t)
-		host := startHost(t, herdr.Extension(), "rpc")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "rpc")
 
 		host.fire("session_start", nil)
 		host.fire("agent_start", nil)
-		time.Sleep(50 * time.Millisecond)
+		host.settle()
 
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests in rpc mode: %v", n, rawLines(h.requests()))
@@ -121,7 +120,7 @@ func TestHerdrAgentStateTwins(t *testing.T) {
 		host.fire("session_start", nil)
 		h.waitFor(1)
 		host.fire("session_shutdown", map[string]any{"reason": "resume"})
-		time.Sleep(50 * time.Millisecond)
+		host.settle()
 		if n := len(h.requests()); n != 1 {
 			t.Fatalf("%d requests after a resume shutdown, want 1", n)
 		}

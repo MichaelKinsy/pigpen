@@ -99,11 +99,20 @@ var (
 	driveSeqRE = regexp.MustCompile(`"seq":(\d+)`)
 )
 
+// slowHerdr is a case whose herdr is slow to answer (server.delayMs): the original's reports stay in flight while the
+// next events arrive. The port's fake herdr holds the reports' answers until the case's events are over, which is what
+// the delay stands for, instead of a time that a loaded host can outrun between two events.
+func slowHerdr(c driveCase) bool { return c.Server.DelayMs > 0 }
+
+// hungHerdr is a case whose herdr leaves a request unanswered, so the extension's own timers end the attempt.
+func hungHerdr(c driveCase) bool { return slices.Contains(c.Server.Behaviors, "silent") }
+
 func runDriveCase(t *testing.T, c driveCase) driveOutcome {
 	t.Helper()
 	h := newFakeHerdr(t)
+	answers := make(chan struct{})
 	h.setBehave(func(n int) behavior {
-		b := behavior{Delay: time.Duration(c.Server.DelayMs) * time.Millisecond}
+		var b behavior
 		if n < len(c.Server.Behaviors) {
 			switch c.Server.Behaviors[n] {
 			case "close":
@@ -114,6 +123,14 @@ func runDriveCase(t *testing.T, c driveCase) driveOutcome {
 		}
 		return b
 	})
+	if slowHerdr(c) {
+		h.setBehaveRequest(func(req herdrRequest) behavior {
+			if req.Method == "pane.report_agent" {
+				return behavior{Hold: answers}
+			}
+			return behavior{}
+		})
+	}
 	env := map[string]string{"HERDR_ENV": "1", "HERDR_SOCKET_PATH": h.path, "HERDR_PANE_ID": "w1:p1", "HERDR_BIN_PATH": "/unused"}
 	for k, v := range c.Env {
 		if v == nil {
@@ -172,13 +189,23 @@ func runDriveCase(t *testing.T, c driveCase) driveOutcome {
 		if step.WaitMs != nil {
 			wait = *step.WaitMs
 		}
-		time.Sleep(time.Duration(wait) * time.Millisecond)
+		if wait == 0 {
+			continue // the next event follows at once, as in the original
+		}
+		// The original waits so that the effects of the event have happened before the next one. Here that is no
+		// time: it is every request the extension took to send being on herdr's wire (so connections open in the
+		// order the events came), then, unless herdr is deliberately slow or hung, the extension having nothing left
+		// to send.
+		h.waitSent(host)
+		if hungHerdr(c) {
+			// The case is about the extension's timers: the events are spaced by real time, as the original's are.
+			time.Sleep(time.Duration(wait) * time.Millisecond)
+		} else if !slowHerdr(c) {
+			host.settle()
+		}
 	}
-	final := 150
-	if c.FinalMs != nil {
-		final = *c.FinalMs
-	}
-	time.Sleep(time.Duration(final) * time.Millisecond)
+	close(answers)
+	host.settle() // the extension has sent everything it will send, behind a hung herdr after its own attempt bounds
 
 	reqs := h.requests()
 	var seqs []int64
@@ -230,29 +257,43 @@ func TestDriveAgainstTheOriginal(t *testing.T) {
 	if len(cases) != len(golden) || len(cases) == 0 {
 		t.Fatalf("%d cases, %d golden entries", len(cases), len(golden))
 	}
-	// The cases that test a timeout or an ordering behind a slow herdr need the original's real bounds.
+	// The cases that test a timeout or a retry need the original's real bounds, and run first. A slow herdr's reports are
+	// held until the case's events are over (slowHerdr), so no bound may end them before that: those cases run after,
+	// with bounds no loaded host reaches. A group's subtests run in parallel and all of them finish before the next
+	// group's bounds are set, because t.Run returns when they have.
 	pf, pr := *herdr.FirstAttempt, *herdr.RetryAttempt
-	*herdr.FirstAttempt, *herdr.RetryAttempt = herdr.OriginalFirstAttempt, herdr.OriginalRetryAttempt
 	defer func() { *herdr.FirstAttempt, *herdr.RetryAttempt = pf, pr }()
-
-	t.Run("cases", func(t *testing.T) {
-		for i, c := range cases {
-			want := golden[i]
-			t.Run(c.Name, func(t *testing.T) {
-				t.Parallel()
-				if want.Name != c.Name {
-					t.Fatalf("golden entry %d is %q", i, want.Name)
+	for _, group := range []struct {
+		name         string
+		first, retry time.Duration
+		slow         bool
+	}{
+		{"cases", herdr.OriginalFirstAttempt, herdr.OriginalRetryAttempt, false},
+		{"cases with a slow herdr", 10 * time.Minute, 10 * time.Minute, true},
+	} {
+		*herdr.FirstAttempt, *herdr.RetryAttempt = group.first, group.retry
+		t.Run(group.name, func(t *testing.T) {
+			for i, c := range cases {
+				if slowHerdr(c) != group.slow {
+					continue
 				}
-				got := runDriveCase(t, c)
-				a, _ := json.Marshal(got)
-				b, _ := json.Marshal(want)
-				var ga, gb any
-				_ = json.Unmarshal(a, &ga)
-				_ = json.Unmarshal(b, &gb)
-				if !reflect.DeepEqual(ga, gb) {
-					t.Fatalf("port differs from the original\n port: %s\n orig: %s", a, b)
-				}
-			})
-		}
-	})
+				want := golden[i]
+				t.Run(c.Name, func(t *testing.T) {
+					t.Parallel()
+					if want.Name != c.Name {
+						t.Fatalf("golden entry %d is %q", i, want.Name)
+					}
+					got := runDriveCase(t, c)
+					a, _ := json.Marshal(got)
+					b, _ := json.Marshal(want)
+					var ga, gb any
+					_ = json.Unmarshal(a, &ga)
+					_ = json.Unmarshal(b, &gb)
+					if !reflect.DeepEqual(ga, gb) {
+						t.Fatalf("port differs from the original\n port: %s\n orig: %s", a, b)
+					}
+				})
+			}
+		})
+	}
 }

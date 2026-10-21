@@ -37,7 +37,7 @@ func TestPerf(t *testing.T) {
 	for range n {
 		h := installFakeHerdr(t)
 		begin := time.Now()
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		register = append(register, time.Since(begin))
 
 		step := func(name string, run func()) {

@@ -47,6 +47,19 @@ SDK gap check (`pigeq gaps --ts port/oracle/herdr-agent-state.ts`): see the resu
 
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/herdr`: 7 exact twins, 0 skipped (the ledger `port/upstream-tests.json` is `pigeq twins list --tests port/upstream/test`, unchanged)
 
+## How the tests wait
+
+The extension sends from goroutines, so a test cannot know from a sleep that its requests have been sent, or that none will
+be: a loaded host (xd670 with a hundred busy loops on the cores the tests run on) made `TestRelease` and the drive replay
+fail about one run in twenty with sleeps of 60 to 200 ms. Nothing in the tests sleeps for that now. The reporter counts the
+requests it has taken to send and the drain goroutines still running, and `export_test.go` exposes both (`Taken`,
+`Quiesce`): a test waits until its fake herdr has seen every request the reporter took (so connections open in the order the
+events came, which the drive replay compares) and, unless herdr is deliberately slow or hung, until the reporter has nothing
+left to send (so "no further request" is a fact, not a time). A request is picked up by what it is, not by the order its
+connection was accepted in. The replay's slow-herdr cases (`server.delayMs`) hold the reports' answers until the case's
+events are over instead of answering after a time that can pass between two events; the hung-herdr cases keep the original's
+real attempt bounds, since the extension's own timers are what they test.
+
 ## Differences from the original
 
 Behavior the original does not have, kept or added on purpose, each with its reason and what it costs in fidelity.
