@@ -59,13 +59,18 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 	typ, _ := p["type"].(string)
 	prompt, _ := p["prompt"].(string)
 	opts, _ := p["options"].(map[string]any)
+	if feature := unportedSpawnOption(opts); feature != "" {
+		return nil, refusal(feature)
+	}
 	description, _ := opts["description"].(string)
 	model, _ := opts["model"].(string)
+	name, _ := opts["name"].(string)
+	thinking, _ := opts["thinkingLevel"].(string)
 	var maxTurns int
 	if f, ok := opts["maxTurns"].(float64); ok {
 		maxTurns = int(f)
 	}
-	r, err := a.start(ctx, typ, prompt, description, "", model, "", maxTurns, true, false)
+	r, err := a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +93,9 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	cfg := getAgentConfig(resolved)
 	if cfg == nil {
 		return nil, fmt.Errorf("Unknown agent type: %q", typ)
+	}
+	if feature := unportedAgentFeature(cfg); feature != "" {
+		return nil, refusal(feature)
 	}
 	parentPrompt := ""
 	if cfg.PromptMode == "append" {

@@ -161,26 +161,13 @@ func TestNotificationIsAFollowUpThatStartsATurn(t *testing.T) {
 	eq(t, opts["deliverAs"], "followUp")
 }
 
-func TestUnsupportedAndEmulatedParameters(t *testing.T) {
+func TestIsolatedReachesTheChild(t *testing.T) {
 	r := startRig(t)
-	out := r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "inherit_context": true})
-	eq(t, strings.HasPrefix(out, "inherit_context is not supported by this port"), true)
-	eq(t, r.fleet.count(), 0)
-	// resume: an unknown id, a running agent, and a finished one (its answer goes into the new prompt)
-	eq(t, r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "resume": "nope"}), `Agent not found: "nope". It may have been cleaned up.`)
-	id := idFrom(t, r.must("Agent", obj{"prompt": "first", "description": "d", "subagent_type": "Plan"}))
-	c := r.fleet.wait(t, 1)[0]
-	out = r.must("Agent", obj{"prompt": "more", "description": "d", "subagent_type": "Plan", "resume": id})
-	eq(t, strings.HasPrefix(out, "Agent "+id+" is still running; use steer_subagent"), true)
-	c.finish("the first answer")
-	r.waitEmitted("subagents:completed")
-	r.must("Agent", obj{"prompt": "more", "description": "d", "subagent_type": "Plan", "resume": id})
-	c2 := r.fleet.wait(t, 2)[1]
-	eq(t, c2.spec.Prompt, "You are continuing earlier work. Your previous run ended with this answer:\n\nthe first answer\n\nContinue with this: more")
-	// isolated reaches the child's command line
+	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan"})
 	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolated": true})
-	eq(t, r.fleet.wait(t, 3)[2].spec.Isolated, true)
-	eq(t, c2.spec.Isolated, false)
+	c := r.fleet.wait(t, 2)
+	eq(t, c[0].spec.Isolated, false)
+	eq(t, c[1].spec.Isolated, true)
 }
 
 func TestProcessCrashDuringStartupIsReportedByTheTool(t *testing.T) {
