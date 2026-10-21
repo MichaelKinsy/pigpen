@@ -108,7 +108,7 @@ func TestBashGateAgainstOriginal(t *testing.T) {
 		}
 		switch {
 		case v == want:
-		case strings.Contains(v.Reason, "(Go port) cannot evaluate this 'bash' call"):
+		case strings.HasPrefix(v.Reason, packageName+" (Go port) does not support ") && v != asked("bash"):
 			got = append(got, portDifference{c.Config, c.Command, "unsupported"})
 		case c.State == "allow" && v == asked("bash"):
 			got = append(got, portDifference{c.Config, c.Command, "stricter"})
