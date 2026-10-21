@@ -83,12 +83,31 @@ func isArrayIndex(k string) bool {
 	if k == "" || (len(k) > 1 && k[0] == '0') {
 		return false
 	}
+	// digits only, at most ten of them (2^32-2 has ten): anything else is no index, and ParseUint would allocate an error to say so
+	if len(k) > 10 {
+		return false
+	}
+	for i := 0; i < len(k); i++ {
+		if k[i] < '0' || k[i] > '9' {
+			return false
+		}
+	}
 	n, err := strconv.ParseUint(k, 10, 64)
 	return err == nil && n < 1<<32-1 && strconv.FormatUint(n, 10) == k
 }
 
 // order returns the keys in Object.keys order.
 func (o *jsObject) order() []string {
+	hasIndex := false
+	for _, k := range o.keys {
+		if isArrayIndex(k) {
+			hasIndex = true
+			break
+		}
+	}
+	if !hasIndex {
+		return append(make([]string, 0, len(o.keys)), o.keys...)
+	}
 	var idx, rest []string
 	for _, k := range o.keys {
 		if isArrayIndex(k) {

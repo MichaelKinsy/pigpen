@@ -12,7 +12,7 @@ trap 'rm -f "$pkg/test/zz-manager-bench.test.ts"' EXIT
 mkdir -p "$here/.bench"
 i=1
 while [ "$i" -le "$rounds" ]; do
-  (cd extensions/pi-permission-system && go test -run '^$' -bench 'CheckBash|CheckPathValues|CheckCold|ToolPermissionAndDenied|ResolverFold|SessionApprovals' -benchtime 300x -count=1 . | grep '^Benchmark' > "$here/.bench/go-$i.txt")
+  (cd extensions/pi-permission-system && { go test -run '^$' -bench 'CheckBash|CheckPathValues|ToolPermissionAndDenied|ResolverFold|SessionApprovals' -benchtime 20000x -count=1 .; go test -run '^$' -bench 'CheckCold' -benchtime 500x -count=1 .; } | grep '^Benchmark' > "$here/.bench/go-$i.txt")
   (cd "$pkg" && BENCH_OUT="$here/.bench/node-$i.json" node_modules/.bin/vitest run test/zz-manager-bench.test.ts > /dev/null)
   i=$((i + 1))
 done
