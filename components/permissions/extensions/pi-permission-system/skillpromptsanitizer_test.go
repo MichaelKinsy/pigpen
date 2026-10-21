@@ -34,13 +34,12 @@ func (m *mockSkillChecker) CheckPermission(surface string, input any, agentName 
 	return PermissionCheckResult{ToolName: "skill", State: state, Source: "tool", Origin: "builtin"}
 }
 
-// policySkillChecker adapts a Policy to the raw SkillPermissionChecker contract, as the original's asChecker adapts a real
-// PermissionManager (a tool intent on the skill surface).
-type policySkillChecker struct{ p *Policy }
+// managerSkillChecker adapts a real PermissionManager to the raw SkillPermissionChecker contract (a tool intent on the skill
+// surface), as the original's asChecker does.
+type managerSkillChecker struct{ m *PermissionManager }
 
-func (c policySkillChecker) CheckPermission(surface string, input any, _ *string) PermissionCheckResult {
-	name, _ := ToRecord(input).str("name")
-	return PermissionCheckResult{ToolName: "skill", State: Evaluate(surface, name, c.p.rules, PosixPathFlavor, "").Action, Source: "tool", Origin: "builtin"}
+func (c managerSkillChecker) CheckPermission(surface string, input any, agent *string) PermissionCheckResult {
+	return c.m.Check(ToolAccessIntent{Surface: surface, Input: input, AgentName: agent}, nil)
 }
 
 func skillBlock(name, location string) string {
@@ -197,7 +196,7 @@ func TestSkillPromptSanitizerTwins(t *testing.T) {
 			"  </skill>", "</available_skills>", "Agent identity section", "<available_skills>", "  <skill>", "    <name>denied-skill</name>",
 			"    <description>Denied in second block</description>", "    <location>/skills/blocked/two.ts</location>", "  </skill>",
 			"</available_skills>", "System prompt end"}, "\n")
-		checker := policySkillChecker{policyOf(t, `{"permission":{"*":"ask","skill":{"denied-skill":"deny"}}}`)}
+		checker := managerSkillChecker{managerWithConfig(t, `{"*":"ask","skill":{"denied-skill":"deny"}}`)}
 		got := VisibleSkillPromptEntries(prompt, checker, nil, NewPathNormalizer(PosixPathFlavor, "/cwd"))
 		eq(t, names(got), S("visible-skill"), "names")
 	})
@@ -207,7 +206,7 @@ func TestSkillPromptSanitizerTwins(t *testing.T) {
 			"</available_skills>", "Middle section", "<available_skills>", "  <skill>", "    <name>visible-skill</name>",
 			"    <description>Visible skill</description>", "    <location>@./skills/visible/entry.ts</location>", "  </skill>",
 			"</available_skills>", "System prompt end"}, "\n")
-		checker := policySkillChecker{policyOf(t, `{"permission":{"*":"ask","skill":{"blocked-skill":"deny"}}}`)}
+		checker := managerSkillChecker{managerWithConfig(t, `{"*":"ask","skill":{"blocked-skill":"deny"}}`)}
 		got := VisibleSkillPromptEntries(prompt, checker, nil, NewPathNormalizer(PosixPathFlavor, "/cwd"))
 		matchedVisible := FindSkillPathMatch("/cwd/skills/visible/file.ts", got, normalizer)
 		matchedBlocked := FindSkillPathMatch("/cwd/skills/blocked/file.ts", got, normalizer)

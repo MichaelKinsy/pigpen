@@ -22,7 +22,10 @@ func newTrustRig(t *testing.T, trusted *bool) *trustRig {
 	r := &trustRig{agent: t.TempDir(), cwd: t.TempDir(), trusted: trusted}
 	t.Setenv("PI_CODING_AGENT_DIR", r.agent)
 	agentDirForTest = r.agent
-	r.h = StartHost(t, pps.Extension(), HostOptions{Cwd: r.cwd, OnCall: func(method string, _ map[string]any) (map[string]any, string) {
+	r.h = StartHost(t, pps.Extension(), HostOptions{Cwd: r.cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
+		if v, ok := sessionReadAnswer(method, args); ok {
+			return v, ""
+		}
 		switch method {
 		case "isProjectTrusted":
 			if r.trusted == nil {
@@ -119,13 +122,14 @@ func TestConfigIssuesAreSaidOncePerIssue(t *testing.T) {
 	r := newTrustRig(t, bp(true))
 	r.global(`{"nope":1}`)
 	r.h.Fire("session_start", map[string]any{})
-	eq(t, r.notes(), []string{"Unrecognized config key 'nope'."}, "session start says it")
+	// the store's issue and the policy loader's (lifecycle.ts) are both said at session start, as in the original
+	eq(t, r.notes(), []string{"Unrecognized config key 'nope'.", "Unrecognized config key 'nope'."}, "session start says it")
 	prompt := map[string]any{"systemPrompt": "x", "systemPromptOptions": map[string]any{}}
 	r.h.Fire("before_agent_start", prompt)
-	eq(t, len(r.notes()), 1, "an unchanged issue is not repeated")
+	eq(t, len(r.notes()), 2, "an unchanged issue is not repeated")
 	r.global(`{"nope":1,"also":2}`)
 	r.h.Fire("before_agent_start", prompt)
-	eq(t, r.notes()[1:], []string{"Unrecognized config key 'also'."}, "only the new issue (the whole scope is rejected, both keys are reported; the first was heard)")
+	eq(t, r.notes()[2:], []string{"Unrecognized config key 'also'."}, "only the new issue (the whole scope is rejected, both keys are reported; the first was heard)")
 }
 
 func TestPermissionSystemCommandInTheHost(t *testing.T) {
@@ -154,7 +158,13 @@ func TestFactoryTimeLoadReadsNoProject(t *testing.T) {
 	os.MkdirAll(filepath.Dir(p), 0o755)
 	os.WriteFile(p, []byte(`{"yoloMode":true}`), 0o644)
 	t.Chdir(cwd)
-	h := StartHost(t, pps.Extension(), HostOptions{Cwd: cwd})
+	h := StartHost(t, pps.Extension(), HostOptions{Cwd: cwd, OnCallValue: func(m string, a map[string]any) (any, string) {
+		v, ok := sessionReadAnswer(m, a)
+		if ok {
+			return v, ""
+		}
+		return map[string]any{}, ""
+	}})
 	eq(t, h.Command("permission-system", "show"), "", "show")
 	n := h.CallsTo("ui.notify")
 	eq(t, strings.HasPrefix(n[len(n)-1].Args["message"].(string), "permission-system: yoloMode=off"), true, "no yolo from a project that was never trusted")
@@ -165,7 +175,10 @@ func TestUntrustedSessionLoadsNoProjectPolicyPaths(t *testing.T) {
 	t.Setenv("PI_CODING_AGENT_DIR", agent)
 	trusted := false
 	e, paths := pps.NewExtensionForTest()
-	h := StartHost(t, e, HostOptions{Cwd: cwd, OnCall: func(method string, _ map[string]any) (map[string]any, string) {
+	h := StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
+		if v, ok := sessionReadAnswer(method, args); ok {
+			return v, ""
+		}
 		if method == "isProjectTrusted" {
 			return map[string]any{"trusted": trusted}, ""
 		}
@@ -179,4 +192,20 @@ func TestUntrustedSessionLoadsNoProjectPolicyPaths(t *testing.T) {
 	p = paths()
 	eq(t, p.ProjectConfigPath != nil && *p.ProjectConfigPath == filepath.Join(cwd, ".pi", "extensions", "pi-permission-system", "config.json"), true, "a trusted one does")
 	eq(t, p.ProjectAgentsDir != nil && *p.ProjectAgentsDir == filepath.Join(cwd, ".pi", "agents"), true, "and its agents")
+}
+
+// sessionReadAnswer answers the session manager's readers the extension makes at every event (a host with a session answers them).
+func sessionReadAnswer(method string, args map[string]any) (any, bool) {
+	if method != "sessionRead" {
+		return nil, false
+	}
+	switch args["method"] {
+	case "getSessionId":
+		return "sess-1", true
+	case "getSessionDir":
+		return "/sessions/sess-1", true
+	case "getEntries", "getBranch":
+		return []any{}, true
+	}
+	return nil, true
 }

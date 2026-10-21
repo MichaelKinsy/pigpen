@@ -1,0 +1,44 @@
+{
+  "name": "external-directory-deny",
+  "description": "external_directory deny blocks a read outside the working directory",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "/etc/hostname"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"*\": \"allow\",\n    \"external_directory\": \"deny\"\n  }\n}"
+  },
+  "files": {
+    "a.txt": "hello\n"
+  }
+}

@@ -1,0 +1,1376 @@
+[
+ {
+  "name": "cmd-empty-check-dropped",
+  "file": "gatebashcommand.go",
+  "find": "\tif isTriviallyEmptyBashCommand(command) {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "cmd-empty-agent",
+  "file": "gatebashcommand.go",
+  "find": "\tif isTriviallyEmptyBashCommand(command) {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)",
+  "replace": "\tif isTriviallyEmptyBashCommand(command) {\n\t\treturn resolveOnBashSurface(command, nil, nil, resolver)"
+ },
+ {
+  "name": "cmd-empty-negated",
+  "file": "gatebashcommand.go",
+  "find": "\tif isTriviallyEmptyBashCommand(command) {",
+  "replace": "\tif !isTriviallyEmptyBashCommand(command) {"
+ },
+ {
+  "name": "cmd-primary-init",
+  "file": "gatebashcommand.go",
+  "find": "\tprimary := false",
+  "replace": "\tprimary := true"
+ },
+ {
+  "name": "cmd-primary-salvaged",
+  "file": "gatebashcommand.go",
+  "find": "if !commands[i].Salvaged {\n\t\t\tprimary = true",
+  "replace": "if commands[i].Salvaged {\n\t\t\tprimary = true"
+ },
+ {
+  "name": "cmd-primary-break",
+  "file": "gatebashcommand.go",
+  "find": "\t\t\tprimary = true\n\t\t\tbreak",
+  "replace": "\t\t\tprimary = true"
+ },
+ {
+  "name": "cmd-primary-gate",
+  "file": "gatebashcommand.go",
+  "find": "\tif !primary {\n\t\twhole :=",
+  "replace": "\tif primary {\n\t\twhole :="
+ },
+ {
+  "name": "cmd-whole-spellings",
+  "file": "gatebashcommand.go",
+  "find": "\t\twhole := resolveOnBashSurface(command, nil, agentName, resolver)",
+  "replace": "\t\twhole := resolveOnBashSurface(command, []string{\"x\"}, agentName, resolver)"
+ },
+ {
+  "name": "cmd-whole-agent",
+  "file": "gatebashcommand.go",
+  "find": "\t\twhole := resolveOnBashSurface(command, nil, agentName, resolver)",
+  "replace": "\t\twhole := resolveOnBashSurface(command, nil, nil, resolver)"
+ },
+ {
+  "name": "cmd-whole-command",
+  "file": "gatebashcommand.go",
+  "find": "\t\twhole := resolveOnBashSurface(command, nil, agentName, resolver)",
+  "replace": "\t\twhole := resolveOnBashSurface(\"\", nil, agentName, resolver)"
+ },
+ {
+  "name": "cmd-whole-deny-state",
+  "file": "gatebashcommand.go",
+  "find": "\t\tif whole.State == \"deny\" {",
+  "replace": "\t\tif whole.State != \"allow\" {"
+ },
+ {
+  "name": "cmd-whole-deny-never",
+  "file": "gatebashcommand.go",
+  "find": "\t\tif whole.State == \"deny\" {\n\t\t\treturn whole\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cmd-whole-deny-ask",
+  "file": "gatebashcommand.go",
+  "find": "\t\tif whole.State == \"deny\" {",
+  "replace": "\t\tif whole.State == \"ask\" {"
+ },
+ {
+  "name": "cmd-whole-deny-returns-ask",
+  "file": "gatebashcommand.go",
+  "find": "\t\t\treturn whole\n",
+  "replace": "\t\t\twhole.State = \"ask\"\n\t\t\treturn whole\n"
+ },
+ {
+  "name": "cmd-zero-units",
+  "file": "gatebashcommand.go",
+  "find": "\t\tif len(commands) == 0 {\n\t\t\tpattern",
+  "replace": "\t\tif len(commands) == 1 {\n\t\t\tpattern"
+ },
+ {
+  "name": "cmd-zero-units-never",
+  "file": "gatebashcommand.go",
+  "find": "\t\tif len(commands) == 0 {\n\t\t\tpattern",
+  "replace": "\t\tif false {\n\t\t\tpattern"
+ },
+ {
+  "name": "cmd-zero-state",
+  "file": "gatebashcommand.go",
+  "find": "PermissionCheckResult{State: \"ask\", ToolName: \"bash\"",
+  "replace": "PermissionCheckResult{State: \"allow\", ToolName: \"bash\""
+ },
+ {
+  "name": "cmd-zero-deny",
+  "file": "gatebashcommand.go",
+  "find": "PermissionCheckResult{State: \"ask\", ToolName: \"bash\"",
+  "replace": "PermissionCheckResult{State: \"deny\", ToolName: \"bash\""
+ },
+ {
+  "name": "cmd-zero-toolname",
+  "file": "gatebashcommand.go",
+  "find": "ToolName: \"bash\", Source: \"bash\", Origin: \"builtin\", Command",
+  "replace": "ToolName: \"tool\", Source: \"bash\", Origin: \"builtin\", Command"
+ },
+ {
+  "name": "cmd-zero-source",
+  "file": "gatebashcommand.go",
+  "find": "ToolName: \"bash\", Source: \"bash\", Origin: \"builtin\", Command",
+  "replace": "ToolName: \"bash\", Source: \"tool\", Origin: \"builtin\", Command"
+ },
+ {
+  "name": "cmd-zero-origin",
+  "file": "gatebashcommand.go",
+  "find": "Source: \"bash\", Origin: \"builtin\", Command: &command",
+  "replace": "Source: \"bash\", Origin: \"global\", Command: &command"
+ },
+ {
+  "name": "cmd-zero-command",
+  "file": "gatebashcommand.go",
+  "find": "Origin: \"builtin\", Command: &command, MatchedPattern: &pattern",
+  "replace": "Origin: \"builtin\", MatchedPattern: &pattern"
+ },
+ {
+  "name": "cmd-zero-pattern",
+  "file": "gatebashcommand.go",
+  "find": "Origin: \"builtin\", Command: &command, MatchedPattern: &pattern",
+  "replace": "Origin: \"builtin\", Command: &command"
+ },
+ {
+  "name": "cmd-zero-sentinel",
+  "file": "gatebashcommand.go",
+  "find": "unparseableSentinel        = \"<unparseable-bash-command>\"",
+  "replace": "unparseableSentinel        = \"<unparseable>\""
+ },
+ {
+  "name": "cmd-unit-agent",
+  "file": "gatebashcommand.go",
+  "find": "results[i] = resolveBashCommandUnit(&commands[i], command, agentName, resolver)",
+  "replace": "results[i] = resolveBashCommandUnit(&commands[i], command, nil, resolver)"
+ },
+ {
+  "name": "cmd-unit-command",
+  "file": "gatebashcommand.go",
+  "find": "results[i] = resolveBashCommandUnit(&commands[i], command, agentName, resolver)",
+  "replace": "results[i] = resolveBashCommandUnit(&commands[i], commands[i].Text, agentName, resolver)"
+ },
+ {
+  "name": "cmd-units-first-only",
+  "file": "gatebashcommand.go",
+  "find": "\tfor i := range commands {\n\t\tresults[i] = ",
+  "replace": "\tfor i := range commands[:1] {\n\t\tresults[i] = "
+ },
+ {
+  "name": "cmd-units-last-skipped",
+  "file": "gatebashcommand.go",
+  "find": "\tresults := make([]PermissionCheckResult, len(commands))\n\tfor i := range commands {",
+  "replace": "\tresults := make([]PermissionCheckResult, len(commands))\n\tfor i := 0; i < len(commands)-1; i++ {"
+ },
+ {
+  "name": "cmd-results-empty-fallback",
+  "file": "gatebashcommand.go",
+  "find": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)\n\t}",
+  "replace": "\tif len(results) == 0 {\n\t\treturn PermissionCheckResult{State: \"allow\"}\n\t}"
+ },
+ {
+  "name": "cmd-results-empty-agent",
+  "file": "gatebashcommand.go",
+  "find": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, agentName, resolver)",
+  "replace": "\tif len(results) == 0 {\n\t\treturn resolveOnBashSurface(command, nil, nil, resolver)"
+ },
+ {
+  "name": "cmd-results-empty-never",
+  "file": "gatebashcommand.go",
+  "find": "\tif len(results) == 0 {",
+  "replace": "\tif len(results) == 99 {"
+ },
+ {
+  "name": "cmd-worst-first",
+  "file": "gatebashcommand.go",
+  "find": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.State })",
+  "replace": "return results[0]"
+ },
+ {
+  "name": "cmd-worst-last",
+  "file": "gatebashcommand.go",
+  "find": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.State })",
+  "replace": "return results[len(results)-1]"
+ },
+ {
+  "name": "cmd-worst-source",
+  "file": "gatebashcommand.go",
+  "find": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.State })",
+  "replace": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.Source })"
+ },
+ {
+  "name": "cmd-worst-origin",
+  "file": "gatebashcommand.go",
+  "find": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.State })",
+  "replace": "return mostRestrictiveOf(results, func(c PermissionCheckResult) string { return c.Origin })"
+ },
+ {
+  "name": "unit-spellings",
+  "file": "gatebashcommand.go",
+  "find": "base := resolveOnBashSurface(cmd.Text, cmd.Spellings, agentName, resolver)",
+  "replace": "base := resolveOnBashSurface(cmd.Text, nil, agentName, resolver)"
+ },
+ {
+  "name": "unit-text",
+  "file": "gatebashcommand.go",
+  "find": "base := resolveOnBashSurface(cmd.Text, cmd.Spellings, agentName, resolver)",
+  "replace": "base := resolveOnBashSurface(command, cmd.Spellings, agentName, resolver)"
+ },
+ {
+  "name": "unit-agent",
+  "file": "gatebashcommand.go",
+  "find": "base := resolveOnBashSurface(cmd.Text, cmd.Spellings, agentName, resolver)",
+  "replace": "base := resolveOnBashSurface(cmd.Text, cmd.Spellings, nil, resolver)"
+ },
+ {
+  "name": "unit-wrapper-kind",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.WrapperKind != \"\" && base.State == \"allow\" {",
+  "replace": "if base.State == \"allow\" {"
+ },
+ {
+  "name": "unit-wrapper-kind-only",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.WrapperKind != \"\" && base.State == \"allow\" {",
+  "replace": "if cmd.WrapperKind != \"\" {"
+ },
+ {
+  "name": "unit-wrapper-state",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.WrapperKind != \"\" && base.State == \"allow\" {",
+  "replace": "if cmd.WrapperKind != \"\" && base.State != \"deny\" {"
+ },
+ {
+  "name": "unit-wrapper-never",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.WrapperKind != \"\" && base.State == \"allow\" {",
+  "replace": "if false && base.State == \"allow\" {"
+ },
+ {
+  "name": "unit-wrapper-skips-unparsed",
+  "file": "gatebashcommand.go",
+  "find": "result := floorUnparsedBashUnit(cmd, command, floored)",
+  "replace": "result := floored"
+ },
+ {
+  "name": "unit-unparsed-uses-base",
+  "file": "gatebashcommand.go",
+  "find": "result := floorUnparsedBashUnit(cmd, command, floored)",
+  "replace": "result := floorUnparsedBashUnit(cmd, command, base)"
+ },
+ {
+  "name": "unit-context-dropped",
+  "file": "gatebashcommand.go",
+  "find": "\tif cmd.Context != \"\" {\n\t\tresult.CommandContext = BashCommandContext(cmd.Context)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "unit-context-always",
+  "file": "gatebashcommand.go",
+  "find": "\tif cmd.Context != \"\" {",
+  "replace": "\tif cmd.Context == \"\" {"
+ },
+ {
+  "name": "unit-executed-dropped",
+  "file": "gatebashcommand.go",
+  "find": "\tif cmd.ExecutedUnit != \"\" {\n\t\texecuted := cmd.ExecutedUnit\n\t\tresult.ExecutedUnit = &executed\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "unit-executed-negated",
+  "file": "gatebashcommand.go",
+  "find": "\tif cmd.ExecutedUnit != \"\" {\n\t\texecuted",
+  "replace": "\tif cmd.ExecutedUnit == \"\" {\n\t\texecuted"
+ },
+ {
+  "name": "unit-executed-text",
+  "file": "gatebashcommand.go",
+  "find": "executed := cmd.ExecutedUnit\n",
+  "replace": "executed := cmd.Text\n"
+ },
+ {
+  "name": "unit-executed-set-only-wrapper",
+  "file": "gatebashcommand.go",
+  "find": "\tif cmd.ExecutedUnit != \"\" {\n\t\texecuted",
+  "replace": "\tif cmd.ExecutedUnit != \"\" && cmd.WrapperKind == \"\" {\n\t\texecuted"
+ },
+ {
+  "name": "floor-parse-flag",
+  "file": "gatebashcommand.go",
+  "find": "if !cmd.ParseUnresolved || resolved.State != \"allow\" {",
+  "replace": "if cmd.ParseUnresolved || resolved.State != \"allow\" {"
+ },
+ {
+  "name": "floor-parse-flag-ignored",
+  "file": "gatebashcommand.go",
+  "find": "if !cmd.ParseUnresolved || resolved.State != \"allow\" {",
+  "replace": "if resolved.State != \"allow\" {"
+ },
+ {
+  "name": "floor-state-allow",
+  "file": "gatebashcommand.go",
+  "find": "if !cmd.ParseUnresolved || resolved.State != \"allow\" {",
+  "replace": "if !cmd.ParseUnresolved || resolved.State == \"deny\" {"
+ },
+ {
+  "name": "floor-state-ask",
+  "file": "gatebashcommand.go",
+  "find": "if !cmd.ParseUnresolved || resolved.State != \"allow\" {",
+  "replace": "if !cmd.ParseUnresolved {"
+ },
+ {
+  "name": "floor-deny-floored",
+  "file": "gatebashcommand.go",
+  "find": "if !cmd.ParseUnresolved || resolved.State != \"allow\" {",
+  "replace": "if !cmd.ParseUnresolved || resolved.State == \"ask\" {"
+ },
+ {
+  "name": "floor-state-deny",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.State = \"ask\"\n\tresolved.Command = &command",
+  "replace": "\tresolved.State = \"deny\"\n\tresolved.Command = &command"
+ },
+ {
+  "name": "floor-state-kept",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.State = \"ask\"\n\tresolved.Command = &command",
+  "replace": "\tresolved.Command = &command"
+ },
+ {
+  "name": "floor-command-whole",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.Command = &command\n",
+  "replace": ""
+ },
+ {
+  "name": "floor-pattern-kept",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.MatchedPattern = &pattern\n\treturn resolved",
+  "replace": "\treturn resolved"
+ },
+ {
+  "name": "floor-pattern-sentinel",
+  "file": "gatebashcommand.go",
+  "find": "unparsedSubtreeSentinel    = \"<unparsed-bash-subtree>\"",
+  "replace": "unparsedSubtreeSentinel    = \"<unparsed>\""
+ },
+ {
+  "name": "floor-pattern-opaque",
+  "file": "gatebashcommand.go",
+  "find": "\tpattern := unparsedSubtreeSentinel\n",
+  "replace": "\tpattern := opaqueWrapperSentinel\n"
+ },
+ {
+  "name": "floor-source-reset",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.MatchedPattern = &pattern\n\treturn resolved",
+  "replace": "\tresolved.MatchedPattern = &pattern\n\tresolved.Source = \"bash\"\n\treturn resolved"
+ },
+ {
+  "name": "floor-origin-reset",
+  "file": "gatebashcommand.go",
+  "find": "\tresolved.MatchedPattern = &pattern\n\treturn resolved",
+  "replace": "\tresolved.MatchedPattern = &pattern\n\tresolved.Origin = \"builtin\"\n\treturn resolved"
+ },
+ {
+  "name": "wrap-exempt-and",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.FloorExemption == \"\" || cmd.ExecutedUnit == \"\" {",
+  "replace": "if cmd.FloorExemption == \"\" && cmd.ExecutedUnit == \"\" {"
+ },
+ {
+  "name": "wrap-exempt-only-flag",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.FloorExemption == \"\" || cmd.ExecutedUnit == \"\" {",
+  "replace": "if cmd.FloorExemption == \"\" {"
+ },
+ {
+  "name": "wrap-exempt-only-inner",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.FloorExemption == \"\" || cmd.ExecutedUnit == \"\" {",
+  "replace": "if cmd.ExecutedUnit == \"\" {"
+ },
+ {
+  "name": "wrap-exempt-never",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.FloorExemption == \"\" || cmd.ExecutedUnit == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "wrap-exempt-always",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.FloorExemption == \"\" || cmd.ExecutedUnit == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "wrap-sentinel-default",
+  "file": "gatebashcommand.go",
+  "find": "\t\tsentinel := opaqueWrapperSentinel\n",
+  "replace": "\t\tsentinel := indirectionWrapperSentinel\n"
+ },
+ {
+  "name": "wrap-kind-test",
+  "file": "gatebashcommand.go",
+  "find": "if cmd.WrapperKind == bashanalysis.WrapperIndirection {",
+  "replace": "if cmd.WrapperKind == bashanalysis.WrapperOpaquePayload {"
+ },
+ {
+  "name": "wrap-kind-sentinel",
+  "file": "gatebashcommand.go",
+  "find": "\t\t\tsentinel = indirectionWrapperSentinel\n",
+  "replace": "\t\t\tsentinel = opaqueWrapperSentinel\n"
+ },
+ {
+  "name": "wrap-opaque-text",
+  "file": "gatebashcommand.go",
+  "find": "opaqueWrapperSentinel      = \"<opaque-bash-wrapper>\"",
+  "replace": "opaqueWrapperSentinel      = \"<opaque>\""
+ },
+ {
+  "name": "wrap-indirection-text",
+  "file": "gatebashcommand.go",
+  "find": "indirectionWrapperSentinel = \"<indirection-bash-wrapper>\"",
+  "replace": "indirectionWrapperSentinel = \"<indirection>\""
+ },
+ {
+  "name": "wrap-state-kept",
+  "file": "gatebashcommand.go",
+  "find": "\t\tbase.State = \"ask\"\n",
+  "replace": ""
+ },
+ {
+  "name": "wrap-state-deny",
+  "file": "gatebashcommand.go",
+  "find": "\t\tbase.State = \"ask\"\n",
+  "replace": "\t\tbase.State = \"deny\"\n"
+ },
+ {
+  "name": "wrap-pattern-kept",
+  "file": "gatebashcommand.go",
+  "find": "\t\tbase.MatchedPattern = &sentinel\n",
+  "replace": ""
+ },
+ {
+  "name": "wrap-returns-inner",
+  "file": "gatebashcommand.go",
+  "find": "\t\tbase.MatchedPattern = &sentinel\n\t\treturn base",
+  "replace": "\t\tbase.MatchedPattern = &sentinel\n\t\treturn resolveOnBashSurface(cmd.ExecutedUnit, nil, agentName, resolver)"
+ },
+ {
+  "name": "wrap-inner-text",
+  "file": "gatebashcommand.go",
+  "find": "inner := resolveOnBashSurface(cmd.ExecutedUnit, nil, agentName, resolver)",
+  "replace": "inner := resolveOnBashSurface(cmd.Text, nil, agentName, resolver)"
+ },
+ {
+  "name": "wrap-inner-agent",
+  "file": "gatebashcommand.go",
+  "find": "inner := resolveOnBashSurface(cmd.ExecutedUnit, nil, agentName, resolver)",
+  "replace": "inner := resolveOnBashSurface(cmd.ExecutedUnit, nil, nil, resolver)"
+ },
+ {
+  "name": "wrap-inner-spellings",
+  "file": "gatebashcommand.go",
+  "find": "inner := resolveOnBashSurface(cmd.ExecutedUnit, nil, agentName, resolver)",
+  "replace": "inner := resolveOnBashSurface(cmd.ExecutedUnit, cmd.Spellings, agentName, resolver)"
+ },
+ {
+  "name": "wrap-inner-command",
+  "file": "gatebashcommand.go",
+  "find": "\tinner.Command = base.Command\n",
+  "replace": ""
+ },
+ {
+  "name": "wrap-inner-command-text",
+  "file": "gatebashcommand.go",
+  "find": "\tinner.Command = base.Command\n",
+  "replace": "\tinner.Command = &cmd.ExecutedUnit\n"
+ },
+ {
+  "name": "wrap-inner-exemption",
+  "file": "gatebashcommand.go",
+  "find": "\tinner.FloorExemption = FloorExemption(cmd.FloorExemption)\n",
+  "replace": ""
+ },
+ {
+  "name": "wrap-inner-allow",
+  "file": "gatebashcommand.go",
+  "find": "\tinner.FloorExemption = FloorExemption(cmd.FloorExemption)\n\treturn inner",
+  "replace": "\tinner.FloorExemption = FloorExemption(cmd.FloorExemption)\n\treturn base"
+ },
+ {
+  "name": "empty-split",
+  "file": "gatebashcommand.go",
+  "find": "strings.Split(command, \"\\n\")",
+  "replace": "strings.Split(command, \";\")"
+ },
+ {
+  "name": "empty-trim",
+  "file": "gatebashcommand.go",
+  "find": "\t\tline = jsTrim(line)\n",
+  "replace": ""
+ },
+ {
+  "name": "empty-comment-char",
+  "file": "gatebashcommand.go",
+  "find": "line[0] != '#'",
+  "replace": "line[0] != ';'"
+ },
+ {
+  "name": "empty-comment-negated",
+  "file": "gatebashcommand.go",
+  "find": "line[0] != '#'",
+  "replace": "line[0] == '#'"
+ },
+ {
+  "name": "empty-blank-line",
+  "file": "gatebashcommand.go",
+  "find": "if line != \"\" && line[0] != '#' {",
+  "replace": "if line[0] != '#' {"
+ },
+ {
+  "name": "empty-and-or",
+  "file": "gatebashcommand.go",
+  "find": "if line != \"\" && line[0] != '#' {",
+  "replace": "if line != \"\" || line[0] != '#' {"
+ },
+ {
+  "name": "empty-result",
+  "file": "gatebashcommand.go",
+  "find": "\t\t\treturn false\n\t\t}\n\t}\n\treturn true",
+  "replace": "\t\t\treturn false\n\t\t}\n\t}\n\treturn false"
+ },
+ {
+  "name": "empty-first-line",
+  "file": "gatebashcommand.go",
+  "find": "\t\t\treturn false\n\t\t}\n\t}\n\treturn true",
+  "replace": "\t\t\treturn false\n\t\t}\n\t\tbreak\n\t}\n\treturn true"
+ },
+ {
+  "name": "surface-spellings-default",
+  "file": "gatebashcommand.go",
+  "find": "\tif spellings == nil {\n\t\tspellings = noBashSpellings\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "surface-surface",
+  "file": "gatebashcommand.go",
+  "find": "BashCommandAccessIntent{Surface: \"bash\", Command: command",
+  "replace": "BashCommandAccessIntent{Surface: \"tool\", Command: command"
+ },
+ {
+  "name": "surface-command",
+  "file": "gatebashcommand.go",
+  "find": "Command: command, Spellings: spellings, AgentName: agentName})",
+  "replace": "Command: \"\", Spellings: spellings, AgentName: agentName})"
+ },
+ {
+  "name": "surface-spellings",
+  "file": "gatebashcommand.go",
+  "find": "Spellings: spellings, AgentName: agentName})",
+  "replace": "Spellings: nil, AgentName: agentName})"
+ },
+ {
+  "name": "surface-agent",
+  "file": "gatebashcommand.go",
+  "find": "Spellings: spellings, AgentName: agentName})",
+  "replace": "Spellings: spellings})"
+ },
+ {
+  "name": "path-nil-program",
+  "file": "gatebashpath.go",
+  "find": "func DescribeBashPathGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {\n\tif program == nil {\n\t\treturn nil\n\t}",
+  "replace": "func DescribeBashPathGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {"
+ },
+ {
+  "name": "path-no-candidates",
+  "file": "gatebashpath.go",
+  "find": "\tcandidates := program.PathRuleCandidates()\n\tif len(candidates) == 0 {\n\t\treturn nil\n\t}",
+  "replace": "\tcandidates := program.PathRuleCandidates()"
+ },
+ {
+  "name": "path-no-candidates-flip",
+  "file": "gatebashpath.go",
+  "find": "\tcandidates := program.PathRuleCandidates()\n\tif len(candidates) == 0 {",
+  "replace": "\tcandidates := program.PathRuleCandidates()\n\tif len(candidates) != 0 {"
+ },
+ {
+  "name": "path-surface-family",
+  "file": "gatebashpath.go",
+  "find": "surface := CapabilitySurfaceForEffect(\"path\", c.Effect.Effect)",
+  "replace": "surface := \"path\""
+ },
+ {
+  "name": "path-surface-read",
+  "file": "gatebashpath.go",
+  "find": "surface := CapabilitySurfaceForEffect(\"path\", c.Effect.Effect)",
+  "replace": "surface := \"path_read\""
+ },
+ {
+  "name": "path-surface-family-name",
+  "file": "gatebashpath.go",
+  "find": "surface := CapabilitySurfaceForEffect(\"path\", c.Effect.Effect)",
+  "replace": "surface := CapabilitySurfaceForEffect(\"external_directory\", c.Effect.Effect)"
+ },
+ {
+  "name": "path-resolve-path",
+  "file": "gatebashpath.go",
+  "find": "AccessPathAccessIntent{Surface: surface, Path: c.Path, AgentName: tcc.AgentName})\n\n\t\t// No explicit",
+  "replace": "AccessPathAccessIntent{Surface: surface, Path: AccessPathForLiteral(c.Token), AgentName: tcc.AgentName})\n\n\t\t// No explicit"
+ },
+ {
+  "name": "path-resolve-agent",
+  "file": "gatebashpath.go",
+  "find": "AccessPathAccessIntent{Surface: surface, Path: c.Path, AgentName: tcc.AgentName})\n\n\t\t// No explicit",
+  "replace": "AccessPathAccessIntent{Surface: surface, Path: c.Path})\n\n\t\t// No explicit"
+ },
+ {
+  "name": "path-universal-default",
+  "file": "gatebashpath.go",
+  "find": "if check.MatchedPattern == nil && check.Source != \"session\" {",
+  "replace": "if check.Source != \"session\" {"
+ },
+ {
+  "name": "path-universal-default-or",
+  "file": "gatebashpath.go",
+  "find": "if check.MatchedPattern == nil && check.Source != \"session\" {",
+  "replace": "if check.MatchedPattern == nil || check.Source != \"session\" {"
+ },
+ {
+  "name": "path-universal-default-session",
+  "file": "gatebashpath.go",
+  "find": "if check.MatchedPattern == nil && check.Source != \"session\" {",
+  "replace": "if check.MatchedPattern == nil {"
+ },
+ {
+  "name": "path-universal-default-never",
+  "file": "gatebashpath.go",
+  "find": "if check.MatchedPattern == nil && check.Source != \"session\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "path-universal-covered",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tallSessionCovered = false\n\t\t\tcontinue\n",
+  "replace": "\t\t\tcontinue\n"
+ },
+ {
+  "name": "path-universal-continue",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tallSessionCovered = false\n\t\t\tcontinue\n",
+  "replace": "\t\t\tallSessionCovered = false\n"
+ },
+ {
+  "name": "path-source-covered",
+  "file": "gatebashpath.go",
+  "find": "\t\tif check.Source != \"session\" {\n\t\t\tallSessionCovered = false\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-source-covered-flip",
+  "file": "gatebashpath.go",
+  "find": "\t\tif check.Source != \"session\" {\n\t\t\tallSessionCovered = false\n\t\t}",
+  "replace": "\t\tif check.Source == \"session\" {\n\t\t\tallSessionCovered = false\n\t\t}"
+ },
+ {
+  "name": "path-covered-init",
+  "file": "gatebashpath.go",
+  "find": "\tallSessionCovered := true\n",
+  "replace": "\tallSessionCovered := false\n"
+ },
+ {
+  "name": "path-deny-state",
+  "file": "gatebashpath.go",
+  "find": "\t\tif check.State == \"deny\" {\n\t\t\tuncovered",
+  "replace": "\t\tif check.State == \"ask\" {\n\t\t\tuncovered"
+ },
+ {
+  "name": "path-deny-break",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n\t\t\tbreak\n",
+  "replace": "\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n"
+ },
+ {
+  "name": "path-deny-not-collected",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n\t\t\tbreak\n",
+  "replace": "\t\t\tbreak\n"
+ },
+ {
+  "name": "path-ask-state",
+  "file": "gatebashpath.go",
+  "find": "\t\tif check.State == \"ask\" {\n\t\t\tuncovered",
+  "replace": "\t\tif check.State != \"allow\" {\n\t\t\tuncovered"
+ },
+ {
+  "name": "path-ask-not-collected",
+  "file": "gatebashpath.go",
+  "find": "\t\tif check.State == \"ask\" {\n\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-ask-surface",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tuncovered = append(uncovered, uncoveredToken{c, surface, check})\n\t\t}\n\t}",
+  "replace": "\t\t\tuncovered = append(uncovered, uncoveredToken{c, \"path\", check})\n\t\t}\n\t}"
+ },
+ {
+  "name": "path-bypass-never",
+  "file": "gatebashpath.go",
+  "find": "\tif allSessionCovered {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "path-bypass-always",
+  "file": "gatebashpath.go",
+  "find": "\tif allSessionCovered {",
+  "replace": "\tif allSessionCovered || len(uncovered) == 0 {"
+ },
+ {
+  "name": "path-bypass-event",
+  "file": "gatebashpath.go",
+  "find": "Event: \"permission_request.session_approved\", Details: details},\n\t\t}\n\t}\n\n\tif len(uncovered)",
+  "replace": "Event: \"permission_request.session\", Details: details},\n\t\t}\n\t}\n\n\tif len(uncovered)"
+ },
+ {
+  "name": "path-bypass-kind",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"path\"}",
+  "replace": "DecisionSource{Kind: \"session\", Surface: \"path\"}"
+ },
+ {
+  "name": "path-bypass-surface",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"path\"}",
+  "replace": "DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"}"
+ },
+ {
+  "name": "path-bypass-pattern",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"path\"}",
+  "replace": "DecisionSource{Kind: \"session_approval\", Surface: \"path\", Pattern: func() *string { s := \"*\"; return &s }()}"
+ },
+ {
+  "name": "path-bypass-source",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"source\", \"tool_call\")\n\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\"",
+  "replace": "\t\tdetails.set(\"source\", \"skill_read\")\n\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\""
+ },
+ {
+  "name": "path-bypass-toolcallid",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\"",
+  "replace": "\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\""
+ },
+ {
+  "name": "path-bypass-toolname",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\"",
+  "replace": "\t\tdetails.set(\"toolName\", \"bash\")\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\""
+ },
+ {
+  "name": "path-bypass-agent",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\"",
+  "replace": "\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\""
+ },
+ {
+  "name": "path-bypass-command",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"tokens\"",
+  "replace": "\t\tdetails.set(\"tokens\""
+ },
+ {
+  "name": "path-bypass-tokens",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"tokens\", stringsAsJSON(tokens))\n",
+  "replace": ""
+ },
+ {
+  "name": "path-bypass-resolution",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"resolution\", \"session_approved\")\n\t\treturn &GateBypass{\n\t\t\tDecidedBy: DecisionSource{Kind: \"session_approval\", Surface: \"path\"}",
+  "replace": "\t\tdetails.set(\"resolution\", \"policy_allow\")\n\t\treturn &GateBypass{\n\t\t\tDecidedBy: DecisionSource{Kind: \"session_approval\", Surface: \"path\"}"
+ },
+ {
+  "name": "path-bypass-decision",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tLog:       &GateBypassLog{Event: \"permission_request.session_approved\", Details: details},\n\t\t}\n\t}\n\n\tif len(uncovered)",
+  "replace": "\t\t\tLog:       &GateBypassLog{Event: \"permission_request.session_approved\", Details: details},\n\t\t\tDecision:  &DecisionEventFacts{Surface: \"path\"},\n\t\t}\n\t}\n\n\tif len(uncovered)"
+ },
+ {
+  "name": "path-none-uncovered",
+  "file": "gatebashpath.go",
+  "find": "\tif len(uncovered) == 0 {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "path-worst-first",
+  "file": "gatebashpath.go",
+  "find": "worst := uncovered[firstMostRestrictive(states)]",
+  "replace": "worst := uncovered[0]"
+ },
+ {
+  "name": "path-worst-last",
+  "file": "gatebashpath.go",
+  "find": "worst := uncovered[firstMostRestrictive(states)]",
+  "replace": "worst := uncovered[len(uncovered)-1]"
+ },
+ {
+  "name": "path-worst-state",
+  "file": "gatebashpath.go",
+  "find": "\t\tstates[i] = u.check.State\n\t}\n\tworst := uncovered",
+  "replace": "\t\tstates[i] = u.check.Source\n\t}\n\tworst := uncovered"
+ },
+ {
+  "name": "path-patterns-token",
+  "file": "gatebashpath.go",
+  "find": "patterns := normalizer.ApprovalPatternsFor(worst.candidate.Path)",
+  "replace": "patterns := []string{token}"
+ },
+ {
+  "name": "path-payload-tool",
+  "file": "gatebashpath.go",
+  "find": "ToolName: tcc.ToolName, PathValue: token, AgentName: tcc.AgentName, MatchedPattern: check.MatchedPattern, Surface: surface,",
+  "replace": "ToolName: \"bash\", PathValue: token, AgentName: tcc.AgentName, MatchedPattern: check.MatchedPattern, Surface: surface,"
+ },
+ {
+  "name": "path-payload-value",
+  "file": "gatebashpath.go",
+  "find": "PathValue: token, AgentName: tcc.AgentName",
+  "replace": "PathValue: command, AgentName: tcc.AgentName"
+ },
+ {
+  "name": "path-payload-agent",
+  "file": "gatebashpath.go",
+  "find": "PathValue: token, AgentName: tcc.AgentName, MatchedPattern",
+  "replace": "PathValue: token, MatchedPattern"
+ },
+ {
+  "name": "path-payload-pattern",
+  "file": "gatebashpath.go",
+  "find": "AgentName: tcc.AgentName, MatchedPattern: check.MatchedPattern, Surface: surface,\n\t})\n\ttoolCallID",
+  "replace": "AgentName: tcc.AgentName, Surface: surface,\n\t})\n\ttoolCallID"
+ },
+ {
+  "name": "path-payload-surface",
+  "file": "gatebashpath.go",
+  "find": "MatchedPattern: check.MatchedPattern, Surface: surface,\n\t})\n\ttoolCallID",
+  "replace": "MatchedPattern: check.MatchedPattern, Surface: \"path\",\n\t})\n\ttoolCallID"
+ },
+ {
+  "name": "path-payload-resolved",
+  "file": "gatebashpath.go",
+  "find": "PathValue: token, AgentName",
+  "replace": "PathValue: token, ResolvedPath: func() *string { s := token; return &s }(), AgentName"
+ },
+ {
+  "name": "path-input-key",
+  "file": "gatebashpath.go",
+  "find": "\tinput.set(\"path\", token)\n",
+  "replace": "\tinput.set(\"command\", token)\n"
+ },
+ {
+  "name": "path-input-value",
+  "file": "gatebashpath.go",
+  "find": "\tinput.set(\"path\", token)\n",
+  "replace": "\tinput.set(\"path\", command)\n"
+ },
+ {
+  "name": "path-access-facts",
+  "file": "gatebashpath.go",
+  "find": "access := AccessFactsFromPath(surface, worst.candidate.Path)",
+  "replace": "access := AccessFactsFromPath(surface, AccessPathForLiteral(token))"
+ },
+ {
+  "name": "path-access-surface",
+  "file": "gatebashpath.go",
+  "find": "access := AccessFactsFromPath(surface, worst.candidate.Path)",
+  "replace": "access := AccessFactsFromPath(\"path\", worst.candidate.Path)"
+ },
+ {
+  "name": "path-log-source",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"source\", \"tool_call\")\n\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\"",
+  "replace": "\tlogContext.set(\"source\", \"skill_read\")\n\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\""
+ },
+ {
+  "name": "path-log-toolcallid",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\"",
+  "replace": "\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\""
+ },
+ {
+  "name": "path-log-agent",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\"",
+  "replace": "\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\""
+ },
+ {
+  "name": "path-log-command",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"command\", command)\n\tlogContext.set(\"path\", token)",
+  "replace": "\tlogContext.set(\"path\", token)"
+ },
+ {
+  "name": "path-log-path",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"path\", token)\n",
+  "replace": "\tlogContext.set(\"path\", command)\n"
+ },
+ {
+  "name": "path-log-effect",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"effect\", string(worst.candidate.Effect.Effect))\n\tlogContext.set(\"effectSource\", string(worst.candidate.Effect.Source))\n\n\treturn",
+  "replace": "\tlogContext.set(\"effectSource\", string(worst.candidate.Effect.Source))\n\n\treturn"
+ },
+ {
+  "name": "path-log-effectsource",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"effectSource\", string(worst.candidate.Effect.Source))\n\n\treturn",
+  "replace": "\tlogContext.set(\"effect\", string(worst.candidate.Effect.Effect))\n\n\treturn"
+ },
+ {
+  "name": "path-log-effect-swapped",
+  "file": "gatebashpath.go",
+  "find": "logContext.set(\"effect\", string(worst.candidate.Effect.Effect))",
+  "replace": "logContext.set(\"effect\", string(worst.candidate.Effect.Source))"
+ },
+ {
+  "name": "path-prompt-source",
+  "file": "gatebashpath.go",
+  "find": "PromptPermissionDetails{\n\t\t\tSource: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "PromptPermissionDetails{\n\t\t\tSource: \"skill_read\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-prompt-agent",
+  "file": "gatebashpath.go",
+  "find": "Source: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "Source: \"tool_call\", ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-prompt-command",
+  "file": "gatebashpath.go",
+  "find": "ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "ToolName: &toolName, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-prompt-access",
+  "file": "gatebashpath.go",
+  "find": "Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "Command: &command,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-prompt-toolcallid",
+  "file": "gatebashpath.go",
+  "find": "ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-decision-surface",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: token},\n\t\tPreCheck:   &check,\n\t}\n}\n\n// DescribeBashExternal",
+  "replace": "Decision:   GateDecision{Surface: \"path\", Value: token},\n\t\tPreCheck:   &check,\n\t}\n}\n\n// DescribeBashExternal"
+ },
+ {
+  "name": "path-decision-value",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: token},\n\t\tPreCheck:   &check,\n\t}\n}\n\n// DescribeBashExternal",
+  "replace": "Decision:   GateDecision{Surface: surface, Value: command},\n\t\tPreCheck:   &check,\n\t}\n}\n\n// DescribeBashExternal"
+ },
+ {
+  "name": "path-precheck",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: token},\n\t\tPreCheck:   &check,\n\t}\n}\n\n// DescribeBashExternal",
+  "replace": "Decision:   GateDecision{Surface: surface, Value: token},\n\t}\n}\n\n// DescribeBashExternal"
+ },
+ {
+  "name": "path-session-approval",
+  "file": "gatebashpath.go",
+  "find": "\t\tSessionApproval: SessionApprovalForPatterns(surface, patterns),\n\t\tPromptDetails: PromptPermissionDetails{\n\t\t\tSource: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}",
+  "replace": "\t\tSessionApproval: SessionApprovalForPatterns(\"path\", patterns),\n\t\tPromptDetails: PromptPermissionDetails{\n\t\t\tSource: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: token}"
+ },
+ {
+  "name": "path-descriptor-surface",
+  "file": "gatebashpath.go",
+  "find": "\treturn &GateDescriptor{\n\t\tSurface:         surface,\n\t\tInput:           input,",
+  "replace": "\treturn &GateDescriptor{\n\t\tSurface:         \"path\",\n\t\tInput:           input,"
+ },
+ {
+  "name": "ext-nil-program",
+  "file": "gatebashpath.go",
+  "find": "func DescribeBashExternalDirectoryGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {\n\tif program == nil {\n\t\treturn nil\n\t}",
+  "replace": "func DescribeBashExternalDirectoryGate(tcc ToolCallContext, program *BashProgram, resolver ScopedPermissionResolver, normalizer *PathNormalizer) GateResult {"
+ },
+ {
+  "name": "ext-no-accesses",
+  "file": "gatebashpath.go",
+  "find": "\taccesses := program.ExternalAccesses()\n\tif len(accesses) == 0 {\n\t\treturn nil\n\t}",
+  "replace": "\taccesses := program.ExternalAccesses()"
+ },
+ {
+  "name": "ext-agent",
+  "file": "gatebashpath.go",
+  "find": "coverage := SelectUncoveredExternalPaths(accesses, resolver, tcc.AgentName)",
+  "replace": "coverage := SelectUncoveredExternalPaths(accesses, resolver, nil)"
+ },
+ {
+  "name": "ext-all-covered",
+  "file": "gatebashpath.go",
+  "find": "\tif len(coverage.Uncovered) == 0 {\n\t\tif len(coverage.SessionCovered) == 0 {",
+  "replace": "\tif len(coverage.Uncovered) != 0 {\n\t\tif len(coverage.SessionCovered) == 0 {"
+ },
+ {
+  "name": "ext-no-session",
+  "file": "gatebashpath.go",
+  "find": "\t\tif len(coverage.SessionCovered) == 0 {\n\t\t\treturn nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-no-session-flip",
+  "file": "gatebashpath.go",
+  "find": "\t\tif len(coverage.SessionCovered) == 0 {",
+  "replace": "\t\tif len(coverage.SessionCovered) != 0 {"
+ },
+ {
+  "name": "ext-covered-values",
+  "file": "gatebashpath.go",
+  "find": "covered[i] = p.Value()",
+  "replace": "covered[i] = command"
+ },
+ {
+  "name": "ext-bypass-event",
+  "file": "gatebashpath.go",
+  "find": "\t\t\tDecidedBy: DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"},\n\t\t\tLog:       &GateBypassLog{Event: \"permission_request.session_approved\"",
+  "replace": "\t\t\tDecidedBy: DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"},\n\t\t\tLog:       &GateBypassLog{Event: \"permission_request.approved\""
+ },
+ {
+  "name": "ext-bypass-kind",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"}",
+  "replace": "DecisionSource{Kind: \"session\", Surface: \"external_directory\"}"
+ },
+ {
+  "name": "ext-bypass-surface",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"}",
+  "replace": "DecisionSource{Kind: \"session_approval\", Surface: \"path\"}"
+ },
+ {
+  "name": "ext-bypass-pattern",
+  "file": "gatebashpath.go",
+  "find": "DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\"}",
+  "replace": "DecisionSource{Kind: \"session_approval\", Surface: \"external_directory\", Pattern: func() *string { s := \"*\"; return &s }()}"
+ },
+ {
+  "name": "ext-bypass-source",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"source\", \"tool_call\")\n\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)",
+  "replace": "\t\tdetails.set(\"source\", \"skill_read\")\n\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)"
+ },
+ {
+  "name": "ext-bypass-toolcallid",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"toolCallId\", tcc.ToolCallID)\n\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)",
+  "replace": "\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)"
+ },
+ {
+  "name": "ext-bypass-toolname",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"toolName\", tcc.ToolName)\n\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)",
+  "replace": "\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)"
+ },
+ {
+  "name": "ext-bypass-agent",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"agentName\", strOrNull(tcc.AgentName))\n\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)",
+  "replace": "\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)"
+ },
+ {
+  "name": "ext-bypass-command",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"command\", command)\n\t\tdetails.set(\"externalPaths\", covered)",
+  "replace": "\t\tdetails.set(\"externalPaths\", covered)"
+ },
+ {
+  "name": "ext-bypass-paths",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"externalPaths\", covered)\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-bypass-resolution",
+  "file": "gatebashpath.go",
+  "find": "\t\tdetails.set(\"externalPaths\", covered)\n\t\tdetails.set(\"resolution\", \"session_approved\")",
+  "replace": "\t\tdetails.set(\"externalPaths\", covered)\n\t\tdetails.set(\"resolution\", \"policy_allow\")"
+ },
+ {
+  "name": "ext-bypass-decision",
+  "file": "gatebashpath.go",
+  "find": "Event: \"permission_request.session_approved\", Details: details},\n\t\t}\n\t}\n\n\tstates",
+  "replace": "Event: \"permission_request.session_approved\", Details: details},\n\t\t\tDecision:  &DecisionEventFacts{Surface: \"external_directory\"},\n\t\t}\n\t}\n\n\tstates"
+ },
+ {
+  "name": "ext-states",
+  "file": "gatebashpath.go",
+  "find": "\t\tstates[i] = u.Check.State\n",
+  "replace": "\t\tstates[i] = u.Check.Source\n"
+ },
+ {
+  "name": "ext-uncovered-values",
+  "file": "gatebashpath.go",
+  "find": "uncoveredPaths[i] = u.Path.Value()",
+  "replace": "uncoveredPaths[i] = command"
+ },
+ {
+  "name": "ext-disclosure-path",
+  "file": "gatebashpath.go",
+  "find": "disclosure := ExternalPathDisclosure{Path: u.Path.Value()}",
+  "replace": "disclosure := ExternalPathDisclosure{Path: command}"
+ },
+ {
+  "name": "ext-disclosure-alias",
+  "file": "gatebashpath.go",
+  "find": "\t\tif alias, ok := u.Path.ResolvedAlias(); ok {\n\t\t\tdisclosure.ResolvedPath = &alias\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-disclosure-alias-flip",
+  "file": "gatebashpath.go",
+  "find": "if alias, ok := u.Path.ResolvedAlias(); ok {",
+  "replace": "if alias, ok := u.Path.ResolvedAlias(); !ok {"
+ },
+ {
+  "name": "ext-worst-first",
+  "file": "gatebashpath.go",
+  "find": "worst := coverage.Uncovered[firstMostRestrictive(states)]",
+  "replace": "worst := coverage.Uncovered[0]"
+ },
+ {
+  "name": "ext-worst-last",
+  "file": "gatebashpath.go",
+  "find": "worst := coverage.Uncovered[firstMostRestrictive(states)]",
+  "replace": "worst := coverage.Uncovered[len(coverage.Uncovered)-1]"
+ },
+ {
+  "name": "ext-payload-command",
+  "file": "gatebashpath.go",
+  "find": "BashExternalDirectoryAskFacts{\n\t\tCommand: command,",
+  "replace": "BashExternalDirectoryAskFacts{\n\t\tCommand: \"\","
+ },
+ {
+  "name": "ext-payload-paths",
+  "file": "gatebashpath.go",
+  "find": "ExternalPaths: disclosures, Cwd: tcc.Cwd",
+  "replace": "Cwd: tcc.Cwd"
+ },
+ {
+  "name": "ext-payload-cwd",
+  "file": "gatebashpath.go",
+  "find": "ExternalPaths: disclosures, Cwd: tcc.Cwd",
+  "replace": "ExternalPaths: disclosures, Cwd: \"\""
+ },
+ {
+  "name": "ext-payload-agent",
+  "file": "gatebashpath.go",
+  "find": "Cwd: tcc.Cwd, AgentName: tcc.AgentName, ToolName: tcc.ToolName,",
+  "replace": "Cwd: tcc.Cwd, ToolName: tcc.ToolName,"
+ },
+ {
+  "name": "ext-payload-tool",
+  "file": "gatebashpath.go",
+  "find": "AgentName: tcc.AgentName, ToolName: tcc.ToolName,\n\t\tMatchedPattern",
+  "replace": "AgentName: tcc.AgentName, ToolName: \"bash\",\n\t\tMatchedPattern"
+ },
+ {
+  "name": "ext-payload-pattern",
+  "file": "gatebashpath.go",
+  "find": "\t\tMatchedPattern: preCheck.MatchedPattern, Surface: surface,\n\t})\n\tvar grants",
+  "replace": "\t\tSurface: surface,\n\t})\n\tvar grants"
+ },
+ {
+  "name": "ext-payload-surface",
+  "file": "gatebashpath.go",
+  "find": "MatchedPattern: preCheck.MatchedPattern, Surface: surface,\n\t})\n\tvar grants",
+  "replace": "MatchedPattern: preCheck.MatchedPattern, Surface: \"external_directory\",\n\t})\n\tvar grants"
+ },
+ {
+  "name": "ext-grants-surface",
+  "file": "gatebashpath.go",
+  "find": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: pattern})",
+  "replace": "grants = append(grants, ApprovalGrant{Surface: \"external_directory\", Pattern: pattern})"
+ },
+ {
+  "name": "ext-grants-worst-surface",
+  "file": "gatebashpath.go",
+  "find": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: pattern})",
+  "replace": "grants = append(grants, ApprovalGrant{Surface: surface, Pattern: pattern})"
+ },
+ {
+  "name": "ext-grants-pattern",
+  "file": "gatebashpath.go",
+  "find": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: pattern})",
+  "replace": "grants = append(grants, ApprovalGrant{Surface: u.Surface, Pattern: u.Path.Value()})"
+ },
+ {
+  "name": "ext-grants-only-worst",
+  "file": "gatebashpath.go",
+  "find": "\tfor _, u := range coverage.Uncovered {\n\t\tfor _, pattern",
+  "replace": "\tfor _, u := range []UncoveredExternalPath{worst} {\n\t\tfor _, pattern"
+ },
+ {
+  "name": "ext-grants-normalizer",
+  "file": "gatebashpath.go",
+  "find": "range normalizer.ApprovalPatternsFor(u.Path)",
+  "replace": "range normalizer.ApprovalPatternsFor(worst.Path)"
+ },
+ {
+  "name": "ext-access-path",
+  "file": "gatebashpath.go",
+  "find": "access := AccessFactsFromPath(surface, worst.Path)",
+  "replace": "access := AccessFactsFromPath(surface, coverage.Uncovered[0].Path)"
+ },
+ {
+  "name": "ext-access-surface",
+  "file": "gatebashpath.go",
+  "find": "access := AccessFactsFromPath(surface, worst.Path)",
+  "replace": "access := AccessFactsFromPath(\"external_directory\", worst.Path)"
+ },
+ {
+  "name": "ext-log-source",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"source\", \"tool_call\")\n\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\"",
+  "replace": "\tlogContext.set(\"source\", \"skill_read\")\n\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\""
+ },
+ {
+  "name": "ext-log-toolcallid",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"toolCallId\", tcc.ToolCallID)\n\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\"",
+  "replace": "\tlogContext.set(\"toolName\", tcc.ToolName)\n\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\""
+ },
+ {
+  "name": "ext-log-agent",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"agentName\", strOrNull(tcc.AgentName))\n\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\"",
+  "replace": "\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\""
+ },
+ {
+  "name": "ext-log-command",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"command\", command)\n\tlogContext.set(\"externalPaths\", uncoveredPaths)",
+  "replace": "\tlogContext.set(\"externalPaths\", uncoveredPaths)"
+ },
+ {
+  "name": "ext-log-paths",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"externalPaths\", uncoveredPaths)\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-log-effect",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"effect\", string(worst.Effect.Effect))\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-log-effectsource",
+  "file": "gatebashpath.go",
+  "find": "\tlogContext.set(\"effectSource\", string(worst.Effect.Source))\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-log-effect-swapped",
+  "file": "gatebashpath.go",
+  "find": "logContext.set(\"effect\", string(worst.Effect.Effect))",
+  "replace": "logContext.set(\"effect\", string(worst.Effect.Source))"
+ },
+ {
+  "name": "ext-prompt-source",
+  "file": "gatebashpath.go",
+  "find": "Source: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}",
+  "replace": "Source: \"skill_read\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
+ },
+ {
+  "name": "ext-prompt-agent",
+  "file": "gatebashpath.go",
+  "find": "Source: \"tool_call\", AgentName: tcc.AgentName, ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}",
+  "replace": "Source: \"tool_call\", ToolCallID: &toolCallID, ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
+ },
+ {
+  "name": "ext-prompt-command",
+  "file": "gatebashpath.go",
+  "find": "ToolName: &toolName, Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}",
+  "replace": "ToolName: &toolName, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
+ },
+ {
+  "name": "ext-prompt-access",
+  "file": "gatebashpath.go",
+  "find": "Command: &command, AccessIntent: &access,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}",
+  "replace": "Command: &command,\n\t\t},\n\t\tLogContext: logContext,\n\t\tDecision:   GateDecision{Surface: surface, Value: command}"
+ },
+ {
+  "name": "ext-decision-surface",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: command},",
+  "replace": "Decision:   GateDecision{Surface: \"external_directory\", Value: command},"
+ },
+ {
+  "name": "ext-decision-value",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: command},",
+  "replace": "Decision:   GateDecision{Surface: surface, Value: uncoveredPaths[0].(string)},"
+ },
+ {
+  "name": "ext-precheck",
+  "file": "gatebashpath.go",
+  "find": "Decision:   GateDecision{Surface: surface, Value: command},\n\t\tPreCheck:   &preCheck,",
+  "replace": "Decision:   GateDecision{Surface: surface, Value: command},"
+ },
+ {
+  "name": "ext-input",
+  "file": "gatebashpath.go",
+  "find": "\t\tInput:           newObject(),\n\t\tPayload:         payload,\n\t\tSessionApproval: SessionApprovalForGrants(grants),",
+  "replace": "\t\tInput:           nil,\n\t\tPayload:         payload,\n\t\tSessionApproval: SessionApprovalForGrants(grants),"
+ },
+ {
+  "name": "ext-descriptor-surface",
+  "file": "gatebashpath.go",
+  "find": "\treturn &GateDescriptor{\n\t\tSurface:         surface,\n\t\tInput:           newObject(),",
+  "replace": "\treturn &GateDescriptor{\n\t\tSurface:         \"external_directory\",\n\t\tInput:           newObject(),"
+ },
+ {
+  "name": "ext-session-approval-nil",
+  "file": "gatebashpath.go",
+  "find": "SessionApproval: SessionApprovalForGrants(grants),",
+  "replace": "SessionApproval: nil,"
+ },
+ {
+  "name": "help-first-most-restrictive-last",
+  "file": "gatebashpath.go",
+  "find": "\t\tif restrictiveness[s] > restrictiveness[states[worst]] {",
+  "replace": "\t\tif restrictiveness[s] >= restrictiveness[states[worst]] {"
+ },
+ {
+  "name": "help-first-most-restrictive-least",
+  "file": "gatebashpath.go",
+  "find": "\t\tif restrictiveness[s] > restrictiveness[states[worst]] {",
+  "replace": "\t\tif restrictiveness[s] < restrictiveness[states[worst]] {"
+ },
+ {
+  "name": "help-first-most-restrictive-start",
+  "file": "gatebashpath.go",
+  "find": "\tworst := 0\n\tfor i, s := range states {",
+  "replace": "\tworst := len(states) - 1\n\tfor i, s := range states {"
+ },
+ {
+  "name": "help-strings-as-json",
+  "file": "gatebashpath.go",
+  "find": "\t\tout[i] = s\n",
+  "replace": "\t\tout[i] = \"\"\n"
+ }
+]

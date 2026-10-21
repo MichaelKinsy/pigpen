@@ -1,18 +1,11 @@
 {
- "composition-root": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems",
- "handlers/before-agent-start": "not ported: lifecycle, project trust, review log and turn preparation handlers beyond the status, exposure and tool_call handlers",
- "handlers/gates/bash-command": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
- "handlers/gates/bash-command-metamorphic": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
- "handlers/gates/bash-effect-invariants": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
- "handlers/gates/bash-external-directory": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
- "handlers/gates/bash-path": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
- "handlers/lifecycle": "not ported: lifecycle, project trust, review log and turn preparation handlers beyond the status, exposure and tool_call handlers",
- "handlers/session-turn-prep": "not ported: lifecycle, project trust, review log and turn preparation handlers beyond the status, exposure and tool_call handlers",
- "helpers/handler-fixtures": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems",
- "service": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems",
- "service/bash-advisory-check": "not ported: the cross-extension service API",
- "service/permission-events": "partly ported: the permissions:ui_prompt half (emitUiPromptEvent, 3 twins); not ported: the ready and decision broadcasts (twins), the cross-extension service API",
- "service/permissions-service": "not ported: the cross-extension service API",
- "service/service-lifecycle": "not ported: the cross-extension service API",
- "session-start": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems"
+  "composition-root": "not yet twinned: the composition root is ported (extension.go) and exercised by adapter_test.go and cfg_adapter_test.go through the fake host; the 72 in-process multi-node twins need the buildOptions bus seam (extension.go newExtensionWith) driven by a harness not written yet",
+  "handlers/gates/bash-command": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
+  "handlers/gates/bash-command-metamorphic": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
+  "handlers/gates/bash-effect-invariants": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
+  "handlers/gates/bash-external-directory": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
+  "handlers/gates/bash-path": "not ported: the gate pipeline for paths, external directories, skills, inputs and bash commands; the port decides by tool name and by simple bash commands",
+  "helpers/handler-fixtures": "not ported: root-level pieces of the original (composition root, service, request ids, type guards) that belong to unported subsystems",
+  "service/permission-events": "partly ported: the permissions:ui_prompt half (emitUiPromptEvent, 3 twins); not ported: the ready and decision broadcasts (twins), the cross-extension service API",
+  "session-start": "not yet twinned: the composition root is ported (extension.go) and exercised by adapter_test.go and cfg_adapter_test.go through the fake host; the 72 in-process multi-node twins need the buildOptions bus seam (extension.go newExtensionWith) driven by a harness not written yet"
 }

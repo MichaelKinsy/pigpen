@@ -1,0 +1,45 @@
+{
+  "name": "path-deny",
+  "description": "a path rule denies a read of a matching file; another file is read",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "secret.env"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "read",
+          "arguments": {
+            "path": "a.txt"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "do the work"
+      }
+    }
+  ],
+  "agentFiles": {
+    "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"*\": \"allow\",\n    \"path\": {\n      \"*.env\": \"deny\"\n    }\n  }\n}"
+  },
+  "files": {
+    "a.txt": "hello\n",
+    "secret.env": "k=v\n"
+  }
+}
