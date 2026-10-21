@@ -86,6 +86,11 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 
 // start builds the child's spec from the agent type and spawns it.
 func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+	return a.startOwned(ctx, "", typ, prompt, description, name, model, thinking, maxTurns, background, isolated)
+}
+
+// startOwned is start for an agent a workflow run owns (owner is the run id).
+func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -99,13 +104,17 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 		return nil, fmt.Errorf("Unknown agent type: %q", typ)
 	}
 	if feature := unportedAgentFeature(cfg); feature != "" {
-		return nil, refusal(feature)
+		return nil, &workflowRefusalError{feature}
 	}
 	parentPrompt := ""
 	if cfg.PromptMode == "append" {
 		parentPrompt, _ = ctx.GetSystemPrompt()
 	}
-	system := buildAgentPrompt(cfg, cwd, detectEnv(ctx, cwd), parentPrompt)
+	env := detectEnv(ctx, cwd)
+	system := buildAgentPrompt(cfg, cwd, env, parentPrompt)
+	if owner != "" {
+		system = withWorkflowChildBlock(system, cfg, cwd, env)
+	}
 	spec := childSpec{Prompt: prompt, SystemPrompt: system, PromptMode: "replace", Cwd: cwd, Tools: cfg.BuiltinToolNames, Isolated: isolated || (cfg.Isolated != nil && *cfg.Isolated) || cfg.Extensions == false}
 	// An agent file's model, thinking level and turn limit outrank the call's, which only fills gaps; the original's
 	// haiku default of Explore falls back to the parent's model when it is not available, so this port never forces it.
@@ -147,7 +156,7 @@ func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thin
 	snapshot := buildInvocation(ctx, inv, background, isolated || (cfg.Isolated != nil && *cfg.Isolated))
 	obs := a.ui.newObserver(snapshot, spec.MaxTurns)
 	spec.Observer = obs
-	r := a.mgr.spawn(resolved, description, name, spec, background)
+	r := a.mgr.spawnOwned(owner, resolved, description, name, spec, background)
 	a.ui.attach(r, obs)
 	return r, nil
 }

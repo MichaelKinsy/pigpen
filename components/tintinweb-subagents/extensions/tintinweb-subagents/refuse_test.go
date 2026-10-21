@@ -11,6 +11,15 @@ import (
 // Everything of the original that this port does not do yet is refused with one message (refuse.go): a tool error,
 // or a notification for a setting; never a silent fallback and never a partial run.
 
+// needComponentRoot skips a test that reads the component's own files (package.json, the original under port/oracle)
+// when run in a copy of the Go directory alone, as the mutation runner's sandbox is. In the repository it always runs.
+func needComponentRoot(t *testing.T) {
+	t.Helper()
+	if _, err := os.Stat("../../package.json"); err != nil {
+		t.Skip("the component's files are not next to this directory (a copy of the Go port alone)")
+	}
+}
+
 func readJSONFile(t *testing.T, path string) map[string]any {
 	t.Helper()
 	data, err := os.ReadFile(path)
@@ -27,7 +36,12 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 	return out
 }
 
+func TestRefusalMessageText(t *testing.T) {
+	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
+}
+
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
+	needComponentRoot(t)
 	pkg := readJSONFile(t, "../../package.json")
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])
@@ -133,7 +147,6 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		{"reclaim", obj{"reclaim": obj{"handle": "a"}}, `the spawn RPC option "reclaim"`},
 		{"bypassQueue", obj{"bypassQueue": true}, `the spawn RPC option "bypassQueue"`},
 		{"blocking", obj{"blocking": true}, `the spawn RPC option "blocking"`},
-		{"workflowId", obj{"workflowId": "w"}, `the spawn RPC option "workflowId"`},
 		{"foreground", obj{"isBackground": false}, "foreground agents through the spawn RPC (isBackground: false)"},
 	}
 	for _, c := range cases {
@@ -196,7 +209,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"rememberAgents", `{"rememberAgents": true}`, "rememberAgents: true"},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
-		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
 		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
 	}
@@ -228,7 +240,7 @@ func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
 	r := settingsRig(t, `{"maxConcurrent": 3, "defaultMaxTurns": 5, "graceTurns": 2, "disableDefaultAgents": false, "fallbackSubagent": "none",
 		"maxConcurrentForeground": 0, "defaultJoinMode": "async", "backgroundByDefault": true, "schedulingEnabled": false, "scopeModels": false,
 		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "off", "rememberAgents": false,
-		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 1,
+		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": true, "maxSubagentDepth": 1,
 		"reportUsage": false, "showCost": false, "showModel": false, "showCost2": "x", "fleetView2": 1, "agentMentions2": 1}`)
 	eq(t, len(notices(r)), 0)
 	r = settingsRig(t, `{"widgetMode": "sideways", "maxSubagentDepth": "deep", "scopeModels": "yes"}`) // wrong types and unknown values are ignored, as in the original

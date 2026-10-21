@@ -1,0 +1,39 @@
+{
+  "name": "workflow-off",
+  "description": "With workflowsEnabled false the tool is not offered and the flag is refused.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false, \"workflowsEnabled\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    "flow.js": "export const meta = { name: \"flagged\", description: \"x\" };\n"
+  },
+  "args": [
+    "--subagents-workflow-file=flow.js"
+  ]
+}

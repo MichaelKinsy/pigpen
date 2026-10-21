@@ -101,7 +101,7 @@ func fakePig(mode string) {
 		case "get_last_assistant_text":
 			resp(map[string]any{"text": "fake answer to " + os.Getenv("FAKE_PIG_TAG")})
 		case "get_session_stats":
-			resp(map[string]any{"tokens": map[string]any{"total": 42}, "toolCalls": 2})
+			resp(map[string]any{"tokens": map[string]any{"total": 42, "output": 7}, "toolCalls": 2})
 		case "steer":
 			if p := os.Getenv("FAKE_PIG_STEER"); p != "" {
 				f, _ := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -165,6 +165,7 @@ func TestRPCChildRunsToCompletion(t *testing.T) {
 	eq(t, err, nil)
 	eq(t, res.Text, "fake answer to the task")
 	eq(t, res.Tokens, 42)
+	eq(t, res.OutputTokens, 7)
 	eq(t, res.ToolUses, 2)
 	eq(t, res.Turns, 2)
 	got, _ := os.ReadFile(argsFile)

@@ -1,0 +1,44 @@
+{
+  "name": "workflow-resume-unknown",
+  "description": "A run id this session never issued is an error, not a cold start.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "script": "export const meta = { name: \"p\", description: \"d\" };\n",
+            "resumeFromRunId": "wf_deadbeef1234"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

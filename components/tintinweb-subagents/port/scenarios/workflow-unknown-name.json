@@ -1,0 +1,47 @@
+{
+  "name": "workflow-unknown-name",
+  "description": "An unknown saved name lists the saved workflows that do exist, and leaves out a non-workflow file.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "name": "nightlyy"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "files": {
+    ".pi/workflows/nightly.js": "export const meta = { name: \"nightly\", description: \"saved\" };\n",
+    ".pi/workflows/utils.js": "const x = 1;\n"
+  }
+}

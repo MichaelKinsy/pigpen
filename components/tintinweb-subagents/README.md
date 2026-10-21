@@ -59,14 +59,29 @@ transcript, activity and usage they show come from the child's event stream. `sh
 displayed; `showCost` also adds the cost to the foreground result, `get_subagent_result`, the steer reply and the completion
 notification the model reads. Nothing a handler or a surface does can panic the extension process.
 
+## Workflows
+
+`SubagentWorkflow` runs a user- or model-authored JavaScript script that orchestrates many agents: `agent()`, `parallel()`,
+`pipeline()`, `phase()`, `log()`, `workflow()` (one level of nesting), `budget`, `args`, with caps (1000 agents, 4096 items
+per fan-out, 256 nested runs), a concurrency semaphore, a journal for `resumeFromRunId`, saved workflows
+(`.pi/workflows/<name>.js`, `.agents/workflows/`, `<agent dir>/workflows/`), `gate` commands, pause/skip/retry, and the
+`--subagents-workflow-file=<path>` flag. It is on by default (`"workflowsEnabled": false` in `subagents.json` removes the
+tool), and stands down for another extension's `Workflow` tool unless the setting is pinned. The script runs in-process in
+a pure-Go JavaScript engine ([goja](https://github.com/dop251/goja)), with no Node; the engine's limits and every
+difference from the original are in [port/PORT.md](port/PORT.md). A workflow's agents are children of the workflow: not in
+`/agents`, no completion notice of their own, no slot in the session's concurrency limit. `isolation: "worktree"`,
+`agent({ schema })` and `agent({ resume })` need features the port does not have yet and fail the run with the refusal
+message below.
+The `/agents → Workflows` menu (stop, pause, skip, retry, the run dialog) is not ported yet: `/agents` lists the runs and
+says so with the same refusal message.
+
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
+[port/PORT.md](port/PORT.md): scheduled runs, worktree isolation, `@name`
 mentions, persistent agent memory, nested delegation, `inherit_context`,
 resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
-original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
-`SubagentWorkflow` is not registered.
+original's text and schema as it is with scheduling and worktree isolation switched off.
 
 Nothing that is not ported is accepted and quietly ignored. Each of these is refused with one message, a tool error
 (for the settings, a notification when a session starts):
@@ -81,8 +96,8 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
   `isBackground: true`.
 - `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `workflowsEnabled: true`, `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, and so on). The settings the port matches are not flagged: `false` for the switches the port does not have, the five
-  it honors for the run, and the five display settings below.
+  `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, and so on). The settings the port matches are not flagged: `false` for the switches the port does not have, the five
+  it honors for the run, `workflowsEnabled`, and the five display settings above.
 
 `isolated: true` starts the child with no extensions. The proof that the shipped slice matches the original is in
 [port/PORT.md](port/PORT.md).

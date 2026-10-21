@@ -39,6 +39,11 @@ type agentRecord struct {
 	ToolUses, Tokens, Turns     int
 	WrappedUp                   bool
 	Consumed                    bool
+	// OutputTokens are the output tokens of the run (Tokens is the total); a workflow's budget counts these.
+	OutputTokens int
+	// Owner is the id of the workflow run that owns this agent ("" for a top-level agent): an owned agent is out of the
+	// listings, answers to its owner alone and emits no top-level events. upstream: AgentRecord.workflowId.
+	Owner string
 
 	spec    childSpec
 	child   child
@@ -114,6 +119,9 @@ func (m *manager) resolve(idOrName string) *agentRecord {
 	var found *agentRecord
 	for _, id := range m.order {
 		r := m.records[id]
+		if r.Owner != "" {
+			continue // an owned agent is not addressable from outside its run
+		}
 		if idOrName != "" && (strings.HasPrefix(id, idOrName) || r.Handle == idOrName || r.Alias == idOrName || (r.Name != "" && r.Name == idOrName)) {
 			if found != nil {
 				return nil
@@ -129,7 +137,9 @@ func (m *manager) list() []*agentRecord {
 	defer m.mu.Unlock()
 	out := make([]*agentRecord, 0, len(m.order))
 	for _, id := range m.order {
-		out = append(out, m.records[id])
+		if m.records[id].Owner == "" {
+			out = append(out, m.records[id])
+		}
 	}
 	return out
 }
@@ -137,14 +147,22 @@ func (m *manager) list() []*agentRecord {
 // spawn creates an agent: it starts at once, or is queued behind the concurrency limit (background agents only;
 // a foreground agent is not limited, as `maxConcurrentForeground` defaults to unlimited). upstream: agent-manager.ts spawn.
 func (m *manager) spawn(typ, description, name string, spec childSpec, background bool) *agentRecord {
-	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec,
+	return m.spawnOwned("", typ, description, name, spec, background)
+}
+
+// spawnOwned is spawn for an agent a workflow run owns (owner is the run id; "" for a top-level agent).
+func (m *manager) spawnOwned(owner, typ, description, name string, spec childSpec, background bool) *agentRecord {
+	r := &agentRecord{ID: newAgentID(), Type: typ, Description: description, Name: name, Background: background, spec: spec, Owner: owner,
 		done: make(chan struct{}), started: make(chan struct{}), Status: statusQueued, StartedAt: time.Now()}
 	m.mu.Lock()
 	m.records[r.ID] = r
 	m.order = append(m.order, r.ID)
-	r.Handle = m.assignHandle(handleBase(typ))
-	if name != "" {
-		r.Alias = m.assignHandle(handleBase(name))
+	// A workflow's child gets no handle: the original assigns none (agent-manager.ts), so it is no @mention target.
+	if owner == "" {
+		r.Handle = m.assignHandle(handleBase(typ))
+		if name != "" {
+			r.Alias = m.assignHandle(handleBase(name))
+		}
 	}
 	if background && m.running >= m.maxConcurrent {
 		m.queue = append(m.queue, r)
@@ -211,6 +229,7 @@ func (m *manager) run(r *agentRecord) {
 	}
 	if res != nil {
 		r.Result, r.ToolUses, r.Tokens, r.Turns, r.WrappedUp = res.Text, res.ToolUses, res.Tokens, res.Turns, res.WrappedUp
+		r.OutputTokens = res.OutputTokens
 	}
 	if r.Background {
 		m.running--
@@ -310,7 +329,13 @@ func (m *manager) consume(id string) bool {
 
 // abortAll stops every agent (the session ends).
 func (m *manager) abortAll() {
-	for _, r := range m.list() {
+	m.mu.Lock()
+	all := make([]*agentRecord, 0, len(m.order))
+	for _, id := range m.order {
+		all = append(all, m.records[id]) // owned agents too
+	}
+	m.mu.Unlock()
+	for _, r := range all {
 		m.abort(r)
 	}
 }

@@ -30,6 +30,9 @@ type app struct {
 	timers          map[string]*time.Timer
 	settingsNotice  string
 	ui              *uiHub // the widget, fleet list and conversation viewer
+
+	wf     *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
+	wfOnce sync.Once
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
@@ -122,6 +125,7 @@ func (a *app) register(e *sdk.Extension) {
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)
+		a.workflowSessionStart(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
@@ -135,6 +139,7 @@ func (a *app) register(e *sdk.Extension) {
 	e.OnSessionShutdown(protect("session_shutdown", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		// Pending completion nudges die with the session (upstream clears pendingNudges), then the agents and the list.
 		a.stopNudges()
+		a.shutdownWorkflows()
 		a.mgr.abortAll()
 		a.ui.dispose()
 		return nil, nil
@@ -148,6 +153,9 @@ func (a *app) register(e *sdk.Extension) {
 func (a *app) onSettle(r *agentRecord) {
 	// The surfaces learn of the end whether or not a context exists to announce it on.
 	safeCall("settle surfaces", func() { a.ui.onSettle(r) })
+	if r.Owner != "" {
+		return // an owned agent reports through its owner (a workflow's card, notification and dialog), not top-level
+	}
 	ctx, ok := a.context()
 	if !ok {
 		return

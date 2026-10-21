@@ -93,7 +93,7 @@ func skillsSupported(v any) bool {
 }
 
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
-// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only). upstream: agent-manager.ts SpawnOptions.
+// Honored: description, model, maxTurns, name, thinkingLevel, isBackground (true only); workflowId is dropped, as the original drops it. upstream: agent-manager.ts SpawnOptions.
 func unportedSpawnOption(opts map[string]any) string {
 	keys := make([]string, 0, len(opts))
 	for k := range opts {
@@ -107,6 +107,9 @@ func unportedSpawnOption(opts map[string]any) string {
 		}
 		switch k {
 		case "description", "model", "maxTurns", "name", "thinkingLevel":
+		case "workflowId":
+			// Internal: the original deletes it from the options a bus caller sends (index.ts:703), so a forged value cannot
+			// hide an agent inside someone else's workflow. Ignored, not refused; bus.go never passes it on.
 		case "isBackground":
 			if b, _ := v.(bool); !b {
 				return "foreground agents through the spawn RPC (isBackground: false)"
@@ -141,7 +144,6 @@ var settingRules = []settingRule{
 	{key: "rememberAgents", kind: "bool", okBool: false},
 	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
-	{key: "workflowsEnabled", kind: "bool", okBool: false},
 	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "reportUsage", kind: "bool", okBool: false},
 }
