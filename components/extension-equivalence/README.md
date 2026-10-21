@@ -88,7 +88,9 @@ configuration). The scenario is data (see [scenarios](extensions/extension-equiv
   that only an extension command context can start (`new session`, `fork`) go through a
   small driver extension loaded in every lane (`/eq-new`, `/eq-fork`).
 
-Recorded per step, in arrival order: UI requests (dialogs, notifications, status,
+Recorded per step, in arrival order (a request to the model or to a fake upstream server is recorded after the host
+output that precedes it: the harness holds the request and round-trips `get_state` on the host's stdout first, so a fast
+host cannot make the order depend on which harness goroutine ran first): UI requests (dialogs, notifications, status,
 widgets), exec calls and exits (via PATH shims), requests that reached the model (the
 messages, every tool's full definition, and the extension's part of the system prompt:
 its difference from the same host's baseline prompt without the extension), tool
@@ -107,7 +109,9 @@ golden trace recorded under another version is refused.
   described in the Skill (`references/fakehost_test.go.txt`).
 - Effects the extension starts without awaiting are collected during a quiet period
   (`settleMs`, default 150 ms, plus `tailMs` after the last step). An effect later than
-  that is not seen. Parallel exec calls arrive in a nondeterministic order.
+  that is not seen. Parallel exec calls arrive in a nondeterministic order. An exec call is
+  not ordered against the host's output either: its shim cannot hold the call for a round trip
+  (a host blocked in a synchronous spawn could not answer it).
 - Only declared commands are recorded. `exec-coverage` catches literal command names;
   a computed name (`pi.exec(tool, ...)`) must be declared by hand and reviewed.
 - The host's own system prompt wording is not compared, only the extension's difference

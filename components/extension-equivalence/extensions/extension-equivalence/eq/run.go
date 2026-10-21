@@ -126,6 +126,19 @@ type recorder struct {
 	step   string
 	events []Event
 	norm   *Normalizer
+
+	// hostSync, while a host is serving a scenario, returns once every record the host wrote before the call
+	// has been read and recorded (driver.syncHost). It is nil before the host is ready and after the run ends.
+	syncMu   sync.RWMutex
+	hostSync func()
+	// held counts the requests waiting in addAfterHost, which a finished lane waits for before it reads the events.
+	held sync.WaitGroup
+}
+
+func (r *recorder) setHostSync(f func()) {
+	r.syncMu.Lock()
+	r.hostSync = f
+	r.syncMu.Unlock()
 }
 
 func (r *recorder) setStep(s string) {
@@ -139,6 +152,26 @@ func (r *recorder) add(ch string, data any) {
 	r.mu.Lock()
 	r.events = append(r.events, Event{Step: r.step, Ch: ch, Data: raw})
 	r.mu.Unlock()
+}
+
+// addAfterHost records an effect that reached the harness over a channel of its own (the model server, a scenario's
+// fake upstream server) once the host output that precedes it has been recorded. The host writes a record to its
+// stdout before it sends such a request, but nothing orders the harness's reader of that stdout against the request's
+// handler goroutine: a reader that is a few hundred microseconds late records the request first, and a fast host
+// (PiG, which writes a rejected tool call's tool_execution_end, tool-result message_end, turn_end and turn_start and
+// then asks the model again within one millisecond) made the trace order depend on the scheduler. The handler holds
+// the request, so the host cannot write anything caused by its answer yet: everything the host wrote before the
+// request is already in the pipe, and a round trip on the same pipe (driver.syncHost) is read after it.
+func (r *recorder) addAfterHost(ch string, data any) {
+	r.held.Add(1)
+	defer r.held.Done()
+	r.syncMu.RLock()
+	sync := r.hostSync
+	r.syncMu.RUnlock()
+	if sync != nil {
+		sync()
+	}
+	r.add(ch, data)
 }
 
 func (r *recorder) addRaw(ch string, raw json.RawMessage) {
@@ -258,7 +291,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	origPath := os.Getenv("PATH")
 
 	// Fake upstream servers start before the workspace is written: files and env refer to them.
-	ups, err := startUpstreams(sc.Servers, rec.add)
+	ups, err := startUpstreams(sc.Servers, rec.addAfterHost)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +338,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 
 	args := []string{"--mode", "rpc", "--no-session", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--offline"}
 	if len(sc.LLM) > 0 {
-		llm, err := newFakeLLM(sc.LLM, rec.add)
+		llm, err := newFakeLLM(sc.LLM, rec.addAfterHost)
 		if err != nil {
 			return nil, err
 		}
@@ -401,8 +434,8 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("start %s: %w", lane.Bin, err)
 	}
-	d := &driver{sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture()}
 	readerDone := make(chan struct{})
+	d := &driver{sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture(), readerDone: readerDone, syncing: map[string]chan struct{}{}}
 	go d.read(stdout, readerDone)
 	// The host's exit is read by the driver's waits and by the shutdown below, so it is a closed channel
 	// plus the stored error, not a value one reader can take from the other (a lane used to hang forever).
@@ -417,6 +450,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		fail(runErr.Error())
 	}
 	// Shut the host down: closing stdin ends an RPC session, and shutdown handlers run.
+	rec.setHostSync(nil)
 	rec.setStep("99-shutdown")
 	_ = stdin.Close()
 	select {
@@ -438,6 +472,10 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if runErr != nil && opt.Stderr != nil {
 		fmt.Fprintf(opt.Stderr, "eq: lane %s host stderr tail:\n%s\n", lane.Name, stderrBuf.String())
 	}
+	// The host is gone, which releases every request still waiting for its output to be ordered before it.
+	rec.held.Wait()
+	rec.mu.Lock()
+	defer rec.mu.Unlock()
 	return &Trace{
 		Header: Header{Kind: "header", Scenario: sc.Name, Lane: lane.Name, Host: lane.Host + " " + hostVersion(lane.Bin), Extension: extHash, Normalizer: NormalizerVersion},
 		Events: rec.events,
@@ -510,10 +548,13 @@ type driver struct {
 	stdin   io.Writer
 	events  chan map[string]any
 	capture []string
+	// readerDone is closed when the host's stdout has been read to its end.
+	readerDone <-chan struct{}
 
-	mu     sync.Mutex
-	silent map[string]bool // barrier response ids, kept out of the trace
-	nextID int
+	mu      sync.Mutex
+	silent  map[string]bool // barrier response ids, kept out of the trace
+	nextID  int
+	syncing map[string]chan struct{} // syncHost round trips by response id, closed by the reader
 }
 
 func (d *driver) send(m map[string]any) error {
@@ -544,6 +585,41 @@ func (d *driver) isSilent(id string) bool {
 	return d.silent[id]
 }
 
+// syncHost returns once every record the host wrote to its stdout before the call has been read and recorded. The
+// host answers a get_state request after it has written everything it wrote before reading the request, and the
+// reader handles the lines of one pipe in order, so the answer's arrival means the earlier lines are in the trace.
+// It does not wait for a host that is gone or cannot answer: a host that does not answer within the step timeout is
+// reported as a harness failure, and the lane stops ordering (every later wait would cost the same timeout).
+func (d *driver) syncHost(timeout time.Duration) {
+	id := d.newID(true)
+	done := make(chan struct{})
+	d.mu.Lock()
+	d.syncing[id] = done
+	d.mu.Unlock()
+	if err := d.send(map[string]any{"id": id, "type": "get_state"}); err != nil {
+		d.releaseSync(id) // the host's stdin is closed: nothing more to order
+		return
+	}
+	select {
+	case <-done:
+	case <-d.readerDone:
+	case <-time.After(timeout):
+		d.rec.setHostSync(nil)
+		d.rec.add(ChError, map[string]any{"message": fmt.Sprintf("host did not answer get_state within %s while the harness ordered a request after its output", timeout)})
+	}
+}
+
+// releaseSync wakes the syncHost round trip waiting for response id, if any.
+func (d *driver) releaseSync(id string) {
+	d.mu.Lock()
+	done, ok := d.syncing[id]
+	delete(d.syncing, id)
+	d.mu.Unlock()
+	if ok {
+		close(done)
+	}
+}
+
 // read records host output in arrival order and forwards it to the driver.
 func (d *driver) read(r io.Reader, done chan<- struct{}) {
 	defer close(done)
@@ -562,7 +638,9 @@ func (d *driver) read(r io.Reader, done chan<- struct{}) {
 		}
 		id, _ := rec["id"].(string)
 		if typ, _ := rec["type"].(string); typ == "response" && d.isSilent(id) {
-			// barrier response: forwarded, not recorded
+			// barrier response: forwarded, not recorded. Every line before it has been recorded, which is what a
+			// syncHost round trip waits for.
+			d.releaseSync(id)
 		} else if ch, data, ok := d.rec.norm.ProjectHost(rec, d.capture); ok {
 			d.rec.addRaw(ch, data)
 		}
@@ -577,6 +655,10 @@ func (d *driver) run(opt Options, exited *hostExit, stderr *tailBuffer) error {
 	if err := d.barrier(opt.startup(), exited, stderr, nil); err != nil {
 		return fmt.Errorf("host did not become ready: %w", err)
 	}
+	// From here the host reads its stdin while it works, so a request it sends can be ordered after its output.
+	// Before this point an extension that loads while the host starts could wait on a request this lane holds
+	// back for an answer the host gives only once it has loaded.
+	d.rec.setHostSync(func() { d.syncHost(opt.step()) })
 	time.Sleep(time.Duration(d.sc.settle()) * time.Millisecond)
 	for i, st := range d.sc.Steps {
 		d.rec.setStep(st.label(i))
