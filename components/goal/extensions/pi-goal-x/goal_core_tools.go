@@ -493,10 +493,12 @@ func runGoalBlockedFlow(c *core, reasonInput string, _ bool, attemptedActions []
 		attempted = attempted[:8]
 	}
 	var run oracleRunResult
-	c.awaiting(func() {
-		run = runBlockerOracle(runBlockerOracleArgs{ctx: hostAuditorCtx{c.h}, goal: goalAtBlock, reason: reason, attemptedActions: attempted,
-			settings: oracleSettings, recentEvidence: "", createSession: c.deps.createSession})
-	})
+	// The Oracle is a model run, not a host dialog: the core lock is released while it runs (the original's await), so commands and
+	// events (/goal-unfocus, Esc) reach the core meanwhile; the focus is revalidated below.
+	oracleArgs := runBlockerOracleArgs{ctx: hostAuditorCtx{c.h}, goal: goalAtBlock, reason: reason, attemptedActions: attempted,
+		settings: oracleSettings, recentEvidence: "", createSession: c.deps.createSession}
+	c.flush()
+	c.awaiting(func() { c.await(func() { run = runBlockerOracle(oracleArgs) }) })
 
 	if !c.isFocusedOperationCurrent(focusToken) {
 		return c.focusedOperationCancelledResult("Blocker Oracle", focusToken), nil

@@ -67,7 +67,7 @@ func registrationOf(t *testing.T, ext *sdk.Extension) extensionRegistration {
 				} `json:"commands"`
 				Renderers []struct {
 					CustomType string `json:"custom_type"`
-				} `json:"renderers"`
+				} `json:"message_renderers"`
 			} `json:"register"`
 		}
 		if err := json.Unmarshal(data, &f); err != nil {

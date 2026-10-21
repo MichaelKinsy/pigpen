@@ -19,8 +19,14 @@ file: custom tools in the child, compaction off in the child, the parent's model
 terminal width.
 
 **Twins:** 1048 exact twins and 1 named skip of 1049 upstream titles (`pigeq twins check`; the skip is the real-SDK prompt cache e2e), `slices.json` is empty. **Go tests:** `go vet`
-on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds one list of
-2034 mutants (every find text occurs exactly once); the run results are in the PR bodies. The lead faithfulness review (five
+on linux, windows and darwin and `go test -race -count=3` pass on the merged tree. **Mutations:** `mutations.json` holds 1983 mutants (every find
+text occurs exactly once). The first `pigeq mutate --unit-only --jobs 10` run over the 2034 original mutants killed 1241, left 740
+alive and found 53 that do not build. The survivors got tests (`mutants_a_test.go` to `mutants_d_test.go`, plain tests, not twins);
+the 53 invalid mutants were rewritten (51) or dropped (2: `health-marker-version-required`, `draft-unavailable`, both equivalent or
+unreachable); 51 building mutants are equivalent (same observable behavior) and are listed with a reason in
+`mutations-equivalent.json`, outside the run list. The rerun of only those lanes' survivors and rewritten mutants left no survivor
+outside that list: slice A 181 mutants (5 equivalent listed), B 214 (19), C 207 (22), D 154 (7). Two Go bugs the survivors exposed
+were fixed: `Date.parse` of `T24:00:00` (`jsDateParse`) and the blocker oracle wait holding the core lock. The lead faithfulness review (five The lead faithfulness review (five
 reviewers, function by function against the TypeScript) found and fixed: `set_goal_tasks` item schema without `additionalProperties:false`,
 `clearContinuationState` default in the blocked and pause flows, a failed tweak apply propagating as a tool error, the active-pool read
 that must fail for a vanished external root, `timestampForFile` for any ISO form, the external-pool ledger symlink check, stale-lock
