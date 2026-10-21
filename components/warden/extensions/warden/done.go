@@ -232,6 +232,7 @@ func compileGlob(pattern string) *gatedRegexp {
 	if err != nil {
 		return &gatedRegexp{Regexp: regexp.MustCompile(`\A\z\A`)}
 	}
+	re.glob = newGlobMatcher(pattern)
 	return re
 }
 
