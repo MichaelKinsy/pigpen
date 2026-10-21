@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MichaelKinsy/pigpen/pig-snake/internal/pixel"
+	"github.com/MichaelKinsy/pigpen/components/pig-play/libraries/pixel"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/snake"
 	"github.com/MichaelKinsy/pigpen/pig-snake/internal/sprites"
 )
@@ -159,8 +159,8 @@ func TestTheAppleIsDrawnWhereTheFoodIs(t *testing.T) {
 	}
 }
 
-func TestTheBuiltinSourceDrawsAtEverySize(t *testing.T) {
-	src := sprites.Builtin("pink")
+func TestTheSharedSourceDrawsAtEverySize(t *testing.T) {
+	src := sprites.Shared("pink")
 	for _, size := range []int{8, 6, 4} {
 		g := playingGame(4)
 		var c pixel.Canvas
@@ -279,7 +279,7 @@ func TestRenderFillsEveryViewportExactly(t *testing.T) {
 	widths := []int{1, 2, 5, 10, 20, 31, 32, 33, 34, 40, 60, 78, 80, 100, 118, 160, 200, 300}
 	heights := []int{1, 2, 3, 10, 13, 14, 15, 22, 24, 38, 60}
 	for name, g := range statuses() {
-		for _, src := range []sprites.Source{sprites.Builtin("green"), &fakeSource{}} {
+		for _, src := range []sprites.Source{sprites.Shared("green"), &fakeSource{}} {
 			for _, w := range widths {
 				for _, h := range heights {
 					var b Buffers
@@ -301,7 +301,7 @@ func TestRenderFillsEveryViewportExactly(t *testing.T) {
 func TestRenderShowsTheBoardWhenItFitsAndTheHintWhenItDoesNot(t *testing.T) {
 	g := playingGame(3) // 13x6 board
 	var b Buffers
-	src := sprites.Builtin("")
+	src := sprites.Shared("")
 	fits := Render(&b, g, src, 78, 22, nil)
 	if !strings.Contains(strings.Join(fits, "\n"), "▀") {
 		t.Fatal("no half-block cells drawn at 78x22")
@@ -325,7 +325,7 @@ func TestRenderShowsTheBoardWhenItFitsAndTheHintWhenItDoesNot(t *testing.T) {
 // the size its own board needs. Naming the minimum new board (34x16) told a
 // player in a 40x16 terminal "needs 34x16, have 40x16" while nothing fit.
 func TestTheTooSmallHintNamesTheSizeTheBoardInPlayNeeds(t *testing.T) {
-	src := sprites.Builtin("")
+	src := sprites.Shared("")
 	for _, tc := range []struct {
 		cols, rows   int
 		status       snake.Status
@@ -373,7 +373,7 @@ func TestTheTooSmallHintNamesTheSizeTheBoardInPlayNeeds(t *testing.T) {
 func TestRenderShrinksHeadsInsteadOfDroppingTheBoard(t *testing.T) {
 	g := playingGame(3) // board chosen at 13x6
 	var b Buffers
-	src := sprites.Builtin("")
+	src := sprites.Shared("")
 	big := Render(&b, g, src, 118, 38, nil)
 	mid := Render(&b, g, src, 78, 22, nil)
 	tiny := Render(&b, g, src, 52, 14, nil) // 13x6 at 4px = 52x24px
@@ -394,7 +394,7 @@ func TestTooSmallMessageFitsNarrowWidths(t *testing.T) {
 			t.Fatalf("width %d: empty message", w)
 		}
 		var b Buffers
-		lines := Render(&b, snake.New(13, 6, snake.Walls, 0, fixedRand{}), sprites.Builtin(""), w, 5, nil)
+		lines := Render(&b, snake.New(13, 6, snake.Walls, 0, fixedRand{}), sprites.Shared(""), w, 5, nil)
 		for i, l := range lines {
 			if cells(l) != w {
 				t.Fatalf("width %d line %d: %d cells", w, i, cells(l))
@@ -461,12 +461,12 @@ func TestCardPixels(t *testing.T) {
 func TestRenderSwitchesSourceWithoutStalePalettes(t *testing.T) {
 	var b Buffers
 	g := playingGame(3)
-	first := strings.Join(Render(&b, g, sprites.Builtin("pink"), 78, 22, nil), "")
-	second := strings.Join(Render(&b, g, sprites.Builtin("lavender"), 78, 22, nil), "")
+	first := strings.Join(Render(&b, g, sprites.Shared("pink"), 78, 22, nil), "")
+	second := strings.Join(Render(&b, g, sprites.Shared("lavender"), 78, 22, nil), "")
 	if first == second {
 		t.Fatal("a different source drew the same pigs: stale palette cache")
 	}
-	again := strings.Join(Render(&b, g, sprites.Builtin("pink"), 78, 22, nil), "")
+	again := strings.Join(Render(&b, g, sprites.Shared("pink"), 78, 22, nil), "")
 	if again != first {
 		t.Fatal("switching back did not restore the first picture")
 	}
@@ -475,7 +475,7 @@ func TestRenderSwitchesSourceWithoutStalePalettes(t *testing.T) {
 func TestTheHUDFollowsTheGameBetweenFrames(t *testing.T) {
 	var b Buffers
 	g := playingGame(3)
-	src := sprites.Builtin("")
+	src := sprites.Shared("")
 	before := plain(strings.Join(Render(&b, g, src, 78, 22, nil), "\n"))
 	g.Score = 7 // only the score changes: the cache must notice it alone
 	after := plain(strings.Join(Render(&b, g, src, 78, 22, nil), "\n"))
@@ -499,7 +499,7 @@ func TestTheHUDFollowsTheGameBetweenFrames(t *testing.T) {
 func TestRenderReusesBuffersAcrossFrames(t *testing.T) {
 	var b Buffers
 	g := playingGame(6)
-	src := sprites.Builtin("")
+	src := sprites.Shared("")
 	dst := make([]string, 0, 30)
 	dst = Render(&b, g, src, 78, 22, dst[:0])
 	first := append([]string(nil), dst...)
@@ -517,14 +517,14 @@ func TestRenderDownsamplesWithoutTrueColor(t *testing.T) {
 	t.Setenv("COLORTERM", "")
 	t.Setenv("WT_SESSION", "")
 	var b Buffers
-	lines := Render(&b, playingGame(4), sprites.Builtin(""), 78, 22, nil)
+	lines := Render(&b, playingGame(4), sprites.Shared(""), 78, 22, nil)
 	frame := strings.Join(lines, "\n")
 	if strings.Contains(frame, "38;2;") || !strings.Contains(frame, "\x1b[38;5;") {
 		t.Fatal("a frame without 24-bit color support must use 256-color SGR")
 	}
 	t.Setenv("COLORTERM", "truecolor")
 	b = Buffers{}
-	frame = strings.Join(Render(&b, playingGame(4), sprites.Builtin(""), 78, 22, nil), "\n")
+	frame = strings.Join(Render(&b, playingGame(4), sprites.Shared(""), 78, 22, nil), "\n")
 	if !strings.Contains(frame, "38;2;") {
 		t.Fatal("a true-color terminal must get 24-bit SGR")
 	}
@@ -586,5 +586,63 @@ func TestAppleArtHasUniformRowsAndOnlyKnownSymbols(t *testing.T) {
 	}
 	if len(appleFor(12)) != 8 || len(appleFor(5)) != 4 {
 		t.Error("appleFor must fall back to the nearest smaller art")
+	}
+}
+
+// The Sheriff wears his hat over the top rows of the leader's head; nobody else does, followers included.
+func TestTheSheriffLeaderWearsAHatAndNoFollowerDoes(t *testing.T) {
+	hatColour := sprites.Shared("sheriff").Palette(0)['H']
+	for _, size := range []int{8, 6, 4} {
+		g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+		g.Start() // a waiting game has a card over the leader
+		g.Body = append(g.Body, snake.Point{X: g.Body[0].X - 1, Y: g.Body[0].Y})
+		w, h := 10*size+4, 6*size+4
+		ox, oy := BoardOrigin(w, h, g.W, g.H, size)
+		leaderTop := func(src sprites.Source, member int) bool {
+			var cv pixel.Canvas
+			cv.Resize(w, h)
+			Draw(&cv, g, src, size)
+			p := g.Body[member]
+			for x := range size {
+				if cv.At(ox+p.X*size+x, oy+p.Y*size) == hatColour {
+					return true
+				}
+			}
+			return false
+		}
+		if !leaderTop(sprites.Shared("sheriff"), 0) {
+			t.Errorf("size %d: the Sheriff leader has no hat", size)
+		}
+		if leaderTop(sprites.Shared("sheriff"), 1) {
+			t.Errorf("size %d: a follower wears the Sheriff's hat", size)
+		}
+		if leaderTop(sprites.Shared("pink"), 0) || leaderTop(sprites.Shared(""), 0) {
+			t.Errorf("size %d: a leader that is not the Sheriff wears a hat", size)
+		}
+	}
+}
+
+func TestTheHatStaysOnTheHeadAndLeavesTheEyesAlone(t *testing.T) {
+	src := sprites.Shared("sheriff")
+	pal := src.Palette(0)
+	g := snake.New(10, 6, snake.Walls, 0, fixedRand{})
+	g.Start() // a waiting game has a card over the leader
+	for _, size := range []int{8, 6, 4} {
+		var c pixel.Canvas
+		c.Resize(10*size+4, 6*size+4)
+		Draw(&c, g, src, size)
+		ox, oy := BoardOrigin(c.W, c.H, g.W, g.H, size)
+		x0, y0 := ox+g.Body[0].X*size, oy+g.Body[0].Y*size
+		eyes := 0
+		for y := range size {
+			for x := range size {
+				if c.At(x0+x, y0+y) == pal['K'] {
+					eyes++
+				}
+			}
+		}
+		if eyes < 2 {
+			t.Errorf("size %d: the hat hides the eyes (%d dark pixels)", size, eyes)
+		}
 	}
 }
