@@ -1,6 +1,7 @@
 package pi_permission_system
 
 import (
+	"reflect"
 	"runtime"
 	"testing"
 )
@@ -961,3 +962,25 @@ type failingEntriesManager struct{}
 func (failingEntriesManager) GetSessionID() (string, error)           { return "", errTest }
 func (failingEntriesManager) GetSessionDir() (string, error)          { return "", errTest }
 func (failingEntriesManager) GetEntries() ([]SessionEntryView, error) { return nil, errTest }
+
+// Object.keys order: canonical array indexes (0 to 2^32-2) ascending first, then the other keys in insertion order. The key test skips
+// ParseUint's error for non-numeric keys, so its edges are pinned here.
+func TestJSObjectKeyOrderArrayIndexEdges(t *testing.T) {
+	o := newObject()
+	for _, k := range []string{"b", "10", "01", "4294967295", "4294967294", "2", "-1", "00", "0", "12345678901", "a1", "1e3", ""} {
+		o.set(k, true)
+	}
+	want := []string{"0", "2", "10", "4294967294", "b", "01", "4294967295", "-1", "00", "12345678901", "a1", "1e3", ""}
+	if got := o.order(); !reflect.DeepEqual(got, want) {
+		t.Errorf("order = %q, want %q", got, want)
+	}
+	plain := newObject()
+	for _, k := range []string{"z", "a", "m"} {
+		plain.set(k, true)
+	}
+	got := plain.order()
+	got[0] = "changed"
+	if plain.order()[0] != "z" {
+		t.Error("order of an object with no index keys shares its key slice")
+	}
+}

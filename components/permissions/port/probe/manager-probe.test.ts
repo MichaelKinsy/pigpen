@@ -9,6 +9,7 @@ import { it } from "vitest";
 import type { ResolvedAccessIntent } from "#src/access-intent/access-intent";
 import { getActiveAgentName, getActiveAgentNameFromSystemPrompt } from "#src/session/active-agent";
 import { PermissionManager } from "#src/policy/permission-manager";
+import { PermissionResolver } from "#src/policy/permission-resolver";
 import type { Ruleset } from "#src/policy/rule";
 
 const must = (v: string | undefined, name: string): string => {
@@ -72,6 +73,22 @@ it("records the manager corpus", () => {
           return { throws: String(e) };
         }
       });
+      // The resolver over the same manager: the family fold, the access-path unwrap and the pre-resolved (path-values) wire. A path-values
+      // intent is also run as an access-path intent whose matchValues() is the same list.
+      const resolver = new PermissionResolver(manager, { getRuleset: () => w.sessionRules });
+      const resolved = w.intents.map((intent) => {
+        const run = (i: Parameters<PermissionResolver["resolve"]>[0]) => {
+          try {
+            return { result: resolver.resolve(i) };
+          } catch (e) {
+            return { throws: String(e) };
+          }
+        };
+        const direct = run(intent);
+        if (intent.kind !== "path-values") return { direct };
+        const accessPath = { kind: "access-path", surface: intent.surface, agentName: intent.agentName, path: { matchValues: () => intent.values } };
+        return { direct, viaAccessPath: run(accessPath as unknown as Parameters<PermissionResolver["resolve"]>[0]) }; // a duck-typed AccessPath: the resolver reads only matchValues()
+      });
       const display: Record<string, unknown> = {};
       for (const agent of w.agentNames) {
         const key = agent ?? "<none>";
@@ -83,7 +100,7 @@ it("records the manager corpus", () => {
           composed: manager.getComposedConfigRules(a),
         };
       }
-      worlds.push(scrub({ id: w.id, results, display }, base));
+      worlds.push(scrub({ id: w.id, results, resolved, display }, base));
     } finally {
       rmSync(base, { recursive: true, force: true });
     }

@@ -71,11 +71,19 @@ func CapabilityDirectionOf(surface string) (CapabilityDirection, bool) {
 
 // SurfaceFamilyMembers is a family name's two directional members (read, then write), ok false when surface is not a family name.
 func SurfaceFamilyMembers(surface string) (members [2]string, ok bool) {
-	if !isDirectionalFamily(surface) {
-		return members, false
-	}
-	return [2]string{surface + "_read", surface + "_write"}, true
+	members, ok = directionalFamilyMembers[surface]
+	return members, ok
 }
+
+// directionalFamilyMembers is every family's member names, built once: the resolver's fold and the session store expand a family on
+// every check and every approval, and concatenating the names each time allocated them again.
+var directionalFamilyMembers = func() map[string][2]string {
+	m := map[string][2]string{}
+	for _, f := range pathDirectionalFamilies {
+		m[f] = [2]string{f + "_" + string(capabilityDirections[0]), f + "_" + string(capabilityDirections[1])}
+	}
+	return m
+}()
 
 // CapabilitySurfaceForEffect is the narrowest surface in family that an attributed effect names; unproven names the bare family.
 func CapabilitySurfaceForEffect(family string, effect AttributedEffect) string {

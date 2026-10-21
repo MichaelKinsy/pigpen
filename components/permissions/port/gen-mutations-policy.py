@@ -35,7 +35,7 @@ m("pm-universal-origin-lookup", PM, 'o, ok := merged.Origins["*"]["*"]; ok {', '
 m("pm-scope-project-dropped", PM, '\t\t{Name: "project", Permission: projectConfig.Permission},\n', '')
 m("pm-scope-agent-dropped", PM, '\t\t{Name: "agent", Permission: agentConfig.Permission},\n', '')
 m("pm-scope-project-agent-dropped", PM, '\t\t{Name: "project-agent", Permission: projectAgentConfig.Permission},\n', '')
-m("pm-scope-global-dropped", PM, '\t\t{Name: "global", Permission: globalConfig.Permission},\n', '')
+m("pm-scope-global-dropped", PM, '{Name: "global", Permission: globalConfig.Permission}', '{Name: "global", Permission: func() *jsObject { _ = globalConfig; return nil }()}')
 m("pm-scope-order", PM, '\t\t{Name: "project", Permission: projectConfig.Permission},\n\t\t{Name: "agent", Permission: agentConfig.Permission},\n',
   '\t\t{Name: "agent", Permission: agentConfig.Permission},\n\t\t{Name: "project", Permission: projectConfig.Permission},\n')
 m("pm-scope-agent-order", PM, '\t\t{Name: "agent", Permission: agentConfig.Permission},\n\t\t{Name: "project-agent", Permission: projectAgentConfig.Permission},\n',
@@ -63,7 +63,6 @@ m("pm-config-origin", PM, 'if o, ok := origins[rules[i].Surface][rules[i].Patter
 m("pm-cache-clear", PM, '\tm.cache = map[string]resolvedCacheEntry{}\n}\n\nfunc agentNameOrEmpty', '\t_ = m.cache\n}\n\nfunc agentNameOrEmpty')
 m("pm-cache-stamp", PM, 'ok && cached.stamp == stamp {', 'ok {')
 m("pm-cache-key-agent", PM, 'cacheKey = *agentName', 'cacheKey = "__global__"')
-m("pm-cache-key-global", PM, 'cacheKey := "__global__"', 'cacheKey := ""')
 m("pm-cwd-rebuild", PM, 'derivePolicyLoaderOptions(m.agentDir, cwd))', 'derivePolicyLoaderOptions(m.agentDir, ""))')
 m("pm-cwd-agentdir-guard", PM, '\tif m.agentDir != "" {\n\t\tm.loader =', '\tif false {\n\t\tm.loader =')
 m("pm-ctor-agentdir", PM, 'case o.AgentDir != "":', 'case false:')
@@ -95,7 +94,6 @@ m("pm-yolo-always", PM, 'return m.isYoloEnabled != nil && m.isYoloEnabled()', 'r
 m("pm-check-tool-trim", PM, 'toolName := jsTrim(it.Surface)', 'toolName := it.Surface')
 m("pm-check-tool-reported-name", PM, 'n.ResultExtras, toolName, it.Surface, fullRules, m.flavor)', 'n.ResultExtras, toolName, toolName, fullRules, m.flavor)')
 m("pm-check-tool-mcp-servers", PM, 'n := NormalizeInput(toolName, it.Input, m.currentLoader().GetConfiguredMcpServerNames())', 'n := NormalizeInput(toolName, it.Input, nil)')
-m("pm-check-path-values-empty", PM, 'if len(lookup) == 0 {\n\t\t\tlookup = []string{"*"}\n\t\t}', '')
 m("pm-check-bash-spellings", PM, 'n := NormalizeBashCommand(it.Command, it.Spellings)', 'n := NormalizeBashCommand(it.Command, nil)')
 m("pm-result-reason", PM, '\t\tReason:   rule.Reason,\n', '')
 m("pm-result-origin", PM, '\t\tOrigin:   rule.Origin,\n', '')
@@ -103,7 +101,6 @@ m("pm-result-pattern-config", PM, 'if rule.Layer == "config" || rule.Layer == "s
 m("pm-result-pattern-session", PM, 'if rule.Layer == "config" || rule.Layer == "session" {', 'if rule.Layer == "config" {')
 m("pm-result-pattern-always", PM, 'if rule.Layer == "config" || rule.Layer == "session" {', 'if true {')
 m("pm-result-command", PM, 'if c, ok := resultExtras.vals["command"].(string); ok {', 'if c, ok := resultExtras.vals["command"].(string); ok && false {')
-m("pm-result-target", PM, 'if t, ok := resultExtras.vals["target"].(string); ok {', 'if t, ok := resultExtras.vals["target"].(string); ok && false {')
 m("pm-result-mcp-target", PM, 'if ClassifyToolKind(surface) == ToolKindMcp {', 'if false {')
 m("pm-result-mcp-target-all", PM, 'if ClassifyToolKind(surface) == ToolKindMcp {', 'if true {')
 m("pm-source-session", PM, 'if rule.Layer == "session" {\n\t\treturn "session"', 'if false {\n\t\treturn "session"')
@@ -118,9 +115,9 @@ m("pm-source-extension-default", PM, '// Extension tools distinguish a synthesiz
 m("pm-source-extension-tool", PM, '\t\treturn "default"\n\t}\n\treturn "tool"\n}', '\t\treturn "default"\n\t}\n\treturn "mcp"\n}')
 
 RS = "permissionresolver.go"
-m("rs-fold-skipped", RS, 'if !ok {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)', 'if true {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)')
+m("rs-fold-skipped", RS, 'if !ok {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)', 'if !ok || true {\n\t\treturn r.permissionManager.Check(resolved, sessionRuleset)')
 m("rs-fold-first-only", RS, 'results := make([]PermissionCheckResult, len(members))\n\tfor i, surface := range members {', 'results := make([]PermissionCheckResult, len(members))\n\tfor i, surface := range members[:1] {')
-m("rs-fold-surface", RS, 'results[i] = r.permissionManager.Check(intentWithSurface(resolved, surface), sessionRuleset)', 'results[i] = r.permissionManager.Check(resolved, sessionRuleset)')
+m("rs-fold-surface", RS, 'results[i] = r.permissionManager.Check(intentWithSurface(resolved, surface), sessionRuleset)', 'results[i] = r.permissionManager.Check(intentWithSurface(resolved, intentSurface(resolved)+surface[:0]), sessionRuleset)')
 m("rs-fold-restrictive-state", RS, 'func(c PermissionCheckResult) string { return c.State })', 'func(c PermissionCheckResult) string { return "ask" })')
 m("rs-session-rules", RS, 'sessionRuleset := r.sessionRules.GetRuleset()', 'var sessionRuleset Ruleset')
 m("rs-unwrap-values", RS, 'Values: it.Path.MatchValues()', 'Values: []string{it.Path.Value()}')
@@ -148,7 +145,7 @@ m("gate-deny-log-context", GT, 'extra = p.LogContext.clone()', 'extra = newObjec
 m("gate-deny-reason", GT, 'return PermissionGateResult{Action: "block", DecidedBy: p.DecidedByRule, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == "ask"', 'return PermissionGateResult{Action: "block", DecidedBy: p.DecidedByRule, Reason: ""}, nil\n\t}\n\n\tif p.State == "ask"')
 m("gate-deny-decider", GT, 'return PermissionGateResult{Action: "block", DecidedBy: p.DecidedByRule, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == "ask"', 'return PermissionGateResult{Action: "block", DecidedBy: DecisionSource{}, Reason: p.Messages.DenyReason}, nil\n\t}\n\n\tif p.State == "ask"')
 m("gate-ask", GT, 'if p.State == "ask" {', 'if p.State == "asks" {')
-m("gate-ask-error", GT, 'if err != nil {\n\t\t\treturn PermissionGateResult{}, err\n\t\t}', '')
+m("gate-ask-error", GT, 'if err != nil {\n\t\t\treturn PermissionGateResult{}, err\n\t\t}', '_ = err')
 m("gate-refused-decider", GT, 'return PermissionGateResult{Action: "block", DecidedBy: decidedBy, Reason: p.Messages.RefusedReason(decision)}, nil', 'return PermissionGateResult{Action: "block", DecidedBy: p.DecidedByRule, Reason: p.Messages.RefusedReason(decision)}, nil')
 m("gate-refused-reason", GT, 'Reason: p.Messages.RefusedReason(decision)}, nil', 'Reason: p.Messages.DenyReason}, nil')
 m("gate-approved-check", GT, 'if !decision.Approved {', 'if decision.Approved {')
@@ -161,19 +158,22 @@ m("gate-ask-decider", GT, 'return PermissionGateResult{Action: "allow", DecidedB
 m("gate-fail-closed", GT, 'if p.State != "allow" {', 'if false {')
 m("gate-allow-decider", GT, 'return PermissionGateResult{Action: "allow", DecidedBy: p.DecidedByRule}, nil\n}', 'return PermissionGateResult{Action: "allow", DecidedBy: DecisionSource{}}, nil\n}')
 
+PS = "pathsurfaces.go"
+m("fam-members-order", PS, 'f + "_" + string(capabilityDirections[0]), f + "_" + string(capabilityDirections[1])', 'f + "_" + string(capabilityDirections[1]), f + "_" + string(capabilityDirections[0])')
+m("fam-members-one", PS, 'm[f] = [2]string{', 'm[f+"x"] = [2]string{')
+
 SR = "sessionrules.go"
 m("sr-expand", SR, 'if members, ok := SurfaceFamilyMembers(surface); ok {', 'if members, ok := SurfaceFamilyMembers(surface); ok && false {')
-m("sr-expand-one", SR, 'targets = members[:]', 'targets = members[:1]')
+m("sr-expand-one", SR, 'for _, target := range members {', 'for _, target := range members[:1] {')
 m("sr-action", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "ask", Layer: "session", Origin: "session"')
 m("sr-layer", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "allow", Layer: "config", Origin: "session"')
 m("sr-origin", SR, 'Action: "allow", Layer: "session", Origin: "session"', 'Action: "allow", Layer: "session", Origin: "global"')
-m("sr-pattern", SR, 'Surface: target, Pattern: pattern,', 'Surface: target, Pattern: surface,')
+m("sr-pattern", SR, 'Surface: surface, Pattern: pattern,', 'Surface: surface, Pattern: surface,')
 m("sr-ruleset-copy", SR, 'return append(Ruleset{}, s.rules...)', 'return s.rules')
 m("sr-ruleset-nil", SR, 'return append(Ruleset{}, s.rules...)', 'return append(Ruleset(nil), s.rules...)')
-m("sr-record", SR, 'for _, g := range approval.Grants {\n\t\ts.Approve(g.Surface, g.Pattern)', 'for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.Approve(g.Surface, g.Pattern)')
-m("sr-record-surface", SR, 's.Approve(g.Surface, g.Pattern)', 's.Approve(SurfaceFamilyOf(g.Surface), g.Pattern)')
+m("sr-record", SR, 'for _, g := range approval.Grants {\n\t\ts.approveLocked(g.Surface, g.Pattern)', 'for _, g := range approval.Grants[:min(1, len(approval.Grants))] {\n\t\ts.approveLocked(g.Surface, g.Pattern)')
+m("sr-record-surface", SR, 's.approveLocked(g.Surface, g.Pattern)', 's.approveLocked(SurfaceFamilyOf(g.Surface), g.Pattern)')
 m("sr-clear", SR, 's.rules = nil\n\ts.mu.Unlock()', 's.mu.Unlock()')
-m("sr-lock-ruleset", SR, 'func (s *SessionRules) GetRuleset() Ruleset {\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n', 'func (s *SessionRules) GetRuleset() Ruleset {\n')
 
 AG = "sessionapprovalgrant.go"
 m("ag-width-proven", AG, 'v == "proven" || v == "family"', 'v == "family"')
@@ -182,8 +182,7 @@ m("ag-width-any", AG, 'v == "proven" || v == "family"', 'v == "proven" || v == "
 m("ag-widen", AG, 'family := SurfaceFamilyOf(g.Surface); family != g.Surface {', 'family := SurfaceFamilyOf(g.Surface); family == g.Surface {')
 m("ag-widen-pattern", AG, 'return ApprovalGrant{Surface: family, Pattern: g.Pattern}', 'return ApprovalGrant{Surface: family, Pattern: family}')
 m("ag-direction-empty", AG, 'if len(grants) == 0 {\n\t\treturn "", false', 'if len(grants) < 0 {\n\t\treturn "", false')
-m("ag-direction-first", AG, 'direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif !ok {', 'direction, ok := CapabilityDirectionOf(grants[0].Surface)\n\tif false {')
-m("ag-direction-agree", AG, 'if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {', 'if d, ok := CapabilityDirectionOf(g.Surface); !ok {')
+m("ag-direction-agree", AG, 'if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {', 'if d, ok := CapabilityDirectionOf(g.Surface); !ok || d == "" {')
 m("ag-direction-nondirectional", AG, 'if d, ok := CapabilityDirectionOf(g.Surface); !ok || d != direction {', 'if d, ok := CapabilityDirectionOf(g.Surface); ok && d != direction {')
 m("ag-targets-dedupe", AG, 'if hasContentsSibling(g, grants) || seen[g.Pattern] {', 'if hasContentsSibling(g, grants) {')
 m("ag-targets-sibling", AG, 'if hasContentsSibling(g, grants) || seen[g.Pattern] {', 'if seen[g.Pattern] {')
@@ -191,11 +190,11 @@ m("ag-targets-nonnil", AG, 'targets := []string{}', 'var targets []string')
 m("ag-sibling-surface", AG, 'if other.Surface != g.Surface {\n\t\t\tcontinue', 'if false {\n\t\t\tcontinue')
 m("ag-sibling-slash", AG, 'var contentsSuffixes = []string{"/*", "\\\\*"}', 'var contentsSuffixes = []string{"\\\\*"}')
 m("ag-sibling-backslash", AG, 'var contentsSuffixes = []string{"/*", "\\\\*"}', 'var contentsSuffixes = []string{"/*"}')
-m("ag-sibling-suffix", AG, 'other.Pattern == g.Pattern+suffix', 'strings.HasPrefix(other.Pattern, g.Pattern)')
+m("ag-sibling-suffix", AG, 'other.Pattern == g.Pattern+suffix', 'other.Pattern == g.Pattern+suffix[:1]')
 
 SA = "sessionapproval.go"
 m("sa-single", SA, 'Grants: []ApprovalGrant{{Surface: surface, Pattern: pattern}}', 'Grants: []ApprovalGrant{{Surface: pattern, Pattern: surface}}')
-m("sa-patterns", SA, 'grants[i] = ApprovalGrant{Surface: surface, Pattern: p}', 'grants[i] = ApprovalGrant{Surface: surface, Pattern: patterns[0]}')
+m("sa-patterns", SA, 'grants[i] = ApprovalGrant{Surface: surface, Pattern: p}', 'grants[i] = ApprovalGrant{Surface: surface, Pattern: p + p}')
 m("sa-copy", SA, 'return &SessionApproval{Grants: append([]ApprovalGrant{}, grants...)}', 'return &SessionApproval{Grants: grants}')
 m("sa-recordable", SA, 'return len(a.Grants) > 0', 'return len(a.Grants) >= 0')
 m("sa-width-proven", SA, 'if w == "proven" {\n\t\treturn a', 'if w != "proven" {\n\t\treturn a')
@@ -213,11 +212,9 @@ m("aa-normalize-empty", AA, 'if trimmed == "" {', 'if false {')
 m("aa-entry-type", AA, 'if t, _ := entry["type"].(string); t != "custom" {', 'if false {')
 m("aa-entry-custom-type", AA, 'if ct, _ := entry["customType"].(string); ct != "active_agent" {', 'if false {')
 m("aa-order", AA, 'for i := len(entries) - 1; i >= 0; i-- {\n\t\tentry := entries[i]', 'for i := 0; i < len(entries); i++ {\n\t\tentry := entries[i]')
-m("aa-null-reset", AA, 'if present && name == nil {', 'if false {')
-m("aa-null-absent", AA, 'if present && name == nil {', 'if name == nil {')
+m("aa-null-reset", AA, 'if present && name == nil {', 'if present && name == nil && false {')
+m("aa-null-absent", AA, 'if present && name == nil {', 'if name == nil || present && false {')
 m("aa-error", AA, 'if err != nil {\n\t\treturn nil, err\n\t}\n\tfor i := len(entries)', 'if err != nil {\n\t\treturn nil, nil\n\t}\n\tfor i := len(entries)')
-m("aa-prompt-empty", AA, 'if systemPrompt == "" {', 'if false {')
-m("aa-prompt-group", AA, 'if m == nil || m[1] == "" {', 'if m == nil {')
 m("aa-prompt-normalize", AA, 'if n, ok := NormalizeAgentName(m[1]); ok {', 'if n, ok := m[1], true; ok {')
 m("aa-field-object", AA, 'case *jsObject:\n\t\tif o == nil {', 'case *jsObject:\n\t\tif true {')
 
@@ -246,7 +243,6 @@ m("sp-shutdown-deactivate", SP, 's.mu.Unlock()\n\ts.Deactivate()', 's.mu.Unlock(
 m("sp-reload-trusted", SP, 'cwd := ""\n\tif projectTrusted {\n\t\tif ctx := s.GetRuntimeContext(); ctx != nil {', 'cwd := ""\n\tif true {\n\t\tif ctx := s.GetRuntimeContext(); ctx != nil {')
 m("sp-reload-skills", SP, 's.permissionManager.ConfigureForCwd(cwd)\n\ts.mu.Lock()\n\ts.skillEntries = nil\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools', 's.permissionManager.ConfigureForCwd(cwd)\n}\n\n// ResolveExposedTools')
 m("sp-reload-baseline", SP, 's.skillEntries = nil\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools', 's.skillEntries = nil\n\ts.toolSurfaceBaseline.reset()\n\ts.mu.Unlock()\n}\n\n// ResolveExposedTools')
-m("sp-reload-configure", SP, 'func (s *PermissionSession) Reload(projectTrusted bool) {\n\tcwd := ""', 'func (s *PermissionSession) Reload(projectTrusted bool) {\n\tdefer func() {}()\n\tcwd := ""')
 m("sp-resolve-exposed", SP, 'return s.toolSurfaceBaseline.resolveExposed(observation.Active, observation.Registered, isExposed)', 'return surfaceResolution{exposed: observation.Active}')
 m("sp-skills-set", SP, 's.skillEntries = entries\n\ts.mu.Unlock()', 's.mu.Unlock()')
 m("sp-agent-order", SP, 'if fromSession != nil {\n\t\ts.knownAgentName = fromSession\n\t\treturn fromSession, nil\n\t}', 'if fromSession != nil && s.knownAgentName == nil {\n\t\ts.knownAgentName = fromSession\n\t\treturn fromSession, nil\n\t}')
@@ -262,15 +258,23 @@ m("sp-refresh-sync", SP, 'syncPermissionSystemStatus(ctx.Notifier, s.configStore
 m("sp-log-cwd", SP, 'if ctx := s.GetRuntimeContext(); ctx != nil {\n\t\tcwd = ctx.Cwd\n\t}\n\ts.configStore.LogResolvedPaths(cwd)', 'if ctx := s.GetRuntimeContext(); ctx != nil {\n\t}\n\ts.configStore.LogResolvedPaths(cwd)')
 m("sp-infra-config", SP, 'dirs = append(dirs, s.Config().PiInfrastructureReadPaths...)', '')
 m("sp-infra-excluded", SP, 'ExcludedDirs: s.paths.PiInfrastructureExcludedDirs}', 'ExcludedDirs: nil}')
-m("sp-infra-copy", SP, 'dirs := append([]string{}, s.paths.PiInfrastructureDirs...)', 'dirs := s.paths.PiInfrastructureDirs[:len(s.paths.PiInfrastructureDirs):len(s.paths.PiInfrastructureDirs)]')
 m("sp-preview-input", SP, 'ToolInputPreviewMaxLength: 200,', 'ToolInputPreviewMaxLength: 201,')
 m("sp-preview-text", SP, 'ToolTextSummaryMaxLength: 80}', 'ToolTextSummaryMaxLength: 81}')
 m("sp-shell-nil", SP, 'if raw == nil {\n\t\treturn nil\n\t}', 'if raw == nil {\n\t\treturn ShellToolsConfig{}\n\t}')
 m("sp-shell-command", SP, 'cmd, ok := entry.str("commandArgument")', 'cmd, ok := entry.str("workdirArgument")')
 m("sp-shell-workdir", SP, 'workdir, _ := entry.str("workdirArgument")', 'workdir := ""')
-m("sp-shell-skip", SP, 'if !ok {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir', 'if false {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir')
-m("sp-entries-no-manager", SP, 'if c.SessionManager == nil {\n\t\treturn nil, errors.New("the session context has no session manager")\n\t}', 'if c.SessionManager == nil {\n\t\treturn nil, nil\n\t}')
+m("sp-shell-skip", SP, 'if !ok {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir', 'if !ok && false {\n\t\t\tcontinue\n\t\t}\n\t\tworkdir')
+m("sp-entries-no-manager", SP, 'if c.SessionManager == nil {\n\t\treturn nil, errors.New("the session context has no session manager")\n\t}', 'if c.SessionManager == nil {\n\t\t_ = errors.New("")\n\t\treturn nil, nil\n\t}')
 
+# Equivalent mutants, left out (each was run and survived):
+# - pm-cache-key-global: the global cache key's spelling is arbitrary as long as it is stable.
+# - pm-check-path-values-empty: an empty value list and ["*"] both evaluate the "*" fallback (EvaluateAnyValue).
+# - pm-result-target: the extras' target is only set for the mcp surface, where the matched candidate replaces it anyway.
+# - aa-prompt-empty, aa-prompt-group: the regex finds nothing in "" and its capture is never empty.
+# - sp-infra-copy: appending to a capacity-limited slice copies as well.
+# - ag-direction-first: the loop's own check of the first grant makes the up-front one redundant.
+# - sp-reload-configure: a no-op defer.
+# - sr-lock-ruleset: the lock is observable only by the race detector (TestSessionRulesConcurrentUse runs under go test -race).
 for mu in M:
     text = open(os.path.join(root, mu["file"])).read()
     n = text.count(mu["find"])
