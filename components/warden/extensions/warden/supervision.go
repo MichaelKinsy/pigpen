@@ -362,6 +362,10 @@ func joinedText(content []any) string {
 // previous failed output of the same call, the result is replaced by a short diff note (computed against the
 // current content, so the diff never grows the result). It returns the content to deliver and whether it changed.
 func (w *warden) stuckDiffResult(ctx sdk.Context, cfg Config, verdict *StuckVerdict, failed bool, text string, content []any) ([]any, bool) {
+	if !failed || text == "" {
+		// Only a failed output is stored or diffed (extension.ts 2025-2078): a passing result costs nothing here.
+		return content, false
+	}
 	var key string
 	w.mu.Lock()
 	if w.window != nil && len(w.window.Attempts) > 0 {
