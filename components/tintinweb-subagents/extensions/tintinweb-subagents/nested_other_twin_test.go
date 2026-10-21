@@ -2,8 +2,8 @@ package tintinweb_subagents
 
 import (
 	"os"
-	"path/filepath"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
