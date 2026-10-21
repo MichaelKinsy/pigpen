@@ -18,27 +18,27 @@ func TestBashPathGateExtras(t *testing.T) {
 
 	t.Run("the session bypass logs the whole command and every token", func(t *testing.T) {
 		r := makeResolver(ck(func(c *PermissionCheckResult) { c.State, c.Source = "allow", "session" }))
-		b, ok := isBypass(gate(t, cmd("cat a.txt b.txt", func(c *ToolCallContext) { c.AgentName = sp("agent-1") }), r))
+		b, ok := isBypass(gate(t, cmd("cat ./a.txt ./b.txt", func(c *ToolCallContext) { c.AgentName = sp("agent-1") }), r))
 		if !ok {
 			t.Fatal("want a bypass")
 		}
 		eq(t, b.Log.Event, "permission_request.session_approved", "event")
-		eq(t, jsonOf(t, b.Log.Details), `{"source":"tool_call","toolCallId":"tc-1","toolName":"bash","agentName":"agent-1","command":"cat a.txt b.txt","tokens":["a.txt","b.txt"],"resolution":"session_approved"}`, "details")
+		eq(t, jsonOf(t, b.Log.Details), `{"source":"tool_call","toolCallId":"tc-1","toolName":"bash","agentName":"agent-1","command":"cat ./a.txt ./b.txt","tokens":["./a.txt","./b.txt"],"resolution":"session_approved"}`, "details")
 		eq(t, b.Decision == nil, true, "no decision event")
 	})
 	t.Run("the first of equally restrictive tokens decides", func(t *testing.T) {
 		r := makePathDispatchResolver(map[string]PermissionCheckResult{
-			"a.txt": ck(ckState("ask", "*")), "b.txt": ck(ckState("ask", "*")),
+			"/test/project/a.txt": ck(ckState("ask", "*")), "/test/project/b.txt": ck(ckState("ask", "*")),
 		}, ck(ckState("allow")))
-		d := gate(t, cmd("cat a.txt b.txt"), r).(*GateDescriptor)
-		eq(t, d.Decision.Value, "a.txt", "value")
+		d := gate(t, cmd("cat ./a.txt ./b.txt"), r).(*GateDescriptor)
+		eq(t, d.Decision.Value, "./a.txt", "value")
 	})
 	t.Run("a deny after asks decides, and later tokens are not resolved", func(t *testing.T) {
 		r := makePathDispatchResolver(map[string]PermissionCheckResult{
-			"a.txt": ck(ckState("ask", "*")), "b.txt": ck(ckState("deny", "*.txt")), "c.txt": ck(ckState("deny", "*.txt")),
+			"/test/project/a.txt": ck(ckState("ask", "*")), "/test/project/b.txt": ck(ckState("deny", "*.txt")), "/test/project/c.txt": ck(ckState("deny", "*.txt")),
 		}, ck(ckState("allow")))
-		d := gate(t, cmd("cat a.txt b.txt c.txt"), r).(*GateDescriptor)
-		eq(t, d.Decision.Value, "b.txt", "value")
+		d := gate(t, cmd("cat ./a.txt ./b.txt ./c.txt"), r).(*GateDescriptor)
+		eq(t, d.Decision.Value, "./b.txt", "value")
 		eq(t, d.PreCheck.State, "deny", "state")
 		eq(t, len(r.calls), 2, "resolver calls stop at the first deny")
 	})
