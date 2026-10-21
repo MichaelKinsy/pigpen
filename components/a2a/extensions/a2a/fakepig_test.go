@@ -36,6 +36,14 @@ type fakeLog struct {
 	Aborted    bool              `json:"aborted"`
 	Finished   bool              `json:"finished"`
 	ChildPID   int               `json:"childPid"`
+	Images     []fakeImage       `json:"images"`
+}
+
+// fakeImage is an image of the `prompt` command as Pi's RPC carries it (ImageContent).
+type fakeImage struct {
+	Type     string `json:"type"`
+	Data     string `json:"data"`
+	MimeType string `json:"mimeType"`
 }
 
 func fakePig() {
@@ -86,16 +94,17 @@ func fakePig() {
 	in.Buffer(make([]byte, 1<<20), 1<<24)
 	for in.Scan() {
 		var cmd struct {
-			ID      string `json:"id"`
-			Type    string `json:"type"`
-			Message string `json:"message"`
+			ID      string      `json:"id"`
+			Type    string      `json:"type"`
+			Message string      `json:"message"`
+			Images  []fakeImage `json:"images"`
 		}
 		if json.Unmarshal(in.Bytes(), &cmd) != nil {
 			continue
 		}
 		switch cmd.Type {
 		case "prompt":
-			entry.Prompt, entry.Started = cmd.Message, true
+			entry.Prompt, entry.Started, entry.Images = cmd.Message, true, cmd.Images
 			save()
 			if strings.Contains(cmd.Message, "REJECT") {
 				emit(map[string]any{"id": cmd.ID, "type": "response", "command": "prompt", "success": false, "error": "secret internal reason"})

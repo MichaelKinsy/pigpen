@@ -1,0 +1,373 @@
+
+# port/a2a-1: `pigeq mutate --unit --jobs 12` on xd670 (tern-ci:v3, go1.27.2, PiG SDK 0.5.0, pig 0.5.0+1.3.0.1402973a, taskset -c 64-95,160-191 nice -n 10), 166 mutants.
+# First run: 160 killed, 6 not killed (SURVIVED shutdown-does-not-close-the-port and raw-without-media-type-accepted; INVALID, not compiling:
+# store-get-owner-unchecked, store-update-owner-unchecked, server-store-in-memory-only, push-config-in-send-ignored).
+# Fixes: four mutants repaired so they compile; the test for a raw part with no media type now requires the sentence "has no media type"
+# (it passed on the malformed-type message before, so the mutant was equivalent to the test); re-run of those five plus three copies of
+# shutdown-does-not-close-the-port (second block below): five killed, the shutdown mutant survived all three copies.
+# Result: 165 of 166 killed; 1 survives on this host: shutdown-does-not-close-the-port. It deletes the wait for the Serve goroutine and the
+# explicit listener close in Server.Shutdown; it is killed only when the test's probe wins a scheduling race (it was killed in the 109-mutant
+# run and in the 24-run loop on the earlier hosts), and on this 64-processor host the Serve goroutine always finishes first. A GOMAXPROCS(1)
+# variant of TestShutdownClosesThePortEvenRightAfterStart was tried and did not kill it either, so the test is unchanged. Not claimed as killed.
+KILLED   listener-starts-without-config
+         unit test: --- FAIL: TestWorkerChildNeverListens (0.00s)
+KILLED   worker-child-may-listen
+         unit test: --- FAIL: TestWorkerProcessDoesNotOpenAListener (0.00s)
+KILLED   flag-not-highest-precedence
+         unit test: --- FAIL: TestPrecedenceFlagOverEnvOverFile (0.00s)
+KILLED   env-not-over-file
+         unit test: --- FAIL: TestPrecedenceFlagOverEnvOverFile (0.00s)
+KILLED   unknown-keys-and-inline-secrets-accepted
+         unit test: --- FAIL: TestInlineSecretsAreRejected (0.00s)
+KILLED   listener-without-tokens-allowed
+         unit test: --- FAIL: TestListenerNeedsAuthentication (0.00s)
+KILLED   insecure-no-auth-off-loopback
+         unit test: --- FAIL: TestInsecureNoAuthOnlyOnLoopback (0.00s)
+KILLED   insecure-and-tokens-both
+         unit test: --- FAIL: TestInsecureNoAuthWithTokensIsAmbiguous (0.00s)
+KILLED   short-tokens-allowed
+         unit test: --- FAIL: TestTokenConfigValidation (0.00s)
+KILLED   duplicate-token-values-allowed
+         unit test: --- FAIL: TestTwoVariablesWithOneValueAreRejected (0.00s)
+KILLED   duplicate-token-names-allowed
+         unit test: --- FAIL: TestTokenConfigValidation (0.00s)
+KILLED   tenant-not-validated
+         unit test: --- FAIL: TestTokenConfigValidation (0.00s)
+KILLED   missing-token-env-allowed
+         unit test: --- FAIL: TestTokenEnvNotSetIsSaidPlainly (0.00s)
+KILLED   listen-not-host-port
+         unit test: --- FAIL: TestMalformedListenAddressSaysHostPort (0.00s)
+KILLED   worker-gets-pig-default-tools
+         unit test: --- FAIL: TestReview_WorkerHasNoToolsUnlessConfigured (0.00s)
+KILLED   remote-url-scheme-unchecked
+         unit test: --- FAIL: TestRemoteDefaultsAndValidation (0.00s)
+KILLED   remote-name-unchecked
+         unit test: --- FAIL: TestRemoteDefaultsAndValidation (0.00s)
+KILLED   basic-scheme-accepted
+         unit test: --- FAIL: TestAuthenticateRejects (0.00s)
+KILLED   extra-fields-accepted
+         unit test: --- FAIL: TestAuthenticateRejects (0.00s)
+KILLED   token-comparison-inverted
+         unit test: --- FAIL: TestAuthenticateBearer (0.00s)
+KILLED   insecure-flag-ignored
+         unit test: --- FAIL: TestInsecureNoAuthGivesOneAnonymousPrincipal (0.00s)
+KILLED   tenant-key-uses-token-name
+         unit test: --- FAIL: TestPrincipalKeysIsolate (0.00s)
+KILLED   key-namespaces-collide
+         unit test: --- FAIL: TestPrincipalKeysIsolate (0.00s)
+KILLED   everything-public
+         unit test: --- FAIL: TestWrapRejectsWith401AndChallenge (0.00s)
+KILLED   no-bearer-challenge
+         unit test: --- FAIL: TestWrapRejectsWith401AndChallenge (0.00s)
+KILLED   empty-authenticator-allowed
+         unit test: --- FAIL: TestNoTokensNoInsecureFlagIsAnError (0.00s)
+KILLED   file-parts-dropped
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   empty-prompt-accepted
+         unit test: --- FAIL: TestPromptOfStillRefusesAnEmptyMessage (0.00s)
+KILLED   prompt-size-unbounded
+         unit test: --- FAIL: TestPromptOfLimitsApplyToWhatIsInlined (0.00s)
+KILLED   timeout-never-fires
+         unit test: --- FAIL: TestTaskTimeoutFailsTheTask (30.02s)
+KILLED   worker-error-detail-leaks
+         unit test: --- FAIL: TestWorkerErrorDetailIsNotSentToThePeer (0.00s)
+KILLED   context-not-serialised
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheSameContext (0.30s)
+KILLED   concurrency-limit-ignored
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit (0.31s)
+KILLED   cancel-does-not-stop-worker
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit (30.31s)
+KILLED   failure-reason-dropped
+         unit test: --- FAIL: TestWorkerFailureBecomesAFailedTask (0.00s)
+KILLED   principal-not-checked
+         unit test: --- FAIL: TestExecutorRefusesAForgedUser (0.00s)
+KILLED   version-not-enforced
+         unit test: --- FAIL: TestOldProtocolVersionsAreRefusedWithTheExactSentence (0.00s)
+KILLED   absent-version-accepted
+         unit test: --- FAIL: TestOldProtocolVersionsAreRefusedWithTheExactSentence (0.00s)
+KILLED   minor-versions-accepted
+         unit test: --- FAIL: TestCardWithoutAProtocol10InterfaceIsRefused (0.00s)
+KILLED   mixed-version-values-accepted
+         unit test: --- FAIL: TestOldProtocolVersionsAreRefusedWithTheExactSentence (0.00s)
+KILLED   tenant-not-enforced
+         unit test: --- FAIL: TestRequestTenantMustMatchTheTokensTenant (0.00s)
+KILLED   user-not-attached
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit (10.01s)
+KILLED   body-size-unbounded
+         unit test: --- FAIL: TestBodyLimitAppliesEvenWithASmallPrompt (0.10s)
+KILLED   card-requires-auth
+         unit test: --- FAIL: TestCardAdvertisesTheInputModesItAccepts (0.00s)
+KILLED   card-drops-streaming
+         unit test: --- FAIL: TestCardAdvertisesWhatTheListenerDoesNotOfferAsFalse (0.00s)
+KILLED   card-claims-push
+         unit test: --- FAIL: TestCardAdvertisesWhatTheListenerDoesNotOfferAsFalse (0.00s)
+KILLED   card-ignores-external-url
+         unit test: --- FAIL: TestAgentCardIsEncodedOncePerAdvertisedURL (0.01s)
+KILLED   card-without-security-requirement
+         unit test: --- FAIL: TestAgentCardIsPublicAndPinnedToProtocol10 (0.00s)
+KILLED   plain-http-on-tls
+         unit test: --- FAIL: TestTLSListener (0.00s)
+KILLED   second-start-allowed
+         unit test: --- FAIL: TestSecondStartIsAnError (0.00s)
+KILLED   worker-keeps-extensions
+         unit test: --- FAIL: TestWorkerPassesFlagsSessionAndCwd (0.01s)
+KILLED   worker-not-marked
+         unit test: --- FAIL: TestWorkerEnvironmentIsAllowlisted (0.01s)
+KILLED   worker-inherits-secrets
+         unit test: --- FAIL: TestWorkerEnvironmentIsAllowlisted (0.00s)
+KILLED   passenv-ignored
+         unit test: --- FAIL: TestWorkerSendsImagesInThePromptCommand (0.01s)
+KILLED   session-id-ignores-principal
+         unit test: --- FAIL: TestSessionIDIsStableScopedAndSafe (0.00s)
+KILLED   session-id-ignores-context
+         unit test: --- FAIL: TestSessionIDIsStableScopedAndSafe (0.00s)
+KILLED   session-dir-shared
+         unit test: --- FAIL: TestWorkerPassesFlagsSessionAndCwd (0.01s)
+KILLED   worker-cwd-not-set
+         unit test: --- FAIL: TestWorkerPassesFlagsSessionAndCwd (0.01s)
+KILLED   tools-allowlist-dropped
+         unit test: --- FAIL: TestReview_WorkerHasNoToolsUnlessConfigured (0.00s)
+KILLED   session-not-kept
+         unit test: --- FAIL: TestWorkerPassesFlagsSessionAndCwd (0.01s)
+KILLED   abort-not-sent
+         unit test: --- FAIL: TestWorkerCancelAbortsThenReaps (1.01s)
+KILLED   no-kill-after-grace
+         unit test: --- FAIL: TestWorkerEscalatesToKillWhenTermIsIgnored (20.02s)
+KILLED   no-terminate
+         unit test: --- FAIL: TestWorkerAsksForTermBeforeKill (3.01s)
+KILLED   model-error-text-copied
+         unit test: --- FAIL: TestModelFailureMessageIsExactlyGeneric (0.01s)
+KILLED   model-error-not-a-failure
+         unit test: --- FAIL: TestModelFailureMessageIsExactlyGeneric (0.00s)
+KILLED   streamed-and-final-text-duplicated
+         unit test: --- FAIL: TestWorkerPassesFlagsSessionAndCwd (0.00s)
+KILLED   empty-prompt-sent
+         unit test: --- FAIL: TestWorkerRefusesEmptyPrompt (0.01s)
+KILLED   tool-updates-dropped
+         unit test: --- FAIL: TestWorkerStreamsUpdatesAndFinalText (0.00s)
+KILLED   ui-request-hangs
+         unit test: --- FAIL: TestWorkerFailsATurnThatNeedsInteractiveInput (12.01s)
+KILLED   rejected-prompt-ignored
+         unit test: --- FAIL: TestWorkerReportsARejectedPromptWithoutTheReason (10.01s)
+KILLED   any-protocol-version-accepted
+         unit test: --- FAIL: TestCardWithoutAProtocol10InterfaceIsRefused (0.00s)
+KILLED   credentials-follow-the-card
+         unit test: --- FAIL: TestCredentialsAreNotSentToAHostTheCardNamed (0.00s)
+KILLED   transport-host-not-checked
+         unit test: --- FAIL: TestCredentialTransportRefusesAnotherHost (0.00s)
+KILLED   redirects-followed-with-credentials
+         unit test: --- FAIL: TestRemoteRedirectsAreNotFollowed (0.00s)
+KILLED   bearer-not-sent
+         unit test: --- FAIL: TestBearerAndCustomHeadersComeFromEnvironment (0.00s)
+KILLED   missing-bearer-env-tolerated
+         unit test: --- FAIL: TestMissingTokenEnvironmentIsAnErrorBeforeAnyRequest (0.00s)
+KILLED   custom-headers-dropped
+         unit test: --- FAIL: TestBearerAndCustomHeadersComeFromEnvironment (0.00s)
+KILLED   remote-not-cancelled-on-abort
+         unit test: --- FAIL: TestCancellingTheCallCancelsTheRemoteTask (10.01s)
+KILLED   timeout-ignored
+         unit test: panic: test timed out after 3m0s
+KILLED   unknown-agent-unnamed
+         unit test: --- FAIL: TestUnknownAgentNamesTheKnownOnes (0.00s)
+KILLED   names-unsorted
+         unit test: --- FAIL: TestRemotesNamesAreSortedForManyNames (0.00s)
+KILLED   empty-message-sent
+         unit test: --- FAIL: TestSendRefusesAnEmptyMessageBeforeAnyRequest (0.00s)
+KILLED   input-required-called-terminal
+         unit test: --- FAIL: TestSummaryOfAnInputRequiredTaskIsNotTerminal (0.00s)
+KILLED   failure-text-hidden
+         unit test: --- FAIL: TestFailedAndInputRequiredStates (0.00s)
+KILLED   auth-error-shows-token-context
+         unit test: --- FAIL: TestAuthFailureIsExplainedWithoutTheToken (0.00s)
+KILLED   switch-drops-listener
+         unit test: --- FAIL: TestSessionSwitchKeepsTheListenerReloadRestartsIt (0.00s)
+KILLED   shutdown-keeps-listener
+         unit test: --- FAIL: TestConfiguredListenerServesAndShutdownStopsIt (0.01s)
+KILLED   config-error-silent
+         unit test: --- FAIL: TestInvalidConfigurationIsReportedNotFatal (0.00s)
+KILLED   start-failure-silent
+         unit test: --- FAIL: TestListenFailureIsReportedToTheUser (0.00s)
+KILLED   flag-not-read
+         unit test: --- FAIL: TestFlagOverridesTheConfigurationFile (0.00s)
+KILLED   agent-dir-ignored
+         unit test: --- FAIL: TestConfigIsReadFromTheAgentDirectory (0.00s)
+KILLED   stop-does-not-reload-config
+         unit test: --- FAIL: TestToolAfterShutdownUsesTheRewrittenConfiguration (0.00s)
+KILLED   status-hides-remotes
+         unit test: --- FAIL: TestReloadAppliesChangedConfiguration (0.00s)
+KILLED   tool-required-not-enforced
+         unit test: --- FAIL: TestToolsRejectBadArguments (0.00s)
+KILLED   tool-empty-message-allowed
+         unit test: --- FAIL: TestToolsRejectBadArguments (0.00s)
+KILLED   tool-errors-not-errors
+         unit test: --- FAIL: TestToolsWithoutRemotesSayWhy (0.00s)
+KILLED   unfinished-task-not-flagged
+         unit test: --- FAIL: TestSummaryOfAnInputRequiredTaskIsNotTerminal (0.00s)
+KILLED   task-action-unchecked
+         unit test: --- FAIL: TestToolsRejectBadArguments (0.00s)
+KILLED   send-drops-context
+         unit test: --- FAIL: TestSendToolPassesTheContextIDThrough (0.01s)
+KILLED   tls-load-failure-ignored
+         unit test: --- FAIL: TestUnreadableTLSKeyPairFailsStart (0.00s)
+KILLED   subscribe-ownership-unchecked
+         unit test: --- FAIL: TestSecondPrincipalIsRefusedOnEveryTaskRPC (60.04s)
+KILLED   queued-cancel-ignored-at-slot
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheConcurrencyLimit (30.31s)
+KILLED   queued-cancel-ignored-at-context-lock
+         unit test: --- FAIL: TestCancelBeforeTheWorkerStartsBehindTheSameContext (30.31s)
+SURVIVED shutdown-does-not-close-the-port
+         
+KILLED   insecure-host-unchecked
+         unit test: --- FAIL: TestReview_InsecureLoopbackListenerRefusesAForeignHostHeader (0.00s)
+KILLED   transport-scheme-not-checked
+         unit test: --- FAIL: TestReview_CredentialsAreNotDowngradedToPlainHTTP (0.00s)
+KILLED   card-scheme-downgrade-accepted
+         unit test: --- FAIL: TestReview_CredentialsAreNotDowngradedToPlainHTTP (0.00s)
+KILLED   context-lock-shared-across-tenants
+         unit test: --- FAIL: TestReview_SameContextIDInTwoTenantsRunsConcurrently (6.01s)
+KILLED   left-behind-child-survives
+         unit test: --- FAIL: TestReview_WorkerKillsWhatATurnLeftBehind (10.02s)
+KILLED   store-create-not-persisted
+         unit test: --- FAIL: TestTaskInterruptedByARestartIsReportedFailed (0.00s)
+INVALID  store-get-owner-unchecked
+         mutant does not build: # github.com/MichaelKinsy/pigpen/a2a [github.com/MichaelKinsy/pigpen/a2a.test]
+INVALID  store-update-owner-unchecked
+         mutant does not build: # github.com/MichaelKinsy/pigpen/a2a [github.com/MichaelKinsy/pigpen/a2a.test]
+KILLED   store-list-shows-other-principals
+         unit test: --- FAIL: TestRestartKeepsTaskOwnership (0.01s)
+KILLED   store-interrupted-task-left-running
+         unit test: --- FAIL: TestTaskInterruptedByARestartIsReportedFailed (0.00s)
+KILLED   store-no-prune-on-open
+         unit test: --- FAIL: TestFileStoreFinishedTasksExpireAfterTheRetention (0.00s)
+KILLED   store-prunes-unfinished-tasks
+         unit test: --- FAIL: TestFileStoreNeverExpiresAnUnfinishedTask (0.00s)
+KILLED   store-create-does-not-prune
+         unit test: --- FAIL: TestFileStoreFinishedTasksExpireAfterTheRetention (0.00s)
+KILLED   store-writes-every-update
+         unit test: --- FAIL: TestFileStoreDoesNotWriteEveryArtifactChunk (0.03s)
+KILLED   store-state-change-not-written
+         unit test: --- FAIL: TestTaskSurvivesAListenerRestart (0.02s)
+KILLED   store-file-world-readable
+         unit test: --- FAIL: TestStoredTaskIsOwnerOnlyOnDisk (0.00s)
+KILLED   store-dir-world-readable
+         unit test: --- FAIL: TestFileStoreFilesAreOwnerOnlyAndNamedByDigest (0.00s)
+KILLED   store-task-id-in-file-name
+         unit test: --- FAIL: TestFileStoreFilesAreOwnerOnlyAndNamedByDigest (0.00s)
+KILLED   store-stale-update-accepted
+         unit test: --- FAIL: TestFileStoreCreateTwiceUpdateMissingAndStaleVersion (0.00s)
+KILLED   store-corrupt-file-silent
+         unit test: --- FAIL: TestFileStoreSkipsACorruptFileAndSaysSo (0.00s)
+KILLED   store-create-overwrites
+         unit test: --- FAIL: TestFileStoreCreateTwiceUpdateMissingAndStaleVersion (0.00s)
+KILLED   store-list-oldest-first
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   store-list-always-with-artifacts
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   store-list-page-size-unchecked
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   store-list-ignores-page-token
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   store-list-ignores-context-filter
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   store-list-ignores-status-filter
+         unit test: --- FAIL: TestFileStoreListFiltersAndPages (0.00s)
+KILLED   interrupted-message-without-reason
+         unit test: --- FAIL: TestTaskInterruptedByARestartIsReportedFailed (0.00s)
+INVALID  server-store-in-memory-only
+         mutant does not build: # github.com/MichaelKinsy/pigpen/a2a [github.com/MichaelKinsy/pigpen/a2a.test]
+KILLED   retention-default-not-applied
+         unit test: --- FAIL: TestTaskRetentionDaysDefaultsAndValidates (0.00s)
+KILLED   negative-retention-accepted
+         unit test: --- FAIL: TestTaskRetentionDaysDefaultsAndValidates (0.00s)
+KILLED   url-part-accepted
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   attachment-fence-fixed
+         unit test: --- FAIL: TestPromptOfUsesALongerFenceThanTheContent (0.00s)
+KILLED   attachment-name-unsanitised
+         unit test: --- FAIL: TestPromptOfKeepsAHostileFilenameOnOneLine (0.00s)
+KILLED   attachment-name-uncapped
+         unit test: --- FAIL: TestPromptOfKeepsAHostileFilenameOnOneLine (0.00s)
+KILLED   binary-text-accepted
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   non-utf8-text-accepted
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   charset-ignored
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   image-count-unlimited
+         unit test: --- FAIL: TestPromptOfLimitsApplyToWhatIsInlined (0.00s)
+KILLED   svg-image-accepted-as-text
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+KILLED   empty-attachment-accepted
+         unit test: --- FAIL: TestPromptOfStillRefusesAnEmptyMessage (0.00s)
+SURVIVED raw-without-media-type-accepted
+         
+KILLED   images-not-sent-to-worker
+         unit test: --- FAIL: TestWorkerSendsImagesInThePromptCommand (0.01s)
+KILLED   input-modes-text-only
+         unit test: --- FAIL: TestCardAdvertisesTheInputModesItAccepts (0.00s)
+KILLED   remote-binary-pasted-to-model
+         unit test: --- FAIL: TestSummaryShowsFileAndDataPartsOfARemoteTask (0.00s)
+KILLED   remote-data-part-hidden
+         unit test: --- FAIL: TestSummaryShowsFileAndDataPartsOfARemoteTask (0.00s)
+INVALID  push-config-in-send-ignored
+         mutant does not build: # github.com/MichaelKinsy/pigpen/a2a [github.com/MichaelKinsy/pigpen/a2a.test]
+KILLED   push-create-not-refused
+         unit test: --- FAIL: TestPushNotificationMethodsAreRefusedWithTheExactSentence (0.00s)
+KILLED   extended-card-not-refused
+         unit test: --- FAIL: TestExtendedAgentCardIsRefusedWithTheExactSentence (0.00s)
+KILLED   followup-ownership-unchecked
+         unit test: --- FAIL: TestSecondPrincipalIsRefusedOnEveryTaskRPC (0.01s)
+KILLED   wait-cancels-remote-when-given-up
+         unit test: --- FAIL: TestWaitCancelledByTheCallerDoesNotCancelTheRemoteTask (0.40s)
+KILLED   wait-out-of-time-is-an-error
+         unit test: --- FAIL: TestWaitRunningOutOfTimeLeavesTheRemoteTaskRunning (1.01s)
+KILLED   wait-never-follows-the-stream
+         unit test: --- FAIL: TestWaitFollowsALiveTaskToItsEndAndStreamsProgress (2.00s)
+KILLED   wait-drops-progress
+         unit test: --- FAIL: TestWaitFollowsALiveTaskToItsEndAndStreamsProgress (0.10s)
+KILLED   wait-returns-while-running
+         unit test: --- FAIL: TestWaitPollsARemoteThatDoesNotStream (0.00s)
+KILLED   wait-ignores-its-budget
+         unit test: --- FAIL: TestWaitRunningOutOfTimeLeavesTheRemoteTaskRunning (20.01s)
+KILLED   send-detach-waits-anyway
+         unit test: panic: test timed out after 3m0s
+KILLED   wait-errors-swallowed
+         unit test: panic: test timed out after 3m0s
+KILLED   wait-seconds-not-checked
+         unit test: --- FAIL: TestTaskWaitArgumentsAreChecked (5.01s)
+KILLED   wait-seconds-accepted-for-other-actions
+         unit test: --- FAIL: TestTaskWaitArgumentsAreChecked (0.00s)
+KILLED   send-does-not-wait-by-default
+         unit test: --- FAIL: TestSendToolRunsARemoteTaskEndToEnd (0.00s)
+KILLED   wait-flag-not-checked
+         unit test: --- FAIL: TestTaskWaitArgumentsAreChecked (0.00s)
+166 mutation(s), 6 not killed
+MUTATE-EXIT=1
+====SUB
+ok  	github.com/MichaelKinsy/pigpen/a2a	1.119s
+KILLED   store-get-owner-unchecked
+         unit test: --- FAIL: TestRestartKeepsTaskOwnership (0.01s)
+KILLED   store-update-owner-unchecked
+         unit test: --- FAIL: TestFileStoreOwnershipIsMaskedAsNotFoundAndSurvivesReopen (0.00s)
+KILLED   server-store-in-memory-only
+         unit test: --- FAIL: TestTaskSurvivesAListenerRestart (0.01s)
+KILLED   push-config-in-send-ignored
+         unit test: --- FAIL: TestSendMessageWithAPushConfigIsRefusedNotIgnored (0.00s)
+KILLED   raw-without-media-type-accepted
+         unit test: --- FAIL: TestPromptOfRefusesWhatTheWorkerCannotUseAndSaysWhy (0.00s)
+SURVIVED shutdown-does-not-close-the-port-1
+         
+SURVIVED shutdown-does-not-close-the-port-2
+         
+SURVIVED shutdown-does-not-close-the-port-3
+         
+8 mutation(s), 3 not killed
+SUB-DONE
+
+# Last block: the survivor was made deterministic. Server.serveHook (tests only) holds the Serve goroutine back for 300 ms;
+# TestShutdownWaitsForTheServeGoroutineAndClosesThePort asserts that after Shutdown returns the goroutine has finished and the port refuses
+# connections. `pigeq mutate --unit` on shutdown-does-not-close-the-port alone (xd670):
+KILLED   shutdown-does-not-close-the-port
+         unit test: --- FAIL: TestShutdownWaitsForTheServeGoroutineAndClosesThePort (0.00s)
+1 mutation(s), 0 not killed
+# Total: 166 of 166 killed.

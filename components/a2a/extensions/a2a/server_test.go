@@ -332,8 +332,16 @@ func rawRPC(t *testing.T, url, token, version, method string, params any) (int, 
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	// A streaming method answers with server-sent events, even when its first and only event is an error.
+	for _, line := range bytes.Split(raw, []byte("\n")) {
+		if rest, ok := bytes.CutPrefix(line, []byte("data:")); ok {
+			raw = rest
+			break
+		}
+	}
 	var out map[string]any
-	_ = json.NewDecoder(resp.Body).Decode(&out)
+	_ = json.Unmarshal(raw, &out)
 	return resp.StatusCode, out
 }
 
@@ -828,5 +836,31 @@ func TestServesOurAgentCardTellsThisServerFromAnotherListener(t *testing.T) {
 	}()
 	if servesOurAgentCard(stranger.Addr().String()) {
 		t.Fatal("another process's listener was read as this server")
+	}
+}
+
+// Shutdown returns only when the Serve goroutine has returned and the port is closed. The goroutine is held back
+// by the test, so the result does not depend on how the scheduler orders it against Shutdown.
+func TestShutdownWaitsForTheServeGoroutineAndClosesThePort(t *testing.T) {
+	s, err := NewServer(serverConfig(), &scriptedWorker{}, serverEnv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.serveHook = func() { time.Sleep(300 * time.Millisecond) }
+	if err := s.Start(); err != nil {
+		t.Fatal(err)
+	}
+	addr := s.Addr()
+	if err := s.Shutdown(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-s.served:
+	default:
+		t.Fatal("Shutdown returned while the Serve goroutine was still running")
+	}
+	if c, err := net.DialTimeout("tcp", addr, time.Second); err == nil {
+		_ = c.Close()
+		t.Fatalf("%s still accepts connections after Shutdown returned", addr)
 	}
 }

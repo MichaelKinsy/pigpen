@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"iter"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -13,8 +12,6 @@ import (
 	"github.com/a2aproject/a2a-go/v2/a2a"
 	"github.com/a2aproject/a2a-go/v2/a2asrv"
 )
-
-const maxPromptBytes = 256 << 10
 
 type stopReason int32
 
@@ -69,31 +66,6 @@ func principalOf(ec *a2asrv.ExecutorContext) (Principal, error) {
 	return p, nil
 }
 
-// promptOf accepts text parts only. A part it cannot represent is refused, never dropped.
-func promptOf(m *a2a.Message) (string, error) {
-	if m == nil {
-		return "", fmt.Errorf("message is required: %w", a2a.ErrInvalidParams)
-	}
-	var texts []string
-	for _, p := range m.Parts {
-		if p == nil {
-			continue
-		}
-		if _, ok := p.Content.(a2a.Text); !ok {
-			return "", fmt.Errorf("only text parts are supported: %w", a2a.ErrUnsupportedContentType)
-		}
-		texts = append(texts, p.Text())
-	}
-	prompt := strings.Join(texts, "\n")
-	if strings.TrimSpace(prompt) == "" {
-		return "", fmt.Errorf("the message has no text: %w", a2a.ErrInvalidParams)
-	}
-	if len(prompt) > maxPromptBytes {
-		return "", fmt.Errorf("the message exceeds %d bytes: %w", maxPromptBytes, a2a.ErrInvalidParams)
-	}
-	return prompt, nil
-}
-
 func (e *executor) lockContext(ctx context.Context, key string) (func(), error) {
 	e.mu.Lock()
 	l := e.ctxLocks[key]
@@ -143,7 +115,7 @@ func (e *executor) Execute(ctx context.Context, ec *a2asrv.ExecutorContext) iter
 			yield(nil, err)
 			return
 		}
-		prompt, err := promptOf(ec.Message)
+		prompt, images, err := promptOf(ec.Message)
 		if err != nil {
 			yield(nil, err)
 			return
@@ -201,7 +173,7 @@ func (e *executor) Execute(ctx context.Context, ec *a2asrv.ExecutorContext) iter
 
 		events := make(chan runEvent, 128)
 		go func() {
-			res, err := e.worker.Run(runCtx, Turn{Principal: principal, ContextID: ec.ContextID, TaskID: string(ec.TaskID), Prompt: prompt},
+			res, err := e.worker.Run(runCtx, Turn{Principal: principal, ContextID: ec.ContextID, TaskID: string(ec.TaskID), Prompt: prompt, Images: images},
 				func(u Update) {
 					select {
 					case events <- runEvent{update: u}:
