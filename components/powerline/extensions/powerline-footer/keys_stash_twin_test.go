@@ -389,9 +389,6 @@ func TestStashShortcutTwins(t *testing.T) {
 		}
 	})
 
-	tskip(t, file, "Ctrl+S toggles the stash only from the focused editor",
-		"Ctrl+S is handled only inside the focused editor (index.ts 3388, so Pi's selectors keep it); a Go extension cannot install an editor (SDK: setEditorComponent), so the shortcut stays unported and the global listener leaves \\x13 alone (checked by TestTerminalInputLeavesCtrlS)")
-
 	tw(t, file, "agent_end leaves an active stash untouched until explicit restore", func(t *testing.T) {
 		_, cwd := agentRig(t)
 		g := newGeneration(t, cwd, "agent-end-session", "draft to keep")

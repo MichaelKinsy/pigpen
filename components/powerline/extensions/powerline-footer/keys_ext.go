@@ -11,8 +11,8 @@ import (
 // upstream: index.ts setupCustomEditor (3190-3220: ctx.ui.onTerminalInput), registerCommand("stash-history") (2670), the stash
 // parts of session_start and session_shutdown.
 //
-// Not ported yet (needs the focused editor of the next slice, setEditorComponent): Ctrl+S, which the original handles only inside the focused
-// editor (index.ts 3388) so that Pi's selectors keep it; the printable shortcuts are handled by the terminal listener alone.
+// Ctrl+S, which the original handles only inside the focused editor (index.ts 3388) so that Pi's selectors keep it, is handled
+// by the powerline editor (editor_ext.go); the printable shortcuts are handled by the terminal listener.
 // The reply, bashMode and queueOpen actions are filled by the features that own them (keysExt.setHook).
 
 // keysHooks is what the core calls on the keys slice.
@@ -95,6 +95,7 @@ func (k *keysExt) setup() {
 	k.mu.Lock()
 	k.unsub = unsub
 	k.mu.Unlock()
+	k.installEditor(ctx)
 }
 
 func (k *keysExt) disable() {
@@ -102,6 +103,7 @@ func (k *keysExt) disable() {
 	k.enabled.Store(false)
 	k.ensure(ctx).disable(k.host(ctx))
 	k.unsubscribe()
+	k.uninstallEditor(ctx)
 }
 
 func (k *keysExt) unsubscribe() {

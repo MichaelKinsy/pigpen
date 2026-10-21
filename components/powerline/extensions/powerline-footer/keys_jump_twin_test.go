@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 // Twins of tests/jump-shortcuts.test.ts.
@@ -119,12 +121,46 @@ func TestJumpShortcutTwins(t *testing.T) {
 		}
 	})
 
-	tskip(t, file, "fast editor render keeps Powerline chrome for large drafts",
-		"renderFastPowerlineEditor draws onto Pi's Editor object (its borderColor, state.lines and tui.terminal.rows); the Go SDK has no editor object to hand it (SDK: setEditorComponent)")
-	tskip(t, file, "fast editor render falls back for short drafts and enabled completions",
-		"the null return is the editor render hook declining a draft below its line and column thresholds; with no editor render hook in the Go SDK there is no caller that could fall back")
-	tskip(t, file, "fast editor render falls back for wide characters",
-		"the fallback is decided by the wide-character width of Pi's editor.state lines (1300 CJK characters); no editor state is reachable from a Go extension")
+	tw(t, file, "fast editor render keeps Powerline chrome for large drafts", func(t *testing.T) {
+		base := &fakeBase{lines: []string{"intro", strings.Repeat("x", 5000)}, cursor: sdk.EditorCursor{Line: 1, Col: 5000}}
+		red := editorBorderColor{prefix: "\x1b[31m"}
+		rendered, _ := renderFastPowerlineEditor(base, red, 80, false, false)
+		if rendered == nil {
+			t.Fatal("no fast render")
+		}
+		if !strings.Contains(rendered[0], "↑") || !strings.HasPrefix(rendered[0], " \x1b[31m") || !strings.HasPrefix(rendered[len(rendered)-1], " \x1b[31m") {
+			t.Errorf("borders %q / %q", rendered[0], rendered[len(rendered)-1])
+		}
+		joined := strings.Join(rendered, "\n")
+		if !strings.Contains(joined, cursorMarker) || !strings.Contains(joined, ">") {
+			t.Errorf("no cursor marker or prompt:\n%s", joined)
+		}
+		blue := editorBorderColor{prefix: "\x1b[34m"}
+		recolored, _ := renderFastPowerlineEditor(base, blue, 80, false, false)
+		if !strings.HasPrefix(recolored[0], " \x1b[34m") || !strings.HasPrefix(recolored[len(recolored)-1], " \x1b[34m") {
+			t.Errorf("recolored %q", recolored)
+		}
+		fallback, _ := renderFastPowerlineEditor(base, editorBorderColor{}, 80, false, false)
+		if !strings.HasPrefix(fallback[0], " "+separatorAnsi) || !strings.HasSuffix(fallback[0], ansiReset) {
+			t.Errorf("fallback %q", fallback[0])
+		}
+	})
+	tw(t, file, "fast editor render falls back for short drafts and enabled completions", func(t *testing.T) {
+		short := &fakeBase{lines: []string{"short"}, cursor: sdk.EditorCursor{Col: 5}}
+		if got, _ := renderFastPowerlineEditor(short, editorBorderColor{}, 80, false, false); got != nil {
+			t.Errorf("a short draft took the fast path: %q", got)
+		}
+		long := &fakeBase{lines: []string{strings.Repeat("x", 5000)}, cursor: sdk.EditorCursor{Col: 5000}}
+		if got, _ := renderFastPowerlineEditor(long, editorBorderColor{}, 80, false, true); got != nil {
+			t.Errorf("completions enabled took the fast path: %q", got)
+		}
+	})
+	tw(t, file, "fast editor render falls back for wide characters", func(t *testing.T) {
+		wide := &fakeBase{lines: []string{strings.Repeat("漢", 1300)}, cursor: sdk.EditorCursor{Col: 1291}}
+		if got, _ := renderFastPowerlineEditor(wide, editorBorderColor{}, 80, false, false); got != nil {
+			t.Errorf("wide characters took the fast path: %q", got)
+		}
+	})
 	tskip(t, file, "fast editor render updates the editor navigation width",
 		"the case asserts a write to the editor's private lastWidth field; an editor's internals cannot be reached from a Go extension")
 }
