@@ -35,12 +35,16 @@ func sessionTaskDir(cwd, sessionID string) (string, error) {
 		uid = 0
 	}
 	root := filepath.Join(os.TempDir(), "pi-subagents-"+strconv.Itoa(uid))
-	if err := os.MkdirAll(root, 0o700); err != nil {
-		return "", err
-	}
-	// chmod enforces 0700 past umask; it fails on some Windows filesystems, where it is ignored.
-	if err := os.Chmod(root, 0o700); err != nil && runtime.GOOS != "windows" {
-		return "", err
+	// A root that is already an owner-only directory (every spawn after the first) needs neither the mkdir nor the
+	// chmod: two syscalls less on the start path of every agent.
+	if st, err := os.Stat(root); err != nil || !st.IsDir() || st.Mode().Perm() != 0o700 {
+		if err := os.MkdirAll(root, 0o700); err != nil {
+			return "", err
+		}
+		// chmod enforces 0700 past umask; it fails on some Windows filesystems, where it is ignored.
+		if err := os.Chmod(root, 0o700); err != nil && runtime.GOOS != "windows" {
+			return "", err
+		}
 	}
 	dir := filepath.Join(root, encodeCwd(cwd), sessionID, "tasks")
 	if err := os.MkdirAll(dir, 0o777); err != nil {

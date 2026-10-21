@@ -2,6 +2,7 @@ package tintinweb_subagents
 
 import (
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -92,5 +93,18 @@ func BenchmarkFormatCost(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_ = formatCost(0.0123)
+	}
+}
+
+// The start-path cost of a transcript: the path (directories ensured) and the initial entry.
+func BenchmarkAttachTranscriptFiles(b *testing.B) {
+	b.Setenv("TMPDIR", b.TempDir())
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		path, err := createOutputFilePath("/work/project", "agent-"+strconv.Itoa(i), "session-1")
+		if err != nil {
+			b.Fatal(err)
+		}
+		writeInitialEntry(path, "a", "do the thing", "/work/project")
 	}
 }
