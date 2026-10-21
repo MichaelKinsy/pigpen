@@ -218,13 +218,13 @@
  {
   "name": "version-not-enforced",
   "file": "server.go",
-  "find": "\tif err := checkVersion(v); err != nil {",
-  "replace": "\tif err := checkVersion(v); false && err != nil {"
+  "find": "\tif err := checkVersion(v, g.enabled[\"protocol03\"]); err != nil {",
+  "replace": "\tif err := checkVersion(v, g.enabled[\"protocol03\"]); false && err != nil {"
  },
  {
   "name": "absent-version-accepted",
   "file": "server.go",
-  "find": "\tif n == 0 {",
+  "find": "\tif n == 0 && !allow03 {",
   "replace": "\tif false {"
  },
  {
@@ -902,8 +902,8 @@
  {
   "name": "push-config-in-send-ignored",
   "file": "server.go",
-  "find": "\t\tif p != nil && p.Config != nil && p.Config.PushConfig != nil {",
-  "replace": "\t\tif false && p != nil && p.Config != nil && p.Config.PushConfig != nil {"
+  "find": "\t\tif p != nil && p.Config != nil && p.Config.PushConfig != nil && !enabled[\"pushNotifications\"] {",
+  "replace": "\t\tif false && p != nil && p.Config != nil && p.Config.PushConfig != nil && !enabled[\"pushNotifications\"] {"
  },
  {
   "name": "push-create-not-refused",
@@ -914,8 +914,8 @@
  {
   "name": "extended-card-not-refused",
   "file": "server.go",
-  "find": "\tcase *a2a.GetExtendedAgentCardRequest:\n\t\treturn refuse",
-  "replace": "\tcase *a2a.GetExtendedAgentCardRequest:\n\t\treturn nil\n\t\treturn refuse"
+  "find": "\t\treturn refuse(a2a.ErrExtendedCardNotConfigured",
+  "replace": "\t\treturn nil\n\t\treturn refuse(a2a.ErrExtendedCardNotConfigured"
  },
  {
   "name": "followup-ownership-unchecked",
@@ -994,5 +994,83 @@
   "file": "extension.go",
   "find": "\tb, ok := v.(bool)\n\tif !ok {",
   "replace": "\tb, ok := v.(bool)\n\tif false && !ok {"
+ },
+ {
+  "name": "capability-flag-ignored",
+  "file": "capability.go",
+  "find": "\t\tif !spec.on(c) {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tif true {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "capability-accessor-swapped",
+  "file": "capability.go",
+  "find": "func(c CapabilitiesConfig) bool { return c.GRPC }",
+  "replace": "func(c CapabilitiesConfig) bool { return c.REST }"
+ },
+ {
+  "name": "capability-refusal-sentence-changed",
+  "file": "capability.go",
+  "find": "\"push notifications\", func",
+  "replace": "\"push notification\", func"
+ },
+ {
+  "name": "capability-enabled-set-empty",
+  "file": "capability.go",
+  "find": "\t\tif spec.on(c) {\n\t\t\tset[spec.key] = true",
+  "replace": "\t\tif false && spec.on(c) {\n\t\t\tset[spec.key] = true"
+ },
+ {
+  "name": "capability-default-on",
+  "file": "config.go",
+  "find": "\tif c.TaskRetentionDays == 0 {",
+  "replace": "\tc.Capabilities.PushNotifications = true\n\tif c.TaskRetentionDays == 0 {"
+ },
+ {
+  "name": "capability-validation-skipped",
+  "file": "config.go",
+  "find": "\tif _, err := c.Capabilities.resolve(); err != nil {",
+  "replace": "\tif _, err := c.Capabilities.resolve(); false && err != nil {"
+ },
+ {
+  "name": "card-advertises-push-by-default",
+  "file": "server.go",
+  "find": "Capabilities:        a2a.AgentCapabilities{Streaming: true},",
+  "replace": "Capabilities:        a2a.AgentCapabilities{Streaming: true, PushNotifications: true},"
+ },
+ {
+  "name": "capability-advertise-skipped",
+  "file": "server.go",
+  "find": "\t\tc.Advertise(card)\n",
+  "replace": "\t\t_ = c\n"
+ },
+ {
+  "name": "capability-mount-skipped",
+  "file": "server.go",
+  "find": "\t\tif err := c.Mount(mux, handler); err != nil {",
+  "replace": "\t\tif err := error(nil); c == nil && err != nil {"
+ },
+ {
+  "name": "guard-enabled-set-dropped",
+  "file": "server.go",
+  "find": "guard{store: store, enabled: cfg.Capabilities.enabledSet()}",
+  "replace": "guard{store: store}"
+ },
+ {
+  "name": "guard-refuses-enabled-push",
+  "file": "server.go",
+  "find": "\t\tif enabled[\"pushNotifications\"] {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\tif false && enabled[\"pushNotifications\"] {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "guard-refuses-enabled-extended-card",
+  "file": "server.go",
+  "find": "\t\tif enabled[\"extendedAgentCard\"] {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\tif false && enabled[\"extendedAgentCard\"] {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "protocol03-flag-ignored",
+  "file": "server.go",
+  "find": "\t\t\tif allow03 && (one == \"0.3\"",
+  "replace": "\t\t\tif false && allow03 && (one == \"0.3\""
  }
 ]

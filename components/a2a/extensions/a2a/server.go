@@ -36,6 +36,7 @@ type Server struct {
 	exec    *executor
 	handler http.Handler
 	cancel  context.CancelFunc
+	caps    []Capability // the optional capabilities switched on, each with its implementation
 
 	mu     sync.Mutex
 	srv    *http.Server
@@ -70,8 +71,12 @@ func NewServer(cfg Config, worker Worker, getenv func(string) string) (*Server, 
 	if err != nil {
 		return nil, err
 	}
+	caps, err := cfg.Capabilities.resolve()
+	if err != nil {
+		return nil, err
+	}
 	base, cancel := context.WithCancel(context.Background())
-	s := &Server{cfg: cfg, auth: auth, cancel: cancel}
+	s := &Server{cfg: cfg, auth: auth, cancel: cancel, caps: caps}
 	s.exec = newExecutor(base, worker, cfg.MaxConcurrentTasks, time.Duration(cfg.TaskTimeoutSeconds)*time.Second, s.logf)
 
 	// The store is ours so that guard can ask it who owns a task: a2a-go's SubscribeToTask attaches to a live
@@ -94,13 +99,19 @@ func NewServer(cfg Config, worker Worker, getenv func(string) string) (*Server, 
 	}
 	handler := a2asrv.NewHandler(s.exec,
 		a2asrv.WithTaskStore(store),
-		a2asrv.WithCallInterceptors(guard{store: store}),
+		a2asrv.WithCallInterceptors(guard{store: store, enabled: cfg.Capabilities.enabledSet()}),
 		// The a2a-go logger writes to stderr, which is PiG's terminal when the extension is fused.
 		a2asrv.WithLogger(slog.New(slog.NewTextHandler(io.Discard, nil))),
 	)
 	mux := http.NewServeMux()
 	mux.Handle("POST /{$}", http.MaxBytesHandler(a2asrv.NewJSONRPCHandler(handler), maxBodyBytes))
 	mux.HandleFunc(a2asrv.WellKnownAgentCardPath, s.serveCard)
+	for _, c := range caps {
+		if err := c.Mount(mux, handler); err != nil {
+			cancel()
+			return nil, err
+		}
+	}
 	s.handler = auth.Wrap(mux, func(r *http.Request) bool { return r.URL.Path == a2asrv.WellKnownAgentCardPath })
 	return s, nil
 }
@@ -136,6 +147,14 @@ func (s *Server) baseURL() string {
 }
 
 func (s *Server) card() *a2a.AgentCard {
+	card := s.baseCard()
+	for _, c := range s.caps {
+		c.Advertise(card)
+	}
+	return card
+}
+
+func (s *Server) baseCard() *a2a.AgentCard {
 	return &a2a.AgentCard{
 		Name: s.cfg.Name, Description: s.cfg.Description, Version: agentVersion,
 		SupportedInterfaces: []*a2a.AgentInterface{a2a.NewAgentInterface(s.baseURL(), a2a.TransportProtocolJSONRPC)},
@@ -245,12 +264,14 @@ func (s *Server) Shutdown(ctx context.Context) error {
 // authenticated principal and keeps callers inside their tenant.
 type guard struct {
 	store taskstore.Store
+	// enabled names the optional capabilities that are switched on; a request for one is not refused here.
+	enabled map[string]bool
 	a2asrv.PassthroughCallInterceptor
 }
 
 func (g guard) Before(ctx context.Context, callCtx *a2asrv.CallContext, req *a2asrv.Request) (context.Context, any, error) {
 	v, _ := callCtx.ServiceParams().Get(a2a.SvcParamVersion)
-	if err := checkVersion(v); err != nil {
+	if err := checkVersion(v, g.enabled["protocol03"]); err != nil {
 		return ctx, nil, err
 	}
 	p, ok := PrincipalFrom(ctx)
@@ -261,7 +282,7 @@ func (g guard) Before(ctx context.Context, callCtx *a2asrv.CallContext, req *a2a
 		return ctx, nil, a2a.ErrUnauthorized
 	}
 	callCtx.User = a2asrv.NewAuthenticatedUser(p.Key(), map[string]any{"name": p.Name, "tenant": p.Tenant})
-	if err := refuseUnsupported(req.Payload); err != nil {
+	if err := refuseUnsupported(req.Payload, g.enabled); err != nil {
 		return ctx, nil, err
 	}
 	// Ownership is masked as "not found", as the spec's task lookups are (§3.3.2). a2a-go checks it itself for
@@ -310,19 +331,23 @@ func refuse(base error, feature, detail string) error {
 // checkVersion refuses anything but A2A 1.0: a missing header is protocol 0.3 by the specification. Every value
 // of the header must be 1.0: kagent's client sends it twice (the SDK's own and its static-header interceptor's),
 // which HTTP folds into "1.0, 1.0".
-func checkVersion(values []string) error {
+func checkVersion(values []string, allow03 bool) error {
 	const detail = "This listener serves A2A 1.0 only; send the header A2A-Version: 1.0."
 	n := 0
 	for _, v := range values {
 		for _, one := range strings.Split(v, ",") {
 			one = strings.TrimSpace(one)
+			if allow03 && (one == "0.3" || strings.HasPrefix(one, "0.3.")) {
+				n++
+				continue
+			}
 			if !versionOK(one) {
 				return refuse(a2a.ErrVersionNotSupported, "A2A protocol version "+oneLine(one, 32), detail)
 			}
 			n++
 		}
 	}
-	if n == 0 {
+	if n == 0 && !allow03 {
 		return refuse(a2a.ErrVersionNotSupported, "requests without an A2A-Version header (protocol 0.3)", detail)
 	}
 	return nil
@@ -331,15 +356,21 @@ func checkVersion(values []string) error {
 // refuseUnsupported turns a request for a capability the card says is off into the one refusal sentence, before
 // anything runs. Nothing is accepted and ignored: a message that carries a push notification configuration is
 // refused as a whole.
-func refuseUnsupported(payload any) error {
+func refuseUnsupported(payload any, enabled map[string]bool) error {
 	switch p := payload.(type) {
 	case *a2a.PushConfig, *a2a.GetTaskPushConfigRequest, *a2a.ListTaskPushConfigRequest, *a2a.DeleteTaskPushConfigRequest:
+		if enabled["pushNotifications"] {
+			return nil
+		}
 		return refuse(a2a.ErrPushNotificationNotSupported, "push notifications", "Poll the task with GetTask, or follow it with SendStreamingMessage or SubscribeToTask.")
 	case *a2a.SendMessageRequest:
-		if p != nil && p.Config != nil && p.Config.PushConfig != nil {
+		if p != nil && p.Config != nil && p.Config.PushConfig != nil && !enabled["pushNotifications"] {
 			return refuse(a2a.ErrPushNotificationNotSupported, "push notifications", "Send the message without taskPushNotificationConfig.")
 		}
 	case *a2a.GetExtendedAgentCardRequest:
+		if enabled["extendedAgentCard"] {
+			return nil
+		}
 		return refuse(a2a.ErrExtendedCardNotConfigured, "an extended agent card", "The public agent card is all this listener offers.")
 	}
 	return nil

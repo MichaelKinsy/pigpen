@@ -37,6 +37,9 @@ type Config struct {
 	// TaskRetentionDays is how long a finished task stays stored (default 30). Unfinished tasks are never dropped.
 	TaskRetentionDays int                    `json:"taskRetentionDays"`
 	Remotes           map[string]RemoteAgent `json:"remotes"`
+	// Capabilities switches optional capabilities on. Every one is off by default; switching one on without an
+	// implementation is an error when the configuration is loaded (capability.go).
+	Capabilities CapabilitiesConfig `json:"capabilities"`
 }
 
 // TokenConfig names a bearer token by the environment variable that holds it.
@@ -201,6 +204,9 @@ func isLoopbackHost(host string) bool {
 }
 
 func (c Config) validate(getenv func(string) string) error {
+	if _, err := c.Capabilities.resolve(); err != nil {
+		return err
+	}
 	if c.TaskRetentionDays < 0 {
 		return fmt.Errorf("a2a: taskRetentionDays is %d; it is how many days finished tasks are kept, at least 1", c.TaskRetentionDays)
 	}
