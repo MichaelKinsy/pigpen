@@ -244,6 +244,9 @@ func detailsFromJSON(v any) *taskDetails {
 
 // execute applies one tool call to the calling session's slot. upstream: todo.ts:73-79.
 func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
+	if err := refuseUnportedConfig(); err != nil {
+		return nil, err
+	}
 	wait, release := a.order.turn() // the first statement: the SDK starts handlers in source order
 	handed := false
 	defer func() {
@@ -273,6 +276,10 @@ func (a *app) execute(ctx sdk.Context, p map[string]any) (any, error) {
 
 // commandHandler is the /todos command: the list grouped by status. upstream: todo.ts:119-158.
 func (a *app) commandHandler(ctx sdk.Context, _ string) error {
+	if err := refuseUnportedConfig(); err != nil {
+		ctx.Notify(err.Error(), "error")
+		return nil
+	}
 	if !ctx.HasUI() {
 		ctx.Notify(tr("command.requires_interactive", errRequiresInteractive), "error")
 		return nil
