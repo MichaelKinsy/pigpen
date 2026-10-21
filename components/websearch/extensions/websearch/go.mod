@@ -7,6 +7,6 @@ require github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1
 
 require (
 	golang.org/x/image v0.46.0
-	golang.org/x/net v0.58.0
+	golang.org/x/net v0.60.0
 	golang.org/x/text v0.42.0
 )

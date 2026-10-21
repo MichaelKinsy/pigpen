@@ -3,7 +3,7 @@
 name: jev
 description: "PiG with Jev, a typed judge for tool calls and tool output (destructive? leaks data? beyond scope? secret in the output?). Off until you run /jev on, which shows what leaves the machine first; it fails open."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

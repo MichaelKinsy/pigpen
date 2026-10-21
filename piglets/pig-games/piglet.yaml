@@ -5,7 +5,7 @@
 name: pig-games
 description: "PiG with two pixel-art games, PiG Runner (/runner) and Angry Pigs (/angry-pigs), starring the pig you chose with PiG's /sprite. Nothing starts until you type a command."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused
