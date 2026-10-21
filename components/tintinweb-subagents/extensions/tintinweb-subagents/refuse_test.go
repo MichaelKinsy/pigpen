@@ -114,8 +114,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		name    string
 		options obj
 		feature string
-	}{
-	}
+	}{}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			r := startRig(t)

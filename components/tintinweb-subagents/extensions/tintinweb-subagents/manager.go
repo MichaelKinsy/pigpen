@@ -68,22 +68,22 @@ type agentRecord struct {
 	transcript        *transcriptStream
 	// stream is the transcript the child's events go to: the stream of the run in progress, nil between runs. A resume
 	// replaces it, so the hook the child holds is fixed once and reads it with no lock per event.
-	stream atomic.Pointer[transcriptStream]
-	Consumed                    bool   // the result was handed to the model, so its notification is not sent
-	SessionFile                 string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
-	JoinMode, GroupID           string // how the completion of a background agent is announced
+	stream            atomic.Pointer[transcriptStream]
+	Consumed          bool   // the result was handed to the model, so its notification is not sent
+	SessionFile       string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
+	JoinMode, GroupID string // how the completion of a background agent is announced
 
-	spec          childSpec
-	child         child
-	done          chan struct{} // closed once the record is final (settled, or stopped while queued); a resume replaces it
-	startGate     chan struct{} // closed when the record leaves the queue (started, stopped or the manager disposed)
-	cancel        context.CancelFunc // ends the context the child was started with: its process lives no longer
-	stopped       bool               // stopped by the user or the parent (not a failure)
-	started       chan struct{}
+	spec      childSpec
+	child     child
+	done      chan struct{}      // closed once the record is final (settled, or stopped while queued); a resume replaces it
+	startGate chan struct{}      // closed when the record leaves the queue (started, stopped or the manager disposed)
+	cancel    context.CancelFunc // ends the context the child was started with: its process lives no longer
+	stopped   bool               // stopped by the user or the parent (not a failure)
+	started   chan struct{}
 	// setup is closed once the agent's startup (the worktree copy, if any) has finished, or failed with startErr.
-	setup     chan struct{}
-	startErr  error
-	fromQueue bool // started from the queue, minutes after its caller returned
+	setup         chan struct{}
+	startErr      error
+	fromQueue     bool     // started from the queue, minutes after its caller returned
 	settled       bool     // the run has settled: its status, result and slot are final (a resume waits for it)
 	pool          pool     // the pool this run was charged to when it started
 	pendingSteers []string // steers that arrived before the child existed
@@ -195,9 +195,9 @@ type manager struct {
 	onStart   func(*agentRecord)
 	onCompact func(r *agentRecord, reason string, tokensBefore, count int)
 	onUsage   func(*agentRecord, lifetimeUsage)
-	now      func() time.Time
-	stopGC   chan struct{}
-	gcDone   chan struct{}
+	now       func() time.Time
+	stopGC    chan struct{}
+	gcDone    chan struct{}
 	// git runs git for worktree isolation; wtRepos are the repositories worktrees were made in (pruned at shutdown).
 	git     gitFn
 	wtRepos map[string]bool

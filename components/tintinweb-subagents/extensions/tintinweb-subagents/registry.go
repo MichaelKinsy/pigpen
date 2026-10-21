@@ -69,7 +69,11 @@ func (e *registryEntry) GetRecord(id string) *agentRecord {
 // Spawn starts a detached agent for another package, with the same dispatch contract as the model's: an unknown or
 // disabled type is an error. upstream: index.ts spawnTopLevel, spawnResolved.
 func (e *registryEntry) Spawn(ctx sdk.Context, typ, prompt string, options map[string]any) (string, error) {
-	return e.app.spawnTopLevel(ctx, typ, prompt, options)
+	r, err := e.app.spawnTopLevel(ctx, typ, prompt, options)
+	if err != nil {
+		return "", err
+	}
+	return r.ID, nil
 }
 
 // internalSpawnOptions are the options only this extension issues.

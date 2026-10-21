@@ -55,7 +55,7 @@ func TestIsolationStrictFailure(t *testing.T) {
 		r := startRigIn(t, t.TempDir())
 		_, failure := r.tool("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "isolation": "worktree"})
 		eq(t, strings.Contains(failure, `Cannot run with isolation: "worktree" — not a git repo, no commits yet, or `+"`git worktree add`"+` failed. Initialize git and commit at least once, or omit `+"`isolation`"+`.`), true)
-		eq(t, r.app.mgr.running, 0)
+		eq(t, r.app.mgr.runningBackground, 0)
 		eq(t, len(r.app.mgr.list()), 0)
 		// the handle goes back
 		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan"})
@@ -195,14 +195,16 @@ func TestToolTextFollowsTheSwitch(t *testing.T) {
 	specs := loadToolSpecs()
 	for _, enabled := range []bool{true, false} {
 		setWorktreeIsolationEnabled(enabled)
-		desc := agentToolDescription(currentRegistry())
-		props := agentToolSchema(currentRegistry(), specs["Agent"])["properties"].(map[string]any)
+		flags := descriptionFlagsNow(settings{WorktreeIsolation: &enabled}, "full")
+		dc := descriptionContext{reg: currentRegistry(), agentDir: agentDir(), cwd: t.TempDir(), warn: func(string) {}}
+		desc := agentDescription(flags, dc)
+		props := agentSchemaFor(flags, dc, specs["Agent"])["properties"].(map[string]any)
 		_, has := props["isolation"]
 		eq(t, has, enabled)
 		eq(t, strings.Contains(desc, `- Use isolation: "worktree" to give the agent its own git worktree (safe parallel file modifications); leave it unset, or pass "off", for none. The worktree is removed when the agent finishes; if it made changes, they are committed to a branch and the branch is named in the result.`), enabled)
 		if enabled {
 			eq(t, strings.Contains(desc, "- Use inherit_context if the agent needs the parent conversation history.\n- Use isolation:"), true)
-			eq(t, props["isolation"].(map[string]any)["description"], isolationDescription)
+			eq(t, props["isolation"].(map[string]any)["description"], texts.IsolationParam["description"])
 		}
 	}
 	resetTypes()

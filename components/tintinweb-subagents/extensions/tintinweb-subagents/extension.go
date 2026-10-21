@@ -176,7 +176,7 @@ func (a *app) register(e *sdk.Extension) {
 		a.disc.reset()
 		a.mgr.open()
 		guard("session start cleanup", func() { a.mgr.clearCompleted(true) }) // the agents of the session before are not this one's
-		a.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))
+		a.mgr.startGC(a.cleanupEvery)                                         // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))
 		a.refuseSettings(ctx)
 		a.announce(ctx)
 		return nil, nil
