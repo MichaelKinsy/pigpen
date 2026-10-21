@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial: the status bar, not the custom editor)
+# Port record: pi-powerline-footer (partial, stacked PR 5 of 8)
 
 | Input | Identity |
 |---|---|
@@ -22,10 +22,21 @@ never visible (the first needs bash mode, the second renders nothing in the orig
 
 `auto-follow-up.ts` and the `input` handler of `index.ts` (Jev classifier: POST to `api.typesafe.ai/v1/systemone`, 1500 ms for the exchange, confidence at least 0.8, requests serialised, Esc during the call returns the messages to the editor, a session switch during the call routes nothing into the new session, any failure keeps the message as steering and says so) are in `follow_up.go`, `followup_ext.go` and `auto_follow_up.go`. `editor-performance.ts` (options, counters, report) and `editor-composition.ts` are ported as `editor_performance.go` and `editor_composition.go`; nothing calls them, because the call site is the editor setup (`setEditorComponent`), which the Go SDK cannot do (PiG item C3). `/powerline-perf` and `POWERLINE_DEBUG_PERF` stay refused. Evidence: 10 more exact twins (6 auto-follow-up, 2 editor-performance, 2 editor-composition), 3 scenarios recorded from the original under Pi 1402973a, 146 mutations killed.
 
+### Ported in PR 3 (keys, version 0.3.0)
+
+`shortcuts.ts`, the shortcut config of `index.ts`, the stash and restore, `/stash-history`, copy and cut, `render-scheduler.ts`, `lifecycle.ts` in `shortcuts.go`, `shortcut_config.go`, `keymatch.go`, `keys.go`, `keys_ext.go`, `stash_history.go`, `stash_reload.go`, `clipboard.go`, `render_scheduler.go`. The input listener is `ctx.OnTerminalInput` and takes no core lock. `ctrl+s` is handled by the original only inside the focused editor; a Go extension has no editor, so the listener leaves it to Pi (`TestTerminalInputLeavesCtrlS`). Key matching has no keybinding lookup, so Pi's default keys are used.
+
+### Ported in PR 4 (bashmode, version 0.4.0)
+
+the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `completion.ts`, the pure parts of `editor.ts`) in `bash_*.go`: the shell session over `os/exec` (process group signals, hidden console on Windows), the completion engine and its providers over the SDK's `AutocompleteProvider`, the transcript store and widget, the `shell_mode` segment. The editor (`BashModeEditor`) needs `setEditorComponent`: `/bash-mode`, `/bash-reset` and the `bashMode` setting stay refused, and 28 twins of editor cases are named skips with their reasons.
+
+### Ported in PR 5 (vibes, version 0.5.0)
+
+`working-vibes.ts` and the vibe wiring of `index.ts` in `working_vibes*.go` (model registry `Complete`, `SetWorkingMessage`): manager, themes, file and generate modes, prompt template, rate limit, `parseVibeGenerateArgs`, `generateVibesBatch`, and the `before_agent_start`, `agent_start`, `tool_call`, `agent_end` handlers. 9 twins.
+
 ### Refusal of what is not ported
 
-Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/stash-history`, `/bash-mode`,
-`/bash-reset`, `/powerline-perf`, `/vibe`, `/cd`) with an error notification and each unported setting (see the README) with a
+Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`, `/cd`) with an error notification and each unported setting (see the README) with a
 warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
 npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
 The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
