@@ -96,3 +96,20 @@ func TestValidateActionReadsAScriptFile(t *testing.T) {
 		t.Errorf("empty file: %s", failure)
 	}
 }
+
+func TestValidateActionAnswersWarningsAndNodeReadErrors(t *testing.T) {
+	script := `const prefix = "lane";
+const child = await runs.run(prefix + "-writer", { agent: "helper", task: "x" });
+return child.output;`
+	_, text, failure := validateResult(t, map[string]any{"workflowScript": script, "maxSubagentSpawnsPerRun": 5})
+	eq(t, failure, "", "a script with a dynamic launch")
+	if !strings.HasPrefix(text, `{"ok":true,"errors":[],"warnings":[{"kind":"dynamic-spawn-count","message":"workflowScript contains dynamic child launches;`) {
+		t.Errorf("warnings: %s", text)
+	}
+	h, cwd := validateHost(t)
+	_, failure = h.Tool("subagent", map[string]any{"action": "validate", "workflowScriptPath": "missing.js"})
+	want := "Failed to read workflowScriptPath '" + filepath.Join(cwd, "missing.js") + "': ENOENT: no such file or directory, open '" + filepath.Join(cwd, "missing.js") + "'"
+	if !strings.Contains(failure, want) {
+		t.Errorf("a missing script file: %q, want %q", failure, want)
+	}
+}

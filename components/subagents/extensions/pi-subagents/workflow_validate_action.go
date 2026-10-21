@@ -149,9 +149,6 @@ func validationObject(v WorkflowScriptValidationResult, preflight *WorkflowPrefl
 
 func validateAction(ctx sdk.Context, params map[string]any) (any, error) {
 	isSet := func(k string) bool { return params[k] != nil }
-	if isSet("workflowScript") && isSet("workflowScriptPath") {
-		return validationFailure("workflowScript and workflowScriptPath are mutually exclusive.")
-	}
 	if v := params["globalConcurrencyLimit"]; v != nil {
 		if _, ok := positiveSafeInt(v); !ok {
 			return validationFailure("globalConcurrencyLimit must be a positive safe integer.")
@@ -161,9 +158,6 @@ func validateAction(ctx sdk.Context, params map[string]any) (any, error) {
 		if _, ok := positiveSafeInt(v); !ok {
 			return validationFailure("maxSubagentSpawnsPerRun must be a positive safe integer.")
 		}
-	}
-	if isSet("globalConcurrencyLimit") {
-		return validationFailure("Workflow capacity overrides are only supported on top-level workflowScript or workflowScriptPath calls; validate accepts maxSubagentSpawnsPerRun for static budget checks.")
 	}
 	script, hasScript := params["workflowScript"].(string)
 	path, hasPath := params["workflowScriptPath"].(string)
