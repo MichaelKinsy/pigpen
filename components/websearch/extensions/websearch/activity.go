@@ -232,10 +232,12 @@ func (a activityRef) failed(message string) {
 }
 
 // failedErr is failed for an error, returning it so a return site reads `return nil, act.failedErr(err)`.
+// A cancellation completes the entry as aborted and reads as the AbortError the original's fetch rejects
+// with, "This operation was aborted" (the cancellation stays the cause).
 func (a activityRef) failedErr(err error) error {
 	if errors.Is(err, context.Canceled) {
 		a.complete(0)
-		return err
+		return &redactedError{"This operation was aborted", err}
 	}
 	a.failed(err.Error())
 	return err
