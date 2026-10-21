@@ -642,12 +642,6 @@
   "replace": "\tif false {\n"
  },
  {
-  "name": "ext-single-agent-type",
-  "file": "extension.go",
-  "find": "if name == \"\" {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution",
-  "replace": "if false {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution"
- },
- {
   "name": "ext-action-type",
   "file": "extension.go",
   "find": "!isString || jsTrim(s) == \"\"",
@@ -2763,7 +2757,7 @@
   "name": "rm-parent-model",
   "file": "run_model.go",
   "find": "if id := ctx.Model(); id != \"\" {",
-  "replace": "if false {"
+  "replace": "if id := ctx.Model(); id != \"\" && false {"
  },
  {
   "name": "rm-fullid",
@@ -2781,7 +2775,7 @@
   "name": "rm-explicit",
   "file": "run_model.go",
   "find": "if m, _ := params[\"model\"].(string); m != \"\" {",
-  "replace": "if false {"
+  "replace": "if m, _ := params[\"model\"].(string); m != \"\" && false {"
  },
  {
   "name": "rm-configured",
@@ -2794,12 +2788,6 @@
   "file": "run_model.go",
   "find": "if origin == \"explicit\" {\n\t\tsource = \"explicit\"",
   "replace": "if false {\n\t\tsource = \"explicit\""
- },
- {
-  "name": "rm-from-parent",
-  "file": "run_model.go",
-  "find": "origin == \"inherited\" || inheritsParentModel(explicit, configured, parent)",
-  "replace": "origin == \"inherited\""
  },
  {
   "name": "rm-effective-error",
@@ -2882,8 +2870,8 @@
  {
   "name": "rf-config-limit",
   "file": "run_fanout.go",
-  "find": "resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv)",
-  "replace": "resolveMaxSubagentSpawnsPerRun(nil, osEnv)"
+  "find": "cfg := loadExtensionConfig()\n\tdesc, err := createRunFanoutBudget(runID, resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv))",
+  "replace": "desc, err := createRunFanoutBudget(runID, resolveMaxSubagentSpawnsPerRun(nil, osEnv))"
  },
  {
   "name": "mp-both",
@@ -2925,7 +2913,7 @@
   "name": "ext-model-failed",
   "file": "extension.go",
   "find": "if fan != nil && !modelFailed {",
-  "replace": "if fan != nil {"
+  "replace": "if fan != nil && (true || modelFailed) {"
  },
  {
   "name": "ext-background-claim",
@@ -2990,8 +2978,8 @@
  {
   "name": "ar-status-details",
   "file": "async_actions.go",
-  "find": "\"spawnBudget\", spawnBudget, \"activeAsyncCapacity\", capacity)",
-  "replace": "\"spawnBudget\", nil, \"activeAsyncCapacity\", nil)"
+  "find": "budget, spawnBudget, capacity := statusBudget(sessionID)",
+  "replace": "budget, spawnBudget, capacity := statusBudget(sessionID)\n\t\tspawnBudget, capacity = nil, nil"
  },
  {
   "name": "ac-prefix",
@@ -3046,12 +3034,6 @@
   "file": "run_budget_status.go",
   "find": "\"previousLimit\", float64(g.PreviousLimit)",
   "replace": "\"previousLimit\", float64(g.Limit)"
- },
- {
-  "name": "bs-history-empty",
-  "file": "run_budget_status.go",
-  "find": "history := []any{}",
-  "replace": "var history []any"
  },
  {
   "name": "bs-unlimited",

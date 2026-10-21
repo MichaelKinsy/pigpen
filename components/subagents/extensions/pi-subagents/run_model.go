@@ -40,8 +40,7 @@ func resolveRunModel(ctx sdk.Context, d Discovery, a *AgentConfig, params map[st
 	if err != nil {
 		return "", err
 	}
-	selection, err := resolveModelSelection(primary, available, preferred, &ResolveModelSelectionOptions{Scope: scopes,
-		PrimaryModelFromParent: origin == "inherited" || inheritsParentModel(explicit, configured, parent), Origin: origin})
+	selection, err := resolveModelSelection(primary, available, preferred, &ResolveModelSelectionOptions{Scope: scopes, Origin: origin})
 	if err != nil {
 		return "", err
 	}

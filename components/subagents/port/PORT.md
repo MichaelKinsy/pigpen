@@ -321,7 +321,9 @@ Every mutation of `mutations.json` was run with `pigeq mutate --unit-only`; each
 | `mis-update-child-paths` | `parseMissionWorkflowChild` de-duplicates artifact paths again, so the merge's own de-duplication is not observable | mutation removed |
 | `dl-capacity` | the saturation flag is set when a table fills, so the length guard could not be reached | guard removed |
 | `ref-run-params` | `output` is registered by the run policy | mutation retargeted at an unregistered parameter |
-| 40 mutations whose definition did not build | unused variable after the mutation | definitions repaired in `gen-mutations.py` |
+| `rm-from-parent`, `ext-single-agent-type`, `bs-history-empty` | `resolveRunModel` always passes the origin, so `PrimaryModelFromParent` was implied by it; the public boundary already refuses a blank agent and a non-string task before `runOne`; the JSON writer prints a nil list as `[]` | the redundant argument and the two unreachable checks removed; the mutation of the equivalent list initializer removed |
+| `disc-legacy-skills`, `ld-exclude-bound`, `eb-properties`, `val-ws-order`, `val-enoent`, `bs-unlimited`, `bs-reconcile`, `rf-*`, `ext-widget-clear`, `ext-schedule-checks`, `ext-background-claim`, `ar-launch-rollback`, `rm-source-explicit` | no test observed them | `mutkill5_test.go`, `mutkill5_host_test.go`, `validate_action_test.go` |
+| 50 mutations whose definition did not build | unused variable after the mutation | definitions repaired in `gen-mutations.py` |
 
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 

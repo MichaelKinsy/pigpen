@@ -96,3 +96,14 @@ func TestValidateActionReadsAScriptFile(t *testing.T) {
 		t.Errorf("empty file: %s", failure)
 	}
 }
+
+func TestValidateActionAnswersWarningsAndUnreadableFiles(t *testing.T) {
+	_, text, failure := validateResult(t, map[string]any{"workflowScript": "const keys = [\"a\",\"b\"];\nawait runs.all(keys.map((k) => ({ key: k, agent: \"helper\", task: \"x\" })));\nreturn 1;", "maxSubagentSpawnsPerRun": 5})
+	eq(t, failure, "", "a valid script with a dynamic fan-out")
+	eq(t, text, `{"ok":true,"errors":[],"warnings":[{"kind":"dynamic-spawn-count","message":"workflowScript contains dynamic child launches; static validation proved 0 launch(es), so runtime fan-out enforcement remains authoritative for the configured budget of 5."}]}`, "warnings answer")
+
+	h, cwd := validateHost(t)
+	_, failure = h.Tool("subagent", map[string]any{"action": "validate", "workflowScriptPath": "missing.js"})
+	path := filepath.Join(cwd, "missing.js")
+	eq(t, failure, "Failed to read workflowScriptPath '"+path+"': ENOENT: no such file or directory, open '"+path+"'", "a missing file")
+}
