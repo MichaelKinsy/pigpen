@@ -62,9 +62,9 @@ func withLocal(t *testing.T, zone string) {
 	if err != nil {
 		t.Skipf("no zone database for %s: %v", zone, err)
 	}
-	prev := time.Local
-	time.Local = loc
-	t.Cleanup(func() { time.Local = prev })
+	prev := localZone
+	localZone = func() *time.Location { return loc }
+	t.Cleanup(func() { localZone = prev })
 }
 
 func TestCronMatchesCroner(t *testing.T) {

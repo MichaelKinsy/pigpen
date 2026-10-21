@@ -56,6 +56,10 @@ func jsSpace(r rune) bool {
 // jsFields splits on runs of JavaScript whitespace: `s.match(/\S+/g) || []`.
 func jsFields(s string) []string { return strings.FieldsFunc(s, jsSpace) }
 
+// localZone is the process's local time zone, as croner reads it (a test replaces it: assigning time.Local would race
+// every goroutine that reads the clock).
+var localZone = func() *time.Location { return time.Local }
+
 // jsTrim is String.prototype.trim.
 func jsTrim(s string) string { return strings.TrimFunc(s, jsSpace) }
 
@@ -490,7 +494,7 @@ func (d *cronDate) set(t, v int) {
 }
 
 func fromTime(t time.Time) *cronDate {
-	t = t.In(time.Local)
+	t = t.In(localZone())
 	return &cronDate{ms: t.Nanosecond() / 1e6, second: t.Second(), minute: t.Minute(), hour: t.Hour(), day: t.Day(), month: int(t.Month()) - 1, year: t.Year()}
 }
 
@@ -709,7 +713,7 @@ func jsLocalTime(y, mo, d, h, mi, s, ms int) time.Time {
 	u := utcDate(y, mo, d, h, mi, s, ms)
 	wall := u.Unix() // the wall-clock time read as if it were UTC
 	offsetAt := func(unix int64) int {
-		_, off := time.Unix(unix, 0).In(time.Local).Zone()
+		_, off := time.Unix(unix, 0).In(localZone()).Zone()
 		return off
 	}
 	var candidates []int
