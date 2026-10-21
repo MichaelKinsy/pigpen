@@ -69,11 +69,17 @@ func (a *app) showCost() bool {
 func (a *app) wireObs() {
 	a.mgr.onSpawn = a.attachTranscript
 	a.mgr.onStart = func(r *agentRecord) {
+		if !r.topLevel() { // an owned child is announced by nothing: its owner is the only one that hears of it
+			return
+		}
 		if ctx, ok := a.context(); ok {
 			_ = ctx.Events().Emit("subagents:started", map[string]any{"id": r.ID, "type": r.Type, "description": r.Description})
 		}
 	}
 	a.mgr.onCompact = func(r *agentRecord, reason string, tokensBefore, count int) {
+		if !r.topLevel() {
+			return
+		}
 		if ctx, ok := a.context(); ok {
 			_ = ctx.Events().Emit("subagents:compacted", map[string]any{"id": r.ID, "type": r.Type, "description": r.Description,
 				"reason": reason, "tokensBefore": tokensBefore, "compactionCount": count})

@@ -80,7 +80,6 @@ var settingRules = []settingRule{
 	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
 	{key: "workflowsEnabled", kind: "bool", okBool: false},
-	{key: "maxSubagentDepth", kind: "int", okInts: []int{0, 1}},
 	{key: "showCost", kind: "bool", okBool: false, note: " (only its widget display; the cost in the notification, result and steer texts is shown)"},
 	{key: "showModel", kind: "bool", okBool: false},
 	{key: "viewerMarkdown", kind: "enum", enum: []string{"assistant", "all", "off"}},

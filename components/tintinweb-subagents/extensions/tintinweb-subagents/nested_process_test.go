@@ -110,6 +110,13 @@ func toolsArg(l nestLog) string {
 	return ""
 }
 
+func excludeArg(l nestLog) string {
+	if i := slices.Index(l.Args, "--exclude-tools"); i >= 0 && i+1 < len(l.Args) {
+		return l.Args[i+1]
+	}
+	return ""
+}
+
 func processGone(t *testing.T, pid int) bool {
 	t.Helper()
 	for i := 0; i < 1000; i++ {
@@ -216,12 +223,12 @@ func TestNestedDelegationAcrossProcessesTwins(t *testing.T) {
 		logs := p.waitLogs(t, 2)
 		one, two := logOf(t, logs, "level_one-child"), logOf(t, logs, "level_two-child")
 		eq(t, one.ToolsEnabled, true)
-		eq(t, strings.Contains(toolsArg(one), nestedNames), true)
+		eq(t, strings.Contains(excludeArg(one), "get_subagent_result"), false) // the nested tools are not excluded
 		// The cap agent was given no allowance and no tools, though its file asked for them.
 		eq(t, two.ToolsEnabled, false)
 		eq(t, two.Allowed, "")
-		eq(t, hasArg(two, "--tools") && strings.Contains(toolsArg(two), "Agent"), false)
-		eq(t, len(p.logs(t)), 2) // level_three never started
+		eq(t, hasAll(strings.Split(excludeArg(two), ","), strings.Split(nestedNames, ",")...), true) // at the cap they stay excluded
+		eq(t, len(p.logs(t)), 2)                                                                     // level_three never started
 	})
 
 	tw(t, printModeFile, "holds a background child while it performs real nested delegation", func(t *testing.T) {

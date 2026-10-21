@@ -388,7 +388,7 @@ func (m *manager) assignHandle(base string) string {
 func (m *manager) resolve(ref string) *agentRecord {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if r := m.records[ref]; r != nil {
+	if r := m.records[ref]; r != nil && r.topLevel() { // what another agent owns is not addressable from here
 		return r
 	}
 	return m.resolveLiveLocked(ref)
