@@ -232,7 +232,7 @@ func getContentCallText(args map[string]any, th WidgetTheme) (string, error) {
 // ---- results -------------------------------------------------------------------------------------
 
 // RenderedText is a Text component with no padding.
-func textNode(s string) kit.Node { return kit.NewText(s, 0, 0) }
+func kitTextNode(s string) kit.Node { return kit.NewText(s, 0, 0) }
 
 // searchErrorNode is renderSearchErrorPlan: the expanded plan as one text, the collapsed plan as a
 // box on the error background with a hint to expand.
@@ -246,16 +246,16 @@ func searchErrorNode(plan *SearchErrorPlan, expanded bool, th WidgetTheme) kit.N
 			}
 			lines[i] = th.Fg(token, l)
 		}
-		return textNode(strings.Join(lines, "\n"))
+		return kitTextNode(strings.Join(lines, "\n"))
 	}
 	box := kit.NewBox(1, 0)
 	box.Bg = "toolErrorBg"
-	box.AddChild(textNode(th.Fg("error", plan.Expanded[0])))
+	box.AddChild(kitTextNode(th.Fg("error", plan.Expanded[0])))
 	for _, l := range plan.Collapsed {
-		box.AddChild(textNode(th.Fg("dim", l)))
+		box.AddChild(kitTextNode(th.Fg("dim", l)))
 	}
 	if plan.ExpandHint != nil {
-		box.AddChild(textNode(th.Fg("muted", *plan.ExpandHint)))
+		box.AddChild(kitTextNode(th.Fg("muted", *plan.ExpandHint)))
 	}
 	return box
 }
@@ -333,7 +333,7 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 			} else {
 				lines = append(lines, th.Fg("dim", "  "+shortcut+" reopens"))
 			}
-			return textNode(strings.Join(lines, "\n")), nil
+			return kitTextNode(strings.Join(lines, "\n")), nil
 		case "curating", "waiting-for-approval", "generating-summary":
 			phaseText := "waiting for summary approval in browser..."
 			switch phase {
@@ -351,7 +351,7 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 			} else {
 				lines = append(lines, th.Fg("dim", "  "+shortcut+" reopens"))
 			}
-			return textNode(strings.Join(lines, "\n")), nil
+			return kitTextNode(strings.Join(lines, "\n")), nil
 		}
 		progress, _ := numField(d, "progress")
 		bar, err := progressBar(progress)
@@ -363,20 +363,20 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 			if jsLen(query) > 40 {
 				query = jsSlice(query, 0, 37) + "..."
 			}
-			return textNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, query))), nil
+			return kitTextNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, query))), nil
 		}
 		label := phase
 		if label == "" {
 			label = "searching"
 		}
-		return textNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, label))), nil
+		return kitTextNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, label))), nil
 	}
 
 	if jsTruthy(d["error"]) {
 		if plan := BuildSearchErrorPlan(searchErrorDetailsFrom(d)); plan != nil {
 			return searchErrorNode(plan, expanded, th), nil
 		}
-		return textNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
+		return kitTextNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
 	}
 
 	queryInfo := ""
@@ -506,16 +506,16 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 
 	totalLines := len(lines)
 	if expanded {
-		return textNode(strings.Join(lines, "\n")), nil
+		return kitTextNode(strings.Join(lines, "\n")), nil
 	}
 
 	box := kit.NewBox(1, 0)
-	box.AddChild(textNode(statusLine))
+	box.AddChild(kitTextNode(statusLine))
 	collapsedLines := 1
 	summaryPreview := jsTrim(summaryText)
 	switch {
 	case summaryPreview != "":
-		box.AddChild(textNode(th.Fg("dim", preview2(summaryPreview, 120))))
+		box.AddChild(kitTextNode(th.Fg("dim", preview2(summaryPreview, 120))))
 		collapsedLines++
 	case len(curated) > 0:
 		for _, item := range curated[:min(3, len(curated))] {
@@ -530,11 +530,11 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 			if jsTruthy(cq["error"]) {
 				suffix = th.Fg("error", " (error)")
 			}
-			box.AddChild(textNode(th.Fg("accent", `  "`+dq+`"`) + suffix))
+			box.AddChild(kitTextNode(th.Fg("accent", `  "`+dq+`"`) + suffix))
 			collapsedLines++
 		}
 		if len(curated) > 3 {
-			box.AddChild(textNode(th.Fg("dim", fmt.Sprintf("  ... and %d more", len(curated)-3))))
+			box.AddChild(kitTextNode(th.Fg("dim", fmt.Sprintf("  ... and %d more", len(curated)-3))))
 			collapsedLines++
 		}
 	default:
@@ -548,12 +548,12 @@ func (r *Runtime) searchResultNode(content []map[string]any, d map[string]any, e
 		}
 		fallback := strings.ReplaceAll(jsTrim(first), "**", "")
 		if fallback != "" {
-			box.AddChild(textNode(th.Fg("dim", preview2(fallback, 120))))
+			box.AddChild(kitTextNode(th.Fg("dim", preview2(fallback, 120))))
 			collapsedLines++
 		}
 	}
 	if more := max(0, totalLines-collapsedLines); more > 0 {
-		box.AddChild(textNode(th.Fg("muted", fmt.Sprintf("\n... (%d more lines, %d total, ctrl+o to expand)", more, totalLines))))
+		box.AddChild(kitTextNode(th.Fg("muted", fmt.Sprintf("\n... (%d more lines, %d total, ctrl+o to expand)", more, totalLines))))
 	}
 	return box, nil
 }
@@ -624,7 +624,7 @@ func (r *Runtime) fetchResultNode(content []map[string]any, d map[string]any, ex
 		if phase == "" {
 			phase = "fetching"
 		}
-		return textNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, phase))), nil
+		return kitTextNode(th.Fg("accent", fmt.Sprintf("[%s] %s", bar, phase))), nil
 	}
 	if jsTruthy(d["error"]) {
 		var extras []string
@@ -649,7 +649,7 @@ func (r *Runtime) fetchResultNode(content []map[string]any, d map[string]any, ex
 		if plan := errorPlanFrom(d, extras); plan != nil {
 			return searchErrorNode(plan, expanded, th), nil
 		}
-		return textNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
+		return kitTextNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
 	}
 
 	text := firstText(content)
@@ -683,7 +683,7 @@ func (r *Runtime) fetchResultNode(content []map[string]any, d map[string]any, ex
 			statusLine += th.Fg("muted", " | "+FormatSeconds(int(math.Floor(dur)))+" total")
 		}
 		if !expanded {
-			return textNode(statusLine + "\n" + th.Fg("dim", previewText(text, 200))), nil
+			return kitTextNode(statusLine + "\n" + th.Fg("dim", previewText(text, 200))), nil
 		}
 		lines := []string{statusLine}
 		if p, _ := d["prompt"].(string); p != "" {
@@ -696,7 +696,7 @@ func (r *Runtime) fetchResultNode(content []map[string]any, d map[string]any, ex
 			lines = append(lines, th.Fg("dim", "  frames: "+jsNumber(f)))
 		}
 		lines = append(lines, th.Fg("dim", previewText(text, 500)))
-		return textNode(strings.Join(lines, "\n")), nil
+		return kitTextNode(strings.Join(lines, "\n")), nil
 	}
 
 	token := "error"
@@ -709,9 +709,9 @@ func (r *Runtime) fetchResultNode(content []map[string]any, d map[string]any, ex
 	}
 	statusLine := th.Fg(token, jsOpt(d, "successful")+"/"+jsOpt(d, "urlCount")+" URLs") + th.Fg("muted", stored)
 	if !expanded {
-		return textNode(statusLine), nil
+		return kitTextNode(statusLine), nil
 	}
-	return textNode(statusLine + "\n" + th.Fg("dim", previewText(text, 500))), nil
+	return kitTextNode(statusLine + "\n" + th.Fg("dim", previewText(text, 500))), nil
 }
 
 func getContentResultNode(content []map[string]any, d map[string]any, expanded bool, th WidgetTheme) (kit.Node, error) {
@@ -728,7 +728,7 @@ func getContentResultNode(content []map[string]any, d map[string]any, expanded b
 		if plan := errorPlanFrom(d, extras); plan != nil {
 			return searchErrorNode(plan, expanded, th), nil
 		}
-		return textNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
+		return kitTextNode(th.Fg("error", "Error: "+jsPrint(d["error"]))), nil
 	}
 	first := func(keys ...string) string {
 		for _, k := range keys {
@@ -775,7 +775,7 @@ func getContentResultNode(content []map[string]any, d map[string]any, expanded b
 		statusLine = th.Fg("success", name) + th.Fg("muted", fmt.Sprintf(" (%s chars%s)", length, slice))
 	}
 	if !expanded {
-		return textNode(statusLine), nil
+		return kitTextNode(statusLine), nil
 	}
-	return textNode(statusLine + "\n" + th.Fg("dim", previewText(firstText(content), 500))), nil
+	return kitTextNode(statusLine + "\n" + th.Fg("dim", previewText(firstText(content), 500))), nil
 }
