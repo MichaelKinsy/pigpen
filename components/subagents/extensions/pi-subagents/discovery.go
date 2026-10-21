@@ -3,7 +3,6 @@ package pi_subagents
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 

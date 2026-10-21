@@ -3,7 +3,6 @@ package pi_subagents
 import (
 	"embed"
 	"sort"
-	"strings"
 )
 
 //go:embed builtin/*.md
