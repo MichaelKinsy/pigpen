@@ -79,18 +79,36 @@ func TestToolNotify(t *testing.T) {
 			t.Fatalf("job = %v", job)
 		}
 	})
-	tskip(t, tool_, "accepts notify=true with model", "slice 4: the call passes model=haiku, which the per-task model mode refuses until the SDK has agent sessions (TestModelIsRefused)")
+	tw(t, tool_, "accepts notify=true with model", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"notify": true, "model": "haiku"}), makeCtx())
+		requireNoError(t, out)
+		if detailJobs(out)[0].(*jsobj.Object).Get("notify") != true {
+			t.Fatal("notify was not stored")
+		}
+	})
 	tw(t, tool_, "accepts notify=false without model", func(t *testing.T) {
 		d, _ := buildTool("session")
 		requireNoError(t, callTool(t, d, addParams(obj{"notify": false}), makeCtx()))
 	})
-	tskip(t, tool_, "accepts model without notify (defaults to silent)", "slice 4: model=haiku is refused for now; the notify default of a refused job cannot be observed")
+	tw(t, tool_, "accepts model without notify (defaults to silent)", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"model": "haiku"}), makeCtx())
+		requireNoError(t, out)
+		job := detailJobs(out)[0].(*jsobj.Object)
+		if !jsobj.IsUndefined(job.Get("notify")) {
+			t.Fatalf("notify = %v", job.Get("notify"))
+		}
+	})
 
 	tw(t, tool_, "accepts setting notify=true on an existing inline (no-model) job (no-op)", func(t *testing.T) {
 		d, _ := buildTool("session", toolJob(obj{"id": "j1"}))
 		requireNoError(t, callTool(t, d, obj{"action": "update", "jobId": "j1", "notify": true}, makeCtx()))
 	})
-	tskip(t, tool_, "accepts setting notify=true alongside model in the same call", "slice 4: the update passes model=haiku, which is refused until the SDK has agent sessions")
+	tw(t, tool_, "accepts setting notify=true alongside model in the same call", func(t *testing.T) {
+		d, _ := buildTool("session", exampleJob(obj{"id": "j2"}))
+		requireNoError(t, callTool(t, d, obj{"action": "update", "jobId": "j2", "notify": true, "model": "haiku"}, makeCtx()))
+	})
 	tw(t, tool_, "accepts setting notify=true on a job that already has model", func(t *testing.T) {
 		d, _ := buildTool("session", toolJob(obj{"id": "j3", "model": "haiku"}))
 		requireNoError(t, callTool(t, d, obj{"action": "update", "jobId": "j3", "notify": true}, makeCtx()))
@@ -192,10 +210,38 @@ func TestToolSessionBinding(t *testing.T) {
 }
 
 func TestToolExtensionsSkills(t *testing.T) {
-	tskip(t, tool_, "accepts extensions=true and stores it on the job", "slice 4: the add passes model=haiku with extensions=true; the model mode is refused until the SDK has agent sessions")
-	tskip(t, tool_, "accepts skills=true and stores it on the job", "slice 4: the add passes model=haiku with skills=true; the model mode is refused until the SDK has agent sessions")
-	tskip(t, tool_, "defaults extensions to undefined when not provided", "slice 4: the add passes model=haiku, so the job it would create is refused; the default of extensions is covered through an inline add in TestInlineAddDefaults")
-	tskip(t, tool_, "defaults skills to undefined when not provided", "slice 4: the add passes model=haiku, so the job it would create is refused; the default of skills is covered through an inline add in TestInlineAddDefaults")
+	tw(t, tool_, "accepts extensions=true and stores it on the job", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"model": "haiku", "extensions": true}), makeCtx())
+		requireNoError(t, out)
+		if detailJobs(out)[0].(*jsobj.Object).Get("extensions") != true {
+			t.Fatal("extensions was not stored")
+		}
+	})
+	tw(t, tool_, "accepts skills=true and stores it on the job", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"model": "haiku", "skills": true}), makeCtx())
+		requireNoError(t, out)
+		if detailJobs(out)[0].(*jsobj.Object).Get("skills") != true {
+			t.Fatal("skills was not stored")
+		}
+	})
+	tw(t, tool_, "defaults extensions to undefined when not provided", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"model": "haiku"}), makeCtx())
+		requireNoError(t, out)
+		if !jsobj.IsUndefined(detailJobs(out)[0].(*jsobj.Object).Get("extensions")) {
+			t.Fatal("extensions is not undefined")
+		}
+	})
+	tw(t, tool_, "defaults skills to undefined when not provided", func(t *testing.T) {
+		d, _ := buildTool("session")
+		out := callTool(t, d, addParams(obj{"model": "haiku"}), makeCtx())
+		requireNoError(t, out)
+		if !jsobj.IsUndefined(detailJobs(out)[0].(*jsobj.Object).Get("skills")) {
+			t.Fatal("skills is not undefined")
+		}
+	})
 
 	update := func(t *testing.T, id string, seed obj, key string, value bool) {
 		d, st := buildTool("session", toolJob(merge(obj{"id": id, "model": "haiku"}, seed)))

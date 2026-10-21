@@ -36,9 +36,6 @@ type toolOutput struct {
 	Details *jsobj.Object
 }
 
-// modelRefusal: the per-task model mode needs an in-process agent session, which the Go SDK cannot start yet (PORT.md M16, slice 4).
-const modelFeature = "the per-task model mode (the model parameter: a prompt run in a separate agent session)"
-
 func pOpt(params map[string]any, key string) (any, bool) {
 	v, ok := params[key]
 	if !ok || v == nil {
@@ -109,20 +106,27 @@ func (d toolDeps) execute(params map[string]any, sess toolSession) (toolOutput, 
 	details := newDetails(action)
 	out, err := d.run(action, params, sess, storage, sched, details)
 	if err != nil {
-		var refusal *refusalError
-		if errors.As(err, &refusal) {
-			return toolOutput{}, err
-		}
 		details.Set("error", err.Error())
 		return toolOutput{Text: "✗ Error: " + err.Error(), Details: details}, nil
 	}
 	return out, nil
 }
 
-// refusalError is the program's refusal: a tool error, never result text.
-type refusalError struct{ error }
-
-func refuse(feature string) error { return &refusalError{unsupported(feature)} }
+// modelDescription is "Model: m (runs in subagent, notifies parent, extensions, skills)", as the add result and the list show a job
+// that has a model.
+func modelDescription(job *jsobj.Object) string {
+	notify, ext, skills := "", "", ""
+	if truthy(job.Get("notify")) {
+		notify = ", notifies parent"
+	}
+	if truthy(job.Get("extensions")) {
+		ext = ", extensions"
+	}
+	if truthy(job.Get("skills")) {
+		skills = ", skills"
+	}
+	return "Model: " + jsStr(job.Get("model")) + " (runs in subagent" + notify + ext + skills + ")"
+}
 
 func (d toolDeps) run(action string, params map[string]any, sess toolSession, storage jobStore, sched jobScheduler, details *jsobj.Object) (toolOutput, error) {
 	switch action {
@@ -159,7 +163,6 @@ func (d toolDeps) add(params map[string]any, sess toolSession, storage jobStore,
 		if s, isStr := m.(string); isStr && s == "" {
 			return toolOutput{}, errors.New("'model' must be a non-empty string. Omit the field for inline (no-model) jobs.")
 		}
-		return toolOutput{}, refuse(modelFeature)
 	}
 
 	jobName := pStr(params, "name")
@@ -223,6 +226,9 @@ func (d toolDeps) add(params map[string]any, sess toolSession, storage jobStore,
 
 	text := `✓ Created cron job "` + jsStr(job.Get("name")) + `" (` + jsStr(job.Get("id")) + ")\nType: " + jsStr(job.Get("type")) +
 		"\nSchedule: " + jsStr(job.Get("schedule")) + "\nPrompt: " + jsStr(job.Get("prompt"))
+	if truthy(job.Get("model")) {
+		text += "\n" + modelDescription(job)
+	}
 	return toolOutput{Text: text, Details: details}, nil
 }
 
@@ -357,7 +363,6 @@ func (d toolDeps) update(params map[string]any, storage jobStore, sched jobSched
 		if s, isStr := m.(string); isStr && s == "" {
 			return toolOutput{}, errors.New("'model' must be a non-empty string. To switch a job from subagent back to inline, remove and re-add it without a model.")
 		}
-		return toolOutput{}, refuse(modelFeature)
 	}
 
 	updates := jsobj.New()
@@ -367,7 +372,7 @@ func (d toolDeps) update(params map[string]any, storage jobStore, sched jobSched
 	if pTruthy(params, "prompt") {
 		updates.Set("prompt", params["prompt"])
 	}
-	for _, key := range []string{"description", "notify", "extensions", "skills"} {
+	for _, key := range []string{"description", "model", "notify", "extensions", "skills"} {
 		if p, ok := pOpt(params, key); ok {
 			updates.Set(key, normalizeParam(p))
 		}
@@ -436,17 +441,7 @@ func (d toolDeps) list(sess toolSession, storage jobStore, sched jobScheduler, d
 		lines = append(lines, status+" "+jsStr(job.Get("name"))+" ("+jsStr(job.Get("id"))+")")
 		lines = append(lines, "  Type: "+jsStr(job.Get("type"))+" | Schedule: "+jsStr(job.Get("schedule")))
 		if truthy(job.Get("model")) {
-			notify, ext, skills := "", "", ""
-			if truthy(job.Get("notify")) {
-				notify = ", notifies parent"
-			}
-			if truthy(job.Get("extensions")) {
-				ext = ", extensions"
-			}
-			if truthy(job.Get("skills")) {
-				skills = ", skills"
-			}
-			lines = append(lines, "  Model: "+jsStr(job.Get("model"))+" (runs in subagent"+notify+ext+skills+")")
+			lines = append(lines, "  "+modelDescription(job))
 		}
 		lines = append(lines, "  Prompt: "+jsStr(job.Get("prompt")))
 		tail := ""

@@ -229,21 +229,6 @@ func TestExecuteJobWithModelRunsTheSubagent(t *testing.T) {
 	}
 }
 
-// A job made by the original with a model runs through the refusing runner: the failure is the run's error, in the chat, and the job's.
-func TestRefusingRunnerReportsTheRefusal(t *testing.T) {
-	pi := &mockPi{}
-	job := exampleJob(obj{"model": "haiku"})
-	st := makeStorage(job)
-	s := newSched(st, pi, makeCtx(), refusingRunner)
-	s.executeJobInSubagent(job)
-	waitFor(t, func() bool { return pi.messageCount() == 2 })
-	m := pi.message(1)
-	if detail(m.msg, "mode") != "subagent_error" || !strings.HasPrefix(detail(m.msg, "error").(string), "@pi-in-go/pigpen-schedule-prompt (Go port) does not support the per-task model mode") {
-		t.Fatalf("details = %v", m.msg.Details)
-	}
-	waitFor(t, func() bool { j, _ := st.GetJob("job-1"); return j.Get("lastStatus") == "error" })
-}
-
 func TestStopClearsEveryTimer(t *testing.T) {
 	job := exampleJob(obj{"type": "cron", "schedule": "0 0 * * * *"})
 	iv := exampleJob(obj{"id": "iv", "type": "interval", "schedule": "5m", "intervalMs": float64(300000)})

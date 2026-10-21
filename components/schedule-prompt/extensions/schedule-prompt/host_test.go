@@ -214,18 +214,19 @@ func TestAutoCleanup(t *testing.T) {
 }
 
 // A stale `running` flag of this session is cleared at the start, one of another session is not.
-func TestToolRefusesTheModelModeThroughTheHost(t *testing.T) {
+func TestToolStoresTheModelThroughTheHost(t *testing.T) {
 	r := startRig(t)
 	r.Fire("session_start", obj{"reason": "startup"})
-	_, failure := r.call(t, obj{"action": "add", "schedule": "+10s", "type": "once", "prompt": "p", "model": "haiku"})
-	if !strings.Contains(failure, "does not support the per-task model mode") || !strings.HasSuffix(failure, "which runs unchanged in PiG.") {
-		t.Fatalf("failure = %q", failure)
+	text, failure := r.call(t, obj{"action": "add", "schedule": "+10m", "type": "once", "prompt": "p", "model": "haiku", "notify": true})
+	if failure != "" || !strings.HasSuffix(text, "\nModel: haiku (runs in subagent, notifies parent)") {
+		t.Fatalf("text = %q, failure = %q", text, failure)
 	}
-	if _, err := os.Stat(r.storePath()); err == nil {
-		t.Fatal("a refused call wrote the store")
+	job := r.readStore(t)["jobs"].([]any)[0].(map[string]any)
+	if job["model"] != "haiku" || job["notify"] != true {
+		t.Fatalf("job = %v", job)
 	}
+	r.Fire("session_shutdown", obj{"reason": "quit"})
 }
-
 
 // A change event redraws the widget at once: a job added through the tool shows the widget below the editor without waiting for the
 // 30 s refresh.

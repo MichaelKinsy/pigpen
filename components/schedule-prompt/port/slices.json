@@ -1,3 +1,1 @@
-{
- "subagent": "not ported: slice 4 (the per-task model mode: an in-process agent session, which the Go SDK of PiG 0.5.0 cannot start; PiG's branch feat/sdk-child-agent-sessions adds it)"
-}
+{}

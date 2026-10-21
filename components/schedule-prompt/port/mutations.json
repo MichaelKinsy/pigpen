@@ -636,24 +636,6 @@
   "replace": "\"'model' must be non-empty.\""
  },
  {
-  "name": "tool-model-refusal-add-dropped",
-  "file": "tool.go",
-  "find": "\t\treturn toolOutput{}, refuse(modelFeature)\n\t}\n\n\tjobName := ",
-  "replace": "\t}\n\n\tjobName := "
- },
- {
-  "name": "tool-model-refusal-update-dropped",
-  "file": "tool.go",
-  "find": "\t\treturn toolOutput{}, refuse(modelFeature)\n\t}\n\n\tupdates := jsobj.New()",
-  "replace": "\t}\n\n\tupdates := jsobj.New()"
- },
- {
-  "name": "tool-refusal-as-text",
-  "file": "tool.go",
-  "find": "func refuse(feature string) error { return &refusalError{unsupported(feature)} }",
-  "replace": "func refuse(feature string) error { return unsupported(feature) }"
- },
- {
   "name": "tool-name-generated",
   "file": "tool.go",
   "find": "jobName = \"job-\" + nanoid(6)",
@@ -740,8 +722,8 @@
  {
   "name": "tool-add-optional-fields",
   "file": "tool.go",
-  "find": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\", \"skills\"} {",
-  "replace": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\"} {"
+  "find": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\", \"skills\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tjob.Set",
+  "replace": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tjob.Set"
  },
  {
   "name": "tool-remove-needs-id-text",
@@ -836,8 +818,8 @@
  {
   "name": "tool-update-description-order",
   "file": "tool.go",
-  "find": "for _, key := range []string{\"description\", \"notify\", \"extensions\", \"skills\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set",
-  "replace": "for _, key := range []string{\"description\", \"notify\", \"extensions\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set"
+  "find": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\", \"skills\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set",
+  "replace": "for _, key := range []string{\"description\", \"model\", \"notify\", \"extensions\"} {\n\t\tif p, ok := pOpt(params, key); ok {\n\t\t\tupdates.Set"
  },
  {
   "name": "tool-update-type-of-job",
@@ -908,8 +890,8 @@
  {
   "name": "tool-list-model-line",
   "file": "tool.go",
-  "find": "lines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\"))+\" (runs in subagent\"+notify+ext+skills+\")\")",
-  "replace": "_, _, _ = notify, ext, skills\n\t\t\tlines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\")))"
+  "find": "lines = append(lines, \"  \"+modelDescription(job))",
+  "replace": "_ = modelDescription\n\t\t\t_ = job"
  },
  {
   "name": "tool-list-notify-text",
@@ -1434,12 +1416,6 @@
   "replace": "\"minLength\": 0,"
  },
  {
-  "name": "ext-command-refusal",
-  "file": "extension.go",
-  "find": "ctx.Notify(unsupported(commandFeature).Error(), \"error\")",
-  "replace": "_ = commandFeature"
- },
- {
   "name": "nanoid-alphabet",
   "file": "nanoid.go",
   "find": "out[i] = nanoidAlphabet[v&63]",
@@ -1846,5 +1822,533 @@
   "file": "internal/jsdate/parse.go",
   "find": "date -= utcOffset * 1000",
   "replace": "date += utcOffset * 1000"
+ },
+ {
+  "name": "jobs-q-does-not-quit",
+  "file": "jobsview.go",
+  "find": "if tui.MatchesKey(data, \"q\") || tui.MatchesKey(data, \"escape\") {\n\t\treturn true",
+  "replace": "if tui.MatchesKey(data, \"escape\") {\n\t\treturn true"
+ },
+ {
+  "name": "jobs-escape-does-not-quit",
+  "file": "jobsview.go",
+  "find": "if tui.MatchesKey(data, \"q\") || tui.MatchesKey(data, \"escape\") {\n\t\treturn true",
+  "replace": "if tui.MatchesKey(data, \"q\") {\n\t\treturn true"
+ },
+ {
+  "name": "jobs-up-wraps",
+  "file": "jobsview.go",
+  "find": "if v.selected > 0 {\n\t\t\tv.selected--",
+  "replace": "if v.selected > -1 {\n\t\t\tv.selected--"
+ },
+ {
+  "name": "jobs-down-unbounded",
+  "file": "jobsview.go",
+  "find": "if v.selected < len(v.mine)+len(v.foreign)-1 {",
+  "replace": "if v.selected < len(v.mine)+len(v.foreign) {"
+ },
+ {
+  "name": "jobs-confirm-n-ignored",
+  "file": "jobsview.go",
+  "find": "if tui.MatchesKey(data, \"n\") || tui.MatchesKey(data, \"escape\") {\n\t\tv.confirm = nil",
+  "replace": "if tui.MatchesKey(data, \"escape\") {\n\t\tv.confirm = nil"
+ },
+ {
+  "name": "jobs-confirm-escape-ignored",
+  "file": "jobsview.go",
+  "find": "if tui.MatchesKey(data, \"n\") || tui.MatchesKey(data, \"escape\") {\n\t\tv.confirm = nil",
+  "replace": "if tui.MatchesKey(data, \"n\") {\n\t\tv.confirm = nil"
+ },
+ {
+  "name": "jobs-confirm-y-keeps-prompt",
+  "file": "jobsview.go",
+  "find": "\t\tv.confirm = nil\n\t\tv.refresh()\n\t\treturn\n\t}\n\tif tui.MatchesKey(data, \"n\")",
+  "replace": "\t\tv.refresh()\n\t\treturn\n\t}\n\tif tui.MatchesKey(data, \"n\")"
+ },
+ {
+  "name": "jobs-remove-skips-scheduler",
+  "file": "jobsview.go",
+  "find": "\tv.sched.removeJob(id)\n}",
+  "replace": "}"
+ },
+ {
+  "name": "jobs-cleanup-removes-enabled",
+  "file": "jobsview.go",
+  "find": "for _, j := range v.mine {\n\t\t\t\tif !truthy(j.Get(\"enabled\")) {\n\t\t\t\t\tv.removeJob(jobID(j))",
+  "replace": "for _, j := range v.mine {\n\t\t\t\tif truthy(j.Get(\"enabled\")) {\n\t\t\t\t\tv.removeJob(jobID(j))"
+ },
+ {
+  "name": "jobs-cleanup-counts-all",
+  "file": "jobsview.go",
+  "find": "for _, j := range v.mine {\n\t\t\tif !truthy(j.Get(\"enabled\")) {\n\t\t\t\tcount++",
+  "replace": "for _, j := range v.mine {\n\t\t\tif true {\n\t\t\t\tcount++"
+ },
+ {
+  "name": "jobs-cleanup-empty-opens",
+  "file": "jobsview.go",
+  "find": "if count == 0 {\n\t\t\treturn false\n\t\t}",
+  "replace": "if count == -1 {\n\t\t\treturn false\n\t\t}"
+ },
+ {
+  "name": "jobs-toggle-foreign",
+  "file": "jobsview.go",
+  "find": "case tui.MatchesKey(data, \"t\"):\n\t\tif v.isSelectionForeign() {\n\t\t\treturn false\n\t\t}",
+  "replace": "case tui.MatchesKey(data, \"t\"):"
+ },
+ {
+  "name": "jobs-remove-foreign",
+  "file": "jobsview.go",
+  "find": "case tui.MatchesKey(data, \"x\"):\n\t\tif v.isSelectionForeign() {\n\t\t\treturn false\n\t\t}",
+  "replace": "case tui.MatchesKey(data, \"x\"):"
+ },
+ {
+  "name": "jobs-toggle-skips-scheduler",
+  "file": "jobsview.go",
+  "find": "\tv.sched.updateJob(id, updated)\n}",
+  "replace": "\t_ = updated\n}"
+ },
+ {
+  "name": "jobs-scope-unbinds-always",
+  "file": "jobsview.go",
+  "find": "if !truthy(sel.Get(\"session\")) {\n\t\t\tsession = v.mySessionID",
+  "replace": "if truthy(sel.Get(\"session\")) {\n\t\t\tsession = v.mySessionID"
+ },
+ {
+  "name": "jobs-add-no-refresh",
+  "file": "jobsview.go",
+  "find": "\t\t\tv.mu.Lock()\n\t\t\tv.refresh()\n\t\t\tv.mu.Unlock()\n",
+  "replace": ""
+ },
+ {
+  "name": "jobs-add-no-render",
+  "file": "jobsview.go",
+  "find": "\t\t\tv.requestRender()\n\t\t}()",
+  "replace": "\t\t}()"
+ },
+ {
+  "name": "jobs-rule-width",
+  "file": "jobsview.go",
+  "find": "strings.Repeat(\"─\", max(1, width))",
+  "replace": "strings.Repeat(\"─\", max(2, width))"
+ },
+ {
+  "name": "jobs-name-width",
+  "file": "jobsview.go",
+  "find": "jobsNameW   = 18",
+  "replace": "jobsNameW   = 17"
+ },
+ {
+  "name": "jobs-sched-width",
+  "file": "jobsview.go",
+  "find": "jobsSchedW  = 16",
+  "replace": "jobsSchedW  = 17"
+ },
+ {
+  "name": "jobs-prompt-width",
+  "file": "jobsview.go",
+  "find": "jobsPromptW = 30",
+  "replace": "jobsPromptW = 31"
+ },
+ {
+  "name": "jobs-truncate-dots",
+  "file": "jobsview.go",
+  "find": "return jsSubstring(s, 0, n-3) + \"...\"",
+  "replace": "return jsSubstring(s, 0, n-3) + \"…\""
+ },
+ {
+  "name": "jobs-prompt-detail-limit",
+  "file": "jobsview.go",
+  "find": "jobsTruncate(jsStr(sel.Get(\"prompt\")), 200)",
+  "replace": "jobsTruncate(jsStr(sel.Get(\"prompt\")), 100)"
+ },
+ {
+  "name": "jobs-shared-tag",
+  "file": "jobsview.go",
+  "find": "if !truthy(job.Get(\"session\")) && !foreign {",
+  "replace": "if !truthy(job.Get(\"session\")) {"
+ },
+ {
+  "name": "jobs-foreign-colored",
+  "file": "jobsview.go",
+  "find": "case foreign:\n\t\tswitch {",
+  "replace": "case false:\n\t\tswitch {"
+ },
+ {
+  "name": "jobs-icon-running",
+  "file": "jobsview.go",
+  "find": "th.Fg(\"warning\", \"⟳\")",
+  "replace": "th.Fg(\"warning\", \"✓\")"
+ },
+ {
+  "name": "jobs-icon-error",
+  "file": "jobsview.go",
+  "find": "th.Fg(\"error\", \"!\")",
+  "replace": "th.Fg(\"error\", \"✗\")"
+ },
+ {
+  "name": "jobs-indicator",
+  "file": "jobsview.go",
+  "find": "indicator = \"▶\"",
+  "replace": "indicator = \">\""
+ },
+ {
+  "name": "jobs-confirm-remove-text",
+  "file": "jobsview.go",
+  "find": "` Remove \"`+v.confirm.name+`\"? (y/n)`",
+  "replace": "` Remove \"`+v.confirm.name+`\" (y/n)`"
+ },
+ {
+  "name": "jobs-confirm-cleanup-text",
+  "file": "jobsview.go",
+  "find": "\" disabled job(s) in this session? (y/n)\"",
+  "replace": "\" disabled jobs in this session? (y/n)\""
+ },
+ {
+  "name": "jobs-meta-next-missing",
+  "file": "jobsview.go",
+  "find": "meta = append(meta, \"Next: \"+iso)",
+  "replace": "_ = iso"
+ },
+ {
+  "name": "jobs-meta-last-missing",
+  "file": "jobsview.go",
+  "find": "meta = append(meta, \"Last: \"+jsStr(sel.Get(\"lastRun\")))",
+  "replace": "_ = sel"
+ },
+ {
+  "name": "jobs-foreign-header",
+  "file": "jobsview.go",
+  "find": "\"  Other sessions (read-only):\"",
+  "replace": "\"  Other sessions:\""
+ },
+ {
+  "name": "jobs-foreign-next",
+  "file": "jobsview.go",
+  "find": "if !v.isSelectionForeign() {\n\t\t\tnext = v.sched.getNextRun(jobID(sel))",
+  "replace": "if true {\n\t\t\tnext = v.sched.getNextRun(jobID(sel))"
+ },
+ {
+  "name": "jobs-clamp-after-refresh",
+  "file": "jobsview.go",
+  "find": "if max := max(0, len(v.mine)+len(v.foreign)-1); v.selected > max {\n\t\tv.selected = max",
+  "replace": "if max := max(0, len(v.mine)+len(v.foreign)-1); v.selected > max {\n\t\tv.selected = 0"
+ },
+ {
+  "name": "flow-cancel-name-continues",
+  "file": "addflow.go",
+  "find": "if err != nil || !ok || name == \"\" {\n\t\treturn err",
+  "replace": "if err != nil {\n\t\treturn err"
+ },
+ {
+  "name": "flow-duplicate-allowed",
+  "file": "addflow.go",
+  "find": "if dup {\n\t\tui.Notify(",
+  "replace": "if false {\n\t\tui.Notify("
+ },
+ {
+  "name": "flow-duplicate-text",
+  "file": "addflow.go",
+  "find": "`A job named \"`+name+`\" already exists`",
+  "replace": "`A job named \"`+name+`\" exists`"
+ },
+ {
+  "name": "flow-type-labels",
+  "file": "addflow.go",
+  "find": "{\"Interval (periodic)\", \"interval\"},",
+  "replace": "{\"Interval (repeating)\", \"interval\"},"
+ },
+ {
+  "name": "flow-no-trim",
+  "file": "addflow.go",
+  "find": "validateSchedule(jobType, croner.JSTrim(raw))",
+  "replace": "validateSchedule(jobType, raw)"
+ },
+ {
+  "name": "flow-reprompt-placeholder",
+  "file": "addflow.go",
+  "find": "placeholder = result.err",
+  "replace": "placeholder = addFlowPlaceholders[jobType]"
+ },
+ {
+  "name": "flow-default-scope-first",
+  "file": "addflow.go",
+  "find": "if st.defaultJobScope == \"\" || st.defaultJobScope == \"session\" {",
+  "replace": "if st.defaultJobScope == \"session\" {"
+ },
+ {
+  "name": "flow-shared-session",
+  "file": "addflow.go",
+  "find": "if scopeChoice == scopeSession {\n\t\tsession = mySessionID",
+  "replace": "if scopeChoice != scopeSession {\n\t\tsession = mySessionID"
+ },
+ {
+  "name": "flow-confirm-text",
+  "file": "addflow.go",
+  "find": "\"\\nScope: \"+scopeLabel",
+  "replace": "\" Scope: \"+scopeLabel"
+ },
+ {
+  "name": "flow-scope-label",
+  "file": "addflow.go",
+  "find": "scopeLabel := \"shared (any pi here)\"",
+  "replace": "scopeLabel := \"shared\""
+ },
+ {
+  "name": "flow-declined-saves",
+  "file": "addflow.go",
+  "find": "if err != nil || !confirmed {\n\t\treturn err",
+  "replace": "if err != nil {\n\t\treturn err"
+ },
+ {
+  "name": "flow-not-scheduled",
+  "file": "addflow.go",
+  "find": "\tsched.addJob(job)\n\tui.Notify(",
+  "replace": "\tui.Notify("
+ },
+ {
+  "name": "flow-notify-text",
+  "file": "addflow.go",
+  "find": "\"Created scheduled prompt: \"+name+\" (\"+human+\")\"",
+  "replace": "\"Created scheduled prompt: \"+name"
+ },
+ {
+  "name": "flow-runcount",
+  "file": "addflow.go",
+  "find": "job.Set(\"runCount\", float64(0))",
+  "replace": "job.Set(\"runCount\", float64(1))"
+ },
+ {
+  "name": "cmd-menu-options",
+  "file": "command.go",
+  "find": "[]string{\"Jobs\", \"Settings\"}",
+  "replace": "[]string{\"Settings\", \"Jobs\"}"
+ },
+ {
+  "name": "cmd-menu-title",
+  "file": "command.go",
+  "find": "ctx.Select(\"Scheduled Prompts\"",
+  "replace": "ctx.Select(\"Schedule\""
+ },
+ {
+  "name": "cmd-settings-widget-text",
+  "file": "command.go",
+  "find": "\"Widget visibility: \" + widgetState",
+  "replace": "\"Widget: \" + widgetState"
+ },
+ {
+  "name": "cmd-settings-widget-not-saved",
+  "file": "command.go",
+  "find": "if !saveSettings(ctx.Cwd(), &next, \"\") {",
+  "replace": "if false && !saveSettings(ctx.Cwd(), &next, \"\") {"
+ },
+ {
+  "name": "cmd-settings-widget-not-shown",
+  "file": "command.go",
+  "find": "\t\t\t\tif next {\n\t\t\t\t\twidget.show(sdkWidgetUI{ctx})",
+  "replace": "\t\t\t\tif false {\n\t\t\t\t\twidget.show(sdkWidgetUI{ctx})"
+ },
+ {
+  "name": "cmd-settings-scope-flip",
+  "file": "command.go",
+  "find": "next := \"session\"\n\t\t\tif bound {\n\t\t\t\tnext = \"workdir\"",
+  "replace": "next := \"workdir\"\n\t\t\tif bound {\n\t\t\t\tnext = \"session\""
+ },
+ {
+  "name": "cmd-settings-scope-not-kept",
+  "file": "command.go",
+  "find": "a.settings.defaultJobScope = next",
+  "replace": "_ = next"
+ },
+ {
+  "name": "cmd-settings-persist-level",
+  "file": "command.go",
+  "find": "\" (session only; failed to persist)\", \"warning\")\n\t\t\t}\n\t\tcase",
+  "replace": "\" (session only; failed to persist)\", \"error\")\n\t\t\t}\n\t\tcase"
+ },
+ {
+  "name": "cmd-jobs-overlay-not-full",
+  "file": "command.go",
+  "find": "OverlayOptions: &sdk.OverlayOptions{Width: sdk.OverlayPercent(100), MaxHeight: sdk.OverlayPercent(100)},",
+  "replace": "OverlayOptions: &sdk.OverlayOptions{Width: sdk.OverlayPercent(50), MaxHeight: sdk.OverlayPercent(100)},"
+ },
+ {
+  "name": "cmd-add-keeps-overlay",
+  "file": "command.go",
+  "find": "_ = overlay.SetHidden(true)",
+  "replace": "_ = overlay"
+ },
+ {
+  "name": "cmd-add-no-refocus",
+  "file": "command.go",
+  "find": "_ = overlay.Focus()",
+  "replace": "_ = overlay"
+ },
+ {
+  "name": "sub-default-tools",
+  "file": "subagent.go",
+  "find": "\"bash\", \"read\", \"edit\", \"write\", \"grep\", \"find\", \"ls\"}",
+  "replace": "\"bash\", \"read\", \"edit\", \"write\", \"grep\", \"find\"}"
+ },
+ {
+  "name": "sub-tools-with-extensions",
+  "file": "subagent.go",
+  "find": "if !extEnabled {\n\t\toptions.Tools = defaultToolNames",
+  "replace": "if true {\n\t\toptions.Tools = defaultToolNames"
+ },
+ {
+  "name": "sub-extensions-not-bound",
+  "file": "subagent.go",
+  "find": "if extEnabled {\n\t\tif err := session.BindExtensions()",
+  "replace": "if false {\n\t\tif err := session.BindExtensions()"
+ },
+ {
+  "name": "sub-skills-always-off",
+  "file": "subagent.go",
+  "find": "NoSkills:          !skillsEnabled,",
+  "replace": "NoSkills:          true,"
+ },
+ {
+  "name": "sub-extensions-always-off",
+  "file": "subagent.go",
+  "find": "NoExtensions:      !extEnabled,",
+  "replace": "NoExtensions:      true,"
+ },
+ {
+  "name": "sub-prompt-templates",
+  "file": "subagent.go",
+  "find": "NoPromptTemplates: true,",
+  "replace": "NoPromptTemplates: false,"
+ },
+ {
+  "name": "sub-themes",
+  "file": "subagent.go",
+  "find": "NoThemes:          true,",
+  "replace": "NoThemes:          false,"
+ },
+ {
+  "name": "sub-persisted",
+  "file": "subagent.go",
+  "find": "InMemory: true,",
+  "replace": "InMemory: false,"
+ },
+ {
+  "name": "sub-cwd",
+  "file": "subagent.go",
+  "find": "Cwd: host.Cwd(),",
+  "replace": "Cwd: \"\","
+ },
+ {
+  "name": "sub-extension-names",
+  "file": "subagent.go",
+  "find": "ExtensionNames:    nameList(opts.Extensions),",
+  "replace": "ExtensionNames:    nil,"
+ },
+ {
+  "name": "sub-skill-names",
+  "file": "subagent.go",
+  "find": "SkillNames:        nameList(opts.Skills),",
+  "replace": "SkillNames:        nil,"
+ },
+ {
+  "name": "sub-empty-list-enabled",
+  "file": "subagent.go",
+  "find": "return ok && len(l) > 0\n}",
+  "replace": "return ok\n}"
+ },
+ {
+  "name": "sub-no-dispose",
+  "file": "subagent.go",
+  "find": "defer session.Dispose()",
+  "replace": "_ = session"
+ },
+ {
+  "name": "sub-resolve-exact-first",
+  "file": "subagent.go",
+  "find": "if strings.ToLower(modelField(m, \"id\")) == needle {",
+  "replace": "if strings.Contains(strings.ToLower(modelField(m, \"id\")), needle) {"
+ },
+ {
+  "name": "sub-resolve-name",
+  "file": "subagent.go",
+  "find": "if strings.Contains(strings.ToLower(modelField(m, \"name\")), needle) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sub-resolve-slash-fuzzy",
+  "file": "subagent.go",
+  "find": "fuzzyNeedle = id",
+  "replace": "fuzzyNeedle = modelStr"
+ },
+ {
+  "name": "sub-resolve-case",
+  "file": "subagent.go",
+  "find": "needle := strings.ToLower(fuzzyNeedle)",
+  "replace": "needle := fuzzyNeedle"
+ },
+ {
+  "name": "sub-describe-limit",
+  "file": "subagent.go",
+  "find": "available[:min(5, len(available))]",
+  "replace": "available[:min(4, len(available))]"
+ },
+ {
+  "name": "sub-describe-more",
+  "file": "subagent.go",
+  "find": "if len(available) > 5 {",
+  "replace": "if len(available) > 6 {"
+ },
+ {
+  "name": "sub-unknown-text",
+  "file": "subagent.go",
+  "find": "\"Unknown model '\" + modelStr + \"'. \" + available",
+  "replace": "\"Unknown model \" + modelStr + \". \" + available"
+ },
+ {
+  "name": "sub-buffer-reset",
+  "file": "subagent.go",
+  "find": "case \"message_start\":\n\t\t\tbuffered.Reset()",
+  "replace": "case \"message_start\":"
+ },
+ {
+  "name": "sub-buffer-delta-only",
+  "file": "subagent.go",
+  "find": "ame[\"type\"] == \"text_delta\"",
+  "replace": "ame[\"type\"] == \"thinking_delta\""
+ },
+ {
+  "name": "sub-fallback-last-text",
+  "file": "subagent.go",
+  "find": "text = getLastAssistantText(messages)",
+  "replace": "_ = messages"
+ },
+ {
+  "name": "sub-last-skips-user",
+  "file": "subagent.go",
+  "find": "if msg[\"role\"] != \"assistant\" {",
+  "replace": "if msg[\"role\"] == \"toolResult\" {"
+ },
+ {
+  "name": "sub-last-text-parts",
+  "file": "subagent.go",
+  "find": "if m, ok := e.(map[string]any); ok && m[\"type\"] == \"text\" {",
+  "replace": "if m, ok := e.(map[string]any); ok {"
+ },
+ {
+  "name": "sub-aborted-before-runs",
+  "file": "subagent.go",
+  "find": "_ = session.Abort()\n\t\trunCtx = context.Background()",
+  "replace": "_ = session.Abort()\n\t\trunCtx = abort"
+ },
+ {
+  "name": "sub-no-abort-call",
+  "file": "subagent.go",
+  "find": "_ = session.Abort()",
+  "replace": "_ = session"
+ },
+ {
+  "name": "sub-trim",
+  "file": "subagent.go",
+  "find": "text := croner.JSTrim(buffered.String())",
+  "replace": "text := buffered.String()"
  }
 ]

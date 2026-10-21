@@ -1,45 +1,38 @@
 package schedule_prompt
 
 import (
-	"errors"
 	"strings"
 	"testing"
 
 	"github.com/MichaelKinsy/pigpen/schedule-prompt/internal/jsobj"
 )
 
-// Cases of the port beyond the original's tests: the refusal of the per-task model mode and the behavior the original has in code only.
+// Cases of the port beyond the original's tests: the per-task model mode and the behavior the original has in code only.
 
-// TestModelIsRefused: add and update with a model are refused with the program's message as a tool error, and nothing is stored.
-func TestModelIsRefused(t *testing.T) {
-	want := "@pi-in-go/pigpen-schedule-prompt (Go port) does not support the per-task model mode (the model parameter: a prompt run in a separate agent session) yet. Install the original extension, npm:pi-schedule-prompt@0.4.1, which runs unchanged in PiG."
+// A job with a model is stored with its subagent fields, the add result names the model line and an update changes them.
+func TestModelJobs(t *testing.T) {
 	d, st := buildTool("session", toolJob(obj{"id": "j1"}))
-	for _, params := range []obj{
-		addParams(obj{"model": "haiku", "notify": true}),
-		addParams(obj{"model": "sonnet"}),
-		{"action": "update", "jobId": "j1", "model": "haiku"},
-		{"action": "update", "jobId": "j1", "model": "haiku", "notify": true},
-	} {
-		_, err := d.execute(params, makeCtx())
-		if err == nil || err.Error() != want {
-			t.Fatalf("params %v: err = %v", params, err)
-		}
-		var r *refusalError
-		if !errors.As(err, &r) {
-			t.Fatal("the refusal is not a tool error")
-		}
+	out := callTool(t, d, addParams(obj{"name": "m", "model": "haiku", "notify": true, "extensions": true, "skills": []any{"git"}}), makeCtx())
+	requireNoError(t, out)
+	if !strings.Contains(out.Text, "\nPrompt: test\nModel: haiku (runs in subagent, notifies parent, extensions, skills)") {
+		t.Fatalf("text = %q", out.Text)
 	}
-	all, _ := st.GetAllJobs()
-	if len(all) != 1 {
-		t.Fatalf("a refused call stored a job: %d", len(all))
+	job := detailJobs(out)[0].(*jsobj.Object)
+	if job.Get("model") != "haiku" || job.Get("notify") != true {
+		t.Fatalf("job = %v", job)
 	}
-	if j, _ := st.GetJob("j1"); !jsobj.IsUndefined(j.Get("model")) || !jsobj.IsUndefined(j.Get("notify")) {
-		t.Fatalf("a refused update changed the job: %v", j)
+	out = callTool(t, d, addParams(obj{"name": "plain"}), makeCtx())
+	if strings.Contains(out.Text, "Model:") {
+		t.Fatalf("an inline job has a model line: %q", out.Text)
+	}
+	out = callTool(t, d, obj{"action": "update", "jobId": "j1", "model": "sonnet", "notify": true}, makeCtx())
+	requireNoError(t, out)
+	if j, _ := st.GetJob("j1"); j.Get("model") != "sonnet" || j.Get("notify") != true {
+		t.Fatalf("job = %v", j)
 	}
 }
 
-// TestInlineAddDefaults: extensions and skills stay undefined when the call does not pass them (the cases of the original that add with a
-// model are in slice 4).
+// TestInlineAddDefaults: extensions and skills stay undefined when the call does not pass them .
 func TestInlineAddDefaults(t *testing.T) {
 	d, _ := buildTool("session")
 	out := callTool(t, d, addParams(nil), makeCtx())

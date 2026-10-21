@@ -238,6 +238,43 @@ scenario("cmd-jobs-in-rpc", "The Jobs overlay needs a terminal: in RPC mode the 
 scenario("cmd-unknown-choice", "A choice that is neither Jobs nor Settings ends the command.", [], [cmd("Other")])
 scenario("cmd-settings-empty-choice", "An empty answer leaves Settings like Back.", [], [cmd("Settings", "")])
 
+# ---- the per-task model mode: a job with `model` runs in its own agent session (the harness's model server answers the session too, in
+# request order; the one-shots fire after the parent's turns are done, so the order is fixed) ----
+WAIT = {"name": "wait", "rpc": {"type": "get_state"}, "settleMs": 3500}
+raw_scenario("sub-once-text", "A one-shot with a model fires in its own session: the start marker, the session's answer, the done marker.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="summarize", model="eq-1")]}, {"text": "scheduled"},
+    {"text": "the subagent's answer"},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-once-notify", "notify=true: the done marker wakes the parent, which answers.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="summarize", model="eq-1", notify=True)]}, {"text": "scheduled"},
+    {"text": "the subagent's answer"}, {"text": "parent saw it"},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-unknown-model", "An unknown model: the run's error lists the models that are available.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="summarize", model="no-such-model")]}, {"text": "scheduled"},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-tool-use", "The session uses its default tools: one bash call, then the answer.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="count the files", model="eq-1")]}, {"text": "scheduled"},
+    {"toolCalls": [call("bash", command="echo from-the-subagent")]}, {"text": "done: from-the-subagent"},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-extensions-skills", "extensions and skills true: the session binds extensions and loads skills; the answer still comes back.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="check", model="eq-1", extensions=True, skills=True)]}, {"text": "scheduled"},
+    {"text": "with everything"},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-empty-answer", "A session that answers with nothing: the marker says so.", [
+    {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="say nothing", model="eq-1")]}, {"text": "scheduled"},
+    {"text": " "},
+], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM)
+raw_scenario("sub-add-list-update", "A job with a model: the add result names it, the list shows it, an update changes it, the store keeps the fields.", [
+    {"toolCalls": [sp("add", name="m", schedule="0 0 0 * * *", prompt="p", model="eq-1", notify=True, extensions=True, skills=["git"])]},
+    {"toolCalls": [sp("list")]},
+    {"toolCalls": [sp("update", jobId="mod0000001", model="eq-2", notify=False)]},
+    {"toolCalls": [cat()]}, {"text": "done"},
+], [prompt("go", name="go")], files={STORE: store(job("mod0000001", "seeded", "0 0 1 * * *", "q", model="eq-1", skills=True))}, normalize=NORM)
+raw_scenario("sub-empty-model", "An empty model is refused on add and on update.", [
+    {"toolCalls": [sp("add", name="x", schedule="0 0 0 * * *", prompt="p", model="")]},
+    {"toolCalls": [sp("update", jobId="mod0000001", model="")]}, {"text": "done"},
+], [prompt("go", name="go")], files={STORE: store(job("mod0000001", "seeded", "0 0 1 * * *", "q", model="eq-1"))}, normalize=NORM)
+
 print("wrote", len(os.listdir(out)), "scenarios")
 
 # ---- evidence: behavior of the original that the port deliberately does not copy (PORT.md D1). Recorded under Pi only. ----

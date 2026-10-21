@@ -3,7 +3,7 @@
 package schedule_prompt
 
 import (
-	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -50,13 +50,13 @@ func (s sdkSession) Entries() ([]map[string]any, error) { return s.ctx.SessionMa
 
 // app is the extension's state (upstream: index.ts, the closure of the default export).
 type app struct {
-	mu       sync.Mutex
-	storage  *fileStorage
-	sched    *scheduler
-	settings settings
-	widget   *cronWidget
-	widgetOn atomic.Bool
-	runner   subagentRunner
+	mu        sync.Mutex
+	storage   *fileStorage
+	sched     *scheduler
+	settings  settings
+	widget    *cronWidget
+	widgetOn  atomic.Bool
+	newRunner func(sdk.Context) subagentRunner
 }
 
 func (a *app) defaultScope() string {
@@ -66,12 +66,6 @@ func (a *app) defaultScope() string {
 		return "session"
 	}
 	return a.settings.defaultJobScope
-}
-
-// refusingRunner stands for runSubagentOnce until the per-task model mode is ported (PORT.md M16): the run fails with the program's
-// refusal, which the scheduler reports like any failed subagent run.
-func refusingRunner(string, string, context.Context, subagentOptions) subagentResult {
-	return subagentResult{Error: unsupported(modelFeature).Error()}
 }
 
 func (a *app) isWidgetVisible() bool { return a.widgetOn.Load() }
@@ -92,7 +86,7 @@ func (a *app) initializeSession(ctx sdk.Context) {
 	a.settings = loadSettings(ctx.Cwd())
 	a.widgetOn.Store(a.settings.widgetVisible == nil || *a.settings.widgetVisible)
 	a.storage = newFileStorage(ctx.Cwd())
-	a.sched = newScheduler(a.storage, sdkPi{ctx}, sdkSession{ctx}, a.runner)
+	a.sched = newScheduler(a.storage, sdkPi{ctx}, sdkSession{ctx}, a.newRunner(ctx))
 	a.widget = newCronWidget(a.storage, a.sched, a.isWidgetVisible, sdkSession{ctx}.SessionID())
 	// The widget redraws on every change event, so the rows and the counters stay current without waiting for the 30 s tick.
 	w := a.widget
@@ -181,7 +175,7 @@ func (a *app) executeTool(ctx sdk.Context, params map[string]any) (any, error) {
 // Extension returns the schedule-prompt extension.
 func Extension() *sdk.Extension {
 	e := sdk.New("schedule-prompt")
-	a := &app{runner: refusingRunner}
+	a := &app{newRunner: newSubagentRunner}
 	e.MessageRenderer("scheduled_prompt", renderScheduledPrompt)
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: toolName, Label: toolLabel, Description: toolDesc, Parameters: toolParameters(),
@@ -199,3 +193,5 @@ func Extension() *sdk.Extension {
 func unsupportedBeforeSession() error {
 	return errNoSession
 }
+
+var errNoSession = errors.New("schedule_prompt is not ready: the session has not started")
