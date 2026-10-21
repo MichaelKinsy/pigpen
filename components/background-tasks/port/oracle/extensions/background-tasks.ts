@@ -1,0 +1,1129 @@
+/*
+ * kendex Pi background tasks.
+ *
+ * Locally owned package based on ideas and portions of the MIT-licensed
+ * @ifi/pi-background-tasks package. See ../THIRD_PARTY_NOTICES.md.
+ */
+
+import {
+	getShellConfig,
+	type ExtensionAPI,
+	type ExtensionCommandContext,
+	type ExtensionContext,
+	type Theme,
+} from "@earendil-works/pi-coding-agent";
+import { spawn } from "node:child_process";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
+import { openLaneDir, pruneLanes } from "../scripts/lane-retention.js";
+
+import { shouldAdoptActiveContext } from "./active-context.js";
+import {
+	autoBackgroundDecision,
+	bashBackgroundAck,
+	bashBackgroundAckText,
+	forcedBackgroundDecision,
+} from "./auto-background.js";
+import { publishBackgroundTaskActivity, publishBackgroundTaskStarted } from "./activity.js";
+import { createCoalescedCall } from "./coalesce.js";
+import {
+	BG_COMMAND,
+	BG_INSTALL_SYMBOL,
+	BG_MESSAGE_TYPE,
+	BG_STATE_TYPE,
+	BG_WIDGET_KEY,
+	DEFAULT_BACKGROUND_BASH_SHORTCUT,
+	DEFAULT_BG_SHORTCUT,
+	DEFAULT_FORCE_KILL_GRACE_MS,
+	DEFAULT_FORCED_BACKGROUND_WINDOW_MS,
+	DEFAULT_LOG_TAIL_MAX_CHARS,
+	DEFAULT_OUTPUT_BUFFER_MAX_CHARS,
+	DEFAULT_OUTPUT_ALERT_MAX_CHARS,
+	DEFAULT_OUTPUT_SETTLE_MS,
+	DEFAULT_OUTPUT_WAKE_BUDGET_MAX_BYTES,
+	DEFAULT_OUTPUT_WAKE_BUDGET_MAX_WAKES,
+	DEFAULT_TIMEOUT_MS,
+	DEFAULT_WIDGET_FINISHED_RETENTION_MS,
+	DEFAULT_WIDGET_TOGGLE_SHORTCUT,
+	MAX_FINISHED_TASKS,
+	WIDGET_COMPACT_TASKS,
+} from "./constants.js";
+
+import {
+	buildTaskSummaryLine,
+	compactText,
+	formatDuration,
+	formatRelativeTime,
+	formatShortcutHint,
+	parseOutputMatcher,
+	OutputMatcherBudgetError,
+	summarizeTaskStatus,
+	tailText,
+	taskDisplayName,
+	trimOutputBuffer,
+} from "./format.js";
+import {
+	bgStatusIcon,
+	bgTree,
+	frameWidget,
+	renderTaskEventMessage,
+} from "./render.js";
+import { logBackgroundDiagnostic } from "./diagnostics.js";
+import { registerAll } from "./registrations.js";
+import { closeTaskLifecycle, replayMissedExitsLifecycle, sendExitWakeLifecycle, type LifecycleHooks } from "./lifecycle.js";
+import { taskLogs } from "./log-writer.js";
+import { createTaskOutputReader } from "./log-tail.js";
+import { createOrphanWatcher, type OrphanWatcher } from "./orphan-watcher.js";
+import { applyCustomEntryWithBarrier, createPersistence, sessionIdForContext, sidecarStatePath } from "./persistence.js";
+import { mapWithConcurrency, PROBE_CONCURRENCY } from "./probes.js";
+import { defaultSystemdUnitActive, planResourceControlledSpawn, stopResourceControlledTask } from "./resource-control.js";
+import { installSettingsCacheRefresh, recordProjectTrust } from "./package-config.js";
+import { logFilePath, settingBoolean, settingEnum, settingNumber, settingString, taskEnv, taskLaneDir, taskLanesRoot } from "./settings.js";
+import { applyBgToolResultTasksWithBarrier } from "./tool-result-details.js";
+import {
+	defaultReadProcessIdentity,
+	forgetSnapshot,
+	rememberSnapshot,
+	resolveTaskByToken,
+	restoredTaskFromSnapshot,
+	taskSnapshot,
+} from "./snapshot.js";
+import { MINI_DASHBOARD_RANK, setMiniDashboardWidget } from "./stacked-widget.js";
+import {
+	createBackgroundWidgetExpiryScheduler,
+	createBackgroundWidgetVisibility,
+	shouldRenderBackgroundWidget,
+	toggleBackgroundWidgetVisibility,
+	type BackgroundWidgetMode,
+} from "./widget-visibility.js";
+import type {
+	BackgroundTaskSnapshot,
+	BackgroundTaskStatus,
+	ManagedTask,
+	SpawnTaskOptions,
+	TaskEventType,
+	WakeDiagnostic,
+	WakeDropReason,
+} from "./types.js";
+import {
+	canEmitOutputWake,
+	emptyOutputWakeBudget,
+	ensureOutputWakeBudget,
+	ensureWakeState,
+	resolveNotifyMode,
+	recordScheduledOutputDrop,
+	scheduleTaskWake,
+	sendOutputWakeBudgetExhaustedNotice,
+	sendOutputMatcherTimeoutNotice,
+	sendTaskWake,
+	shouldEmitOutputWake,
+	truncateForTranscript,
+	voidPendingTaskWakes,
+	WAKE_MANIFEST_FIELD_MAX_CHARS,
+	type OutputWakeBudgetLimits,
+} from "./wake-events.js";
+
+/**
+ * Clamp the rendered line count of an aboveEditor widget so it can never push
+ * the chat / status / editor above the terminal viewport top, which is what
+ * triggers pi-tui's full-screen redraw (firstChanged < prevViewportTop) and
+ * the visible flash. Keeps at least 4 lines visible; reserves enough rows for
+ * the editor + footer + a sliver of chat. Drops trailing lines and replaces
+ * them with a muted "… N more" hint.
+ */
+function clampAboveEditorWidget(lines: string[], terminalRows: number, theme: Theme): string[] {
+	const reserveForOtherUi = 10;
+	const maxLines = Math.max(4, terminalRows - reserveForOtherUi);
+	if (lines.length <= maxLines) return lines;
+	const hidden = lines.length - (maxLines - 1);
+	return [...lines.slice(0, maxLines - 1), theme.fg("muted", `… ${hidden} more (open dashboard for full view)`)];
+}
+
+// Task output arrives one chunk at a time. A chunk only marks the widget and
+// the persisted state stale; these windows bound how often each is redone.
+const OUTPUT_UI_REFRESH_MS = 200;
+const OUTPUT_PERSIST_MS = 1_000;
+
+export default function backgroundTasks(pi: ExtensionAPI): void {
+	const guard = pi as unknown as Record<PropertyKey, unknown>;
+	if (guard[BG_INSTALL_SYMBOL]) return;
+	guard[BG_INSTALL_SYMBOL] = true;
+	if (!settingBoolean("enabled", true)) return;
+
+	let activeCtx: ExtensionContext | null = null;
+	let requestWidgetRender: (() => void) | null = null;
+	let forceNextBashBackgroundAt: number | null = null;
+	const backgroundBashShortcut = settingString("backgroundBashShortcut", DEFAULT_BACKGROUND_BASH_SHORTCUT);
+	const dashboardShortcut = settingString("dashboardShortcut", DEFAULT_BG_SHORTCUT);
+	const widgetToggleShortcut = settingString("widgetToggleShortcut", DEFAULT_WIDGET_TOGGLE_SHORTCUT);
+	const widgetVisibility = createBackgroundWidgetVisibility(settingEnum("widgetDefaultMode", ["compact", "expanded", "hidden"] as const, "compact") as BackgroundWidgetMode);
+	let taskCounter = 0;
+	let shuttingDown = false;
+	const tasks = new Map<string, ManagedTask>();
+	const outputDedupeHashes = new Map<string, string>();
+
+	const numericTaskId = (id: string): number => {
+		const match = id.match(/^bg-(\d+)$/);
+		return match ? Number(match[1]) : 0;
+	};
+
+	// Track the active session id so spawn/restore/replay can scope snapshots
+	// to the current Pi session and reject cross-session leaks.
+	let activeSessionId: string | null = null;
+
+	const persistenceLayer = createPersistence({
+		pi,
+		customType: BG_STATE_TYPE,
+		getActiveCtx: () => activeCtx,
+		listSnapshots: () => sortedTasks().map((task) => rememberSnapshot(task)),
+		notify: (where) => activeCtx?.ui.notify?.(
+			`Background task state persistence failed (${where}). Recent task transitions may not survive a restart.`,
+			"warning",
+		),
+	});
+
+	// Deferred persistence for per-chunk state; any immediate persist covers it.
+	const persistSoon = createCoalescedCall(() => persistenceLayer.persistSnapshots(), OUTPUT_PERSIST_MS);
+	const persistSnapshots = (): { appendEntry: boolean; sidecar: boolean } => {
+		persistSoon.cancel();
+		return persistenceLayer.persistSnapshots();
+	};
+
+	// Restore replays the session's plain snapshot data first, newest per task
+	// id, and only then rehydrates and probes the final task set, so startup
+	// probes each surviving task once however long the history is.
+	const restoreSnapshots = async (ctx: ExtensionContext) => {
+		tasks.clear();
+		taskCounter = 0;
+		activeSessionId = sessionIdForContext(ctx);
+		const replayed = new Map<string, BackgroundTaskSnapshot>();
+		const rememberRestoredSnapshot = (snapshot: BackgroundTaskSnapshot) => {
+			if (!snapshot?.id || !snapshot.command) return;
+			const existing = replayed.get(snapshot.id);
+			if (existing && existing.updatedAt >= snapshot.updatedAt) return;
+			replayed.set(snapshot.id, snapshot);
+		};
+		const clearRestoredTasks = () => { replayed.clear(); };
+		let sidecarLoaded = false;
+		let sidecarTasks: BackgroundTaskSnapshot[] | undefined;
+		try {
+			const file = sidecarStatePath(ctx);
+			if (existsSync(file)) {
+				const data = JSON.parse(readFileSync(file, "utf8")) as { tasks?: unknown };
+				if (Array.isArray(data?.tasks)) {
+					sidecarTasks = data.tasks as BackgroundTaskSnapshot[];
+					for (const snapshot of sidecarTasks) rememberRestoredSnapshot(snapshot);
+					sidecarLoaded = true;
+				}
+			}
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
+			logBackgroundDiagnostic("persistence failed (sidecar-read)", { error: msg });
+			// Fall back to session entries below.
+		}
+		for (const entry of ctx.sessionManager.getBranch()) {
+			if (entry.type === "custom" && entry.customType === BG_STATE_TYPE) {
+				applyCustomEntryWithBarrier({
+					data: entry.data,
+					sidecarLoaded,
+					sidecarTasks,
+					clear: clearRestoredTasks,
+					apply: (snapshot) => rememberRestoredSnapshot(snapshot),
+				});
+			}
+			if (entry.type === "message" && entry.message.role === "toolResult" && (entry.message.toolName === "bg_task" || entry.message.toolName === "bg_status")) {
+				const details = entry.message.details as { task?: unknown; tasks?: unknown } | undefined;
+				if (details?.task) rememberRestoredSnapshot(details.task as BackgroundTaskSnapshot);
+				applyBgToolResultTasksWithBarrier({
+					apply: (snapshot) => rememberRestoredSnapshot(snapshot as BackgroundTaskSnapshot),
+					clear: clearRestoredTasks,
+					detailsTasks: details?.tasks,
+					sidecarLoaded,
+					sidecarTasks,
+				});
+			}
+		}
+		const sessionId = activeSessionId ?? undefined;
+		const restored = await mapWithConcurrency([...replayed.values()], PROBE_CONCURRENCY, (snapshot) =>
+			restoredTaskFromSnapshot(snapshot, { sessionId, unitActiveProbe: defaultSystemdUnitActive }));
+		for (const task of restored) {
+			tasks.set(task.id, task);
+			taskCounter = Math.max(taskCounter, numericTaskId(task.id));
+			rememberSnapshot(task);
+		}
+		if (tasks.size > 0) persistSnapshots();
+	};
+
+	const sortedTasks = (): ManagedTask[] => [...tasks.values()].sort((a, b) => b.startedAt - a.startedAt);
+
+	const taskOutput = createTaskOutputReader((logFile, error) => logBackgroundDiagnostic("task log read failed", { logFile, error }),
+		(task) => tasks.get(task.id) === task && !shuttingDown);
+	const getTaskOutput = (task: ManagedTask, maxChars = settingNumber("outputBufferMaxChars", DEFAULT_OUTPUT_BUFFER_MAX_CHARS, activeCtx?.cwd)): Promise<string> =>
+		taskOutput.read(task, maxChars);
+
+	// A write the log writer still holds for the file would create it again,
+	// so the removal waits for the file's writes to settle.
+	const removeTaskLog = (task: ManagedTask) => {
+		const remove = () => {
+			try {
+				rmSync(task.logFile, { force: true });
+			} catch (error) {
+				logBackgroundDiagnostic("task log removal failed", { id: task.id, logFile: task.logFile, error: error instanceof Error ? error.message : String(error) });
+			}
+		};
+		const written = taskLogs.flush(task.logFile);
+		if (written) void written.then(remove);
+		else remove();
+	};
+
+	/** The lane directory this session's task logs are written to. */
+	const ownLaneDir = (): string => taskLaneDir(activeSessionId ?? `ephemeral-${process.pid}`);
+
+	// A task restored from another session's branch, as a forked session holds,
+	// keeps its log: the session that wrote it still reads it, and the lane
+	// prune removes it in time.
+	const forgetFinishedTask = (task: ManagedTask) => {
+		voidPendingTaskWakes(task, "clear", logWakeDiagnostic);
+		clearTaskTimers(task);
+		tasks.delete(task.id);
+		forgetSnapshot(task.id);
+		if (dirname(task.logFile) === ownLaneDir()) removeTaskLog(task);
+	};
+
+	// Tasks whose exit wake waits for a log flush, queued read or delivery.
+	const exitWakeDue = new WeakSet<ManagedTask>();
+
+	// Keep at most MAX_FINISHED_TASKS finished tasks, dropping the oldest. Each
+	// finished task the bound counts has had its exit reported or never asked
+	// for it: an exit wake goes unsent only during session_shutdown, which
+	// empties the map first, and session_start replays missed exits before it
+	// bounds. A task whose exit wake is queued or active is not counted.
+	const boundFinishedTasks = (): number => {
+		const finished = [...tasks.values()].filter((task) => task.status !== "running" && !exitWakeDue.has(task));
+		const excess = finished.length - MAX_FINISHED_TASKS;
+		let removed = 0;
+		for (const task of finished.sort((a, b) => a.updatedAt - b.updatedAt)) {
+			if (removed >= excess) break;
+			forgetFinishedTask(task);
+			removed += 1;
+		}
+		return removed;
+	};
+
+	const clearTaskTimers = (task: ManagedTask) => {
+		if (task.outputTimer) {
+			for (const pending of (task.pendingWakes ?? []).filter((wake) => wake.eventType === "output")) {
+				persistScheduledOutputDrop(task, pending, "cleared-on-task-exit");
+			}
+		}
+		if (task.outputTimer) clearTimeout(task.outputTimer);
+		if (task.timeoutTimer) clearTimeout(task.timeoutTimer);
+		if (task.forceKillTimer) clearTimeout(task.forceKillTimer);
+		task.outputTimer = null;
+		task.timeoutTimer = null;
+		task.forceKillTimer = null;
+	};
+
+	const widgetExpiry = createBackgroundWidgetExpiryScheduler(() => activeCtx ? syncWidget(activeCtx) : undefined);
+	const clearWidget = () => {
+		widgetExpiry.clear();
+		if (activeCtx) setMiniDashboardWidget(activeCtx, BG_WIDGET_KEY, MINI_DASHBOARD_RANK.BACKGROUND_TASKS, undefined);
+		requestWidgetRender = null;
+	};
+
+	const widgetFinishedRetentionMs = (cwd?: string): number =>
+		Math.max(0, Math.floor(settingNumber("widgetFinishedRetentionSeconds", DEFAULT_WIDGET_FINISHED_RETENTION_MS / 1_000, cwd) * 1_000));
+
+	const widgetTasks = (now: number = Date.now()): ManagedTask[] => {
+		const retention = widgetFinishedRetentionMs(activeCtx?.cwd);
+		return sortedTasks().filter((task) => task.status === "running" || now - task.updatedAt <= retention);
+	};
+
+	const renderWidgetLines = (theme: Theme): string[] => {
+		const sorted = widgetTasks();
+		const running = sorted.filter((task) => task.status === "running");
+		const display = [...running, ...sorted.filter((task) => task.status !== "running")];
+		const finished = sorted.length - running.length;
+		const toggleHint = widgetToggleShortcut === "none" ? "" : ` · ${formatShortcutHint(widgetToggleShortcut)} toggle`;
+		const dashboardHint = dashboardShortcut === "none" ? "" : ` · ${formatShortcutHint(dashboardShortcut)} dashboard`;
+		const summary = `${theme.fg("customMessageLabel", theme.bold("Background tasks"))} ${theme.fg(
+			"muted",
+			`${running.length} running · ${finished} finished${toggleHint}${dashboardHint}`,
+		)}`;
+		if (display.length === 0) return [summary];
+		const shown = display.slice(0, widgetVisibility.mode === "expanded" ? display.length : WIDGET_COMPACT_TASKS);
+		const lines = [summary];
+		shown.forEach((task, index) => {
+			const isLast = index === shown.length - 1 && shown.length === display.length;
+			const activityAt = task.lastOutputAt ?? task.updatedAt;
+			lines.push(`${bgTree(theme, isLast ? "└" : "├", activeCtx?.cwd)}${bgStatusIcon(task.status, theme)} ${theme.fg("accent", task.id)} ${theme.fg(
+				"dim",
+				`${summarizeTaskStatus(task.status, task.exitCode, task.terminationReason)} · ${compactText(taskDisplayName(task), 72)} · ${formatRelativeTime(activityAt)}`,
+			)}`);
+		});
+		const hidden = display.length - shown.length;
+		if (hidden > 0) lines.push(`${bgTree(theme, "└", activeCtx?.cwd)}${theme.fg("muted", `… ${hidden} more`)}`);
+		return lines;
+	};
+
+	function syncWidget(ctx: ExtensionContext): void {
+		activeCtx = ctx;
+		widgetExpiry.clear();
+		const now = Date.now();
+		const visibleTasks = widgetTasks(now);
+		if (!shouldRenderBackgroundWidget({
+			hasUi: ctx.hasUI,
+			mode: widgetVisibility.mode,
+			showWidget: settingBoolean("showWidget", true, ctx.cwd),
+			trackedTaskCount: tasks.size,
+			visibleTaskCount: visibleTasks.length,
+		})) {
+			clearWidget();
+			return;
+		}
+
+		setMiniDashboardWidget(
+			ctx,
+			BG_WIDGET_KEY,
+			MINI_DASHBOARD_RANK.BACKGROUND_TASKS,
+			(tui, theme) => {
+				requestWidgetRender = () => tui.requestRender();
+				// No recurring redraw for relative-time labels: full-screen redraws cause
+				// above-viewport flicker. Labels can stay stale between task events;
+				// the one-shot expiry refresh only updates task visibility.
+				return {
+					dispose() {
+						if (requestWidgetRender) requestWidgetRender = null;
+					},
+					invalidate() {},
+					render(width: number) {
+						return clampAboveEditorWidget(frameWidget(renderWidgetLines(theme), width, theme), tui.terminal.rows, theme);
+					},
+				};
+			},
+			{ placement: settingString("widgetPlacement", "aboveEditor", ctx.cwd) === "belowEditor" ? "belowEditor" : "aboveEditor" },
+		);
+
+		widgetExpiry.schedule(visibleTasks, widgetFinishedRetentionMs(ctx.cwd), now);
+	}
+
+	const refreshUi = () => {
+		outputUiRefresh.cancel();
+		for (const task of tasks.values()) rememberSnapshot(task);
+		if (activeCtx) syncWidget(activeCtx);
+		requestWidgetRender?.();
+	};
+	const outputUiRefresh = createCoalescedCall(refreshUi, OUTPUT_UI_REFRESH_MS);
+
+	const logWakeDiagnostic = (diagnostic: WakeDiagnostic) => {
+		logBackgroundDiagnostic("wake diagnostic", diagnostic);
+	};
+
+	const persistScheduledOutputDrop = (
+		task: ManagedTask,
+		pending: { eventAt: number; eventType: TaskEventType; sequence: number },
+		reason: WakeDropReason,
+		extra: Partial<WakeDiagnostic> = {},
+	) => {
+		recordScheduledOutputDrop({
+			extra,
+			logDiagnostic: logWakeDiagnostic,
+			pending,
+			reason,
+			task,
+		});
+		// A dropped output wake is a diagnostic record, and a chatty task drops
+		// one per chunk; it rides the next persist instead of forcing one.
+		persistSoon.request();
+	};
+
+	const wakeBudgetLimits = (cwd?: string): OutputWakeBudgetLimits => ({
+		maxBytes: Math.max(0, Math.floor(settingNumber("outputWakeBudgetMaxBytes", DEFAULT_OUTPUT_WAKE_BUDGET_MAX_BYTES, cwd))),
+		maxWakes: Math.max(0, Math.floor(settingNumber("outputWakeBudgetMaxWakes", DEFAULT_OUTPUT_WAKE_BUDGET_MAX_WAKES, cwd))),
+	});
+
+	const announceWakeBudgetExhausted = (task: ManagedTask) => {
+		const limits = wakeBudgetLimits(activeCtx?.cwd);
+		const announced = sendOutputWakeBudgetExhaustedNotice({
+			logDiagnostic: logWakeDiagnostic,
+			messageType: BG_MESSAGE_TYPE,
+			rememberSnapshot,
+			sendMessage: (message, messageOptions) => pi.sendMessage(message as any, messageOptions as any),
+		}, task, limits);
+		if (announced) {
+			rememberSnapshot(task);
+			persistSnapshots();
+		}
+		return announced;
+	};
+
+
+	const releaseExit = (task: ManagedTask) => {
+		exitWakeDue.delete(task);
+		if (boundFinishedTasks() > 0) persistSnapshots();
+	};
+
+	const sendTaskEvent = (
+		eventType: TaskEventType,
+		task: ManagedTask,
+		options: { eventAt?: number; matchedPattern?: string; newOutputTail?: string; sequence?: number } = {},
+		output?: { text: string; truncated: boolean },
+	): boolean => {
+		if (eventType === "exit" && (tasks.get(task.id) !== task || shuttingDown)) return false;
+		// Lifecycle hooks remain synchronous. A restored exit reads its tail
+		// before marking the wake delivered, and a cleared task gets no wake.
+		if (eventType === "exit" && task.notifyOnExit && !task.exitNotified && task.output.length === 0 && output === undefined) {
+			if (exitWakeDue.has(task)) return false;
+			exitWakeDue.add(task);
+			void taskOutput.readTail(task, settingNumber("outputAlertMaxChars", DEFAULT_OUTPUT_ALERT_MAX_CHARS, activeCtx?.cwd)).then((tail) => {
+				if (tasks.get(task.id) !== task || shuttingDown || task.exitNotified) return;
+				sendExitWakeLifecycle(task, { ...lifecycleHooks, sendTaskEvent: (type, target) => sendTaskEvent(type, target, options, tail) });
+			}).finally(() => releaseExit(task));
+			return false;
+		}
+		const sent = sendTaskWake({
+			isShuttingDown: () => shuttingDown,
+			logDiagnostic: logWakeDiagnostic,
+			messageType: BG_MESSAGE_TYPE,
+			outputTail: (target) => tailText(output?.text ?? target.output, settingNumber("outputAlertMaxChars", DEFAULT_OUTPUT_ALERT_MAX_CHARS, activeCtx?.cwd), output?.truncated),
+			rememberSnapshot,
+			sendMessage: (message, messageOptions) => pi.sendMessage(message as any, messageOptions as any),
+		}, eventType, task, options);
+		publishBackgroundTaskActivity(eventType, task, { ...options, sequence: options.sequence ?? task.wakeSequence ?? 0 });
+		rememberSnapshot(task);
+		persistSnapshots();
+		return sent;
+	};
+
+	const scheduleOutputReaction = (task: ManagedTask) => {
+		ensureWakeState(task);
+		if (!task.notifyOnOutput) return;
+		if (!canEmitOutputWake(task)) {
+			logWakeDiagnostic({
+				eventAt: task.lastOutputAt ?? Date.now(),
+				eventType: "output",
+				reason: "output-after-stop-suppressed",
+				stopReason: task.stopReason ?? undefined,
+				taskId: task.id,
+				taskStatus: task.status,
+				timestamp: Date.now(),
+			});
+			return;
+		}
+		if (task.outputTimer) {
+			for (const pendingWake of (task.pendingWakes ?? []).filter((wake) => wake.eventType === "output")) {
+				persistScheduledOutputDrop(task, pendingWake, "output-wake-rescheduled");
+			}
+			clearTimeout(task.outputTimer);
+		}
+		const pending = scheduleTaskWake(task, "output", task.lastOutputAt ?? Date.now());
+		task.outputTimer = setTimeout(async () => {
+			task.outputTimer = null;
+			if (!canEmitOutputWake(task)) {
+				sendTaskEvent("output", task, { eventAt: pending.eventAt, sequence: pending.sequence });
+				refreshUi();
+				return;
+			}
+			const output = await getTaskOutput(task);
+			const unseenOutput = output.slice(task.lastAnnouncedLength);
+			if (!unseenOutput.trim()) {
+				task.lastAnnouncedLength = output.length;
+				persistScheduledOutputDrop(task, pending, "empty-output");
+				return;
+			}
+			if (!canEmitOutputWake(task)) {
+				sendTaskEvent("output", task, { eventAt: pending.eventAt, sequence: pending.sequence });
+				refreshUi();
+				return;
+			}
+			let patternMatched = true;
+			try {
+				patternMatched = task.matcher ? (task.matcher(unseenOutput) || task.matcher(output)) : true;
+			} catch (error) {
+				if (!(error instanceof OutputMatcherBudgetError)) throw error;
+				logBackgroundDiagnostic("notify pattern over budget", { id: task.id, pattern: task.notifyPattern, error: error.message });
+				sendOutputMatcherTimeoutNotice({
+					logDiagnostic: logWakeDiagnostic,
+					messageType: BG_MESSAGE_TYPE,
+					rememberSnapshot,
+					sendMessage: (message, messageOptions) => pi.sendMessage(message as any, messageOptions as any),
+				}, task, error.message);
+				persistScheduledOutputDrop(task, pending, "notify-pattern-timeout", { matchedPattern: task.notifyPattern });
+				return;
+			}
+			if (!patternMatched) {
+				persistScheduledOutputDrop(task, pending, "notify-pattern-no-match", { matchedPattern: task.notifyPattern });
+				return;
+			}
+			const newOutputTail = tailText(unseenOutput, settingNumber("outputAlertMaxChars", DEFAULT_OUTPUT_ALERT_MAX_CHARS, activeCtx?.cwd));
+			const decisionDiagnostics: WakeDiagnostic[] = [];
+			const limits = wakeBudgetLimits(activeCtx?.cwd);
+			const shouldEmit = shouldEmitOutputWake(task, {
+				dedupeHashes: outputDedupeHashes,
+				eventAt: pending.eventAt,
+				logDiagnostic: (diagnostic) => decisionDiagnostics.push(diagnostic),
+				newOutput: unseenOutput,
+				newOutputTail,
+				patternMatched,
+				sequence: pending.sequence,
+				wakeBudgetLimits: limits,
+			});
+			if (!shouldEmit) {
+				const diagnostic = decisionDiagnostics[decisionDiagnostics.length - 1];
+				const reason = (diagnostic?.reason ?? "output-after-stop-suppressed") as WakeDropReason;
+				task.lastAnnouncedLength = output.length;
+				persistScheduledOutputDrop(task, pending, reason, diagnostic ?? {});
+				if (reason === "wake-budget-exhausted") announceWakeBudgetExhausted(task);
+				refreshUi();
+				return;
+			}
+			task.lastAnnouncedLength = output.length;
+			sendTaskEvent("output", task, {
+				eventAt: pending.eventAt,
+				matchedPattern: task.notifyPattern,
+				newOutputTail,
+				sequence: pending.sequence,
+			});
+			refreshUi();
+		}, settingNumber("outputSettleMs", DEFAULT_OUTPUT_SETTLE_MS, activeCtx?.cwd));
+		task.outputTimer.unref?.();
+	};
+
+	const lifecycleHooks: LifecycleHooks = {
+		rememberSnapshot,
+		persistSnapshots,
+		sendTaskEvent,
+		refreshUi,
+		clearTaskTimers,
+	};
+
+	// The task's final status and its timers settle at once, so a stop,
+	// timeout or shutdown after the child exits signals nothing. The exit wake
+	// names the log file as the task's full output, so it waits for the log's
+	// flush to release. A task cleared or replaced meanwhile gets no wake.
+	// Once the log holds the output, the process handle and the in-memory
+	// output are released: an exited process has nothing left to report. A log
+	// whose last write failed or is still stalled keeps the in-memory output as
+	// the record.
+	const finalizeTask = (task: ManagedTask, exitCode: number | null, statusOverride?: BackgroundTaskStatus): void => {
+		if (!closeTaskLifecycle(task, exitCode, lifecycleHooks, statusOverride)) return;
+		task.child = null;
+		refreshUi();
+		exitWakeDue.add(task);
+		const settle = () => {
+			exitWakeDue.delete(task);
+			if (tasks.get(task.id) !== task) return;
+			sendExitWakeLifecycle(task, lifecycleHooks);
+			if (taskLogs.settled(task.logFile) && existsSync(task.logFile)) {
+				task.output = "";
+				task.lastAnnouncedLength = 0;
+			}
+			if (boundFinishedTasks() > 0) persistSnapshots();
+		};
+		const written = taskLogs.flush(task.logFile);
+		if (written) void written.then(settle);
+		else settle();
+	};
+
+	// Orphan-running tasks (status=
+	// running, child=null, restored=true) need a liveness watcher.
+	// When the recorded pid eventually disappears, finalize and emit
+	// the canonical exit wake so the silent stall does not survive Pi
+	// dying mid-bg_task.
+	let orphanWatcher: OrphanWatcher | null = null;
+	const ensureOrphanWatcher = () => {
+		if (orphanWatcher) return;
+		orphanWatcher = createOrphanWatcher({
+			getTasks: () => tasks.values(),
+			hooks: lifecycleHooks,
+			unitActiveProbe: defaultSystemdUnitActive,
+			onFinalize: (task, reason) => {
+				logBackgroundDiagnostic("orphan task finalized", { id: task.id, pid: task.pid, reason, status: task.status });
+			},
+		});
+		orphanWatcher.start();
+	};
+
+	// Replay 'exit' wakeups for any task we restored in a terminal state
+	// without ever notifying the agent. The canonical failure path: a long-
+	// running session_shutdown or a mid-session restore coerced status
+	// running->stopped (restoredTaskFromSnapshot) and the agent never saw
+	// the exit. Without this replay the bg_task silently stalls.
+	//
+	// Restored tasks whose process is still alive remain status='running'
+	// (handled by restoredTaskFromSnapshot) and are skipped by
+	// selectMissedExits, so kill -9 / OOM with an orphaned-but-alive child
+	// does not get a fake exit.
+	const replayMissedExits = () => replayMissedExitsLifecycle(tasks.values(), lifecycleHooks);
+
+	// A non-null result is the log writer's hold: the task's output should
+	// pause until it resolves.
+	const appendLogLine = (task: ManagedTask, text: string): Promise<void> | null =>
+		taskLogs.append(task.logFile, text);
+
+	const resourceControlFallbackWarned = new Set<string>();
+	const warnResourceControlFallback = (message: string, cwd?: string) => {
+		if (!settingBoolean("resourceControlWarnOnFallback", true, cwd)) return;
+		if (resourceControlFallbackWarned.has(message)) return;
+		resourceControlFallbackWarned.add(message);
+		logBackgroundDiagnostic(message);
+		activeCtx?.ui.notify?.(message, "warning");
+	};
+
+	type KillTaskResult = { error?: string; sent: boolean };
+
+	const killTaskProcess = (task: ManagedTask, signal: NodeJS.Signals): KillTaskResult => {
+		const resourceStop = stopResourceControlledTask(task.resourceControl, signal);
+		if (resourceStop.attempted && resourceStop.ok) return { sent: true };
+		if (resourceStop.attempted && !resourceStop.ok) {
+			const error = resourceStop.error ?? "resource-control stop failed";
+			appendLogLine(task, `\n[resource-control stop error] ${error}\n`);
+			return { error, sent: false };
+		}
+		if (task.pid <= 0) {
+			return { sent: false };
+		}
+		try {
+			if (process.platform === "win32") {
+				process.kill(task.pid, signal);
+			} else {
+				// We spawn detached on Unix, so -pid targets the task process group.
+				process.kill(-task.pid, signal);
+			}
+			return { sent: true };
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code !== "ESRCH") appendLogLine(task, `\n[kill error] ${String(error)}\n`);
+			return resourceStop.attempted
+				? { error: resourceStop.error ?? String(error), sent: false }
+				: { sent: false };
+		}
+	};
+
+	const requestStop = (
+		task: ManagedTask | null,
+		reason: "user" | "timeout" | "shutdown" = "user",
+	): { ok: boolean; message: string } => {
+		if (!task) return { ok: false, message: "No background task matched that id or pid." };
+		if (task.status !== "running") {
+			return { ok: true, message: `${task.id} is already ${summarizeTaskStatus(task.status, task.exitCode, task.terminationReason)}.` };
+		}
+
+		task.stopReason = reason;
+		// stamp terminationReason eagerly so when the child's
+		// close handler later calls closeTaskLifecycle the annotation
+		// is already in place. session_shutdown calls requestStop with
+		// reason="shutdown" so the two paths land on distinct values.
+		if (reason === "user") task.terminationReason = "extension-stop";
+		else if (reason === "shutdown") task.terminationReason = "session-shutdown";
+		else if (reason === "timeout") task.terminationReason = "timeout";
+		task.updatedAt = Date.now();
+		voidPendingTaskWakes(task, reason === "shutdown" ? "shutdown" : "stop", logWakeDiagnostic);
+		rememberSnapshot(task);
+		if (task.outputTimer) clearTimeout(task.outputTimer);
+		task.outputTimer = null;
+		persistSnapshots();
+
+		// Bound the command preview embedded in the stop message so a 100KB
+		// heredoc command cannot leak into the bg_task/bg_status stop tool
+		// result content.
+		const safeCommand = truncateForTranscript(task.command, WAKE_MANIFEST_FIELD_MAX_CHARS) ?? "";
+
+		const stopResult = killTaskProcess(task, "SIGTERM");
+		if (!stopResult.sent) {
+			if (stopResult.error) {
+				task.stopReason = null;
+				task.terminationReason = undefined;
+				task.updatedAt = Date.now();
+				rememberSnapshot(task);
+				persistSnapshots();
+				refreshUi();
+				return { ok: false, message: `Failed to stop ${task.id}: ${stopResult.error}` };
+			}
+			finalizeTask(task, task.exitCode, reason === "timeout" ? "timed_out" : "stopped");
+			return { ok: true, message: `Stopped ${task.id} (${safeCommand}).` };
+		}
+
+		const forceKillGraceMs = settingNumber("forceKillGraceMs", DEFAULT_FORCE_KILL_GRACE_MS, activeCtx?.cwd);
+		task.forceKillTimer = setTimeout(() => {
+			if (task.status === "running" && !task.closed) {
+				appendLogLine(task, `\n[stop] Escalating to SIGKILL after ${formatDuration(forceKillGraceMs)}.\n`);
+				killTaskProcess(task, "SIGKILL");
+			}
+		}, forceKillGraceMs);
+		task.forceKillTimer.unref?.();
+		refreshUi();
+		return { ok: true, message: `Stopping ${task.id} (${safeCommand}).` };
+	};
+
+	const spawnTask = (options: SpawnTaskOptions): ManagedTask => {
+		const command = options.command.trim();
+		if (!command) throw new Error("command is required for background task spawn");
+
+		const cwd = options.cwd?.trim() || activeCtx?.cwd || process.cwd();
+		const id = `bg-${++taskCounter}`;
+		const now = Date.now();
+		const timeoutSeconds = typeof options.timeoutSeconds === "number" ? options.timeoutSeconds : settingNumber("defaultTimeoutSeconds", DEFAULT_TIMEOUT_MS / 1_000, cwd);
+		const expiresAt = timeoutSeconds > 0 ? now + timeoutSeconds * 1_000 : null;
+		const laneDir = openLaneDir(ownLaneDir(), activeCtx?.cwd ?? cwd);
+		const logFile = logFilePath(laneDir, id, now);
+		writeFileSync(logFile, "");
+
+		const { shell, args } = getShellConfig();
+		const spawnPlan = planResourceControlledSpawn({
+			command,
+			cwd,
+			shell,
+			shellArgs: args,
+			taskId: id,
+			now,
+			origin: options.origin ?? "bg_task",
+		});
+		for (const warning of spawnPlan.warnings) warnResourceControlFallback(warning, cwd);
+		// kendex#97 hardening: spawn the child in its own session / process
+		// group via `detached: true` (Node calls setsid() on POSIX before
+		// exec). This protects against two signal paths:
+		//
+		//   H1 (process-group / parent-death cascade): when Pi exits or is
+		//   restarted, the kernel does NOT propagate SIGHUP / SIGTERM to
+		//   the child because it lives in a separate pgid that is not tied
+		//   to Pi's controlling terminal or session. PR_SET_PDEATHSIG is 0
+		//   by default on Linux for non-prctl'd children, so the child is
+		//   not signaled on parent death even without setsid — setsid is
+		//   the belt-and-braces protection that also covers macOS / BSD.
+		//
+		//   H3 (session-leader cascade): if Pi was attached to a tmux pane
+		//   that subsequently died, SIGHUP would propagate through Pi's
+		//   session leader to every process group in the same session.
+		//   detached: true makes the child its own session leader so the
+		//   cascade stops at Pi's pgid.
+		//
+		// We do NOT call child.unref() here because we still rely on the
+		// child handle for stdout/stderr piping and close-event delivery;
+		// the detached flag only affects session/pgid membership, not
+		// whether the parent waits for the child during normal operation.
+		const child = spawn(spawnPlan.file, spawnPlan.args, {
+			cwd,
+			detached: process.platform !== "win32",
+			env: taskEnv(),
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+
+		const spawnedPid = child.pid ?? 0;
+		const task: ManagedTask = {
+			child,
+			closed: false,
+			command,
+			cwd,
+			exitCode: null,
+			exitNotified: false,
+			resourceControl: spawnPlan.metadata,
+			sessionId: activeSessionId ?? undefined,
+			expiresAt,
+			forceKillTimer: null,
+			id,
+			lastAnnouncedLength: 0,
+			lastOutputAt: null,
+			logFile,
+			matcher: parseOutputMatcher(options.notifyPattern),
+			notifyOnExit: options.notifyOnExit ?? true,
+			notifyOnOutput: options.notifyOnOutput ?? false,
+			notifyPattern: options.notifyPattern?.trim() || undefined,
+			notifyMode: resolveNotifyMode(options.notifyMode, options.notifyPattern),
+			dedupeKey: options.dedupeKey?.trim() || undefined,
+			output: "",
+			outputBytes: 0,
+			wakeSequence: 0,
+			wakeEvents: [],
+			voidedWakeSequences: [],
+			voidedWakes: new Set<number>(),
+			pendingWakes: [],
+			lastOutputDedupeHash: undefined,
+			lastOutputDedupeByKey: {},
+			outputPatternMatched: false,
+			outputWakeBudget: emptyOutputWakeBudget(),
+			outputTimer: null,
+			pid: spawnedPid,
+			startedAt: now,
+			status: "running",
+			stopReason: null,
+			terminationReason: undefined,
+			timeoutTimer: null,
+			title: options.title?.trim() || command,
+			updatedAt: now,
+		};
+		tasks.set(task.id, task);
+		rememberSnapshot(task);
+		persistSnapshots();
+		publishBackgroundTaskStarted(task);
+		// The identity lets a later restore tell this process from a reused
+		// pid; it rides the next windowed persist, and every lifecycle persist
+		// and session_shutdown flush it. A task cleared or replaced before the
+		// read resolves stays forgotten. An identity the read could not answer
+		// stays unset, so restore falls back to pid-only liveness.
+		if (spawnedPid > 0) {
+			void defaultReadProcessIdentity(spawnedPid).then((reading) => {
+				if (tasks.get(task.id) !== task) return;
+				switch (reading.kind) {
+					case "identity":
+						task.procIdent = reading.identity;
+						rememberSnapshot(task);
+						persistSoon.request();
+						return;
+					case "alive":
+					case "gone":
+						return;
+					case "unknown":
+						logBackgroundDiagnostic("spawn identity unknown", { id: task.id, pid: spawnedPid, reason: reading.reason });
+						return;
+					default: {
+						const unreachable: never = reading;
+						throw new Error(`unknown identity reading: ${JSON.stringify(unreachable)}`);
+					}
+				}
+			});
+		}
+
+		const handleChunk = (chunk: Buffer) => {
+			const text = chunk.toString();
+			task.updatedAt = Date.now();
+			task.lastOutputAt = task.updatedAt;
+			task.outputBytes += chunk.byteLength;
+			task.output += text;
+			const trimmed = trimOutputBuffer(task.output, task.lastAnnouncedLength);
+			task.output = trimmed.output;
+			task.lastAnnouncedLength = trimmed.lastAnnouncedLength;
+			const hold = appendLogLine(task, text);
+			if (hold) {
+				// The log's writes fell behind: stop reading until they settle
+				// or one stalls, so the child blocks on its pipe meanwhile.
+				child.stdout?.pause();
+				child.stderr?.pause();
+				void hold.then(() => {
+					child.stdout?.resume();
+					child.stderr?.resume();
+				});
+			}
+			scheduleOutputReaction(task);
+			outputUiRefresh.request();
+		};
+
+		child.stdout?.on("data", handleChunk);
+		child.stderr?.on("data", handleChunk);
+		child.on("close", (code) => finalizeTask(task, typeof code === "number" ? code : null));
+		child.on("error", (error) => {
+			handleChunk(Buffer.from(`\n[spawn error] ${error.message}\n`));
+			finalizeTask(task, 1, "failed");
+		});
+
+		if (expiresAt != null) {
+			task.timeoutTimer = setTimeout(() => {
+				appendLogLine(task, `\n[timeout] Background task exceeded ${formatDuration(timeoutSeconds * 1_000)}.\n`);
+				requestStop(task, "timeout");
+			}, Math.max(1, timeoutSeconds * 1_000));
+			task.timeoutTimer.unref?.();
+		}
+
+		refreshUi();
+		return task;
+	};
+
+	const clearFinishedTasks = (): number => {
+		let removed = 0;
+		for (const task of [...tasks.values()]) {
+			if (task.status === "running") continue;
+			forgetFinishedTask(task);
+			removed += 1;
+		}
+		persistSnapshots();
+		refreshUi();
+		return removed;
+	};
+
+	const formatTaskListText = (): string => {
+		const sorted = sortedTasks();
+		if (sorted.length === 0) return "No background tasks.";
+		return sorted.map((task) => buildTaskSummaryLine(taskSnapshot(task))).join("\n\n");
+	};
+
+	const resolveTask = (id?: string, pid?: number): ManagedTask | null =>
+		resolveTaskByToken<ManagedTask>(tasks.values(), id ?? pid);
+
+	const forcedBackgroundWindowMs = (cwd?: string): number =>
+		Math.max(1_000, settingNumber("forcedBackgroundWindowSeconds", DEFAULT_FORCED_BACKGROUND_WINDOW_MS / 1_000, cwd) * 1_000);
+
+	const consumeForcedBackground = (cwd?: string): boolean => {
+		if (forceNextBashBackgroundAt == null) return false;
+		if (Date.now() - forceNextBashBackgroundAt > forcedBackgroundWindowMs(cwd)) {
+			forceNextBashBackgroundAt = null;
+			return false;
+		}
+		forceNextBashBackgroundAt = null;
+		return true;
+	};
+
+	const armForcedBackground = (ctx: ExtensionContext | ExtensionCommandContext, source: "shortcut" | "command") => {
+		forceNextBashBackgroundAt = Date.now();
+		const seconds = Math.max(1, Math.round(forcedBackgroundWindowMs(ctx.cwd) / 1_000));
+		const sourceText = source === "shortcut" ? formatShortcutHint(backgroundBashShortcut) : `/${BG_COMMAND} next`;
+		const note = ctx.isIdle?.()
+			? `${sourceText} armed. Next bash command in the next ${seconds}s will start as a background task.`
+			: `${sourceText} armed. Next not-yet-started bash command in this turn will start as a background task. Already-running bash cannot be detached safely.`;
+		ctx.ui.notify(note, "info");
+	};
+
+	const decisionForBashCommand = (command: string, cwd?: string) => {
+		if (!command.trim()) return null;
+		if (consumeForcedBackground(cwd)) return forcedBackgroundDecision(command, cwd);
+		if (!settingBoolean("autoBackgroundBash", true, cwd)) return null;
+		return autoBackgroundDecision(command, cwd);
+	};
+
+	const dashboardDeps = {
+		clearFinishedTasks,
+		formatTaskListText,
+		getTask: (id: string) => tasks.get(id) ?? null,
+		getTaskOutput: (task: ManagedTask) => getTaskOutput(task, settingNumber("logTailMaxChars", DEFAULT_LOG_TAIL_MAX_CHARS, activeCtx?.cwd)),
+		requestStop: (task: ManagedTask | null, reason: "user") => requestStop(task, reason),
+		sortedTasks,
+	};
+
+	pi.registerMessageRenderer(BG_MESSAGE_TYPE, (message, { expanded }, theme) => renderTaskEventMessage(message, expanded, theme));
+
+	installSettingsCacheRefresh(pi);
+	pi.on("session_start", async (_event, ctx) => {
+		shuttingDown = false;
+		recordProjectTrust(ctx);
+		activeCtx = ctx;
+		const pruned = pruneLanes(taskLanesRoot());
+		for (const failure of pruned.failed) logBackgroundDiagnostic("task log prune failed", { path: failure.path, error: failure.error });
+		await restoreSnapshots(ctx);
+		replayMissedExits();
+		if (boundFinishedTasks() > 0) persistSnapshots();
+		// Restore just probed every task the watcher would check, so the first
+		// pass waits one poll interval.
+		ensureOrphanWatcher();
+		syncWidget(ctx);
+	});
+	pi.on("before_agent_start", (_event, ctx) => {
+		recordProjectTrust(ctx);
+		activeCtx = ctx;
+		syncWidget(ctx);
+	});
+	pi.on("session_tree", (_event, ctx) => {
+		activeCtx = ctx;
+		syncWidget(ctx);
+	});
+	pi.on("session_compact", (_event, ctx) => {
+		activeCtx = ctx;
+		syncWidget(ctx);
+	});
+	pi.on("session_shutdown", async () => {
+		shuttingDown = true;
+		orphanWatcher?.stop();
+		orphanWatcher = null;
+		outputUiRefresh.cancel();
+		for (const task of tasks.values()) {
+			if (task.status === "running") {
+				task.stopReason = "shutdown";
+				// explicit annotation for the session_shutdown
+				// kill path so a later restore can tell shutdown-kills from
+				// reconcile-on-restart coercion.
+				task.terminationReason = "session-shutdown";
+				voidPendingTaskWakes(task, "shutdown", logWakeDiagnostic);
+				const termResult = killTaskProcess(task, "SIGTERM");
+				const killResult: KillTaskResult = killTaskProcess(task, "SIGKILL");
+				if (termResult.sent || killResult.sent) {
+					task.status = "stopped";
+				} else {
+					task.stopReason = null;
+					task.terminationReason = undefined;
+					appendLogLine(task, `\n[shutdown stop skipped] ${termResult.error ?? killResult.error ?? "no stop signal sent"}\n`);
+				}
+				task.updatedAt = Date.now();
+				rememberSnapshot(task);
+			}
+			clearTaskTimers(task);
+		}
+		persistSnapshots();
+		// The persisted snapshots carry the tasks to the next session_start.
+		tasks.clear();
+		clearWidget();
+		taskOutput.clear();
+		activeCtx = null;
+		await taskLogs.drain();
+	});
+
+	pi.on("tool_call", async (event: any, ctx: ExtensionContext) => {
+		recordProjectTrust(ctx);
+		activeCtx = ctx;
+		if (event?.toolName !== "bash") return undefined;
+		const command = typeof event.input?.command === "string" ? event.input.command : "";
+		const decision = decisionForBashCommand(command, ctx.cwd);
+		if (!decision) return undefined;
+
+		const task = spawnTask({
+			command,
+			cwd: ctx.cwd,
+			origin: "auto-background",
+			notifyOnExit: decision.notifyOnExit,
+			notifyOnOutput: decision.notifyOnOutput,
+			notifyPattern: decision.notifyPattern,
+			title: decision.title,
+		});
+		event.input.command = bashBackgroundAck(rememberSnapshot(task), decision);
+		if (ctx.hasUI) {
+			const label = decision.forced ? "Shortcut moved bash to background" : "Auto-backgrounded bash";
+			ctx.ui.notify(`${label}: ${task.id} (pid ${task.pid})`, "info");
+		}
+		return undefined;
+	});
+
+	pi.on("user_bash", (event: any, ctx: ExtensionContext) => {
+		recordProjectTrust(ctx);
+		// Pi 0.83.0 also routes direct RPC bash through this handler, so ctx is no
+		// longer guaranteed to be the interactive session's UI context.
+		if (shouldAdoptActiveContext(activeCtx, ctx)) activeCtx = ctx;
+		const command = typeof event?.command === "string" ? event.command : "";
+		const decision = decisionForBashCommand(command, event?.cwd ?? ctx.cwd);
+		if (!decision) return undefined;
+
+		const task = spawnTask({
+			command,
+			cwd: event?.cwd ?? ctx.cwd,
+			origin: "auto-background",
+			notifyOnExit: decision.notifyOnExit,
+			notifyOnOutput: decision.notifyOnOutput,
+			notifyPattern: decision.notifyPattern,
+			title: decision.title,
+		});
+		const output = bashBackgroundAckText(rememberSnapshot(task), decision);
+		if (ctx.hasUI) {
+			const label = decision.forced ? "Shortcut moved user bash to background" : "Auto-backgrounded user bash";
+			ctx.ui.notify(`${label}: ${task.id} (pid ${task.pid})`, "info");
+		}
+		return { result: { output, exitCode: 0, cancelled: false, truncated: false } };
+	});
+
+	registerAll(pi, {
+		getActiveCtx: () => activeCtx,
+		setActiveCtx: (ctx) => { activeCtx = ctx; },
+		rememberSnapshot,
+		sortedTasks,
+		formatTaskListText,
+		getTaskOutput,
+		resolveTask,
+		requestStop: (task, _reason) => requestStop(task, "user"),
+		spawnTask,
+		clearFinishedTasks,
+		armForcedBackground,
+		toggleWidget: () => {
+			toggleBackgroundWidgetVisibility(widgetVisibility);
+			if (activeCtx) syncWidget(activeCtx);
+		},
+		dashboardDeps,
+		dashboardShortcut,
+		backgroundBashShortcut,
+		widgetToggleShortcut,
+	});
+}

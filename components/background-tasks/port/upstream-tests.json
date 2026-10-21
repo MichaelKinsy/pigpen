@@ -1,0 +1,225 @@
+{
+ "active-context": [
+  "context adoption retains UI while accepting first and headless contexts",
+  "retained UI context keeps the composed widget decision visible after headless input"
+ ],
+ "background-ack": [
+  "background acknowledgement rows"
+ ],
+ "bounded-snapshot": [
+  "snapshot append decisions follow content changes",
+  "oversized snapshots append a bounded manifest"
+ ],
+ "bounded-snapshot-barrier": [
+  "custom entries restore the sidecar at bounded snapshot barriers"
+ ],
+ "bounded-snapshot-manifest": [
+  "bounded manifest recognition distinguishes snapshot envelopes"
+ ],
+ "coalesce": [
+  "coalesced call runs once per window"
+ ],
+ "compact-log-snapshot": [
+  "compact log snapshot field rows"
+ ],
+ "component-benchmark": [
+  "restored 50 MB dashboard frames bound log operations and command wrapping",
+  "must-fail: bypassing the command cache exceeds the benchmark operation bound"
+ ],
+ "dashboard": [
+  "the dashboard renders before its log read and caches command layout by content and width",
+  "must-fail: bypassing the command cache fails the dashboard suite",
+  "must-fail: dropping the selected-task guard lets a late read replace selected output"
+ ],
+ "finalize-lifecycle": [
+  "finalize lifecycle outcomes"
+ ],
+ "identity-probe-live": [
+  "observes each owned process transition"
+ ],
+ "identity-reading": [
+  "an identity read decides restore and the orphan watcher through one liveness verdict"
+ ],
+ "log-tail": [
+  "asynchronous per-task log tails preserve character limits, bound reads, invalidate metadata, and report errors",
+  "must-fail: character, cache and shared acquisition defects fail the log reader suite"
+ ],
+ "log-tool-result-bounds": [
+  "registered log tool result rows"
+ ],
+ "log-writer": [
+  "task log writer batches, bounds and drains appends",
+  "output past the pending cap inside one window reaches the log whole through the producer's holds"
+ ],
+ "missed-exit-selection": [
+  "selectMissedExits selects exact task IDs from notification and status inputs"
+ ],
+ "orphan-eligibility": [
+  "orphan eligibility"
+ ],
+ "orphan-reconcile-effects": [
+  "orphan reconciliation effect rows"
+ ],
+ "orphan-watcher": [
+  "orphan watcher poll outcomes"
+ ],
+ "orphan-watcher-pass": [
+  "an orphan pass bounds its probes, joins overlapping passes and yields to stop"
+ ],
+ "orphan-watcher-timer": [
+  "orphan watcher interval lifecycle"
+ ],
+ "output-matcher": [
+  "a pathological notify regex on 1 MB reaches its deadline and reports only once",
+  "registered output timeout completes, reports once, suppresses output and retains exit delivery",
+  "must-fail: rethrowing the matcher timeout rejects the registered output callback",
+  "must-fail: dropping the matcher notice leaves headless callers without a failure",
+  "must-fail: recording a timeout as an ordinary non-match loses its cause",
+  "must-fail: removing the matcher deadline hangs the same pathological test"
+ ],
+ "output-wake-budget-persistence": [
+  "retains each budget and restore state before the wake decision"
+ ],
+ "probes": [
+  "each way a probe ends maps to one tagged result from either runner",
+  "mapWithConcurrency bounds calls in flight and keeps input order"
+ ],
+ "replay-missed-exits": [
+  "missed exit replay outcomes"
+ ],
+ "resource-settings": [
+  "resource settings parse configured fields and clamp numeric values"
+ ],
+ "resource-spawn-plan": [
+  "resource spawn plans retain complete argv, metadata and warnings",
+  "helper lookups run once per settled command across spawns"
+ ],
+ "resource-stop": [
+  "resource stop selects the unit command and returns its result"
+ ],
+ "resource-stop-integration": [
+  "registered resource stop and shutdown rows"
+ ],
+ "resource-unit-lifecycle": [
+  "systemd unit state takes precedence over wrapper identity during restore and polling"
+ ],
+ "restore-replay": [
+  "restore followed by missed exit replay"
+ ],
+ "restored-exit": [
+  "restored exits read their tail before delivery and suppress completions after clear or shutdown",
+  "must-fail: dropping the asynchronous exit tail fails the registered lifecycle suite",
+  "must-fail: dropping disk omission information loses exit-tail metadata",
+  "must-fail: dropping the forced omission marker loses exit-tail metadata",
+  "must-fail: forgetting bounded-read omissions loses exit-tail metadata",
+  "registered live, orphan and replay exits share admission and retain delivery and suppression",
+  "must-fail: unprotected queued exits fail the producer-created retention check"
+ ],
+ "sidecar-root": [
+  "resolves each override spelling to its exact sidecar root"
+ ],
+ "snapshot-restore": [
+  "restoredTaskFromSnapshot restores task state and missed exit eligibility"
+ ],
+ "snapshot-serialization": [
+  "taskSnapshot serializes notification, session and termination fields"
+ ],
+ "spawn-hardening": [
+  "registered extension spawn hardening rows"
+ ],
+ "stop-content-e2e": [
+  "registered stop content rows"
+ ],
+ "systemd-unit-probe": [
+  "systemd unit liveness probe caches the user manager's reachability",
+  "concurrent unit probes share one manager probe",
+  "spawn planning and unit probes read one user manager answer",
+  "spawn planning asks an unanswering user manager once per settings"
+ ],
+ "task-display-summary": [
+  "transcript display and summary rows"
+ ],
+ "task-log-format": [
+  "log formatting and descriptor rows"
+ ],
+ "task-retention": [
+  "task logs follow the lane retention rule, and finished tasks are bounded and released"
+ ],
+ "task-status-format": [
+  "task status formatting rows"
+ ],
+ "tool-result-details": [
+  "bounded tool-result list rows"
+ ],
+ "tool-result-restore-barrier": [
+  "tool-result restore barrier rows"
+ ],
+ "transcript-truncation": [
+  "transcript truncation rows"
+ ],
+ "wake-budget": [
+  "output wake budget limits"
+ ],
+ "wake-budget-normalization": [
+  "normalizes each input into independent budget state"
+ ],
+ "wake-budget-notice": [
+  "budget exhaustion notice content and once-only delivery",
+  "bounded exhaustion notice stays below the payload byte cap"
+ ],
+ "wake-compact-snapshot": [
+  "compact wake snapshot fields"
+ ],
+ "wake-defaults": [
+  "unset wake settings run on the shipped defaults"
+ ],
+ "wake-events": [
+  "wake send lifecycle rows",
+  "wake payload retained content",
+  "wake payload byte and character bounds"
+ ],
+ "wake-notify-mode": [
+  "default output notify mode",
+  "resolved output notify mode"
+ ],
+ "wake-output-decision": [
+  "output wake decision traces"
+ ],
+ "wake-persistence": [
+  "appended snapshot retains delivered wake metadata"
+ ],
+ "wake-scheduled-drop": [
+  "scheduled output drop records task-exit cleanup"
+ ],
+ "widget-expiry": [
+  "widget expiry selects the earliest unexpired finished task",
+  "widget expiry owns one timer until it fires or is cleared"
+ ],
+ "widget-lifecycle": [
+  "widget lifecycle scenarios"
+ ],
+ "widget-visibility": [
+  "widget toggles preserve the last visible mode",
+  "widget rendering requires UI, enabled visibility and visible tasks"
+ ],
+ "write-path": [
+  "streamed output chunks defer log, widget and state writes to their windows",
+  "a long snapshot history probes each restored running task once",
+  "a task cleared before its spawn-time identity read resolves keeps no identity",
+  "restore runs at most PROBE_CONCURRENCY identity reads at once",
+  "a task's exit wake is sent once its log holds the chunk written before close",
+  "a task that outruns its log writes pauses its output until the write in flight ends, and loses none",
+  "a task that exits while its last log write is in flight shows closed at once, takes no stop, timeout or shutdown signal and ends completed",
+  "the finished-task bound keeps a task whose exit wake waits for its log flush",
+  "a task stopped while its log write never settles resumes output at the stall deadline, finalizes and sends its exit wake"
+ ],
+ "activity": [
+  "activity event construction"
+ ],
+ "activity-publication": [
+  "activity publication retains the ordered task trace"
+ ],
+ "line-count": [
+  "line count"
+ ]
+}

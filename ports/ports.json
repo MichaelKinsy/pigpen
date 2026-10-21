@@ -666,6 +666,25 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "pi-background-tasks",
+      "name": "@vanillagreen/pi-background-tasks",
+      "kind": "port",
+      "summary": "Explicit non-blocking background shell tasks: bg_task and bg_status tools, /bg commands, exit and output wakeups, log tails, a mini-dashboard widget and a dashboard overlay.",
+      "upstream": {
+        "name": "pi-background-tasks",
+        "url": "https://github.com/vanillagreencom/kendex",
+        "commit": "bd611b212d2bec33aac5b62642b6aba21100d7f8",
+        "license": "MIT",
+        "author": "vanillagreen",
+        "path": "pi-extensions/pi-background-tasks"
+      },
+      "targetPackage": "components/background-tasks",
+      "lane": "pigpen-background-tasks",
+      "status": "porting",
+      "credit": "Go port of @vanillagreen/pi-background-tasks 2.2.0, https://github.com/vanillagreencom/kendex (pi-extensions/pi-background-tasks), by vanillagreen (MIT, Copyright (c) 2026 vanillagreen), at commit bd611b212d2bec33aac5b62642b6aba21100d7f8; the original is based on @ifi/pi-background-tasks by Ifiok Jr. (MIT, Copyright (c) 2025 Ifiok Jr.).",
+      "notes": "PpBackgroundTasks lane. Slice 1: refusal skeleton; every task action is refused until its slice lands."
     }
   ]
 }

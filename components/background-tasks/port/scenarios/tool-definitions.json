@@ -1,0 +1,44 @@
+{
+  "name": "tool-definitions",
+  "description": "The model request carries bg_status and bg_task with the original's schemas, descriptions and guidelines.",
+  "commands": {
+    "sh": {
+      "mode": "real"
+    },
+    "ps": {
+      "mode": "real"
+    },
+    "nice": {
+      "mode": "real"
+    },
+    "ionice": {
+      "mode": "real"
+    },
+    "systemctl": {
+      "mode": "missing"
+    },
+    "systemd-run": {
+      "mode": "missing"
+    },
+    "where": {
+      "mode": "missing"
+    },
+    "which": {
+      "mode": "real"
+    }
+  },
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}
