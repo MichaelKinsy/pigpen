@@ -290,20 +290,6 @@ func datalabFilename(title string) string {
 	return s
 }
 
-// jsEncodeURIComponent is encodeURIComponent.
-func jsEncodeURIComponent(s string) string {
-	var b strings.Builder
-	for i := range len(s) {
-		c := s[i]
-		if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || strings.IndexByte("-_.!~*'()", c) >= 0 {
-			b.WriteByte(c)
-		} else {
-			fmt.Fprintf(&b, "%%%02X", c)
-		}
-	}
-	return b.String()
-}
-
 // sleepCtx waits d or until ctx ends.
 func sleepCtx(ctx context.Context, d time.Duration) error {
 	t := time.NewTimer(d)
