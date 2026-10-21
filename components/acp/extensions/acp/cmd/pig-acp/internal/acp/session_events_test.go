@@ -218,9 +218,9 @@ func TestSessionEvents(t *testing.T) {
 		Event{"type": "auto_compaction_end"}, "Automatic compaction finished; context was summarized to continue the session."))
 
 	t.Run("gap F1: compaction_start and compaction_end (pi 0.84+ and PiG) produce the compaction notices", func(t *testing.T) {
-		t.Skip("upstream defect kept as ported: pi-acp handles auto_compaction_start/auto_compaction_end, but Pi 0.84 to 0.99 and PiG 0.3.0 emit " +
-			"compaction_start (reason manual, threshold or overflow) and compaction_end, so the two notices never appear against these hosts. " +
-			"Fixing it changes observable behavior and needs an owner decision (port/PORT.md, F1). The twins above keep the upstream event names.")
+		t.Skip("owner-approved as the original (2026-10-20): pi-acp handles auto_compaction_start/auto_compaction_end, but Pi 0.84 and later (1.3.0 at pi-mono 1402973a) and PiG " +
+			"emit compaction_start (reason manual, threshold or overflow) and compaction_end, so the original shows no compaction notice against these hosts " +
+			"either, and the port matches it. Showing one is new behavior and stays a tracked optional follow-up (port/PORT.md, F1, with the mapping). The twins above keep the upstream event names.")
 	})
 
 	tw(t, "component/session-events", "PiAcpSession: preserves ordering when auto_retry_start is interleaved with text_delta events", func(t *testing.T) {

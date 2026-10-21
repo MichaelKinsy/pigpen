@@ -248,8 +248,9 @@ func TestStartupInfo(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// PiG has no npm update check (`pig update` uses its own signed manifest), so the
-		// "New version available" branch of the original does not exist: see the skipped twin.
+		// The original tolerates both outcomes because its live npm lookup may or may not find an update.
+		// TestMain sets PIG_OFFLINE, so none is looked up here; the branch with a notice is
+		// TestNewSessionUpdateNotice.
 		if startupInfoOf(res.Meta) != nil {
 			t.Errorf("startupInfo = %v", res.Meta)
 		}
@@ -259,12 +260,6 @@ func TestStartupInfo(t *testing.T) {
 		if sch.count() != 1 {
 			t.Errorf("%d scheduled tasks, want the available_commands_update only", sch.count())
 		}
-	})
-
-	t.Run("PiAcpAgent: quietStartup=true still surfaces a New version available notice", func(t *testing.T) {
-		t.Skip("gap: pi-acp asks the npm registry for a newer pi (`npm view @earendil-works/pi-coding-agent version`) and surfaces the " +
-			"notice even with quietStartup. PiG updates through `pig update` and a signed release manifest, not npm; an editor adapter " +
-			"must not add a network lookup to session/new (PIG_OFFLINE). The adapter emits no update notice. Owner decision if wanted.")
 	})
 
 	tw(t, "unit/startup-info-load-session", "PiAcpAgent: does not emit startup info on loadSession", func(t *testing.T) {

@@ -27,7 +27,7 @@ Build the companion (Go 1.26 or later) and put it on your `PATH`:
 ```sh
 cd components/acp/extensions/acp/cmd/pig-acp
 go build -trimpath -o pig-acp .
-pig-acp --version        # pig-acp 0.1.0 (ACP protocol version 1)
+pig-acp --version        # pig-acp 0.2.1 (ACP protocol version 1)
 ```
 
 Zed, `settings.json` (`/acp` prints this with your paths filled in):
@@ -74,7 +74,12 @@ audio), `sessionCapabilities` `list` and `delete`, MCP `http` and `sse` **false*
   diffs for edit and write, `execute` calls with terminal output for bash, `usage_update`, `available_commands_update`,
   `config_option_update`, `current_mode_update`, `session_info_update`.
 - Adapter-side slash commands that never reach the model: `/compact`, `/autocompact`, `/session`, `/name`, `/steering`,
-  `/follow-up`, `/changelog`, `/export`. Prompt template files expand as `/name args`.
+  `/follow-up`, `/changelog`, `/export`. Prompt template files expand as `/name args`. `/changelog` shows a `CHANGELOG.md` that sits
+  beside the pig binary (or one directory up); PiG embeds its changelog and has no command that prints it, so without such a file
+  `/changelog` says it is not supported yet and names the original.
+- **Update notice.** `session/new` runs `npm view @pi-in-go/pig version` (800 ms budget, as pi-acp does for Pi) and adds "New version
+  available: v... Run: `pig update`" to the startup block, also under `quietStartup`. It starts no npm under `PIG_OFFLINE` (1, true,
+  yes), `PI_OFFLINE`, `PI_SKIP_VERSION_CHECK` or `--pig-arg --offline`, and shows nothing when npm is not installed.
 - **Permissions.** An extension `select` or `confirm` dialog becomes `session/request_permission`; the editor's answer is
   sent back to the extension. A client that fails or cancels means "cancelled". Nothing is ever executed locally in place of an
   editor's answer. `input` and `editor` dialogs are cancelled with a visible notice; `notify` becomes a chunk with its level.
@@ -87,14 +92,20 @@ audio), `sessionCapabilities` `list` and `delete`, MCP `http` and `sse` **false*
 - MCP servers passed by the editor are accepted and stored, never started (PiG's own MCP support is configured in PiG).
 - Extension slash commands (`/name` of an extension is not advertised, and as a prompt it runs without ending a turn: drive
   extensions through tools). `session/fork`, `session/resume`, `session/close` are Method not found.
-- The npm "New version available" notice: PiG has no npm package (`pig update` uses a signed manifest).
+- Compaction notices: like pi-acp 0.0.34, `pig-acp` reports `auto_compaction_start`/`auto_compaction_end`; Pi 0.84+ and PiG emit
+  `compaction_start`/`compaction_end` instead, so no compaction notice appears (as in the original; owner-approved as it is, the mapping is a tracked optional follow-up, `port/PORT.md` F1).
 
 ## Evidence
 
 Everything below was first run on PiG 0.3.0 and re-run on 0.4.0 (the 11 end-to-end scenarios, the reference client's 30 checked messages, the Go tests) with a temporary `HOME`, `PIG_HOME` and agent directories.
 
-- **Twins of the upstream tests:** 124 exact twins with their upstream titles plus 1 named skip, checked by
-  `pigeq twins check` against the upstream ledger (`port/upstream-tests.json`). Two more skipped tests name the remaining gaps (the npm update notice, the compaction event names); see `port/PORT.md`.
+- **Twins of the upstream tests:** 124 exact twins with their upstream titles plus 1 named skip (the simulated-Windows `.cmd` spawn, which
+  Go cannot fake), checked by `pigeq twins check` against the upstream ledger (`port/upstream-tests.json`). The update notice has its own
+  tests (`updatenotice_test.go`); one more skipped test names the compaction event names; see `port/PORT.md`.
+- **Wire differential:** `port/differential/run.mjs` drives pi-acp 0.0.34 under Pi (pi-mono `1402973a`) and `pig-acp` under PiG with the same
+  scripted ACP client and the same scripted model, and compares the normalized wire transcripts of 29 scenarios: 0 unrecorded differences;
+  the 7 recorded groups (identity, the login arguments, error text placement, `/changelog`, `session/set_model`, `.pig` against `.pi`) are in
+  `port/differential/findings.json` and `port/PORT.md`.
 - **Unit and protocol tests:** `go test -race ./...` in both modules (a scripted ACP client over pipes against `Serve`).
 - **End to end:** 11 scenarios (streaming, bash, diff, cancel, load/list/delete across two adapter runs, config options, a real
   permission round trip through a Go extension tool, no-model auth error, missing pig, MCP accepted, exit on stdin close) pass against
@@ -104,7 +115,7 @@ Everything below was first run on PiG 0.3.0 and re-run on 0.4.0 (the 11 end-to-e
   `PIG_ACP=<pig-acp> PIG=<pig or Binary> PIGEQ=<pigeq> npm run test:acp-interop`. The run needs the `pigeq` built from
   this repository (`PIG_BIN=<pig> npm run build:pigeq` writes `dist/bin/pigeq`), which has the `llm` command; so does the twin
   ledger check (`pigeq twins check`).
-- **Mutations:** 106 deliberate defects (`port/mutations.json`, `node components/acp/port/mutate.mjs`), 105 killed and 1 documented
+- **Mutations:** 125 deliberate defects (`port/mutations.json`, `node components/acp/port/mutate.mjs`), 124 killed and 1 documented
   equivalent; results in `port/mutation-results.txt`.
 
 **Not verified:** Zed and JetBrains themselves (no editor could be run here). The reference client is the interop evidence.

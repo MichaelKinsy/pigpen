@@ -220,6 +220,11 @@ func (a *Agent) deliveryMode(sess ActiveSession, label, cmd, stateKey string, ar
 	return ok(a.say(id, label+" mode set to: "+mode))
 }
 
+// changelogRefusal is what /changelog says when no CHANGELOG.md sits beside the pig binary (PiG
+// binaries embed theirs and expose no accessor: PORT.md F3).
+const changelogRefusal = "@pi-in-go/pigpen-acp (Go port) does not support /changelog without a CHANGELOG.md beside the pig binary yet. " +
+	"Install the original extension, git:github.com/svkozak/pi-acp@b0581c9c1d675e634234674484247008b03d69b4, which runs unchanged in PiG."
+
 func (a *Agent) changelog(id string) error {
 	var path string
 	if a.changelogPath != nil {
@@ -228,7 +233,7 @@ func (a *Agent) changelog(id string) error {
 		path = FindChangelog(a.pigCommand())
 	}
 	if path == "" {
-		return a.say(id, "Changelog not found (couldn't locate pig installation).")
+		return a.say(id, changelogRefusal)
 	}
 	raw, err := os.ReadFile(path)
 	if err != nil {
