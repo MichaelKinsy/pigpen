@@ -313,25 +313,33 @@ func fixtureSearchOptions(t *testing.T, o map[string]any) SearchOptions {
 }
 
 var fixtureFns = map[string]func(context.Context, string, SearchOptions) (*SearchResponse, error){
-	"searchWithSerper":    SearchWithSerper,
-	"searchWithSerpApi":   SearchWithSerpAPI,
-	"searchWithSerpBase":  SearchWithSerpBase,
-	"searchWithSerply":    SearchWithSerply,
-	"searchWithValyu":     SearchWithValyu,
-	"searchWithBocha":     SearchWithBocha,
-	"searchWithBaizhi":    SearchWithBaizhi,
-	"searchWithYou":       SearchWithYou,
-	"searchWithAnySearch": SearchWithAnySearch,
-	"searchWithXCrawl":    SearchWithXCrawl,
-	"searchWithJina":      SearchWithJina,
-	"searchWithSearXNG":   SearchWithSearXNG,
+	"searchWithSerper":     SearchWithSerper,
+	"searchWithSerpApi":    SearchWithSerpAPI,
+	"searchWithSerpBase":   SearchWithSerpBase,
+	"searchWithSerply":     SearchWithSerply,
+	"searchWithValyu":      SearchWithValyu,
+	"searchWithBocha":      SearchWithBocha,
+	"searchWithBaizhi":     SearchWithBaizhi,
+	"searchWithYou":        SearchWithYou,
+	"searchWithAnySearch":  SearchWithAnySearch,
+	"searchWithXCrawl":     SearchWithXCrawl,
+	"searchWithJina":       SearchWithJina,
+	"searchWithSearXNG":    SearchWithSearXNG,
+	"searchWithBrave":      SearchWithBrave,
+	"searchWithPerplexity": SearchWithPerplexity,
+	"searchWithSerpdive":   SearchWithSerpdive,
+	"searchWithDuckDuckGo": SearchWithDuckDuckGo,
+	"searchWithTavily":     SearchWithTavily,
+	"searchWithExa":        SearchWithExa,
+	"searchWithKagi":       SearchWithKagi,
+	"searchWithOllama":     SearchWithOllama,
 }
 
 // runFixture replays one case against the port and returns what it sent and what it produced.
 func runFixture(t *testing.T, c *fixtureCase) (*fixtureDoer, *SearchResponse, error) {
 	t.Helper()
 	_, agentDir := isolate(t)
-	unsetenv(t, "SERPAPI_KEY", "YDC_API_KEY", "XCRAWL_API_KEY", "SYNTHETIC_BAIZHI_NAMED")
+	unsetenv(t, "SERPAPI_KEY", "YDC_API_KEY", "XCRAWL_API_KEY", "SYNTHETIC_BAIZHI_NAMED", "EXA_API_KEY", "BRAVE_API_KEY", "PERPLEXITY_API_KEY", "SERPDIVE_API_KEY", "TAVILY_API_KEY", "KAGI_API_KEY", "OLLAMA_API_KEY")
 	if c.ConfigRaw != nil {
 		writeConfig(t, agentDir, *c.ConfigRaw)
 	} else if c.Config != nil {
@@ -367,6 +375,17 @@ func runFixture(t *testing.T, c *fixtureCase) (*fixtureDoer, *SearchResponse, er
 func canonicalRequests(reqs []fixtureRequest, unordered bool) []string {
 	out := make([]string, len(reqs))
 	for i, r := range reqs {
+		// Accept-Encoding: the original names gzip itself (brave.ts); the Go transport negotiates it and
+		// decodes the body, so a request that names it would receive undecoded bytes.
+		if _, ok := r.Headers["accept-encoding"]; ok {
+			h := map[string]string{}
+			for k, v := range r.Headers {
+				if k != "accept-encoding" {
+					h[k] = v
+				}
+			}
+			r.Headers = h
+		}
 		b, _ := json.Marshal(r)
 		out[i] = string(b)
 	}
