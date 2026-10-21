@@ -1670,8 +1670,8 @@
  {
   "name": "cleanup-timer-not-started",
   "file": "extension.go",
-  "find": "\t\ta.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))\n",
-  "replace": ""
+  "find": "\t\ta.mgr.startGC(a.cleanupEvery)",
+  "replace": "\t\t_ = a.cleanupEvery"
  },
  {
   "name": "cleanup-every-hour",
