@@ -5,8 +5,8 @@
 //   node port/bench-answer.mjs one                      # the original: JSON with per-call milliseconds
 //   node port/bench-answer.mjs drive <go-test-binary> [runs]
 //
-// The Go side is the package's test binary (go test -c) running BenchmarkAnswerFromPage and
-// BenchmarkGenerateSummaryDraft; each run measures CALLS calls. Node is Node 24 with the oracle's
+// The Go side is the package's test binary (go test -c) running BenchmarkAnswerFromPage, BenchmarkAnswerFromPageSerialized
+// and BenchmarkGenerateSummaryDraft; each run measures CALLS calls. Node is Node 24 with the oracle's
 // dependencies installed.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -50,9 +50,14 @@ async function one() {
 		results: [{ title: "One", url: "https://a.test/1" }, { title: "Two", url: "https://a.test/2" }],
 	}));
 
+	// The model call that serializes its request, as the host call does before sending it: the
+	// page text of the original is a lazily joined string until something reads it.
+	const serializingCtx = { ...pageCtx, modelRegistry: { ...pageCtx.modelRegistry, complete: async (_model, context) => { JSON.stringify(context); return answer; } } };
+
 	const out = {};
 	const cases = {
 		AnswerFromPage: () => answerFromPage({ question: "Q", pageText: page, sourceUrl: "https://example.com" }, pageCtx),
+		AnswerFromPageSerialized: () => answerFromPage({ question: "Q", pageText: page, sourceUrl: "https://example.com" }, serializingCtx),
 		GenerateSummaryDraft: () => generateSummaryDraft(results, summaryCtx),
 	};
 	for (const [name, fn] of Object.entries(cases)) {
@@ -78,7 +83,7 @@ function goRun(bin, name) {
 }
 
 function drive(bin, runs) {
-	const names = ["AnswerFromPage", "GenerateSummaryDraft"];
+	const names = ["AnswerFromPage", "AnswerFromPageSerialized", "GenerateSummaryDraft"];
 	const node = Object.fromEntries(names.map((n) => [n, []]));
 	const go = Object.fromEntries(names.map((n) => [n, []]));
 	for (let i = 0; i < runs; i++) {

@@ -2,6 +2,7 @@ package websearch
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -26,6 +27,30 @@ func BenchmarkAnswerFromPage(b *testing.B) {
 	ResetCaches()
 	b.Cleanup(ResetCaches)
 	side, _ := benchSide()
+	page := strings.Repeat("The page text goes on and on. ", 70000)
+	b.SetBytes(int64(len(page)))
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if _, err := AnswerFromPage(context.Background(), PageAnswerInput{Question: "Q", PageText: page, SourceURL: "https://example.com"}, side); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+// The same call when the model call serializes its request, as the host call does before it sends
+// it: the original's page text is a lazily joined string until something reads it, so only this
+// variant compares like with like.
+func BenchmarkAnswerFromPageSerialized(b *testing.B) {
+	b.Setenv("PIG_CODING_AGENT_DIR", b.TempDir())
+	ResetCaches()
+	b.Cleanup(ResetCaches)
+	side, reg := benchSide()
+	reg.completeFn = func(_ context.Context, _, request map[string]any, _ CompleteOptions) (map[string]any, error) {
+		if _, err := json.Marshal(request); err != nil {
+			return nil, err
+		}
+		return stopText("The answer."), nil
+	}
 	page := strings.Repeat("The page text goes on and on. ", 70000)
 	b.SetBytes(int64(len(page)))
 	b.ReportAllocs()
