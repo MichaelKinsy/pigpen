@@ -4575,7 +4575,7 @@
   "name": "persist-event-dropped",
   "file": "settings_menu.go",
   "find": "_ = ctx.Events().Emit(\"subagents:settings_changed\", map[string]any{\"settings\": settingsAsMap(snapshot), \"persisted\": persisted})",
-  "replace": "_ = snapshot"
+  "replace": "_, _ = ctx, snapshot"
  },
  {
   "name": "schedule-switch-keeps-timers",
@@ -4791,7 +4791,7 @@
   "name": "schedule-menu-cancels-without-confirm",
   "file": "agents_menu.go",
   "find": "if err != nil || !confirmed {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob",
-  "replace": "if err != nil {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob"
+  "replace": "if err != nil || (false && !confirmed) {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob"
  },
  {
   "name": "clear-completed-drops-unread",

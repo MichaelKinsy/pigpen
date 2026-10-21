@@ -521,7 +521,7 @@ func TestDialogFrameHeight(t *testing.T) {
 		eq(t, bodyHeight(dialogOver{Progress: phased(3)}) < defaultPaneBodyRows, true)
 	})
 	tw(t, fDialog, "keeps a floor so a one-agent run still reads as a pane", func(t *testing.T) {
-		eq(t, bodyHeight(dialogOver{Progress: phased(1)}), minPaneBodyRows)
+		eq(t, bodyHeight(dialogOver{Progress: phased(1)}), 6)
 	})
 	tw(t, fDialog, "grows with the content", func(t *testing.T) {
 		small, large := bodyHeight(dialogOver{Progress: phased(3)}), bodyHeight(dialogOver{Progress: phased(12)})

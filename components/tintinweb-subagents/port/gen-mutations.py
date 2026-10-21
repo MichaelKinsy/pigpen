@@ -863,7 +863,7 @@ m("menu-entry-count", "schedule_menu_data.go", 'fmt.Sprintf("Scheduled jobs (%d)
 
 
 m("hub-viewer-persist", "ui_runtime.go", 'h.app.persistSettings(func(message, level string) { guard(func() { ctx.Notify(message, level) }) }, "Viewer markdown set to "+string(mode))', "_ = ctx")
-m("persist-event-dropped", "settings_menu.go", '_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": settingsAsMap(snapshot), "persisted": persisted})', "_ = snapshot")
+m("persist-event-dropped", "settings_menu.go", '_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": settingsAsMap(snapshot), "persisted": persisted})', "_, _ = ctx, snapshot")
 m("schedule-switch-keeps-timers", "extension.go", "// A session switch: schedules reset on /new and are restored on /resume (the store is per session).\n\t\ta.scheduler().stop()\n", "")
 m("schedule-shutdown-keeps-timers", "extension.go", "a.stopNudges()\n\t\ta.scheduler().stop()\n", "a.stopNudges()\n")
 m("schedule-session-start-unbound", "extension.go", "\t\ta.scheduleSessionStart(ctx)\n", "")
@@ -906,7 +906,7 @@ m("settings-workflows-always-written", "settings_menu.go", "if value, write := a
 m("settings-persist-toast", "settings_store.go", '" (session only; failed to persist)", "warning"', '" (could not be saved)", "warning"')
 m("settings-unported-not-announced", "settings_menu.go", "if r.key == key && r.unported(value) {", "if r.key == key && !r.unported(value) {")
 m("settings-max-concurrency-text", "settings_menu.go", 'fmt.Sprintf("Max concurrency set to %d", n)', 'fmt.Sprintf("Max concurrency %d", n)')
-m("schedule-menu-cancels-without-confirm", "agents_menu.go", "if err != nil || !confirmed {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob", "if err != nil {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob")
+m("schedule-menu-cancels-without-confirm", "agents_menu.go", "if err != nil || !confirmed {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob", "if err != nil || (false && !confirmed) {\n\t\treturn\n\t}\n\t_, _ = sched.removeJob")
 m("clear-completed-drops-unread", "manager_clear.go", "(skipUnconsumed && r.Background && !r.Consumed)", "false")
 m("wizard-overwrite-unasked", "agents_menu.go", 'if fileExists(targetPath) {\n\t\tif overwrite, err := m.ui.Confirm("Overwrite", targetPath+" already exists. Overwrite?"); err != nil || !overwrite {\n\t\t\treturn\n\t\t}\n\t}\n\tif !m.write(targetPath, serializeAgentFile(cfg))', 'if !m.write(targetPath, serializeAgentFile(cfg))')
 

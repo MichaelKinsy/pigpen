@@ -1,0 +1,2736 @@
+{
+ "cards": [
+  {
+   "name": "run-w20",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 20,
+    "now": 1072000
+   }
+  },
+  {
+   "name": "run-w40",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 40,
+    "now": 1072000
+   }
+  },
+  {
+   "name": "run-w80",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 80,
+    "now": 1072000
+   }
+  },
+  {
+   "name": "run-w120",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 120,
+    "now": 1072000
+   }
+  },
+  {
+   "name": "ascii",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "completed",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "width": 100,
+    "now": 1072000,
+    "ascii": true
+   }
+  },
+  {
+   "name": "standalone-large",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "killed",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "width": 100,
+    "now": 1072000,
+    "showToolTitle": true,
+    "agentCount": 40
+   }
+  }
+ ],
+ "dialogs": [
+  {
+   "name": "phases",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "phases-second",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 1,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "phases-filter-running",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "running",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "agent-detail",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "agent-expanded",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": true
+    }
+   }
+  },
+  {
+   "name": "agent-running",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 1,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "agent-blocked",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 4,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "paused",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "paused",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "killed-agent",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "killed",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 1,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "ascii",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    },
+    "ascii": true
+   }
+  },
+  {
+   "name": "narrow-20",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 20,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "narrow-60",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 60,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "agent",
+     "filter": "all",
+     "promptExpanded": false
+    }
+   }
+  },
+  {
+   "name": "body-rows-8",
+   "input": {
+    "progress": [
+     {
+      "type": "workflow_phase",
+      "index": 0,
+      "title": "Review"
+     },
+     {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 0,
+      "label": "review:bugs",
+      "phaseIndex": 0,
+      "state": "done",
+      "agentType": "Explore",
+      "model": "haiku",
+      "tokens": 18400,
+      "toolCalls": 12,
+      "durationMs": 42000,
+      "recordId": "rec-0",
+      "promptPreview": "prompt line 0\nprompt line 1\nprompt line 2\nprompt line 3\nprompt line 4\nprompt line 5\nprompt line 6\nprompt line 7\nprompt line 8",
+      "resultPreview": "found 3 bugs"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "review:perf",
+      "phaseIndex": 0,
+      "state": "progress",
+      "queuedAt": 1000000,
+      "startedAt": 1000000,
+      "agentType": "Explore",
+      "toolCalls": 8,
+      "attempt": 2,
+      "lastAttemptReason": "throttled",
+      "recordId": "rec-1",
+      "thinking": "low",
+      "requestedThinking": "max",
+      "modelId": "anthropic/claude-haiku-4-5",
+      "model": "haiku 4.5"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "review:security",
+      "phaseIndex": 0,
+      "state": "start",
+      "queuedAt": 1000000
+     },
+     {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "review:style",
+      "phaseIndex": 0,
+      "state": "error",
+      "skipped": true
+     },
+     {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "review:docs",
+      "phaseIndex": 0,
+      "state": "error",
+      "blocked": true,
+      "error": "needs approval"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 5,
+      "label": "verify:auth.ts",
+      "phaseIndex": 1,
+      "state": "done",
+      "cached": true,
+      "agentType": "Plan"
+     },
+     {
+      "type": "workflow_agent",
+      "index": 6,
+      "label": "日本語のラベルがとても長い場合",
+      "phaseIndex": 1,
+      "state": "error",
+      "error": "boom",
+      "durationMs": 3723000,
+      "tokens": 1240000
+     },
+     {
+      "type": "workflow_log",
+      "message": "scanned 41 changed files\nsecond line"
+     }
+    ],
+    "task": {
+     "status": "running",
+     "workflowName": "review-changes",
+     "startTime": 1000000
+    },
+    "meta": {
+     "name": "review-changes",
+     "description": "Review changed files across dimensions, verify each finding",
+     "phases": [
+      {
+       "title": "Review"
+      },
+      {
+       "title": "Verify"
+      },
+      {
+       "title": "Report"
+      }
+     ]
+    },
+    "agentCount": 9,
+    "width": 100,
+    "now": 1072000,
+    "spinnerFrame": 3,
+    "state": {
+     "selectedPhase": 0,
+     "selectedAgent": 0,
+     "level": "phases",
+     "filter": "all",
+     "promptExpanded": false
+    },
+    "bodyRows": 8
+   }
+  }
+ ],
+ "settingsLists": [
+  {
+   "name": "top",
+   "items": [
+    {
+     "id": "k0",
+     "label": "Setting number 0",
+     "description": "Description of setting 0, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k1",
+     "label": "Setting number 1",
+     "description": "Description of setting 1, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k2",
+     "label": "Setting number 2",
+     "description": "Description of setting 2, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k3",
+     "label": "Setting number 3",
+     "description": "Description of setting 3, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k4",
+     "label": "Setting number 4",
+     "description": "Description of setting 4, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k5",
+     "label": "Setting number 5",
+     "description": "Description of setting 5, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k6",
+     "label": "Setting number 6",
+     "description": "Description of setting 6, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k7",
+     "label": "Setting number 7",
+     "description": "Description of setting 7, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    }
+   ],
+   "maxVisible": 5,
+   "downs": 0,
+   "width": 60
+  },
+  {
+   "name": "scrolled",
+   "items": [
+    {
+     "id": "k0",
+     "label": "Setting number 0",
+     "description": "Description of setting 0, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k1",
+     "label": "Setting number 1",
+     "description": "Description of setting 1, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k2",
+     "label": "Setting number 2",
+     "description": "Description of setting 2, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k3",
+     "label": "Setting number 3",
+     "description": "Description of setting 3, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k4",
+     "label": "Setting number 4",
+     "description": "Description of setting 4, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k5",
+     "label": "Setting number 5",
+     "description": "Description of setting 5, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k6",
+     "label": "Setting number 6",
+     "description": "Description of setting 6, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k7",
+     "label": "Setting number 7",
+     "description": "Description of setting 7, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    }
+   ],
+   "maxVisible": 5,
+   "downs": 6,
+   "width": 60
+  },
+  {
+   "name": "narrow",
+   "items": [
+    {
+     "id": "k0",
+     "label": "Setting number 0",
+     "description": "Description of setting 0, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k1",
+     "label": "Setting number 1",
+     "description": "Description of setting 1, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k2",
+     "label": "Setting number 2",
+     "description": "Description of setting 2, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k3",
+     "label": "Setting number 3",
+     "description": "Description of setting 3, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k4",
+     "label": "Setting number 4",
+     "description": "Description of setting 4, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k5",
+     "label": "Setting number 5",
+     "description": "Description of setting 5, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k6",
+     "label": "Setting number 6",
+     "description": "Description of setting 6, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k7",
+     "label": "Setting number 7",
+     "description": "Description of setting 7, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    }
+   ],
+   "maxVisible": 3,
+   "downs": 2,
+   "width": 30
+  },
+  {
+   "name": "wrap-up",
+   "items": [
+    {
+     "id": "k0",
+     "label": "Setting number 0",
+     "description": "Description of setting 0, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k1",
+     "label": "Setting number 1",
+     "description": "Description of setting 1, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k2",
+     "label": "Setting number 2",
+     "description": "Description of setting 2, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k3",
+     "label": "Setting number 3",
+     "description": "Description of setting 3, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k4",
+     "label": "Setting number 4",
+     "description": "Description of setting 4, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "on",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k5",
+     "label": "Setting number 5",
+     "description": "Description of setting 5, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "off",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k6",
+     "label": "Setting number 6",
+     "description": "Description of setting 6, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "smart",
+     "values": [
+      "on",
+      "off"
+     ]
+    },
+    {
+     "id": "k7",
+     "label": "Setting number 7",
+     "description": "Description of setting 7, long enough to wrap around the list's width when it is selected by the user.",
+     "currentValue": "12",
+     "values": [
+      "on",
+      "off"
+     ]
+    }
+   ],
+   "maxVisible": 5,
+   "ups": 1,
+   "width": 80
+  }
+ ]
+}
