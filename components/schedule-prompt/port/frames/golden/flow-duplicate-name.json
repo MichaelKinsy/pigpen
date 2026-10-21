@@ -1,0 +1,24 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-duplicate-name",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "notify",
+      "message": "A job named \"taken\" already exists",
+      "level": "error"
+    }
+  ],
+  "calls": [],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"d1\",\n      \"name\": \"taken\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

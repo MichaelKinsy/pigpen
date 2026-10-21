@@ -1,0 +1,82 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-reprompt-interval",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Duration, e.g. '5m', '1h', '30s'"
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Invalid interval format: 5x. Use format like '5m', '1h', '30s'"
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Invalid interval format: 0s. Use format like '5m', '1h', '30s'"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Bind to this session — only this pi fires it",
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"x\"?\nSchedule: every 10m\nScope: session-bound\nPrompt: p"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: x (every 10m)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "x",
+        "schedule": "10m",
+        "prompt": "p",
+        "enabled": true,
+        "type": "interval",
+        "intervalMs": 600000,
+        "createdAt": "<now>",
+        "runCount": 0,
+        "session": "s1"
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"x\",\n      \"schedule\": \"10m\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"interval\",\n      \"intervalMs\": 600000,\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

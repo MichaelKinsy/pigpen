@@ -1,0 +1,17 @@
+{
+ "name": "flow-cron-shared-default-workdir",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {
+  "defaultJobScope": "workdir"
+ },
+ "jobs": [],
+ "answers": [
+  "w",
+  "Cron (recurring)",
+  " 0 30 8 * * 1-5 ",
+  "p",
+  "Shared — every pi in this cwd fires it (accepts duplicate fires)",
+  true
+ ]
+}

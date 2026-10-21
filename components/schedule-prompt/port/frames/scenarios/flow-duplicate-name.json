@@ -1,0 +1,22 @@
+{
+ "name": "flow-duplicate-name",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [
+  {
+   "id": "d1",
+   "name": "taken",
+   "schedule": "0 0 9 * * *",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s1"
+  }
+ ],
+ "answers": [
+  "taken"
+ ]
+}

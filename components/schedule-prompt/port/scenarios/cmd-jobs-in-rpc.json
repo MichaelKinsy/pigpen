@@ -1,0 +1,26 @@
+{
+  "name": "cmd-jobs-in-rpc",
+  "description": "The Jobs overlay needs a terminal: in RPC mode the host answers the custom component with nothing and the command ends.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Jobs"
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000001\",\n      \"name\": \"alpha\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  }
+}

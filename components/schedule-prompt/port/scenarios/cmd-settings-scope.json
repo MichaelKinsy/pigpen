@@ -1,0 +1,96 @@
+{
+  "name": "cmd-settings-scope",
+  "description": "The default scope of new jobs is switched twice; a job added afterwards follows the last choice.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts-settings.json || echo missing"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "after",
+            "schedule": "0 0 0 * * *",
+            "prompt": "p"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts.json"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Bind new jobs to session: yes"
+        },
+        {
+          "value": "Bind new jobs to session: no"
+        },
+        {
+          "value": "Bind new jobs to session: yes"
+        },
+        {
+          "value": "Bind new jobs to session: no"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "rpc": {
+        "type": "prompt",
+        "message": "show the file"
+      }
+    }
+  ],
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ]
+}

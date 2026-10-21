@@ -1,0 +1,49 @@
+{
+  "name": "cmd-settings-scope-from-global",
+  "description": "The global setting says workdir: the menu starts at `no`.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts-settings.json || echo missing"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Bind new jobs to session: no"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "rpc": {
+        "type": "prompt",
+        "message": "show the file"
+      }
+    }
+  ],
+  "agentFiles": {
+    "schedule-prompts-settings.json": "{\"defaultJobScope\": \"workdir\", \"widgetVisible\": false}"
+  }
+}

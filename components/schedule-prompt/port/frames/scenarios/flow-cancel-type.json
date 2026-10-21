@@ -1,0 +1,11 @@
+{
+ "name": "flow-cancel-type",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  null
+ ]
+}

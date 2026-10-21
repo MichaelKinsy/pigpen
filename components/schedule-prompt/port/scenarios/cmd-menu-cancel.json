@@ -1,0 +1,23 @@
+{
+  "name": "cmd-menu-cancel",
+  "description": "The menu is cancelled: nothing happens.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

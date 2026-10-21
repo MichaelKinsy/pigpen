@@ -22,10 +22,9 @@
   ],
   "steps": [
     {
-      "name": "after",
+      "name": "wait",
       "rpc": {
-        "type": "prompt",
-        "message": "after"
+        "type": "get_state"
       }
     }
   ],

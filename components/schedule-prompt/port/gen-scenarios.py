@@ -182,7 +182,7 @@ def raw_scenario(name, description, llm, steps, **extra):
 # order of events does not depend on where in a second the host happened to start.
 raw_scenario("fire-cron", "An every-second cron job fires: the marker, then the prompt as a user message; the model removes the job.", [
     {"toolCalls": [sp("remove", jobId="cron000010")]}, {"text": "removed"}, {"text": "after"},
-], [prompt("after", name="after")],
+], [{"name": "wait", "rpc": {"type": "get_state"}}],
     files={STORE: store(job("cron000010", "tick", "* * * * * *", fire_prompt))}, settleMs=1500, tailMs=500)
 
 raw_scenario("fire-interval", "An interval job fires after its interval; the model removes it.", [
@@ -205,6 +205,38 @@ raw_scenario("recursion-after-fire", "A job added after a scheduled prompt ran i
     {"toolCalls": [sp("add", name="child", schedule="0 0 0 * * *", prompt="scheduled by a scheduled prompt")]},
     {"toolCalls": [sp("list")]}, {"text": "done"},
 ], [{"name": "wait", "rpc": {"type": "get_state"}}], files={STORE: store(job("cron000011", "parent", "* * * * * *", fire_prompt))}, normalize=NORM, settleMs=1500, tailMs=500)
+
+# ---- the /schedule-prompt command: the menu and Settings (the Jobs overlay is compared frame by frame, port/frames) ----
+def cmd(*answers, name="cmd"):
+    ui = [{"cancelled": True} if a is None else {"value": a} for a in answers]
+    return {"name": name, "rpc": {"type": "prompt", "message": "/schedule-prompt"}, "ui": ui}
+
+
+def readback(path=SETTINGS):
+    return [call("bash", command="cat " + path + " || echo missing")]
+
+
+SEEDED = {STORE: store(job("cron000001", "alpha", "0 0 9 * * *"))}
+scenario("cmd-menu-cancel", "The menu is cancelled: nothing happens.", [], [cmd(None)])
+scenario("cmd-settings-back", "Settings, then Back.", [], [cmd("Settings", "Back")])
+scenario("cmd-settings-cancel", "Settings, then the menu is cancelled.", [], [cmd("Settings", None)])
+scenario("cmd-settings-widget-toggle", "The widget is hidden and shown again from Settings; the project settings file records the last choice.",
+         [readback()], [cmd("Settings", "Widget visibility: shown", "Widget visibility: hidden", "Widget visibility: shown", "Widget visibility: hidden", "Back"),
+                        prompt("show the file", name="read")], files=SEEDED)
+scenario("cmd-settings-widget-no-job", "Hiding and showing the widget with no job to show.", [readback()],
+         [cmd("Settings", "Widget visibility: shown", "Widget visibility: hidden", "Back"), prompt("show the file", name="read")])
+scenario("cmd-settings-scope", "The default scope of new jobs is switched twice; a job added afterwards follows the last choice.",
+         [readback(), [sp("add", name="after", schedule="0 0 0 * * *", prompt="p")], [cat()]],
+         [cmd("Settings", "Bind new jobs to session: yes", "Bind new jobs to session: no", "Bind new jobs to session: yes", "Bind new jobs to session: no", "Back"),
+          prompt("show the file", name="read")], normalize=NORM)
+scenario("cmd-settings-scope-from-global", "The global setting says workdir: the menu starts at `no`.", [readback()],
+         [cmd("Settings", "Bind new jobs to session: no", "Back"), prompt("show the file", name="read")],
+         agentFiles={"schedule-prompts-settings.json": "{\"defaultJobScope\": \"workdir\", \"widgetVisible\": false}"})
+scenario("cmd-settings-persist-fails", "`.pi` is a file, so the settings cannot be written: both toggles warn that the change is for this session only.", [],
+         [cmd("Settings", "Widget visibility: shown", "Bind new jobs to session: yes", "Back")], files={".pi": "not a directory"})
+scenario("cmd-jobs-in-rpc", "The Jobs overlay needs a terminal: in RPC mode the host answers the custom component with nothing and the command ends.", [], [cmd("Jobs")], files=SEEDED)
+scenario("cmd-unknown-choice", "A choice that is neither Jobs nor Settings ends the command.", [], [cmd("Other")])
+scenario("cmd-settings-empty-choice", "An empty answer leaves Settings like Back.", [], [cmd("Settings", "")])
 
 print("wrote", len(os.listdir(out)), "scenarios")
 

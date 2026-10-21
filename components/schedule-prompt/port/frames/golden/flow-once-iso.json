@@ -1,0 +1,70 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-once-iso",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "ISO timestamp or relative time (+10s, +5m, +1h)"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Bind to this session — only this pi fires it",
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"later\"?\nSchedule: Jan 1 09:30\nScope: shared (any pi here)\nPrompt: do it"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: later (Jan 1 09:30)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "later",
+        "schedule": "2099-01-01T09:30:00.000Z",
+        "prompt": "do it",
+        "enabled": true,
+        "type": "once",
+        "createdAt": "<now>",
+        "runCount": 0
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"later\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"do it\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

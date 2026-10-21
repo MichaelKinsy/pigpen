@@ -1,0 +1,15 @@
+{
+ "name": "flow-once-iso",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "later",
+  "Once (one-shot)",
+  "2099-01-01T09:30:00Z",
+  "do it",
+  "Shared — every pi in this cwd fires it (accepts duplicate fires)",
+  true
+ ]
+}

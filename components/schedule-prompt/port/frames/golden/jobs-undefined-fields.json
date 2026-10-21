@@ -1,0 +1,53 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "jobs-undefined-fields",
+  "steps": [
+    {
+      "input": null,
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> bare                daily at 9:00     x                             <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: bare (u1)</fg>",
+          "<fg:dim> Type: cron   Runs: undefined</fg>",
+          "<fg:dim> Prompt: x</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> bare                daily at 9:00     x                             <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: bare (u1)</fg>",
+          "<fg:dim> Type: cron   Runs: undefined</fg>",
+          "<fg:dim> Prompt: x</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> bare                daily at 9:00     x                             <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: bare (u1)</fg>",
+          "<fg:dim> Type: cron   Runs: undefined</fg>",
+          "<fg:dim> Prompt: x</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"u1\",\n      \"name\": \"bare\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"x\",\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"enabled\": true\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [],
+      "addRuns": 0,
+      "renders": 0
+    }
+  ]
+}

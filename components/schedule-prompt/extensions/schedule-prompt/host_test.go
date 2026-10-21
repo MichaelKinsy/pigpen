@@ -226,16 +226,6 @@ func TestToolRefusesTheModelModeThroughTheHost(t *testing.T) {
 	}
 }
 
-func TestCommandIsRefusedUntilItsSlice(t *testing.T) {
-	r := startRig(t)
-	if failure := r.Command("schedule-prompt", ""); failure != "" {
-		t.Fatal(failure)
-	}
-	calls := r.CallsTo("ui.notify")
-	if len(calls) != 1 || calls[0].Args["level"] != "error" || !strings.Contains(calls[0].Args["message"].(string), "does not support the /schedule-prompt command") {
-		t.Fatalf("notify = %v", calls)
-	}
-}
 
 // A change event redraws the widget at once: a job added through the tool shows the widget below the editor without waiting for the
 // 30 s refresh.

@@ -1,0 +1,35 @@
+{
+  "name": "cmd-settings-persist-fails",
+  "description": "`.pi` is a file, so the settings cannot be written: both toggles warn that the change is for this session only.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Widget visibility: shown"
+        },
+        {
+          "value": "Bind new jobs to session: yes"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi": "not a directory"
+  }
+}

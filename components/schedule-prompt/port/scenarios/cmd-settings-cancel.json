@@ -1,0 +1,26 @@
+{
+  "name": "cmd-settings-cancel",
+  "description": "Settings, then the menu is cancelled.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ]
+}

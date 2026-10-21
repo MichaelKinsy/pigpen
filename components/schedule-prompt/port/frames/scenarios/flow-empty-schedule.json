@@ -1,0 +1,12 @@
+{
+ "name": "flow-empty-schedule",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  "Cron (recurring)",
+  ""
+ ]
+}

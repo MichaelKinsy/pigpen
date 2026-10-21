@@ -1,0 +1,16 @@
+{
+ "name": "flow-reprompt-cron",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "x",
+  "Cron (recurring)",
+  "* * *",
+  "0 0 * * * *",
+  "p",
+  "Bind to this session — only this pi fires it",
+  true
+ ]
+}

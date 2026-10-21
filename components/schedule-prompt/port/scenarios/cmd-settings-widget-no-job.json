@@ -1,0 +1,49 @@
+{
+  "name": "cmd-settings-widget-no-job",
+  "description": "Hiding and showing the widget with no job to show.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts-settings.json || echo missing"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Widget visibility: shown"
+        },
+        {
+          "value": "Widget visibility: hidden"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "rpc": {
+        "type": "prompt",
+        "message": "show the file"
+      }
+    }
+  ]
+}

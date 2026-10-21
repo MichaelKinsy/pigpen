@@ -1,0 +1,26 @@
+{
+  "name": "cmd-settings-back",
+  "description": "Settings, then Back.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    }
+  ]
+}

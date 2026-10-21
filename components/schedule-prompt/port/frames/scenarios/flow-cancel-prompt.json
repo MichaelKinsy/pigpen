@@ -1,0 +1,13 @@
+{
+ "name": "flow-cancel-prompt",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  "Interval (periodic)",
+  "5m",
+  null
+ ]
+}

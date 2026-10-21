@@ -1,0 +1,15 @@
+{
+ "name": "flow-declined",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  "Interval (periodic)",
+  "5m",
+  "p",
+  "Bind to this session — only this pi fires it",
+  false
+ ]
+}

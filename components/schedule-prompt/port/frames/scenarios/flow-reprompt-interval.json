@@ -1,0 +1,17 @@
+{
+ "name": "flow-reprompt-interval",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "x",
+  "Interval (periodic)",
+  "5x",
+  "0s",
+  "10m",
+  "p",
+  "Bind to this session — only this pi fires it",
+  true
+ ]
+}

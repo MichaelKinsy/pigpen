@@ -1,0 +1,17 @@
+{
+ "name": "flow-reprompt-once",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "x",
+  "Once (one-shot)",
+  "garbage",
+  "2020-01-01T00:00:00Z",
+  "2099-01-01T00:00:00Z",
+  "p",
+  "Bind to this session — only this pi fires it",
+  true
+ ]
+}

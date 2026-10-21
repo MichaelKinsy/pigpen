@@ -1,0 +1,71 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-cron-session",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "6-field cron, e.g. '0 0 9 * * *' for 9am daily"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Bind to this session — only this pi fires it",
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"daily report\"?\nSchedule: daily at 9:00\nScope: session-bound\nPrompt: write the report"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: daily report (daily at 9:00)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "daily report",
+        "schedule": "0 0 9 * * *",
+        "prompt": "write the report",
+        "enabled": true,
+        "type": "cron",
+        "createdAt": "<now>",
+        "runCount": 0,
+        "session": "s1"
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"daily report\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"write the report\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

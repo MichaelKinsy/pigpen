@@ -1,0 +1,36 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-answers-run-out",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "6-field cron, e.g. '0 0 9 * * *' for 9am daily"
+    },
+    {
+      "m": "exhausted"
+    }
+  ],
+  "calls": [],
+  "store": null,
+  "thrown": "the scenario ran out of answers",
+  "unusedAnswers": 0
+}

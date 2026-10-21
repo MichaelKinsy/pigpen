@@ -1,0 +1,76 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-reprompt-cron",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "6-field cron, e.g. '0 0 9 * * *' for 9am daily"
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Invalid cron expression: Cron expression must have 6 fields (second minute hour dom month dow), got 3. Example: \"0 * * * * *\" for every minute"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Bind to this session — only this pi fires it",
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"x\"?\nSchedule: every hour\nScope: session-bound\nPrompt: p"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: x (every hour)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "x",
+        "schedule": "0 0 * * * *",
+        "prompt": "p",
+        "enabled": true,
+        "type": "cron",
+        "createdAt": "<now>",
+        "runCount": 0,
+        "session": "s1"
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"x\",\n      \"schedule\": \"0 0 * * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

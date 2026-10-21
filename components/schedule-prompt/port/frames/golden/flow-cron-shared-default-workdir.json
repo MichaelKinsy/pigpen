@@ -1,0 +1,70 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-cron-shared-default-workdir",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "6-field cron, e.g. '0 0 9 * * *' for 9am daily"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)",
+        "Bind to this session — only this pi fires it"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"w\"?\nSchedule: 0 30 8 * * 1-5\nScope: shared (any pi here)\nPrompt: p"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: w (0 30 8 * * 1-5)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "w",
+        "schedule": "0 30 8 * * 1-5",
+        "prompt": "p",
+        "enabled": true,
+        "type": "cron",
+        "createdAt": "<now>",
+        "runCount": 0
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"w\",\n      \"schedule\": \"0 30 8 * * 1-5\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

@@ -1,0 +1,19 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-cancel-name",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    }
+  ],
+  "calls": [],
+  "store": null,
+  "thrown": null,
+  "unusedAnswers": 0
+}

@@ -11,8 +11,6 @@ import (
 	"github.com/MichaelKinsy/pigpen/schedule-prompt/internal/jsobj"
 )
 
-const commandFeature = "the /schedule-prompt command (the Jobs overlay and Settings)"
-
 // sdkPi implements piAPI on a retained host context (the original holds the ExtensionAPI and its context for its timers).
 type sdkPi struct{ ctx sdk.Context }
 
@@ -193,10 +191,7 @@ func Extension() *sdk.Extension {
 	})
 	e.OnEvent(sdk.EventSessionStart, a.onSessionStart)
 	e.OnEvent(sdk.EventSessionShutdown, a.onSessionShutdown)
-	e.Command("schedule-prompt", "Manage scheduled prompts interactively", func(ctx sdk.Context, _ string) error {
-		ctx.Notify(unsupported(commandFeature).Error(), "error")
-		return nil
-	})
+	e.Command("schedule-prompt", commandDescription, a.runCommand)
 	return e
 }
 

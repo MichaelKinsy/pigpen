@@ -1,0 +1,132 @@
+{
+ "name": "jobs-cleanup-confirm",
+ "kind": "jobs",
+ "session": "s1",
+ "jobs": [
+  {
+   "id": "a1",
+   "name": "morning",
+   "schedule": "0 0 9 * * *",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 3,
+   "session": "s1",
+   "lastRun": "2026-02-01T09:00:00.000Z",
+   "lastStatus": "success"
+  },
+  {
+   "id": "a2",
+   "name": "disabled-one",
+   "schedule": "5m",
+   "prompt": "say hello",
+   "enabled": false,
+   "type": "interval",
+   "intervalMs": 300000,
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s1"
+  },
+  {
+   "id": "a3",
+   "name": "shared-job-with-a-very-long-name",
+   "schedule": "2099-01-01T09:30:00.000Z",
+   "prompt": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+   "enabled": true,
+   "type": "once",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0
+  },
+  {
+   "id": "a4",
+   "name": "failing",
+   "schedule": "0 */5 * * * *",
+   "prompt": "héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld ",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s1",
+   "lastStatus": "error"
+  },
+  {
+   "id": "a5",
+   "name": "running",
+   "schedule": "0 0 0 * * *",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s1",
+   "lastStatus": "running"
+  },
+  {
+   "id": "a6",
+   "name": "off-shared",
+   "schedule": "0 0 9 * * 1-5",
+   "prompt": "say hello",
+   "enabled": false,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0
+  },
+  {
+   "id": "f1",
+   "name": "other-live",
+   "schedule": "30 * * * * *",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s2"
+  },
+  {
+   "id": "f2",
+   "name": "other-off",
+   "schedule": "0 0 9 * * *",
+   "prompt": "say hello",
+   "enabled": false,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s2"
+  },
+  {
+   "id": "f3",
+   "name": "other-err",
+   "schedule": "1h",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "interval",
+   "intervalMs": 3600000,
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s2",
+   "lastStatus": "error"
+  }
+ ],
+ "nextRuns": {
+  "a1": "2099-03-04T09:00:00.000Z",
+  "a3": "2099-01-01T09:30:00.000Z",
+  "a4": "2099-03-04T09:05:00.000Z",
+  "f1": "2099-03-04T09:01:30.000Z"
+ },
+ "widths": [
+  40,
+  90,
+  120
+ ],
+ "runAdd": "ok",
+ "steps": [
+  "c",
+  "n",
+  "c",
+  "\u001b",
+  "c",
+  "y",
+  "c"
+ ]
+}

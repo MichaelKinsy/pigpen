@@ -1,0 +1,15 @@
+{
+ "name": "flow-interval",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "poll",
+  "Interval (periodic)",
+  "30s",
+  "check",
+  "Bind to this session — only this pi fires it",
+  true
+ ]
+}

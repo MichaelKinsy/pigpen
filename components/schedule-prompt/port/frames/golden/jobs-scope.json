@@ -1,0 +1,571 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "jobs-scope",
+  "steps": [
+    {
+      "input": null,
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"session\": \"s1\",\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "s",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "s",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "\u001b[B",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "s",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          " ▶ <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: disabled-one (a2)</fg>",
+          "<fg:dim> Type: interval   Runs: 0</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a2",
+          "job": "{\"id\":\"a2\",\"name\":\"disabled-one\",\"schedule\":\"5m\",\"prompt\":\"say hello\",\"enabled\":false,\"type\":\"interval\",\"intervalMs\":300000,\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":0}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "\u001b[B",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          " ▶ <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: shared-job-with-a-very-long-name (a3)</fg>",
+          "<fg:dim> Type: once   Next: 2099-01-01T09:30:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp...</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          " ▶ <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: shared-job-with-a-very-long-name (a3)</fg>",
+          "<fg:dim> Type: once   Next: 2099-01-01T09:30:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp...</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          " ▶ <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          "   <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: shared-job-with-a-very-long-name (a3)</fg>",
+          "<fg:dim> Type: once   Next: 2099-01-01T09:30:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp...</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a2",
+          "job": "{\"id\":\"a2\",\"name\":\"disabled-one\",\"schedule\":\"5m\",\"prompt\":\"say hello\",\"enabled\":false,\"type\":\"interval\",\"intervalMs\":300000,\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":0}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "\u001b[B",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a2",
+          "job": "{\"id\":\"a2\",\"name\":\"disabled-one\",\"schedule\":\"5m\",\"prompt\":\"say hello\",\"enabled\":false,\"type\":\"interval\",\"intervalMs\":300000,\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":0}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "s",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...<fg:dim> [shared]</fg>",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...<fg:dim> [shared]</fg>",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "   <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     <fg:dim> [shared]</fg>",
+          "   <fg:success>✓</fg> shared-job-with...  Jan 1 09:30       ppppppppppppppppppppppppppp...<fg:dim> [shared]</fg>",
+          " ▶ <fg:error>!</fg> failing             every 5 min       héllo 😀 wörld héllo 😀 wör...<fg:dim> [shared]</fg>",
+          "   <fg:warning>⟳</fg> running             daily             say hello                     ",
+          "   <fg:muted>✗</fg> off-shared          9am weekdays      say hello                     <fg:dim> [shared]</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: failing (a4)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:05:00.000Z   Runs: 0</fg>",
+          "<fg:dim> Prompt: héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld </fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\",\n      \"session\": \"s1\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a3\",\n      \"name\": \"shared-job-with-a-very-long-name\",\n      \"schedule\": \"2099-01-01T09:30:00.000Z\",\n      \"prompt\": \"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    },\n    {\n      \"id\": \"a4\",\n      \"name\": \"failing\",\n      \"schedule\": \"0 */5 * * * *\",\n      \"prompt\": \"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"lastStatus\": \"error\"\n    },\n    {\n      \"id\": \"a5\",\n      \"name\": \"running\",\n      \"schedule\": \"0 0 0 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\",\n      \"lastStatus\": \"running\"\n    },\n    {\n      \"id\": \"a6\",\n      \"name\": \"off-shared\",\n      \"schedule\": \"0 0 9 * * 1-5\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a1",
+          "job": "{\"id\":\"a1\",\"name\":\"morning\",\"schedule\":\"0 0 9 * * *\",\"prompt\":\"say hello\",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":3,\"lastRun\":\"2026-02-01T09:00:00.000Z\",\"lastStatus\":\"success\",\"session\":\"s1\"}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a2",
+          "job": "{\"id\":\"a2\",\"name\":\"disabled-one\",\"schedule\":\"5m\",\"prompt\":\"say hello\",\"enabled\":false,\"type\":\"interval\",\"intervalMs\":300000,\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":0}"
+        },
+        {
+          "op": "updateJob",
+          "id": "a4",
+          "job": "{\"id\":\"a4\",\"name\":\"failing\",\"schedule\":\"0 */5 * * * *\",\"prompt\":\"héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld héllo 😀 wörld \",\"enabled\":true,\"type\":\"cron\",\"createdAt\":\"2026-01-01T00:00:00.000Z\",\"runCount\":0,\"lastStatus\":\"error\"}"
+        }
+      ],
+      "addRuns": 0,
+      "renders": 0
+    }
+  ]
+}

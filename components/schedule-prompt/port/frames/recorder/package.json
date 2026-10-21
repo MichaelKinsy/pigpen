@@ -1,0 +1,13 @@
+{
+	"name": "sp-frames-recorder",
+	"private": true,
+	"version": "0.0.0",
+	"description": "Records the frames and the add flow of the unmodified pi-schedule-prompt 0.4.1 under Pi 1402973a9d (see record.ts).",
+	"type": "module",
+	"scripts": {
+		"record": "tsx record.ts"
+	},
+	"dependencies": {
+		"tsx": "4.23.15"
+	}
+}

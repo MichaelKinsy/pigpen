@@ -1,0 +1,29 @@
+{
+ "name": "jobs-undefined-fields",
+ "kind": "jobs",
+ "session": "s1",
+ "jobs": [
+  {
+   "id": "u1",
+   "name": "bare",
+   "schedule": "0 0 9 * * *",
+   "prompt": "x",
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "enabled": true
+  }
+ ],
+ "nextRuns": {
+  "a1": "2099-03-04T09:00:00.000Z",
+  "a3": "2099-01-01T09:30:00.000Z",
+  "a4": "2099-03-04T09:05:00.000Z",
+  "f1": "2099-03-04T09:01:30.000Z"
+ },
+ "widths": [
+  40,
+  90,
+  120
+ ],
+ "runAdd": "ok",
+ "steps": []
+}

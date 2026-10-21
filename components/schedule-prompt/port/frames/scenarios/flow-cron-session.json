@@ -1,0 +1,15 @@
+{
+ "name": "flow-cron-session",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "daily report",
+  "Cron (recurring)",
+  "0 0 9 * * *",
+  "write the report",
+  "Bind to this session — only this pi fires it",
+  true
+ ]
+}

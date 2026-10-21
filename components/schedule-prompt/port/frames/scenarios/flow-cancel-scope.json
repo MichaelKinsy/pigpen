@@ -1,0 +1,14 @@
+{
+ "name": "flow-cancel-scope",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  "Interval (periodic)",
+  "5m",
+  "p",
+  null
+ ]
+}

@@ -1,0 +1,58 @@
+{
+  "name": "cmd-settings-widget-toggle",
+  "description": "The widget is hidden and shown again from Settings; the project settings file records the last choice.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat .pi/schedule-prompts-settings.json || echo missing"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Settings"
+        },
+        {
+          "value": "Widget visibility: shown"
+        },
+        {
+          "value": "Widget visibility: hidden"
+        },
+        {
+          "value": "Widget visibility: shown"
+        },
+        {
+          "value": "Widget visibility: hidden"
+        },
+        {
+          "value": "Back"
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "rpc": {
+        "type": "prompt",
+        "message": "show the file"
+      }
+    }
+  ],
+  "files": {
+    ".pi/schedule-prompts.json": "{\n  \"jobs\": [\n    {\n      \"id\": \"cron000001\",\n      \"name\": \"alpha\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0\n    }\n  ],\n  \"version\": 1\n}"
+  }
+}

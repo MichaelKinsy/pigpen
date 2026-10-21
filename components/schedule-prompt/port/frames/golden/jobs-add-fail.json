@@ -1,0 +1,102 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "jobs-add-fail",
+  "steps": [
+    {
+      "input": null,
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"session\": \"s1\",\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [],
+      "addRuns": 0,
+      "renders": 0
+    },
+    {
+      "input": "a",
+      "done": false,
+      "frames": {
+        "40": [
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────</fg>"
+        ],
+        "90": [
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>──────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ],
+        "120": [
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " <fg:accent><b>Jobs</b></fg>  —  ↑↓ select   a add   t toggle   s scope   x remove   c cleanup   q quit",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          " ▶ <fg:success>✓</fg> morning             daily at 9:00     say hello                     ",
+          "   <fg:muted>✗</fg> disabled-one        every 5m          say hello                     ",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>",
+          "<fg:dim> Selected: morning (a1)</fg>",
+          "<fg:dim> Type: cron   Next: 2099-03-04T09:00:00.000Z   Last: 2026-02-01T09:00:00.000Z   Runs: 3</fg>",
+          "<fg:dim> Prompt: say hello</fg>",
+          "<fg:dim>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</fg>"
+        ]
+      },
+      "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"a1\",\n      \"name\": \"morning\",\n      \"schedule\": \"0 0 9 * * *\",\n      \"prompt\": \"say hello\",\n      \"enabled\": true,\n      \"type\": \"cron\",\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 3,\n      \"session\": \"s1\",\n      \"lastRun\": \"2026-02-01T09:00:00.000Z\",\n      \"lastStatus\": \"success\"\n    },\n    {\n      \"id\": \"a2\",\n      \"name\": \"disabled-one\",\n      \"schedule\": \"5m\",\n      \"prompt\": \"say hello\",\n      \"enabled\": false,\n      \"type\": \"interval\",\n      \"intervalMs\": 300000,\n      \"createdAt\": \"2026-01-01T00:00:00.000Z\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+      "calls": [],
+      "addRuns": 1,
+      "renders": 1
+    }
+  ]
+}

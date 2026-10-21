@@ -1,0 +1,12 @@
+{
+ "name": "flow-cancel-schedule",
+ "kind": "addflow",
+ "session": "s1",
+ "settings": {},
+ "jobs": [],
+ "answers": [
+  "n",
+  "Cron (recurring)",
+  null
+ ]
+}

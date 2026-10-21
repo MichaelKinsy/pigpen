@@ -1,0 +1,81 @@
+{
+  "recordedWith": {
+    "pi": "1402973a9d",
+    "node": "v24.19.0",
+    "tz": "UTC"
+  },
+  "scenario": "flow-reprompt-once",
+  "ui": [
+    {
+      "m": "input",
+      "title": "Job Name",
+      "placeholder": "Enter a name for this scheduled prompt"
+    },
+    {
+      "m": "select",
+      "title": "Job Type",
+      "options": [
+        "Cron (recurring)",
+        "Once (one-shot)",
+        "Interval (periodic)"
+      ]
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "ISO timestamp or relative time (+10s, +5m, +1h)"
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Invalid timestamp: garbage. Use ISO format or relative time like '+10s', '+5m'"
+    },
+    {
+      "m": "input",
+      "title": "Schedule",
+      "placeholder": "Timestamp is in the past: 2020-01-01T00:00:00.000Z. Current time: <now>"
+    },
+    {
+      "m": "input",
+      "title": "Prompt",
+      "placeholder": "Enter the prompt to execute"
+    },
+    {
+      "m": "select",
+      "title": "Scope",
+      "options": [
+        "Bind to this session — only this pi fires it",
+        "Shared — every pi in this cwd fires it (accepts duplicate fires)"
+      ]
+    },
+    {
+      "m": "confirm",
+      "title": "Confirm",
+      "message": "Save \"x\"?\nSchedule: Jan 1 00:00\nScope: session-bound\nPrompt: p"
+    },
+    {
+      "m": "notify",
+      "message": "Created scheduled prompt: x (Jan 1 00:00)",
+      "level": "info"
+    }
+  ],
+  "calls": [
+    {
+      "op": "addJob",
+      "job": {
+        "id": "<id>",
+        "name": "x",
+        "schedule": "2099-01-01T00:00:00.000Z",
+        "prompt": "p",
+        "enabled": true,
+        "type": "once",
+        "createdAt": "<now>",
+        "runCount": 0,
+        "session": "s1"
+      }
+    }
+  ],
+  "store": "{\n  \"jobs\": [\n    {\n      \"id\": \"<id>\",\n      \"name\": \"x\",\n      \"schedule\": \"2099-01-01T00:00:00.000Z\",\n      \"prompt\": \"p\",\n      \"enabled\": true,\n      \"type\": \"once\",\n      \"createdAt\": \"<now>\",\n      \"runCount\": 0,\n      \"session\": \"s1\"\n    }\n  ],\n  \"version\": 1\n}",
+  "thrown": null,
+  "unusedAnswers": 0
+}

@@ -1,0 +1,23 @@
+{
+  "name": "cmd-unknown-choice",
+  "description": "A choice that is neither Jobs nor Settings ends the command.",
+  "llm": [
+    {
+      "text": "done"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/schedule-prompt"
+      },
+      "ui": [
+        {
+          "value": "Other"
+        }
+      ]
+    }
+  ]
+}

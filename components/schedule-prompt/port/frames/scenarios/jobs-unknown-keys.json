@@ -1,0 +1,52 @@
+{
+ "name": "jobs-unknown-keys",
+ "kind": "jobs",
+ "session": "s1",
+ "jobs": [
+  {
+   "id": "a1",
+   "name": "morning",
+   "schedule": "0 0 9 * * *",
+   "prompt": "say hello",
+   "enabled": true,
+   "type": "cron",
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 3,
+   "session": "s1",
+   "lastRun": "2026-02-01T09:00:00.000Z",
+   "lastStatus": "success"
+  },
+  {
+   "id": "a2",
+   "name": "disabled-one",
+   "schedule": "5m",
+   "prompt": "say hello",
+   "enabled": false,
+   "type": "interval",
+   "intervalMs": 300000,
+   "createdAt": "2026-01-01T00:00:00.000Z",
+   "runCount": 0,
+   "session": "s1"
+  }
+ ],
+ "nextRuns": {
+  "a1": "2099-03-04T09:00:00.000Z",
+  "a3": "2099-01-01T09:30:00.000Z",
+  "a4": "2099-03-04T09:05:00.000Z",
+  "f1": "2099-03-04T09:01:30.000Z"
+ },
+ "widths": [
+  40,
+  90,
+  120
+ ],
+ "runAdd": "ok",
+ "steps": [
+  "z",
+  "A",
+  "\r",
+  " ",
+  "Q",
+  "\u001b[C"
+ ]
+}
