@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/article",
+ "title": "Literal text in equations",
+ "content": "This example contains a formula with text whose spaces are significant.\n\n$$\n\\texttt{<div>}\n$$\n\nPreserve the original formula as literal source when escaping would change its text.",
+ "error": null
+}

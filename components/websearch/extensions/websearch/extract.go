@@ -8,14 +8,12 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"golang.org/x/net/html"
-	"golang.org/x/text/encoding/htmlindex"
 )
 
 // Port of extract.ts: fetch one URL and return readable text. What is ported here is the direct
@@ -447,7 +445,7 @@ func ExtractHeadingTitle(text string) (string, bool) {
 	return cleaned, cleaned != ""
 }
 
-var headingRE = regexp.MustCompile(`(?m)^#{1,2}\s+(.+)`)
+var headingRE = mustRE(`(?m)^#{1,2}\s+(.+)`)
 
 func lastPathSegment(u string) string {
 	parsed, err := ParseURL(u, nil)
@@ -496,23 +494,6 @@ func readLimited(r io.Reader, max int64, tooBig func() error) ([]byte, error) {
 	return data, nil
 }
 
-func decodeText(data []byte, contentType string) string {
-	charset := ""
-	if m := charsetRE.FindStringSubmatch(contentType); m != nil {
-		charset = m[1]
-	}
-	if charset != "" {
-		if enc, err := htmlindex.Get(charset); err == nil {
-			if out, err := enc.NewDecoder().Bytes(data); err == nil {
-				return string(out)
-			}
-		}
-	}
-	return string([]rune(string(data)))
-}
-
-var charsetRE = regexp.MustCompile(`(?i)charset\s*=\s*["']?([^;"'\s]+)`)
-
 func isTextContentType(contentType string) bool {
 	mime := strings.ToLower(jsTrim(strings.SplitN(contentType, ";", 2)[0]))
 	return strings.HasPrefix(mime, "text/") || mime == "application/json" || mime == "application/ld+json" ||
@@ -529,12 +510,12 @@ func isPDF(u, contentType string) bool {
 }
 
 var (
-	cfTitleRE = regexp.MustCompile(`(?i)<title>\s*Just a moment\.\.\.\s*</title>`)
-	bodyRE    = regexp.MustCompile(`(?is)<body[^>]*>(.*?)</body>`)
-	scriptRE  = regexp.MustCompile(`(?is)<script.*?</script>`)
-	styleRE   = regexp.MustCompile(`(?is)<style.*?</style>`)
-	tagRE     = regexp.MustCompile(`<[^>]+>`)
-	scriptTag = regexp.MustCompile(`(?i)<script`)
+	cfTitleRE = mustRE(`(?i)<title>\s*Just a moment\.\.\.\s*</title>`)
+	bodyRE    = mustRE(`(?is)<body[^>]*>(.*?)</body>`)
+	scriptRE  = mustRE(`(?is)<script.*?</script>`)
+	styleRE   = mustRE(`(?is)<style.*?</style>`)
+	tagRE     = mustRE(`<[^>]+>`)
+	scriptTag = mustRE(`(?i)<script`)
 )
 
 // isCloudflareChallenge: the cf-mitigated header is authoritative for any 200 text response; the
@@ -782,14 +763,10 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 	extractHook("processing")
 	act.complete(status)
 
-	var defuddleRefusal error
 	jsMsg := func(fallback string) string {
 		msg := fallback
 		if isLikelyJSRendered(text) {
 			msg = "Page appears to be JavaScript-rendered (content loads dynamically)"
-		}
-		if defuddleRefusal != nil {
-			msg += "\n\n" + defuddleRefusal.Error()
 		}
 		return msg
 	}
@@ -807,12 +784,7 @@ func doHTTP(ctx context.Context, rawURL string, o ExtractOptions) httpExtracted 
 		}
 		def, err := extractWithDefuddle(text, responseURL(resp, rawURL))
 		if err != nil {
-			// A refusal is reported after the original's own verdict (below); a real failure is the URL's error.
-			if asUnsupported(err) == nil {
-				return fail(err.Error()), true
-			}
-			defuddleRefusal = err
-			return httpExtracted{}, false
+			return fail(err.Error()), true
 		}
 		if ctx.Err() != nil {
 			return fail(abortedByDeadline), true

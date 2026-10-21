@@ -1,0 +1,6 @@
+{
+ "url": "https://external-labeled-section",
+ "title": "Product Update",
+ "content": "This release includes several improvements to image processing.\n\n- *Higher resolution*. The system now processes images at up to 4096 pixels, more than three times the previous limit.[^1]\n- *Better accuracy*. Internal testing showed significant improvements in accuracy.[^2]\n\nUsers can start using these features immediately.\n\n[^1]: This is a [configuration change](https://example.com/docs/vision) rather than an API parameter, so images will be processed at higher fidelity automatically.\n\n- Benchmark A: scores reflect revised grading methodology.\n- Benchmark B: memorization screens flag a subset of problems.\n\n[^2]: Based on internal evaluations using standardized test harnesses.",
+ "error": null
+}

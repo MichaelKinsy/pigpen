@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/article",
+ "title": "Lazy srcset placeholder",
+ "content": "Lazy images may ship a tiny inline placeholder in both src and srcset while the real responsive sources wait in data-srcset.\n\n![Photo](https://images.example.com/photo-1200.jpg)\n\n![Other](https://images.example.com/other-1200.jpg)\n\nThe extracted image should use the real responsive sources rather than the placeholder source set.",
+ "error": null
+}

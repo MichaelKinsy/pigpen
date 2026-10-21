@@ -1,0 +1,6 @@
+{
+ "url": "https://temml",
+ "title": "Temml Math Test",
+ "content": "A variety of Temml-rendered math elements using the `hurmet-tex` pattern.\n\n## Accents\n\n| $\\vec{F}$ `\\vec{F}` | $\\tilde{a}$ `\\tilde{a}` | $\\hat{\\theta}$ `\\hat{\\theta}` |\n| --- | --- | --- |\n| $\\dot{a}$ `\\dot{a}` | $\\overline{AB}$ `\\overline{AB}` | $\\overbrace{AB}$ `\\overbrace{AB}` |\n\n## Fractions and Roots\n\nInline fraction: $\\frac{a}{b}$ and square root: $\\sqrt{x^2+y^2}$.\n\nCube root: $\\sqrt[3]{8}$\n\n## Display Math\n\n$$\nE = mc^2\n$$\n\n## Operators\n\n| $\\sum$ `\\sum` | $\\int$ `\\int` | $\\prod$ `\\prod` | $\\oint$ `\\oint` |\n| --- | --- | --- | --- |\n\n## Environments\n\n| $\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}$ | `\\begin{pmatrix}`   `a & b \\\\`   `c & d`   `\\end{pmatrix}` |\n| --- | --- |\n\n## Greek and Symbols\n\nGreek letters: $\\alpha$, $\\beta$, $\\gamma$, $\\Omega$\n\nRelation: $a \\leq b$, not equal: $x \\neq y$",
+ "error": null
+}

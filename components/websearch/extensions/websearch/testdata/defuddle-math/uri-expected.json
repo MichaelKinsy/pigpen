@@ -1,0 +1,367 @@
+[
+ {
+  "in": "",
+  "uri": "",
+  "component": ""
+ },
+ {
+  "in": "abc",
+  "uri": "abc",
+  "component": "abc"
+ },
+ {
+  "in": "%41",
+  "uri": "A",
+  "component": "A"
+ },
+ {
+  "in": "%2f",
+  "uri": "%2f",
+  "component": "/"
+ },
+ {
+  "in": "%2F%3b%3A%23",
+  "uri": "%2F%3b%3A%23",
+  "component": "/;:#"
+ },
+ {
+  "in": "%E2%82%AC",
+  "uri": "€",
+  "component": "€"
+ },
+ {
+  "in": "%e2%82%ac",
+  "uri": "€",
+  "component": "€"
+ },
+ {
+  "in": "%F0%9F%98%80",
+  "uri": "😀",
+  "component": "😀"
+ },
+ {
+  "in": "%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%4",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%zz",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C0%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C1%81",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%E0%80%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%ED%A0%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%ED%BF%BF",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%F4%90%80%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%F8%88%80%80%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%BF",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C3",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C3%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C3%2",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C3%28",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%E2%82",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%E2%82%A",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%E2%28%A1",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%c3%a9t%c3%a9",
+  "uri": "été",
+  "component": "été"
+ },
+ {
+  "in": "a%20b+c",
+  "uri": "a b+c",
+  "component": "a b+c"
+ },
+ {
+  "in": "#fn:1",
+  "uri": "#fn:1",
+  "component": "#fn:1"
+ },
+ {
+  "in": "#fn%3A1",
+  "uri": "#fn%3A1",
+  "component": "#fn:1"
+ },
+ {
+  "in": "#cite_note-%C3%A9",
+  "uri": "#cite_note-é",
+  "component": "#cite_note-é"
+ },
+ {
+  "in": "%25",
+  "uri": "%",
+  "component": "%"
+ },
+ {
+  "in": "%2525",
+  "uri": "%25",
+  "component": "%25"
+ },
+ {
+  "in": "a%2Fb%2fc",
+  "uri": "a%2Fb%2fc",
+  "component": "a/b/c"
+ },
+ {
+  "in": "%3Cscript%3E",
+  "uri": "<script>",
+  "component": "<script>"
+ },
+ {
+  "in": "%5Cfrac%7Ba%7D%7Bb%7D",
+  "uri": "\\frac{a}{b}",
+  "component": "\\frac{a}{b}"
+ },
+ {
+  "in": "%5C",
+  "uri": "\\",
+  "component": "\\"
+ },
+ {
+  "in": "x%2By",
+  "uri": "x%2By",
+  "component": "x+y"
+ },
+ {
+  "in": "%e4%bd%a0%e5%a5%bd",
+  "uri": "你好",
+  "component": "你好"
+ },
+ {
+  "in": "100%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%u0041",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "ünï%C3%BC",
+  "uri": "ünïü",
+  "component": "ünïü"
+ },
+ {
+  "in": "😀%F0%9F%98%80",
+  "uri": "😀😀",
+  "component": "😀😀"
+ },
+ {
+  "in": "%ef%bf%bd",
+  "uri": "�",
+  "component": "�"
+ },
+ {
+  "in": "%EF%BF%BE",
+  "uri": "￾",
+  "component": "￾"
+ },
+ {
+  "in": "%F0%90%80%80",
+  "uri": "𐀀",
+  "component": "𐀀"
+ },
+ {
+  "in": "%F4%8F%BF%BF",
+  "uri": "􏿿",
+  "component": "􏿿"
+ },
+ {
+  "in": "%2",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%G1",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%1G",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "\u0000%00",
+  "uri": "\u0000\u0000",
+  "component": "\u0000\u0000"
+ },
+ {
+  "in": "%7f%80",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%FF",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%C2%A0",
+  "uri": " ",
+  "component": " "
+ },
+ {
+  "in": "%E3%80%80",
+  "uri": "　",
+  "component": "　"
+ },
+ {
+  "in": "%0A%0D",
+  "uri": "\n\r",
+  "component": "\n\r"
+ },
+ {
+  "in": "a%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%41%",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ },
+ {
+  "in": "%41%4",
+  "uri": null,
+  "uriErr": "URIError",
+  "component": null,
+  "componentErr": "URIError"
+ }
+]

@@ -1,0 +1,6 @@
+{
+ "url": "https://example.com/article",
+ "title": null,
+ "content": null,
+ "error": "Defuddle failed to process document: Expected name, found : > div > div.story"
+}

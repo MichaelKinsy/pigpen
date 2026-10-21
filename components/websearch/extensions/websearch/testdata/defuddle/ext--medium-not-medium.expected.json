@@ -1,0 +1,6 @@
+{
+ "url": "https://medium.com/@someone/not-a-medium-page",
+ "title": "Not Medium",
+ "content": "This article is on a medium.com host but has neither the metered class nor the site name, so the extractor declines.\n\nThe generic pipeline handles it instead, keeping both paragraphs of the text.",
+ "error": null
+}

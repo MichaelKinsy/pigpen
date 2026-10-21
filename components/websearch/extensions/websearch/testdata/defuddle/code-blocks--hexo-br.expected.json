@@ -1,0 +1,6 @@
+{
+ "url": "https://code-blocks--hexo-br",
+ "title": "Sample Technical Post",
+ "content": "This post shows how to use the sample API. Here is the code:\n\n```sh\necho hello\n```\n\nHere is a longer example with multiple lines:\n\n```cpp\n#include <iostream>\n\nint main() {\n  std::cout << \"hello\";\n  return 0;\n}\n```\n\nAnd a plain text block:\n\n```\nfoo bar\nbaz qux\n```\n\nThat is all for this post.",
+ "error": null
+}

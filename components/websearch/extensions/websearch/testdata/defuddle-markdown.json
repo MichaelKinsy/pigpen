@@ -1,0 +1,142 @@
+[
+ {
+  "name": "task-list-checked-and-open",
+  "html": "<ul><li class=\"task-list-item\"><input type=\"checkbox\" checked=\"checked\" disabled> Done</li><li class=\"task-list-item\"><input type=\"checkbox\" disabled> Todo</li><li class=\"task-list-item\"><input type=\"checkbox\" checked> Boolean checked attribute</li><li class=\"task-list-item\"><input type=\"checkbox\" checked=\"true\"> Checked is true</li></ul>",
+  "url": "https://example.com/post",
+  "markdown": "- [x] Done\n- [ ] Todo\n- [ ] Boolean checked attribute\n- [x] Checked is true",
+  "error": null
+ },
+ {
+  "name": "task-list-nested",
+  "html": "<ul class=\"contains-task-list\"><li class=\"task-list-item\"><input type=\"checkbox\" checked=\"checked\"> Parent<ul><li class=\"task-list-item\"><input type=\"checkbox\"> Child</li></ul></li><li>Plain item</li></ul>",
+  "url": "https://example.com/post",
+  "markdown": "- [x] Parent\n\t- [ ] Child\n- Plain item",
+  "error": null
+ },
+ {
+  "name": "task-list-checkbox-without-class",
+  "html": "<ul><li><input type=\"checkbox\" checked> No class</li></ul>",
+  "url": "https://example.com/post",
+  "markdown": "- No class",
+  "error": null
+ },
+ {
+  "name": "code-block-blank-line-run",
+  "html": "<pre><code>first\n\n\n\nsecond\n\n\nthird</code></pre>",
+  "url": "https://example.com/post",
+  "markdown": "```\nfirst\n\nsecond\n\nthird\n```",
+  "error": null
+ },
+ {
+  "name": "code-block-blank-lines-between-paragraphs",
+  "html": "<p>One</p><pre><code>a\n\n\n\n\nb</code></pre><p>Two</p>",
+  "url": "https://example.com/post",
+  "markdown": "One\n\n```\na\n\nb\n```\n\nTwo",
+  "error": null
+ },
+ {
+  "name": "inline-code-newline-run",
+  "html": "<p>Text <code>a\n\n\n\nb</code> after.</p>",
+  "url": "https://example.com/post",
+  "markdown": "Text `a    b` after.",
+  "error": null
+ },
+ {
+  "name": "paragraph-with-empty-paragraphs",
+  "html": "<p>One</p><p></p><p></p><p></p><p>Two</p>",
+  "url": "https://example.com/post",
+  "markdown": "One\n\nTwo",
+  "error": null
+ },
+ {
+  "name": "leading-no-break-space",
+  "html": "<p>&nbsp;Starts with a no-break space</p><p>Second</p>",
+  "url": "https://example.com/post",
+  "markdown": "Starts with a no-break space\n\nSecond",
+  "error": null
+ },
+ {
+  "name": "leading-em-space",
+  "html": "<p> Starts with an em space</p>",
+  "url": "https://example.com/post",
+  "markdown": "Starts with an em space",
+  "error": null
+ },
+ {
+  "name": "leading-bom",
+  "html": "<p>﻿Starts with a byte order mark</p>",
+  "url": "https://example.com/post",
+  "markdown": "Starts with a byte order mark",
+  "error": null
+ },
+ {
+  "name": "leading-spaces-then-text",
+  "html": "<p>   Starts with spaces</p>",
+  "url": "https://example.com/post",
+  "markdown": "Starts with spaces",
+  "error": null
+ },
+ {
+  "name": "trailing-no-break-space",
+  "html": "<p>Ends with a no-break space&nbsp;</p>",
+  "url": "https://example.com/post",
+  "markdown": "Ends with a no-break space",
+  "error": null
+ },
+ {
+  "name": "trailing-break",
+  "html": "<p>Ends with a break<br></p>",
+  "url": "https://example.com/post",
+  "markdown": "Ends with a break",
+  "error": null
+ },
+ {
+  "name": "leading-h1-removed",
+  "html": "<h1>Title</h1><p>Body</p>",
+  "url": "https://example.com/post",
+  "markdown": "Body",
+  "error": null
+ },
+ {
+  "name": "block-math-ampersand",
+  "html": "<math display=\"block\" data-latex=\"x &amp;= y\"><mi>x</mi></math>",
+  "url": "https://example.com/post",
+  "markdown": "$$\n\\begin{aligned}\nx &= y\n\\end{aligned}\n$$",
+  "error": null
+ },
+ {
+  "name": "block-math-ampersand-in-text",
+  "html": "<p>Before.</p><math display=\"block\" data-latex=\"a &amp;= b + c\"></math><p>After.</p>",
+  "url": "https://example.com/post",
+  "markdown": "Before.\n\nAfter.",
+  "error": null
+ },
+ {
+  "name": "block-math-line-break",
+  "html": "<math display=\"block\" data-latex=\"a \\\\ b\"><mi>a</mi></math>",
+  "url": "https://example.com/post",
+  "markdown": "$$\n\\begin{aligned}\na \\\\ b\n\\end{aligned}\n$$",
+  "error": null
+ },
+ {
+  "name": "block-math-plain",
+  "html": "<math display=\"block\" data-latex=\"x + y\"><mi>x</mi></math>",
+  "url": "https://example.com/post",
+  "markdown": "$$\nx + y\n$$",
+  "error": null
+ },
+ {
+  "name": "block-math-environment",
+  "html": "<math display=\"block\" data-latex=\"\\begin{matrix} a &amp; b \\end{matrix}\"><mi>a</mi></math>",
+  "url": "https://example.com/post",
+  "markdown": "$$\n\\begin{aligned}\na & b\n\\end{aligned}\n$$",
+  "error": null
+ },
+ {
+  "name": "inline-math-ampersand",
+  "html": "<p>Text <math data-latex=\"a &amp;= b\">x</math> more text.</p>",
+  "url": "https://example.com/post",
+  "markdown": "Text $a &= b$ more text.",
+  "error": null
+ }
+]

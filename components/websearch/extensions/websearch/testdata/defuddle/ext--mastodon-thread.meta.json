@@ -1,0 +1,10 @@
+{
+ "author": "Alice :wave:",
+ "published": "2024-03-04",
+ "description": "Hello @bob see https://example.com/p",
+ "site": "Mastodon",
+ "language": "",
+ "image": "",
+ "extractorType": "mastodon",
+ "wordCount": 24
+}

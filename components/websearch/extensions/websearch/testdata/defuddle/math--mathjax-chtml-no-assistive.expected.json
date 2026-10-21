@@ -1,0 +1,6 @@
+{
+ "url": "https://mathjax-chtml-no-assistive",
+ "title": "MathJax CHTML without assistive MathML",
+ "content": "## Group estimation strategies\n\nThe body of placeholder prose establishes the article as the main content so the scoring pipeline keeps this section. We restate the joint estimate, its standard deviation, and its precision below.\n\n## Reliability of the joint estimate\n\nWe assume that the group computes its joint estimate by averaging the individual estimates:\n\n$$\nz = \\frac{1}{n} \\sum_{i = 1}^{n} x_{i}\n$$\n\nFor a given group size, the standard deviation of the joint estimate is\n\n$$\n\\sigma_{group} = \\frac{\\sigma}{\\sqrt{n}}\n$$\n\nand the precision of the joint estimate is\n\n$$\np_{group} = \\frac{1}{\\sigma_{group}^{2}}\n$$\n\nEach estimate is drawn from a Gaussian distribution $N \\left(s , \\sigma_{i}^{2}\\right)$ with a fixed mean.\n\n## Unrendered formula\n\nThis lazily-loaded formula was never rendered and has no recoverable content, so it is dropped:\n\nThe surrounding prose continues after the dropped placeholder so the section is not empty.",
+ "error": null
+}

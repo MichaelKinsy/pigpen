@@ -1,0 +1,54 @@
+{
+ "name": "fetch-defuddle-processing-failure",
+ "description": "fetch_content on a page whose Defuddle run throws (the selector :a of the RSC streaming ids is not a CSS pseudo-class): the error line and the Fallback options list, the fifth case of test/rsc-fallback.",
+ "agentFiles": {
+  "web-search.json": "{\"toolActivation\": \"eager\", \"ssrf\": {\"allowRanges\": [\"127.0.0.0/8\"]}}"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "fetch_content",
+     "arguments": {
+      "url": "{{server:web}}/broken"
+     }
+    }
+   ]
+  },
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "research this"
+   }
+  }
+ ],
+ "servers": {
+  "web": {
+   "routes": [
+    {
+     "path": "/broken",
+     "headers": {
+      "content-type": "text/html"
+     },
+     "body": "<!doctype html><html><head><title>Defuddle selector failure</title></head><body><nav><a href=\"/\">Home</a></nav><template id=\"B:0\"></template><div hidden id=\"S:a\"><h1>Defuddle selector failure</h1><p>This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. This is substantial article text that should be extracted as the page's main content. </p></div><template id=\"P:a\"></template><footer><p>Copyright 2026 Example Inc. All rights reserved.</p></footer></body></html>"
+    }
+   ]
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "(responseId[\\\": ]+)[0-9a-z]{9,14}\\b",
+   "replacement": "${1}<response-id>"
+  },
+  {
+   "pattern": "^[m-o][0-9a-z]{8,13}$",
+   "replacement": "<response-id>"
+  }
+ ]
+}

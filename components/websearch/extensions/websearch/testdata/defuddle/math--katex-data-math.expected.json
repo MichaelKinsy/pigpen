@@ -1,0 +1,6 @@
+{
+ "url": "https://gemini.google.com/app",
+ "title": "Gemini - Math response",
+ "content": "### Predicate Logic\n\n$\\forall x (M(x) \\rightarrow D(x))$ — For all $x$, if $x$ is a man, then $x$ is mortal.\n\n### Quadratic Formula\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\n$$",
+ "error": null
+}

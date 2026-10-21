@@ -1,0 +1,6 @@
+{
+ "url": "https://leetcode.com/problems/longest-special-sequence/description",
+ "title": "Longest Special Sequence",
+ "content": "Given a string `s`, return *the longest* *special* *subsequence* in `s`.\n\n**Example 1:**\n\n```\nInput: s = \"babad\"\nOutput: \"bab\"\nExplanation: \"aba\" is also a valid answer.\n```\n\n**Example 2:**\n\n```\nInput: s = \"cbbd\"\nOutput: \"bb\"\n```\n\n**Constraints:**\n\n- `1 <= s.length <= 1000`\n- `s` consists of only digits and English letters.",
+ "error": null
+}
