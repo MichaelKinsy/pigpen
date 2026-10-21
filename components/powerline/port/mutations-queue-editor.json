@@ -90,12 +90,6 @@
   "replace": ""
  },
  {
-  "name": "app-repaint-guard",
-  "file": "extension.go",
-  "find": "if !a.repaintPending.CompareAndSwap(false, true) {\n\t\treturn\n\t}",
-  "replace": "if false {\n\t\treturn\n\t}"
- },
- {
   "name": "editor-queue-attach",
   "file": "editor_ext.go",
   "find": "k.a.pl.queue.editor = editorQueueAdapter{e} // called with a.mu held, from the core's setup",
