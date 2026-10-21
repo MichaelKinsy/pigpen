@@ -663,7 +663,7 @@
   "name": "setting-notice-repeats",
   "file": "extension.go",
   "find": "if text != \"\" && !same {",
-  "replace": "if text != \"\" {"
+  "replace": "if text != \"\" && (!same || true) {"
  },
  {
   "name": "setting-notice-silent",
@@ -675,13 +675,13 @@
   "name": "start-skips-agent-file-check",
   "file": "bus.go",
   "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
  },
  {
   "name": "rpc-skips-option-check",
   "file": "bus.go",
   "find": "if feature := unportedSpawnOption(opts); feature != \"\" {",
-  "replace": "if false {"
+  "replace": "if feature := unportedSpawnOption(opts); feature != \"\" && false {"
  },
  {
   "name": "rpc-name-dropped",
@@ -759,7 +759,7 @@
   "name": "cleanup-ignores-age",
   "file": "sessions.go",
   "find": "|| !r.CompletedAt.Before(cutoff) {",
-  "replace": "{"
+  "replace": "|| (r.CompletedAt.Before(cutoff) && false) {"
  },
  {
   "name": "cleanup-removes-running",

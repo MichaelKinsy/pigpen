@@ -180,6 +180,47 @@ func TestAStopAndAResumeThatMeetOnAQueuedAgentNeitherRaceNorPanic(t *testing.T) 
 	}
 }
 
+// A stopped record's channels are closed in the same step that makes it visible as stopped: a waiter that sees the
+// status must not find the channel it waits on still open.
+func TestAStoppedQueuedAgentIsNeverVisibleBeforeItsChannelsAreClosed(t *testing.T) {
+	for range 500 {
+		fl := &fleet{}
+		m := newManager(fl.start, nil)
+		m.maxConcurrent = 1
+		m.spawn("general-purpose", "a", "", childSpec{}, true)
+		fl.wait(t, 1)
+		b := m.spawn("general-purpose", "b", "", childSpec{}, true) // queued
+		seen := make(chan string, 1)
+		go func() {
+			for {
+				m.mu.Lock()
+				if b.Status == statusStopped {
+					done, started := b.done, b.started
+					m.mu.Unlock()
+					for _, ch := range []chan struct{}{done, started} {
+						select {
+						case <-ch:
+						default:
+							seen <- "a stopped agent's channel was still open"
+							return
+						}
+					}
+					seen <- ""
+					return
+				}
+				m.mu.Unlock()
+				runtime.Gosched()
+			}
+		}()
+		m.abort(b)
+		if msg := <-seen; msg != "" {
+			m.dispose()
+			t.Fatal(msg)
+		}
+		m.dispose()
+	}
+}
+
 func TestAPanicInARunSettlesTheAgentAndStartsTheNext(t *testing.T) {
 	fl := &fleet{}
 	var mu sync.Mutex

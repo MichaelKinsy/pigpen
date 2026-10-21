@@ -139,6 +139,9 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
+		recs := r.app.mgr.list()
+		eq(t, recs[0].Name, "scout") // the name is the agent's, and addresses it
+		eq(t, recs[0].Alias, "scout")
 	})
 }
 
