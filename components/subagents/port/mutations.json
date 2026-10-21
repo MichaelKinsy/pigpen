@@ -1016,8 +1016,8 @@
  {
   "name": "ack-dotdot",
   "file": "runtimeack.go",
-  "find": "&&\n\t\t!strings.Contains(s, \"..\")",
-  "replace": ""
+  "find": "!strings.Contains(s, \"..\")",
+  "replace": "!strings.Contains(s, \"\u0000\")"
  },
  {
   "name": "ack-dedupe",
@@ -1065,7 +1065,7 @@
   "name": "bindings-finite",
   "file": "extbindings.go",
   "find": "if math.IsNaN(v) || math.IsInf(v, 0) {",
-  "replace": "if false {"
+  "replace": "if math.IsNaN(v) && math.IsInf(v, 0) {"
  },
  {
   "name": "bindings-bytes",
@@ -1371,25 +1371,25 @@
   "name": "profile-dominated",
   "file": "profiles.go",
   "find": "if i != j && dominates(o, c) {",
-  "replace": "if false {"
+  "replace": "if i != j && dominates(o, c) && false {"
  },
  {
   "name": "profile-stale",
   "file": "profiles.go",
   "find": "return float64(time.Since(t).Milliseconds()) > maxAgeDays*24*60*60*1000",
-  "replace": "return false"
+  "replace": "return float64(time.Since(t).Milliseconds()) > maxAgeDays*24*60*60*1000 && false"
  },
  {
   "name": "profile-probe-cache",
   "file": "profiles.go",
   "find": "probe, ok := cache[probeID]\n\t\tif !ok {",
-  "replace": "probe, ok := cache[probeID]\n\t\tif true {"
+  "replace": "probe, ok := cache[probeID]\n\t\tif !ok || true {"
  },
  {
   "name": "profile-suffix",
   "file": "profiles.go",
   "find": "probeID = info.FullID + suffix",
-  "replace": "probeID = info.FullID"
+  "replace": "probeID = info.FullID + suffix[:0]"
  },
  {
   "name": "admin-refresh-warn",
@@ -1419,7 +1419,7 @@
   "name": "admin-unchanged",
   "file": "slash_admin.go",
   "find": "&& !(throughSettings && projectOwns) {",
-  "replace": "{"
+  "replace": "&& !(throughSettings && projectOwns && false) {"
  },
  {
   "name": "admin-hidden-disabled",
@@ -1430,8 +1430,8 @@
  {
   "name": "slash-force-flag",
   "file": "slash_commands.go",
-  "find": "force := forceSuffixRe.MatchString(trimmed)",
-  "replace": "force := false"
+  "find": "force = forceSuffixRe.MatchString(trimmed)",
+  "replace": "force = false"
  },
  {
   "name": "slash-guide-usage",
