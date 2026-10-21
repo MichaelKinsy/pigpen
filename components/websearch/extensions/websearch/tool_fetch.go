@@ -60,39 +60,35 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 		return errorOutput("auth cannot be combined with mode answer.", "auth cannot be combined with mode answer", nil), nil
 	}
 	if opts.Auth != nil {
-		msg := "authFetch profiles (local browser-cookie fetching) are not available in this Go port; no browser cookies are read"
-		return errorOutput(msg, msg, nil), nil
+		return ToolOutput{}, unsupported("authenticated fetch (auth profiles read local browser cookies)")
 	}
 	if len(urlList) == 0 {
 		return errorOutput("No URL provided.", "No URL provided", nil), nil
+	}
+	if mode == "answer" {
+		return ToolOutput{}, unsupported("fetch_content mode answer (answering from a page needs a model call)")
 	}
 	if update != nil {
 		update(textOutput(fmt.Sprintf("Fetching %d URL(s)...", len(urlList)), map[string]any{"phase": "fetch", "progress": 0}))
 	}
 
 	ex := ExtractOptions{Mode: mode, Frames: opts.Frames, Timestamp: opts.Timestamp, ForceClone: opts.ForceClone != nil && *opts.ForceClone, Model: opts.Model, ToolNames: r.registeredNames()}
-	if mode != "answer" {
-		ex.Prompt = opts.Prompt
-	}
+	ex.Prompt = opts.Prompt
 	fetched := FetchAllContent(ctx, urlList, ex)
 	if ctx.Err() != nil {
 		return ToolOutput{}, abortError(ctx.Err())
 	}
 
-	presented := fetched
-	if mode == "answer" {
-		presented = make([]ExtractedContent, len(fetched))
-		for i, res := range fetched {
-			switch {
-			case res.Error != nil:
-			case res.Thumbnail != nil || strings.HasPrefix(res.MimeType, "image/"):
-				res.Error = errp("Page answer requires textual fetched content")
-			default:
-				res.Error = errp("Page answer failed: answering from a page with a model is not available in this Go port yet (planned for a later slice)")
+	// A URL the original would hand to an extractor this port lacks refuses the whole call: a
+	// partial result would pass for the original's.
+	for _, res := range fetched {
+		if res.Error != nil {
+			if err := refusalIn(*res.Error); err != nil {
+				return ToolOutput{}, err
 			}
-			presented[i] = res
 		}
 	}
+	presented := fetched
 	successful, totalChars := 0, 0
 	for _, p := range presented {
 		if p.Error == nil {
