@@ -2,6 +2,7 @@ package tintinweb_subagents
 
 import (
 	"os"
+	"path/filepath"
 	"os/exec"
 	"slices"
 	"strings"
@@ -171,8 +172,18 @@ func TestAgentRunnerNestedTwins(t *testing.T) {
 
 	tw(t, f, "injects no nested tools once the effective cap is reached", func(t *testing.T) {
 		// At the cap the agent can never spawn, and so can never own a child to fetch from or steer.
-		setMaxSubagentDepth(1) // read when the agent starts
-		spec := childOf(t, "extensions: false\nallowed_subagents: all\n")
+		cwd := t.TempDir()
+		writeAgentFile(t, cwd, "worker", "extensions: false\nallowed_subagents: all\n")
+		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
+		if err := os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"maxSubagentDepth": 1}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		r := startRigIn(t, cwd)
+		r.must("Agent", obj{"prompt": "go", "description": "d", "subagent_type": "worker"})
+		spec := r.fleet.waitPrompt(t, "go").spec
 		eq(t, spec.nestedActive(), false)
 		eq(t, withTools(childArgs(spec)), false)
 		eq(t, envOf(spec), map[string]string{depthEnv: "1"})
