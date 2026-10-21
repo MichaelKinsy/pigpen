@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -685,11 +686,24 @@ func newRuleSet(sources, texts []string, maxChars int) *RuleSet {
 // rulesFor are the rules that apply to a path: unscoped rules plus those whose `paths` match.
 func rulesFor(set *RuleSet, path string) []Rule {
 	var out []Rule
-	for _, rule := range set.Rules {
-		if len(rule.Paths) == 0 {
-			out = append(out, rule)
-		} else if _, ok := matchGlobFirst(path, rule.Paths); ok {
-			out = append(out, rule)
+	// Rules of a file commonly share one `paths:` list: the answer for the list just asked about is reused.
+	var lastPaths []string
+	lastMatch, asked := false, false
+	for i := range set.Rules {
+		rule := &set.Rules[i]
+		keep := len(rule.Paths) == 0
+		if !keep {
+			if !asked || !slices.Equal(rule.Paths, lastPaths) {
+				_, lastMatch = matchGlobFirst(path, rule.Paths)
+				lastPaths, asked = rule.Paths, true
+			}
+			keep = lastMatch
+		}
+		if keep {
+			if out == nil {
+				out = make([]Rule, 0, len(set.Rules))
+			}
+			out = append(out, *rule)
 		}
 	}
 	return out
@@ -697,10 +711,14 @@ func rulesFor(set *RuleSet, path string) []Rule {
 
 // editRulesFor are the rules asked about a write or edit: those that apply to the path without a `when: turn` header.
 func editRulesFor(set *RuleSet, path string) []Rule {
+	scoped := rulesFor(set, path)
 	var out []Rule
-	for _, rule := range rulesFor(set, path) {
-		if rule.When != "turn" {
-			out = append(out, rule)
+	for i := range scoped {
+		if scoped[i].When != "turn" {
+			if out == nil {
+				out = make([]Rule, 0, len(scoped))
+			}
+			out = append(out, scoped[i])
 		}
 	}
 	return out
@@ -934,13 +952,20 @@ func describeTarget(tool string, input map[string]any, cwd string) *RulesTarget 
 
 // outcomeChoice is a choice question over the four outcomes.
 func outcomeChoice(instructions string) Question {
-	q := Question{Type: "choice", Instructions: instructions, Criteria: map[string]string{}}
-	for _, key := range rulesQuestions().outcomeOrder {
-		q.Criteria[key] = rulesQuestions().outcomes[key]
-		q.CriteriaOrder = append(q.CriteriaOrder, key)
-	}
-	return q
+	criteria, order := outcomeCriteria()
+	return Question{Type: "choice", Instructions: instructions, Criteria: criteria, CriteriaOrder: order}
 }
+
+// outcomeCriteria is the wording of the four outcomes, built once: every rule's question shares the map and the order,
+// and nothing writes to them (a request is only read, by the backends and the answer validation).
+var outcomeCriteria = sync.OnceValues(func() (map[string]string, []string) {
+	q := rulesQuestions()
+	criteria := make(map[string]string, len(q.outcomeOrder))
+	for _, key := range q.outcomeOrder {
+		criteria[key] = q.outcomes[key]
+	}
+	return criteria, append([]string(nil), q.outcomeOrder...)
+})
 
 func ruleQuestionText(frame string, rule Rule) string {
 	body := "(no further detail beyond the heading)"
@@ -1073,7 +1098,7 @@ func bySeverityThenScore(list []RuleFinding) {
 // one, else the global threshold, and the soft tier sits under that cutoff. Findings are ordered severity first, then
 // the strongest score.
 func scoreAnswers(answers map[string]Answer, entries []RuleScoreEntry, config RulesConfig) RuleScoring {
-	out := RuleScoring{Scores: []RuleScore{}}
+	out := RuleScoring{Scores: make([]RuleScore, 0, len(entries))}
 	for _, entry := range entries {
 		answer, ok := answers[entry.Key]
 		if !ok || answer.Choice == "" {
@@ -1117,9 +1142,10 @@ func scoreRuleAnswers(applicable []Rule, answers map[string]Answer, config Rules
 	if aggregateName != nil {
 		entries = []RuleScoreEntry{{Key: aggregateQuestion, ID: aggregateQuestion, Name: *aggregateName}}
 	} else {
+		entries = make([]RuleScoreEntry, 0, len(applicable))
 		for i := range applicable {
-			rule := applicable[i]
-			entries = append(entries, RuleScoreEntry{Key: "rule_" + rule.ID, ID: rule.ID, Name: rule.Name, Body: rule.Body, Rule: &rule})
+			rule := &applicable[i]
+			entries = append(entries, RuleScoreEntry{Key: "rule_" + rule.ID, ID: rule.ID, Name: rule.Name, Body: rule.Body, Rule: rule})
 		}
 	}
 	return scoreAnswers(answers, entries, config)
