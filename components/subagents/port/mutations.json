@@ -764,8 +764,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions",
-  "replace": "runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions"
+  "find": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})",
+  "replace": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions{TimeoutMs: pol.TimeoutMs})\n\t_ = model"
  },
  {
   "name": "ext-chain-task",
@@ -1750,6 +1750,30 @@
   "file": "mission_store.go",
   "find": "\tpruneTerminalMissions(loc, retain)\n\treturn created, nil",
   "replace": "\treturn created, nil"
+ },
+ {
+  "name": "mis-prune-count-skipped",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mis-prune-count-strict",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if countJSONFiles(loc.MissionDir) < maxTerminal {"
+ },
+ {
+  "name": "mis-prune-count-loose",
+  "file": "mission_store.go",
+  "find": "if countJSONFiles(loc.MissionDir) <= maxTerminal {",
+  "replace": "if countJSONFiles(loc.MissionDir) <= maxTerminal+1 {"
+ },
+ {
+  "name": "mis-prune-count-suffix",
+  "file": "mission_store.go",
+  "find": "if strings.HasSuffix(e.Name(), \".json\") {\n\t\t\tn++",
+  "replace": "if true {\n\t\t\tn++"
  },
  {
   "name": "mis-update-gate",

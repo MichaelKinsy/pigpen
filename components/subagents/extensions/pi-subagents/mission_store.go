@@ -243,6 +243,10 @@ func writeMission(loc MissionStoreLocation, record *MissionRecord) (*MissionReco
 }
 
 func pruneTerminalMissions(loc MissionStoreLocation, maxTerminal int) {
+	// Every launch prunes. With no more record files than the bound there is nothing to prune, so the files are not read.
+	if countJSONFiles(loc.MissionDir) <= maxTerminal {
+		return
+	}
 	listed, _ := listMissions(loc)
 	var terminal []*MissionRecord
 	for _, r := range listed.Records {
@@ -372,7 +376,27 @@ func jsonFileNames(dir string) []string {
 	return names
 }
 
+func countJSONFiles(dir string) int {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0
+	}
+	n := 0
+	for _, e := range entries {
+		if strings.HasSuffix(e.Name(), ".json") {
+			n++
+		}
+	}
+	return n
+}
+
+// missionFileParsed is a test seam: it sees every record file the store reads and parses for a listing.
+var missionFileParsed func(path string)
+
 func readMissionFile(filePath string) (*MissionRecord, error) {
+	if missionFileParsed != nil {
+		missionFileParsed(filePath)
+	}
 	raw, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
