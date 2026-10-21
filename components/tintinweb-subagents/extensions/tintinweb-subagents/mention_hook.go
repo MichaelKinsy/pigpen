@@ -89,15 +89,15 @@ func (a *app) handleInput(ctx sdk.Context, data map[string]any) any {
 	if mode == "off" {
 		return inputContinue
 	}
+	text, _ := data["text"].(string)
+	handle, message, ok := parseMention(text)
+	if !ok {
+		return inputContinue
+	}
 	// Claiming the turn is TUI only, matching the `@` completion that teaches the syntax: a headless claim would answer
 	// with silence. `model` mode queues a clone and lets the answer arrive as a notification, so it alone acts headless.
 	canDispatchDirectly := ctx.Mode() == "tui"
 	if !canDispatchDirectly && mode != "model" {
-		return inputContinue
-	}
-	text, _ := data["text"].(string)
-	handle, message, ok := parseMention(text)
-	if !ok {
 		return inputContinue
 	}
 	// `@main` addresses the main conversation, never a subagent: the escape hatch for text that reads as a mention.

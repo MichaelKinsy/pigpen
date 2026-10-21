@@ -111,3 +111,19 @@ func BenchmarkParseMention(b *testing.B) {
 		_, _, _ = parseMention("@explore find every retry marker in the repository and report")
 	}
 }
+
+// The hook runs on every prompt the user submits. Text that is not a mention must cost no more than the parse.
+func benchInput(b *testing.B, text string) {
+	a := newApp(nil, nil)
+	data := map[string]any{"text": text, "source": "interactive"}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = a.handleInput(sdk.Context{}, data)
+	}
+}
+
+func BenchmarkInputHookPlainText(b *testing.B) {
+	benchInput(b, "please look at the failing build in the CI pipeline and tell me what changed")
+}
+func BenchmarkInputHookFilePath(b *testing.B) { benchInput(b, "@src/index.ts summarize this") }
