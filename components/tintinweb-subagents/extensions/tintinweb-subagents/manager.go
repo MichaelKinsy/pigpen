@@ -201,6 +201,8 @@ type manager struct {
 	// git runs git for worktree isolation; wtRepos are the repositories worktrees were made in (pruned at shutdown).
 	git     gitFn
 	wtRepos map[string]bool
+	// account runs for an owned child before it is reported settled: its spend is folded into its owner's (nested.go).
+	account func(*agentRecord)
 }
 
 // hooksFor is what the record's child reports into. upstream: agent-manager.ts onAssistantUsage, onCompaction.
@@ -453,6 +455,17 @@ func (m *manager) listTombstones() []tombstone {
 	return out
 }
 
+// listTopLevel is the session's own agents, the ones every surface lists. upstream: listAgents().filter(isTopLevelAgent).
+func (m *manager) listTopLevel() []*agentRecord {
+	var out []*agentRecord
+	for _, r := range m.list() {
+		if r.topLevel() {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
 // list is the records in the order they were spawned.
 func (m *manager) list() []*agentRecord {
 	m.mu.Lock()
@@ -499,6 +512,11 @@ func (m *manager) spawnWith(typ, description string, spec childSpec, o spawnOpti
 		done: make(chan struct{}), started: make(chan struct{}), setup: make(chan struct{}), startGate: make(chan struct{}), StartedAt: m.now()}
 	if spec.SessionName != "" { // upstream: session.setSessionName(`${name}#${agentId.slice(0, 8)}`)
 		r.spec.SessionName = spec.SessionName + "#" + r.ID[:min(8, len(r.ID))]
+	}
+	r.spec.AgentID = r.ID // the owner of the children this agent spawns (nested.go)
+	r.spec.Depth = r.Depth
+	if o.MaxSubagentDepth != 0 {
+		r.spec.MaxDepth = o.MaxSubagentDepth
 	}
 	r.Status = statusRunning
 	if o.Background {
@@ -785,6 +803,10 @@ func (m *manager) run(r *agentRecord) {
 	}
 	stop := r.stopped
 	done := r.done // this run's: a resume that lands once the record has settled replaces it
+	if err != nil && rr == nil && !r.stopped {
+		// A waiter released by `started` must find the failure: a child that did not start is not "running".
+		r.Status, r.Error = statusError, err.Error()
+	}
 	r.closeStarted()
 	m.mu.Unlock()
 	if replaced != nil {
@@ -845,6 +867,7 @@ func (m *manager) run(r *agentRecord) {
 	}
 	if res != nil {
 		r.Result, r.ToolUses, r.Turns, r.WrappedUp = res.Text, res.ToolUses+len(spec.Warnings), res.Turns, res.WrappedUp
+		addUsage(&r.Usage, res.Nested) // the spend of the agents it owned is its own too. upstream: nested-tools.ts onAssistantUsage
 		r.ContextPercent, r.Conversation, r.StructuredJSON, r.StructuredRetried = res.ContextPercent, res.Conversation, res.StructuredJSON, res.StructuredRetried
 	}
 	// A foreground agent's result is delivered inline, so nothing is left to announce.
@@ -868,6 +891,9 @@ func (m *manager) run(r *agentRecord) {
 	}
 	if closingCancel != nil {
 		closingCancel()
+	}
+	if m.account != nil && !r.topLevel() {
+		m.account(r)
 	}
 	m.abortOwnedChildren(r.ID)
 	if m.onSettle != nil && (rr == nil || rr.background) { // a foreground resume is not announced

@@ -26,7 +26,7 @@ or take the [`pig-essentials`](../../piglets/pig-essentials/README.md) Piglet, w
 
 Each agent is a child `pig --mode rpc` process, started in your workspace with the agent's tools and system prompt,
 the parent's model and thinking level (unless the call or the agent file sets its own), and the task as its prompt. The original runs the agent inside Pi's process through Pi's SDK; a Go extension cannot, so an agent here
-costs one process (and one start-up of pig). A child registers no agent tools, so there is no nesting. The pig that
+costs one process (and one start-up of pig). A child registers no top-level agent tools; an agent whose file says `allowed_subagents` gets the nested tools instead (see Nested delegation). The pig that
 is started is, in order: `TINTINWEB_SUBAGENTS_PIG_BINARY`, the pig that started this extension (`PIG_HARNESS_BINARY`,
 which PiG sets for its extension processes), the parent process (Linux and Android), this executable (in a Piglet
 Binary, the Binary itself, so agents have the same built-in members), `pig` on `PATH`; the first that answers
@@ -71,6 +71,25 @@ extensions, no skills and no `ext:` selectors, exactly as in the original. A chi
 selectors and `disallowed_tools` are applied as pig flags (`--exclude-tools`, `--tools`) over the tools the parent's
 registry knows; see `port/PORT.md` for what that cannot reach.
 
+## Nested delegation
+
+An agent whose file says `allowed_subagents` (`all`, `*`, `true`, or a list of agent types) can start agents of its own;
+without it a child has no agent tools. A nested agent gets three tools, the original's: `Agent` (a "child-safe" version:
+`prompt`, `description`, `subagent_type` limited to the allowed types, and the optional parameters; **foreground by
+default**, the call returns the child's answer inline), `get_subagent_result` and `steer_subagent`. All three work on
+the agents *that agent* started, and nothing else: another agent's id answers "not found or not owned by this parent".
+Nested agents take no concurrency slot, have no handle or name, appear nowhere in `/agents`, and emit none of the
+`subagents:*` events and no completion notification; their owner is the only one that hears of them.
+
+`maxSubagentDepth` in `subagents.json` (default 2, 0 to 16) is the ceiling: the main session is 0, its subagents 1, their
+children 2. An agent at the ceiling is given no nested tools (and a call that gets past that says `Nested subagent call
+blocked (depth=2, max=2). Complete the task directly.`); 0 or 1 switches nesting off. The ceiling of a branch is fixed
+when its first agent starts. An agent with `isolated: true` (in the file or the call) never gets nested tools; one with
+`extensions: false` does (its tool list is the built-ins and the nested tools). A nested agent that is still running
+when its owner finishes is stopped, and so is everything below it when an agent is stopped or the session ends. A
+nested child's token spend counts in every owner's total, so the `(N tool uses, X token)` of the top-level agent covers
+the tree. See [port/PORT.md](port/PORT.md) D6 for how this works across processes.
+
 ## Agent files
 
 Custom agents are Markdown files with YAML frontmatter, read from `<agent dir>/agents/`, `<workspace>/.agents/agents/`
@@ -92,6 +111,7 @@ original; all 24 keys are parsed alike, and a value of the wrong shape is droppe
 | `toolDescriptionMode` (`full`) | `compact` is the short Agent description; `custom` renders `.pi/agent-tool-description.md` (else `<agent dir>/agent-tool-description.md`) with `{{typeList}}`, `{{compactTypeList}}`, `{{agentDir}}`, `{{scheduleGuideline}}` and `{{isolationGuideline}}`; read once at registration |
 | `fallbackSubagent`, `disableDefaultAgents` | an unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused; the three default agents can be switched off |
 | `rememberAgents` (true) | an agent's conversation is a pi session file (see Sessions, resume and context below); `false` keeps it in the child's memory |
+| `maxSubagentDepth` (2) | the branch cap: main session 0, its agents 1, their children 2; `0` or `1` switch nesting off; at most 16 |
 | `worktreeIsolation` (true) | `false` drops the `isolation` parameter and its guideline from the Agent text, and a worktree any caller asks for (the call, an agent file, the spawn RPC) is dropped, not refused |
 
 A model named by the call (or by an agent file) is resolved against the models with credentials: `provider/modelId`, else
@@ -114,6 +134,17 @@ input, output and cache-write tokens (cache reads are excluded, as in the origin
 a pi `usage`. `reportUsage: true` attaches the agents' spend to the next tool result so the parent session counts it.
 `showCost: true` adds `~$0.0042` to the tool results and `<estimated_cost_usd>` to the notification; the widgets that
 show it are another slice, so the setting is still announced as not fully supported.
+
+## Nested delegation
+
+An agent file with `allowed_subagents: all` (or a list of types) lets that agent start agents of its own, below the
+`maxSubagentDepth` cap (default 2; `isolated` agents get none). Each level is a `pig --mode rpc` process that loads this
+extension and registers three tools in place of the top-level ones: `Agent` (foreground by default, with `resume`,
+`isolation`, `inherit_context`, the model and `scopeModels` rules of the top-level tool), `get_subagent_result` and
+`steer_subagent`, which see only the agents that agent owns. A parent that settles, or whose session ends, stops what it
+owns, down the tree. A nested agent's spend (and its own children's) is added to its owner's record, so the top-level
+record counts the whole tree; its transcript is filed under the top-level session. `disallowed_tools` takes a nested tool
+back. Nothing nested is announced to the model or on the bus.
 
 ## Worktree isolation and persistent memory
 
@@ -150,7 +181,6 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
 - The Agent call parameter `schedule`.
-- The agent file field `allowed_subagents`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolation`, `isolated`,
   `inheritContext`, `bypassQueue` and `isBackground`. (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
   `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim` and `blocking` are dropped, as the original drops what a

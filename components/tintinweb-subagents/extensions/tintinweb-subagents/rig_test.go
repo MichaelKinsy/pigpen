@@ -169,6 +169,7 @@ type rig struct {
 	branch      []any  // sessionRead getBranch
 	registry    []any  // getAllTools
 	trusted     bool   // isProjectTrusted
+	systemPrompt string // getSystemPrompt
 	mu          sync.Mutex
 	extBus      map[string][]string
 	goBus       map[string][]func(any)
@@ -221,6 +222,10 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 		return obj{"trusted": r.trusted}, ""
 	case "getAllTools":
 		return obj{"tools": append([]any{}, r.registry...)}, ""
+	case "getSystemPrompt":
+		if r.systemPrompt != "" {
+			return obj{"prompt": r.systemPrompt}, ""
+		}
 	case "getSessionID":
 		return obj{"sessionId": "session-1"}, ""
 	case "exec":
@@ -368,4 +373,23 @@ func (f *fleet) setFail(err error) {
 	f.mu.Lock()
 	f.failWith = err
 	f.mu.Unlock()
+}
+
+// waitPrompt waits for the child that was given the prompt (children start in no fixed order).
+func (f *fleet) waitPrompt(t *testing.T, prompt string) *fakeChild {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		f.mu.Lock()
+		for _, c := range f.children {
+			if c.spec.Prompt == prompt {
+				f.mu.Unlock()
+				return c
+			}
+		}
+		f.mu.Unlock()
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("no child was given %q", prompt)
+	return nil
 }

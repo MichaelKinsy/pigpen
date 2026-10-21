@@ -22,6 +22,8 @@ type app struct {
 	e   *sdk.Extension
 	mgr *manager
 	mu  sync.Mutex
+	// nested is set in a child that may delegate: who it is and how deep. nil in the top-level session.
+	nested *nestedConfig
 
 	cwd         string // the workspace the custom agents were last read for
 	settingsCwd string // the workspace the settings were last applied for
@@ -57,6 +59,7 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 	a.groups = newGroupJoinManager(a.deliverGroup, groupJoinTimeout, func(d time.Duration, f func()) func() { return a.after(d, f) })
 	a.entry = claimManagerRegistry(a)
 	a.wireObs()
+	a.mgr.account = a.accountNested
 	return a
 }
 
@@ -148,8 +151,9 @@ func (a *app) context() (sdk.Context, bool) {
 	return *a.latest, true
 }
 
-// Extension returns the subagents extension. A child (TINTINWEB_SUBAGENT_DEPTH set) registers nothing: there is no
-// nesting in this port.
+// Extension returns the subagents extension. A child (TINTINWEB_SUBAGENT_DEPTH set) is not a top-level session: it
+// registers no Agent tool, no RPC, no command and announces nothing. Only a child whose agent file opted into nested
+// delegation (allowed_subagents) and that is below the depth cap gets the nested tools. See nested.go.
 func Extension() *sdk.Extension {
 	e := sdk.New("tintinweb-subagents")
 	if os.Getenv(depthEnv) != "" {
@@ -158,6 +162,9 @@ func Extension() *sdk.Extension {
 			if schema, err := os.ReadFile(path); err == nil {
 				registerStructuredOutput(e, string(schema))
 			}
+		}
+		if n := nestedConfigFromEnv(); n != nil && n.toolsEnabled() {
+			newApp(e, startRPCChild).registerNested(e, n)
 		}
 		return e
 	}

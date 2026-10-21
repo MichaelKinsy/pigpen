@@ -6,16 +6,19 @@ import json, os
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scenarios")
 SETTINGS = {"workflowsEnabled": False, "schedulingEnabled": False, "worktreeIsolation": False}
 
-def setup(settings=SETTINGS):
+def setup(settings=SETTINGS, agents=None):
     body = json.dumps(settings).replace("'", "'\\''")
-    return [["sh", "-c", "mkdir -p .pi && printf '%s' '" + body + "' > .pi/subagents.json"]]
+    out = [["sh", "-c", "mkdir -p .pi && printf '%s' '" + body + "' > .pi/subagents.json"]]
+    for name, text in (agents or {}).items():
+        out.append(["sh", "-c", "mkdir -p .pi/agents && printf '%s' '" + text.replace("'", "'\\''") + "' > .pi/agents/" + name + ".md"])
+    return out
 
 def call(name, **args): return {"name": name, "arguments": args}
 
-def scenario(name, description, turns, settings=SETTINGS, steps=None, files=None, agent_files=None, llm=None, commands=None, setup_extra=None):
+def scenario(name, description, turns, settings=SETTINGS, steps=None, files=None, agent_files=None, llm=None, commands=None, setup_extra=None, agents=None):
     s = {"name": name, "description": description,
          "llm": llm if llm is not None else [{"toolCalls": t} for t in turns] + [{"text": "done"}],
-         "setup": setup(settings) + (setup_extra or []), "commands": commands or {"git": {"mode": "missing"}, "gh": {"mode": "missing"}},
+         "setup": setup(settings, agents) + (setup_extra or []), "commands": commands or {"git": {"mode": "missing"}, "gh": {"mode": "missing"}},
          "steps": steps or [{"name": "prompt", "rpc": {"type": "prompt", "message": "go"}}]}
     if files: s["files"] = files
     if agent_files: s["agentFiles"] = agent_files
@@ -48,6 +51,11 @@ scenario("tool-tools-invalid-mode", "An invalid toolDescriptionMode in subagents
          settings={**SETTINGS, "toolDescriptionMode": "tiny"}, steps=HELLO)
 scenario("agent-model-not-found", "A model the call names that matches nothing is an error result listing the available models.",
          [[call("Agent", prompt="x", description="d", subagent_type="Plan", model="no-such-model-xyz")]])
+
+scenario("nested-agent-file", "An agent file with allowed_subagents and a maxSubagentDepth setting are accepted: the agent is listed, nothing is refused.",
+         [], settings={**SETTINGS, "maxSubagentDepth": 3}, steps=[{"name": "prompt", "rpc": {"type": "prompt", "message": "hello"}}],
+         agents={"orchestrator": "---\ndescription: Delegates to the worker\ntools: read\nallowed_subagents: worker\n---\nYou delegate.\n",
+                 "worker": "---\ndescription: Does the work\ntools: read\n---\nYou work.\n"})
 
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's

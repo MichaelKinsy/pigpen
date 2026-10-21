@@ -11,7 +11,7 @@ import (
 // in the background (detached, notified at the end) or inline. upstream: index.ts Agent execute (Resume existing agent).
 func (a *app) resumeTool(ctx sdk.Context, id, prompt string, background bool) (any, error) {
 	existing := a.mgr.get(id)
-	if existing == nil {
+	if existing == nil || !existing.topLevel() { // what another agent owns is not the session's to resume
 		return notFound(id), nil
 	}
 	if !a.mgr.canResume(existing) {

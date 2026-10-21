@@ -31,6 +31,11 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	os.RemoveAll(dir)
 	os.Exit(code)
+	if os.Getenv("TW_PRINT_DEPTH") != "" { // a fresh process: the cap nothing has set yet (documented-defaults twin)
+		os.Stdout.WriteString(strconv.Itoa(getMaxSubagentDepth()))
+		return
+	}
+	os.Exit(m.Run())
 }
 
 func fakePig(mode string) {
@@ -51,6 +56,9 @@ func fakePig(mode string) {
 	if p, f := os.Getenv("FAKE_PIG_SCHEMA"), os.Getenv(structuredSchemaFileEnv); p != "" && f != "" { // what the child would read
 		b, _ := os.ReadFile(f)
 		os.WriteFile(p, b, 0o644)
+	if mode == "nest" { // a pig that delegates: nested_fakepig_test.go
+		fakeNestingPig()
+		return
 	}
 	if mode == "crash" {
 		os.Stderr.WriteString("no such model")

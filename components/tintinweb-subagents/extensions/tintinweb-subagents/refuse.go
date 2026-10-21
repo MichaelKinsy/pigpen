@@ -36,16 +36,6 @@ func unportedCallParam(p map[string]any) string {
 	return ""
 }
 
-// unportedAgentFeature names the first field of an agent file that asks for something this port does not do, or "".
-// upstream: src/custom-agents.ts, src/types.ts AgentConfig.
-func unportedAgentFeature(cfg *agentConfig) string {
-	switch {
-	case cfg.AllowedSubagents != nil:
-		return "nested delegation (allowed_subagents)"
-	}
-	return ""
-}
-
 // unportedSpawnOption names the first RPC spawn option the port does not honor, or "".
 // Honored: description, model, maxTurns, name, thinkingLevel, isolation, isolated, inheritContext, bypassQueue, isBackground;
 // dropped, as the original drops them: parentAgentId, workflowId, depth, maxSubagentDepth, configCwd, rootSessionId,

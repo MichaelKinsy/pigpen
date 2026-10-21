@@ -36,6 +36,7 @@ func resetTypes() {
 	setWorktreeIsolationEnabled(true)
 	setFallbackSubagent(nil)
 	setDefaultsDisabled(false)
+	setMaxSubagentDepth(2)
 	registerAgents(newRegistry())
 }
 

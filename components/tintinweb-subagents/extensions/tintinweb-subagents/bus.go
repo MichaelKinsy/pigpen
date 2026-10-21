@@ -2,6 +2,7 @@ package tintinweb_subagents
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
@@ -160,10 +161,22 @@ type startRequest struct {
 	MaxTurns                                   *int
 	Isolated, InheritContext                   bool
 	Worktree                                   bool         // run in a temporary git worktree (isolation: "worktree")
+	// Registry is a nested spawn's agent registry (its branch's config root, never the process-wide one); Type is then
+	// already resolved. ConfigCwd is that root.
+	Registry  *agentRegistry
+	ConfigCwd string
 	Spawn                                      spawnOptions // the name, the pool and the signal of the spawn
 	// Per-call settings that only the Agent tool has (the RPC spawn path takes none).
 	Transcript bool // write a `.output` transcript (the Agent tool's decision: the agent file, else the default)
 	SessionID  string
+}
+
+// toolNamesOf is the built-in tools an agent type asks for: its file's list, else all of them.
+func toolNamesOf(cfg *agentConfig) []string {
+	if cfg.BuiltinToolNames != nil {
+		return cfg.BuiltinToolNames
+	}
+	return slices.Clone(builtinToolNames)
 }
 
 // start builds the child's spec from the agent type and spawns it.
@@ -171,21 +184,26 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd, remember := a.cwd, a.rememberAgents
 	a.mu.Unlock()
-	res := resolveSpawnType(q.Type)
-	if !res.OK {
-		return nil, errors.New(res.Message)
+	// A nested spawn names a type its parent's branch registry already resolved; a top-level one goes through the
+	// fallback policy and the process-wide registry.
+	var resolved string
+	var cfg *agentConfig
+	if q.Registry != nil {
+		resolved, cfg = q.Type, q.Registry.get(q.Type)
+	} else {
+		res := resolveSpawnType(q.Type)
+		if !res.OK {
+			return nil, errors.New(res.Message)
+		}
+		resolved = res.Type
+		cfg = getAgentConfig(resolved)
 	}
-	resolved := res.Type
-	cfg := getAgentConfig(resolved)
 	if cfg == nil {
 		// The unset fallback names general-purpose even when it was removed from the registry: run the built-in one under
 		// the resolved name. upstream: agent-runner.ts runAgent (DEFAULT_AGENTS fallback).
 		fallback := *defaultAgents().get("general-purpose")
 		fallback.Name = resolved
 		cfg = &fallback
-	}
-	if feature := unportedAgentFeature(cfg); feature != "" {
-		return nil, refusal(feature)
 	}
 	parentPrompt := ""
 	if cfg.PromptMode == "append" {
@@ -202,11 +220,33 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	}
 	// Persistent memory adds the tools it needs to the agent's list before the scope is planned. upstream: agent-runner.ts runAgent.
 	toolNames := getToolNamesForType(resolved)
+	if q.Registry != nil {
+		toolNames = toolNamesOf(cfg)
+	}
 	memoryWrites := false
 	if cfg.Memory != "" {
 		toolNames, memoryWrites = memoryTools(cfg, toolNames)
 	}
-	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, toolNames, cwd, nil)
+	// Nested delegation: an agent whose file says `allowed_subagents` gets the nested tools (which this extension
+	// registers in the child), unless it is isolated or at the depth cap. The tools are re-admitted past the scope that
+	// keeps this extension's own tools out of a child, unless `disallowed_tools` takes them back. upstream: agent-runner.ts:843-866.
+	nested := q.Spawn.ParentAgentID != ""
+	depth, maxDepth := max(1, q.Spawn.Depth), q.Spawn.MaxSubagentDepth
+	if !nested { // a top-level agent's branch is capped by the setting; a caller cannot name another cap
+		q.Spawn.Depth, maxDepth = 0, getMaxSubagentDepth()
+		q.Spawn.MaxSubagentDepth = maxDepth
+	}
+	var allowed any
+	var readmit []string
+	if !q.Isolated && cfg.AllowedSubagents != nil && depth < min(maxDepth, subagentDepthCeiling) {
+		allowed = cfg.AllowedSubagents
+		for _, name := range nestedToolNames {
+			if !slices.Contains(cfg.DisallowedTools, name) {
+				readmit = append(readmit, name)
+			}
+		}
+	}
+	plan, scope, err := a.childScope(ctx, resolved, cfg, q.Isolated, toolNames, cwd, readmit)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +258,18 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	}
 	spec := childSpec{Prompt: q.Prompt, PromptMode: "replace", Cwd: cwd, Thinking: q.Thinking, Worktree: q.Worktree,
 		NoExtensions: scope.NoExtensions, ExtensionPaths: scope.ExtensionPaths, AllowTools: scope.AllowTools, ExcludeTools: scope.ExcludeTools,
-		NoSkills: skills != true, Warnings: plan.Warnings, Transcript: q.Transcript, SessionID: q.SessionID}
+		NoSkills: skills != true, Warnings: plan.Warnings, Transcript: q.Transcript, SessionID: q.SessionID,
+		Depth: depth, MaxDepth: maxDepth, Allowed: allowed, ConfigCwd: cwd}
+	if q.ConfigCwd != "" {
+		spec.ConfigCwd = q.ConfigCwd
+	}
+	if spec.nestedActive() {
+		// Every transcript of the branch goes under the root session, whatever agent wrote it.
+		spec.RootSessionID = q.SessionID
+		if spec.RootSessionID == "" {
+			spec.RootSessionID, _ = a.sessionIDOf(ctx)
+		}
+	}
 	spec.Prepare = func(spec *childSpec, workCwd, worktreeBase string) error {
 		env := eagerEnv
 		if q.Worktree {
@@ -240,7 +291,7 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 			spec.Trust = "approve"
 		}
 	}
-	if sessionPersisted(cfg, false, remember) {
+	if sessionPersisted(cfg, nested, remember) {
 		spec.Persist = true
 		spec.SessionDir = resolveConfiguredSessionDir(cfg.SessionDir, cwd)
 		if f, err := ctx.GetSessionFile(); err == nil && f != nil {

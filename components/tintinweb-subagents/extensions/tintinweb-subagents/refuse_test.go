@@ -82,31 +82,17 @@ func agentFileRig(t *testing.T, frontmatter string) *rig {
 	return startRigIn(t, cwd)
 }
 
-func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
-	cases := []struct{ name, frontmatter, feature string }{
-		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			r := agentFileRig(t, c.frontmatter)
-			text, failure := r.tool("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "custom"})
-			eq(t, text, "")
-			eq(t, strings.Contains(failure, refusalText(c.feature)), true)
-			eq(t, r.fleet.count(), 0)
-			// the spawn RPC reaches the same check
-			reply := r.request("subagents:rpc:spawn", obj{"type": "custom", "prompt": "p", "options": obj{"description": "d"}})
-			eq(t, reply["success"], false)
-			eq(t, strings.Contains(reply["error"].(string), refusalText(c.feature)), true)
-			eq(t, r.fleet.count(), 0)
-		})
-	}
-	t.Run("supported fields run", func(t *testing.T) {
-		r := agentFileRig(t, "extensions: false\nskills: true\npersist_session: false\noutput_transcript: false\nisolation: off\ninherit_context: false\nmemory: none\nmax_turns: 4")
-		r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "custom"})
-		c := r.fleet.wait(t, 1)[0]
-		eq(t, c.spec.NoExtensions, true)
-		eq(t, c.spec.MaxTurns, 4)
-	})
+// Every field of an agent file is ported: none is refused.
+func TestEveryAgentFileFieldRuns(t *testing.T) {
+	r := agentFileRig(t, "extensions: false\nskills: true\npersist_session: false\noutput_transcript: false\nisolation: off\ninherit_context: false\nmemory: none\nallowed_subagents: all\nmax_turns: 4")
+	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "custom"})
+	c := r.fleet.wait(t, 1)[0]
+	eq(t, c.spec.NoExtensions, true)
+	eq(t, c.spec.MaxTurns, 4)
+	// the spawn RPC takes the same file
+	reply := r.request("subagents:rpc:spawn", obj{"type": "custom", "prompt": "p", "options": obj{"description": "d"}})
+	eq(t, reply["success"], true)
+	r.fleet.wait(t, 2)
 }
 
 func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
@@ -176,8 +162,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
-		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
-		{"showCost", `{"showCost": true}`, "showCost: true (only its widget display; the cost in the notification, result and steer texts is shown)"},
 		{"showModel", `{"showModel": true}`, "showModel: true"},
 		{"viewerMarkdown", `{"viewerMarkdown": "all"}`, `viewerMarkdown: "all"`},
 	}
@@ -225,7 +209,7 @@ func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
 	r := settingsRig(t, `{"maxConcurrent": 3, "defaultMaxTurns": 5, "graceTurns": 2, "disableDefaultAgents": false, "fallbackSubagent": "none",
 		"maxConcurrentForeground": 0, "defaultJoinMode": "async", "backgroundByDefault": true, "schedulingEnabled": false, "scopeModels": false,
 		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "off", "rememberAgents": false,
-		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 1,
+		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 3,
 		"reportUsage": false, "showCost": false, "showModel": false, "showCost2": "x", "fleetView2": 1, "agentMentions2": 1}`)
 	eq(t, len(notices(r)), 0)
 	r = settingsRig(t, `{"widgetMode": "sideways", "maxSubagentDepth": "deep", "scopeModels": "yes"}`) // wrong types and unknown values are ignored, as in the original

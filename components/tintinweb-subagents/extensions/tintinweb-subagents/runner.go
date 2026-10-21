@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -66,6 +67,21 @@ type childSpec struct {
 	// if any, exists: cwd is the directory the child works in, worktreeBase the directory a worktree copy was made
 	// from ("" without one). An error fails the agent. upstream: agent-runner.ts runAgent.
 	Prepare func(spec *childSpec, cwd, worktreeBase string) error
+	// Nested delegation. upstream: agent-runner.ts nestedRuntime.
+	AgentID   string // the agent this child is: the owner of the children it spawns
+	Depth     int    // this child's depth (a top-level agent's child is 1)
+	MaxDepth  int    // the cap of the branch: a child at or past it gets no nested tools
+	Allowed   any    // the agent file's allowed_subagents: nil, "all" or []string
+	ConfigCwd string // the config root the child's own children are resolved from
+	// RootSessionID is the session of the top of the tree: the transcripts of the whole branch are filed under it.
+	RootSessionID string
+}
+
+// nestedActive says whether the child is given the nested tools: its file opted in and it is below the depth cap. A
+// child at the cap can never spawn, so it gets nothing rather than three tools whose every call is an error.
+// upstream: agent-runner.ts:847-865.
+func (s childSpec) nestedActive() bool {
+	return s.Allowed != nil && max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)
 }
 
 // childResult is what a finished child reports.
@@ -82,7 +98,9 @@ type childResult struct {
 	// StructuredJSON is the validated StructuredOutput payload, when a schema was asked for and one validated.
 	StructuredJSON    string
 	StructuredRetried bool
-	WrappedUp         bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
+	// Nested is what the agents the child owns spent, folded into the child's own count. upstream: nested-tools.ts onAssistantUsage.
+	Nested    lifetimeUsage
+	WrappedUp bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
 	Aborted           bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
 	Failure           string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
 }
@@ -192,7 +210,9 @@ func childArgs(spec childSpec) []string {
 	case "no-approve":
 		args = append(args, "--no-approve")
 	}
-	if spec.NoExtensions {
+	// The nested tools live in this extension, so a child that has them loads it: `extensions: false` alone is held by
+	// the tool allowlist (the built-ins and the nested tools), not by --no-extensions.
+	if spec.NoExtensions && !spec.nestedActive() {
 		args = append(args, "--no-extensions")
 	}
 	for _, p := range spec.ExtensionPaths {
@@ -231,13 +251,39 @@ func childArgs(spec childSpec) []string {
 	return args
 }
 
-// depthEnv marks a child: it registers no agent tools, so there is no nesting.
-const depthEnv = "TINTINWEB_SUBAGENT_DEPTH"
+// The environment a child is started with. depthEnv marks a child: it registers no top-level tools. The rest is set
+// only for a child that gets the nested tools, and says who it is and how far it may delegate (nested.go).
+const (
+	depthEnv     = "TINTINWEB_SUBAGENT_DEPTH"      // this child's depth, 1 for a top-level agent's child
+	maxDepthEnv  = "TINTINWEB_SUBAGENT_MAX_DEPTH"  // the branch's cap
+	allowedEnv   = "TINTINWEB_SUBAGENT_ALLOWED"    // JSON: "all" or the list of agent types
+	agentIDEnv   = "TINTINWEB_SUBAGENT_ID"         // this child's agent id: the owner of its children
+	configCwdEnv = "TINTINWEB_SUBAGENT_CONFIG_CWD" // the config root its children's agent files are read from
+	rootSessionEnv = "TINTINWEB_SUBAGENT_ROOT_SESSION" // the top-level session: nested transcripts are filed under it
+	usageEnv     = "TINTINWEB_SUBAGENT_USAGE_FILE" // where the child writes what its own children spent
+)
+
+// envPrefix is the namespace of the variables above: every one of them starts with it, and nothing else does.
+const envPrefix = "TINTINWEB_SUBAGENT_"
+
+// childEnv is the environment of a child: the parent's, with this child's place in the tree. A variable the parent
+// itself was started with (it may be a nested child) never reaches a grandchild.
+func childEnv(spec childSpec, usageFile string) []string {
+	env := slices.DeleteFunc(os.Environ(), func(kv string) bool { return strings.HasPrefix(kv, envPrefix) })
+	env = append(env, depthEnv+"="+strconv.Itoa(max(spec.Depth, 1)))
+	if spec.nestedActive() {
+		allowed, _ := json.Marshal(spec.Allowed)
+		env = append(env, maxDepthEnv+"="+strconv.Itoa(spec.MaxDepth), allowedEnv+"="+string(allowed), agentIDEnv+"="+spec.AgentID,
+			configCwdEnv+"="+spec.ConfigCwd, usageEnv+"="+usageFile, rootSessionEnv+"="+spec.RootSessionID)
+	}
+	return env
+}
 
 // rpcChild is a child pig process. A run is one prompt and what follows until the agent settles; the child lives
 // on after a run when its conversation exists nowhere else, so that resume can continue it.
 type rpcChild struct {
 	cmd     *exec.Cmd
+	usage   string // the file the child's own children's spend is written to ("" without nested tools)
 	stdin   io.WriteCloser
 	mu      sync.Mutex
 	nextID  int
@@ -288,7 +334,16 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	cmd := exec.CommandContext(ctx, bin, childArgs(spec)...)
 	cmd.Cancel = func() error { terminate(cmd); return nil }
 	cmd.Dir = spec.Cwd
-	cmd.Env = append(os.Environ(), depthEnv+"=1")
+	usageFile := ""
+	if spec.nestedActive() {
+		f, err := os.CreateTemp("", "tintinweb-subagent-usage-*")
+		if err != nil {
+			return nil, err
+		}
+		usageFile = f.Name()
+		_ = f.Close()
+	}
+	cmd.Env = childEnv(spec, usageFile)
 	// The schema goes through a private file: an environment string is capped (Windows 32,767 characters, Linux
 	// 128 KiB) and a schema may be larger.
 	schemaFile := ""
@@ -302,6 +357,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		if schemaFile != "" {
 			_ = os.Remove(schemaFile)
 		}
+		removeUsage(usageFile)
 	}
 	setProcessGroup(cmd)
 	stdin, err := cmd.StdinPipe()
@@ -320,7 +376,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		removeSchema()
 		return nil, err
 	}
-	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, exited: make(chan struct{}), exitErr: make(chan error, 1),
+	c := &rpcChild{cmd: cmd, usage: usageFile, stdin: stdin, pending: map[string]chan map[string]any{}, exited: make(chan struct{}), exitErr: make(chan error, 1),
 		grace: spec.GraceTurns, abortWait: abortGrace, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == "", hooks: spec.Hooks}
 	if spec.Schema != "" {
 		c.capture = &structuredCapture{}
@@ -357,6 +413,7 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 		err := cmd.Wait()
 		removeSchema()
 		close(c.exited)
+		removeUsage(c.usage)
 		c.mu.Lock()
 		killed := c.killed
 		settled := c.settled
@@ -689,6 +746,7 @@ func (c *rpcChild) wait() (*childResult, error) {
 			res.ContextPercent = contextPercentOf(d)
 		}
 	}
+	res.Nested = readUsage(c.usage) // what the agents this one owns spent; the child's own stream does not carry it
 	// The conversation as the child's session ends (after any compaction); the stream's own copy when it cannot say.
 	messages := c.messages()
 	if messages != nil {
@@ -710,6 +768,7 @@ func (c *rpcChild) wait() (*childResult, error) {
 	case c.lastStop == "length" && strings.TrimSpace(c.lastText) == "":
 		res.Failure = "run hit the output token limit before producing any text"
 	}
+	res.Tokens += nestedTokens
 	if res.ToolUses == 0 {
 		res.ToolUses = c.toolUse
 	}

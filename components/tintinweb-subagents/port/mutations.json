@@ -452,7 +452,7 @@
  {
   "name": "child-may-nest",
   "file": "runner.go",
-  "find": "cmd.Env = append(os.Environ(), depthEnv+\"=1\")",
+  "find": "cmd.Env = childEnv(spec, usageFile)",
   "replace": "cmd.Env = os.Environ()"
  },
  {
@@ -600,12 +600,6 @@
   "replace": "if v, ok := p[\"schedule\"]; ok && v == nil {"
  },
  {
-  "name": "nested-field-accepted",
-  "file": "refuse.go",
-  "find": "case cfg.AllowedSubagents != nil:",
-  "replace": "case false:"
- },
- {
   "name": "rpc-option-accepted",
   "file": "refuse.go",
   "find": "default:\n\t\t\treturn \"the spawn RPC option",
@@ -640,12 +634,6 @@
   "file": "extension.go",
   "find": "ctx.Notify(text, \"warning\")",
   "replace": "_ = text"
- },
- {
-  "name": "start-skips-agent-file-check",
-  "file": "bus.go",
-  "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
-  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
  },
  {
   "name": "rpc-skips-option-check",
@@ -769,9 +757,9 @@
  },
  {
   "name": "depth-default",
-  "file": "settings.go",
-  "find": "defaultMaxSubagentDepth = 2",
-  "replace": "defaultMaxSubagentDepth = 3"
+  "file": "nested.go",
+  "find": "maxSubagentDepth.Store(defaultMaxSubagentDepth)",
+  "replace": "maxSubagentDepth.Store(3)"
  },
  {
   "name": "scheduling-default-off",
@@ -2642,14 +2630,8 @@
  {
   "name": "spec-transcript-dropped",
   "file": "bus.go",
-  "find": ", Transcript: q.Transcript, SessionID: q.SessionID}",
-  "replace": "}"
- },
- {
-  "name": "agent-file-transcript-refused",
-  "file": "refuse.go",
-  "find": "\tcase cfg.AllowedSubagents != nil:\n\t\treturn \"nested delegation (allowed_subagents)\"",
-  "replace": "\tcase cfg.AllowedSubagents != nil:\n\t\treturn \"nested delegation (allowed_subagents)\"\n\tcase cfg.OutputTranscript != nil && *cfg.OutputTranscript:\n\t\treturn \"output transcripts (output_transcript)\""
+  "find": "Transcript: q.Transcript, SessionID: q.SessionID,",
+  "replace": "SessionID: q.SessionID,"
  },
  {
   "name": "stream-keeps-flushed-messages",
@@ -2758,6 +2740,324 @@
   "file": "sessions.go",
   "find": "newTranscriptStream(r.OutputFile, r.ID, r.spec.Cwd, 0)",
   "replace": "newTranscriptStream(r.OutputFile, r.ID, r.spec.Cwd, 1)"
+ },
+ {
+  "name": "owned-child-named",
+  "file": "manager.go",
+  "find": "if r.topLevel() {\n\t\tif o.Reclaim",
+  "replace": "if true {\n\t\tif o.Reclaim"
+ },
+ {
+  "name": "everything-is-top-level",
+  "file": "manager.go",
+  "find": "func (r *agentRecord) topLevel() bool { return r.ParentAgentID == \"\" && r.WorkflowID == \"\" }",
+  "replace": "func (r *agentRecord) topLevel() bool { return true }"
+ },
+ {
+  "name": "owner-not-recorded",
+  "file": "manager.go",
+  "find": "ParentAgentID: o.ParentAgentID, ",
+  "replace": ""
+ },
+ {
+  "name": "top-level-depth-zero",
+  "file": "manager.go",
+  "find": "Depth: max(1, o.Depth)",
+  "replace": "Depth: o.Depth"
+ },
+ {
+  "name": "spec-depth-not-passed",
+  "file": "manager.go",
+  "find": "\tr.spec.Depth = r.Depth\n",
+  "replace": "\n"
+ },
+ {
+  "name": "spec-agent-id-missing",
+  "file": "manager.go",
+  "find": "spec.AgentID = r.ID",
+  "replace": "spec.AgentID = \"\""
+ },
+ {
+  "name": "config-root-dropped",
+  "file": "bus.go",
+  "find": "if q.ConfigCwd != \"\" {\n\t\tspec.ConfigCwd = q.ConfigCwd",
+  "replace": "if false {\n\t\tspec.ConfigCwd = q.ConfigCwd"
+ },
+ {
+  "name": "children-outlive-parent",
+  "file": "manager.go",
+  "find": "m.abortOwnedChildren(r.ID)\n\tif m.onSettle",
+  "replace": "if m.onSettle"
+ },
+ {
+  "name": "abort-owned-all-owned",
+  "file": "manager.go",
+  "find": "if r.ParentAgentID == parentID {",
+  "replace": "if r.ParentAgentID != \"\" {"
+ },
+ {
+  "name": "owned-found-by-reference",
+  "file": "manager.go",
+  "find": "if r.ParentAgentID != \"\" {\n\t\t\tcontinue\n\t\t}\n\t\tif (r.Handle",
+  "replace": "if false {\n\t\t\tcontinue\n\t\t}\n\t\tif (r.Handle"
+ },
+ {
+  "name": "owned-listed",
+  "file": "manager.go",
+  "find": "if r.topLevel() {\n\t\t\tout = append(out, r)",
+  "replace": "if true {\n\t\t\tout = append(out, r)"
+ },
+ {
+  "name": "owned-spend-not-accounted",
+  "file": "manager.go",
+  "find": "if m.account != nil && !r.topLevel() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rpc-stop-owned",
+  "file": "bus.go",
+  "find": "if !r.topLevel() {\n\t\t\treturn nil, errors.New(\"Agent is owned by another agent or workflow\")",
+  "replace": "if false {\n\t\t\treturn nil, errors.New(\"Agent is owned by another agent or workflow\")"
+ },
+ {
+  "name": "rpc-stop-owned-text",
+  "file": "bus.go",
+  "find": "errors.New(\"Agent is owned by another agent or workflow\")",
+  "replace": "errors.New(\"Agent is owned\")"
+ },
+ {
+  "name": "isolated-child-keeps-allowance",
+  "file": "bus.go",
+  "find": "if !q.Isolated && cfg.AllowedSubagents != nil &&",
+  "replace": "if cfg.AllowedSubagents != nil &&"
+ },
+ {
+  "name": "cap-not-handed-down",
+  "file": "bus.go",
+  "find": "q.Spawn.Depth, maxDepth = 0, getMaxSubagentDepth()",
+  "replace": "q.Spawn.Depth, maxDepth = 0, 99"
+ },
+ {
+  "name": "depth-setting-not-applied",
+  "file": "settings_apply.go",
+  "find": "ap.SetMaxSubagentDepth = func(n int) { setMaxSubagentDepth(float64(n)) }",
+  "replace": "_ = ap"
+ },
+ {
+  "name": "owned-child-announced",
+  "file": "extension.go",
+  "find": "if !r.topLevel() { // an owned child reports through its owner",
+  "replace": "if false { // an owned child reports through its owner"
+ },
+ {
+  "name": "child-gets-tools-at-the-cap",
+  "file": "extension.go",
+  "find": "n != nil && n.toolsEnabled() {",
+  "replace": "n != nil {"
+ },
+ {
+  "name": "nested-tools-not-admitted",
+  "file": "bus.go",
+  "find": "if !slices.Contains(cfg.DisallowedTools, name) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "nested-child-without-extensions",
+  "file": "runner.go",
+  "find": "if spec.NoExtensions && !spec.nestedActive() {",
+  "replace": "if spec.NoExtensions {"
+ },
+ {
+  "name": "depth-cap-off-by-one",
+  "file": "runner.go",
+  "find": "max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)\n}",
+  "replace": "max(s.Depth, 1) <= min(s.MaxDepth, subagentDepthCeiling)\n}"
+ },
+ {
+  "name": "allowance-not-needed",
+  "file": "runner.go",
+  "find": "return s.Allowed != nil && max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)",
+  "replace": "return max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)"
+ },
+ {
+  "name": "depth-not-handed-down",
+  "file": "runner.go",
+  "find": "depthEnv+\"=\"+strconv.Itoa(max(spec.Depth, 1))",
+  "replace": "depthEnv+\"=1\""
+ },
+ {
+  "name": "owner-id-not-handed-down",
+  "file": "runner.go",
+  "find": "agentIDEnv+\"=\"+spec.AgentID,",
+  "replace": "agentIDEnv+\"=\","
+ },
+ {
+  "name": "allowance-not-handed-down",
+  "file": "runner.go",
+  "find": "allowedEnv+\"=\"+string(allowed),",
+  "replace": "allowedEnv+\"=\"+strings.ToUpper(string(allowed)),"
+ },
+ {
+  "name": "stale-place-handed-down",
+  "file": "runner.go",
+  "find": "func(kv string) bool { return strings.HasPrefix(kv, envPrefix) })",
+  "replace": "func(kv string) bool { return false })"
+ },
+ {
+  "name": "nested-spend-dropped",
+  "file": "runner.go",
+  "find": "res.Tokens += nestedTokens",
+  "replace": "_ = nestedTokens"
+ },
+ {
+  "name": "usage-file-not-handed-down",
+  "file": "runner.go",
+  "find": "usageEnv+\"=\"+usageFile, rootSessionEnv",
+  "replace": "usageEnv+\"=\", rootSessionEnv"
+ },
+ {
+  "name": "depth-clamp-negative",
+  "file": "nested.go",
+  "find": "math.Max(0, math.Floor(n))",
+  "replace": "math.Floor(n)"
+ },
+ {
+  "name": "depth-clamp-fraction",
+  "file": "nested.go",
+  "find": "math.Floor(n)))",
+  "replace": "math.Ceil(n)))"
+ },
+ {
+  "name": "depth-default",
+  "file": "nested.go",
+  "find": "maxSubagentDepth.Store(defaultMaxSubagentDepth)",
+  "replace": "maxSubagentDepth.Store(3)"
+ },
+ {
+  "name": "tools-enabled-below-cap",
+  "file": "nested.go",
+  "find": "n.Allowed != nil && n.Depth < n.MaxDepth",
+  "replace": "n.Allowed != nil && n.Depth <= n.MaxDepth"
+ },
+ {
+  "name": "not-owner-check",
+  "file": "nested.go",
+  "find": "r != nil && r.ParentAgentID == n.AgentID",
+  "replace": "r != nil"
+ },
+ {
+  "name": "depth-block-off-by-one",
+  "file": "nested.go",
+  "find": "if n.Depth >= n.MaxDepth {",
+  "replace": "if n.Depth > n.MaxDepth {"
+ },
+ {
+  "name": "allowance-not-enforced",
+  "file": "nested.go",
+  "find": "allowed != nil && !inList(allowed, resolved)",
+  "replace": "false"
+ },
+ {
+  "name": "allowance-names-case-sensitive",
+  "file": "nested.go",
+  "find": "if k, found := reg.resolveKey(name); found {",
+  "replace": "if k, found := reg.resolveKey(name); found && false {"
+ },
+ {
+  "name": "unknown-type-falls-back",
+  "file": "nested.go",
+  "find": "resolved := resolveEnabledTypeIn(reg, rawType)",
+  "replace": "resolved := resolveSpawnType(rawType).Type"
+ },
+ {
+  "name": "process-registry-used",
+  "file": "nested.go",
+  "find": "reg := a.branchRegistry(n)",
+  "replace": "reg := currentRegistry()"
+ },
+ {
+  "name": "working-directory-config",
+  "file": "nested.go",
+  "find": "custom, _ := loadCustomAgents(n.ConfigCwd)",
+  "replace": "custom, _ := loadCustomAgents(a.cwd)"
+ },
+ {
+  "name": "start-failure-reads-as-started",
+  "file": "nested.go",
+  "find": "status == statusError {\n\t\t\treturn nestedText(errText, true)",
+  "replace": "status == \"never\" {\n\t\t\treturn nestedText(errText, true)"
+ },
+ {
+  "name": "nested-foreground-note",
+  "file": "nested.go",
+  "find": "if pos == inline {\n\t\tnote = foregroundOutcomeNote(status)",
+  "replace": "if false {\n\t\tnote = foregroundOutcomeNote(status)"
+ },
+ {
+  "name": "nested-failure-partial-dropped",
+  "file": "nested.go",
+  "find": "return \"Agent failed: \" + errText + partialOutputSuffix(result)",
+  "replace": "return \"Agent failed: \" + errText"
+ },
+ {
+  "name": "nested-result-note-dropped",
+  "file": "nested.go",
+  "find": "return \"Nested agent\" + note + \".\\n\\n\" + text",
+  "replace": "return text"
+ },
+ {
+  "name": "nested-foreground-not-stopped",
+  "file": "nested.go",
+  "find": "opts.Signal = c.Done",
+  "replace": "_ = c.Done"
+ },
+ {
+  "name": "nested-wait-cancel-aborts-child",
+  "file": "nested.go",
+  "find": "case <-done:\n\t\t\treturn sdk.ToolResult{}, context.Canceled",
+  "replace": "case <-done:\n\t\t\ta.mgr.abort(r)\n\t\t\treturn sdk.ToolResult{}, context.Canceled"
+ },
+ {
+  "name": "nested-steer-not-queued",
+  "file": "nested.go",
+  "find": "r.pendingSteers = append(r.pendingSteers, message)",
+  "replace": "_ = message"
+ },
+ {
+  "name": "nested-steer-finished",
+  "file": "nested.go",
+  "find": "if r.Status != statusRunning {\n\t\ta.mgr.mu.Unlock()",
+  "replace": "if false {\n\t\ta.mgr.mu.Unlock()"
+ },
+ {
+  "name": "nested-spend-not-summed",
+  "file": "nested.go",
+  "find": "addUsage(&n.spent, spent)",
+  "replace": "n.spent = spent"
+ },
+ {
+  "name": "nested-settle-hook-missing",
+  "file": "nested.go",
+  "find": "{ a.nestedSettled(); return nil, nil }",
+  "replace": "{ return nil, nil }"
+ },
+ {
+  "name": "nested-shutdown-hook-missing",
+  "file": "nested.go",
+  "find": "{ a.nestedShutdown(); return nil, nil }",
+  "replace": "{ return nil, nil }"
+ },
+ {
+  "name": "nested-settle-stops-other-owners",
+  "file": "nested.go",
+  "find": "a.mgr.abortOwnedChildren(a.nested.AgentID)",
+  "replace": "a.mgr.abortOwnedChildren(\"\")"
+ },
+ {
+  "name": "nested-agent-text",
+  "file": "nested.go",
+  "find": "\"Launch a child-safe nested subagent for bounded delegated work. \"",
+  "replace": "\"Launch a nested subagent for delegated work. \""
  },
  {
   "name": "mem-name-limit",
@@ -3196,5 +3496,47 @@
   "file": "prompts.go",
   "find": "suffix = \"\\n\\n\" + strings.Join(sections, \"\\n\")",
   "replace": "suffix = \"\""
+ },
+ {
+  "name": "nested-resume-not-owner-checked",
+  "file": "nested.go",
+  "find": "if !n.ownsRecord(existing) {",
+  "replace": "if existing == nil {"
+ },
+ {
+  "name": "nested-isolation-ignored",
+  "file": "nested.go",
+  "find": "Worktree: inv.isolation == \"worktree\",\n\t\tRegistry: reg",
+  "replace": "Worktree: false,\n\t\tRegistry: reg"
+ },
+ {
+  "name": "nested-default-background",
+  "file": "nested.go",
+  "find": "defaultRunInBackground: false})",
+  "replace": "defaultRunInBackground: true})"
+ },
+ {
+  "name": "nested-root-session-dropped",
+  "file": "bus.go",
+  "find": "spec.RootSessionID = q.SessionID",
+  "replace": "spec.RootSessionID = \"\""
+ },
+ {
+  "name": "ceiling-ignored-by-the-runner",
+  "file": "runner.go",
+  "find": "max(s.Depth, 1) < min(s.MaxDepth, subagentDepthCeiling)\n}",
+  "replace": "max(s.Depth, 1) < s.MaxDepth\n}"
+ },
+ {
+  "name": "ceiling-ignored-by-the-child",
+  "file": "nested.go",
+  "find": "maxDepth = min(maxDepth, subagentDepthCeiling)",
+  "replace": "_ = maxDepth"
+ },
+ {
+  "name": "start-announced-before-failure-recorded",
+  "file": "manager.go",
+  "find": "if err != nil && rr == nil && !r.stopped {",
+  "replace": "if false {"
  }
 ]

@@ -506,7 +506,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 		}
 		lines = append(lines, fmt.Sprintf("  %s [%s]%s — %s", name, src, state, firstLine(c.Description)))
 	}
-	recs := a.mgr.list()
+	recs := a.mgr.listTopLevel()
 	lines = append(lines, "", "Agents:")
 	if len(recs) == 0 {
 		lines = append(lines, "  (none)")
