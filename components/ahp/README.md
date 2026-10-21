@@ -36,7 +36,7 @@ for every deviation and gap.
 
 With `filesystem.enabled` and no `roots`, access is confined to the session's working directory;
 `unrestricted: true` must be said explicitly. A terminal is a shell as you, claimed by the client
-that started it. The dev tunnel of pi-ahp is not bundled.
+that started it. A dev tunnel is a separate way to open the listener, with no token (see Dev tunnel).
 
 **What a connected client can always do.** The opt-ins above cover the host's own filesystem,
 watch, terminal and deletion services. They do not limit the agent. Anyone who holds the token
@@ -49,8 +49,39 @@ can do all of the following, so treat the token like a shell login:
 - List and read the stored history of **every** PiG session under the session directory, from all
   projects, not only the running one.
 - Get `@` completions, which list file names under the working directory.
+- Read the git changesets of the working directory (the diff of the last commit and the uncommitted work, with the content of the changed
+  files from git) through `git-blob:` references. These are served without the filesystem opt-in because they are read-only and confined to
+  the working directory's subtree; with `filesystem.enabled` the filesystem roots limit them too.
 
 The token is shown in the `/ahp` status and in the "listening" notice.
+
+## Git changesets
+
+Like pi-ahp, the host runs the `git` command line (it must be on `PATH`; without it, or outside a work tree, no changesets are advertised)
+to compute two changesets per session: **Latest Commit** (HEAD against its parent, or the root commit) and **Uncommitted Changes**
+(tracked changes against HEAD plus untracked files that git does not ignore). Nothing in the repository or its index is modified:
+git runs with `GIT_OPTIONAL_LOCKS=0`, the ambient `GIT_DIR`/`GIT_INDEX_FILE`/`GIT_WORK_TREE`-style overrides are removed, and each
+call is limited to 30 seconds and 32 MiB of output. A changeset is computed when a client subscribes, again after every turn, and
+while it stays subscribed whenever the working directory, the git index, HEAD, the refs or the ignore rules change (the watcher
+polls once a second and does not descend into ignored directories). Unsubscribed changesets are dropped after 30 seconds.
+
+## Dev tunnel
+
+`/ahp tunnel [name]` is the counterpart of pi-ahp's `pi-ahp-tunnel [--name <label>]`. It needs Microsoft's `devtunnel` CLI on `PATH`
+(https://aka.ms/devtunnels/download), which is not bundled, and a login (`devtunnel user login -g` for GitHub, or
+`devtunnel user login`; add `-d` without a browser). It then runs the same `devtunnel` commands pi-ahp does: `user show`, `list`
+for this host's tunnel (labels `_pi_ahp` and `vscode-server-launcher`), `create` when there is none (labels `vscode-server-launcher`,
+`protocolv5`, `_pi_ahp` and the display name), `update` to rename it, and `port list`, `port show`, `port create` or `port delete` to
+make port 31546 forward HTTP, refusing to replace a port that has its own access control. `name` is folded the way VS Code folds a
+tunnel name (letters, digits, `_` and `-`, at most 20 characters); `--name <label>` is accepted too.
+
+Then the session is served on `127.0.0.1:31546` **without a token** (the dev tunnel's account is the access control, as in pi-ahp)
+and `devtunnel host <tunnel id>` runs as a child process that forwards it; its output is shown as notices. Because that listener has no
+token, any process on this machine can connect to it: use it on a machine you trust, and know that the opt-ins of the settings file
+(filesystem, terminals, session deletion, allowed origins) still apply to whoever reaches it through the tunnel. The tunnel does not
+read or write the direct listener's `port`, `host` or `token`, and it cannot run while the direct listener does (`/ahp stop`
+first). `/ahp stop`, or the session being replaced or ending, stops `devtunnel host` and then the listener; if `devtunnel host` exits
+on its own the listener is shut down with a notice.
 
 ## Commands and flags
 
@@ -59,6 +90,7 @@ The token is shown in the `/ahp` status and in the "listening" notice.
 | `--ahp` | start the listener when the session starts |
 | `--ahp-settings <file>` | settings file (default `<pig home>/ahp/settings.json`) |
 | `/ahp [status]` `/ahp start` `/ahp stop` | inspect, start or stop the listener |
+| `/ahp tunnel [name]` | serve the session through a Microsoft dev tunnel (see Dev tunnel); `/ahp stop` ends it |
 
 If the PiG session is replaced (new, resume, fork, reload), the listener closes with it and connected
 clients are dropped. With `--ahp` it opens again for the new session on the same port. After
@@ -96,10 +128,11 @@ Reaching a host on another machine:
   on the remote. VS Code reads the first `ws://127.0.0.1:<port>?tkn=<token>` in the command's output, which is how the notice
   starts. The command has to keep pig running without a terminal: `pig --mode rpc --ahp` prints the notice on standard output at
   once and runs while its input stays open (checked with a plain shell, not yet with VS Code).
-- **A dev tunnel** is not bundled (the pi-ahp tunnel feature is not ported), and VS Code's own tunnel support looks for VS Code agent
-  hosts, not this one. A tunnel you start yourself can forward the port and give a `wss://` address that **Add Remote Agent Host...**
-  accepts, but VS Code sends no tunnel credentials on that connection, so the tunnel has to admit it anonymously and the token is
-  the only protection. Not tried.
+- **A dev tunnel**: `/ahp tunnel` (see Dev tunnel) sets up the fixed-port tunnel that Dev Tunnel-capable AHP clients discover, the
+  way `pi-ahp-tunnel` does. It has not been tried against VS Code. VS Code's own tunnel support looks for VS Code agent hosts; a
+  tunnel you start yourself can instead forward the direct listener's port and give a `wss://` address that **Add Remote Agent
+  Host...** accepts, but VS Code sends no tunnel credentials on that connection, so the tunnel has to admit it anonymously and
+  the token is the only protection. Not tried.
 
 Debugging: set `"chat.agentHost.ahpJsonlLoggingEnabled": true` to have VS Code log every AHP message as JSON lines under the
 window's log directory (it is off by default in stable builds).
@@ -112,9 +145,11 @@ What to expect, and the limits that apply to this port:
   [proof/PORT.md](proof/PORT.md), deviation 15). A browser `Origin` that is not allowed also gets 403.
 - The host serves **the one running session** as one agent (`pi`). Other sessions are readable from their files; they are not
   running agents. If the session is replaced (new, resume, fork, reload) clients are dropped (see Commands and flags).
-- No git changeset channels: VS Code's change views will have nothing to show (the changeset service of pi-ahp is not ported).
+- Git changesets: when the session's working directory is inside a git work tree, the session advertises two changesets, **Latest Commit**
+  (once the repository has a commit) and **Uncommitted Changes**, which VS Code's change views show. They are read-only, limited to the
+  working directory's subtree, and refreshed while a client has them open (see Git changesets above).
 - The remote filesystem, watches, terminals and session deletion are off until you opt in (see Safe by default).
-- No dev tunnel is bundled, and project trust cannot be gated from an extension (see [proof/PORT.md](proof/PORT.md)).
+- Project trust cannot be gated from an extension (see [proof/PORT.md](proof/PORT.md)).
 
 ## Other AHP clients
 

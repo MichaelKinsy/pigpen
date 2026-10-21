@@ -108,3 +108,14 @@ func TestListenNoticeIsReadByAddRemoteAgentHost(t *testing.T) {
 		t.Fatalf("pasting the notice gives host %q and tkn %q, want 127.0.0.1:7117 and s3cret (from %q)", u.Host, got, candidate)
 	}
 }
+
+// A client cannot make the host start another agent: the refusal is the one wording of the program.
+func TestCreateStoreRefusesOtherSessionsWithTheExactWording(t *testing.T) {
+	rt := newRuntime()
+	_, err := rt.createStore("/work", "some-other-session")
+	want := "@pi-in-go/pigpen-ahp (Go port) does not support creating a session from a client (only the running PiG session has an agent) yet. " +
+		"The original, git:github.com/Qusic/pi-ahp@4065e98309b03c1d2d916300856c3c21a9c10674, is a standalone Node host and runs on its own, outside PiG."
+	if err == nil || err.Error() != want {
+		t.Fatalf("error = %v", err)
+	}
+}
