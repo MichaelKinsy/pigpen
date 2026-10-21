@@ -221,7 +221,9 @@ func TestWorkflowCardStatSegments(t *testing.T) {
 		lines := card(workflowCardInput{Progress: []workflowEntry{
 			phaseEntry(0, "Review"), phaseEntry(1, "Verify"),
 			aEntry(0, func(e *workflowAgentEntry) { e.Label, e.PhaseIndex, e.ToolCalls = "short", intp(0), intp(1) }),
-			aEntry(1, func(e *workflowAgentEntry) { e.Label, e.PhaseIndex, e.ToolCalls = "a-much-longer-label", intp(1), intp(2) }),
+			aEntry(1, func(e *workflowAgentEntry) {
+				e.Label, e.PhaseIndex, e.ToolCalls = "a-much-longer-label", intp(1), intp(2)
+			}),
 		}})
 		var columns []int
 		for _, l := range treeRows(lines) {

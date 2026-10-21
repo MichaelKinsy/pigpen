@@ -29,9 +29,9 @@ const (
 
 // workflowGlyphs is a glyph tier of the card.
 type workflowGlyphs struct {
-	pointer, tick, cross, running                            string
-	groupTop, groupMid, groupBottom                          string
-	vertical, branch, lastBranch, log, warning               string
+	pointer, tick, cross, running              string
+	groupTop, groupMid, groupBottom            string
+	vertical, branch, lastBranch, log, warning string
 }
 
 var unicodeWorkflowGlyphs = workflowGlyphs{

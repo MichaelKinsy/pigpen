@@ -12,7 +12,9 @@ import (
 // Twins of the original's test/workflow-dialog.test.ts: the two-pane inspector's layout, keys and component.
 const fDialog = "workflow-dialog"
 
-func dEntry(index int, mut func(*workflowAgentEntry)) *workflowAgentEntry { return aEntryWith(index, mut) }
+func dEntry(index int, mut func(*workflowAgentEntry)) *workflowAgentEntry {
+	return aEntryWith(index, mut)
+}
 
 func TestDialogGlyphMapping(t *testing.T) {
 	live := func() []workflowEntry {
@@ -22,7 +24,9 @@ func TestDialogGlyphMapping(t *testing.T) {
 			dEntry(2, func(e *workflowAgentEntry) { e.Label, e.State, e.Skipped = "skipped", entryError, true }),
 			dEntry(3, func(e *workflowAgentEntry) { e.Label, e.State, e.Blocked = "blocked", entryError, true }),
 			dEntry(4, func(e *workflowAgentEntry) { e.Label, e.State, e.QueuedAt = "queued", entryStart, startedAt(dlgStart) }),
-			dEntry(5, func(e *workflowAgentEntry) { e.Label, e.State, e.StartedAt = "running", entryProgress, startedAt(dlgStart) }),
+			dEntry(5, func(e *workflowAgentEntry) {
+				e.Label, e.State, e.StartedAt = "running", entryProgress, startedAt(dlgStart)
+			}),
 		}
 	}
 	tw(t, fDialog, "maps every one of the seven display states to its glyph and colour", func(t *testing.T) {
@@ -72,8 +76,10 @@ func TestDialogGlyphMapping(t *testing.T) {
 	})
 	tw(t, fDialog, "draws ◌ for an agent still live when the run stopped", func(t *testing.T) {
 		rows := rightRows(dialogLines(dialogOver{
-			Progress: []workflowEntry{dEntry(0, func(e *workflowAgentEntry) { e.Label, e.State, e.StartedAt = "cutoff", entryProgress, startedAt(dlgStart) })},
-			Task:     taskStatus(runKilled)}))
+			Progress: []workflowEntry{dEntry(0, func(e *workflowAgentEntry) {
+				e.Label, e.State, e.StartedAt = "cutoff", entryProgress, startedAt(dlgStart)
+			})},
+			Task: taskStatus(runKilled)}))
 		hasStr(t, rows[0], "◌ cutoff")
 	})
 	tw(t, fDialog, "keeps an ASCII tier one column wide for every glyph", func(t *testing.T) {
@@ -142,7 +148,9 @@ func TestDialogStateFilter(t *testing.T) {
 		return []workflowEntry{
 			dEntry(0, func(e *workflowAgentEntry) { e.Label, e.State = "one", entryDone }),
 			dEntry(1, func(e *workflowAgentEntry) { e.Label, e.State, e.StartedAt = "two", entryProgress, startedAt(dlgStart) }),
-			dEntry(2, func(e *workflowAgentEntry) { e.Label, e.State, e.StartedAt = "three", entryProgress, startedAt(dlgStart) }),
+			dEntry(2, func(e *workflowAgentEntry) {
+				e.Label, e.State, e.StartedAt = "three", entryProgress, startedAt(dlgStart)
+			}),
 		}
 	}
 	filter := func(f string) func(*workflowDialogState) { return func(s *workflowDialogState) { s.Filter = f } }
@@ -238,7 +246,9 @@ func TestDialogPerAgentDetail(t *testing.T) {
 	}
 	// The detail pane is where per-agent configuration belongs: it has the width the card row does not.
 	tw(t, fDialog, "names the canonical model id, which the tight card row has no room for", func(t *testing.T) {
-		rows := detailLines(dialogOver{Progress: one(func(e *workflowAgentEntry) { e.State, e.Model, e.ModelID = entryDone, "haiku 4.5", "anthropic/claude-haiku-4-5" })})
+		rows := detailLines(dialogOver{Progress: one(func(e *workflowAgentEntry) {
+			e.State, e.Model, e.ModelID = entryDone, "haiku 4.5", "anthropic/claude-haiku-4-5"
+		})})
 		hasStr(t, strings.Join(bareRows(rows), "\n"), "anthropic/claude-haiku-4-5")
 	})
 	tw(t, fDialog, "shows the thinking level and discloses one that was clamped", func(t *testing.T) {
@@ -529,7 +539,9 @@ func TestDialogFrameHeight(t *testing.T) {
 		for i := range 60 {
 			lines = append(lines, "prompt line "+itoa(i))
 		}
-		return []workflowEntry{phaseEntry(0, "Review"), dEntry(0, func(e *workflowAgentEntry) { e.Label, e.PhaseIndex, e.State, e.PromptPreview = "a", intp(0), entryDone, strings.Join(lines, "\n") })}
+		return []workflowEntry{phaseEntry(0, "Review"), dEntry(0, func(e *workflowAgentEntry) {
+			e.Label, e.PhaseIndex, e.State, e.PromptPreview = "a", intp(0), entryDone, strings.Join(lines, "\n")
+		})}
 	}
 	expanded := func(s *workflowDialogState) { s.Level, s.PromptExpanded = dialogLevelAgent, true }
 	tw(t, fDialog, "caps the detail pane when a long prompt is expanded", func(t *testing.T) {

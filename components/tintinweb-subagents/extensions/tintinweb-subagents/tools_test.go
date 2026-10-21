@@ -117,4 +117,3 @@ func TestSteer(t *testing.T) {
 	eq(t, r.must("steer_subagent", obj{"agent_id": "nope", "message": "x"}), `Agent not found: "nope". It may have been cleaned up.`)
 	eq(t, r.must("get_subagent_result", obj{"agent_id": "nope"}), `Agent not found: "nope". It may have been cleaned up.`)
 }
-

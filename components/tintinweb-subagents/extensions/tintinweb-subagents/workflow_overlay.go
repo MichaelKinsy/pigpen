@@ -1,7 +1,6 @@
 package tintinweb_subagents
 
 import (
-
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
@@ -233,4 +232,3 @@ func (a *app) renderWorkflowEntry(ctx sdk.Context, entry map[string]any, _ sdk.E
 		return renderWorkflowEntryCard(data, sdkTheme{ctx.UITheme()}, width), nil
 	})
 }
-

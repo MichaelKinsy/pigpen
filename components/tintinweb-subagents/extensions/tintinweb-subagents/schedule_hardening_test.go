@@ -50,7 +50,9 @@ func TestAPanicInTheManagerIsAFireErrorNotACrash(t *testing.T) {
 	got := r.job(t, job.ID)
 	eq(t, got.LastStatus, "error")
 	eq(t, got.LastRun != "", true)
-	eq(t, r.events.has(func(e scheduleChange) bool { return e.Type == "error" && e.JobID == job.ID && e.Error == "spawn went wrong" }), true)
+	eq(t, r.events.has(func(e scheduleChange) bool {
+		return e.Type == "error" && e.JobID == job.ID && e.Error == "spawn went wrong"
+	}), true)
 	clock.advance(time.Minute) // the interval is still armed
 	eq(t, len(m.spawned()), 2)
 }

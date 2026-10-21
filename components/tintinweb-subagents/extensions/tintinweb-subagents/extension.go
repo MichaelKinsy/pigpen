@@ -29,12 +29,12 @@ type app struct {
 	latest          *sdk.Context
 	timers          map[string]*time.Timer
 	settingsNotice  string
-	ui              *uiHub // the widget, fleet list and conversation viewer
+	ui              *uiHub        // the widget, fleet list and conversation viewer
 	held            *heldSettings // the settings of features this port does not have: shown, written, not applied (settings_store.go)
 
-	wf     *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
-	wfOnce sync.Once
-	schedule        scheduleState
+	wf       *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
+	wfOnce   sync.Once
+	schedule scheduleState
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {

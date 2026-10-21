@@ -78,7 +78,9 @@ func (m *agentsMenu) getModelLabel(typ string) string {
 	// Surface what it actually resolved to when that differs from the config, e.g. a provider fallback or a looser
 	// version pin. Cosmetic separator and date differences are normalized away so an effectively identical match stays quiet.
 	full := msgStr(resolved["provider"]) + "/" + msgStr(resolved["id"])
-	norm := func(s string) string { return datedModel.ReplaceAllString(strings.ReplaceAll(strings.ToLower(s), ".", "-"), "") }
+	norm := func(s string) string {
+		return datedModel.ReplaceAllString(strings.ReplaceAll(strings.ToLower(s), ".", "-"), "")
+	}
 	if norm(cfg.Model) == norm(full) {
 		return label
 	}

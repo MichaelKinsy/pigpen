@@ -45,16 +45,16 @@ type workflowDialogBox struct {
 
 var unicodeDialogGlyphs = workflowDialogGlyphs{
 	tick: unicodeWorkflowGlyphs.tick, cross: unicodeWorkflowGlyphs.cross, queued: "◌", pointer: "❯", focus: unicodeWorkflowGlyphs.pointer,
-	spinner: spinner,
-	box:     workflowDialogBox{"╭", "╮", "╰", "╯", "─", "│", "┬", "┴"},
+	spinner:  spinner,
+	box:      workflowDialogBox{"╭", "╮", "╰", "╯", "─", "│", "┬", "┴"},
 	ellipsis: "…", upDown: "↑↓", enter: "⏎",
 }
 
 // asciiDialogGlyphs is the ASCII tier, one column per glyph so the panes stay aligned either way.
 var asciiDialogGlyphs = workflowDialogGlyphs{
 	tick: asciiWorkflowGlyphs.tick, cross: asciiWorkflowGlyphs.cross, queued: "o", pointer: ">", focus: asciiWorkflowGlyphs.pointer,
-	spinner: []string{"-", "\\", "|", "/"},
-	box:     workflowDialogBox{"+", "+", "+", "+", "-", "|", "+", "+"},
+	spinner:  []string{"-", "\\", "|", "/"},
+	box:      workflowDialogBox{"+", "+", "+", "+", "-", "|", "+", "+"},
 	ellipsis: "~", upDown: "up/down", enter: "enter",
 }
 
@@ -723,7 +723,9 @@ type workflowDialogKeyResult struct {
 // handleWorkflowDialogKey maps a keypress to the next state and, where the key is an action, what the caller should do
 // about it. Pure: nil means "not ours". Movement clamps at both ends rather than wrapping.
 func handleWorkflowDialogKey(data string, state workflowDialogState, view resolvedWorkflowDialog) *workflowDialogKeyResult {
-	act := func(a workflowDialogAction) *workflowDialogKeyResult { return &workflowDialogKeyResult{State: state, Action: &a} }
+	act := func(a workflowDialogAction) *workflowDialogKeyResult {
+		return &workflowDialogKeyResult{State: state, Action: &a}
+	}
 	// Ctrl+C is the reflex for backing out of a full-screen overlay, so it closes outright from either level.
 	if tui.MatchesKey(data, "ctrl+c") {
 		return act(workflowDialogAction{Kind: "cancel"})
@@ -983,4 +985,6 @@ func (d *workflowDialog) dispatch(a workflowDialogAction) {
 }
 
 // plainWorkflowDialogLines is the dialog as plain text.
-func plainWorkflowDialogLines(lines []workflowCardLine) []string { return plainWorkflowCardLines(lines) }
+func plainWorkflowDialogLines(lines []workflowCardLine) []string {
+	return plainWorkflowCardLines(lines)
+}
