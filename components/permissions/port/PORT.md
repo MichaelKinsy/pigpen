@@ -613,8 +613,11 @@ swaps it for this layer.
   through to its tool branch, so `{kind: "bogus", surface: "bash"}` is evaluated as the `bash` tool and denied where bash is denied.
   It throws a TypeError only for `null`/`undefined`/non-objects, a missing surface and a kind whose fields are missing. The port's
   `AccessIntent` is a sealed interface, so no Go input exists for the unknown kind; a nil intent or an intent type the resolver does not
-  know panics (pinned by the test), the gate pipeline's recover turns that into a block, and a wire decoder in the forwarding code
-  must decide an unknown kind itself (it must refuse it, not evaluate it as a tool, though the original would). This corrects the earlier
+  know panics (pinned by the test), and the gate pipeline's recover turns that into a block. No decoder in the port reads an intent `kind`
+  from a wire: the forwarded wire's `accessIntent` is `{surface, matchValues, boundaryValue, requesterCwd, principal}` with no kind (the serving
+  policy builds the path-values intent itself, as the original's does), `asForwardedAccessIntent` accepts only a fully well formed object (anything
+  else is nil, so the serving node floors to ask), and the cross-extension service takes typed Go intents. So there is no wire input on which the
+  port could evaluate an unknown kind as a tool the way the original's resolver would. This corrects the earlier
   note that the unknown-intent panic mirrors the original's TypeError: it mirrors it for nil only.
 - Mutations: `port/gen-mutations-policy.py` writes `port/mutations-policy.json`; run `pigeq mutate --unit-only --go
   extensions/pi-permission-system --sdk-dir <PiG sdk> --mutations port/mutations-policy.json --jobs 4`.
