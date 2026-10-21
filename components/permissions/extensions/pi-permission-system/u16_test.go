@@ -25,3 +25,28 @@ func TestU16S16AgreeWithTheGeneralConversion(t *testing.T) {
 		}
 	}
 }
+
+func TestJSSliceAndSanitizeAgreeAcrossTheASCIIFastPath(t *testing.T) {
+	generalSlice := func(s string, start, end int) string {
+		u := utf16.Encode([]rune(s))
+		from, to := jsSliceBounds(len(u), start, end)
+		if from >= to {
+			return ""
+		}
+		return string(utf16.Decode(u[from:to]))
+	}
+	for _, s := range []string{"", "abc", "mcp__danger_srv__wipe", "danger-srv", "é", "a😀b"} {
+		for _, start := range []int{-10, -2, -1, 0, 1, 2, 3, 40} {
+			for _, end := range []int{-10, -1, 0, 1, 2, 3, 40, jsEnd} {
+				if got, want := jsSlice(s, start, end), generalSlice(s, start, end); got != want {
+					t.Errorf("jsSlice(%q, %d, %d) = %q, want %q", s, start, end, got, want)
+				}
+			}
+		}
+	}
+	for in, want := range map[string]string{"": "", "danger-srv": "danger_srv", "a.b c": "a_b_c", "ok_09AZ": "ok_09AZ", "é": "_", "a😀b": "a__b"} {
+		if got := sanitizePiMcpName(in); got != want {
+			t.Errorf("sanitizePiMcpName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
