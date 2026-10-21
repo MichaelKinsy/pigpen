@@ -29,12 +29,6 @@ var quickWords = map[string]bool{
 const quickQueueLines = 8
 
 func (a *app) quickCommand(ctx sdk.Context, words []string) error {
-	if _, settings, err := a.load(); err == nil {
-		if err := a.refuseNativeEngine(settings); err != nil {
-			ctx.Notify("pig-music: "+err.Error(), "warning")
-			return nil
-		}
-	}
 	a.foot.capture(ctx)
 	cctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
@@ -59,16 +53,10 @@ func (a *app) quickCommand(ctx sdk.Context, words []string) error {
 
 // cliEnv is the command line's environment as this extension has it (the tests' fakes included).
 func (a *app) cliEnv() cli.Env {
-	// "native" is refused before this point (refuseNativeEngine); "auto" means mpv here, so a native player is never started
-	// that the overlay, the footer and stopOnExit would not see.
-	getenv := func(k string) string {
-		if k == "PIG_MUSIC_ENGINE" {
-			return "mpv"
-		}
-		return a.d.Getenv(k)
-	}
+	// The engine is the setting's (or PIG_MUSIC_ENGINE's), chosen by the command line's own code, which the player's ensure
+	// mirrors (chooseEngine), so the overlay, the footer and stopOnExit follow the player the command started.
 	return cli.Env{
-		Getenv: getenv, LookPath: a.d.LookPath, Source: a.d.Source, Doctor: a.d.Doctor, Name: "/music",
+		Getenv: a.d.Getenv, LookPath: a.d.LookPath, Source: a.d.Source, Doctor: a.d.Doctor, Name: "/music",
 		Configure: func(c *mpv.Config) {
 			c.Env = append(append([]string(nil), c.Env...), a.d.MPVEnv...)
 			if a.d.MPVBin != "" && c.MPVPath == "" {

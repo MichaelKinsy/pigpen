@@ -150,7 +150,7 @@ func (p quickPort) Set(key, value string) (string, error) {
 	note := "takes effect after /reload"
 	switch key {
 	case "engine":
-		note = "pigmusic only for now: the /music player and its quick commands use mpv"
+		note = "used from the next /music command; native needs the pigmusic program"
 	case "cookieBrowser":
 	case "nowPlaying":
 		note = ""

@@ -129,25 +129,7 @@ func TestSlashMusicPlayMakesThisPiGTheOwnerOfTheMusic(t *testing.T) {
 	}
 }
 
-// The /music player and its quick commands only drive mpv. With engine "native" they are refused, not run on mpv anyway.
-func TestNativeEngineIsRefusedByTheQuickCommands(t *testing.T) {
-	h, _, env, _ := playerEnv(t)
-	writeSettings(t, env, `{"engine": "native"}`)
-	out := say(t, h, "play", "night")
-	if !strings.Contains(out, "@pi-in-go/pigpen-pig-music does not support the native engine in the /music player yet") {
-		t.Fatalf("play with engine native: %q", out)
-	}
-}
-
-func TestNativeEngineIsRefusedByTheEnvironmentToo(t *testing.T) {
-	h, _, _, _ := playerEnvWith(t, map[string]string{"PIG_MUSIC_ENGINE": "Native"})
-	out := say(t, h, "play", "night")
-	if !strings.Contains(out, "@pi-in-go/pigpen-pig-music does not support the native engine in the /music player yet") {
-		t.Fatalf("play with PIG_MUSIC_ENGINE=native: %q", out)
-	}
-}
-
-// /music settings must not promise that the engine takes effect after /reload: the /music player does not use it yet.
+// /music settings says what the engine row changes: the next /music command uses it, and native needs the pigmusic program.
 func TestTheEngineRowSaysWhatItChanges(t *testing.T) {
 	h, _, _, _ := playerEnv(t)
 	done := h.command("music", "settings")
@@ -157,7 +139,7 @@ func TestTheEngineRowSaysWhatItChanges(t *testing.T) {
 		h.input("j") // down to Engine
 	}
 	h.input("l")
-	h.waitSnapshot("the engine note", hasText("pigmusic only"))
+	h.waitSnapshot("the engine note", hasText("pigmusic program"))
 	h.input("q")
 	<-done
 }
