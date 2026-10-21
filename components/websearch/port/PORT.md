@@ -709,3 +709,22 @@ gemini-wire.json, testdata/model-provider-requests.json) and the replays compare
 adds the failure paths the fixtures do not reach.
 Seams are installed: `/google-account` reads the cookie reader of the auth-cookies slice, the curator default provider
 uses the OpenAI eligibility check (`modelHostedSearchEligible`).
+
+Activity logging proof (integration of the curator onto the stack): `testdata/provider-requests.json` now holds the
+original's activity entries for HTTP 500, transport failure, abort and invalid JSON of every REST provider, SearXNG,
+Brave, Exa (keyed and MCP), Perplexity, SERPdive, DuckDuckGo, Tavily, Kagi and Ollama search (62 recorded cases, replayed by
+`TestOracleProviderFixtures`). `activity_fetch_test.go` and `activity_endings_test.go` pin how a page fetch, the Jina reader,
+Crawl4AI, Firecrawl, the Bright Data Unlocker, Kagi and Ollama extraction and Gemini end in the monitor. A cancelled provider
+call reads "This operation was aborted" like the original's fetch rejection. The model fixture moved to
+`testdata/model-provider-requests.json` so mutation runs replay it too. Replay differences kept out of the recorder: Brave
+and Exa pass V8's JSON parser message through (Go cannot produce it), and a body read that fails under a deadline is
+"returned invalid JSON" with status 200 in the original but a plain deadline error here (restCallA, Kagi, Perplexity).
+
+Mutants of the activity code that are NOT in `mutations.json` because no test kills them yet (recorded, not equivalent):
+the GitHub clone entries (`github_extract.go`, 14 sites), the video and YouTube entries, the Kimi and OpenAI HTTP-error
+entries, xAI's HTTP-error entry, `act.logError("HTTP n")` before the error of Brave and SearXNG (equivalent: the next
+`failedErr` overwrites the message), the invalid-JSON branches of Brave and Exa, and ten semantic mutants (xAI credits
+regex, `useCurrentModel` only for openai, unsupported errors in configured routing, a non-array `openaiSearchProviders`,
+untrimmed provider ids, the Codex URL and api check of the current model, the curator eligibility flag, case-sensitive
+abort text, credential redaction in `failedBy`). They need GitHub/video wire recordings of the original's activity and
+hand twins.
