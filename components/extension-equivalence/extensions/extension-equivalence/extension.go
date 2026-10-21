@@ -62,14 +62,20 @@ func Extension() *sdk.Extension {
 		})
 
 	e.Tool("equivalence_run",
-		"Run the equivalence harness. mode=run executes the original under Pi and under PiG and the Go port under PiG with the same scripted scenarios and requires identical traces. mode=check compares only the Go port with recorded golden traces. mode=record writes golden traces from Pi. mode=mutate applies each deliberate defect in mutations to a copy of the port and requires the golden traces (and, with sdkDir, the port's Go tests) to catch it.",
+		"Run the equivalence harness. mode=run executes the original under Pi and under PiG and the Go port under PiG with the same scripted scenarios and requires identical traces. mode=check compares only the Go port with recorded golden traces. mode=record writes golden traces from Pi. mode=mutate applies each deliberate defect in mutations to a copy of the port and requires the golden traces (and, with unit or sdkDir, the port's Go tests) to catch it. mode=lane runs one host on the scenarios and writes its traces, comparing nothing, to debug a divergence. builtin checks a built Piglet Binary; keep leaves each lane's run directory in place and names it.",
 		sdk.Schema{
 			"type":     "object",
 			"required": []any{"mode"},
 			"properties": map[string]any{
-				"mode":           map[string]any{"type": "string", "enum": []any{"run", "check", "record", "mutate"}},
+				"mode":           map[string]any{"type": "string", "enum": []any{"run", "check", "record", "mutate", "lane"}},
 				"mutations":      map[string]any{"type": "string", "description": "Mutation list, JSON (mutate)"},
 				"sdkDir":         map[string]any{"type": "string", "description": "PiG's staged Go SDK (mutate: also run the port's go tests on each mutant; default $PIG_SDK_DIR)"},
+				"unit":           map[string]any{"type": "boolean", "description": "mutate: also run the port's go tests on each mutant first (needs sdkDir or $PIG_SDK_DIR). Omitted: on when sdkDir or $PIG_SDK_DIR is set; false turns the layer off."},
+				"builtin":        map[string]any{"type": "boolean", "description": "check, record with self: the port is compiled into pig (a built Piglet Binary); no go directory is loaded. Not available for mutate."},
+				"keep":           map[string]any{"type": "boolean", "description": "Keep each lane's run directory; the report names it"},
+				"host":           map[string]any{"type": "string", "enum": []any{"pi", "pig"}, "description": "lane: the host to run"},
+				"bin":            map[string]any{"type": "string", "description": "lane: the host executable"},
+				"ext":            map[string]any{"type": "string", "description": "lane: the extension (a TypeScript file or a Go directory)"},
 				"scenarios":      map[string]any{"type": "string", "description": "Scenario file or directory"},
 				"golden":         map[string]any{"type": "string", "description": "Golden trace directory (check and record)"},
 				"ts":             map[string]any{"type": "string", "description": "The original TypeScript extension (oracle: run under Pi)"},
@@ -78,7 +84,7 @@ func Extension() *sdk.Extension {
 				"go":             map[string]any{"type": "string", "description": "The Go port directory"},
 				"pi":             map[string]any{"type": "string", "description": "pi executable (default $PIGEQ_PI)"},
 				"pig":            map[string]any{"type": "string", "description": "pig executable (default $PIGEQ_PIG)"},
-				"out":            map[string]any{"type": "string", "description": "Directory for recorded traces"},
+				"out":            map[string]any{"type": "string", "description": "Directory for recorded traces (record, lane)"},
 				"acceptGaps":     map[string]any{"type": "object", "description": "Accepted gap symbol -> owner approval text"},
 				"surface":        map[string]any{"type": "string", "description": "PiG docs/extension-sdk-surface.md"},
 				"skipHostRun":    map[string]any{"type": "boolean", "description": "Skip running the original under PiG"},
@@ -157,7 +163,14 @@ func runTool(ctx sdk.Context, params map[string]any) (any, error) {
 		Out:           resolve(ctx, str(params, "out")),
 		Surface:       resolve(ctx, str(params, "surface")),
 		SkipHostCheck: params["skipHostRun"] == true,
-		Options:       eq.Options{Stderr: &stderr, StepTimeout: time.Duration(num(params, "stepTimeoutSec") * float64(time.Second))},
+		Builtin:       params["builtin"] == true,
+		Options:       eq.Options{Stderr: &stderr, Keep: params["keep"] == true, StepTimeout: time.Duration(num(params, "stepTimeoutSec") * float64(time.Second))},
+	}
+	switch {
+	case cfg.Builtin && mode == "mutate":
+		return nil, fmt.Errorf("builtin cannot mutate a built binary; mutate the port's source directory (go)")
+	case cfg.Builtin && mode != "check" && mode != "record":
+		return nil, fmt.Errorf("builtin applies to mode check and record (with self), not %s", mode)
 	}
 	if m, ok := params["acceptGaps"].(map[string]any); ok {
 		cfg.AcceptedGaps = map[string]string{}
@@ -181,8 +194,18 @@ func runTool(ctx sdk.Context, params map[string]any) (any, error) {
 		if err == nil {
 			results, err = eq.Record(scs, cfg, golden)
 		}
+	case "lane":
+		err = need(str(params, "host"), "host", str(params, "bin"), "bin", str(params, "ext"), "ext")
+		if err == nil {
+			host := str(params, "host")
+			results, err = eq.LaneTraces(scs, cfg, eq.Lane{Name: host + "-lane", Host: host, Bin: resolve(ctx, str(params, "bin")), Ext: resolve(ctx, str(params, "ext"))})
+		}
 	case "check":
-		err = need(cfg.Pig, "pig", str(params, "go"), "go", str(params, "golden"), "golden")
+		if cfg.Builtin {
+			err = need(cfg.Pig, "pig", str(params, "golden"), "golden")
+		} else {
+			err = need(cfg.Pig, "pig", str(params, "go"), "go", str(params, "golden"), "golden")
+		}
 		if err == nil {
 			results, err = eq.Check(scs, cfg, golden)
 		}
@@ -193,33 +216,49 @@ func runTool(ctx sdk.Context, params map[string]any) (any, error) {
 			err = need(cfg.Pig, "pig", str(params, "go"), "go", str(params, "golden"), "golden", str(params, "mutations"), "mutations")
 		}
 		if err == nil {
-			return mutateTool(ctx, scs, cfg, golden, params)
+			return mutateTool(ctx, scs, cfg, golden, params, &stderr)
 		}
 	default:
-		err = fmt.Errorf("mode must be run, check, record or mutate, got %q", mode)
+		err = fmt.Errorf("mode must be run, check, record, mutate or lane, got %q", mode)
 	}
 	if err != nil {
 		return nil, err
 	}
 	var report bytes.Buffer
 	pass := eq.WriteReport(&report, results)
+	kept(&report, cfg, &stderr)
 	return verdictText(pass, report.String()), nil
 }
 
-func mutateTool(ctx sdk.Context, scs []*eq.Scenario, cfg eq.Config, golden string, params map[string]any) (any, error) {
+// kept adds the run directories --keep left in place (the harness reports them on its stderr) to the report.
+func kept(report *bytes.Buffer, cfg eq.Config, stderr *bytes.Buffer) {
+	if cfg.Options.Keep && stderr.Len() > 0 {
+		report.WriteString("\n" + strings.TrimRight(stderr.String(), "\n") + "\n")
+	}
+}
+
+func mutateTool(ctx sdk.Context, scs []*eq.Scenario, cfg eq.Config, golden string, params map[string]any, stderr *bytes.Buffer) (any, error) {
 	list, err := eq.LoadMutations(resolve(ctx, str(params, "mutations")))
 	if err != nil {
 		return nil, err
 	}
 	var unit *eq.UnitTest
-	if dir := firstNonEmpty(resolve(ctx, str(params, "sdkDir")), os.Getenv("PIG_SDK_DIR")); dir != "" {
+	dir := firstNonEmpty(resolve(ctx, str(params, "sdkDir")), os.Getenv("PIG_SDK_DIR"))
+	// The port's own tests run on each mutant when asked (unit), when only they judge (unitOnly), or, as before
+	// the parameter existed, when an SDK directory is given and unit is not set to false.
+	wantUnit, unitSet := params["unit"].(bool)
+	if params["unitOnly"] == true || (unitSet && wantUnit) || (!unitSet && dir != "") {
+		if dir == "" {
+			who := "unit"
+			if params["unitOnly"] == true {
+				who = "unitOnly"
+			}
+			return nil, fmt.Errorf("%s needs sdkDir (or $PIG_SDK_DIR)", who)
+		}
 		unit = eq.NewUnitTest(dir)
 	}
 	cfg.Jobs = int(num(params, "jobs"))
 	cfg.UnitOnly = params["unitOnly"] == true
-	if cfg.UnitOnly && unit == nil {
-		return nil, fmt.Errorf("unitOnly needs sdkDir (or $PIG_SDK_DIR)")
-	}
 	results, err := eq.Mutate(scs, cfg, golden, list, unit)
 	if err != nil {
 		return nil, err
@@ -238,6 +277,7 @@ func mutateTool(ctx sdk.Context, scs []*eq.Scenario, cfg eq.Config, golden strin
 		fmt.Fprintf(&report, "%s %s\n         %s\n", status, m.Mutation.Name, m.Detail)
 	}
 	fmt.Fprintf(&report, "%d mutation(s), %d not killed\n", len(results), notKilled)
+	kept(&report, cfg, stderr)
 	return verdictText(notKilled == 0, report.String()), nil
 }
 

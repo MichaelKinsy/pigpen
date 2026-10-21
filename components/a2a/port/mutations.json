@@ -157,19 +157,19 @@
  },
  {
   "name": "file-parts-dropped",
-  "file": "executor.go",
-  "find": "\t\tif _, ok := p.Content.(a2a.Text); !ok {",
-  "replace": "\t\tif _, ok := p.Content.(a2a.Text); false && !ok {"
+  "file": "parts.go",
+  "find": "\t\tcase a2a.URL:\n\t\t\treturn \"\", nil, fmt.Errorf(\"part %d is a URL",
+  "replace": "\t\tcase a2a.URL:\n\t\t\tcontinue\n\t\t\treturn \"\", nil, fmt.Errorf(\"part %d is a URL"
  },
  {
   "name": "empty-prompt-accepted",
-  "file": "executor.go",
+  "file": "parts.go",
   "find": "\tif strings.TrimSpace(prompt) == \"\" {",
   "replace": "\tif false {"
  },
  {
   "name": "prompt-size-unbounded",
-  "file": "executor.go",
+  "file": "parts.go",
   "find": "\tif len(prompt) > maxPromptBytes {",
   "replace": "\tif false {"
  },
@@ -218,14 +218,14 @@
  {
   "name": "version-not-enforced",
   "file": "server.go",
-  "find": "!ok || !versionsOK(v)",
-  "replace": "false && (!ok || !versionsOK(v))"
+  "find": "\tif err := checkVersion(v, g.enabled[\"protocol03\"]); err != nil {",
+  "replace": "\tif err := checkVersion(v, g.enabled[\"protocol03\"]); false && err != nil {"
  },
  {
   "name": "absent-version-accepted",
   "file": "server.go",
-  "find": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); !ok || !versionsOK(v) {",
-  "replace": "if v, ok := callCtx.ServiceParams().Get(a2a.SvcParamVersion); ok && !versionsOK(v) {"
+  "find": "\tif n == 0 && !allow03 {",
+  "replace": "\tif false {"
  },
  {
   "name": "minor-versions-accepted",
@@ -236,8 +236,8 @@
  {
   "name": "mixed-version-values-accepted",
   "file": "server.go",
-  "find": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\treturn false\n\t\t\t}",
-  "replace": "\t\t\tif !versionOK(strings.TrimSpace(one)) {\n\t\t\t\tcontinue\n\t\t\t}"
+  "find": "\t\t\tif !versionOK(one) {\n\t\t\t\treturn refuse(a2a.ErrVersionNotSupported, \"A2A protocol version \"+oneLine(one, 32), detail)\n\t\t\t}",
+  "replace": "\t\t\tif !versionOK(one) {\n\t\t\t\tcontinue\n\t\t\t}"
  },
  {
   "name": "tenant-not-enforced",
@@ -542,7 +542,7 @@
  {
   "name": "agent-dir-ignored",
   "file": "extension.go",
-  "find": "\tif d := m.getenv(\"PIG_CODING_AGENT_DIR\"); d != \"\" {\n\t\treturn d\n\t}\n",
+  "find": "\tif d := m.getenv(\"PIG_CODING_AGENT_DIR\"); d != \"\" {\n\t\treturn d, nil\n\t}\n",
   "replace": ""
  },
  {
@@ -584,14 +584,14 @@
  {
   "name": "task-action-unchecked",
   "file": "extension.go",
-  "find": "\treturn nil, sdk.NewToolError(fmt.Sprintf(\"a2a: unknown action %q (get, cancel or list)\", action))",
+  "find": "\treturn nil, sdk.NewToolError(fmt.Sprintf(\"a2a: unknown action %q (get, cancel, list or wait)\", action))",
   "replace": "\treturn \"ok\", nil"
  },
  {
   "name": "send-drops-context",
   "file": "extension.go",
-  "find": "SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID}",
-  "replace": "SendArgs{Agent: agent, Message: message, ContextID: contextID[:0], TaskID: taskID}"
+  "find": "SendArgs{Agent: agent, Message: message, ContextID: contextID, TaskID: taskID, Detach: !wait}",
+  "replace": "SendArgs{Agent: agent, Message: message, ContextID: contextID[:0], TaskID: taskID, Detach: !wait}"
  },
  {
   "name": "tls-load-failure-ignored",
@@ -602,8 +602,8 @@
  {
   "name": "subscribe-ownership-unchecked",
   "file": "server.go",
-  "find": "\t\tif _, err := g.store.Get(ctx, sub.ID); err != nil {",
-  "replace": "\t\tif _, err := g.store.Get(ctx, sub.ID); false && err != nil {"
+  "find": "\t\tif _, err := g.store.Get(ctx, named); err != nil {",
+  "replace": "\t\tif _, err := g.store.Get(ctx, named); false && err != nil {"
  },
  {
   "name": "queued-cancel-ignored-at-slot",
@@ -652,5 +652,425 @@
   "file": "worker.go",
   "find": "\t\t// A tool the worker started can outlive it.\n\t\t_ = killTree(cmd.Process)\n",
   "replace": ""
+ },
+ {
+  "name": "store-create-not-persisted",
+  "file": "taskstore.go",
+  "find": "\tif err := s.persist(task, rec); err != nil {\n\t\treturn taskstore.TaskVersionMissing, fmt.Errorf(\"a2a: could not store the task: %w\", err)\n\t}",
+  "replace": "\tif false {\n\t\treturn taskstore.TaskVersionMissing, errors.New(\"x\")\n\t}"
+ },
+ {
+  "name": "store-get-owner-unchecked",
+  "file": "taskstore.go",
+  "find": "\tif owner != user {",
+  "replace": "\tif false && owner != user {"
+ },
+ {
+  "name": "store-update-owner-unchecked",
+  "file": "taskstore.go",
+  "find": "\tif rec == nil || rec.user != user {",
+  "replace": "\tif rec == nil || (false && rec.user != user) {"
+ },
+ {
+  "name": "store-list-shows-other-principals",
+  "file": "taskstore.go",
+  "find": "\t\tcase rec.user != user:",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "store-interrupted-task-left-running",
+  "file": "taskstore.go",
+  "find": "\t\tif !rec.state.Terminal() {\n\t\t\tif err := s.interrupt",
+  "replace": "\t\tif false {\n\t\t\tif err := s.interrupt"
+ },
+ {
+  "name": "store-no-prune-on-open",
+  "file": "taskstore.go",
+  "find": "\ts.prune(now)\n\treturn s, nil",
+  "replace": "\treturn s, nil"
+ },
+ {
+  "name": "store-prunes-unfinished-tasks",
+  "file": "taskstore.go",
+  "find": "\t\tif rec.state.Terminal() && now.Sub(rec.updated) > s.retention {",
+  "replace": "\t\tif now.Sub(rec.updated) > s.retention {"
+ },
+ {
+  "name": "store-create-does-not-prune",
+  "file": "taskstore.go",
+  "find": "\tif now.Sub(s.lastPrune) >= pruneInterval {\n\t\ts.prune(now)\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "store-writes-every-update",
+  "file": "taskstore.go",
+  "find": "\tif rec.state != rec.persistedState || rec.state.Terminal() || now.Sub(rec.persistedAt) >= writeInterval {",
+  "replace": "\tif true {"
+ },
+ {
+  "name": "store-state-change-not-written",
+  "file": "taskstore.go",
+  "find": "\tif rec.state != rec.persistedState || rec.state.Terminal() || now.Sub(rec.persistedAt) >= writeInterval {",
+  "replace": "\tif now.Sub(rec.persistedAt) >= writeInterval {"
+ },
+ {
+  "name": "store-file-world-readable",
+  "file": "taskstore.go",
+  "find": "os.O_TRUNC, 0o600)",
+  "replace": "os.O_TRUNC, 0o644)"
+ },
+ {
+  "name": "store-dir-world-readable",
+  "file": "taskstore.go",
+  "find": "os.Chmod(s.dir, 0o700)",
+  "replace": "os.Chmod(s.dir, 0o755)"
+ },
+ {
+  "name": "store-task-id-in-file-name",
+  "file": "taskstore.go",
+  "find": "hex.EncodeToString(sum[:])+\".json\"",
+  "replace": "hex.EncodeToString(sum[:])[:0]+string(id)+\".json\""
+ },
+ {
+  "name": "store-stale-update-accepted",
+  "file": "taskstore.go",
+  "find": "\tif req.PrevVersion != taskstore.TaskVersionMissing && rec.version != req.PrevVersion {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "store-corrupt-file-silent",
+  "file": "taskstore.go",
+  "find": "\t\ts.logf(\"task store: skipping %s: %v\", name, err)\n\t\treturn\n\t}\n\tvar t a2a.Task",
+  "replace": "\t\treturn\n\t}\n\tvar t a2a.Task"
+ },
+ {
+  "name": "store-create-overwrites",
+  "file": "taskstore.go",
+  "find": "\tif s.tasks[task.ID] != nil {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "store-list-oldest-first",
+  "file": "taskstore.go",
+  "find": "\t\tif c := b.updated.Compare(a.updated); c != 0 {",
+  "replace": "\t\tif c := a.updated.Compare(b.updated); c != 0 {"
+ },
+ {
+  "name": "store-list-always-with-artifacts",
+  "file": "taskstore.go",
+  "find": "\t\tif !req.IncludeArtifacts {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "store-list-page-size-unchecked",
+  "file": "taskstore.go",
+  "find": "\tcase pageSize < 1 || pageSize > maxListPageSize:",
+  "replace": "\tcase false:"
+ },
+ {
+  "name": "store-list-ignores-page-token",
+  "file": "taskstore.go",
+  "find": "\tif req.PageToken != \"\" {\n\t\tat, id, err",
+  "replace": "\tif false {\n\t\tat, id, err"
+ },
+ {
+  "name": "store-list-ignores-context-filter",
+  "file": "taskstore.go",
+  "find": "\t\tcase req.ContextID != \"\" && rec.contextID != req.ContextID:",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "store-list-ignores-status-filter",
+  "file": "taskstore.go",
+  "find": "\t\tcase req.Status != a2a.TaskStateUnspecified && rec.state != req.Status:",
+  "replace": "\t\tcase false:"
+ },
+ {
+  "name": "interrupted-message-without-reason",
+  "file": "taskstore.go",
+  "find": "The listener restarted while the task was running; PiG did not finish it.",
+  "replace": "PiG did not finish the task."
+ },
+ {
+  "name": "server-store-in-memory-only",
+  "file": "server.go",
+  "find": "openTaskStore(storeOptions{Dir: tasksDir,",
+  "replace": "openTaskStore(storeOptions{Dir: tasksDir[:0],"
+ },
+ {
+  "name": "retention-default-not-applied",
+  "file": "config.go",
+  "find": "\tif c.TaskRetentionDays == 0 {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "negative-retention-accepted",
+  "file": "config.go",
+  "find": "\tif c.TaskRetentionDays < 0 {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "url-part-accepted",
+  "file": "parts.go",
+  "find": "\t\tcase a2a.URL:\n",
+  "replace": "\t\tcase a2a.URL:\n\t\t\tchunks = append(chunks, string(c))\n\t\t\tcontinue\n"
+ },
+ {
+  "name": "attachment-fence-fixed",
+  "file": "parts.go",
+  "find": "max(3, longestRun(content, '`')+1)",
+  "replace": "3"
+ },
+ {
+  "name": "attachment-name-unsanitised",
+  "file": "parts.go",
+  "find": "unicode.IsControl(r) || r == '`' || r == utf8.RuneError",
+  "replace": "false && (unicode.IsControl(r) || r == '`' || r == utf8.RuneError)"
+ },
+ {
+  "name": "attachment-name-uncapped",
+  "file": "parts.go",
+  "find": "maxLabelName = 100",
+  "replace": "maxLabelName = 100000"
+ },
+ {
+  "name": "binary-text-accepted",
+  "file": "parts.go",
+  "find": "bytes.IndexByte(raw, 0) >= 0",
+  "replace": "false"
+ },
+ {
+  "name": "non-utf8-text-accepted",
+  "file": "parts.go",
+  "find": "\t\tif !utf8.Valid(raw) {",
+  "replace": "\t\tif false {"
+ },
+ {
+  "name": "charset-ignored",
+  "file": "parts.go",
+  "find": "if cs := strings.ToLower(params[\"charset\"]); cs != \"\" &&",
+  "replace": "if cs := strings.ToLower(params[\"charset\"]); cs != \"\" && false &&"
+ },
+ {
+  "name": "image-count-unlimited",
+  "file": "parts.go",
+  "find": "\t\t\t\tif len(images) > maxImages {",
+  "replace": "\t\t\t\tif false {"
+ },
+ {
+  "name": "svg-image-accepted-as-text",
+  "file": "parts.go",
+  "find": "(strings.HasPrefix(mt, \"application/\") && (strings.HasSuffix(mt, \"+json\") || strings.HasSuffix(mt, \"+xml\")))",
+  "replace": "(strings.HasSuffix(mt, \"+json\") || strings.HasSuffix(mt, \"+xml\"))"
+ },
+ {
+  "name": "empty-attachment-accepted",
+  "file": "parts.go",
+  "find": "\tif len(raw) == 0 {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "raw-without-media-type-accepted",
+  "file": "parts.go",
+  "find": "\tif strings.TrimSpace(p.MediaType) == \"\" {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "images-not-sent-to-worker",
+  "file": "worker.go",
+  "find": "\tif len(t.Images) > 0 {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "input-modes-text-only",
+  "file": "server.go",
+  "find": "DefaultInputModes:   inputModes,",
+  "replace": "DefaultInputModes:   []string{\"text/plain\"},"
+ },
+ {
+  "name": "remote-binary-pasted-to-model",
+  "file": "client.go",
+  "find": "err == nil && isTextType(mt) && utf8.Valid(c) && bytes.IndexByte(c, 0) < 0",
+  "replace": "err == nil && (true || isTextType(mt) && utf8.Valid(c) && bytes.IndexByte(c, 0) < 0)"
+ },
+ {
+  "name": "remote-data-part-hidden",
+  "file": "client.go",
+  "find": "\t\t\tline(\"[data] \" + capText(string(body), maxInlineReply))",
+  "replace": "\t\t\t_ = body"
+ },
+ {
+  "name": "push-config-in-send-ignored",
+  "file": "server.go",
+  "find": "\t\tif p != nil && p.Config != nil && p.Config.PushConfig != nil && !enabled[\"pushNotifications\"] {",
+  "replace": "\t\tif false && p != nil && p.Config != nil && p.Config.PushConfig != nil && !enabled[\"pushNotifications\"] {"
+ },
+ {
+  "name": "push-create-not-refused",
+  "file": "server.go",
+  "find": "\tcase *a2a.PushConfig, *a2a.GetTaskPushConfigRequest,",
+  "replace": "\tcase *a2a.GetTaskPushConfigRequest,"
+ },
+ {
+  "name": "extended-card-not-refused",
+  "file": "server.go",
+  "find": "\t\treturn refuse(a2a.ErrExtendedCardNotConfigured",
+  "replace": "\t\treturn nil\n\t\treturn refuse(a2a.ErrExtendedCardNotConfigured"
+ },
+ {
+  "name": "followup-ownership-unchecked",
+  "file": "server.go",
+  "find": "\t\t\tnamed = p.Message.TaskID",
+  "replace": "\t\t\tnamed = \"\""
+ },
+ {
+  "name": "wait-cancels-remote-when-given-up",
+  "file": "client.go",
+  "find": "\tif err := ctx.Err(); err != nil {\n\t\treturn last, err\n\t}\n\t// The budget",
+  "replace": "\tif err := ctx.Err(); err != nil {\n\t\t_, _ = c.CancelTask(context.WithoutCancel(ctx), &a2a.CancelTaskRequest{ID: id})\n\t\treturn last, err\n\t}\n\t// The budget"
+ },
+ {
+  "name": "wait-out-of-time-is-an-error",
+  "file": "client.go",
+  "find": "\treturn last, nil\n}\n\n// follow reads",
+  "replace": "\treturn last, context.DeadlineExceeded\n}\n\n// follow reads"
+ },
+ {
+  "name": "wait-never-follows-the-stream",
+  "file": "client.go",
+  "find": "\t\t\tfollow(waitCtx, c, id, onProgress)\n",
+  "replace": ""
+ },
+ {
+  "name": "wait-drops-progress",
+  "file": "client.go",
+  "find": "chunk != \"\" {\n\t\t\t\tonProgress(chunk)\n\t\t\t}\n\t\t}\n\t}\n}\n\n// streams",
+  "replace": "chunk != \"\" {\n\t\t\t\t_ = chunk\n\t\t\t}\n\t\t}\n\t}\n}\n\n// streams"
+ },
+ {
+  "name": "wait-returns-while-running",
+  "file": "client.go",
+  "find": "\t\t\tif last.Terminal || interrupted(t.Status.State) {",
+  "replace": "\t\t\tif true {"
+ },
+ {
+  "name": "wait-ignores-its-budget",
+  "file": "client.go",
+  "find": "\tif args.Seconds > 0 {\n\t\tbudget = args.Seconds",
+  "replace": "\tif false {\n\t\tbudget = args.Seconds"
+ },
+ {
+  "name": "send-detach-waits-anyway",
+  "file": "client.go",
+  "find": "\tif args.Detach {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "wait-errors-swallowed",
+  "file": "client.go",
+  "find": "\t\t} else if waitCtx.Err() == nil {\n\t\t\treturn TaskSummary{}, fmt.Errorf(\"a2a: %q: %w\", args.Agent, describe(err))",
+  "replace": "\t\t} else if false {\n\t\t\treturn TaskSummary{}, fmt.Errorf(\"a2a: %q: %w\", args.Agent, describe(err))"
+ },
+ {
+  "name": "wait-seconds-not-checked",
+  "file": "extension.go",
+  "find": "\tif !ok || f != float64(int(f)) || f < 1 || f > maxWaitSeconds {",
+  "replace": "\tif !ok {"
+ },
+ {
+  "name": "wait-seconds-accepted-for-other-actions",
+  "file": "extension.go",
+  "find": "&& action != \"wait\" {",
+  "replace": "&& false {"
+ },
+ {
+  "name": "send-does-not-wait-by-default",
+  "file": "extension.go",
+  "find": "boolParam(params, \"wait\", true)",
+  "replace": "boolParam(params, \"wait\", false)"
+ },
+ {
+  "name": "wait-flag-not-checked",
+  "file": "extension.go",
+  "find": "\tb, ok := v.(bool)\n\tif !ok {",
+  "replace": "\tb, ok := v.(bool)\n\tif false && !ok {"
+ },
+ {
+  "name": "capability-flag-ignored",
+  "file": "capability.go",
+  "find": "\t\tif !spec.on(c) {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tif true {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "capability-accessor-swapped",
+  "file": "capability.go",
+  "find": "func(c CapabilitiesConfig) bool { return c.GRPC }",
+  "replace": "func(c CapabilitiesConfig) bool { return c.REST }"
+ },
+ {
+  "name": "capability-refusal-sentence-changed",
+  "file": "capability.go",
+  "find": "\"push notifications\", func",
+  "replace": "\"push notification\", func"
+ },
+ {
+  "name": "capability-enabled-set-empty",
+  "file": "capability.go",
+  "find": "\t\tif spec.on(c) {\n\t\t\tset[spec.key] = true",
+  "replace": "\t\tif false && spec.on(c) {\n\t\t\tset[spec.key] = true"
+ },
+ {
+  "name": "capability-default-on",
+  "file": "config.go",
+  "find": "\tif c.TaskRetentionDays == 0 {",
+  "replace": "\tc.Capabilities.PushNotifications = true\n\tif c.TaskRetentionDays == 0 {"
+ },
+ {
+  "name": "capability-validation-skipped",
+  "file": "config.go",
+  "find": "\tif _, err := c.Capabilities.resolve(); err != nil {",
+  "replace": "\tif _, err := c.Capabilities.resolve(); false && err != nil {"
+ },
+ {
+  "name": "card-advertises-push-by-default",
+  "file": "server.go",
+  "find": "Capabilities:        a2a.AgentCapabilities{Streaming: true},",
+  "replace": "Capabilities:        a2a.AgentCapabilities{Streaming: true, PushNotifications: true},"
+ },
+ {
+  "name": "capability-advertise-skipped",
+  "file": "server.go",
+  "find": "\t\tc.Advertise(card)\n",
+  "replace": "\t\t_ = c\n"
+ },
+ {
+  "name": "capability-mount-skipped",
+  "file": "server.go",
+  "find": "\t\tif err := c.Mount(mux, handler); err != nil {",
+  "replace": "\t\tif err := error(nil); c == nil && err != nil {"
+ },
+ {
+  "name": "guard-enabled-set-dropped",
+  "file": "server.go",
+  "find": "guard{store: store, enabled: cfg.Capabilities.enabledSet()}",
+  "replace": "guard{store: store}"
+ },
+ {
+  "name": "guard-refuses-enabled-push",
+  "file": "server.go",
+  "find": "\t\tif enabled[\"pushNotifications\"] {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\tif false && enabled[\"pushNotifications\"] {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "guard-refuses-enabled-extended-card",
+  "file": "server.go",
+  "find": "\t\tif enabled[\"extendedAgentCard\"] {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\tif false && enabled[\"extendedAgentCard\"] {\n\t\t\treturn nil\n\t\t}"
+ },
+ {
+  "name": "protocol03-flag-ignored",
+  "file": "server.go",
+  "find": "\t\t\tif allow03 && (one == \"0.3\"",
+  "replace": "\t\t\tif false && allow03 && (one == \"0.3\""
  }
 ]

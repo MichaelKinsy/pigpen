@@ -1,0 +1,122 @@
+[
+ {
+  "name": "ensure-ignores-the-chosen-engine",
+  "file": "app.go",
+  "find": "kind = choice.Kind",
+  "replace": "_ = choice\n\t\tkind = engine.MPVEngine"
+ },
+ {
+  "name": "native-player-not-used",
+  "file": "app.go",
+  "find": "\t\tplayer = nativePlayer\n",
+  "replace": ""
+ },
+ {
+  "name": "native-source-not-used",
+  "file": "app.go",
+  "find": "\treturn a.guarded(src), player",
+  "replace": "\t_ = src\n\treturn a.guarded(&native.Source{}), player"
+ },
+ {
+  "name": "auto-ignores-a-running-native-player",
+  "file": "app.go",
+  "find": "case native.Running(ctx, paths):\n\t\t\treturn engine.Choice{Kind: engine.NativeEngine, Mode: mode, Reason: \"the native player is already running\"}, nil",
+  "replace": "case false:\n\t\t\treturn engine.Choice{Kind: engine.NativeEngine, Mode: mode, Reason: \"the native player is already running\"}, nil"
+ },
+ {
+  "name": "auto-ignores-a-running-mpv",
+  "file": "app.go",
+  "find": "case mpv.Running(ctx, paths.Socket):\n\t\t\treturn engine.Choice{Kind: engine.MPVEngine, Mode: mode, Reason: \"an mpv is already running\"}, nil",
+  "replace": "case false:\n\t\t\treturn engine.Choice{Kind: engine.MPVEngine, Mode: mode, Reason: \"an mpv is already running\"}, nil"
+ },
+ {
+  "name": "auto-failure-is-returned-instead-of-mpv",
+  "file": "app.go",
+  "find": "if err != nil && mode == engine.Auto {",
+  "replace": "if false {"
+ },
+ {
+  "name": "auto-never-falls-back-to-native",
+  "file": "app.go",
+  "find": "\tchoice, err := engine.Select(ctx, s, deps)\n",
+  "replace": "\tchoice, err := engine.Select(ctx, s, deps)\n\tchoice.Kind = engine.MPVEngine\n"
+ },
+ {
+  "name": "engine-setting-change-not-noticed",
+  "file": "app.go",
+  "find": "if a.host != nil && a.engineChanged() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "native-change-not-noticed",
+  "file": "app.go",
+  "find": "return a.kind != engine.NativeEngine",
+  "replace": "return false"
+ },
+ {
+  "name": "mpv-change-not-noticed",
+  "file": "app.go",
+  "find": "return a.kind != engine.MPVEngine",
+  "replace": "return false"
+ },
+ {
+  "name": "termux-not-mpv-only",
+  "file": "app.go",
+  "find": "case engine.IsTermux(deps):",
+  "replace": "case false:"
+ },
+ {
+  "name": "running-ignores-a-native-player",
+  "file": "lifecycle.go",
+  "find": "(mpv.Running(ctx, paths.Socket) || native.Running(ctx, paths))",
+  "replace": "mpv.Running(ctx, paths.Socket)"
+ },
+ {
+  "name": "stop-ignores-a-native-player",
+  "file": "lifecycle.go",
+  "find": "\t\tcase native.Running(ctx, paths):\n\t\t\tp = native.NewPlayer(native.ClientConfig{Paths: paths})",
+  "replace": "\t\tcase false:\n\t\t\tp = native.NewPlayer(native.ClientConfig{Paths: paths})"
+ },
+ {
+  "name": "quick-commands-forced-to-mpv",
+  "file": "quickcmd.go",
+  "find": "Getenv: a.d.Getenv, LookPath",
+  "replace": "Getenv: func(k string) string {\n\t\t\tif k == \"PIG_MUSIC_ENGINE\" {\n\t\t\t\treturn \"mpv\"\n\t\t\t}\n\t\t\treturn a.d.Getenv(k)\n\t\t}, LookPath"
+ },
+ {
+  "name": "doctor-native-engine-without-probe",
+  "file": "setup.go",
+  "find": "engine.NativeHealth(context.Background(), settings, deps, true), true)",
+  "replace": "engine.NativeHealth(context.Background(), settings, deps, false), true)"
+ },
+ {
+  "name": "doctor-native-engine-runs-the-mpv-doctor",
+  "file": "setup.go",
+  "find": "if mode == engine.Native {",
+  "replace": "if mode == engine.Native && false {"
+ },
+ {
+  "name": "doctor-on-mpv-has-no-native-health",
+  "file": "setup.go",
+  "find": "\tnotifyNative(ctx, engine.NativeHealth(context.Background(), settings, deps, false), false)\n",
+  "replace": ""
+ },
+ {
+  "name": "doctor-on-mpv-probes-the-network",
+  "file": "setup.go",
+  "find": "engine.NativeHealth(context.Background(), settings, deps, false), false)",
+  "replace": "engine.NativeHealth(context.Background(), settings, deps, true), false)"
+ },
+ {
+  "name": "doctor-native-failure-not-an-error",
+  "file": "setup.go",
+  "find": "\t\tif inUse {\n\t\t\tlevel = \"error\"\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "engine-note-lost",
+  "file": "quickport.go",
+  "find": "note = \"used from the next /music command; native needs the pigmusic program\"",
+  "replace": "note = \"takes effect after /reload\""
+ }
+]

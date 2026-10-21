@@ -1,23 +1,23 @@
 // Package herdr reports PiG's agent state to herdr, the terminal workspace manager.
 //
-// It follows herdr's published "Add Herdr support to your agent" contract
-// (https://herdr.dev/docs/add-herdr-support/): inside a herdr pane, report idle,
-// working or blocked through `"$HERDR_BIN_PATH" pane report-agent`, keep the
-// report order with an increasing --seq, report the command that resumes the
-// session (herdr 0.9.2+ restores the pane with it after a server restart), and
-// release the pane when the user quits. Outside herdr the factory registers
-// nothing.
+// It is a port of herdr-pig's extensions/herdr-agent-state.ts (Hai-Fai Solutions, Apache-2.0; revision
+// 3ec680471e8282e0a8a64545781069f822c0c212, vendored unmodified in port/oracle), itself based on herdr's built-in Pi
+// integration. Inside a herdr pane (HERDR_ENV=1 with HERDR_SOCKET_PATH and HERDR_PANE_ID) it reports `idle`,
+// `working` and `blocked` and the command that resumes the session, over herdr's socket as newline-delimited JSON
+// (`pane.report_agent`, `pane.release_agent`), and releases the pane when the user quits. Outside herdr it
+// registers nothing.
 //
-// It is written against PiG's public Go extension SDK only, so it builds as a
-// source extension and fuses into a Piglet Binary.
+// It is written against PiG's public Go extension SDK only, so it builds as a source extension and fuses into a
+// Piglet Binary. The comments cite the original's line numbers ("ts:NN").
 package herdr
 
 import (
-	"context"
-	"errors"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"math/rand/v2"
 	"os"
-	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,16 +28,20 @@ import (
 )
 
 const (
-	// source is the stable integration identity. herdr reserves the `herdr:` prefix for its own sources.
-	source = "custom:pig"
+	// source and agent are the original's identity (ts:17-18). herdr reserves the `herdr:` source prefix for its own
+	// integrations, so this reports under a plain source and herdr treats PiG as a self-reporting agent.
+	source = "pig"
 	agent  = "pig"
-	// maxMessageLength bounds the sidebar message, in characters.
-	maxMessageLength = 120
-	// command is the first word of the resume command: a plain command name on PATH, as herdr requires.
-	command = "pig"
-	// herdr refuses a resume command of more than 64 arguments or 8 KiB in total.
-	maxResumeArgs  = 64
-	maxResumeBytes = 8 * 1024
+	// maxPromptMessage bounds the sidebar message of a prompt-based block, in characters.
+	maxPromptMessage = 120
+	// promptsEnv opts into the PiG-only prompt-based blocked state.
+	promptsEnv = "PIGPEN_HERDR_UI_PROMPTS"
+)
+
+// The attempt bounds of one request (ts:57-62): 0.5 s, then one retry of 1.5 s.
+var (
+	firstAttempt = 500 * time.Millisecond
+	retryAttempt = 1500 * time.Millisecond
 )
 
 type agentState string
@@ -48,10 +52,57 @@ const (
 	stateBlocked agentState = "blocked"
 )
 
-type report struct {
-	state   agentState
-	message string
-	seq     int64
+// jsValue is a JavaScript value of a herdr:blocked label: undefined (the zero value), or a decoded JSON value.
+// ref identifies an object or an array, which JavaScript compares by reference.
+type jsValue struct {
+	defined bool
+	value   any
+	ref     uint64
+}
+
+var refCounter struct {
+	mu sync.Mutex
+	n  uint64
+}
+
+// newJSValue wraps a decoded JSON value; a map or a slice gets a fresh identity.
+func newJSValue(v any) jsValue {
+	out := jsValue{defined: true, value: v}
+	switch v.(type) {
+	case map[string]any, []any:
+		refCounter.mu.Lock()
+		refCounter.n++
+		out.ref = refCounter.n
+		refCounter.mu.Unlock()
+	}
+	return out
+}
+
+// strictEquals is `===` on two values (NaN cannot arrive from JSON).
+func (a jsValue) strictEquals(b jsValue) bool {
+	if !a.defined || !b.defined {
+		return a.defined == b.defined
+	}
+	if a.ref != 0 || b.ref != 0 {
+		return a.ref == b.ref
+	}
+	return a.value == b.value
+}
+
+// truthy is JavaScript's ToBoolean for a decoded JSON value.
+func truthy(v any) bool {
+	switch v := v.(type) {
+	case nil:
+		return false
+	case bool:
+		return v
+	case float64:
+		return v != 0
+	case string:
+		return v != ""
+	default:
+		return true
+	}
 }
 
 var (
@@ -59,9 +110,8 @@ var (
 	lastSeq int64
 )
 
-// nextSeq is monotonic across every reporter in this process and, because it is
-// seeded from the clock (microseconds), across restarts and session
-// replacements. herdr drops reports whose seq is not higher than the last one it
+// nextSeq increases across every reporter in this process and, because it is seeded from the clock (microseconds, as
+// ts:74), across restarts and session replacements. herdr drops reports whose seq is not higher than the last one it
 // accepted.
 func nextSeq() int64 {
 	seqMu.Lock()
@@ -70,129 +120,48 @@ func nextSeq() int64 {
 	return lastSeq
 }
 
-type herdrEnv struct {
-	bin    string
-	paneID string
+// requestID is `pig:<kind>:<ms>:<random base 36>` (ts:82-84).
+func requestID(kind string) string {
+	return source + ":" + kind + ":" + strconv.FormatInt(time.Now().UnixMilli(), 10) + ":" + strconv.FormatUint(rand.Uint64N(1<<53), 36)
 }
 
-// readEnv reports whether this process runs inside a herdr pane. The contract
-// is HERDR_ENV=1 and HERDR_PANE_ID, HERDR_BIN_PATH and HERDR_SOCKET_PATH all set;
-// otherwise the integration does nothing. The reports go through the CLI, which
-// finds the socket itself from the same environment.
-func readEnv() (herdrEnv, bool) {
-	bin, pane, socket := os.Getenv("HERDR_BIN_PATH"), os.Getenv("HERDR_PANE_ID"), os.Getenv("HERDR_SOCKET_PATH")
-	if os.Getenv("HERDR_ENV") != "1" || bin == "" || pane == "" || socket == "" {
+type herdrEnv struct {
+	endpoint string
+	paneID   string
+}
+
+// readEnv reports whether this process runs inside a herdr pane (ts:20-27): HERDR_ENV=1, a socket path and a pane id.
+func readEnv(getenv func(string) string) (herdrEnv, bool) {
+	socket, pane := getenv("HERDR_SOCKET_PATH"), getenv("HERDR_PANE_ID")
+	if getenv("HERDR_ENV") != "1" || socket == "" || pane == "" {
 		return herdrEnv{}, false
 	}
-	return herdrEnv{bin: bin, paneID: pane}, true
+	return herdrEnv{endpoint: endpointFor(runtime.GOOS, socket), paneID: pane}, true
 }
 
-// Extension is the conventional Go factory. Outside a herdr pane it registers nothing.
-func Extension() *sdk.Extension {
-	e := sdk.New("herdr")
-	env, ok := readEnv()
-	if !ok {
-		return e
+// endpointFor is the socket endpoint (ts:21-22): on Windows herdr's socket is a named pipe and HERDR_SOCKET_PATH holds its name.
+func endpointFor(goos, socketPath string) string {
+	if goos == "windows" && socketPath != "" {
+		return `\\.\pipe\` + socketPath
 	}
-	r := &reporter{env: env}
-
-	// PiG tells every extension when a blocking UI prompt (select, confirm,
-	// input, editor, custom) opens and settles.
-	e.OnEvent(sdk.EventUIPromptStart, func(_ sdk.Context, data map[string]any) (any, error) {
-		title, _ := data["title"].(string)
-		if title == "" {
-			title, _ = data["kind"].(string)
-		}
-		r.block(holderPrompt, title)
-		return nil, nil
-	})
-	e.OnEvent(sdk.EventUIPromptEnd, func(sdk.Context, map[string]any) (any, error) {
-		r.unblock(holderPrompt)
-		return nil, nil
-	})
-
-	// Another extension can say the agent waits on the user by emitting
-	// `herdr:blocked` with `{ active, label }` on pi.events, the convention
-	// herdr's Pi integration and herdr-pig use. Ported from herdr-pig
-	// (https://github.com/Hai-Fai-Solutions/herdr-pig, Apache-2.0, see NOTICE).
-	// A failed subscription leaves the prompt-based blocked state working.
-	_, _ = e.Events().On("herdr:blocked", func(_ sdk.Context, data any) error {
-		payload, _ := data.(map[string]any)
-		if active, _ := payload["active"].(bool); !active {
-			r.unblock(holderBus)
-			return nil
-		}
-		label, _ := payload["label"].(string)
-		r.block(holderBus, label)
-		return nil
-	})
-
-	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		// herdr can only show a pane's terminal, so report the interactive session
-		// and stay silent in RPC, JSON and print runs.
-		if ctx.Mode() != "tui" {
-			return nil, nil
-		}
-		path, id := sessionIdentity(ctx)
-		// A reload can start this reporter in the middle of a turn.
-		idle, err := ctx.IsIdle()
-		r.start(path, id, err == nil && !idle)
-		return nil, nil
-	})
-
-	e.OnEvent(sdk.EventAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		if !r.isRoot() {
-			return nil, nil
-		}
-		path, id := sessionIdentity(ctx)
-		r.agentStarted(path, id)
-		return nil, nil
-	})
-
-	// agent_settled fires once the run is fully over: no retry, compaction or
-	// queued continuation follows, so it is the right moment to report idle.
-	e.OnEvent(sdk.EventAgentSettled, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		if !r.isRoot() {
-			return nil, nil
-		}
-		// herdr-pig requires isIdle() === true: a failed check is not idle.
-		if idle, err := ctx.IsIdle(); err != nil || !idle {
-			return nil, nil
-		}
-		r.agentSettled()
-		return nil, nil
-	})
-
-	e.OnSessionShutdown(func(_ sdk.Context, data map[string]any) (any, error) {
-		if !r.isRoot() {
-			return nil, nil
-		}
-		if reason, _ := data["reason"].(string); reason != "quit" {
-			// A successor reporter in this pane re-reports on its own. Releasing here
-			// would race that report, and a late release would clear the pane.
-			r.silence()
-			return nil, nil
-		}
-		r.release()
-		return nil, nil
-	})
-	return e
+	return socketPath
 }
 
-// sessionIdentity reads the session file and id. A host failure or a value herdr
-// cannot use is omitted, not guessed.
-func sessionIdentity(ctx sdk.Context) (path, id string) {
-	if file, err := ctx.GetSessionFile(); err == nil && file != nil && isAbsolutePath(*file) {
-		path = *file
+// isSafeResumeArg: herdr rejects a resume command whose arguments contain an apostrophe or a control character, and
+// rejecting it drops the whole state report (ts:86-91). Control is exactly U+0000..U+001F and U+007F.
+func isSafeResumeArg(value string) bool {
+	if value == "" {
+		return false
 	}
-	if v, err := ctx.GetSessionID(); err == nil {
-		id = v
+	for _, r := range value {
+		if r == '\'' || r < 0x20 || r == 0x7f {
+			return false
+		}
 	}
-	return path, id
+	return true
 }
 
-// isAbsolutePath accepts POSIX and Windows absolute paths, so a session file
-// from any host is reported.
+// isAbsolutePath is path.posix.isAbsolute or path.win32.isAbsolute, so a session file from any host is reported.
 func isAbsolutePath(p string) bool {
 	if p == "" {
 		return false
@@ -204,113 +173,239 @@ func isAbsolutePath(p string) bool {
 	return len(p) >= 3 && isLetter && p[1] == ':' && (p[2] == '/' || p[2] == '\\')
 }
 
-// resumeArgv is the command that reopens this session in the pane's directory,
-// mirroring herdr's built-in pi integration (`pi --session <file>`, no model
-// flag) with pig substituted. It is the same on PiG 0.3.x and 0.4.0: a
-// `--session` argument with a path separator or a .jsonl suffix opens that exact
-// file whatever the directory or session dir. When the file cannot be passed
-// (herdr refuses apostrophes, control characters and more than 8 KiB) the
-// session id goes to `--session-id`, which resumes the id in the pane's project
-// session dir and never asks to fork the way `--session <id>` does from another
-// directory. With neither, there is no resume command. An in-memory session
-// (`pig --no-session`) has an id but no file, and nothing to resume:
-// `--session-id` would create a new, persisted session with that id.
-func resumeArgv(path, id string) []string {
-	if path == "" {
-		return nil
+// resumeArgvFor is the command that reopens the session (ts:93-118): `pig --session <file>` for an absolute, safe
+// session file, else `pig --session <id>` for a safe id, else none. A nil file or id is one the session manager did not
+// have (or could not give).
+func resumeArgvFor(file, id *string) []string {
+	if file != nil && isAbsolutePath(*file) && isSafeResumeArg(*file) {
+		return []string{"pig", "--session", *file}
 	}
-	for _, argv := range [][]string{
-		{command, "--session", path},
-		{command, "--session-id", id},
-	} {
-		if argv[2] != "" && resumeArgvValid(argv) && (argv[1] == "--session" || validSessionID(id)) {
-			return argv
-		}
+	if id != nil && isSafeResumeArg(*id) {
+		return []string{"pig", "--session", *id}
 	}
 	return nil
 }
 
-// resumeArgvValid applies herdr's own rules for a resume command.
-func resumeArgvValid(argv []string) bool {
-	total := 0
-	for _, arg := range argv {
-		total += len(arg)
-		if strings.ContainsRune(arg, '\'') || strings.ContainsFunc(arg, unicode.IsControl) {
-			return false
+// sessionIdentity reads the session file and id; a host failure is an absent value, as a throwing getter is (ts:93-105).
+func sessionIdentity(ctx sdk.Context) (file, id *string) {
+	if f, err := ctx.GetSessionFile(); err == nil {
+		file = f
+	}
+	if v, err := ctx.GetSessionID(); err == nil {
+		id = &v
+	}
+	return file, id
+}
+
+// statePayload is the params of a report, in the original's key order (ts:121-133). A message that is undefined is
+// left out, as JSON.stringify does.
+type statePayload struct {
+	PaneID     string          `json:"pane_id"`
+	Source     string          `json:"source"`
+	Agent      string          `json:"agent"`
+	State      agentState      `json:"state"`
+	Message    json.RawMessage `json:"message,omitempty"`
+	Seq        int64           `json:"seq"`
+	ResumeArgv []string        `json:"resume_argv,omitempty"`
+}
+
+type releasePayload struct {
+	PaneID string `json:"pane_id"`
+	Source string `json:"source"`
+	Agent  string `json:"agent"`
+	Seq    int64  `json:"seq"`
+}
+
+type request struct {
+	ID     string `json:"id"`
+	Method string `json:"method"`
+	Params any    `json:"params"`
+}
+
+// encodeLine is JSON.stringify(request) + "\n" (ts:49).
+func encodeLine(req request) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(req); err != nil {
+		return nil, err
+	}
+	return rawLineSeparators(buf.Bytes()), nil
+}
+
+// rawLineSeparators writes U+2028 and U+2029 as themselves: Go's encoder escapes them, JSON.stringify does not, and the
+// request line is meant to be the same bytes. A backslash escapes the next character, so `\\u2028` is left alone.
+func rawLineSeparators(b []byte) []byte {
+	if !bytes.Contains(b, []byte(`\u202`)) {
+		return b
+	}
+	out := make([]byte, 0, len(b))
+	for i := 0; i < len(b); i++ {
+		switch {
+		case b[i] == '\\' && i+1 < len(b) && b[i+1] == '\\':
+			out = append(out, '\\', '\\')
+			i++
+		case b[i] == '\\' && i+5 < len(b) && string(b[i+1:i+5]) == "u202" && (b[i+5] == '8' || b[i+5] == '9'):
+			if b[i+5] == '8' {
+				out = append(out, "\u2028"...)
+			} else {
+				out = append(out, "\u2029"...)
+			}
+			i += 5
+		default:
+			out = append(out, b[i])
 		}
 	}
-	return len(argv) <= maxResumeArgs && total <= maxResumeBytes
+	return out
 }
 
-// validSessionID is PiG's rule for a `--session-id` value: letters, digits, `-`,
-// `_` and `.`, starting and ending with a letter or digit.
-func validSessionID(id string) bool {
-	if id == "" {
-		return false
+// Extension is the conventional Go factory. Outside a herdr pane it registers nothing.
+func Extension() *sdk.Extension { return extensionFor(os.Getenv) }
+
+// extensionFor is Extension over an environment lookup, so a test can run several in one process.
+func extensionFor(getenv func(string) string) *sdk.Extension {
+	e := sdk.New("herdr")
+	env, ok := readEnv(getenv)
+	if !ok {
+		return e
 	}
-	alnum := func(c byte) bool { return c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' }
-	for i := 0; i < len(id); i++ {
-		c := id[i]
-		if !alnum(c) && (i == 0 || i == len(id)-1 || c != '-' && c != '_' && c != '.') {
-			return false
+	r := &reporter{env: env}
+
+	// PiG-only: PiG tells every extension when a blocking UI prompt (select, confirm, input, editor, custom) opens and
+	// settles. Pi has no such event and herdr-pig never reports a prompt, so this is opt-in: by default the port reports
+	// exactly what the original reports in the same session.
+	if getenv(promptsEnv) == "1" {
+		e.OnEvent(sdk.EventUIPromptStart, func(_ sdk.Context, data map[string]any) (any, error) {
+			title, _ := data["title"].(string)
+			if title == "" {
+				title, _ = data["kind"].(string)
+			}
+			r.block(holderPrompt, newJSValue(promptMessage(title)))
+			return nil, nil
+		})
+		e.OnEvent(sdk.EventUIPromptEnd, func(sdk.Context, map[string]any) (any, error) {
+			r.unblock(holderPrompt)
+			return nil, nil
+		})
+	}
+
+	// Another extension marks the agent as waiting on the user by emitting `herdr:blocked` with `{ active, label }`
+	// (ts:217-235). A failed subscription leaves the rest working.
+	_, _ = e.Events().On("herdr:blocked", func(_ sdk.Context, data any) error {
+		payload, _ := data.(map[string]any) // `data?.active` of anything else is undefined
+		if !truthy(payload["active"]) {
+			r.unblock(holderBus)
+			return nil
 		}
-	}
-	return true
+		var label jsValue // `data.label`: undefined when missing
+		if v, present := payload["label"]; present {
+			label = newJSValue(v)
+		}
+		r.block(holderBus, label)
+		return nil
+	})
+
+	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		// TUI only: print, JSON and RPC modes have no pane for herdr to show (ts:238-241).
+		if ctx.Mode() != "tui" {
+			return nil, nil
+		}
+		file, id := sessionIdentity(ctx)
+		// A reload can replace this extension mid-run without another agent_start (ts:245).
+		idle, err := ctx.IsIdle()
+		return nil, r.start(resumeArgvFor(file, id), err == nil && !idle, err)
+	})
+
+	e.OnEvent(sdk.EventAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if !r.isRoot() {
+			return nil, nil
+		}
+		file, id := sessionIdentity(ctx)
+		r.agentStarted(resumeArgvFor(file, id))
+		return nil, nil
+	})
+
+	// agent_settled fires once the run is fully over: no retry, compaction or queued continuation follows (ts:258-264).
+	e.OnEvent(sdk.EventAgentSettled, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if !r.isRoot() {
+			return nil, nil
+		}
+		// `ctx?.isIdle?.() !== true`: only a successful true is idle; a failed call surfaces as the handler's error.
+		idle, err := ctx.IsIdle()
+		if err != nil {
+			return nil, err
+		}
+		if idle {
+			r.agentSettled()
+		}
+		return nil, nil
+	})
+
+	e.OnSessionShutdown(func(_ sdk.Context, data map[string]any) (any, error) {
+		if !r.isRoot() {
+			return nil, nil
+		}
+		// Switching or reloading a session keeps PiG in the pane, so only a real quit releases it (ts:267-269).
+		if reason, _ := data["reason"].(string); reason != "quit" {
+			return nil, nil
+		}
+		r.release()
+		return nil, nil
+	})
+	return e
 }
 
-// messageArgs passes the message in the form every herdr parses: `--message
-// <text>`. Every herdr CLI takes the next argument as the value, even one that
-// starts with "-"; herdr before 0.9.0 does not know the attached
-// `--message=<text>` form and would drop the whole report. Only a message that
-// is exactly `--` goes attached (herdr 0.9.0+), because herdr 0.9.2+ splits the
-// resume command off at the first `--` argument.
-func messageArgs(message string) []string {
-	if message == "--" {
-		return []string{"--message=" + message}
-	}
-	return []string{"--message", message}
-}
-
-// messageFrom makes one short line for herdr's sidebar; prompt titles can be long and multi-line.
-func messageFrom(value string) string {
+// promptMessage makes one short line for herdr's sidebar; prompt titles can be long and multi-line.
+func promptMessage(value string) string {
 	line := strings.Join(strings.FieldsFunc(value, func(r rune) bool { return unicode.IsSpace(r) || r == '\uFEFF' }), " ")
 	runes := []rune(line)
-	if len(runes) > maxMessageLength {
-		return string(runes[:maxMessageLength-1]) + "…"
+	if len(runes) > maxPromptMessage {
+		return string(runes[:maxPromptMessage-1]) + "…"
 	}
 	return line
 }
 
-// reporter is one herdr reporting session. Handlers may run concurrently, so
-// every field is guarded by mu; host and herdr calls run outside it.
+// holder is a source of a blocked state.
+type holder int
+
+const (
+	holderBus    holder = iota // a herdr:blocked emitter on pi.events
+	holderPrompt               // a PiG UI prompt (opt-in)
+	holderCount
+)
+
+type report struct {
+	state   agentState
+	message jsValue
+	seq     int64
+}
+
+// reporter is one herdr reporting session. Handlers may run concurrently, so every field is guarded by mu; herdr calls
+// run outside it.
 type reporter struct {
 	env herdrEnv
 
-	mu             sync.Mutex
-	rootSession    bool
-	sessionPath    string
-	sessionID      string
-	agentActive    bool
-	blockedMessage string
-	// Blocks currently held, per holder: PiG reports only the outermost prompt
-	// of a kind, and producers can overlap, so count. A bus holder cannot
-	// release a prompt's block, nor a prompt a bus holder's.
-	blockedCount [holderCount]int
-	hasLast      bool
-	// resumeOff is set once herdr refused a resume command (herdr before 0.9.2,
-	// or invalid_resume_argv): later reports leave it out.
-	resumeOff bool
+	mu          sync.Mutex
+	rootSession bool
+	resume      []string
+	agentActive bool
+	// Blocks currently held, per holder: a bus release cannot end a prompt's block, nor the reverse.
+	blockedCount   [holderCount]int
+	blockedMessage jsValue
+
+	hasLast     bool
+	lastState   agentState
+	lastMessage jsValue
+	lastResume  string
+	hasResume   bool
+
 	// lastDiagnostic is the last failure written to stderr, so a repeat is not.
 	lastDiagnostic string
-	lastState      agentState
-	lastMessage    string
-	released       bool
 
-	// Only the newest state matters: while a call is in flight, newer states
-	// replace the queued one, and calls never overlap, so herdr sees them in order.
+	// Only the newest state matters: while a request is in flight, newer states replace the queued one, and requests
+	// never overlap, so herdr sees them in order (ts:145-174).
 	queued  *report
 	sending bool
-	drained chan struct{} // closed when the drain goroutine exits; valid while sending
 }
 
 func (r *reporter) isRoot() bool {
@@ -319,21 +414,27 @@ func (r *reporter) isRoot() bool {
 	return r.rootSession
 }
 
-func (r *reporter) start(path, id string, active bool) {
+// start is the session_start handler's state change (ts:242-247). It keeps everything else as it is, the blocked counters
+// included: the original does not reset them (a second session_start on one instance does not occur under Pi, which loads
+// a fresh copy of the module for every session). An isIdle failure fails the handler after the session and its resume
+// command are recorded, as a throwing isIdle() does in the original.
+func (r *reporter) start(resume []string, active bool, idleErr error) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	// A session start opens a fresh reporting epoch; the blocked counters carry over, as in herdr-pig.
 	r.rootSession = true
-	r.released = false
-	r.sessionPath, r.sessionID = path, id
+	r.resume = resume
+	if idleErr != nil {
+		return idleErr
+	}
 	r.agentActive = active
 	r.publishLocked(true)
+	return nil
 }
 
-func (r *reporter) agentStarted(path, id string) {
+func (r *reporter) agentStarted(resume []string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.sessionPath, r.sessionID = path, id
+	r.resume = resume
 	r.agentActive = true
 	r.publishLocked(false)
 }
@@ -345,14 +446,14 @@ func (r *reporter) agentSettled() {
 	r.publishLocked(false)
 }
 
-func (r *reporter) block(h holder, label string) {
+func (r *reporter) block(h holder, label jsValue) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if !r.rootSession {
 		return
 	}
 	r.blockedCount[h]++
-	r.blockedMessage = messageFrom(label)
+	r.blockedMessage = label
 	r.publishLocked(false)
 }
 
@@ -364,7 +465,7 @@ func (r *reporter) unblock(h holder) {
 	}
 	r.blockedCount[h] = max(0, r.blockedCount[h]-1)
 	if !r.blockedLocked() {
-		r.blockedMessage = ""
+		r.blockedMessage = jsValue{}
 	}
 	r.publishLocked(false)
 }
@@ -378,99 +479,132 @@ func (r *reporter) blockedLocked() bool {
 	return false
 }
 
-// holder is a source of a blocked state.
-type holder int
-
-const (
-	holderPrompt holder = iota // a PiG UI prompt
-	holderBus                  // a herdr:blocked emitter on pi.events
-	holderCount
-)
-
-// silence stops reporting without releasing the pane.
-func (r *reporter) silence() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.released = true
-	r.queued = nil
-}
-
-func (r *reporter) desiredLocked() (agentState, string) {
+func (r *reporter) desiredLocked() (agentState, jsValue) {
 	if r.blockedLocked() {
 		return stateBlocked, r.blockedMessage
 	}
 	if r.agentActive {
-		return stateWorking, ""
+		return stateWorking, jsValue{}
 	}
-	return stateIdle, ""
+	return stateIdle, jsValue{}
 }
 
+// publishLocked is publishState (ts:200-215).
 func (r *reporter) publishLocked(force bool) {
 	state, message := r.desiredLocked()
-	if !force && r.hasLast && state == r.lastState && message == r.lastMessage {
+	resume := strings.Join(r.resume, "\x00")
+	hasResume := r.resume != nil
+	if !force && r.hasLast && state == r.lastState && message.strictEquals(r.lastMessage) && hasResume == r.hasResume && resume == r.lastResume {
 		return
 	}
-	r.hasLast, r.lastState, r.lastMessage = true, state, message
+	r.hasLast, r.lastState, r.lastMessage, r.lastResume, r.hasResume = true, state, message, resume, hasResume
 	r.queueLocked(state, message)
 }
 
-func (r *reporter) queueLocked(state agentState, message string) {
-	if r.released {
-		// A report after the release would reclaim a pane whose agent has exited.
-		return
-	}
+// queueLocked is queueState (ts:149-154). When nothing is in flight the drain starts at once on this state, as the
+// original's drainStateQueue takes the queued state synchronously, so a following event cannot replace it.
+func (r *reporter) queueLocked(state agentState, message jsValue) {
 	r.queued = &report{state: state, message: message, seq: nextSeq()}
 	if !r.sending {
 		r.sending = true
-		r.drained = make(chan struct{})
-		go r.drain(r.drained)
+		first := r.takeLocked()
+		go r.drain(first)
 	}
 }
 
-// drain sends queued reports one at a time until none is left.
-func (r *reporter) drain(done chan struct{}) {
-	defer close(done)
-	for {
-		r.mu.Lock()
-		next := r.queued
-		r.queued = nil
-		if next == nil {
-			r.sending = false
-			r.mu.Unlock()
-			return
-		}
-		args := r.reportArgsLocked(*next, !r.resumeOff)
-		r.mu.Unlock()
-		out, err := callHerdr(r.env, args)
-		switch {
-		case err == nil:
-			r.healthy()
-		case resumeRefused(out, err):
-			// herdr did not apply the report. Send it once more without the command,
-			// silently, and stop attaching one: state and release keep working.
-			r.mu.Lock()
-			r.resumeOff = true
-			args = r.reportArgsLocked(*next, false)
-			r.mu.Unlock()
-			if out, err = callHerdr(r.env, args); err != nil {
-				r.diagnose(args, out, err)
+// takeLocked removes the queued state and builds its request. The resume command goes out as it is when the request is
+// built, not when the state was queued (ts:129-133).
+func (r *reporter) takeLocked() *outgoing {
+	next := r.queued
+	r.queued = nil
+	if next == nil {
+		return nil
+	}
+	return &outgoing{message: next.message, payload: statePayload{
+		PaneID: r.env.paneID, Source: source, Agent: agent, State: next.state, Seq: next.seq,
+		ResumeArgv: append([]string(nil), r.resume...),
+	}}
+}
+
+// outgoing is a state report ready to send.
+type outgoing struct {
+	message jsValue
+	payload statePayload
+}
+
+// drain sends queued reports one at a time until none is left (ts:156-174).
+func (r *reporter) drain(next *outgoing) {
+	for ; next != nil; next = r.nextOutgoing() {
+		if next.message.defined {
+			raw, err := marshalValue(next.message.value)
+			if err != nil {
+				r.diagnose("pane.report_agent", err)
+				continue
 			}
-		default:
-			r.diagnose(args, out, err)
+			next.payload.Message = raw
 		}
+		r.send("state", "pane.report_agent", next.payload)
 	}
 }
 
-// diagnose writes one line to stderr, which PiG collects as the extension's
-// output, when herdr did not take a call: a herdr that never hears about a pane
-// is otherwise indistinguishable from one that was told. The same failure is
-// written once until a call succeeds again, so a herdr that is gone does not
-// flood the output. The agent never waits on it and the transcript never shows it.
-func (r *reporter) diagnose(args []string, out []byte, err error) {
-	msg := "herdr: pane " + args[1] + " failed: " + err.Error()
-	if line := firstLine(out); line != "" {
-		msg += ": " + line
+// nextOutgoing takes the next queued state, or ends the drain.
+func (r *reporter) nextOutgoing() *outgoing {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	next := r.takeLocked()
+	if next == nil {
+		r.sending = false
 	}
+	return next
+}
+
+// marshalValue is JSON.stringify of a decoded value, without HTML escaping.
+func marshalValue(v any) (json.RawMessage, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(v); err != nil {
+		return nil, err
+	}
+	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
+}
+
+// release stops new reports, drops the queued one and sends pane.release_agent (ts:271-274). It does not wait for a
+// report in flight: the original's drain loop runs on, and herdr drops the older seq whichever arrives first.
+func (r *reporter) release() {
+	r.mu.Lock()
+	r.rootSession = false
+	r.queued = nil
+	seq := nextSeq()
+	r.mu.Unlock()
+	r.send("release", "pane.release_agent", releasePayload{PaneID: r.env.paneID, Source: source, Agent: agent, Seq: seq})
+}
+
+// send is sendRequest (ts:57-62): one attempt of 0.5 s and, when it does not deliver, one of 1.5 s with the same request.
+func (r *reporter) send(kind, method string, params any) {
+	line, err := encodeLine(request{ID: requestID(kind), Method: method, Params: params})
+	if err != nil {
+		r.diagnose(method, err)
+		return
+	}
+	err = attempt(r.env.endpoint, line, firstAttempt)
+	if err != nil {
+		err = attempt(r.env.endpoint, line, retryAttempt)
+	}
+	if err != nil {
+		r.diagnose(method, err)
+		return
+	}
+	r.healthy()
+}
+
+// diagnose writes one line to stderr, which PiG collects as the extension's output, when herdr did not take a
+// request: a herdr that never hears about a pane is otherwise indistinguishable from one that was told. The same
+// failure is written once until a request is delivered again. The agent never waits on it and the transcript never
+// shows it. (herdr-pig fails silently; stderr is not an effect herdr observes. The line came from the herdr-agent-state
+// extension of pigpen pull request 2, Yu Li.)
+func (r *reporter) diagnose(method string, err error) {
+	msg := fmt.Sprintf("herdr: %s failed: %v", method, err)
 	r.mu.Lock()
 	repeat := msg == r.lastDiagnostic
 	r.lastDiagnostic = msg
@@ -485,108 +619,4 @@ func (r *reporter) healthy() {
 	r.mu.Lock()
 	r.lastDiagnostic = ""
 	r.mu.Unlock()
-}
-
-// firstLine is the first non-empty line of herdr's output, cut to a sensible length.
-func firstLine(out []byte) string {
-	for _, line := range strings.Split(string(out), "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			if len(line) > 200 {
-				line = line[:200] + "..."
-			}
-			return line
-		}
-	}
-	return ""
-}
-
-// resumeRefused reports whether a failed report failed because herdr does not
-// take a resume command: herdr before 0.9.2 does not know the `--` separator
-// ("unknown option: --", exit 2), and 0.9.2+ answers `invalid_resume_argv` (exit
-// 1) without applying the report. A timeout or any other failure is not a verdict
-// on resume support.
-func resumeRefused(output []byte, err error) bool {
-	var exit *exec.ExitError
-	if !errors.As(err, &exit) {
-		return false
-	}
-	text := strings.ToLower(string(output))
-	if strings.Contains(text, "invalid_resume_argv") {
-		return true
-	}
-	// "unknown option: --" names the separator itself; "unknown option: --message=..." does not.
-	for _, line := range strings.Split(text, "\n") {
-		if strings.TrimSpace(line) == "unknown option: --" {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *reporter) reportArgsLocked(rep report, withResume bool) []string {
-	args := []string{
-		"pane", "report-agent", r.env.paneID,
-		"--source", source, "--agent", agent,
-		"--state", string(rep.state), "--seq", strconv.FormatInt(rep.seq, 10),
-	}
-	if rep.message != "" {
-		args = append(args, messageArgs(rep.message)...)
-	}
-	if r.sessionPath != "" {
-		args = append(args, "--agent-session-path", r.sessionPath)
-	}
-	if r.sessionID != "" {
-		args = append(args, "--agent-session-id", r.sessionID)
-	}
-	// The command goes last, after `--`. The state report in the same call is what
-	// makes this source hold the pane, which herdr requires before it takes one.
-	if withResume {
-		if argv := resumeArgv(r.sessionPath, r.sessionID); argv != nil {
-			args = append(args, "--")
-			args = append(args, argv...)
-		}
-	}
-	return args
-}
-
-// release stops new reports, drops the queued one and lets the in-flight call
-// finish so the release is the last thing herdr hears from this pane.
-func (r *reporter) release() {
-	r.mu.Lock()
-	r.released = true
-	r.queued = nil
-	var inFlight chan struct{}
-	if r.sending {
-		inFlight = r.drained
-	}
-	seq := nextSeq()
-	r.mu.Unlock()
-	if inFlight != nil {
-		<-inFlight
-	}
-	args := []string{
-		"pane", "release-agent", r.env.paneID,
-		"--source", source, "--agent", agent, "--seq", strconv.FormatInt(seq, 10),
-	}
-	if out, err := callHerdr(r.env, args); err != nil {
-		r.diagnose(args, out, err)
-	}
-}
-
-// callTimeout bounds every herdr CLI call: herdr must never slow the agent down. It is a variable so
-// a test on a heavily loaded host can give the fake herdr, a freshly started test binary, time to
-// start; production never changes it.
-var callTimeout = 3 * time.Second
-
-// callHerdr runs one herdr command and returns its output. Callers do not wait on a
-// failed or slow herdr call (a failure is written once to stderr): the reporter is best effort, and it must never fail
-// or stall the agent.
-func callHerdr(env herdrEnv, args []string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
-	defer cancel()
-	cmd := newCommand(ctx, env.bin, args)
-	// A herdr that hangs is killed at the deadline; a grandchild holding the pipe
-	// must not keep Wait from returning.
-	cmd.WaitDelay = time.Second
-	return cmd.CombinedOutput()
 }

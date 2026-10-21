@@ -18,6 +18,7 @@ import (
 	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 	"github.com/MichaelKinsy/pigpen/pig-music/mpv"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
+	"github.com/MichaelKinsy/pigpen/pig-music/native"
 	"github.com/MichaelKinsy/pigpen/pig-music/ui"
 )
 
@@ -202,14 +203,14 @@ func (f *footer) screen(open bool, current music.State) {
 	f.set(f.text(current))
 }
 
-// running reports whether an mpv answers on the player's socket, without starting anything.
+// running reports whether an mpv or a native player answers on its socket, without starting anything.
 func (a *app) running(ctx context.Context) bool {
 	paths, _, err := a.load()
-	return err == nil && mpv.Running(ctx, paths.Socket)
+	return err == nil && (mpv.Running(ctx, paths.Socket) || native.Running(ctx, paths))
 }
 
-// onSessionStart keeps the footer right after a /reload or a restart: an mpv that is still playing is attached, so its
-// track shows in the footer without a /music.
+// onSessionStart keeps the footer right after a /reload or a restart: an mpv or a native player that is still playing is
+// attached, so its track shows in the footer without a /music.
 func (a *app) onSessionStart(ctx sdk.Context) {
 	a.foot.capture(ctx)
 	if !ctx.HasUI() || ctx.Mode() != "tui" {
@@ -224,8 +225,9 @@ func (a *app) onSessionStart(ctx sdk.Context) {
 	}()
 }
 
-// stopMPV ends the mpv this user has playing, whether or not this process attached to it. It reports whether one was running.
-func (a *app) stopMPV(ctx context.Context) (bool, error) {
+// stopMusic ends the player (mpv or native) this user has playing, whether or not this process attached to it. It reports
+// whether one was running.
+func (a *app) stopMusic(ctx context.Context) (bool, error) {
 	a.mu.Lock()
 	player := a.player
 	a.mu.Unlock()
@@ -237,10 +239,15 @@ func (a *app) stopMPV(ctx context.Context) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		if !mpv.Running(ctx, paths.Socket) {
+		var p music.Player
+		switch {
+		case mpv.Running(ctx, paths.Socket):
+			p = mpv.New(mpv.Config{Paths: paths})
+		case native.Running(ctx, paths):
+			p = native.NewPlayer(native.ClientConfig{Paths: paths})
+		default:
 			return false, nil
 		}
-		p := mpv.New(mpv.Config{Paths: paths})
 		defer p.Close()
 		if err := p.Attach(ctx); err != nil {
 			return false, err
@@ -273,7 +280,7 @@ func (a *app) onSessionShutdown(data map[string]any) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if stopped, err := a.stopMPV(ctx); stopped && err == nil { // PiG is exiting; there is nobody left to tell an error
+	if stopped, err := a.stopMusic(ctx); stopped && err == nil { // PiG is exiting; there is nobody left to tell an error
 		a.disown()
 	}
 }

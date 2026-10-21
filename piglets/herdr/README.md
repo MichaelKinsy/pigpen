@@ -20,52 +20,42 @@ pig --piglet dist/staged/piglets/herdr/piglet.yaml
 
 ## What it reports
 
-The extension follows herdr's published guide, [Add Herdr support to your agent](https://herdr.dev/docs/add-herdr-support/) (and the [Socket API](https://herdr.dev/docs/socket-api/#agent-state-reporting) it builds on), with source `custom:pig` and agent `pig`. It runs `"$HERDR_BIN_PATH" pane report-agent "$HERDR_PANE_ID" ...` and activates only when `HERDR_ENV=1` and `HERDR_PANE_ID`, `HERDR_BIN_PATH` and `HERDR_SOCKET_PATH` are all set. Checked against herdr 0.9.3.
+The extension does what [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) does (see [Credits](#credits)): it talks to herdr's socket, as herdr's own Pi integration does, with source `pig` and agent `pig`. It activates only when `HERDR_ENV=1` and `HERDR_SOCKET_PATH` and `HERDR_PANE_ID` are set; the `herdr` binary need not be on `PATH`. Each report is one JSON line, `{"id", "method": "pane.report_agent", "params"}`, on a new connection to the socket (a named pipe on Windows). Checked against herdr 0.9.3.
 
 | PiG event | Report |
 | --- | --- |
-| `session_start` | the current state (`idle`, or `working` when a reload lands mid-turn), with the session |
+| `session_start` (TUI only) | the current state (`idle`, or `working` when a reload lands mid-turn), with the resume command |
 | `agent_start` | `working` |
-| `agent_settled` | `idle`, once no retry, compaction or queued continuation remains |
-| `ui_prompt_start` | `blocked`, with the prompt title as the message: `select`, `confirm`, `input`, `editor` and `custom` dialogs from any extension |
-| `ui_prompt_end` | back to `working` or `idle` |
-| `herdr:blocked` on `pi.events` with `{ active: true, label }` | `blocked`, with the label as the message |
-| `herdr:blocked` with `{ active: false }` | back to `working` or `idle` once no other block holds |
-| `session_shutdown` with reason `quit` | `pane release-agent` |
+| `agent_settled` | `idle`, once no retry, compaction or queued continuation remains and `isIdle()` is true |
+| `herdr:blocked` on `pi.events` with `{ active: true, label }` | `blocked`, with the label as the message (as given, whatever its type) |
+| `herdr:blocked` with a falsy `active` | back to `working` or `idle` once no other block holds |
+| `session_shutdown` with reason `quit` | `pane.release_agent` |
+| `ui_prompt_start` / `ui_prompt_end`, **only with `PIGPEN_HERDR_UI_PROMPTS=1`** | `blocked` with the prompt title (or its kind) as the message, then back |
 
-- **Session.** Every report carries `--agent-session-path` (an absolute session file) and `--agent-session-id`. A new, resumed or forked session is reported as soon as it starts.
-- **Message.** A `blocked` report's `--message` is the prompt title, sent as `--message <text>`, the only form herdr before 0.9.0 parses (every herdr takes the next argument as the value, even one that starts with `-`). Only a title that is exactly `--` is sent as `--message=--`, because herdr 0.9.2+ splits the resume command off at the first `--`.
-- **Order.** Every report has a `--seq` seeded from the clock, so it increases across sessions and restarts. Calls never overlap; while one is in flight only the newest state is kept.
-- **Release.** Only a real quit releases the pane. Reload and session replacement do not, so the successor's first report cannot race a release.
-- **Best effort.** Each call has a three-second limit and a failure is ignored. It never slows the agent down.
+- **Prompts are opt-in.** PiG tells every extension when a `select`, `confirm`, `input`, `editor` or `custom` dialog opens. Pi has no such event and herdr-pig never reports a prompt, so by default the extension reports exactly what herdr-pig does. `PIGPEN_HERDR_UI_PROMPTS=1` in the pane's environment adds the `blocked` state for dialogs; blocks are counted per holder, so a `herdr:blocked` release cannot end a dialog's block, nor the other way round.
+- **Order.** Every report has a `seq` seeded from the clock (microseconds), so it increases across sessions and restarts. Requests never overlap; while one is in flight only the newest state is kept. An unchanged state, message and resume command is not sent again.
+- **Release.** Only a real quit releases the pane. Reload and session replacement do not, and the next session's first report replaces the state. The release does not wait for a report in flight; herdr drops the older `seq`.
+- **Retry.** A request that gets no answer is sent again once with the same content: 0.5 s for the first attempt, 1.5 s for the second. Nothing waits on herdr longer than that, and a failure never reaches the agent.
 - **Interactive only.** RPC, JSON and print runs report nothing, because herdr can only show a pane's terminal.
-- **`herdr:blocked` bus event.** Another extension can mark a block that is not a UI prompt by emitting `herdr:blocked` with `{ active, label }` on `pi.events`, the convention herdr's own Pi integration uses. Blocks are counted per holder, so a bus release cannot end an open prompt's block, nor the other way round. The listener is ported from herdr-pig (see [Credits](#credits)).
 
 ## Resume after a herdr restart
 
-herdr 0.9.2 and later restore a pane after a server restart by running the resume command an agent reported. Every state report carries it after `--`, together with `--agent-session-id`:
+herdr 0.9.2 and later restore a pane after a server restart by running the resume command an agent reported. Every state report carries it as `resume_argv`:
 
-```text
-"$HERDR_BIN_PATH" pane report-agent "$HERDR_PANE_ID" --source custom:pig --agent pig --state idle --seq N \
-  --agent-session-path <session file> --agent-session-id <id> -- pig --session <session file>
+```json
+{"id":"pig:state:1792509903106:2cvg0fgoom3","method":"pane.report_agent","params":{"pane_id":"w1:p1","source":"pig","agent":"pig","state":"idle","seq":1792509903106737,"resume_argv":["pig","--session","/home/user/.pig/agent/sessions/one.jsonl"]}}
 ```
 
-herdr opens the pane in the same directory and runs that command, so the pig session comes back in the same pane. This mirrors herdr's own Pi integration, which restores `pi --session <session file>`; like it, the command has no model flag (a resumed session restores the model it recorded). `pig --session <file>` opens that exact file from any directory and session dir on PiG 0.3.x and 0.4.0. `--session <id>` would ask to fork the session when the directory differs, so the extension never reports it.
+The command is `pig --session <session file>` when the session file is an absolute path without an apostrophe or control character, else `pig --session <session id>` when the id is safe, else no command is sent (herdr rejects a resume command with an apostrophe or control character and drops the whole report). An in-memory session (`pig --no-session`) has an id and no file, so it reports `pig --session <id>`. A `pig --session <id>` asks to fork the session when it is restored from another directory than the session's own; that is herdr-pig's behavior and the port keeps it.
 
-- **Rules.** The first word is `pig`, a plain command on `PATH`; no argument has an apostrophe or control character; at most 64 arguments and 8 KiB. When the session file breaks a rule (for example an apostrophe in a directory name), the command is `pig --session-id <id>`, which resumes the id in the pane's project session directory and never prompts. With neither usable, only the state is reported. An in-memory session (`pig --no-session`) has no file and reports no command: `--session-id` would create a new, saved session instead of bringing it back.
 - **A new session.** `/new`, `/resume` and `/fork` report the new session, not a release.
-- **Older herdr.** herdr before 0.9.2 cannot parse the `--` separator (`unknown option: --`) and 0.9.2+ answers `invalid_resume_argv` for a command it refuses. Either way the extension sends the same report once more without the command, silently, and stops attaching one. State reports and the release keep working.
 - **Opt out.** `[session] resume_agents_on_restore = false` in herdr's config turns restore off.
 - **You need `pig` on `PATH`** in the restored pane, with the same agent directory (`PIG_CODING_AGENT_DIR`) and model settings the session used; herdr starts the command in the pane's shell.
 - **The restore runs plain `pig`.** An extension cannot see how PiG was started, so the command carries no `--piglet`, `-e` or other launch flag. A session started with `pig --piglet .../herdr/piglet.yaml`, or with a Piglet Binary under another name, comes back in plain `pig`: the conversation returns, the Piglet's composition does not, and herdr sees the agent again only if that `pig` loads this extension (install the Package with `pig install ./components/herdr`, or put the Binary on `PATH` as `pig`).
 
 ## When herdr does not take a report
 
-The reporter never waits on herdr and never fails the agent. When a call fails (herdr not running, a pane herdr no longer
-knows, a `herdr` binary that is gone) it writes one line to stderr, which PiG collects as the extension's output, naming the
-cause: `herdr: pane report-agent failed: exit status 1: error: pane p_9 not found`. The same failure is written once until a
-call succeeds again. A report that only an old herdr refuses because of the resume command is retried without it and stays
-silent. This diagnostic came from the `herdr-agent-state` extension of pigpen pull request 2 (Yu Li, @liyu1981).
+The reporter never fails the agent. When a request gets no answer after both attempts (herdr not running, a socket that is gone) it writes one line to stderr, which PiG collects as the extension's output, naming the cause: `herdr: pane.report_agent failed: dial unix /run/herdr.sock: connect: no such file or directory`. The same failure is written once until a request is delivered again. herdr-pig fails silently here; the line is an addition that herdr cannot see. It came from the `herdr-agent-state` extension of pigpen pull request 2 (Yu Li, @liyu1981).
 
 ## Install from herdr
 
@@ -88,8 +78,8 @@ install` (or `pig-support.ps1` on Windows) does the same. Use the plugin or this
 
 ## Credits
 
-Pigpen's herdr support merges two implementations. The reporter and this Piglet are Pigpen's own (MIT). The herdr plugin
-in [`herdr-plugin/`](herdr-plugin/) and the `herdr:blocked` listener come from
+Pigpen's herdr support is a port of herdr-pig. The herdr plugin
+in [`herdr-plugin/`](herdr-plugin/) and the reporter's behavior (including the `herdr:blocked` listener) come from
 [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer ([@cpolzer](https://github.com/cpolzer))
 and Hai-Fai Solutions, ported with their permission
 ([PiG#204](https://github.com/MichaelKinsy/PiG/issues/204)) at v0.2.1. That code stays under the Apache License 2.0: see
@@ -97,21 +87,15 @@ and Hai-Fai Solutions, ported with their permission
 [`components/herdr/NOTICE`](../../components/herdr/NOTICE). herdr-pig is itself based on herdr's Pi integration
 (Apache-2.0).
 
-Where the two differed, Pigpen kept the better behaviour per feature:
+The Go reporter is Pigpen's own (MIT) and a faithful port of herdr-pig's extension: the same socket transport, source, retry, resume command and `herdr:blocked` handling, proven against the unmodified original (see [`components/herdr/port/PORT.md`](../../components/herdr/port/PORT.md)). What it adds, and why:
 
-| Feature | Kept | Why |
+| Feature | Behavior | Why |
 | --- | --- | --- |
-| Extension language | Pigpen's Go reporter | No Node.js needed; it fuses into a Piglet Binary |
-| Transport | Pigpen's `herdr pane report-agent` CLI calls | herdr's documented contract; the CLI finds the socket or pipe itself on every platform |
-| `blocked` from UI prompts | Pigpen's | herdr-pig could not detect PiG's own prompts |
-| `blocked` from `herdr:blocked` | herdr-pig's | Pigpen's Go reporter had no listener; now ported, counted per holder |
-| Resume fallback | Pigpen's `pig --session-id <id>` | herdr-pig's `pig --session <id>` asks to fork from another directory |
-| In-memory sessions | Pigpen's (no resume command) | resuming the id would create a new session |
-| Old herdr | Pigpen's (retry without the resume command) | state keeps working on herdr before 0.9.2 |
-| Failure reporting | Pigpen's one-line stderr diagnostic | herdr-pig failed silently |
-| Retry | Pigpen's single call with a 3 s limit | herdr-pig retried once (0.5 s, then 1.5 s); either keeps PiG unblocked |
+| Extension language | Go reporter | No Node.js needed; it fuses into a Piglet Binary |
+| `blocked` from UI prompts | Opt-in, `PIGPEN_HERDR_UI_PROMPTS=1` | herdr-pig could not detect PiG's own prompts; by default the port reports what the original does |
+| Failure reporting | One stderr line | herdr-pig failed silently |
 | Install from herdr | herdr-pig's plugin, adapted | Pigpen had none; it now installs the Go Package with `pig install` |
-| Plugin startup refresh | dropped | `pig update` updates the Package; a refresh would hit npm on every herdr start |
+| Plugin startup refresh | herdr-pig's, adapted: reinstalls the pinned Package version when another one is installed | The plugin pins the Package version it was released with |
 | Plugin ownership check | herdr-pig's marker, used to replace its old copy | `pig install` and `pig remove` own the Package itself |
 | `PIG_USE_PI_DIRS=1` refusal | herdr-pig's | shared settings would hand the Package to Pi |
 

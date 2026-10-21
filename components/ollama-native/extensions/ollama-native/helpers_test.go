@@ -142,3 +142,17 @@ func httpHandler(see func(map[string][]string), next http.Handler) http.Handler 
 		next.ServeHTTP(w, r)
 	})
 }
+
+// withResponseHeader answers every request with an extra response header.
+func withResponseHeader(key, value string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(key, value)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func contextWithCancelAfter(d time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(d, cancel)
+	return ctx, cancel
+}

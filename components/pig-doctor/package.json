@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-pig-doctor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Finds and safely fixes cruft in a PiG setup: duplicate or broken extensions, unpruned caches, orphaned agent directories, legacy files. Read-only by default; every removal is backed up and restorable",
   "keywords": [
     "pig-package",

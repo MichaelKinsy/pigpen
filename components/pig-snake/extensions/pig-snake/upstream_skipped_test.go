@@ -58,7 +58,7 @@ func TestPowerRaisesLaunchSpeedMonotonically(t *testing.T) { skipUpstream(t, "no
 func TestPowerKeysClampAtMinimumAndMaximum(t *testing.T)   { skipUpstream(t, "no launch power") }
 func TestPreviewMatchesTheRealFlight(t *testing.T)         { skipUpstream(t, "no trajectory preview") }
 func TestMouseDragPullsAndReleaseFires(t *testing.T) {
-	skipUpstream(t, "keyboard only; see internal/termgame TestParseMouseDecodesSGRReports")
+	skipUpstream(t, "no slingshot: the mouse steers the snake (TestAClickSteersTheLeaderTowardTheCell and the rest of mouse_test.go); ParseMouse itself is the shared termgame library's and tested there")
 }
 func TestPreviewTracesTheAimAndStopsAtStructures(t *testing.T) {
 	skipUpstream(t, "no trajectory preview")

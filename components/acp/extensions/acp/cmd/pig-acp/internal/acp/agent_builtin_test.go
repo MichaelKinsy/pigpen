@@ -226,12 +226,12 @@ func TestBuiltinExport(t *testing.T) {
 }
 
 func TestBuiltinChangelog(t *testing.T) {
-	t.Run("/changelog says so when no installation is found", func(t *testing.T) {
+	t.Run("/changelog refuses by name when the pig installation carries no changelog", func(t *testing.T) {
 		proc := newFakeProc()
 		a, conn := builtinAgent(t, proc, cwdNow(t))
 		a.changelogPath = func() string { return "" }
 		runCmd(t, a, "/changelog")
-		if got := lastChunkText(t, conn); got != "Changelog not found (couldn't locate pig installation)." {
+		if got := lastChunkText(t, conn); got != changelogRefusal {
 			t.Errorf("text = %q", got)
 		}
 	})

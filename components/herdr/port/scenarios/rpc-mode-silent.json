@@ -1,0 +1,9 @@
+{
+  "name": "rpc-mode-silent",
+  "description": "HERDR_ENV, a socket path and a pane id are set, but an RPC session is not a TUI: the extension reports nothing and the trace is the same as without it. (The harness hosts speak RPC only; the TUI behavior is proven by the twins and by the drive replay.)",
+  "env": {"HERDR_ENV": "1", "HERDR_SOCKET_PATH": "/nonexistent/herdr.sock", "HERDR_PANE_ID": "w1:p1"},
+  "llm": [{"text": "hello"}],
+  "steps": [
+    {"name": "turn", "rpc": {"type": "prompt", "message": "hi"}}
+  ]
+}

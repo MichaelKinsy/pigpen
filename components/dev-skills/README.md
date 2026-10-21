@@ -1,7 +1,8 @@
 # dev-skills
 
 Eight general Skills for software work, as one PiG Package. They are adaptations of
-public Skills (see [CREDITS.md](CREDITS.md)); the names carry a `pigpen-` prefix.
+public Skills, not copies: each one is based on a pinned upstream commit and lists what it changes
+(see [CREDITS.md](CREDITS.md)); the names carry a `pigpen-` prefix.
 
 | Skill | Use it when |
 |---|---|
@@ -24,6 +25,13 @@ pig install ./components/dev-skills
 
 `pig package validate ./components/dev-skills` validates the Package. The Skills expand
 as `/skill:pigpen-tdd` and so on, and the model can load them by name.
+
+## Staying true to the upstream
+
+`upstream-map.json` maps every shipped file to the upstream file it was adapted from, at the pinned commit, with its
+adaptations. `node scripts/dev-skills-drift.mjs` (part of `npm run quality`) fails when a shipped file or a vendored upstream
+copy changes without its row, and `node scripts/dev-skills-drift.mjs --online --latest` checks the pins against the upstream
+repositories and lists what upstream changed since.
 
 ## Not in this Package
 

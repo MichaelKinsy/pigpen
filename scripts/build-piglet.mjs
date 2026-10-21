@@ -6,7 +6,8 @@ import { targetOf } from './host-target.mjs';
 import { requirePig } from './pig-bin.mjs';
 
 // One command from a checkout to a Piglet Binary:
-//   npm run build:piglet -- <piglet-name> [--out <file>] [--replace] [-- <extra pig piglet build flags>]
+//   npm run build:piglet -- <piglet-name> [--out <file>] [--replace] [--with <piglet>:<selection>]... [-- <extra pig piglet build flags>]
+// --with enables an optional selection (piglets/<name>/optional.json), which is off by default.
 // pig never overwrites a binary; --replace moves an existing one to <out>.prev first.
 // Without --out the Binary goes to dist/bin/<name>; PIGPEN_BIN_DIR names another directory (the tests use it so a Binary built in dist/bin cannot change their result).
 // PiG anchors a Piglet's local Packages inside the Piglet's own directory, so the authored
@@ -28,8 +29,10 @@ const own = separator === -1 ? args : args.slice(0, separator);
 let name;
 let out;
 let replace = false;
+const withs = [];
 for (let i = 0; i < own.length; i++) {
   if (own[i] === '--replace') replace = true;
+  else if (own[i] === '--with') withs.push(own[++i] ?? fail('--with needs <piglet>:<selection>'));
   else if (own[i] === '--out') out = own[++i] ?? fail('--out needs a path');
   else if (own[i].startsWith('-')) fail(`unknown flag ${own[i]}`);
   else if (name === undefined) name = own[i];
@@ -45,7 +48,7 @@ if (!names().includes(name)) fail(`no Piglet named "${name}". Piglets: ${names()
 const step = (command, commandArgs, options = {}) => spawnSync(command, commandArgs, { cwd: root, stdio: 'inherit', ...options });
 const staged = spawnSync(process.execPath, [join(root, 'scripts/quality-gates.mjs')], { cwd: root, stdio: 'inherit' }).status === 0
   && step(process.execPath, [join(root, 'scripts/go-only.mjs')]).status === 0
-  && step(process.execPath, [join(root, 'scripts/stage-piglets.mjs')]).status === 0;
+  && step(process.execPath, [join(root, 'scripts/stage-piglets.mjs'), ...withs.flatMap((entry) => ['--with', entry])]).status === 0;
 if (!staged) fail('staging failed; fix the diagnostic above');
 
 const manifest = join(root, 'dist/staged/piglets', name, 'piglet.yaml');

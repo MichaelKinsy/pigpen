@@ -1,0 +1,18 @@
+{
+ "name": "bootstrap-first-request",
+ "description": "The first model request of a session carries the using-superpowers bootstrap as a user message in front of the prompt.",
+ "llm": [
+  {
+   "text": "done"
+  }
+ ],
+ "steps": [
+  {
+   "name": "prompt",
+   "rpc": {
+    "type": "prompt",
+    "message": "Let us make a react todo list"
+   }
+  }
+ ]
+}

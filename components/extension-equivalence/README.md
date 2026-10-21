@@ -10,17 +10,19 @@ code):
 
 | Tool / command | Use |
 |---|---|
-| `equivalence_gaps` / `pigeq gaps` | Static: list the Pi APIs the TypeScript uses that the Go SDK lacks (`ctx.newSession({ setup })`, `pi.on("cache_warming_decision")`, ...). A missing API cannot show up in any scenario, because the Go lane cannot call it, so only a static check sees it. Rows come from PiG's `docs/extension-sdk-surface.md`; a snapshot of its non-implemented rows and its `pi.*` rows (PiG 0.4.1, Pi 1.0.1) is embedded, and `--surface` reads a fresh copy. A `pi.<member>` the table has no row for is an API that PiG predates (`pi.registerToolRenderer` before PiG 0.4.1) and is reported missing. `--ts` takes a file (read with the local modules it imports or re-exports) or a multi-file extension's directory; on a table where `pi.events` is missing for Go (PiG 0.3.x), the bus reached through an alias, destructuring or an index is reported too; `--accept-gaps` lists owner-approved exclusions. |
+| `equivalence_gaps` / `pigeq gaps` | Static: list the Pi APIs the TypeScript uses that the Go SDK lacks (`ctx.newSession({ setup })`, `ctx.ui.custom({ onHandle })`, ...). A missing API cannot show up in any scenario, because the Go lane cannot call it, so only a static check sees it. Rows come from PiG's `docs/extension-sdk-surface.md`; a snapshot of its non-implemented rows and its `pi.*` rows (PiG 0.5.0, Pi 1.3.0+1402973a; `eq/surface/go-gaps.md` names the revision and the one-line command that regenerates it) is embedded, and `--surface` reads a fresh copy. A `pi.<member>` the table has no row for is an API that PiG predates (`pi.registerToolRenderer` before PiG 0.4.1) and is reported missing. `--ts` takes a file (read with the local modules it imports or re-exports) or a multi-file extension's directory; on a table where `pi.events` is missing for Go (PiG 0.3.x), the bus reached through an alias, destructuring or an index is reported too; `--accept-gaps` lists owner-approved exclusions. |
 | `equivalence_run` mode `run` / `pigeq run` | Live: the original under **Pi**, the original under **PiG's Node runtime**, and the Go port under **PiG**, with the same scripted scenario. The port passes when its trace equals Pi's. The PiG-Node lane proves the trace is host-neutral. |
 | mode `record` / `pigeq record` | Write golden traces from Pi (and refuse a scenario on which Pi and PiG's Node lane disagree). Commit them. |
 | mode `check` / `pigeq check` | Compare only the Go port with the golden traces. Needs no Pi installation, so it can run wherever `pig` does. |
-| `pigeq check --builtin --pig <Binary>` | Prove a built Piglet Binary against the goldens: the port is compiled in, so no extension directory is loaded with `-e`. Not available for `mutate`. |
-| `equivalence_run` mode `mutate` / `pigeq mutate` | Apply deliberate defects to a copy of the port; every one must make a scenario fail (or, with the SDK directory, the port's own Go tests). `--unit-only` (tool: `unitOnly`) judges by the port's own tests alone, for a port with no scenarios; `--jobs N` runs mutants in parallel; each unit run is bounded by `-timeout=180s`; a mutant is judged only after the unmutated port's tests pass, and only a reported test failure is a kill. |
+| `pigeq check --builtin --pig <Binary>` / `equivalence_run` mode `check` with `builtin` | Prove a built Piglet Binary against the goldens: the port is compiled in, so no extension directory is loaded with `-e`. `record --self --builtin` / mode `record` with `self` and `builtin` records its baseline the same way. Not available for `mutate` (mutate the source directory) or `run`. |
+| `equivalence_run` mode `mutate` / `pigeq mutate` | Apply deliberate defects to a copy of the port; every one must make a scenario fail (or, with the SDK directory, the port's own Go tests). `--unit` (tool: `unit`) also runs the port's own tests on each mutant first (needs `--sdk-dir`, tool `sdkDir`; the tool, as before `unit` existed, also turns the layer on when `sdkDir` or `$PIG_SDK_DIR` is given and `unit` is not `false`); `--unit-only` (tool: `unitOnly`) judges by the port's own tests alone, for a port with no scenarios; `--jobs N` runs mutants in parallel; each unit run is bounded by `-timeout=180s`; a mutant is judged only after the unmutated port's tests pass, and only a reported test failure is a kill. |
 | (in `run`, `record`, `check`) | Two pseudo-scenarios: `sdk-gaps` (above) and `exec-coverage`: every command the original or the port starts by a literal name must be declared in some scenario's `commands` and must be a bare name, because an undeclared command runs unshimmed and unrecorded. A command in code no scenario reaches (a development launcher, a deferred feature, an SQL statement handed to a driver's `exec`) is excused by the owner with an `"exec:<name>": "<reason>"` entry in the `--accept-gaps` file; it stays listed with its reason, and a path is never excused. |
 | `equivalence_diff` / `pigeq diff` | First difference between two traces. |
 | `equivalence_twins` / `pigeq twins list\|check` | The twin contract: `list` writes the ledger of upstream test titles per file; `check` requires each title to have a Go `tw(...)` twin or a named `tskip(...)` (for a Go original: a test function of the same name, or one that skips first, directly or through a skip helper, as a named skip), rejects unknown titles and one reason shared by many skips, and prints the `N exact twins, M skipped` line for `PORT.md`. Helpers: the Skill's `references/twin_test.go.txt`. |
-| `pigeq llm --script turns.json [--log F]` | Serves the scenarios' scripted OpenAI-compatible model on a loopback port (prints its base URL; stops when stdin closes) and logs each request as a JSON line. For a port's own end-to-end run, for example an adapter driven by a real client. |
-| `pigeq env`, `pigeq source` | Session setup (CLI only). `env --root DIR --pig PIG --pi PI [--pi-source DIR] [--sdk-dir DIR] --source DIR --module EXTDIR` prints an isolated shell environment to source (temporary `HOME`, `PIG_HOME`, agent directories; the real `go` and `node` first on `PATH`; `GOCACHE` and `GOMODCACHE` kept; `PIG_SDK_GO_ROOT` unset) and, with `--pig` and `--module`, writes a `go.work` that resolves PiG's SDK. `source --from PIG-REPO --rev COMMIT --out DIR` exports a PiG revision as a one-commit git checkout for `PIG_SOURCE_ROOT`. | A PiG that pins an untagged Pi commit reports `0.5.0+1.3.0.1402973a`; `env` then accepts a Pi that prints `1.3.0` and whose source checkout (the git tree above the `pi` executable, or `--pi-source`) is at that commit, and rejects any other commit.
+| `pigeq lane --scenarios DIR --host pi\|pig --bin EXE --ext PATH --out DIR` / `equivalence_run` mode `lane` (`host`, `bin`, `ext`, `out`) | Run one host on the scenarios and write its traces, comparing nothing: for debugging a divergence. A lane that fails is reported as a failed lane, with its trace. |
+| `--keep` / `keep` (on `run`, `record`, `check`, `lane`) | Leave each lane's run directory in place (workspace, home, agent directory, host logs). The CLI prints `eq: keeping DIR` on stderr; the tool puts the same line in its report. |
+| `pigeq llm --script turns.json [--log F]` | Serves the scenarios' scripted OpenAI-compatible model on a loopback port (prints its base URL; stops when stdin closes) and logs each request as a JSON line. For a port's own end-to-end run, for example an adapter driven by a real client. CLI only, on purpose: it is a long-lived server whose lifetime is its stdin, which a tool call has no way to hold open. |
+| `pigeq env`, `pigeq source` | Session setup (CLI only, on purpose: `env` prints a shell script that the calling shell must `source` to get its isolated `HOME`, `PATH` and `go.work`, which a tool call cannot do for a model; `source` exports a PiG revision to a directory for `PIG_SOURCE_ROOT`, a one-time checkout step). `env --root DIR --pig PIG --pi PI [--pi-source DIR] [--sdk-dir DIR] --source DIR --module EXTDIR` prints an isolated shell environment to source (temporary `HOME`, `PIG_HOME`, agent directories; the real `go` and `node` first on `PATH`; `GOCACHE` and `GOMODCACHE` kept; `PIG_SDK_GO_ROOT` unset) and, with `--pig` and `--module`, writes a `go.work` that resolves PiG's SDK. `source --from PIG-REPO --rev COMMIT --out DIR` exports a PiG revision as a one-commit git checkout for `PIG_SOURCE_ROOT`. | A PiG that pins an untagged Pi commit reports `0.5.0+1.3.0.1402973a`; `env` then accepts a Pi that prints `1.3.0` and whose source checkout (the git tree above the `pi` executable, or `--pi-source`) is at that commit, and rejects any other commit.
 
 **Go source** is scanned too: `pigeq gaps --go DIR` (tool: `equivalence_gaps` with `go`) reports
 `MISSING` for an import of a PiG package other than the public SDK and for the process-global
@@ -91,7 +93,9 @@ configuration). The scenario is data (see [scenarios](extensions/extension-equiv
   that only an extension command context can start (`new session`, `fork`) go through a
   small driver extension loaded in every lane (`/eq-new`, `/eq-fork`).
 
-Recorded per step, in arrival order: UI requests (dialogs, notifications, status,
+Recorded per step, in arrival order (a request to the model or to a fake upstream server is recorded after the host
+output that precedes it: the harness holds the request and round-trips `get_state` on the host's stdout first, so a fast
+host cannot make the order depend on which harness goroutine ran first): UI requests (dialogs, notifications, status,
 widgets), exec calls and exits (via PATH shims), requests that reached the model (the
 messages, every tool's full definition, and the extension's part of the system prompt:
 its difference from the same host's baseline prompt without the extension), tool
@@ -118,15 +122,21 @@ field, so it does not change the normalizer version.
   described in the Skill (`references/fakehost_test.go.txt`).
 - Effects the extension starts without awaiting are collected during a quiet period
   (`settleMs`, default 150 ms, plus `tailMs` after the last step). An effect later than
-  that is not seen. Parallel exec calls arrive in a nondeterministic order.
+  that is not seen. Parallel exec calls arrive in a nondeterministic order. An exec call is
+  not ordered against the host's output either: its shim cannot hold the call for a round trip
+  (a host blocked in a synchronous spawn could not answer it).
 - Only declared commands are recorded. `exec-coverage` catches literal command names;
   a computed name (`pi.exec(tool, ...)`) must be declared by hand and reviewed.
 - The host's own system prompt wording is not compared, only the extension's difference
   from it. An extension that removes host text shows the removed text, which may differ
   between Pi and PiG (a host-check failure to record, not to normalize).
 - The extension's stderr and log output are not in the trace.
-- Linux and macOS. The shims are POSIX symlinks; Windows is covered by the Skill's
-  Windows notes and `go vet`, not by this harness.
+- Linux and macOS. The shims are POSIX symlinks and the tests' fake hosts are shell scripts, so
+  a lane does not run on Windows: the extension and `pigeq` build for it (`GOOS=windows go vet`)
+  and the tests that need a POSIX shell skip there by name, but no run on Windows has been done.
+  Port authors on Windows run the lanes under WSL or Linux CI and cover Windows with the Skill's
+  Windows notes. Whether to add Windows lanes is an owner decision (recommendation: no, the
+  recorded traces check on any host that can run `pig`, so only recording needs Linux or macOS).
 - The harness needs `go` (it builds its shim and PiG builds Go extensions on first use)
   and `node` (TypeScript lanes).
 

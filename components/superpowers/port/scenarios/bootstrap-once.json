@@ -1,0 +1,28 @@
+{
+ "name": "bootstrap-once",
+ "description": "After the first agent run ends the bootstrap is not injected again: the second request holds the two prompts and no bootstrap.",
+ "llm": [
+  {
+   "text": "first answer"
+  },
+  {
+   "text": "second answer"
+  }
+ ],
+ "steps": [
+  {
+   "name": "first",
+   "rpc": {
+    "type": "prompt",
+    "message": "Let us make a react todo list"
+   }
+  },
+  {
+   "name": "second",
+   "rpc": {
+    "type": "prompt",
+    "message": "Now add a delete button"
+   }
+  }
+ ]
+}

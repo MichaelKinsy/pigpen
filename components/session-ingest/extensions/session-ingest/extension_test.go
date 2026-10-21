@@ -64,9 +64,12 @@ func TestSchemaAdvertisesOnlyImplementedModes(t *testing.T) {
 	}
 }
 
-func TestParametersThatDoNotApplyToTheModeAreRefused(t *testing.T) {
+// The schema is one flat object for every mode, so a call may carry a parameter
+// (often a schema default) that the chosen mode does not use. It is ignored, as in
+// PiG's own tools; the result is the same as without it.
+func TestParametersThatTheModeDoesNotUseAreIgnored(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "s.jsonl")
-	if err := os.WriteFile(path, []byte(`{"type":"session","id":"abcdef0123456789","cwd":"/w"}`+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(`{"type":"session","id":"abcdef0123456789","cwd":"/w"}`+"\n"+`{"type":"message","message":{"role":"user","content":"hi"}}`+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	h := StartHost(t, sessioningest.Extension(), HostOptions{})
@@ -84,12 +87,17 @@ func TestParametersThatDoNotApplyToTheModeAreRefused(t *testing.T) {
 		{"stats", "start", 1},
 	}
 	for _, c := range cases {
-		_, errText := h.Tool("read_session", map[string]any{"path": path, "mode": c.mode, c.param: c.value})
-		if !strings.Contains(errText, "does not support the \""+c.param+"\" parameter with mode="+c.mode) {
-			t.Errorf("mode=%s %s: error = %q", c.mode, c.param, errText)
+		want, errText := h.Tool("read_session", map[string]any{"path": path, "mode": c.mode})
+		if errText != "" {
+			t.Fatalf("mode=%s: %s", c.mode, errText)
 		}
-	}
-	if _, errText := h.Tool("read_session", map[string]any{"path": path, "mode": "toc", "limit": 5}); errText != "" {
-		t.Errorf("applicable parameter refused: %s", errText)
+		got, errText := h.Tool("read_session", map[string]any{"path": path, "mode": c.mode, c.param: c.value})
+		if errText != "" {
+			t.Errorf("mode=%s %s: refused: %s", c.mode, c.param, errText)
+			continue
+		}
+		if string(got) != string(want) {
+			t.Errorf("mode=%s %s changed the result:\n%s\nvs\n%s", c.mode, c.param, got, want)
+		}
 	}
 }

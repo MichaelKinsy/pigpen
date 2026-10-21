@@ -17,6 +17,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/pig-music/art"
 	"github.com/MichaelKinsy/pigpen/pig-music/cookies"
 	"github.com/MichaelKinsy/pigpen/pig-music/doctor"
+	"github.com/MichaelKinsy/pigpen/pig-music/engine"
 	"github.com/MichaelKinsy/pigpen/pig-music/lyrics"
 	"github.com/MichaelKinsy/pigpen/pig-music/mpv"
 	"github.com/MichaelKinsy/pigpen/pig-music/music"
@@ -58,8 +59,9 @@ type app struct {
 
 	gone atomic.Bool // the generation ended (session_shutdown): nothing is built or written any more
 
-	mu     sync.Mutex // guards player, host and art; held while they are built
+	mu     sync.Mutex // guards player, kind, host and art; held while they are built
 	player music.Player
+	kind   engine.Kind // the engine player was built for (mpv when a test supplied the player)
 	host   *teahost.Host
 	art    music.Artwork // the cover art source, whether the coverArt setting draws with it or not; nil when there is none
 
@@ -112,6 +114,9 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 	if a.gone.Load() {
 		return nil, errEnded
 	}
+	if a.host != nil && a.engineChanged() {
+		a.dropPlayer() // the engine setting names another engine than the one this player was built for: build it again
+	}
 	if a.host != nil {
 		if a.player.State().Connected {
 			return a.host, nil
@@ -129,8 +134,13 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := a.refuseNativeEngine(settings); err != nil {
-		return nil, err
+	kind := engine.MPVEngine
+	if a.d.Player == nil { // a player a test supplies is used as it is
+		choice, err := a.chooseEngine(ctx, settings, paths)
+		if err != nil {
+			return nil, err
+		}
+		kind = choice.Kind
 	}
 	a.foot.setEnabled(settings.FooterStatusOrDefault())
 	a.foot.setMode(settings.NowPlayingMode())
@@ -144,6 +154,17 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 		source = saving
 		if es, ok := a.d.Source.(music.EntitySearcher); ok {
 			source = savingEntitySource{saving, es}
+		}
+	}
+	var nativePlayer *native.Player
+	if kind == engine.NativeEngine {
+		// The player is `pigmusic serve`, a daemon this process attaches to (or starts): the engine is linked into the pigmusic
+		// program only. mpv and yt-dlp are not used, so the doctor does not look at them; the native Source answers search and
+		// the pages, and reports why the library and liked songs are not there.
+		nsrc, np := a.nativeEngine(settings, paths)
+		nativePlayer = np
+		if source == nil {
+			source = nsrc
 		}
 	}
 	if source == nil {
@@ -172,6 +193,9 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 		source = a.guarded(&ytdlp.Source{Bin: ytPath, Cookies: access.Spec, JSRuntime: rep.JSRuntimeArg, Inner: native.NewSearcher(a.d.Getenv), Account: ytdlp.NewAccount(a.d.Getenv, ytPath, access.Spec), CacheDir: libraryCacheDir(paths.Data)})
 	}
 	player := a.d.Player
+	if nativePlayer != nil {
+		player = nativePlayer
+	}
 	if player == nil {
 		cfg := mpv.Config{
 			MPVPath: mpvPath, YtdlPath: ytPath, Paths: paths, PlayURL: source.PlayURL,
@@ -229,9 +253,80 @@ func (a *app) ensure(ctx context.Context) (*teahost.Host, error) {
 	if st := player.State(); st.Track != nil || len(st.Queue) > 0 {
 		host.Send(ui.ShowPlayerMsg{}) // an mpv that was already playing: show its queue, not an empty search
 	}
-	a.player, a.host = player, host
+	a.player, a.host, a.kind = player, host, kind
 	a.drawn.Store(host)
 	return host, nil
+}
+
+// chooseEngine picks the engine as the command line does (cli.command.open), so that the player and the quick commands, which
+// run that code, never disagree: an explicit engine is used (native refuses when the pigmusic program is missing, and on
+// Termux); with auto, the mpv or the native player that is already running is the one to control, and otherwise mpv when it
+// and yt-dlp are healthy, else the native engine. When nothing can play under auto, mpv is returned: the doctor that runs
+// next says what is missing.
+func (a *app) chooseEngine(ctx context.Context, s music.Settings, paths music.Paths) (engine.Choice, error) {
+	deps := engine.Deps{Getenv: a.d.Getenv, LookPath: a.d.LookPath}
+	mode, err := engine.ParseMode(first(a.d.Getenv("PIG_MUSIC_ENGINE"), s.Engine))
+	if err != nil {
+		return engine.Choice{}, err
+	}
+	if mode == engine.Auto {
+		switch {
+		case engine.IsTermux(deps):
+			return engine.Choice{Kind: engine.MPVEngine, Mode: mode, Reason: "Termux: mpv is the only engine"}, nil
+		case mpv.Running(ctx, paths.Socket):
+			return engine.Choice{Kind: engine.MPVEngine, Mode: mode, Reason: "an mpv is already running"}, nil
+		case native.Running(ctx, paths):
+			return engine.Choice{Kind: engine.NativeEngine, Mode: mode, Reason: "the native player is already running"}, nil
+		}
+		if a.d.Source == nil {
+			deps.MPVHealthy = func(ctx context.Context, s music.Settings) error {
+				return doctor.Run(ctx, doctor.ConfigFrom(a.d.Getenv, s, paths), a.doctorEnv(), doctor.Options{}).Err()
+			}
+		}
+	}
+	choice, err := engine.Select(ctx, s, deps)
+	if err != nil && mode == engine.Auto {
+		return engine.Choice{Kind: engine.MPVEngine, Mode: mode}, nil
+	}
+	return choice, err
+}
+
+// engineChanged reports whether the settings now name an engine other than the one the held player was built for. Only an
+// explicit mpv or native counts: auto keeps whatever was chosen. The caller holds mu.
+func (a *app) engineChanged() bool {
+	if a.d.Player != nil {
+		return false
+	}
+	_, s, err := a.load()
+	if err != nil {
+		return false
+	}
+	switch mode, _ := engine.ParseMode(first(a.d.Getenv("PIG_MUSIC_ENGINE"), s.Engine)); mode {
+	case engine.MPV:
+		return a.kind != engine.MPVEngine
+	case engine.Native:
+		return a.kind != engine.NativeEngine
+	}
+	return false
+}
+
+// dropPlayer lets go of the player and its model without stopping the music. The caller holds mu.
+func (a *app) dropPlayer() {
+	host, player := a.host, a.player
+	a.host, a.player = nil, nil
+	a.drawn.Store(nil)
+	if host != nil {
+		host.Stop()
+	}
+	if player != nil {
+		_ = player.Close()
+	}
+}
+
+// nativeEngine is the native engine's Source (guarded like the yt-dlp one) and its Player.
+func (a *app) nativeEngine(settings music.Settings, paths music.Paths) (music.Source, *native.Player) {
+	src, player := engine.NewNative(settings, paths, engine.Deps{Getenv: a.d.Getenv, LookPath: a.d.LookPath})
+	return a.guarded(src), player
 }
 
 func attach(ctx context.Context, player music.Player) error {
@@ -292,18 +387,6 @@ func (a *app) requestRedraw() {
 }
 
 func lookPath(name string) (string, error) { return exec.LookPath(name) }
-
-// refuseNativeEngine refuses to start the in-PiG player while the native engine is selected: the /music player and its quick
-// commands only drive mpv, so running them anyway would silently ignore the choice.
-func (a *app) refuseNativeEngine(s music.Settings) error {
-	engine := first(a.d.Getenv("PIG_MUSIC_ENGINE"), s.Engine)
-	if strings.EqualFold(strings.TrimSpace(engine), "native") {
-		return errNativeEngine
-	}
-	return nil
-}
-
-var errNativeEngine = errors.New("@pi-in-go/pigpen-pig-music does not support the native engine in the /music player yet (engine is \"native\" in settings.json or PIG_MUSIC_ENGINE); it only drives mpv here. Set engine to \"mpv\" or \"auto\", or use the pigmusic program, which supports the native engine")
 
 func (a *app) load() (music.Paths, music.Settings, error) {
 	paths, err := music.DefaultPaths(a.d.Getenv)

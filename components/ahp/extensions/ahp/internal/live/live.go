@@ -322,7 +322,7 @@ func (s *Session) Models() []pi.Model {
 // backend.
 func (s *Session) BackendFactory(session *pi.LiveSession) (pi.Backend, error) {
 	if id := s.ID(); id == "" || session.SessionID != id {
-		return nil, fmt.Errorf("this host serves the running PiG session only; session %s is not running", session.SessionID)
+		return nil, fmt.Errorf("%s: session %s is not the running PiG session", pi.Unsupported("running a turn in a session other than the running PiG session"), session.SessionID)
 	}
 	return s, nil
 }
