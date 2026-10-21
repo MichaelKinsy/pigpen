@@ -2842,5 +2842,53 @@
   "file": "extension.go",
   "find": "DeliverAs: deliverAs}",
   "replace": "DeliverAs: \"\"}"
+ },
+ {
+  "name": "curator-falsy-body-answered",
+  "file": "curator_server.go",
+  "find": "case nil:\n\t\treturn curatorHang(r)",
+  "replace": "case nil:\n\t\tcuratorFail(w, http.StatusBadRequest, \"Invalid body\")\n\t\treturn nil, false"
+ },
+ {
+  "name": "curator-falsy-zero-answered",
+  "file": "curator_server.go",
+  "find": "if body == 0 {\n\t\t\treturn curatorHang(r)",
+  "replace": "if body == 1 {\n\t\t\treturn curatorHang(r)"
+ },
+ {
+  "name": "activity-serper-complete-dropped",
+  "file": "serper.go",
+  "find": "\tact.complete(status)\n\tenvelope, ok := jsonObject(data)",
+  "replace": "\t_ = status\n\tenvelope, ok := jsonObject(data)"
+ },
+ {
+  "name": "activity-rest-non-2xx-status-dropped",
+  "file": "restcommon.go",
+  "find": "\tif !ok {\n\t\tact.complete(resp.StatusCode)\n\t\treturn nil, 0, fmt.Errorf",
+  "replace": "\tif !ok {\n\t\treturn nil, 0, fmt.Errorf"
+ },
+ {
+  "name": "activity-ollama-fetch-complete-dropped",
+  "file": "ollama.go",
+  "find": "\tact.complete(resp.StatusCode)\n\tcontent = jsTrim(content)",
+  "replace": "\tcontent = jsTrim(content)"
+ },
+ {
+  "name": "seam-google-account-opt-in-ignored",
+  "file": "curator_commands.go",
+  "find": "func (cookieGoogleAccount) CookieAccessAllowed() (bool, error) { return IsBrowserCookieAccessAllowed() }",
+  "replace": "func (cookieGoogleAccount) CookieAccessAllowed() (bool, error) { return false, nil }"
+ },
+ {
+  "name": "seam-current-model-eligibility-ignored",
+  "file": "curator.go",
+  "find": "!modelHostedSearchEligible(model)",
+  "replace": "false"
+ },
+ {
+  "name": "routing-hosted-response-without-search-call-accepted",
+  "file": "openai.go",
+  "find": "if !parsed.webSearchCallSeen {",
+  "replace": "if false && !parsed.webSearchCallSeen {"
  }
 ]
