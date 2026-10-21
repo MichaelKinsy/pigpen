@@ -135,10 +135,15 @@ func (g *gate) may(s string) bool {
 		return true
 	}
 	ascii, known := false, false
+	short := len(s) <= 512
+	var present letterSet
 	for _, set := range g.sets {
 		if set.fold {
 			if !known {
 				ascii, known = isASCII(s), true
+				if ascii && short {
+					present = letters(s)
+				}
 			}
 			if !ascii {
 				continue
@@ -146,10 +151,15 @@ func (g *gate) may(s string) bool {
 		}
 		found := false
 		for _, lit := range set.lits {
-			if set.fold && indexFold(s, lit) >= 0 || !set.fold && strings.Contains(s, lit) {
-				found = true
-				break
+			if set.fold {
+				if short && !present.hasAll(lit) || indexFold(s, lit) < 0 {
+					continue
+				}
+			} else if !strings.Contains(s, lit) {
+				continue
 			}
+			found = true
+			break
 		}
 		if !found {
 			return false
@@ -158,18 +168,65 @@ func (g *gate) may(s string) bool {
 	return true
 }
 
-// indexFold is the index of lit (lower case ASCII) in the ASCII text s, ignoring the case of letters, or -1.
+// indexFold is the index of lit (lower case ASCII) in the ASCII text s, ignoring the case of letters, or -1. It jumps
+// between occurrences of the first letter, in either case, with the vectorised byte search.
 func indexFold(s, lit string) int {
 	first := lit[0]
-	for i := 0; i+len(lit) <= len(s); i++ {
-		if c := s[i]; c != first && c != first-'a'+'A' {
-			continue
+	upper := first
+	if first >= 'a' && first <= 'z' {
+		upper = first - 'a' + 'A'
+	}
+	next := func(from int, c byte) int {
+		if i := strings.IndexByte(s[from:], c); i >= 0 {
+			return from + i
 		}
-		if foldPrefix(s[i:], lit) {
-			return i
+		return len(s)
+	}
+	lo, up := -1, -1
+	for i := 0; i+len(lit) <= len(s); {
+		if lo < i {
+			lo = next(i, first)
 		}
+		if upper != first && up < i {
+			up = next(i, upper)
+		}
+		p := lo
+		if upper != first && up < p {
+			p = up
+		}
+		if p+len(lit) > len(s) {
+			return -1
+		}
+		if foldPrefix(s[p:], lit) {
+			return p
+		}
+		i = p + 1
 	}
 	return -1
+}
+
+// letterSet is the set of ASCII bytes of a text, letters lower-cased: a literal with a byte outside it is not in the
+// text, which settles most literals without a search.
+type letterSet [2]uint64
+
+func letters(s string) (set letterSet) {
+	for i := range len(s) {
+		c := s[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		set[c>>6] |= 1 << (c & 63)
+	}
+	return set
+}
+
+func (set letterSet) hasAll(lit string) bool {
+	for i := range len(lit) {
+		if set[lit[i]>>6]>>(lit[i]&63)&1 == 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // gatedRegexp is a compiled expression that carries its gate: the compiled-and-cached expressions built from
@@ -177,6 +234,8 @@ func indexFold(s, lit string) int {
 type gatedRegexp struct {
 	*regexp.Regexp
 	gate *gate
+	// glob is set for a compiled glob (done.go compileGlob): the walk that answers for plain paths.
+	glob *globMatcher
 }
 
 func compileGated(expr string) (*gatedRegexp, error) {
@@ -187,5 +246,10 @@ func compileGated(expr string) (*gatedRegexp, error) {
 	return &gatedRegexp{Regexp: re, gate: buildGate(expr)}, nil
 }
 
-// MatchString is regexp.Regexp.MatchString after the gate.
-func (g *gatedRegexp) MatchString(s string) bool { return g.gate.may(s) && g.Regexp.MatchString(s) }
+// MatchString is regexp.Regexp.MatchString after the gate, or the state walk of a glob for a plain path.
+func (g *gatedRegexp) MatchString(s string) bool {
+	if g.glob != nil && plainPath(s) {
+		return g.glob.match(s)
+	}
+	return g.gate.may(s) && g.Regexp.MatchString(s)
+}

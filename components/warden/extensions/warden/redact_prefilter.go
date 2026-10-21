@@ -17,6 +17,15 @@ var credentialLiteralsExact = []string{"PRIVATE KEY-----", "sk-", "ghp_", "gho_"
 
 // mayHaveCredential reports whether Redact could change text. False means it cannot.
 func mayHaveCredential(text string) bool {
+	if isASCII(text) {
+		return mayHaveCredentialASCII(text)
+	}
+	return mayHaveCredentialScan(text)
+}
+
+// mayHaveCredentialScan is mayHaveCredential for any text: substring searches, and a Unicode-lower-cased copy for the
+// case-insensitive literals (which can come from a character that is not ASCII, such as the Kelvin sign).
+func mayHaveCredentialScan(text string) bool {
 	for _, lit := range credentialLiteralsExact {
 		if strings.Contains(text, lit) {
 			return true

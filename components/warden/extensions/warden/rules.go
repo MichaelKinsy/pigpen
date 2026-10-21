@@ -999,7 +999,7 @@ func buildRulesRequest(target *RulesTarget, set *RuleSet) RulesRequest {
 		applicable = applicable[:maxRules]
 	}
 	dropped := len(scoped) - len(applicable)
-	questions := Questions{}
+	questions := make(Questions, len(applicable)+2)
 	for _, rule := range applicable {
 		questions["rule_"+rule.ID] = ruleQuestion(rule)
 	}
