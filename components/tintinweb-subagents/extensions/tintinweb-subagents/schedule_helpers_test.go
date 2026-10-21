@@ -113,6 +113,7 @@ type mockManager struct {
 	calls    []spawnCall
 	spawnErr []error // consumed one per spawn
 	startErr []error // consumed one per awaitStartup
+	panics   string  // "spawn" or "startup": that method panics instead of returning
 	records  map[string]*mockRecord
 	order    []*mockRecord
 	faithful string // "": no records. Otherwise the status a new record has
@@ -132,6 +133,9 @@ func (m *mockManager) spawn(typ, prompt string, o spawnJobOptions) (string, erro
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.calls = append(m.calls, spawnCall{typ, prompt, o})
+	if m.panics == "spawn" {
+		panic("spawn went wrong")
+	}
 	if len(m.spawnErr) > 0 {
 		err := m.spawnErr[0]
 		m.spawnErr = m.spawnErr[1:]
@@ -157,6 +161,9 @@ func (m *mockManager) spawn(typ, prompt string, o spawnJobOptions) (string, erro
 func (m *mockManager) awaitStartup(string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.panics == "startup" {
+		panic("startup went wrong")
+	}
 	if len(m.startErr) > 0 {
 		err := m.startErr[0]
 		m.startErr = m.startErr[1:]
@@ -191,6 +198,17 @@ func (m *mockManager) record(i int) *mockRecord {
 type eventLog struct {
 	mu     sync.Mutex
 	events []scheduleChange
+}
+
+// settle waits, at most d, for the runs started by fires to have their outcome recorded (a run outlives stop(): its
+// outcome is still written to the store it was started with).
+func (s *subagentScheduler) settle(d time.Duration) {
+	done := make(chan struct{})
+	go func() { s.settling.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(d):
+	}
 }
 
 func (l *eventLog) emit(ev scheduleChange) {

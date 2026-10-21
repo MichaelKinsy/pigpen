@@ -170,14 +170,32 @@
  {
   "name": "foreground-queued",
   "file": "manager.go",
-  "find": "if background && m.running >= m.maxConcurrent {",
-  "replace": "if m.running >= m.maxConcurrent {"
+  "find": "if background && !r.bypassQueue && m.running >= m.maxConcurrent {",
+  "replace": "if !r.bypassQueue && m.running >= m.maxConcurrent {"
  },
  {
   "name": "slot-not-released",
   "file": "manager.go",
-  "find": "if r.Background {\n\t\tm.running--\n\t}",
-  "replace": "if r.Background {\n\t}"
+  "find": "if r.Background && !r.bypassQueue {\n\t\tm.running--\n\t}",
+  "replace": "if r.Background && !r.bypassQueue {\n\t}"
+ },
+ {
+  "name": "scheduled-fire-queued",
+  "file": "manager.go",
+  "find": "if background && !r.bypassQueue && m.running >= m.maxConcurrent {",
+  "replace": "if background && m.running >= m.maxConcurrent {"
+ },
+ {
+  "name": "scheduled-fire-takes-slot",
+  "file": "manager.go",
+  "find": "if background && !r.bypassQueue {\n\t\tm.running++",
+  "replace": "if background {\n\t\tm.running++"
+ },
+ {
+  "name": "scheduled-fire-frees-slot",
+  "file": "manager.go",
+  "find": "if r.Background && !r.bypassQueue {\n\t\tm.running--",
+  "replace": "if r.Background {\n\t\tm.running--"
  },
  {
   "name": "consume-running-agent",
@@ -606,12 +624,6 @@
   "replace": "\".\""
  },
  {
-  "name": "schedule-accepted",
-  "file": "refuse.go",
-  "find": "if v, ok := p[\"schedule\"]; ok && v != nil {",
-  "replace": "if v, ok := p[\"schedule\"]; ok && v == nil {"
- },
- {
   "name": "worktree-param-accepted",
   "file": "refuse.go",
   "find": "v != \"\" && v != \"off\" {",
@@ -724,5 +736,689 @@
   "file": "bus.go",
   "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
   "replace": "thinking := \"\""
+ },
+ {
+  "name": "cron-dom-dow-and",
+  "file": "cron.go",
+  "find": "match = match || dow != 0",
+  "replace": "match = match && dow != 0"
+ },
+ {
+  "name": "cron-plus-prefix-ignored",
+  "file": "cron.go",
+  "find": "p.useAndLogic = true",
+  "replace": "p.useAndLogic = false"
+ },
+ {
+  "name": "cron-last-day-off-by-one",
+  "file": "cron.go",
+  "find": "p.lastDayOfMonth && i-offset == last {",
+  "replace": "p.lastDayOfMonth && i-offset == last-1 {"
+ },
+ {
+  "name": "cron-nearest-weekday-saturday",
+  "file": "cron.go",
+  "find": "return day + 2",
+  "replace": "return day + 1"
+ },
+ {
+  "name": "cron-last-weekday-sunday",
+  "file": "cron.go",
+  "find": "case 0:\n\t\treturn last - 2",
+  "replace": "case 0:\n\t\treturn last - 1"
+ },
+ {
+  "name": "cron-sunday-seven",
+  "file": "cron.go",
+  "find": "if index == 7 {",
+  "replace": "if index == 8 {"
+ },
+ {
+  "name": "cron-nth-count",
+  "file": "cron.go",
+  "find": "if utcWeekday(year, month, d) == weekday {\n\t\t\tcount++",
+  "replace": "if utcWeekday(year, month, d) == weekday {\n\t\t\tcount += 2"
+ },
+ {
+  "name": "cron-year-limit",
+  "file": "cron.go",
+  "find": "const cronYearLimit = 3000",
+  "replace": "const cronYearLimit = 3001"
+ },
+ {
+  "name": "cron-step-zero",
+  "file": "cron.go",
+  "find": "if *steps == 0 {",
+  "replace": "if *steps == -1 {"
+ },
+ {
+  "name": "cron-step-over-size",
+  "file": "cron.go",
+  "find": "if *steps > float64(size) {",
+  "replace": "if *steps >= float64(size) {"
+ },
+ {
+  "name": "cron-backwards-range",
+  "file": "cron.go",
+  "find": "if lower > upper {",
+  "replace": "if lower > upper+100 {"
+ },
+ {
+  "name": "cron-month-names-zero-based",
+  "file": "cron.go",
+  "find": "parts[4] = replaceFold(parts[4], n, fmt.Sprint(i+1))",
+  "replace": "parts[4] = replaceFold(parts[4], n, fmt.Sprint(i))"
+ },
+ {
+  "name": "cron-sunday-range-end",
+  "file": "cron.go",
+  "find": "parts[5] = replaceFold(parts[5], \"-sun\", \"-7\")",
+  "replace": "parts[5] = replaceFold(parts[5], \"-sun\", \"-0\")"
+ },
+ {
+  "name": "cron-question-mark-ignored",
+  "file": "cron.go",
+  "find": "if strings.Contains(pattern, \"?\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cron-dow-illegal-chars",
+  "file": "cron.go",
+  "find": "[^/*0-9,\\-#Ll]+",
+  "replace": "[^/*0-9,\\-#]+"
+ },
+ {
+  "name": "cron-dst-gap-later-offset",
+  "file": "cron.go",
+  "find": "chosen = slices.Min(candidates)",
+  "replace": "chosen = slices.Max(candidates)"
+ },
+ {
+  "name": "cron-dst-overlap-second",
+  "file": "cron.go",
+  "find": "(!found || off > chosen)",
+  "replace": "(!found || off < chosen)"
+ },
+ {
+  "name": "cron-february-29",
+  "file": "cron.go",
+  "find": "var daysOfMonth = [12]int{31, 28,",
+  "replace": "var daysOfMonth = [12]int{31, 29,"
+ },
+ {
+  "name": "cron-numeric-step-prefix",
+  "file": "cron.go",
+  "find": "if split[0] != \"*\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "cron-l-in-dow",
+  "file": "cron.go",
+  "find": "p.dayOfWeek[index] |= lastOccurrence",
+  "replace": "p.dayOfWeek[index] |= 0"
+ },
+ {
+  "name": "cron-same-second-again",
+  "file": "cron.go",
+  "find": "d.second++\n\td.ms = 0",
+  "replace": "d.second += 0\n\td.ms = 0"
+ },
+ {
+  "name": "cron-keeps-milliseconds",
+  "file": "cron.go",
+  "find": "d.second++\n\td.ms = 0",
+  "replace": "d.second++"
+ },
+ {
+  "name": "cron-lw-flag",
+  "file": "cron.go",
+  "find": "if strings.EqualFold(parts[3], \"LW\") {",
+  "replace": "if strings.EqualFold(parts[3], \"LWX\") {"
+ },
+ {
+  "name": "cron-star-dom-undecided",
+  "file": "cron.go",
+  "find": "if parts[3] == \"*\" {\n\t\tp.starDOM = true",
+  "replace": "if parts[3] == \"**\" {\n\t\tp.starDOM = true"
+ },
+ {
+  "name": "schedule-relative-needs-no-plus",
+  "file": "schedule.go",
+  "find": "`^\\+(\\d+)(s|m|h|d)$`",
+  "replace": "`^\\+?(\\d+)(s|m|h|d)$`"
+ },
+ {
+  "name": "schedule-minute-unit",
+  "file": "schedule.go",
+  "find": "\"m\": 60_000",
+  "replace": "\"m\": 6_000"
+ },
+ {
+  "name": "schedule-not-trimmed",
+  "file": "schedule.go",
+  "find": "trimmed := jsTrim(s)",
+  "replace": "trimmed := s"
+ },
+ {
+  "name": "schedule-past-iso-accepted",
+  "file": "schedule.go",
+  "find": "if ms <= float64(now.UnixMilli()) {",
+  "replace": "if ms <= float64(now.UnixMilli())-1e12 {"
+ },
+ {
+  "name": "schedule-field-count",
+  "file": "schedule.go",
+  "find": "if fields != 6 {",
+  "replace": "if fields != 5 {"
+ },
+ {
+  "name": "schedule-duplicate-name",
+  "file": "schedule.go",
+  "find": "if store.hasName(in.Name, \"\") {",
+  "replace": "if false && store.hasName(in.Name, \"\") {"
+ },
+ {
+  "name": "schedule-added-silent",
+  "file": "schedule.go",
+  "find": "s.emit(scheduleChange{Type: \"added\", Job: &job})",
+  "replace": "_ = job"
+ },
+ {
+  "name": "schedule-start-arms-disabled",
+  "file": "schedule.go",
+  "find": "for _, job := range store.list() {\n\t\tif job.Enabled {",
+  "replace": "for _, job := range store.list() {\n\t\tif true {"
+ },
+ {
+  "name": "schedule-update-arms-disabled",
+  "file": "schedule.go",
+  "find": "if updated.Enabled {",
+  "replace": "if true {"
+ },
+ {
+  "name": "schedule-remove-keeps-timer",
+  "file": "schedule.go",
+  "find": "s.unscheduleJob(id)\n\tok, err := store.remove(id)",
+  "replace": "ok, err := store.remove(id)"
+ },
+ {
+  "name": "schedule-stop-keeps-intervals",
+  "file": "schedule.go",
+  "find": "for _, t := range intervals {\n\t\tt.stop()\n\t}",
+  "replace": "for range intervals {\n\t}"
+ },
+ {
+  "name": "schedule-stop-keeps-crons",
+  "file": "schedule.go",
+  "find": "for _, c := range crons {\n\t\tc.stop()\n\t}",
+  "replace": "for range crons {\n\t}"
+ },
+ {
+  "name": "schedule-arm-twice",
+  "file": "schedule.go",
+  "find": "s.unscheduleJob(job.ID) // never two timers for one job",
+  "replace": ""
+ },
+ {
+  "name": "schedule-cron-fires-early",
+  "file": "schedule.go",
+  "find": "if !r.clock.now().Before(target) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "schedule-once-stays-enabled",
+  "file": "schedule.go",
+  "find": "s.record(store, job.ID, func(j *scheduledSubagent) { j.Enabled = false })",
+  "replace": "s.record(store, job.ID, func(j *scheduledSubagent) {})"
+ },
+ {
+  "name": "schedule-past-once-not-marked",
+  "file": "schedule.go",
+  "find": "j.Enabled, j.LastStatus = false, \"error\" })",
+  "replace": "j.Enabled = false })"
+ },
+ {
+  "name": "schedule-fires-disabled-job",
+  "file": "schedule.go",
+  "find": "if !ok || !job.Enabled {\n\t\treturn\n\t}\n\ts.record(store, id, func(j *scheduledSubagent) { j.LastStatus = \"running\" })",
+  "replace": "if !ok {\n\t\treturn\n\t}\n\ts.record(store, id, func(j *scheduledSubagent) { j.LastStatus = \"running\" })"
+ },
+ {
+  "name": "schedule-fire-queued",
+  "file": "schedule.go",
+  "find": "IsBackground: true, BypassQueue: true,",
+  "replace": "IsBackground: true, BypassQueue: false,"
+ },
+ {
+  "name": "schedule-fire-foreground",
+  "file": "schedule.go",
+  "find": "IsBackground: true, BypassQueue: true,",
+  "replace": "IsBackground: false, BypassQueue: true,"
+ },
+ {
+  "name": "schedule-snapshot-raw-turns",
+  "file": "schedule.go",
+  "find": "MaxTurns: normalizeMaxTurns(job.MaxTurns), Isolated",
+  "replace": "MaxTurns: job.MaxTurns, Isolated"
+ },
+ {
+  "name": "schedule-snapshot-foreground",
+  "file": "schedule.go",
+  "find": "RunInBackground: true, Isolation: job.Isolation}",
+  "replace": "RunInBackground: false, Isolation: job.Isolation}"
+ },
+ {
+  "name": "schedule-type-not-resolved",
+  "file": "schedule.go",
+  "find": "if !dispatch.OK {\n\t\t\treturn errors.New(dispatch.Message)\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "schedule-spawn-error-not-recorded",
+  "file": "schedule.go",
+  "find": "j.LastRun, j.LastStatus = now, \"error\" })",
+  "replace": "j.LastRun = now })"
+ },
+ {
+  "name": "schedule-fired-without-agent",
+  "file": "schedule.go",
+  "find": "Type: \"fired\", JobID: id, AgentID: agentID, Name: job.Name}",
+  "replace": "Type: \"fired\", JobID: id, Name: job.Name}"
+ },
+ {
+  "name": "schedule-aborted-is-success",
+  "file": "schedule.go",
+  "find": "case statusError, statusAborted, statusStopped:",
+  "replace": "case statusError, statusStopped:"
+ },
+ {
+  "name": "schedule-stopped-is-success",
+  "file": "schedule.go",
+  "find": "case statusError, statusAborted, statusStopped:",
+  "replace": "case statusError, statusAborted:"
+ },
+ {
+  "name": "schedule-error-is-success",
+  "file": "schedule.go",
+  "find": "case statusError, statusAborted, statusStopped:",
+  "replace": "case statusAborted, statusStopped:"
+ },
+ {
+  "name": "schedule-run-count",
+  "file": "schedule.go",
+  "find": "now, status, current.RunCount+1",
+  "replace": "now, status, current.RunCount"
+ },
+ {
+  "name": "schedule-next-run-dropped",
+  "file": "schedule.go",
+  "find": "if hasNext {\n\t\t\t\tj.NextRun = next",
+  "replace": "if false {\n\t\t\t\tj.NextRun = next"
+ },
+ {
+  "name": "schedule-start-failure-ignored",
+  "file": "schedule.go",
+  "find": "if err := manager.awaitStartup(agentID); err != nil {\n\t\t\t\treturn \"error\"",
+  "replace": "if err := manager.awaitStartup(agentID); err != nil {\n\t\t\t\treturn \"success\""
+ },
+ {
+  "name": "schedule-next-run-ignores-last-run",
+  "file": "schedule.go",
+  "find": "if job.LastRun != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-next-run-of-once",
+  "file": "schedule.go",
+  "find": "if job.ScheduleType == \"once\" {\n\t\treturn job.Schedule, true",
+  "replace": "if job.ScheduleType == \"once\" {\n\t\treturn \"\", false"
+ },
+ {
+  "name": "schedule-spawn-panic-crashes",
+  "file": "schedule.go",
+  "find": "\t\tdefer func() {\n\t\t\tif r := recover(); r != nil {\n\t\t\t\terr = fmt.Errorf(\"%v\", r)\n\t\t\t}\n\t\t}()\n",
+  "replace": ""
+ },
+ {
+  "name": "schedule-run-panic-is-success",
+  "file": "schedule.go",
+  "find": "\t\t\t\tif recover() != nil {\n\t\t\t\t\tstatus = \"error\"",
+  "replace": "\t\t\t\tif recover() != nil {\n\t\t\t\t\tstatus = \"success\""
+ },
+ {
+  "name": "schedule-timer-panic-crashes",
+  "file": "schedule.go",
+  "find": "\t\tdefer func() { _ = recover() }()\n\t\tf()",
+  "replace": "\t\tf()"
+ },
+ {
+  "name": "schedule-interval-stops-on-panic",
+  "file": "schedule.go",
+  "find": "\t\t\tdefer tick(started)\n\t\t\tfire()",
+  "replace": "\t\t\tfire()\n\t\t\ttick(started)"
+ },
+ {
+  "name": "schedule-event-keys",
+  "file": "schedule.go",
+  "find": "fields = []field{{\"type\", e.Type}, {\"jobId\", e.JobID}, {\"agentId\", e.AgentID}, {\"name\", e.Name}}",
+  "replace": "fields = []field{{\"type\", e.Type}, {\"jobId\", e.JobID}, {\"agentId\", e.AgentID}}"
+ },
+ {
+  "name": "store-path",
+  "file": "schedule_store.go",
+  "find": "\"subagent-schedules\"",
+  "replace": "\"subagent-schedule\""
+ },
+ {
+  "name": "store-lock-kept",
+  "file": "schedule_store.go",
+  "find": "defer releaseLock(s.lockPath)",
+  "replace": ""
+ },
+ {
+  "name": "store-no-reload",
+  "file": "schedule_store.go",
+  "find": "defer releaseLock(s.lockPath)\n\ts.load()\n\tfn()",
+  "replace": "defer releaseLock(s.lockPath)\n\tfn()"
+ },
+ {
+  "name": "store-temp-file-kept",
+  "file": "schedule_store.go",
+  "find": "return os.Rename(tmp, s.filePath)",
+  "replace": "return nil"
+ },
+ {
+  "name": "store-live-lock-taken",
+  "file": "schedule_store.go",
+  "find": "!processRunning(int(pid))",
+  "replace": "processRunning(int(pid))"
+ },
+ {
+  "name": "store-lock-retries",
+  "file": "schedule_store.go",
+  "find": "lockMaxRetries = 100",
+  "replace": "lockMaxRetries = 2"
+ },
+ {
+  "name": "store-update-unknown-creates",
+  "file": "schedule_store.go",
+  "find": "if s.index(id) < 0 {\n\t\treturn scheduledSubagent{}, false, nil\n\t}",
+  "replace": "if false {\n\t\treturn scheduledSubagent{}, false, nil\n\t}"
+ },
+ {
+  "name": "store-remove-unknown-creates",
+  "file": "schedule_store.go",
+  "find": "if s.index(id) < 0 {\n\t\treturn false, nil\n\t}",
+  "replace": "if false {\n\t\treturn false, nil\n\t}"
+ },
+ {
+  "name": "store-indent",
+  "file": "schedule_store.go",
+  "find": "enc.SetIndent(\"\", \"  \")",
+  "replace": "enc.SetIndent(\"\", \"    \")"
+ },
+ {
+  "name": "store-escapes-html",
+  "file": "schedule_store.go",
+  "find": "enc.SetEscapeHTML(false)",
+  "replace": "enc.SetEscapeHTML(true)"
+ },
+ {
+  "name": "store-version",
+  "file": "schedule_store.go",
+  "find": "scheduleStoreData{Version: 1,",
+  "replace": "scheduleStoreData{Version: 2,"
+ },
+ {
+  "name": "store-name-except-id",
+  "file": "schedule_store.go",
+  "find": "if j.ID != exceptID && j.Name == name {",
+  "replace": "if j.Name == name {"
+ },
+ {
+  "name": "store-corrupt-clears",
+  "file": "schedule_store.go",
+  "find": "if json.Unmarshal(raw, &data) != nil || data == nil {",
+  "replace": "if json.Unmarshal(raw, &data) != nil && false {"
+ },
+ {
+  "name": "store-null-clears",
+  "file": "schedule_store.go",
+  "find": "if json.Unmarshal(raw, &data) != nil || data == nil {",
+  "replace": "if json.Unmarshal(raw, &data) != nil {"
+ },
+ {
+  "name": "store-duplicate-id-appended",
+  "file": "schedule_store.go",
+  "find": "if s.jobs[i].ID == job.ID {\n\t\t\ts.jobs[i] = job\n\t\t\treturn",
+  "replace": "if false {\n\t\t\ts.jobs[i] = job\n\t\t\treturn"
+ },
+ {
+  "name": "store-delete-file-with-jobs",
+  "file": "schedule_store.go",
+  "find": "if len(s.jobs) == 0 {\n\t\t_ = os.Remove",
+  "replace": "if true {\n\t\t_ = os.Remove"
+ },
+ {
+  "name": "store-id-length",
+  "file": "schedule_store.go",
+  "find": "b := make([]byte, 10)",
+  "replace": "b := make([]byte, 11)"
+ },
+ {
+  "name": "process-liveness-inverted",
+  "file": "pidalive_unix.go",
+  "find": "syscall.Kill(pid, 0) == nil",
+  "replace": "syscall.Kill(pid, 0) != nil"
+ },
+ {
+  "name": "schedule-call-ignored",
+  "file": "tools.go",
+  "find": "schedule != \"\" {\n\t\treturn a.scheduleCall",
+  "replace": "schedule != \"\" && false {\n\t\treturn a.scheduleCall"
+ },
+ {
+  "name": "schedule-with-resume",
+  "file": "schedule_tool.go",
+  "find": "if resume != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-with-inherit-context",
+  "file": "schedule_tool.go",
+  "find": "if b, _ := p[\"inherit_context\"].(bool); b {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-with-foreground",
+  "file": "schedule_tool.go",
+  "find": "if b, ok := p[\"run_in_background\"].(bool); ok && !b {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-disabled-ignored",
+  "file": "schedule_tool.go",
+  "find": "if !a.schedulingOn() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-inactive-ignored",
+  "file": "schedule_tool.go",
+  "find": "if !a.scheduler().isActive() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-stores-substitute-type",
+  "file": "schedule_tool.go",
+  "find": "SubagentType: requestedType,",
+  "replace": "SubagentType: subagentType,"
+ },
+ {
+  "name": "schedule-stores-raw-turns",
+  "file": "schedule_tool.go",
+  "find": "MaxTurns: normalizeMaxTurns(maxTurns),",
+  "replace": "MaxTurns: maxTurns,"
+ },
+ {
+  "name": "schedule-agent-file-thinking-ignored",
+  "file": "schedule_tool.go",
+  "find": "if cfg != nil && cfg.Thinking != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-agent-file-turns-ignored",
+  "file": "schedule_tool.go",
+  "find": "if cfg != nil && cfg.MaxTurns != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-agent-file-isolated-ignored",
+  "file": "schedule_tool.go",
+  "find": "if cfg != nil && cfg.Isolated != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-default-turns-ignored",
+  "file": "schedule_tool.go",
+  "find": "maxTurns = a.defaultMaxTurns",
+  "replace": "maxTurns = nil"
+ },
+ {
+  "name": "schedule-reply-next-run",
+  "file": "schedule_tool.go",
+  "find": "`Next run: `",
+  "replace": "`Next: `"
+ },
+ {
+  "name": "schedule-unported-not-refused",
+  "file": "schedule_tool.go",
+  "find": "if feature := unportedCallParam(p); feature != \"\" {",
+  "replace": "if feature := unportedCallParam(p); feature != \"\" && false {"
+ },
+ {
+  "name": "schedule-agent-file-not-refused",
+  "file": "schedule_tool.go",
+  "find": "if feature := unportedAgentFeature(cfg); feature != \"\" {",
+  "replace": "if feature := unportedAgentFeature(cfg); feature != \"\" && false {"
+ },
+ {
+  "name": "schedule-fire-not-bypassing",
+  "file": "schedule_tool.go",
+  "find": "func(r *agentRecord) { r.bypassQueue = o.BypassQueue }",
+  "replace": "func(r *agentRecord) {}"
+ },
+ {
+  "name": "schedule-worktree-job-run-anyway",
+  "file": "schedule_tool.go",
+  "find": "if feature := unportedCallParam(map[string]any{\"isolation\": o.Isolation}); feature != \"\" {",
+  "replace": "if feature := unportedCallParam(map[string]any{\"isolation\": o.Isolation}); feature != \"\" && false {"
+ },
+ {
+  "name": "schedule-events-channel",
+  "file": "schedule_tool.go",
+  "find": "\"subagents:scheduled\"",
+  "replace": "\"subagents:schedule\""
+ },
+ {
+  "name": "schedule-ready-event-count",
+  "file": "schedule_tool.go",
+  "find": "\"jobCount\": len(store.list())",
+  "replace": "\"jobCount\": 0"
+ },
+ {
+  "name": "schedule-starts-without-session-id",
+  "file": "schedule_tool.go",
+  "find": "if err != nil || sessionID == \"\" {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "schedule-start-silent",
+  "file": "schedule_tool.go",
+  "find": "a.scheduler().start(scheduleManagerOf{a}, store, a.emitScheduled)",
+  "replace": "a.scheduler().start(scheduleManagerOf{a}, store, func(scheduleChange) {})"
+ },
+ {
+  "name": "schedule-switch-keeps-timers",
+  "file": "schedule_tool.go",
+  "find": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()",
+  "replace": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(sdk.Context, map[string]any) (any, error) {\n\t\t"
+ },
+ {
+  "name": "schedule-shutdown-keeps-timers",
+  "file": "schedule_tool.go",
+  "find": "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\ta.scheduler().stop()",
+  "replace": "e.OnSessionShutdown(func(sdk.Context, map[string]any) (any, error) {\n\t\t"
+ },
+ {
+  "name": "schedule-setting-ignored",
+  "file": "schedule_feature.go",
+  "find": "if b, ok := raw[\"schedulingEnabled\"].(bool); ok {",
+  "replace": "if false {"
+ },
+ {
+  "name": "schedule-setting-global-wins",
+  "file": "schedule_feature.go",
+  "find": "for _, path := range []string{filepath.Join(agentDir(), \"subagents.json\"), filepath.Join(cwd, \".pi\", \"subagents.json\")} {",
+  "replace": "for _, path := range []string{filepath.Join(cwd, \".pi\", \"subagents.json\"), filepath.Join(agentDir(), \"subagents.json\")} {"
+ },
+ {
+  "name": "schedule-guideline-anchor",
+  "file": "schedule_feature.go",
+  "find": "const anchor = \"\\n\\n## Writing the prompt\"",
+  "replace": "const anchor = \"\\n\\n## Writing\""
+ },
+ {
+  "name": "schedule-param-text",
+  "file": "schedule_feature.go",
+  "find": "Returns job ID.",
+  "replace": "Returns the job ID."
+ },
+ {
+  "name": "schedule-param-shape",
+  "file": "schedule_feature.go",
+  "find": "props[\"schedule\"] = map[string]any{\"type\": \"string\", \"description\": scheduleParamDescription}",
+  "replace": "props[\"schedule\"] = map[string]any{\"type\": \"string\"}"
+ },
+ {
+  "name": "schedule-listing-dropped",
+  "file": "tools.go",
+  "find": "lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)",
+  "replace": ""
+ },
+ {
+  "name": "menu-rel-time-minute",
+  "file": "schedule_menu_data.go",
+  "find": "if abs < 60_000 {",
+  "replace": "if abs <= 60_000 {"
+ },
+ {
+  "name": "menu-rel-time-rounding",
+  "file": "schedule_menu_data.go",
+  "find": "math.Floor(v + 0.5)",
+  "replace": "math.Floor(v)"
+ },
+ {
+  "name": "menu-error-icon",
+  "file": "schedule_menu_data.go",
+  "find": "case j.LastStatus == \"error\":\n\t\treturn \"!\"",
+  "replace": "case j.LastStatus == \"error\":\n\t\treturn \"x\""
+ },
+ {
+  "name": "menu-details-prompt-length",
+  "file": "schedule_menu_data.go",
+  "find": "if len(prompt) > 200 {",
+  "replace": "if len(prompt) > 201 {"
+ },
+ {
+  "name": "menu-name-width",
+  "file": "schedule_menu_data.go",
+  "find": "utf16Fit(j.Name, 18)",
+  "replace": "utf16Fit(j.Name, 17)"
+ },
+ {
+  "name": "menu-entry-count",
+  "file": "schedule_menu_data.go",
+  "find": "fmt.Sprintf(\"Scheduled jobs (%d)\", len(a.scheduler().list()))",
+  "replace": "fmt.Sprintf(\"Scheduled jobs (%d)\", 0)"
  }
 ]

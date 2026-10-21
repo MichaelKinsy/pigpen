@@ -139,13 +139,13 @@ func TestStoreFileHasTheOriginalsShape(t *testing.T) {
 func TestTheStoreSerializesMutationsFromManyGoroutines(t *testing.T) {
 	store := newScheduleStore(filepath.Join(t.TempDir(), "s.json"))
 	done := make(chan struct{})
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		go func() {
 			defer func() { done <- struct{}{} }()
 			_ = store.add(makeJob(nil))
 		}()
 	}
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		<-done
 	}
 	eq(t, len(store.list()), 8)
@@ -385,6 +385,7 @@ func TestScheduleMenuData(t *testing.T) {
 	for in, want := range map[string]string{
 		"": "—", "garbage": "—", iso(30 * time.Second): "in <1m", iso(-30 * time.Second): "<1m ago", iso(4 * time.Minute): "in 4m", iso(-59 * time.Minute): "59m ago",
 		iso(90 * time.Minute): "in 2h", iso(-23 * time.Hour): "23h ago", iso(36 * time.Hour): "in 2d", iso(-49 * time.Hour): "2d ago", iso(59*time.Minute + 31*time.Second): "in 1h",
+		iso(time.Minute): "in 1m", iso(-time.Minute): "1m ago",
 	} {
 		eq(t, scheduleRelTime(in, now), want)
 	}

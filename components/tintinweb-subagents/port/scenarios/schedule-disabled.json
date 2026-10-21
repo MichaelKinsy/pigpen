@@ -1,0 +1,46 @@
+{
+  "name": "schedule-disabled",
+  "description": "With schedulingEnabled false a schedule call is answered with the disabled text.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "1h"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

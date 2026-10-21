@@ -1,6 +1,8 @@
 package tintinweb_subagents
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -16,15 +18,51 @@ import (
 // bypassing the concurrency queue, and records the outcome in the store; the completion notification is the manager's
 // own background path. upstream: src/schedule.ts SubagentScheduler.
 
-// scheduleChange is an event of the `subagents:scheduled` channel (key order as the original's objects).
-// upstream: src/schedule.ts ScheduleChangeEvent.
+// scheduleChange is an event of the `subagents:scheduled` channel. upstream: src/schedule.ts ScheduleChangeEvent.
 type scheduleChange struct {
-	Type    string             `json:"type"` // "added", "removed", "updated", "fired" or "error"
-	Job     *scheduledSubagent `json:"job,omitempty"`
-	JobID   string             `json:"jobId,omitempty"`
-	AgentID string             `json:"agentId,omitempty"`
-	Name    string             `json:"name,omitempty"`
-	Error   string             `json:"error,omitempty"`
+	Type    string // "added", "removed", "updated", "fired" or "error"
+	Job     *scheduledSubagent
+	JobID   string
+	AgentID string
+	Name    string
+	Error   string
+}
+
+// MarshalJSON writes the keys each kind of event has in the original (`{type, job}`, `{type, jobId}`, `{type, jobId,
+// agentId, name}`, `{type, jobId, error}`), in that order, even where a value is the empty string.
+func (e scheduleChange) MarshalJSON() ([]byte, error) {
+	type field struct {
+		key string
+		val any
+	}
+	var fields []field
+	switch e.Type {
+	case "added", "updated":
+		fields = []field{{"type", e.Type}, {"job", e.Job}}
+	case "removed":
+		fields = []field{{"type", e.Type}, {"jobId", e.JobID}}
+	case "fired":
+		fields = []field{{"type", e.Type}, {"jobId", e.JobID}, {"agentId", e.AgentID}, {"name", e.Name}}
+	default:
+		fields = []field{{"type", e.Type}, {"jobId", e.JobID}, {"error", e.Error}}
+	}
+	var buf bytes.Buffer
+	buf.WriteByte('{')
+	for i, f := range fields {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		k, _ := json.Marshal(f.key)
+		v, err := json.Marshal(f.val)
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(k)
+		buf.WriteByte(':')
+		buf.Write(v)
+	}
+	buf.WriteByte('}')
+	return buf.Bytes(), nil
 }
 
 // newJobInput is what a job is created from; the id, the timestamps and the state are derived. upstream: schedule.ts NewJobInput.
@@ -82,8 +120,14 @@ type scheduleClock interface {
 type realClock struct{}
 
 func (realClock) now() time.Time { return time.Now() }
+
+// afterFunc arms a timer whose callback cannot take the process down: a panic in a fire is dropped here, where the
+// callback has no caller to return it to (the scheduler turns a panic inside a fire into an error event before that).
 func (realClock) afterFunc(d time.Duration, f func()) interface{ stop() } {
-	return realTimer{time.AfterFunc(d, f)}
+	return realTimer{time.AfterFunc(d, func() {
+		defer func() { _ = recover() }()
+		f()
+	})}
 }
 
 type realTimer struct{ t *time.Timer }
@@ -124,9 +168,8 @@ func (c *rearmable) arm(clock scheduleClock, wait time.Duration, next func()) bo
 	return true
 }
 
-// after runs fire once, delayMs from now (setTimeout). A delay too long for a Duration is waited in pieces.
-func (c *rearmable) after(clock scheduleClock, delayMs float64, fire func()) {
-	deadline := clock.now().Add(msDuration(delayMs))
+// at runs fire once, at deadline (setTimeout). A wait too long for a Duration is made in pieces.
+func (c *rearmable) at(clock scheduleClock, deadline time.Time, fire func()) {
 	var step func()
 	step = func() {
 		remaining := deadline.Sub(clock.now())
@@ -139,16 +182,23 @@ func (c *rearmable) after(clock scheduleClock, delayMs float64, fire func()) {
 	step()
 }
 
-// every runs fire every intervalMs (setInterval) until stopped.
+// after runs fire once, delayMs from now.
+func (c *rearmable) after(clock scheduleClock, delayMs float64, fire func()) {
+	c.at(clock, clock.now().Add(msDuration(delayMs)), fire)
+}
+
+// every runs fire every intervalMs (setInterval) until stopped. The next tick is due one interval after this one
+// started, whether or not the fire panics or takes long.
 func (c *rearmable) every(clock scheduleClock, intervalMs float64, fire func()) {
-	var tick func()
-	tick = func() {
-		c.after(clock, intervalMs, func() {
+	var tick func(from time.Time)
+	tick = func(from time.Time) {
+		c.at(clock, from.Add(msDuration(intervalMs)), func() {
+			started := clock.now()
+			defer tick(started)
 			fire()
-			tick()
 		})
 	}
-	tick()
+	tick(clock.now())
 }
 
 // msDuration is a millisecond count as a Duration, capped at the longest one (about 292 years).
@@ -231,17 +281,6 @@ func (s *subagentScheduler) stop() {
 	}
 	for _, t := range intervals {
 		t.stop()
-	}
-}
-
-// settle waits, at most d, for the runs started by fires to have their outcome recorded (a run outlives stop(): its
-// outcome is still written to the store it was started with).
-func (s *subagentScheduler) settle(d time.Duration) {
-	done := make(chan struct{})
-	go func() { s.settling.Wait(); close(done) }()
-	select {
-	case <-done:
-	case <-time.After(d):
 	}
 }
 
@@ -399,6 +438,7 @@ func (s *subagentScheduler) scheduleJob(job scheduledSubagent) {
 	if store == nil {
 		return
 	}
+	s.unscheduleJob(job.ID) // never two timers for one job
 	switch {
 	case job.ScheduleType == "interval" && job.IntervalMs != nil && *job.IntervalMs != 0:
 		t := &rearmable{}
@@ -424,7 +464,10 @@ func (s *subagentScheduler) scheduleJob(job scheduledSubagent) {
 			})
 		} else {
 			// A past timestamp: disable, mark it an error, never fire.
-			_, _, _ = store.update(job.ID, func(j *scheduledSubagent) { j.Enabled, j.LastStatus = false, "error" })
+			if _, _, err := store.update(job.ID, func(j *scheduledSubagent) { j.Enabled, j.LastStatus = false, "error" }); err != nil {
+				s.emit(scheduleChange{Type: "error", JobID: job.ID, Error: err.Error()})
+				return
+			}
 			s.emit(scheduleChange{Type: "error", JobID: job.ID, Error: fmt.Sprintf("Scheduled time %s is in the past", job.Schedule)})
 		}
 	default:
@@ -481,14 +524,19 @@ func (s *subagentScheduler) executeJob(id string) {
 	s.record(store, id, func(j *scheduledSubagent) { j.LastStatus = "running" })
 
 	var agentID string
-	err := func() error {
+	err := func() (err error) {
+		// A panic in the manager is a thrown error in the original: it becomes this fire's error.
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("%v", r)
+			}
+		}()
 		// Re-resolved at fire time against the registry as it stands: a job that outlives its agent must not silently
 		// run something else (#183).
 		dispatch := resolveSpawnType(job.SubagentType)
 		if !dispatch.OK {
 			return errors.New(dispatch.Message)
 		}
-		var err error
 		agentID, err = manager.spawn(dispatch.Type, job.Prompt, spawnJobOptions{
 			Description: job.Description, IsBackground: true, BypassQueue: true, Model: job.Model, MaxTurns: job.MaxTurns,
 			Isolated: job.Isolated, Thinking: job.Thinking, Isolation: job.Isolation,
@@ -519,25 +567,31 @@ func (s *subagentScheduler) executeJob(id string) {
 	}
 	// A run settles either way, so success or failure is read off the record's status, not off the run ending:
 	// completed and steered are successes; error, aborted and stopped are errors. awaitStartup first: a run that
-	// only exists once a preparation step has finished (a failed one rejects here).
+	// only exists once a preparation step has finished (a failed one rejects here). A panic in either is a failure
+	// of the run, not of the process.
 	s.settling.Add(1)
 	go func() {
 		defer s.settling.Done()
-		if err := manager.awaitStartup(agentID); err != nil {
-			finalize("error")
-			return
-		}
-		failed := false
-		if rec := manager.getRecord(agentID); rec != nil {
-			<-rec.Done
-			status := rec.Status()
-			failed = status == statusError || status == statusAborted || status == statusStopped
-		}
-		if failed {
-			finalize("error")
-		} else {
-			finalize("success")
-		}
+		status := func() (status string) {
+			defer func() {
+				if recover() != nil {
+					status = "error"
+				}
+			}()
+			if err := manager.awaitStartup(agentID); err != nil {
+				return "error"
+			}
+			if rec := manager.getRecord(agentID); rec != nil {
+				<-rec.Done
+				switch rec.Status() {
+				case statusError, statusAborted, statusStopped:
+					return "error"
+				}
+			}
+			return "success"
+		}()
+		defer func() { _ = recover() }()
+		finalize(status)
 	}()
 }
 

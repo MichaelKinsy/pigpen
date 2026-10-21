@@ -66,7 +66,7 @@ func resolveStorePath(cwd, sessionID string) string {
 // acquireLock creates the lock file holding this process's id, taking over a lock whose holder is gone.
 // upstream: schedule-store.ts acquireLock.
 func acquireLock(lockPath string) error {
-	for i := 0; i < lockMaxRetries; i++ {
+	for range lockMaxRetries {
 		f, err := os.OpenFile(lockPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 		if err == nil {
 			_, werr := f.WriteString(strconv.Itoa(os.Getpid()))
@@ -105,19 +105,34 @@ func newScheduleStore(filePath string) *scheduleStore {
 	return s
 }
 
-// load reads the file into the cache. Silent on a missing or corrupt file. The caller holds s.mu.
+// load reads the file into the cache. Silent on a missing or corrupt file: a file that is not JSON, or is `null`,
+// leaves the cache as it is; any other JSON replaces it with the jobs the file lists (none when it lists none, or
+// something that is not a list). A job record that is not an object ends the list, and one with a field of the wrong
+// type is skipped. The caller holds s.mu.
 func (s *scheduleStore) load() {
 	raw, err := os.ReadFile(s.filePath)
 	if err != nil {
 		return
 	}
-	var data scheduleStoreData
-	if json.Unmarshal(raw, &data) != nil {
+	var data any
+	if json.Unmarshal(raw, &data) != nil || data == nil {
 		return
 	}
 	s.jobs = s.jobs[:0:0]
-	for _, j := range data.Jobs {
-		s.set(j)
+	file, _ := data.(map[string]any)
+	list, _ := file["jobs"].([]any)
+	for _, item := range list {
+		if _, isObject := item.(map[string]any); !isObject {
+			return
+		}
+		encoded, err := json.Marshal(item)
+		if err != nil {
+			continue
+		}
+		var job scheduledSubagent
+		if json.Unmarshal(encoded, &job) == nil {
+			s.set(job)
+		}
 	}
 }
 

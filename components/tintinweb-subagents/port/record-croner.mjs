@@ -83,10 +83,22 @@ const pick = (n) => Math.floor(rand() * n);
 const FIELDS = [
   { max: 59, min: 0 }, { max: 59, min: 0 }, { max: 23, min: 0 }, { max: 31, min: 1 }, { max: 12, min: 1 }, { max: 7, min: 0 },
 ];
+const NAMES_M = ["jan", "FEB", "Mar", "apr", "may", "JUN", "jul", "aug", "SEP", "oct", "nov", "Dec"];
+const NAMES_D = ["sun", "MON", "Tue", "wed", "thu", "FRI", "sat"];
 function field(i) {
   const { min, max } = FIELDS[i];
   const over = rand() < 0.06 ? 3 : 0; // now and then an out-of-range value
   const n = () => min + pick(max - min + 1 + over);
+  // The extensions: `L`, `LW` and `nW` for the day of month; names for the month; `nL`, `n#k`, names and the `+`
+  // (day-of-month AND day-of-week) prefix for the day of week.
+  if (i === 3 && rand() < 0.2) return ["L", "LW", `${1 + pick(31)}W`, `${1 + pick(31)}W,${1 + pick(28)}`, `L,${1 + pick(28)}`][pick(5)];
+  if (i === 4 && rand() < 0.2) { const a = pick(12), b = pick(12); return rand() < 0.5 ? NAMES_M[a] : `${NAMES_M[Math.min(a, b)]}-${NAMES_M[Math.max(a, b)]}`; }
+  if (i === 5 && rand() < 0.4) {
+    const k = [() => `${pick(7)}L`, () => `${pick(7)}#${1 + pick(5)}`, () => NAMES_D[pick(7)], () => `${NAMES_D[pick(7)]}#${1 + pick(5)}`,
+      () => `+${pick(7)}`, () => `+${pick(7)}#${1 + pick(5)}`, () => `${pick(7)}#${1 + pick(5)},${pick(7)}L`, () => `${NAMES_D[pick(7)]}-fri`][pick(8)];
+    return k();
+  }
+  if (i < 2 && rand() < 0.4) return "0"; // fixed seconds and minutes make a run a day or a month apart, which is where the calendar walk matters
   switch (pick(7)) {
     case 0: return "*";
     case 1: return String(n());
@@ -98,7 +110,10 @@ function field(i) {
   }
 }
 const GENERATED = [];
-for (let k = 0; k < 140; k++) GENERATED.push([0, 1, 2, 3, 4, 5].map(field).join(" "));
+for (let k = 0; k < 450; k++) GENERATED.push([0, 1, 2, 3, 4, 5].map(field).join(" "));
+// Instants anywhere in 2026-2045, to the millisecond (the same in every run).
+const RANDOM_ANCHORS = [];
+for (let k = 0; k < 3; k++) RANDOM_ANCHORS.push(new Date(Date.UTC(2026, 0, 1) + Math.floor(rand() * 20 * 365.25 * 86400000)).toISOString());
 
 // The ones a daylight-saving transition changes: a wall-clock hour that does not exist or happens twice.
 const DST_PATTERNS = ["0 30 2 * * *", "0 0 2 * * *", "0 0 3 * * *", "0 0 1 * * *", "0 15 2 * * *", "0 59 1 * * *", "0 30 1 * * *",
@@ -157,7 +172,7 @@ if (process.argv[2] === "--zone") {
   const zone = process.env.TZ;
   const vectors = [];
   const patterns = zone === "UTC" ? PATTERNS : [...new Set([...PATTERNS.filter((_, i) => i % 7 === 0), ...DST_PATTERNS])];
-  const anchors = zone === "UTC" ? [0, 1, 2, 3, 10, 11].map((i) => ANCHORS[i]) : DST_ANCHORS;
+  const anchors = [...(zone === "UTC" ? [0, 1, 2, 3, 10, 11].map((i) => ANCHORS[i]) : DST_ANCHORS), ...RANDOM_ANCHORS];
   for (const pattern of patterns) {
     const valid = accepts(pattern);
     if (valid.ok) valid.c.stop();

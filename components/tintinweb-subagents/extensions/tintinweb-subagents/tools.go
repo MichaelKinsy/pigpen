@@ -368,6 +368,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(a, r.Type), r.Status, r.Description))
 		a.mgr.mu.Unlock()
 	}
+	lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)
 	ctx.Notify(strings.Join(lines, "\n"), "info")
 	return nil
 }

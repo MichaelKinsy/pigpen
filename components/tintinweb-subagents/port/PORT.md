@@ -5,7 +5,7 @@
 | Original | `@tintinweb/pi-subagents` 0.19.0 by tintinweb, https://github.com/tintinweb/pi-subagents, commit `4f572eaa04c09d3dbc16e4a5f13a16b295e84e14`, MIT |
 | Oracle | Pi 1.0.3, Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; **1907 deferred by name** in `port/slices.json`, each file with its reason |
+| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **178 exact twins** (`agent-types` 46, `custom-agents` 76, `schedule` 28, `schedule-e2e` 6, `schedule-params-wiring` 9, `schedule-store` 13), no skips; **1851 deferred by name** in `port/slices.json`, each file with its reason (`schedule-menu`, 11 cases, tests the interactive menu, which is not ported; its data layer has tests of its own) |
 | Kind | 1: an extension, no CLI built-in, no provider |
 | Not this | `nicobailon/pi-subagents`, ported as `components/subagents`. A different project |
 
@@ -17,14 +17,16 @@ extension cannot host a Pi session, so the shipped slice is the part that has a 
 
 - the three tools `Agent`, `get_subagent_result`, `steer_subagent` with the original's text and schemas;
 - agent types: the three defaults, custom agent files (three directories, strict mode, warn-once), settings
-  (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`), the spawn policy (#183);
+  (`maxConcurrent`, `defaultMaxTurns`, `fallbackSubagent`, `disableDefaultAgents`, `schedulingEnabled`), the spawn policy (#183);
 - background by default, a concurrency limit and a FIFO queue, handles (`explore`, `explore-2`) and names, a held
   completion notification that a read of the result cancels, the event-bus protocol v2 `pi-tasks` speaks;
-- `/agents`: the types and the agents of the session.
+- scheduled runs: the `schedule` parameter of `Agent` (cron, interval, one-shot), the session-scoped job store, the
+  scheduler, its events, and the data of the `/agents` Scheduled jobs menu (G2);
+- `/agents`: the types, the agents and the scheduled jobs of the session.
 
 Everything else is deferred, by name, in `port/slices.json` (reasons per file). The Agent tool is advertised **as the
-original advertises it with workflows, scheduling and worktree isolation switched off** (`.pi/subagents.json`:
-`workflowsEnabled`, `schedulingEnabled`, `worktreeIsolation` all `false`), which is exactly what this port offers.
+original advertises it with workflows and worktree isolation switched off** (`.pi/subagents.json`: `workflowsEnabled`
+and `worktreeIsolation` both `false`) and scheduling on, its default, which is exactly what this port offers.
 
 ## Mapping
 
@@ -41,6 +43,11 @@ original advertises it with workflows, scheduling and worktree isolation switche
 | M9 | `cross-extension-rpc.ts`: ping, spawn, stop, consume | `bus.go` | `bus_test.go` |
 | M10 | completion events and the held notification (`index.ts` `formatTaskNotification`, `getStatusLabel`; `status-note.ts`; `xml.ts`) | `extension.go` | `tools_test.go`, `extra_test.go`, `turnlimit_test.go` |
 | M11 | the Agent, result and steer tools' behavior and texts | `tools.go` | `agent-not-found`, `agent-unknown-type-strict`; `tools_test.go` |
+| M12 | `schedule.ts`: `SubagentScheduler` (jobs, intervals, one-shots, cron; `addJob`, `removeJob`, `updateJob`, `getNextRun`, the fire path, `detectSchedule` and the parsers); `index.ts` `startScheduler`, the session hooks | `schedule.go`, `schedule_tool.go` | 28 twins of `schedule.test.ts` (`schedule_twin_test.go`), 6 of `schedule-e2e.test.ts`; `schedule_test.go`, `schedule_hardening_test.go` |
+| M13 | `schedule-store.ts`: the per-session file, the PID lock, the atomic write | `schedule_store.go`, `pidalive_*.go` | 13 twins of `schedule-store.test.ts`; `schedule_test.go`, `schedule_hardening_test.go` (two processes, a damaged file) |
+| M14 | croner 10.0.1 (`Cron`, `CronPattern`, `CronDate`) as `schedule.ts` uses it: a 6-field pattern, the next run, the 30 s re-arm | `cron.go` (a hand port, no Go dependency) | `cron_test.go` replays 5,000+ answers recorded from croner (`testdata/croner-vectors.json`, `port/record-croner.mjs`) in six time zones |
+| M15 | `index.ts`: the `schedule` branch of `Agent`, `scheduleParamShape`, `scheduleGuideline`, `schedulingEnabled` | `tools.go`, `schedule_tool.go`, `schedule_feature.go` | 9 twins of `schedule-params-wiring.test.ts`; `schedule-tool-text`, `schedule-refusals`, `schedule-disabled` |
+| M16 | `ui/schedule-menu.ts`: the job rows, the relative times, the details; the menu entry `Scheduled jobs (N)` | `schedule_menu_data.go`; `/agents` lists the rows | `TestScheduleMenuData`, `TestAgentsListsTheScheduledJobs` (the interactive menu and its 11 twins are deferred) |
 
 ## SDK gap check (`pigeq gaps --ts port/oracle/src`)
 
@@ -77,7 +84,7 @@ components; this port registers none.
    environment block and the agent's prompt), after a fix this comparison found (a blank line in the replace-mode header).
    The harness's `removed` part is the host's own default system prompt, which says `pi` under Pi and `pig` under PiG, so
    that comparison cannot pass and the scenario is not kept (`port/gen-scenarios.py` says so).
-3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume`, `schedule` and
+3. **Unsupported parameters of `Agent` are refused.** `inherit_context: true`, `resume` and
    `isolation: "worktree"` are tool errors with the message in the README (`refuse.go`; the first version answered
    `inherit_context` with plain text and emulated `resume` by starting a new agent with the old answer in its prompt, a
    partial run, now removed). `isolated` starts the child with `--no-extensions`. The tool text is the original's, so the
@@ -85,12 +92,12 @@ components; this port registers none.
 4. **Agent files are read at start-up for the tool text** (the workspace of an extension process is fixed), and again when
    the session starts and when the workspace differs. A file added later reaches `/agents` and the `subagent_type`
    check on the next session event, not the tool description of the running session.
-5. **Settings.** Five of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
-   `fallbackSubagent`, `disableDefaultAgents`). A value of any other field that asks for an unported feature is
+5. **Settings.** Six of `subagents.json`'s fields are honored (`maxConcurrent`, `defaultMaxTurns`, `graceTurns`,
+   `fallbackSubagent`, `disableDefaultAgents`, `schedulingEnabled`). A value of any other field that asks for an unported feature is
    announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
-6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
+6. **Not ported** (named in `port/slices.json`): the workflow runtime, the interactive Scheduled jobs menu, worktree isolation, `@mentions`,
    widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
    settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
@@ -120,3 +127,39 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+11. **Scheduled runs (G2).** Ported from `schedule.ts`, `schedule-store.ts`, `ui/schedule-menu.ts` (data only) and the
+    `schedule` branch of `index.ts`; the Go matches the original except in these places, each deliberate:
+    - **croner is hand-ported, not depended on.** `cron.go` follows croner 10.0.1 (MIT, Hexagon, https://github.com/Hexagon/croner)
+      step by step, quirks included (day-of-month OR day-of-week unless the day-of-week field starts with `+`, a search that
+      stops at the year 3000, February pinned to 28 days in the normalization, `L`, `LW`, `nW`, `n#k`, `nL`, names, `?`),
+      in the process's local time zone, as `new Cron(expr, fn)` with no options does. No new Go dependency: croner is only
+      the oracle that `port/record-croner.mjs` runs under Node to record `testdata/croner-vectors.json` (Node never runs
+      at runtime), and the fixture is the only size added (see Results). croner's five- and seven-field forms, its options and
+      its `@nickname` patterns cannot be reached from the original's own six-field gate and are not ported.
+    - **A six-field string with a `:` after its first character** is read by croner as a date (V8's `Date.parse`, a legacy
+      parser) and becomes a one-shot Cron. The original's gate lets only a few such strings through (`Tue Jan 01 2030
+      10:00:00 GMT+0100` has six fields); here every one is refused as `Invalid ISO8601 passed to timezone parser.`
+      since Go has no `Date.parse`. A one-shot ISO timestamp, the form the tool text advertises, is read as the ECMAScript
+      date-time format (`parseJSDate`, recorded against Node for 70+ shapes).
+    - **A delay above 2^31-1 ms (24.8 days) is waited, not fired at once.** Node's `setTimeout` and `setInterval` turn such a
+      delay into 1 ms: `+30d` fires immediately and `30d` fires every millisecond in the original. Here the wait is made in
+      24-hour pieces (`rearmable`), so no timer is longer than a day and none is lost.
+    - **The model is resolved by the child.** The original resolves `job.model` against Pi's registry at fire time and falls
+      back to the default when it does not resolve; here the string reaches `pig --model`, as for an immediate run (item 6).
+      The conversation-viewer snapshot (`invocation`) is built and passed to the manager but not shown (the viewer is deferred).
+    - **`isolation: "worktree"` is refused**, in a `schedule` call as in any other, and a stored job that carries it (a
+      session of the original, resumed here) fires as an `error` event and `lastStatus: "error"`, without a spawn.
+    - **The store.** Same path, JSON shape, key order, lock file (`<file>.lock`, a PID, 100 tries 50 ms apart, a dead
+      holder's lock taken over) and temp-and-rename write. A job record in a file keeps no field the Go type does not know,
+      and one with a field of the wrong type is skipped, where the original keeps the object as it parsed.
+    - **Timers and goroutines.** One `time.AfterFunc` per armed job (a cron job re-arms every 30 s as croner does), none for
+      a stopped one, none when there are no jobs; each fire runs in a recovered goroutine (a panic in the manager is a fire
+      error, in a timer callback it is dropped), the one goroutine per fire waits for its agent and is bounded by the agents.
+    - **Settings are read once**, when the extension loads (as the original applies its settings once): `schedulingEnabled`
+      from `subagents.json`, project over global. The settings slice (branch `parity/tintinweb-subagents-settings`) holds the
+      full reader and the tool-text assembly; `schedule_feature.go` is the temporary form of the `schedule` part and says
+      what to delete when the two merge.
+    - **`/agents` is a listing, not the original's menu**: it adds a `Scheduled jobs (N)` section with the original's rows,
+      and cancelling a job says it is not supported yet (the refusal message). Until the menu slice lands, the jobs of a
+      running session end with it (or with `/new`, which starts a session with none); one that should not come back on
+      `/resume` is removed from the session's file while the session is not running.

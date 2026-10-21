@@ -608,7 +608,10 @@ func (d *cronDate) findNext(p *cronPattern, target, offset int) int {
 			match = true
 		}
 		if target == tDay && !p.starDOW {
-			dow := p.dayOfWeek[(firstWeekday+((i-offset)-1))%7]
+			dow := 0 // an index below zero is `undefined` in croner: no weekday matches
+			if at := firstWeekday + ((i - offset) - 1); at >= 0 {
+				dow = p.dayOfWeek[at%7]
+			}
 			if dow != 0 && dow&anyOccurrence != 0 {
 				if !isNthWeekdayOfMonth(d.year, d.month, i-offset, dow) {
 					dow = 0

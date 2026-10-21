@@ -1,0 +1,127 @@
+{
+  "name": "schedule-refusals",
+  "description": "A schedule call is refused with the original's text: with resume, with inherit_context, in the foreground, with a schedule that is not one, with a time in the past, and for an agent type that does not exist (fallbackSubagent none).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "1h",
+            "resume": "some-agent"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "1h",
+            "inherit_context": true
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "1h",
+            "run_in_background": false
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "every now and then"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "* * * * *"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "general-purpose",
+            "schedule": "2020-01-01T00:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "check the repo",
+            "description": "nightly check",
+            "subagent_type": "typoo",
+            "schedule": "1h"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"worktreeIsolation\": false, \"fallbackSubagent\": \"none\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

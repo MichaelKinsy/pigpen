@@ -37,7 +37,9 @@ func (a *app) schedulingOn() bool {
 	return a.schedule.enabled
 }
 
-// setSchedulingEnabled is `setSchedulingEnabled(b)`; the caller turning it off also stops the scheduler.
+// setSchedulingEnabled is `setSchedulingEnabled(b)`: the switch of the feature. The settings are applied once, when the
+// extension loads (as the original applies them), so flipping it later changes the `schedule` check and what starts
+// with the next session, not the tool text.
 func (a *app) setSchedulingEnabled(on bool) {
 	a.schedule.mu.Lock()
 	a.schedule.enabled = on && scheduleFeatureOn
@@ -49,7 +51,7 @@ func (a *app) scheduler() *subagentScheduler { return a.schedule.sched }
 
 func (a *app) registerSchedule(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.setSchedulingEnabled(scheduleSettingEnabled(ctx.Cwd()))
+		// The setting was read when the extension loaded (tools.go), as the original applies its settings once.
 		if a.schedulingOn() && !a.scheduler().isActive() {
 			a.startScheduler(ctx)
 		}
@@ -97,6 +99,10 @@ func deref[T any](p *T) T {
 }
 
 func (m scheduleManagerOf) spawn(typ, prompt string, o spawnJobOptions) (string, error) {
+	// A job the original stored with a worktree (a session of the original, resumed here) cannot be run without one.
+	if feature := unportedCallParam(map[string]any{"isolation": o.Isolation}); feature != "" {
+		return "", refusal(feature)
+	}
 	ctx, ok := m.a.context()
 	if !ok {
 		return "", errNoSession

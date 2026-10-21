@@ -21,6 +21,24 @@ func (a *app) scheduleMenuEntry() (string, bool) {
 	return fmt.Sprintf("Scheduled jobs (%d)", len(a.scheduler().list())), true
 }
 
+// scheduleListing is the scheduled jobs as lines of the text `/agents` (which is a listing, not the original's menu):
+// the menu entry, one row per job, and the refusal for what only the interactive menu does, cancelling a job.
+func (a *app) scheduleListing(nowMs int64) []string {
+	entry, ok := a.scheduleMenuEntry()
+	if !ok {
+		return nil
+	}
+	jobs := a.scheduler().list()
+	lines := []string{"", entry + ":"}
+	if len(jobs) == 0 {
+		return append(lines, "  (none)")
+	}
+	for _, j := range jobs {
+		lines = append(lines, "  "+a.scheduleFormatJob(j, nowMs))
+	}
+	return append(lines, "  "+refusalText("cancelling a scheduled job (the /agents Scheduled jobs menu)"))
+}
+
 // scheduleRelTime formats an ISO timestamp as relative time ("in 4h", "2d ago", "—"). nowMs is Date.now().
 func scheduleRelTime(iso string, nowMs int64) string {
 	if iso == "" {
