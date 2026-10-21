@@ -92,5 +92,10 @@ PIG_BIN=/path/to/pig node components/pig-doctor/mutations/run.mjs   # 61 mutatio
 ```
 
 Tests use only `t.TempDir()` homes and an injected process list; they never read the real
-`~/.pig` or the process environment. Windows: the engine compiles and vets (`GOOS=windows go vet`)
-but lock probing is not implemented there, so a fix that needs a lock check is refused; only Linux was run in tests, and macOS is covered by cross-compilation and a fake `ps` listing, not by a run on a Mac.
+`~/.pig` or the process environment. Lock probing is `flock` on Linux and macOS and `LockFileEx` on Windows
+(`doctor/locks_windows.go`: the byte-range lock PiG takes, a lock file opened with `FILE_FLAG_OPEN_REPARSE_POINT` so a link is
+refused, a file another process has open without sharing counts as held). On another platform (not unix, not Windows) a fix that
+needs a lock check is refused. Only Linux was run in the fixture tests. macOS is covered by cross-compilation and a fake `ps`
+listing, not by a run on a Mac. Windows is covered by `GOOS=windows go vet` and `GOOS=windows go test -c`, and by
+`doctor/locks_windows_test.go`, whose tests run only on a Windows host; they have not been run on one (no Windows machine was
+available), so Windows lock probing is compiled and written to PiG's own use of `LockFileEx` but unrun.

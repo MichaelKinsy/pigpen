@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-// dirLockFresh is how recent a lock directory's modification must be for the
-// lock to count as held (lock directories carry no owner we could probe).
-const dirLockFresh = time.Minute
-
 // lockHeld reports whether another process holds path. A regular lock file is
 // probed with a non-blocking flock that is released at once; nothing is created
 // or written. A lock directory counts as held while it is fresh.
