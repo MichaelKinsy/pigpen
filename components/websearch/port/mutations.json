@@ -2540,8 +2540,8 @@
  {
   "name": "render-summary-rule-width",
   "file": "render.go",
-  "find": "strings.Repeat(\"─\", 32)",
-  "replace": "strings.Repeat(\"─\", 31)"
+  "find": "strings.Repeat(\"\u2500\", 32)",
+  "replace": "strings.Repeat(\"\u2500\", 31)"
  },
  {
   "name": "activity-keeps-nine",
@@ -2554,5 +2554,1349 @@
   "file": "extension.go",
   "find": "DeliverAs: deliverAs}",
   "replace": "DeliverAs: \"\"}"
+ },
+ {
+  "name": "activity-anysearch-start-1",
+  "file": "anysearch.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-anysearch-complete-1",
+  "file": "anysearch.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-baizhi-start-1",
+  "file": "baizhi.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-baizhi-logError-1",
+  "file": "baizhi.go",
+  "find": "\t\tact.logError(message)",
+  "replace": "\t\t_ = message"
+ },
+ {
+  "name": "activity-baizhi-complete-1",
+  "file": "baizhi.go",
+  "find": "\tact.complete(200)",
+  "replace": "\t_ = 200"
+ },
+ {
+  "name": "activity-bocha-start-1",
+  "file": "bocha.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-bocha-logError-1",
+  "file": "bocha.go",
+  "find": "\t\tact.logError(err.Error())",
+  "replace": "\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-bocha-complete-1",
+  "file": "bocha.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-brave-start-1",
+  "file": "brave.go",
+  "find": "\tact := logAPIStart(searchQuery)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-brave-failedErr-1",
+  "file": "brave.go",
+  "find": "\t\tHeader: http.Header{\"X-Subscription-Token\": {apiKey}, \"Accept\": {\"application/json\"}}}, []string{\"X-Subscription-Token\"})\n\tif err != nil {\n\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\t\tHeader: http.Header{\"X-Subscription-Token\": {apiKey}, \"Accept\": {\"application/json\"}}}, []string{\"X-Subscription-Token\"})\n\tif err != nil {\n\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-brave-failedErr-3",
+  "file": "brave.go",
+  "find": "\t\treturn nil, act.failedErr(fmt.Errorf(\"Brave Search API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, apiKey))))",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Brave Search API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, apiKey)))"
+ },
+ {
+  "name": "activity-brave-complete-1",
+  "file": "brave.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-brightdata-start-1",
+  "file": "brightdata.go",
+  "find": "\tact := logAPIStart(searchQuery)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-brightdata-complete-1",
+  "file": "brightdata.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-brightdata-unlocker-failedBy-1",
+  "file": "brightdata_unlocker.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, redactErr(timeoutFix(ctx, tctx, err), key), key)",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), key)"
+ },
+ {
+  "name": "activity-brightdata-unlocker-failedBy-2",
+  "file": "brightdata_unlocker.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, fmt.Errorf(\"Bright Data Web Unlocker error %d: %s\", resp.StatusCode, jsSlice(RedactCredential(text, key), 0, 300)), key)",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Bright Data Web Unlocker error %d: %s\", resp.StatusCode, jsSlice(RedactCredential(text, key), 0, 300))"
+ },
+ {
+  "name": "activity-brightdata-unlocker-failedBy-3",
+  "file": "brightdata_unlocker.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, redactErr(timeoutFix(ctx, tctx, rerr), key), key)",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, rerr), key)"
+ },
+ {
+  "name": "activity-brightdata-unlocker-complete-1",
+  "file": "brightdata_unlocker.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-1",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, timeoutFix(ctx, tctx, err), \"\")",
+  "replace": "\t\treturn nil, timeoutFix(ctx, tctx, err)"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-2",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, fmt.Errorf(\"Crawl4AI md error %d: %s\", resp.StatusCode, jsSlice(redact(text), 0, 300)), \"\")",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Crawl4AI md error %d: %s\", resp.StatusCode, jsSlice(redact(text), 0, 300))"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-3",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, timeoutFix(ctx, tctx, rerr), \"\")",
+  "replace": "\t\treturn nil, timeoutFix(ctx, tctx, rerr)"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-4",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, errors.New(\"Crawl4AI md returned invalid JSON\"), \"\")",
+  "replace": "\t\treturn nil, errors.New(\"Crawl4AI md returned invalid JSON\")"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-5",
+  "file": "crawl4ai.go",
+  "find": "\tif env == nil {\n\t\treturn nil, act.failedBy(ctx, errors.New(\"Crawl4AI md returned an unexpected response shape\"), \"\")",
+  "replace": "\tif env == nil {\n\t\treturn nil, errors.New(\"Crawl4AI md returned an unexpected response shape\")"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-6",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, fmt.Errorf(\"Crawl4AI md unsuccessful: %s\", redact(detail)), \"\")",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Crawl4AI md unsuccessful: %s\", redact(detail))"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-7",
+  "file": "crawl4ai.go",
+  "find": "\tdefault:\n\t\treturn nil, act.failedBy(ctx, errors.New(\"Crawl4AI md returned an unexpected response shape\"), \"\")",
+  "replace": "\tdefault:\n\t\treturn nil, errors.New(\"Crawl4AI md returned an unexpected response shape\")"
+ },
+ {
+  "name": "activity-crawl4ai-failedBy-8",
+  "file": "crawl4ai.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, errors.New(\"Crawl4AI md returned markdown in an unexpected shape\"), \"\")",
+  "replace": "\t\treturn nil, errors.New(\"Crawl4AI md returned markdown in an unexpected shape\")"
+ },
+ {
+  "name": "activity-crawl4ai-complete-1",
+  "file": "crawl4ai.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-duckduckgo-start-1",
+  "file": "duckduckgo.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-duckduckgo-failedErr-1",
+  "file": "duckduckgo.go",
+  "find": "\t\treturn nil, act.failedErr(err)",
+  "replace": "\t\treturn nil, err"
+ },
+ {
+  "name": "activity-duckduckgo-complete-1",
+  "file": "duckduckgo.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-exa-start-1",
+  "file": "exa.go",
+  "find": "func searchWithExaMCP(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {\n\tact := logAPIStart(query)",
+  "replace": "func searchWithExaMCP(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {\n\tact := activityRef{}"
+ },
+ {
+  "name": "activity-exa-failedErr-1",
+  "file": "exa.go",
+  "find": "\t\treturn nil, act.failedErr(err)",
+  "replace": "\t\treturn nil, err"
+ },
+ {
+  "name": "activity-exa-complete-1",
+  "file": "exa.go",
+  "find": "\tact.complete(200)",
+  "replace": "\t_ = 200"
+ },
+ {
+  "name": "activity-exa-start-2",
+  "file": "exa.go",
+  "find": "\tdefer cancel()\n\tact := logAPIStart(query)",
+  "replace": "\tdefer cancel()\n\tact := activityRef{}"
+ },
+ {
+  "name": "activity-exa-failedErr-2",
+  "file": "exa.go",
+  "find": "\t\tHeader: http.Header{\"X-Api-Key\": {apiKey}, \"Content-Type\": {\"application/json\"}, \"X-Exa-Integration\": {\"pi-web-access\"}}}, []string{\"x-api-key\"})\n\tif err != nil {\n\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\t\tHeader: http.Header{\"X-Api-Key\": {apiKey}, \"Content-Type\": {\"application/json\"}, \"X-Exa-Integration\": {\"pi-web-access\"}}}, []string{\"x-api-key\"})\n\tif err != nil {\n\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-exa-failedErr-3",
+  "file": "exa.go",
+  "find": "\ttext, err := readBody(resp)\n\tif err != nil {\n\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\ttext, err := readBody(resp)\n\tif err != nil {\n\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-exa-failedErr-4",
+  "file": "exa.go",
+  "find": "\t\treturn nil, act.failedErr(fmt.Errorf(\"Exa API error %d: %s\", resp.StatusCode, slice300(RedactCredential(text, apiKey))))",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Exa API error %d: %s\", resp.StatusCode, slice300(RedactCredential(text, apiKey)))"
+ },
+ {
+  "name": "activity-exa-complete-2",
+  "file": "exa.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-extract-start-1",
+  "file": "extract.go",
+  "find": "\tact := logAPIStart(\"jina: \" + rawURL)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-extract-failedErr-1",
+  "file": "extract.go",
+  "find": "\tssrf, err := LoadSsrfConfig()\n\tif err != nil {\n\t\tact.failedErr(err)",
+  "replace": "\tssrf, err := LoadSsrfConfig()\n\tif err != nil {\n\t\t_ = err"
+ },
+ {
+  "name": "activity-extract-failedErr-2",
+  "file": "extract.go",
+  "find": "\tpolicy, err := LoadFetchContentDomainPolicy()\n\tif err != nil {\n\t\tact.failedErr(err)",
+  "replace": "\tpolicy, err := LoadFetchContentDomainPolicy()\n\tif err != nil {\n\t\t_ = err"
+ },
+ {
+  "name": "activity-extract-failedErr-3",
+  "file": "extract.go",
+  "find": "\tif _, err := ValidateRemoteURL(ctx, rawURL, ValidationOptions{Lookup: lookup, DomainPolicy: &policy, AllowRanges: ssrf.AllowRanges, TrustEnvProxy: ssrf.TrustEnvProxy}); err != nil {\n\t\tact.failedErr(err)",
+  "replace": "\tif _, err := ValidateRemoteURL(ctx, rawURL, ValidationOptions{Lookup: lookup, DomainPolicy: &policy, AllowRanges: ssrf.AllowRanges, TrustEnvProxy: ssrf.TrustEnvProxy}); err != nil {\n\t\t_ = err"
+ },
+ {
+  "name": "activity-extract-failedErr-4",
+  "file": "extract.go",
+  "find": "\t\tHeader: http.Header{\"Accept\": {\"text/markdown\"}, \"X-No-Cache\": {\"true\"}}}, nil)\n\tif err != nil {\n\t\tact.failedErr(err)",
+  "replace": "\t\tHeader: http.Header{\"Accept\": {\"text/markdown\"}, \"X-No-Cache\": {\"true\"}}}, nil)\n\tif err != nil {\n\t\t_ = err"
+ },
+ {
+  "name": "activity-extract-complete-1",
+  "file": "extract.go",
+  "find": "\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-extract-complete-2",
+  "file": "extract.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-extract-failedErr-6",
+  "file": "extract.go",
+  "find": "\tfailLogged := func(err error) httpExtracted {\n\t\tact.failedErr(err)",
+  "replace": "\tfailLogged := func(err error) httpExtracted {\n\t\t_ = err"
+ },
+ {
+  "name": "activity-extract-complete-3",
+  "file": "extract.go",
+  "find": "\tif (status < 200 || status > 299) && o.Mode != \"raw\" {\n\t\tact.complete(status)",
+  "replace": "\tif (status < 200 || status > 299) && o.Mode != \"raw\" {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-4",
+  "file": "extract.go",
+  "find": "\t\tif !cfg.Enabled {\n\t\t\tact.complete(status)",
+  "replace": "\t\tif !cfg.Enabled {\n\t\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-5",
+  "file": "extract.go",
+  "find": "\t\tif n, err := strconv.ParseInt(leadingDigits(cl), 10, 64); err == nil && n > maxBytes {\n\t\t\tact.complete(status)",
+  "replace": "\t\tif n, err := strconv.ParseInt(leadingDigits(cl), 10, 64); err == nil && n > maxBytes {\n\t\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-6",
+  "file": "extract.go",
+  "find": "\t\tif !isTextContentType(contentType) {\n\t\t\tact.complete(status)",
+  "replace": "\t\tif !isTextContentType(contentType) {\n\t\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-7",
+  "file": "extract.go",
+  "find": "\t\ttext := decodeText(data, contentType)\n\t\tact.complete(status)",
+  "replace": "\t\ttext := decodeText(data, contentType)\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-8",
+  "file": "extract.go",
+  "find": "\t\tif msg := imageGateError(); msg != \"\" {\n\t\t\tact.complete(status)",
+  "replace": "\t\tif msg := imageGateError(); msg != \"\" {\n\t\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-logError-1",
+  "file": "extract.go",
+  "find": "\t\t}\n\t\tdata, err := readLimited(resp.Body, maxBytes, sizeErr)\n\t\tif err != nil {\n\t\t\tact.logError(err.Error())",
+  "replace": "\t\t}\n\t\tdata, err := readLimited(resp.Body, maxBytes, sizeErr)\n\t\tif err != nil {\n\t\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-extract-complete-9",
+  "file": "extract.go",
+  "find": "\t\t\treturn httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(err.Error()), MimeType: mime, Status: statusPtr}}\n\t\t}\n\t\tact.complete(status)",
+  "replace": "\t\t\treturn httpExtracted{ExtractedContent: ExtractedContent{URL: rawURL, Error: errp(err.Error()), MimeType: mime, Status: statusPtr}}\n\t\t}\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-logError-3",
+  "file": "extract.go",
+  "find": "\t\t// extract.ts:1298-1322\n\t\tdata, err := readLimited(resp.Body, maxBytes, sizeErr)\n\t\tif err != nil {\n\t\t\tact.logError(err.Error())",
+  "replace": "\t\t// extract.ts:1298-1322\n\t\tdata, err := readLimited(resp.Body, maxBytes, sizeErr)\n\t\tif err != nil {\n\t\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-extract-logError-4",
+  "file": "extract.go",
+  "find": "\t\t\t}\n\t\t\tact.logError(err.Error())",
+  "replace": "\t\t\t}\n\t\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-extract-complete-10",
+  "file": "extract.go",
+  "find": "\t\t\treturn fail(pdfFailureMessage(err))\n\t\t}\n\t\tact.complete(status)",
+  "replace": "\t\t\treturn fail(pdfFailureMessage(err))\n\t\t}\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-11",
+  "file": "extract.go",
+  "find": "\t\tstrings.Contains(contentType, \"audio/\") || strings.Contains(contentType, \"video/\") || strings.Contains(contentType, \"application/zip\") {\n\t\tact.complete(status)",
+  "replace": "\t\tstrings.Contains(contentType, \"audio/\") || strings.Contains(contentType, \"video/\") || strings.Contains(contentType, \"application/zip\") {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-12",
+  "file": "extract.go",
+  "find": "\tif isCloudflareChallenge(resp, text, isHTML) {\n\t\tact.complete(status)",
+  "replace": "\tif isCloudflareChallenge(resp, text, isHTML) {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-13",
+  "file": "extract.go",
+  "find": "\tif !isHTML {\n\t\tact.complete(status)",
+  "replace": "\tif !isHTML {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-extract-complete-14",
+  "file": "extract.go",
+  "find": "\t\tact.complete(0)",
+  "replace": "\t\t_ = 0"
+ },
+ {
+  "name": "activity-extract-complete-15",
+  "file": "extract.go",
+  "find": "\textractHook(\"processing\")\n\tact.complete(status)",
+  "replace": "\textractHook(\"processing\")\n\t_ = status"
+ },
+ {
+  "name": "activity-firecrawl-start-1",
+  "file": "firecrawl.go",
+  "find": "\t\tact = logAPIStart(*apiQuery)",
+  "replace": "\t\tact = activityRef{}"
+ },
+ {
+  "name": "activity-firecrawl-failedBy-1",
+  "file": "firecrawl.go",
+  "find": "\tfail := func(err error) (map[string]any, error) { return nil, act.failedBy(ctx, err, \"\") }",
+  "replace": "\tfail := func(err error) (map[string]any, error) { return nil, err }"
+ },
+ {
+  "name": "activity-firecrawl-complete-1",
+  "file": "firecrawl.go",
+  "find": "\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-gemini-search-failedErr-1",
+  "file": "gemini_search.go",
+  "find": "\t\tact.failedErr(err)",
+  "replace": "\t\t_ = err"
+ },
+ {
+  "name": "activity-gemini-search-complete-1",
+  "file": "gemini_search.go",
+  "find": "\tact.complete(res.StatusCode)",
+  "replace": "\t_ = res.StatusCode"
+ },
+ {
+  "name": "activity-gemini-search-start-1",
+  "file": "gemini_search.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-gemini-search-failedErr-2",
+  "file": "gemini_search.go",
+  "find": "\t\treturn nil, act.failedErr(err)",
+  "replace": "\t\treturn nil, err"
+ },
+ {
+  "name": "activity-gemini-search-complete-2",
+  "file": "gemini_search.go",
+  "find": "\tact.complete(200)",
+  "replace": "\t_ = 200"
+ },
+ {
+  "name": "activity-gemini-url-context-start-1",
+  "file": "gemini_url_context.go",
+  "find": "\tact := logAPIStart(\"url_context: \" + url)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-gemini-url-context-failedErr-1",
+  "file": "gemini_url_context.go",
+  "find": "\t\tact.failedErr(timeoutFix(ctx, tctx, err))",
+  "replace": "\t\t_ = timeoutFix(ctx, tctx, err)"
+ },
+ {
+  "name": "activity-gemini-url-context-complete-1",
+  "file": "gemini_url_context.go",
+  "find": "\t\tact.complete(res.StatusCode)",
+  "replace": "\t\t_ = res.StatusCode"
+ },
+ {
+  "name": "activity-gemini-url-context-complete-2",
+  "file": "gemini_url_context.go",
+  "find": "\t}\n\tact.complete(res.StatusCode)",
+  "replace": "\t}\n\t_ = res.StatusCode"
+ },
+ {
+  "name": "activity-gemini-url-context-start-2",
+  "file": "gemini_url_context.go",
+  "find": "\tact := logAPIStart(\"gemini_web: \" + url)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-gemini-url-context-failedErr-2",
+  "file": "gemini_url_context.go",
+  "find": "\t\tact.failedErr(err)",
+  "replace": "\t\t_ = err"
+ },
+ {
+  "name": "activity-gemini-url-context-complete-3",
+  "file": "gemini_url_context.go",
+  "find": "\tact.complete(200)",
+  "replace": "\t_ = 200"
+ },
+ {
+  "name": "activity-github-extract-complete-6",
+  "file": "github_extract.go",
+  "find": "\t\tif apiFallback != nil {\n\t\t\tact.complete(200)",
+  "replace": "\t\tif apiFallback != nil {\n\t\t\t_ = 200"
+ },
+ {
+  "name": "activity-jinasearch-complete-1",
+  "file": "jinasearch.go",
+  "find": "\t\tact.complete(408)",
+  "replace": "\t\t_ = 408"
+ },
+ {
+  "name": "activity-jinasearch-failed-1",
+  "file": "jinasearch.go",
+  "find": "\t\tact.failed(out.Error())",
+  "replace": "\t\t_ = out.Error()"
+ },
+ {
+  "name": "activity-jinasearch-failed-2",
+  "file": "jinasearch.go",
+  "find": "\tout := redactErr(transportFailure(err, false), apiKey)\n\tact.failed(out.Error())",
+  "replace": "\tout := redactErr(transportFailure(err, false), apiKey)\n\t_ = out.Error()"
+ },
+ {
+  "name": "activity-jinasearch-start-1",
+  "file": "jinasearch.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-jinasearch-complete-2",
+  "file": "jinasearch.go",
+  "find": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-jinasearch-complete-3",
+  "file": "jinasearch.go",
+  "find": "\tif err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-jinasearch-logError-1",
+  "file": "jinasearch.go",
+  "find": "\t\tact.logError(err.Error())",
+  "replace": "\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-jinasearch-complete-4",
+  "file": "jinasearch.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-start-1",
+  "file": "kagi.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-kagi-failedErr-1",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-kagi-complete-1",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))\n\t}\n\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))\n\t}\n\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-complete-2",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, fmt.Errorf(\"Kagi API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, apiKey)))\n\t}\n\tvar raw any\n\tif err := json.Unmarshal([]byte(body), &raw); err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Kagi API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, apiKey)))\n\t}\n\tvar raw any\n\tif err := json.Unmarshal([]byte(body), &raw); err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-complete-3",
+  "file": "kagi.go",
+  "find": "\tkagiAppend(items, &results, &inline)\n\tact.complete(resp.StatusCode)",
+  "replace": "\tkagiAppend(items, &results, &inline)\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-start-2",
+  "file": "kagi.go",
+  "find": "\tact := logAPIStart(\"kagi extract: \" + rawURL)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-kagi-failedErr-2",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), key))",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), key)"
+ },
+ {
+  "name": "activity-kagi-complete-4",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), key)\n\t}\n\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), key)\n\t}\n\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-complete-5",
+  "file": "kagi.go",
+  "find": "\t\treturn nil, fmt.Errorf(\"Kagi Extract API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, key)))\n\t}\n\tvar raw any\n\tif err := json.Unmarshal([]byte(body), &raw); err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\t\treturn nil, fmt.Errorf(\"Kagi Extract API error %d: %s\", resp.StatusCode, slice300(RedactCredential(body, key)))\n\t}\n\tvar raw any\n\tif err := json.Unmarshal([]byte(body), &raw); err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kagi-complete-6",
+  "file": "kagi.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-kimi-start-1",
+  "file": "kimi.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-kimi-complete-2",
+  "file": "kimi.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-mistral-start-1",
+  "file": "mistral.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-mistral-failedErr-1",
+  "file": "mistral.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(err, apiKey))",
+  "replace": "\t\treturn nil, redactErr(err, apiKey)"
+ },
+ {
+  "name": "activity-mistral-complete-1",
+  "file": "mistral.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-ollama-start-1",
+  "file": "ollama.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-ollama-complete-1",
+  "file": "ollama.go",
+  "find": "\tif status < 200 || status > 299 {\n\t\tact.complete(status)",
+  "replace": "\tif status < 200 || status > 299 {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-ollama-complete-2",
+  "file": "ollama.go",
+  "find": "\tif err != nil {\n\t\tact.complete(status)",
+  "replace": "\tif err != nil {\n\t\t_ = status"
+ },
+ {
+  "name": "activity-ollama-complete-3",
+  "file": "ollama.go",
+  "find": "\t}\n\tact.complete(status)",
+  "replace": "\t}\n\t_ = status"
+ },
+ {
+  "name": "activity-ollama-start-2",
+  "file": "ollama.go",
+  "find": "\tact := logAPIStart(\"ollama fetch: \" + rawURL)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-ollama-failedErr-1",
+  "file": "ollama.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), key))",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), key)"
+ },
+ {
+  "name": "activity-ollama-complete-4",
+  "file": "ollama.go",
+  "find": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-ollama-complete-5",
+  "file": "ollama.go",
+  "find": "\tif err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-ollama-complete-6",
+  "file": "ollama.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-openai-start-1",
+  "file": "openai.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-openai-failedErr-1",
+  "file": "openai.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(err, auth.apiKey))",
+  "replace": "\t\treturn nil, redactErr(err, auth.apiKey)"
+ },
+ {
+  "name": "activity-openai-complete-1",
+  "file": "openai.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-parallel-complete-1",
+  "file": "parallel.go",
+  "find": "\t\tact.complete(status)",
+  "replace": "\t\t_ = status"
+ },
+ {
+  "name": "activity-parallel-complete-2",
+  "file": "parallel.go",
+  "find": "\tdata, err := parseJSONObjectLoose(text)\n\tact.complete(status)",
+  "replace": "\tdata, err := parseJSONObjectLoose(text)\n\t_ = status"
+ },
+ {
+  "name": "activity-parallelmcp-start-1",
+  "file": "parallelmcp.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-perplexity-start-1",
+  "file": "perplexity.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-perplexity-failedErr-1",
+  "file": "perplexity.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-perplexity-complete-1",
+  "file": "perplexity.go",
+  "find": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-perplexity-complete-2",
+  "file": "perplexity.go",
+  "find": "\tif err := json.Unmarshal([]byte(text), &data); err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif err := json.Unmarshal([]byte(text), &data); err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-perplexity-complete-3",
+  "file": "perplexity.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-querit-start-1",
+  "file": "querit.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-restcommon-failedErr-1",
+  "file": "restcommon.go",
+  "find": "\t\treturn nil, 0, act.failedErr(redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey))",
+  "replace": "\t\treturn nil, 0, redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey)"
+ },
+ {
+  "name": "activity-restcommon-complete-2",
+  "file": "restcommon.go",
+  "find": "\tif !ok {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif !ok {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-restcommon-complete-3",
+  "file": "restcommon.go",
+  "find": "\tif err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-restcommon-failedBy-1",
+  "file": "restcommon.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, restFailure(ctx, tctx, name, apiKey, err), apiKey)",
+  "replace": "\t\treturn nil, restFailure(ctx, tctx, name, apiKey, err)"
+ },
+ {
+  "name": "activity-restcommon-complete-4",
+  "file": "restcommon.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-search1api-start-1",
+  "file": "search1api.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-searchinfinity-start-1",
+  "file": "searchinfinity.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-searxng-start-1",
+  "file": "searxng.go",
+  "find": "\tact := logAPIStart(searxngQuery(query, filters))",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-searxng-failedErr-2",
+  "file": "searxng.go",
+  "find": "\t\treturn nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, false)))",
+  "replace": "\t\treturn nil, timeoutFix(ctx, tctx, transportFailure(err, false))"
+ },
+ {
+  "name": "activity-searxng-failedErr-4",
+  "file": "searxng.go",
+  "find": "\t\treturn nil, act.failedErr(fmt.Errorf(\"SearXNG search error %d: %s\", resp.StatusCode, slice300(text)))",
+  "replace": "\t\treturn nil, fmt.Errorf(\"SearXNG search error %d: %s\", resp.StatusCode, slice300(text))"
+ },
+ {
+  "name": "activity-searxng-failedErr-5",
+  "file": "searxng.go",
+  "find": "\t\treturn nil, act.failedErr(fmt.Errorf(\"SearXNG returned invalid JSON: %v\", err))",
+  "replace": "\t\treturn nil, fmt.Errorf(\"SearXNG returned invalid JSON: %v\", err)"
+ },
+ {
+  "name": "activity-searxng-complete-1",
+  "file": "searxng.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-serpapi-start-1",
+  "file": "serpapi.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-serpbase-start-1",
+  "file": "serpbase.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-serpbase-complete-1",
+  "file": "serpbase.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-serpdive-start-1",
+  "file": "serpdive.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-serpdive-failedErr-1",
+  "file": "serpdive.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))",
+  "replace": "\t\treturn nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "activity-serpdive-complete-1",
+  "file": "serpdive.go",
+  "find": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif resp.StatusCode < 200 || resp.StatusCode > 299 {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-serpdive-complete-2",
+  "file": "serpdive.go",
+  "find": "\tif err := json.Unmarshal([]byte(text), &data); err != nil {\n\t\tact.complete(resp.StatusCode)",
+  "replace": "\tif err := json.Unmarshal([]byte(text), &data); err != nil {\n\t\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-serpdive-complete-3",
+  "file": "serpdive.go",
+  "find": "\t}\n\tact.complete(resp.StatusCode)",
+  "replace": "\t}\n\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-serper-start-1",
+  "file": "serper.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-serper-complete-1",
+  "file": "serper.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-serply-start-1",
+  "file": "serply.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-tavily-start-1",
+  "file": "tavily.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-tavily-complete-1",
+  "file": "tavily.go",
+  "find": "\t\t\tact.complete(0)",
+  "replace": "\t\t\t_ = 0"
+ },
+ {
+  "name": "activity-tavily-complete-2",
+  "file": "tavily.go",
+  "find": "\t\t\tact.complete(status)",
+  "replace": "\t\t\t_ = status"
+ },
+ {
+  "name": "activity-tavily-logError-1",
+  "file": "tavily.go",
+  "find": "\t\t\tact.logError(err.Error())",
+  "replace": "\t\t\t_ = err.Error()"
+ },
+ {
+  "name": "activity-tavily-complete-3",
+  "file": "tavily.go",
+  "find": "\tact.complete(200)",
+  "replace": "\t_ = 200"
+ },
+ {
+  "name": "activity-tinyfish-start-1",
+  "file": "tinyfish.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-valyu-start-1",
+  "file": "valyu.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-valyu-complete-1",
+  "file": "valyu.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-xai-start-1",
+  "file": "xai.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-xai-failedErr-1",
+  "file": "xai.go",
+  "find": "\t\treturn nil, act.failedErr(redactErr(err, auth.apiKey))",
+  "replace": "\t\treturn nil, redactErr(err, auth.apiKey)"
+ },
+ {
+  "name": "activity-xai-complete-1",
+  "file": "xai.go",
+  "find": "\tact.complete(status)",
+  "replace": "\t_ = status"
+ },
+ {
+  "name": "activity-xcrawl-start-1",
+  "file": "xcrawl.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-xcrawl-failedBy-1",
+  "file": "xcrawl.go",
+  "find": "\t\treturn nil, act.failedBy(ctx, restFailure(ctx, tctx, \"XCrawl search\", apiKey, err), apiKey)",
+  "replace": "\t\treturn nil, restFailure(ctx, tctx, \"XCrawl search\", apiKey, err)"
+ },
+ {
+  "name": "activity-xcrawl-complete-1",
+  "file": "xcrawl.go",
+  "find": "\tact.complete(resp.StatusCode)",
+  "replace": "\t_ = resp.StatusCode"
+ },
+ {
+  "name": "activity-you-start-1",
+  "file": "you.go",
+  "find": "\tact := logAPIStart(query)",
+  "replace": "\tact := activityRef{}"
+ },
+ {
+  "name": "activity-youtube-extract-complete-2",
+  "file": "youtube_extract.go",
+  "find": "\t\t\tact.complete(200)",
+  "replace": "\t\t\t_ = 200"
+ },
+ {
+  "name": "activity-youtube-extract-complete-3",
+  "file": "youtube_extract.go",
+  "find": "\tif ctx.Err() != nil {\n\t\tact.complete(0)",
+  "replace": "\tif ctx.Err() != nil {\n\t\t_ = 0"
+ },
+ {
+  "name": "activity-youtube-extract-logError-1",
+  "file": "youtube_extract.go",
+  "find": "\tact.logError(msg)",
+  "replace": "\t_ = msg"
+ },
+ {
+  "name": "xai-403-quota-never-classified",
+  "file": "search.go",
+  "find": "case provider == \"xai\" && status == 403 && xaiQuotaRE.MatchString(lower):",
+  "replace": "case provider == \"xai\" && status == 403 && false:"
+ },
+ {
+  "name": "xai-403-always-quota",
+  "file": "search.go",
+  "find": "case provider == \"xai\" && status == 403 && xaiQuotaRE.MatchString(lower):",
+  "replace": "case provider == \"xai\" && status == 403:"
+ },
+ {
+  "name": "use-current-model-not-validated",
+  "file": "search.go",
+  "find": "b, ok := v.(bool)\n\t\tif !ok {",
+  "replace": "b, ok := v.(bool)\n\t\tif false && !ok {"
+ },
+ {
+  "name": "routing-hosted-auth-falls-back",
+  "file": "search.go",
+  "find": "if !sliceHas(routing.FallbackOn, classified.Kind) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "auto-unsupported-does-not-stop",
+  "file": "search.go",
+  "find": "if asUnsupported(err) != nil || errors.As(err, &credErr) && p == \"exa\" || isAbortError(err) {",
+  "replace": "if errors.As(err, &credErr) && p == \"exa\" || isAbortError(err) {"
+ },
+ {
+  "name": "all-includes-anysearch",
+  "file": "search.go",
+  "find": "\"gemini\", \"bocha\"}",
+  "replace": "\"gemini\", \"bocha\", \"anysearch\"}"
+ },
+ {
+  "name": "all-drops-tinyfish-search1api",
+  "file": "search.go",
+  "find": "AllSearchProviders = []string{\"searxng\", \"openai\", \"exa\", \"brave\", \"parallel\", \"tinyfish\", \"search1api\", ",
+  "replace": "AllSearchProviders = []string{\"searxng\", \"openai\", \"exa\", \"brave\", \"parallel\", "
+ },
+ {
+  "name": "all-keeps-duplicate-results",
+  "file": "search.go",
+  "find": "if !seenResults[x.URL] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "all-keeps-duplicate-inline",
+  "file": "search.go",
+  "find": "if !seenInline[c.URL] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "openai-provider-entry-blank-allowed",
+  "file": "openai.go",
+  "find": "s, ok := mpString(entry)\n\t\tif !ok || jsTrim(s) == \"\" {",
+  "replace": "s, ok := mpString(entry)\n\t\tif !ok {"
+ },
+ {
+  "name": "openai-no-web-search-call-accepted",
+  "file": "openai.go",
+  "find": "if !parsed.webSearchCallSeen {",
+  "replace": "if false {"
+ },
+ {
+  "name": "openai-no-web-search-call-unclassified",
+  "file": "search.go",
+  "find": "|no web_search_call`",
+  "replace": "`"
+ },
+ {
+  "name": "openai-tool-choice-auto",
+  "file": "openai.go",
+  "find": "ToolChoice: \"required\"",
+  "replace": "ToolChoice: \"auto\""
+ },
+ {
+  "name": "openai-include-sources-dropped",
+  "file": "openai.go",
+  "find": "Include:      []string{\"web_search_call.action.sources\"},",
+  "replace": "Include:      []string{},"
+ },
+ {
+  "name": "openai-blocked-domains-dropped",
+  "file": "openai.go",
+  "find": "BlockedDomains: capDomains(f.blocked)}",
+  "replace": "BlockedDomains: nil}"
+ },
+ {
+  "name": "openai-allowed-domains-dropped",
+  "file": "openai.go",
+  "find": "AllowedDomains: capDomains(f.allowed), ",
+  "replace": "AllowedDomains: nil, "
+ },
+ {
+  "name": "openai-current-model-host-unchecked",
+  "file": "openai.go",
+  "find": "api == \"openai-responses\" && host == \"api.openai.com\" {",
+  "replace": "api == \"openai-responses\" && host != \"\" {"
+ },
+ {
+  "name": "openai-current-model-gpt-prefix-dropped",
+  "file": "openai.go",
+  "find": "if !gptPrefixRE.MatchString(id) {",
+  "replace": "if false && !gptPrefixRE.MatchString(id) {"
+ },
+ {
+  "name": "openai-current-model-target-unchecked",
+  "file": "openai.go",
+  "find": "_, err := resolveCurrentModelSearchTarget(model)\n\treturn err == nil",
+  "replace": "return true"
+ },
+ {
+  "name": "openai-current-model-nil-eligible",
+  "file": "openai.go",
+  "find": "if model == nil {\n\t\treturn false\n\t}\n\tid, _ := mpString(model[\"id\"])",
+  "replace": "if model == nil {\n\t\treturn true\n\t}\n\tid, _ := mpString(model[\"id\"])"
+ },
+ {
+  "name": "openai-current-model-no-context-eligible",
+  "file": "openai.go",
+  "find": "if ec == nil {\n\t\treturn false\n\t}\n\treturn modelHostedSearchEligible(ec.Model())",
+  "replace": "if ec == nil {\n\t\treturn true\n\t}\n\treturn modelHostedSearchEligible(ec.Model())"
+ },
+ {
+  "name": "openai-current-model-availability-ignored",
+  "file": "openai.go",
+  "find": "return IsCurrentModelHostedSearchEligible(ec), nil",
+  "replace": "return true, nil"
+ },
+ {
+  "name": "openai-current-model-search-not-routed",
+  "file": "openai.go",
+  "find": "if currentModelSearchRequested(ctx) {\n\t\treturn SearchWithCurrentModelOpenAI(ctx, query, o)",
+  "replace": "if false {\n\t\treturn SearchWithCurrentModelOpenAI(ctx, query, o)"
+ },
+ {
+  "name": "openai-explicit-provider-uses-current-model",
+  "file": "openai.go",
+  "find": "return SearchWithOpenAI(ctx, query, o)\n}",
+  "replace": "return SearchWithCurrentModelOpenAI(ctx, query, o)\n}"
+ },
+ {
+  "name": "curator-eligibility-seam-ignored",
+  "file": "curator.go",
+  "find": "&& !modelHostedSearchEligible(model))",
+  "replace": "&& false)"
+ },
+ {
+  "name": "curator-eligibility-any-candidate",
+  "file": "curator.go",
+  "find": "return !(candidate == \"openai\" &&",
+  "replace": "return !(true &&"
+ },
+ {
+  "name": "google-account-disabled-ignored",
+  "file": "curator_commands.go",
+  "find": "if !allowed {\n\t\ttext := fmt.Sprintf(\"Gemini Web browser cookie access",
+  "replace": "if false && !allowed {\n\t\ttext := fmt.Sprintf(\"Gemini Web browser cookie access"
+ },
+ {
+  "name": "google-account-unavailable-ignored",
+  "file": "curator_commands.go",
+  "find": "if cookies == nil {\n\t\tdiagnostic := src.Diagnostic()",
+  "replace": "if false {\n\t\tdiagnostic := src.Diagnostic()"
+ },
+ {
+  "name": "google-account-active-email-dropped",
+  "file": "curator_commands.go",
+  "find": "text = \"Active Google account: \" + email",
+  "replace": "text = \"Active Google account: \""
+ },
+ {
+  "name": "google-account-email-detail-dropped",
+  "file": "curator_commands.go",
+  "find": "emailValue = email\n",
+  "replace": "emailValue = nil\n"
+ },
+ {
+  "name": "google-account-attempts-dropped",
+  "file": "curator_commands.go",
+  "find": "text += \" Attempted browser profiles: \" + attempted + \".\"",
+  "replace": "text += \"\""
+ },
+ {
+  "name": "google-account-cookie-access-flag",
+  "file": "curator_commands.go",
+  "find": "map[string]any{\"available\": false, \"cookieAccessAllowed\": true, \"diagnostic\"",
+  "replace": "map[string]any{\"available\": false, \"cookieAccessAllowed\": false, \"diagnostic\""
+ },
+ {
+  "name": "google-account-source-restore-dropped",
+  "file": "curator_commands.go",
+  "find": "if s == nil {\n\t\ts = cookieGoogleAccount{}\n\t}\n\tgoogleAccountSource = s\n\treturn func() { googleAccountSource = prev }",
+  "replace": "if s == nil {\n\t\ts = cookieGoogleAccount{}\n\t}\n\tgoogleAccountSource = s\n\treturn func() { _ = prev }"
+ },
+ {
+  "name": "google-account-cookie-source-nil-typed",
+  "file": "curator_commands.go",
+  "find": "cookies, err := IsGeminiWebAvailable(ctx, \"\")\n\tif cookies == nil {",
+  "replace": "cookies, err := IsGeminiWebAvailable(ctx, \"\")\n\tif false {"
+ },
+ {
+  "name": "google-account-cookie-access-not-read",
+  "file": "curator_commands.go",
+  "find": "func (cookieGoogleAccount) CookieAccessAllowed() (bool, error) { return IsBrowserCookieAccessAllowed() }",
+  "replace": "func (cookieGoogleAccount) CookieAccessAllowed() (bool, error) { return true, nil }"
+ },
+ {
+  "name": "google-account-active-email-not-read",
+  "file": "curator_commands.go",
+  "find": "return ActiveGoogleEmail(ctx, m)",
+  "replace": "_ = m\n\treturn \"\""
+ },
+ {
+  "name": "google-account-diagnostic-not-read",
+  "file": "curator_commands.go",
+  "find": "func (cookieGoogleAccount) Diagnostic() string { return geminiWebAvailabilityDiagnostic() }",
+  "replace": "func (cookieGoogleAccount) Diagnostic() string { return \"\" }"
+ },
+ {
+  "name": "curator-falsy-null-answered",
+  "file": "curator_server.go",
+  "find": "case nil:\n\t\treturn curatorHang(r)",
+  "replace": "case nil:\n\t\tcuratorFail(w, http.StatusBadRequest, \"Invalid body\")\n\t\treturn nil, false"
+ },
+ {
+  "name": "curator-falsy-false-answered",
+  "file": "curator_server.go",
+  "find": "if !body {\n\t\t\treturn curatorHang(r)",
+  "replace": "if false {\n\t\t\treturn curatorHang(r)"
+ },
+ {
+  "name": "curator-falsy-zero-answered",
+  "file": "curator_server.go",
+  "find": "if body == 0 {\n\t\t\treturn curatorHang(r)",
+  "replace": "if false {\n\t\t\treturn curatorHang(r)"
+ },
+ {
+  "name": "curator-falsy-empty-string-answered",
+  "file": "curator_server.go",
+  "find": "if body == \"\" {\n\t\t\treturn curatorHang(r)",
+  "replace": "if false {\n\t\t\treturn curatorHang(r)"
+ },
+ {
+  "name": "curator-falsy-hang-returns-at-once",
+  "file": "curator_server.go",
+  "find": "\t<-r.Context().Done()\n\treturn nil, false",
+  "replace": "\treturn nil, false"
+ },
+ {
+  "name": "curator-truthy-scalar-hangs",
+  "file": "curator_server.go",
+  "find": "\tcuratorFail(w, http.StatusBadRequest, \"Invalid body\")\n\treturn nil, false\n}\n\n// curatorHang",
+  "replace": "\treturn curatorHang(r)\n}\n\n// curatorHang"
+ },
+ {
+  "name": "curator-array-body-refused-as-invalid",
+  "file": "curator_server.go",
+  "find": "case []any:\n\t\t// An array is an object to typeof: it has no token, so the session check refuses it.\n\t\treturn map[string]any{}, true",
+  "replace": "case []any:\n\t\tcuratorFail(w, http.StatusBadRequest, \"Invalid body\")\n\t\treturn nil, false"
+ },
+ {
+  "name": "activity-failed-abort-recorded",
+  "file": "activity.go",
+  "find": "if strings.Contains(strings.ToLower(message), \"abort\") {\n\t\ta.complete(0)\n\t\treturn\n\t}",
+  "replace": "if false {\n\t\ta.complete(0)\n\t\treturn\n\t}"
+ },
+ {
+  "name": "activity-failed-err-cancel-recorded",
+  "file": "activity.go",
+  "find": "if errors.Is(err, context.Canceled) {\n\t\ta.complete(0)\n\t\treturn &redactedError{\"This operation was aborted\", err}",
+  "replace": "if false && errors.Is(err, context.Canceled) {\n\t\ta.complete(0)\n\t\treturn &redactedError{\"This operation was aborted\", err}"
+ },
+ {
+  "name": "activity-failed-err-abort-message",
+  "file": "activity.go",
+  "find": "return &redactedError{\"This operation was aborted\", err}",
+  "replace": "return err"
+ },
+ {
+  "name": "activity-tavily-abort-message",
+  "file": "tavily.go",
+  "find": "err = &redactedError{\"This operation was aborted\", err}",
+  "replace": "_ = err"
+ },
+ {
+  "name": "activity-failed-by-ignores-parent",
+  "file": "activity.go",
+  "find": "if parent.Err() != nil {\n\t\ta.complete(0)",
+  "replace": "if false {\n\t\ta.complete(0)"
+ },
+ {
+  "name": "activity-logged-redaction-dropped",
+  "file": "activity.go",
+  "find": "return zero, act.failedErr(redactErr(err, secret))\n\t}\n\tact.complete(200)\n\treturn v, nil\n}\n\n// loggedBy",
+  "replace": "return zero, act.failedErr(err)\n\t}\n\tact.complete(200)\n\treturn v, nil\n}\n\n// loggedBy"
+ },
+ {
+  "name": "activity-logged-completes-with-201",
+  "file": "activity.go",
+  "find": "\t\treturn zero, act.failedErr(redactErr(err, secret))\n\t}\n\tact.complete(200)",
+  "replace": "\t\treturn zero, act.failedErr(redactErr(err, secret))\n\t}\n\tact.complete(201)"
+ },
+ {
+  "name": "activity-logged-by-completes-with-201",
+  "file": "activity.go",
+  "find": "\t\treturn zero, act.failedBy(parent, redactErr(err, secret), secret)\n\t}\n\tact.complete(200)",
+  "replace": "\t\treturn zero, act.failedBy(parent, redactErr(err, secret), secret)\n\t}\n\tact.complete(201)"
+ },
+ {
+  "name": "activity-logged-by-redaction-dropped",
+  "file": "activity.go",
+  "find": "act.failedBy(parent, redactErr(err, secret), secret)",
+  "replace": "act.failedBy(parent, err, secret)"
+ },
+ {
+  "name": "activity-log-start-api-keeps-url",
+  "file": "activity.go",
+  "find": "if kind == \"api\" {\n\t\te.Query = target",
+  "replace": "if kind != \"api\" {\n\t\te.Query = target"
+ },
+ {
+  "name": "activity-log-error-leaves-open",
+  "file": "activity.go",
+  "find": "m.entries[i].EndTime = nowMs()\n\t\t\tm.entries[i].Error = message",
+  "replace": "m.entries[i].Error = message"
+ },
+ {
+  "name": "activity-complete-without-status",
+  "file": "activity.go",
+  "find": "s := status\n\t\t\tm.entries[i].Status = &s",
+  "replace": "s := 0\n\t\t\tm.entries[i].Status = &s"
+ },
+ {
+  "name": "activity-parallel-objective-start-dropped",
+  "file": "parallel.go",
+  "find": "return logAPIStart(objective)",
+  "replace": "return activityRef{}"
+ },
+ {
+  "name": "activity-parallel-first-query-start-dropped",
+  "file": "parallel.go",
+  "find": "return logAPIStart(queries[0])",
+  "replace": "return activityRef{}"
+ },
+ {
+  "name": "activity-parallel-query-start-dropped",
+  "file": "parallel.go",
+  "find": "return logAPIStart(q)",
+  "replace": "_ = q\n\t\t\t\treturn activityRef{}"
+ },
+ {
+  "name": "activity-parallel-default-start-dropped",
+  "file": "parallel.go",
+  "find": "return logAPIStart(\"Parallel search\")",
+  "replace": "return activityRef{}"
+ },
+ {
+  "name": "activity-gemini-search-start-dropped",
+  "file": "gemini_search.go",
+  "find": "*act = logAPIStart(query)",
+  "replace": "*act = activityRef{}"
  }
 ]
