@@ -3,7 +3,6 @@ package pi_subagents
 import (
 	"embed"
 	"sort"
-	"strings"
 )
 
 //go:embed builtin/*.md
@@ -17,18 +16,6 @@ func defaultSystemPromptMode(name string) string {
 }
 
 func defaultInheritProjectContext(name string) bool { return name == "delegate" }
-
-func splitTools(raw []string) (tools, mcp []string) {
-	tools = []string{}
-	for _, t := range raw {
-		if strings.HasPrefix(t, "mcp:") {
-			mcp = append(mcp, t[4:])
-		} else {
-			tools = append(tools, t)
-		}
-	}
-	return
-}
 
 func normalizeAliases(raw []string, agentName string) []string {
 	var out []string

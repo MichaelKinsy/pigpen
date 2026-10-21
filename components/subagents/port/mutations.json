@@ -193,15 +193,15 @@
  },
  {
   "name": "disc-legacy-skills",
-  "file": "discovery.go",
-  "find": "if isLegacySkillPath(dir, p) {",
-  "replace": "if false {"
+  "file": "agentmgmt_discover.go",
+  "find": "&& !isLegacySkillPath(root, p) {",
+  "replace": "{"
  },
  {
   "name": "disc-chain-md",
-  "file": "discovery.go",
-  "find": "!strings.HasSuffix(n, \".chain.md\") }",
-  "replace": "true }"
+  "file": "agentmgmt_discover.go",
+  "find": "&& !strings.HasSuffix(e.Name(), \".chain.md\")",
+  "replace": ""
  },
  {
   "name": "disc-prune-git",
@@ -256,12 +256,6 @@
   "file": "agents.go",
   "find": "seen[a] || a == agentName",
   "replace": "seen[a]"
- },
- {
-  "name": "agents-mcp-split",
-  "file": "agents.go",
-  "find": "strings.HasPrefix(t, \"mcp:\")",
-  "replace": "strings.HasPrefix(t, \"mcp-\")"
  },
  {
   "name": "agents-runner-type",
@@ -595,9 +589,9 @@
  },
  {
   "name": "ext-widget-clear",
-  "file": "extension.go",
-  "find": "_ = ctx.SetWidget(asyncWidget, nil)\n\t\treturn nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart",
-  "replace": "return nil, nil\n\t})\n\te.OnEvent(sdk.EventBeforeAgentStart"
+  "file": "async_runtime.go",
+  "find": "rt.notifier.Dispose()\n\t_ = ctx.SetWidget(widgetKeyAsync, nil)",
+  "replace": "rt.notifier.Dispose()"
  },
  {
   "name": "ext-git-probe",
@@ -2455,9 +2449,9 @@
  },
  {
   "name": "proj-escape",
-  "file": "async_projection.go",
-  "find": "\t\tif cp == 0x1b {\n\t\t\tvar next uint16",
-  "replace": "\t\tif cp == 0x1c {\n\t\t\tvar next uint16"
+  "file": "policy_display.go",
+  "find": "\t\tif cp == 0x1b {\n\t\t\tvar next byte",
+  "replace": "\t\tif cp == 0x1c {\n\t\t\tvar next byte"
  },
  {
   "name": "proj-cycle",
@@ -2474,13 +2468,487 @@
  {
   "name": "proj-run-precedence",
   "file": "async_projection.go",
-  "find": "\tfor i, l := range lanes {\n\t\trunID, ok := truthyString(l.step[\"runId\"])",
-  "replace": "\tfor i, l := range lanes[:0] {\n\t\trunID, ok := truthyString(l.step[\"runId\"])"
+  "find": "\tfor i, l := range lanes {\n\t\trunID, ok := truthyText(l.step[\"runId\"])",
+  "replace": "\tfor i, l := range lanes[:0] {\n\t\trunID, ok := truthyText(l.step[\"runId\"])"
  },
  {
   "name": "fleet-limit",
   "file": "async_state.go",
   "find": "const maxRecentFleetJobs = 20",
   "replace": "const maxRecentFleetJobs = 21"
+ },
+ {
+  "name": "rm-parent-model",
+  "file": "run_model.go",
+  "find": "if id := ctx.Model(); id != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rm-fullid",
+  "file": "run_model.go",
+  "find": "if available[i].FullID == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rm-preferred-parent",
+  "file": "run_model.go",
+  "find": "if preferred == \"\" && parent != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rm-explicit",
+  "file": "run_model.go",
+  "find": "if m, _ := params[\"model\"].(string); m != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rm-configured",
+  "file": "run_model.go",
+  "find": "if a.Model != \"\" {\n\t\tconfigured",
+  "replace": "if false {\n\t\tconfigured"
+ },
+ {
+  "name": "rm-source-explicit",
+  "file": "run_model.go",
+  "find": "if origin == \"explicit\" {\n\t\tsource = \"explicit\"",
+  "replace": "if false {\n\t\tsource = \"explicit\""
+ },
+ {
+  "name": "rm-from-parent",
+  "file": "run_model.go",
+  "find": "origin == \"inherited\" || inheritsParentModel(explicit, configured, parent)",
+  "replace": "origin == \"inherited\""
+ },
+ {
+  "name": "rm-effective-error",
+  "file": "run_model.go",
+  "find": "if err != nil {\n\t\treturn \"\", err\n\t}\n\tselection, err :=",
+  "replace": "selection, err :="
+ },
+ {
+  "name": "rm-scope",
+  "file": "run_model.go",
+  "find": "scopes := resolveModelScopesForAgent(d.ModelScope, a.Name, parent)",
+  "replace": "scopes := resolveModelScopesForAgent(d.ModelScope, \"\", parent)"
+ },
+ {
+  "name": "rf-single-claim",
+  "file": "run_fanout.go",
+  "find": "[]string{\"single\"}",
+  "replace": "[]string{\"single\", \"single\"}"
+ },
+ {
+  "name": "rf-line-result",
+  "file": "run_fanout.go",
+  "find": "case explicitOK:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)\n\t\tr.Content = line + \"\\n\" + r.Content",
+  "replace": "case explicitOK:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)"
+ },
+ {
+  "name": "rf-line-toolresult",
+  "file": "run_fanout.go",
+  "find": "case sdk.ToolResult:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)\n\t\tr.Content = line + \"\\n\" + r.Content",
+  "replace": "case sdk.ToolResult:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)"
+ },
+ {
+  "name": "rf-details-explicit",
+  "file": "run_fanout.go",
+  "find": "case explicitOK:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)",
+  "replace": "case explicitOK:"
+ },
+ {
+  "name": "rf-details-toolresult",
+  "file": "run_fanout.go",
+  "find": "case sdk.ToolResult:\n\t\tdetailsSet(r.Details, \"runFanoutBudget\", object)",
+  "replace": "case sdk.ToolResult:"
+ },
+ {
+  "name": "rf-used",
+  "file": "run_fanout.go",
+  "find": "object.set(\"used\", float64(snap.Used))",
+  "replace": "object.set(\"used\", float64(snap.Remaining))"
+ },
+ {
+  "name": "rf-limit",
+  "file": "run_fanout.go",
+  "find": "object.set(\"limit\", float64(snap.Limit))",
+  "replace": "object.set(\"limit\", float64(snap.Used))"
+ },
+ {
+  "name": "rf-remaining",
+  "file": "run_fanout.go",
+  "find": "object.set(\"remaining\", float64(snap.Remaining))",
+  "replace": "object.set(\"remaining\", float64(snap.Limit))"
+ },
+ {
+  "name": "rf-cancelled",
+  "file": "run_fanout.go",
+  "find": "if errors.Is(err, errCancelled) {\n\t\t\treturn res, err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "rf-snapshot-error",
+  "file": "run_fanout.go",
+  "find": "if serr != nil {\n\t\treturn res, err\n\t}",
+  "replace": "if serr != nil && false {\n\t\treturn res, err\n\t}"
+ },
+ {
+  "name": "rf-failure-line",
+  "file": "run_fanout.go",
+  "find": "sdk.NewToolError(line + \"\\n\" + err.Error())",
+  "replace": "sdk.NewToolError(err.Error())"
+ },
+ {
+  "name": "rf-config-limit",
+  "file": "run_fanout.go",
+  "find": "resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv)",
+  "replace": "resolveMaxSubagentSpawnsPerRun(nil, osEnv)"
+ },
+ {
+  "name": "mp-both",
+  "file": "run_fanout.go",
+  "find": "if hasID && hasMission {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mp-mission-false",
+  "file": "run_fanout.go",
+  "find": "if hasMission && mission == false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mp-read",
+  "file": "run_fanout.go",
+  "find": "_, err = readMission(resolveMissionStoreLocation(cwd, loadMissionStoreConfig(), \"\"), id)\n\t\treturn err",
+  "replace": "_ = id\n\t\treturn nil"
+ },
+ {
+  "name": "mp-launch",
+  "file": "run_fanout.go",
+  "find": "_, err := validateMissionLaunch(toDyn(mission))\n\t\treturn err",
+  "replace": "return nil"
+ },
+ {
+  "name": "ext-background-model",
+  "file": "extension.go",
+  "find": "model, err := resolveRunModel(ctx, d, a, params)\n\t\tif err != nil {\n\t\t\treturn fan.annotate(nil, err)",
+  "replace": "model, err := resolveRunModel(ctx, d, a, params)\n\t\tif err != nil {\n\t\t\treturn nil, sdk.NewToolError(err.Error())"
+ },
+ {
+  "name": "ext-capacity-refusal",
+  "file": "extension.go",
+  "find": "if err != nil && strings.HasPrefix(err.Error(), capacityRefusalPrefix) {",
+  "replace": "if err != nil && !strings.HasPrefix(err.Error(), capacityRefusalPrefix) {"
+ },
+ {
+  "name": "ext-model-failed",
+  "file": "extension.go",
+  "find": "if fan != nil && !modelFailed {",
+  "replace": "if fan != nil {"
+ },
+ {
+  "name": "ext-background-claim",
+  "file": "extension.go",
+  "find": "fan, err := claimRunFanout(newUUID())\n\t\tif err != nil {",
+  "replace": "fan, err := claimRunFanout(newUUID())\n\t\tif err != nil && false {"
+ },
+ {
+  "name": "ext-schedule-checks",
+  "file": "extension.go",
+  "find": "if strings.HasPrefix(action, \"schedule.\") {",
+  "replace": "if strings.HasPrefix(action, \"schedulex.\") {"
+ },
+ {
+  "name": "ext-mission-validate",
+  "file": "extension.go",
+  "find": "validateMissionParams(params, ctx.Cwd()); err != nil {",
+  "replace": "validateMissionParams(params, ctx.Cwd()); false && err != nil {"
+ },
+ {
+  "name": "ar-tool-hook",
+  "file": "async_runtime.go",
+  "find": "toolHooks = append(toolHooks, installAsyncTools)",
+  "replace": ""
+ },
+ {
+  "name": "ar-wait-failed",
+  "file": "async_actions.go",
+  "find": "if r.IsError {\n\t\treturn nil, sdk.NewToolError(r.Text)",
+  "replace": "if false {\n\t\treturn nil, sdk.NewToolError(r.Text)"
+ },
+ {
+  "name": "ar-status-failed",
+  "file": "async_actions.go",
+  "find": "return nil, sdk.NewToolError(full)",
+  "replace": "return sdk.ToolResult{Content: full, IsError: true}, nil"
+ },
+ {
+  "name": "ar-status-details",
+  "file": "async_actions.go",
+  "find": "\"spawnBudget\", spawnBudget, \"activeAsyncCapacity\", capacity)",
+  "replace": "\"spawnBudget\", nil, \"activeAsyncCapacity\", nil)"
+ },
+ {
+  "name": "ac-prefix",
+  "file": "async_capacity.go",
+  "find": "\"Active async run capacity exhausted: \"",
+  "replace": "\"Active async capacity exhausted: \""
+ },
+ {
+  "name": "sh-posix",
+  "file": "async_run.go",
+  "find": "const posixShell = \"/bin/sh\"",
+  "replace": "const posixShell = \"/bin/false\""
+ },
+ {
+  "name": "pr-before-run",
+  "file": "policy_run.go",
+  "find": "if beforeRun != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pr-after-admission",
+  "file": "policy_run.go",
+  "find": "if afterAdmission != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "val-ws-order",
+  "file": "workflow_validate_action.go",
+  "find": "jo(\"kind\", w.Kind, \"message\", w.Message)",
+  "replace": "jo(\"message\", w.Message, \"kind\", w.Kind)"
+ },
+ {
+  "name": "val-enoent",
+  "file": "workflow_validate_action.go",
+  "find": "nodeFSErrorText(err, \"open\", path)",
+  "replace": "err.Error()"
+ },
+ {
+  "name": "bs-granted",
+  "file": "run_budget_status.go",
+  "find": "budget.set(\"granted\", float64(snap.Granted))",
+  "replace": "budget.set(\"granted\", float64(snap.Used))"
+ },
+ {
+  "name": "bs-nil-limit",
+  "file": "run_budget_status.go",
+  "find": "if v == nil {\n\t\t\tbudget.set(k, nil)",
+  "replace": "if false {\n\t\t\tbudget.set(k, nil)"
+ },
+ {
+  "name": "bs-history-previous",
+  "file": "run_budget_status.go",
+  "find": "\"previousLimit\", float64(g.PreviousLimit)",
+  "replace": "\"previousLimit\", float64(g.Limit)"
+ },
+ {
+  "name": "bs-history-empty",
+  "file": "run_budget_status.go",
+  "find": "history := []any{}",
+  "replace": "var history []any"
+ },
+ {
+  "name": "bs-unlimited",
+  "file": "run_budget_status.go",
+  "find": "if used.Limit > 0 {",
+  "replace": "if used.Limit >= 0 {"
+ },
+ {
+  "name": "bs-reconcile",
+  "file": "run_budget_status.go",
+  "find": "if sessionID != \"\" {\n\t\tused = reconcile",
+  "replace": "if false {\n\t\tused = reconcile"
+ },
+ {
+  "name": "bs-capacity-line",
+  "file": "run_budget_status.go",
+  "find": "\"\\nActive async capacity: %d/%s used\"",
+  "replace": "\"\\nActive capacity: %d/%s used\""
+ },
+ {
+  "name": "bs-capacity-details",
+  "file": "run_budget_status.go",
+  "find": "obj(\"used\", float64(used.Used), \"limit\", float64(used.Limit))",
+  "replace": "obj(\"used\", float64(used.Limit), \"limit\", float64(used.Used))"
+ },
+ {
+  "name": "sv-id-length",
+  "file": "schedule_validate.go",
+  "find": "{0,63}$`",
+  "replace": "{0,64}$`"
+ },
+ {
+  "name": "sv-relative-min",
+  "file": "schedule_validate.go",
+  "find": "amount > 9007199254740991 || amount < 1 {\n\t\t\treturn fmt.Sprintf(\"Invalid at value",
+  "replace": "amount > 9007199254740991 {\n\t\t\treturn fmt.Sprintf(\"Invalid at value"
+ },
+ {
+  "name": "sv-every-min",
+  "file": "schedule_validate.go",
+  "find": "amount > 9007199254740991 || amount < 1 {\n\t\treturn fmt.Sprintf(\"Invalid every value",
+  "replace": "amount > 9007199254740991 {\n\t\treturn fmt.Sprintf(\"Invalid every value"
+ },
+ {
+  "name": "sv-second-unit",
+  "file": "schedule_validate.go",
+  "find": "\"s\": 1_000",
+  "replace": "\"s\": 1_001"
+ },
+ {
+  "name": "sv-week-unit",
+  "file": "schedule_validate.go",
+  "find": "\"w\": 604_800_000",
+  "replace": "\"w\": 604_800_001"
+ },
+ {
+  "name": "sv-relative-large",
+  "file": "schedule_validate.go",
+  "find": "float64(now.UnixMilli())+amount*unit > 9007199254740991",
+  "replace": "amount*unit > 9007199254740991"
+ },
+ {
+  "name": "sv-every-large",
+  "file": "schedule_validate.go",
+  "find": "if amount*unit > 9007199254740991 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sv-hour",
+  "file": "schedule_validate.go",
+  "find": "hour > 23",
+  "replace": "hour > 24"
+ },
+ {
+  "name": "sv-minute",
+  "file": "schedule_validate.go",
+  "find": "minute > 59",
+  "replace": "minute > 60"
+ },
+ {
+  "name": "sv-second",
+  "file": "schedule_validate.go",
+  "find": "second > 59",
+  "replace": "second > 60"
+ },
+ {
+  "name": "sv-offset-hour",
+  "file": "schedule_validate.go",
+  "find": "offsetHour > 23",
+  "replace": "offsetHour > 24"
+ },
+ {
+  "name": "sv-offset-minute",
+  "file": "schedule_validate.go",
+  "find": "offsetMinute > 59",
+  "replace": "offsetMinute > 60"
+ },
+ {
+  "name": "sv-month-days",
+  "file": "schedule_validate.go",
+  "find": "day > daysInMonth",
+  "replace": "day > 31"
+ },
+ {
+  "name": "sv-month",
+  "file": "schedule_validate.go",
+  "find": "month < 1 || month > 12 || day",
+  "replace": "month < 1 || month > 13 || day"
+ },
+ {
+  "name": "sv-no-seconds-layout",
+  "file": "schedule_validate.go",
+  "find": "if m[6] == \"\" {\n\t\tlayout",
+  "replace": "if false {\n\t\tlayout"
+ },
+ {
+  "name": "sv-past",
+  "file": "schedule_validate.go",
+  "find": "if !parsed.After(now) {",
+  "replace": "if parsed.Before(now) {"
+ },
+ {
+  "name": "sv-one-trigger",
+  "file": "schedule_validate.go",
+  "find": "(at != \"\") == (every != \"\")",
+  "replace": "(at != \"\") && (every != \"\")"
+ },
+ {
+  "name": "sv-overlap",
+  "file": "schedule_validate.go",
+  "find": "v != \"skip\"",
+  "replace": "v != \"skip\" && false"
+ },
+ {
+  "name": "sv-catchup",
+  "file": "schedule_validate.go",
+  "find": "v != \"none\" && v != \"latest\"",
+  "replace": "v != \"none\""
+ },
+ {
+  "name": "sv-mission-scope",
+  "file": "schedule_validate.go",
+  "find": "\"missionStatus\", \"missionScope\"}",
+  "replace": "\"missionStatus\"}"
+ },
+ {
+  "name": "sv-calendar-on",
+  "file": "schedule_validate.go",
+  "find": "defined(params, \"on\") || defined(params, \"timezone\") ||",
+  "replace": "defined(params, \"timezone\") ||"
+ },
+ {
+  "name": "sv-calendar-day",
+  "file": "schedule_validate.go",
+  "find": "every == \"day\" ||",
+  "replace": ""
+ },
+ {
+  "name": "sv-calendar-year",
+  "file": "schedule_validate.go",
+  "find": "|| every == \"year\"",
+  "replace": ""
+ },
+ {
+  "name": "sv-quiet-type",
+  "file": "schedule_validate.go",
+  "find": "if !isBool {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sv-quiet-at",
+  "file": "schedule_validate.go",
+  "find": "if at != \"\" && quiet {",
+  "replace": "if at == \"\" && quiet {"
+ },
+ {
+  "name": "sv-id-check",
+  "file": "schedule_validate.go",
+  "find": "id != \"\" && !scheduleIDPattern.MatchString(id)",
+  "replace": "id != \"\" && false"
+ },
+ {
+  "name": "sv-at-branch",
+  "file": "schedule_validate.go",
+  "find": "if at != \"\" {\n\t\t\treturn parseScheduledRunTime",
+  "replace": "if false {\n\t\t\treturn parseScheduledRunTime"
+ },
+ {
+  "name": "sv-show-id",
+  "file": "schedule_validate.go",
+  "find": "if id == \"\" {\n\t\t\treturn action + \" requires id.\"",
+  "replace": "if false {\n\t\t\treturn action + \" requires id.\""
+ },
+ {
+  "name": "sv-actions",
+  "file": "schedule_validate.go",
+  "find": "\"schedule.run\", \"schedule.delete\":",
+  "replace": "\"schedule.run\":"
+ },
+ {
+  "name": "sv-trim-at",
+  "file": "schedule_validate.go",
+  "find": "trimmed := jsTrim(at)",
+  "replace": "trimmed := at"
  }
 ]
