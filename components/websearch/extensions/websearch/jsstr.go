@@ -1,24 +1,60 @@
 package websearch
 
 import (
+	"encoding/binary"
 	"strings"
 	"unicode/utf16"
+	"unicode/utf8"
+	"unsafe"
 )
 
 // The original measures and slices strings in UTF-16 code units (String.length, slice). Limits,
 // offsets and cut points below use the same unit so a response splits where the original's did.
 
-// jsLen is `s.length`.
+// jsLen is `s.length`: the UTF-16 length of the string, a rune above U+FFFF counting for two.
+// A run of ASCII is counted a block at a time, which is nearly all of a page; any other rune goes
+// through the decoder, which treats an invalid byte as U+FFFD (one unit) as a range loop does.
 func jsLen(s string) int {
-	n := 0
-	for _, r := range s {
+	n, i := 0, 0
+	for i < len(s) {
+		run := asciiRun(s[i:], len(s))
+		n += run
+		i += run
+		if i == len(s) {
+			break
+		}
+		r, size := utf8.DecodeRuneInString(s[i:])
 		if r >= 0x10000 {
 			n += 2
 		} else {
 			n++
 		}
+		i += size
 	}
 	return n
+}
+
+// asciiBlock is the number of bytes asciiRun tests at once.
+const asciiBlock = 64
+
+// asciiRun is the length of the leading run of ASCII bytes of s, counted in whole blocks of
+// asciiBlock bytes and at most limit: it may stop short of the end of the run (the caller then
+// decodes one rune and calls again), never past a byte of 0x80 or more. The block is read as
+// eight 64-bit words through a read-only view of the string.
+func asciiRun(s string, limit int) int {
+	b := unsafe.Slice(unsafe.StringData(s), len(s))
+	i := 0
+	for i+asciiBlock <= len(b) && i+asciiBlock <= limit {
+		w := binary.LittleEndian.Uint64(b[i:]) | binary.LittleEndian.Uint64(b[i+8:]) |
+			binary.LittleEndian.Uint64(b[i+16:]) | binary.LittleEndian.Uint64(b[i+24:]) |
+			binary.LittleEndian.Uint64(b[i+32:]) | binary.LittleEndian.Uint64(b[i+40:]) |
+			binary.LittleEndian.Uint64(b[i+48:]) | binary.LittleEndian.Uint64(b[i+56:])
+		if w&0x8080808080808080 != 0 {
+			break
+		}
+		i += asciiBlock
+	}
+	return i
 }
 
 // jsSlice is `s.slice(start, end)`; end < 0 means the end of the string. A cut inside a

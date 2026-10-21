@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
 // Port of page-query.ts: answer a question from one fetched page with a model, the way
@@ -270,8 +271,14 @@ func AnswerFromPage(ctx context.Context, input PageAnswerInput, sc SideCallConte
 // jsPrefix is jsSlice(s, 0, n) without encoding the whole page to UTF-16: a page can be megabytes
 // and only its first n units are kept. A cut inside a surrogate pair gives U+FFFD, as jsSlice does.
 func jsPrefix(s string, n int) string {
-	units := 0
-	for i, r := range s {
+	units, i := 0, 0
+	for i < len(s) {
+		if run := asciiRun(s[i:], n-units); run > 0 {
+			units += run
+			i += run
+			continue
+		}
+		r, size := utf8.DecodeRuneInString(s[i:])
 		width := 1
 		if r >= 0x10000 {
 			width = 2
@@ -283,6 +290,7 @@ func jsPrefix(s string, n int) string {
 			return s[:i]
 		}
 		units += width
+		i += size
 	}
 	return s
 }
