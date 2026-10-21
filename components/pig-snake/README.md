@@ -52,17 +52,40 @@ pig install ./components/pig-snake
 pig package validate ./components/pig-snake
 ```
 
-The Package is `private` until the owner publishes it. `pig-with-batteries` selects it: bundling
-registers two commands and nothing else, so nothing runs until a user types one.
+The Package is public (`publishConfig.access: public` in `package.json`; it carries no `private` flag) and ships with the owner's
+releases. `pig-with-batteries` selects it: bundling registers two commands and nothing else, so nothing runs until a user types
+one. It reaches the shared `pig-play` libraries through the `go.work` in `extensions/pig-snake`, like PiG Runner and Angry Pigs
+(a Piglet that selects `pig-snake` selects `pig-play` too).
 
 ## The sprite seam
 
 The game draws pigs only through `sprites.Source` (`internal/sprites`): sizes, head art and a palette
-per herd member. `extension.go` `newSprites` is the one place that chooses the art. The shared sprite
-package is now [`pig-play`](../pig-play/README.md) (`libraries/sprite`); an adapter implementing `Source`
-on top of it would replace `sprites.Builtin` there and nothing else would change. This release still
-uses the built-in source. The built-in source
-holds the 8x8 pig of Angry Pigs unchanged, two smaller drawings, and the sprite catalogue colors.
+per herd member. `extension.go` `newSprites` is the one place that chooses the art. `sprites.Shared` is the source in use: the
+colourings, their order (followers cycle through the catalogue after the leader) and the sprite chosen with `/sprite` come from
+the shared sprite library, [`pig-play`](../pig-play/README.md) (`libraries/sprite`), and the pixel canvas and terminal plumbing
+from `libraries/pixel` and `libraries/termgame`. The heads at 8, 6 and 4 pixels are Pig Snake's own drawings of that pig (the
+8x8 one is the Angry Pigs pig unchanged).
+
+## Mouse
+
+In PiG's fullscreen mode (the default; regular mode leaves the mouse to the terminal, as Pi does) a left press on the board
+steers the leader toward the pointer, as the arrow key for that direction would: the larger of the horizontal and vertical
+distance from the middle of the leader decides. It starts a game on the title screen, turns a running one (never into the herd,
+and the two-turn queue applies), and does nothing while the game is paused or over, on the pig itself, on the two HUD lines, for
+another button, a release, a drag or the wheel, or when the board does not fit. The keyboard is unchanged.
+
+## The Sheriff
+
+When the sprite chosen with `/sprite` is the Sheriff, the leader wears the Sheriff's hat (Pig Snake's own small drawings at the
+three pig sizes, in the Sheriff's brown and gold from the shared catalogue) over the top of its head. The followers never do.
+
+## Not built, and why
+
+- **Mini mode** (the game in a footer widget while you keep typing): `Context.SetWidget` can now show a view (`kit.View`), but a
+  widget cannot take keys, and a game you cannot steer is not a game; it needs the host to hand the keyboard to a widget on a key
+  (the focus handoff Pi's `ctx.ui.setWidget` has no counterpart for). Recorded as a PiG SDK item.
+- **Sound**: an extension can neither write to the terminal (a bell) nor play audio through PiG's SDK, and no upstream game has
+  sound to be faithful to. Recorded as a PiG SDK item.
 
 ## Evidence
 

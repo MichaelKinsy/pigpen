@@ -93,7 +93,7 @@ func height(h int) func() int { return func() int { return h } }
 // manual builds a component with no timer goroutine, driven by advance.
 func manual(t *testing.T, highs highScores, h func() int) *component {
 	t.Helper()
-	c := newComponentWith(highs, sprites.Builtin(""), h, options{manual: true, rng: fixedRand{}})
+	c := newComponentWith(highs, sprites.Shared(""), h, options{manual: true, rng: fixedRand{}})
 	t.Cleanup(c.Dispose)
 	return c
 }
@@ -273,7 +273,7 @@ func TestGameOverStopsStepsAndOnlyRetryAndQuitWork(t *testing.T) {
 
 // Twin of pigrunner TestRunnerRestartKeepsHighScoreAndSprite.
 func TestSnakeRestartKeepsHighScoreModeAndSprite(t *testing.T) {
-	src := sprites.Builtin("sheriff")
+	src := sprites.Shared("sheriff")
 	component := newComponentWith(highScores{High: 5, WrapHigh: 8}, src, height(24), options{manual: true, rng: fixedRand{}})
 	defer component.Dispose()
 	_, _ = component.HandleInput("m") // wrap mode while waiting
@@ -474,7 +474,7 @@ func TestRenderHandlesEveryNarrowWidth(t *testing.T) {
 // Twin of pigrunner TestRunnerComponentTimerInvalidatesAndStops. The timer
 // runs at 40x speed so the twin does not wait for real 160 ms steps.
 func TestSnakeComponentTimerInvalidatesAndStops(t *testing.T) {
-	component := newComponentWith(highScores{High: 7}, sprites.Builtin(""), height(24), options{speed: 40, rng: fixedRand{}})
+	component := newComponentWith(highScores{High: 7}, sprites.Shared(""), height(24), options{speed: 40, rng: fixedRand{}})
 	_, _ = component.HandleInput("m") // wrap mode: at 40x speed a wall would end the game within a few ticks
 	_, _ = component.HandleInput(" ")
 	invalidated := make(chan struct{}, 8)
@@ -518,7 +518,7 @@ func TestSnakeComponentTimerInvalidatesAndStops(t *testing.T) {
 }
 
 func TestDisposeIsIdempotentAndTheWaitingGameNeverTicks(t *testing.T) {
-	component := newComponentWith(highScores{}, sprites.Builtin(""), height(24), options{speed: 40, rng: fixedRand{}})
+	component := newComponentWith(highScores{}, sprites.Shared(""), height(24), options{speed: 40, rng: fixedRand{}})
 	invalidated := make(chan struct{}, 8)
 	component.SetInvalidate(func() {
 		select {
@@ -538,7 +538,7 @@ func TestDisposeIsIdempotentAndTheWaitingGameNeverTicks(t *testing.T) {
 func TestTimerInvalidatesWhenTheTerminalHeightChanges(t *testing.T) {
 	var h atomic.Int64
 	h.Store(24)
-	component := newComponentWith(highScores{}, sprites.Builtin(""), func() int { return int(h.Load()) }, options{rng: fixedRand{}})
+	component := newComponentWith(highScores{}, sprites.Shared(""), func() int { return int(h.Load()) }, options{rng: fixedRand{}})
 	defer component.Dispose()
 	invalidated := make(chan struct{}, 8)
 	component.SetInvalidate(func() {
@@ -588,10 +588,10 @@ func TestTheLeaderWearsTheSpriteChosenWithSprite(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "login.json"), []byte(`{"variant":"lavender"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := newSprites(home).Palette(0)['P'], sprites.Builtin("lavender").Palette(0)['P']; got != want {
+	if got, want := newSprites(home).Palette(0)['P'], sprites.Shared("lavender").Palette(0)['P']; got != want {
 		t.Fatalf("leader body %v, want the lavender pig %v", got, want)
 	}
-	if got, want := newSprites(t.TempDir()).Palette(0)['P'], sprites.Builtin("").Palette(0)['P']; got != want {
+	if got, want := newSprites(t.TempDir()).Palette(0)['P'], sprites.Shared("").Palette(0)['P']; got != want {
 		t.Fatalf("no saved sprite: leader body %v, want the default %v", got, want)
 	}
 }
@@ -616,7 +616,7 @@ func TestAPausedGameDoesNotBankTimeToSpendAfterResume(t *testing.T) {
 
 func TestNothingFiresAfterDisposeReturns(t *testing.T) {
 	for i := range 30 {
-		component := newComponentWith(highScores{}, sprites.Builtin(""), height(24), options{speed: 40, rng: fixedRand{}})
+		component := newComponentWith(highScores{}, sprites.Shared(""), height(24), options{speed: 40, rng: fixedRand{}})
 		_, _ = component.HandleInput("m") // wrap: keeps ticking
 		_, _ = component.HandleInput(" ")
 		var fired atomic.Int64
@@ -636,7 +636,7 @@ func TestNothingFiresAfterDisposeReturns(t *testing.T) {
 }
 
 func TestDisposeWaitsForAFrameRequestInFlight(t *testing.T) {
-	component := newComponentWith(highScores{}, sprites.Builtin(""), height(24), options{speed: 40, rng: fixedRand{}})
+	component := newComponentWith(highScores{}, sprites.Shared(""), height(24), options{speed: 40, rng: fixedRand{}})
 	_, _ = component.HandleInput("m")
 	_, _ = component.HandleInput(" ")
 	entered, release := make(chan struct{}), make(chan struct{})
@@ -688,7 +688,7 @@ func TestSnakeSharesTheRunnerStyle(t *testing.T) {
 // Twin in spirit of pigrunner TestRunnerTitleAndGameOverScreens (PiG d86eb93).
 func TestSnakeTitleAndGameOverScreens(t *testing.T) {
 	t.Setenv("COLORTERM", "truecolor")
-	component := newComponentWith(highScores{}, sprites.Builtin(""), height(40), options{speed: 40, rng: fixedRand{}})
+	component := newComponentWith(highScores{}, sprites.Shared(""), height(40), options{speed: 40, rng: fixedRand{}})
 	defer component.Dispose()
 	lines := component.Render(120)
 	if status := sgrPattern.ReplaceAllString(lines[len(lines)-1], ""); !strings.Contains(status, "space start") {
