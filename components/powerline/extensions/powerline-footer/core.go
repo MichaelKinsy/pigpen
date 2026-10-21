@@ -52,11 +52,12 @@ const (
 )
 
 // widgetKeys are the widgets the original clears before it installs its own, in its order. Some belong to features that are
-// not ported (the bash transcript, the secondary row, pending send, the queue preview and the last prompt), but a host that
-// still shows one left by another version must see them cleared.
+// not drawn by every slice (the secondary row, for one), but a host that still shows one left by another version must see them
+// cleared.
 var widgetKeys = []string{"powerline-top", "powerline-secondary", "powerline-bash-transcript", "powerline-status", "powerline-pending-send", "powerline-queue-preview", "powerline-last-prompt"}
 
 type powerline struct {
+	bash    bashHooks // the bash slice (bash_ext.go); nil in tests that build a powerline without it
 	h       hostAPI
 	enabled bool
 	config  powerlineConfig
@@ -235,6 +236,9 @@ func (p *powerline) sessionStart(reason string) {
 	} else if p.h.HasUI() {
 		p.h.SetStatus(statusStash, nil)
 	}
+	if p.bash != nil {
+		p.bash.sessionStart()
+	}
 	if p.enabled && p.h.HasUI() {
 		p.setup()
 	}
@@ -378,6 +382,8 @@ func (p *powerline) setup() {
 	if p.h.Mode() == "tui" {
 		p.ui.Widgets[widgetStatus] = "aboveEditor"
 		p.h.SetWidgetInstalled(widgetStatus, "aboveEditor", true)
+		p.ui.Widgets[widgetBashTranscript] = "belowEditor"
+		p.h.SetWidgetInstalled(widgetBashTranscript, "belowEditor", true)
 		p.ui.Widgets[widgetPendingSend] = "belowEditor"
 		p.h.SetWidgetInstalled(widgetPendingSend, "belowEditor", true)
 		p.ui.Widgets[widgetQueuePreview] = "belowEditor"
@@ -389,6 +395,9 @@ func (p *powerline) setup() {
 
 func (p *powerline) teardown() {
 	p.queue.restorePendingSend()
+	if p.bash != nil {
+		p.bash.powerlineDisabled()
+	}
 	if p.keys != nil {
 		p.keys.disable()
 	} else {
@@ -491,6 +500,9 @@ func (p *powerline) refresh() {
 	p.left, p.right, p.secondary = l, r, s
 	all := append(append(slices.Clone(l), r...), s...)
 	ctx := p.buildContext(d, all)
+	if p.bash != nil {
+		ctx.Shell = p.bash.segmentData()
+	}
 	p.base = &ctx
 	if c, ok := p.renderContext(); ok {
 		p.frame.Store(&footerFrame{ctx: c, ids: all, style: p.separatorStyle()})

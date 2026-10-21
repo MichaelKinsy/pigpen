@@ -17,6 +17,7 @@ import (
 type powerlineEditor struct {
 	*sdk.Editor // inherits HandleMouse, SetText, InsertTextAtCursor and AddToHistory
 	base        editorBase
+	bash        *bashModeEditor // nil until the bash slice is wired in (internal tests)
 	ctx         sdk.Context
 	k           *keysExt
 	border      editorBorderColor
@@ -25,28 +26,57 @@ type powerlineEditor struct {
 func (e *powerlineEditor) HandleInput(data string) error {
 	e.k.dismiss(e.ctx) // dismissWelcomeForInput
 	if isPrintableInput(data) {
-		return e.base.HandleInput(data)
+		return e.pass(data)
 	}
 	if e.k.editorInput(e.ctx, data) {
 		return nil
+	}
+	return e.pass(data)
+}
+
+// pass is originalHandleInput: BashModeEditor.handleInput over the default editor.
+func (e *powerlineEditor) pass(data string) error {
+	if e.bash != nil {
+		return e.bash.handleInput(data)
 	}
 	return e.base.HandleInput(data)
 }
 
 func (e *powerlineEditor) Render(width int) ([]string, error) {
 	completions := e.k.ensure(e.ctx).completionsEnabled()
-	return renderPowerlineEditor(e.base, &e.border, width, false, completions)
+	base := e.base
+	active := false
+	if e.bash != nil {
+		base = ghostBase{base, e.bash}
+		active = e.bash.env.active()
+	}
+	return renderPowerlineEditor(base, &e.border, width, active, completions)
 }
 
 // installEditor installs the powerline editor; with no UI or in RPC mode the SDK ignores it, as Pi does.
 func (k *keysExt) installEditor(ctx sdk.Context) {
+	var bash *bashExt
+	if k.a != nil {
+		bash = k.a.bash
+	}
 	_ = ctx.SetEditorComponent(func(base *sdk.Editor) sdk.EditorComponent {
-		return &powerlineEditor{Editor: base, base: base, ctx: ctx, k: k}
+		e := &powerlineEditor{Editor: base, base: base, ctx: ctx, k: k}
+		if bash != nil {
+			mode := bash.bind(ctx)
+			e.bash = newBashModeEditor(base, bash.editorEnv(ctx, mode, k.ensure(ctx)))
+			mode.setEditorHooks(bashEditorHooks{dismissBashModeUi: e.bash.dismissBashModeUi, refreshGhostSuggestion: e.bash.refreshGhostSuggestion})
+		}
+		return e
 	})
 }
 
 // uninstallEditor restores the host's editor (ctx.ui.setEditorComponent(undefined)).
 func (k *keysExt) uninstallEditor(ctx sdk.Context) {
+	if k.a != nil && k.a.bash != nil {
+		if mode := k.a.bash.current(); mode != nil {
+			mode.setEditorHooks(bashEditorHooks{})
+		}
+	}
 	_ = ctx.SetEditorComponent(nil)
 }
 

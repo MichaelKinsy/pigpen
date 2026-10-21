@@ -192,6 +192,9 @@ func (h *sdkHost) Repaint() {
 	if placement, ok := ui.Widgets[widgetStatus]; ok {
 		h.setWidget(widgetStatus, placement, h.pl.renderStatus(width))
 	}
+	if placement, ok := ui.Widgets[widgetBashTranscript]; ok {
+		h.setWidget(widgetBashTranscript, placement, h.pl.renderBashTranscript(width))
+	}
 	if placement, ok := ui.Widgets[widgetPendingSend]; ok {
 		h.setWidget(widgetPendingSend, placement, h.pl.renderPendingSend(width))
 	}
@@ -214,6 +217,7 @@ type app struct {
 	welcome   welcomeState // welcome.go, welcome_ext.go
 	cdq       *cdQuote     // /cd, /reply and the last-prompt line (cdquote_ext.go)
 	keys      *keysExt
+	bash      *bashExt // bash mode (bash_ext.go)
 }
 
 func (a *app) core(ctx sdk.Context) *powerline {
@@ -224,6 +228,9 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		a.pl.queue.mu = &a.mu
 		if a.keys != nil {
 			a.pl.keys = a.keys
+		}
+		if a.bash != nil {
+			a.pl.bash = a.bash
 		}
 	})
 	a.host.ctx = ctx
@@ -316,6 +323,7 @@ func Extension() *sdk.Extension {
 	}
 	registerQueue(e, a)
 	registerCdQuote(e, a)
+	registerBash(e, a)
 	// The shortcut actions the keys slice leaves to the features that own them (index.ts runPowerlineShortcut 2379-2390).
 	a.keys.setHook(actionQueueOpen, a.openQueuePicker)
 	a.keys.setHook(actionReply, func(ctx sdk.Context) {
@@ -324,4 +332,12 @@ func Extension() *sdk.Extension {
 		}
 	})
 	return e
+}
+
+// renderBashTranscript is the powerline-bash-transcript widget at a width.
+func (p *powerline) renderBashTranscript(width int) []string {
+	if p.bash == nil {
+		return nil
+	}
+	return p.bash.transcriptLines(width, p.h.Theme())
 }

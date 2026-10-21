@@ -11,10 +11,8 @@ import (
 // rows and the shell_mode segment's data. upstream: index.ts 1240-1243 (state), 1280-1281, 1354-1420 (setBashModeActive,
 // runShellCommand), 2683-2737 (the commands), 2935-2938 (segment data), 3060-3090 (renderBashTranscriptLines).
 //
-// Bash mode needs the bash editor (a replacement of Pi's input editor, installed through ctx.ui.setEditorComponent). The Go
-// SDK offers that since PiG v0.5.0 and the editor is the next slice; until it lands the user cannot type into the mode, so the extension keeps /bash-mode, /bash-reset and the
-// bashMode setting refused (refusal.go) and does not construct a bashMode. This type is the complete logic behind them, tested
-// on its own, so the editor lands on top of it: its editor hooks are the two functions of bashEditorHooks.
+// Bash mode types into the powerline editor (editor_ext.go, bash_editor.go): this type is the logic behind /bash-mode,
+// /bash-reset and the `!` mode, and the editor reaches it through the two functions of bashEditorHooks (bash_ext.go).
 
 // bashEditorHooks are what the editor offers the mode: upstream's currentEditor?.dismissBashModeUi?.() and
 // currentEditor?.refreshGhostSuggestion?.(). Either may be nil (no editor installed yet).
@@ -56,6 +54,26 @@ type bashMode struct {
 
 func newBashMode(env bashModeEnv, limits bashTranscriptLimits) *bashMode {
 	return &bashMode{env: env, limits: limits, transcript: newBashTranscriptStore(limits), engine: &bashCompletionEngine{}}
+}
+
+// setEditorHooks installs the editor's hooks (or removes them with the zero value).
+func (b *bashMode) setEditorHooks(hooks bashEditorHooks) {
+	b.mu.Lock()
+	b.editor = hooks
+	b.mu.Unlock()
+}
+
+func (b *bashMode) editorHooks() bashEditorHooks {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.editor
+}
+
+// currentSession is shellSession, nil when there is none.
+func (b *bashMode) currentSession() *managedShellSession {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.session
 }
 
 // isActive is bashModeActive.
@@ -157,6 +175,7 @@ func (b *bashMode) setBashModeActive(ctx context.Context, value bool) {
 		return
 	}
 
+	hooks := b.editorHooks()
 	if value {
 		session, err := b.ensureShellSession(ctx)
 		if err != nil {
@@ -174,11 +193,11 @@ func (b *bashMode) setBashModeActive(ctx context.Context, value bool) {
 		b.mu.Lock()
 		b.active = true
 		b.mu.Unlock()
-		if b.editor.dismissBashModeUi != nil {
-			b.editor.dismissBashModeUi()
+		if hooks.dismissBashModeUi != nil {
+			hooks.dismissBashModeUi()
 		}
-		if b.editor.refreshGhostSuggestion != nil {
-			b.editor.refreshGhostSuggestion()
+		if hooks.refreshGhostSuggestion != nil {
+			hooks.refreshGhostSuggestion()
 		}
 		b.env.RequestStatusRender()
 		b.env.Notify("Bash mode enabled ("+session.State().ShellName+")", "info")
@@ -188,8 +207,8 @@ func (b *bashMode) setBashModeActive(ctx context.Context, value bool) {
 	b.mu.Lock()
 	b.active = value
 	b.mu.Unlock()
-	if b.editor.dismissBashModeUi != nil {
-		b.editor.dismissBashModeUi()
+	if hooks.dismissBashModeUi != nil {
+		hooks.dismissBashModeUi()
 	}
 	b.env.RequestStatusRender()
 	b.env.Notify("Bash mode disabled", "info")

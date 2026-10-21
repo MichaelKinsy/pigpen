@@ -19,8 +19,6 @@ func refusal(feature string) string {
 
 // refusedCommands are the commands the original registers that the port does not implement: command name, description, feature.
 var refusedCommands = []struct{ name, description, feature string }{
-	{"bash-mode", "Toggle bash mode", "bash mode (/bash-mode)"},
-	{"bash-reset", "Restart the bash mode shell session", "bash mode (/bash-reset)"},
 	{"powerline-perf", "Show or reset the editor performance counters", "the editor performance profiler (/powerline-perf)"},
 }
 
@@ -35,9 +33,6 @@ func unsupportedSettings(settings map[string]any, cfg powerlineConfig, env func(
 		if cfg.SendDelayMs > 0 {
 			add("delayed send (powerline.sendDelayMs)")
 		}
-	}
-	if settings["bashMode"] != nil {
-		add("bash mode (bashMode)")
 	}
 	if readEditorPerfOptions(env).Enabled {
 		add("the editor performance profiler (POWERLINE_DEBUG_PERF)")

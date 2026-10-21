@@ -32,8 +32,6 @@ func TestRefusalMessageIsExact(t *testing.T) {
 
 func TestEveryUnportedCommandIsRefused(t *testing.T) {
 	commands := map[string]string{
-		"bash-mode":      "bash mode (/bash-mode)",
-		"bash-reset":     "bash mode (/bash-reset)",
 		"powerline-perf": "the editor performance profiler (/powerline-perf)",
 	}
 	for name, feature := range commands {
@@ -54,7 +52,6 @@ func TestEveryUnportedCommandIsRefused(t *testing.T) {
 func TestEveryUnportedSettingIsRefusedAtSessionStart(t *testing.T) {
 	settings := map[string]struct{ json, feature string }{
 		"sendDelayMs": {`{"powerline":{"sendDelayMs":1500}}`, "delayed send (powerline.sendDelayMs)"},
-		"bashMode":    {`{"bashMode":{"completions":true}}`, "bash mode (bashMode)"},
 	}
 	for name, c := range settings {
 		t.Run(name, func(t *testing.T) {
@@ -99,11 +96,12 @@ func TestSettingsTheOriginalAlsoIgnoresAreNotRefused(t *testing.T) {
 }
 
 func TestSeveralUnportedSettingsAreEachRefused(t *testing.T) {
-	h := tuiRig{settings: `{"powerline":{"sendDelayMs":1000,"autoFollowUp":true},"bashMode":{}}`}.start(t)
+	t.Setenv("POWERLINE_DEBUG_PERF", "1")
+	h := tuiRig{settings: `{"powerline":{"sendDelayMs":1000,"autoFollowUp":true}}`}.start(t)
 	got := notifications(h)
 	want := []string{
 		"warning: " + refusalFor("delayed send (powerline.sendDelayMs)"),
-		"warning: " + refusalFor("bash mode (bashMode)"),
+		"warning: " + refusalFor("the editor performance profiler (POWERLINE_DEBUG_PERF)"),
 	}
 	if len(got) != len(want) {
 		t.Fatalf("notifications = %q, want %q", got, want)
