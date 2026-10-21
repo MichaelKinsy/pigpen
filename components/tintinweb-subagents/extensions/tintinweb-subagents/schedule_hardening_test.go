@@ -219,27 +219,18 @@ func TestTheStoreReadsADamagedFileAsTheOriginalDoes(t *testing.T) {
 	eq(t, got.Name, "y")
 }
 
-func TestAgentsListsTheScheduledJobs(t *testing.T) {
+func TestAgentsMenuOffersTheScheduledJobsWhileTheSchedulerIsActive(t *testing.T) {
 	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 	r := startRigIn(t, t.TempDir())
-	now := time.Now().UnixMilli()
-	eq(t, r.app.scheduleListing(now), []string{"", "Scheduled jobs (0):", "  (none)"})
 	r.must("Agent", obj{"prompt": "p", "description": "nightly sweep", "subagent_type": "Plan", "schedule": "1h"})
-	lines := r.app.scheduleListing(now)
-	eq(t, len(lines), 4)
-	eq(t, lines[:2], []string{"", "Scheduled jobs (1):"})
-	eq(t, strings.HasPrefix(lines[2], "  ✓  nightly sweep       1h              [Plan]  next in "), true)
-	eq(t, lines[3], "  "+refusalText("cancelling a scheduled job (the /agents Scheduled jobs menu)"))
-
-	r.Command("agents", "")
-	var msg string
-	for _, c := range r.CallsTo("ui.notify") {
-		msg, _ = c.Args["message"].(string)
-	}
-	eq(t, strings.Contains(msg, "\n\nScheduled jobs (1):\n  ✓  nightly sweep"), true)
-
+	entry, ok := r.app.scheduleMenuEntry()
+	eq(t, ok, true)
+	eq(t, entry, "Scheduled jobs (1)")
+	jobs := r.app.scheduler().list()
+	eq(t, strings.HasPrefix(r.app.scheduleFormatJob(jobs[0], time.Now().UnixMilli()), "✓  nightly sweep       1h              [Plan]  next in "), true)
 	r.app.scheduler().stop()
-	eq(t, r.app.scheduleListing(now) == nil, true) // not active: no entry, as the original's menu
+	_, ok = r.app.scheduleMenuEntry()
+	eq(t, ok, false) // not active: no entry, as the original's menu
 }
 
 func TestTwoStoresOnOneFileDoNotLoseEachOthersJobs(t *testing.T) {

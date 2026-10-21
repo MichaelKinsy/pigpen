@@ -227,6 +227,9 @@ func loadSubagentsSettings(cwd string) subagentsSettings {
 // subagentsSettingsPath is the file the menu writes: the project's, which overrides the global one on load.
 func subagentsSettingsPath(cwd string) string { return filepath.Join(cwd, ".pi", "subagents.json") }
 
+// settingsWriter is the write, a seam so a test can make it fail.
+var settingsWriter = saveSubagentsSettings
+
 // saveSubagentsSettings writes the whole snapshot as JSON.stringify(s, null, 2) would (no trailing newline), and reports
 // whether it was written. upstream: settings.ts saveSettings.
 func saveSubagentsSettings(s subagentsSettings, cwd string) bool {

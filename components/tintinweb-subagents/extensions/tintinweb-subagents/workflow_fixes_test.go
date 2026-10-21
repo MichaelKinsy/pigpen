@@ -175,17 +175,6 @@ func TestWorkflowMenuIsRefused(t *testing.T) {
 		eq(t, strings.Contains(target.Message, "is still running"), true)
 		eq(t, strings.Contains(target.Message, "/agents"), false)
 	})
-	t.Run("/agents lists the runs and refuses the menu with the unified text", func(t *testing.T) {
-		w := startWfRig(t, wfRigOptions{hasUI: true})
-		w.start()
-		text := w.run(obj{"script": inlineScript + "await new Promise(() => {});\n"})
-		id := w.taskID(text)
-		w.Command("agents", "")
-		out := w.noticeTexts()
-		eq(t, strings.Contains(out, "Workflows (1):"), true)
-		eq(t, strings.Contains(out, id+" from-inline"), true)
-		eq(t, strings.Contains(out, refusalText("the Workflows menu (stop, pause, skip and retry of a run)")), true)
-	})
 }
 
 func TestWorkflowMetaEvalErrorKeepsTheName(t *testing.T) {

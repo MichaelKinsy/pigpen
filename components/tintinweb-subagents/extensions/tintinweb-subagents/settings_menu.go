@@ -120,7 +120,7 @@ func (a *app) saveAndEmitChanged(snapshot subagentsSettings, successMsg string) 
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
-	persisted := cwd != "" && saveSubagentsSettings(snapshot, cwd)
+	persisted := cwd != "" && settingsWriter(snapshot, cwd)
 	if ctx, ok := a.context(); ok {
 		guard(func() {
 			_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": settingsAsMap(snapshot), "persisted": persisted})

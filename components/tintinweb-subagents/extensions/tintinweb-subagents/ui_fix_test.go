@@ -117,9 +117,9 @@ func TestFleetListIsBoundAgainAfterAShutdown(t *testing.T) {
 
 func TestViewerMarkdownPersistFailureWarnsAndAnnounces(t *testing.T) {
 	r := startRig(t)
-	old := persistViewerMarkdown
-	persistViewerMarkdown = func(string, viewerMarkdownMode) bool { return false }
-	t.Cleanup(func() { persistViewerMarkdown = old })
+	old := settingsWriter
+	settingsWriter = func(subagentsSettings, string) bool { return false }
+	t.Cleanup(func() { settingsWriter = old })
 	r.app.ui.chooseViewerMarkdown(viewerMarkdownAll)
 	r.waitEmitted("subagents:settings_changed")
 	found := false
@@ -133,7 +133,7 @@ func TestViewerMarkdownPersistFailureWarnsAndAnnounces(t *testing.T) {
 	}
 	// A successful write is silent but still announced.
 	before := len(notices(r))
-	persistViewerMarkdown = func(string, viewerMarkdownMode) bool { return true }
+	settingsWriter = func(subagentsSettings, string) bool { return true }
 	r.app.ui.chooseViewerMarkdown(viewerMarkdownOff)
 	time.Sleep(50 * time.Millisecond)
 	if len(notices(r)) != before {

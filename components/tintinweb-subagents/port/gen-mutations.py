@@ -732,7 +732,6 @@ m("meta-empty-phases-dropped", "workflow_meta.go", "\tif m.Phases == nil {\n\t\t
 m("task-pause-overwrites-settled", "workflow_task.go", "\tif task.Status != runRunning {\n\t\treturn false\n\t}\n\ttask.Status = runPaused", "\ttask.Status = runPaused")
 m("task-resume-overwrites-settled", "workflow_task.go", "\tif task.Status != runPaused {\n\t\treturn false\n\t}\n\ttask.Status = runRunning", "\ttask.Status = runRunning")
 m("utf16-prefix-split-pair", "workflow_task.go", "\t		if units < n {\n\t\t\t\treturn s[:i] + \"\\uFFFD\"\n\t\t\t}\n", "")
-m("agents-menu-not-refused", "tools.go", "lines = append(lines, \"  \"+refusalText(", "_ = (refusalText(")
 m("resume-target-names-menu", "workflow_task.go", "Resume it once it has finished.`", "Stop it from /agents → Workflows before resuming it.`")
 # cron.go: croner's calendar walk (the differential in cron_test.go replays croner's own answers)
 m("cron-dom-dow-and", "cron.go", "match = match || dow != 0", "match = match && dow != 0")

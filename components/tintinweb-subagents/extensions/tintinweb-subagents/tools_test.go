@@ -118,16 +118,3 @@ func TestSteer(t *testing.T) {
 	eq(t, r.must("get_subagent_result", obj{"agent_id": "nope"}), `Agent not found: "nope". It may have been cleaned up.`)
 }
 
-func TestAgentsCommandListsTypesAndAgents(t *testing.T) {
-	r := startRig(t)
-	r.must("Agent", obj{"prompt": "p", "description": "scan", "subagent_type": "Explore"})
-	r.fleet.wait(t, 1)
-	r.Command("agents", "")
-	var msg string
-	for _, c := range r.CallsTo("ui.notify") {
-		msg, _ = c.Args["message"].(string)
-	}
-	for _, want := range []string{"Agent types:", "general-purpose [default]", "Explore [default]", "Plan [default]", "Agents:", "scan"} {
-		eq(t, strings.Contains(msg, want), true)
-	}
-}

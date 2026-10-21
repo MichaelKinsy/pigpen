@@ -260,19 +260,22 @@ func TestUISettings(t *testing.T) {
 			t.Errorf("%+v", s)
 		}
 	})
-	t.Run("a mode chosen with m is written to the project file", func(t *testing.T) {
-		cwd := t.TempDir()
-		writeProjectSettings(t, cwd, `{"showCost": true}`)
-		if !persistViewerMarkdown(cwd, viewerMarkdownAll) {
-			t.Fatal("not persisted")
+	t.Run("a mode chosen with m is written to the project file, with the whole snapshot", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.app.ui.chooseViewerMarkdown(viewerMarkdownAll)
+		r.waitEmitted("subagents:settings_changed")
+		data, err := os.ReadFile(filepath.Join(r.app.cwdValue(), ".pi", "subagents.json"))
+		if err != nil {
+			t.Fatal(err)
 		}
-		data, _ := os.ReadFile(filepath.Join(cwd, ".pi", "subagents.json"))
 		var raw map[string]any
 		if err := json.Unmarshal(data, &raw); err != nil {
 			t.Fatal(err)
 		}
-		if raw["viewerMarkdown"] != "all" || raw["showCost"] != true {
-			t.Errorf("%v", raw)
+		// Every setting is written back (a key missing would be erased), but workflowsEnabled and fallbackSubagent,
+		// which are written only when the user chose them.
+		if raw["viewerMarkdown"] != "all" || raw["showCost"] != true || len(raw) != 22 {
+			t.Errorf("%d keys: %v", len(raw), raw)
 		}
 	})
 	t.Run("the display settings are no longer refused", func(t *testing.T) {
