@@ -39,6 +39,12 @@ up in a query; every report says how many entries it left out (`off_branch_entri
 `session.offBranchEntries`). An entry whose parent is not in the file starts a new root, as in
 Pi's `getBranch`. Entries without a `parentId` (v1 sessions) follow file order.
 
+To read another branch, pass `leaf`, an entry id from the session file: the tool then reads the branch that ends at that entry
+(for an abandoned branch, its last entry; any entry works, so `leaf` also cuts a branch short). The reports say which leaf they
+read (`leaf:`, JSON `session.leaf`) and count the entries off that branch (`off_branch_entries`), and the next-page and retrieval
+hints carry it. `leaf` applies to every mode; an id that is not in the file is an error that names it. Without `leaf` nothing
+changes. Session files whose entries have no ids (v1) have no branches to select.
+
 On the branch the transcript keeps, in order:
 
 | Entry | Becomes |

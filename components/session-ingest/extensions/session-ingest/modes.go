@@ -59,7 +59,7 @@ func handleTurn(session sessionFile, params map[string]any, format, path string,
 	if format == "json" {
 		return report, nil
 	}
-	content := truncateOutput(formatTurnMarkdown(report, session.Metadata), path, "turn", start, limit, 0)
+	content := truncateOutput(session.Metadata.Leaf, formatTurnMarkdown(report, session.Metadata), path, "turn", start, limit, 0)
 	return sdk.ToolResult{
 		Content: content,
 		Preview: fmt.Sprintf("Turn %d of %d — %d messages", turn, total, len(report.Messages)),
@@ -217,7 +217,7 @@ func handleTools(session sessionFile, params map[string]any, format, path string
 		return report, nil
 	}
 	return sdk.ToolResult{
-		Content: truncateOutput(formatToolsMarkdown(report), path, "tools", start, limit, report.FilesTotal),
+		Content: truncateOutput(session.Metadata.Leaf, formatToolsMarkdown(report), path, "tools", start, limit, report.FilesTotal),
 		Preview: fmt.Sprintf("%d tool calls across %d tools, %d files", report.TotalCalls, len(report.Tools), report.FilesTotal),
 	}, nil
 }
@@ -360,7 +360,7 @@ func handleStats(session sessionFile, format, path string) (any, error) {
 		return report, nil
 	}
 	return sdk.ToolResult{
-		Content: truncateOutput(formatStatsMarkdown(report), path, "stats", 0, 0, 0),
+		Content: truncateOutput(session.Metadata.Leaf, formatStatsMarkdown(report), path, "stats", 0, 0, 0),
 		Preview: fmt.Sprintf("%d turns, %d messages, %d tokens, $%.4f", report.Turns, report.Messages, report.Usage.Total, report.Usage.Cost),
 	}, nil
 }
