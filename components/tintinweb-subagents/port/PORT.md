@@ -57,11 +57,21 @@ components; this port registers none.
 
 ## Results (this revision)
 
+- Scoped checks for the final head: `go vet` clean, `go test -race -count=1 ./...` passes; GOOS evidence from
+  `scoped.mjs`: `requested windows -> go env GOOS prints windows`, `darwin -> darwin`, `linux -> linux`, each followed by
+  `go vet ./...` exit 0. `npm run check` and `npm run generate` (no diff) pass.
 - `go test -race ./...` passes, also `-count=24` (twice). A later `-count=24` run found a data race the first `-count=25` run had missed: `manager.run` set an agent's cancel func without the lock that `abort` reads it under (stopping an agent right after spawning it, as a session end does); fixed, with `TestAbortRightAfterSpawnIsRaceFree` red first. The runner tests re-execute the test binary as a fake `pig --mode rpc`.
-- `pigeq check` against goldens **recorded from the original under Pi 1.0.3**: 3 of 3 scenarios, plus `port-gaps` and
-  `exec-coverage`. `tool-tools` compares the whole model request, so the three tool definitions, the Agent guidelines in
+- `pigeq check` against goldens **recorded from the original** (the first three under Pi 1.0.3, the two resume scenarios
+  under Pi 1.3.0.1402973a): 5 of 5 scenarios, plus `port-gaps` and `exec-coverage`. `tool-tools` compares the whole model request, so the three tool definitions, the Agent guidelines in
   the system prompt and the tool list equal Pi's.
-- `pigeq mutate --unit`: 81 mutations, all killed (the first run killed 58; 16 survived and 7 did not build; each
+- `pigeq mutate --unit-only` after the sessions review fixes: **156 mutations**. Nine entries had gone stale when the
+  sessions slice moved code (five refusal mutants of behavior that is ported now were dropped, four were re-targeted), four
+  more did not build and were fixed; 52 new ones cover the lifecycle (a kept child and its context, a stop of an in-memory
+  conversation, the cleanup timer, shutdown, session start and switch, `clearCompleted`), the scope flags, the session name,
+  `APPEND_SYSTEM.md`, JS trim, rooted paths, the package manifest shape, tombstone order, mention matching, lazy
+  `inherit_context`, the spawn RPC options and `rememberAgents`. The last full run killed 155 of 156 and left
+  `setting-notice-repeats` (its test, `the same settings are announced once`, was added after that run and kills it).
+  The earlier history: 81 mutations, all killed (the first run killed 58; 16 survived and 7 did not build; each
   survivor got a test in `extra_test.go` / `extra2_test.go` and each invalid mutation was rewritten). After the review
   fixes (finding 10): **101 mutations, all killed by the unit tests** (`--unit-only`); the first run after the fixes left
   three (a setting that never reached the child, a process-group signal the test waited long enough to miss, and a test

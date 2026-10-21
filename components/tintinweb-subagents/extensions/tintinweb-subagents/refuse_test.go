@@ -200,6 +200,12 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true, "scopeModels": true}`)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (scopeModels: true, showCost: true)")})
 	})
+	t.Run("the same settings are announced once", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		r.Fire("session_start", obj{"reason": "resume"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()
 		t.Setenv("PIG_CODING_AGENT_DIR", dir)
