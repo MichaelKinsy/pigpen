@@ -7,6 +7,10 @@ RETARGET: name -> (file, find, replace) for code that still exists in another sh
 import glob, json, os, sys
 
 RETARGET = {
+ "rd-name-boundary-start": ("logredaction.go", "if i == 0 || isSepByte(s[i-1]) {", "if i > 0 && isSepByte(s[i-1]) {"),
+ "rd-name-boundary-end": ("logredaction.go", "if j == len(s) || isSepByte(s[j]) || (s[j] == 's' && (j+1 == len(s) || isSepByte(s[j+1]))) {", "if j < len(s) && (isSepByte(s[j]) || (s[j] == 's' && j+1 < len(s) && isSepByte(s[j+1]))) {"),
+ "rd-camel": ("logredaction.go", "|| matchesCamelKey(name)", "|| false"),
+ "rd-lower": ("logredaction.go", "matchesSensitive(asciiLower(name))", "matchesSensitive(name)"),
  "js-seen-add": ("logjsonsafe.go", "\t\ts.small = append(s.small, id)\n", "\t\t_ = id\n"),
  "js-seen-check": ("logjsonsafe.go", "for _, k := range s.small {\n\t\tif k == id {", "for _, k := range s.small {\n\t\tif k != id {"),
  "js-array-key": ("logjsonsafe.go", "key = strconv.Itoa(i)", 'key = ""'),

@@ -158,19 +158,19 @@
  {
   "name": "rd-name-boundary-start",
   "file": "logredaction.go",
-  "find": "(?:^|[-_])keys?(?:$|[-_])",
-  "replace": "(?:[-_])keys?(?:$|[-_])"
+  "find": "if i == 0 || isSepByte(s[i-1]) {",
+  "replace": "if i > 0 && isSepByte(s[i-1]) {"
  },
  {
   "name": "rd-name-boundary-end",
   "file": "logredaction.go",
-  "find": "(?:^|[-_])keys?(?:$|[-_])",
-  "replace": "(?:^|[-_])keys?(?:[-_])"
+  "find": "if j == len(s) || isSepByte(s[j]) || (s[j] == 's' && (j+1 == len(s) || isSepByte(s[j+1]))) {",
+  "replace": "if j < len(s) && (isSepByte(s[j]) || (s[j] == 's' && j+1 < len(s) && isSepByte(s[j+1]))) {"
  },
  {
   "name": "rd-camel",
   "file": "logredaction.go",
-  "find": "|| camelKeyPattern.MatchString(name)",
+  "find": "|| matchesCamelKey(name)",
   "replace": "|| false"
  },
  {
@@ -188,8 +188,8 @@
  {
   "name": "rd-lower",
   "file": "logredaction.go",
-  "find": "sensitiveNamePattern.MatchString(asciiLower(name))",
-  "replace": "sensitiveNamePattern.MatchString(name)"
+  "find": "matchesSensitive(asciiLower(name))",
+  "replace": "matchesSensitive(name)"
  },
  {
   "name": "rd-lower-range",
