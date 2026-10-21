@@ -8,7 +8,7 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (620 exact twins, 255 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (661 exact twins, 214 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
@@ -129,8 +129,9 @@ and calls `RewriteSearchQuery` from the curator's rewrite hook. `fetch-answer-st
 `page-query`, `query-cold-abort`, `query-rewrite`, `summary-cold-deadline`, `summary-model-scope`,
 `summary-opencode-headers` and `summary-provider-routing` have no named skip left in the slice (one twin of
 `lazy-extract-load` omits the module-load marker, see below).
+`pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` at the head of the stack through this slice: 661 exact twins, 214 named skips.
 
-Wiring: the session's model state reaches the tools through `SideCallContext` (`sidecall.go`), attached to the request's
+Wiring: `bridgeContext` attaches two session views to a request's context: `ExtensionContext` (the model providers' credential reads: registry `GetAll`, `Find`, `GetApiKeyAndHeaders`, session id) and `SideCallContext` (the model calls below). They read the same Pi `ExtensionContext`; the second adds `getAvailable`, `complete` and `scopedModels`. The session's model state reaches the tools through `SideCallContext` (`sidecall.go`), attached to the request's
 context in `bridgeContext` and read by `answerPages` (`fetch_answer.go`). It carries what the original reads off Pi's
 `ExtensionContext`: `ctx.model`, `ctx.modelRegistry` (`find`, `getAvailable`, `getApiKeyAndHeaders`, `complete`),
 `ctx.scopedModels` and the session id. The SDK implementation uses `Context.ModelRegistry()` (`Find`, `GetAvailable`,
