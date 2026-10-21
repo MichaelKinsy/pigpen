@@ -83,6 +83,8 @@ test('the vendored original is compared with the pinned upstream commit', () => 
     mkdirSync(repo);
     cpSync(join(box.component, 'port', 'oracle', 'skills'), join(repo, 'skills'), { recursive: true });
     cpSync(join(box.component, 'port', 'oracle', 'LICENSE'), join(repo, 'LICENSE'));
+    // The bootstrap extension and its test are vendored from the same commit, so the sandbox upstream carries them too.
+    for (const dir of ['.pi', 'tests']) cpSync(join(box.component, 'port', 'oracle', dir), join(repo, dir), { recursive: true });
     const git = (...args) => execFileSync('git', ['-C', repo, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', '-c', 'commit.gpgsign=false', ...args], { encoding: 'utf8' }).trim();
     git('init', '-q');
     git('add', '-A');
