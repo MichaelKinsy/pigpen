@@ -8,6 +8,8 @@
     "delegation",
     "agents",
     "chains",
+    "skill",
+    "prompt",
     "extension",
     "pigpen"
   ],
