@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 )
@@ -366,58 +365,57 @@ func (r *Runtime) CuratorCommand(args string) {
 	r.sendFollowUp("curator-config", textBlocks(label), map[string]any{"workflow": workflow}, false)
 }
 
-// CookieAttempt is one browser profile the cookie reader tried.
-type CookieAttempt struct{ Browser, Profile, Status string }
-
-// GoogleAccountSource is the part of gemini-web.ts that /google-account reads. The cookie reader
-// belongs to the authenticated-fetch slice, which installs its implementation with
-// SetGoogleAccountSource; the default knows the opt-in and refuses what needs the reader.
+// GoogleAccountSource is the part of gemini-web.ts that /google-account reads. The command reads the
+// real cookie reader of the authenticated-fetch slice (cookieGoogleAccount); SetGoogleAccountSource
+// replaces it for the tests.
 type GoogleAccountSource interface {
 	// CookieAccessAllowed is isBrowserCookieAccessAllowed.
 	CookieAccessAllowed() (bool, error)
 	// Available is isGeminiWebAvailable: the cookies, or nil when Gemini Web cannot be used.
 	Available(ctx context.Context) (cookies any, err error)
-	// Diagnostic and Attempts are getGeminiWebAvailabilityDiagnostic and its details.
+	// Diagnostic and DiagnosticDetails are getGeminiWebAvailabilityDiagnostic and ...Details.
 	Diagnostic() string
-	Attempts() []CookieAttempt
+	DiagnosticDetails() *BrowserCookieDiagnosticDetails
 	// ActiveEmail is getActiveGoogleEmail: "" when it cannot be determined.
 	ActiveEmail(ctx context.Context, cookies any) string
 }
 
-var googleAccountSource GoogleAccountSource = refusingGoogleAccount{}
+var googleAccountSource GoogleAccountSource = cookieGoogleAccount{}
 
-// SetGoogleAccountSource installs the cookie reader and returns a restore function.
+// SetGoogleAccountSource replaces the cookie reader and returns a restore function; nil restores the real one.
 func SetGoogleAccountSource(s GoogleAccountSource) func() {
 	prev := googleAccountSource
 	if s == nil {
-		s = refusingGoogleAccount{}
+		s = cookieGoogleAccount{}
 	}
 	googleAccountSource = s
 	return func() { googleAccountSource = prev }
 }
 
-// refusingGoogleAccount is the source of a build without the browser cookie reader.
-type refusingGoogleAccount struct{}
+// cookieGoogleAccount reads the browser cookies of gemini-web.ts and gemini-web-config.ts.
+type cookieGoogleAccount struct{}
 
-func (refusingGoogleAccount) CookieAccessAllowed() (bool, error) {
-	if os.Getenv("PI_ALLOW_BROWSER_COOKIES") == "1" || os.Getenv("FEYNMAN_ALLOW_BROWSER_COOKIES") == "1" {
-		return true, nil
+func (cookieGoogleAccount) CookieAccessAllowed() (bool, error) { return IsBrowserCookieAccessAllowed() }
+
+func (cookieGoogleAccount) Available(ctx context.Context) (any, error) {
+	cookies, err := IsGeminiWebAvailable(ctx, "")
+	if cookies == nil {
+		return nil, err
 	}
-	root, err := ReadConfigRoot()
-	if err != nil {
-		return false, err
-	}
-	return root["allowBrowserCookies"] == true, nil
+	return cookies, err
 }
 
-func (refusingGoogleAccount) Available(context.Context) (any, error) {
-	return nil, unsupported("Gemini Web (browser cookies)")
+func (cookieGoogleAccount) Diagnostic() string { return geminiWebAvailabilityDiagnostic() }
+func (cookieGoogleAccount) DiagnosticDetails() *BrowserCookieDiagnosticDetails {
+	return GeminiWebAvailabilityDiagnosticDetails()
 }
-func (refusingGoogleAccount) Diagnostic() string                      { return "" }
-func (refusingGoogleAccount) Attempts() []CookieAttempt               { return nil }
-func (refusingGoogleAccount) ActiveEmail(context.Context, any) string { return "" }
 
-// GoogleAccountCommand is the /google-account command.
+func (cookieGoogleAccount) ActiveEmail(ctx context.Context, cookies any) string {
+	m, _ := cookies.(CookieMap)
+	return ActiveGoogleEmail(ctx, m)
+}
+
+// GoogleAccountCommand is the /google-account command (index.ts:3570-3615).
 func (r *Runtime) GoogleAccountCommand(ctx context.Context) error {
 	src := googleAccountSource
 	allowed, err := src.CookieAccessAllowed()
@@ -431,34 +429,32 @@ func (r *Runtime) GoogleAccountCommand(ctx context.Context) error {
 	}
 	cookies, err := src.Available(ctx)
 	if err != nil {
-		if u := asUnsupported(err); u != nil {
-			r.sendFollowUp("google-account", textBlocks(u.Error()), map[string]any{"available": false, "cookieAccessAllowed": true, "error": u.Error()}, true)
-			return nil
-		}
 		return err
 	}
 	if cookies == nil {
 		diagnostic := src.Diagnostic()
-		attempts := formatCookieAttempts(src.Attempts())
+		details := src.DiagnosticDetails()
+		var attempts []BrowserCookieAttempt
+		if details != nil {
+			attempts = details.Attempts
+		}
+		attempted := formatCookieAttempts(attempts)
 		text := "Gemini Web is unavailable. Sign into gemini.google.com in a supported Chromium-based browser."
 		if diagnostic != "" {
 			text = "Gemini Web is unavailable: " + diagnostic
-			if attempts != "" {
-				text += " Attempted browser profiles: " + attempts + "."
+			if attempted != "" {
+				text += " Attempted browser profiles: " + attempted + "."
 			}
 		}
-		details := map[string]any{"available": false, "cookieAccessAllowed": true}
+		var diagnosticValue, detailsValue any
 		if diagnostic != "" {
-			details["diagnostic"] = diagnostic
+			diagnosticValue = diagnostic
 		}
-		if list := src.Attempts(); len(list) > 0 {
-			rows := make([]map[string]any, len(list))
-			for i, a := range list {
-				rows[i] = map[string]any{"browser": a.Browser, "profile": a.Profile, "status": a.Status}
-			}
-			details["cookieDiagnostic"] = map[string]any{"attempts": rows}
+		if details != nil {
+			detailsValue = details
 		}
-		r.sendFollowUp("google-account", textBlocks(text), details, true)
+		r.sendFollowUp("google-account", textBlocks(text),
+			map[string]any{"available": false, "cookieAccessAllowed": true, "diagnostic": diagnosticValue, "cookieDiagnostic": detailsValue}, true)
 		return nil
 	}
 	email := src.ActiveEmail(ctx, cookies)
@@ -472,7 +468,7 @@ func (r *Runtime) GoogleAccountCommand(ctx context.Context) error {
 	return nil
 }
 
-func formatCookieAttempts(attempts []CookieAttempt) string {
+func formatCookieAttempts(attempts []BrowserCookieAttempt) string {
 	parts := make([]string, len(attempts))
 	for i, a := range attempts {
 		parts[i] = fmt.Sprintf("%s/%s (%s)", a.Browser, a.Profile, a.Status)

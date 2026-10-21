@@ -200,6 +200,7 @@ func ExtractVideo(ctx context.Context, info VideoFileInfo, o ExtractOptions) (*E
 		msg := "Local video " + display + " is " + sizeMB + " MiB, above configured video.maxSizeMB (" + maxMB + " MiB) for Gemini analysis. Use timestamp/frames for ffmpeg frame extraction, increase video.maxSizeMB, or compress the file."
 		return &ExtractedContent{URL: info.AbsolutePath, Title: display, Content: msg, Error: errp(msg)}, nil
 	}
+	act := logFetchStart("video:" + display)
 	result, err := tryVideoGeminiAPI(ctx, info, prompt, model)
 	if err != nil {
 		return nil, err
@@ -210,6 +211,11 @@ func ExtractVideo(ctx context.Context, info VideoFileInfo, o ExtractOptions) (*E
 		}
 	}
 	if result == nil {
+		if ctx.Err() != nil {
+			act.complete(0)
+		} else {
+			act.logError("all video extraction paths failed")
+		}
 		return nil, nil
 	}
 	if CanAttachImages() {
@@ -217,6 +223,7 @@ func ExtractVideo(ctx context.Context, info VideoFileInfo, o ExtractOptions) (*E
 			result.Thumbnail = &thumb
 		}
 	}
+	act.complete(200)
 	return result, nil
 }
 

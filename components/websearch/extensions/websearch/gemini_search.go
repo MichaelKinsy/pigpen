@@ -46,11 +46,18 @@ func geminiProviderAvailable(ctx context.Context, _ FullSearchOptions) bool {
 func searchWithGeminiAPI(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
 	tctx, cancel := withTimeout(ctx, geminiSearchTimeout)
 	defer cancel()
-	res, err := searchWithGeminiAPIOnce(tctx, ctx, query, o)
-	return res, timeoutFix(ctx, tctx, err)
+	var act activityRef
+	res, err := searchWithGeminiAPIOnce(tctx, ctx, query, o, &act)
+	err = timeoutFix(ctx, tctx, err)
+	if err != nil {
+		// The catch block of searchWithGeminiApi (gemini-search.ts:871-880); a failure before the request opened no entry.
+		act.failedErr(err)
+	}
+	return res, err
 }
 
-func searchWithGeminiAPIOnce(tctx, ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
+// searchWithGeminiAPIOnce opens the activity entry in *act once the credentials are known (gemini-search.ts:839).
+func searchWithGeminiAPIOnce(tctx, ctx context.Context, query string, o SearchOptions, act *activityRef) (*SearchResponse, error) {
 	c := loadGeminiCfg()
 	adc, err := c.adcAvailable()
 	if err != nil {
@@ -69,6 +76,7 @@ func searchWithGeminiAPIOnce(tctx, ctx context.Context, query string, o SearchOp
 	if apiKey == "" && !gw && !adc {
 		return nil, nil
 	}
+	*act = logAPIStart(query)
 	// searchModel: Search has already validated the whole config (getSearchConfig upstream).
 	model := DefaultGeminiModel
 	if root, err := c.lax(); err == nil {
@@ -88,6 +96,7 @@ func searchWithGeminiAPIOnce(tctx, ctx context.Context, query string, o SearchOp
 	if err != nil {
 		return nil, err
 	}
+	act.complete(res.StatusCode)
 	answer := geminiCandidateText(data)
 	chunks, _ := jsonPath(data, "candidates", 0, "groundingMetadata", "groundingChunks").([]any)
 	results := resolveGroundingChunks(ctx, chunks)
@@ -142,10 +151,12 @@ func searchWithGeminiWeb(ctx context.Context, query string, o SearchOptions) (*S
 	if err != nil || cookies == nil {
 		return nil, err
 	}
+	act := logAPIStart(query)
 	text, err := geminiWebClient.Query(ctx, buildGeminiSearchPrompt(query, o), cookies, geminiSearchTimeout)
 	if err != nil {
-		return nil, err
+		return nil, act.failedErr(err)
 	}
+	act.complete(200)
 	return &SearchResponse{Answer: text, Results: extractGeminiSourceURLs(text)}, nil
 }
 

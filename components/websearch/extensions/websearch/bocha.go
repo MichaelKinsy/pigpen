@@ -96,9 +96,10 @@ func SearchWithBocha(ctx context.Context, query string, o SearchOptions) (*Searc
 	}
 	numResults := normalizeCountDefault(o.NumResults, 8)
 	filters := normalizeDomainFilters(o.DomainFilter)
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
-	data, err := restCallA(ctx, tctx, "Bocha API", apiKey, bochaSearchURL, RequestInit{Method: "POST",
+	data, status, err := restCallA(ctx, tctx, act, "Bocha API", apiKey, bochaSearchURL, RequestInit{Method: "POST",
 		Body:   marshalJS(bochaBody{Query: query, Count: numResults, Freshness: bochaFreshness(o.RecencyFilter), Summary: true}),
 		Header: http.Header{"Authorization": {"Bearer " + apiKey}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}}, []string{"Authorization"})
 	if err != nil {
@@ -106,8 +107,12 @@ func SearchWithBocha(ctx context.Context, query string, o SearchOptions) (*Searc
 	}
 	results, err := parseBochaResponse(data)
 	if err != nil {
-		return nil, redactErr(err, apiKey)
+		// Unlike the other envelope checks, bocha.ts:189-197 records the (redacted) message instead of the status.
+		err = redactErr(err, apiKey)
+		act.logError(err.Error())
+		return nil, err
 	}
+	act.complete(status)
 	kept := []SearchResult{}
 	for _, r := range results {
 		if filters.matches(r.URL) {

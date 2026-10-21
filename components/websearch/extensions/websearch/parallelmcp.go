@@ -227,80 +227,86 @@ func asList(v any) []any {
 
 // SearchWithParallelMCP searches through the Parallel MCP server.
 func SearchWithParallelMCP(ctx context.Context, query string, o SearchOptions) (*SearchResponse, error) {
-	payload, err := callParallelMCP(ctx, "web_search", map[string]any{"objective": query, "search_queries": []string{parallelMCPQuery(query, o)}})
-	if err != nil {
-		return nil, err
-	}
-	max := parallelCount(o.NumResults)
-	f := normalizeDomainFilters(o.DomainFilter)
-	var results []parallelMCPResult
-	for _, r := range parallelMCPResults(payload) {
-		if f.matches(r.URL) {
-			results = append(results, r)
+	act := logAPIStart(query)
+	return logged(act, "", func() (*SearchResponse, error) {
+		payload, err := callParallelMCP(ctx, "web_search", map[string]any{"objective": query, "search_queries": []string{parallelMCPQuery(query, o)}})
+		if err != nil {
+			return nil, err
 		}
-	}
-	if math.IsNaN(max) {
-		results = nil
-	} else if int(max) < len(results) {
-		results = results[:int(max)]
-	}
-	resp := &SearchResponse{Results: []SearchResult{}}
-	var answer []string
-	var inline []ExtractedContent
-	for i, r := range results {
-		title := r.Title
-		if title == "" {
-			title = fmt.Sprintf("Source %d", i+1)
+		max := parallelCount(o.NumResults)
+		f := normalizeDomainFilters(o.DomainFilter)
+		var results []parallelMCPResult
+		for _, r := range parallelMCPResults(payload) {
+			if f.matches(r.URL) {
+				results = append(results, r)
+			}
 		}
-		snippet := ""
-		if len(r.Excerpts) > 0 {
-			snippet = jsSlice(collapseWS(r.Excerpts[0]), 0, 200)
+		if math.IsNaN(max) {
+			results = nil
+		} else if int(max) < len(results) {
+			results = results[:int(max)]
 		}
-		resp.Results = append(resp.Results, SearchResult{Title: title, URL: r.URL, Snippet: snippet})
-		if c := jsTrim(strings.Join(r.Excerpts, " ")); c != "" {
-			answer = append(answer, c+"\nSource: "+title+" ("+r.URL+")")
+		resp := &SearchResponse{Results: []SearchResult{}}
+		var answer []string
+		var inline []ExtractedContent
+		for i, r := range results {
+			title := r.Title
+			if title == "" {
+				title = fmt.Sprintf("Source %d", i+1)
+			}
+			snippet := ""
+			if len(r.Excerpts) > 0 {
+				snippet = jsSlice(collapseWS(r.Excerpts[0]), 0, 200)
+			}
+			resp.Results = append(resp.Results, SearchResult{Title: title, URL: r.URL, Snippet: snippet})
+			if c := jsTrim(strings.Join(r.Excerpts, " ")); c != "" {
+				answer = append(answer, c+"\nSource: "+title+" ("+r.URL+")")
+			}
+			if c := strings.Join(r.Excerpts, "\n\n"); c != "" {
+				inline = append(inline, ExtractedContent{URL: r.URL, Title: r.Title, Content: c})
+			}
 		}
-		if c := strings.Join(r.Excerpts, "\n\n"); c != "" {
-			inline = append(inline, ExtractedContent{URL: r.URL, Title: r.Title, Content: c})
+		resp.Answer = strings.Join(answer, "\n\n")
+		if o.IncludeContent && len(inline) > 0 {
+			resp.InlineContent = inline
 		}
-	}
-	resp.Answer = strings.Join(answer, "\n\n")
-	if o.IncludeContent && len(inline) > 0 {
-		resp.InlineContent = inline
-	}
-	return resp, nil
+		return resp, nil
+	})
 }
 
 // ExtractWithParallelMCP fetches one URL through the MCP server's web_fetch tool.
 func ExtractWithParallelMCP(ctx context.Context, rawURL string, o ExtractOptions) (*ExtractedContent, error) {
-	args := map[string]any{"urls": []string{rawURL}, "full_content": true}
-	if obj := jsTrim(o.Prompt); obj != "" {
-		args["objective"] = jsSlice(obj, 0, 200)
-	}
-	payload, err := callParallelMCP(ctx, "web_fetch", args)
-	if err != nil {
-		return nil, err
-	}
-	results := parallelMCPResults(payload)
-	var result *parallelMCPResult
-	for i := range results {
-		if results[i].URL == rawURL {
-			result = &results[i]
-			break
+	act := logFetchStart(rawURL)
+	return logged(act, "", func() (*ExtractedContent, error) {
+		args := map[string]any{"urls": []string{rawURL}, "full_content": true}
+		if obj := jsTrim(o.Prompt); obj != "" {
+			args["objective"] = jsSlice(obj, 0, 200)
 		}
-	}
-	if result == nil && len(results) > 0 {
-		result = &results[0]
-	}
-	if result == nil {
-		return nil, nil
-	}
-	content := jsTrim(result.FullText)
-	if content == "" {
-		content = strings.Join(result.Excerpts, "\n\n")
-	}
-	if content == "" {
-		return nil, nil
-	}
-	return &ExtractedContent{URL: result.URL, Title: result.Title, Content: content}, nil
+		payload, err := callParallelMCP(ctx, "web_fetch", args)
+		if err != nil {
+			return nil, err
+		}
+		results := parallelMCPResults(payload)
+		var result *parallelMCPResult
+		for i := range results {
+			if results[i].URL == rawURL {
+				result = &results[i]
+				break
+			}
+		}
+		if result == nil && len(results) > 0 {
+			result = &results[0]
+		}
+		if result == nil {
+			return nil, nil
+		}
+		content := jsTrim(result.FullText)
+		if content == "" {
+			content = strings.Join(result.Excerpts, "\n\n")
+		}
+		if content == "" {
+			return nil, nil
+		}
+		return &ExtractedContent{URL: result.URL, Title: result.Title, Content: content}, nil
+	})
 }

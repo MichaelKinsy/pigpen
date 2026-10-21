@@ -30,9 +30,10 @@ func SearchWithSerpBase(ctx context.Context, query string, o SearchOptions) (*Se
 	if tbs, ok := googleRecencyTBS[o.RecencyFilter]; ok {
 		params = append(params, "tbs="+formEscape(tbs))
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
-	data, err := restCallA(ctx, tctx, "SerpBase API", apiKey, serpbaseAPIURL+"?"+strings.Join(params, "&"),
+	data, status, err := restCallA(ctx, tctx, act, "SerpBase API", apiKey, serpbaseAPIURL+"?"+strings.Join(params, "&"),
 		RequestInit{Method: "GET", Header: http.Header{"Accept": {"application/json"}}}, nil)
 	if err != nil {
 		return nil, err
@@ -66,6 +67,8 @@ func SearchWithSerpBase(ctx context.Context, query string, o SearchOptions) (*Se
 	if !found {
 		return nil, fmt.Errorf("SerpBase API returned invalid response: expected organic_results array")
 	}
+	// serpbase.ts:195: parseResponse runs outside the try block, so a bad envelope leaves the entry open.
+	act.complete(status)
 	results := []SearchResult{}
 	for _, raw := range organic {
 		item, ok := jsonObject(raw)

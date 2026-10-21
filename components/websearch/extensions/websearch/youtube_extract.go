@@ -99,6 +99,11 @@ func ExtractYouTube(ctx context.Context, rawURL, prompt, model string) (*Extract
 	if model == "" {
 		model = cfg.PreferredModel
 	}
+	idLabel := videoID
+	if idLabel == "" {
+		idLabel = "video"
+	}
+	act := logFetchStart("youtube.com/" + idLabel)
 	var attempts attemptErrors
 	result, err := tryYouTubeGeminiWeb(ctx, canonical, prompt, model, &attempts)
 	if err == nil && result == nil {
@@ -117,15 +122,22 @@ func ExtractYouTube(ctx context.Context, rawURL, prompt, model string) (*Extract
 				result.Thumbnail = thumb
 			}
 		}
+		if result.Error != nil {
+			act.complete(0)
+		} else {
+			act.complete(200)
+		}
 		return result, nil
 	}
 	if ctx.Err() != nil {
+		act.complete(0)
 		return nil, nil
 	}
 	msg := youtubeNoAccess
 	if len(attempts) > 0 {
 		msg = "Could not extract YouTube video content.\n\n- " + strings.Join(attempts, "\n- ")
 	}
+	act.logError(msg)
 	return &ExtractedContent{URL: rawURL, Error: errp(msg)}, nil
 }
 

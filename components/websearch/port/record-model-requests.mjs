@@ -127,6 +127,8 @@ async function run(c) {
 	const options = c.options ?? {};
 	const suffix = `?case=${++counter}`;
 	let result, error;
+	const { activityMonitor } = await import(oracle("activity.ts"));
+	activityMonitor.clear();
 	try {
 		if (c.provider === "xai") result = await (await import(oracle("xai-search.ts") + suffix)).searchWithXai(c.query, options, ctx);
 		else if (c.provider === "kimi") result = await (await import(oracle("kimi-search.ts") + suffix)).searchWithKimi(c.query, options, ctx);
@@ -136,7 +138,9 @@ async function run(c) {
 	} catch (err) {
 		error = err.message;
 	}
-	return { requests, ...(error === undefined ? { result } : { error }) };
+	// What the original's activity monitor holds after the call (activity.ts), without ids and times.
+	const activity = activityMonitor.getEntries().map(({ type, query, url, status, error }) => ({ type, query, url, status, error }));
+	return { requests, ...(error === undefined ? { result } : { error }), activity };
 }
 
 const recorded = [];

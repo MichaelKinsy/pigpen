@@ -166,7 +166,7 @@ func useFakeProvider(t *testing.T, name string, search func(ctx context.Context,
 	if old != nil {
 		label = old.label
 	}
-	providerTable[name] = &providerDef{name: name, label: label, available: func() bool { return true }, search: search}
+	providerTable[name] = &providerDef{name: name, label: label, available: plainAvail(func() bool { return true }), search: search}
 	t.Cleanup(func() { providerTable[name] = old })
 }
 
@@ -318,13 +318,6 @@ func (c *curatorClient) page() string {
 	return string(data)
 }
 
-func readFile(t *testing.T, path string) string {
-	t.Helper()
-	data, err := os.ReadFile(path)
-	noErr(t, err)
-	return string(data)
-}
-
 func recvURL(t *testing.T, ch <-chan string) string {
 	t.Helper()
 	select {
@@ -349,8 +342,8 @@ var errBrowser = errors.New("spawn xdg-open ENOENT")
 
 func detailString(o ToolOutput, key string) string { s, _ := o.Details[key].(string); return s }
 
-// readReadme reads the Package's README; a module copied alone (the mutation runs) has none.
-func readReadme(t *testing.T) string {
+// readPackageReadme reads the Package's README; a module copied alone (the mutation runs) has none.
+func readPackageReadme(t *testing.T) string {
 	t.Helper()
 	data, err := os.ReadFile(readmePath)
 	if err != nil {

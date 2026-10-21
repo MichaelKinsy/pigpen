@@ -2,10 +2,14 @@ package websearch
 
 import (
 	"context"
+	"net/http"
+	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Twins of curator-run and auto-summary-source, and the command tests.
@@ -122,7 +126,7 @@ func TestUpstream_auto_summary_source(t *testing.T) {
 		noURL(t, e.opened)
 	})
 	tw(t, F, "README documents auto-summary", func(t *testing.T) {
-		readme := readReadme(t)
+		readme := readPackageReadme(t)
 		matchRE(t, `workflow: "auto-summary"`, readme)
 		matchRE(t, `generate a summary without opening the curator`, readme)
 	})
@@ -207,14 +211,14 @@ type fakeGoogle struct {
 	allowed    bool
 	cookies    any
 	diagnostic string
-	attempts   []CookieAttempt
+	details    *BrowserCookieDiagnosticDetails
 	email      string
 }
 
 func (f fakeGoogle) CookieAccessAllowed() (bool, error)                 { return f.allowed, nil }
 func (f fakeGoogle) Available(context_ context.Context) (any, error)    { return f.cookies, nil }
 func (f fakeGoogle) Diagnostic() string                                 { return f.diagnostic }
-func (f fakeGoogle) Attempts() []CookieAttempt                          { return f.attempts }
+func (f fakeGoogle) DiagnosticDetails() *BrowserCookieDiagnosticDetails { return f.details }
 func (f fakeGoogle) ActiveEmail(context_ context.Context, _ any) string { return f.email }
 
 func TestGoogleAccountCommand(t *testing.T) {
@@ -246,8 +250,8 @@ func TestGoogleAccountCommand(t *testing.T) {
 	if m.text != "Gemini Web is unavailable. Sign into gemini.google.com in a supported Chromium-based browser." || m.details["available"] != false || m.details["cookieAccessAllowed"] != true {
 		t.Fatalf("%+v", m)
 	}
-	m = run(fakeGoogle{allowed: true, diagnostic: "no cookies", attempts: []CookieAttempt{{"chrome", "Default", "no-cookies"}, {"brave", "Profile 1", "locked"}}})
-	if m.text != "Gemini Web is unavailable: no cookies Attempted browser profiles: chrome/Default (no-cookies), brave/Profile 1 (locked)." || m.details["diagnostic"] != "no cookies" {
+	m = run(fakeGoogle{allowed: true, diagnostic: "no cookies", details: &BrowserCookieDiagnosticDetails{Message: "no cookies", Attempts: []BrowserCookieAttempt{{"chrome", "Default", "no-cookies"}, {"brave", "Profile 1", "locked"}}}})
+	if m.text != "Gemini Web is unavailable: no cookies Attempted browser profiles: chrome/Default (no-cookies), brave/Profile 1 (locked)." || m.details["diagnostic"] != "no cookies" || m.details["cookieDiagnostic"] == nil {
 		t.Fatalf("%+v", m)
 	}
 	m = run(fakeGoogle{allowed: true, cookies: map[string]string{"a": "b"}, email: "me@example.com"})
@@ -258,11 +262,76 @@ func TestGoogleAccountCommand(t *testing.T) {
 	if m.text != "Gemini Web is available, but the active Google account could not be determined." || m.details["email"] != nil {
 		t.Fatalf("%+v", m)
 	}
-	// Without the cookie reader the opt-in is still read from the environment and the config, and a
-	// switched-on opt-in is refused with the port's refusal message, never reported as "not signed in".
+	// A diagnostic-free refusal reports null for both, as JSON.stringify of the original's details does.
+	m = run(fakeGoogle{allowed: true})
+	if v, ok := m.details["diagnostic"]; !ok || v != nil {
+		t.Fatalf("%+v", m.details)
+	}
+	if v, ok := m.details["cookieDiagnostic"]; !ok || v != nil {
+		t.Fatalf("%+v", m.details)
+	}
+}
+
+// The default source of /google-account is the cookie reader of the authenticated-fetch slice (chrome-cookies.ts,
+// gemini-web.ts): the command finds the signed-in profile through the host command runner and asks Gemini for the
+// account, with nothing installed by the test.
+func TestGoogleAccountCommandReadsTheBrowserCookies(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the canned profile is the macOS and Linux layout; the Windows key store has its own twins")
+	}
+	e := newCuratorEnv(t, ``)
+	home, _ := isolate(t)
 	t.Setenv("PI_ALLOW_BROWSER_COOKIES", "1")
-	m = run(nil)
-	if !isRefusalText(m.text) || m.details["available"] != false {
-		t.Fatalf("%+v", m)
+	db := filepath.Join(browserBase(home, "Chrome", runtime.GOOS), "Default", "Cookies")
+	noErr(t, os.MkdirAll(filepath.Dir(db), 0o755))
+	noErr(t, os.WriteFile(db, []byte("placeholder"), 0o600))
+	rows := `[{"name":"__Secure-1PSID","value":"sid","host_key":".google.com","path":"/","expires_utc":0,"encrypted_value_hex":""},` +
+		`{"name":"__Secure-1PSIDTS","value":"ts","host_key":".google.com","path":"/","expires_utc":0,"encrypted_value_hex":""}]`
+	t.Cleanup(SetExecRunner(func(_ context.Context, command string, _ []string, _ time.Duration) (ExecResult, error) {
+		switch command {
+		case "sqlite3":
+			return ExecResult{Stdout: rows}, nil
+		case "security", "secret-tool":
+			return ExecResult{Stdout: "peanuts"}, nil
+		}
+		return ExecResult{Code: 1}, nil
+	}))
+	calls := useGeminiWeb(t, func(r GeminiWebRequest) (*http.Response, error) {
+		if r.URL == "https://gemini.google.com/app" {
+			return webResp(200, `<html>"oPEP7c":"Me@Example.com"</html>`, nil), nil
+		}
+		t.Errorf("unexpected request %s", r.URL)
+		return nil, http.ErrNotSupported
+	})
+	noErr(t, e.rt.GoogleAccountCommand(bg()))
+	msgs := e.host.messages()
+	if len(msgs) != 1 || msgs[0].customType != "google-account" || msgs[0].text != "Active Google account: Me@Example.com" ||
+		msgs[0].details["available"] != true || msgs[0].details["email"] != "Me@Example.com" {
+		t.Fatalf("%+v", msgs)
+	}
+	if len(*calls) != 1 || !strings.Contains((*calls)[0].Cookie, "__Secure-1PSID=sid") {
+		t.Fatalf("calls %+v", *calls)
+	}
+
+	// Cookie access on but no profile with the Google cookies: the diagnostic and every attempt are reported.
+	noErr(t, os.Remove(db))
+	resetCookieState()
+	noErr(t, e.rt.GoogleAccountCommand(bg()))
+	msgs = e.host.messages()
+	last := msgs[len(msgs)-1]
+	if last.details["available"] != false || last.details["cookieAccessAllowed"] != true || !strings.HasPrefix(last.text, "Gemini Web is unavailable") {
+		t.Fatalf("%+v", last)
+	}
+	if _, ok := last.details["cookieDiagnostic"]; !ok {
+		t.Fatalf("%+v", last.details)
+	}
+
+	// Opt-in off: the command only says so.
+	t.Setenv("PI_ALLOW_BROWSER_COOKIES", "0")
+	t.Setenv("FEYNMAN_ALLOW_BROWSER_COOKIES", "")
+	noErr(t, e.rt.GoogleAccountCommand(bg()))
+	msgs = e.host.messages()
+	if last = msgs[len(msgs)-1]; last.details["cookieAccessAllowed"] != false || !strings.HasPrefix(last.text, "Gemini Web browser cookie access is disabled.") {
+		t.Fatalf("%+v", last)
 	}
 }

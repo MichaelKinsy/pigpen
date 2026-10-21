@@ -56,13 +56,15 @@ func SearchWithXCrawl(ctx context.Context, query string, o SearchOptions) (*Sear
 	if apiKey == "" {
 		return nil, fmt.Errorf("XCrawl search requires an API key. Set xcrawlApiKey in %s or export XCRAWL_API_KEY. Get one at https://dash.xcrawl.com/", ConfigPath())
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
 	resp, err := FetchWithCredentialRedirects(tctx, xcrawlAPIURL, RequestInit{Method: "POST", Body: marshalJS(xcrawlBody{"google_search", query}),
 		Header: http.Header{"Authorization": {"Bearer " + apiKey}, "Content-Type": {"application/json"}}}, []string{"Authorization"})
 	if err != nil {
-		return nil, restFailure(ctx, tctx, "XCrawl search", apiKey, err)
+		return nil, act.failedBy(ctx, restFailure(ctx, tctx, "XCrawl search", apiKey, err), apiKey)
 	}
+	act.complete(resp.StatusCode)
 	text, err := readBody(resp)
 	if err != nil {
 		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)

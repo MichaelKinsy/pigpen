@@ -31,10 +31,11 @@ func SearchWithYou(ctx context.Context, query string, o SearchOptions) (*SearchR
 	numResults := NormalizeSearchResultCount(o.NumResults)
 	filters := normalizeDomainFilters(o.DomainFilter)
 	body := youBody{Query: query, Count: numResults, Freshness: o.RecencyFilter, Include: filters.allowed, Exclude: filters.blocked}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
 	var entries []any
-	_, err = restCallB(ctx, tctx, "You.com", apiKey, youSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
+	_, err = restCallB(ctx, tctx, act, "You.com", apiKey, youSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
 		Header: headerOf("Accept", "application/json", "Content-Type", "application/json", "X-API-Key", apiKey)}, []string{"X-API-Key"}, func(data any) error {
 		results, _ := jsonObject(data)
 		var web any

@@ -27,6 +27,8 @@ type hostedCall struct {
 	Timeout time.Duration
 	// Credentials names the headers the redirect handling strips when the origin changes.
 	Credentials []string
+	// Act is the activity entry of the call; a transport failure closes it through the provider's catch block.
+	Act activityRef
 }
 
 // hostedSend sends the request and reads the whole body. Transport errors have the credential
@@ -40,7 +42,7 @@ func hostedSend(parent context.Context, c hostedCall) (int, string, error) {
 	}
 	resp, err := FetchWithCredentialRedirects(tctx, c.URL, RequestInit{Method: method, Body: c.Body, Header: c.Header}, c.Credentials)
 	if err != nil {
-		return 0, "", redactErr(timeoutFix(parent, tctx, err), c.Key)
+		return 0, "", c.Act.failedErr(redactErr(timeoutFix(parent, tctx, err), c.Key))
 	}
 	text, err := readBody(resp)
 	if err != nil {

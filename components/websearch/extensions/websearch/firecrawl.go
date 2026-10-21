@@ -96,7 +96,7 @@ func firecrawlSSRF(o *SsrfConfig) (SsrfConfig, error) {
 }
 
 // firecrawlCall is firecrawlFetch.
-func firecrawlCall(ctx context.Context, endpoint string, body map[string]any, timeout time.Duration, ssrf SsrfConfig, lookup Lookup, label string) (map[string]any, error) {
+func firecrawlCall(ctx context.Context, endpoint string, body map[string]any, timeout time.Duration, ssrf SsrfConfig, lookup Lookup, label string, apiQuery *string) (map[string]any, error) {
 	base, err := firecrawlRequireBase()
 	if err != nil {
 		return nil, err
@@ -114,6 +114,13 @@ func firecrawlCall(ctx context.Context, endpoint string, body map[string]any, ti
 		h.Set("Authorization", "Bearer "+key)
 	}
 	requestURL := base + "/" + version + "/" + endpoint
+	var act activityRef
+	if apiQuery != nil {
+		act = logAPIStart(*apiQuery)
+	} else {
+		act = logFetchStart(requestURL)
+	}
+	fail := func(err error) (map[string]any, error) { return nil, act.failedBy(ctx, err, "") }
 	tctx, cancel := withTimeout(ctx, timeout)
 	defer cancel()
 	redact := func(s string) string {
@@ -124,25 +131,25 @@ func firecrawlCall(ctx context.Context, endpoint string, body map[string]any, ti
 	}
 	resp, err := fetchAPIManual(tctx, requestURL, RequestInit{Method: "POST", Header: h, Body: jsonBytes(body)}, ssrfValidation(ssrf, lookup, isLoopbackHost(requestURL)))
 	if err != nil {
-		return nil, timeoutFix(ctx, tctx, err)
+		return fail(timeoutFix(ctx, tctx, err))
 	}
 	text, rerr := readBody(resp)
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		if rerr != nil {
 			text = ""
 		}
-		return nil, fmt.Errorf("Firecrawl %s error %d: %s", label, resp.StatusCode, redact(jsSlice(text, 0, 300)))
+		return fail(fmt.Errorf("Firecrawl %s error %d: %s", label, resp.StatusCode, redact(jsSlice(text, 0, 300))))
 	}
 	if rerr != nil {
-		return nil, timeoutFix(ctx, tctx, rerr)
+		return fail(timeoutFix(ctx, tctx, rerr))
 	}
 	data, err := decodeAny(text)
 	if err != nil {
-		return nil, fmt.Errorf("Firecrawl %s returned invalid JSON: %v", label, err)
+		return fail(fmt.Errorf("Firecrawl %s returned invalid JSON: %v", label, err))
 	}
 	env := asMap(data)
 	if env == nil {
-		return nil, fmt.Errorf("Firecrawl %s returned an unexpected response shape", label)
+		return fail(fmt.Errorf("Firecrawl %s returned an unexpected response shape", label))
 	}
 	switch env["success"] {
 	case false:
@@ -150,11 +157,12 @@ func firecrawlCall(ctx context.Context, endpoint string, body map[string]any, ti
 		if s, ok := strField(env, "error"); ok && jsTrim(s) != "" {
 			reason = s
 		}
-		return nil, fmt.Errorf("Firecrawl %s unsuccessful: %s", label, redact(reason))
+		return fail(fmt.Errorf("Firecrawl %s unsuccessful: %s", label, redact(reason)))
 	case true:
+		act.complete(resp.StatusCode)
 		return env, nil
 	}
-	return nil, fmt.Errorf("Firecrawl %s returned an unexpected response shape", label)
+	return fail(fmt.Errorf("Firecrawl %s returned an unexpected response shape", label))
 }
 
 func firecrawlScrapeOptions(fresh bool) map[string]any {
@@ -194,7 +202,7 @@ func SearchWithFirecrawl(ctx context.Context, query string, o SearchOptions) (*S
 	if err != nil {
 		return nil, err
 	}
-	env, err := firecrawlCall(ctx, "search", body, timeoutMsOr(o.TimeoutMs, firecrawlTimeout), ssrf, o.Lookup, "search")
+	env, err := firecrawlCall(ctx, "search", body, timeoutMsOr(o.TimeoutMs, firecrawlTimeout), ssrf, o.Lookup, "search", &query)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +267,7 @@ func ExtractWithFirecrawl(ctx context.Context, rawURL string, o ExtractOptions, 
 	if !fresh {
 		body["lockdown"] = true
 	}
-	env, err := firecrawlCall(ctx, "scrape", body, timeoutMsOr(o.TimeoutMs, firecrawlTimeout), ssrf, o.Lookup, "scrape")
+	env, err := firecrawlCall(ctx, "scrape", body, timeoutMsOr(o.TimeoutMs, firecrawlTimeout), ssrf, o.Lookup, "scrape", nil)
 	if err != nil {
 		return nil, err
 	}

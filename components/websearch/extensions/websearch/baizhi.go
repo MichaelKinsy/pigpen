@@ -143,12 +143,17 @@ func SearchWithBaizhi(ctx context.Context, query string, o SearchOptions) (*Sear
 		return nil, errors.New("Baizhi credential resolution failed: invalid-header-value")
 	}
 	s := &mcpSession{auth: "Bearer " + apiKey}
+	act := logAPIStart(query)
 	answer, err := s.run(tctx, args, apiKey)
 	// Best effort, separately bounded DELETE; always before the result is reported.
 	s.terminate(ctx)
 	if err != nil {
-		return nil, errors.New(baizhiMessage(ctx, tctx, err))
+		// The catch block records the fixed message, never the SDK error, and not even a cancellation completes the entry.
+		message := baizhiMessage(ctx, tctx, err)
+		act.logError(message)
+		return nil, errors.New(message)
 	}
+	act.complete(200)
 	return &SearchResponse{Answer: answer, Results: []SearchResult{}}, nil
 }
 

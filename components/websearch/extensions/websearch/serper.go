@@ -32,13 +32,16 @@ func SearchWithSerper(ctx context.Context, query string, o SearchOptions) (*Sear
 	if o.RecencyFilter != "" {
 		body.Tbs = googleRecencyTBS[o.RecencyFilter]
 	}
+	act := logAPIStart(query)
 	tctx, cancel := withTimeout(ctx, restTimeout(restSearchTimeout))
 	defer cancel()
-	data, err := restCallA(ctx, tctx, "Serper API", apiKey, serperSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
+	data, status, err := restCallA(ctx, tctx, act, "Serper API", apiKey, serperSearchURL, RequestInit{Method: "POST", Body: marshalJS(body),
 		Header: headerOf("X-API-KEY", apiKey, "Content-Type", "application/json", "Accept", "application/json")}, []string{"X-API-KEY"})
 	if err != nil {
 		return nil, err
 	}
+	// Every outcome after a readable body completes the entry with the status, whatever the envelope check says.
+	act.complete(status)
 	envelope, ok := jsonObject(data)
 	if !ok {
 		return nil, fmt.Errorf("Serper API returned invalid response: expected an object envelope")

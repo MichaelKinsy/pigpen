@@ -302,7 +302,10 @@ async function runChild(index) {
 	for (const req of requests) {
 		if (typeof req.body === "string") req.body = normalize(req.body);
 	}
-	process.stdout.write(JSON.stringify({ id: c.id, requests, outcome }));
+	// The activity entries the original's activity monitor holds after the call (activity.ts), without ids and times.
+	const { activityMonitor } = await import(pathToFileURL(join(oracle, "activity.ts")).href);
+	const activity = activityMonitor.getEntries().map(({ type, query, url, status, error }) => ({ type, query, url, status, error: error === undefined ? undefined : normalize(error) }));
+	process.stdout.write(JSON.stringify({ id: c.id, requests, outcome, activity }));
 }
 
 if (process.argv[2] === "--case") {
