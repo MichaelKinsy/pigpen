@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-pig-music",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Pig Music: a full-screen music player for PiG that keeps playing while it is hidden. /music opens the player (YouTube Music through yt-dlp, played by mpv); /music setup and /music doctor check the machine. Explicit /music command only.",
   "keywords": [
     "pig-package",
