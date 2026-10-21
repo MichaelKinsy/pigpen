@@ -2558,8 +2558,8 @@
  {
   "name": "dfd-markdown-ol-start",
   "file": "dfd_markdown2.go",
-  "find": "jsToNumber(start) + float64(index) - 1",
-  "replace": "jsToNumber(start) + float64(index)"
+  "find": "jsToNumberNaN(start) + float64(index) - 1",
+  "replace": "jsToNumberNaN(start) + float64(index)"
  },
  {
   "name": "dfd-markdown-drops-leading-h1",
