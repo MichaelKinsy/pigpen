@@ -91,7 +91,9 @@
   },
   "commands": {
     "npm": {
-      "mode": "missing"
+      "mode": "canned",
+      "stdout": "/usr/lib/node_modules\n",
+      "exit": 0
     }
   }
 }

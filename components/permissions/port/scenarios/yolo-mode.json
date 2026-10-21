@@ -50,5 +50,12 @@
   },
   "agentFiles": {
     "extensions/pi-permission-system/config.json": "{\n  \"yoloMode\": true,\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"*\": \"ask\",\n    \"bash\": {\n      \"*\": \"ask\",\n      \"rm *\": {\n        \"action\": \"deny\",\n        \"reason\": \"no deletes\"\n      }\n    }\n  }\n}"
+  },
+  "commands": {
+    "npm": {
+      "mode": "canned",
+      "stdout": "/usr/lib/node_modules\n",
+      "exit": 0
+    }
   }
 }

@@ -4,6 +4,8 @@
 package pi_permission_system
 
 import (
+	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -210,6 +212,23 @@ func (p *permissionSystem) hostSessionContext(ctx sdk.Context) SessionContext {
 			return err == nil && trusted
 		},
 	}
+}
+
+func init() { nodeModulesRootDiscovery = discoverNodeModulesRoot }
+
+// discoverNodeModulesRoot is discoverGlobalNodeModulesRoot() with this module's own location in place of import.meta.url: the
+// running executable (strategy 1 walks up from it; strategy 2 runs `npm root -g`). Pi's install directory is auto-allowed for
+// infrastructure reads through the node_modules root it finds.
+func discoverNodeModulesRoot() string {
+	from := ""
+	if exe, err := os.Executable(); err == nil {
+		from = "file://" + filepath.ToSlash(exe)
+	}
+	root, ok := DiscoverGlobalNodeModulesRoot(from)
+	if !ok {
+		return ""
+	}
+	return root
 }
 
 // Extension returns the permission gate.
