@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 // ported from goal-recovery.ts: the read-only storage/recovery report and the guarded repair. Malformed goal files and
@@ -47,14 +46,10 @@ type recoveryRepairResult struct {
 	confirmed bool
 }
 
-// jsDateMs is `new Date(s).getTime()` for the ISO forms the ledger writes; ok=false is NaN.
+// jsDateMs is `new Date(s).getTime()`: ok=false is NaN.
 func jsDateMs(s string) (float64, bool) {
-	for _, layout := range []string{time.RFC3339Nano, "2006-01-02T15:04:05", "2006-01-02"} {
-		if t, err := time.Parse(layout, s); err == nil {
-			return float64(t.UnixMilli()), true
-		}
-	}
-	return 0, false
+	ms := jsDateParse(s)
+	return ms, ms == ms
 }
 
 func scanMalformedGoalFiles(ctx storage) []malformedGoalFileEntry {

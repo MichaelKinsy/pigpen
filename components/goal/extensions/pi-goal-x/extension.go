@@ -115,19 +115,39 @@ func (h sdkHost) OnWidthChange(fn func(width int)) func() {
 	return off
 }
 func (h sdkHost) Theme() goalHostTheme { return sdkTheme{h.ctx.UITheme()} }
-func (h sdkHost) Confirm(t, m string) bool {
-	ok, _ := h.ctx.Confirm(t, m)
+
+// await runs a host call that waits for the user (a dialog): the core's lock is released meanwhile, as the original's other event
+// handlers run at an `await`. Without it a dialog would hold up the key events that answer it. State the caller read before the call
+// may have changed after it; revalidate (focus tokens) as the original does.
+func (h sdkHost) await(fn func()) {
+	if h.c != nil {
+		h.c.mu.Unlock()
+		defer h.c.mu.Lock()
+	}
+	fn()
+}
+
+func (h sdkHost) Confirm(t, m string) (ok bool) {
+	h.await(func() { ok, _ = h.ctx.Confirm(t, m) })
 	return ok
 }
-func (h sdkHost) Select(t string, o []string) (string, bool) {
-	v, ok, err := h.ctx.Select(t, o)
-	return v, ok && err == nil
+func (h sdkHost) Select(t string, o []string) (v string, ok bool) {
+	h.await(func() {
+		var err error
+		v, ok, err = h.ctx.Select(t, o)
+		ok = ok && err == nil
+	})
+	return v, ok
 }
-func (h sdkHost) Input(t, placeholder string) (string, bool) {
-	v, ok, err := h.ctx.Input(t, placeholder)
-	return v, ok && err == nil
+func (h sdkHost) Input(t, placeholder string) (v string, ok bool) {
+	h.await(func() {
+		var err error
+		v, ok, err = h.ctx.Input(t, placeholder)
+		ok = ok && err == nil
+	})
+	return v, ok
 }
-func (h sdkHost) Custom(factory goalCustomFactory, opts goalCustomOptions) (any, error) {
+func (h sdkHost) Custom(factory goalCustomFactory, opts goalCustomOptions) (out any, err error) {
 	if !h.ctx.HasUI() {
 		return nil, nil
 	}
@@ -136,7 +156,8 @@ func (h sdkHost) Custom(factory goalCustomFactory, opts goalCustomOptions) (any,
 	if rc.comp == nil {
 		return nil, nil
 	}
-	return h.ctx.Custom(rc, remoteOverlayOptions(opts))
+	h.await(func() { out, err = h.ctx.Custom(rc, remoteOverlayOptions(opts)) })
+	return out, err
 }
 func (h sdkHost) OnTerminalInput(cb func(data string) *goalInputResult) func() {
 	off, err := h.ctx.OnTerminalInput(func(data string) sdk.TerminalInputResult {

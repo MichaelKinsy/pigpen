@@ -92,17 +92,22 @@ type goalRig struct {
 	activeTools []string
 	widgets     []rigWidget
 	sendHook    func(message, options map[string]any)
+	sessionID   string
+	model       map[string]any
+	idle        func() bool
+	pending     func() bool
 }
 
 func newGoalRig(t *testing.T, opts rigOptions) *goalRig {
 	t.Helper()
-	r := &goalRig{t: t, opts: opts, branch: append([]any{}, opts.Branch...), activeTools: opts.ActiveTools, sendHook: opts.OnSendMessage}
+	r := &goalRig{t: t, opts: opts, branch: append([]any{}, opts.Branch...), activeTools: opts.ActiveTools, sendHook: opts.OnSendMessage, model: opts.Model, idle: opts.Idle, pending: opts.Pending}
 	if r.activeTools == nil {
 		r.activeTools = []string{"read", "write", "bash"}
 	}
 	if opts.SessionID == "" {
-		r.opts.SessionID = "rig-session"
+		opts.SessionID = "rig-session"
 	}
+	r.sessionID = opts.SessionID
 	t.Setenv("PI_CODING_AGENT_DIR", t.TempDir())
 	for k, v := range opts.Env {
 		t.Setenv(k, v)
@@ -137,6 +142,7 @@ func newGoalRig(t *testing.T, opts rigOptions) *goalRig {
 	}
 	r.Host = StartHost(t, ext, HostOptions{Mode: mode, HasUI: opts.HasUI, Cwd: cwd, OnCallValue: r.answer})
 	if probe != nil {
+		t.Cleanup(probe.Quiesce)
 		probe.WidgetTap(func(key string, lines []string) {
 			r.mu.Lock()
 			defer r.mu.Unlock()
@@ -153,19 +159,30 @@ func (r *goalRig) answer(method string, args map[string]any) (any, string) {
 	o := r.opts
 	switch method {
 	case "getSessionID":
-		return map[string]any{"sessionId": o.SessionID}, ""
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if r.sessionID == "-" { // a host without a session id
+			return map[string]any{}, ""
+		}
+		return map[string]any{"sessionId": r.sessionID}, ""
 	case "getSessionFile":
 		return map[string]any{"sessionFile": ""}, ""
 	case "isIdle":
 		idle := true
-		if o.Idle != nil {
-			idle = o.Idle()
+		r.mu.Lock()
+		fn := r.idle
+		r.mu.Unlock()
+		if fn != nil {
+			idle = fn()
 		}
 		return map[string]any{"idle": idle}, ""
 	case "hasPendingMessages":
 		pending := false
-		if o.Pending != nil {
-			pending = o.Pending()
+		r.mu.Lock()
+		fn := r.pending
+		r.mu.Unlock()
+		if fn != nil {
+			pending = fn()
 		}
 		return map[string]any{"pending": pending}, ""
 	case "sessionRead":
@@ -197,10 +214,12 @@ func (r *goalRig) answer(method string, args map[string]any) (any, string) {
 		}
 		return o.ContextUsage, ""
 	case "getModelInfo":
-		if o.Model == nil {
+		r.mu.Lock()
+		defer r.mu.Unlock()
+		if r.model == nil {
 			return map[string]any{}, ""
 		}
-		return o.Model, ""
+		return r.model, ""
 	case "sendMessage":
 		r.mu.Lock()
 		hook := r.sendHook
@@ -387,4 +406,107 @@ func (r *goalRig) SetSendHook(fn func(message, options map[string]any)) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sendHook = fn
+}
+
+// SetSession changes the session id the host answers ("-": none), as a second ctx of another session would.
+func (r *goalRig) SetSession(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.sessionID = id
+}
+
+// SetModel changes the model the host answers (nil: none).
+func (r *goalRig) SetModel(provider, id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.model = map[string]any{"provider": provider, "id": id, "name": id}
+}
+
+// RunSignal tells the extension about the run in progress: active, and aborted (the user's Esc), as the host's run_signal frame.
+func (r *goalRig) RunSignal(active, aborted bool) {
+	r.t.Helper()
+	r.Host.write(map[string]any{"type": "notify", "notify": map[string]any{"method": "run_signal", "args": map[string]any{"run": 1, "active": active, "aborted": aborted}}})
+}
+
+// rigToolResult is a tool's wire result: its text, details and whether it ends the turn.
+type rigToolResult struct {
+	Text      string
+	Details   map[string]any
+	Terminate bool
+	IsError   bool
+}
+
+func decodeToolResult(t *testing.T, raw json.RawMessage) rigToolResult {
+	t.Helper()
+	var w struct {
+		Content   json.RawMessage `json:"content"`
+		Details   map[string]any  `json:"details"`
+		Terminate bool            `json:"terminate"`
+		IsError   bool            `json:"is_error"`
+	}
+	if err := json.Unmarshal(raw, &w); err != nil {
+		t.Fatalf("tool result %s: %v", raw, err)
+	}
+	out := rigToolResult{Details: w.Details, Terminate: w.Terminate, IsError: w.IsError}
+	var text string
+	if json.Unmarshal(w.Content, &text) == nil {
+		out.Text = text
+		return out
+	}
+	var blocks []struct {
+		Type string `json:"type"`
+		Text string `json:"text"`
+	}
+	if json.Unmarshal(w.Content, &blocks) == nil {
+		for _, b := range blocks {
+			if b.Type == "text" {
+				out.Text += b.Text
+			}
+		}
+	}
+	return out
+}
+
+// ToolResult runs a tool and decodes its result; a failure text fails the test.
+func (r *goalRig) ToolResult(name string, params map[string]any) rigToolResult {
+	r.t.Helper()
+	raw, failure := r.Tool(name, params)
+	if failure != "" {
+		r.t.Fatalf("tool %s failed: %s", name, failure)
+	}
+	return decodeToolResult(r.t, raw)
+}
+
+// rigToolOutcome is a tool call's wire result or failure.
+type rigToolOutcome struct {
+	Raw     json.RawMessage
+	Failure string
+}
+
+// ToolAsync starts a tool call and returns at once: the original's tests start `tool.execute(...)` without awaiting it, act on
+// the session meanwhile (a command, a dialog answer) and await the call afterwards.
+func (r *goalRig) ToolAsync(name string, params map[string]any) <-chan rigToolOutcome {
+	if !r.Host.tools[name] {
+		r.t.Fatalf("tool %q is not registered", name)
+	}
+	argv, _ := json.Marshal(params)
+	out := make(chan rigToolOutcome, 1)
+	go func() {
+		raw, failure := r.Host.roundTrip(map[string]any{"method": "tool_call", "tool": name, "tool_call_id": "call-1", "args": json.RawMessage(argv)})
+		out <- rigToolOutcome{raw, failure}
+	}()
+	return out
+}
+
+// SetIdle and SetPending replace the isIdle and hasPendingMessages answers after the rig started.
+func (r *goalRig) SetIdle(fn func() bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.idle = fn
+}
+
+func (r *goalRig) SetPending(fn func() bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.pending = fn
 }

@@ -112,13 +112,13 @@ func validateTaskCompletion(goal *jsObject, taskId string) policyValidation {
 	}
 	task := findTaskInTree(taskListTasks(tl), taskId)
 	if task == nil {
-		return policyReject(fmt.Sprintf("Task %q not found.", taskId))
+		return policyReject(fmt.Sprintf("Task \"%s\" not found.", taskId))
 	}
 	switch gstr(task, "status") {
 	case "complete":
-		return policyReject(fmt.Sprintf("Task %q is already complete.", taskId))
+		return policyReject(fmt.Sprintf("Task \"%s\" is already complete.", taskId))
 	case "skipped":
-		return policyReject(fmt.Sprintf("Task %q was already skipped.", taskId))
+		return policyReject(fmt.Sprintf("Task \"%s\" was already skipped.", taskId))
 	}
 	return policyOK
 }
@@ -133,11 +133,11 @@ func validateTaskSkip(goal *jsObject, taskId, reason string) policyValidation {
 	}
 	task := findTaskInTree(taskListTasks(tl), taskId)
 	if task == nil {
-		return policyReject(fmt.Sprintf("Task %q not found.", taskId))
+		return policyReject(fmt.Sprintf("Task \"%s\" not found.", taskId))
 	}
 	switch gstr(task, "status") {
 	case "complete":
-		return policyReject(fmt.Sprintf("Task %q is already complete.", taskId))
+		return policyReject(fmt.Sprintf("Task \"%s\" is already complete.", taskId))
 	case "skipped":
 		return policyOK // toggled by the executor
 	}
