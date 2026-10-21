@@ -1,0 +1,170 @@
+[
+ {
+  "name": "auth-any-key",
+  "file": "companion.go",
+  "find": "return len(a) == len(b) && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1",
+  "replace": "return len(a) == len(b) && subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1 || true"
+ },
+ {
+  "name": "key-does-not-win-over-cookie",
+  "file": "companion.go",
+  "find": "if q := r.URL.Query(); q.Has(\"key\") {",
+  "replace": "if q := r.URL.Query(); false && q.Has(\"key\") {"
+ },
+ {
+  "name": "frame-options",
+  "file": "companion.go",
+  "find": "h.Set(\"X-Frame-Options\", \"DENY\")",
+  "replace": "h.Set(\"X-Frame-Options\", \"SAMEORIGIN\")"
+ },
+ {
+  "name": "cache-control",
+  "file": "companion.go",
+  "find": "h.Set(\"Cache-Control\", \"no-store\")",
+  "replace": "h.Set(\"Cache-Control\", \"no-cache\")"
+ },
+ {
+  "name": "any-origin",
+  "file": "companion.go",
+  "find": "return r.Host != \"\" && origin == \"http://\"+r.Host",
+  "replace": "return true"
+ },
+ {
+  "name": "origin-required",
+  "file": "companion.go",
+  "find": "\tif origin == \"\" {\n\t\treturn true\n\t}",
+  "replace": "\tif origin == \"\" {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "dotfiles-served",
+  "file": "companion.go",
+  "find": "name == \".\" || strings.HasPrefix(name, \".\") ||",
+  "replace": "name == \".\" ||"
+ },
+ {
+  "name": "frames-not-unmasked",
+  "file": "companion.go",
+  "find": "data[i] = buf[offset+4+i] ^ mask[i%4]",
+  "replace": "data[i] = buf[offset+4+i] ^ mask[i%4] ^ mask[0]"
+ },
+ {
+  "name": "pong-without-payload",
+  "file": "companion.go",
+  "find": "encodeFrame(opPong, payload)",
+  "replace": "encodeFrame(opPong, nil)"
+ },
+ {
+  "name": "close-code",
+  "file": "companion.go",
+  "find": "[]byte{0x03, 0xEB}",
+  "replace": "[]byte{0x03, 0xEA}"
+ },
+ {
+  "name": "new-screen-keeps-events",
+  "file": "companion.go",
+  "find": "_ = os.Remove(filepath.Join(c.stateDir, \"events\"))",
+  "replace": "_ = c.stateDir"
+ },
+ {
+  "name": "explicit-key-falls-back",
+  "file": "companion.go",
+  "find": "if c.tokenSource == \"env\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "fallback-keeps-key",
+  "file": "companion.go",
+  "find": "c.token, c.tokenSource = randomHexToken(), \"generated-fallback\"",
+  "replace": "c.tokenSource = \"generated-fallback\""
+ },
+ {
+  "name": "fallback-overwrites-port-file",
+  "file": "companion.go",
+  "find": "if c.opts.portFile != \"\" && !fellBack {",
+  "replace": "if c.opts.portFile != \"\" && (!fellBack || fellBack) {"
+ },
+ {
+  "name": "branding-text",
+  "file": "companion.go",
+  "find": "text = \"Prime Radiant Superpowers v\" + version",
+  "replace": "text = \"Superpowers v\" + version"
+ },
+ {
+  "name": "opens-without-asking",
+  "file": "companion.go",
+  "find": "if !c.opts.Open || (c.host != \"127.0.0.1\"",
+  "replace": "if (c.host != \"127.0.0.1\""
+ },
+ {
+  "name": "opens-on-any-host",
+  "file": "companion.go",
+  "find": "(c.host != \"127.0.0.1\" && c.host != \"localhost\")",
+  "replace": "false"
+ },
+ {
+  "name": "never-idle",
+  "file": "companion.go",
+  "find": "idle := time.Since(c.lastActivity) > c.idle",
+  "replace": "idle := false"
+ },
+ {
+  "name": "cookie-not-httponly",
+  "file": "companion.go",
+  "find": "\"; HttpOnly; SameSite=Strict; Path=/\"",
+  "replace": "\"; SameSite=Strict; Path=/\""
+ },
+ {
+  "name": "stop-keeps-info",
+  "file": "companion.go",
+  "find": "_ = os.Remove(filepath.Join(c.stateDir, \"server-info\"))\n\t\tstamp",
+  "replace": "stamp"
+ },
+ {
+  "name": "server-info-world-readable",
+  "file": "companion.go",
+  "find": "filepath.Join(c.stateDir, \"server-info\"), append(raw, '\\n'), 0o600)",
+  "replace": "filepath.Join(c.stateDir, \"server-info\"), append(raw, '\\n'), 0o644)"
+ },
+ {
+  "name": "graph-numbering",
+  "file": "render.go",
+  "find": "name := fmt.Sprintf(\"graph_%d\", len(blocks)+1)",
+  "replace": "name := fmt.Sprintf(\"graph_%d\", len(blocks))"
+ },
+ {
+  "name": "combined-label-quotes",
+  "file": "render.go",
+  "find": "label=\\\"%s\\\";",
+  "replace": "label='%s';"
+ },
+ {
+  "name": "skill-name-dashes",
+  "file": "render.go",
+  "find": "strings.ReplaceAll(filepath.Base(skillDir), \"-\", \"_\")",
+  "replace": "filepath.Base(skillDir)"
+ },
+ {
+  "name": "found-message",
+  "file": "render.go",
+  "find": "\"Found %d diagram(s) in %s/SKILL.md\\n\"",
+  "replace": "\"Found %d diagrams in %s/SKILL.md\\n\""
+ },
+ {
+  "name": "combined-source-not-written",
+  "file": "render.go",
+  "find": "_ = os.WriteFile(filepath.Join(outputDir, skillName+\"_combined.dot\"), []byte(combined), 0o644)",
+  "replace": ""
+ },
+ {
+  "name": "dot-check-skipped",
+  "file": "render.go",
+  "find": "if err := exec.Command(dot, \"-V\").Run(); err != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "tools-action-stop-reason",
+  "file": "companion.go",
+  "find": "c.Stop(\"stop-server.sh\")",
+  "replace": "c.Stop(\"stopped\")"
+ }
+]

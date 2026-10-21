@@ -1,14 +1,14 @@
 # Adaptations
 
-Every change between the unmodified original (`port/oracle/skills`, obra/superpowers v6.4.2, commit
-`8ca22dba9a94f28898bbce59f2537ff4d87c747d`) and the Skills shipped here (`skills/`), written by `port/adapt.py`.
+Every change between the unmodified original (`port/oracle/skills`, obra/superpowers v7.0.0, commit
+`bb92a77741419a4ab5f06e711a283343f1ada0c3`) and the Skills shipped here (`skills/`), written by `port/adapt.py`.
 Two kinds of change, and no others: the Skill `name` and its directory take the `pigpen-superpowers-` prefix
 (Pigpen's Skill gate requires `pigpen-<name>` and a directory equal to the name), and a reference of the form
 `superpowers:<skill>` becomes `pigpen-superpowers-<skill>`. All other files and bytes are as upstream.
 
 | Upstream Skill | Skill here | `name` line | references rewritten (file: count) |
 |---|---|---|---|
-| `brainstorming` | `pigpen-superpowers-brainstorming` | changed | - |
+| `brainstorming` | `pigpen-superpowers-brainstorming` | changed | SKILL.md: 2 |
 | `diagnosing-superpowers` | `pigpen-superpowers-diagnosing-superpowers` | changed | - |
 | `dispatching-parallel-agents` | `pigpen-superpowers-dispatching-parallel-agents` | changed | - |
 | `executing-plans` | `pigpen-superpowers-executing-plans` | changed | SKILL.md: 14 |
@@ -24,14 +24,24 @@ Two kinds of change, and no others: the Skill `name` and its directory take the 
 | `writing-plans` | `pigpen-superpowers-writing-plans` | changed | SKILL.md: 5 |
 | `writing-skills` | `pigpen-superpowers-writing-skills` | changed | SKILL.md: 4; testing-skills-with-subagents.md: 1 |
 
-39 references rewritten in total.
+41 references rewritten in total.
+
+## The extension
+
+`.pi/extensions/superpowers.ts`, the original's Pi extension, is ported to Go in `extensions/superpowers` (see
+[PORT.md](PORT.md)). It reads `skills/using-superpowers/SKILL.md` at run time; the port embeds the shipped Skill
+(`extensions/superpowers/bootstrap_skill.md`, a copy of `skills/pigpen-superpowers-using-superpowers/SKILL.md`) and the text
+of the original's `piToolMapping()` (`extensions/superpowers/pi_tool_mapping.md`), both written by this script, so the
+injected bootstrap names the renamed Skills.
+
+`extensions/superpowers-tools` is a Go port of the two Node helpers the Skills tell the model to run: the visual companion server of
+`brainstorming` (`scripts/server.cjs`, `start-server.sh`, `stop-server.sh`) and `writing-skills/render-graphs.js`. They are the tools
+`brainstorm_server` and `render_skill_graphs`; the tools' prompt guidelines tell the model to use them in place of the scripts. The
+scripts stay in the Skills as the original has them (this tree is byte for byte the original's apart from the changes above) and are
+inert without Node. The extension embeds the browser-side `helper.js` and `frame-template.html`, copied by this script.
 
 ## Not included
 
-- `.pi/extensions/superpowers.ts`, the original's Node extension for Pi: it injects the `using-superpowers` bootstrap
-  into every first model request. A Package here ships no Node code and no hook, so the Skill is available by its
-  description like any other (`/skill:pigpen-superpowers-using-superpowers` loads it). Nothing else of the original
-  runs at start-up.
 - `hooks/`, `scripts/`, `tests/`, `docs/`, `assets/` and the other harness manifests (Claude Code, Codex, Gemini,
   OpenCode, Cursor): they are not Skills.
 

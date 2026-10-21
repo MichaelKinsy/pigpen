@@ -1,0 +1,38 @@
+{
+ "name": "bootstrap-after-compact",
+ "description": "Compaction does not inject before it (the summarising request has no bootstrap); the first request after it carries the bootstrap after the compaction summary.",
+ "llm": [
+  {
+   "text": "first answer"
+  },
+  {
+   "text": "A summary of the work so far."
+  },
+  {
+   "text": "second answer"
+  }
+ ],
+ "steps": [
+  {
+   "name": "first",
+   "rpc": {
+    "type": "prompt",
+    "message": "Let us make a react todo list"
+   }
+  },
+  {
+   "name": "compact",
+   "rpc": {
+    "type": "compact"
+   },
+   "wait": "response"
+  },
+  {
+   "name": "second",
+   "rpc": {
+    "type": "prompt",
+    "message": "Continue"
+   }
+  }
+ ]
+}
