@@ -62,7 +62,7 @@ func fgAgent(t *testing.T, r *rig, run func(c *fakeChild)) string {
 	return <-got
 }
 
-func TestStatusNoteWiringTwins(t *testing.T) {
+func TestStatusNoteWiringObservabilityTwins(t *testing.T) {
 	tw(t, "status-note-wiring", "foreground turn-limit abort → the Agent result flags an incomplete outcome", func(t *testing.T) {
 		r := startObsRig(t, obsWorkspace(t, "", ""))
 		out := fgAgent(t, r, func(c *fakeChild) { c.finishWith(&childResult{Text: "partial work so far", Aborted: true}) })
@@ -85,7 +85,6 @@ func TestStatusNoteWiringTwins(t *testing.T) {
 		eq(t, strings.Contains(out, "the task is unfinished"), true)
 		eq(t, strings.Contains(out, "re-spawn") || strings.Contains(out, "ask before"), false)
 	})
-	tskip(t, "status-note-wiring", "hides nested records from top-level tools, registry, transcripts, and lifecycle", "nested delegation is refused by this port, so no nested record exists to hide")
 	tw(t, "status-note-wiring", "background user-stop → get_subagent_result flags STOPPED BY THE USER (not completed)", func(t *testing.T) {
 		r := startObsRig(t, obsWorkspace(t, "", ""))
 		id := idFrom(t, r.must("Agent", obj{"prompt": "go", "description": "d", "subagent_type": "general-purpose", "run_in_background": true}))
