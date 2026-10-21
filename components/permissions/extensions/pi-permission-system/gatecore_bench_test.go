@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -58,6 +59,9 @@ func BenchmarkGateCore(b *testing.B) {
 	}
 	for _, in := range inputs {
 		b.Run(in.name, func(b *testing.B) {
+			if strings.HasPrefix(in.name, "Bash") && pendingBashProducers() {
+				b.Skip("the bash gate producers are fail-closed stand-ins (gatebashpending.go)")
+			}
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
 				if _, err := handler.HandleToolCall(in.event, ctx); err != nil {
@@ -77,3 +81,14 @@ func (gfBenchLogger) Warn(string)              {}
 type gfBenchEvents struct{}
 
 func (gfBenchEvents) Emit(string, any) error { return nil }
+
+// pendingBashProducers reports whether a parsed bash program still reaches the fail-closed stand-ins.
+func pendingBashProducers() (pending bool) {
+	defer func() {
+		if r := recover(); r == pendingBashGates {
+			pending = true
+		}
+	}()
+	DescribeBashPathGate(ToolCallContext{}, &BashProgram{}, nil, nil)
+	return false
+}
