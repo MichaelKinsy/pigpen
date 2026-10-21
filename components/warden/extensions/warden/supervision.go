@@ -172,9 +172,9 @@ func (w *warden) collectSubagentReport(msg map[string]any) {
 // onInput is the `input` handler (extension.ts 2259): a message typed while a generation runs is swallowed with a
 // notice; any other input invalidates what was in flight and settles the steers watched for the user's reply.
 func (w *warden) onInput(ctx sdk.Context, data map[string]any) (any, error) {
-	// D16: a message the extension itself sends (`source` "extension": /warden audit, init and index send their prompt
+	// D31: a message the extension itself sends (`source` "extension": /warden audit, init and index send their prompt
 	// with sendUserMessage) is never answered by a busy lane. The original's handler (extension.ts 2258-2268) has no such
-	// check and swallows the prompt of the very command that is running (port/PORT.md D16).
+	// check and swallows the prompt of the very command that is running (port/PORT.md D31).
 	fromExtension := data["source"] == "extension"
 	for _, b := range w.sup.inputBlocks {
 		if !fromExtension && b.busy() {

@@ -1,6 +1,6 @@
 {
   "name": "audit-prompt-reaches-the-model-report-written",
-  "description": "D16 deviation scenario. /warden audit: the audit prompt (workspace inventory, instructions, report path) is the user message the model receives and the agent writes the report; the original swallows its own prompt (golden-deviations/original: no model request).",
+  "description": "D31 deviation scenario. /warden audit: the audit prompt (workspace inventory, instructions, report path) is the user message the model receives and the agent writes the report; the original swallows its own prompt (golden-deviations/original: no model request).",
   "env": {
     "PIGPEN_WARDEN_ENABLED": "1",
     "PIGPEN_WARDEN_STEER_VISIBLE": "0"

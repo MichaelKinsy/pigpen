@@ -801,7 +801,7 @@ micro-dollar. The Go port does not read pi-typesafe's price override.
 - `console.warn` lines of `discover.ts` / `audit.ts` (an unreadable directory) are not reproduced; the port never writes to stdout/stderr.
   `DiscoverSourceFiles` returns names in sorted order (Go's `os.ReadDir`); Node returns directory order, which only matters when the 200-file cap cuts.
 
-**D16 (a deviation from the original, an upstream bug fixed in the port).** The original's `input` handler (`extension.ts` 2258-2268) answers
+**D31 (a deviation from the original, an upstream bug fixed in the port).** The original's `input` handler (`extension.ts` 2258-2268) answers
 `{action: "handled"}` to every message while `auditRunning` (and `initRunning`, `indexRunning`) without looking at `source`, and Pi 1.3.0.1402973a
 (and PiG's Node host) emit `input` for the extension's own `sendUserMessage`. Recorded from the original under Pi
 (`port/golden-deviations/original/`): the notice `pi-warden is running an audit. Please wait...`, no model request, and the outcome

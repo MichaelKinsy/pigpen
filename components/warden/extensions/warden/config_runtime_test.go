@@ -39,12 +39,17 @@ func startCfg(t *testing.T, o cfgOpts) (*harness, string) {
 	}
 	getenv := func(k string) string { return o.env[k] }
 	hasUI := !o.noUI
-	h.host = StartHost(t, New(Options{Getenv: getenv}), HostOptions{HasUI: &hasUI, Cwd: cwd, OnCall: func(method string, args map[string]any) (map[string]any, string) {
+	ext, w := newWarden(Options{Getenv: getenv})
+	h.w = w
+	h.host = StartHost(t, ext, HostOptions{HasUI: &hasUI, Cwd: cwd, OnCall: func(method string, args map[string]any) (map[string]any, string) {
 		if method == "isProjectTrusted" {
 			return map[string]any{"trusted": o.trusted}, ""
 		}
 		return h.onCall(method, args)
 	}})
+	// As startHarness: background rules and learning writes must be over before the temporary directories are removed.
+	t.Cleanup(w.rulesShutdown)
+	t.Cleanup(func() { w.learnFlush(); CloseLearningDatabases() })
 	return h, cwd
 }
 

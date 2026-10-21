@@ -877,26 +877,6 @@ func TestSkippedSDKToolCallArgumentsAsObject(t *testing.T) {
 	}
 }
 
-// --- refusals of what the port does not carry ---------------------------------------------------------------
-
-func TestUnportedWardenSubcommandsAreRefusedWithTheOriginalsInstallLine(t *testing.T) {
-	cases := map[string]string{
-		"bench": "/warden bench",
-	}
-	for args, feature := range cases {
-		h := startHarness(t, harnessOpts{})
-		h.host.Command("warden", args)
-		want := "@pi-in-go/pigpen-warden (Go port) does not support " + feature + " yet. Install the original extension, npm:pi-warden@0.80.0, which runs unchanged in PiG."
-		got := h.notices()
-		if len(got) != 1 || got[0] != want {
-			t.Errorf("/warden %s: notices %q, want %q", args, got, want)
-		}
-		if len(h.messages()) != 0 {
-			t.Errorf("/warden %s ran something: %v", args, h.messages())
-		}
-	}
-}
-
 // The three tools are registered (tools_extension_test.go carries their behavior).
 func TestWardenToolsAreRegistered(t *testing.T) {
 	h := startHarness(t, harnessOpts{})

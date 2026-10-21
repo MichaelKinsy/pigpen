@@ -144,7 +144,7 @@ func TestAuditBlocksUserInputWhileRunning(t *testing.T) {
 		t.Fatalf("during: %q", during)
 	}
 	if strings.Contains(ext, "handled") {
-		t.Fatalf("D16: the audit's own prompt (source extension) must pass; the original swallows it: %q", ext)
+		t.Fatalf("D31: the audit's own prompt (source extension) must pass; the original swallows it: %q", ext)
 	}
 	if strings.Contains(after, "handled") {
 		t.Fatalf("after: %q", after)
@@ -160,7 +160,7 @@ func TestAuditBlocksUserInputWhileRunning(t *testing.T) {
 	}
 }
 
-// D16 for every lane that registers a busy flag (init, audit, index): a message with source "extension" passes, a typed
+// D31 for every lane that registers a busy flag (init, audit, index): a message with source "extension" passes, a typed
 // one is handled and answered. The original answers both.
 func TestInputFromTheExtensionPassesWhileAnyRegisteredLaneIsBusy(t *testing.T) {
 	ext, w := newWarden(Options{})

@@ -31,10 +31,6 @@ func (w *warden) command(ctx sdk.Context, args string) error {
 	if len(fields) > 0 {
 		sub, rest = strings.ToLower(fields[0]), fields[1:]
 	}
-	if feature := unportedAction(sub, rest); feature != "" {
-		ctx.Notify(refusal(feature), "warning")
-		return nil
-	}
 	switch sub {
 	case "status", "":
 		w.showStatus(ctx)

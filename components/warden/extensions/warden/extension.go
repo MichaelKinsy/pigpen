@@ -160,7 +160,7 @@ func newWarden(o Options) (*sdk.Extension, *warden) {
 	w.sup.onMessageUpdate(w.onRunawayMessageUpdate)                                                       // security: the runaway guard feeds on the stream
 	w.sup.blockInput(w.InitBusy, "pi-warden is generating rules. Please wait...")                         // rules: /warden init and rules tune
 	w.sup.blockInput(w.conscienceIndexBusy, "pi-warden is building the capability index. Please wait...") // conscience: /warden index
-	w.sup.blockInput(w.auditRunning, "pi-warden is running an audit. Please wait...") // audit: /warden audit
+	w.sup.blockInput(w.auditRunning, "pi-warden is running an audit. Please wait...")                     // audit: /warden audit
 	w.sup.onInputPass(w.conscienceInputPass)                                                              // conscience: operator input makes assessments in flight stale
 	w.sup.onMessageEnd(w.learnMessageEnd)                                                                 // learning: the assistant message settles the watched steers (runs first)
 	w.sup.onMessageEnd(w.contextMessageEnd)                                                               // context: the repeated-run cut of a user or custom message (opt-in)
