@@ -373,23 +373,24 @@ func TestLifecycleAndPersistence(t *testing.T) {
 		t.Errorf("server-info: %v %v", err, fi)
 	}
 	c1.Stop("restart")
-	c2, i2 := start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
-	tok2, _ := c2.currentToken()
-	wantLast := i2["port"]
-	if i2["port"] == i1["port"] {
-		if tok1 != tok2 {
-			t.Errorf("restart: key reused %v", tok1 == tok2)
+	// The saved port is random and lies in the range the operating system also hands to outgoing connections, so on a busy
+	// host another process can hold it for a moment after the stop; the server then falls back, as server.cjs does. A restart
+	// is retried a few times: only a saved port that is never reused is the defect.
+	var (
+		c2   *Companion
+		i2   map[string]any
+		tok2 string
+	)
+	for range 5 {
+		c2, i2 = start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
+		tok2, _ = c2.currentToken()
+		if i2["port"] == i1["port"] {
+			break
 		}
-	} else {
-		// The saved port is random and lies in the range the operating system also hands to outgoing connections, so on a
-		// busy host another process can take it between the stop and the restart; the server then falls back, as server.cjs
-		// does. That is only acceptable when the port really is taken: a free port that was not reused is the defect.
-		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%v", i1["port"]))
-		if err == nil {
-			_ = ln.Close()
-			t.Errorf("restart: port %v then %v although %v is free", i1["port"], i2["port"], i1["port"])
-		}
-		wantLast = i1["port"] // a fallback leaves the saved port alone
+		c2.Stop("the saved port was taken, retry")
+	}
+	if i2["port"] != i1["port"] || tok1 != tok2 {
+		t.Errorf("restart: port %v then %v, key reused %v", i1["port"], i2["port"], tok1 == tok2)
 	}
 	// a second server wanting the same port falls back to another and keeps the shared files
 	c3, i3 := start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
@@ -397,7 +398,7 @@ func TestLifecycleAndPersistence(t *testing.T) {
 	if i3["port"] == i2["port"] || tok3 == tok2 {
 		t.Errorf("fallback: port %v/%v key reused %v", i2["port"], i3["port"], tok3 == tok2)
 	}
-	if got := readTrim(filepath.Join(project, ".superpowers", "brainstorm", ".last-port")); got != fmt.Sprint(wantLast) {
+	if got := readTrim(filepath.Join(project, ".superpowers", "brainstorm", ".last-port")); got != fmt.Sprint(i2["port"]) {
 		t.Errorf(".last-port %q overwritten by the fallback", got)
 	}
 	// an explicit key refuses the fallback
