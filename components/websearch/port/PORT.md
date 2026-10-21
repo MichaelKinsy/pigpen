@@ -8,13 +8,13 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (777 exact twins, 98 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (781 exact twins, 94 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
 | Tools `web_search` (workflow `none`), `fetch_content` (readable/raw, images), `get_search_content`, `source_check`, `web_enable` and the `/search` command; dynamic activation with transcript-based selection; tool renaming and registration gates; schemas hash-identical to the original | Curator UI and every command but `/search`; `summary-review` / `auto-summary` workflows; activity widget and shortcut; TUI render hooks |
 | Providers Exa (keyed and keyless MCP), Brave, Tavily (key pool), Perplexity, DuckDuckGo, SERPdive, Kagi (search and extract), TinyFish, Search1API, Searchinfinity, Querit, Parallel, Parallel MCP, Ollama, Firecrawl, Crawl4AI, Bright Data (SERP and Unlocker), Gemini (API, ADC, Cloudflare gateway; also the `gemini` fetch provider, URL context and PDF conversion), OpenAI, xAI, Kimi, Mistral, Serper, SerpApi, SerpBase, Serply, Valyu, Bocha, Baizhi, You.com, AnySearch, XCrawl, SearXNG, Jina Search; routing (`auto`, `all`, arrays, `searchRouting`, `allowedProviders`), error classification, credential sources | None: every search provider of the original is ported |
-| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | Defuddle fallback |
+| SSRF guard, redirect limits, domain policy, proxy scoping, private 0600 fetch cache with TTL, retained sources restored from the session, inline data-URI sanitiser, config loading | None: the Defuddle fallback is ported (Slice 12) |
 
 ## Refusals (until the slices above are ported)
 
@@ -420,10 +420,10 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 777 exact + 98 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 781 exact + 94 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 404 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, video, and the decoder, body read and domain fast paths, video, extract fidelity); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, and the whole file again at this head (cumulative run) |
+| Mutation | `mutations.json`: 452 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, video, and the decoder, body read and domain fast paths, video, extract fidelity, the Defuddle port); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, and the whole file again at this head (cumulative run) |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 
@@ -704,7 +704,7 @@ run through the whole pipeline never reaches some of the rules (standardization 
 code blocks), so the snippets cover the task list markers (`checked` counts only when it has a value), runs of blank lines, leading and
 trailing whitespace of the result and block math with `&` or `\\`.
 Mutations of the key decisions of the pipeline, the registry, the Markdown rules and the math helpers are in `mutations.json`
-(`dfd-*`, `decode-text-*`, `extract-defuddle-*`): 49 mutants of this slice (96 in the file), all killed by `pigeq mutate --unit`. One mutant was judged equivalent and
+(`dfd-*`, `decode-text-*`, `extract-defuddle-*`): 49 mutants of this slice (452 in the file), all killed by `pigeq mutate --unit`. One mutant was judged equivalent and
 is not in the file: swapping the title and the description in the call of `dfdRemoveByContentPattern`. The title only decides which element
 `dfdFindContentStart` names as the start of the content, and as the port's comment on that function says, the original's tree walker always
 starts at the first element, so the title anchor decides only whether the search is repeated with an empty title, and the repeat walks the

@@ -85,6 +85,15 @@ the REST API of `api.github.com` when `gh` is missing or fails. `githubClone.ena
 `githubPrIssue.enabled` switch the two extractors off. `gh` and `git` run as child processes of
 this extension, with prompts disabled; see [`port/PORT.md`](port/PORT.md).
 
+## Pages Readability cannot read
+
+`fetch_content` extracts a page as the original does: Readability and a Turndown conversion first, then the
+payload of a React Server Components page, then the Defuddle fallback (a Go port of Defuddle 0.19.3 with its
+extractors for sites such as YouTube, Reddit, X, Wikipedia and Hacker News, and its math handling) when
+Readability found nothing or less than 500 characters. Defuddle runs locally and makes no request. A page that
+all of them give up on ends in the "Fallback options" list of the hosted providers; see
+[`port/PORT.md`](port/PORT.md) "Slice 12: Defuddle fallback".
+
 ## What is refused until it is ported
 
 Each of these returns a tool error with one message, which names the working alternative, and
