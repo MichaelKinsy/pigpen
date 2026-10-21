@@ -47,6 +47,19 @@ type Options struct {
 	// baseline, when set, makes the lane a baseline run that captures the
 	// host's system text instead of comparing to it.
 	baseline *baselineCapture
+
+	// after, when set, makes the timer of every wait on the host: it returns a channel that receives when d has passed.
+	// Nil is time.After. A test about a host that cannot answer fires the timers itself, once the host is known to be
+	// mute, instead of racing a few hundred milliseconds against the speed of a host process on a loaded machine.
+	after func(d time.Duration) <-chan time.Time
+}
+
+// timer is the channel a wait on the host selects on for its timeout.
+func (o Options) timer(d time.Duration) <-chan time.Time {
+	if o.after != nil {
+		return o.after(d)
+	}
+	return time.After(d)
 }
 
 func (o Options) startup() time.Duration {
@@ -467,7 +480,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		return nil, fmt.Errorf("start %s: %w", lane.Bin, err)
 	}
 	readerDone := make(chan struct{})
-	d := &driver{sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture(), readerDone: readerDone, syncing: map[string]chan struct{}{}}
+	d := &driver{timer: opt.timer, sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture(), readerDone: readerDone, syncing: map[string]chan struct{}{}}
 	go d.read(stdout, readerDone)
 	// The host's exit is read by the driver's waits and by the shutdown below, so it is a closed channel
 	// plus the stored error, not a value one reader can take from the other (a lane used to hang forever).
@@ -582,6 +595,8 @@ type driver struct {
 	capture []string
 	// readerDone is closed when the host's stdout has been read to its end.
 	readerDone <-chan struct{}
+	// timer is Options.timer.
+	timer func(time.Duration) <-chan time.Time
 
 	mu      sync.Mutex
 	silent  map[string]bool // barrier response ids, kept out of the trace
@@ -635,7 +650,7 @@ func (d *driver) syncHost(timeout time.Duration) {
 	select {
 	case <-done:
 	case <-d.readerDone:
-	case <-time.After(timeout):
+	case <-d.timer(timeout):
 		d.rec.setHostSync(nil)
 		d.rec.add(ChError, map[string]any{"message": fmt.Sprintf("host did not answer get_state within %s while the harness ordered a request after its output", timeout)})
 	}
@@ -740,7 +755,7 @@ func (d *driver) barrier(timeout time.Duration, exited *hostExit, stderr *tailBu
 // await reads host records until the response to id (and, when wantEnd, an
 // agent_end) arrives, answering dialogs from the scripted queue.
 func (d *driver) await(id string, wantEnd, wantUI bool, timeout time.Duration, exited *hostExit, stderr *tailBuffer, answers *[]UIAnswer) error {
-	deadline := time.After(timeout)
+	deadline := d.timer(timeout)
 	gotResponse, gotEnd := false, false
 	for {
 		select {

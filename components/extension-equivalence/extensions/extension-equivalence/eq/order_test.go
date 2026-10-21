@@ -27,7 +27,8 @@ const burstEvents = 400
 // The host is the shape of PiG's agent loop for a tool call that the host rejects: it writes a run of records to its
 // stdout and, with nothing in between, sends the next request to the model. It reads its stdin on a goroutine of its
 // own, as pi and pig do, so it answers get_state while it waits for the model. In mode "mute" it stops answering once
-// it has been asked to run.
+// it has been asked to run, and the first get_state it then receives is the harness's, which is only sent once the
+// model's request has arrived and is held: the host creates the file named by EQ_FAKE_ORDER_MUTE_MARK at that point.
 func TestFakeOrderHost(t *testing.T) {
 	mode := os.Getenv("EQ_FAKE_ORDER_HOST")
 	if mode == "" {
@@ -85,6 +86,9 @@ func TestFakeOrderHost(t *testing.T) {
 		switch cmd["type"] {
 		case "get_state":
 			if mode == "mute" && prompted {
+				if mark := os.Getenv("EQ_FAKE_ORDER_MUTE_MARK"); mark != "" {
+					_ = os.WriteFile(mark, nil, 0o644)
+				}
 				continue
 			}
 			respond(cmd["id"], "get_state")
@@ -97,7 +101,11 @@ func TestFakeOrderHost(t *testing.T) {
 	os.Exit(0)
 }
 
-func fakeOrderHost(t *testing.T, mode string) string {
+func fakeOrderHost(t *testing.T, mode string) string { return fakeOrderHostMarked(t, mode, "") }
+
+// fakeOrderHostMarked is fakeOrderHost whose mute mode creates the file mark when the model's request is held by the
+// harness (see TestFakeOrderHost).
+func fakeOrderHostMarked(t *testing.T, mode, mark string) string {
 	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("the fake host is started by a POSIX shell script")
@@ -107,7 +115,7 @@ func fakeOrderHost(t *testing.T, mode string) string {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(t.TempDir(), "pig")
-	script := fmt.Sprintf("#!/bin/sh\nEQ_FAKE_ORDER_HOST=%s exec %q -test.run='^TestFakeOrderHost$' -test.count=1\n", mode, exe)
+	script := fmt.Sprintf("#!/bin/sh\nEQ_FAKE_ORDER_HOST=%s EQ_FAKE_ORDER_MUTE_MARK=%q exec %q -test.run='^TestFakeOrderHost$' -test.count=1\n", mode, mark, exe)
 	if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -157,8 +165,14 @@ func TestHostOutputIsRecordedBeforeTheRequestThatFollowsIt(t *testing.T) {
 
 // Ordering a request after the host's output must not hang a lane whose host cannot answer: the step timeout ends
 // the lane as a failure, the held request is released with the host's exit, and the request is still recorded.
+//
+// The timeout is not measured against the wall clock here. A test that gave the lane half a second from the prompt
+// failed whenever the host process, on a loaded machine, took longer than that to write its burst and send the
+// request: the lane then timed out before the request existed and had nothing to record. The test's timers wait for
+// the one thing the property needs instead: the host has been asked, with the model's request held, and is mute.
 func TestAHostThatCannotAnswerEndsTheLaneInsteadOfHanging(t *testing.T) {
-	bin := fakeOrderHost(t, "mute")
+	mark := filepath.Join(t.TempDir(), "muted")
+	bin := fakeOrderHostMarked(t, "mute", mark)
 	// The baseline run of the host's system text would meet the same mute host; the fake host has no system text.
 	key := "pig\x00" + bin + "\x00"
 	baselineMu.Lock()
@@ -169,10 +183,29 @@ func TestAHostThatCannotAnswerEndsTheLaneInsteadOfHanging(t *testing.T) {
 		delete(baselineCache, key)
 		baselineMu.Unlock()
 	})
+	// Every timeout of the lane elapses when the host has gone mute. A host that never gets there is a bug of the test,
+	// and ends it after a minute instead of hanging it.
+	muted := make(chan struct{})
+	go func() {
+		defer close(muted)
+		for deadline := time.Now().Add(time.Minute); time.Now().Before(deadline); time.Sleep(2 * time.Millisecond) {
+			if _, err := os.Stat(mark); err == nil {
+				return
+			}
+		}
+	}()
+	timeouts := func(time.Duration) <-chan time.Time {
+		c := make(chan time.Time, 1)
+		go func() { <-muted; c <- time.Now() }()
+		return c
+	}
 	start := time.Now()
-	tr, err := RunLane(orderScenario(), Lane{Name: "pig-go", Host: "pig", Bin: bin}, Options{StartupTimeout: 30 * time.Second, StepTimeout: 500 * time.Millisecond})
+	tr, err := RunLane(orderScenario(), Lane{Name: "pig-go", Host: "pig", Bin: bin}, Options{StartupTimeout: 30 * time.Second, StepTimeout: 500 * time.Millisecond, after: timeouts})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if _, err := os.Stat(mark); err != nil {
+		t.Fatalf("the host never went mute: %v", err)
 	}
 	var llm bool
 	for _, e := range tr.Events {
