@@ -2582,8 +2582,8 @@
  {
   "name": "rf-config-limit",
   "file": "run_fanout.go",
-  "find": "resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv)",
-  "replace": "resolveMaxSubagentSpawnsPerRun(nil, osEnv)"
+  "find": "cfg := loadExtensionConfig()\n\tdesc, err := createRunFanoutBudget(runID, resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv))",
+  "replace": "_ = loadExtensionConfig()\n\tdesc, err := createRunFanoutBudget(runID, resolveMaxSubagentSpawnsPerRun(nil, osEnv))"
  },
  {
   "name": "mp-both",
@@ -2625,7 +2625,7 @@
   "name": "ext-model-failed",
   "file": "extension.go",
   "find": "if fan != nil && !modelFailed {",
-  "replace": "if fan != nil {"
+  "replace": "if fan != nil && (!modelFailed || modelFailed) {"
  },
  {
   "name": "ext-background-claim",
@@ -2667,7 +2667,7 @@
   "name": "ar-status-details",
   "file": "async_actions.go",
   "find": "\"spawnBudget\", spawnBudget, \"activeAsyncCapacity\", capacity)",
-  "replace": "\"spawnBudget\", nil, \"activeAsyncCapacity\", nil)"
+  "replace": "\"spawnBudget\", func(*jsObject) any { return nil }(spawnBudget), \"activeAsyncCapacity\", func(*jsObject) any { return nil }(capacity))"
  },
  {
   "name": "ac-prefix",
@@ -2722,12 +2722,6 @@
   "file": "run_budget_status.go",
   "find": "\"previousLimit\", float64(g.PreviousLimit)",
   "replace": "\"previousLimit\", float64(g.Limit)"
- },
- {
-  "name": "bs-history-empty",
-  "file": "run_budget_status.go",
-  "find": "history := []any{}",
-  "replace": "var history []any"
  },
  {
   "name": "bs-unlimited",

@@ -1,6 +1,10 @@
 package pi_subagents
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -110,4 +114,102 @@ func TestMissionDecisionsMoveAnActiveMissionToNeedsDecision(t *testing.T) {
 func TestPromptChainSplitsOnSpacedArrowsOnly(t *testing.T) {
 	eq(t, splitPromptChain("a ->b -> c"), []string{"a ->b", "c"}, "an arrow without a following space stays in the segment")
 	eq(t, splitPromptChain(" a ->  -> b "), []string{"a", "b"}, "blank segments are dropped")
+}
+
+func TestLaunchBindingTaskDigest(t *testing.T) {
+	task := "do the work"
+	eq(t, projectLaunchBinding(launchBindingInput{Task: &task})["taskDigest"], any(stableJSONDigest(task)), "the task is carried as a digest")
+	_, has := projectLaunchBinding(launchBindingInput{})["taskDigest"]
+	eq(t, has, false, "no task, no digest")
+}
+
+func TestBindingPropertiesAreBounded(t *testing.T) {
+	build := func(n int) map[string]any {
+		m := map[string]any{}
+		for i := 0; i < n; i++ {
+			m[fmt.Sprintf("k%03d", i)] = float64(i)
+		}
+		return m
+	}
+	props := 0
+	_, err := canonicalizeBindingJSON(build(maxExtensionBindingsProperties), "b", 0, map[uintptr]bool{}, &props)
+	eq(t, err, nil, "exactly the limit")
+	props = 0
+	_, err = canonicalizeBindingJSON(build(maxExtensionBindingsProperties+1), "b", 0, map[uintptr]bool{}, &props)
+	hasMatch(t, err, `extensionBindings exceeds 256 total properties.`)
+}
+
+func TestRefinementFileBaseSourceAndBlankCurrent(t *testing.T) {
+	file := func(source, current string) *refinementFile {
+		f := newRefinementFile(&AgentConfig{Name: "worker", Source: AgentSource(source), FilePath: "/x/worker.md", SystemPrompt: "p"}, 1, "2026-01-01T00:00:00.000Z")
+		f.Current = current
+		return f
+	}
+	_, err := parseRefinementFile(file("nowhere", "guidance").serialize(), "L")
+	hasMatch(t, err, `L base source is invalid.`)
+	_, err = parseRefinementFile(file("project", "guidance").serialize(), "L")
+	eq(t, err, nil, "a project base")
+
+	withTempHome(t)
+	dir := tmp(t)
+	path, err := getAgentRefinementPath(dir, "worker")
+	eq(t, err, nil, "path")
+	eq(t, writeRefinementFile(path, file("project", "   ")), nil, "write")
+	eq(t, appendAgentRefinementOverlay("Base.", dir, "worker"), "Base.", "a blank refinement adds no overlay")
+	eq(t, writeRefinementFile(path, file("project", "  Be brief.  ")), nil, "write")
+	if got := appendAgentRefinementOverlay("Base.", dir, "worker"); !strings.Contains(got, "\nBe brief.\n") {
+		t.Errorf("overlay: %q", got)
+	}
+}
+
+func TestStatusBudgetReconcilesTheSessionAndNamesUnlimitedCapacity(t *testing.T) {
+	withTempHome(t)
+	t.Setenv("PI_SUBAGENTS_TEMP_ROOT", tmp(t))
+	asyncDir := filepath.Join(tmp(t), "run-a")
+	h := mustAcquire(t, "session-bs", lim(3), "run-a", "runner", asyncDir, CapacityOptions{})
+	eq(t, h.MarkStarted("runner-a"), nil, "mark")
+	lines, _, _ := statusBudget("session-bs")
+	hasRe(t, lines, `Active async capacity: 1/unlimited used`)
+	capWriteJSON(t, filepath.Join(asyncDir, "status.json"), map[string]any{"runId": "run-a", "sessionId": "session-bs", "mode": "single", "state": "complete", "startedAt": 100})
+	capWriteJSON(t, filepath.Join(asyncDir, "process-terminal.json"), observedProofJSON("run-a", "runner-a"))
+	lines, _, _ = statusBudget("session-bs")
+	hasRe(t, lines, `Active async capacity: 0/unlimited used`)
+}
+
+func TestValidateResultKeyOrderAndMissingScriptText(t *testing.T) {
+	out := validationObject(WorkflowScriptValidationResult{OK: true, Warnings: []WorkflowScriptValidationWarning{{Kind: "dynamic-spawn-count", Message: "m"}}}, nil, "")
+	eq(t, marshalJSON(out, ""), `{"ok":true,"errors":[],"warnings":[{"kind":"dynamic-spawn-count","message":"m"}]}`, "warning keys")
+	dir := tmp(t)
+	_, text := loadWorkflowScriptPath(dir, map[string]any{"workflowScriptPath": "missing.js"})
+	want := filepath.Join(dir, "missing.js")
+	eq(t, text, "Failed to read workflowScriptPath '"+want+"': ENOENT: no such file or directory, open '"+want+"'", "a missing script")
+}
+
+func newTestFanout(t *testing.T) *runFanout {
+	t.Helper()
+	withTempHome(t)
+	t.Setenv("PI_SUBAGENTS_TEMP_ROOT", tmp(t))
+	f, err := claimRunFanout("run-x")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f
+}
+
+func TestRunFanoutAnnotatesResultsAndKeepsCancellationAndLostBudgets(t *testing.T) {
+	f := newTestFanout(t)
+	res, err := f.annotate(sdk.ToolResult{Content: "body", Details: map[string]any{}}, nil)
+	eq(t, err, nil, "annotate")
+	tr := res.(sdk.ToolResult)
+	if !strings.HasPrefix(tr.Content, "Run fan-out: 1/") || !strings.HasSuffix(tr.Content, "\nbody") {
+		t.Errorf("content: %q", tr.Content)
+	}
+	eq(t, tr.Details.(map[string]any)["runFanoutBudget"].(*jsObject).vals["used"], any(float64(1)), "details")
+
+	_, err = f.annotate(nil, errCancelled)
+	eq(t, err == errCancelled, true, "a cancelled run keeps its own error")
+
+	eq(t, os.RemoveAll(f.desc.Directory), nil, "the budget is gone")
+	_, err = f.annotate(nil, errors.New("boom"))
+	eq(t, err.Error(), "boom", "without a readable budget the error stays as it is")
 }
