@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 // Go-only: the one-pass reader of an index file (index_decode.go) is held to the generic decoder it sits in front of.
@@ -141,5 +142,31 @@ func TestDecodeIndexFastEqualsTheGenericDecoder(t *testing.T) {
 	}
 	if accepted < 3000 || refused < 1000 {
 		t.Fatalf("accepted %d, refused %d: the test does not reach both routes", accepted, refused)
+	}
+}
+
+// TestJSONStringWriterEqualsTheGenericEncoder: every byte that needs an escape, and the ones around it, at every
+// offset of the eight-byte steps the scan takes and after strings of every length up to a few steps.
+func TestJSONStringWriterEqualsTheGenericEncoder(t *testing.T) {
+	specials := []string{"\"", "\\", "\n", "\t", "\r", "\b", "\f", "\x00", "\x01", "\x1f", "\x7f", "\x20", "é", "😀", "\u2028", "<", "&", "/"}
+	for _, special := range specials {
+		for before := range 26 {
+			for _, after := range []int{0, 1, 7, 8, 9, 17} {
+				s := strings.Repeat("a", before) + special + strings.Repeat("b", after) + special
+				w := jsonOut{}
+				w.str(s)
+				want := strings.ReplaceAll(jsonCompact(s), `\u2028`, "\u2028")
+				if string(w.b) != want {
+					t.Fatalf("%q: %s, want %s", s, w.b, want)
+				}
+			}
+		}
+	}
+	for _, s := range []string{"", "a", strings.Repeat("a", 4096), strings.Repeat("\"", 100), "\xff\xfe invalid"} {
+		w := jsonOut{}
+		w.str(s)
+		if string(w.b) != strings.ReplaceAll(jsonCompact(s), `\u2028`, "\u2028") && utf8.ValidString(s) {
+			t.Fatalf("%q: %s", s, w.b)
+		}
 	}
 }

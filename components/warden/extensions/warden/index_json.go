@@ -15,12 +15,18 @@ type jsonOut struct {
 	indent bool
 }
 
+const indentSpaces = "                                "
+
 func (w *jsonOut) newline(level int) {
 	if !w.indent {
 		return
 	}
 	w.b = append(w.b, '\n')
-	for i := 0; i < level; i++ {
+	if 2*level <= len(indentSpaces) {
+		w.b = append(w.b, indentSpaces[:2*level]...)
+		return
+	}
+	for range level {
 		w.b = append(w.b, ' ', ' ')
 	}
 }
@@ -44,19 +50,11 @@ const hexDigits = "0123456789abcdef"
 func (w *jsonOut) str(s string) {
 	w.b = append(w.b, '"')
 	start := 0
-	for i := 0; i < len(s); {
-		c := s[i]
-		if c >= 0x20 && c != '"' && c != '\\' && c < utf8.RuneSelf {
-			i++
-			continue
-		}
-		if c >= utf8.RuneSelf {
-			_, size := utf8.DecodeRuneInString(s[i:])
-			i += size
-			continue
-		}
+	// Bytes of 0x80 and over pass through as they are (a Go string holds well-formed UTF-8 or the bytes stay as they
+	// were), so the only bytes that need a look are the ones firstSpecial finds.
+	for i := firstSpecial(s, 0); i >= 0; i = firstSpecial(s, start) {
 		w.b = append(w.b, s[start:i]...)
-		switch c {
+		switch c := s[i]; c {
 		case '"', '\\':
 			w.b = append(w.b, '\\', c)
 		case '\b':
@@ -72,8 +70,7 @@ func (w *jsonOut) str(s string) {
 		default:
 			w.b = append(w.b, '\\', 'u', '0', '0', hexDigits[c>>4], hexDigits[c&0xf])
 		}
-		i++
-		start = i
+		start = i + 1
 	}
 	w.b = append(w.b, s[start:]...)
 	w.b = append(w.b, '"')

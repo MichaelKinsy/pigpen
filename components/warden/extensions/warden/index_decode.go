@@ -10,14 +10,22 @@ import "strings"
 // two to each other over mutated files.
 
 type indexScan struct {
-	s string
-	i int
+	s    string
+	i    int
+	pool []string
 }
 
 func (d *indexScan) ws() {
 	for d.i < len(d.s) {
 		switch d.s[d.i] {
-		case ' ', '\t', '\n', '\r':
+		case ' ':
+			// The indentation of a written file is runs of spaces.
+			if d.i+8 <= len(d.s) && le64(d.s[d.i:]) == 0x2020202020202020 {
+				d.i += 8
+			} else {
+				d.i++
+			}
+		case '\t', '\n', '\r':
 			d.i++
 		default:
 			return
@@ -131,23 +139,24 @@ func (d *indexScan) str() (string, bool) {
 	}
 }
 
-// strList reads an array of strings (never null); an empty array is an empty, non-nil slice.
+// strList reads an array of strings (never null); an empty array is an empty, non-nil slice. The strings of every list
+// are laid end to end in one backing array (pool), each list a slice of it that cannot grow into the next.
 func (d *indexScan) strList() ([]string, bool) {
 	if !d.eat('[') {
 		return nil, false
 	}
-	out := []string{}
+	start := len(d.pool)
 	if d.eat(']') {
-		return out, true
+		return d.pool[start:start:start], true
 	}
 	for {
 		s, ok := d.str()
 		if !ok {
 			return nil, false
 		}
-		out = append(out, s)
+		d.pool = append(d.pool, s)
 		if d.eat(']') {
-			return out, true
+			return d.pool[start:len(d.pool):len(d.pool)], true
 		}
 		if !d.eat(',') {
 			return nil, false
@@ -305,7 +314,9 @@ func (d *indexScan) entries(f *IndexFile) bool {
 	if !d.eat('[') {
 		return false
 	}
-	f.Entries = make([]IndexEntry, 0, min(strings.Count(d.s, `"kind"`), len(d.s)/20))
+	n := min(strings.Count(d.s, `"kind"`), len(d.s)/20)
+	f.Entries = make([]IndexEntry, 0, n)
+	d.pool = make([]string, 0, 4*n)
 	if d.eat(']') {
 		return true
 	}
