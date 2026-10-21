@@ -169,24 +169,57 @@ type taggedLine struct {
 	fenced bool
 }
 
-// taggedLines are the lines of a document tagged with whether they sit inside a fenced code block, where `#` is code.
+// taggedLines are the lines of a document (split at \r\n, \r or \n) tagged with whether they sit inside a fenced code
+// block, where `#` is code.
 func taggedLines(markdown string) []taggedLine {
-	var out []taggedLine
+	out := make([]taggedLine, 0, strings.Count(markdown, "\n")+1)
 	fence := ""
-	for _, text := range reLineBreak.Split(markdown, -1) {
-		if m := reFence.FindStringSubmatch(text); m != nil {
-			marker := m[1]
-			if fence == "" {
-				fence = marker
-			} else if marker[0] == fence[0] && len(marker) >= len(fence) {
-				fence = ""
+	add := func(text string) {
+		// Only a line with a backtick or a tilde can open or close a fence: the regular expression runs on those.
+		if strings.IndexByte(text, '`') >= 0 || strings.IndexByte(text, '~') >= 0 {
+			if m := reFence.FindStringSubmatch(text); m != nil {
+				marker := m[1]
+				if fence == "" {
+					fence = marker
+				} else if marker[0] == fence[0] && len(marker) >= len(fence) {
+					fence = ""
+				}
+				out = append(out, taggedLine{text, true})
+				return
 			}
-			out = append(out, taggedLine{text, true})
-			continue
 		}
 		out = append(out, taggedLine{text, fence != ""})
 	}
+	start := 0
+	for i := 0; i < len(markdown); i++ {
+		c := markdown[i]
+		if c != '\n' && c != '\r' {
+			continue
+		}
+		add(markdown[start:i])
+		if c == '\r' && i+1 < len(markdown) && markdown[i+1] == '\n' {
+			i++
+		}
+		start = i + 1
+	}
+	add(markdown[start:])
 	return out
+}
+
+// headingMatch is reHeading.FindStringSubmatch: a heading starts with `#` at the first byte of the line.
+func headingMatch(text string) []string {
+	if text == "" || text[0] != '#' {
+		return nil
+	}
+	return reHeading.FindStringSubmatch(text)
+}
+
+// headerMatch is re.FindStringSubmatch for the header-line expressions, each of which needs a colon.
+func headerMatch(re *lazyRegexp, line string) []string {
+	if strings.IndexByte(line, ':') < 0 {
+		return nil
+	}
+	return re.FindStringSubmatch(line)
 }
 
 // condense cuts a fallback document to limit characters while keeping its shape: every heading stays and each section
@@ -202,7 +235,7 @@ func condense(text string, limit int) string {
 	}
 	sections := []*section{{}}
 	for _, line := range taggedLines(text) {
-		if !line.fenced && reHeading.MatchString(line.text) {
+		if !line.fenced && headingMatch(line.text) != nil {
 			sections = append(sections, &section{heading: line.text, hasHeading: true})
 		} else {
 			last := sections[len(sections)-1]
@@ -246,7 +279,7 @@ func ruleLevel(lines []taggedLine) int {
 		if line.fenced {
 			continue
 		}
-		if m := reHeading.FindStringSubmatch(line.text); m != nil && len(m[1]) < level {
+		if m := headingMatch(line.text); m != nil && len(m[1]) < level {
 			level = len(m[1])
 		}
 	}
@@ -317,7 +350,7 @@ func parseRules(markdown string) []Rule {
 	var drafts []*draft
 	for _, line := range lines {
 		if !line.fenced {
-			if m := reHeading.FindStringSubmatch(line.text); m != nil && len(m[1]) == level {
+			if m := headingMatch(line.text); m != nil && len(m[1]) == level {
 				drafts = append(drafts, &draft{name: m[2]})
 				continue
 			}
@@ -349,7 +382,7 @@ func parseRules(markdown string) []Rule {
 			}
 			line := body[first]
 			remove := func() { body = append(body[:first], body[first+1:]...) }
-			if m := rePathsLine.FindStringSubmatch(line); m != nil {
+			if m := headerMatch(rePathsLine, line); m != nil {
 				remove()
 				if seenPaths {
 					warnings = append(warnings, "paths: appears more than once; the first is kept")
@@ -364,7 +397,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := reThresholdLn.FindStringSubmatch(line); m != nil {
+			if m := headerMatch(reThresholdLn, line); m != nil {
 				remove()
 				raw := jsTrim(cutBackticks(m[1]))
 				value := jsToNumber(raw)
@@ -383,7 +416,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := reSeverityLine.FindStringSubmatch(line); m != nil {
+			if m := headerMatch(reSeverityLine, line); m != nil {
 				remove()
 				raw := strings.ToLower(jsTrim(m[1]))
 				if seenSeverity {
@@ -401,7 +434,7 @@ func parseRules(markdown string) []Rule {
 				continue
 			}
 			// One small block for the `source: <file>:<line>` citation header, beside the other header lines.
-			if m := reSourceRef.FindStringSubmatch(line); m != nil {
+			if m := headerMatch(reSourceRef, line); m != nil {
 				remove()
 				raw := jsTrim(cutBackticks(m[1]))
 				ref := reRefParts.FindStringSubmatch(raw)
@@ -425,7 +458,7 @@ func parseRules(markdown string) []Rule {
 				}
 				continue
 			}
-			if m := reWhenLine.FindStringSubmatch(line); m != nil {
+			if m := headerMatch(reWhenLine, line); m != nil {
 				remove()
 				raw := strings.ToLower(jsTrim(m[1]))
 				if seenWhen {
@@ -468,7 +501,7 @@ func isRuleShaped(markdown string) bool {
 		if line.fenced {
 			continue
 		}
-		if m := reHeading.FindStringSubmatch(line.text); m != nil && len(m[1]) == level {
+		if m := headingMatch(line.text); m != nil && len(m[1]) == level {
 			inSection = true
 			inBody = 0
 			continue
@@ -1128,33 +1161,8 @@ func bySeverityThenScore(list []RuleFinding) {
 func scoreAnswers(answers map[string]Answer, entries []RuleScoreEntry, config RulesConfig) RuleScoring {
 	out := RuleScoring{Scores: make([]RuleScore, 0, len(entries))}
 	for _, entry := range entries {
-		answer, ok := answers[entry.Key]
-		if !ok || answer.Choice == "" {
-			continue
-		}
-		violation := 0.0
-		if p, has := answer.Probabilities[outcomeViolation]; has {
-			violation = p
-		} else if answer.Choice == outcomeViolation {
-			violation = 1
-		}
-		outcome := answer.Choice
-		if _, known := rulesQuestions().outcomes[outcome]; !known {
-			outcome = outcomeInsufficent
-		}
-		score := RuleScore{ID: entry.ID, Name: entry.Name, Outcome: outcome, Violation: violation}
-		cutoff := config.Threshold
-		if entry.Rule != nil {
-			score.Threshold, score.Severity, score.SourceRef = entry.Rule.Threshold, entry.Rule.Severity, entry.Rule.SourceRef
-			if entry.Rule.Threshold != nil {
-				cutoff = *entry.Rule.Threshold
-			}
-		}
-		out.Scores = append(out.Scores, score)
-		if violation >= cutoff {
-			out.Findings = append(out.Findings, RuleFinding{RuleScore: score, Body: entry.Body})
-		} else if config.SoftThreshold > 0 && violation >= config.SoftThreshold {
-			out.SoftFindings = append(out.SoftFindings, RuleFinding{RuleScore: score, Body: entry.Body})
+		if answer, ok := answers[entry.Key]; ok {
+			scoreOne(&out, answer, entry.ID, entry.Name, entry.Body, entry.Rule, config)
 		}
 	}
 	bySeverityThenScore(out.Findings)
@@ -1162,21 +1170,56 @@ func scoreAnswers(answers map[string]Answer, entries []RuleScoreEntry, config Ru
 	return out
 }
 
+// scoreOne adds one answered question to out: its score, and a finding or soft finding when it reaches a cutoff.
+func scoreOne(out *RuleScoring, answer Answer, id, name, body string, rule *Rule, config RulesConfig) {
+	if answer.Choice == "" {
+		return
+	}
+	violation := 0.0
+	if p, has := answer.Probabilities[outcomeViolation]; has {
+		violation = p
+	} else if answer.Choice == outcomeViolation {
+		violation = 1
+	}
+	outcome := answer.Choice
+	if _, known := rulesQuestions().outcomes[outcome]; !known {
+		outcome = outcomeInsufficent
+	}
+	score := RuleScore{ID: id, Name: name, Outcome: outcome, Violation: violation}
+	cutoff := config.Threshold
+	if rule != nil {
+		score.Threshold, score.Severity, score.SourceRef = rule.Threshold, rule.Severity, rule.SourceRef
+		if rule.Threshold != nil {
+			cutoff = *rule.Threshold
+		}
+	}
+	out.Scores = append(out.Scores, score)
+	if violation >= cutoff {
+		out.Findings = append(out.Findings, RuleFinding{RuleScore: score, Body: body})
+	} else if config.SoftThreshold > 0 && violation >= config.SoftThreshold {
+		out.SoftFindings = append(out.SoftFindings, RuleFinding{RuleScore: score, Body: body})
+	}
+}
+
 // scoreRuleAnswers scores the judge's answers rule by rule: one score each, a finding at the rule's own cutoff (or
 // rules.threshold when the rule sets none), and a soft finding between rules.softThreshold and that cutoff. An
 // aggregate document is one rule under its source's name. Shared by the live guard and history replays.
 func scoreRuleAnswers(applicable []Rule, answers map[string]Answer, config RulesConfig, aggregateName *string) RuleScoring {
-	var entries []RuleScoreEntry
 	if aggregateName != nil {
-		entries = []RuleScoreEntry{{Key: aggregateQuestion, ID: aggregateQuestion, Name: *aggregateName}}
-	} else {
-		entries = make([]RuleScoreEntry, 0, len(applicable))
-		for i := range applicable {
-			rule := &applicable[i]
-			entries = append(entries, RuleScoreEntry{Key: "rule_" + rule.ID, ID: rule.ID, Name: rule.Name, Body: rule.Body, Rule: rule})
+		return scoreAnswers(answers, []RuleScoreEntry{{Key: aggregateQuestion, ID: aggregateQuestion, Name: *aggregateName}}, config)
+	}
+	out := RuleScoring{Scores: make([]RuleScore, 0, len(applicable))}
+	var buf [96]byte
+	for i := range applicable {
+		rule := &applicable[i]
+		key := append(append(buf[:0], "rule_"...), rule.ID...)
+		if answer, ok := answers[string(key)]; ok {
+			scoreOne(&out, answer, rule.ID, rule.Name, rule.Body, rule, config)
 		}
 	}
-	return scoreAnswers(answers, entries, config)
+	bySeverityThenScore(out.Findings)
+	bySeverityThenScore(out.SoftFindings)
+	return out
 }
 
 // RulesVerdict is the verdict on one write, edit or run.
