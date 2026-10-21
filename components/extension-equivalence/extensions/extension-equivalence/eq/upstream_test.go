@@ -400,10 +400,13 @@ while IFS= read -r line; do
     *'"type":"set_model"'*) printf '{"type":"response","id":"%s","command":"set_model","success":true,"data":{"id":"eq-1","baseUrl":"%s","note":"dial %s"}}\n' "$id" "$base" "${base#http://}" ;;
     *'"type":"prompt"'*)
       printf '{"type":"response","id":"%s","command":"prompt","success":true}\n' "$id"
-      curl -s -X POST "$base/chat/completions" -d '{"messages":[{"role":"user","content":"responseId r-1a2b3c"}]}' > '` + dir + `'/answer.$$
-      printf '{"type":"agent_end"}\n' ;;
+      # A real host keeps reading its stdin while a model call is in flight: the harness orders that request after the
+      # host output written before it (a get_state round trip), so the call runs in the background.
+      ( curl -s -X POST "$base/chat/completions" -d '{"messages":[{"role":"user","content":"responseId r-1a2b3c"}]}' > '` + dir + `'/answer.$$
+        printf '{"type":"agent_end"}\n' ) & ;;
   esac
 done
+wait
 `
 		if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
 			t.Fatal(err)
