@@ -362,7 +362,7 @@ func TestSessionBoundariesClearTheFinishedAgentsAndTheEvictedOnes(t *testing.T) 
 			unread.finish("not read")
 			waitStatus(t, r, unreadID, statusCompleted)
 
-			r.Fire(event, obj{"reason": "new"})
+			r.FireAll(event, obj{"reason": "new"})
 
 			eq(t, r.app.mgr.get(readID) == nil, true) // a session boundary clears the agents of the session before
 			read.mu.Lock()

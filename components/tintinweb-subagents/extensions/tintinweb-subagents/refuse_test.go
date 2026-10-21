@@ -184,7 +184,7 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
 		r.FireAll("session_start", obj{"reason": "new"})
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 }
 
