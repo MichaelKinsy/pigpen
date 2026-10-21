@@ -443,3 +443,17 @@ How it differs from the original, and why:
 - **The old `/agents` text listing is gone** (it was a stand-in for the menu), with its refusal of the Workflows menu and
   of cancelling a scheduled job.
 - **Skipped twin:** "leaves a file without a BOM exactly as the parser reads it": Go has one parser.
+
+### Proof beyond the twins (menus)
+
+- **The original's drawing, recorded under Node and compared in Go**: `port/record-menus.spec.ts` (vitest, run from a Pi
+  checkout with `port/record-menus.config.mjs`; the original's `ui/workflow-card.ts` and `ui/workflow-dialog.ts` and pi-tui's
+  own `SettingsList`) draws 6 cards, 14 dialogs and 4 settings lists on the inputs of `testdata/menus-fixtures.json` into
+  `testdata/menus-golden.json`; `menus_golden_test.go` draws the same inputs with the Go code and compares every line,
+  markup included. It passed on the first recording. Re-record with
+  `RECORD_ROOT=$PWD PI_SRC=<pi checkout> vitest run --config port/record-menus.config.mjs` (after `npm install --omit=dev` in `port/oracle`).
+- **Mutants**: 32 for the toggles, the card, the dialog, the settings and the menus (see `gen-mutations.py`); every one is killed.
+- **Benchmarks** (`menu_bench_test.go`): one spinner frame of a 1000-agent dialog, one key, a 200-agent card layout and the
+  settings list. The dialog caches its phase groups against the log's revision, so a frame costs the visible rows.
+- **Not done**: a `pigeq` scenario of the menu (its answers are dialogs, which the headless harness cancels, so there is
+  nothing observable to compare), and the interleaved comparison with the original under Node's runtime for the perf report.
