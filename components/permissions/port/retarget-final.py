@@ -7,6 +7,11 @@ RETARGET: name -> (file, find, replace) for code that still exists in another sh
 import glob, json, os, sys
 
 RETARGET = {
+ "rd-name-authorization": ("logredaction.go", '{"authorization", "secret", "token",', '{"secret", "token",'),
+ "rd-name-secret": ("logredaction.go", '"secret", "token", "password"', '"token", "password"'),
+ "rd-name-cookie": ("logredaction.go", '"credential", "cookie"}', '"credential"}'),
+ "rd-camel-keys": ("logredaction.go", "if j == len(s) || camelEnd(s[j]) || (s[j] == 's' && (j+1 == len(s) || camelEnd(s[j+1]))) {", "if j == len(s) || camelEnd(s[j]) {"),
+ "rd-camel-tail": ("logredaction.go", "if j == len(s) || camelEnd(s[j]) || (s[j] == 's' && (j+1 == len(s) || camelEnd(s[j+1]))) {", "if j < len(s) && (camelEnd(s[j]) || (s[j] == 's' && j+1 < len(s) && camelEnd(s[j+1]))) {"),
  "rd-name-boundary-start": ("logredaction.go", "if i == 0 || isSepByte(s[i-1]) {", "if i > 0 && isSepByte(s[i-1]) {"),
  "rd-name-boundary-end": ("logredaction.go", "if j == len(s) || isSepByte(s[j]) || (s[j] == 's' && (j+1 == len(s) || isSepByte(s[j+1]))) {", "if j < len(s) && (isSepByte(s[j]) || (s[j] == 's' && j+1 < len(s) && isSepByte(s[j+1]))) {"),
  "rd-camel": ("logredaction.go", "|| matchesCamelKey(name)", "|| false"),
@@ -49,6 +54,8 @@ DROP_NAMES = {
  "fv-label": "FlaggedElements' label comparison was rewritten away by the presentation lane (no `e.Label == label` remains)",
  "effect-unproven": "UnprovenEffect is now an alias of bashparse.UnprovenEffect; the bashparse lists cover the value",
 }
+# these still found their text, but only in the comment that keeps the original's regular expressions (they mutated the comment)
+FORCE = {"rd-name-authorization", "rd-name-secret", "rd-name-cookie", "rd-camel-keys", "rd-camel-tail"}
 ext = "extensions/pi-permission-system/"
 def usable(m):
     p = ext + m["file"]
@@ -57,7 +64,7 @@ changed = dropped = 0
 for f in sorted(glob.glob("port/mutations*.json")):
     ms = json.load(open(f)); out = []
     for m in ms:
-        if usable(m): out.append(m); continue
+        if usable(m) and m["name"] not in FORCE: out.append(m); continue
         n = m["name"]
         if n in RETARGET and (f.endswith("handlers.json") is False):
             file, find, repl = RETARGET[n]

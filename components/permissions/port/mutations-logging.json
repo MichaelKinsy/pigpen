@@ -140,20 +140,20 @@
  {
   "name": "rd-name-authorization",
   "file": "logredaction.go",
-  "find": "authorization|api",
-  "replace": "api"
+  "find": "{\"authorization\", \"secret\", \"token\",",
+  "replace": "{\"secret\", \"token\","
  },
  {
   "name": "rd-name-secret",
   "file": "logredaction.go",
-  "find": "|secret|token",
-  "replace": "|token"
+  "find": "\"secret\", \"token\", \"password\"",
+  "replace": "\"token\", \"password\""
  },
  {
   "name": "rd-name-cookie",
   "file": "logredaction.go",
-  "find": "|cookie|",
-  "replace": "|"
+  "find": "\"credential\", \"cookie\"}",
+  "replace": "\"credential\"}"
  },
  {
   "name": "rd-name-boundary-start",
@@ -176,14 +176,14 @@
  {
   "name": "rd-camel-keys",
   "file": "logredaction.go",
-  "find": "(?:Key|Keys)(?:$|[A-Z_-])",
-  "replace": "(?:Key)(?:$|[A-Z_-])"
+  "find": "if j == len(s) || camelEnd(s[j]) || (s[j] == 's' && (j+1 == len(s) || camelEnd(s[j+1]))) {",
+  "replace": "if j == len(s) || camelEnd(s[j]) {"
  },
  {
   "name": "rd-camel-tail",
   "file": "logredaction.go",
-  "find": "(?:Key|Keys)(?:$|[A-Z_-])",
-  "replace": "(?:Key|Keys)(?:[A-Z_-])"
+  "find": "if j == len(s) || camelEnd(s[j]) || (s[j] == 's' && (j+1 == len(s) || camelEnd(s[j+1]))) {",
+  "replace": "if j < len(s) && (camelEnd(s[j]) || (s[j] == 's' && j+1 < len(s) && camelEnd(s[j+1]))) {"
  },
  {
   "name": "rd-lower",
