@@ -3,6 +3,10 @@
 // module's own work is timed.
 //
 //   node port/bench-video.mjs [iterations]
+//   node --expose-gc --min-semi-space-size=512 --max-semi-space-size=512 port/bench-video.mjs [iterations] alloc
+//
+// With `alloc` it also prints the heap growth per call: the semi space is large enough that no
+// scavenge runs during the loop, so the growth of `heapUsed` is what the calls allocated.
 //
 // Run it from components/websearch with the oracle's dependencies installed (Node 24).
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
@@ -13,6 +17,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const iterations = Number(process.argv[2] ?? 200);
+const measureAlloc = process.argv[3] === "alloc" && typeof globalThis.gc === "function";
 const home = mkdtempSync(join(tmpdir(), "pi-bench-video-"));
 const agent = join(home, "agent");
 mkdirSync(agent, { recursive: true });
@@ -44,6 +49,12 @@ async function time(label, url, options) {
 		samples.push(Number(process.hrtime.bigint() - t) / 1e3);
 	}
 	console.log(`${label}: median ${median(samples).toFixed(1)} us over ${iterations} runs`);
+	if (measureAlloc) {
+		globalThis.gc();
+		const before = process.memoryUsage().heapUsed;
+		for (let i = 0; i < iterations; i++) await run();
+		console.log(`${label}: alloc ${Math.round((process.memoryUsage().heapUsed - before) / iterations)} bytes/op over ${iterations} runs`);
+	}
 }
 const yt = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 await time("youtube-frames", yt, { frames: 3 });
