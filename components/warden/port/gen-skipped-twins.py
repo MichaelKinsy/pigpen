@@ -74,15 +74,15 @@ LEARNING_CASES = {
 }
 
 CONSCIENCE_CASES = {
-    ("conscience-gunner.test.ts", 672): "config loader case: applyProjectOverrides ignoring conscience in a project file is the config lane's (the port has no project config file at all: D5)",
-    ("conscience-gunner.test.ts", 702): "config loader case: completeConfig reporting a missing conscience section is the config lane's (the Go config merges defaults over the JSON file: a missing section is the defaults, conscience off)",
+    ("conscience-gunner.test.ts", 672): "config loader case: the port's loader (config_load.go ApplyProjectOverrides) ignores the conscience section of a project file; no Go test pins this exact case",
+    ("conscience-gunner.test.ts", 702): "config loader case: completeConfig reports a missing conscience section (shape.go, 'conscience' in the shape warning); no Go test pins this exact case",
     ("extension.test.ts", 4417): "the first half needs a saved key rejection (a 401 kept in the TypeSafe auth state file); the port reads the key from the environment and keeps no such state, so key_rejected is never traced (D17); the no_consent half is TestConscienceMissingConsentTracesNoConsent, a missing key is no_key (TestConscienceMissingKeyTracesNoKey)",
 }
 
 # Per-case reasons for the cases that stay skipped in the configuration, host and backend files (each case says why).
 CASES = {
     "config.test.ts": [
-        ("the tracker reads a string duration", "needs the arming tracker, which the guard-core lane ports with arming.ts (the config half, ParseDuration, is twinned by TestParseDuration and config.test.ts:417)"),
+        ("the tracker reads a string duration", "asserts the arming tracker's string-duration input; the config half, ParseDuration, is twinned by TestParseDuration and config.test.ts:417 (no Go test pins the tracker half of this exact case)"),
     ],
     "shape.test.ts": [
         ("the 0.9.0 live crash", "guardCurrentSections guards the extension against a stale shape module in Node's module graph; the Go package is one unit, so a stale shape module cannot exist (the completeConfig half is twinned)"),
@@ -162,7 +162,7 @@ def reason(f, name, line=0):
     if f in ("violation.test.ts", "violation-pipeline.test.ts"):
         return "rules file resolution, starter rules and the init prompt belong to the rules guard (pi-warden.md)"
     if f in ("filter.test.ts", "relevance.test.ts") and re.match(r"filter config:|a project file tunes the filter|config: ", n):
-        return "config loader (applyUserOverrides, applyProjectOverrides, completeConfig) is owned by the configui lane; this case asserts the loader's parsing and clamping, not the context module"
+        return "this case asserts the config loader's parsing and clamping of the filter settings (config_load.go); the loader's twins cover the same clamps for the other sections, no Go test pins this exact case"
     if f == "shape.test.ts":
         return "config schema migration (completeConfig) is not part of this port: the Go config merges defaults over a JSON file"
     if f == "extension.test.ts" and n.startswith("stuck-loop diff:"):
