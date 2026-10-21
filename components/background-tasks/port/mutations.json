@@ -1,0 +1,44 @@
+[
+ {
+  "name": "logtail-character-bound",
+  "file": "logtail.go",
+  "find": "length := int64(min(size, int64(3*lengthLimit+1)))",
+  "replace": "length := int64(min(size, int64(lengthLimit)))"
+ },
+ {
+  "name": "logtail-byte-bound",
+  "file": "logtail.go",
+  "find": "length := int64(min(size, int64(3*lengthLimit+1)))",
+  "replace": "length := size"
+ },
+ {
+  "name": "logtail-task-cache",
+  "file": "logtail.go",
+  "find": "if cached != nil && cached.logFile == logFile",
+  "replace": "if false && cached != nil && cached.logFile == logFile"
+ },
+ {
+  "name": "logtail-shared-admission",
+  "file": "logtail.go",
+  "find": "if r.active < probeConcurrency {",
+  "replace": "if true || r.active < probeConcurrency {"
+ },
+ {
+  "name": "logtail-queued-validity",
+  "file": "logtail.go",
+  "find": "if r.tails[t] != owned || !current {",
+  "replace": "if false && (r.tails[t] != owned || !current) {"
+ },
+ {
+  "name": "logtail-close-ownership",
+  "file": "logtail.go",
+  "find": "\t\t// The descriptor closes before the admission is released.\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n\t\tr.mu.Lock()\n\t\tr.active--\n\t\tvar wake chan struct{}\n\t\tif len(r.queued) > 0 {\n\t\t\twake = r.queued[0]\n\t\t\tr.queued = r.queued[1:]\n\t\t}\n\t\tr.mu.Unlock()\n\t\tif wake != nil {\n\t\t\tclose(wake)\n\t\t}\n",
+  "replace": "\t\tr.mu.Lock()\n\t\tr.active--\n\t\tvar wake chan struct{}\n\t\tif len(r.queued) > 0 {\n\t\t\twake = r.queued[0]\n\t\t\tr.queued = r.queued[1:]\n\t\t}\n\t\tr.mu.Unlock()\n\t\tif wake != nil {\n\t\t\tclose(wake)\n\t\t}\n\t\tif f != nil {\n\t\t\t_ = f.Close()\n\t\t}\n"
+ },
+ {
+  "name": "logtail-clear-ownership",
+  "file": "logtail.go",
+  "find": "\tr.tails = map[*task]*tailState{}\n\tqueued := r.queued",
+  "replace": "\tr.tails = map[*task]*tailState{}\n\tr.active = 0\n\tqueued := r.queued"
+ }
+]

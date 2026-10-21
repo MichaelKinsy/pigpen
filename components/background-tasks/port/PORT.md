@@ -12,8 +12,8 @@
 
 | Slice | Content | State |
 |---|---|---|
-| 1 | Inventory, honest-refusal skeleton, settings reader, package metadata | this revision |
-| 2a | Leaf modules and their twins: format, wake events, snapshots and restore, lifecycle, orphan watcher, resource control, probes, log writer and tail, lanes, persistence, matcher, activity | refused until then |
+| 1 | Inventory, honest-refusal skeleton, settings reader, package metadata | merged-ready (`parity/background-tasks-1`) |
+| 2a | Leaf modules and their twins: format, wake events, snapshots and restore, lifecycle, orphan watcher, resource control, probes, log writer and tail, lanes, persistence, matcher, activity | this revision: 58 exact twins, 1 named skip (below); the tool, commands and shortcuts stay refused until 2b |
 | 2b | The task runtime through the host: spawn, stop, wakes, restore, retention, auto-background; scenarios and mutations | refused until then |
 | 3 | Widget, dashboard, renderers, shortcuts | refused until then |
 | 4 | Process-tree cleanup on stop and shutdown on Linux and macOS (Windows by vet and reasoning), the performance table | |
@@ -40,8 +40,8 @@ column is what a user sees until its slice lands (`refusal(feature)` in `refuse.
 | M12 | `render.ts`, `registrations.ts` | tool renderers (`renderCall` empty, `renderResult`) and the `kendex-background-tasks:event` message renderer | port (`SetToolRenderers`, `MessageViewRenderer`; slice 3) | `render.go` | default card |
 | M13 | `registrations.ts:201-322` | `/bg` and `/bg:*` commands with argument completions; four shortcuts | port | `commands.go` | notification |
 | M14 | `package.json` `kendex.extensionManager` | the settings declaration for the `/extensions:settings` tab | n/a | carried unchanged in `package.json`; the tab belongs to `pi-extension-manager`, a separate extension | none |
-| M15 | `activity.ts` | `bg_task.*` events to the broker at `globalThis[Symbol.for("kendex.pi.activity")]` (pi-session-bridge) | owner | the event builder is ported and twinned; publication has no target across the process boundary (see Gaps) | |
-| M16 | `render.ts:acquirekendexModalLock`, `stacked-widget.ts`, `package-config.ts` | process-global `Symbol.for("kendex.pi.*")` registries (modal lock, mini-dashboard stack, project trust) | owner | each is a Go-process registry of this extension (see Gaps) | |
+| M15 | `activity.ts` | `bg_task.*` events to the broker at `globalThis[Symbol.for("kendex.pi.activity")]` (pi-session-bridge) | owner | the event builder is ported and twinned; publication has no target across the process boundary (see the table under Gaps) | |
+| M16 | `render.ts:acquirekendexModalLock`, `stacked-widget.ts`, `package-config.ts` | process-global `Symbol.for("kendex.pi.*")` registries (modal lock, mini-dashboard stack, project trust) | owner | each is a Go-process registry of this extension (see the table under Gaps) | |
 | M17 | `package.json` `pi.appendSystem`, `scripts/append-system.mjs`, `instructions.md` | the npm postinstall helper writes a marked block into `APPEND_SYSTEM.md` | port | the extension appends `instructions.md` to the system prompt unless the block is already there (slice 2b) | none |
 | M18 | `settings.ts`, `package-config.ts` | settings: user and trusted-project files, 1 s memo, `PI_BG_TASK_DIR`, agent-directory `bin` on the task PATH | port | `config.go`, `settings.go` | none (done in slice 1) |
 | M19 | `diagnostics.ts` | `PI_BG_TASK_DEBUG`, `PI_BG_TASK_DIAGNOSTICS`, `PI_BG_TASK_DIAGNOSTIC_LOG` | port | `diagnostics.go` | |
@@ -49,14 +49,18 @@ column is what a user sees until its slice lands (`refusal(feature)` in `refuse.
 
 ## Gaps: needs an SDK capability or an owner decision
 
-- **Activity broker (M15).** The original publishes through a JavaScript global that another extension in the same Node
-  process (pi-session-bridge) installs. A Go extension is another process; nothing can install or read that global.
-  Decision needed: either accept that no `bg_task.*` activity is published, or define a `pi.events` channel for it (an invented
-  protocol, so not done without approval). The event builder (`buildBackgroundTaskActivity`) is ported and twinned either way.
-- **Shared registries (M16).** The mini-dashboard stack lets pi-tasks, orchestrators and agents widgets share one host
-  widget. Across Node extensions it is a global; for Go extensions fused into one Binary a Go-process registry could be
-  shared, but no other Pigpen extension uses it, so this package keeps its own registry and the same host widget keys
-  (`kendex-mini-dashboard-stack-above` and `-below`). The modal lock is dropped with nothing to lock against.
+- **Process-global interop (M15, M16): the facts for the owner.** The original reads or writes five `Symbol.for` globals.
+  A Go extension runs in its own process (or fused into PiG's), so it can neither see nor set a JavaScript global; what each
+  one drives, observably:
+
+  | Symbol | Original use | What a user sees when it works | Go port today |
+  |---|---|---|---|
+  | `kendex.background-tasks.installed` (`constants.ts:7`) | set on the `pi` object itself as a double-registration guard | nothing cross-extension; a second load of the same `pi` object registers nothing | n/a (each factory call returns a new extension) |
+  | `kendex.pi.activity` (`activity.ts:36`) | a broker object that pi-session-bridge installs; `publishBackgroundTaskStarted`/`publishBackgroundTaskActivity` call `broker.publish(event)` on task start, output match and exit (`bg_task.started`, `bg_task.output_matched`, `bg_task.completed`/`failed`/`timed_out`/`stopped`, with severity, importance, refs `bg_task_id`, details) | nothing in the chat (README: "these do not appear as chat messages"); with pi-session-bridge loaded, **external observers** of that bridge receive structured task events | not published; `buildBackgroundTaskActivity` is ported and twinned. Decision: accept, or define a `pi.events` channel (invented protocol) |
+  | `kendex.pi.mini-dashboard-stack` (`stacked-widget.ts:42`) | one registry of widget entries ranked ORCH 10, TASKS 20, AGENTS 30, BACKGROUND_TASKS 40; sibling kendex extensions (orchestrator, pi-tasks, agents) add entries and **one** host widget per placement (`kendex-mini-dashboard-stack-above`, `-below`) draws them in rank order, sequence order for equal ranks | with siblings loaded, their mini-dashboards and this one share one framed region in rank order and a sibling's removal re-lays the rest out; alone, only this entry draws | the port keeps its own registry with the same host keys, so alone it is identical. **With a Node sibling loaded in PiG's Node runtime, both write the same host widget key and the later `setWidget` replaces the earlier** (no cross-process stack). Decision: keep the shared key (matches the original when alone, clobbers a sibling) or use a port-specific key (no clobbering, no stacking) |
+  | `kendex.pi.modal-lock` (`constants.ts:10`, `render.ts:54`) | a depth counter raised while the dashboard overlay is open | sibling kendex extensions that read `depth > 0` hold back their own modals or notifications while the dashboard is up | dropped: nothing to lock against |
+  | `kendex.pi.project-trust` (`package-config.ts:136`) | the trust answer recorded by whichever kendex package sees Pi's `isProjectTrusted()` first, read by every package | which packages read a project's `.pi/settings.json` | each process records its own answer from `ctx.IsProjectTrusted()` on the events the original records on; same file gating |
+
 - **`PI_CODING_AGENT_DIR`.** The original resolves the user directory from `PI_CODING_AGENT_DIR` (when root-anchored) or
   `~/.pi/agent`. The port follows PiG's identity rule (divergence D2, as the tintinweb-tasks port; owner decision
   2026-10-20): PiG's agent directory (`sdk.AgentDir`, which honors `PIG_CODING_AGENT_DIR`, `PIG_HOME` and
@@ -81,6 +85,27 @@ all `PARTIAL` stand-ins:
 | `ctx.ui.setWidget` with a factory | `stacked-widget.ts:115,119` | a `kit` view through `Context.SetWidget` | the widget is rows re-laid out on resize (as in tintinweb-tasks); slice 3 |
 | `pi.registerMessageRenderer` | `background-tasks.ts:991` | `Extension.MessageViewRenderer` | lines, not a Component; slice 3 |
 | `tool.renderCall`, `tool.renderResult` | `registrations.ts:77-78,168-169` | `ToolDefinition.RenderCall`/`RenderResult` (or `SetToolRenderers`) | lines, not a Component; slice 3 |
-| `tool.promptSnippet` | `registrations.ts:89` | `ToolDefinition.PromptSnippet` | the host does not yet list extension tools' snippets in PiG's system prompt (a host gap shared with in-process extensions); recorded when the scenarios run |
+| `tool.promptSnippet` | `registrations.ts:89` | `ToolDefinition.PromptSnippet` | none: the gap note is stale. The `tool-definitions` golden (Pi) and the Go port (PiG) both carry `- bg_task: Spawn, inspect, and stop explicit non-blocking background shell tasks.` in the system prompt, and the original under PiG's Node runtime matches Pi |
 
 `pigeq gaps --go` on the port is run with each slice.
+
+## Slice 2a evidence (leaf modules)
+
+- `pigeq twins check --ledger port/upstream-tests.json --go extensions/pi-background-tasks --deferred port/slices.json`:
+  **58 exact twins, 1 skipped** (the log-tail must-fail row, tied to the seven `logtail-*` mutations of `port/mutations.json`).
+  Cases of files whose runtime is not ported are listed as `DEFERRED` by `port/slices.json` (slice 2b: the task runtime; slice 3: widget,
+  dashboard). `resource-systemd-probe` is a `skipIf` case the ledger does not list; its Go test is a plain subtest.
+- Mutations (`pigeq mutate --unit-only`, unit twins as the judge): 7 of 7 killed (`logtail-*`, all by `TestTwinLogTail`).
+- Runs on xd670 (tern-ci:v3, Linux, CPUs 64-95,160-191): `go test -race -count=12 ./...` green; `GOOS=linux|windows|darwin go vet ./...` clean. The
+  Linux-only twins (`resource-systemd-probe`, `identity-probe-live`) run there, not skipped.
+
+### Findings behind the two red twins of the work-in-progress branch
+
+- **Log writer visit order.** A flush window and a drain visit the files in the order they were first appended (a JavaScript `Map`). The Go port
+  held them in a `map`, whose iteration order is random, so the writes of two files came out in either order (the twin failed about one run in
+  two, not only inside the full suite). `logWriter` now keeps an insertion-ordered list beside the map.
+- **Log tail admission twin.** The original starts nine reads in one tick, so they reach the shared admission in call order. Goroutines do not;
+  the twin now starts each read only once the one before holds a slot or waits for one (`admissions()`), and the duplicate read only once it
+  waits on its task's read (`joins`, a counter in the reader). No expectation changed.
+- **Systemd probe twin under load.** The stand-in `systemctl`/`systemd-run` were the race-instrumented test binary re-executed; its start-up
+  alone can pass the one-second probe timeout on a loaded host. They are now `#!/bin/sh` scripts, as light as the original's Node stubs.

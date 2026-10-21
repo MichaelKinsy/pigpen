@@ -25,6 +25,9 @@
     },
     "which": {
       "mode": "real"
+    },
+    "taskkill": {
+      "mode": "missing"
     }
   },
   "llm": [
