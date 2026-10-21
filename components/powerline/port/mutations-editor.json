@@ -1,36 +1,206 @@
 [
- {"name": "fast-guard-width", "file": "editor_chrome.go", "find": "if width < 10 || completionsEnabled {", "replace": "if completionsEnabled {"},
- {"name": "fast-guard-completions", "file": "editor_chrome.go", "find": "if width < 10 || completionsEnabled {", "replace": "if width < 10 {"},
- {"name": "fast-line-threshold", "file": "editor_chrome.go", "find": "if len(lines) < fastEditorRenderLineThreshold {", "replace": "if len(lines) <= fastEditorRenderLineThreshold {"},
- {"name": "fast-column-probe", "file": "editor_chrome.go", "find": "len(line) >= fastEditorRenderColumnThreshold", "replace": "len(line) > fastEditorRenderColumnThreshold"},
- {"name": "fast-autocomplete-guard", "file": "editor_chrome.go", "find": "if err != nil || showing {", "replace": "if err != nil {"},
- {"name": "fast-cursor-column-threshold", "file": "editor_chrome.go", "find": "jsLen(state.lines[state.cursorLine]) < fastEditorRenderColumnThreshold", "replace": "jsLen(state.lines[state.cursorLine]) <= fastEditorRenderColumnThreshold"},
- {"name": "fast-visible-rows", "file": "editor_chrome.go", "find": "max(5, fastEditorTerminalRows*3/10)", "replace": "max(5, fastEditorTerminalRows*3/9)"},
- {"name": "fast-inner-width", "file": "editor_chrome.go", "find": "innerWidth := max(1, width-3)", "replace": "innerWidth := max(1, width-2)"},
- {"name": "fast-layout-width", "file": "editor_chrome.go", "find": "layoutWidth := max(1, innerWidth-1)", "replace": "layoutWidth := max(1, innerWidth)"},
- {"name": "fast-up-mark", "file": "editor_chrome.go", "find": "topMark = \"↑\"", "replace": "topMark = \"↓\""},
- {"name": "fast-down-mark", "file": "editor_chrome.go", "find": "bottomMark = \"↓\"", "replace": "bottomMark = \"↑\""},
- {"name": "fast-first-row-prompt", "file": "editor_chrome.go", "find": "\t\tif i == 0 {\n\t\t\tprefix = promptPrefix", "replace": "\t\tif i == 1 {\n\t\t\tprefix = promptPrefix"},
- {"name": "fast-cursor-chunk", "file": "editor_chrome.go", "find": "cursorChunkIndex := state.cursorCol / layoutWidth", "replace": "cursorChunkIndex := (state.cursorCol + 1) / layoutWidth"},
- {"name": "fast-first-cursor-chunk", "file": "editor_chrome.go", "find": "firstCursorChunk := max(0, cursorChunkIndex-maxVisibleLines+1)", "replace": "firstCursorChunk := max(0, cursorChunkIndex-maxVisibleLines)"},
- {"name": "fast-has-before-chunk", "file": "editor_chrome.go", "find": "hasBefore: state.cursorLine > 0 || firstCursorChunk > 0,", "replace": "hasBefore: state.cursorLine > 0,"},
- {"name": "fast-has-after-chunk", "file": "editor_chrome.go", "find": "|| cursorChunkIndex < cursorChunkCount-1,", "replace": ","},
- {"name": "fast-cursor-marker", "file": "editor_chrome.go", "find": "\tif focused {\n\t\tmarker = cursorMarker", "replace": "\tif !focused {\n\t\tmarker = cursorMarker"},
- {"name": "fast-chunk-count", "file": "editor_chrome.go", "find": "(max(1, n)+width-1)/width", "replace": "max(1, n)/width"},
- {"name": "fast-trailing-chunks", "file": "editor_chrome.go", "find": "for index := max(0, count-maxCount); index < count; index++ {", "replace": "for index := 0; index < count; index++ {"},
- {"name": "chrome-content-width", "file": "editor_chrome.go", "find": "contentWidth := max(1, width-3)", "replace": "contentWidth := max(1, width-2)"},
- {"name": "chrome-narrow-guard", "file": "editor_chrome.go", "find": "\tif width < 10 {\n\t\treturn ed.Render(width)", "replace": "\tif width < 0 {\n\t\treturn ed.Render(width)"},
- {"name": "chrome-border-row-run", "file": "editor_chrome.go", "find": "regexp.MustCompile(`^─{3,}`)", "replace": "regexp.MustCompile(`^─{30,}`)"},
- {"name": "chrome-blank-prompt-row", "file": "editor_chrome.go", "find": "if bottom == 1 {", "replace": "if bottom == 2 {"},
- {"name": "chrome-prompt-first-row", "file": "editor_chrome.go", "find": "\t\tif i == 1 {\n\t\t\tprefix = promptPrefix", "replace": "\t\tif i == 2 {\n\t\t\tprefix = promptPrefix"},
- {"name": "chrome-rows-below", "file": "editor_chrome.go", "find": "lines[bottom+1:]...", "replace": "lines[bottom:]..."},
- {"name": "border-learn-needs-border", "file": "editor_chrome.go", "find": "ReplaceAllString(row, \"\"), \"─\")", "replace": "ReplaceAllString(row, \"\"), \"x\")"},
- {"name": "border-fallback", "file": "editor_chrome.go", "find": "if c.prefix == \"\" {", "replace": "if c.prefix != \"\" {"},
- {"name": "js-len-astral", "file": "editor_chrome.go", "find": "\t\t\tn += 2", "replace": "\t\t\tn++"},
- {"name": "editor-dismiss-welcome", "file": "editor_ext.go", "find": "\te.k.dismiss(e.ctx) // dismissWelcomeForInput\n", "replace": ""},
- {"name": "editor-enabled-guard", "file": "editor_ext.go", "find": "if !k.enabled.Load() || !ctx.HasUI() {", "replace": "if !ctx.HasUI() {"},
- {"name": "editor-ctrl-s", "file": "editor_ext.go", "find": "state.isStashShortcutInput(data) || matchesCtrlSStashInput(data)", "replace": "state.isStashShortcutInput(data)"},
- {"name": "editor-shortcut-consumed", "file": "editor_ext.go", "find": "\tif action == \"\" {\n\t\treturn false\n\t}", "replace": "\tif action == \"\" {\n\t\treturn true\n\t}"},
- {"name": "editor-install", "file": "keys_ext.go", "find": "\tk.installEditor(ctx)\n}", "replace": "}"},
- {"name": "editor-uninstall", "file": "keys_ext.go", "find": "\tk.uninstallEditor(ctx)\n}", "replace": "}"}
+ {
+  "name": "fast-guard-width",
+  "file": "editor_chrome.go",
+  "find": "if width < 10 || completionsEnabled {",
+  "replace": "if completionsEnabled {"
+ },
+ {
+  "name": "fast-guard-completions",
+  "file": "editor_chrome.go",
+  "find": "if width < 10 || completionsEnabled {",
+  "replace": "if width < 10 {"
+ },
+ {
+  "name": "fast-line-threshold",
+  "file": "editor_chrome.go",
+  "find": "if len(lines) < fastEditorRenderLineThreshold {",
+  "replace": "if len(lines) <= fastEditorRenderLineThreshold {"
+ },
+ {
+  "name": "fast-column-probe",
+  "file": "editor_chrome.go",
+  "find": "len(line) >= fastEditorRenderColumnThreshold",
+  "replace": "len(line) > fastEditorRenderColumnThreshold"
+ },
+ {
+  "name": "fast-autocomplete-guard",
+  "file": "editor_chrome.go",
+  "find": "if err != nil || showing {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "fast-cursor-column-threshold",
+  "file": "editor_chrome.go",
+  "find": "jsLen(state.lines[state.cursorLine]) < fastEditorRenderColumnThreshold",
+  "replace": "jsLen(state.lines[state.cursorLine]) <= fastEditorRenderColumnThreshold"
+ },
+ {
+  "name": "fast-visible-rows",
+  "file": "editor_chrome.go",
+  "find": "max(5, fastEditorTerminalRows*3/10)",
+  "replace": "max(5, fastEditorTerminalRows*3/9)"
+ },
+ {
+  "name": "fast-inner-width",
+  "file": "editor_chrome.go",
+  "find": "innerWidth := max(1, width-3)",
+  "replace": "innerWidth := max(1, width-2)"
+ },
+ {
+  "name": "fast-layout-width",
+  "file": "editor_chrome.go",
+  "find": "layoutWidth := max(1, innerWidth-1)",
+  "replace": "layoutWidth := max(1, innerWidth)"
+ },
+ {
+  "name": "fast-up-mark",
+  "file": "editor_chrome.go",
+  "find": "topMark = \"↑\"",
+  "replace": "topMark = \"↓\""
+ },
+ {
+  "name": "fast-down-mark",
+  "file": "editor_chrome.go",
+  "find": "bottomMark = \"↓\"",
+  "replace": "bottomMark = \"↑\""
+ },
+ {
+  "name": "fast-first-row-prompt",
+  "file": "editor_chrome.go",
+  "find": "\t\tif i == 0 {\n\t\t\tprefix = promptPrefix",
+  "replace": "\t\tif i == 1 {\n\t\t\tprefix = promptPrefix"
+ },
+ {
+  "name": "fast-cursor-chunk",
+  "file": "editor_chrome.go",
+  "find": "cursorChunkIndex := state.cursorCol / layoutWidth",
+  "replace": "cursorChunkIndex := (state.cursorCol + 1) / layoutWidth"
+ },
+ {
+  "name": "fast-first-cursor-chunk",
+  "file": "editor_chrome.go",
+  "find": "firstCursorChunk := max(0, cursorChunkIndex-maxVisibleLines+1)",
+  "replace": "firstCursorChunk := max(0, cursorChunkIndex-maxVisibleLines)"
+ },
+ {
+  "name": "fast-has-before-chunk",
+  "file": "editor_chrome.go",
+  "find": "hasBefore: state.cursorLine > 0 || firstCursorChunk > 0,",
+  "replace": "hasBefore: state.cursorLine > 0,"
+ },
+ {
+  "name": "fast-has-after-chunk",
+  "file": "editor_chrome.go",
+  "find": "|| cursorChunkIndex < cursorChunkCount-1,",
+  "replace": ","
+ },
+ {
+  "name": "fast-cursor-marker",
+  "file": "editor_chrome.go",
+  "find": "\tif focused {\n\t\tmarker = cursorMarker",
+  "replace": "\tif !focused {\n\t\tmarker = cursorMarker"
+ },
+ {
+  "name": "fast-chunk-count",
+  "file": "editor_chrome.go",
+  "find": "(max(1, n)+width-1)/width",
+  "replace": "max(1, n)/width"
+ },
+ {
+  "name": "fast-trailing-chunks",
+  "file": "editor_chrome.go",
+  "find": "for index := max(0, count-maxCount); index < count; index++ {",
+  "replace": "for index := 0; index < count; index++ {"
+ },
+ {
+  "name": "chrome-content-width",
+  "file": "editor_chrome.go",
+  "find": "contentWidth := max(1, width-3)",
+  "replace": "contentWidth := max(1, width-2)"
+ },
+ {
+  "name": "chrome-narrow-guard",
+  "file": "editor_chrome.go",
+  "find": "\tif width < 10 {\n\t\treturn ed.Render(width)",
+  "replace": "\tif width < 0 {\n\t\treturn ed.Render(width)"
+ },
+ {
+  "name": "chrome-border-row-run",
+  "file": "editor_chrome.go",
+  "find": "regexp.MustCompile(`^─{3,}`)",
+  "replace": "regexp.MustCompile(`^─{30,}`)"
+ },
+ {
+  "name": "chrome-blank-prompt-row",
+  "file": "editor_chrome.go",
+  "find": "if bottom == 1 {",
+  "replace": "if bottom == 2 {"
+ },
+ {
+  "name": "chrome-prompt-first-row",
+  "file": "editor_chrome.go",
+  "find": "\t\tif i == 1 {\n\t\t\tprefix = promptPrefix",
+  "replace": "\t\tif i == 2 {\n\t\t\tprefix = promptPrefix"
+ },
+ {
+  "name": "chrome-rows-below",
+  "file": "editor_chrome.go",
+  "find": "lines[bottom+1:]...",
+  "replace": "lines[bottom:]..."
+ },
+ {
+  "name": "border-learn-needs-border",
+  "file": "editor_chrome.go",
+  "find": "ReplaceAllString(row, \"\"), \"─\")",
+  "replace": "ReplaceAllString(row, \"\"), \"x\")"
+ },
+ {
+  "name": "border-fallback",
+  "file": "editor_chrome.go",
+  "find": "if c.prefix == \"\" {",
+  "replace": "if c.prefix != \"\" {"
+ },
+ {
+  "name": "js-len-astral",
+  "file": "editor_chrome.go",
+  "find": "\t\t\tn += 2",
+  "replace": "\t\t\tn++"
+ },
+ {
+  "name": "editor-dismiss-welcome",
+  "file": "editor_ext.go",
+  "find": "\te.k.dismiss(e.ctx) // dismissWelcomeForInput\n",
+  "replace": ""
+ },
+ {
+  "name": "editor-enabled-guard",
+  "file": "editor_ext.go",
+  "find": "if !k.enabled.Load() || !ctx.HasUI() {",
+  "replace": "if !ctx.HasUI() {"
+ },
+ {
+  "name": "editor-ctrl-s",
+  "file": "editor_ext.go",
+  "find": "k.isStashShortcutInput(data) || matchesCtrlSStashInput(data)",
+  "replace": "k.isStashShortcutInput(data)"
+ },
+ {
+  "name": "editor-shortcut-consumed",
+  "file": "editor_ext.go",
+  "find": "\tif action == \"\" {\n\t\treturn false\n\t}",
+  "replace": "\tif action == \"\" {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "editor-install",
+  "file": "keys_ext.go",
+  "find": "\tk.installEditor(ctx)\n}",
+  "replace": "}"
+ },
+ {
+  "name": "editor-uninstall",
+  "file": "keys_ext.go",
+  "find": "\tk.uninstallEditor(ctx)\n}",
+  "replace": "}"
+ }
 ]
