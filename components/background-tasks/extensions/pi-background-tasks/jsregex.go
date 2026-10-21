@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 	"unicode/utf16"
@@ -37,6 +38,7 @@ func (e *jsUnsupportedError) Error() string { return e.msg }
 type jsRegex struct {
 	re      *regexp2.Regexp
 	unicode bool
+	running sync.Mutex
 }
 
 // toRunes is the text as the engine reads it: UTF-16 code units, or code points under the u flag.
@@ -53,17 +55,44 @@ func (r *jsRegex) toRunes(text string) []rune {
 }
 
 // test is regex.test(text) with lastIndex 0 under a deadline. timedOut reports that the deadline passed.
+//
+// regexp2 checks its own timeout only every so many backtracking steps, so a slow host (the race detector, a loaded machine)
+// can overrun a short deadline several times over. The deadline is therefore enforced here as well: the match runs in a goroutine
+// and the caller stops waiting when the deadline passes. The abandoned match ends on regexp2's own timeout, which is still set.
 func (r *jsRegex) test(text string, deadline time.Duration) (matched, timedOut bool) {
-	if deadline > 0 {
-		r.re.MatchTimeout = deadline
-	} else {
+	if deadline <= 0 {
+		r.running.Lock()
+		defer r.running.Unlock()
 		r.re.MatchTimeout = regexp2.DefaultMatchTimeout
+		ok, err := r.re.MatchRunes(r.toRunes(text))
+		return ok && err == nil, err != nil
 	}
-	ok, err := r.re.MatchRunes(r.toRunes(text))
-	if err != nil {
+	timer := time.NewTimer(deadline)
+	defer timer.Stop()
+	type answer struct {
+		ok  bool
+		err error
+	}
+	done := make(chan answer, 1)
+	go func() {
+		// An abandoned match still holds the engine until regexp2's own timeout ends it, so the next match on this regex
+		// waits for it and the engine's settings are never written under a running match.
+		r.running.Lock()
+		defer r.running.Unlock()
+		r.re.MatchTimeout = deadline
+		// The text's conversion counts against the deadline, as the match does.
+		ok, err := r.re.MatchRunes(r.toRunes(text))
+		done <- answer{ok, err}
+	}()
+	select {
+	case a := <-done:
+		if a.err != nil {
+			return false, true
+		}
+		return a.ok, false
+	case <-timer.C:
 		return false, true
 	}
-	return ok, false
 }
 
 // compileJSRegex translates and compiles `new RegExp(source, flags)`.
