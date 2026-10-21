@@ -68,11 +68,15 @@ func isNullish(v any) bool {
 // CreateJSONSafeReplacer builds a JSON.stringify replacer. Each call owns a fresh `seen` set, so a replacer must not be reused
 // across stringify calls. As in the original, a repeated non-cyclic reference is also marked: seen entries are never released.
 func CreateJSONSafeReplacer(transform JSONValueTransform) JSONReplacer {
-	seen := map[seenKey]bool{}
+	seen := &seenSet{}
 	return func(key string, raw any) any {
 		value := raw
 		if transform != nil {
 			value = transform(key, raw)
+		}
+		switch value.(type) {
+		case string, float64, bool, nil:
+			return value // the common leaves: neither an Error, a bigint nor an object, so skip the interface checks below
 		}
 		switch e := value.(type) {
 		case *JSError:
@@ -87,13 +91,47 @@ func CreateJSONSafeReplacer(transform JSONValueTransform) JSONReplacer {
 			}
 		}
 		if id, ok := identityOf(value); ok {
-			if seen[id] {
+			if !seen.add(id) {
 				return "[Circular]"
 			}
-			seen[id] = true
 		}
 		return value
 	}
+}
+
+// seenSet is the WeakSet of the replacer. A tool input holds a handful of objects, so it is a slice scanned linearly and becomes a map
+// only past seenSetSmall entries (a hash map grown entry by entry was a third of the allocations of a nested preview).
+type seenSet struct {
+	small []seenKey
+	m     map[seenKey]bool
+}
+
+const seenSetSmall = 32
+
+// add records id and reports whether it was new.
+func (s *seenSet) add(id seenKey) bool {
+	if s.m != nil {
+		if s.m[id] {
+			return false
+		}
+		s.m[id] = true
+		return true
+	}
+	for _, k := range s.small {
+		if k == id {
+			return false
+		}
+	}
+	if len(s.small) < seenSetSmall {
+		s.small = append(s.small, id)
+		return true
+	}
+	s.m = make(map[seenKey]bool, 2*seenSetSmall)
+	for _, k := range s.small {
+		s.m[k] = true
+	}
+	s.m[id] = true
+	return true
 }
 
 func errorRecord(name, message string, stack *string) *jsObject {
@@ -117,6 +155,7 @@ func SafeJSONStringify(value any) (string, bool) {
 // jsonStringifyWith is JSON.stringify(value, replacer) with no indent.
 func jsonStringifyWith(value any, replacer JSONReplacer) (string, bool) {
 	var b bytes.Buffer
+	b.Grow(1024) // a structured tool input is a few hundred bytes to a few KB; growing from 64 copied it five times
 	if !serializeProperty(&b, "", value, replacer) {
 		return "", false
 	}

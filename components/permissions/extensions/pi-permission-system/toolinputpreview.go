@@ -75,29 +75,44 @@ func normalizeSerializedPreview(serialized string, ok bool) string {
 	return jsTrim(collapseJSWhitespace(serialized))
 }
 
-// collapseJSWhitespace is s.replace(/\s+/g, " "): every run of JavaScript whitespace becomes one space.
+// collapseJSWhitespace is s.replace(/\s+/g, " "): every run of JavaScript whitespace becomes one space. A string with nothing to
+// rewrite (no run but single spaces, the usual JSON preview) is returned as it is; otherwise the unchanged stretches are copied whole.
 func collapseJSWhitespace(s string) string {
 	var b strings.Builder
-	b.Grow(len(s))
-	inSpace := false
+	copied := 0 // s[:copied] is already in b
 	for i := 0; i < len(s); {
-		if c := s[i]; c > ' ' && c < utf8.RuneSelf { // a printable ASCII byte is never whitespace
-			inSpace = false
-			b.WriteByte(c)
+		c := s[i]
+		if c > ' ' && c < utf8.RuneSelf { // a printable ASCII byte is never whitespace
 			i++
 			continue
 		}
 		r, size := utf8.DecodeRuneInString(s[i:])
-		if isJSSpace(r) {
-			if !inSpace {
-				b.WriteByte(' ')
-			}
-			inSpace = true
-		} else {
-			inSpace = false
-			b.WriteString(s[i : i+size])
+		if !isJSSpace(r) {
+			i += size
+			continue
 		}
-		i += size
+		j := i + size
+		for j < len(s) {
+			r2, size2 := utf8.DecodeRuneInString(s[j:])
+			if !isJSSpace(r2) {
+				break
+			}
+			j += size2
+		}
+		if j-i == 1 && c == ' ' { // already one space
+			i = j
+			continue
+		}
+		if b.Cap() == 0 {
+			b.Grow(len(s))
+		}
+		b.WriteString(s[copied:i])
+		b.WriteByte(' ')
+		copied, i = j, j
 	}
+	if copied == 0 {
+		return s
+	}
+	b.WriteString(s[copied:])
 	return b.String()
 }
