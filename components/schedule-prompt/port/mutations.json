@@ -75,7 +75,7 @@
   "name": "relative-not-resolved",
   "file": "schedule.go",
   "find": "return validated{ok: true, schedule: rel}, nil",
-  "replace": "return validated{ok: true, schedule: schedule}, nil"
+  "replace": "_ = rel\n\t\t\treturn validated{ok: true, schedule: schedule}, nil"
  },
  {
   "name": "invalid-timestamp-text",
@@ -159,7 +159,7 @@
   "name": "loaded-for-always",
   "file": "scheduler.go",
   "find": "return !truthy(session) || strictEqualString(session, sessionID)",
-  "replace": "return true"
+  "replace": "_ = session\n\treturn true"
  },
  {
   "name": "loaded-for-unbound-never",
@@ -177,7 +177,7 @@
   "name": "start-sweeps-foreign",
   "file": "scheduler.go",
   "find": "\t\tif !isLoadedFor(job, mySessionID) {\n\t\t\tcontinue\n\t\t}\n\t\tif strictEqualString(job.Get(\"lastStatus\")",
-  "replace": "\t\tif strictEqualString(job.Get(\"lastStatus\")"
+  "replace": "\t\t_ = mySessionID\n\t\tif strictEqualString(job.Get(\"lastStatus\")"
  },
  {
   "name": "start-schedules-disabled",
@@ -315,13 +315,13 @@
   "name": "unschedule-keeps-cron",
   "file": "scheduler.go",
   "find": "\tif c != nil {\n\t\tc.Stop()\n\t}\n\tif t != nil {",
-  "replace": "\tif t != nil {"
+  "replace": "\t_ = c\n\tif t != nil {"
  },
  {
   "name": "unschedule-keeps-timer",
   "file": "scheduler.go",
   "find": "\tif t != nil {\n\t\tt.stop()\n\t}\n}\n\n// storageFailure",
-  "replace": "}\n\n// storageFailure"
+  "replace": "\t_ = t\n}\n\n// storageFailure"
  },
  {
   "name": "fire-fresh-ignored-disabled",
@@ -381,7 +381,7 @@
   "name": "fire-runcount-stale",
   "file": "scheduler.go",
   "find": "stats.Set(\"runCount\", toNumber(current)+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {",
-  "replace": "stats.Set(\"runCount\", toNumber(job.Get(\"runCount\"))+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {"
+  "replace": "_ = current\n\t\tstats.Set(\"runCount\", toNumber(job.Get(\"runCount\"))+1)\n\t\tstats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {"
  },
  {
   "name": "fire-runcount-two",
@@ -393,7 +393,7 @@
   "name": "fire-nextrun-dropped",
   "file": "scheduler.go",
   "find": "stats.Set(\"nextRun\", nextRunISO(nextRun))\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {",
-  "replace": "if _, err := s.storage.UpdateJob(id, stats); err != nil {"
+  "replace": "_ = nextRun\n\t\tif _, err := s.storage.UpdateJob(id, stats); err != nil {"
  },
  {
   "name": "fire-status-success",
@@ -477,7 +477,7 @@
   "name": "subagent-wake-always",
   "file": "scheduler.go",
   "find": "\tvar wake *deliverOptions\n\tif notify {",
-  "replace": "\tvar wake *deliverOptions\n\tif true {"
+  "replace": "\tvar wake *deliverOptions\n\t_ = notify\n\tif true {"
  },
  {
   "name": "subagent-aborted-posts",
@@ -663,7 +663,7 @@
   "name": "tool-duplicate-allowed",
   "file": "tool.go",
   "find": "\tif dup {\n\t\treturn toolOutput{}, errors.New(",
-  "replace": "\tif false {\n\t\treturn toolOutput{}, errors.New("
+  "replace": "\t_ = dup\n\tif false {\n\t\treturn toolOutput{}, errors.New("
  },
  {
   "name": "tool-duplicate-text",
@@ -795,7 +795,7 @@
   "name": "tool-cleanup-all-sessions",
   "file": "tool.go",
   "find": "if !truthy(j.Get(\"enabled\")) && isLoadedFor(j, mySessionID) {\n\t\t\tdisabled",
-  "replace": "if !truthy(j.Get(\"enabled\")) {\n\t\t\tdisabled"
+  "replace": "_ = mySessionID\n\t\tif !truthy(j.Get(\"enabled\")) {\n\t\t\tdisabled"
  },
  {
   "name": "tool-cleanup-enabled",
@@ -873,7 +873,7 @@
   "name": "tool-list-filter",
   "file": "tool.go",
   "find": "\t\tif isLoadedFor(j, mySessionID) {\n\t\t\tjobs = append(jobs, j)",
-  "replace": "\t\tif true {\n\t\t\tjobs = append(jobs, j)"
+  "replace": "\t\t_ = mySessionID\n\t\tif true {\n\t\t\tjobs = append(jobs, j)"
  },
  {
   "name": "tool-list-empty-text",
@@ -909,7 +909,7 @@
   "name": "tool-list-model-line",
   "file": "tool.go",
   "find": "lines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\"))+\" (runs in subagent\"+notify+ext+skills+\")\")",
-  "replace": "lines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\")))"
+  "replace": "_, _, _ = notify, ext, skills\n\t\t\tlines = append(lines, \"  Model: \"+jsStr(job.Get(\"model\")))"
  },
  {
   "name": "tool-list-notify-text",
@@ -1107,7 +1107,7 @@
   "name": "widget-dedupe-first-value",
   "file": "widget.go",
   "find": "\t\t\tout[i] = j\n\t\t\tcontinue",
-  "replace": "\t\t\tcontinue"
+  "replace": "\t\t\t_ = i\n\t\t\tcontinue"
  },
  {
   "name": "widget-name-width",
@@ -1335,13 +1335,13 @@
   "name": "ext-startup-cleanup",
   "file": "extension.go",
   "find": "if reason != \"startup\" {\n\t\ta.autoCleanupDisabledJobs(ctx)",
-  "replace": "if true {\n\t\ta.autoCleanupDisabledJobs(ctx)"
+  "replace": "_ = reason\n\tif true {\n\t\ta.autoCleanupDisabledJobs(ctx)"
  },
  {
   "name": "ext-switch-no-cleanup",
   "file": "extension.go",
   "find": "if reason != \"startup\" {\n\t\ta.autoCleanupDisabledJobs(ctx)",
-  "replace": "if false {\n\t\ta.autoCleanupDisabledJobs(ctx)"
+  "replace": "_ = reason\n\tif false {\n\t\ta.autoCleanupDisabledJobs(ctx)"
  },
  {
   "name": "ext-shutdown-no-cleanup",
@@ -1365,7 +1365,7 @@
   "name": "ext-cleanup-foreign",
   "file": "extension.go",
   "find": "if !truthy(j.Get(\"enabled\")) && isLoadedFor(j, my) {",
-  "replace": "if !truthy(j.Get(\"enabled\")) {"
+  "replace": "_ = my\n\t\tif !truthy(j.Get(\"enabled\")) {"
  },
  {
   "name": "ext-reinit-keeps-scheduler",
@@ -1383,7 +1383,7 @@
   "name": "ext-widget-not-refreshed",
   "file": "extension.go",
   "find": "a.sched.onChange(func(*jsobj.Object) { w.refresh() })",
-  "replace": "_ = w"
+  "replace": "_ = w\n\t_ = jsobj.Undefined"
  },
  {
   "name": "ext-scope-default",
@@ -1479,7 +1479,7 @@
   "name": "js-len-astral",
   "file": "js.go",
   "find": "\t\tif r > 0xFFFF {\n\t\t\tn++\n\t\t}\n\t}\n\treturn n\n}\n\n// jsSubstring",
-  "replace": "\t}\n\treturn n\n}\n\n// jsSubstring"
+  "replace": "\t\t_ = r\n\t}\n\treturn n\n}\n\n// jsSubstring"
  },
  {
   "name": "js-pad-end",
@@ -1689,7 +1689,7 @@
   "name": "croner-fromtz-overlap",
   "file": "internal/croner/date.go",
   "find": "if altCheck.same(tp) {\n\t\t\treturn alt, nil\n\t\t}",
-  "replace": ""
+  "replace": "_ = altCheck"
  },
  {
   "name": "croner-fromtz-gap",
@@ -1731,7 +1731,7 @@
   "name": "croner-validate-search",
   "file": "internal/croner/cron.go",
   "find": "_, err = c.next(nil)\n\treturn err",
-  "replace": "return nil"
+  "replace": "_ = c\n\treturn nil"
  },
  {
   "name": "jsdate-former-offset",

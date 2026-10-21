@@ -236,3 +236,27 @@ func TestCommandIsRefusedUntilItsSlice(t *testing.T) {
 		t.Fatalf("notify = %v", calls)
 	}
 }
+
+// A change event redraws the widget at once: a job added through the tool shows the widget below the editor without waiting for the
+// 30 s refresh.
+func TestWidgetFollowsChangeEvents(t *testing.T) {
+	r := startRig(t)
+	r.Fire("session_start", obj{"reason": "startup"})
+	shown := func() int {
+		n := 0
+		for _, c := range r.CallsTo("ui.setWidget") {
+			if c.Args["view"] != nil {
+				n++
+			}
+		}
+		return n
+	}
+	if shown() != 0 {
+		t.Fatal("a widget without a job was shown")
+	}
+	if _, failure := r.call(t, obj{"action": "add", "name": "w", "schedule": "0 0 9 * * *", "prompt": "p"}); failure != "" {
+		t.Fatal(failure)
+	}
+	r.waitFor(t, "the widget", func() bool { return shown() >= 1 })
+	r.Fire("session_shutdown", obj{"reason": "quit"})
+}

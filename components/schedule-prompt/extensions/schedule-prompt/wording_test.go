@@ -240,3 +240,81 @@ func TestMarkerTextsOfTheSubagentPath(t *testing.T) {
 		t.Errorf("start = %v", contentText(t, m.msg))
 	}
 }
+
+// The one-shot's update event carries the job as the storage holds it afterwards: disabled. The timer's job is NOT the storage's
+// object here (the in-memory storage of the original's tests shares it, which hides the difference).
+func TestOnceUpdateEventCarriesTheDisabledJob(t *testing.T) {
+	pi := &mockPi{}
+	at, _ := isoString(jsdate.Now() + 100)
+	job := exampleJob(obj{"type": "once", "schedule": at})
+	st := makeStorage(job.Clone())
+	s := newSched(st, pi, makeCtx(), nil)
+	defer s.stop()
+	s.scheduleJob(job)
+	waitFor(t, func() bool { pi.mu.Lock(); defer pi.mu.Unlock(); return len(pi.emitted) >= 3 })
+	pi.mu.Lock()
+	e := pi.emitted[2]
+	pi.mu.Unlock()
+	if e.Get("type") != "update" || e.Get("job").(*jsobj.Object).Get("enabled") != false {
+		t.Fatalf("update event = %v", e)
+	}
+	if job.Get("enabled") != true {
+		t.Fatal("the event's job is the timer's own object, which must stay untouched")
+	}
+}
+
+// A removed job's timers stop: the interval keeps no tick and the cron has no next run.
+func TestUnscheduleStopsTheTimers(t *testing.T) {
+	pi := &mockPi{}
+	iv := exampleJob(obj{"id": "iv", "type": "interval", "schedule": "x", "intervalMs": float64(15)})
+	cr := exampleJob(obj{"id": "cr", "type": "cron", "schedule": "0 0 * * * *"})
+	s := newSched(makeStorage(iv.Clone(), cr.Clone()), pi, makeCtx(), nil)
+	defer s.stop()
+	s.scheduleJob(iv)
+	s.scheduleJob(cr)
+	s.mu.Lock()
+	c := s.jobs["cr"]
+	s.mu.Unlock()
+	if math.IsNaN(c.NextRun()) {
+		t.Fatal("a scheduled cron has no next run")
+	}
+	waitFor(t, func() bool { pi.mu.Lock(); defer pi.mu.Unlock(); return len(pi.users) >= 1 })
+	s.removeJob("iv")
+	s.removeJob("cr")
+	if !math.IsNaN(c.NextRun()) {
+		t.Fatal("removing the job left the cron alive")
+	}
+	time.Sleep(60 * time.Millisecond) // a tick already on its way may still land
+	pi.mu.Lock()
+	n := len(pi.users)
+	pi.mu.Unlock()
+	time.Sleep(150 * time.Millisecond)
+	pi.mu.Lock()
+	after := len(pi.users)
+	pi.mu.Unlock()
+	if after != n {
+		t.Fatalf("the interval kept ticking after its removal: %d then %d", n, after)
+	}
+}
+
+// The count is read from the storage, not from the job the timer captured: another writer's runs are not lost.
+func TestFireCountsFromTheStoredJob(t *testing.T) {
+	job := exampleJob(obj{"runCount": float64(0)})
+	stored := job.Clone()
+	stored.Set("runCount", float64(5))
+	st := makeStorage(stored)
+	s := newSched(st, &mockPi{}, makeCtx(), nil)
+	defer s.stop()
+	s.executeJob(job)
+	if j, _ := st.GetJob("job-1"); j.Get("runCount") != float64(6) {
+		t.Fatalf("runCount = %v, want 6", j.Get("runCount"))
+	}
+}
+
+func TestJsLenCountsUTF16Units(t *testing.T) {
+	for s, want := range map[string]int{"": 0, "abc": 3, "é": 1, "😀": 2, "a😀b": 4, "日本": 2} {
+		if got := jsLen(s); got != want {
+			t.Errorf("jsLen(%q) = %d, want %d", s, got, want)
+		}
+	}
+}
