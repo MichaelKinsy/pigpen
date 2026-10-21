@@ -293,7 +293,7 @@ func TestGapScanIgnoresSourcesThatAreNotPiExtensions(t *testing.T) {
 		t.Errorf("ctx.model in a real extension must still be reported: %+v", g)
 	}
 	// A helper file of a multi-file extension has no default export but takes pi.
-	helper := "export function wire(pi) { pi.on('cache_warming_decision', () => {}); }\n"
+	helper := "export function wire(pi) { pi.on('after_provider_response', () => {}); }\n"
 	if !LooksLikeExtension(helper) || len(ScanGaps(helper, "")) == 0 {
 		t.Error("a helper that uses pi.* must still be scanned")
 	}
@@ -473,7 +473,7 @@ func TestGapScanReportsAPIMembersTheSurfaceTableDoesNotList(t *testing.T) {
 	if gaps := ScanGaps(src, nonImplemented); len(gaps) != 0 {
 		t.Errorf("a table of non-implemented rows reported %+v", gaps)
 	}
-	// Every member Pi 1.0.1's ExtensionAPI has is in the embedded PiG 0.4.1 snapshot.
+	// Every member Pi 1.3.0's ExtensionAPI has is in the embedded PiG 0.5.0 snapshot.
 	for _, m := range []string{"appendEntry", "events", "exec", "getActiveTools", "getAllTools", "getCommands", "getFlag",
 		"getMcpServers", "getSessionName", "getSettings", "getThinkingLevel", "on", "registerCommand", "registerEntryRenderer",
 		"registerFlag", "registerMarkdownTransformer", "registerMcpServer", "registerMessageRenderer", "registerProvider",
