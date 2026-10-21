@@ -28,8 +28,9 @@ func Extension() *sdk.Extension {
 	rt.live.Register(e, rt.onSessionStart, rt.onSessionShutdown)
 	rt.live.OnModelChanged(rt.onModelChanged)
 
-	e.Command("ahp", "AHP host: /ahp [status|start|stop]", func(ctx sdk.Context, args string) error {
-		switch strings.TrimSpace(args) {
+	e.Command("ahp", "AHP host: /ahp [status|start|stop|tunnel [name]]", func(ctx sdk.Context, args string) error {
+		command, rest, _ := strings.Cut(strings.TrimSpace(args), " ")
+		switch command {
 		case "", "status":
 			ctx.Notify(rt.status(), "info")
 		case "start":
@@ -45,10 +46,33 @@ func Extension() *sdk.Extension {
 			} else {
 				ctx.Notify("AHP listener is not running", "info")
 			}
+		case "tunnel":
+			name, err := tunnelName(strings.TrimSpace(rest))
+			if err != nil {
+				return err
+			}
+			if err := rt.startTunnel(ctx, name); err != nil {
+				ctx.Notify("AHP: "+err.Error(), "error")
+				return nil
+			}
+			ctx.Notify("AHP: setting up the dev tunnel (needs `devtunnel` on PATH and a login)", "info")
 		default:
-			return fmt.Errorf("usage: /ahp [status|start|stop]")
+			return fmt.Errorf("usage: /ahp [status|start|stop|tunnel [name]]")
 		}
 		return nil
 	})
 	return e
+}
+
+// tunnelName is the display name given to /ahp tunnel: the rest of the line, optionally as
+// `--name <label>` as pi-ahp-tunnel takes it.
+func tunnelName(rest string) (string, error) {
+	if name, ok := strings.CutPrefix(rest, "--name"); ok {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			return "", fmt.Errorf("usage: /ahp tunnel [--name <label>]")
+		}
+		return name, nil
+	}
+	return rest, nil
 }

@@ -784,7 +784,7 @@ func (r *Registry) truncate(s *LiveSession, turnID *string) {
 	if d := s.Driver(); d != nil && !d.Truncate(context.Background(), anchor) {
 		// The agent refused (or cannot). Protocol state is already truncated, so the two have
 		// diverged; say so loudly rather than pretend.
-		r.logf("agent refused truncation of %s; state and session now differ", s.URI)
+		r.logf("%s: %s (state and session now differ)", Unsupported("truncating the agent's session from a client"), s.URI)
 	}
 }
 

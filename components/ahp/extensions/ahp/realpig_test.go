@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	goruntime "runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -30,6 +31,9 @@ type realOpts struct {
 	args     []string
 	root     string // reuse a previous run's directory (its sessions included)
 	noFlag   bool   // start without --ahp
+	// pathPrefix is put in front of PATH (a stand-in for a program the extension runs); env is added.
+	pathPrefix string
+	env        []string
 }
 
 type realPig struct {
@@ -43,6 +47,13 @@ type realPig struct {
 	mu     sync.Mutex
 	id     int
 	notes  []map[string]any
+}
+
+func pathWith(prefix string) string {
+	if prefix == "" {
+		return os.Getenv("PATH")
+	}
+	return prefix + string(os.PathListSeparator) + os.Getenv("PATH")
 }
 
 func freeTCPPort(t *testing.T) int {
@@ -129,7 +140,8 @@ func startRealPig(t *testing.T, o realOpts) *realPig {
 	cmd := exec.Command(pigBin, args...)
 	cmd.Dir = work
 	cmd.Env = []string{"HOME=" + home, "PIG_HOME=" + pighome, "PIG_CODING_AGENT_DIR=" + agent, "PI_CODING_AGENT_DIR=" + agent,
-		"PATH=" + os.Getenv("PATH"), "GOCACHE=" + os.Getenv("GOCACHE"), "GOMODCACHE=" + os.Getenv("GOMODCACHE"), "GOTOOLCHAIN=local", "GOFLAGS=" + os.Getenv("GOFLAGS")}
+		"PATH=" + pathWith(o.pathPrefix), "GOCACHE=" + os.Getenv("GOCACHE"), "GOMODCACHE=" + os.Getenv("GOMODCACHE"), "GOTOOLCHAIN=local", "GOFLAGS=" + os.Getenv("GOFLAGS")}
+	cmd.Env = append(cmd.Env, o.env...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		t.Fatal(err)
@@ -586,4 +598,99 @@ func TestRealPigSessionReplacement(t *testing.T) {
 		}
 		testkit.Eventually(t, "the notice that the listener closed", func() bool { return strings.Contains(p.pigLog(), "AHP listener stopped") })
 	})
+}
+
+// fakeDevtunnel is a `devtunnel` stand-in: it answers the JSON commands the way the real CLI does for
+// an account with no tunnel yet, records every argument list, and as `host` prints a line and stays.
+const fakeDevtunnel = `#!/bin/sh
+echo "$@" >> "$DEVTUNNEL_LOG"
+case "$1" in
+user) echo '{"status":"Logged in"}' ;;
+list) echo '{"warning":"No tunnels found."}' ;;
+create) echo '{"tunnel":{"tunnelId":"fake.usw2"}}' ;;
+port) case "$2" in list) echo '{"ports":[]}' ;; *) echo '{}' ;; esac ;;
+host) echo "Connect via browser: https://fake.usw2.devtunnels.example"; echo $$ > "$DEVTUNNEL_PID"; exec sleep 300 ;;
+esac
+`
+
+// /ahp tunnel against a stand-in devtunnel CLI: the commands run in upstream's order, the session is
+// served on the fixed port without a token, devtunnel host is the child that is stopped with
+// /ahp stop, and the direct listener's settings file is not created.
+func TestRealPigDevTunnel(t *testing.T) {
+	if goruntime.GOOS == "windows" {
+		t.Skip("the stand-in CLI is a shell script")
+	}
+	bin := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bin, "devtunnel"), []byte(fakeDevtunnel), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	logPath, pidPath := filepath.Join(bin, "calls.log"), filepath.Join(bin, "host.pid")
+	if c, err := net.DialTimeout("tcp", "127.0.0.1:31546", 300*time.Millisecond); err == nil {
+		c.Close()
+		t.Skip("port 31546 is in use")
+	}
+	p := startRealPig(t, realOpts{script: `[]`, noFlag: true, pathPrefix: bin, env: []string{"DEVTUNNEL_LOG=" + logPath, "DEVTUNNEL_PID=" + pidPath}})
+	p.rpcPrompt("/ahp tunnel my box")
+	testkit.Eventually(t, "the tunnel notice", func() bool {
+		return strings.Contains(p.pigLog(), "AHP dev tunnel fake.usw2: listening on ws://127.0.0.1:31546")
+	})
+	testkit.Eventually(t, "the output of devtunnel host", func() bool {
+		return strings.Contains(p.pigLog(), "Connect via browser: https://fake.usw2.devtunnels.example")
+	})
+	calls, _ := os.ReadFile(logPath)
+	want := strings.Join([]string{
+		"user show --json",
+		"list --all-labels _pi_ahp --all-labels vscode-server-launcher --json",
+		"create --json -l vscode-server-launcher -l protocolv5 -l _pi_ahp -l mybox",
+		"port list fake.usw2 --json",
+		"port create fake.usw2 -p 31546 --protocol http --json",
+		"host fake.usw2",
+	}, "\n") + "\n"
+	if string(calls) != want {
+		t.Fatalf("devtunnel was run as:\n%s\nwant:\n%s", calls, want)
+	}
+	if !strings.Contains(p.pigLog(), "tunnel: fake.usw2 (new, named mybox)") {
+		t.Fatalf("log lacks the tunnel line:\n%s", p.pigLog())
+	}
+	if _, err := os.Stat(filepath.Join(p.root, "ahp-settings.json")); err == nil {
+		t.Fatal("a tunnel must not create the direct listener's settings file")
+	}
+
+	// The listener takes no token.
+	c, _, err := ws.Dial("ws://127.0.0.1:31546/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p.client = c
+	t.Cleanup(func() { c.Close() })
+	raw, e := p.request("initialize", map[string]any{"channel": "ahp-root://", "clientId": "tunnel-client", "protocolVersions": []string{"0.9.0"}})
+	if e != nil || !strings.Contains(string(raw), `"protocolVersion"`) {
+		t.Fatalf("initialize through the tunnel port: %s %v", raw, e)
+	}
+	// /ahp start while the tunnel runs reports the running listener; it opens no second one.
+	p.rpcPrompt("/ahp start")
+	testkit.Eventually(t, "the running listener to be reported again", func() bool {
+		return strings.Count(p.pigLog(), "AHP dev tunnel fake.usw2: listening on ws://127.0.0.1:31546") >= 2
+	})
+	if strings.Contains(p.pigLog(), "?tkn=") {
+		t.Fatal("/ahp start must not open a second listener while the tunnel runs")
+	}
+
+	pid, _ := os.ReadFile(pidPath)
+	hostPID := strings.TrimSpace(string(pid))
+	if hostPID == "" {
+		t.Fatal("devtunnel host did not record its pid")
+	}
+	p.rpcPrompt("/ahp stop")
+	testkit.Eventually(t, "the listener to close", func() bool { return !p.portOpen(31546) })
+	testkit.Eventually(t, "devtunnel host to be gone", func() bool { return exec.Command("kill", "-0", hostPID).Run() != nil })
+}
+
+func (p *realPig) portOpen(port int) bool {
+	c, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 300*time.Millisecond)
+	if err == nil {
+		c.Close()
+		return true
+	}
+	return false
 }
