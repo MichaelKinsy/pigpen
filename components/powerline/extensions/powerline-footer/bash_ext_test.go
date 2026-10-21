@@ -183,7 +183,9 @@ func topBar(t *testing.T, h *Host) string {
 func TestTheShellModeSegmentFollowsBashMode(t *testing.T) {
 	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
 	b.h.Command("bash-mode", "on")
-	waitUntil(t, "the shell segment", func() bool { return strings.Contains(topBar(t, b.h), "bash") && strings.Contains(topBar(t, b.h), "idle") })
+	waitUntil(t, "the shell segment", func() bool {
+		return strings.Contains(topBar(t, b.h), "bash") && strings.Contains(topBar(t, b.h), "idle")
+	})
 	b.h.Command("bash-mode", "off")
 	waitUntil(t, "the shell segment to go", func() bool { return !strings.Contains(topBar(t, b.h), "idle") })
 }
