@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial, stacked PR 4 of 8)
+# Port record: pi-powerline-footer (partial, stacked PR 5 of 8)
 
 | Input | Identity |
 |---|---|
@@ -30,9 +30,13 @@ never visible (the first needs bash mode, the second renders nothing in the orig
 
 the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `completion.ts`, the pure parts of `editor.ts`) in `bash_*.go`: the shell session over `os/exec` (process group signals, hidden console on Windows), the completion engine and its providers over the SDK's `AutocompleteProvider`, the transcript store and widget, the `shell_mode` segment. The editor (`BashModeEditor`) needs `setEditorComponent`: `/bash-mode`, `/bash-reset` and the `bashMode` setting stay refused, and 28 twins of editor cases are named skips with their reasons.
 
+### Ported in PR 5 (vibes, version 0.5.0)
+
+`working-vibes.ts` and the vibe wiring of `index.ts` in `working_vibes*.go` (model registry `Complete`, `SetWorkingMessage`): manager, themes, file and generate modes, prompt template, rate limit, `parseVibeGenerateArgs`, `generateVibesBatch`, and the `before_agent_start`, `agent_start`, `tool_call`, `agent_end` handlers. 9 twins.
+
 ### Refusal of what is not ported
 
-Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`, `/vibe`, `/cd`) with an error notification and each unported setting (see the README) with a
+Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/bash-mode`, `/bash-reset`, `/powerline-perf`, `/cd`) with an error notification and each unported setting (see the README) with a
 warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
 npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
 The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
