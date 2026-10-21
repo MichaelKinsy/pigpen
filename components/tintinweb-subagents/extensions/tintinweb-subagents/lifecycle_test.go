@@ -546,7 +546,7 @@ func TestAChildNeverReadsAppendSystemMd(t *testing.T) {
 }
 
 func TestJSTrim(t *testing.T) {
-	eq(t, jsTrim("\uFEFF  x \u00a0\u2028"), "x")  // BOM, NBSP and the line separators are white space in JS
+	eq(t, jsTrim("\uFEFF  x \u00a0\u2028"), "x")    // BOM, NBSP and the line separators are white space in JS
 	eq(t, jsTrim("\u0085x\u0085"), "\u0085x\u0085") // NEL is not
 	eq(t, jsTrim(" \t\r\n\v\f"), "")
 }

@@ -61,8 +61,8 @@ type agentRecord struct {
 
 	spec          childSpec
 	child         child
-	done          chan struct{} // closed once the record is final (settled, or stopped while queued); a resume replaces it
-	startGate     chan struct{} // closed when the record leaves the queue (started, stopped or the manager disposed)
+	done          chan struct{}      // closed once the record is final (settled, or stopped while queued); a resume replaces it
+	startGate     chan struct{}      // closed when the record leaves the queue (started, stopped or the manager disposed)
 	cancel        context.CancelFunc // ends the context the child was started with: its process lives no longer
 	stopped       bool               // stopped by the user or the parent (not a failure)
 	started       chan struct{}
