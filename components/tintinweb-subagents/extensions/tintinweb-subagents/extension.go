@@ -33,6 +33,7 @@ type app struct {
 
 	wf     *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
 	wfOnce sync.Once
+	schedule        scheduleState
 }
 
 func newApp(e *sdk.Extension, start childStarter) *app {
@@ -46,6 +47,7 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 		}
 	}
 	panicNotice.Store(&notice)
+	a.initSchedule()
 	return a
 }
 
@@ -146,6 +148,7 @@ func (a *app) register(e *sdk.Extension) {
 	}))
 	a.registerTools(e)
 	a.registerRenderers(e)
+	a.registerSchedule(e)
 	e.Command("agents", "List the agent types and the running agents", protectCommand("/agents", a.agentsCommand))
 }
 

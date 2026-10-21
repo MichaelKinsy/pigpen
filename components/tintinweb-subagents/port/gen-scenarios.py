@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Generates port/scenarios/*.json. Every scenario starts with the original's workflows, scheduling and worktree
-isolation switched off (.pi/subagents.json), the features this port does not offer, and declares git as missing
-(the original's environment probe starts it)."""
+"""Generates port/scenarios/*.json. Unless a scenario is about scheduled runs, it starts with the original's workflows,
+scheduling and worktree isolation switched off (.pi/subagents.json), so its recorded requests do not depend on them, and
+declares git as missing (the original's environment probe starts it). The scheduling scenarios leave scheduling on, as
+it is by default."""
 import json, os
 out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scenarios")
 SETTINGS = {"workflowsEnabled": False, "schedulingEnabled": False, "worktreeIsolation": False}
+SCHEDULING_ON = {"workflowsEnabled": False, "worktreeIsolation": False}
 
 def setup(settings=SETTINGS):
     body = json.dumps(settings).replace("'", "'\\''")
@@ -64,6 +66,23 @@ wf_scenario("workflow-missing-script-path", "A missing scriptPath is reported ra
 # workflow-flag-bare (a bare --subagents-workflow-file) has no scenario: Pi refuses to start with `Extension flag requires a value`, so there is nothing to record; the twin covers it.
 wf_scenario("workflow-off", "With workflowsEnabled false the tool is not offered and the flag is refused.", [],
             settings={**WF_SETTINGS, "workflowsEnabled": False}, files={"flow.js": META % ("flagged", "x")}, args=["--subagents-workflow-file=flow.js"])
+# Scheduled runs. A call that registers a job answers with the job's random id (nanoid), which the trace cannot
+# normalize, so only what is deterministic is recorded: the tool text and every refusal of a `schedule` call.
+scenario("schedule-tool-text", "With scheduling on (the default) the Agent tool carries the schedule parameter and its guideline.", [],
+         settings=SCHEDULING_ON, steps=[{"name": "prompt", "rpc": {"type": "prompt", "message": "hello"}}])
+AGENT = dict(prompt="check the repo", description="nightly check", subagent_type="general-purpose")
+scenario("schedule-refusals", "A schedule call is refused with the original's text: with resume, with inherit_context, in the foreground, "
+         "with a schedule that is not one, with a time in the past, and for an agent type that does not exist (fallbackSubagent none).",
+         [[call("Agent", **AGENT, schedule="1h", resume="some-agent")],
+          [call("Agent", **AGENT, schedule="1h", inherit_context=True)],
+          [call("Agent", **AGENT, schedule="1h", run_in_background=False)],
+          [call("Agent", **AGENT, schedule="every now and then")],
+          [call("Agent", **AGENT, schedule="* * * * *")],
+          [call("Agent", **AGENT, schedule="2020-01-01T00:00:00Z")],
+          [call("Agent", **{**AGENT, "subagent_type": "typoo"}, schedule="1h")]],
+         settings={**SCHEDULING_ON, "fallbackSubagent": "none"})
+scenario("schedule-disabled", "With schedulingEnabled false a schedule call is answered with the disabled text.",
+         [[call("Agent", **AGENT, schedule="1h")]])
 
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's

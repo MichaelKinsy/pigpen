@@ -116,15 +116,16 @@ func (a *app) registerTools(e *sdk.Extension) {
 	// The workspace is fixed for an extension process, so the custom agents can be read before the tool is registered.
 	if wd, err := os.Getwd(); err == nil {
 		safeCall("loading the agent files", func() { a.reload(wd) })
+		a.setSchedulingEnabled(scheduleSettingEnabled(wd))
 	}
 	reg := currentRegistry()
 	var guidelines []string
 	_ = json.Unmarshal(agentGuidelinesJSON, &guidelines)
 	e.RegisterTool(sdk.ToolDefinition{
-		Name: "Agent", Label: "Agent", Description: agentToolDescription(reg),
+		Name: "Agent", Label: "Agent", Description: a.withScheduleGuideline(agentToolDescription(reg)),
 		PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
 		PromptGuidelines: guidelines,
-		Parameters:       agentToolSchema(reg, specs["Agent"]),
+		Parameters:       a.withScheduleParam(agentToolSchema(reg, specs["Agent"])),
 		Execute:          protect("Agent", a.agentTool),
 		RenderCall:       a.renderAgentCall,
 		RenderResult:     a.renderAgentResult,
@@ -188,6 +189,9 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	maxTurns := 0
 	if f, ok := p["max_turns"].(float64); ok {
 		maxTurns = int(f)
+	}
+	if schedule, _ := p["schedule"].(string); schedule != "" {
+		return a.scheduleCall(p, schedule)
 	}
 	if feature := unportedCallParam(p); feature != "" {
 		return nil, refusal(feature)
@@ -408,6 +412,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 		// The inspector (stop, pause, skip, retry) is the UI slice's: refused, never a menu that looks like it works.
 		lines = append(lines, "  "+refusalText("the Workflows menu (stop, pause, skip and retry of a run)"))
 	}
+	lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)
 	ctx.Notify(strings.Join(lines, "\n"), "info")
 	return nil
 }

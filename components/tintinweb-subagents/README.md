@@ -46,7 +46,21 @@ and `<workspace>/.pi/agents/` (later ones win), exactly as in the original: `nam
 `enabled`, `disallowed_tools`, `extensions`, `skills`, `isolated` and the rest are parsed the same way (the 76 cases of
 the original's `custom-agents` tests are twinned). Settings come from `<agent dir>/subagents.json` and
 `<workspace>/.pi/subagents.json`: `maxConcurrent` (default 10), `defaultMaxTurns`, `graceTurns`, `fallbackSubagent` (an
-unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused) and `disableDefaultAgents`.
+unknown type goes to `general-purpose`, to a named agent, or with `"none"` is refused), `disableDefaultAgents` and
+`schedulingEnabled` (default `true`; `false` takes the `schedule` parameter out of the tool text and answers a call that
+passes it anyway with "Scheduling is disabled in this project").
+
+## Scheduled runs
+
+The `Agent` tool takes an optional `schedule` that registers a job instead of starting an agent now: a 6-field cron
+expression (`"0 0 9 * * 1"`, second minute hour day-of-month month day-of-week, with croner's `L`, `W`, `#` and `+`
+extensions and its local-time-zone rules), an interval (`"5m"`, `"1h"`, `"2d"`) or a one-shot (`"+10m"` or an ISO
+timestamp). The call answers with the job's id and next run. A job fires as a background agent that bypasses the
+concurrency limit; its completion reaches you as the usual notification. Jobs belong to a session and are kept in
+`<workspace>/.pi/subagent-schedules/<session id>.json` (written atomically, under a lock file, in the original's
+format): `/new` starts empty, `/resume` brings the session's jobs back. The `subagents:scheduled` and
+`subagents:scheduler_ready` events are published as in the original. `/agents` lists the jobs; the interactive
+`Scheduled jobs` menu, which cancels one, is not ported and says so with the message below.
 
 ## The display surfaces
 
@@ -78,10 +92,10 @@ says so with the same refusal message.
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): scheduled runs, worktree isolation, `@name`
-mentions, persistent agent memory, nested delegation, `inherit_context`,
-resuming a finished agent's session, the settings menu, and output transcripts. The `Agent` tool is advertised with the
-original's text and schema as it is with scheduling and worktree isolation switched off.
+[port/PORT.md](port/PORT.md): worktree isolation, `@name` mentions, persistent agent memory, nested delegation,
+`inherit_context`, resuming a finished agent's session, and output transcripts. The `Agent` tool is advertised with the
+original's text and schema as it is with worktree isolation switched off (scheduling and workflows are on, as they are by
+default).
 
 Nothing that is not ported is accepted and quietly ignored. Each of these is refused with one message, a tool error
 (for the settings, a notification when a session starts):
@@ -89,15 +103,16 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > @pi-in-go/pigpen-tintinweb-subagents (Go port) does not support _the feature_ yet. Install the original extension,
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
-- Agent call parameters `schedule`, `isolation: "worktree"`, `inherit_context: true` and `resume`.
+- Agent call parameters `isolation: "worktree"`, `inherit_context: true` and `resume`; a `schedule` that asks for the same,
+  and cancelling a scheduled job (the `/agents` Scheduled jobs menu).
 - Agent file fields that ask for an unported feature: `inherit_context: true`, `isolation: worktree`, `memory`,
   `allowed_subagents`, `ext:` tool selectors, `disallowed_tools`, an `extensions` list, `exclude_extensions`, `skills` as
   `false` or a list, `persist_session: true`, `output_transcript: true`, `session_dir`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel` and
   `isBackground: true`.
-- `subagents.json` settings with a value that asks for an unported feature (`schedulingEnabled: true`,
-  `worktreeIsolation: true`, `scopeModels: true`, `defaultJoinMode: "group"`, and so on). The settings the port matches are not flagged: `false` for the switches the port does not have, the five
-  it honors for the run, `workflowsEnabled`, and the five display settings above.
+- `subagents.json` settings with a value that asks for an unported feature (`worktreeIsolation: true`,
+  `scopeModels: true`, `defaultJoinMode: "group"`, and so on). The settings the port matches are not flagged: `false`
+  for the switches the port does not have, the settings it honors for the run, and the display settings above.
 
 `isolated: true` starts the child with no extensions. The proof that the shipped slice matches the original is in
 [port/PORT.md](port/PORT.md).

@@ -85,12 +85,12 @@ func (a *app) rpcSpawn(ctx sdk.Context, p map[string]any) (any, error) {
 }
 
 // start builds the child's spec from the agent type and spawns it.
-func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
-	return a.startOwned(ctx, "", typ, prompt, description, name, model, thinking, maxTurns, background, isolated)
+func (a *app) start(ctx sdk.Context, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool, options ...func(*agentRecord)) (*agentRecord, error) {
+	return a.startOwned(ctx, "", typ, prompt, description, name, model, thinking, maxTurns, background, isolated, options...)
 }
 
 // startOwned is start for an agent a workflow run owns (owner is the run id).
-func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool) (*agentRecord, error) {
+func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name, model, thinking string, maxTurns int, background, isolated bool, options ...func(*agentRecord)) (*agentRecord, error) {
 	a.mu.Lock()
 	cwd := a.cwd
 	a.mu.Unlock()
@@ -156,7 +156,7 @@ func (a *app) startOwned(ctx sdk.Context, owner, typ, prompt, description, name,
 	snapshot := buildInvocation(ctx, inv, background, isolated || (cfg.Isolated != nil && *cfg.Isolated))
 	obs := a.ui.newObserver(snapshot, spec.MaxTurns)
 	spec.Observer = obs
-	r := a.mgr.spawnOwned(owner, resolved, description, name, spec, background)
+	r := a.mgr.spawnOwned(owner, resolved, description, name, spec, background, options...)
 	a.ui.attach(r, obs)
 	return r, nil
 }

@@ -14,6 +14,9 @@ import (
 
 type obj = map[string]any
 
+// rigSessionID is the session id the fake host reports; the scheduler keeps its jobs in a file named after it.
+const rigSessionID = "sched-wiring-session"
+
 // fakeChild is a scripted child: it settles when released, or when aborted.
 type fakeChild struct {
 	spec    childSpec
@@ -103,22 +106,27 @@ type rig struct {
 	extBus map[string][]string
 	goBus  map[string][]func(any)
 	emits  []string
+
+	noSession bool // the host has no session id yet
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
 
 // startRigIn is startRig with the workspace the session starts in.
-func startRigIn(t *testing.T, cwd string) *rig {
+func startRigIn(t *testing.T, cwd string) *rig { return startRigWith(t, cwd, false) }
+
+// startRigWith is startRigIn, with the host answering getSessionID with an empty id when noSession is set.
+func startRigWith(t *testing.T, cwd string, noSession bool) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
-	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}, noSession: noSession}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
-	r.Fire("session_start", obj{"reason": "startup"})
-	t.Cleanup(func() { r.app.mgr.abortAll() })
+	r.FireAll("session_start", obj{"reason": "startup"})
+	t.Cleanup(func() { r.app.mgr.abortAll(); r.app.scheduler().stop() })
 	return r
 }
 
@@ -126,6 +134,11 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {
+	case "getSessionID":
+		if r.noSession {
+			return obj{"sessionId": ""}, ""
+		}
+		return obj{"sessionId": rigSessionID}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string

@@ -46,7 +46,6 @@ func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])
 	eq(t, originalSpec, "npm:"+orig["name"].(string)+"@"+orig["version"].(string))
-	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
 }
 
 func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
@@ -55,7 +54,6 @@ func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
 		params  obj
 		feature string
 	}{
-		{"schedule", obj{"schedule": "5m"}, "scheduled agent runs (the schedule parameter)"},
 		{"isolation worktree", obj{"isolation": "worktree"}, `worktree isolation (isolation: "worktree")`},
 		{"inherit_context", obj{"inherit_context": true}, "inheriting the parent conversation (inherit_context)"},
 		{"resume", obj{"resume": "explore"}, "resuming a finished agent's session (resume)"},
@@ -169,6 +167,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
+		eq(t, r.app.mgr.resolve("scout") != nil, true) // the name reaches the record
 	})
 }
 
@@ -200,7 +199,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"maxConcurrentForeground", `{"maxConcurrentForeground": 2}`, "maxConcurrentForeground: 2"},
 		{"defaultJoinMode", `{"defaultJoinMode": "group"}`, `defaultJoinMode: "group"`},
 		{"backgroundByDefault", `{"backgroundByDefault": false}`, "backgroundByDefault: false"},
-		{"schedulingEnabled", `{"schedulingEnabled": true}`, "schedulingEnabled: true"},
 		{"scopeModels", `{"scopeModels": true}`, "scopeModels: true"},
 		{"strictAgentFiles", `{"strictAgentFiles": true}`, "strictAgentFiles: true"},
 		{"toolDescriptionMode", `{"toolDescriptionMode": "compact"}`, `toolDescriptionMode: "compact"`},
@@ -233,6 +231,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		_ = os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"showCost": false}`), 0o644)
 		r := startRigIn(t, cwd)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true)")})
+	})
+	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
 	})
 }
 

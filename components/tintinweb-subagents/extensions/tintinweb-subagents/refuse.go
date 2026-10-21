@@ -28,11 +28,8 @@ func refusalText(feature string) string {
 }
 
 // unportedCallParam names the first Agent parameter of the original that is not ported, or "".
-// upstream: index.ts Agent parameters (schedule, isolation, resume, inherit_context).
+// upstream: index.ts Agent parameters (isolation, resume, inherit_context).
 func unportedCallParam(p map[string]any) string {
-	if v, ok := p["schedule"]; ok && v != nil {
-		return "scheduled agent runs (the schedule parameter)"
-	}
 	if v, _ := p["isolation"].(string); v != "" && v != "off" {
 		return `worktree isolation (isolation: "` + v + `")`
 	}
@@ -136,7 +133,6 @@ var settingRules = []settingRule{
 	{key: "maxConcurrentForeground", kind: "int", okInts: []int{0}},
 	{key: "defaultJoinMode", kind: "enum", enum: []string{"async", "group", "smart"}, okEnum: []string{"async"}},
 	{key: "backgroundByDefault", kind: "bool", okBool: true},
-	{key: "schedulingEnabled", kind: "bool", okBool: false},
 	{key: "scopeModels", kind: "bool", okBool: false},
 	{key: "strictAgentFiles", kind: "bool", okBool: false},
 	{key: "toolDescriptionMode", kind: "enum", enum: []string{"full", "compact", "custom"}, okEnum: []string{"full"}},
