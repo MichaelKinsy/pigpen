@@ -78,7 +78,7 @@ func TestSessionPersistenceTwins(t *testing.T) {
 	})
 	tw(t, f, "reopens an existing session file instead of starting a new conversation", func(t *testing.T) {
 		r := startRig(t)
-		rec := r.app.mgr.spawnWith("Plan", "d", "", childSpec{Prompt: "carry on", Persist: true}, spawnOptions{ResumeFile: "/sessions/explore.jsonl", Background: true})
+		rec := r.app.mgr.spawnWith("Plan", "d", childSpec{Prompt: "carry on", Persist: true}, spawnOptions{ResumeFile: "/sessions/explore.jsonl", Background: true})
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.ResumeFile, "/sessions/explore.jsonl")
 		args := childArgs(c.spec)
@@ -558,7 +558,7 @@ func TestAnEvictedAgentCanBeReopenedByItsHandle(t *testing.T) {
 		eq(t, rec.Handle, "explore-2")
 	}
 	// Reopening: the file, the type's current definition and the handle the user typed.
-	reopened := r.app.mgr.spawnWith("Explore", "d", "", childSpec{Prompt: "carry on", Persist: true}, spawnOptions{ResumeFile: dead.SessionFile, Reclaim: &reclaim{Handle: dead.Handle, Alias: dead.Alias}, Background: true})
+	reopened := r.app.mgr.spawnWith("Explore", "d", childSpec{Prompt: "carry on", Persist: true}, spawnOptions{ResumeFile: dead.SessionFile, Reclaim: &reclaim{Handle: dead.Handle, Alias: dead.Alias}, Background: true})
 	eq(t, reopened.Handle, "explore")
 	cs := r.fleet.wait(t, 3)
 	eq(t, cs[2].spec.ResumeFile, "/sessions/explore.jsonl")
