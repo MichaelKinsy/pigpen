@@ -186,6 +186,13 @@ func TestFastRenderWrapsAVeryLongLine(t *testing.T) {
 	if !strings.Contains(got[0], "↑") || !strings.Contains(got[len(got)-1], "↓") {
 		t.Errorf("marks %q %q", got[0], got[len(got)-1])
 	}
+	// Six chunks before the cursor's (19 to 24), then the cursor's chunk 25: the first row carries chunk 19, columns 931 to 979.
+	if want := long[19*49 : 20*49]; !strings.Contains(got[1], want) {
+		t.Errorf("first row %q, want chunk 19 %q", got[1], want)
+	}
+	if want := long[25*49 : 26*49]; !strings.Contains(got[7], want[2:]) {
+		t.Errorf("cursor row %q, want chunk 25 %q", got[7], want)
+	}
 }
 
 func TestFastRenderStepsAside(t *testing.T) {

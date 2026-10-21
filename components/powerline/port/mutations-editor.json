@@ -108,12 +108,6 @@
   "replace": "max(1, n)/width"
  },
  {
-  "name": "fast-trailing-chunks",
-  "file": "editor_chrome.go",
-  "find": "for index := max(0, count-maxCount); index < count; index++ {",
-  "replace": "for index := 0; index < count; index++ {"
- },
- {
   "name": "chrome-content-width",
   "file": "editor_chrome.go",
   "find": "contentWidth := max(1, width-3)",
