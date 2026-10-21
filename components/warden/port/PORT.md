@@ -726,6 +726,20 @@ Rows still above the original: `sanitize` (+86%, 14 us more on 1.8 KB of text th
 
 Against the previous slice (`port/warden-learning-3`; a `package main` that only runs `warden.Extension()`, linux/amd64, `-s -w`, 31 interleaved runs pinned to CPUs 100-103): binary 14,487,712 to 14,794,912 bytes (+307,200, +2.1%); `Extension()` 91.3 us to 89.0 us; process start to a built extension 7.37 ms to 7.02 ms (noise: the box is shared). Package init allocates no more than before (`TestPackageInitDoesNotCompileRegexps` green: every expression is a `lazyRE`). The original's module load under Node was not measured for this slice.
 
+### Performance follow-up: the five paths that were above the original (`port/warden-perf-ctx-1`)
+
+Re-measured and fixed (`port/perf/ctxcons-run.sh`: the code before the fixes, the code after and the original under Node 24 in the same rounds, 10 rounds, one CPU set, xd670 container; the box was shared, so read the ratios; full table and profiles in `handoffs/pigpen-parity/perf-warden-ctxcons.md`). Medians, ns/op, B/op, allocs/op:
+
+| Path | Before | After | Node original | After / Node |
+|---|---|---|---|---|
+| compress 200 KB output (generic) | 723,921, 100,408 B, 15 | 232,076, 3,568 B, 4 | 358,500 to 589,500 | 0.65x |
+| compress 100 KB tsc log (parser) | 335,740, 183,808 B, 36 | 220,254, 48,334 B, 24 | 311,500 to 333,000 | 0.71x |
+| relevance summary render, 120 calls | 1,670,265, 3,141,506 B, 1,100 | 300,231, 776,714 B, 123 | 1,719,500 to 1,808,000 | 0.17x |
+| conscience sanitize 1.8 KB | 14,544, 14,288 B, 25 | 12,152, 6,400 B, 4 | 11,840 | 1.03x |
+| conscience index write + read, 200 entries | 1,293,790, 658,864 B, 1,348 | 796,842, 469,832 B, 24 | 772,385 | 1.03x |
+
+What changed, each held by a test to the code it replaces: `isASCII` reads 32 bytes a step and `CompressOutput` asks once (it was four 200 KB scans); the ASCII route cuts as bytes, splits no line and finds diagnostic lines with an eight-positions-at-a-time test for the first two letters of a stem (`TestNextDiagnosticLine*`, `TestCompressOutputEqualsTheReference`, `TestFormatExcerptEqualsTheReference`); `RenderSummary` writes into one buffer (`TestRenderSummaryEqualsTheReference` keeps the old renderer as the reference); an index file in the plain shape is read in one pass with the generic decoder as the final say (`TestDecodeIndexFastEqualsTheGenericDecoder`, over mutated files) and written with the same eight-byte scan (`TestJSONStringWriterEqualsTheGenericEncoder`); the sanitizer sizes its result once. Measured and not closeable: system calls are 46% of an index write (about 0.24 ms of 0.52 ms: directory check, open, write, close, chmod, rename on the container's overlay file system), the same sequence `atomic.ts` `writeFileAtomicSync` runs under Node, so the write and read stay level with Node (+3%). A shift-based (Wu-Manber) scan of the diagnostic words was tried and dropped: its loop-carried table lookups cost more per byte than the plain scan (profile: 2.08 s of 3.27 s on one line).
+
 ### Conscience gaps
 
 | # | Gap | Why | Closes when |
