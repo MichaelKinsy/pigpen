@@ -1194,12 +1194,6 @@
   "replace": "disable := denyExtensions"
  },
  {
-  "name": "plan-deny",
-  "file": "extension_plan.go",
-  "find": "if !denyExtensions {\n\t\tfor _, t := range a.Tools {",
-  "replace": "if true {\n\t\tfor _, t := range a.Tools {"
- },
- {
   "name": "plan-fast-prefix",
   "file": "extension_plan.go",
   "find": "const fastModeProviderPrefix = \"openai-codex/\"",
