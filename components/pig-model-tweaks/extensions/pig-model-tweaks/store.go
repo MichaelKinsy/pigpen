@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 // Store file. The Pi original wrote one file for the whole package,
@@ -72,9 +74,12 @@ type store struct {
 	// mu is a one-token channel rather than a sync.Mutex: load and update hand
 	// the cached pointer out to callers, and a mutex cannot protect a value that
 	// is read after it is unlocked.
-	mu      chan struct{}
-	home    string
-	path    string
+	mu   chan struct{}
+	home string
+	path string
+	// bound is set once a real agent directory was bound; home and path may be
+	// set before that by the fallback in file.
+	bound   bool
 	current *settings
 	// startup is the model PiG was configured with when the session began, which
 	// the guard trusts: a session that opens on the model the user set up is not a
@@ -110,9 +115,41 @@ func newStore() *store {
 func (s *store) bind(dir string) {
 	<-s.mu
 	defer func() { s.mu <- struct{}{} }()
-	if s.home == "" && dir != "" {
-		s.home, s.path = dir, filepath.Join(dir, settingsFileName)
+	if s.bound || dir == "" {
+		return
 	}
+	path := filepath.Join(dir, settingsFileName)
+	if path != s.path {
+		// Settings read from the fallback location are not this directory's.
+		s.current = nil
+	}
+	s.home, s.path, s.bound = dir, path, true
+}
+
+// agent returns the agent directory, binding it on first use. It is Pi's
+// getAgentDir(): the host's own answer (sdk.AgentDir) when it gave one, and
+// otherwise PIG_HOME resolved from the context. The error is the context's, so
+// a missing home directory fails the handler instead of writing under the
+// working directory.
+func (s *store) agent(ctx sdk.Context) (string, error) {
+	<-s.mu
+	home, bound := s.home, s.bound
+	s.mu <- struct{}{}
+	if bound {
+		return home, nil
+	}
+	dir, err := sdk.AgentDir()
+	if err != nil {
+		configHome, homeErr := ctx.ConfigHome()
+		if homeErr != nil {
+			return "", homeErr
+		}
+		dir = agentDir(configHome)
+	}
+	s.bind(dir)
+	<-s.mu
+	defer func() { s.mu <- struct{}{} }()
+	return s.home, nil
 }
 
 // file is the settings path, resolved from the bound agent directory or, before
@@ -194,17 +231,62 @@ func defaultSettings() *settings {
 func readSettings(path string) *settings {
 	out := defaultSettings()
 	raw, err := os.ReadFile(path)
-	if err != nil {
-		return out
-	}
 	var parsed map[string]any
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		logf("%s is not valid JSON; using defaults", path)
+	if err == nil {
+		if err := json.Unmarshal(raw, &parsed); err != nil {
+			logf("%s is not valid JSON; using defaults", path)
+			parsed = nil
+		}
+	}
+	if parsed == nil {
+		// store.ts loadSettings: without a readable consolidated file, the
+		// per-feature files of earlier versions seed it.
+		if migrated := migrateLegacy(filepath.Dir(path)); migrated != nil {
+			if err := writeSettings(path, migrated); err != nil {
+				logf("write %s: %v", path, err)
+			}
+			return migrated
+		}
 		return out
 	}
 	applyRememberModel(out, object(parsed["rememberModel"]))
 	applyModelGuard(out, object(parsed["modelGuard"]))
 	applyLocks(out, object(parsed["openrouterModelProviderPref"]))
+	return out
+}
+
+// migrateLegacy is store.ts migrateLegacy. Earlier versions kept
+// last-model.json (rememberModel.last), openrouter-provider-prefs.json (the
+// locks) and model-preferences.json (the guard) in the agent directory. It
+// returns nil when none of them is readable JSON.
+func migrateLegacy(dir string) *settings {
+	readJSON := func(name string) (any, bool) {
+		raw, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil {
+			return nil, false
+		}
+		var value any
+		if json.Unmarshal(raw, &value) != nil {
+			return nil, false
+		}
+		return value, true
+	}
+	last, haveLast := readJSON("last-model.json")
+	locks, haveLocks := readJSON("openrouter-provider-prefs.json")
+	guard, haveGuard := readJSON("model-preferences.json")
+	if !haveLast && !haveLocks && !haveGuard {
+		return nil
+	}
+	out := defaultSettings()
+	if section := object(last); section != nil {
+		applyRememberModel(out, map[string]any{"last": section})
+	}
+	if section := object(locks); section != nil {
+		applyLocks(out, map[string]any{"locks": section})
+	}
+	if section := object(guard); section != nil {
+		applyModelGuard(out, map[string]any{"enabled": section["enabled"], "allowedModels": section["allowedModels"]})
+	}
 	return out
 }
 

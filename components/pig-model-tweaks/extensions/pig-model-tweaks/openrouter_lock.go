@@ -77,76 +77,55 @@ func registerOpenRouterLockProvider(ext *sdk.Extension, st *store) {
 		return next, nil
 	})
 
-	ext.Command(lockProviderName, "Pin an OpenRouter model to one upstream provider",
+	ext.Command(lockProviderName, "Manage OpenRouter provider locks (adds a :<provider> suffix)",
 		func(ctx sdk.Context, args string) error {
 			state := st.load()
-			fields := strings.Fields(strings.TrimSpace(args))
-			sub := ""
-			if len(fields) > 0 {
-				sub = strings.ToLower(fields[0])
-			}
+			trimmed := strings.TrimSpace(args)
+			sub := strings.ToLower(trimmed)
 
 			switch sub {
 			case "on", "off":
 				enabled := sub == "on"
 				st.update(func(draft *settings) { draft.OpenRouterModelProviderPref.Enabled = enabled })
-				ctx.Notify(fmt.Sprintf("openrouter provider locks %s", enabledWord(enabled)), "info")
+				ctx.Notify("openrouter-lock-provider "+enabledVerb(enabled), "info")
 				return nil
 			case "list":
 				ctx.Notify(formatLocks(state), "info")
 				return nil
 			case "clear":
-				// `clear` alone clears the lock of the model the session runs;
-				// `clear <model>` names one.
-				baseID := ""
-				switch {
-				case len(fields) >= 2:
-					baseID = baseIDOf(state, fields[1])
-				case ctx.ModelProvider() != openRouterProvider:
+				// `clear` clears the lock of the model the session runs.
+				if ctx.ModelProvider() != openRouterProvider {
 					ctx.Notify("Current model is not an OpenRouter model", "warning")
 					return nil
-				default:
-					baseID = baseIDOf(state, ctx.Model())
 				}
-				if lockFor(state, baseID) == "" {
-					ctx.Notify("No provider lock set for "+baseID, "info")
-					return nil
-				}
-				applyLock(ctx, st, baseID, "")
-				ctx.Notify("Cleared provider lock for "+baseID, "info")
-				return nil
-			case "lock":
-				// `lock <model> <provider>` sets one for any model.
-				if len(fields) < 3 {
-					ctx.Notify("usage: /"+lockProviderName+" lock <model> <provider>", "warning")
-					return nil
-				}
-				baseID, provider := fields[1], fields[2]
-				if !strings.Contains(baseID, "/") {
-					ctx.Notify("a model id looks like vendor/model", "warning")
-					return nil
-				}
-				applyLock(ctx, st, baseID, provider)
-				ctx.Notify(fmt.Sprintf("locked %s to provider %s", baseID, provider), "info")
+				return clearLockFor(ctx, st, baseIDOf(state, ctx.Model()))
+			}
+
+			// This port's own forms, which the original does not have:
+			// `clear <model>` and `lock <model> <provider>` name a model.
+			fields := strings.Fields(trimmed)
+			if len(fields) == 2 && strings.ToLower(fields[0]) == "clear" {
+				return clearLockFor(ctx, st, baseIDOf(state, fields[1]))
+			}
+			if len(fields) == 3 && strings.ToLower(fields[0]) == "lock" && strings.Contains(fields[1], "/") {
+				applyLock(ctx, st, fields[1], fields[2])
+				ctx.Notify(fmt.Sprintf("locked %s to provider %s", fields[1], fields[2]), "info")
 				return nil
 			}
 
-			// `<provider>` locks the model the session is running.
-			if len(fields) == 1 {
+			// `<provider>` locks the model the session is running; the whole
+			// argument is the slug, as the original takes it.
+			if trimmed != "" {
 				if ctx.ModelProvider() != openRouterProvider {
 					ctx.Notify("Current model is not an OpenRouter model", "warning")
 					return nil
 				}
 				baseID := baseIDOf(state, ctx.Model())
-				message := fmt.Sprintf("OpenRouter provider lock for %s: %s", baseID, fields[0])
-				if persisted := applyLock(ctx, st, baseID, fields[0]); persisted != "" {
-					message += "\ndefaultModel -> " + persisted
-				}
-				ctx.Notify(message, "info")
-				return nil
-			}
-			if len(fields) > 1 {
-				ctx.Notify("usage: /"+lockProviderName+" <provider> | clear [model] | lock <model> <provider> | list | on | off", "warning")
+				applyLock(ctx, st, baseID, trimmed)
+				// The original names the variant whether or not settings.json
+				// could be written.
+				ctx.Notify(fmt.Sprintf("OpenRouter provider lock for %s: %s\ndefaultModel -> %s",
+					baseID, trimmed, makeVariantID(baseID, trimmed)), "info")
 				return nil
 			}
 
@@ -155,43 +134,54 @@ func registerOpenRouterLockProvider(ext *sdk.Extension, st *store) {
 				ctx.Notify("Usage: /"+lockProviderName+" <provider> | clear | list | on | off", "info")
 				return nil
 			}
-
-			// The model list the Pi original opened, then the
-			// provider slug.
-			model, ok, err := pickOpenRouterModel(ctx, state)
-			if err != nil {
-				logf("model picker: %v", err)
-				return nil
-			}
-			if !ok {
-				ctx.Notify("cancelled", "info")
-				return nil
-			}
-			provider, ok, err := ctx.Input("Upstream provider for "+model, "provider slug (empty clears the lock)")
-			if err != nil {
-				logf("input: %v", err)
-				return nil
-			}
-			if !ok {
-				ctx.Notify("cancelled", "info")
-				return nil
-			}
-			provider = strings.TrimSpace(provider)
-			if provider == "" {
-				applyLock(ctx, st, model, "")
-				ctx.Notify("cleared the provider lock for "+model, "info")
-				return nil
-			}
-			applyLock(ctx, st, model, provider)
-			ctx.Notify(fmt.Sprintf("locked %s to provider %s", model, provider), "info")
-			return nil
+			return showLockPicker(ctx, st)
 		})
 }
 
+// lockPickerItems lists the picker's rows: the available OpenRouter models plus
+// every model that already has a lock, sorted by id, each described by its lock.
+func lockPickerItems(available []modelRef, locks map[string]string) []lockItem {
+	ids := map[string]bool{}
+	for _, model := range available {
+		if model.Provider == openRouterProvider {
+			ids[model.Model] = true
+		}
+	}
+	for id := range locks {
+		ids[id] = true
+	}
+	sorted := make([]string, 0, len(ids))
+	for id := range ids {
+		sorted = append(sorted, id)
+	}
+	sort.Strings(sorted)
+	items := make([]lockItem, 0, len(sorted))
+	for _, id := range sorted {
+		description := "no provider lock"
+		if locks[id] != "" {
+			description = "provider: " + locks[id]
+		}
+		items = append(items, lockItem{id: id, description: description})
+	}
+	return items
+}
+
+// clearLockFor clears a model's lock, as `clear` does.
+func clearLockFor(ctx sdk.Context, st *store, baseID string) error {
+	if lockFor(st.load(), baseID) == "" {
+		ctx.Notify("No provider lock set for "+baseID, "info")
+		return nil
+	}
+	applyLock(ctx, st, baseID, "")
+	ctx.Notify("Cleared provider lock for "+baseID, "info")
+	return nil
+}
+
 // applyLock records a lock change (an empty provider clears it) and writes the
-// model into settings.json as the default, as the original's applyLock does. It
-// returns the model id written, or "" when settings.json was not updated.
-func applyLock(ctx sdk.Context, st *store, baseID, provider string) string {
+// model into settings.json as the default (as `base:provider` while a lock is
+// active), as the original's applyLock does. A settings.json that cannot be
+// written is logged, never an error: the lock itself is already stored.
+func applyLock(ctx sdk.Context, st *store, baseID, provider string) {
 	st.update(func(draft *settings) {
 		if provider == "" {
 			clearLock(draft, baseID)
@@ -199,46 +189,51 @@ func applyLock(ctx sdk.Context, st *store, baseID, provider string) string {
 			setLock(draft, baseID, provider)
 		}
 	})
-	configHome, err := ctx.ConfigHome()
+	agent, err := st.agent(ctx)
 	if err != nil {
-		logf("config home: %v", err)
-		return ""
+		logf("agent directory: %v", err)
+		return
 	}
-	return persistDefaultModel(agentDir(configHome), openRouterProvider, baseID)
+	persistDefaultModel(agent, st.load(), openRouterProvider, baseID)
 }
 
-// pickOpenRouterModel asks which OpenRouter model to pin: through the picker when
-// the host can list models, and through a typed prompt when it cannot.
-func pickOpenRouterModel(ctx sdk.Context, state *settings) (string, bool, error) {
-	// The whole catalog, not just the usable half: a provider lock is often set
-	// before the host can reach the model it pins.
-	models := catalogModels(ctx, catalogEvery)
-	openRouter := make([]modelRef, 0)
-	for _, model := range models {
-		if model.Provider == openRouterProvider {
-			openRouter = append(openRouter, model)
-		}
+// showLockPicker is pt-openrouter-lock-provider.ts's showLockPicker: a
+// searchable list of the available OpenRouter models plus every model that
+// already has a lock, then the provider slug to lock it to.
+func showLockPicker(ctx sdk.Context, st *store) error {
+	locks := st.load().OpenRouterModelProviderPref.Locks
+	items := lockPickerItems(availableModels(ctx), locks)
+	if len(items) == 0 {
+		ctx.Notify("No OpenRouter models available", "warning")
+		return nil
 	}
-	if len(openRouter) == 0 {
-		// Nothing in this host's catalog is an OpenRouter model. Say so instead of
-		// opening an empty list, and still accept a model typed by hand, because a
-		// provider lock is written to a file herdr reads, not to the host.
-		ctx.Notify("no OpenRouter models in this host's catalog; type one to lock it anyway", "info")
-		model, ok, err := ctx.Input("OpenRouter model to pin", "vendor/model")
-		if err != nil || !ok {
-			return "", false, err
-		}
-		return strings.TrimSpace(model), strings.TrimSpace(model) != "", nil
-	}
-	result, err := ctx.Custom(newModelPicker(openRouter, nil, false), nil)
+	result, err := ctx.Custom(newLockPicker(items), nil)
 	if err != nil {
-		return "", false, err
+		return err
 	}
-	chosen := selection(result)
-	if len(chosen) == 0 {
-		return "", false, nil
+	selected, _ := result.(string)
+	if selected == "" {
+		return nil
 	}
-	return chosen[0], true, nil
+	current := lockFor(st.load(), selected)
+	if current == "" {
+		current = "deepseek"
+	}
+	input, answered, err := ctx.Input("Provider for "+selected+" (empty to clear):", current)
+	if err != nil {
+		return err
+	}
+	if !answered {
+		return nil
+	}
+	value := strings.TrimSpace(input)
+	applyLock(ctx, st, selected, value)
+	if value != "" {
+		ctx.Notify(fmt.Sprintf("OpenRouter provider lock for %s: %s", selected, value), "info")
+	} else {
+		ctx.Notify("Cleared provider lock for "+selected, "info")
+	}
+	return nil
 }
 
 // activeModelID returns the model id the session is running, or "" when the host
@@ -251,19 +246,19 @@ func activeModelID(ctx sdk.Context) string {
 // formatLocks renders every lock, sorted so the list is stable between runs.
 func formatLocks(state *settings) string {
 	locks := state.OpenRouterModelProviderPref.Locks
-	if len(locks) == 0 {
-		return "no OpenRouter provider locks set"
-	}
-	models := make([]string, 0, len(locks))
-	for model := range locks {
-		models = append(models, model)
-	}
-	sort.Strings(models)
-	lines := make([]string, 0, len(models))
-	for _, model := range models {
-		lines = append(lines, model+":"+locks[model])
+	lines := "  (none)"
+	if len(locks) > 0 {
+		models := make([]string, 0, len(locks))
+		for model := range locks {
+			models = append(models, model)
+		}
+		sort.Strings(models)
+		entries := make([]string, 0, len(models))
+		for _, model := range models {
+			entries = append(entries, "  • "+model+" -> "+locks[model])
+		}
+		lines = strings.Join(entries, "\n")
 	}
 	return fmt.Sprintf("OpenRouter provider locks (%s):\n%s",
-		strings.ToUpper(enabledWord(state.OpenRouterModelProviderPref.Enabled)),
-		strings.Join(lines, "\n"))
+		strings.ToUpper(enabledWord(state.OpenRouterModelProviderPref.Enabled)), lines)
 }

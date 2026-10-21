@@ -1,0 +1,10 @@
+{"kind":"header","scenario":"guard-pickers-cancelled","lane":"pi-ts","host":"pi 1.3.0","extension":"sha256:fc767afcbeedf603d53e87866cd0a3437464faecb902e8c13e062532ef237e93","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"message":"💡 No model preferences set. Run /pt-model-guard-pref to choose preferred models.","method":"notify","notifyType":"info"}}
+{"step":"01-add","ch":"ui","data":{"message":"Cancelled","method":"notify","notifyType":"info"}}
+{"step":"01-add","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-remove","ch":"ui","data":{"message":"Cancelled","method":"notify","notifyType":"info"}}
+{"step":"02-remove","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-bare","ch":"ui","data":{"message":"No preferences set yet. Pick your preferred models:","method":"notify","notifyType":"info"}}
+{"step":"03-bare","ch":"ui","data":{"message":"Cancelled","method":"notify","notifyType":"info"}}
+{"step":"03-bare","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

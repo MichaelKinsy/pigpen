@@ -1,0 +1,84 @@
+{
+  "name": "remember-select-toast",
+  "description": "Selecting a model with set_model remembers it, writes settings.json and toasts one tick later.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "agentFiles": {
+    "settings.json": "{\"theme\":\"dark\"}\n"
+  },
+  "steps": [
+    {
+      "name": "set-openai",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o-mini"
+      }
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "set-other",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model off"
+      }
+    },
+    {
+      "name": "set-openai-off",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o-mini"
+      }
+    },
+    {
+      "name": "status-off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model on"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "status-eq-llm",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    }
+  ]
+}

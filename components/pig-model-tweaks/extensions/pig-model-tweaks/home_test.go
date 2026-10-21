@@ -89,7 +89,7 @@ func TestModelSelectRemembersTheDefaultUnderTheConfigHome(t *testing.T) {
 	}
 }
 
-// remembered writes a remembered model into pmt-settings.json under home.
+// remembered writes a remembered model into the settings file under home.
 func rememberedHome(t *testing.T) {
 	t.Helper()
 	home := t.TempDir()
@@ -101,7 +101,7 @@ func rememberedHome(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "settings.json"), []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "pmt-settings.json"),
+	if err := os.WriteFile(filepath.Join(dir, settingsFileName),
 		[]byte(`{"version":1,"rememberModel":{"enabled":true,"last":{"provider":"acme","modelId":"model-1"}}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}

@@ -3,6 +3,7 @@ package pigmodeltweaks
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -10,6 +11,12 @@ import (
 // rememberModelName is the command that owns this feature. Every command in
 // this extension uses the pmt- prefix, where the Pi original used pt-.
 const rememberModelName = "pmt-remember-model"
+
+// deferredToastDelay is how long the "remembered" toast waits after its handler
+// returned. The original's setTimeout(0) lands after the host's own status; a
+// separate goroutine with a short delay keeps the same order without blocking the
+// handler.
+const deferredToastDelay = 30 * time.Millisecond
 
 // registerRememberModel remembers the model the user selected and restores it
 // on the next session.
@@ -43,7 +50,7 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			return nil, nil
 		}
 		baseID := baseIDOf(state, model.Model)
-		configHome, err := ctx.ConfigHome()
+		agent, err := st.agent(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -55,49 +62,16 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			}{Provider: model.Provider, ModelID: baseID}
 		})
 
-		if persistDefaultModel(agentDir(configHome), model.Provider, baseID) == "" {
+		persisted := persistDefaultModel(agent, st.load(), model.Provider, baseID)
+		if persisted == "" {
 			return nil, nil
 		}
-		ctx.Notify(fmt.Sprintf("remembered %s/%s as the default model", model.Provider, baseID), "info")
-		return nil, nil
-	})
-
-	ext.OnSessionStart(func(ctx sdk.Context, data map[string]any) (any, error) {
-		state := st.load()
-		if !state.RememberModel.Enabled {
-			return nil, nil
-		}
-		reason := sdk.Param[string](data, "reason")
-		if reason != "new" && reason != "startup" {
-			return nil, nil
-		}
-		// A continued session already carries its own model; leave it alone.
-		// When the branch cannot be read, assume it has messages rather than
-		// override a model mid-history.
-		if reason == "startup" {
-			branch, err := ctx.GetBranch()
-			if err != nil {
-				logf("read session branch: %v", err)
-				return nil, nil
-			}
-			for _, entry := range branch {
-				if entry.Type == "message" {
-					return nil, nil
-				}
-			}
-		}
-		last := state.RememberModel.Last
-		if last == nil {
-			return nil, nil
-		}
-		spec := resolveModelSpec(ctx, state, last.Provider, last.ModelID)
-		if spec == "" {
-			logf("remembered model %s/%s is not in the registry", last.Provider, last.ModelID)
-			return nil, nil
-		}
-		if _, err := ctx.SetModel(spec); err != nil {
-			logf("restore %s: %v", spec, err)
-		}
+		// pt-remember-model.ts defers the toast one timer tick: the /model
+		// selector and Ctrl+P show their own "Model: ..." status right after the
+		// selection resolves, which would overwrite this one, so it is sent after
+		// the handler has returned.
+		message := fmt.Sprintf("%s: remembered model: %s/%s in settings.json", rememberModelName, model.Provider, persisted)
+		time.AfterFunc(deferredToastDelay, func() { ctx.Notify(message, "info") })
 		return nil, nil
 	})
 
@@ -107,16 +81,12 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 			switch sub {
 			case "on", "off":
 				enabled := sub == "on"
-				updated := st.update(func(draft *settings) { draft.RememberModel.Enabled = enabled })
-				last := "(none)"
-				if updated.RememberModel.Last != nil {
-					last = updated.RememberModel.Last.Provider + "/" + updated.RememberModel.Last.ModelID
-				}
-				ctx.Notify(fmt.Sprintf("remember-model %s; last: %s", enabledWord(enabled), last), "info")
+				st.update(func(draft *settings) { draft.RememberModel.Enabled = enabled })
+				ctx.Notify("remember-model "+enabledVerb(enabled), "info")
 				return nil
 			case "clear":
 				st.update(func(draft *settings) { draft.RememberModel.Last = nil })
-				ctx.Notify("cleared the remembered model", "info")
+				ctx.Notify("Cleared remembered model", "info")
 				return nil
 			}
 			state := st.load()
@@ -125,11 +95,51 @@ func registerRememberModel(ext *sdk.Extension, st *store) {
 				last = state.RememberModel.Last.Provider + "/" + state.RememberModel.Last.ModelID
 			}
 			ctx.Notify(fmt.Sprintf(
-				"remember-model: %s\nlast: %s\nusage: /%s [on|off|clear]",
+				"remember-model: %s\nlast: %s\nUsage: /%s [on|off|clear]",
 				enabledWord(state.RememberModel.Enabled), last, rememberModelName,
 			), "info")
 			return nil
 		})
+}
+
+// restoreRememberedModel puts the remembered model back on a new session and on
+// a fresh startup, as pt-remember-model.ts's session_start handler does.
+func restoreRememberedModel(ctx sdk.Context, st *store, data map[string]any) {
+	state := st.load()
+	if !state.RememberModel.Enabled {
+		return
+	}
+	reason := sdk.Param[string](data, "reason")
+	if reason != "new" && reason != "startup" {
+		return
+	}
+	// A continued session already carries its own model; leave it alone.
+	// When the branch cannot be read, assume it has messages rather than
+	// override a model mid-history.
+	if reason == "startup" {
+		branch, err := ctx.GetBranch()
+		if err != nil {
+			logf("read session branch: %v", err)
+			return
+		}
+		for _, entry := range branch {
+			if entry.Type == "message" {
+				return
+			}
+		}
+	}
+	last := state.RememberModel.Last
+	if last == nil {
+		return
+	}
+	spec := resolveModelSpec(ctx, state, last.Provider, last.ModelID)
+	if spec == "" {
+		logf("remembered model %s/%s is not in the registry", last.Provider, last.ModelID)
+		return
+	}
+	if _, err := ctx.SetModel(spec); err != nil {
+		logf("restore %s: %v", spec, err)
+	}
 }
 
 // resolveModelSpec returns the `provider/model` spec to restore, preferring the
@@ -191,6 +201,14 @@ func enabledWord(enabled bool) string {
 		return "on"
 	}
 	return "off"
+}
+
+// enabledVerb renders a toggle result the way the commands announce it.
+func enabledVerb(enabled bool) string {
+	if enabled {
+		return "enabled"
+	}
+	return "disabled"
 }
 
 // askingWord renders whether the guard asks before refusing.

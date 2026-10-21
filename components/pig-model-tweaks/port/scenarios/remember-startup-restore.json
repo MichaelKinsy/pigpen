@@ -1,0 +1,55 @@
+{
+  "name": "remember-startup-restore",
+  "description": "A fresh startup with an empty branch restores the remembered model, and a later selection is remembered. The guard is off so its session_start hint stays out of the startup trace. A new_session step is not here: the deferred toast orders differently across PiG's extension-host boundary (PORT.md, findings).",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": true, \"last\": {\"provider\": \"openai\", \"modelId\": \"gpt-4o-mini\"}}, \"modelGuard\": {\"enabled\": false, \"allowedModels\": []}}",
+    "settings.json": "{}\n"
+  },
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "switch-away",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o"
+      }
+    },
+    {
+      "name": "status-after-switch",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "status-eq-llm",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    }
+  ]
+}

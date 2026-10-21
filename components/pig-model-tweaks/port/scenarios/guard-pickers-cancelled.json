@@ -1,0 +1,32 @@
+{
+  "name": "guard-pickers-cancelled",
+  "description": "A model is available; the picker (ctx.ui.custom is a no-op in RPC) is cancelled for add, remove and the bare command (first-time notice).",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "add",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref add"
+      }
+    },
+    {
+      "name": "remove",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref remove"
+      }
+    },
+    {
+      "name": "bare",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref"
+      }
+    }
+  ]
+}

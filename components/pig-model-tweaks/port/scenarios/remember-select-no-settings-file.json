@@ -1,0 +1,44 @@
+{
+  "name": "remember-select-no-settings-file",
+  "description": "Without a settings.json there is nothing to persist: no toast.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "env": {
+    "OPENAI_API_KEY": "eq-openai-key"
+  },
+  "steps": [
+    {
+      "name": "set-openai",
+      "rpc": {
+        "type": "set_model",
+        "provider": "openai",
+        "modelId": "gpt-4o-mini"
+      }
+    },
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "status-eq-llm",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    }
+  ]
+}
