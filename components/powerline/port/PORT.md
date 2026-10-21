@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (partial, stacked PR 6 of 8)
+# Port record: pi-powerline-footer (partial, stacked PR 7 of 8)
 
 | Input | Identity |
 |---|---|
@@ -37,6 +37,10 @@ the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `
 ### Ported in PR 6 (cdquote, version 0.6.0)
 
 `cd-command.ts` (target resolution, argument completions, the forked session file written byte for byte as `SessionManager.forkFrom` writes it, checked against a file Pi wrote; `SwitchSession` with the notification and the `pi - <dir>` title), `quote-reply.ts` (candidate list, `formatQuote`, the picker through `Custom` and the select fallback) and the last-prompt line, in `cd_command.go`, `quote_reply.go`, `quote_picker.go`, `cdquote_ext.go`. One difference: the original calls `process.chdir(nextCtx.cwd)`; a Go extension has no host process cwd to change (PiG core item C3; `TestCdDoesNotChangeTheProcessCwd`). PiG replaces the session's cwd on `switchSession`, so tools, the footer and `Context.Cwd()` follow the new directory.
+
+### Ported in PR 7 (welcome, version 0.7.0)
+
+`welcome.ts` and `index.ts` (1882-1890, 2184-2202, 3539-3666) in `welcome.go` and `welcome_ext.go`: the header through `SetHeaderRenderer`, the 30 second non-capturing overlay through `Custom` (the SDK v0.5.0 `OverlayHandle`, while `go.mod` still requires v0.4.1) with a terminal-input listener standing in for the editor's key forwarding, and the dismissals (`agent_start`, `tool_call`, `session_shutdown`, `/powerline` off, any typing). The lifecycle tests assert the welcome's own start and stop of watching the keyboard through a test hook, because the SDK shares one host subscription between the extension's listeners.
 
 ### Refusal of what is not ported
 
