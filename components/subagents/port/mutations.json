@@ -764,8 +764,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions",
-  "replace": "runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions"
+  "find": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})",
+  "replace": "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions{TimeoutMs: pol.TimeoutMs})\n\t_ = model"
  },
  {
   "name": "ext-chain-task",

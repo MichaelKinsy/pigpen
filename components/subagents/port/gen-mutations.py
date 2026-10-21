@@ -159,7 +159,7 @@ m("ext-run-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg !=
 m("ext-chain-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\tctx.Notify(msg, \"error\")", "\tif msg := nestedBlocked(os.Getenv); false {\n\t\tctx.Notify(msg, \"error\")")
 m("ext-run-cwd", "extension.go", "cwd, err := resolveRunCwd(ctx.Cwd(), requested)", "cwd, err := resolveRunCwd(ctx.Cwd(), requested[:0])")
 m("ext-run-scope", "extension.go", 'scope := ResolveExecutionAgentScope(params["agentScope"])', "scope := ResolveExecutionAgentScope(nil)")
-m("ext-run-model", "extension.go", "runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions", "runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions")
+m("ext-run-model", "extension.go", "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, model, runOptions{TimeoutMs: pol.TimeoutMs})", "out, err := runAgentOpts(done, cwd, pol.Agent, pol.Task, \"\", runOptions{TimeoutMs: pol.TimeoutMs})\n\t_ = model")
 m("ext-chain-task", "extension.go", "agents, jsTrim(fields[1]), func", "agents, fields[1], func")
 m("ext-chain-answer", "extension.go", "\tctx.Notify(out, \"info\")\n", "\tctx.Notify(out[:0], \"info\")\n")
 m("ext-chain-last-wins", "extension.go", "\t\t\tfound = &chains[i]\n", "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n")
