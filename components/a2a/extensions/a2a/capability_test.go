@@ -206,3 +206,24 @@ func TestProtocol03IsAcceptedOnlyWhenItsCapabilityIsOn(t *testing.T) {
 		t.Error("another version is refused even with 0.3 on")
 	}
 }
+
+func TestExtendedAgentCardIsNotRefusedByTheGuardWhenItsCapabilityIsOn(t *testing.T) {
+	fake := &fakeCapability{key: "extendedAgentCard"}
+	defer registerCapability(fake)()
+	cfg := serverConfig()
+	cfg.Capabilities.ExtendedAgentCard = true
+	s := startServer(t, cfg, &scriptedWorker{})
+	base := "http://" + s.Addr()
+	if !fetchCard(t, base).Capabilities.ExtendedAgentCard {
+		t.Error("the switched-on capability is advertised")
+	}
+	_, out := rawRPC(t, base, tokenA, "1.0", "GetExtendedAgentCard", map[string]any{})
+	if _, msg := rpcError(t, out); strings.HasPrefix(msg, doesNotSupport) {
+		t.Errorf("the guard still refuses an enabled capability: %q", msg)
+	}
+	// Push stays refused on the same server.
+	_, out = rawRPC(t, base, tokenA, "1.0", "ListTaskPushNotificationConfigs", map[string]any{"taskId": "t"})
+	if code, msg := rpcError(t, out); code != -32003 || !strings.HasPrefix(msg, doesNotSupport+"push notifications yet.") {
+		t.Errorf("push: %d %q", code, msg)
+	}
+}
