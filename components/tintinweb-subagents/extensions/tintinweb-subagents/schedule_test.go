@@ -237,7 +237,7 @@ func TestSchedulingDisabledMeansNoSchedulerNoParameterAndNoEvent(t *testing.T) {
 
 func TestTheAgentToolTextCarriesTheScheduleParameterAndGuideline(t *testing.T) {
 	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
-	r := startRig(t)
+	startRig(t)
 	flags := descriptionFlagsNow(settingsView(), "full")
 	dc := descriptionContext{reg: currentRegistry(), agentDir: agentDir(), cwd: t.TempDir(), warn: func(string) {}}
 	schema := agentSchemaFor(flags, dc, loadToolSpecs()["Agent"])
