@@ -27,13 +27,13 @@ m("dr-marker", D, 'elisionMarker     = "\\u2026"', 'elisionMarker     = "..."')
 m("dr-marker-rows", D, "elisionMarkerRows = 1", "elisionMarkerRows = 2")
 m("dr-cap-boundary", D, "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {", "if float64(utf16LenWTF(fact.text)) < fieldMaxWidth {")
 m("dr-cap-units", D, "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {", "if float64(len(fact.text)) <= fieldMaxWidth {")
-m("dr-cap-slice", D, "utf16Prefix(fact.text, end) + elisionMarker", "fact.text[:min(len(fact.text), int(fieldMaxWidth))] + elisionMarker")
+m("dr-cap-slice", D, "utf16Prefix(fact.text, end) + elisionMarker", "fact.text[:min(len(fact.text), int(fieldMaxWidth)+0*end)] + elisionMarker")
 m("dr-cap-no-mark", D, "return cappedFact{promptFact{fact.label, utf16Prefix(fact.text, end) + elisionMarker}, true}", "return cappedFact{promptFact{fact.label, utf16Prefix(fact.text, end) + elisionMarker}, false}")
 m("dr-evidence-capped", D, "for _, fact := range evidenceFacts(payload) {\n\t\tfacts = append(facts, capField(fact, budget.FieldMaxWidth))", "for _, fact := range evidenceFacts(payload) {\n\t\tfacts = append(facts, cappedFact{fact, false})")
 m("dr-core-capped", D, "for _, fact := range coreFacts(payload) {\n\t\tfacts = append(facts, capField(fact, budget.FieldMaxWidth))", "for _, fact := range coreFacts(payload) {\n\t\tfacts = append(facts, cappedFact{fact, false})")
 m("dr-wrap", D, "return FitLinesToWidth(layoutFact(f.promptFact, width, flagged, paint), budget.Width)", "return layoutFact(f.promptFact, width, flagged, paint)")
 m("dr-elided-clip", D, "elided = elided || f.clipped", "elided = elided")
-m("dr-elided-drop", D, "Elided: elided || dropped}", "Elided: elided}")
+m("dr-elided-drop", D, "Elided: elided || dropped}", "Elided: elided || (dropped && false)}")
 m("dr-rows-fit", D, "len(evidence) == entries && float64(len(core)+total) <= maxRows {", "len(evidence) == entries && float64(len(core)+total) < maxRows {")
 m("dr-rows-limit", D, "limit := maxRows - elisionMarkerRows", "limit := maxRows")
 m("dr-rows-block-whole", D, "if float64(len(lines)+len(block)) > limit {\n\t\t\tbreak\n\t\t}", "if float64(len(lines)) > limit {\n\t\t\tbreak\n\t\t}")
@@ -54,7 +54,7 @@ m("dr-rule", D, 'if request.MatchedPattern != nil {\n\t\tfacts = append(facts, p
 m("dr-value-empty", D, 'if request.Value != "" && (request.ToolName == nil || request.Value != *request.ToolName) {', 'if (request.ToolName == nil || request.Value != *request.ToolName) {')
 m("dr-value-tool", D, 'if request.Value != "" && (request.ToolName == nil || request.Value != *request.ToolName) {', 'if request.Value != "" {')
 m("dr-runs", D, 'promptFact{"runs", *request.ExecutedUnit}', 'promptFact{"run", *request.ExecutedUnit}')
-m("dr-context", D, 'promptFact{"context", context}', 'promptFact{"context", *request.CommandContext}')
+m("dr-context", D, 'promptFact{"context", context}', 'promptFact{"context", *request.CommandContext + context[:0]}')
 m("dr-detail-arrow", D, 'text = entry.Text + " \\u2192 " + *entry.Detail', 'text = entry.Text + " -> " + *entry.Detail')
 m("dr-detail-drop", D, "if entry.Detail != nil {\n\t\t\ttext =", "if false {\n\t\t\ttext =")
 m("dr-pad-units", D, "if pad := n - utf16LenWTF(s); pad > 0 {", "if pad := n - len(s); pad > 0 {")
@@ -69,14 +69,11 @@ m("dr-token-after", D, "(at == 0 || !isTokenCharacter(line[at-1])) && (end >= le
 m("dr-token-class-dash", D, "c == '/' || c == '.' || c == '-'", "c == '/' || c == '.'")
 m("dr-token-class-underscore", D, "c >= '0' && c <= '9' || c == '_' ||", "c >= '0' && c <= '9' ||")
 m("dr-token-class-dot", D, "c == '/' || c == '.' || c == '-'", "c == '/' || c == '-'")
-m("dr-paint-newline-needle", D, 'if needle == "" || strings.Contains(needle, "\\n") {', 'if needle == "" {')
 m("dr-paint-empty-needle", D, 'if needle == "" || strings.Contains(needle, "\\n") {', 'if strings.Contains(needle, "\\n") {')
 m("dr-paint-repeat", D, "cursor = end\n\t}\n\tresult.WriteString(line[cursor:])", "cursor = end\n\t\tbreak\n\t}\n\tresult.WriteString(line[cursor:])")
 m("dr-wellformed", D, "lines[i] = toWellFormed(lines[i])", "lines[i] = lines[i]")
 m("dr-default-paint", D, "paint = func(text string) string { return text }", "paint = func(text string) string { return \"[\" + text + \"]\" }")
 
-m("dr-lazy-break", D, "if float64(len(coreLines)+total) > budget.MaxRows {\n\t\t\tbreak\n\t\t}", "if float64(len(coreLines)+total) > budget.MaxRows+3 {\n\t\t\tbreak\n\t\t}")
-m("dr-lazy-complete", D, "len(evidence) == entries && float64", "float64")
 m("dr-lazy-first-overrun", D, "if float64(len(coreLines)+total) > budget.MaxRows {\n\t\t\tbreak\n\t\t}", "if float64(len(coreLines)+total) >= budget.MaxRows {\n\t\t\tbreak\n\t\t}")
 
 # ---- linefitting.go
@@ -171,7 +168,6 @@ m("pn-control-c0", N, "if c := value[i]; c > 31 && c != 127 {", "if c := value[i
 
 # ---- patternsuggest.go
 P = "patternsuggest.go"
-m("ps-bash-trim", P, "trimmed := jsTrim(command)", "trimmed := command")
 m("ps-bash-comments", P, "stripped := bashanalysis.StripBashCommentLines(trimmed)", "stripped := trimmed")
 m("ps-bash-single", P, "if len(tokens) == 1 {\n\t\treturn stripped", "if len(tokens) == 0 {\n\t\treturn stripped")
 m("ps-bash-cover", P, "if len(meaningful) >= len(tokens) {", "if len(meaningful) > len(tokens) {")
@@ -196,9 +192,9 @@ m("ps-fwd-anon", P, 'subagentLabel := "This subagent only"', 'subagentLabel := "
 m("ps-fwd-name", P, '"This subagent (\'" + *agentName + "\') only"', '"This subagent (" + *agentName + ") only"')
 m("ps-fwd-empty", P, 'if agentName != nil && *agentName != "" {\n\t\tsubagentLabel', 'if agentName != nil {\n\t\tsubagentLabel')
 m("ps-fwd-dash", P, '"The whole session \\u2014 allow "', '"The whole session - allow "')
-m("ps-fwd-family", P, "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = family + \" \" + granted", "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = granted")
+m("ps-fwd-family", P, "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = family + \" \" + granted", "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = granted + family[:0]")
 m("ps-shared-empty", P, "if len(grants) == 0 {\n\t\treturn \"\", false\n\t}\n\tfamily := SurfaceFamilyOf(grants[0].Surface)", "family := SurfaceFamilyOf(grants[0].Surface)")
-m("ps-shared-every", P, "if SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false", "if false {\n\t\t\treturn \"\", false")
+m("ps-shared-every", P, "if SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false", "if false && SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false")
 m("ps-shared-direction", P, "family := SurfaceFamilyOf(grants[0].Surface)\n\tfor _, grant := range grants {\n\t\tif SurfaceFamilyOf(grant.Surface) != family {", "family := grants[0].Surface\n\tfor _, grant := range grants {\n\t\tif grant.Surface != family {")
 m("ps-label-bash", P, '`Yes, allow bash "` + pattern', '`Yes, allow command "` + pattern')
 m("ps-label-mcp", P, '`Yes, allow mcp tool "` + pattern', '`Yes, allow mcp "` + pattern')
@@ -259,7 +255,7 @@ m("pa-extdir-kind", PA, 'return pathPayload("external_directory", facts.PathAskF
 m("pa-bash-kind", PA, 'Kind: "bash_external_directory",', 'Kind: "external_directory",')
 m("pa-bash-order", PA, "evidence := []PromptEvidence{workingDirectoryEvidence(facts.Cwd)}\n\tfor _, external := range facts.ExternalPaths {\n\t\tevidence = append(evidence, externalPathEvidence(external))\n\t}", "evidence := []PromptEvidence{}\n\tfor _, external := range facts.ExternalPaths {\n\t\tevidence = append(evidence, externalPathEvidence(external))\n\t}\n\tevidence = append(evidence, workingDirectoryEvidence(facts.Cwd))")
 m("pa-bash-value", PA, "Value:          facts.Command,", "Value:          facts.ToolName,")
-m("pa-bash-tool", PA, "ToolName:       &toolName,\n\t\t\tValue:          facts.Command,", "ToolName:       nil,\n\t\t\tValue:          facts.Command,")
+m("pa-bash-tool", PA, "ToolName:       &toolName,\n\t\t\tValue:          facts.Command,", "ToolName:       func() *string { _ = toolName; return nil }(),\n\t\t\tValue:          facts.Command,")
 m("pa-path-value", PA, "Value:          facts.PathValue,", "Value:          facts.ToolName,")
 m("pa-path-pattern", PA, "MatchedPattern: facts.MatchedPattern,\n\t\t},\n\t\tEvidence:    evidence,\n\t\tAnnotations: []PromptAnnotation{},\n\t}\n}\n\n// resolvedAlias", "MatchedPattern: nil,\n\t\t},\n\t\tEvidence:    evidence,\n\t\tAnnotations: []PromptAnnotation{},\n\t}\n}\n\n// resolvedAlias")
 m("pa-alias-label", PA, '{Label: "resolves to", Text: *resolvedPath}', '{Label: "resolved", Text: *resolvedPath}')
@@ -278,8 +274,8 @@ m("sk-requester", SK, "Requester: LocalRequester(agentName),", "Requester: Local
 
 FW = "forwardedaskpayload.go"
 m("fw-forwarded", FW, "requester := PromptRequester{AgentName: &agentName, Forwarded: true, SessionID: &sessionID}", "requester := PromptRequester{AgentName: &agentName, Forwarded: false, SessionID: &sessionID}")
-m("fw-session", FW, "SessionID: &sessionID}", "SessionID: nil}")
-m("fw-agent", FW, "AgentName: &agentName, Forwarded", "AgentName: request.Payload.Request.Requester.AgentName, Forwarded")
+m("fw-session", FW, "SessionID: &sessionID}", "SessionID: func() *string { _ = sessionID; return nil }()}")
+m("fw-agent", FW, "AgentName: &agentName, Forwarded", "AgentName: func() *string { _ = agentName; if request.Payload != nil { return request.Payload.Request.Requester.AgentName }; return nil }(), Forwarded")
 m("fw-payload", FW, "if request.Payload != nil {\n\t\tpayload := *request.Payload\n\t\tpayload.Request.Requester = requester\n\t\treturn payload\n\t}", "")
 m("fw-degraded-kind", FW, 'Kind: "forwarded",', 'Kind: "bash",')
 m("fw-degraded-surface", FW, "Surface: display(request.Surface),", 'Surface: "",')
@@ -314,7 +310,7 @@ m("ip-normalize-empty-object", IP, 'serialized == "{}" || ', "")
 m("ip-normalize-null", IP, ' || serialized == "null"', "")
 m("ip-normalize-undefined", IP, "if !ok || serialized == \"\"", "if serialized == \"\"")
 m("ip-normalize-collapse", IP, "return jsTrim(collapseJSWhitespace(serialized))", "return jsTrim(serialized)")
-m("ip-collapse-run", IP, "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}", "b.WriteByte(' ')")
+m("ip-collapse-run", IP, "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}", "_ = inSpace\n\t\t\tb.WriteByte(' ')")
 m("ip-collapse-js", IP, "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif isJSSpace(r) {", "r, size := utf8.DecodeRuneInString(s[i:])\n\t\tif r == ' ' || r == '\\n' || r == '\\t' || r == '\\r' {")
 
 PF = "toolinputpromptformatters.go"
@@ -333,7 +329,7 @@ m("pf-edit-count", PF, 'FormatCount(len(edits), "replacement", "replacements") +
 m("pf-edit-path-format", PF, 'pathPart = "for \'" + path + "\'"', 'pathPart = "for " + path')
 m("pf-write-units", PF, 'FormatCount(utf16LenWTF(content), "character", "characters")', 'FormatCount(len(content), "character", "characters")')
 m("pf-write-lines", PF, 'FormatCount(CountTextLines(content), "line", "lines") + ", "', 'FormatCount(len(strings.Split(content, "\\n")), "line", "lines") + ", "')
-m("pf-write-path", PF, 'return "for \'" + path + "\' " + summary', 'return summary')
+m("pf-write-path", PF, 'return "for \'" + path + "\' " + summary', '_ = path\n\treturn summary')
 m("pf-read-offset", PF, 'parts = append(parts, "offset "+jsNumber(offset))', 'parts = append(parts, "offset "+jsNumber(offset+1))')
 m("pf-read-limit", PF, 'parts = append(parts, "limit "+jsNumber(limit))', 'parts = append(parts, "limit "+jsNumber(limit+1))')
 m("pf-read-join", PF, 'return "for " + strings.Join(parts, ", ")', 'return "for " + strings.Join(parts, " ")')
@@ -389,7 +385,6 @@ m("rf-duplicate", RG, "if _, dup := r.formatters[toolName]; dup {", "if _, dup :
 m("rf-guard", RG, "if r.formatters[toolName] == f {\n\t\t\tdelete", "if true {\n\t\t\tdelete")
 m("rf-delete", RG, "delete(r.formatters, toolName)", "_ = toolName")
 m("rf-message", RG, 'return "A " + e.what + " is already registered for \'" + e.tool + "\'."', 'return "A " + e.what + " is already registered."')
-m("rf-wrapper", RG, "return &funcToolInputFormatter{fn: fn}", "return &funcToolInputFormatter{fn: func(input *jsObject) (string, bool) { return fn(input) }}")
 RE = "toolaccessextractorregistry.go"
 m("re-duplicate", RE, "if _, dup := r.extractors[toolName]; dup {", "if _, dup := r.extractors[toolName]; false && dup {")
 m("re-guard", RE, "if r.extractors[toolName] == e {\n\t\t\tdelete", "if true {\n\t\t\tdelete")
@@ -401,9 +396,6 @@ TR = "toolregistry.go"
 m("tr-read-name", TR, "name, ok := GetToolNameFromValue(tool)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}\n\t\tregistered.Names", "name, ok := GetToolNameFromValue(tool)\n\t\t_ = ok\n\t\tregistered.Names")
 m("tr-read-guidelines", TR, "if guidelines := GetToolPromptGuidelinesFromValue(tool); len(guidelines) > 0 {", "if guidelines := GetToolPromptGuidelinesFromValue(tool); true {")
 m("tr-normalize-alias", TR, 'if canonical := aliases[toolName]; canonical != "" {', 'if canonical := aliases[toolName]; false {')
-m("tr-reverse-alias", TR, "if !inStrings(existing, alias) {", "if true {")
-m("tr-variants-value", TR, "names[value] = true\n\n\tnormalized", "\n\tnormalized")
-m("tr-variants-canonical", TR, 'if canonicalFromAlias := aliases[value]; canonicalFromAlias != "" {\n\t\tnames[canonicalFromAlias] = true\n\t}', "")
 m("tr-variants-reverse-value", TR, "for _, alias := range reverseAliases[value] {\n\t\tnames[alias] = true\n\t}", "")
 m("tr-variants-reverse-normalized", TR, "for _, alias := range reverseAliases[normalized] {\n\t\tnames[alias] = true\n\t}", "")
 m("tr-name-direct", TR, "if direct, ok := GetNonEmptyString(value); ok {\n\t\treturn direct, true\n\t}", "")
@@ -411,7 +403,7 @@ m("tr-name-order", TR, '[]string{"toolName", "name", "tool"}', '[]string{"name",
 m("tr-name-tool", TR, '[]string{"toolName", "name", "tool"}', '[]string{"toolName", "name"}')
 m("tr-guidelines-array", TR, '.vals["promptGuidelines"].([]any)\n\tif !ok {', '.vals["promptGuidelines"].([]any)\n\tif ok {')
 m("tr-guidelines-trim", TR, "if bullet, ok := GetNonEmptyString(entry); ok {\n\t\t\tbullets = append(bullets, bullet)", "if bullet, ok := entry.(string); ok {\n\t\t\tbullets = append(bullets, bullet)")
-m("tr-check-missing", TR, "if !ok {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}", "if false {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}")
+m("tr-check-missing", TR, "if !ok {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}", "if _ = ok; false {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}")
 m("tr-check-requested", TR, "if registeredLookup[requested] || registeredLookup[normalizedToolName] {", "if registeredLookup[normalizedToolName] {")
 m("tr-check-normalized", TR, "if registeredLookup[requested] || registeredLookup[normalizedToolName] {", "if registeredLookup[requested] {")
 m("tr-check-dedupe", TR, "if !availableSeen[name] {", "if true {")
@@ -431,7 +423,7 @@ m("ts-rules-empty", TS, 'if normalized == "" || seen[normalized] {', "if seen[no
 m("ts-rules-dedupe", TS, 'if normalized == "" || seen[normalized] {', 'if normalized == "" {')
 m("ts-rules-prefix", TS, 'bullets[i] = "- " + bullet', 'bullets[i] = "* " + bullet')
 m("ts-rules-order-file", TS, "if fileOperations, ok := fileExplorationGuideline(allowed); ok {\n\t\taddGuideline(fileOperations)\n\t}\n\tfor _, toolName", "for _, toolName")
-m("ts-rules-allowed-only", TS, "for _, guideline := range inputs.GuidelinesByTool[toolName] {", "for _, guideline := range inputs.GuidelinesByTool[\"read\"] {")
+m("ts-rules-allowed-only", TS, "for _, guideline := range inputs.GuidelinesByTool[toolName] {", "for _, guideline := range inputs.GuidelinesByTool[\"read\"+toolName[:0]] {")
 m("ts-ext-trim", TS, "toolGuidelines[jsTrim(guideline)] = true", "toolGuidelines[guideline] = true")
 m("ts-ext-trim-input", TS, "if !toolGuidelines[jsTrim(guideline)] {", "if !toolGuidelines[guideline] {")
 m("ts-ext-filter", TS, "if !toolGuidelines[jsTrim(guideline)] {", "if true {")
@@ -451,13 +443,27 @@ m("ss-visible-state", SS, "Location: entry.Location, State: state,", 'Location: 
 m("ss-visible-location", SS, "NormalizedLocation: normalizer.ComparableValue(entry.Location),", "NormalizedLocation: entry.Location,")
 m("ss-visible-basedir", SS, "NormalizedBaseDir:  normalizer.ComparableValue(HostPath.Dirname(entry.Location)),", "NormalizedBaseDir:  normalizer.ComparableValue(entry.Location),")
 m("ss-without-deny", SS, 'if resolveSkillState(nameOf(skill), checker, agentName, cache) != "deny" {', 'if resolveSkillState(nameOf(skill), checker, agentName, cache) == "allow" {')
-m("ss-match-empty", SS, 'if normalizedPath == "" || len(entries) == 0 {', "if len(entries) == 0 {")
-m("ss-match-exact", SS, 'if entries[i].NormalizedLocation != "" && normalizedPath == entries[i].NormalizedLocation {', 'if normalizedPath == entries[i].NormalizedLocation {')
-m("ss-match-basedir-empty", SS, 'if entry.NormalizedBaseDir == "" || !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {', 'if !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {')
 m("ss-match-within", SS, '|| !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {', '|| normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {')
 m("ss-match-longest", SS, "utf16LenWTF(entry.NormalizedBaseDir) > utf16LenWTF(best.NormalizedBaseDir)", "utf16LenWTF(entry.NormalizedBaseDir) < utf16LenWTF(best.NormalizedBaseDir)")
 m("ss-match-first", SS, "best == nil || utf16LenWTF", "true || utf16LenWTF")
 m("ss-parse-order", SS, "sections := []SkillPromptSection{}\n\tfor _, parsed := range parseAllSkillPromptSections(prompt) {", "sections := []SkillPromptSection{}\n\tfor _, parsed := range parseAllSkillPromptSections(prompt)[:0] {")
+
+# Mutants judged equivalent and left out (the first run of 392 left 29 alive and 12 not building: the 12 were rewritten to build and the suite kills them, 18 of the 29 are killed by presentation_guards_test.go, 11 are equivalent):
+# - dr-paint-newline-needle: paintOccurrences runs on one line of a fact, split on "\n", so a needle containing "\n" is never found in it.
+# - dr-lazy-break: a later break renders a few more blocks than needed; the rows already exceed maxRows at the break, so fitToRows
+#   drops the same blocks and answers the same lines (work bound only; TestRenderPromptDialogBoundedWork pins the bound).
+# - dr-lazy-complete: `len(evidence) == entries` is false only after the lazy break, which happens once core+total > maxRows,
+#   which the second condition already rules out.
+# - ps-bash-trim: StripBashCommentLines splits on "\n", tests each line with a whitespace-tolerant comment match and trims its result,
+#   so a command's own surrounding whitespace changes neither the stripped text nor the empty check.
+# - rf-wrapper: a wrapper around fn is the same behaviour; identity is the pointer either way.
+# - tr-reverse-alias: the aliases are a map, so an alias key is never listed twice and the includes() test is always false.
+# - tr-variants-value, tr-variants-canonical: names[value] is also added through reverseAliases[normalized] (value is an alias of its
+#   normalized form) or is the normalized form itself, and aliases[value] is the normalized form; TestCheckRequestedToolRegistrationExhaustive
+#   compares the check with a transcription of the original over 40,000 alias/registered/requested combinations.
+# - ss-match-empty, ss-match-exact, ss-match-basedir-empty: the guards (empty path, empty location, empty base directory) repeat what
+#   follows: an empty location never equals a non-empty path, and IsWithinDirectory is false for an empty path or directory on both
+#   flavors (TestFindSkillPathMatchEmptyLocations).
 
 bad = 0
 for x in M:

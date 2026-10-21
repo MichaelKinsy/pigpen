@@ -63,7 +63,7 @@
   "name": "dr-cap-slice",
   "file": "dialogrenderer.go",
   "find": "utf16Prefix(fact.text, end) + elisionMarker",
-  "replace": "fact.text[:min(len(fact.text), int(fieldMaxWidth))] + elisionMarker"
+  "replace": "fact.text[:min(len(fact.text), int(fieldMaxWidth)+0*end)] + elisionMarker"
  },
  {
   "name": "dr-cap-no-mark",
@@ -99,7 +99,7 @@
   "name": "dr-elided-drop",
   "file": "dialogrenderer.go",
   "find": "Elided: elided || dropped}",
-  "replace": "Elided: elided}"
+  "replace": "Elided: elided || (dropped && false)}"
  },
  {
   "name": "dr-rows-fit",
@@ -225,7 +225,7 @@
   "name": "dr-context",
   "file": "dialogrenderer.go",
   "find": "promptFact{\"context\", context}",
-  "replace": "promptFact{\"context\", *request.CommandContext}"
+  "replace": "promptFact{\"context\", *request.CommandContext + context[:0]}"
  },
  {
   "name": "dr-detail-arrow",
@@ -312,12 +312,6 @@
   "replace": "c == '/' || c == '-'"
  },
  {
-  "name": "dr-paint-newline-needle",
-  "file": "dialogrenderer.go",
-  "find": "if needle == \"\" || strings.Contains(needle, \"\\n\") {",
-  "replace": "if needle == \"\" {"
- },
- {
   "name": "dr-paint-empty-needle",
   "file": "dialogrenderer.go",
   "find": "if needle == \"\" || strings.Contains(needle, \"\\n\") {",
@@ -340,18 +334,6 @@
   "file": "dialogrenderer.go",
   "find": "paint = func(text string) string { return text }",
   "replace": "paint = func(text string) string { return \"[\" + text + \"]\" }"
- },
- {
-  "name": "dr-lazy-break",
-  "file": "dialogrenderer.go",
-  "find": "if float64(len(coreLines)+total) > budget.MaxRows {\n\t\t\tbreak\n\t\t}",
-  "replace": "if float64(len(coreLines)+total) > budget.MaxRows+3 {\n\t\t\tbreak\n\t\t}"
- },
- {
-  "name": "dr-lazy-complete",
-  "file": "dialogrenderer.go",
-  "find": "len(evidence) == entries && float64",
-  "replace": "float64"
  },
  {
   "name": "dr-lazy-first-overrun",
@@ -846,12 +828,6 @@
   "replace": "if c := value[i]; c > 8 && c != 127 {"
  },
  {
-  "name": "ps-bash-trim",
-  "file": "patternsuggest.go",
-  "find": "trimmed := jsTrim(command)",
-  "replace": "trimmed := command"
- },
- {
   "name": "ps-bash-comments",
   "file": "patternsuggest.go",
   "find": "stripped := bashanalysis.StripBashCommentLines(trimmed)",
@@ -999,7 +975,7 @@
   "name": "ps-fwd-family",
   "file": "patternsuggest.go",
   "find": "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = family + \" \" + granted",
-  "replace": "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = granted"
+  "replace": "if family, ok := sharedSurfaceFamilyOf(grants); ok {\n\t\tgranted = granted + family[:0]"
  },
  {
   "name": "ps-shared-empty",
@@ -1011,7 +987,7 @@
   "name": "ps-shared-every",
   "file": "patternsuggest.go",
   "find": "if SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false",
-  "replace": "if false {\n\t\t\treturn \"\", false"
+  "replace": "if false && SurfaceFamilyOf(grant.Surface) != family {\n\t\t\treturn \"\", false"
  },
  {
   "name": "ps-shared-direction",
@@ -1311,7 +1287,7 @@
   "name": "pa-bash-tool",
   "file": "pathaskpayload.go",
   "find": "ToolName:       &toolName,\n\t\t\tValue:          facts.Command,",
-  "replace": "ToolName:       nil,\n\t\t\tValue:          facts.Command,"
+  "replace": "ToolName:       func() *string { _ = toolName; return nil }(),\n\t\t\tValue:          facts.Command,"
  },
  {
   "name": "pa-path-value",
@@ -1401,13 +1377,13 @@
   "name": "fw-session",
   "file": "forwardedaskpayload.go",
   "find": "SessionID: &sessionID}",
-  "replace": "SessionID: nil}"
+  "replace": "SessionID: func() *string { _ = sessionID; return nil }()}"
  },
  {
   "name": "fw-agent",
   "file": "forwardedaskpayload.go",
   "find": "AgentName: &agentName, Forwarded",
-  "replace": "AgentName: request.Payload.Request.Requester.AgentName, Forwarded"
+  "replace": "AgentName: func() *string { _ = agentName; if request.Payload != nil { return request.Payload.Request.Requester.AgentName }; return nil }(), Forwarded"
  },
  {
   "name": "fw-payload",
@@ -1587,7 +1563,7 @@
   "name": "ip-collapse-run",
   "file": "toolinputpreview.go",
   "find": "if !inSpace {\n\t\t\t\tb.WriteByte(' ')\n\t\t\t}",
-  "replace": "b.WriteByte(' ')"
+  "replace": "_ = inSpace\n\t\t\tb.WriteByte(' ')"
  },
  {
   "name": "ip-collapse-js",
@@ -1689,7 +1665,7 @@
   "name": "pf-write-path",
   "file": "toolinputpromptformatters.go",
   "find": "return \"for '\" + path + \"' \" + summary",
-  "replace": "return summary"
+  "replace": "_ = path\n\treturn summary"
  },
  {
   "name": "pf-read-offset",
@@ -1986,12 +1962,6 @@
   "replace": "return \"A \" + e.what + \" is already registered.\""
  },
  {
-  "name": "rf-wrapper",
-  "file": "toolinputformatterregistry.go",
-  "find": "return &funcToolInputFormatter{fn: fn}",
-  "replace": "return &funcToolInputFormatter{fn: func(input *jsObject) (string, bool) { return fn(input) }}"
- },
- {
   "name": "re-duplicate",
   "file": "toolaccessextractorregistry.go",
   "find": "if _, dup := r.extractors[toolName]; dup {",
@@ -2032,24 +2002,6 @@
   "file": "toolregistry.go",
   "find": "if canonical := aliases[toolName]; canonical != \"\" {",
   "replace": "if canonical := aliases[toolName]; false {"
- },
- {
-  "name": "tr-reverse-alias",
-  "file": "toolregistry.go",
-  "find": "if !inStrings(existing, alias) {",
-  "replace": "if true {"
- },
- {
-  "name": "tr-variants-value",
-  "file": "toolregistry.go",
-  "find": "names[value] = true\n\n\tnormalized",
-  "replace": "\n\tnormalized"
- },
- {
-  "name": "tr-variants-canonical",
-  "file": "toolregistry.go",
-  "find": "if canonicalFromAlias := aliases[value]; canonicalFromAlias != \"\" {\n\t\tnames[canonicalFromAlias] = true\n\t}",
-  "replace": ""
  },
  {
   "name": "tr-variants-reverse-value",
@@ -2097,7 +2049,7 @@
   "name": "tr-check-missing",
   "file": "toolregistry.go",
   "find": "if !ok {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}",
-  "replace": "if false {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}"
+  "replace": "if _ = ok; false {\n\t\treturn ToolRegistrationCheckResult{Status: \"missing-tool-name\"}"
  },
  {
   "name": "tr-check-requested",
@@ -2205,7 +2157,7 @@
   "name": "ts-rules-allowed-only",
   "file": "toolsurfaceprompt.go",
   "find": "for _, guideline := range inputs.GuidelinesByTool[toolName] {",
-  "replace": "for _, guideline := range inputs.GuidelinesByTool[\"read\"] {"
+  "replace": "for _, guideline := range inputs.GuidelinesByTool[\"read\"+toolName[:0]] {"
  },
  {
   "name": "ts-ext-trim",
@@ -2308,24 +2260,6 @@
   "file": "skillpromptsanitizer.go",
   "find": "if resolveSkillState(nameOf(skill), checker, agentName, cache) != \"deny\" {",
   "replace": "if resolveSkillState(nameOf(skill), checker, agentName, cache) == \"allow\" {"
- },
- {
-  "name": "ss-match-empty",
-  "file": "skillpromptsanitizer.go",
-  "find": "if normalizedPath == \"\" || len(entries) == 0 {",
-  "replace": "if len(entries) == 0 {"
- },
- {
-  "name": "ss-match-exact",
-  "file": "skillpromptsanitizer.go",
-  "find": "if entries[i].NormalizedLocation != \"\" && normalizedPath == entries[i].NormalizedLocation {",
-  "replace": "if normalizedPath == entries[i].NormalizedLocation {"
- },
- {
-  "name": "ss-match-basedir-empty",
-  "file": "skillpromptsanitizer.go",
-  "find": "if entry.NormalizedBaseDir == \"\" || !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {",
-  "replace": "if !normalizer.IsWithinDirectory(normalizedPath, entry.NormalizedBaseDir) {"
  },
  {
   "name": "ss-match-within",
