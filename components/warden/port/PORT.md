@@ -574,3 +574,112 @@ regexp whitespace splitting, map-based word sets) and fixed.
   loader and has no comparable in-process registration point.
 - No new Go dependency. `/warden status` probes the desktop notifier once per session when `notify.enabled` is on
   (up to six executables, 3 s each, as upstream does); nothing else of this lane blocks a host call.
+
+## Learning lane (port/warden-learning-3, stacked on port/warden-context-2)
+
+Ported modules: `holds.ts`, `learning.ts`, `sqlite-adapter.ts`, `adaptive.ts`, `judge-cooldown.ts`, the `feedbackLog` hold log,
+`/warden recommend` and `/warden unmute`, the hold, regret and steer-outcome parts of the `extension.ts` handlers, and
+pi-typesafe's answer check (`validResult`) for the TypeSafe judge.
+
+| Original | Go | Notes |
+|---|---|---|
+| `holds.ts` | `holds.go` | `HoldLedger`, `HoldLog`, `TextRegrets`, `OutcomeNote`, `FormatHolds`; the log line keeps `JSON.stringify`'s key order |
+| `learning.ts`, `sqlite-adapter.ts` | `learning.go`, `sqlite_store.go` | the same SQL against the same `holds.db` (WAL, busy timeout 10 s, `json_extract`); the engine is behind `sqlStore` |
+| `adaptive.ts` | `adaptive.go` | `SteerStats` (file format and key order of the original), `SteerWatch`, `steerOutcome`; `adaptiveAdaptor` is the steering core's `steerAdaptor` |
+| `judge-cooldown.ts` | `judge_cooldown.go` | `IntegrationError.Status` carries the HTTP status the 401/403 rule reads |
+| `extension.ts` `holds`, `noteOutcomes`, `settleRegret`, `watched`, `tellCooldown`, `/warden recommend`, `/warden unmute` | `learning_wire.go`, `learning_commands.go` | hooks: `beforeAgentStartWithLearning`, `learnMessageEnd`, `trackHold` and `holdApproved` in `toolcall.go`, `cooldownActive` and `watchJudge` in `judgeFor` |
+| pi-typesafe `client.js` `validResult` | `answers_validate.go` | `EvaluatorJudge.CheckAnswers` (TypeSafe backend only) |
+
+The SQLite engine is **`modernc.org/sqlite` v1.60.1** (BSD-3-Clause, pure Go, no cgo; its requirements are `libc`, `mathutil`, `memory`,
+`fileutil`, `x/sys`, `uuid`, `go-humanize`, `go-isatty`, `go-strftime`, `bigfft`, all BSD or MIT). It is an **owner-veto item: a new
+Go dependency in this component only**. The original opens the user's `holds.db` with `node:sqlite`; the file is shared
+state (WAL, an `AUTOINCREMENT` table, queries with `json_extract`), so a faithful port needs an engine that reads and writes
+SQLite files. It builds for linux, darwin and windows without cgo and fuses into a Binary (`pig piglet build --format binary`,
+checked: `port/live-smoke/smoke.sh` creates `holds.db` from the built `pig-warden`). Cost: the fused `pig-warden` Binary grew from
+72,294,560 to 76,546,208 bytes (+4.25 MB, +5.9%) on linux/amd64 (the previous lane's tree against this one, same PiG source). Removing
+it means replacing `sqlite_store.go` (the only file that names the engine) with a store that answers every method with "learning
+is off" (the original's own NOOP answers).
+
+Deviations (D12): the original's `PI_WARDEN_DB` and `PI_WARDEN_STEER_STATS` are `PIGPEN_WARDEN_DB` and
+`PIGPEN_WARDEN_STEER_STATS` (D6); the files live in `<PIG_HOME>/pigpen-warden/` (`holds.db`, `steer-stats.json`, `holds/`).
+Database and log writes run on one ordered background queue (the original's promises are not awaited either), so a tool
+call never waits for a disk; the hold log writes the newest snapshot only (every snapshot is the whole state). The module's
+console warnings have no console: they are kept (last 20) and the learning lines of `/warden status` show the counts.
+`/warden status` prints the learning lines separately (D5). The upstream `ctx.hasUI` notices of the cooldown name
+`TYPESAFE_API_KEY` for the TypeSafe backend and point at `/warden status` for the others.
+
+Wiring facts:
+
+- `guardcoreState.previousActions` is set by `installLearning`; the regret answer is settled by `settleRegretFromVerdict`.
+- The tools lane's `holdRecords` adapter is installed (`holdAdapter`, over `HoldLedger.HeldCalls()`): `w.tools.holds`.
+- `message_end` is registered as `w.sup.onMessageEnd(w.learnMessageEnd)`, first in the list (before the context saver's piece); the
+  supervision lane's `input` hook settles `w.adaptor.user()`, and its stuck and repeat steers go through `adaptiveSend` and `watchSteer`.
+- `adaptiveSend` and `watchSteer` gate and watch the action notes (intent-mismatch, off-task, should-proceed) in `toolcall.go`, with
+  the `OffPlan`, `OffPlanTraceOnly` and `OffTask` counters.
+- Every `Judge` the extension hands out is wrapped by the cooldown (`watchJudge`); tests that inject `Options.NewJudge` get it too.
+- Names shared with other lanes were reused (`endsWithQuestion` from the prefs code, `nonNilStrings` from the relevance code).
+
+Answer check (finding): pi-typesafe's `validResult` rejects a response whose answers are not exactly the questions asked
+(count, type, probabilities over every label or level, the choice among them, `noul` in [0, 1]); the original then fails
+the request with code `response` and the guard fails open. The shared Go client accepted such responses, so a judge
+fixture with a static answer set made the original and the port diverge. `EvaluatorJudge.CheckAnswers` applies the same
+rules in warden (the shared client is unchanged) and fails with the original's message. The own-model backend does not use
+the check (it builds its answers itself). The text of a response that does not decode at all stays the port's `unreadable`
+message (both are `response`).
+
+Judge-server fixture recipe (G1 is disproved: the original can be pointed at a fake judge from the hermetic host):
+
+1. Scenario: `"servers": {"judge": {"recordHeaders": ["authorization"], "routes": [{"method": "POST", "path": "/v1/systemone", "json": {"model": "jev-fixture", "answers": {...exactly the asked ids...}, "usage": {"input_tokens": 10, "output_tokens": 2}}, "times": 1}, ...]}}` and the env `FIXTURE_JUDGE_KEY`, `TYPESAFE_API_KEY` (any string) and `TYPESAFE_BASE_URL={{server:judge}}`. Routes answer in order, so a request whose question set differs (a regret question, a retry's approval question) needs its own `times` route; the answers must be exactly the asked ids (see the answer check).
+2. The original: `agentFiles` `pi-warden/config.json` = `{"typesafe": true, "typesafeBackend": {"label": "Fixture judge", "host": "{{server:judge}}", "keyEnv": "FIXTURE_JUDGE_KEY", "defaultModel": "jev-latest"}, "notices": false, "rules": {"enabled": false}}` (an http loopback origin is accepted; `defaultModel` equals the Go client's default so the request `model` is equal). The port: `homeFiles` `pigpen-warden/config.json` = `{"enabled": true, "backend": "typesafe", "consent": "typesafe", ...}`.
+3. Commands that print temporary paths (npm, git) differ between lanes; use `touch x.txt`. `pigeq` needs `--accept-gaps port/accepted-gaps.json` for the SQL statements the scanner mistakes for process starts. Examples: `scenarios/judge-*.json`.
+
+Not reachable by pigeq (UI requests cannot be compared: the original and the port draw different status lines and widgets, G2):
+the notices of `/warden recommend`, `/warden unmute` and the cooldown, `/warden status`, the hold log and the database files.
+They are proved by the layer-1 tests (`learning_wire_test.go`, `learning_ext_test.go`) and by the judge-server scenarios through the requests
+that leave (the regret question, the cooldown's silence).
+
+Results of the learning lane (imladris, tern-ci:v2, go1.27.2, linux/amd64; PR 7, stacked on PR 6's content, version 0.1.9):
+
+- **Twins**: holds 10 of 10, learning 31 of 31, learning-dirs 3 of 3, adaptive 12 of 12, judge-cooldown 6 of 6, ask 2 of 2,
+  sqlite-adapter 1 of 10 (the real-engine case; the nine others test the bun:sqlite wrapper and stay named skips), the
+  `extension.test.ts` cases on adaptive steers, hold feedback (offline, record-time outcome, with Jev, confirm mode) and the judge
+  cooldown (seven) 12 of 12. Named skips with per-case reasons: sqlite-adapter 9 and learning-driver 2 (they test which JavaScript
+  module opened the database). 744 twins and 520 named skips in all (1,264 upstream cases).
+- **Red first**: the tests alone (commit `9507a9c`) do not build (442 undefined symbols; the first error is a test helper
+  name the stack commit then resolves).
+- **Mutations** (`port/mutate.py`, rows `holds-*`, `learning-*`, `adaptive-*`, `cooldown-*`, `learn-*`): 143 rows, 138 killed, 5 equivalent
+  mutants named in `EQUIVALENT` with their reasons (a redundant outer floor, limits that cannot be reached, a defensive guard).
+  pigeq (`port/mutations.json`): 3 rows (`learn-regret-candidates-never-offered`, `learn-judge-cooldown-ignored`,
+  `learn-answer-check-skipped`), 3 killed by the judge-server scenarios.
+- **pigeq** (`pigeq-gaps`, `check` over the 75 scenarios of the stack): three scenarios of this lane,
+  `judge-regret-question-rides-the-first-request-after-a-reply` (42 events), `judge-auth-failure-pauses-the-judge` (25) and
+  `judge-answers-that-do-not-match-the-questions-fail-the-request` (41): the original under Pi == the original under PiG's Node
+  runtime == the Go port, event for event, including every request to the fake judge; goldens recorded from the original. All
+  three passed the full check. Under host load (load average 130 to 150) six other scenarios of the stack differed once at event 4,
+  10 or 24 (`llm` before `turn_end` or the user message, the harness's event order); each passed when rerun alone (one of them
+  needed a third run), none was normalized.
+- **Shared file**: the port's `holds.db` and the original's are one file format: the original wrote six rows with `node:sqlite`
+  and the port read them (stats, smart history), and the port wrote six rows and the original read them (stats, history,
+  recommendations, steer report): `port/perf/learning-cross.mts` with `TestLearningCrossCheck` (needs `WARDEN_LEARNING_CROSS`).
+- **Binary and smoke**: `npm run build:piglet`-equivalent single-extension Binaries (`scripts/perf/build-singles.mjs`) of the stack
+  head and of this lane: 73,244,832 and 77,508,768 bytes (+4,263,936, +5.8%: the engine). `port/live-smoke/smoke.sh` passes with the
+  built Binary and finds `holds.db` created. The package-init allocation limit test passes unchanged (102,864 bytes, 839 allocs).
+- **Race**: a first `go test -race -count=6` found one real race (`CloseLearningDatabases` read a connection while its open was still
+  in flight in the background queue); fixed (`e.once.Do` before the read) and verified with `-race -count=60` over the wiring and
+  extension tests; the full `-race -count=6` is rerun for the PR body.
+- **Performance** (median; 4 CPUs of the shared host, `taskset 100-103`, load average 90 to 200, so differences under 10% are noise):
+
+  | | stack head (context lane) | this lane |
+  |---|---|---|
+  | single-extension Binary | 73,244,832 bytes | **77,508,768** (+4.26 MB, +5.8%; the engine) |
+  | startup, 41 interleaved runs, `-p` through the fused Binary, warden off | 89.4 ms | 94.1 ms (+5.3%; seed-check control 85.7 ms) |
+
+  An off warden opens no database (`learnEnsure`). Per operation, 500 rows of one project, Go 4 CPUs against the original under
+  Node 24 (`node:sqlite`) on the same CPUs: `recordHold` 173 us (40 allocs, 2.4 KB) against 165 us; `generateRecommendations` 800 us
+  (104 allocs) against 490 us; `analyzeSteerEffectivenessReport` 330 us against 185 us; `holdStats` 495 us (54 allocs) against 298 us.
+  The pure-Go engine is about 1.6 times slower on the reads. They run in `/warden recommend` and `/warden status`
+  (sub-millisecond), never on the tool-call path; the per-call work is the ledger (630 ns, 12 allocs, 888 B) and an enqueue, and the
+  database write runs in the background (173 us). The steer counts write 3 KB in 170 us per observed steer. This is the >10% slowdown
+  the quality bar names for the reads: the owner decision is the dependency itself (no cgo, one file format).
+  The original under PiG's Node runtime was not measured for startup: it is on by default and its first-run judgment notice is a
+  message the faux model of the perf harness refuses (`unhandled request`).
