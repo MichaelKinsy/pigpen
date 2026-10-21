@@ -108,29 +108,6 @@ func (e asyncEnv) host(t *testing.T) *Host {
 	}})
 }
 
-func toolText(t *testing.T, raw json.RawMessage) string {
-	t.Helper()
-	var r struct {
-		Content any `json:"content"`
-	}
-	if err := json.Unmarshal(raw, &r); err != nil {
-		t.Fatalf("%s: %v", raw, err)
-	}
-	switch c := r.Content.(type) {
-	case string:
-		return c
-	case []any:
-		var sb strings.Builder
-		for _, b := range c {
-			if m, ok := b.(map[string]any); ok {
-				sb.WriteString(m["text"].(string))
-			}
-		}
-		return sb.String()
-	}
-	return string(raw)
-}
-
 func eventually(t *testing.T, what string, ok func() bool) {
 	t.Helper()
 	deadline := time.Now().Add(20 * time.Second)
