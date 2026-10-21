@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -183,41 +184,55 @@ func TestAStopAndAResumeThatMeetOnAQueuedAgentNeitherRaceNorPanic(t *testing.T) 
 // A stopped record's channels are closed in the same step that makes it visible as stopped: a waiter that sees the
 // status must not find the channel it waits on still open.
 func TestAStoppedQueuedAgentIsNeverVisibleBeforeItsChannelsAreClosed(t *testing.T) {
-	for range 500 {
+	// Many observers hammer the lock, so one is waiting (or spinning) when the stop releases it: with the channels closed
+	// after the unlock instead of before, an observer wins the lock in between and finds them open. Not a -race test.
+	observers := max(8, runtime.GOMAXPROCS(0))
+	for range 1500 {
 		fl := &fleet{}
 		m := newManager(fl.start, nil)
 		m.maxConcurrent = 1
 		m.spawn("general-purpose", "a", "", childSpec{}, true)
 		fl.wait(t, 1)
 		b := m.spawn("general-purpose", "b", "", childSpec{}, true) // queued
-		seen := make(chan string, 1)
-		go func() {
-			for {
-				m.mu.Lock()
-				if b.Status == statusStopped {
-					done, started := b.done, b.started
-					m.mu.Unlock()
-					for _, ch := range []chan struct{}{done, started} {
-						select {
-						case <-ch:
-						default:
-							seen <- "a stopped agent's channel was still open"
-							return
-						}
+		var bad atomic.Pointer[string]
+		var wg sync.WaitGroup
+		stop := make(chan struct{})
+		for range observers {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case <-stop:
+						return
+					default:
 					}
-					seen <- ""
-					return
+					m.mu.Lock()
+					if b.Status == statusStopped {
+						done, started := b.done, b.started
+						m.mu.Unlock()
+						for _, ch := range []chan struct{}{done, started} {
+							select {
+							case <-ch:
+							default:
+								msg := "a stopped agent's channel was still open"
+								bad.CompareAndSwap(nil, &msg)
+							}
+						}
+						return
+					}
+					m.mu.Unlock()
 				}
-				m.mu.Unlock()
-				runtime.Gosched()
-			}
-		}()
-		m.abort(b)
-		if msg := <-seen; msg != "" {
-			m.dispose()
-			t.Fatal(msg)
+			}()
 		}
+		m.abort(b)
+		time.Sleep(time.Millisecond)
+		close(stop)
+		wg.Wait()
 		m.dispose()
+		if msg := bad.Load(); msg != nil {
+			t.Fatal(*msg)
+		}
 	}
 }
 
