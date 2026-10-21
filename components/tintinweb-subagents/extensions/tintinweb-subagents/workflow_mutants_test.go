@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -119,10 +120,15 @@ func TestWorkflowSavedNames(t *testing.T) {
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "zeta.js"), fileScript)
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "alpha.js"), fileScript)
 		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "utils.js"), "const x = 1;\n")
-		for _, n := range []string{"mid", "beta", "omega", "gamma"} {
+		// More than a map's first bucket holds, so an unsorted listing comes out in a random order.
+		want := []string{"alpha", "zeta"}
+		for i := 0; i < 24; i++ {
+			n := "wf-" + string(rune('a'+i%26)) + string(rune('a'+(i*7)%26))
 			writeFile(t, filepath.Join(cwd, ".pi", "workflows", n+".js"), fileScript)
+			want = append(want, n)
 		}
-		eq(t, listSavedWorkflows(cwd), []string{"alpha", "beta", "gamma", "mid", "omega", "zeta"})
+		sort.Strings(want)
+		eq(t, listSavedWorkflows(cwd), want)
 	})
 	t.Run("an unknown name lists the saved ones", func(t *testing.T) {
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
@@ -131,6 +137,13 @@ func TestWorkflowSavedNames(t *testing.T) {
 		r := resolveWorkflowSource(workflowRef{Name: "nope"}, cwd)
 		eq(t, r.OK, false)
 		eq(t, strings.Contains(r.Message, "nightly"), true)
+	})
+	t.Run("a call with no source names the saved workflows", func(t *testing.T) {
+		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
+		cwd := t.TempDir()
+		writeFile(t, filepath.Join(cwd, ".pi", "workflows", "nightly.js"), fileScript)
+		r := resolveWorkflowScript(workflowScriptParams{}, cwd)
+		eq(t, strings.Contains(r.Message, "Saved workflows: nightly."), true)
 	})
 	t.Run("a relative scriptPath is joined to the project directory", func(t *testing.T) {
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())

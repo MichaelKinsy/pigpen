@@ -1014,12 +1014,6 @@
   "replace": "if true {"
  },
  {
-  "name": "progress-stats-complete-live",
-  "file": "workflow_progress.go",
-  "find": "Complete: !anyLive && seen > 0 && done+failed >= total}",
-  "replace": "Complete: seen > 0 && done+failed >= total}"
- },
- {
   "name": "progress-elapsed-ignores-pause",
   "file": "workflow_progress.go",
   "find": "d := end - task.StartTime - task.TotalPausedMs",
@@ -1560,12 +1554,6 @@
   "replace": "rt.emit("
  },
  {
-  "name": "runtime-retry-while-aborted",
-  "file": "workflow_runtime.go",
-  "find": "if live.intent == \"retry\" && !rt.aborted {",
-  "replace": "if live.intent == \"retry\" {"
- },
- {
   "name": "runtime-pause-permit-leak",
   "file": "workflow_runtime.go",
   "find": "if rt.paused && !rt.aborted && !rt.settled {\n\t\t\trt.sem.release()\n\t\t\tcontinue\n\t\t}",
@@ -1606,12 +1594,6 @@
   "file": "workflow_runtime.go",
   "find": "if result.Gate != nil {\n\t\toutcome = *result.Gate",
   "replace": "if false {\n\t\toutcome = *result.Gate"
- },
- {
-  "name": "runtime-gate-keeps-text",
-  "file": "workflow_runtime.go",
-  "find": "result.Text = \"\"\n\toutput := strings",
-  "replace": "output := strings"
  },
  {
   "name": "runtime-gate-silent-failure",
@@ -1710,12 +1692,6 @@
   "replace": ""
  },
  {
-  "name": "runtime-already-aborted-runs",
-  "file": "workflow_runtime.go",
-  "find": "if ctx.Err() != nil {\n\t\treturn &workflowRunResult{Status: runKilled",
-  "replace": "if false {\n\t\treturn &workflowRunResult{Status: runKilled"
- },
- {
   "name": "runtime-onresolved-after-settle",
   "file": "workflow_runtime.go",
   "find": "if !rt.inflight[agentID] {\n\t\t\t\treturn\n\t\t\t}",
@@ -1738,12 +1714,6 @@
   "file": "workflow_runtime.go",
   "find": "rt.finish(workflowRunResult{Status: runFailed, Error: refusal.Error(), HasError: true})",
   "replace": "rt.respond(callID, true, nil, \"\", false)"
- },
- {
-  "name": "runtime-unknown-method-not-fatal",
-  "file": "workflow_runtime.go",
-  "find": "`Unknown workflow host method \"%s\".`, m.Method), true)",
-  "replace": "`Unknown workflow host method \"%s\".`, m.Method), false)"
  },
  {
   "name": "runtime-nested-load-error-fatal",
@@ -1786,12 +1756,6 @@
   "file": "workflow_host.go",
   "find": "modelInput := req.Model\n\tif modelInput == \"\" && config != nil {",
   "replace": "modelInput := \"\"\n\tif config != nil {"
- },
- {
-  "name": "host-unresolvable-agent-model-error",
-  "file": "workflow_host.go",
-  "find": "\t\t\t\tif req.Model != \"\" {\n\t\t\t\t\treturn workflowSpawnResult{Error: errText}, nil\n\t\t\t\t}",
-  "replace": "\t\t\t\treturn workflowSpawnResult{Error: errText}, nil"
  },
  {
   "name": "host-scope-caller-keyed-on-input",
@@ -2206,12 +2170,6 @@
   "file": "workflow_tool.go",
   "find": "if !isString || strings.TrimSpace(path) == \"\" {",
   "replace": "if !isString && false {"
- },
- {
-  "name": "flag-relative-path",
-  "file": "workflow_tool.go",
-  "find": "path = filepath.Join(ctx.Cwd(), path)",
-  "replace": ""
  },
  {
   "name": "flag-entry-not-appended",

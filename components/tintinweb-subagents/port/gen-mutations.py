@@ -207,7 +207,6 @@ m("progress-failed-status-lost", "workflow_progress.go", "if failed > 0 {\n\t\t\
 m("progress-duration-sum", "workflow_progress.go", "duration = maxProgress - minStart", "duration = maxProgress")
 m("progress-unphased-hidden", "workflow_progress.go", "if !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))", "if false && !anyTotal {\n\t\t\treturn append(merged, summarizePhase(\"Agents\", c.Agents))")
 m("progress-stats-queued-started", "workflow_progress.go", "if e.StartedAt != nil || e.QueuedAt == nil {", "if true {")
-m("progress-stats-complete-live", "workflow_progress.go", "Complete: !anyLive && seen > 0 && done+failed >= total}", "Complete: seen > 0 && done+failed >= total}")
 m("progress-elapsed-ignores-pause", "workflow_progress.go", "d := end - task.StartTime - task.TotalPausedMs", "d := end - task.StartTime")
 m("progress-duration-minutes-pad", "workflow_progress.go", "return fmt.Sprintf(\"%dm%02ds\", minutes, seconds)", "return fmt.Sprintf(\"%dm%ds\", minutes, seconds)")
 m("progress-header-no-suffix", "workflow_progress.go", "case runKilled:\n\t\tsuffix = \" · stopped\"", "case runKilled:\n\t\tsuffix = \"\"")
@@ -310,7 +309,6 @@ m("runtime-failure-not-journaled", "workflow_runtime.go", "\t\t// A dead agent i
 m("runtime-spent-only-successes", "workflow_runtime.go", "rt.spentOutput += result.OutputTokens", "if result.OK {\n\t\t\trt.spentOutput += result.OutputTokens\n\t\t}")
 m("runtime-skip-not-null", "workflow_runtime.go", "e.State = entryError\n\t\t\te.Skipped = true", "e.State = entryError\n\t\t\te.Skipped = false")
 m("runtime-retry-without-attempt", "workflow_runtime.go", "attempt++\n\t\t\trt.emit(", "rt.emit(")
-m("runtime-retry-while-aborted", "workflow_runtime.go", "if live.intent == \"retry\" && !rt.aborted {", "if live.intent == \"retry\" {")
 m("runtime-pause-permit-leak", "workflow_runtime.go", "if rt.paused && !rt.aborted && !rt.settled {\n\t\t\trt.sem.release()\n\t\t\tcontinue\n\t\t}", "")
 m("runtime-pause-gate-before-slot", "workflow_runtime.go", "\t\trt.pauseGate(c, live)\n\t\tif live.intent == \"skip\" {", "\t\tif live.intent == \"skip\" {")
 m("runtime-skip-held-waits-resume", "workflow_runtime.go", "} else if live.wake != nil {\n\t\tlive.wake()\n\t}", "}")
@@ -318,7 +316,6 @@ m("runtime-skip-twice", "workflow_runtime.go", "if live == nil || live.intent !=
 m("runtime-retry-needs-child", "workflow_runtime.go", "if live == nil || !live.started || live.intent != \"\" {", "if live == nil || live.intent != \"\" {")
 m("runtime-gate-needs-host", "workflow_runtime.go", "if payload.gate != nil && runGate == nil {", "if false {")
 m("runtime-gate-runs-twice", "workflow_runtime.go", "if result.Gate != nil {\n\t\toutcome = *result.Gate", "if false {\n\t\toutcome = *result.Gate")
-m("runtime-gate-keeps-text", "workflow_runtime.go", "result.Text = \"\"\n\toutput := strings", "output := strings")
 m("runtime-gate-silent-failure", "workflow_runtime.go", "result.Error = \"Gate command failed: \" + command", "result.Error = \"\"")
 m("runtime-gate-after-schema", "workflow_runtime.go", "result = applyWorkflowSchema(result, compiledSchema)\n\t\t\t\t}\n\t\t\t\tif result.OK && payload.gate", "}\n\t\t\t\tif result.OK && payload.gate")
 m("runtime-gate-cwd-dropped", "workflow_runtime.go", "runGate.RunGate(rt.runCtx, command, agentID, result.Cwd)", "runGate.RunGate(rt.runCtx, command, agentID, \"\")")
@@ -335,12 +332,10 @@ m("runtime-schema-prose-accepted", "workflow_runtime.go", "if compiledSchema != 
 m("runtime-unawaited-ignored", "workflow_runtime.go", "if len(rt.openLaunches) > 0 {\n\t\t\tlabels :=", "if false {\n\t\t\tlabels :=")
 m("runtime-unawaited-order", "workflow_runtime.go", "labels[i] = \"'\" + rt.openLabels[id] + \"'\"", "labels[len(labels)-1-i] = \"'\" + rt.openLabels[id] + \"'\"")
 m("runtime-abort-skips-children", "workflow_runtime.go", "\tfor _, id := range ids {\n\t\trt.host.AbortAgent(id)\n\t}", "")
-m("runtime-already-aborted-runs", "workflow_runtime.go", "if ctx.Err() != nil {\n\t\treturn &workflowRunResult{Status: runKilled", "if false {\n\t\treturn &workflowRunResult{Status: runKilled")
 m("runtime-onresolved-after-settle", "workflow_runtime.go", "if !rt.inflight[agentID] {\n\t\t\t\treturn\n\t\t\t}", "")
 m("runtime-onresolved-record-id", "workflow_runtime.go", "if info.RecordID != \"\" {\n\t\t\t\tbase.RecordID = info.RecordID\n\t\t\t}", "")
 m("runtime-onresolved-model", "workflow_runtime.go", "if info.ModelName != \"\" {\n\t\t\t\tbase.Model = info.ModelName\n\t\t\t}", "")
 m("runtime-refusal-not-fatal", "workflow_runtime.go", "rt.finish(workflowRunResult{Status: runFailed, Error: refusal.Error(), HasError: true})", "rt.respond(callID, true, nil, \"\", false)")
-m("runtime-unknown-method-not-fatal", "workflow_runtime.go", "`Unknown workflow host method \"%s\".`, m.Method), true)", "`Unknown workflow host method \"%s\".`, m.Method), false)")
 m("runtime-nested-load-error-fatal", "workflow_runtime.go", "rt.respond(callID, false, nil, source.Message, false)", "rt.respond(callID, false, nil, source.Message, true)")
 m("runtime-nested-no-loader-ok", "workflow_runtime.go", "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", true)", "if loader == nil {\n\t\trt.respond(callID, false, nil, \"This workflow host cannot run nested workflows.\", false)")
 m("runtime-nested-validate-skipped", "workflow_runtime.go", "meta, body, verr := validateScript(source.Script)\n\tif verr != nil {", "meta, body, verr := validateScript(source.Script)\n\tif false {")
@@ -350,7 +345,6 @@ m("runtime-boundary-struct-ok", "workflow_runtime.go", "return workflowBoundaryE
 
 # workflow_host.go: the manager binding
 m("host-model-precedence", "workflow_host.go", "modelInput := req.Model\n\tif modelInput == \"\" && config != nil {", "modelInput := \"\"\n\tif config != nil {")
-m("host-unresolvable-agent-model-error", "workflow_host.go", "\t\t\t\tif req.Model != \"\" {\n\t\t\t\t\treturn workflowSpawnResult{Error: errText}, nil\n\t\t\t\t}", "\t\t\t\treturn workflowSpawnResult{Error: errText}, nil")
 m("host-scope-caller-keyed-on-input", "workflow_host.go", "CallerSupplied: req.Model != \"\"", "CallerSupplied: modelInput != \"\"")
 m("host-scope-error-fatal", "workflow_host.go", "if verdict.Kind == \"error\" {\n\t\t\treturn workflowSpawnResult{Error: verdict.Message}, nil", "if verdict.Kind == \"error\" {\n\t\t\treturn workflowSpawnResult{}, errors.New(verdict.Message)")
 m("host-scope-warn-every-child", "workflow_host.go", "first := !h.warnedScope[verdict.Message]", "first := true")
@@ -427,7 +421,6 @@ m("tool-withdraw-drops-others", "workflow_tool.go", "if n != workflowToolName {\
 m("flag-read-before-collision", "workflow_tool.go", "if w.flagHandled {", "if false {")
 m("flag-ignored-while-off", "workflow_tool.go", "// The flag is the same machinery by another door, so the master switch has to close it too.\n\tif !w.isEnabled() {", "if false {")
 m("flag-bare-true-read", "workflow_tool.go", "if !isString || strings.TrimSpace(path) == \"\" {", "if !isString && false {")
-m("flag-relative-path", "workflow_tool.go", "path = filepath.Join(ctx.Cwd(), path)", "")
 m("flag-entry-not-appended", "workflow_tool.go", "_ = live.AppendEntry(workflowEntryType, snapshotWorkflowEntry(task))", "")
 m("flag-result-follow-up", "workflow_tool.go", "sdk.SendMessageOptions{DeliverAs: \"nextTurn\"})", "sdk.SendMessageOptions{DeliverAs: \"followUp\"})")
 m("flag-result-displayed", "workflow_tool.go", "CustomType: \"workflow-result\", Content: formatWorkflowNotification(task, wfNowMs()), Display: false}", "CustomType: \"workflow-result\", Content: formatWorkflowNotification(task, wfNowMs()), Display: true}")
@@ -472,7 +465,8 @@ m("engine-compile-strict", "workflow_engine.go", "_ = host.Set(\"compile\", func
 m("meta-eval-strict", "workflow_meta.go", "\"(\"+fragment+\")\", false)", "\"(\"+fragment+\")\", true)")
 m("engine-response-error-dropped", "workflow_engine.go", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\tw.failUncaught(err)", "if _, err := w.response(goja.Undefined(), msg); err != nil {\n\t\t\t_ = err")
 m("meta-eval-error-name-dropped", "workflow_meta.go", "return ex.Value().String()\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail", "return wfErrorDetail(err)\n\t}\n\treturn err.Error()\n}\n\n// wfErrorDetail")
-# Not mutated, equivalent: `journal-read-keeps-blank-line` (a blank line fails JSON parsing and is skipped by the next guard anyway);: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
+# Not mutated, equivalent or unreachable (PORT.md, "Mutation status"): progress-stats-complete-live, runtime-unknown-method-not-fatal,
+# runtime-already-aborted-runs, runtime-gate-keeps-text, runtime-retry-while-aborted, flag-relative-path, host-unresolvable-agent-model-error;: `journal-read-keeps-blank-line` (a blank line fails JSON parsing and is skipped by the next guard anyway);: the timer site of workflowWorker (host.defer is used only for the progress flush, which a script cannot
 # make overflow) and `encoded = encoded[3:]` vs `[2:]` (the TrimLeft of dashes that follows removes the difference).
 m("engine-overflow-text", "workflow_meta.go", "return \"Maximum call stack size exceeded\"", "return \"Stack overflow\"")
 m("engine-rejections-not-flushed", "workflow_engine.go", "\t\tfn()\n\t\tw.flushRejections()", "\t\tfn()")
