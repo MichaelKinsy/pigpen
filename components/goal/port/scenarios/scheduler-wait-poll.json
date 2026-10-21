@@ -1,0 +1,79 @@
+{
+  "name": "scheduler-wait-poll",
+  "description": "A strict goal declares a wait with polling; the poll fires a check run, then the repair run ends the chain with a pause for lack of a disposition.",
+  "llm": [
+    {
+      "text": "Started."
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "continuation": {
+              "kind": "wait",
+              "reason": "The build is queued",
+              "deadline": "2099-01-01T00:00:00Z",
+              "polling": {
+                "interval_seconds": 1,
+                "max_checks": 2
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "text": "Checked: still queued."
+    },
+    {
+      "text": "Repair: nothing to report."
+    }
+  ],
+  "steps": [
+    {
+      "name": "user",
+      "rpc": {
+        "type": "prompt",
+        "message": "Get going."
+      },
+      "settleMs": 9000
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 8, \"strictExecutionContract\": true, \"autoSelectSingleGoal\": true}",
+    ".pi/goals/active_goal_20260102030405_seed-t.md": "{\n  \"version\": 3,\n  \"id\": \"seed-t\",\n  \"objective\": \"Wait for the build\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-t.md\"\n}\n\n# Goal Prompt\n\nWait for the build\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start"
+  ]
+}

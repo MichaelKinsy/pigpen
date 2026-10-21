@@ -1,0 +1,74 @@
+{
+  "name": "settings-oracle",
+  "description": "Blocker Oracle rows: enable it, set the attempt limit (out of range, then valid), set the provider/model pair.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  oracle enabled: false (default)"
+        },
+        {
+          "value": "Set project override to true"
+        },
+        {
+          "value": "  max failed attempts per blocker: 2 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "4"
+        },
+        {
+          "value": "  max failed attempts per blocker: 2 (default)"
+        },
+        {
+          "value": "Set project override..."
+        },
+        {
+          "value": "2"
+        },
+        {
+          "value": "  oracle provider/model: [object Object] (default)"
+        },
+        {
+          "value": "zzz-no-such-model"
+        },
+        {
+          "value": "\u270e Enter provider/model manually (advanced)"
+        },
+        {
+          "value": "acme/oracle-1"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

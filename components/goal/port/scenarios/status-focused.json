@@ -1,0 +1,50 @@
+{
+  "name": "status-focused",
+  "description": "A focused goal with tasks, a budget, usage, a contract and ledger history: dashboard, verbose, health.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status verbose"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status health"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"Ship the parser\\nSuccess criteria: tests pass\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\",\n  \"tokenBudget\": 50000,\n  \"currentTaskId\": \"task-2\",\n  \"verificationContract\": \"run the full test suite\",\n  \"taskList\": {\n    \"tasks\": [\n      {\n        \"id\": \"task-1\",\n        \"title\": \"Read the code\",\n        \"status\": \"complete\",\n        \"evidence\": \"read src/main.go\",\n        \"completedAt\": \"2026-01-02T04:00:00.000Z\"\n      },\n      {\n        \"id\": \"task-2\",\n        \"title\": \"Write the fix\",\n        \"status\": \"pending\",\n        \"verificationContract\": \"the unit test passes\"\n      },\n      {\n        \"id\": \"task-3\",\n        \"title\": \"Update the docs\",\n        \"status\": \"skipped\",\n        \"skipReason\": \"no docs exist\",\n        \"skippedAt\": \"2026-01-02T04:30:00.000Z\"\n      }\n    ],\n    \"blockCompletion\": false,\n    \"proposedAt\": \"2026-01-02T03:04:05.000Z\"\n  }\n}\n\n# Goal Prompt\n\nShip the parser\nSuccess criteria: tests pass\n\n## Progress\n\n- Status: active\n",
+    ".pi/goals/goal_events.jsonl": "{\"type\": \"goal_created\", \"goalId\": \"seed-a\", \"objective\": \"Ship the parser\", \"sisyphus\": false, \"autoContinue\": true, \"at\": \"2020-01-02T03:04:05.000Z\"}\n{\"type\": \"task_complete\", \"goalId\": \"seed-a\", \"taskId\": \"task-1\", \"evidence\": \"read src/main.go\", \"at\": \"2020-01-02T04:00:00.000Z\"}\n{\"type\": \"audit_result\", \"goalId\": \"seed-a\", \"verdict\": \"disapproved\", \"report\": \"The tests were not run.\", \"at\": \"2020-01-02T05:00:00.000Z\"}\n"
+  },
+  "normalize": [
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    }
+  ]
+}

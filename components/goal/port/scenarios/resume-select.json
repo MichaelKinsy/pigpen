@@ -1,0 +1,40 @@
+{
+  "name": "resume-select",
+  "description": "Two open goals and no focus: /goal-resume offers the selector, a dismissed selector changes nothing.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-resume"
+      },
+      "ui": [
+        {
+          "cancelled": true
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-resume"
+      },
+      "ui": [
+        {
+          "value": "  seed-q | paused | goal | Second paused .pi/goals/active_goal_20260102030406_seed-q.md"
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-p.md": "{\n  \"version\": 3,\n  \"id\": \"seed-p\",\n  \"objective\": \"First paused\",\n  \"status\": \"paused\",\n  \"autoContinue\": false,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-p.md\",\n  \"stopReason\": \"user\"\n}\n\n# Goal Prompt\n\nFirst paused\n\n## Progress\n\n- Status: paused\n",
+    ".pi/goals/active_goal_20260102030406_seed-q.md": "{\n  \"version\": 3,\n  \"id\": \"seed-q\",\n  \"objective\": \"Second paused\",\n  \"status\": \"paused\",\n  \"autoContinue\": false,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:06.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:06.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030406_seed-q.md\",\n  \"stopReason\": \"user\"\n}\n\n# Goal Prompt\n\nSecond paused\n\n## Progress\n\n- Status: paused\n"
+  }
+}

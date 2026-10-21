@@ -1,0 +1,63 @@
+{
+  "name": "audit-no-marker",
+  "description": "An audit report without a verdict marker on its last line is a rejection; the parent continues with the report as the tool result.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal",
+          "arguments": {
+            "status": "complete",
+            "completion_summary": "done"
+          }
+        }
+      ]
+    },
+    {
+      "text": "I looked at notes.txt and it seems fine, but I will not commit to a verdict."
+    },
+    {
+      "text": "The audit gave no verdict."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Finish the notes."
+      }
+    }
+  ],
+  "files": {
+    ".pi/goals/active_goal_20260102030405_seed-aud.md": "{\n  \"version\": 3,\n  \"id\": \"seed-aud\",\n  \"objective\": \"Write notes.txt with the word ready\\nSuccess criteria: notes.txt exists and says ready\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-aud.md\"\n}\n\n# Goal Prompt\n\nWrite notes.txt with the word ready\nSuccess criteria: notes.txt exists and says ready\n\n## Progress\n\n- Status: active\n",
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0, \"autoSelectSingleGoal\": true}",
+    "notes.txt": "ready\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "archived/goal_\\d{16}_",
+      "replacement": "archived/goal_<stamp>_"
+    }
+  ],
+  "args": [
+    "--system-prompt",
+    "You are the executor of a goal. Work on it with the goal tools and keep every answer short."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "scheduler-budget",
+  "description": "A token budget spent inside an autonomous run ends the scheduling: the goal is budget-limited and no further run starts although the allowance remains. (create_goal activates the goal tools: PiG's next run sends stale tool snippets, see above.)",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "create_goal",
+          "arguments": {
+            "objective": "Summarize the log",
+            "token_budget": 3
+          }
+        }
+      ]
+    },
+    {
+      "text": "Working on it."
+    },
+    {
+      "text": "Wrapping up."
+    }
+  ],
+  "steps": [
+    {
+      "name": "create",
+      "rpc": {
+        "type": "prompt",
+        "message": "Create it."
+      },
+      "settleMs": 5000
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 5}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ],
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "agent_start",
+    "agent_end",
+    "turn_start",
+    "turn_end",
+    "tool_execution_start"
+  ]
+}

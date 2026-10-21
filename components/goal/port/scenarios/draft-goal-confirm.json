@@ -1,0 +1,115 @@
+{
+  "name": "draft-goal-confirm",
+  "description": "/goal: the model asks one question (select), proposes a goal with tasks, the user keeps the auditor and confirms; the goal is created and shown by /goal-status.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "goal_question",
+          "arguments": {
+            "question": "Which part of the parser?",
+            "options": [
+              "The tokenizer",
+              "The AST builder"
+            ],
+            "recommended": 0
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "propose_goal_draft",
+          "arguments": {
+            "objective": "=== Goal ===\nObjective: Refactor the parser\nSuccess criteria: the parser tests pass\nVerification contract: run go test ./...",
+            "tasks": [
+              {
+                "id": "task-1",
+                "title": "Extract the tokenizer"
+              },
+              {
+                "id": "task-2",
+                "title": "Rewrite the AST builder",
+                "verification_contract": "the builder tests pass"
+              },
+              {
+                "id": "task-3",
+                "title": "Update the callers",
+                "parent_id": "task-2"
+              }
+            ],
+            "block_completion": true
+          }
+        }
+      ]
+    },
+    {
+      "text": "unused"
+    }
+  ],
+  "steps": [
+    {
+      "name": "draft",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Refactor the parser module"
+      },
+      "ui": [
+        {
+          "value": "2. The AST builder"
+        },
+        {
+          "value": "Enabled \u2014 require independent approval"
+        },
+        {
+          "value": "1. Confirm \u2014 create this goal now (Recommended)"
+        }
+      ],
+      "wait": "agent_end"
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status verbose"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}
