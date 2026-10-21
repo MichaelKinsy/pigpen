@@ -12,7 +12,7 @@ import (
 const managerFile = "agent-manager"
 
 // settled waits for a record to settle.
-func settled(t *testing.T, rec *agentRecord) {
+func settledRec(t *testing.T, rec *agentRecord) {
 	t.Helper()
 	select {
 	case <-rec.done:
@@ -36,7 +36,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		eq(t, c.spec.MaxDepth, 3)
 		eq(t, c.spec.ConfigCwd, "/trusted/config")
 		c.finish("x")
-		settled(t, rec)
+		settledRec(t, rec)
 	})
 
 	tw(t, managerFile, "tells the runner which spawns are nested, so only top-level ones persist", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		eq(t, c.spec.AgentID, rec.ID)
 		eq(t, rec.topLevel(), true)
 		c.finish("x")
-		settled(t, rec)
+		settledRec(t, rec)
 	})
 
 	tw(t, managerFile, "starts a nested background child even when the concurrency pool is full", func(t *testing.T) {
@@ -83,11 +83,11 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		grandchild := r.app.mgr.spawnOwned("scout", "grandchild", "", childSpec{Prompt: "grandchild"}, true, &owner{ParentID: child.ID, Depth: 3, MaxDepth: 4})
 		r.fleet.wait(t, 3)
 		r.fleet.waitPrompt(t, "parent").finish("done")
-		settled(t, parent)
+		settledRec(t, parent)
 		// The child's own settle path stops the generation below it.
-		settled(t, child)
+		settledRec(t, child)
 		eq(t, child.Status, statusStopped)
-		settled(t, grandchild)
+		settledRec(t, grandchild)
 		eq(t, grandchild.Status, statusStopped)
 	})
 
@@ -97,7 +97,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		parent := r.app.mgr.spawn("general-purpose", "parent", "", childSpec{Prompt: "parent"}, true)
 		c := r.fleet.waitPrompt(t, "parent")
 		c.finish("done")
-		settled(t, parent)
+		settledRec(t, parent)
 		eq(t, r.app.mgr.resume(parent, "keep going", true, ""), true)
 		for i := 0; i < 400; i++ {
 			c.mu.Lock()
@@ -111,7 +111,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		child := r.app.mgr.spawnOwned("scout", "child", "", childSpec{Prompt: "child"}, true, &owner{ParentID: parent.ID, Depth: 2, MaxDepth: 3})
 		r.fleet.waitPrompt(t, "child")
 		c.finish("resumed")
-		settled(t, child)
+		settledRec(t, child)
 		eq(t, child.Status, statusStopped)
 	})
 
@@ -124,7 +124,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		eq(t, sibling.Status, statusQueued)
 		r.fleet.wait(t, 2)
 		r.fleet.waitPrompt(t, "child").finish("done")
-		settled(t, child)
+		settledRec(t, child)
 		// The parent still holds the only slot, so the sibling must stay queued.
 		time.Sleep(50 * time.Millisecond)
 		eq(t, sibling.Status, statusQueued)
@@ -141,7 +141,7 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		c := r.fleet.waitPrompt(t, "child")
 		c.err = errBoom
 		close(c.release)
-		settled(t, child)
+		settledRec(t, child)
 		eq(t, child.Status, statusError)
 		time.Sleep(50 * time.Millisecond)
 		eq(t, sibling.Status, statusQueued)
@@ -156,9 +156,9 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		sibling := r.app.mgr.spawn("general-purpose", "sibling", "", childSpec{Prompt: "sibling"}, true)
 		eq(t, sibling.Status, statusQueued)
 		r.fleet.waitPrompt(t, "parent").finish("done")
-		settled(t, parent)
+		settledRec(t, parent)
 		r.fleet.waitPrompt(t, "sibling").finish("x")
-		settled(t, sibling)
+		settledRec(t, sibling)
 	})
 
 	tw(t, managerFile, "never names a nested child, however it was spawned", func(t *testing.T) {
@@ -184,13 +184,13 @@ func TestAgentManagerNestedTwins(t *testing.T) {
 		r.app.mgr.onUsage = func(_ *agentRecord, u lifetimeUsage) { mu.Lock(); seen = append(seen, u); mu.Unlock() }
 		parent := r.app.mgr.spawn("general-purpose", "parent", "", childSpec{Prompt: "parent"}, true)
 		r.fleet.waitPrompt(t, "parent").finish("done")
-		settled(t, parent)
+		settledRec(t, parent)
 		mu.Lock()
 		seen = nil
 		mu.Unlock()
 		child := r.app.mgr.spawnOwned("general-purpose", "child", "", childSpec{Prompt: "child"}, true, &owner{ParentID: parent.ID, Depth: 2, MaxDepth: 3})
 		r.fleet.waitPrompt(t, "child").finish("done")
-		settled(t, child)
+		settledRec(t, child)
 		mu.Lock()
 		defer mu.Unlock()
 		eq(t, seen, []lifetimeUsage{{Input: 1500}})
