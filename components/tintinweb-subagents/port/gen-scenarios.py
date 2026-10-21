@@ -46,6 +46,9 @@ scenario("mention-agent-prefix-unknown", "Claude Code's @agent-<type> spelling w
 scenario("mention-clone-turn", "In model mode a mention is taken by an off-screen clone: its request carries the conversation, the reminder and only the Agent tool; the clone calls Agent (here refused by fallbackSubagent none) and the main model is never asked.",
          [[call("Agent", prompt="x", description="d", subagent_type="typoo")]], settings={**SETTINGS, "fallbackSubagent": "none"},
          steps=say("@explore find the flaky test", wait="response", settleMs=3000))
+# The oracle asks the model a third time after the clone's turns (the script is read in order, so a spare turn keeps the
+# run going and lets the golden show what each side does with it).
+_p = os.path.join(out, "mention-clone-turn.json"); _s = json.load(open(_p)); _s["llm"].append({"text": "done"}); json.dump(_s, open(_p, "w"), indent=2, ensure_ascii=False); open(_p, "a").write("\n")
 
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's

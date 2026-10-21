@@ -453,10 +453,8 @@ func TestMentionWiringTwins(t *testing.T) {
 	}
 	// evict ages the record past the cutoff and lets the real cleanup evict it.
 	evict := func(t *testing.T, m *mentionRig, rec *agentRecord) {
-		m.app.mgr.mu.Lock()
-		rec.CompletedAt = time.Now().Add(-11 * time.Minute)
-		m.app.mgr.mu.Unlock()
-		m.app.mgr.cleanup(time.Now())
+		// The clock is moved, not the record (the settle notice reads CompletedAt without the lock).
+		m.app.mgr.cleanup(time.Now().Add(11 * time.Minute))
 		eq(t, m.app.mgr.get(rec.ID) == nil, true)
 	}
 	evicted := func(t *testing.T, m *mentionRig, typ string) (file string, c *fakeChild) {
