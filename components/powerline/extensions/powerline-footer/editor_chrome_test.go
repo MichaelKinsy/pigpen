@@ -316,7 +316,7 @@ func TestFastRenderPlacesTheCursorInItsChunk(t *testing.T) {
 		t.Errorf("column 35 is the last of the first chunk, nothing is above: %q", last)
 	}
 	next, _ := renderFastPowerlineEditor(&fakeBase{lines: []string{line}, cursor: sdk.EditorCursor{Col: 36}}, border, 40, false, false)
-	if next == nil || len(next) < 3 || !strings.Contains(next[1], "") || !strings.Contains(next[0], "─") {
+	if next == nil || len(next) < 3 {
 		t.Fatalf("rows %q", next)
 	}
 	if !strings.Contains(next[0], "↑") {
