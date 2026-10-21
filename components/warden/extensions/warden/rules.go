@@ -709,7 +709,9 @@ func rulesFor(set *RuleSet, path string) []Rule { return scopedRules(set, path, 
 // editRulesFor are the rules asked about a write or edit: those that apply to the path without a `when: turn` header.
 func editRulesFor(set *RuleSet, path string) []Rule { return scopedRules(set, path, true) }
 
-// scopedRules are the rules that apply to a path, copied once; skipTurn leaves out those with a `when: turn` header.
+// scopedRules are the rules that apply to a path; skipTurn leaves out those with a `when: turn` header. When no rule
+// is left out the result is the set's own slice (capacity cut to its length, and read only by every caller): no copy
+// of the rules; otherwise the kept rules are copied once.
 func scopedRules(set *RuleSet, path string, skipTurn bool) []Rule {
 	var out []Rule
 	// Rules of a file commonly share one `paths:` list: the answer for the list just asked about is reused.
@@ -717,23 +719,30 @@ func scopedRules(set *RuleSet, path string, skipTurn bool) []Rule {
 	lastMatch, asked := false, false
 	for i := range set.Rules {
 		rule := &set.Rules[i]
-		if skipTurn && rule.When == "turn" {
-			continue
-		}
-		keep := len(rule.Paths) == 0
-		if !keep {
+		keep := !(skipTurn && rule.When == "turn")
+		if keep && len(rule.Paths) > 0 {
 			if !asked || !slices.Equal(rule.Paths, lastPaths) {
 				_, lastMatch = matchGlobFirst(path, rule.Paths)
 				lastPaths, asked = rule.Paths, true
 			}
 			keep = lastMatch
 		}
-		if keep {
-			if out == nil {
-				out = make([]Rule, 0, len(set.Rules))
-			}
+		switch {
+		case !keep && out == nil:
+			out = make([]Rule, i, len(set.Rules))
+			copy(out, set.Rules[:i])
+		case keep && out != nil:
 			out = append(out, *rule)
 		}
+	}
+	if out == nil {
+		if len(set.Rules) == 0 {
+			return nil
+		}
+		return set.Rules[:len(set.Rules):len(set.Rules)]
+	}
+	if len(out) == 0 {
+		return nil
 	}
 	return out
 }
