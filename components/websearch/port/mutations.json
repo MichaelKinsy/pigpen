@@ -2834,8 +2834,8 @@
  {
   "name": "render-summary-rule-width",
   "file": "render.go",
-  "find": "strings.Repeat(\"\u2500\", 32)",
-  "replace": "strings.Repeat(\"\u2500\", 31)"
+  "find": "strings.Repeat(\"─\", 32)",
+  "replace": "strings.Repeat(\"─\", 31)"
  },
  {
   "name": "activity-keeps-nine",
@@ -4192,5 +4192,221 @@
   "file": "gemini_search.go",
   "find": "*act = logAPIStart(query)",
   "replace": "*act = activityRef{}"
+ },
+ {
+  "name": "body-rejection-abort-wording",
+  "file": "restcommon.go",
+  "find": "return &redactedError{\"This operation was aborted\", err}\n\t}\n\tif child.Err()",
+  "replace": "return &redactedError{\"Aborted\", err}\n\t}\n\tif child.Err()"
+ },
+ {
+  "name": "body-rejection-caller-check",
+  "file": "restcommon.go",
+  "find": "if parent.Err() != nil {\n\t\treturn &redactedError{\"This operation was aborted\", err}\n\t}\n\tif child.Err()",
+  "replace": "if parent.Err() == nil {\n\t\treturn &redactedError{\"This operation was aborted\", err}\n\t}\n\tif child.Err()"
+ },
+ {
+  "name": "body-rejection-deadline-check",
+  "file": "restcommon.go",
+  "find": "if child.Err() == context.DeadlineExceeded {\n\t\treturn &redactedError{providerTimeoutMessage, err}\n\t}\n\treturn transportFailure(err, true)",
+  "replace": "if child.Err() != context.DeadlineExceeded {\n\t\treturn &redactedError{providerTimeoutMessage, err}\n\t}\n\treturn transportFailure(err, true)"
+ },
+ {
+  "name": "body-rejection-dropped-connection",
+  "file": "restcommon.go",
+  "find": "return &redactedError{providerTimeoutMessage, err}\n\t}\n\treturn transportFailure(err, true)",
+  "replace": "return &redactedError{providerTimeoutMessage, err}\n\t}\n\treturn err"
+ },
+ {
+  "name": "invalid-json-read-wording",
+  "file": "restcommon.go",
+  "find": "return fmt.Errorf(\"%s returned invalid JSON: %s\", what, bodyRejection(parent, child, err).Error())",
+  "replace": "return fmt.Errorf(\"%s returned invalid JSON: %s\", what, err.Error())"
+ },
+ {
+  "name": "success-status-upper-bound",
+  "file": "restcommon.go",
+  "find": "func successStatus(resp *http.Response) bool { return resp.StatusCode >= 200 && resp.StatusCode <= 299 }",
+  "replace": "func successStatus(resp *http.Response) bool { return resp.StatusCode >= 200 && resp.StatusCode <= 600 }"
+ },
+ {
+  "name": "success-status-lower-bound",
+  "file": "restcommon.go",
+  "find": "func successStatus(resp *http.Response) bool { return resp.StatusCode >= 200 && resp.StatusCode <= 299 }",
+  "replace": "func successStatus(resp *http.Response) bool { return resp.StatusCode >= 201 && resp.StatusCode <= 299 }"
+ },
+ {
+  "name": "rest-a-body-failure-activity",
+  "file": "restcommon.go",
+  "find": "\tif err != nil {\n\t\tact.complete(resp.StatusCode)\n\t\tif ok {\n\t\t\treturn nil, 0, invalidJSONRead",
+  "replace": "\tif err != nil {\n\t\tif ok {\n\t\t\treturn nil, 0, invalidJSONRead"
+ },
+ {
+  "name": "rest-a-body-failure-wording",
+  "file": "restcommon.go",
+  "find": "return nil, 0, invalidJSONRead(ctx, tctx, api, err)",
+  "replace": "return nil, 0, redactErr(timeoutFix(ctx, tctx, transportFailure(err, true)), apiKey)"
+ },
+ {
+  "name": "rest-b-body-failure-wording",
+  "file": "restcommon.go",
+  "find": "return fail(invalidJSONRead(ctx, tctx, name, err))",
+  "replace": "return fail(transportFailure(err, true))"
+ },
+ {
+  "name": "rest-b-body-failure-status",
+  "file": "restcommon.go",
+  "find": "\t\tif successStatus(resp) {\n\t\t\t// serpapi.ts rethrows",
+  "replace": "\t\tif !successStatus(resp) {\n\t\t\t// serpapi.ts rethrows"
+ },
+ {
+  "name": "kagi-search-body-failure-wording",
+  "file": "kagi.go",
+  "find": "invalidJSONRead(ctx, tctx, \"Kagi API\", err)",
+  "replace": "redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "kagi-search-body-failure-activity",
+  "file": "kagi.go",
+  "find": "\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi API\", err)",
+  "replace": "\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi API\", err)"
+ },
+ {
+  "name": "kagi-search-body-failure-status",
+  "file": "kagi.go",
+  "find": "\t\tif successStatus(resp) {\n\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi API\", err)",
+  "replace": "\t\tif !successStatus(resp) {\n\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi API\", err)"
+ },
+ {
+  "name": "kagi-extract-body-failure-wording",
+  "file": "kagi.go",
+  "find": "invalidJSONRead(ctx, tctx, \"Kagi Extract API\", err)",
+  "replace": "redactErr(timeoutFix(ctx, tctx, err), key)"
+ },
+ {
+  "name": "kagi-extract-body-failure-activity",
+  "file": "kagi.go",
+  "find": "\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi Extract API\", err)",
+  "replace": "\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Kagi Extract API\", err)"
+ },
+ {
+  "name": "perplexity-body-failure-wording",
+  "file": "perplexity.go",
+  "find": "invalidJSONRead(ctx, tctx, \"Perplexity API\", err)",
+  "replace": "redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "perplexity-body-failure-activity",
+  "file": "perplexity.go",
+  "find": "\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Perplexity API\", err)",
+  "replace": "\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Perplexity API\", err)"
+ },
+ {
+  "name": "serpdive-body-failure-wording",
+  "file": "serpdive.go",
+  "find": "invalidJSONRead(ctx, tctx, \"SERPdive API\", err)",
+  "replace": "redactErr(timeoutFix(ctx, tctx, err), apiKey)"
+ },
+ {
+  "name": "serpdive-body-failure-activity",
+  "file": "serpdive.go",
+  "find": "\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"SERPdive API\", err)",
+  "replace": "\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"SERPdive API\", err)"
+ },
+ {
+  "name": "searxng-body-failure-wording",
+  "file": "searxng.go",
+  "find": "act.failedErr(invalidJSONRead(ctx, tctx, \"SearXNG\", err))",
+  "replace": "act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, true)))"
+ },
+ {
+  "name": "searxng-error-status-body-failure-activity",
+  "file": "searxng.go",
+  "find": "\t\tact.logError(fmt.Sprintf(\"HTTP %d\", resp.StatusCode))\n\t\treturn nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, true)))",
+  "replace": "\t\treturn nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, true)))"
+ },
+ {
+  "name": "xcrawl-body-failure-wording",
+  "file": "xcrawl.go",
+  "find": "response body is not valid JSON: %s\", bodyRejection(ctx, tctx, err))",
+  "replace": "response body is not valid JSON: %s\", err)"
+ },
+ {
+  "name": "xcrawl-body-failure-status",
+  "file": "xcrawl.go",
+  "find": "\t\tif successStatus(resp) {\n\t\t\treturn nil, fmt.Errorf(\"XCrawl API returned invalid response",
+  "replace": "\t\tif !successStatus(resp) {\n\t\t\treturn nil, fmt.Errorf(\"XCrawl API returned invalid response"
+ },
+ {
+  "name": "tavily-body-failure-wording",
+  "file": "tavily.go",
+  "find": "invalidJSONRead(parent, ctx, \"Tavily API\", err)",
+  "replace": "redactErr(timeoutFix(parent, ctx, err), apiKey)"
+ },
+ {
+  "name": "tavily-caller-abort-keeps-error",
+  "file": "tavily.go",
+  "find": "\t\t\tif errors.Is(err, context.Canceled) {\n\t\t\t\terr = &redactedError{\"This operation was aborted\", err}",
+  "replace": "\t\t\tif true {\n\t\t\t\terr = &redactedError{\"This operation was aborted\", err}"
+ },
+ {
+  "name": "ollama-fetch-body-failure-wording",
+  "file": "ollama.go",
+  "find": "invalidJSONRead(ctx, tctx, \"Ollama Web Fetch\", err)",
+  "replace": "redactErr(timeoutFix(ctx, tctx, err), key)"
+ },
+ {
+  "name": "ollama-fetch-body-failure-activity",
+  "file": "ollama.go",
+  "find": "\t\t\tact.complete(resp.StatusCode)\n\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Ollama Web Fetch\", err)",
+  "replace": "\t\t\treturn nil, invalidJSONRead(ctx, tctx, \"Ollama Web Fetch\", err)"
+ },
+ {
+  "name": "ollama-search-body-failure-wording",
+  "file": "ollama.go",
+  "find": "InvalidJSONAs: \"Ollama API\"",
+  "replace": "InvalidJSONAs: \"\""
+ },
+ {
+  "name": "hosted-body-failure-wording",
+  "file": "hosted.go",
+  "find": "return 0, \"\", invalidJSONRead(parent, tctx, c.InvalidJSONAs, err)",
+  "replace": "return 0, \"\", redactErr(timeoutFix(parent, tctx, err), c.Key)"
+ },
+ {
+  "name": "hosted-body-failure-activity",
+  "file": "hosted.go",
+  "find": "\t\t\tc.Act.complete(resp.StatusCode)\n\t\t\tif successStatus(resp) {",
+  "replace": "\t\t\tif successStatus(resp) {"
+ },
+ {
+  "name": "hosted-body-failure-status",
+  "file": "hosted.go",
+  "find": "\t\t\tif successStatus(resp) {\n\t\t\t\treturn 0, \"\", invalidJSONRead",
+  "replace": "\t\t\tif !successStatus(resp) {\n\t\t\t\treturn 0, \"\", invalidJSONRead"
+ },
+ {
+  "name": "duckduckgo-body-rejection",
+  "file": "duckduckgo.go",
+  "find": "return nil, 0, bodyRejection(ctx, tctx, err)",
+  "replace": "return nil, 0, timeoutFix(ctx, tctx, err)"
+ },
+ {
+  "name": "exa-mcp-body-rejection",
+  "file": "exa.go",
+  "find": "return \"\", bodyRejection(ctx, tctx, err)",
+  "replace": "return \"\", timeoutFix(ctx, tctx, err)"
+ },
+ {
+  "name": "exa-body-rejection",
+  "file": "exa.go",
+  "find": "return nil, act.failedErr(redactErr(bodyRejection(ctx, tctx, err), apiKey))",
+  "replace": "return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))"
+ },
+ {
+  "name": "brave-body-rejection",
+  "file": "brave.go",
+  "find": "return nil, act.failedErr(redactErr(bodyRejection(ctx, tctx, err), apiKey))",
+  "replace": "return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))"
  }
 ]

@@ -66,7 +66,7 @@ under Pi 1402973a and pass `pigeq check` on PiG.
   follows the redirect the same way but drops the provider's credential header when the origin changes (hardening beyond the
   original). Baizhi and SearXNG never send the credential to another origin (Baizhi's fetch is `redirect: "error"`,
   SearXNG's `onRedirect` drops the configured headers).
-- A failed connection reads `fetch failed` and a body cut short `terminated`, as in Node, so the routing classifier treats it as
+- A failed connection reads `fetch failed` and a body cut short `terminated` on an error status; after a successful status the same body failure is `<api> returned invalid JSON: terminated` (see "Slice 13: a body that cannot be read"), so the routing classifier treats it as
   a network failure (`TestRestProviderTransportFailure`, scenario `web-search-searxng-drop`).
 - Baizhi's MCP client is written against the wire sequence of the SDK's streamable-HTTP client (initialize,
   `notifications/initialized`, the optional GET event stream, `tools/call`, DELETE with the session id), with the same
@@ -714,8 +714,8 @@ Brave, Exa (keyed and MCP), Perplexity, SERPdive, DuckDuckGo, Tavily, Kagi and O
 Crawl4AI, Firecrawl, the Bright Data Unlocker, Kagi and Ollama extraction and Gemini end in the monitor. A cancelled provider
 call reads "This operation was aborted" like the original's fetch rejection. The model fixture moved to
 `testdata/model-provider-requests.json` so mutation runs replay it too. Replay differences kept out of the recorder: Brave
-and Exa pass V8's JSON parser message through (Go cannot produce it), and a body read that fails under a deadline is
-"returned invalid JSON" with status 200 in the original but a plain deadline error here (restCallA, Kagi, Perplexity).
+and Exa pass V8's JSON parser message through (Go cannot produce it). A body that cannot be read after the headers
+arrived is "Slice 13: a body that cannot be read" below.
 
 Mutants of the activity code that are NOT in `mutations.json` because no test kills them yet (recorded, not equivalent):
 the GitHub clone entries (`github_extract.go`, 14 sites), the video and YouTube entries, the Kimi and OpenAI HTTP-error
@@ -881,3 +881,35 @@ tables are embedded gzip files decoded at first use (`dfd_tables.go`; the genera
 `port/gen-defuddle-mathml-tables.mjs` and `port/gen-html-entities.py` write them; a one-off comparison of all 22 decoded tables with the old
 map literals found them equal). Binary size: the ported pipeline is hand-written code (the Defuddle pipeline and its 26 extractors, the linkedom-like DOM and css-select,
 Temml and mhchem, mathml-to-latex, the JavaScript regular expression engine): see the PR body for the numbers.
+
+## Slice 13: a body that cannot be read after the headers arrived
+
+The original reads a 2xx body with `await response.json()` inside a `try` whose `catch` words every failure as
+`<api> returned invalid JSON: <message>`, whatever the cause: the signal's reason once the provider's own deadline fired
+(`The operation was aborted due to timeout`) or the caller aborted (`This operation was aborted`), or `terminated` when the
+connection dropped. The port used to answer the deadline with that message alone (`restCallA`, Kagi, Perplexity and the
+providers that share their shape), the caller's abort with `context canceled` and a dropped connection with `terminated`
+or the Go reader's own text. Every search provider now follows its original (`invalidJSONRead`, `bodyRejection`):
+
+- Serper, SerpBase, Valyu, Bocha, AnySearch (`restCallA`), Kagi, Perplexity, SERPdive, Tavily, Ollama search (`hostedSend`) and Ollama
+  Web Fetch, Kagi Extract: `<api> returned invalid JSON: <message>`, the activity entry completed with the status (Tavily, which logs
+  after its key loop, records the message unless the caller aborted).
+- SearXNG: the same wording; its catch block completes the entry with status 0 for a message that says "abort" and records the message otherwise.
+- XCrawl: `XCrawl API returned invalid response: response body is not valid JSON: <message>`.
+- SerpApi, Serply, You.com (`restCallB`): their outer catch block answers first, so a deadline stays `<name> request timed out after 60s`,
+  a cancelled caller `Aborted`, and a dropped connection is `<name> returned invalid JSON: terminated`.
+- Brave, Exa, DuckDuckGo and the Exa MCP call read the body with no catch block of their own, so the rejection itself is the error
+  (`terminated` where the port used to say `unexpected EOF`); Jina keeps its 408 text for a deadline.
+- On an error status the original reads `response.text()` with no catch block: a failed read stays the bare rejection, with the activity
+  entry completed with the status first (`restCallA`, SearXNG logs `HTTP n`, Ollama's `hostedSend`).
+
+Proof: `record-provider-requests.mjs` records four more endings for every provider's first case (a body cut by the deadline, the caller
+aborting during the body, a dropped connection, and the deadline on a 500) from the original under a recording `fetch` whose body
+rejects with the signal's reason, 59 + 19 cases in `provider-requests.json`; `provider_fixtures_test.go` replays them over a body that stalls until the
+request's own context ends (the deadline set short through `providerTimeoutOverride`; the abort fires from the body's first read).
+`record-hosted-requests.mjs` records the same for Kagi Extract and Ollama Web Fetch (`provider-wire.json`, 4 cases). The recorder
+keeps the text after `invalid JSON:` only when it is one of these three (a parser's own text differs between V8 and Go and stays dropped).
+`TestBodyReadFailureOverHTTP` shows over a real connection that a stalled body, a cancelled caller and a reset connection produce the three
+rejections the fixtures inject. Not covered: the body reads of the hosted fetch providers (Firecrawl, Crawl4AI, Bright Data, TinyFish, Parallel,
+Search1API, Querit, Searchinfinity), Gemini, the model-backed providers (OpenAI, xAI, Kimi, Mistral) and the page fetch itself keep the wording
+they had; no fixture of theirs reads a failing body yet.
