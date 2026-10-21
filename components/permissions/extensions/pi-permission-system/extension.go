@@ -158,12 +158,30 @@ type permissionSystem struct {
 	gates            *PermissionGateHandler
 	toolCall         func(event any, ctx sdk.Context) ToolCallResult
 	keys             tui.Keybindings
+	// contextOf builds the port's session context from the host's; tests replace it to drive the handlers with a synthetic one.
+	contextOf func(ctx sdk.Context) SessionContext
+	// gateTools and agentTools are the tool registries the handlers read; tests replace them.
+	gateTools  ToolRegistry
+	agentTools AgentToolRegistry
 }
+
+// gateToolsRef and agentToolsRef hand the handlers whatever registry the system currently holds.
+type gateToolsRef struct{ p *permissionSystem }
+
+func (r gateToolsRef) GetAll() []any            { return r.p.gateTools.GetAll() }
+func (r gateToolsRef) GetActive() []string      { return r.p.gateTools.GetActive() }
+func (r gateToolsRef) SetActive(names []string) { r.p.gateTools.SetActive(names) }
+
+type agentToolsRef struct{ p *permissionSystem }
+
+func (r agentToolsRef) GetAll() ([]any, error)       { return r.p.agentTools.GetAll() }
+func (r agentToolsRef) GetActive() ([]string, error) { return r.p.agentTools.GetActive() }
+func (r agentToolsRef) SetActive(names []string)     { r.p.agentTools.SetActive(names) }
 
 // sessionContext builds the port's session context from the host's: the narrow readers the session, the forwarding subsystem and the
 // authorizer selection use. A failing host call never reads as an affirmative: the project is untrusted unless the host says so, and
 // the system prompt accessor reports its error.
-func (p *permissionSystem) sessionContext(ctx sdk.Context) SessionContext {
+func (p *permissionSystem) hostSessionContext(ctx sdk.Context) SessionContext {
 	sm := ctx.SessionManager()
 	ui := NewSDKPromptUi(ctx, p.keys, nil)
 	return SessionContext{
@@ -200,12 +218,32 @@ func Extension() *sdk.Extension {
 	return e
 }
 
+// buildOptions are the seams the tests replace; the zero value is production: the SDK's event bus, and the host-backed tool
+// registries and session context.
+type buildOptions struct {
+	// events is the bus the node emits on (nil: the extension's pi.events).
+	events PermissionEventBus
+	// lifecycleBus is where the node subscribes to pi-subagents' child events (nil: the extension's pi.events).
+	lifecycleBus LifecycleEventBus
+}
+
 // newExtension is the composition root (index.ts piPermissionSystemExtension): it builds the extension and the state its handlers
 // share.
-func newExtension() (*sdk.Extension, *permissionSystem) {
+func newExtension() (*sdk.Extension, *permissionSystem) { return newExtensionWith(buildOptions{}) }
+
+func newExtensionWith(opts buildOptions) (*sdk.Extension, *permissionSystem) {
 	ext := sdk.New(extensionID)
 	p := &permissionSystem{binder: &hostBinder{}}
-	events := ext.Events()
+	p.contextOf = p.hostSessionContext
+	p.gateTools, p.agentTools = hostGateTools{p.binder}, hostAgentTools{p.binder}
+	var events PermissionEventBus = ext.Events()
+	if opts.events != nil {
+		events = opts.events
+	}
+	var lifecycleBus LifecycleEventBus = NewSDKLifecycleBus(ext.Events())
+	if opts.lifecycleBus != nil {
+		lifecycleBus = opts.lifecycleBus
+	}
 
 	dir := agentDir()
 	// getPackageDir() is Pi's own install dir; the SDK has no counterpart, so the auto-allowed infrastructure root for it is absent.
@@ -338,7 +376,7 @@ func newExtension() (*sdk.Extension, *permissionSystem) {
 	// Subscribe to pi-subagents' child lifecycle events so child sessions register and unregister without the core calling us (ADR
 	// 0002), and so a child that bound its extensions without loading one of ours is reported rather than silently ungated (#792).
 	childNodeAudit := NewChildNodeAudit(func(sessionID string) bool { return GetPermissionsService(sessionID) != nil }, p.logger)
-	unsubSubagentLifecycle, err := SubscribeSubagentLifecycle(NewSDKLifecycleBus(events), subagentRegistry, childNodeAudit)
+	unsubSubagentLifecycle, err := SubscribeSubagentLifecycle(lifecycleBus, subagentRegistry, childNodeAudit)
 	if err != nil {
 		unsubSubagentLifecycle = func() {}
 		details := newObject()
@@ -357,7 +395,7 @@ func newExtension() (*sdk.Extension, *permissionSystem) {
 	configIssueReporter := NewConfigIssueReporter(p.configStore, p.logger)
 	p.lifecycle = NewSessionLifecycleHandler(p.session, p.resolver, p.serviceLifecycle, p.logger, p.audit, configIssueReporter, p.dialogQueue)
 	turnPrep := NewSessionTurnPrep(p.session, func() { go bashparse.WarmBashParser() }, p.serviceLifecycle, configIssueReporter)
-	p.agentPrep = NewAgentPrepHandler(turnPrep, p.session, p.resolver, hostAgentTools{p.binder}, p.logger, subagentDetection)
+	p.agentPrep = NewAgentPrepHandler(turnPrep, p.session, p.resolver, agentToolsRef{p}, p.logger, subagentDetection)
 
 	gateRunner := NewGateRunner(p.resolver, p.sessionRules, p.selection, p.reporter, isYoloEnabled)
 	// This node's ancestors in the current process: the gates read their fact-shaping registrations through the inheriting lookups,
@@ -366,21 +404,21 @@ func newExtension() (*sdk.Extension, *permissionSystem) {
 	toolCallPipeline := NewToolCallGatePipeline(p.resolver, p.session,
 		NewInheritingToolInputFormatterLookup(formatterRegistry, ancestorNodes),
 		NewInheritingToolAccessExtractorLookup(accessExtractorRegistry, ancestorNodes))
-	p.gates = NewPermissionGateHandler(p.session, hostGateTools{p.binder}, toolCallPipeline, NewSkillInputGatePipeline(ResolverSkillInputInputs{Resolver: p.resolver}), gateRunner)
+	p.gates = NewPermissionGateHandler(p.session, gateToolsRef{p}, toolCallPipeline, NewSkillInputGatePipeline(ResolverSkillInputInputs{Resolver: p.resolver}), gateRunner)
 	p.toolCall = CreateFailClosedToolCall(func(event any, ctx sdk.Context) (GateOutcome, error) {
 		p.binder.bind(ctx)
-		return p.gates.HandleToolCall(event, p.sessionContext(ctx))
+		return p.gates.HandleToolCall(event, p.contextOf(ctx))
 	}, p.reporter, p.audit, p.logger)
 
 	ext.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, data map[string]any) (any, error) {
 		p.binder.bind(ctx)
 		reason, _ := data["reason"].(string)
-		return nil, p.lifecycle.HandleSessionStart(SessionStartPayload{Reason: reason}, p.sessionContext(ctx))
+		return nil, p.lifecycle.HandleSessionStart(SessionStartPayload{Reason: reason}, p.contextOf(ctx))
 	})
 	ext.OnEvent(sdk.EventResourcesDiscover, func(ctx sdk.Context, data map[string]any) (any, error) {
 		p.binder.bind(ctx)
 		reason, _ := data["reason"].(string)
-		p.lifecycle.HandleResourcesDiscover(ResourcesDiscoverPayload{Reason: reason}, p.sessionContext(ctx))
+		p.lifecycle.HandleResourcesDiscover(ResourcesDiscoverPayload{Reason: reason}, p.contextOf(ctx))
 		return nil, nil
 	})
 	ext.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -394,7 +432,7 @@ func newExtension() (*sdk.Extension, *permissionSystem) {
 		if err != nil {
 			return nil, err
 		}
-		if err := p.agentPrep.Handle(payload, p.sessionContext(ctx)); err != nil {
+		if err := p.agentPrep.Handle(payload, p.contextOf(ctx)); err != nil {
 			return nil, err
 		}
 		writeBackSkills(data, payload.Options)
@@ -403,7 +441,7 @@ func newExtension() (*sdk.Extension, *permissionSystem) {
 	ext.OnEvent(sdk.EventInput, func(ctx sdk.Context, data map[string]any) (any, error) {
 		p.binder.bind(ctx)
 		text, _ := data["text"].(string)
-		result, err := p.gates.HandleInput(text, p.sessionContext(ctx))
+		result, err := p.gates.HandleInput(text, p.contextOf(ctx))
 		if err != nil {
 			// The gate could not decide (for example the active agent could not be read): the input is swallowed, never let through.
 			ctx.Notify(UntrustedInputMessage(err), "warning")

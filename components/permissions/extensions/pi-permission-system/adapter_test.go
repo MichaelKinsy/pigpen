@@ -43,28 +43,41 @@ func rigWith(t *testing.T, config string, active ...string) *adapterRig {
 		os.WriteFile(p, []byte(config), 0o644)
 	}
 	r := &adapterRig{active: active}
-	all := []any{}
-	for _, n := range []string{"read", "bash", "edit", "write", "task"} {
-		all = append(all, map[string]any{"name": n})
-	}
-	r.h = StartHost(t, pps.Extension(), HostOptions{OnCall: func(method string, args map[string]any) (map[string]any, string) {
-		switch method {
-		case "isProjectTrusted":
-			return map[string]any{"trusted": true}, ""
-		case "getActiveTools":
-			return map[string]any{"tools": r.active}, ""
-		case "getAllTools":
-			return map[string]any{"tools": all}, ""
-		case "setActiveTools":
-			r.set = nil
-			for _, x := range args["tools"].([]any) {
-				r.set = append(r.set, x.(string))
-			}
-			r.active = r.set
-		}
-		return map[string]any{}, ""
-	}})
+	r.h = StartHost(t, pps.Extension(), HostOptions{OnCallValue: r.onCall})
 	return r
+}
+
+// onCall answers the host calls the extension makes: the session manager's readers, trust and the tool lists.
+func (r *adapterRig) onCall(method string, args map[string]any) (any, string) {
+	switch method {
+	case "sessionRead":
+		switch args["method"] {
+		case "getSessionId":
+			return "sess-1", ""
+		case "getSessionDir":
+			return "/sessions/sess-1", ""
+		case "getEntries", "getBranch":
+			return []any{}, ""
+		}
+		return nil, ""
+	case "isProjectTrusted":
+		return map[string]any{"trusted": true}, ""
+	case "getActiveTools":
+		return map[string]any{"tools": r.active}, ""
+	case "getAllTools":
+		all := []any{}
+		for _, n := range []string{"read", "bash", "edit", "write", "task"} {
+			all = append(all, map[string]any{"name": n})
+		}
+		return map[string]any{"tools": all}, ""
+	case "setActiveTools":
+		r.set = nil
+		for _, x := range args["tools"].([]any) {
+			r.set = append(r.set, x.(string))
+		}
+		r.active = r.set
+	}
+	return map[string]any{}, ""
 }
 
 func (r *adapterRig) uiCalls(method string) []map[string]any {
@@ -123,7 +136,10 @@ func TestAdapterSessionStart(t *testing.T) {
 	bad := rigWith(t, `{"permission":`, "read")
 	bad.h.Fire("session_start", map[string]any{})
 	n = bad.uiCalls("ui.notify")
-	eq(t, len(n), 1, "the config issue")
+	// the store's issue (ConfigIssueReporter) and the policy loader's (lifecycle.ts getConfigIssues) name the same file the same way,
+	// and both are shown, as in the original: the lifecycle handler does not deduplicate across the two sources
+	eq(t, len(n), 2, "the config issue, from the store and from the policy loader")
+	eq(t, n[0]["message"], n[1]["message"], "the same text")
 	eq(t, strings.HasPrefix(n[0]["message"].(string), "Failed to read config at '"), true, "text")
 	eq(t, bad.uiCalls("ui.setStatus")[0]["text"], "", "status cleared")
 
@@ -168,8 +184,10 @@ func TestAdapterSkillRead(t *testing.T) {
 	os.MkdirAll(filepath.Dir(configPath()), 0o755)
 	os.WriteFile(configPath(), []byte(`{"permission":{"*":"ask","path":"allow","external_directory":"allow","read":"allow"}}`), 0o644)
 	cwd := t.TempDir()
-	h := StartHost(t, pps.Extension(), HostOptions{Cwd: cwd})
-	r := &adapterRig{h: h}
+	noUI := false // an ask with no UI to answer it is blocked with its reason (the fake host has no dialog)
+	r := &adapterRig{active: []string{"read"}}
+	h := StartHost(t, pps.Extension(), HostOptions{Cwd: cwd, HasUI: &noUI, OnCallValue: r.onCall})
+	r.h = h
 	h.Fire("session_start", map[string]any{})
 	prompt := "x\n<available_skills>\n<skill>\n<name>demo</name>\n<description>d</description>\n<location>" + cwd +
 		"/skills/demo/SKILL.md</location>\n</skill>\n</available_skills>"

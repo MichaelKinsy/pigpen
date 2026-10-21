@@ -72,8 +72,6 @@ func makeLocalService() *svcRig {
 	return r
 }
 
-func sp2(s string) *string { return &s }
-
 const adapterSession = "adapter-session"
 
 func unpublishAdapter() {
@@ -154,7 +152,7 @@ func TestServiceLocatorTwins(t *testing.T) {
 	round := func() (*recordingResolver, PermissionsService) {
 		bashparse.ResetWarmBashParser()
 		r := newRecordingResolver()
-		r.result = PermissionCheckResult{ToolName: "bash", State: "allow", MatchedPattern: sp2("git *"), Source: "bash", Origin: "global"}
+		r.result = PermissionCheckResult{ToolName: "bash", State: "allow", MatchedPattern: sp("git *"), Source: "bash", Origin: "global"}
 		PublishPermissionsService(adapterSession, NewLocalPermissionsService(r, normalizerSession{NewPathNormalizer(PosixPathFlavor, "/test/project")},
 			&ToolInputFormatterRegistry{}, &ToolAccessExtractorRegistry{}, &AuthorizerRegistry{}))
 		return r, GetPermissionsService(adapterSession)
@@ -162,10 +160,10 @@ func TestServiceLocatorTwins(t *testing.T) {
 	tw(t, f, "resolves a non-path query via a tool intent", func(t *testing.T) {
 		defer unpublishAdapter()
 		r, s := round()
-		got := s.CheckPermission("bash", sp2("git push"), sp2("Explore"))
+		got := s.CheckPermission("bash", sp("git push"), sp("Explore"))
 		eq(t, got, r.result, "result")
 		eq(t, len(r.intents), 1, "one resolve")
-		want := ToolAccessIntent{Surface: "bash", AgentName: sp2("Explore")}
+		want := ToolAccessIntent{Surface: "bash", AgentName: sp("Explore")}
 		it := r.intents[0].(ToolAccessIntent)
 		eq(t, it.Surface, want.Surface, "surface")
 		eq(t, *it.AgentName, "Explore", "agent")
@@ -174,7 +172,7 @@ func TestServiceLocatorTwins(t *testing.T) {
 	tw(t, f, "resolves a path-surface query via an access-path intent", func(t *testing.T) {
 		defer unpublishAdapter()
 		r, s := round()
-		s.CheckPermission("read", sp2("/test/project/.env"), nil)
+		s.CheckPermission("read", sp("/test/project/.env"), nil)
 		it, ok := r.intents[0].(AccessPathAccessIntent)
 		eq(t, ok, true, "access-path")
 		eq(t, it.Surface, "read", "surface")
@@ -183,8 +181,8 @@ func TestServiceLocatorTwins(t *testing.T) {
 		defer unpublishAdapter()
 		r, s := round()
 		r.toolPerm = "deny"
-		eq(t, s.GetToolPermission("write", sp2("Explore")), "deny", "state")
-		eq(t, r.toolPermArgs, [][2]any{{"write", sp2("Explore")}}, "args")
+		eq(t, s.GetToolPermission("write", sp("Explore")), "deny", "state")
+		eq(t, r.toolPermArgs, [][2]any{{"write", sp("Explore")}}, "args")
 	})
 
 	tw(t, f, "delegates to the registry and returns its disposer", func(t *testing.T) {
@@ -247,7 +245,7 @@ func TestPermissionsServiceTwins(t *testing.T) {
 	const f = "service/permissions-service"
 	tw(t, f, "resolves a non-path surface through a tool intent", func(t *testing.T) {
 		r := makeLocalService()
-		r.service.CheckPermission("skill", sp2("my-skill"), sp2("my-agent"))
+		r.service.CheckPermission("skill", sp("my-skill"), sp("my-agent"))
 		it := r.resolver.intents[0].(ToolAccessIntent)
 		eq(t, it.Surface, "skill", "surface")
 		eq(t, marshalJSON(it.Input.(*jsObject), ""), `{"name":"my-skill"}`, "input")
@@ -263,7 +261,7 @@ func TestPermissionsServiceTwins(t *testing.T) {
 			gotCommand, gotAgent, gotResolver = c, a, res
 			return expected
 		}
-		result := r.service.CheckPermission("bash", sp2("cd /repo && npm install x"), sp2("my-agent"))
+		result := r.service.CheckPermission("bash", sp("cd /repo && npm install x"), sp("my-agent"))
 		eq(t, gotCommand, "cd /repo && npm install x", "command")
 		eq(t, *gotAgent, "my-agent", "agent")
 		eq(t, gotResolver == ScopedPermissionResolver(r.resolver), true, "resolver")
@@ -272,7 +270,7 @@ func TestPermissionsServiceTwins(t *testing.T) {
 	tw(t, f, "passes an empty string to the advisory resolver for a value-less bash query", func(t *testing.T) {
 		r := makeLocalService()
 		var gotCommand string
-		var gotAgent = sp2("unset")
+		var gotAgent = sp("unset")
 		r.service.bashAdvisory = func(c string, a *string, _ ScopedPermissionResolver) PermissionCheckResult {
 			gotCommand, gotAgent = c, a
 			return PermissionCheckResult{}
@@ -291,7 +289,7 @@ func TestPermissionsServiceTwins(t *testing.T) {
 			return p, nil
 		}
 		r := makeLocalService()
-		r.service.CheckPermission("external_directory", sp2("link"), nil)
+		r.service.CheckPermission("external_directory", sp("link"), nil)
 		eq(t, len(r.resolver.intents), 1, "one resolve")
 		it, ok := r.resolver.intents[0].(AccessPathAccessIntent)
 		eq(t, ok, true, "access-path")
@@ -300,7 +298,7 @@ func TestPermissionsServiceTwins(t *testing.T) {
 	})
 	tw(t, f, "resolves a path-bearing tool query (read) through an access-path intent", func(t *testing.T) {
 		r := makeLocalService()
-		r.service.CheckPermission("read", sp2("/test/project/.env"), nil)
+		r.service.CheckPermission("read", sp("/test/project/.env"), nil)
 		it, ok := r.resolver.intents[0].(AccessPathAccessIntent)
 		eq(t, ok, true, "access-path")
 		eq(t, it.Surface, "read", "surface")
@@ -315,13 +313,13 @@ func TestPermissionsServiceTwins(t *testing.T) {
 	tw(t, f, "returns the result from resolver.resolve", func(t *testing.T) {
 		r := makeLocalService()
 		r.resolver.result = PermissionCheckResult{State: "deny", ToolName: "skill"}
-		eq(t, r.service.CheckPermission("skill", sp2("my-skill"), nil), r.resolver.result, "result")
+		eq(t, r.service.CheckPermission("skill", sp("my-skill"), nil), r.resolver.result, "result")
 	})
 	tw(t, f, "delegates to resolver.getToolPermission", func(t *testing.T) {
 		r := makeLocalService()
 		r.resolver.toolPerm = "deny"
-		eq(t, r.service.GetToolPermission("write", sp2("my-agent")), "deny", "state")
-		eq(t, r.resolver.toolPermArgs, [][2]any{{"write", sp2("my-agent")}}, "args")
+		eq(t, r.service.GetToolPermission("write", sp("my-agent")), "deny", "state")
+		eq(t, r.resolver.toolPermArgs, [][2]any{{"write", sp("my-agent")}}, "args")
 	})
 	tw(t, f, "omits agentName when not provided", func(t *testing.T) {
 		r := makeLocalService()
@@ -331,8 +329,8 @@ func TestPermissionsServiceTwins(t *testing.T) {
 	tw(t, f, "delegates to resolver.isToolFullyDenied", func(t *testing.T) {
 		r := makeLocalService()
 		r.resolver.fullyDenied = true
-		eq(t, r.service.IsToolFullyDenied("write", sp2("my-agent")), true, "denied")
-		eq(t, r.resolver.fullyDenyArgs, [][2]any{{"write", sp2("my-agent")}}, "args")
+		eq(t, r.service.IsToolFullyDenied("write", sp("my-agent")), true, "denied")
+		eq(t, r.resolver.fullyDenyArgs, [][2]any{{"write", sp("my-agent")}}, "args")
 	})
 	// same title as the getToolPermission twin above: both are twinned by the one subtest name per file
 	tw(t, f, "omits agentName when not provided", func(t *testing.T) {
@@ -507,7 +505,7 @@ func TestServiceLifecycleTwins(t *testing.T) {
 		s := makeServiceLifecycle()
 		s.role.local = false
 		s.l.Activate(idCtx("node-session"))
-		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("node-session"), AdjudicatesLocally: false}}, "ready")
+		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp("node-session"), AdjudicatesLocally: false}}, "ready")
 	})
 	tw(t, f, "emits a null session id when the host exposes none", func(t *testing.T) {
 		s := makeServiceLifecycle()
@@ -518,7 +516,7 @@ func TestServiceLifecycleTwins(t *testing.T) {
 		s := makeServiceLifecycle()
 		s.role.local = false
 		s.l.AnnounceReady(idCtx("node-session"))
-		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("node-session"), AdjudicatesLocally: false}}, "ready")
+		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp("node-session"), AdjudicatesLocally: false}}, "ready")
 	})
 	tw(t, f, "announces only once per session", func(t *testing.T) {
 		defer clear("test-session")
@@ -546,7 +544,7 @@ func TestServiceLifecycleTwins(t *testing.T) {
 		s := makeServiceLifecycle()
 		ctx, _ := makeCtx()
 		s.l.AnnounceReady(ctx)
-		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("test-session"), AdjudicatesLocally: true}}, "ready")
+		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp("test-session"), AdjudicatesLocally: true}}, "ready")
 	})
 	tw(t, f, "recomputes the facts from the ctx it is handed", func(t *testing.T) {
 		defer clear("activated-session")
@@ -554,7 +552,7 @@ func TestServiceLifecycleTwins(t *testing.T) {
 		s.l.Activate(idCtx("activated-session"))
 		s.bus.emitted = nil
 		s.l.AnnounceReady(idCtx("latched-session"))
-		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("latched-session"), AdjudicatesLocally: true}}, "ready")
+		eq(t, s.bus.emitted, []PermissionsReadyEvent{{SessionID: sp("latched-session"), AdjudicatesLocally: true}}, "ready")
 	})
 	tw(t, f, "calls each subscription unsubscribe function", func(t *testing.T) {
 		calls := 0
@@ -617,17 +615,17 @@ func TestPermissionEventsReadyTwins(t *testing.T) {
 	})
 	tw(t, f, "emits the emitting node's facts on the permissions:ready channel", func(t *testing.T) {
 		bus := &readyBus{}
-		EmitReadyEvent(bus, PermissionsReadyEvent{SessionID: sp2("node-1"), AdjudicatesLocally: true})
-		eq(t, bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("node-1"), AdjudicatesLocally: true}}, "emitted")
+		EmitReadyEvent(bus, PermissionsReadyEvent{SessionID: sp("node-1"), AdjudicatesLocally: true})
+		eq(t, bus.emitted, []PermissionsReadyEvent{{SessionID: sp("node-1"), AdjudicatesLocally: true}}, "emitted")
 	})
 	tw(t, f, "emits a relaying node's facts unchanged", func(t *testing.T) {
 		bus := &readyBus{}
-		EmitReadyEvent(bus, PermissionsReadyEvent{SessionID: sp2("node-2"), AdjudicatesLocally: false})
-		eq(t, bus.emitted, []PermissionsReadyEvent{{SessionID: sp2("node-2"), AdjudicatesLocally: false}}, "emitted")
+		EmitReadyEvent(bus, PermissionsReadyEvent{SessionID: sp("node-2"), AdjudicatesLocally: false})
+		eq(t, bus.emitted, []PermissionsReadyEvent{{SessionID: sp("node-2"), AdjudicatesLocally: false}}, "emitted")
 	})
 	tw(t, f, "carries no protocolVersion (the broadcast contract is types + semver)", func(t *testing.T) {
 		eq(t, marshalJSON(ToRecord(map[string]any{"adjudicatesLocally": true, "sessionId": "n"}), ""), `{"adjudicatesLocally":true,"sessionId":"n"}`, "shape")
-		b, _ := jsonMarshalForTest(PermissionsReadyEvent{SessionID: sp2("n"), AdjudicatesLocally: true})
+		b, _ := jsonMarshalForTest(PermissionsReadyEvent{SessionID: sp("n"), AdjudicatesLocally: true})
 		eq(t, string(b), `{"sessionId":"n","adjudicatesLocally":true}`, "wire shape: the two facts and nothing else")
 	})
 	tw(t, f, "swallows event bus errors because broadcasts are best-effort", func(t *testing.T) {
