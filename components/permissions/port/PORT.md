@@ -410,3 +410,16 @@ Differences from the original, on purpose:
 - `getPackageDir()` (Pi's install directory) has no counterpart in PiG's Go SDK (`sdk.AgentDir()` is the only host path): the
   caller that builds the infrastructure roots must pass it, and until the SDK has it that root is missing.
 - `ScopeConfig` lives with the config layer; `ShellToolsConfig` here is a map of `ShellToolAlias`.
+
+## Mutation lists after the stack merge
+
+The slices were written on separate branches, so when they were merged into one stack some mutations of `port/mutations.json`,
+`port/mutations-config.json` and `port/mutations-forwarding.json` named code a later slice had moved or rewritten (`pigeq mutate`
+refuses a mutation whose `find` does not occur exactly once). They were retargeted to the same defect in the current code, each at
+the first branch where it broke: `surface-path` and `surface-options-only-path` (the path-surface set now lives in
+`pathsurfaces.go`) at `perm-paths-3`; the Config reader, status, session-start, agent-start, schema, loader and skill entries of
+`mutations.json` and `icu-accent` of `mutations-config.json` at `perm-config-3`; `ec-chmod`, `ec-mkdir-mode`, `io-dir-mode`,
+`io-file-mode`, `sv-rule-pattern` and `in-origin` at `perm-forwarding-3`. Two entries occurred twice and are now two each
+(`schema-proto` and `schema-proto-validate`; `skill-reset` and `skill-reset-discover`), and `icu-accent-case` is new. The one
+that survived, `skill-reset-discover` (a resources reload forgetting the listed skills), got a test in `TestAdapterSkillRead`. The
+static check is `python3 checkfinds.py` over every list: each `find` occurs once in its file.
