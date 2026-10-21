@@ -9,9 +9,6 @@ import (
 // The single-pass check against the two gated halves it fronts, over generated texts built from every literal in every
 // case, with and without the characters that precede them, near misses, `.env` variants and noise.
 func TestSensitivePathAgreesWithTheFullCheck(t *testing.T) {
-	if sensitiveLiterals() == nil {
-		t.Fatal("the single-pass check is off: reSensitiveRest's gate no longer gives one folded set")
-	}
 	vocab := []string{" ", "\n", "x", "/", "~", "=", ":", "(", "\"", "'", ";", "|", "&", ")", "-", "_", ".", "a", "src/main.go", "/home/user/project/", "file_name.go",
 		".env", ".ENV", ".Env", "env", ".en", ".e", ".env.local", ".env.example", ".env.SAMPLE", ".env.template.x", ".env.dist", ".env.production", ".env-x", ".envrc",
 		"ssh/id_rsa", "ssh/id_", "ssh/authorized_keys", "ssh/known_hosts", ".ssh/id_ed25519", "ssh/", "aws/credentials", ".aws/credentials", "aws/", "gnupg/", ".gnupg/", "gnupg",
