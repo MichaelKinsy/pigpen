@@ -20,6 +20,7 @@ func TestAcceptanceValidation(t *testing.T) {
 		v := func(in any) []string { return validateAcceptanceInput(in, "acceptance") }
 		j := func(s string) []string { return v(js(t, s)) }
 		equal(t, j(`{"level":"none"}`), []string{"acceptance.reason is required when level is none."}, "none without reason")
+		equal(t, j(`{"level":"none","reason":"  "}`), []string{"acceptance.reason is required when level is none."}, "none with a blank reason")
 		equal(t, v("none"), []string{`acceptance level "none" requires a reason; use { level: "none", reason: "..." }.`}, "none string")
 		polMatches(t, joinLines(v("verified")), `object form with at least one runtime verify command.*Use level "checked" or provide a non-empty acceptance\.verify array`)
 		for _, in := range []string{`{"level":"verified"}`, `{"level":"verified","verify":[]}`} {

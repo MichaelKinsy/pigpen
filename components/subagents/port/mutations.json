@@ -642,12 +642,6 @@
   "replace": "\tif false {\n"
  },
  {
-  "name": "ext-single-agent-type",
-  "file": "extension.go",
-  "find": "if name == \"\" {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution",
-  "replace": "if false {\n\t\treturn nil, sdk.NewToolError(\"Structured single-child execution"
- },
- {
   "name": "ext-action-type",
   "file": "extension.go",
   "find": "!isString || jsTrim(s) == \"\"",
@@ -807,7 +801,7 @@
   "name": "accept-none-reason",
   "file": "policy_acceptance.go",
   "find": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && jsTrim(reasonStr) != \"\") {",
-  "replace": "if levelStr == \"none\" && levelIsStr && !reasonIsStr {"
+  "replace": "if levelStr == \"none\" && levelIsStr && !(reasonIsStr && len(reasonStr) > 0) {"
  },
  {
   "name": "accept-false-shorthand",

@@ -155,3 +155,16 @@ func TestSubagentActionRecoveryThroughTheTool(t *testing.T) {
 		}
 	})
 }
+
+// Ending the session removes the async widget (the original's session_shutdown handler clears it).
+func TestSessionShutdownClearsTheAsyncWidget(t *testing.T) {
+	e := newAsyncEnv(t)
+	t.Setenv("FAKE_PIG_SLEEP", "60")
+	h := e.host(t)
+	h.FireAll("session_start", map[string]any{"reason": "startup"})
+	launch(t, h, map[string]any{})
+	eventually(t, "the widget", func() bool { return asyncWidgetDrawn(h) > 0 })
+	before := asyncWidgetCleared(h)
+	h.FireAll("session_shutdown", nil)
+	eq(t, asyncWidgetCleared(h), before+1, "cleared when the session ends")
+}
