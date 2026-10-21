@@ -29,7 +29,7 @@ func (r *rig) uiAgentOf(id string) *uiAgent {
 	return r.app.ui.agents[id]
 }
 
-func writeProjectSettings(t *testing.T, cwd, body string) {
+func writeUIProjectSettings(t *testing.T, cwd, body string) {
 	t.Helper()
 	writeSettings(t, filepath.Join(cwd, ".pi", "subagents.json"), body)
 }
@@ -128,7 +128,7 @@ func TestWidgetAndStatusReachTheHost(t *testing.T) {
 
 func TestWidgetModeOffRegistersNothing(t *testing.T) {
 	cwd := t.TempDir()
-	writeProjectSettings(t, cwd, `{"widgetMode": "off", "fleetView": false}`)
+	writeUIProjectSettings(t, cwd, `{"widgetMode": "off", "fleetView": false}`)
 	r := startRigIn(t, cwd)
 	r.Fire("tool_execution_start", obj{})
 	spawnBackground(r, "quiet")
@@ -254,7 +254,7 @@ func TestUISettings(t *testing.T) {
 			t.Fatal(err)
 		}
 		cwd := t.TempDir()
-		writeProjectSettings(t, cwd, `{"widgetMode": "sideways", "showCost": false, "showModel": true, "fleetView": "yes", "viewerMarkdown": "off"}`)
+		writeUIProjectSettings(t, cwd, `{"widgetMode": "sideways", "showCost": false, "showModel": true, "fleetView": "yes", "viewerMarkdown": "off"}`)
 		s := loadUISettings(cwd)
 		if s.widgetMode != widgetModeAll || s.showCost || !s.showModel || !s.fleetView || s.viewerMarkdown != viewerMarkdownOff {
 			t.Errorf("%+v", s)

@@ -17,7 +17,7 @@ import (
 // settle (the child's worktree created, the pre-cleanup hook run while it exists, the copy removed) takes the place of
 // the real worktree. The real manager's worktree and git behavior is the worktree lane's, tested there.
 
-type spawnCall struct {
+type wfSpawnCall struct {
 	typ, prompt string
 	opts        workflowSpawnOptions
 }
@@ -25,19 +25,19 @@ type spawnCall struct {
 // stubManager is a manager that spawns nothing; settle decides what each spawn produces. upstream: stubManager.
 type stubManager struct {
 	mu      sync.Mutex
-	spawns  []spawnCall
+	spawns  []wfSpawnCall
 	aborts  []string
 	resumes [][2]string
 	records map[string]workflowRecord
-	settle  func(c *spawnCall, spawned func(workflowRecord)) (workflowRecord, error)
+	settle  func(c *wfSpawnCall, spawned func(workflowRecord)) (workflowRecord, error)
 	resume  func(id, prompt string) (workflowRecord, bool, error)
 	n       int
 }
 
-func newStubManager(settle func(c *spawnCall, spawned func(workflowRecord)) (workflowRecord, error)) *stubManager {
+func newStubManager(settle func(c *wfSpawnCall, spawned func(workflowRecord)) (workflowRecord, error)) *stubManager {
 	m := &stubManager{records: map[string]workflowRecord{}, settle: settle}
 	if settle == nil {
-		m.settle = func(*spawnCall, func(workflowRecord)) (workflowRecord, error) { return record(nil), nil }
+		m.settle = func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) { return record(nil), nil }
 	}
 	m.resume = func(id, prompt string) (workflowRecord, bool, error) {
 		return record(func(r *workflowRecord) { r.ID, r.Result = id, "resumed" }), true, nil
@@ -61,7 +61,7 @@ func (m *stubManager) store(r workflowRecord) {
 }
 
 func (m *stubManager) SpawnAndWait(typ, prompt string, opts workflowSpawnOptions, onSpawned func(string)) (workflowRecord, error) {
-	call := &spawnCall{typ, prompt, opts}
+	call := &wfSpawnCall{typ, prompt, opts}
 	m.mu.Lock()
 	m.spawns = append(m.spawns, *call)
 	m.mu.Unlock()
@@ -95,7 +95,7 @@ func (m *stubManager) GetRecord(id string) (workflowRecord, bool) {
 	r, ok := m.records[id]
 	return r, ok
 }
-func (m *stubManager) call(i int) spawnCall { m.mu.Lock(); defer m.mu.Unlock(); return m.spawns[i] }
+func (m *stubManager) call(i int) wfSpawnCall { m.mu.Lock(); defer m.mu.Unlock(); return m.spawns[i] }
 func (m *stubManager) count() int           { m.mu.Lock(); defer m.mu.Unlock(); return len(m.spawns) }
 
 func wfRequest(mod func(*workflowSpawnRequest)) *workflowSpawnRequest {
@@ -171,7 +171,7 @@ func TestWorkflowHostSpawnMapping(t *testing.T) {
 	t.Cleanup(resetTypes)
 
 	tw(t, f, "spawns through the manager and maps a completed record onto the script's result", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) {
 				r.Result, r.ToolUses, r.LifetimeTokens, r.OutputTokens = "the answer", 3, 125, 20
 			}), nil
@@ -237,7 +237,7 @@ func TestWorkflowHostSpawnMapping(t *testing.T) {
 	schema := compileWorkflowSchema(map[string]any{"type": "object", "properties": map[string]any{"a": map[string]any{"type": "string"}}})
 	tw(t, f, "forwards a compiled schema and prefers the structured payload", func(t *testing.T) {
 		// result is prose and picks up the worktree branch note on the way out; the caller asked for a schema and must get the payload.
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.Result, r.StructuredJSON = "here you go", `{"a":"x"}` }), nil
 		})
 		res, _ := hostWith(m, nil).SpawnAgent(wfRequest(func(r *workflowSpawnRequest) { r.Schema = schema.Compiled }))
@@ -245,7 +245,7 @@ func TestWorkflowHostSpawnMapping(t *testing.T) {
 		eq(t, [2]any{res.OK, res.Text}, [2]any{true, `{"a":"x"}`})
 	})
 	tw(t, f, "falls back to the prose when no schema was asked for", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.Result = "here you go" }), nil
 		})
 		res, _ := hostWith(m, nil).SpawnAgent(wfRequest(nil))
@@ -270,7 +270,7 @@ func TestWorkflowHostSpawnMapping(t *testing.T) {
 		eq(t, m.call(0).opts.ThinkingLevel, "")
 	})
 	tw(t, f, "surfaces a strict worktree-isolation failure as a failed agent, not a rejection", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return workflowRecord{}, errors.New(`Cannot run with isolation: "worktree" — not a git repo`)
 		})
 		// A startup failure must land in the script as a null, so the rest of a fan-out keeps going.
@@ -280,10 +280,10 @@ func TestWorkflowHostSpawnMapping(t *testing.T) {
 		eq(t, strings.Contains(res.Error, `isolation: "worktree"`), true)
 	})
 	tw(t, f, "maps an errored record onto an error, and a stopped one onto skipped", func(t *testing.T) {
-		failing := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		failing := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.Status, r.Error = statusError, "boom" }), nil
 		})
-		stopped := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		stopped := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.Status = statusStopped }), nil
 		})
 		failed, _ := hostWith(failing, nil).SpawnAgent(wfRequest(nil))
@@ -399,7 +399,7 @@ func TestWorkflowHostWorktreeCwd(t *testing.T) {
 	t.Cleanup(resetTypes)
 	tw(t, f, "reports the directory the child ran in, so a gate verifies that tree", func(t *testing.T) {
 		worktree := t.TempDir()
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.WorktreePath = worktree }), nil
 		})
 		res, _ := hostWith(m, nil).SpawnAgent(wfRequest(func(r *workflowSpawnRequest) { r.Isolation = "worktree" }))
@@ -409,7 +409,7 @@ func TestWorkflowHostWorktreeCwd(t *testing.T) {
 		// The manager commits the child's changes to a branch and REMOVES the copy before the spawn resolves. Handing that
 		// path to a gate would fail every gated worktree agent with a spawn error instead of a test result.
 		gone := filepath.Join(t.TempDir(), "already-removed")
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.WorktreePath = gone }), nil
 		})
 		res, _ := hostWith(m, nil).SpawnAgent(wfRequest(func(r *workflowSpawnRequest) { r.Isolation = "worktree" }))
@@ -426,7 +426,7 @@ func TestWorkflowHostAbortResumeGate(t *testing.T) {
 	resetTypes()
 	t.Cleanup(resetTypes)
 	tw(t, f, "aborts the manager record the runtime's agent id stands for", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.ID = "manager-id-7" }), nil
 		})
 		h := hostWith(m, nil)
@@ -440,7 +440,7 @@ func TestWorkflowHostAbortResumeGate(t *testing.T) {
 		eq(t, len(m.aborts), 0)
 	})
 	tw(t, f, "resumes the same manager record, long after that agent settled", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.ID = "manager-id-7" }), nil
 		})
 		h := hostWith(m, nil)
@@ -502,7 +502,7 @@ func TestWorkflowGateWorktree(t *testing.T) {
 	isolatedChild := func(t *testing.T, status, failure string) (*stubManager, *string) {
 		var path string
 		m := newStubManager(nil)
-		m.settle = func(c *spawnCall, spawned func(workflowRecord)) (workflowRecord, error) {
+		m.settle = func(c *wfSpawnCall, spawned func(workflowRecord)) (workflowRecord, error) {
 			path = filepath.Join(t.TempDir(), "worktree")
 			_ = os.MkdirAll(path, 0o755)
 			rec := record(func(r *workflowRecord) { r.Status = statusRunning; r.WorktreePath = path; r.Result = "" })
@@ -618,7 +618,7 @@ func TestWorkflowGateWorktree(t *testing.T) {
 	tw(t, f, "runs the gate once, in the session's own tree", func(t *testing.T) {
 		// A child with no worktree of its own: the session's tree is the tree the child edited.
 		repo := t.TempDir()
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			_ = os.WriteFile(filepath.Join(repo, childFile), []byte("the child wrote this"), 0o644)
 			return record(func(r *workflowRecord) { r.Result = "done" }), nil
 		})
@@ -653,7 +653,7 @@ func TestWorkflowEffectiveConfig(t *testing.T) {
 	// childSessionReports stands in for pi resolving the child's session: the manager writes the invocation onto the
 	// record and then fires onSessionCreated, so firing this is what makes the invocation populated by the time the host reads it.
 	childSessionReports := func(model *workflowModel, thinking string) *stubManager {
-		return newStubManager(func(c *spawnCall, spawned func(workflowRecord)) (workflowRecord, error) {
+		return newStubManager(func(c *wfSpawnCall, spawned func(workflowRecord)) (workflowRecord, error) {
 			rec := record(func(r *workflowRecord) {
 				if model != nil {
 					name, id := wfDescribeModel(*model)

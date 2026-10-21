@@ -1,7 +1,6 @@
 package tintinweb_subagents
 
 import (
-	"encoding/json"
 	"math"
 	"os"
 	"path/filepath"
@@ -184,8 +183,6 @@ func TestAJobIsRefusedWhenAnotherProcessHoldsTheLock(t *testing.T) {
 	eq(t, err != nil && strings.Contains(err.Error(), "Failed to acquire schedule lock: "+file+".lock"), true)
 	eq(t, time.Since(start) >= 4*time.Second, true) // 100 tries, 50 ms apart
 }
-
-func itoa(n int) string { b, _ := json.Marshal(n); return string(b) }
 
 // ---- the extension around the scheduler ----
 

@@ -348,7 +348,7 @@ func TestWorkflowHostResults(t *testing.T) {
 		eq(t, g.Output, "out\nerr")
 	})
 	t.Run("a resume reports the record id and the effective model again", func(t *testing.T) {
-		m := newStubManager(func(*spawnCall, func(workflowRecord)) (workflowRecord, error) {
+		m := newStubManager(func(*wfSpawnCall, func(workflowRecord)) (workflowRecord, error) {
 			return record(func(r *workflowRecord) { r.ID = "manager-id-7" }), nil
 		})
 		m.resume = func(id, prompt string) (workflowRecord, bool, error) {

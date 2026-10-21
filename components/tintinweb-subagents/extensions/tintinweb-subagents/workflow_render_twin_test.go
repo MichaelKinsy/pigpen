@@ -2,7 +2,6 @@ package tintinweb_subagents
 
 import (
 	"regexp"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -21,8 +20,6 @@ func aEntry(index int, mut ...func(*workflowAgentEntry)) *workflowAgentEntry {
 	}
 	return e
 }
-
-func itoa(n int) string { return strconv.Itoa(n) }
 
 // card lays out a card at width 120 and now = START + 1000 unless the input says otherwise, as plain text.
 func card(in workflowCardInput) []string {

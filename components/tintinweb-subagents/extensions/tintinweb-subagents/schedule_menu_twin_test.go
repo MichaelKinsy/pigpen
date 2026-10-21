@@ -1,6 +1,7 @@
 package tintinweb_subagents
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,15 +37,6 @@ func jobIDs(rig *schedRig) []string {
 	return ids
 }
 
-func contains(list []string, s string) bool {
-	for _, e := range list {
-		if e == s {
-			return true
-		}
-	}
-	return false
-}
-
 func TestSchedulesMenu(t *testing.T) {
 	tw(t, fScheduleMenu, "warns and does nothing when the scheduler is not active", func(t *testing.T) {
 		ui := &fakeMenuUI{}
@@ -71,7 +63,7 @@ func TestSchedulesMenu(t *testing.T) {
 		b := addMenuJob(t, rig, "beta job")
 		m.showSchedulesMenu()
 		eq(t, jobIDs(rig), []string{a.ID})
-		eq(t, contains(jobIDs(rig), b.ID), false)
+		eq(t, slices.Contains(jobIDs(rig), b.ID), false)
 	})
 
 	// Names are truncated to 18 chars for column alignment, and they come from the LLM-authored `Agent` description, so
@@ -97,7 +89,7 @@ func TestSchedulesMenu(t *testing.T) {
 		second := addMenuJob(t, rig, nameB)
 		m.showSchedulesMenu()
 		eq(t, jobIDs(rig), []string{first.ID})
-		eq(t, contains(jobIDs(rig), second.ID), false)
+		eq(t, slices.Contains(jobIDs(rig), second.ID), false)
 	})
 	tw(t, fScheduleMenu, "cancels the first job when the first row is picked", func(t *testing.T) {
 		// The other direction: an off-by-one or a last-match resolver would pass the test above and fail this one.
@@ -107,7 +99,7 @@ func TestSchedulesMenu(t *testing.T) {
 		second := addMenuJob(t, rig, nameB)
 		m.showSchedulesMenu()
 		eq(t, jobIDs(rig), []string{second.ID})
-		eq(t, contains(jobIDs(rig), first.ID), false)
+		eq(t, slices.Contains(jobIDs(rig), first.ID), false)
 	})
 	tw(t, fScheduleMenu, "shows the SELECTED job's untruncated details in the confirm dialog", func(t *testing.T) {
 		// Guards the half of the bug the user could never catch: deleting the right job while confirming against the
@@ -131,7 +123,7 @@ func TestSchedulesMenu(t *testing.T) {
 		m.showSchedulesMenu()
 		surviving := jobIDs(rig)
 		eq(t, len(surviving), 10)
-		eq(t, contains(surviving, jobs[10].ID), false)
+		eq(t, slices.Contains(surviving, jobs[10].ID), false)
 	})
 	tw(t, fScheduleMenu, "cancels nothing when the picker returns a label we never offered", func(t *testing.T) {
 		ui := &fakeMenuUI{pick: func(string, []string) (string, bool) { return "something else entirely", true }}
