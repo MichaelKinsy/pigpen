@@ -1,8 +1,8 @@
 Pigpen herdr reporter
 Copyright 2026 Michael Kinsy (MIT, see LICENSE)
 
-The herdr:blocked listener in extensions/herdr/extension.go is ported from
-herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) at revision
+The Go extension in extensions/herdr is a port of extensions/herdr-agent-state.ts
+of herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) at revision
 3ec680471e8282e0a8a64545781069f822c0c212, by Christian Polzer and Hai-Fai
 Solutions, licensed under the Apache License, Version 2.0 (see
 LICENSE-herdr-pig). herdr-pig's NOTICE reads:

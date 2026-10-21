@@ -1,55 +1,61 @@
 package herdr
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
-// The reporter runs on agent_start, agent_settled and prompt events. Each handler takes the lock, decides
-// whether the state changed, and only a change queues a herdr call (a process exec, off the handler's path).
-// These benchmarks keep the reporter released so no herdr process is started: they measure the handler logic.
+// Allocations and time of the reporter's own work, without a herdr: the drain goroutine is held off (sending is set), so
+// these measure the state logic and the request encoding.
 //
 //	go test -run xxx -bench . -benchmem
+
 func benchReporter() *reporter {
-	return &reporter{env: herdrEnv{bin: "/bin/true", paneID: "p1"}, rootSession: true, released: true}
+	return &reporter{env: herdrEnv{endpoint: "/nonexistent", paneID: "w1:p1"}, rootSession: true, sending: true}
 }
 
-func BenchmarkReporterStartSettled(b *testing.B) {
+func BenchmarkTurn(b *testing.B) {
 	r := benchReporter()
-	path, id := "/home/u/.pig/agent/sessions/--work--/2026-01-01_abc.jsonl", "0199abcd-0000-7000-8000-000000000000"
+	resume := []string{"pig", "--session", "/home/user/.pig/agent/sessions/one.jsonl"}
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		r.agentStarted(path, id)
+	for b.Loop() {
+		r.agentStarted(resume)
 		r.agentSettled()
 	}
 }
 
-// The same state again (a second agent_start in one run, a repeated prompt event) is dropped without queueing.
-func BenchmarkReporterUnchangedState(b *testing.B) {
+// The same state again is dropped without queueing.
+func BenchmarkUnchangedState(b *testing.B) {
 	r := benchReporter()
-	r.agentStarted("/s.jsonl", "id")
+	resume := []string{"pig", "--session", "/s.jsonl"}
+	r.agentStarted(resume)
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		r.agentStarted("/s.jsonl", "id")
+	for b.Loop() {
+		r.agentStarted(resume)
 	}
 }
 
-func BenchmarkReportArgs(b *testing.B) {
+func BenchmarkBlockUnblock(b *testing.B) {
 	r := benchReporter()
-	r.sessionPath, r.sessionID = "/home/u/.pig/agent/sessions/--work--/2026-01-01_abc.jsonl", "0199abcd-0000-7000-8000-000000000000"
-	rep := report{state: stateBlocked, message: "Allow this tool call?", seq: 7}
+	label := newJSValue("approve command")
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		r.mu.Lock()
-		_ = r.reportArgsLocked(rep, true)
-		r.mu.Unlock()
+	for b.Loop() {
+		r.block(holderBus, label)
+		r.unblock(holderBus)
 	}
 }
 
-func BenchmarkMessageFrom(b *testing.B) {
-	title := strings.Repeat("Allow bash to run a long command?\n  with several lines\tand tabs ", 3)
+func BenchmarkEncodeStateRequest(b *testing.B) {
+	payload := statePayload{PaneID: "w1:p1", Source: source, Agent: agent, State: stateWorking, Seq: 1792509903106737, ResumeArgv: []string{"pig", "--session", "/home/user/.pig/agent/sessions/one.jsonl"}}
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
-		_ = messageFrom(title)
+	for b.Loop() {
+		if _, err := encodeLine(request{ID: requestID("state"), Method: "pane.report_agent", Params: payload}); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkResumeArgvFor(b *testing.B) {
+	file, id := "/home/user/.pig/agent/sessions/one.jsonl", "0199abcd-0000-7000-8000-000000000000"
+	b.ReportAllocs()
+	for b.Loop() {
+		_ = resumeArgvFor(&file, &id)
 	}
 }

@@ -1,0 +1,10 @@
+{
+  "name": "rpc-new-session",
+  "description": "A session replacement in an RPC host with the herdr variables set: session_shutdown (reason new) and session_start run, and neither reports nor releases.",
+  "env": {"HERDR_ENV": "1", "HERDR_SOCKET_PATH": "/nonexistent/herdr.sock", "HERDR_PANE_ID": "w1:p1"},
+  "llm": [{"text": "hello"}],
+  "steps": [
+    {"name": "turn", "rpc": {"type": "prompt", "message": "hi"}},
+    {"name": "new-session", "rpc": {"type": "prompt", "message": "/eq-new"}, "settleMs": 500}
+  ]
+}
