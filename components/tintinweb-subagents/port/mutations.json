@@ -1028,8 +1028,8 @@
  {
   "name": "suggest-case-sensitive",
   "file": "mention_provider.go",
-  "find": "strings.HasPrefix(strings.ToLower(t.Handle), typed)",
-  "replace": "strings.HasPrefix(t.Handle, typedRaw)"
+  "find": "typed := strings.ToLower(typedRaw)",
+  "replace": "typed := typedRaw"
  },
  {
   "name": "suggest-prefix-from-below",
@@ -1065,7 +1065,7 @@
   "name": "provider-warns-every-keystroke",
   "file": "mention_provider.go",
   "find": "if err != nil && st.warned.CompareAndSwap(false, true) {",
-  "replace": "if err != nil {"
+  "replace": "if err != nil && (st.warned.CompareAndSwap(false, true) || true) {"
  },
  {
   "name": "provider-apply-forced",
