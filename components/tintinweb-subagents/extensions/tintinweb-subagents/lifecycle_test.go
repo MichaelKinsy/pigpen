@@ -306,7 +306,7 @@ func TestShutdownClosesEveryKeptChildAndStopsTheRunningOnes(t *testing.T) {
 	kept, id := finished(t, r, "Plan")
 	running, _ := spawnOne(t, r, "Plan", nil)
 	eq(t, r.app.mgr.gcRunning(), true)
-	r.Fire("session_shutdown", obj{"reason": "quit"})
+	r.FireAll("session_shutdown", obj{"reason": "quit"})
 	for i := 0; i < 400 && !(func() bool { running.mu.Lock(); defer running.mu.Unlock(); return running.closed }()); i++ {
 		time.Sleep(5 * time.Millisecond)
 	}
@@ -324,7 +324,7 @@ func TestShutdownClosesEveryKeptChildAndStopsTheRunningOnes(t *testing.T) {
 func TestShutdownCancelsTheNoticesNotYetSent(t *testing.T) {
 	r := startRig(t)
 	_, id := finished(t, r, "Plan") // its notice is held for nudgeHold, for a consume to cancel it
-	r.Fire("session_shutdown", obj{"reason": "quit"})
+	r.FireAll("session_shutdown", obj{"reason": "quit"})
 	time.Sleep(nudgeHold + 300*time.Millisecond)
 	for _, m := range r.messages() {
 		if strings.Contains(m["message"].(map[string]any)["content"].(string), id) {
@@ -335,8 +335,8 @@ func TestShutdownCancelsTheNoticesNotYetSent(t *testing.T) {
 
 func TestASessionThatStartsAgainAfterShutdownKeepsItsConversations(t *testing.T) {
 	r := startRig(t)
-	r.Fire("session_shutdown", obj{"reason": "new"})
-	r.Fire("session_start", obj{"reason": "new"})
+	r.FireAll("session_shutdown", obj{"reason": "new"})
+	r.FireAll("session_start", obj{"reason": "new"})
 	kept, id := finished(t, r, "Plan")
 	time.Sleep(20 * time.Millisecond)
 	eq(t, kept.alive(), true)

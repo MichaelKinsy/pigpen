@@ -67,7 +67,7 @@ func fakeNestingPig() {
 	if n := nestedConfigFromEnv(); n != nil && n.toolsEnabled() {
 		a.registerNested(e, n)
 		host = StartHost(&testing.T{}, e, HostOptions{Cwd: cwd})
-		host.Fire("session_start", obj{"reason": "startup"})
+		host.FireAll("session_start", obj{"reason": "startup"})
 	} else {
 		a.reload(cwd)
 	}

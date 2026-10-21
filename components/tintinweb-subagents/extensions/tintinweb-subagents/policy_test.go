@@ -251,7 +251,7 @@ func TestMaxConcurrentSettingQueuesTheTail(t *testing.T) {
 
 func TestSettingsLoadedIsAnnouncedOnceAfterTheRegistration(t *testing.T) {
 	r := startRigNoSession(t)
-	r.Fire("session_start", obj{"reason": "startup"})
+	r.FireAll("session_start", obj{"reason": "startup"})
 	r.waitEmitted("subagents:ready")
 	var order []string
 	for _, c := range r.emits {
@@ -260,7 +260,7 @@ func TestSettingsLoadedIsAnnouncedOnceAfterTheRegistration(t *testing.T) {
 		}
 	}
 	eq(t, order, []string{"subagents:settings_loaded", "subagents:ready"})
-	r.Fire("session_start", obj{"reason": "resume"})
+	r.FireAll("session_start", obj{"reason": "resume"})
 	n := 0
 	for _, c := range r.emits {
 		if c == "subagents:settings_loaded" {
@@ -341,7 +341,7 @@ func TestTheStopRPCLeavesOwnedChildrenAlone(t *testing.T) {
 func TestShutdownUnsubscribesTheRPCListeners(t *testing.T) {
 	r := startRig(t)
 	eq(t, len(r.CallsTo("events.off")), 0)
-	r.Fire("session_shutdown", obj{})
+	r.FireAll("session_shutdown", obj{})
 	eq(t, len(r.CallsTo("events.off")), 4) // ping, spawn, stop, consume
 }
 

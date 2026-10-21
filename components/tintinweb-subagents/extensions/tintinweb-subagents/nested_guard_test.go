@@ -63,8 +63,8 @@ func TestAPanicInAnAgentsRunSettlesItAndFreesItsSlot(t *testing.T) {
 func TestAnUnportedSettingIsAnnouncedOncePerText(t *testing.T) {
 	r := settingsRig(t, `{"showCost": true}`)
 	eq(t, len(notices(r)), 1)
-	r.Fire("session_start", obj{"reason": "resume"})
-	r.Fire("session_start", obj{"reason": "resume"})
+	r.FireAll("session_start", obj{"reason": "resume"})
+	r.FireAll("session_start", obj{"reason": "resume"})
 	eq(t, len(notices(r)), 1)
 }
 

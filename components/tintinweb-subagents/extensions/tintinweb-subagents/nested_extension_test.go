@@ -99,7 +99,7 @@ func hostFor(t *testing.T, depth, max, allowed string) *Host {
 	t.Setenv(allowedEnv, allowed)
 	t.Setenv(agentIDEnv, "me")
 	h := StartHost(t, Extension(), HostOptions{Cwd: t.TempDir()})
-	h.Fire("session_start", obj{"reason": "startup"})
+	h.FireAll("session_start", obj{"reason": "startup"})
 	return h
 }
 
@@ -130,7 +130,7 @@ func TestExtensionInAChild(t *testing.T) {
 		t.Setenv(depthEnv, "")
 		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 		h := StartHost(t, Extension(), HostOptions{Cwd: t.TempDir()})
-		h.Fire("session_start", obj{"reason": "startup"})
+		h.FireAll("session_start", obj{"reason": "startup"})
 		eq(t, h.tools, map[string]bool{"Agent": true, "get_subagent_result": true, "steer_subagent": true})
 		eq(t, h.cmds["agents"], true)
 	})
@@ -170,7 +170,7 @@ func registeredNestedRig(t *testing.T, cwd string, cfg *nestedConfig) *rig {
 	r.app = newApp(e, r.fleet.start)
 	r.app.registerNested(e, cfg)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
-	r.Fire("session_start", obj{"reason": "startup"})
+	r.FireAll("session_start", obj{"reason": "startup"})
 	t.Cleanup(func() { r.app.mgr.abortAll() })
 	return r
 }
@@ -237,7 +237,7 @@ func TestWhatAnAgentOwnsStopsWithIt(t *testing.T) {
 	})
 	t.Run("session_shutdown stops every child", func(t *testing.T) {
 		r, mine, other := setup(t)
-		r.Fire(sdk.EventSessionShutdown, obj{"reason": "quit"})
+		r.FireAll(sdk.EventSessionShutdown, obj{"reason": "quit"})
 		settledRec(t, mine)
 		settledRec(t, other)
 		eq(t, []string{mine.Status, other.Status}, []string{statusStopped, statusStopped})

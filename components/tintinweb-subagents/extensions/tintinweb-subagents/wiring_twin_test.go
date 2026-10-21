@@ -296,14 +296,14 @@ func TestClearCompletedWiringTwins(t *testing.T) {
 	}
 	tw(t, f, "session_before_switch (user switches sessions) does NOT wipe the unread result", func(t *testing.T) {
 		r, id := completedBackground(t)
-		r.Fire("session_before_switch", obj{})
+		r.FireAll("session_before_switch", obj{})
 		out := r.must("get_subagent_result", obj{"agent_id": id})
 		eq(t, contains(out, "Agent not found"), false)
 		eq(t, contains(out, "THE-RESULT-PAYLOAD"), true)
 	})
 	tw(t, f, "session_start (/resume) does NOT wipe the unread result", func(t *testing.T) {
 		r, id := completedBackground(t)
-		r.Fire("session_start", obj{"reason": "resume"})
+		r.FireAll("session_start", obj{"reason": "resume"})
 		out := r.must("get_subagent_result", obj{"agent_id": id})
 		eq(t, contains(out, "Agent not found"), false)
 		eq(t, contains(out, "THE-RESULT-PAYLOAD"), true)
@@ -311,7 +311,7 @@ func TestClearCompletedWiringTwins(t *testing.T) {
 	tw(t, f, "once read, a session switch DOES evict it — the fix stays surgical, no leak", func(t *testing.T) {
 		r, id := completedBackground(t)
 		eq(t, contains(r.must("get_subagent_result", obj{"agent_id": id}), "THE-RESULT-PAYLOAD"), true)
-		r.Fire("session_before_switch", obj{})
+		r.FireAll("session_before_switch", obj{})
 		eq(t, contains(r.must("get_subagent_result", obj{"agent_id": id}), "Agent not found"), true)
 	})
 }
@@ -492,8 +492,8 @@ func TestForegroundResultRetrievalTwins(t *testing.T) {
 		a2 := newApp(e2, (&fleet{}).start)
 		a2.register(e2)
 		h2 := StartHost(t, e2, HostOptions{Cwd: t.TempDir(), OnCallValue: func(string, map[string]any) (any, string) { return obj{}, "" }})
-		h2.Fire("session_start", obj{"reason": "startup"})
-		h2.Fire("session_shutdown", obj{})
+		h2.FireAll("session_start", obj{"reason": "startup"})
+		h2.FireAll("session_shutdown", obj{})
 		out := r.must("get_subagent_result", obj{"agent_id": id})
 		eq(t, contains(out, "Agent not found"), false)
 		eq(t, contains(out, "THE-RESULT-PAYLOAD"), true)
@@ -501,7 +501,7 @@ func TestForegroundResultRetrievalTwins(t *testing.T) {
 	tw(t, f, "IS evicted by a session switch — its result was already delivered inline", func(t *testing.T) {
 		r := startRig(t)
 		_, id := steered(t, r)
-		r.Fire("session_before_switch", obj{})
+		r.FireAll("session_before_switch", obj{})
 		eq(t, contains(r.must("get_subagent_result", obj{"agent_id": id}), "Agent not found"), true)
 	})
 }
@@ -533,7 +533,7 @@ func TestRPCLifecycleGatingTwins(t *testing.T) {
 	})
 	tw(t, f, "advertises and registers RPC on session_start, and spawn works once bound", func(t *testing.T) {
 		r := startRigNoSession(t)
-		r.Fire("session_start", obj{"reason": "startup"})
+		r.FireAll("session_start", obj{"reason": "startup"})
 		r.waitEmitted("subagents:ready")
 		for _, ch := range channels {
 			eq(t, len(r.extBus[ch]), 1)
@@ -546,8 +546,8 @@ func TestRPCLifecycleGatingTwins(t *testing.T) {
 	tskip(t, f, "shows live tool activity for an RPC-spawned background agent", "the assertion is the widget's rendered row (\"running command…\") fed by the in-process session's tool activity callback; this port draws no widget (G5) and a child process reports no tool activity to the manager")
 	tw(t, f, "is idempotent — a second session_start does not re-advertise or double-register", func(t *testing.T) {
 		r := startRigNoSession(t)
-		r.Fire("session_start", obj{"reason": "startup"})
-		r.Fire("session_start", obj{"reason": "startup"})
+		r.FireAll("session_start", obj{"reason": "startup"})
+		r.FireAll("session_start", obj{"reason": "startup"})
 		r.waitEmitted("subagents:ready")
 		n := 0
 		for _, c := range r.emits {

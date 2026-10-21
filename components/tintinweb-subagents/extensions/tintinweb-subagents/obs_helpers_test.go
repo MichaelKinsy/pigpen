@@ -40,7 +40,7 @@ func startObsRigWith(t *testing.T, cwd, sessionFailure string, starter ...childS
 		}
 		return r.answer(method, args)
 	}})
-	r.Fire("session_start", obj{"reason": "startup"})
+	r.FireAll("session_start", obj{"reason": "startup"})
 	t.Cleanup(func() { r.app.mgr.abortAll() })
 	return r
 }

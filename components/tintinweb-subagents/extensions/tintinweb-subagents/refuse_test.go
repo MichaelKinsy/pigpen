@@ -149,7 +149,7 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	}
 	t.Run("the same notice is not repeated by a second session_start", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
-		r.Fire("session_start", obj{"reason": "reload"})
+		r.FireAll("session_start", obj{"reason": "reload"})
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
@@ -158,8 +158,8 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	})
 	t.Run("the same settings are announced once", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
-		r.Fire("session_start", obj{"reason": "new"})
-		r.Fire("session_start", obj{"reason": "resume"})
+		r.FireAll("session_start", obj{"reason": "new"})
+		r.FireAll("session_start", obj{"reason": "resume"})
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
@@ -176,12 +176,12 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	})
 	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
-		r.Fire("session_start", obj{"reason": "new"})
+		r.FireAll("session_start", obj{"reason": "new"})
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
-		r.Fire("session_start", obj{"reason": "new"})
+		r.FireAll("session_start", obj{"reason": "new"})
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
 	})
 }

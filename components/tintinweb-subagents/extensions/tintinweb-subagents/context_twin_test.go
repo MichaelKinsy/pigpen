@@ -78,7 +78,7 @@ func TestContextTwins(t *testing.T) {
 		t.Setenv(depthEnv, "1")
 		e := Extension()
 		host := StartHost(t, e, HostOptions{Cwd: t.TempDir()})
-		host.Fire("session_start", obj{"reason": "startup"})
+		host.FireAll("session_start", obj{"reason": "startup"})
 		eq(t, len(host.CallsTo("registerTool")), 0)
 		eq(t, len(host.CallsTo("events.on")), 0)
 	})

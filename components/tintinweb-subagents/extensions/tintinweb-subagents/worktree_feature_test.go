@@ -221,7 +221,7 @@ func TestShutdownPrunesWorktrees(t *testing.T) {
 		mu.Unlock()
 		return osGit(args, cwd, timeoutMS)
 	}
-	r.Fire("session_shutdown", obj{"reason": "quit"})
+	r.FireAll("session_shutdown", obj{"reason": "quit"})
 	mu.Lock()
 	defer mu.Unlock()
 	eq(t, calls, [][]string{{repo, "worktree", "prune"}})
@@ -256,7 +256,7 @@ func TestShutdownPrunesTheReposAgentsWereIsolatedIn(t *testing.T) {
 		}
 		return osGit(args, cwd, timeoutMS)
 	}
-	r.Fire("session_shutdown", obj{"reason": "quit"})
+	r.FireAll("session_shutdown", obj{"reason": "quit"})
 	mu.Lock()
 	defer mu.Unlock()
 	eq(t, pruned, map[string]bool{repo: true, other: true})

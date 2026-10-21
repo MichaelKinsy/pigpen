@@ -56,7 +56,7 @@ func startProcessRig(t *testing.T, agents map[string]string, script nestScript) 
 	r.app = newApp(e, startRPCChild)
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
-	r.Fire("session_start", obj{"reason": "startup"})
+	r.FireAll("session_start", obj{"reason": "startup"})
 	t.Cleanup(func() { r.app.mgr.abortAll() })
 	return &processRig{rig: r, logDir: logDir, cwd: cwd}
 }

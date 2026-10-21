@@ -208,8 +208,8 @@ func TestReadingAFinishedResultMarksItConsumed(t *testing.T) {
 func TestTheSettingsNoticeIsShownOncePerText(t *testing.T) {
 	r := startObsRig(t, obsWorkspace(t, `{"showModel": true}`, ""))
 	eq(t, len(notices(r)), 1)
-	r.Fire("session_start", obj{"reason": "reload"})
-	r.Fire("session_start", obj{"reason": "reload"})
+	r.FireAll("session_start", obj{"reason": "reload"})
+	r.FireAll("session_start", obj{"reason": "reload"})
 	eq(t, len(notices(r)), 1)
 }
 
@@ -243,7 +243,7 @@ func TestTheSessionIDIsAskedOncePerSession(t *testing.T) {
 	runningAgent(t, r)
 	runningAgent(t, r)
 	eq(t, asked()-before, 1)
-	r.Fire("session_start", obj{"reason": "new"}) // another session has another id
+	r.FireAll("session_start", obj{"reason": "new"}) // another session has another id
 	runningAgent(t, r)
 	eq(t, asked()-before, 2)
 }
