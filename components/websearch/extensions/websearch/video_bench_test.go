@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 // Benchmarks of the video routes with canned programs and a canned Gemini API (no process is
@@ -24,6 +25,12 @@ func benchVideoEnv(b *testing.B) string {
 	ResetCaches()
 	b.Cleanup(ResetCaches)
 	if err := os.WriteFile(filepath.Join(agent, "web-search.json"), []byte(`{"image":{"enabled":true}}`), 0o600); err != nil {
+		b.Fatal(err)
+	}
+	// A configuration file is older than the cache's two second racy-write window in real use; a file written
+	// a moment ago would measure the uncached path (a read and parse of the file on every call).
+	aged := time.Now().Add(-time.Minute)
+	if err := os.Chtimes(filepath.Join(agent, "web-search.json"), aged, aged); err != nil {
 		b.Fatal(err)
 	}
 	clip := filepath.Join(agent, "clip.mp4")
