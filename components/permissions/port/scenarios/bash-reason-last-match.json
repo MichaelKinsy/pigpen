@@ -68,5 +68,12 @@
   "files": {},
   "agentFiles": {
     "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"bash\": {\n      \"*\": \"ask\",\n      \"rm *\": {\n        \"action\": \"deny\",\n        \"reason\": \"no deletes\"\n      },\n      \"rm -i *\": \"allow\",\n      \"rm -i -r *\": {\n        \"action\": \"deny\",\n        \"reason\": \"never recursive\"\n      },\n      \"echo *\": \"allow\"\n    }\n  }\n}"
+  },
+  "commands": {
+    "npm": {
+      "mode": "canned",
+      "stdout": "/usr/lib/node_modules\n",
+      "exit": 0
+    }
   }
 }

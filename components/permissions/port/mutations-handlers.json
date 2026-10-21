@@ -1,0 +1,452 @@
+[
+ {
+  "name": "lc-untrusted-ignored",
+  "file": "lifecyclehandler.go",
+  "find": "projectTrusted := ctx.ProjectTrusted()\n\t// Reset first",
+  "replace": "projectTrusted := true\n\t// Reset first"
+ },
+ {
+  "name": "lc-refresh-before-reset",
+  "file": "lifecyclehandler.go",
+  "find": "\tif err := h.session.ResetForNewSession(ctx, projectTrusted); err != nil {\n\t\treturn err\n\t}\n\th.session.RefreshConfig(&ctx, projectTrusted)",
+  "replace": "\th.session.RefreshConfig(&ctx, projectTrusted)\n\tif err := h.session.ResetForNewSession(ctx, projectTrusted); err != nil {\n\t\treturn err\n\t}"
+ },
+ {
+  "name": "lc-no-paths-log",
+  "file": "lifecyclehandler.go",
+  "find": "\th.session.LogResolvedConfigPaths()\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-report-before-refresh",
+  "file": "lifecyclehandler.go",
+  "find": "\th.session.RefreshConfig(&ctx, projectTrusted)\n\th.session.LogResolvedConfigPaths()\n\t// The config was just re-read above, and the session is activated, so a warning has a UI to reach.\n\th.configIssues.Report()",
+  "replace": "\th.configIssues.Report()\n\th.session.RefreshConfig(&ctx, projectTrusted)\n\th.session.LogResolvedConfigPaths()"
+ },
+ {
+  "name": "lc-trust-warn-always",
+  "file": "lifecyclehandler.go",
+  "find": "\tif !projectTrusted {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")",
+  "replace": "\tif true {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")"
+ },
+ {
+  "name": "lc-trust-warn-never",
+  "file": "lifecyclehandler.go",
+  "find": "\tif !projectTrusted {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")",
+  "replace": "\tif false {\n\t\th.warnProjectUntrusted(ctx, \"session_start\")"
+ },
+ {
+  "name": "lc-agent-error-swallowed",
+  "file": "lifecyclehandler.go",
+  "find": "\tagentName, err := h.session.ResolveAgentName(ctx, \"\")\n\tif err != nil {\n\t\treturn err\n\t}",
+  "replace": "\tagentName, _ := h.session.ResolveAgentName(ctx, \"\")"
+ },
+ {
+  "name": "lc-no-issue-warn",
+  "file": "lifecyclehandler.go",
+  "find": "\t\th.logger.Warn(issue)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-reload-debug-always",
+  "file": "lifecyclehandler.go",
+  "find": "if event.Reason == \"reload\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "lc-reload-debug-never",
+  "file": "lifecyclehandler.go",
+  "find": "if event.Reason == \"reload\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "lc-service-not-activated",
+  "file": "lifecyclehandler.go",
+  "find": "\th.serviceLifecycle.Activate(ctx)\n\treturn nil",
+  "replace": "\treturn nil"
+ },
+ {
+  "name": "lc-discover-any-reason",
+  "file": "lifecyclehandler.go",
+  "find": "if event.Reason != \"reload\" {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "lc-discover-untrusted-ignored",
+  "file": "lifecyclehandler.go",
+  "find": "projectTrusted := ctx.ProjectTrusted()\n\th.session.Reload(projectTrusted)",
+  "replace": "projectTrusted := true\n\th.session.Reload(projectTrusted)"
+ },
+ {
+  "name": "lc-discover-no-warn",
+  "file": "lifecyclehandler.go",
+  "find": "\t\th.warnProjectUntrusted(ctx, \"resources_discover\")\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-discover-cwd-null",
+  "file": "lifecyclehandler.go",
+  "find": "details.set(\"cwd\", nil)",
+  "replace": "details.set(\"cwd\", \"\")"
+ },
+ {
+  "name": "lc-shutdown-status-kept",
+  "file": "lifecyclehandler.go",
+  "find": "\t\tctx.Notifier.SetStatus(permissionSystemStatusKey, \"\")\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-shutdown-no-audit",
+  "file": "lifecyclehandler.go",
+  "find": "\th.audit.WriteSummary(h.logger)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-shutdown-no-release",
+  "file": "lifecyclehandler.go",
+  "find": "\th.dialogs.ReleaseAll(SessionEndedReason)\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-shutdown-release-after",
+  "file": "lifecyclehandler.go",
+  "find": "\th.dialogs.ReleaseAll(SessionEndedReason)\n\th.session.Shutdown()",
+  "replace": "\th.session.Shutdown()\n\th.dialogs.ReleaseAll(SessionEndedReason)"
+ },
+ {
+  "name": "lc-shutdown-no-session",
+  "file": "lifecyclehandler.go",
+  "find": "\th.session.Shutdown()\n",
+  "replace": ""
+ },
+ {
+  "name": "lc-shutdown-no-teardown",
+  "file": "lifecyclehandler.go",
+  "find": "\th.serviceLifecycle.Teardown()\n}",
+  "replace": "}"
+ },
+ {
+  "name": "tp-no-warm",
+  "file": "sessionturnprep.go",
+  "find": "\tp.warmParser()\n",
+  "replace": ""
+ },
+ {
+  "name": "tp-activate-error-swallowed",
+  "file": "sessionturnprep.go",
+  "find": "\tif err := p.session.Activate(ctx); err != nil {\n\t\treturn err\n\t}",
+  "replace": "\t_ = p.session.Activate(ctx)"
+ },
+ {
+  "name": "tp-trust-ignored",
+  "file": "sessionturnprep.go",
+  "find": "p.session.RefreshConfig(&ctx, ctx.ProjectTrusted())",
+  "replace": "p.session.RefreshConfig(&ctx, true)"
+ },
+ {
+  "name": "tp-no-report",
+  "file": "sessionturnprep.go",
+  "find": "\tp.configIssues.Report()\n",
+  "replace": ""
+ },
+ {
+  "name": "tp-no-announce",
+  "file": "sessionturnprep.go",
+  "find": "\tp.readyAnnouncer.AnnounceReady(ctx)\n",
+  "replace": ""
+ },
+ {
+  "name": "tp-announce-first",
+  "file": "sessionturnprep.go",
+  "find": "\tp.session.RefreshConfig(&ctx, ctx.ProjectTrusted())",
+  "replace": "\tp.readyAnnouncer.AnnounceReady(ctx)\n\tp.session.RefreshConfig(&ctx, ctx.ProjectTrusted())"
+ },
+ {
+  "name": "ap-expose-inverted",
+  "file": "agentprep.go",
+  "find": "return !isToolFullyDenied(toolName, agentName)",
+  "replace": "return isToolFullyDenied(toolName, agentName)"
+ },
+ {
+  "name": "ap-agent-dropped",
+  "file": "agentprep.go",
+  "find": "return !isToolFullyDenied(toolName, agentName)",
+  "replace": "return !isToolFullyDenied(toolName, nil)"
+ },
+ {
+  "name": "ap-prep-error-swallowed",
+  "file": "agentprep.go",
+  "find": "\tif err := h.turnPrep.Prepare(ctx); err != nil {\n\t\treturn err\n\t}",
+  "replace": "\t_ = h.turnPrep.Prepare(ctx)"
+ },
+ {
+  "name": "ap-agent-error-swallowed",
+  "file": "agentprep.go",
+  "find": "\tagentName, err := h.session.ResolveAgentName(ctx, systemPrompt)\n\tif err != nil {\n\t\treturn err\n\t}",
+  "replace": "\tagentName, _ := h.session.ResolveAgentName(ctx, systemPrompt)"
+ },
+ {
+  "name": "ap-prompt-dropped",
+  "file": "agentprep.go",
+  "find": "h.session.ResolveAgentName(ctx, systemPrompt)",
+  "replace": "h.session.ResolveAgentName(ctx, \"\")"
+ },
+ {
+  "name": "ap-registered-ignored",
+  "file": "agentprep.go",
+  "find": "Registered: registeredSet}",
+  "replace": "Registered: map[string]bool{}}"
+ },
+ {
+  "name": "ap-set-active-skipped",
+  "file": "agentprep.go",
+  "find": "\th.toolRegistry.SetActive(allowedTools)\n",
+  "replace": ""
+ },
+ {
+  "name": "ap-no-debug",
+  "file": "agentprep.go",
+  "find": "\t\th.logger.Debug(\"tool_surface.changed\", details)\n",
+  "replace": ""
+ },
+ {
+  "name": "ap-debug-always",
+  "file": "agentprep.go",
+  "find": "\tif surface.changed {",
+  "replace": "\tif true {"
+ },
+ {
+  "name": "ap-subagent-not-checked",
+  "file": "agentprep.go",
+  "find": "\treturn h.detector.IsSubagent(detectionContext(ctx.AuthorityContext))",
+  "replace": "\treturn true, nil"
+ },
+ {
+  "name": "ap-custom-prompt-ignored",
+  "file": "agentprep.go",
+  "find": "if options.CustomPrompt == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "ap-tools-section-nil",
+  "file": "agentprep.go",
+  "find": "\t\t\ttools := \"\"\n\t\t\tif sections.Tools != nil {\n\t\t\t\ttools = *sections.Tools\n\t\t\t}",
+  "replace": "\t\t\ttools := \"\""
+ },
+ {
+  "name": "ap-rules-section-dropped",
+  "file": "agentprep.go",
+  "find": "\t\t\toptions.Sections.Set(\"rules\", sections.Rules)\n",
+  "replace": ""
+ },
+ {
+  "name": "ap-skills-not-narrowed",
+  "file": "agentprep.go",
+  "find": "\toptions.Skills = WithoutDeniedSkills(",
+  "replace": "\t_ = WithoutDeniedSkills("
+ },
+ {
+  "name": "ap-skill-entries-dropped",
+  "file": "agentprep.go",
+  "find": "\th.session.SetActiveSkillEntries(VisibleSkillPromptEntries(systemPrompt, rawSkillChecker{h.resolver}, agentName, h.session.GetPathNormalizer()))",
+  "replace": ""
+ },
+ {
+  "name": "ap-skill-session-rules",
+  "file": "agentprep.go",
+  "find": "return c.resolver.CheckPermission(surface, input, agentName, nil)",
+  "replace": "return c.resolver.CheckPermission(surface, input, agentName, Ruleset{})"
+ },
+ {
+  "name": "ap-fragments-joined",
+  "file": "agentprep.go",
+  "find": "strings.Join(fragments, \"\\n\")",
+  "replace": "strings.Join(fragments, \"\")"
+ },
+ {
+  "name": "sl-unpublish-unconditional",
+  "file": "servicelocator.go",
+  "find": "if sessionServices[sessionID] == service {\n\t\tdelete(sessionServices, sessionID)\n\t}",
+  "replace": "delete(sessionServices, sessionID)"
+ },
+ {
+  "name": "sl-publish-keeps-first",
+  "file": "servicelocator.go",
+  "find": "\tsessionServices[sessionID] = service\n\tsessionServicesMu.Unlock()",
+  "replace": "\tif _, held := sessionServices[sessionID]; !held {\n\t\tsessionServices[sessionID] = service\n\t}\n\tsessionServicesMu.Unlock()"
+ },
+ {
+  "name": "sv-no-rearm",
+  "file": "servicelifecycle.go",
+  "find": "\tl.announced = false\n\tl.mu.Unlock()\n\tif sessionID",
+  "replace": "\tl.mu.Unlock()\n\tif sessionID"
+ },
+ {
+  "name": "sv-announce-always",
+  "file": "servicelifecycle.go",
+  "find": "\tif l.announced {\n\t\tl.mu.Unlock()\n\t\treturn\n\t}",
+  "replace": "\tif false {\n\t\tl.mu.Unlock()\n\t\treturn\n\t}"
+ },
+ {
+  "name": "sv-announce-not-latched",
+  "file": "servicelifecycle.go",
+  "find": "\tl.announced = true\n\tl.mu.Unlock()\n\tl.emitReady(ctx)",
+  "replace": "\tl.mu.Unlock()\n\tl.emitReady(ctx)"
+ },
+ {
+  "name": "sv-publish-after-ready",
+  "file": "servicelifecycle.go",
+  "find": "\t\tPublishPermissionsService(sessionID, l.service)\n\t\tl.mu.Lock()\n\t\tl.publishedSessionID = &sessionID\n\t\tl.mu.Unlock()\n\t}\n\tl.emitReady(ctx)",
+  "replace": "\t\tl.mu.Lock()\n\t\tl.publishedSessionID = &sessionID\n\t\tl.mu.Unlock()\n\t}\n\tl.emitReady(ctx)\n\tif sessionID, ok := ReadSessionID(ctx.SessionManager); ok {\n\t\tPublishPermissionsService(sessionID, l.service)\n\t}"
+ },
+ {
+  "name": "sv-teardown-no-unsubscribe",
+  "file": "servicelifecycle.go",
+  "find": "\tfor _, unsubscribe := range l.subscriptions {\n\t\tunsubscribe()\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-teardown-no-unpublish",
+  "file": "servicelifecycle.go",
+  "find": "\t\tUnpublishPermissionsService(*published, l.service)\n",
+  "replace": ""
+ },
+ {
+  "name": "sv-teardown-keeps-id",
+  "file": "servicelifecycle.go",
+  "find": "\tpublished := l.publishedSessionID\n\tl.publishedSessionID = nil",
+  "replace": "\tpublished := l.publishedSessionID"
+ },
+ {
+  "name": "sv-ready-role-inverted",
+  "file": "servicelifecycle.go",
+  "find": "AdjudicatesLocally: l.role.AdjudicatesLocally()}",
+  "replace": "AdjudicatesLocally: !l.role.AdjudicatesLocally()}"
+ },
+ {
+  "name": "sv-ready-id-always",
+  "file": "servicelifecycle.go",
+  "find": "\tvar id *string\n\tif sessionID, ok := ReadSessionID(ctx.SessionManager); ok {\n\t\tid = &sessionID\n\t}",
+  "replace": "\tid := new(string)"
+ },
+ {
+  "name": "ps-bash-not-advisory",
+  "file": "permissionsservice.go",
+  "find": "if surface == \"bash\" {",
+  "replace": "if surface == \"bashx\" {"
+ },
+ {
+  "name": "ps-bash-value-dropped",
+  "file": "permissionsservice.go",
+  "find": "command = *value",
+  "replace": "command = \"\""
+ },
+ {
+  "name": "ps-mcp-not-prefixed",
+  "file": "permissionsservice.go",
+  "find": "return s.resolver.ResolvePrefixed(intent)",
+  "replace": "return s.resolver.Resolve(ToolAccessIntent{Surface: surface, AgentName: agentName})"
+ },
+ {
+  "name": "ps-tool-permission-agent",
+  "file": "permissionsservice.go",
+  "find": "return s.resolver.GetToolPermission(toolName, agentName)",
+  "replace": "return s.resolver.GetToolPermission(toolName, nil)"
+ },
+ {
+  "name": "ps-fully-denied-agent",
+  "file": "permissionsservice.go",
+  "find": "return s.resolver.IsToolFullyDenied(toolName, agentName)",
+  "replace": "return s.resolver.IsToolFullyDenied(toolName, nil)"
+ },
+ {
+  "name": "ps-extractor-unwrapped",
+  "file": "permissionsservice.go",
+  "find": "if resolved := s.accessExtractors.Resolve(toolName); resolved != nil {\n\t\treturn resolved.Extractor\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ba-cold-agent-dropped",
+  "file": "bashadvisory.go",
+  "find": "Input: o, AgentName: agentName})",
+  "replace": "Input: o})"
+ },
+ {
+  "name": "ba-warm-ignored",
+  "file": "bashadvisory.go",
+  "find": "if !warm {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ev-ready-channel",
+  "file": "permissionevents.go",
+  "find": "const PermissionsReadyChannel = \"permissions:ready\"",
+  "replace": "const PermissionsReadyChannel = \"permissions:ready \""
+ },
+ {
+  "name": "ev-ready-unrecovered",
+  "file": "permissionevents.go",
+  "find": "func EmitReadyEvent(events PermissionEventBus, event PermissionsReadyEvent) {\n\tdefer func() { _ = recover() }()",
+  "replace": "func EmitReadyEvent(events PermissionEventBus, event PermissionsReadyEvent) {"
+ },
+ {
+  "name": "cr-yolo-never",
+  "file": "extension.go",
+  "find": "isYoloEnabled := func() bool { return isYoloModeEnabled(p.configStore.Current()) }",
+  "replace": "isYoloEnabled := func() bool { return false }"
+ },
+ {
+  "name": "cr-trust-default",
+  "file": "extension.go",
+  "find": "return err == nil && trusted\n\t\t},",
+  "replace": "return true\n\t\t},"
+ },
+ {
+  "name": "cr-input-error-allows",
+  "file": "extension.go",
+  "find": "\t\t\tctx.Notify(UntrustedInputMessage(err), \"warning\")\n\t\t\treturn map[string]any{\"action\": \"handled\"}, nil",
+  "replace": "\t\t\treturn nil, nil"
+ },
+ {
+  "name": "cr-input-handled-allows",
+  "file": "extension.go",
+  "find": "\t\tif result.Action == \"handled\" {\n\t\t\treturn map[string]any{\"action\": \"handled\"}, nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cr-flavor-posix",
+  "file": "extension.go",
+  "find": "p.hostFlavor = PathFlavorForPlatform(runtime.GOOS)",
+  "replace": "p.hostFlavor = PathFlavorForPlatform(\"linux\")"
+ },
+ {
+  "name": "cr-lifecycle-bus-unsubscribed",
+  "file": "extension.go",
+  "find": "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, []func(){unsubSubagentLifecycle})",
+  "replace": "p.serviceLifecycle = NewPermissionServiceLifecycle(service, p.selection, events, nil)"
+ },
+ {
+  "name": "cr-service-not-observed",
+  "file": "extension.go",
+  "find": "NewObservedAuthorizerRegistrar(authorizerRegistry, p.selection, p.logger))",
+  "replace": "authorizerRegistry)"
+ },
+ {
+  "name": "cr-skills-not-written-back",
+  "file": "extension.go",
+  "find": "\t\twriteBackSkills(data, payload.Options)\n",
+  "replace": ""
+ },
+ {
+  "name": "cr-timeout-default",
+  "file": "extension.go",
+  "find": "return PermissionForwardingTimeoutMs\n\t\t\t},",
+  "replace": "return 0\n\t\t\t},"
+ },
+ {
+  "name": "cr-warm-sync",
+  "file": "extension.go",
+  "find": "func() { go bashparse.WarmBashParser() }",
+  "replace": "func() {}"
+ }
+]

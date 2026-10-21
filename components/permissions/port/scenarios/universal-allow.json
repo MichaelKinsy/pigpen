@@ -40,5 +40,12 @@
   },
   "agentFiles": {
     "extensions/pi-permission-system/config.json": "{\n  \"permission\": {\n    \"path\": \"allow\",\n    \"external_directory\": \"allow\",\n    \"*\": \"allow\"\n  }\n}"
+  },
+  "commands": {
+    "npm": {
+      "mode": "canned",
+      "stdout": "/usr/lib/node_modules\n",
+      "exit": 0
+    }
   }
 }

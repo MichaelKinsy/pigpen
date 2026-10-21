@@ -2,12 +2,27 @@
   "name": "config-issue",
   "description": "an unreadable-key config issue is announced at session start and not repeated on later turns",
   "llm": [
-    { "text": "done" }
+    {
+      "text": "done"
+    }
   ],
   "steps": [
-    { "name": "prompt", "rpc": { "type": "prompt", "message": "hello" } }
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
   ],
   "agentFiles": {
     "extensions/pi-permission-system/config.json": "{\n  \"nope\": 1\n}"
+  },
+  "commands": {
+    "npm": {
+      "mode": "canned",
+      "stdout": "/usr/lib/node_modules\n",
+      "exit": 0
+    }
   }
 }
