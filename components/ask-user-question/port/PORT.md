@@ -99,7 +99,7 @@ Host: xd670, CPUs 64-127, Pi built from commit 1402973a (`pi 1.3.0`, the Pi that
   port's own Binary matched Pi's order once and the reverse in the following run. Fix: PiG's
   `fix/parallel-tool-ui-order`. The scenario is kept un-normalized and is excluded from mutation kill counts until
   the fix lands.
-- **Mutations.** `pigeq mutate --unit`: 111 mutations, 0 not killed, with `two-calls` excluded (a mutant that only makes
+- **Mutations.** `pigeq mutate --unit`: 117 mutations, 0 not killed, with `two-calls` excluded (a mutant that only makes
   `two-calls` fail is not a kill). With the earlier runs counting `two-calls`, 6 mutants had survived undetected; each
   now has a unit test: the multi-select dialog title (the mutation now targets `en.json`, where the English text lives;
   the constant in `rpc.go` is only the fallback for a key a table lacks), key releases at the component, the external

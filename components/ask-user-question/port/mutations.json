@@ -530,8 +530,8 @@
  {
   "name": "nil-custom-result-not-walked",
   "file": "extension.go",
-  "find": "if raw == nil {\n\t\treturn a.walkDialogs(h, typed)",
-  "replace": "if raw == nil {\n\t\treturn toResult(buildQuestionnaireResponse(nil, typed))"
+  "find": "return a.walkDialogs(h, typed)\n\t}\n\tresult, ok := decodeResult(raw)",
+  "replace": "return toResult(buildQuestionnaireResponse(nil, typed))\n\t}\n\tresult, ok := decodeResult(raw)"
  },
  {
   "name": "listener-not-removed",
@@ -616,6 +616,42 @@
   "file": "questionnaire.go",
   "find": "return 24\n}",
   "replace": "return 0\n}"
+ },
+ {
+  "name": "refusal-collapse-key-allowed",
+  "file": "refusal.go",
+  "find": "if key := resolveCollapseKey(); key != defaultCollapseKey && key != collapseKeyOff {",
+  "replace": "if key := resolveCollapseKey(); false && key != defaultCollapseKey && key != collapseKeyOff {"
+ },
+ {
+  "name": "refusal-off-key-refused",
+  "file": "refusal.go",
+  "find": "key != defaultCollapseKey && key != collapseKeyOff",
+  "replace": "key != defaultCollapseKey"
+ },
+ {
+  "name": "refusal-long-preview-allowed",
+  "file": "refusal.go",
+  "find": "if utf16Len(o.Preview) > maxPreviewChars {",
+  "replace": "if utf16Len(o.Preview) > maxPreviewChars && false {"
+ },
+ {
+  "name": "refusal-preview-boundary",
+  "file": "refusal.go",
+  "find": "if utf16Len(o.Preview) > maxPreviewChars {",
+  "replace": "if utf16Len(o.Preview) >= maxPreviewChars {"
+ },
+ {
+  "name": "refusal-utf16-astral-one-unit",
+  "file": "refusal.go",
+  "find": "if r > 0xFFFF {",
+  "replace": "if false {"
+ },
+ {
+  "name": "refusal-not-applied-in-fallback",
+  "file": "extension.go",
+  "find": "if err := refuseUnported(typed); err != nil {",
+  "replace": "if err := refuseUnported(typed); err != nil && false {"
  },
  {
   "name": "legacy-keybinding-not-migrated",

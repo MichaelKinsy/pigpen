@@ -126,7 +126,7 @@ func (a *app) runQuestionnaire(h host, typed questionParams) (any, error) {
 	}
 	if raw == nil {
 		// The host cannot render a component: the dialog walker asks, and what it cannot carry is refused.
-		if err := refuseUnported(h.Mode(), typed); err != nil {
+		if err := refuseUnported(typed); err != nil {
 			return nil, err
 		}
 		return a.walkDialogs(h, typed)

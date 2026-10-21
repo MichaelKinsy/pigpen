@@ -19,11 +19,9 @@ func unsupported(feature string) error {
 }
 
 // refuseUnported reports the first option of this call, or setting of the user's config, that the dialog walker
-// cannot honour in a terminal (mode other than "rpc", where the original shows its questionnaire).
-func refuseUnported(mode string, p questionParams) error {
-	if mode == "rpc" {
-		return nil
-	}
+// cannot honour. It runs only where the walker answers a terminal host that cannot render the questionnaire: on an
+// RPC host the walker is the original, and a host that renders the questionnaire does not use it.
+func refuseUnported(p questionParams) error {
 	if key := resolveCollapseKey(); key != defaultCollapseKey && key != collapseKeyOff {
 		return unsupported(`the collapseKey setting (the collapse key belongs to the interactive questionnaire)`)
 	}
