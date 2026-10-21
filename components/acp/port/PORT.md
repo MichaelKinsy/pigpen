@@ -55,7 +55,7 @@ built Piglet Binary. See "Results" below.
 | S5 | `bash.ts` | bash as a display terminal via `_meta` (`terminal_info`, `terminal_output` deltas, `terminal_exit`) | `Bash*` | `TestBashHelpers`, tool-call twins | mapped |
 | S6 | `session.ts` usage | `usage_update` from `get_session_stats.contextUsage` before the turn resolves; never breaks the turn | `Session.PublishContextUsage` | usage twins | mapped |
 | S7 | `session.ts` retry notices | `auto_retry_start` / `auto_retry_end` chunks | same | retry twins | mapped |
-| S8 | `session.ts` compaction notices | `auto_compaction_start` / `auto_compaction_end` chunks | same | compaction twins | mapped as upstream; Pi 1.3.0 and PiG never send these names, so neither shows a notice (F1, owner decision pending) |
+| S8 | `session.ts` compaction notices | `auto_compaction_start` / `auto_compaction_end` chunks | same | compaction twins | mapped as upstream; Pi 1.3.0 and PiG never send these names, so neither shows a notice (F1, owner-approved as the original; the mapping is a tracked optional follow-up) |
 | S9 | `session.ts` extension UI | `select` and `confirm` become `session/request_permission`; `input` and `editor` are cancelled with a visible notice; `notify` becomes a chunk with its severity; anything else is cancelled | same | permission twins, `TestSessionExtensionUI`, `TestE2EExtensionSelectBecomesPermissionRequest` | mapped |
 | S10 | `prompt.ts` | text, resource links, embedded resources, images, audio marker | `PromptToPiMessage` | prompt twins | mapped (marker names pig-acp) |
 | S11 | `pi-tools.ts` | tool result text: diff, content, stdout/stderr/exit code, JSON | `ToolResultToText` | pi-tools twins | mapped |
@@ -68,13 +68,13 @@ built Piglet Binary. See "Results" below.
 
 ## Findings about the hosts and about the original
 
-- **F1: compaction event names (owner decision pending).** The original handles `auto_compaction_start` and `auto_compaction_end`. Pi 1.3.0
+- **F1: compaction event names (owner decision 2026-10-20: keep as the original).** The original handles `auto_compaction_start` and `auto_compaction_end`. Pi 1.3.0
   (`agent-session.ts:209`, checked at pi-mono `1402973a`) and PiG emit `compaction_start` (reason `manual`, `threshold` or `overflow`) and
   `compaction_end`; Pi 0.84 and later renamed them. The original's two notices therefore never appear against these hosts, and the port
   matches that: it handles the original's two event names and nothing else (twins keep the old names; the skipped twin at
   `session_events_test.go` names the gap). Showing a notice for the new names would add behavior the original does not have in practice, so it
-  stays pending the owner. Recommendation: map `compaction_start`/`compaction_end` with reason `threshold` or `overflow` to the same two
-  texts (a `manual` compaction is already announced by the `/compact` reply).
+  stays as the original does it: the owner approved this on 2026-10-20. Mapping `compaction_start`/`compaction_end` with reason `threshold` or `overflow`
+  to the same two texts (a `manual` compaction is already announced by the `/compact` reply) stays a tracked optional follow-up, not a won't-do.
 - **F2: update notice (ported, D12).** The original asks npm whether a newer Pi exists. The port runs `npm view @pi-in-go/pig version` the same way to learn whether a newer PiG
   exists and points at `pig update`. PiG's own startup check reads a signed release manifest that only pig can verify
   and offers no check-only command, so that source is not available to a companion; npm is. It honors PiG's offline switches.
@@ -125,8 +125,7 @@ built Piglet Binary. See "Results" below.
 | D14 | version comparison splits on `.` and `-`, so `0.5.1+1.3.0.1402973a` has a `NaN` patch and a patch release is never noticed | splits on `+` as well; the notice shows the PiG version before the `+` | PiG's `--version` is `<pig>+<pi>` |
 
 Named gaps (skipped tests, never silent): the simulated-Windows `.cmd` spawn twin (Go cannot fake `runtime.GOOS`; the shell
-predicate is tested with an explicit `goos`, Windows execution only with `GOOS=windows go vet`); the compaction event names (F1, owner
-decision pending). Not verified in a real Windows or macOS run; `go vet` passes for both.
+predicate is tested with an explicit `goos`, Windows execution only with `GOOS=windows go vet`); the compaction event names (F1, owner-approved as the original; the mapping is a tracked optional follow-up). Not verified in a real Windows or macOS run; `go vet` passes for both.
 
 ## Wire differential (`port/differential/`)
 
@@ -162,7 +161,7 @@ Findings (all differences of the last run; 45 entries in 7 groups):
 | F03 | built-in command descriptions say `pig` where the original says `pi` | identity, D8 |
 | F04 | invalid-params errors carry their text in `message`; the original puts it in `data` and shows only "Invalid params" | D1 |
 | F05 | `/changelog`: "Changelog not found" against the refusal naming the original | D13, SDK need (F3) |
-| F06 | `session/set_model`: the original (SDK 0.26.0) answers Method not found, the port serves it and publishes the resulting mode/config/usage updates | the port offers one method more than the original; recommendation: keep (README lists it); owner may ask for removal |
+| F06 | `session/set_model`: the original (SDK 0.26.0) answers Method not found, the port serves it and publishes the resulting mode/config/usage updates | the port offers one method more than the original; owner decision 2026-10-20: keep as it is (README lists it) |
 | F07 | project skills are read from `.pig/skills` (PiG), `.pi/skills` (Pi) | D7 |
 
 No other difference remains: every update, tool call, terminal output, diff, usage update, queue notice, `/session`, `/name`, `/steering`,

@@ -93,7 +93,7 @@ audio), `sessionCapabilities` `list` and `delete`, MCP `http` and `sse` **false*
 - Extension slash commands (`/name` of an extension is not advertised, and as a prompt it runs without ending a turn: drive
   extensions through tools). `session/fork`, `session/resume`, `session/close` are Method not found.
 - Compaction notices: like pi-acp 0.0.34, `pig-acp` reports `auto_compaction_start`/`auto_compaction_end`; Pi 0.84+ and PiG emit
-  `compaction_start`/`compaction_end` instead, so no compaction notice appears (owner decision pending, `port/PORT.md` F1).
+  `compaction_start`/`compaction_end` instead, so no compaction notice appears (as in the original; owner-approved as it is, the mapping is a tracked optional follow-up, `port/PORT.md` F1).
 
 ## Evidence
 
