@@ -13,7 +13,7 @@
 // PiG) or --self (no original: record the port as its own regression baseline, never proof).
 //
 //	pigeq diff   WANT.jsonl GOT.jsonl
-//	pigeq env    --root DIR [--pig PIG] [--pi PI] [--source DIR] [--module DIR]...
+//	pigeq env    --root DIR [--pig PIG] [--pi PI] [--source DIR] [--pi-source DIR] [--sdk-dir DIR] [--module DIR]...
 //	                                                                    print an isolated shell environment (source it);
 //	                                                                    with --pig and --module also writes DIR/go.work
 //	pigeq twins  list --tests DIR > ledger.json                         upstream test titles per file
@@ -266,6 +266,8 @@ func session(cmd string, args []string, stdout, stderr io.Writer) int {
 	root := fs.String("root", "", "env: scratch root; home, pighome and agent live under it (default: a new private directory)")
 	pig := fs.String("pig", os.Getenv("PIGEQ_PIG"), "env: pig executable")
 	pi := fs.String("pi", os.Getenv("PIGEQ_PI"), "env: pi executable")
+	piSource := fs.String("pi-source", os.Getenv("PIGEQ_PI_SOURCE"), "env: git checkout of the Pi source the pi was built from (default: the checkout above the pi executable)")
+	sdkFlag := fs.String("sdk-dir", os.Getenv("PIG_SDK_DIR"), "env: staged Go SDK directory (default: ask --pig)")
 	source := fs.String("source", os.Getenv("PIG_SOURCE_ROOT"), "env: git checkout of the PiG source the pig was built from")
 	var modules []string
 	fs.Func("module", "env: a Go module directory of the port (repeatable); needs --pig", func(v string) error {
@@ -310,7 +312,7 @@ func session(cmd string, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if *pi != "" && *pig != "" {
-		if err := eq.CheckPiVersion(*pi, *pig); err != nil {
+		if err := eq.CheckPiVersion(*pi, *pig, *piSource); err != nil {
 			fmt.Fprintln(stderr, "pigeq env:", err)
 			return 2
 		}
@@ -322,7 +324,10 @@ func session(cmd string, args []string, stdout, stderr io.Writer) int {
 	}
 	spec.Root, spec.Pig, spec.Pi, spec.Source = abs, *pig, *pi, *source
 	if *pig != "" && len(modules) > 0 {
-		sdk, err := eq.SDKPath(*pig, abs)
+		sdk, err := *sdkFlag, error(nil)
+		if sdk == "" {
+			sdk, err = eq.SDKPath(*pig, abs)
+		}
 		if err == nil {
 			spec.SDKDir, spec.GoWork = sdk, filepath.Join(abs, "go.work")
 			err = eq.WriteGoWork(spec.GoWork, sdk, modules)

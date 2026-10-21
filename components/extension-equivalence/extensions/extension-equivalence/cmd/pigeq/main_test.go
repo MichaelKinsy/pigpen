@@ -63,6 +63,19 @@ func TestEnvPrintsTheIsolatedScriptAndWritesGoWork(t *testing.T) {
 	}
 }
 
+func TestEnvUsesAStagedSDKDir(t *testing.T) {
+	root, sdk, mod := t.TempDir(), t.TempDir(), t.TempDir()
+	fake := filepath.Join(t.TempDir(), "pig")
+	_ = os.WriteFile(fake, []byte("#!/bin/sh\necho /wrong\n"), 0o755)
+	code, out, errs := pigeq("env", "--root", root, "--pig", fake, "--sdk-dir", sdk, "--module", mod)
+	if code != 0 || !strings.Contains(out, "export PIG_SDK_DIR='"+sdk+"'") {
+		t.Errorf("code %d: %s\n%s", code, errs, out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "go.work")); !strings.Contains(string(b), "=> "+sdk) {
+		t.Errorf("go.work does not replace the SDK with %s:\n%s", sdk, b)
+	}
+}
+
 func TestSourceSnapshotsAPiGRevision(t *testing.T) {
 	repo := t.TempDir()
 	run := func(dir string, args ...string) {
