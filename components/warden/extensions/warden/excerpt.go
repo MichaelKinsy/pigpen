@@ -1,6 +1,9 @@
 package warden
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // Format-aware excerpts (excerpt.ts). The judge selects which tool produced the output; code keeps the exact lines
 // that matter for that format: failing tests with their assertion lines, compiler and linter errors with file:line,
@@ -372,16 +375,15 @@ func FormatExcerpt(text string, format OutputFormat) (string, bool) {
 	if !ok {
 		return "", false
 	}
-	var nonEmpty []string
-	for _, line := range lines {
-		if jsTrim(line) != "" {
-			nonEmpty = append(nonEmpty, line)
+	// The last three non-empty lines, found from the end (the earlier ones are never read).
+	var tailBuf [3]string
+	tail := tailBuf[:0]
+	for i := len(lines) - 1; i >= 0 && len(tail) < 3; i-- {
+		if jsTrim(lines[i]) != "" {
+			tail = append(tail, lines[i])
 		}
 	}
-	tail := nonEmpty
-	if len(tail) > 3 {
-		tail = tail[len(tail)-3:]
-	}
+	slices.Reverse(tail)
 	var body []string
 	size, dropped := 0, 0
 	for _, line := range selected {
