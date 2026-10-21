@@ -9,7 +9,6 @@ import (
 
 var (
 	reSplitShell   = lazyRE(`\n|;|&&|\|\||\||&`)
-	reAssignment   = lazyRE(`^[A-Za-z_][A-Za-z0-9_]*=`)
 	reHeredoc      = lazyRE(`<<-?\s*(?:"(\w+)"|'(\w+)'|(\\)?(\w+))`)
 	reSubstitution = lazyRE("\\$\\(|`")
 	reInterpreter  = lazyRE(`^(?:python[\d.]*|node|ruby|perl|php|deno|bun|tsx|Rscript|lua[\d.]*)$`)
@@ -20,7 +19,6 @@ var (
 	reGhMessage    = lazyRE(`\s--(?:body|title|notes)\b`)
 	reGhShort      = lazyRE(`\s-[bt]\s`)
 	reShortMessage = lazyRE(`^-[a-zA-Z]*m$`)
-	reLeadingPath  = lazyRE(`^.*/`)
 )
 
 func setOf(words ...string) map[string]bool {
@@ -41,31 +39,6 @@ var (
 	ghMessageVerbs     = setOf("create", "edit", "comment")
 	gitFlagSubcommands = setOf("commit", "tag")
 )
-
-func splitShell(command string) []string {
-	var out []string
-	for _, part := range reSplitShell.Split(command, -1) {
-		if p := jsTrim(part); p != "" {
-			out = append(out, p)
-		}
-	}
-	return out
-}
-
-func stripPathPrefix(s string) string { return reLeadingPath.ReplaceAllString(s, "") }
-
-// headOf is the command word of a segment after assignments and wrappers, with any directory removed.
-func headOf(segment string) (string, bool) {
-	tokens := jsSplitWhitespace(jsTrim(segment))
-	i := 0
-	for i < len(tokens) && (reAssignment.MatchString(tokens[i]) || wrappers[tokens[i]]) {
-		i++
-	}
-	if i >= len(tokens) || tokens[i] == "" {
-		return "", false
-	}
-	return stripPathPrefix(tokens[i]), true
-}
 
 func headOrEmpty(segment string) string {
 	h, _ := headOf(segment)
@@ -182,7 +155,7 @@ func isDataSegment(segment string) bool {
 // isMessageFlag reports whether flag, read after words of one simple command, takes a message as its value.
 func isMessageFlag(words []string, flag string) bool {
 	i := 0
-	for i < len(words) && (reAssignment.MatchString(words[i]) || wrappers[words[i]]) {
+	for i < len(words) && (isAssignment(words[i]) || wrappers[words[i]]) {
 		i++
 	}
 	if i >= len(words) {
@@ -318,6 +291,21 @@ type ScannedCommand struct {
 // StripDataText removes heredoc bodies that are not fed to a shell and quoted arguments of data commands.
 // Interpreter heredocs (`python3 - <<EOF`) are kept when the script calls out to a shell or process API.
 func StripDataText(command string) ScannedCommand {
+	scanned, stripped := command, false
+	if strings.Contains(command, "<<") {
+		scanned, stripped = stripHeredocs(command)
+	}
+	joined := scanned
+	quoted := strings.ContainsAny(scanned, "'\"")
+	if quoted {
+		joined = blankMessageFlags(scanned)
+	}
+	return scanSegments(command, scanned, joined, stripped, quoted)
+}
+
+// stripHeredocs is the first half: heredoc bodies that are not fed to a shell become a line count. It is only
+// called for a command with `<<` in it, the first thing reHeredoc needs.
+func stripHeredocs(command string) (string, bool) {
 	lines := strings.Split(command, "\n")
 	var out []string
 	stripped := false
@@ -375,8 +363,12 @@ func StripDataText(command string) ScannedCommand {
 		}
 		i = closeAt
 	}
-	scanned := strings.Join(out, "\n")
-	joined := blankMessageFlags(scanned)
+	return strings.Join(out, "\n"), stripped
+}
+
+// scanSegments is the second half of StripDataText: the quoted message flags and the quoted arguments of data commands.
+// quoted is whether the command holds a quote character at all (without one, neither step can change it).
+func scanSegments(command, scanned, joined string, stripped, quoted bool) ScannedCommand {
 	segments := splitShell(joined)
 	// A shell sink anywhere may run text written earlier in the same command, so nothing is data.
 	for _, seg := range segments {
@@ -392,7 +384,7 @@ func StripDataText(command string) ScannedCommand {
 		stripped = true
 	}
 	for _, seg := range segments {
-		if !isDataSegment(seg) || !reQuoteChar.MatchString(seg) {
+		if !quoted || !isDataSegment(seg) || !reQuoteChar.MatchString(seg) {
 			continue
 		}
 		blanked := blankQuotes(seg)
@@ -519,7 +511,7 @@ func isReadOnlySed(segment string) bool {
 		return false
 	}
 	i := 0
-	for i < len(words) && reAssignment.MatchString(words[i].word) {
+	for i < len(words) && isAssignment(words[i].word) {
 		i++
 	}
 	quiet, operands, scripts := false, false, 0
@@ -650,7 +642,7 @@ func IsReadOnlyCommand(command string) bool {
 	for _, segment := range splitShell(stripped) {
 		tokens := jsSplitWhitespace(segment)
 		i := 0
-		for i < len(tokens) && reAssignment.MatchString(tokens[i]) {
+		for i < len(tokens) && isAssignment(tokens[i]) {
 			if !reReadOnlyAssign.MatchString(tokens[i]) {
 				return false
 			}

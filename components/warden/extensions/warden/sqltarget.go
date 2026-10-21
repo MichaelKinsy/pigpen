@@ -250,7 +250,7 @@ func sqlSegments(command string) []*sqlSegment {
 // sqlHeadIndex is the index of the command word: leading assignments and wrappers are skipped, as headOf does.
 func sqlHeadIndex(words []shellWordSQL) int {
 	i := 0
-	for i < len(words) && (reAssignment.MatchString(words[i].text) || wrappers[words[i].text]) {
+	for i < len(words) && (isAssignment(words[i].text) || wrappers[words[i].text]) {
 		i++
 	}
 	return i
