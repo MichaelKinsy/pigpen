@@ -135,7 +135,9 @@ func (g *gate) may(s string) bool {
 		return true
 	}
 	ascii, known := false, false
-	short := len(s) <= 512
+	// The letter set rejects a literal whose letters are absent before the byte search; building it costs a pass over
+	// the text, which pays only when the text is long enough for false starts to add up.
+	short := len(s) > 96 && len(s) <= 512
 	var present letterSet
 	for _, set := range g.sets {
 		if set.fold {
