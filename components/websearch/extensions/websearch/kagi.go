@@ -110,6 +110,10 @@ func SearchWithKagi(ctx context.Context, query string, o SearchOptions) (*Search
 	}
 	body, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			act.complete(resp.StatusCode)
+			return nil, invalidJSONRead(ctx, tctx, "Kagi API", err)
+		}
 		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
@@ -183,6 +187,10 @@ func ExtractWithKagi(ctx context.Context, rawURL string, o ExtractOptions, ssrf 
 	}
 	body, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			act.complete(resp.StatusCode)
+			return nil, invalidJSONRead(ctx, tctx, "Kagi Extract API", err)
+		}
 		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

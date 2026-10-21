@@ -80,7 +80,7 @@ func SearchWithBrave(ctx context.Context, query string, o SearchOptions) (*Searc
 	}
 	body, err := readBody(resp)
 	if err != nil {
-		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+		return nil, act.failedErr(redactErr(bodyRejection(ctx, tctx, err), apiKey))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, act.failedErr(fmt.Errorf("Brave Search API error %d: %s", resp.StatusCode, slice300(RedactCredential(body, apiKey))))

@@ -128,6 +128,10 @@ func SearchWithPerplexity(ctx context.Context, query string, o SearchOptions) (*
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			act.complete(resp.StatusCode)
+			return nil, invalidJSONRead(ctx, tctx, "Perplexity API", err)
+		}
 		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

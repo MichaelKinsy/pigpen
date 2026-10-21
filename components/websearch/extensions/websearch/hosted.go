@@ -29,6 +29,10 @@ type hostedCall struct {
 	Credentials []string
 	// Act is the activity entry of the call; a transport failure closes it through the provider's catch block.
 	Act activityRef
+	// InvalidJSONAs, when set, names the provider whose original completes the entry with the status before it
+	// reads the body and words a body that cannot be read after a successful status as
+	// "<name> returned invalid JSON: <rejection>".
+	InvalidJSONAs string
 }
 
 // hostedSend sends the request and reads the whole body. Transport errors have the credential
@@ -46,6 +50,12 @@ func hostedSend(parent context.Context, c hostedCall) (int, string, error) {
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if c.InvalidJSONAs != "" {
+			c.Act.complete(resp.StatusCode)
+			if successStatus(resp) {
+				return 0, "", invalidJSONRead(parent, tctx, c.InvalidJSONAs, err)
+			}
+		}
 		return 0, "", redactErr(timeoutFix(parent, tctx, err), c.Key)
 	}
 	return resp.StatusCode, text, nil

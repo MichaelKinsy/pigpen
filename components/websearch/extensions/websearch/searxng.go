@@ -213,6 +213,10 @@ func SearchWithSearXNG(ctx context.Context, query string, o SearchOptions) (*Sea
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			return nil, act.failedErr(invalidJSONRead(ctx, tctx, "SearXNG", err))
+		}
+		act.logError(fmt.Sprintf("HTTP %d", resp.StatusCode))
 		return nil, act.failedErr(timeoutFix(ctx, tctx, transportFailure(err, true)))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

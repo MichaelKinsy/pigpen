@@ -67,6 +67,9 @@ func SearchWithXCrawl(ctx context.Context, query string, o SearchOptions) (*Sear
 	act.complete(resp.StatusCode)
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			return nil, fmt.Errorf("XCrawl API returned invalid response: response body is not valid JSON: %s", bodyRejection(ctx, tctx, err))
+		}
 		return nil, redactErr(timeoutFix(ctx, tctx, err), apiKey)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

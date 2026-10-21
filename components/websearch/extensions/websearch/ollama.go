@@ -43,7 +43,7 @@ func SearchWithOllama(ctx context.Context, query string, o SearchOptions) (*Sear
 	n := ollamaCount(o.NumResults)
 	act := logAPIStart(query)
 	status, text, err := hostedSend(ctx, hostedCall{URL: ollamaSearchURL, Body: jsonBytes(map[string]any{"query": query, "max_results": n}), Key: key, Timeout: ollamaSearchTimeout,
-		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}, Act: act})
+		Header: http.Header{"Authorization": {"Bearer " + key}, "Content-Type": {"application/json"}}, Credentials: []string{"Authorization"}, Act: act, InvalidJSONAs: "Ollama API"})
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +126,10 @@ func ExtractWithOllama(ctx context.Context, rawURL string, o ExtractOptions, ssr
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			act.complete(resp.StatusCode)
+			return nil, invalidJSONRead(ctx, tctx, "Ollama Web Fetch", err)
+		}
 		return nil, redactErr(timeoutFix(ctx, tctx, err), key)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

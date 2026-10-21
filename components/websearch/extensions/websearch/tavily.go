@@ -134,7 +134,9 @@ func SearchWithTavily(ctx context.Context, query string, o SearchOptions) (*Sear
 		switch status := tavilyErrorStatus(err); {
 		case ctx.Err() != nil || errors.Is(err, context.Canceled):
 			act.complete(0)
-			err = &redactedError{"This operation was aborted", err}
+			if errors.Is(err, context.Canceled) {
+				err = &redactedError{"This operation was aborted", err}
+			}
 		case status > 0:
 			act.complete(status)
 		default:
@@ -229,6 +231,9 @@ func tavilyRequest(parent, ctx context.Context, apiURL, apiKey string, body map[
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			return nil, invalidJSONRead(parent, ctx, "Tavily API", err)
+		}
 		return nil, redactErr(timeoutFix(parent, ctx, err), apiKey)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

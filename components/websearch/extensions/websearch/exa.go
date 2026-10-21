@@ -171,7 +171,7 @@ func callExaMCP(ctx context.Context, tool string, args map[string]any) (string, 
 	}
 	body, err := readBody(resp)
 	if err != nil {
-		return "", timeoutFix(ctx, tctx, err)
+		return "", bodyRejection(ctx, tctx, err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		if resp.StatusCode == 429 {
@@ -424,7 +424,7 @@ func SearchWithExa(ctx context.Context, query string, o SearchOptions) (*SearchR
 	}
 	text, err := readBody(resp)
 	if err != nil {
-		return nil, act.failedErr(redactErr(timeoutFix(ctx, tctx, err), apiKey))
+		return nil, act.failedErr(redactErr(bodyRejection(ctx, tctx, err), apiKey))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, act.failedErr(fmt.Errorf("Exa API error %d: %s", resp.StatusCode, slice300(RedactCredential(text, apiKey))))

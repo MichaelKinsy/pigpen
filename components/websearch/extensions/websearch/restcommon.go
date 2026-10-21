@@ -122,6 +122,30 @@ func transportFailure(err error, body bool) error {
 	return &redactedError{"fetch failed", err}
 }
 
+// successStatus is `response.ok`.
+func successStatus(resp *http.Response) bool { return resp.StatusCode >= 200 && resp.StatusCode <= 299 }
+
+// bodyRejection is what the body stream of a response rejects with when the body cannot be read
+// after the headers arrived (`await response.text()` or `.json()`): the signal's reason once the
+// caller aborted ("This operation was aborted") or the provider's own deadline fired ("The
+// operation was aborted due to timeout"), "terminated" when the connection dropped.
+func bodyRejection(parent, child context.Context, err error) error {
+	if parent.Err() != nil {
+		return &redactedError{"This operation was aborted", err}
+	}
+	if child.Err() == context.DeadlineExceeded {
+		return &redactedError{providerTimeoutMessage, err}
+	}
+	return transportFailure(err, true)
+}
+
+// invalidJSONRead is the catch block around `await response.json()` of a successful response, which
+// words every body that cannot be read, whatever the cause, as `<what> returned invalid JSON:
+// <message of the rejection>`.
+func invalidJSONRead(parent, child context.Context, what string, err error) error {
+	return fmt.Errorf("%s returned invalid JSON: %s", what, bodyRejection(parent, child, err).Error())
+}
+
 // restFailure is the catch block of serpapi.ts, serply.ts, you.ts and xcrawl.ts: a caller that
 // cancelled gets "Aborted", the provider's own deadline becomes "<what> timed out after 60s"
 // (a retriable network failure, never an abort), anything else has the credential removed.
@@ -205,10 +229,11 @@ func restCallA(ctx, tctx context.Context, act activityRef, api, apiKey, rawURL s
 		return nil, 0, act.failedErr(redactErr(timeoutFix(ctx, tctx, transportFailure(err, false)), apiKey))
 	}
 	text, err := readBody(resp)
-	ok := resp.StatusCode >= 200 && resp.StatusCode <= 299
+	ok := successStatus(resp)
 	if err != nil {
+		act.complete(resp.StatusCode)
 		if ok {
-			act.complete(resp.StatusCode)
+			return nil, 0, invalidJSONRead(ctx, tctx, api, err)
 		}
 		return nil, 0, redactErr(timeoutFix(ctx, tctx, transportFailure(err, true)), apiKey)
 	}
@@ -239,6 +264,11 @@ func restCallB(ctx, tctx context.Context, act activityRef, name, apiKey, rawURL 
 	}
 	text, err := readBody(resp)
 	if err != nil {
+		if successStatus(resp) {
+			// serpapi.ts rethrows a TimeoutError out of the JSON catch block and its outer catch block answers a
+			// cancelled caller first: restFailure sorts both out whatever the wording of err.
+			return fail(invalidJSONRead(ctx, tctx, name, err))
+		}
 		return fail(transportFailure(err, true))
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {

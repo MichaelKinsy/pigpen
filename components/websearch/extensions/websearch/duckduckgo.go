@@ -116,7 +116,7 @@ func searchWithDuckDuckGo(ctx context.Context, query string, o SearchOptions) (*
 	}
 	body, err := readBody(resp)
 	if err != nil {
-		return nil, 0, timeoutFix(ctx, tctx, err)
+		return nil, 0, bodyRejection(ctx, tctx, err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, 0, fmt.Errorf("DuckDuckGo search error %d: %s", resp.StatusCode, slice300(body))

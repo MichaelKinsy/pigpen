@@ -631,8 +631,8 @@ func TestUpstream_anysearch_provider(t *testing.T) {
 }
 
 // TestRestProviderTransportFailure: a connection that fails, drops or is refused reads as Node's
-// "fetch failed" (a network failure the routing falls through on), as upstream; a body cut short is
-// "terminated". Go's own texts (EOF, connection refused) never reach the model or the classifier.
+// "fetch failed" (a network failure the routing falls through on), as upstream; a body cut short after a successful status is
+// "<api> returned invalid JSON: terminated" (`response.json()` rejects with it). Go's own texts (EOF, connection refused) never reach the model or the classifier.
 func TestRestProviderTransportFailure(t *testing.T) {
 	refused := &net.OpError{Op: "dial", Net: "tcp", Err: errors.New("connection refused")}
 	for name, call := range map[string]func() error{
@@ -661,7 +661,7 @@ func TestRestProviderTransportFailure(t *testing.T) {
 			return &http.Response{StatusCode: 200, Header: http.Header{}, Body: brokenBody{io.ErrUnexpectedEOF}, Request: r}, nil
 		})))
 		_, err := SearchWithSerper(bg(), "q", SearchOptions{})
-		if err == nil || err.Error() != "terminated" {
+		if err == nil || err.Error() != "Serper API returned invalid JSON: terminated" {
 			t.Fatal(err)
 		}
 	})
