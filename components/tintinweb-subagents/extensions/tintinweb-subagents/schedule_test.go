@@ -2,6 +2,7 @@ package tintinweb_subagents
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,22 +53,41 @@ func TestCronJobWaitsInPiecesAndFiresOnTime(t *testing.T) {
 	eq(t, next, "2026-10-21T12:00:00.000Z")
 }
 
-func TestLongTimersWaitTheirWholeDelay(t *testing.T) {
-	// Node's setTimeout and setInterval turn a delay above 2^31-1 ms (24.8 days) into 1 ms, so a one-shot a month away
-	// fires at once and a 30-day interval fires every millisecond. Here the delay is what was asked for (PORT.md).
+func TestTimersLongerThanNodesLimitFireAfterOneMillisecond(t *testing.T) {
+	// Node's setTimeout and setInterval turn a delay above 2^31-1 ms (24.8 days) into 1 ms, so in the original a one-shot
+	// a month away fires at once and a 30-day interval fires every millisecond. The port does the same (PORT.md).
 	clock := newFakeClockAt(time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC))
 	r := startSched(t, clock, newMockManager())
+	within, _ := r.sched.addJob(input("in-24-days", "+24d"))
 	once, _ := r.sched.addJob(input("in-a-month", "+30d"))
-	every, _ := r.sched.addJob(input("monthly", "30d"))
 	eq(t, once.ScheduleType, "once")
-	clock.advance(29 * 24 * time.Hour)
-	eq(t, len(r.manager.spawned()), 0)
-	clock.advance(24*time.Hour + time.Second)
-	eq(t, len(r.manager.spawned()), 2)
+	clock.advance(time.Millisecond)
+	eq(t, len(r.manager.spawned()), 1) // only the +30d one-shot
 	eq(t, r.job(t, once.ID).Enabled, false)
-	eq(t, r.job(t, every.ID).Enabled, true)
-	clock.advance(30 * 24 * time.Hour)
-	eq(t, len(r.manager.spawned()), 3) // the interval again, nothing else
+	clock.advance(23*24*time.Hour + time.Hour)
+	eq(t, len(r.manager.spawned()), 1) // +24d still waits its whole delay
+	clock.advance(24 * time.Hour)
+	eq(t, len(r.manager.spawned()), 2)
+	eq(t, r.job(t, within.ID).Enabled, false)
+
+	every, _ := r.sched.addJob(input("monthly", "30d"))
+	before := len(r.manager.spawned())
+	clock.advance(3 * time.Millisecond)
+	eq(t, len(r.manager.spawned()), before+3) // one tick per millisecond
+	_, _ = r.sched.removeJob(every.ID)
+	clock.advance(time.Second)
+	eq(t, len(r.manager.spawned()), before+3)
+	// A 24-day interval is within the limit and ticks once a day-count of milliseconds, not every one.
+	_, _ = r.sched.addJob(input("24-daily", "24d"))
+	count := len(r.manager.spawned())
+	clock.advance(time.Hour)
+	eq(t, len(r.manager.spawned()), count)
+}
+
+func TestNodeDelay(t *testing.T) {
+	for in, want := range map[float64]float64{0: 1, -5: 1, 0.5: 1, 1: 1, 1500: 1500, nodeTimerMax: nodeTimerMax, nodeTimerMax + 1: 1, 1e20: 1, math.NaN(): 1} {
+		eq(t, nodeDelay(in), want)
+	}
 }
 
 func TestJobsAreArmedAgainFromTheStore(t *testing.T) {

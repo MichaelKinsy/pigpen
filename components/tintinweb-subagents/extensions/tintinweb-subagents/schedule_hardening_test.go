@@ -443,3 +443,84 @@ func TestABlankTypeIsNeverPersistedIntoAScheduledJob(t *testing.T) {
 	eq(t, len(jobs), 1)
 	eq(t, jobs[0].SubagentType, "general-purpose")
 }
+
+func TestAFireOfADisabledJobDoesNothing(t *testing.T) {
+	clock := newFakeClock()
+	r := startSched(t, clock, newMockManager())
+	job, _ := r.sched.addJob(input("off", "1h"))
+	_, _, _ = r.sched.updateJob(job.ID, func(j *scheduledSubagent) { j.Enabled = false })
+	r.sched.executeJob(job.ID) // a timer that was already due when the job was disabled
+	eq(t, len(r.manager.spawned()), 0)
+	eq(t, r.job(t, job.ID).LastStatus, "")
+	r.sched.executeJob("no-such-job")
+	eq(t, len(r.manager.spawned()), 0)
+}
+
+func TestTheNextRunOfAOneShotIsItsTimeAndOfAnIntervalOneIntervalOn(t *testing.T) {
+	clock := newFakeClockAt(time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC))
+	r := startSched(t, clock, newMockManager())
+	once, _ := r.sched.addJob(input("once", "+1h"))
+	next, ok := r.sched.getNextRun(once.ID)
+	eq(t, ok, true)
+	eq(t, next, "2026-10-20T10:00:00.000Z")
+	every, _ := r.sched.addJob(input("every", "5m"))
+	next, _ = r.sched.getNextRun(every.ID)
+	eq(t, next, "2026-10-20T09:05:00.000Z")
+	_, ok = r.sched.getNextRun("no-such-job")
+	eq(t, ok, false)
+}
+
+func TestAJobIdIsTenCharactersOfNanoidsAlphabet(t *testing.T) {
+	seen := map[string]bool{}
+	for range 200 {
+		id := nanoid()
+		eq(t, len(id), 10)
+		for _, c := range id {
+			eq(t, strings.ContainsRune("useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict", c), true)
+		}
+		seen[id] = true
+	}
+	eq(t, len(seen), 200)
+}
+
+func TestTheScheduleParameterTextIsTheOriginals(t *testing.T) {
+	// upstream: src/index.ts scheduleParamShape, byte for byte.
+	eq(t, scheduleParamDescription, "Opt-in only — fire later instead of now. Omit to run immediately (the default, almost always correct). "+
+		`Formats: 6-field cron ("0 0 9 * * 1" = 9am Mon), interval ("5m"/"1h"), one-shot ("+10m" or ISO). `+
+		"Forces run_in_background; incompatible with inherit_context and resume. Returns job ID.")
+}
+
+func TestADateStringIsAOneShotCronAsCronerReadsIt(t *testing.T) {
+	withLocal(t, "UTC")
+	now := time.Date(2029, 12, 31, 8, 30, 0, 0, time.UTC)
+	for in, want := range map[string]string{
+		"Tue Jan 01 2030 10:00:00 GMT+0100": "2030-01-01T09:00:00.000Z",
+		"Tue, 01 Jan 2030 10:00:00 GMT":     "2030-01-01T10:00:00.000Z",
+		"Wed Dec 31 2031 23:59:59 GMT-0500": "2032-01-01T04:59:59.000Z",
+		"Thu, 29 Feb 2024 12:00 gmt":        "2024-02-29T12:00:00.000Z",
+	} {
+		at, ok := parseLegacyDate(in)
+		eq(t, ok, true)
+		eq(t, isoString(at), want)
+	}
+	for _, in := range []string{"Tue Jan 01 2030 25:00:00 GMT", "Tue Jan 01 2030 10:00:00", "Tue Feb 30 2030 10:00:00 GMT", "Tue Jan 01 2030 10:00:00 EST", "x y z 1 2 3"} {
+		_, ok := parseLegacyDate(in)
+		eq(t, ok, false)
+	}
+	// Scheduled, it is a cron-type job that runs once, at that time, and has no next run after it.
+	clock := newFakeClockAt(now)
+	r := startSched(t, clock, newMockManager())
+	job, err := r.sched.addJob(input("legacy", "Tue Jan 01 2030 10:00:00 GMT+0100"))
+	eq(t, err, nil)
+	eq(t, job.ScheduleType, "cron")
+	next, _ := r.sched.getNextRun(job.ID)
+	eq(t, next, "2030-01-01T09:00:00.000Z")
+	clock.advance(29 * time.Minute) // 08:59 UTC
+	eq(t, len(r.manager.spawned()), 0)
+	clock.advance(2 * time.Minute)
+	eq(t, len(r.manager.spawned()), 1)
+	_, ok := r.sched.getNextRun(job.ID)
+	eq(t, ok, false)
+	clock.advance(time.Hour)
+	eq(t, len(r.manager.spawned()), 1)
+}

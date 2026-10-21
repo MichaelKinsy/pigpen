@@ -1077,7 +1077,7 @@
   "name": "schedule-next-run-dropped",
   "file": "schedule.go",
   "find": "if hasNext {\n\t\t\t\tj.NextRun = next",
-  "replace": "if false {\n\t\t\t\tj.NextRun = next"
+  "replace": "if hasNext && false {\n\t\t\t\tj.NextRun = next"
  },
  {
   "name": "schedule-start-failure-ignored",
@@ -1126,6 +1126,42 @@
   "file": "schedule.go",
   "find": "fields = []field{{\"type\", e.Type}, {\"jobId\", e.JobID}, {\"agentId\", e.AgentID}, {\"name\", e.Name}}",
   "replace": "fields = []field{{\"type\", e.Type}, {\"jobId\", e.JobID}, {\"agentId\", e.AgentID}}"
+ },
+ {
+  "name": "schedule-timer-over-node-limit-waited",
+  "file": "schedule.go",
+  "find": "if !(ms >= 1 && ms <= nodeTimerMax) {",
+  "replace": "if !(ms >= 1) {"
+ },
+ {
+  "name": "schedule-timer-node-limit-off-by-one",
+  "file": "schedule.go",
+  "find": "ms <= nodeTimerMax)",
+  "replace": "ms < nodeTimerMax)"
+ },
+ {
+  "name": "cron-date-pattern-refused",
+  "file": "cron.go",
+  "find": "at, ok := parseLegacyDate(expr)\n\t\tif !ok {",
+  "replace": "at, ok := parseLegacyDate(expr)\n\t\tif !ok || true {"
+ },
+ {
+  "name": "cron-date-pattern-repeats",
+  "file": "cron.go",
+  "find": "if c.once.After(after) {",
+  "replace": "if true {"
+ },
+ {
+  "name": "cron-date-offset-sign",
+  "file": "cron.go",
+  "find": "Add(-time.Duration(offset) * time.Minute), true",
+  "replace": "Add(time.Duration(offset) * time.Minute), true"
+ },
+ {
+  "name": "cron-date-month-length",
+  "file": "cron.go",
+  "find": "time.Month(mon+2), 0, 0, 0, 0, 0, time.UTC).Day()",
+  "replace": "time.Month(mon+2), 1, 0, 0, 0, 0, time.UTC).Day()"
  },
  {
   "name": "store-path",
@@ -1275,7 +1311,7 @@
   "name": "schedule-stores-substitute-type",
   "file": "schedule_tool.go",
   "find": "SubagentType: requestedType,",
-  "replace": "SubagentType: subagentType,"
+  "replace": "SubagentType: subagentType + requestedType[:0],"
  },
  {
   "name": "schedule-stores-raw-turns",
@@ -1377,7 +1413,7 @@
   "name": "schedule-setting-ignored",
   "file": "schedule_feature.go",
   "find": "if b, ok := raw[\"schedulingEnabled\"].(bool); ok {",
-  "replace": "if false {"
+  "replace": "if b, ok := raw[\"schedulingEnabled\"].(bool); ok && false {"
  },
  {
   "name": "schedule-setting-global-wins",
@@ -1389,7 +1425,7 @@
   "name": "schedule-guideline-anchor",
   "file": "schedule_feature.go",
   "find": "const anchor = \"\\n\\n## Writing the prompt\"",
-  "replace": "const anchor = \"\\n\\n## Writing\""
+  "replace": "const anchor = \"\\n\\n## Writing the promptX\""
  },
  {
   "name": "schedule-param-text",

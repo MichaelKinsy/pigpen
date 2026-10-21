@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -739,7 +740,10 @@ func (d *cronDate) time() time.Time {
 }
 
 // cron is a parsed expression. upstream: croner Cron (the part src/schedule.ts uses).
-type cron struct{ pattern *cronPattern }
+type cron struct {
+	pattern *cronPattern
+	once    *time.Time // a pattern that is a date: croner runs it once, at that instant
+}
 
 // newCron is `new Cron(expr, fn)` as it stands now: see newCronAt.
 func newCron(expr string) (*cron, error) { return newCronAt(expr, time.Now()) }
@@ -747,11 +751,16 @@ func newCron(expr string) (*cron, error) { return newCronAt(expr, time.Now()) }
 // newCronAt is `new Cron(expr, fn)` at the instant now. croner's constructor arms the job at once, which searches for
 // the first run, so a pattern whose search overflows croner's stack is refused here as it is there.
 func newCronAt(expr string, now time.Time) (*cron, error) {
-	// croner reads a pattern with a `:` after its first character as a date, parsed by V8's Date.parse. The
-	// original's own check (six fields) lets a few such strings through ("Tue Jan 01 2030 10:00:00 GMT+0100" is six
-	// fields), and Go has no Date.parse: they are refused here, like croner refuses the ones Date.parse rejects.
+	// croner reads a pattern with a `:` after its first character as a date, parsed by V8's Date.parse, and runs it once.
+	// The original's own check (six fields) lets only the six-word forms through: the date strings `toString()` and
+	// `toUTCString()` write ("Tue Jan 01 2030 10:00:00 GMT+0100", "Tue, 01 Jan 2030 10:00:00 GMT"), which parseLegacyDate
+	// reads. Another shape V8's legacy parser would accept is refused as croner refuses the ones Date.parse rejects.
 	if strings.Index(expr, ":") > 0 {
-		return nil, errors.New("Invalid ISO8601 passed to timezone parser.")
+		at, ok := parseLegacyDate(expr)
+		if !ok {
+			return nil, errors.New("Invalid ISO8601 passed to timezone parser.")
+		}
+		return &cron{once: &at}, nil
 	}
 	p, err := parseCronPattern(expr)
 	if err != nil {
@@ -773,9 +782,76 @@ func (c *cron) next(after time.Time) (time.Time, bool) {
 
 // nextRun is next, also reporting that croner's search would have overflowed the stack (and so found nothing).
 func (c *cron) nextRun(after time.Time) (t time.Time, ok, overflow bool) {
+	if c.once != nil {
+		if c.once.After(after) {
+			return *c.once, true, false
+		}
+		return time.Time{}, false, false
+	}
 	d := fromTime(after)
 	if !d.increment(c.pattern) {
 		return time.Time{}, false, d.overflow
 	}
 	return d.time(), true, false
+}
+
+var (
+	legacyMonths   = []string{"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
+	legacyWeekdays = []string{"sun", "mon", "tue", "wed", "thu", "fri", "sat"}
+	legacyTimeRe   = regexp.MustCompile(`^(\d{1,2}):(\d{2})(?::(\d{2}))?$`)
+	legacyZoneRe   = regexp.MustCompile(`(?i)^(?:gmt|utc)(?:([+-])(\d{2})(\d{2}))?$`)
+	legacyYearRe   = regexp.MustCompile(`^\d{4}$`)
+	legacyDayRe    = regexp.MustCompile(`^\d{1,2}$`)
+)
+
+// legacyName is the index of word in names when it is a name of the kind V8's date parser reads: the full name or its
+// first three letters, in any case.
+func legacyName(word string, names []string, full ...string) int {
+	w := strings.ToLower(strings.TrimSuffix(word, ","))
+	for i, n := range names {
+		if w == n || (len(full) > i && w == full[i]) {
+			return i
+		}
+	}
+	return -1
+}
+
+// parseLegacyDate reads the two six-word date strings of `Date.prototype.toString` (without the zone name) and
+// `toUTCString`, as V8's Date.parse does: weekday, month, day, year, a 24-hour time and GMT with an optional offset.
+// upstream: V8 Date.parse (the legacy parser), reached through croner's constructor.
+func parseLegacyDate(s string) (time.Time, bool) {
+	words := jsFields(s)
+	if len(words) != 6 {
+		return time.Time{}, false
+	}
+	var weekday, month, day, year string
+	if strings.HasSuffix(words[0], ",") { // toUTCString: Tue, 01 Jan 2030 10:00:00 GMT
+		weekday, day, month, year = words[0], words[1], words[2], words[3]
+	} else { // toString: Tue Jan 01 2030 10:00:00 GMT+0100
+		weekday, month, day, year = words[0], words[1], words[2], words[3]
+	}
+	long := []string{"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
+	longMonths := []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+	mon := legacyName(month, legacyMonths, longMonths...)
+	tm, zone := legacyTimeRe.FindStringSubmatch(words[4]), legacyZoneRe.FindStringSubmatch(words[5])
+	if legacyName(weekday, legacyWeekdays, long...) < 0 || mon < 0 || tm == nil || zone == nil || !legacyDayRe.MatchString(day) || !legacyYearRe.MatchString(year) {
+		return time.Time{}, false
+	}
+	atoi := func(v string) int { n, _ := strconv.Atoi(v); return n }
+	y, d, h, mi, sec := atoi(year), atoi(day), atoi(tm[1]), atoi(tm[2]), atoi(tm[3])
+	if d < 1 || d > time.Date(y, time.Month(mon+2), 0, 0, 0, 0, 0, time.UTC).Day() || h > 23 || mi > 59 || sec > 59 {
+		return time.Time{}, false
+	}
+	offset := 0
+	if zone[1] != "" {
+		oh, om := atoi(zone[2]), atoi(zone[3])
+		if oh > 23 || om > 59 {
+			return time.Time{}, false
+		}
+		offset = oh*60 + om
+		if zone[1] == "-" {
+			offset = -offset
+		}
+	}
+	return time.Date(y, time.Month(mon+1), d, h, mi, sec, 0, time.UTC).Add(-time.Duration(offset) * time.Minute), true
 }

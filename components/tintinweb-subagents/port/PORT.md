@@ -56,6 +56,23 @@ is accepted in `port/accepted-gaps.json` with the approval it rests on: the lane
 MDT to ship a tested slice and defer the rest by name. `PARTIAL tool.renderResult`: the original's renderers return TUI
 components; this port registers none.
 
+## Performance of scheduled runs
+
+Measured on imladris (Xeon 6746E, `go test -bench`, 200 iterations; two runs agree within 30%). The baseline is a
+session with nothing loaded: the scheduler is started over an empty store.
+
+| Start-up with | time |
+|---|---|
+| no jobs (baseline) | 4 us |
+| 10 jobs on disk (a third each cron, interval, one-shot) | 0.3 ms |
+| 100 jobs on disk | 2-4 ms |
+
+That is the cost of reading the session's file and arming one timer per enabled job; with no jobs nothing is armed and
+no goroutine starts (`TestAnIdleSchedulerHoldsNoTimer`). Package initialisation adds a dozen compiled regular
+expressions. croner's next-run search takes about 2 us for an ordinary pattern, and about 1 ms for a pattern that never
+runs (the search to the year 3000), once when the job is added or armed. A cron job wakes every 30 s (as croner does)
+to check the clock; an interval or one-shot wakes once per due time, at most once a day while waiting.
+
 ## Results (this revision)
 
 - `go test -race ./...` passes, also `-count=24` (twice). A later `-count=24` run found a data race the first `-count=25` run had missed: `manager.run` set an agent's cancel func without the lock that `abort` reads it under (stopping an agent right after spawning it, as a session end does); fixed, with `TestAbortRightAfterSpawnIsRaceFree` red first. The runner tests re-execute the test binary as a fake `pig --mode rpc`.
@@ -136,14 +153,19 @@ components; this port registers none.
       the oracle that `port/record-croner.mjs` runs under Node to record `testdata/croner-vectors.json` (Node never runs
       at runtime), and the fixture is the only size added (see Results). croner's five- and seven-field forms, its options and
       its `@nickname` patterns cannot be reached from the original's own six-field gate and are not ported.
-    - **A six-field string with a `:` after its first character** is read by croner as a date (V8's `Date.parse`, a legacy
-      parser) and becomes a one-shot Cron. The original's gate lets only a few such strings through (`Tue Jan 01 2030
-      10:00:00 GMT+0100` has six fields); here every one is refused as `Invalid ISO8601 passed to timezone parser.`
-      since Go has no `Date.parse`. A one-shot ISO timestamp, the form the tool text advertises, is read as the ECMAScript
-      date-time format (`parseJSDate`, recorded against Node for 70+ shapes).
-    - **A delay above 2^31-1 ms (24.8 days) is waited, not fired at once.** Node's `setTimeout` and `setInterval` turn such a
-      delay into 1 ms: `+30d` fires immediately and `30d` fires every millisecond in the original. Here the wait is made in
-      24-hour pieces (`rearmable`), so no timer is longer than a day and none is lost.
+    - **A six-field string with a `:` after its first character** (owner decision pending on the remainder) is read by
+      croner as a date (V8's `Date.parse`, a legacy parser) and becomes a one-shot Cron. `cron.go` reads the two six-word
+      forms the original's gate lets through, `toString()` without its zone name (`Tue Jan 01 2030 10:00:00 GMT+0100`)
+      and `toUTCString()` (`Tue, 01 Jan 2030 10:00:00 GMT`), and runs them once, as croner does (recorded against
+      croner in `testdata/croner-vectors.json`). Any other shape V8's legacy parser would accept (a zone name such as
+      `EST`, a two-digit year, a day that does not exist in the month) is refused as `Invalid ISO8601 passed to timezone
+      parser.`; Go has no `Date.parse`. A one-shot ISO timestamp, the form the tool text advertises, is read as the
+      ECMAScript date-time format (`parseJSDate`, recorded against Node for 70+ shapes).
+    - **A delay above 2^31-1 ms (24.8 days) is 1 ms, as in Node** (matched; owner decision pending on whether to keep
+      it). `setTimeout` and `setInterval` turn such a delay into 1 ms: `+30d` fires at once and `30d` fires every
+      millisecond in the original, and so here (`nodeDelay`). The hazard is the original's: an interval job of more than
+      24.8 days starts an agent per millisecond, past the concurrency limit. The wait itself is made in pieces of at
+      most 24 hours (`rearmable`), so no timer is armed for longer.
     - **The model is resolved by the child.** The original resolves `job.model` against Pi's registry at fire time and falls
       back to the default when it does not resolve; here the string reaches `pig --model`, as for an immediate run (item 6).
       The conversation-viewer snapshot (`invocation`) is built and passed to the manager but not shown (the viewer is deferred).
@@ -159,13 +181,16 @@ components; this port registers none.
       the scheduler)**, from `subagents.json`, project over global; the original applies its settings once, at load. The
       settings slice (branch `parity/tintinweb-subagents-settings`) holds the full reader and the tool-text assembly;
       `schedule_feature.go` is the temporary form of the `schedule` part and says what to delete when the two merge.
-    - **A pattern that never runs, and whose search overflows V8's stack, is refused as croner's constructor refuses it.**
+    - **A pattern that never runs, and whose search overflows V8's stack, is refused as croner's constructor refuses it**
+      (owner decision pending: the limit is a measured median, not a rule).
       croner finds the first run when the Cron is built, by a recursion that makes one call per field it settles; for a
       pattern whose failure is decided at the day level (`0 0 8 27 * +6#3`: the 27th that is a third Saturday) that is
       thousands of calls up to the year 3000 and V8 throws `Maximum call stack size exceeded`, so the original answers
       `Invalid schedule`. `cron.go` counts the same calls (exactly: `testdata/croner-stack.json`) and refuses at
-      `cronStackLimit`, a threshold between the most calls a completed search made and the fewest at which one overflowed.
-      The limit is V8's stack, which varies a little with how warm the code is; a search near it could go either way.
+      `cronStackLimit` = 6227, the median depth at which croner overflowed in 75 probes (fresh process each, Node 24.19.0:
+      6066 to 6810, a quarter between 6223 and 6502; completed searches up to 4867 calls and one of about 7100). V8's
+      depth varies from run to run, so a pattern whose search lands between 6066 and about 7100 could go either way in
+      the original; `cron_test.go` allows exactly that band and nothing else.
     - **`/agents` is a listing, not the original's menu**: it adds a `Scheduled jobs (N)` section with the original's rows,
       and cancelling a job says it is not supported yet (the refusal message). Until the menu slice lands, the jobs of a
       running session end with it (or with `/new`, which starts a session with none); one that should not come back on

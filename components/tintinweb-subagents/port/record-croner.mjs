@@ -65,6 +65,9 @@ const CURATED = [
   "0 0 9 * * mon,Tue,WED", "0 0 9 * * 1,2,3,4,5,6,7", "0 0 0 * * 2-6", "99 * * * * *", "-1 * * * * *", "1.5 * * * * *",
   "0x1 * * * * *", "1e1 * * * * *", "+1 * * * * *", "0 0 0 31 * 5", "0 0 0 31 * +5", "0 0 0 30 2 5", "0 0 0 30 2 +5",
   "0 0 0 * * 1#2,3#4,5L", "0 0 0 1-5 * 6", "0 0 0 1W 3 *", "0 0 0 15W 8 *", "0 0 0 LW 2 *", "0 0 0 L 2 *", "0 0 0 L 2 1",
+  // A pattern with a `:` is a date for Date.parse, and a one-shot: the six-word forms the original's gate lets through.
+  "Tue Jan 01 2030 10:00:00 GMT+0100", "Tue, 01 Jan 2030 10:00:00 GMT", "Wed Dec 31 2025 23:59:59 GMT-0500", "Thu, 29 Feb 2024 12:00:00 GMT",
+  "tue jan 01 2030 10:00 gmt", "Mon Jan 01 2030 10:00:00 GMT+0100", "Mon Jan 01 2001 00:00:00 GMT+0000", "Tue Jan 01 2030 25:00:00 GMT",
 ];
 
 // A small seeded generator (mulberry32), so the corpus is the same every run.

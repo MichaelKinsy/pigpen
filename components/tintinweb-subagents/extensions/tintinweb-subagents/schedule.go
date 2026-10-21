@@ -134,8 +134,7 @@ type realTimer struct{ t *time.Timer }
 
 func (r realTimer) stop() { r.t.Stop() }
 
-// timerChunk bounds one wait: a longer delay is waited in pieces, so no delay overflows a time.Duration. (Node's
-// setTimeout turns a delay above 2^31-1 ms into 1 ms, which fires a job a month away at once; PORT.md.)
+// timerChunk bounds one wait: a longer delay is waited in pieces, so no timer is armed for more than a day.
 const timerChunk = 24 * time.Hour
 
 // cronCheckInterval is the longest wait croner arms in one go: it re-arms every 30 s. upstream: croner.ts maxDelay.
@@ -182,9 +181,22 @@ func (c *rearmable) at(clock scheduleClock, deadline time.Time, fire func()) {
 	step()
 }
 
-// after runs fire once, delayMs from now.
+// nodeTimerMax is the longest delay Node's setTimeout and setInterval keep: 2^31-1 ms (24.8 days).
+const nodeTimerMax = 2147483647
+
+// nodeDelay is the delay Node's timers really use: one that is not at least 1 ms and at most 2^31-1 ms (NaN included)
+// becomes 1 ms, with a TimeoutOverflowWarning. So a one-shot more than 24.8 days away fires at once, and an interval
+// longer than that fires every millisecond, in the original (PORT.md).
+func nodeDelay(ms float64) float64 {
+	if !(ms >= 1 && ms <= nodeTimerMax) {
+		return 1
+	}
+	return ms
+}
+
+// after runs fire once, delayMs from now (setTimeout).
 func (c *rearmable) after(clock scheduleClock, delayMs float64, fire func()) {
-	c.at(clock, clock.now().Add(msDuration(delayMs)), fire)
+	c.at(clock, clock.now().Add(msDuration(nodeDelay(delayMs))), fire)
 }
 
 // every runs fire every intervalMs (setInterval) until stopped. The next tick is due one interval after this one
@@ -192,7 +204,7 @@ func (c *rearmable) after(clock scheduleClock, delayMs float64, fire func()) {
 func (c *rearmable) every(clock scheduleClock, intervalMs float64, fire func()) {
 	var tick func(from time.Time)
 	tick = func(from time.Time) {
-		c.at(clock, from.Add(msDuration(intervalMs)), func() {
+		c.at(clock, from.Add(msDuration(nodeDelay(intervalMs))), func() {
 			started := clock.now()
 			defer tick(started)
 			fire()
