@@ -269,11 +269,10 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
 - **A session that cannot be read** (restore or transcript selection) still starts; the user gets a warning.
 - **SOCKS4/4a proxies** validate like the original but fail closed at connect (Go's `net/http` has no SOCKS4 dialer).
 - **Credential commands** run through the bare `sh` (Go) instead of `/bin/sh`, so the harness can record them and NixOS-style systems work.
-- **Guidance names only what this port can do** (review fix): the "No search provider available" error of `auto` is the
-  original's (gemini-search.ts:820-828) and lists every provider of the port, OpenAI/Codex `/login` included; its item 5 (sign
-  into gemini.google.com in a Chromium browser) is left out because Gemini Web is not ported, so the explicit-selection item is
-  numbered 5 (`auto_guidance_test.go`). The fetch "Fallback options" list is the original's, hosted providers and Gemini lines
-  included.
+- **Guidance** (review fix): the "No search provider available" error of `auto` is the original's (gemini-search.ts:820-828) and
+  lists every provider of the port, OpenAI/Codex `/login` included, and (since the browser cookie slice) its item 5, signing
+  into gemini.google.com in a Chromium browser (`auto_guidance_test.go`). The fetch "Fallback options" list is the original's,
+  hosted providers and Gemini lines included.
 - **Image pixel budget** (review fix): images larger than 2000 px are decoded for resizing only up to 64 megapixels
   (8192x8192). Go's decoders allocate the full pixel buffer from the declared size, so a few kilobytes of PNG could
   otherwise demand gigabytes and kill the extension process; larger images fail with "Image too large to process".
