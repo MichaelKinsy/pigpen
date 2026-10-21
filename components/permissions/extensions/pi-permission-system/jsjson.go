@@ -80,7 +80,7 @@ func (o *jsObject) clone() *jsObject {
 
 // isArrayIndex reports whether k is a canonical array index (0, 1, ..., 2^32-2), which JavaScript orders before other keys.
 func isArrayIndex(k string) bool {
-	if k == "" || (len(k) > 1 && k[0] == '0') {
+	if k == "" || k[0] < '0' || k[0] > '9' || (len(k) > 1 && k[0] == '0') {
 		return false
 	}
 	n, err := strconv.ParseUint(k, 10, 64)
@@ -103,6 +103,17 @@ func (o *jsObject) order() []string {
 		return a < b
 	})
 	return append(idx, rest...)
+}
+
+// orderView is order() for a caller that only reads the result: with no array-index key the insertion order already is Object.keys
+// order, and the object's own slice is returned without a copy.
+func (o *jsObject) orderView() []string {
+	for _, k := range o.keys {
+		if isArrayIndex(k) {
+			return o.order()
+		}
+	}
+	return o.keys
 }
 
 // parseJSON decodes one JSON value: objects become *jsObject, arrays []any, numbers float64, null nil.

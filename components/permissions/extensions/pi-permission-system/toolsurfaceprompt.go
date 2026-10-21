@@ -47,7 +47,7 @@ func RenderToolSurfaceSections(inputs ToolSurfaceInputs) ToolSurfaceSections {
 
 // toolBullets is one bullet per allowed tool that has a snippet. A tool without one is left unlisted rather than rendered bare.
 func toolBullets(inputs ToolSurfaceInputs) []string {
-	bullets := []string{}
+	bullets := make([]string, 0, len(inputs.AllowedTools))
 	for _, toolName := range inputs.AllowedTools {
 		if snippet := inputs.ToolSnippets[toolName]; snippet != "" {
 			bullets = append(bullets, "- "+toolName+": "+snippet)
@@ -60,8 +60,9 @@ func toolBullets(inputs ToolSurfaceInputs) []string {
 // file-exploration bullet first, then each allowed tool's own contributions, then the bullets other extensions added, then its two
 // unconditional bullets, de-duplicated in first-seen order.
 func ruleBullets(inputs ToolSurfaceInputs) []string {
-	bullets := []string{}
-	seen := map[string]bool{}
+	size := len(inputs.AllowedTools) + len(inputs.PromptGuidelines) + len(universalGuidelines)
+	bullets := make([]string, 0, size)
+	seen := make(map[string]bool, size)
 	addGuideline := func(guideline string) {
 		normalized := jsTrim(guideline)
 		if normalized == "" || seen[normalized] {
@@ -71,7 +72,7 @@ func ruleBullets(inputs ToolSurfaceInputs) []string {
 		bullets = append(bullets, normalized)
 	}
 
-	allowed := map[string]bool{}
+	allowed := make(map[string]bool, len(inputs.AllowedTools))
 	for _, name := range inputs.AllowedTools {
 		allowed[name] = true
 	}

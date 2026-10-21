@@ -50,14 +50,14 @@
  {
   "name": "dr-cap-boundary",
   "file": "dialogrenderer.go",
-  "find": "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {",
-  "replace": "if float64(utf16LenWTF(fact.text)) < fieldMaxWidth {"
+  "find": "if float64(length) <= fieldMaxWidth {",
+  "replace": "if float64(length) < fieldMaxWidth {"
  },
  {
   "name": "dr-cap-units",
   "file": "dialogrenderer.go",
-  "find": "if float64(utf16LenWTF(fact.text)) <= fieldMaxWidth {",
-  "replace": "if float64(len(fact.text)) <= fieldMaxWidth {"
+  "find": "length := utf16LenWTF(fact.text)",
+  "replace": "length := len(fact.text)"
  },
  {
   "name": "dr-cap-slice",

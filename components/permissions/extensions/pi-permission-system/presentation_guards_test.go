@@ -198,3 +198,10 @@ func TestResolvedAliasUsesTheFirstMatchingExternalPath(t *testing.T) {
 	p.Evidence = []PromptEvidence{evid("external path", "/x", nil), evid("external path", "/x", sp("/second"))}
 	eq(t, resolvedAlias(p, "/x"), "", "first entry without a detail ends the search")
 }
+
+func TestUTF16LenCountsUnits(t *testing.T) {
+	// An ASCII prefix, a BMP character, an astral character (two units) and a lone surrogate in WTF-8 (one unit).
+	eq(t, utf16LenWTF("abc\u00e9\U0001f600\xed\xa0\x80z"), 8, "mixed")
+	eq(t, utf16LenWTF(""), 0, "empty")
+	eq(t, utf16LenWTF("plain ascii"), 11, "ascii")
+}
