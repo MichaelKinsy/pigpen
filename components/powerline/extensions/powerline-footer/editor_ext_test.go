@@ -107,3 +107,11 @@ func TestACopyShortcutPressedInTheEditorIsHandledThere(t *testing.T) {
 		t.Errorf("the shortcut also reached the default editor (%d calls)", got)
 	}
 }
+
+func notifications(h *Host) []string {
+	var out []string
+	for _, c := range h.CallsTo("ui.notify") {
+		out = append(out, c.Args["level"].(string)+": "+c.Args["message"].(string))
+	}
+	return out
+}

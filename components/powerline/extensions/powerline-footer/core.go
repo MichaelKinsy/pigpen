@@ -57,7 +57,8 @@ const (
 var widgetKeys = []string{"powerline-top", "powerline-secondary", "powerline-bash-transcript", "powerline-status", "powerline-pending-send", "powerline-queue-preview", "powerline-last-prompt"}
 
 type powerline struct {
-	bash    bashHooks // the bash slice (bash_ext.go); nil in tests that build a powerline without it
+	perf    *editorPerfProfiler // the editor profiler (perf_ext.go); nil in tests that build a powerline without it
+	bash    bashHooks           // the bash slice (bash_ext.go); nil in tests that build a powerline without it
 	h       hostAPI
 	enabled bool
 	config  powerlineConfig
@@ -377,17 +378,22 @@ func (p *powerline) setup() {
 	if p.config.Placement == "below" {
 		placement = "belowEditor"
 	}
-	p.ui.Widgets[widgetTop] = placement
-	p.h.SetWidgetInstalled(widgetTop, placement, true)
-	if p.h.Mode() == "tui" {
-		p.ui.Widgets[widgetStatus] = "aboveEditor"
-		p.h.SetWidgetInstalled(widgetStatus, "aboveEditor", true)
-		p.ui.Widgets[widgetBashTranscript] = "belowEditor"
-		p.h.SetWidgetInstalled(widgetBashTranscript, "belowEditor", true)
-		p.ui.Widgets[widgetPendingSend] = "belowEditor"
-		p.h.SetWidgetInstalled(widgetPendingSend, "belowEditor", true)
-		p.ui.Widgets[widgetQueuePreview] = "belowEditor"
-		p.h.SetWidgetInstalled(widgetQueuePreview, "belowEditor", true)
+	perf := p.perfOptions()
+	if perf.Widgets { // installPowerlineWidgets returns at once when the profiler's A/B switch turned the widgets off
+		p.ui.Widgets[widgetTop] = placement
+		p.h.SetWidgetInstalled(widgetTop, placement, true)
+		if p.h.Mode() == "tui" {
+			p.ui.Widgets[widgetStatus] = "aboveEditor"
+			p.h.SetWidgetInstalled(widgetStatus, "aboveEditor", true)
+			if perf.BashWidgets {
+				p.ui.Widgets[widgetBashTranscript] = "belowEditor"
+				p.h.SetWidgetInstalled(widgetBashTranscript, "belowEditor", true)
+			}
+			p.ui.Widgets[widgetPendingSend] = "belowEditor"
+			p.h.SetWidgetInstalled(widgetPendingSend, "belowEditor", true)
+			p.ui.Widgets[widgetQueuePreview] = "belowEditor"
+			p.h.SetWidgetInstalled(widgetQueuePreview, "belowEditor", true)
+		}
 	}
 	p.base = nil // taken afresh by Repaint
 	p.h.Repaint()
@@ -499,7 +505,7 @@ func (p *powerline) refresh() {
 	l, r, s := mergeSegmentsWithCustomItems(d, p.config.CustomItems, p.config.Layout, p.config.DisabledSegments)
 	p.left, p.right, p.secondary = l, r, s
 	all := append(append(slices.Clone(l), r...), s...)
-	ctx := p.buildContext(d, all)
+	ctx := p.measureContext(func() segmentContext { return p.buildContext(d, all) })
 	if p.bash != nil {
 		ctx.Shell = p.bash.segmentData()
 	}

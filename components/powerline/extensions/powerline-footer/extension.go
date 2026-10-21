@@ -188,19 +188,19 @@ func (h *sdkHost) Repaint() {
 	ui := h.pl.installed()
 	width := h.ctx.Width()
 	if placement, ok := ui.Widgets[widgetTop]; ok {
-		h.setWidget(widgetTop, placement, h.pl.renderTop(width))
+		h.setWidget(widgetTop, placement, h.pl.measure("primary", func() []string { return h.pl.renderTop(width) }))
 	}
 	if placement, ok := ui.Widgets[widgetStatus]; ok {
-		h.setWidget(widgetStatus, placement, h.pl.renderStatus(width))
+		h.setWidget(widgetStatus, placement, h.pl.measure("status", func() []string { return h.pl.renderStatus(width) }))
 	}
 	if placement, ok := ui.Widgets[widgetBashTranscript]; ok {
-		h.setWidget(widgetBashTranscript, placement, h.pl.renderBashTranscript(width))
+		h.setWidget(widgetBashTranscript, placement, h.pl.measure("bash-transcript", func() []string { return h.pl.renderBashTranscript(width) }))
 	}
 	if placement, ok := ui.Widgets[widgetPendingSend]; ok {
 		h.setWidget(widgetPendingSend, placement, h.pl.renderPendingSend(width))
 	}
 	if placement, ok := ui.Widgets[widgetQueuePreview]; ok {
-		h.setWidget(widgetQueuePreview, placement, h.pl.renderQueuePreview(width))
+		h.setWidget(widgetQueuePreview, placement, h.pl.measure("queue-preview", func() []string { return h.pl.renderQueuePreview(width) }))
 	}
 	if ui.Footer {
 		_ = h.ctx.SetFooterRenderer(h.pl.footerRows)
@@ -218,7 +218,8 @@ type app struct {
 	welcome   welcomeState // welcome.go, welcome_ext.go
 	cdq       *cdQuote     // /cd, /reply and the last-prompt line (cdquote_ext.go)
 	keys      *keysExt
-	bash      *bashExt // bash mode (bash_ext.go)
+	bash      *bashExt            // bash mode (bash_ext.go)
+	perf      *editorPerfProfiler // the editor profiler (perf_ext.go)
 
 	repaintPending atomic.Bool
 }
@@ -255,6 +256,7 @@ func (a *app) core(ctx sdk.Context) *powerline {
 		if a.bash != nil {
 			a.pl.bash = a.bash
 		}
+		a.pl.perf = a.perf
 	})
 	a.host.ctx = ctx
 	return a.pl
@@ -280,7 +282,6 @@ func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) 
 	pl := a.core(ctx)
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
-	pl.warnUnsupported()
 	a.cdq.sessionStart(ctx, pl.enabled)
 	defer a.welcomeSessionStart(ctx, reason) // after the bar is installed, as in index.ts
 	a.widthOnce.Do(func() {
@@ -325,15 +326,8 @@ func (a *app) command(ctx sdk.Context, args string) error {
 // Extension is the powerline status bar.
 func Extension() *sdk.Extension {
 	e := sdk.New("powerline-footer")
-	a := &app{}
+	a := &app{perf: newEditorPerfProfiler(readEditorPerfOptions(nil))}
 	e.Command("powerline", "Configure powerline status (toggle, preset)", a.command)
-	for _, c := range refusedCommands {
-		refused := refusal(c.feature)
-		e.Command(c.name, c.description, func(ctx sdk.Context, _ string) error {
-			ctx.Notify(refused, "error")
-			return nil
-		})
-	}
 	registerKeys(e, a)
 	registerFollowUp(e, a)
 	registerVibes(e, a)
@@ -347,6 +341,7 @@ func Extension() *sdk.Extension {
 	registerQueue(e, a)
 	registerCdQuote(e, a)
 	registerBash(e, a)
+	e.Command("powerline-perf", "Show or reset opt-in editor performance profiling", a.perfCommand)
 	// The shortcut actions the keys slice leaves to the features that own them (index.ts runPowerlineShortcut 2379-2390).
 	a.keys.setHook(actionQueueOpen, a.openQueuePicker)
 	a.keys.setHook(actionReply, func(ctx sdk.Context) {

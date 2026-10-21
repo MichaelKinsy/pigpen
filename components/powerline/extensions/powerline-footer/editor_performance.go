@@ -5,16 +5,15 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
 
 // The editor performance profiler's options and counters. upstream: editor-performance.ts.
 //
-// The profiler measures the editor's render and input (index.ts 3323-3500), which needs the editor installed through the
-// SDK's setEditorComponent (available since PiG v0.5.0; wiring it in is the next slice). Until then only the options are used:
-// refusal.go reads them to refuse POWERLINE_DEBUG_PERF, and /powerline-perf stays refused. The profiler is kept here, proven
-// by twins, so the editor port finds it done.
+// The profiler measures the editor's render and input (index.ts 3323-3500), the widgets and the segment context. It is on only
+// with POWERLINE_DEBUG_PERF=1 (the A/B switches turn one feature off); /powerline-perf shows and resets it (perf_ext.go).
 
 // editorPerfOptions is EditorPerfOptions: the profiling switch and the A/B switches that turn one editor feature off.
 type editorPerfOptions struct {
@@ -50,8 +49,10 @@ type editorPerfMetric struct {
 	maxMs   float64
 }
 
-// editorPerfProfiler is EditorPerfProfiler. It is not safe for concurrent use, as the original is single-threaded.
+// editorPerfProfiler is EditorPerfProfiler. The original is single-threaded; here the editor's input goroutine, the repaint and
+// the commands record into it, so mu guards every method.
 type editorPerfProfiler struct {
+	mu                    sync.Mutex
 	options               editorPerfOptions
 	metrics               map[string]*editorPerfMetric
 	startedAt             float64 // Date.now() at construction or reset, in ms
@@ -93,11 +94,17 @@ func (p *editorPerfProfiler) metric(name string) *editorPerfMetric {
 }
 
 // count adds one to a counter without a duration.
-func (p *editorPerfProfiler) count(name string) { p.metric(name).count++ }
+func (p *editorPerfProfiler) count(name string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.metric(name).count++
+}
 
 // observeDraft tracks the longest draft in UTF-16 units. A draft of several lines is measured on every 32nd observation only
 // (the first, 33rd, 65th ...), to keep the profiler cheap while typing.
 func (p *editorPerfProfiler) observeDraft(lines []string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.draftObservationCount++
 	if len(lines) > 1 && p.draftObservationCount%32 != 1 {
 		return
@@ -110,6 +117,8 @@ func (p *editorPerfProfiler) observeDraft(lines []string) {
 }
 
 func (p *editorPerfProfiler) reset() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.metrics = map[string]*editorPerfMetric{}
 	p.startedAt = p.nowMs()
 	p.maxDraftChars = 0
@@ -125,6 +134,8 @@ func onOff(on bool) string {
 
 // report is the text /powerline-perf shows.
 func (p *editorPerfProfiler) report() string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	inputCount, renderCount := 0, 0
 	if m := p.metrics["input.total"]; m != nil {
 		inputCount = m.count
@@ -162,6 +173,8 @@ func (p *editorPerfProfiler) report() string {
 }
 
 func (p *editorPerfProfiler) record(name string, durationMs float64) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	m := p.metric(name)
 	m.count++
 	m.totalMs += durationMs

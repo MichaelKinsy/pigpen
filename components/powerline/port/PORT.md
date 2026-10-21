@@ -1,4 +1,4 @@
-# Port record: pi-powerline-footer (everything except the editor features, which are the next slices; they are refused meanwhile)
+# Port record: pi-powerline-footer (everything the SDK allows)
 
 | Input | Identity |
 |---|---|
@@ -20,7 +20,7 @@ never visible (the first needs bash mode, the second renders nothing in the orig
 
 ### Ported in the follow-up (version 0.2.0)
 
-`auto-follow-up.ts` and the `input` handler of `index.ts` (Jev classifier: POST to `api.typesafe.ai/v1/systemone`, 1500 ms for the exchange, confidence at least 0.8, requests serialised, Esc during the call returns the messages to the editor, a session switch during the call routes nothing into the new session, any failure keeps the message as steering and says so) are in `follow_up.go`, `followup_ext.go` and `auto_follow_up.go`. `editor-performance.ts` (options, counters, report) and `editor-composition.ts` are ported as `editor_performance.go` and `editor_composition.go`; nothing calls them, because the call site is the editor setup (`setEditorComponent`), which the Go SDK cannot do (PiG item C3). `/powerline-perf` and `POWERLINE_DEBUG_PERF` stay refused. Evidence: 10 more exact twins (6 auto-follow-up, 2 editor-performance, 2 editor-composition), 3 scenarios recorded from the original under Pi 1402973a, 146 mutations killed.
+`auto-follow-up.ts` and the `input` handler of `index.ts` (Jev classifier: POST to `api.typesafe.ai/v1/systemone`, 1500 ms for the exchange, confidence at least 0.8, requests serialised, Esc during the call returns the messages to the editor, a session switch during the call routes nothing into the new session, any failure keeps the message as steering and says so) are in `follow_up.go`, `followup_ext.go` and `auto_follow_up.go`. `editor-performance.ts` (options, counters, report) and `editor-composition.ts` are ported as `editor_performance.go` and `editor_composition.go`; nothing calls them, because the call site is the editor setup (`setEditorComponent`), which PR 9 does; the profiler is wired in by PR 12. Evidence: 10 more exact twins (6 auto-follow-up, 2 editor-performance, 2 editor-composition), 3 scenarios recorded from the original under Pi 1402973a, 146 mutations killed.
 
 ### Ported in PR 3 (keys, version 0.3.0)
 
@@ -44,7 +44,7 @@ the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `
 
 ### Ported in PR 8 (queue, version 0.8.0)
 
-`queue/store.ts`, `queue/types.ts` and the queue parts of `index.ts` in `queue_*.go`, `select_overlay.go`: the inbox store (aliases, ids, statuses, locking, delivery text, the `/compact <prompt>` parse), the `queue` segment and the preview and pending-send widgets, `/queue`, the picker overlay, and delivery after a compaction (timers, block on failure, 60 second requeue, session generation). Typing a prompt during a compaction and delayed send need the editor's submit path and stay refused (`sendDelayMs`). The scenario `queue-post-compaction` is parked in `port/scenarios-pending`: PiG's compaction request prompt says "pig" where Pi says "pi" (PiG core bug). The adapter sends a widget only when its lines or placement changed and reads the session id once per repaint.
+`queue/store.ts`, `queue/types.ts` and the queue parts of `index.ts` in `queue_*.go`, `select_overlay.go`: the inbox store (aliases, ids, statuses, locking, delivery text, the `/compact <prompt>` parse), the `queue` segment and the preview and pending-send widgets, `/queue`, the picker overlay, and delivery after a compaction (timers, block on failure, 60 second requeue, session generation). Typing a prompt during a compaction and delayed send need the editor's submit path and are ported in PR 11. The scenario `queue-post-compaction` is parked in `port/scenarios-pending`: PiG's compaction request prompt says "pig" where Pi says "pi" (PiG core bug). The adapter sends a widget only when its lines or placement changed and reads the session id once per repaint.
 
 ### Ported in PR 9 (editor chrome, version 0.9.0)
 
@@ -58,13 +58,10 @@ the logic of `bash-mode/*` (`history.ts`, `transcript.ts`, `shell-session.ts`, `
 
 `index.ts` 1554-1603 and 3335-3384 (`submitWithDelay`, the editor's `handleInput` wrapper) in `queue_editor.go` (`editorKey`) and `editor_ext.go`: `powerline.sendDelayMs` delays a submitted prompt (Esc takes it back before the draft, Enter on an empty editor sends it now, slash and bang commands go at once), `/compact` and `/compact <prompt>` start a compaction the queue knows of, and a prompt typed during a compaction is queued for after it. The original wraps the editor's `onSubmit` property, which the SDK editor does not expose, so a submit is the Enter key (Pi's default `tui.input.submit`, no keybinding lookup, E10) and a delayed prompt is sent later by putting its text into the editor and pressing Enter there, which runs Pi's own submit path; a draft typed during the countdown is put back afterwards, and Pi's editor does not add the same entry to its history twice. The pending-send widget and its one-second countdown repaint through the app's coalesced repaint.
 
-### Refusal of what is not ported
+### Ported in PR 12 (the editor profiler, version 0.12.0)
 
-Until the rest is ported, `refusal.go` refuses each unported command (`/bash-mode`, `/bash-reset`, `/powerline-perf`) with an error notification and each unported setting (see the README) with a
-warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
-npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
-The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
-options) are unchanged.
+`editor-performance.ts` wired in as in `index.ts` (1204, 2704-2716, 2982, 3125, 3323-3500) in `perf_ext.go`: `POWERLINE_DEBUG_PERF=1` turns profiling on when the extension is created (the A/B switches `POWERLINE_PERF_FAST_RENDER`, `_EDITOR_CHROME`, `_WIDGETS`, `_BASH_WIDGETS` and `_LAST_PROMPT` turn one feature off), `/powerline-perf` shows the report and `reset` clears it, and the editor's input (`input.total`, `input.base-editor`), render (`editor.render.total`, `.base`, `.fast-probe`, `.fast-hit`), the widgets and the segment context are measured. The profiler takes a mutex because the editor's input goroutine, the repaint and the commands record into it. The draft size (`max-draft`) is read from the editor's lines after each input only while profiling. Nothing is refused any more: `refusal.go` and its tests are gone.
+
 
 ## Mapping
 

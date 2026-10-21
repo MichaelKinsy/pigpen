@@ -9,7 +9,7 @@ import (
 )
 
 // The Go SDK has no keybinding lookup (E10) and no tui.hasOverlay(). Nothing in the extension may depend on them: a call would
-// fail or silently return nothing at run time, so a feature that needs one has to be refused (see refusal_test.go) or replaced by
+// fail or silently return nothing at run time, so a feature that needs one has to be replaced by
 // a documented stand-in instead of half working. This test reads every non-test source file, drops the comments, and fails when
 // the code reaches for one of those host capabilities. (SetEditorComponent and GetEditorComponent exist since PiG v0.5.0 and are
 // allowed.)

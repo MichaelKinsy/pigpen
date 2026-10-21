@@ -307,3 +307,35 @@ func TestEditorInputDismissesTheWelcomeForEveryKey(t *testing.T) {
 		t.Errorf("dismissed %d times, default editor got %q", dismissed, base.input)
 	}
 }
+
+func TestRenderSwitchesAndProfilerCounters(t *testing.T) {
+	var border editorBorderColor
+	big := &fakeBase{rows: piRows("normal"), lines: fastDoc(100), cursor: sdk.EditorCursor{Line: 99}}
+	perf := newEditorPerfProfiler(readEditorPerfOptions(func(name string) string {
+		if name == "POWERLINE_DEBUG_PERF" {
+			return "1"
+		}
+		return ""
+	}))
+
+	got, _ := renderPowerlineEditorWith(big, &border, 40, false, false, editorRenderOptions{chrome: true, fast: true, perf: perf})
+	if len(got) != 9 || len(big.renderWidths) != 0 {
+		t.Errorf("fast path: %d rows, default editor rendered %v", len(got), big.renderWidths)
+	}
+	report := perf.report()
+	if !strings.Contains(report, "editor.render.fast-hit: n=1") || !strings.Contains(report, "editor.render.fast-probe: n=1") {
+		t.Errorf("report:\n%s", report)
+	}
+
+	// fastRender off: the chrome of the default editor's rows.
+	got, _ = renderPowerlineEditorWith(big, &border, 40, false, false, editorRenderOptions{chrome: true, fast: false})
+	if len(got) != 3 || len(big.renderWidths) != 1 || big.renderWidths[0] != 37 {
+		t.Errorf("no fast render: rows %q widths %v", got, big.renderWidths)
+	}
+	// editorChrome off: the default editor's rows untouched, at the full width.
+	big.renderWidths = nil
+	got, _ = renderPowerlineEditorWith(big, &border, 40, false, false, editorRenderOptions{chrome: false, fast: true})
+	if len(got) != 3 || got[1] != "normal" || len(big.renderWidths) != 1 || big.renderWidths[0] != 40 {
+		t.Errorf("no chrome: rows %q widths %v", got, big.renderWidths)
+	}
+}

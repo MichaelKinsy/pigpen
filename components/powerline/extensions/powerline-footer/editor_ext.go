@@ -25,14 +25,26 @@ type powerlineBase interface {
 type powerlineEditor struct {
 	*sdk.Editor // inherits HandleMouse, SetText, InsertTextAtCursor and AddToHistory
 	base        powerlineBase
-	mu          sync.Mutex      // one input at a time reaches the default editor: a key, or a delayed prompt being sent
-	bash        *bashModeEditor // nil until the bash slice is wired in (internal tests)
+	mu          sync.Mutex          // one input at a time reaches the default editor: a key, or a delayed prompt being sent
+	bash        *bashModeEditor     // nil until the bash slice is wired in (internal tests)
+	perf        *editorPerfProfiler // nil unless POWERLINE_DEBUG_PERF=1
 	ctx         sdk.Context
 	k           *keysExt
 	border      editorBorderColor
 }
 
 func (e *powerlineEditor) HandleInput(data string) error {
+	if e.perf == nil {
+		return e.handleInput(data)
+	}
+	err := measureEditorPerf(e.perf, "input.total", func() error { return e.handleInput(data) })
+	if lines, lerr := e.base.GetLines(); lerr == nil {
+		e.perf.observeDraft(lines)
+	}
+	return err
+}
+
+func (e *powerlineEditor) handleInput(data string) error {
 	e.k.dismiss(e.ctx) // dismissWelcomeForInput
 	if isPrintableInput(data) {
 		return e.pass(data)
@@ -67,7 +79,17 @@ func (e *powerlineEditor) Render(width int) ([]string, error) {
 		base = ghostBase{base, e.bash}
 		active = e.bash.env.active()
 	}
-	return renderPowerlineEditor(base, &e.border, width, active, completions)
+	options := editorPerfOptions{EditorChrome: true, FastRender: true}
+	if e.k.a != nil && e.k.a.perf != nil {
+		options = e.k.a.perf.options
+	}
+	render := func() ([]string, error) {
+		return renderPowerlineEditorWith(base, &e.border, width, active, completions, editorRenderOptions{chrome: options.EditorChrome, fast: options.FastRender, perf: e.perf})
+	}
+	if e.perf == nil {
+		return render()
+	}
+	return measureEditorPerf2(e.perf, "editor.render.total", render)
 }
 
 // queueKey is the queue's part of handleInput (index.ts 3335-3384): Esc takes a delayed prompt back, /compact starts a compaction
@@ -121,7 +143,13 @@ func (k *keysExt) installEditor(ctx sdk.Context) {
 		bash = k.a.bash
 	}
 	_ = ctx.SetEditorComponent(func(base *sdk.Editor) sdk.EditorComponent {
-		e := &powerlineEditor{Editor: base, base: base, ctx: ctx, k: k}
+		var pb powerlineBase = base
+		var perf *editorPerfProfiler
+		if k.a != nil && k.a.perf != nil && k.a.perf.options.Enabled {
+			perf = k.a.perf
+			pb = perfBase{base, perf}
+		}
+		e := &powerlineEditor{Editor: base, base: pb, ctx: ctx, k: k, perf: perf}
 		if k.a != nil && k.a.pl != nil {
 			k.a.pl.queue.editor = editorQueueAdapter{e} // called with a.mu held, from the core's setup
 		}

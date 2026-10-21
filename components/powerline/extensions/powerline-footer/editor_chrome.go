@@ -283,9 +283,35 @@ func renderFastPowerlineEditor(ed editorBase, border editorBorderColor, width in
 // renderPowerlineEditor is the editor.render override: the fast render when it applies, otherwise the default editor's rows
 // laid out at width-3 with the prompt glyph in the left margin and powerline borders.
 func renderPowerlineEditor(ed editorBase, border *editorBorderColor, width int, bashModeActive, completionsEnabled bool) ([]string, error) {
-	fast, err := renderFastPowerlineEditor(ed, *border, width, bashModeActive, completionsEnabled)
-	if err != nil || fast != nil {
-		return fast, err
+	return renderPowerlineEditorWith(ed, border, width, bashModeActive, completionsEnabled, editorRenderOptions{chrome: true, fast: true})
+}
+
+// editorRenderOptions are the profiler's A/B switches (editorChrome, fastRender) and the profiler itself, nil when profiling is off.
+type editorRenderOptions struct {
+	chrome, fast bool
+	perf         *editorPerfProfiler
+}
+
+func renderPowerlineEditorWith(ed editorBase, border *editorBorderColor, width int, bashModeActive, completionsEnabled bool, o editorRenderOptions) ([]string, error) {
+	if !o.chrome {
+		return ed.Render(width)
+	}
+	if o.fast {
+		var fast []string
+		var err error
+		if o.perf != nil {
+			fast, err = measureEditorPerf2(o.perf, "editor.render.fast-probe", func() ([]string, error) {
+				return renderFastPowerlineEditor(ed, *border, width, bashModeActive, completionsEnabled)
+			})
+		} else {
+			fast, err = renderFastPowerlineEditor(ed, *border, width, bashModeActive, completionsEnabled)
+		}
+		if err != nil || fast != nil {
+			if fast != nil && o.perf != nil {
+				o.perf.count("editor.render.fast-hit")
+			}
+			return fast, err
+		}
 	}
 	if width < 10 {
 		return ed.Render(width)
@@ -324,4 +350,17 @@ func renderPowerlineEditor(ed editorBase, border *editorBorderColor, width int, 
 	}
 	out = append(out, rule)
 	return append(out, lines[bottom+1:]...), nil
+}
+
+// measureEditorPerf2 is measureEditorPerf for an operation that answers rows and an error.
+func measureEditorPerf2(p *editorPerfProfiler, name string, operation func() ([]string, error)) ([]string, error) {
+	type result struct {
+		lines []string
+		err   error
+	}
+	r := measureEditorPerf(p, name, func() result {
+		lines, err := operation()
+		return result{lines, err}
+	})
+	return r.lines, r.err
 }
