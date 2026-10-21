@@ -55,8 +55,7 @@ func (w *warden) audit(ctx sdk.Context) error {
 }
 
 // auditRunning is the busy flag the supervision lane's input registry reads (extension.ts `auditRunning`): while it is
-// true a user message is answered with a notice and handled (extension.go registers it with w.sup.blockInput). Like the
-// original the block does not look at the message's source: a host that emits `input` for the audit's own prompt (Pi
-// 1.3.0 does) has that prompt handled too, and the audit then ends with "Agent did not write an audit report". That is
-// the original's behavior on such a host and is kept (port/PORT.md, finding A1).
+// true a message typed by the user is answered with a notice and handled (extension.go registers it with
+// w.sup.blockInput). The audit's own prompt, sent with sendUserMessage, has `source` "extension" and passes (D16): the
+// original swallows it on Pi 1.3.0 and ends with "Agent did not write an audit report".
 func (w *warden) auditRunning() bool { return w.auditState.running.Load() }

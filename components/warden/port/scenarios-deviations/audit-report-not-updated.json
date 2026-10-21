@@ -1,6 +1,6 @@
 {
   "name": "audit-report-not-updated",
-  "description": "/warden audit with a report from an earlier run: the audit's own prompt is handled by its input handler (PORT.md A1), nothing rewrites the report, the outcome is stale.",
+  "description": "D16 deviation scenario. /warden audit with a report from an earlier run: the original swallows the audit's own prompt (golden-deviations/original: no model request), the port sends it, the agent answers in chat, and the outcome is stale.",
   "env": {
     "PIGPEN_WARDEN_ENABLED": "1",
     "PIGPEN_WARDEN_STEER_VISIBLE": "0"

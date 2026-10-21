@@ -545,6 +545,7 @@ M = [
  ("audit-runs-without-confirm", "audit_cmd.go", "if err != nil || !ok {", "if err != nil || false && !ok {"),
  ("audit-runs-headless", "audit_cmd.go", "\tif !ctx.HasUI() {", "\tif false {"),
  ("audit-input-not-blocked", "audit_cmd.go", "func (w *warden) auditRunning() bool { return w.auditState.running.Load() }", "func (w *warden) auditRunning() bool { return false }"),
+ ("input-extension-source-blocked", "supervision.go", "if !fromExtension && b.busy() {", "if !(fromExtension && false) && b.busy() {"),
  ("audit-flag-left-on", "audit_cmd.go", "defer w.auditState.running.Store(false)", "defer func() {}()"),
  ("audit-failure-not-reported", "audit_cmd.go", 'w.say(ctx, "pi-warden audit failed: "+err.Error()+".", "error")', "_ = err"),
  ("audit-stale-message-changed", "audit_cmd.go", "the report file was not updated", "the report was not updated"),

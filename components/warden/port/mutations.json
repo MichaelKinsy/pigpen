@@ -568,11 +568,5 @@
   "file": "config_load.go",
   "find": "\t\tNudge:          boolean(raw[\"nudge\"], base.Nudge),",
   "replace": "\t\tNudge:          base.Nudge,"
- },
- {
-  "name": "audit-input-not-blocked",
-  "file": "audit_cmd.go",
-  "find": "func (w *warden) auditRunning() bool { return w.auditState.running.Load() }",
-  "replace": "func (w *warden) auditRunning() bool { return false }"
  }
 ]

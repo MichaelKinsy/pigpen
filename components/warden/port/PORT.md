@@ -164,6 +164,7 @@ PiG."
 | D28 | warning text for an object-valued rule setting prints keys in insertion order | keys sorted | D10 |
 | D29 | `/warden config set` writes anything, including consent | the same: `/warden config set consent typesafe` grants consent without the disclosure dialog, exactly as upstream's `config set typesafe true` does; the user typed it | faithful; named so a reviewer sees it |
 | D30 | the config panel is opened by click, the status line is a click target (`MouseRegion`), `closed` settles when the overlay is removed | the sidebar opens by shortcut or `/warden trace`; the status widget's rows are static host rows, not a click target; closing from outside (second toggle) uses `OverlayHandle.Hide()` | SDK needs 1 and 2 below |
+| D31 | the `input` handler answers `handled` to every message while `/warden init`, `audit` or `index` runs, without looking at `source` (`extension.ts` 2258-2268); the three commands send their prompt with `pi.sendUserMessage`, and Pi 1.3.0.1402973a emits `input` for it, so the command swallows its own prompt and ends with "Agent did not write ..." | a message with `source` `extension` passes (`supervision.go` `onInput`); typed (`interactive`) and `rpc` messages are still handled and answered | upstream bug; the original's behavior under Pi is kept as evidence in `port/golden-deviations/original/`. Remove when upstream fixes it (draft issue: `handoffs/pigpen-parity/upstream-issue-pi-warden-audit.md`) |
 
 SDK needs found: (1) a `Context.Custom` call returns only when the component returns `Done`; Pi's `ui.custom` promise is
 settled by the factory's `done()`, which an extension can call from anywhere. The port runs `Custom` on its own
@@ -800,22 +801,19 @@ micro-dollar. The Go port does not read pi-typesafe's price override.
 - `console.warn` lines of `discover.ts` / `audit.ts` (an unreadable directory) are not reproduced; the port never writes to stdout/stderr.
   `DiscoverSourceFiles` returns names in sorted order (Go's `os.ReadDir`); Node returns directory order, which only matters when the 200-file cap cuts.
 
-**A1 (finding about the original, kept): the audit blocks its own prompt on Pi 1.3.0.** The original's `input` handler answers `{action: "handled"}` for every
-message while `auditRunning`, without looking at `source`, and Pi 1.3.0.1402973a (and PiG's Node host) emit `input` for the extension's own
-`sendUserMessage`. Recorded from the original under Pi (`port/golden`, `audit-prompt-blocked-by-its-own-input-handler`): the notice `pi-warden is running an
-audit. Please wait...` appears, no model request is made, and the outcome is `Agent did not write an audit report. ...`. The port keeps that
-behavior (`onAuditInput` does not look at `source`), so on such a host `/warden audit` ends the same way; on a host that does not emit `input` for
-extension messages (the layer-1 fake host) the audit runs. Fixing it means checking `source == "extension"`; that is a deviation for the owner to
-decide, not taken here. Consequently the `written` outcome and the prompt reaching the model are not reachable through pigeq; they are
-proved by layer-1 tests and by the byte-for-byte prompt check.
+**D16 (a deviation from the original, an upstream bug fixed in the port).** The original's `input` handler (`extension.ts` 2258-2268) answers
+`{action: "handled"}` to every message while `auditRunning` (and `initRunning`, `indexRunning`) without looking at `source`, and Pi 1.3.0.1402973a
+(and PiG's Node host) emit `input` for the extension's own `sendUserMessage`. Recorded from the original under Pi
+(`port/golden-deviations/original/`): the notice `pi-warden is running an audit. Please wait...`, no model request, and the outcome
+`Agent did not write an audit report. ...`, so `/warden audit` never reaches the model. The port lets `source == "extension"` through in the one
+input guard (`supervision.go` `onInput`), which covers audit, init and index; typed and rpc messages are still handled and answered. The scenarios
+`port/scenarios-deviations/audit-prompt-reaches-the-model-report-written` and `audit-report-not-updated` differ from the original's trace on
+purpose: their goldens (`port/golden-deviations`) are recorded from the Go port under PiG (`pigeq record --self`), and the original's traces for the
+same scenarios are kept next to them as evidence (`golden-deviations/original`, recorded under Pi, not checked). Layer 1:
+`TestAuditBlocksUserInputWhileRunning`, `TestInputFromTheExtensionPassesWhileAnyRegisteredLaneIsBusy` (both fail without the fix).
 
 Input registry: the supervision lane owns the single `input` handler; `extension.go` registers the audit's busy flag with
 `w.sup.blockInput(w.auditRunning, "pi-warden is running an audit. Please wait...")` (order: init, audit, index).
-
-**Owner decision needed (A1).** Whether to keep the original's self-block or to skip messages whose `source` is `extension`. The port
-does not add the check (it would be a behavior the original lacks); the repro is the scenario
-`port/scenarios/audit-prompt-blocked-by-its-own-input-handler.json` (golden recorded from the original under Pi 1.3.0.1402973a:
-no model request, outcome `missing`).
 
 Not Go twins, by design (named skips with a per-case reason that names the script, generated by `port/gen-skipped-twins.py`): the 48 cases of
 `eval-env`, `eval-score`, `eval-turn`, `eval-waste`, `eval-weak` and the 13 of `judge-bench`. They import `../eval/*.mjs` (research scripts of the
