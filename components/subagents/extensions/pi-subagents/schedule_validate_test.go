@@ -20,8 +20,8 @@ func TestScheduleAtValidation(t *testing.T) {
 		{"+1s", ""},
 		{"+0m", `Invalid at value "+0m". Relative delays must be positive, such as "+10m".`},
 		{"+9007199254740992s", `Invalid at value "+9007199254740992s". Relative delays must be positive, such as "+10m".`},
-		{"+" + itoa(maxSeconds) + "s", ""},
-		{"+" + itoa(maxSeconds+1) + "s", `Invalid at value "+` + itoa(maxSeconds+1) + `s". Relative delay is too large.`},
+		{"+" + i64s(maxSeconds) + "s", ""},
+		{"+" + i64s(maxSeconds+1) + "s", `Invalid at value "+` + i64s(maxSeconds+1) + `s". Relative delay is too large.`},
 		{"+9007199254740s", `Invalid at value "+9007199254740s". Relative delay is too large.`},
 		{"tomorrow", `Invalid at value "tomorrow". Use a one-shot delay such as "+10m" or an ISO timestamp with timezone.`},
 		{"2030-01-01T10:00Z", ""},
@@ -43,7 +43,7 @@ func TestScheduleAtValidation(t *testing.T) {
 	}
 }
 
-func itoa(n int64) string { return strconv.FormatInt(n, 10) }
+func i64s(n int64) string { return strconv.FormatInt(n, 10) }
 
 func TestScheduleIntervalValidation(t *testing.T) {
 	for _, c := range []struct{ every, want string }{
