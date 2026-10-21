@@ -90,6 +90,7 @@ it("records the gate core corpus", async () => {
       mkdirSync(agentsDir, { recursive: true });
       if (spec.config !== null) writeFileSync(globalConfigPath, spec.config);
       for (const [n, text] of Object.entries(spec.agents)) writeFileSync(join(agentsDir, `${n}.md`), text);
+      const yolo = spec.yolo;
       const manager = new PermissionManager({ globalConfigPath, agentsDir, mcpServerNames: [], isYoloEnabled: () => yolo });
       const sessionRules = new SessionRules();
       for (const r of spec.sessionRules) sessionRules.approve(r.surface, r.pattern);
