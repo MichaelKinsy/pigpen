@@ -68,3 +68,22 @@ func TestTurnPrepWarmsTheBashParser(t *testing.T) {
 	}
 	eq(t, bashparse.GetWarmBashParser() != nil, true, "before_agent_start warms the parser")
 }
+
+type failingActivation struct{ refreshed, announced int }
+
+func (*failingActivation) Activate(SessionContext) error         { return errTest }
+func (f *failingActivation) RefreshConfig(*SessionContext, bool) { f.refreshed++ }
+
+func TestTurnPrepStopsWhenActivationFails(t *testing.T) {
+	session := &failingActivation{}
+	announcer := &fakeAnnouncer{order: &recordedOrder{}}
+	issues := &fakeIssueReporter{}
+	prep := NewSessionTurnPrep(session, func() {}, announcer, issues)
+	ctx, _ := trustedCtx(true)
+	if err := prep.Prepare(ctx); err == nil {
+		t.Fatal("the activation error was swallowed")
+	}
+	eq(t, session.refreshed, 0, "no refresh after a failed activation")
+	eq(t, issues.reports, 0, "no report")
+	eq(t, len(announcer.ctxs), 0, "no ready announcement for a node that could not activate")
+}
