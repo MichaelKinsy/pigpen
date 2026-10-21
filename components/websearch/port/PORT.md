@@ -8,7 +8,7 @@ Credits: [`../CREDITS.md`](../CREDITS.md).
 
 Search, fetch and source retention are ported and twinned. Everything else is a **named skipped test**:
 `pigeq twins check --ledger port/upstream-tests.json --go extensions/websearch` accounts for all
-875 upstream test titles (731 exact twins, 144 named skips, each with a reason). Do not call this port complete.
+875 upstream test titles (768 exact twins, 107 named skips, each with a reason). Do not call this port complete.
 
 | Slice 1 (done) | Deferred (named skips) |
 |---|---|
@@ -398,10 +398,10 @@ Each logs `ADAPTED:` when run.
 
 | Layer | Result |
 |---|---|
-| Twins | `pigeq twins check`: 731 exact + 144 named skips = 875 titles; exit 0 |
+| Twins | `pigeq twins check`: 768 exact + 107 named skips = 875 titles; exit 0 |
 | Go tests | `go test -race -count=24` with `GOMAXPROCS=4` passes; `go vet` clean on linux, windows, darwin |
 | Equivalence | 9 scenarios, replayed on PiG with the Go port: identical traces (`pigeq check --go`). The first 5 were recorded from the original under **Pi 1.0.1** (registration, schemas, system-prompt snippets, dynamic activation, renaming and the tool gates). Four were recorded under **Pi 1402973a** and `pigeq run` shows the original under Pi, the original under PiG's Node runtime and the port identical: `web-search-tavily` (the request to a fake Tavily server and the rendered answer), `fetch-text-page` and `fetch-raw-404` (the model's tool call names a fake page server through `{{server:web}}`), `fetch-private-address-refused`. They use the harness's `normalize` rule N7 for the `responseId` that `generateId` (storage.ts) draws on every run: `Date.now().toString(36)` plus 1 to 6 random base-36 characters (so 9 to 14 characters, and a leading `m` to `o` until 2029). One rule covers the id in text (`(responseId[": ]+)[0-9a-z]{9,14}\b`), one the id as a whole value (`^[m-o][0-9a-z]{8,13}$`); a bare 14-character rule was tried first and also hid `searchinfinity` and `simultaneously` in the recorded system text |
-| Mutation | `mutations.json`: 335 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, and the decoder, body read and domain fast paths); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, the 54 of the GitHub slice again at this head |
+| Mutation | `mutations.json`: 367 mutants (slice 1, the REST providers, the config cache, the hosted providers, Gemini, the model providers, answer mode, PDF, GitHub, browser cookies, and the decoder, body read and domain fast paths); each slice's own mutants were all killed (`pigeq mutate --unit`) at its stack position, the 33 of the browser cookie slice again at this head |
 | Binary | a Piglet Binary with only this extension fused (a temporary Piglet, deleted after the run) builds with PiG 0.3.0 and passes the process-global safety check; replaying the 5 scenarios on it (`pigeq record --self --builtin`) gives tool results and events identical to the Pi golden traces. `pig-with-batteries` itself cannot build a Binary yet because of the Node herdr extension (documented in its README) |
 | Go tests | 477 passing subtests, 572 skipped (570 ledger skips + 2 environment skips), coverage 86% |
 
@@ -582,3 +582,12 @@ Deliberate differences:
 - Gemini Web and the fixed Google endpoints cannot be reached by a scenario server, and authenticated fetch requires HTTPS to a
   host the profile names; the scenarios therefore cover profile errors, the opt-in, and the full cookie-extraction chain up to the
   point where no request is sent. The request side is covered by the twins.
+- Stack integration: the browser cookie opt-in (`allowBrowserCookies`) and the `browserCookies` selection are read through the
+  stat-validated config cache of `config.go` (`readLenientConfig`), not by a file read of their own: the opt-in is checked on every
+  Gemini Web and cookie call, and the original's `readFileSync` per call is slower than a cache hit. An edit of the file is still seen
+  on the next call. `ResetCaches` also resets the cookie state and the selection.
+- Stack integration: the Gemini slice's `GeminiWebClient` default is the cookie client, so `gemini_search` and the `gemini` fetch
+  provider reach Gemini Web with the extracted cookies when cookie access is on (`TestGeminiSearchUsesTheCookieClientByDefault`; the
+  Gemini routing twins keep using a fake client). The `auto` "No search provider available" text again carries the original's item 5.
+- Two process mechanisms coexist: the cookie programs run through `Context.Exec` (`hostexec.go`), while the GitHub extractors run
+  `gh` and `git` through os/exec because they need a child environment and a process-group kill that `Context.Exec` lacks.
