@@ -123,8 +123,9 @@ func TestRunOutcomesAreReportedAsTheOriginalReportsThem(t *testing.T) {
 		go func() {
 			done <- r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "run_in_background": false})
 		}()
-		tc.res.Tokens = 10
-		r.fleet.wait(t, 1)[0].finishWith(tc.res)
+		c := r.fleet.wait(t, 1)[0]
+		c.spec.Hooks.Usage(lifetimeUsage{Input: 10})
+		c.finishWith(tc.res)
 		out := <-done
 		if !strings.HasSuffix(out, tc.out) {
 			t.Errorf("%s: %q does not end with %q", tc.status, out, tc.out)
@@ -149,7 +150,9 @@ func TestBackgroundNotificationNamesTheToolCall(t *testing.T) {
 	msgs := r.messages()
 	eq(t, len(msgs), 1)
 	content := msgs[0]["message"].(map[string]any)["content"].(string)
-	eq(t, strings.Contains(content, "<task-id>"+id+"</task-id>\n<tool-use-id>call-1</tool-use-id>\n<status>Wrapped up (turn limit)</status>"), true)
+	// upstream: index.ts formatTaskNotification orders the tool-use id, the output file, then the status.
+	eq(t, strings.Contains(content, "<task-id>"+id+"</task-id>\n<tool-use-id>call-1</tool-use-id>\n<output-file>"), true)
+	eq(t, strings.Contains(content, "</output-file>\n<status>Wrapped up (turn limit)</status>"), true)
 	out := r.must("get_subagent_result", obj{"agent_id": id})
 	eq(t, strings.Contains(out, "Status: steered (wrapped up at the turn limit — output may be partial) |"), true)
 }

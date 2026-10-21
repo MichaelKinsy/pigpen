@@ -509,7 +509,7 @@ func TestTheNameOfAPersistedAgentIsOnTheSessionItRunsIn(t *testing.T) {
 		b, _ := os.ReadFile(logFile)
 		var out []string
 		for _, l := range strings.Split(strings.TrimSpace(string(b)), "\n") {
-			if l != "get_session_stats" && l != "get_last_assistant_text" {
+			if l != "get_session_stats" && l != "get_last_assistant_text" && l != "get_messages" {
 				out = append(out, l)
 			}
 		}

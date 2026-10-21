@@ -98,12 +98,28 @@ a fuzzy match (`haiku`, `sonnet 4.5`, a dot or a dash in a version); one that ma
 call's model and a silent fallback to the parent's for the file's. The other keys are parsed and kept for the slices
 that own them (see below); asking for one of them is refused.
 
+## Transcripts, usage and cost
+
+Each agent started by the `Agent` tool writes a JSON-lines transcript to
+`<temp dir>/pi-subagents-<uid>/<encoded cwd>/<session id>/tasks/<agent id>.output` (directory mode 0700), in the original's
+format: the prompt first, then every message at each turn end, surviving compactions. The path is in the background
+start text (`Output file:`) and the completion notification (`<output-file>`, and a `Full transcript available at:`
+line). `outputTranscript` in `subagents.json` sets the default (on) and an agent file's `output_transcript` overrides it.
+The data comes from the child's `--mode rpc` event stream: a token count is the sum of its assistant messages'
+input, output and cache-write tokens (cache reads are excluded, as in the original), and the cost is pi's own estimate.
+`<context_percent>` and `<compactions>` appear in the notification, `Context:` and `Compactions:` in
+`get_subagent_result` (also `verbose: true`, which appends the conversation) and in `steer_subagent`'s answer;
+`subagents:started` and `subagents:compacted` are emitted, and `subagents:completed` / `subagents:failed` carry `tokens` and
+a pi `usage`. `reportUsage: true` attaches the agents' spend to the next tool result so the parent session counts it.
+`showCost: true` adds `~$0.0042` to the tool results and `<estimated_cost_usd>` to the notification; the widgets that
+show it are another slice, so the setting is still announced as not fully supported.
+
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
 [port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
-mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, the settings
-menu (the store can write `.pi/subagents.json`, nothing calls it yet), and output transcripts. The `Agent` tool is advertised with the
+mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, and the settings
+menu (the store can write `.pi/subagents.json`, nothing calls it yet). The `Agent` tool is advertised with the
 original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
 `SubagentWorkflow` is not registered. (The text for every combination of those three features and the three
 `toolDescriptionMode`s is built and proved against what Pi sends, so a slice that ports a feature only switches it on in
@@ -116,8 +132,7 @@ Nothing that is not ported is accepted and quietly ignored. Each of these is ref
 > npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.
 
 - Agent call parameters `schedule` and `isolation: "worktree"`.
-- Agent file fields that ask for an unported feature: `isolation: worktree`, `memory`, `allowed_subagents`,
-  `output_transcript: true`.
+- Agent file fields that ask for an unported feature: `isolation: worktree`, `memory`, `allowed_subagents`.
 - `subagents:rpc:spawn` options other than `description`, `model`, `maxTurns`, `name`, `thinkingLevel`, `isolated`,
   `inheritContext`, `bypassQueue` and `isBackground`. (`parentAgentId`, `workflowId`, `depth`, `maxSubagentDepth`,
   `configCwd`, `rootSessionId`, `resumeSessionFile`, `reclaim` and `blocking` are dropped, as the original drops what a

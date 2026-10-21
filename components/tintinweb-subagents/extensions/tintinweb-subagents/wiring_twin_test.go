@@ -765,8 +765,5 @@ func TestStatusNoteWiringTwins(t *testing.T) {
 		eq(t, contains(out, "Done"), false) // not surfaced as a normal completion
 		eq(t, contains(out, "everything the agent produced is above"), false)
 	})
-	tskip(t, f, "emits the documented payload when a top-level agent's session compacts", "subagents:compacted comes from the in-process session's compaction callback; a child process does not report its compactions to this extension, and the event belongs with the usage slice (G12)")
-	tskip(t, f, "counts repeated compactions on the same agent", "the compaction count is kept on the record by the in-process session's callback, which a child process does not provide; usage slice (G12)")
-	tskip(t, f, "stays silent for a nested child, like every other lifecycle event", "the compaction event itself is not emitted by this port (G12), and a nested child needs the nested delegation slice (G7) to exist")
 	_ = os.Stat
 }

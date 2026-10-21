@@ -50,17 +50,34 @@ type childSpec struct {
 	ResumeFile    string // --session: reopen this session file instead of starting a conversation
 	ParentSession string // the parent's session file, recorded in the new session's header so /resume nests it
 	SessionName   string // --name
+
+	// Schema (JSON) makes the child report through a StructuredOutput tool built from it. The tool is an extension
+	// tool of the child, so a schema cannot be combined with NoExtensions.
+	Schema string
+	// Transcript and SessionID: the agent writes a `.output` transcript under the session's task directory.
+	Transcript bool
+	SessionID  string
+	// Hooks receives what the child's event stream carries (usage, compaction, every event). Set by the manager.
+	Hooks *childHooks
 }
 
 // childResult is what a finished child reports.
 type childResult struct {
-	Text      string
-	ToolUses  int
-	Tokens    int
-	Turns     int
-	WrappedUp bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
-	Aborted   bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
-	Failure   string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
+	Text     string
+	ToolUses int
+	Turns    int
+	// ContextPercent is the child's context-window utilization when it settled, nil when unavailable (no model
+	// window, or just after a compaction). upstream: usage.ts getSessionContextPercent.
+	ContextPercent *float64
+	// Conversation is the child's conversation as it ended (after any compaction) as getAgentConversation formats it,
+	// bounded by maxConversationBytes. upstream: getAgentConversation(session).
+	Conversation string
+	// StructuredJSON is the validated StructuredOutput payload, when a schema was asked for and one validated.
+	StructuredJSON    string
+	StructuredRetried bool
+	WrappedUp         bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
+	Aborted           bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
+	Failure           string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
 }
 
 // defaultGraceTurns is how many turns past the limit an agent that was told to wrap up may take before it is
@@ -184,10 +201,14 @@ func childArgs(spec childSpec) []string {
 		args = append(args, "--thinking", spec.Thinking)
 	}
 	if spec.AllowTools != nil {
-		if len(spec.AllowTools) == 0 {
+		tools := spec.AllowTools
+		if spec.Schema != "" { // re-admitted: the call asked for a schema, so denying the tool would make it unsatisfiable
+			tools = append(slices.Clone(tools), structuredOutputToolName)
+		}
+		if len(tools) == 0 {
 			args = append(args, "--no-tools")
 		} else {
-			args = append(args, "--tools", strings.Join(spec.AllowTools, ","))
+			args = append(args, "--tools", strings.Join(tools, ","))
 		}
 	}
 	if len(spec.ExcludeTools) > 0 {
@@ -235,6 +256,16 @@ type rpcChild struct {
 	first          bool // the run is the child's first (the RPC text fallback is for it only)
 	// The last assistant message of the run: its stop reason, error and text, and the last text of any of its messages.
 	lastStop, lastError, lastText, lastNonEmpty string
+	// conv is the conversation the stream carried (bounded), and percent the context percent read just before a
+	// stop: what a stopped or failed agent still reports. Both under mu.
+	conv    conversationLog
+	percent *float64
+	hooks   *childHooks
+	// capture is the StructuredOutput box, nil when no schema was asked for. retrying: the extra structured prompt
+	// is in flight, so the next agent_settled ends the retry (settledRetry), not the first run (settled).
+	capture      *structuredCapture
+	retrying     bool
+	settledRetry chan struct{}
 }
 
 func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
@@ -242,28 +273,51 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 	if err != nil {
 		return nil, err
 	}
+	if spec.Schema != "" && spec.NoExtensions {
+		return nil, errors.New("a structured-output agent cannot be isolated: its StructuredOutput tool is an extension tool of the child")
+	}
 	// The child lives as long as ctx: the manager ends the context when it closes the child, not when a run settles, so
 	// that a conversation that exists only in this process outlives the run. A cancel takes the whole process group.
 	cmd := exec.CommandContext(ctx, bin, childArgs(spec)...)
 	cmd.Cancel = func() error { terminate(cmd); return nil }
 	cmd.Dir = spec.Cwd
 	cmd.Env = append(os.Environ(), depthEnv+"=1")
+	// The schema goes through a private file: an environment string is capped (Windows 32,767 characters, Linux
+	// 128 KiB) and a schema may be larger.
+	schemaFile := ""
+	if spec.Schema != "" {
+		if schemaFile, err = writeSchemaFile(spec.Schema); err != nil {
+			return nil, err
+		}
+		cmd.Env = append(cmd.Env, structuredSchemaFileEnv+"="+schemaFile)
+	}
+	removeSchema := func() {
+		if schemaFile != "" {
+			_ = os.Remove(schemaFile)
+		}
+	}
 	setProcessGroup(cmd)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
+		removeSchema()
 		return nil, err
 	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
+		removeSchema()
 		return nil, err
 	}
 	var stderr strings.Builder
 	cmd.Stderr = &tailWriter{w: &stderr}
 	if err := cmd.Start(); err != nil {
+		removeSchema()
 		return nil, err
 	}
 	c := &rpcChild{cmd: cmd, stdin: stdin, pending: map[string]chan map[string]any{}, exited: make(chan struct{}), exitErr: make(chan error, 1),
-		grace: spec.GraceTurns, abortWait: abortGrace, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == ""}
+		grace: spec.GraceTurns, abortWait: abortGrace, keep: !spec.Persist && spec.ResumeFile == "", first: spec.ResumeFile == "", hooks: spec.Hooks}
+	if spec.Schema != "" {
+		c.capture = &structuredCapture{}
+	}
 	if c.grace <= 0 {
 		c.grace = defaultGraceTurns
 	}
@@ -294,11 +348,20 @@ func startRPCChild(ctx context.Context, spec childSpec) (child, error) {
 			terminate(cmd) // an output the reader could not handle: end the child, which settles the run with an error
 		}
 		err := cmd.Wait()
+		removeSchema()
 		close(c.exited)
 		c.mu.Lock()
 		killed := c.killed
 		settled := c.settled
+		retry := c.settledRetry
 		c.mu.Unlock()
+		defer func() { // a retry that waits for the end of the run is released by the child's end
+			select {
+			case <-retry:
+			default:
+				close(retry)
+			}
+		}()
 		select {
 		case <-settled:
 		default:
@@ -349,6 +412,7 @@ func (c *rpcChild) begin(maxTurns int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.settled = make(chan struct{})
+	c.settledRetry, c.retrying = make(chan struct{}), false
 	c.runErr = nil
 	c.toolUse, c.turns, c.maxTurn = 0, 0, maxTurns
 	c.wrapped, c.aborted = false, false
@@ -386,6 +450,9 @@ func (c *rpcChild) close() {
 }
 
 func (c *rpcChild) handle(m map[string]any) {
+	if c.hooks != nil && c.hooks.Event != nil && m["type"] != "response" {
+		c.hooks.Event(m)
+	}
 	switch m["type"] {
 	case "response":
 		id, _ := m["id"].(string)
@@ -400,6 +467,18 @@ func (c *rpcChild) handle(m map[string]any) {
 		c.mu.Lock()
 		c.toolUse++
 		c.mu.Unlock()
+	case "tool_execution_end":
+		c.captureStructured(m)
+	case "compaction_end":
+		// Only a successful compaction counts; an aborted or failed one leaves the session untouched.
+		// upstream: agent-runner.ts:1091.
+		if aborted, _ := m["aborted"].(bool); !aborted && c.hooks != nil && c.hooks.Compaction != nil {
+			if result, _ := m["result"].(map[string]any); result != nil {
+				reason, _ := m["reason"].(string)
+				before, _ := result["tokensBefore"].(float64)
+				c.hooks.Compaction(reason, int(before))
+			}
+		}
 	case "turn_end":
 		// Graceful shutdown at the turn limit: steer the agent to wrap up, and abort it if it is still going
 		// graceTurns turns later. upstream: agent-runner.ts:1055-1066.
@@ -421,7 +500,13 @@ func (c *rpcChild) handle(m map[string]any) {
 			c.limits <- map[string]any{"type": "abort"}
 		}
 	case "message_end":
-		if msg, ok := m["message"].(map[string]any); ok && msg["role"] == "assistant" {
+		msg, ok := m["message"].(map[string]any)
+		if ok {
+			c.mu.Lock()
+			c.conv.add(msg)
+			c.mu.Unlock()
+		}
+		if ok && msg["role"] == "assistant" {
 			stop, _ := msg["stopReason"].(string)
 			errText, _ := msg["errorMessage"].(string)
 			text := assistantText(msg["content"])
@@ -431,11 +516,23 @@ func (c *rpcChild) handle(m map[string]any) {
 				c.lastNonEmpty = text
 			}
 			c.mu.Unlock()
+			// The message's spend, one delta per assistant message. upstream: agent-runner.ts:1081.
+			if u, ok := msg["usage"].(map[string]any); ok && c.hooks != nil && c.hooks.Usage != nil {
+				c.hooks.Usage(usageOf(u))
+			}
 		}
 	case "agent_settled":
 		c.mu.Lock()
-		settled := c.settled
+		settled, retrying, retry := c.settled, c.retrying, c.settledRetry
 		c.mu.Unlock()
+		if retrying {
+			select {
+			case <-retry:
+			default:
+				close(retry)
+			}
+			return
+		}
 		select {
 		case <-settled:
 		default:
@@ -446,6 +543,11 @@ func (c *rpcChild) handle(m map[string]any) {
 
 // call sends a command and waits for its response.
 func (c *rpcChild) call(cmd map[string]any) (map[string]any, error) {
+	return c.callWithin(cmd, 60*time.Second)
+}
+
+// callWithin is call with its own deadline.
+func (c *rpcChild) callWithin(cmd map[string]any, limit time.Duration) (map[string]any, error) {
 	c.mu.Lock()
 	c.nextID++
 	id := fmt.Sprint(c.nextID)
@@ -465,7 +567,7 @@ func (c *rpcChild) call(cmd map[string]any) (map[string]any, error) {
 		return m, nil
 	case <-c.exited:
 		return nil, errors.New("the child exited before it answered")
-	case <-time.After(60 * time.Second):
+	case <-time.After(limit):
 		return nil, errors.New("the child did not answer")
 	}
 }
@@ -483,6 +585,7 @@ var abortGrace = 10 * time.Second
 // the agent can be resumed (the original's `session.abort()` leaves the session as it is); one whose conversation is in
 // a file, which a resume reopens, is ended. upstream: agent-manager.ts abort.
 func (c *rpcChild) abort() {
+	c.readPercentBeforeStop()
 	if !c.keep {
 		c.mu.Lock()
 		c.killed = true // before the abort is sent: the process may exit on it, and the run is then aborted, not lost
@@ -506,6 +609,18 @@ func (c *rpcChild) abort() {
 	})
 }
 
+// readPercentBeforeStop reads what a stopped agent still reports (its context percent) while the child can answer: a
+// kill ends it, and an in-memory conversation may be ended later by the grace.
+func (c *rpcChild) readPercentBeforeStop() {
+	if m, err := c.callWithin(map[string]any{"type": "get_session_stats"}, 2*time.Second); err == nil {
+		d, _ := m["data"].(map[string]any)
+		p := contextPercentOf(d)
+		c.mu.Lock()
+		c.percent = p
+		c.mu.Unlock()
+	}
+}
+
 // kill ends the child's process, and with it its conversation.
 func (c *rpcChild) kill() {
 	c.mu.Lock()
@@ -526,6 +641,24 @@ func (c *rpcChild) wait() (*childResult, error) {
 		return nil, err
 	}
 	res := &childResult{}
+	// One more prompt when a schema was asked for and nothing usable came back (the model answered in prose, or only
+	// ever called the tool invalidly), unless the run was aborted. upstream: agent-runner.ts:1120.
+	if c.capture != nil {
+		c.mu.Lock()
+		again := structuredRetryWanted(c.capture.JSONUnset(), c.aborted, c.killed)
+		c.retrying = again
+		retry := c.settledRetry
+		c.mu.Unlock()
+		if again {
+			res.StructuredRetried = true
+			if _, err := c.call(map[string]any{"type": "prompt", "message": structuredRetryPrompt(c.capture)}); err == nil {
+				select {
+				case <-retry:
+				case <-c.exited:
+				}
+			}
+		}
+	}
 	c.mu.Lock()
 	res.Text = strings.TrimSpace(c.lastText)
 	if res.Text == "" {
@@ -543,14 +676,21 @@ func (c *rpcChild) wait() (*childResult, error) {
 	}
 	if m, err := c.call(map[string]any{"type": "get_session_stats"}); err == nil {
 		if d, ok := m["data"].(map[string]any); ok {
-			if t, ok := d["tokens"].(map[string]any); ok {
-				f, _ := t["total"].(float64)
-				res.Tokens = int(f)
-			}
 			if f, ok := d["toolCalls"].(float64); ok {
 				res.ToolUses = int(f)
 			}
+			res.ContextPercent = contextPercentOf(d)
 		}
+	}
+	// The conversation as the child's session ends (after any compaction); the stream's own copy when it cannot say.
+	messages := c.messages()
+	if messages != nil {
+		res.Conversation = conversationOf(messages)
+	} else {
+		res.Conversation, _ = c.snapshot()
+	}
+	if strings.TrimSpace(res.Text) == "" && first { // a final turn that errored with no content must not hide the turns before it
+		res.Text = lastAssistantText(messages)
 	}
 	c.mu.Lock()
 	res.Turns, res.WrappedUp, res.Aborted = c.turns, c.wrapped, c.aborted
@@ -568,10 +708,129 @@ func (c *rpcChild) wait() (*childResult, error) {
 	}
 	keep := c.keep
 	c.mu.Unlock()
+	if c.capture != nil {
+		res.StructuredJSON = c.capture.JSON
+		// A child asked for structured output that never gave any has failed, however articulate its prose was.
+		if res.Failure == "" {
+			res.Failure = structuredFailure(c.capture)
+		}
+	}
 	if !keep { // a persisted conversation is reopened from its file by resume
 		c.close()
 	}
 	return res, nil
+}
+
+// structuredRetryWanted is whether a settled run that was asked for structured output gets the one extra prompt: only
+// when nothing validated and the run was not cut short (a turn-limit abort or a stop). upstream: agent-runner.ts:1120.
+func structuredRetryWanted(nothingValidated, aborted, killed bool) bool {
+	return nothingValidated && !aborted && !killed
+}
+
+// lastAssistantText is the last non-empty assistant text of a conversation, trimmed. upstream: getLastAssistantText.
+func lastAssistantText(messages []map[string]any) string {
+	for i := len(messages) - 1; i >= 0; i-- {
+		if messages[i]["role"] != "assistant" {
+			continue
+		}
+		if text := strings.TrimSpace(contentText(messages[i]["content"])); text != "" {
+			return text
+		}
+	}
+	return ""
+}
+
+// stats reads the child's live context-window utilization (nil when unavailable). upstream: getSessionContextPercent.
+func (c *rpcChild) stats() *float64 {
+	m, err := c.call(map[string]any{"type": "get_session_stats"})
+	if err != nil {
+		return nil
+	}
+	d, _ := m["data"].(map[string]any)
+	return contextPercentOf(d)
+}
+
+// messages reads the child's live conversation. upstream: session.messages.
+func (c *rpcChild) messages() []map[string]any {
+	m, err := c.call(map[string]any{"type": "get_messages"})
+	if err != nil {
+		return nil
+	}
+	d, _ := m["data"].(map[string]any)
+	var out []map[string]any
+	for _, x := range asList(d["messages"]) {
+		if msg, ok := x.(map[string]any); ok {
+			out = append(out, msg)
+		}
+	}
+	return out
+}
+
+// snapshot is the conversation the stream carried and the context percent read before the stop (nil when none was).
+func (c *rpcChild) snapshot() (string, *float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.conv.String(), c.percent
+}
+
+// captureStructured reads a StructuredOutput call's outcome off the child's tool_execution_end event: the child's
+// tool put the canonical payload (or the rejection) in the result's details.
+func (c *rpcChild) captureStructured(m map[string]any) {
+	if c.capture == nil || m["toolName"] != structuredOutputToolName {
+		return
+	}
+	result, _ := m["result"].(map[string]any)
+	details, _ := result["details"].(map[string]any)
+	c.capture.mu.Lock()
+	defer c.capture.mu.Unlock()
+	c.capture.Called = true
+	if isErr, _ := m["isError"].(bool); isErr {
+		c.capture.HasError = true
+		c.capture.LastError = rejectionReason(result)
+		return
+	}
+	if j, _ := details["json"].(string); j != "" {
+		c.capture.JSON, c.capture.LastError, c.capture.HasError = j, "", false
+	}
+}
+
+// rejectionReason is the schema verdict inside the tool's rejection text.
+func rejectionReason(result map[string]any) string {
+	text := ""
+	for _, x := range asList(result["content"]) {
+		if part, ok := x.(map[string]any); ok {
+			t, _ := part["text"].(string)
+			text += t
+		}
+	}
+	text = strings.TrimPrefix(text, "StructuredOutput did not match the required schema:\n")
+	return strings.TrimSuffix(text, "\nCall it again with a corrected value.")
+}
+
+// JSONUnset reports whether no valid payload was captured yet.
+func (c *structuredCapture) JSONUnset() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.JSON == ""
+}
+
+// usageOf reads one message's usage the way agent-runner.ts:1082 does: absent fields are 0, cost is cost.total.
+func usageOf(u map[string]any) lifetimeUsage {
+	n := func(k string) int { f, _ := u[k].(float64); return int(f) }
+	cost := 0.0
+	if c, ok := u["cost"].(map[string]any); ok {
+		cost, _ = c["total"].(float64)
+	}
+	return lifetimeUsage{Input: n("input"), Output: n("output"), CacheWrite: n("cacheWrite"), CacheRead: n("cacheRead"), Cost: cost}
+}
+
+// contextPercentOf is contextUsage.percent of a get_session_stats answer, nil when null or absent.
+func contextPercentOf(stats map[string]any) *float64 {
+	cu, _ := stats["contextUsage"].(map[string]any)
+	if p, ok := cu["percent"].(float64); ok {
+		return &p
+	}
+	return nil
 }
 
 // assistantText joins the text parts of an assistant message's content.

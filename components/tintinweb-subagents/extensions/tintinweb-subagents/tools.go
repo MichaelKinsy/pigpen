@@ -113,19 +113,19 @@ func (a *app) toolDefinitions(wd string) []sdk.ToolDefinition {
 			PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
 			PromptGuidelines: guidelines,
 			Parameters:       agentSchemaFor(flags, dc, specs["Agent"]),
-			Execute:          a.agentTool,
+			Execute:          a.withUsageReporting(a.agentTool),
 		},
 		"get_subagent_result": {
 			Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
 			PromptSnippet: "Check status and retrieve results from a background agent",
 			Parameters:    sdk.Schema(specs["get_subagent_result"].Parameters),
-			Execute:       a.getResultTool,
+			Execute:       a.withUsageReporting(a.getResultTool),
 		},
 		"steer_subagent": {
 			Name: "steer_subagent", Label: "Steer Agent", Description: *specs["steer_subagent"].Description,
 			PromptSnippet: "Send a steering message to redirect a running background agent",
 			Parameters:    sdk.Schema(specs["steer_subagent"].Parameters),
-			Execute:       a.steerTool,
+			Execute:       a.withUsageReporting(a.steerTool),
 		},
 	}
 	var out []sdk.ToolDefinition
@@ -137,8 +137,26 @@ func (a *app) toolDefinitions(wd string) []sdk.ToolDefinition {
 	return out
 }
 
+// sessionIDOf is the host's session id, asked once per session (session_start clears it): the id names the
+// transcript directory of every agent, and asking costs a host round trip on the start path.
+func (a *app) sessionIDOf(ctx sdk.Context) (string, error) {
+	a.mu.Lock()
+	id := a.sessionID
+	a.mu.Unlock()
+	if id != "" {
+		return id, nil
+	}
+	id, err := ctx.GetSessionID()
+	if err == nil && id != "" {
+		a.mu.Lock()
+		a.sessionID = id
+		a.mu.Unlock()
+	}
+	return id, err
+}
+
 // formatMs is seconds with one decimal. upstream: ui/agent-widget.ts formatMs.
-func formatMs(ms int64) string { return fmt.Sprintf("%.1fs", float64(ms)/1000) }
+func formatMs(ms int64) string { return jsToFixed(float64(ms)/1000, 1) + "s" }
 
 // formatTokens is "" for no tokens, else the count. upstream: index.ts formatLifetimeTokens, ui/agent-widget.ts formatTokens.
 func formatTokens(n int) string {
@@ -146,9 +164,9 @@ func formatTokens(n int) string {
 	case n <= 0:
 		return ""
 	case n >= 1_000_000:
-		return fmt.Sprintf("%.1fM token", float64(n)/1_000_000)
+		return jsToFixed(float64(n)/1_000_000, 1) + "M token"
 	case n >= 1000:
-		return fmt.Sprintf("%.1fk token", float64(n)/1000)
+		return jsToFixed(float64(n)/1000, 1) + "k token"
 	}
 	return fmt.Sprintf("%d token", n)
 }
@@ -252,8 +270,25 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if !background {
 		opts.Signal = ctx.Done() // the turn is interrupted: stop the agent, queued or running
 	}
+	// Whether this spawn writes its `.output` transcript: the agent file's output_transcript wins, else the
+	// project/global default. upstream: index.ts outputTranscript.
+	transcript, sessionID := a.outputTranscriptDefault(), ""
+	if cfg != nil && cfg.OutputTranscript != nil {
+		transcript = *cfg.OutputTranscript
+	}
+	if transcript {
+		// The original always has a session id; without one there is no session directory to write under, so the
+		// agent runs without a transcript (reported on stderr, like a transcript path that cannot be made).
+		id, err := a.sessionIDOf(ctx)
+		if err != nil || id == "" {
+			fmt.Fprintf(os.Stderr, "[pi-subagents] no transcript: the session id is not available (%v)\n", err)
+			transcript = false
+		}
+		sessionID = id
+	}
 	r, err := a.start(ctx, startRequest{Type: resolved, Prompt: prompt, Description: description, Model: model, Thinking: inv.thinking,
-		MaxTurns: inv.maxTurns, Isolated: inv.isolated, InheritContext: inv.inheritContext, Spawn: opts})
+		MaxTurns: inv.maxTurns, Isolated: inv.isolated, InheritContext: inv.inheritContext, Spawn: opts,
+		Transcript: transcript, SessionID: sessionID})
 	if err != nil {
 		return nil, err
 	}
@@ -261,12 +296,15 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		joinMode := resolveJoinMode(rt.defaultJoinMode, true)
 		a.mgr.mu.Lock()
 		r.JoinMode, r.ToolCallID = joinMode, ctx.ToolCallID()
-		queued, limit := r.Status == statusQueued, a.mgr.maxConcurrent
+		queued, limit, outputFile := r.Status == statusQueued, a.mgr.maxConcurrent, r.OutputFile
 		a.mgr.mu.Unlock()
 		a.joinBatch(r.ID, joinMode)
 		pos := ""
+		if outputFile != "" {
+			pos = "Output file: " + outputFile + "\n"
+		}
 		if queued {
-			pos = fmt.Sprintf("Position: queued (max %d concurrent)\n", limit)
+			pos += fmt.Sprintf("Position: queued (max %d concurrent)\n", limit)
 		}
 		_ = ctx.Events().Emit("subagents:created", map[string]any{"id": r.ID, "type": resolved, "description": description, "isBackground": true})
 		state := "started"
@@ -281,7 +319,8 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	// set); a queued call waits for its slot, and an aborted one comes back as a stopped result, never an error.
 	a.mgr.wait(r)
 	a.mgr.mu.Lock()
-	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, r.Tokens, r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
+	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, getLifetimeTotal(r.Usage), r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
+	usage := r.Usage
 	a.mgr.mu.Unlock()
 	if status == statusError {
 		return textResult(fmt.Sprintf("%sAgent failed: %s%s", fallbackNote, errText, partialOutputSuffix(result))), nil
@@ -289,6 +328,11 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	stats := []string{fmt.Sprintf("%d tool uses", uses)}
 	if t := formatTokens(tokens); t != "" {
 		stats = append(stats, t)
+	}
+	if a.showCost() {
+		if c := formatCost(getLifetimeCost(usage)); c != "" {
+			stats = append(stats, c)
+		}
 	}
 	out := strings.TrimSpace(result)
 	if out == "" {
@@ -335,9 +379,10 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 	}
 	a.mgr.mu.Lock()
 	status, result, errText := r.Status, r.Result, r.Error
-	uses, tokens := r.ToolUses, r.Tokens
+	uses, tokens, usage, compactions := r.ToolUses, getLifetimeTotal(r.Usage), r.Usage, r.CompactionCount
 	start, end := r.StartedAt, r.CompletedAt
 	a.mgr.mu.Unlock()
+	percent := a.contextPercent(r)
 	// upstream: ui/agent-widget.ts formatDuration (a running agent's time so far, marked).
 	duration := formatMs(end.Sub(start).Milliseconds())
 	if end.IsZero() {
@@ -346,6 +391,17 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 	stats := []string{fmt.Sprintf("Tool uses: %d", uses)}
 	if t := formatTokens(tokens); t != "" {
 		stats = append(stats, t)
+	}
+	if a.showCost() {
+		if c := formatCost(getLifetimeCost(usage)); c != "" {
+			stats = append(stats, "Cost: "+c)
+		}
+	}
+	if percent != nil {
+		stats = append(stats, fmt.Sprintf("Context: %d%%", roundPercent(*percent)))
+	}
+	if compactions > 0 {
+		stats = append(stats, fmt.Sprintf("Compactions: %d", compactions))
 	}
 	stats = append(stats, "Duration: "+duration)
 	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
@@ -359,6 +415,11 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 			out += t
 		} else {
 			out += "No output."
+		}
+	}
+	if verbose, _ := p["verbose"].(bool); verbose {
+		if conversation := a.conversation(r); conversation != "" {
+			out += "\n\n--- Agent Conversation ---\n" + conversation
 		}
 	}
 	if status != statusRunning && status != statusQueued {
@@ -393,17 +454,33 @@ func (a *app) steerTool(ctx sdk.Context, p map[string]any) (any, error) {
 		return textResult("Steering message queued for agent " + r.ID + ". It will be delivered once the session initializes."), nil
 	}
 	a.mgr.mu.Lock()
-	uses, tokens := r.ToolUses, r.Tokens
+	uses, tokens, usage, compactions := r.ToolUses, getLifetimeTotal(r.Usage), r.Usage, r.CompactionCount
 	a.mgr.mu.Unlock()
+	percent := a.contextPercent(r)
 	var state []string
 	if t := formatTokens(tokens); t != "" {
 		state = append(state, t)
+	}
+	if a.showCost() {
+		if c := formatCost(getLifetimeCost(usage)); c != "" {
+			state = append(state, c)
+		}
 	}
 	use := "uses"
 	if uses == 1 {
 		use = "use"
 	}
 	state = append(state, fmt.Sprintf("%d tool %s", uses, use))
+	if percent != nil {
+		state = append(state, fmt.Sprintf("context %d%% full", roundPercent(*percent)))
+	}
+	if compactions > 0 {
+		plural := "s"
+		if compactions == 1 {
+			plural = ""
+		}
+		state = append(state, fmt.Sprintf("%d compaction%s", compactions, plural))
+	}
 	return textResult(fmt.Sprintf("Steering message sent to agent %s. The agent will process it after its current tool execution.\nCurrent state: %s", r.ID, strings.Join(state, " · "))), nil
 }
 

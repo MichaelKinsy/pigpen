@@ -148,6 +148,15 @@ func sanitizeSettings(raw any) settings {
 	if b, ok := r["rememberAgents"].(bool); ok {
 		out.RememberAgents = &b
 	}
+	if b, ok := r["outputTranscript"].(bool); ok {
+		out.OutputTranscript = &b
+	}
+	if b, ok := r["reportUsage"].(bool); ok {
+		out.ReportUsage = &b
+	}
+	if b, ok := r["showCost"].(bool); ok {
+		out.ShowCost = &b
+	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
 		if !v { // `false` is a spelling of "none": dropped, it would silently leave the permissive default

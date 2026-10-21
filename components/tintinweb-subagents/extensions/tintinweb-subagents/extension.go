@@ -43,6 +43,8 @@ type app struct {
 	cleanupEvery   time.Duration
 	disc           discoverCache
 	listExtensions func(ctx context.Context, cwd string) ([]string, error)
+	sessionID      string // the host session id, fetched on the first transcript of a session (a host round trip)
+	obs            obsState
 }
 
 // agentFileWarn reports an agent file that was skipped (the original's console.warn). A test replaces it.
@@ -54,6 +56,7 @@ func newApp(e *sdk.Extension, start childStarter) *app {
 	a.mgr = newManager(start, a.onSettle)
 	a.groups = newGroupJoinManager(a.deliverGroup, groupJoinTimeout, func(d time.Duration, f func()) func() { return a.after(d, f) })
 	a.entry = claimManagerRegistry(a)
+	a.wireObs()
 	return a
 }
 
@@ -111,7 +114,9 @@ func (a *app) reregisterAgents() {
 }
 
 // refuseSettings tells the user once per distinct text that a setting of subagents.json asks for a feature that is
-// not ported. The setting has no effect (the port does what it did without it); it is never taken for a partial run.
+// not ported. The setting has no effect for the unported part (the port does what it did without it), which the
+// notice names when the setting is honored in part (showCost: the texts show the cost, the widget does not); it is
+// never taken for a full run.
 func (a *app) refuseSettings(ctx sdk.Context) {
 	text := settingsRefusal(ctx.Cwd())
 	a.mu.Lock()
@@ -148,6 +153,12 @@ func (a *app) context() (sdk.Context, bool) {
 func Extension() *sdk.Extension {
 	e := sdk.New("tintinweb-subagents")
 	if os.Getenv(depthEnv) != "" {
+		// A schema-bound child reports through a StructuredOutput tool and registers nothing else.
+		if path := os.Getenv(structuredSchemaFileEnv); path != "" {
+			if schema, err := os.ReadFile(path); err == nil {
+				registerStructuredOutput(e, string(schema))
+			}
+		}
 		return e
 	}
 	a := newApp(e, startRPCChild)
@@ -157,6 +168,9 @@ func Extension() *sdk.Extension {
 
 func (a *app) register(e *sdk.Extension) {
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		a.mu.Lock()
+		a.sessionID = "" // a new, resumed or forked session has another id
+		a.mu.Unlock()
 		a.touch(ctx)
 		a.reload(ctx.Cwd())
 		a.disc.reset()
@@ -240,6 +254,14 @@ func (a *app) onSettle(r *agentRecord) {
 	a.mgr.mu.Lock()
 	data := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status,
 		"toolUses": r.ToolUses, "durationMs": r.CompletedAt.Sub(r.StartedAt).Milliseconds()}
+	// Lifetime spend, which survives compaction: `tokens` is the flat display view (cacheRead excluded), `usage` a
+	// complete pi Usage; each is omitted when nothing was spent. Ungated by showCost. upstream: index.ts buildEventData.
+	if total := getLifetimeTotal(r.Usage); total > 0 {
+		data["tokens"] = map[string]any{"input": r.Usage.Input, "output": r.Usage.Output, "total": total}
+	}
+	if usage := toReportedUsage(r.Usage); usage != nil {
+		data["usage"] = usage
+	}
 	if r.Result != "" {
 		data["result"] = r.Result
 	}
@@ -298,9 +320,9 @@ func (a *app) cancelNudge(key string) {
 }
 
 // escapeXML escapes &, < and >, as the original does. upstream: src/xml.ts.
-func escapeXML(s string) string {
-	return strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;").Replace(s)
-}
+func escapeXML(s string) string { return xmlEscaper.Replace(s) }
+
+var xmlEscaper = strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
 
 // isErrorStatus: the statuses announced on subagents:failed. upstream: index.ts:576.
 func isErrorStatus(status string) bool {
@@ -362,8 +384,16 @@ func partialOutputSuffix(result string) string {
 	return ""
 }
 
+// outputFooter points the model at the transcript. upstream: index.ts emitIndividualNudge.
+func outputFooter(r *agentRecord) string {
+	if r.OutputFile == "" {
+		return ""
+	}
+	return "\nFull transcript available at: " + r.OutputFile
+}
+
 // formatTaskNotification is the completion notice the model receives. upstream: index.ts formatTaskNotification.
-func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
+func formatTaskNotification(r *agentRecord, resultMaxLen int, showCost bool) string {
 	preview := "No output."
 	if r.Result != "" {
 		preview = r.Result
@@ -376,11 +406,26 @@ func formatTaskNotification(r *agentRecord, resultMaxLen int) string {
 	if r.ToolCallID != "" {
 		lines = append(lines, "<tool-use-id>"+escapeXML(r.ToolCallID)+"</tool-use-id>")
 	}
+	if r.OutputFile != "" {
+		lines = append(lines, "<output-file>"+escapeXML(r.OutputFile)+"</output-file>")
+	}
+	ctxXML, compactXML, costXML := "", "", ""
+	if r.ContextPercent != nil {
+		ctxXML = fmt.Sprintf("<context_percent>%d</context_percent>", roundPercent(*r.ContextPercent))
+	}
+	if r.CompactionCount > 0 {
+		compactXML = fmt.Sprintf("<compactions>%d</compactions>", r.CompactionCount)
+	}
+	// Only under showCost: this is LLM context, and a figure the orchestrator did not ask for is a figure it may
+	// start reporting unprompted.
+	if cost := getLifetimeCost(r.Usage); showCost && cost > 0 {
+		costXML = "<estimated_cost_usd>" + jsToFixed(cost, 4) + "</estimated_cost_usd>"
+	}
 	return strings.Join(append(lines,
 		"<status>"+escapeXML(statusLabel(r))+"</status>",
 		fmt.Sprintf("<summary>Agent \"%s\" %s%s</summary>", escapeXML(r.Description), r.Status, statusNote(r.Status)),
 		"<result>"+escapeXML(preview)+"</result>",
-		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses><duration_ms>%d</duration_ms></usage>", r.Tokens, r.ToolUses, dur),
+		fmt.Sprintf("<usage><total_tokens>%d</total_tokens><tool_uses>%d</tool_uses>%s%s%s<duration_ms>%d</duration_ms></usage>", getLifetimeTotal(r.Usage), r.ToolUses, ctxXML, compactXML, costXML, dur),
 		"</task-notification>",
 	), "\n")
 }

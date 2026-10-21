@@ -29,6 +29,20 @@ type fakeChild struct {
 	aborted bool
 	resumed []string
 	closed  bool
+	// what a live child reports (liveChild): the context percent and the conversation so far
+	livePercent  *float64
+	liveMessages []map[string]any
+}
+
+func (c *fakeChild) stats() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.livePercent
+}
+func (c *fakeChild) messages() []map[string]any {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.liveMessages
 }
 
 func (c *fakeChild) wait() (*childResult, error) {
@@ -66,8 +80,11 @@ func (c *fakeChild) releaseNow() {
 }
 func (c *fakeChild) finish(text string) {
 	c.mu.Lock()
-	c.res = &childResult{Text: text, ToolUses: 3, Tokens: 1500, Turns: 2}
+	c.res = &childResult{Text: text, ToolUses: 3, Turns: 2}
 	c.mu.Unlock()
+	if c.spec.Hooks.Usage != nil {
+		c.spec.Hooks.Usage(lifetimeUsage{Input: 1500}) // what the child's stream reports
+	}
 	c.releaseNow()
 }
 // die is the process ending because its context ended: the run in progress fails and no more prompts are taken.
@@ -204,6 +221,8 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 		return obj{"trusted": r.trusted}, ""
 	case "getAllTools":
 		return obj{"tools": append([]any{}, r.registry...)}, ""
+	case "getSessionID":
+		return obj{"sessionId": "session-1"}, ""
 	case "exec":
 		if r.exec != nil {
 			var argv []string

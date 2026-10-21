@@ -1,0 +1,45 @@
+{
+  "name": "agent-result-verbose-not-found",
+  "description": "get_subagent_result with verbose names an agent that does not exist.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "get_subagent_result",
+          "arguments": {
+            "agent_id": "nope",
+            "verbose": true,
+            "wait": false
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ]
+}

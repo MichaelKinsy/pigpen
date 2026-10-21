@@ -14,6 +14,9 @@ import (
 func readJSONFile(t *testing.T, path string) map[string]any {
 	t.Helper()
 	data, err := os.ReadFile(path)
+	if os.IsNotExist(err) { // the mutation runner copies only the extension directory
+		t.Skip("not in this copy of the port: " + path)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +88,6 @@ func TestUnportedAgentFileFieldsAreRefused(t *testing.T) {
 		{"isolation", "isolation: worktree", "worktree isolation (isolation: worktree in the agent file)"},
 		{"memory", "memory: project", "persistent agent memory (memory: project)"},
 		{"allowed_subagents", "allowed_subagents: all", "nested delegation (allowed_subagents)"},
-		{"output_transcript", "output_transcript: true", "output transcripts (output_transcript)"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -143,6 +145,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		eq(t, recs[0].Name, "scout") // the name is the agent's, and addresses it
 		eq(t, recs[0].Alias, "scout")
 		eq(t, r.app.mgr.resolve("scout") != nil, true)
+		eq(t, r.app.mgr.get(reply["data"].(map[string]any)["id"].(string)).Name, "scout")
 	})
 }
 
@@ -176,12 +179,10 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
 		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
-		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
 		{"workflowsEnabled", `{"workflowsEnabled": true}`, "workflowsEnabled: true"},
 		{"maxSubagentDepth", `{"maxSubagentDepth": 2}`, "maxSubagentDepth: 2"},
-		{"reportUsage", `{"reportUsage": true}`, "reportUsage: true"},
-		{"showCost", `{"showCost": true}`, "showCost: true"},
+		{"showCost", `{"showCost": true}`, "showCost: true (only its widget display; the cost in the notification, result and steer texts is shown)"},
 		{"showModel", `{"showModel": true}`, "showModel: true"},
 		{"viewerMarkdown", `{"viewerMarkdown": "all"}`, `viewerMarkdown: "all"`},
 	}
@@ -194,34 +195,34 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 	t.Run("the same notice is not repeated by a second session_start", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
 		r.Fire("session_start", obj{"reason": "reload"})
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("two settings are listed in one notice", func(t *testing.T) {
-		r := settingsRig(t, `{"showCost": true, "reportUsage": true}`)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true, showCost: true)")})
+		r := settingsRig(t, `{"showCost": true, "showModel": true}`)
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown), showModel: true)")})
 	})
 	t.Run("the same settings are announced once", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
 		r.Fire("session_start", obj{"reason": "new"})
 		r.Fire("session_start", obj{"reason": "resume"})
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 	t.Run("the global file counts and the project file overrides it", func(t *testing.T) {
 		dir := t.TempDir()
 		t.Setenv("PIG_CODING_AGENT_DIR", dir)
-		if err := os.WriteFile(filepath.Join(dir, "subagents.json"), []byte(`{"showCost": true, "reportUsage": true}`), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "subagents.json"), []byte(`{"showCost": true, "showModel": true}`), 0o644); err != nil {
 			t.Fatal(err)
 		}
 		cwd := t.TempDir()
 		_ = os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755)
 		_ = os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"showCost": false}`), 0o644)
 		r := startRigIn(t, cwd)
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showModel: true)")})
 	})
 	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
 		r := settingsRig(t, `{"showCost": true}`)
 		r.Fire("session_start", obj{"reason": "new"})
-		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true (only its widget display; the cost in the notification, result and steer texts is shown))")})
 	})
 }
 

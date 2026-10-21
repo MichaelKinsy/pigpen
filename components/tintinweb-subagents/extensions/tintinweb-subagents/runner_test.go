@@ -22,7 +22,15 @@ func TestMain(m *testing.M) {
 		fakePig(mode)
 		return
 	}
-	os.Exit(m.Run())
+	// Transcripts go under the temp dir: keep them out of the real one.
+	dir, err := os.MkdirTemp("", "tw-obs-tmp-")
+	if err != nil {
+		panic(err)
+	}
+	os.Setenv("TMPDIR", dir)
+	code := m.Run()
+	os.RemoveAll(dir)
+	os.Exit(code)
 }
 
 func fakePig(mode string) {
@@ -39,6 +47,10 @@ func fakePig(mode string) {
 	}
 	if p := os.Getenv("FAKE_PIG_ARGS"); p != "" {
 		os.WriteFile(p, []byte(strings.Join(os.Args[1:], "\n")+"\nDEPTH="+os.Getenv(depthEnv)), 0o644)
+	}
+	if p, f := os.Getenv("FAKE_PIG_SCHEMA"), os.Getenv(structuredSchemaFileEnv); p != "" && f != "" { // what the child would read
+		b, _ := os.ReadFile(f)
+		os.WriteFile(p, b, 0o644)
 	}
 	if mode == "crash" {
 		os.Stderr.WriteString("no such model")
@@ -62,6 +74,8 @@ func fakePig(mode string) {
 	out := lockedEncoder{enc: enc, mu: &outMu}
 	var aborted atomic.Bool
 	n := 0 // prompts answered
+	prompts := 0
+	var emitted []any // the messages a scripted run produced, which get_messages answers
 	sc := bufio.NewScanner(os.Stdin)
 	for sc.Scan() {
 		var cmd map[string]any
@@ -85,6 +99,16 @@ func fakePig(mode string) {
 				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
+			if mode == "hang-partial" || mode == "die-partial" { // a run that has said something, then stalls or dies
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "system", "content": "SYSTEM PROMPT"}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "user", "content": "the task"}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "partial findings"}, map[string]any{"type": "toolCall", "name": "bash"}}}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "toolResult", "toolName": "bash", "content": []any{map[string]any{"type": "text", "text": "listing"}}}})
+				if mode == "die-partial" {
+					os.Exit(2)
+				}
+				continue
+			}
 			if mode == "hang-grandchild" { // starts a process of its own, as a bash tool call would, and keeps working
 				gc := exec.Command("sleep", "60")
 				if os.Getenv("FAKE_PIG_GRANDCHILD_IGNORES_TERM") != "" { // only SIGKILL stops it
@@ -104,6 +128,58 @@ func fakePig(mode string) {
 						out.Encode(map[string]any{"type": "agent_settled"})
 					}
 				})
+				continue
+			}
+			if mode == "compaction" { // six exchanges, a compaction that rewrites the history, then one more exchange
+				ex := func(q, a string) {
+					out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "user", "content": q}})
+					out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": a}}}})
+					out.Encode(map[string]any{"type": "turn_end"})
+				}
+				for i := 0; i < 6; i++ {
+					ex("question "+strconv.Itoa(i), "answer-"+strconv.Itoa(i)+" filler")
+				}
+				out.Encode(map[string]any{"type": "compaction_start", "reason": "manual"})
+				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": true, "result": map[string]any{"summary": "never kept", "tokensBefore": 1}})
+				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": false, "errorMessage": "failed", "tokensBefore": 2})
+				out.Encode(map[string]any{"type": "compaction_end", "reason": "manual", "aborted": false, "willRetry": false, "result": map[string]any{"summary": "summary of everything so far", "tokensBefore": 4321}})
+				ex("final question", "POST-COMPACTION-ANSWER")
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
+			if strings.HasPrefix(mode, "structured") { // answers in prose first; the retry prompt gets a StructuredOutput call
+				prompts++
+				if p := os.Getenv("FAKE_PIG_PROMPTS"); p != "" {
+					f, _ := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+					f.WriteString(strings.ReplaceAll(cmd["message"].(string), "\n", " ") + "\n")
+					f.Close()
+				}
+				end := func(isErr bool, text, json string) {
+					out.Encode(map[string]any{"type": "tool_execution_end", "toolName": "StructuredOutput", "isError": isErr,
+						"result": map[string]any{"content": []any{map[string]any{"type": "text", "text": text}}, "details": map[string]any{"json": json}}})
+				}
+				switch {
+				case mode == "structured-none" && prompts == 1:
+					end(true, "StructuredOutput did not match the required schema:\n$: must have required properties file\nCall it again with a corrected value.", "")
+				case mode == "structured" && prompts == 2:
+					end(false, "Recorded.", `{"file":"a.ts"}`)
+				}
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
+			if mode == "fatal-only" || mode == "fatal-masked" { // the #144 shapes: a final turn that errors with no content
+				fatal := "invalid request: provider rejected the prompt"
+				emit := func(msg map[string]any) {
+					emitted = append(emitted, msg)
+					out.Encode(map[string]any{"type": "message_end", "message": msg})
+				}
+				emit(map[string]any{"role": "user", "content": "x"})
+				if mode == "fatal-masked" {
+					emit(map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "EARLIER-PARTIAL-TEXT"}, map[string]any{"type": "toolCall", "name": "bash"}}})
+					emit(map[string]any{"role": "toolResult", "toolName": "bash", "content": []any{map[string]any{"type": "text", "text": "hi"}}})
+				}
+				emit(map[string]any{"role": "assistant", "stopReason": "error", "errorMessage": fatal, "content": []any{}})
+				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
 			if mode == "provider-error" || mode == "provider-error-empty" || mode == "length-empty" {
@@ -155,9 +231,19 @@ func fakePig(mode string) {
 				out.Encode(map[string]any{"type": "agent_settled"})
 				continue
 			}
+			if mode == "usage-nonassistant" { // a tool result that carries a usage object is not an assistant message's spend
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "toolResult", "toolName": "bash", "usage": map[string]any{"input": 999, "output": 999}, "content": []any{}}})
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "ok"}}, "usage": map[string]any{"input": 7, "output": 3}}})
+				out.Encode(map[string]any{"type": "agent_settled"})
+				continue
+			}
 			out.Encode(map[string]any{"type": "tool_execution_start"})
-			out.Encode(map[string]any{"type": "turn_end"})
-			out.Encode(map[string]any{"type": "turn_end"})
+			// Two assistant messages with usage, as a provider reports them.
+			for i := 0; i < 2; i++ {
+				out.Encode(map[string]any{"type": "message_end", "message": map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "fake answer to " + os.Getenv("FAKE_PIG_TAG")}},
+					"usage": map[string]any{"input": 30, "output": 12, "cacheRead": 5, "cacheWrite": 3, "cost": map[string]any{"total": 0.01}}}})
+				out.Encode(map[string]any{"type": "turn_end"})
+			}
 			out.Encode(map[string]any{"type": "agent_settled"})
 		case "set_session_name":
 			resp(nil)
@@ -170,9 +256,19 @@ func fakePig(mode string) {
 			}
 			resp(map[string]any{"cancelled": false})
 		case "get_last_assistant_text":
+			if strings.HasPrefix(mode, "fatal") { // pi answers {} for a final turn with no text
+				resp(map[string]any{})
+				continue
+			}
 			resp(map[string]any{"text": "fake answer to " + os.Getenv("FAKE_PIG_TAG")})
 		case "get_session_stats":
-			resp(map[string]any{"tokens": map[string]any{"total": 42}, "toolCalls": 2})
+			resp(map[string]any{"tokens": map[string]any{"total": 42}, "toolCalls": 2, "contextUsage": map[string]any{"tokens": 100, "contextWindow": 1000, "percent": 10.4}})
+		case "get_messages":
+			if len(emitted) > 0 {
+				resp(map[string]any{"messages": emitted})
+				continue
+			}
+			resp(map[string]any{"messages": []any{map[string]any{"role": "user", "content": "x"}, map[string]any{"role": "assistant", "content": []any{map[string]any{"type": "text", "text": "step"}}}}})
 		case "steer":
 			if p := os.Getenv("FAKE_PIG_STEER"); p != "" {
 				f, _ := os.OpenFile(p, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -243,7 +339,6 @@ func TestRPCChildRunsToCompletion(t *testing.T) {
 	res, err := c.wait()
 	eq(t, err, nil)
 	eq(t, res.Text, "fake answer to the task")
-	eq(t, res.Tokens, 42)
 	eq(t, res.ToolUses, 2)
 	eq(t, res.Turns, 2)
 	got, _ := os.ReadFile(argsFile)
