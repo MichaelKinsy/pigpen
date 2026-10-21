@@ -79,27 +79,16 @@ func TestTheEditorIsClearedWhenPowerlineIsToggledOff(t *testing.T) {
 	}
 }
 
-func TestStashTwinCtrlS(t *testing.T) {
-	t.Run("Ctrl+S toggles the stash only from the focused editor", func(t *testing.T) {
-		r := newKeysRig(t, t.TempDir(), "ctrl-s-session", "draft")
-		r.h.Fire("session_start", map[string]any{"reason": "resume"})
-
-		// The global terminal hook must leave Ctrl+S to whatever has focus, such as Pi's selectors.
-		if r.input(t, "\x13") {
-			t.Error("the terminal hook consumed Ctrl+S")
-		}
-		if r.text() != "draft" {
-			t.Fatalf("text %q", r.text())
-		}
-
-		editorInput(r.h, "\x13")
-		waitUntil(t, "the draft to be stashed", func() bool { return r.text() == "" })
-		waitUntil(t, "the stash status", func() bool { s, ok := r.lastStatus("stash"); return ok && s == "stash" })
-
-		editorInput(r.h, "\x13")
-		waitUntil(t, "the draft to come back", func() bool { return r.text() == "draft" })
-		waitUntil(t, "the stash status to clear", func() bool { s, _ := r.lastStatus("stash"); return s == "" })
-	})
+func TestCtrlSInTheEditorStashesThroughTheWire(t *testing.T) {
+	r := newKeysRig(t, t.TempDir(), "ctrl-s-session", "draft")
+	r.h.Fire("session_start", map[string]any{"reason": "resume"})
+	if r.input(t, "\x13") {
+		t.Error("the terminal hook consumed Ctrl+S")
+	}
+	editorInput(r.h, "\x13")
+	waitUntil(t, "the draft to be stashed", func() bool { return r.text() == "" })
+	editorInput(r.h, "\x13")
+	waitUntil(t, "the draft to come back", func() bool { return r.text() == "draft" })
 }
 
 func TestACopyShortcutPressedInTheEditorIsHandledThere(t *testing.T) {

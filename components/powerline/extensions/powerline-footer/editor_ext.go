@@ -56,20 +56,23 @@ func (k *keysExt) editorInput(ctx sdk.Context, data string) bool {
 	if !k.enabled.Load() || !ctx.HasUI() {
 		return false
 	}
-	state := k.ensure(ctx)
-	h := k.host(ctx)
-	if state.isStashShortcutInput(data) || matchesCtrlSStashInput(data) {
-		state.stashOrRestoreEditorText(h)
+	return k.ensure(ctx).editorInput(k.host(ctx), data)
+}
+
+// editorInput is the stash and shortcut branch of the editor's handleInput (index.ts 3388-3398).
+func (k *keysState) editorInput(h keysHost, data string) bool {
+	if k.isStashShortcutInput(data) || matchesCtrlSStashInput(data) {
+		k.stashOrRestoreEditorText(h)
 		return true
 	}
-	action := state.shortcutAction(h, data)
+	action := k.shortcutAction(h, data)
 	if action == "" {
 		return false
 	}
 	if action == actionCopyEditor || action == actionCutEditor {
-		state.run(h, action)
+		k.run(h, action)
 	} else {
-		go state.run(h, action)
+		go k.run(h, action)
 	}
 	return true
 }

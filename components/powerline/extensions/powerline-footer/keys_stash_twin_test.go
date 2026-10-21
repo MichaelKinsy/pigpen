@@ -389,6 +389,27 @@ func TestStashShortcutTwins(t *testing.T) {
 		}
 	})
 
+	tw(t, file, "Ctrl+S toggles the stash only from the focused editor", func(t *testing.T) {
+		_, cwd := agentRig(t)
+		g := newGeneration(t, cwd, "ctrl-s-session", "draft")
+		g.start("resume")
+
+		// The global terminal hook must leave Ctrl+S to whatever has focus, such as Pi's selectors.
+		g.sendTerminalInput("\x13")
+		if g.f.text != "draft" {
+			t.Fatalf("the terminal hook handled Ctrl+S: text %q", g.f.text)
+		}
+
+		if !g.k.editorInput(g.f, "\x13") || g.f.text != "" {
+			t.Fatalf("the editor did not stash: text %q", g.f.text)
+		}
+		g.f.wantStatus(t, "stash", "stash")
+		if !g.k.editorInput(g.f, "\x13") || g.f.text != "draft" {
+			t.Fatalf("the editor did not restore: text %q", g.f.text)
+		}
+		g.f.wantStatus(t, "stash", "")
+	})
+
 	tw(t, file, "agent_end leaves an active stash untouched until explicit restore", func(t *testing.T) {
 		_, cwd := agentRig(t)
 		g := newGeneration(t, cwd, "agent-end-session", "draft to keep")

@@ -316,5 +316,12 @@ func Extension() *sdk.Extension {
 	}
 	registerQueue(e, a)
 	registerCdQuote(e, a)
+	// The shortcut actions the keys slice leaves to the features that own them (index.ts runPowerlineShortcut 2379-2390).
+	a.keys.setHook(actionQueueOpen, a.openQueuePicker)
+	a.keys.setHook(actionReply, func(ctx sdk.Context) {
+		if err := runReplyCommand(ctx, ""); err != nil {
+			ctx.Notify(err.Error(), "error")
+		}
+	})
 	return e
 }
