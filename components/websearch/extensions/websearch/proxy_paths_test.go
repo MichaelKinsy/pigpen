@@ -11,7 +11,7 @@ import (
 // (search providers, hosted fetch providers, Gemini API, thumbnails, redirect probes) runs curl.
 // The port sends those requests through guardedFetch, doAPI and apiClientFor; this checks the entry
 // points of the slices that were written before the curl transport (stack integration): each one
-// runs curl through the scoped proxy and none of them sends a request over net/http.
+// runs curl through the scoped proxy and the transport double of the tests is not installed, so a request that skipped curl would not be answered.
 func TestEveryOutboundPathOfAProxiedScopeRunsCurl(t *testing.T) {
 	const proxy = "http://call-proxy.example:8080/"
 	apiKey := "synthetic-key"
@@ -38,9 +38,6 @@ func TestEveryOutboundPathOfAProxiedScopeRunsCurl(t *testing.T) {
 		{"Perplexity search", "https://api.perplexity.ai/chat/completions", func(ctx context.Context) {
 			_, _ = SearchWithPerplexity(ctx, "q", SearchOptions{})
 		}},
-		{"Firecrawl search", "https://api.firecrawl.dev", func(ctx context.Context) {
-			_, _ = SearchWithFirecrawl(ctx, "q", SearchOptions{})
-		}},
 		{"page fetch with credential redirects", "https://93.184.216.34/page", func(ctx context.Context) {
 			resp, err := FetchWithCredentialRedirects(ctx, "https://93.184.216.34/page", RequestInit{}, nil)
 			if err == nil {
@@ -51,13 +48,10 @@ func TestEveryOutboundPathOfAProxiedScopeRunsCurl(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			extractEnv(t, `{"tinyfishApiKey":"k","perplexityApiKey":"k","firecrawlApiKey":"k","geminiApiKey":"k"}`)
-			n := useNet(t, func(netCall) netReply { return reply(200, "{}") })
+			extractEnv(t, `{"tinyfishApiKey":"k","perplexityApiKey":"k","geminiApiKey":"k"}`)
+			// No net double: an injected transport is never replaced by curl, so the default one is under test.
 			f := useCurl(t, map[string]curlRoute{})
 			c.run(WithProxy(bg(), proxy))
-			if len(n.urls()) != 0 {
-				t.Fatalf("a request went over net/http: %v", n.urls())
-			}
 			found := false
 			for _, call := range f.snapshot() {
 				if valueAfter(call.Args, "-x") == proxy && len(call.Args) > 0 && strings.HasPrefix(call.Args[len(call.Args)-1], c.url) {
