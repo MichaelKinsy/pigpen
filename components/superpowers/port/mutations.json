@@ -1,0 +1,206 @@
+[
+ {
+  "name": "flag-starts-off",
+  "file": "extension.go",
+  "find": "injectBootstrap.Store(true)\n\n\t// pi.on(\"resources_discover\"",
+  "replace": "injectBootstrap.Store(false)\n\n\t// pi.on(\"resources_discover\""
+ },
+ {
+  "name": "session-start-does-not-reset",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionStart, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(true)",
+  "replace": "e.OnEvent(sdk.EventSessionStart, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(false)"
+ },
+ {
+  "name": "session-compact-does-not-reset",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionCompact, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(true)",
+  "replace": "e.OnEvent(sdk.EventSessionCompact, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(false)"
+ },
+ {
+  "name": "agent-end-keeps-injecting",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventAgentEnd, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(false)",
+  "replace": "e.OnEvent(sdk.EventAgentEnd, func(_ sdk.Context, _ map[string]any) (any, error) {\n\t\tinjectBootstrap.Store(true)"
+ },
+ {
+  "name": "context-ignores-the-flag",
+  "file": "extension.go",
+  "find": "\t\tif !injectBootstrap.Load() {\n\t\t\treturn nil, nil\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "no-duplicate-guard",
+  "file": "extension.go",
+  "find": "\t\tif messageContainsBootstrap(message) {\n\t\t\treturn nil\n\t\t}",
+  "replace": "\t\t_ = message"
+ },
+ {
+  "name": "inserts-before-summaries",
+  "file": "extension.go",
+  "find": "insertAt := firstNonCompactionSummaryIndex(messages)",
+  "replace": "insertAt := 0"
+ },
+ {
+  "name": "inserts-at-the-end",
+  "file": "extension.go",
+  "find": "insertAt := firstNonCompactionSummaryIndex(messages)",
+  "replace": "insertAt := len(messages)"
+ },
+ {
+  "name": "role-assistant",
+  "file": "extension.go",
+  "find": "\"role\":      \"user\",",
+  "replace": "\"role\":      \"assistant\","
+ },
+ {
+  "name": "timestamp-in-seconds",
+  "file": "extension.go",
+  "find": "time.Now().UnixMilli()",
+  "replace": "time.Now().Unix()"
+ },
+ {
+  "name": "skill-paths-key",
+  "file": "extension.go",
+  "find": "map[string]any{\"skillPaths\": []string{dir}}",
+  "replace": "map[string]any{\"skillpaths\": []string{dir}}"
+ },
+ {
+  "name": "skills-dir-is-the-skill-dir",
+  "file": "extension.go",
+  "find": "filepath.Dir(filepath.Dir(command.SourceInfo.Path))",
+  "replace": "filepath.Dir(command.SourceInfo.Path)"
+ },
+ {
+  "name": "skills-dir-wrong-skill",
+  "file": "extension.go",
+  "find": "const bootstrapSkillName = \"skill:pigpen-superpowers-using-superpowers\"",
+  "replace": "const bootstrapSkillName = \"skill:using-superpowers\""
+ },
+ {
+  "name": "skills-dir-any-source",
+  "file": "extension.go",
+  "find": "command.Source == \"skill\" && command.Name",
+  "replace": "command.Name"
+ },
+ {
+  "name": "skills-dir-error-swallowed",
+  "file": "extension.go",
+  "find": "\tif err != nil || dir == \"\" {\n\t\t\treturn nil, err\n\t\t}",
+  "replace": "\tif err != nil || dir == \"\" {\n\t\t\treturn nil, nil\n\t\t}"
+ },
+ {
+  "name": "marker-changed",
+  "file": "bootstrap.go",
+  "find": "bootstrapMarker          = \"superpowers:using-superpowers bootstrap for pi\"",
+  "replace": "bootstrapMarker          = \"superpowers:using-superpowers bootstrap for Pi\""
+ },
+ {
+  "name": "wrapper-tag-changed",
+  "file": "bootstrap.go",
+  "find": "extremelyImportantMarker = \"<EXTREMELY_IMPORTANT>\"",
+  "replace": "extremelyImportantMarker = \"<EXTREMELY-IMPORTANT>\""
+ },
+ {
+  "name": "intro-sentence-changed",
+  "file": "bootstrap.go",
+  "find": "\"You have superpowers.\\n\\n\"",
+  "replace": "\"You have superpower.\\n\\n\""
+ },
+ {
+  "name": "closing-newline-dropped",
+  "file": "bootstrap.go",
+  "find": "piToolMapping + \"\\n\" +",
+  "replace": "piToolMapping +"
+ },
+ {
+  "name": "body-not-trimmed",
+  "file": "bootstrap.go",
+  "find": "return jsTrim(m[1])",
+  "replace": "return m[1]"
+ },
+ {
+  "name": "plain-text-not-trimmed",
+  "file": "bootstrap.go",
+  "find": "return jsTrim(content)\n}",
+  "replace": "return content\n}"
+ },
+ {
+  "name": "frontmatter-needs-no-newline",
+  "file": "bootstrap.go",
+  "find": "`(?s)^---\\n.*?\\n---\\n(.*)$`",
+  "replace": "`(?s)^---\\n.*?\\n---(.*)$`"
+ },
+ {
+  "name": "frontmatter-greedy",
+  "file": "bootstrap.go",
+  "find": "`(?s)^---\\n.*?\\n---\\n(.*)$`",
+  "replace": "`(?s)^---\\n.*\\n---\\n(.*)$`"
+ },
+ {
+  "name": "trim-ignores-bom",
+  "file": "bootstrap.go",
+  "find": "'\\u3000', '\\ufeff':",
+  "replace": "'\\u3000':"
+ },
+ {
+  "name": "trim-takes-nel",
+  "file": "bootstrap.go",
+  "find": "case '\\t', '\\n',",
+  "replace": "case '\\u0085', '\\t', '\\n',"
+ },
+ {
+  "name": "trim-ignores-nbsp",
+  "file": "bootstrap.go",
+  "find": "' ', '\\u00a0', '\\u1680'",
+  "replace": "' ', '\\u1680'"
+ },
+ {
+  "name": "trim-range-short",
+  "file": "bootstrap.go",
+  "find": "r >= '\\u2000' && r <= '\\u200a'",
+  "replace": "r >= '\\u2000' && r < '\\u200a'"
+ },
+ {
+  "name": "string-content-ignored",
+  "file": "bootstrap.go",
+  "find": "\tcase string:\n\t\treturn strings.Contains(content, bootstrapMarker)",
+  "replace": "\tcase string:\n\t\treturn false"
+ },
+ {
+  "name": "part-type-not-checked",
+  "file": "bootstrap.go",
+  "find": "\t\t\tif p[\"type\"] != \"text\" {\n\t\t\t\tcontinue\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "only-first-part-checked",
+  "file": "bootstrap.go",
+  "find": "\t\t\t\treturn true\n\t\t\t}\n\t\t}\n\t}\n\treturn false\n}\n\n// firstNon",
+  "replace": "\t\t\t\treturn true\n\t\t\t}\n\t\t\treturn false\n\t\t}\n\t}\n\treturn false\n}\n\n// firstNon"
+ },
+ {
+  "name": "summary-role-misspelled",
+  "file": "bootstrap.go",
+  "find": "m[\"role\"] != \"compactionSummary\"",
+  "replace": "m[\"role\"] != \"compactionSummery\""
+ },
+ {
+  "name": "summary-scan-stops-after-one",
+  "file": "bootstrap.go",
+  "find": "\t\tindex++\n\t}\n\treturn index",
+  "replace": "\t\tindex++\n\t\tbreak\n\t}\n\treturn index"
+ },
+ {
+  "name": "mapping-text-changed",
+  "file": "pi_tool_mapping.md",
+  "find": "are lowercase:",
+  "replace": "are uppercase:"
+ },
+ {
+  "name": "skill-text-changed",
+  "file": "bootstrap_skill.md",
+  "find": "If you were dispatched as a subagent to execute a specific task, ignore this skill.",
+  "replace": "If you were dispatched as a subagent to execute a specific task, follow this skill."
+ }
+]

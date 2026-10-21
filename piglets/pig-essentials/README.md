@@ -12,7 +12,7 @@ needs nothing else to start. **Everything stays quiet until used**: no network c
 | `tintinweb-tasks` | `@tintinweb/pi-tasks` 0.9.0 by tintinweb, MIT | `TaskCreate`, `TaskList`, `TaskGet`, `TaskUpdate`, `TaskOutput`, `TaskStop`, `TaskExecute`, `/tasks`, a task widget |
 | `ask-user-question` | `@juicesharp/rpiv-ask-user-question` 2.11.0 by juicesharp, MIT | the `ask_user_question` tool (partial: dialogs) |
 | `ponytail` | `@dietrichgebert/ponytail` 4.10.0 by Dietrich Gebert, MIT | the "lazy senior dev" mode: `/ponytail`, five more commands and six skills |
-| `superpowers` (skills) | `obra/superpowers` v6.4.2 by Jesse Vincent, MIT | fifteen skills: brainstorming, plans, TDD, debugging, review, verification |
+| `superpowers` (skills) | `obra/superpowers` v7.0.0 by Jesse Vincent, MIT | fifteen skills: brainstorming, plans, TDD, debugging, review, verification |
 
 ## Install
 
@@ -64,3 +64,26 @@ a child process starts only when the model calls `Agent` or runs `TaskExecute`. 
 ## Build it yourself
 
 `npm run stage`, then `PIG_BIN=<pig 0.4.1> npm run build:piglet -- pig-essentials` (see the repository README).
+
+## Optional: the superpowers extensions (off by default)
+
+The Piglet selects the Superpowers Skills only. The Package `superpowers` also ships two Go extensions: `superpowers` (injects the
+`using-superpowers` bootstrap into the first model request of a session and after each compaction) and `superpowers-tools` (the tools
+`brainstorm_server`, the brainstorming visual companion, and `render_skill_graphs`, the writing-skills diagram renderer). They are not
+loaded by a default stage or build, because the bootstrap adds about 7 KB to the first request of every session and the tools add
+two tool definitions to every request. They are declared as an optional selection in [`optional.json`](optional.json), and a switch
+turns them on:
+
+```sh
+# stage with them (dist/staged/piglets/pig-essentials/piglet.yaml then selects both extensions)
+npm run stage -- --with pig-essentials:superpowers-extensions
+# or build a Binary with them
+npm run build:piglet -- pig-essentials --with pig-essentials:superpowers-extensions
+# the environment form works for both
+PIGPEN_WITH=pig-essentials:superpowers-extensions npm run stage
+```
+
+Without `--with` (or `PIGPEN_WITH`) the staged manifest is the authored one. `scripts/stage-optional.test.mjs` (part of `npm test`)
+proves both: the default stage selects neither extension and the switched stage selects both, with the tools scoped to
+`brainstorm_server` and `render_skill_graphs`. To use them without this Piglet, install the Package: `pig install ./components/superpowers`.
+
