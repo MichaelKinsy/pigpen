@@ -25,11 +25,15 @@ func readJSONFile(t *testing.T, path string) map[string]any {
 }
 
 func TestRefusalMessageNamesThisPackageAndThePinnedOriginal(t *testing.T) {
+	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
+	// Where the Package files are beside the module (not in a scratch copy of the module), the names come from them.
+	if _, err := os.Stat("../../package.json"); err != nil {
+		return
+	}
 	pkg := readJSONFile(t, "../../package.json")
 	orig := readJSONFile(t, "../../port/oracle/package.json")
 	eq(t, portName, pkg["name"])
 	eq(t, originalSpec, "npm:"+orig["name"].(string)+"@"+orig["version"].(string))
-	eq(t, refusalText("x"), "@pi-in-go/pigpen-tintinweb-subagents (Go port) does not support x yet. Install the original extension, npm:@tintinweb/pi-subagents@0.19.0, which runs unchanged in PiG.")
 }
 
 func TestUnportedAgentCallParametersAreRefused(t *testing.T) {
@@ -152,6 +156,7 @@ func TestUnportedSpawnRPCOptionsAreRefused(t *testing.T) {
 		c := r.fleet.wait(t, 1)[0]
 		eq(t, c.spec.Thinking, "low")
 		eq(t, c.spec.MaxTurns, 3)
+		eq(t, r.app.mgr.resolve("scout") != nil, true) // the name reaches the record
 	})
 }
 
@@ -221,6 +226,11 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		_ = os.WriteFile(filepath.Join(cwd, ".pi", "subagents.json"), []byte(`{"showCost": false}`), 0o644)
 		r := startRigIn(t, cwd)
 		eq(t, notices(r), []string{refusalText("these subagents.json settings (reportUsage: true)")})
+	})
+	t.Run("the same notice is not repeated when another session starts with the same settings", func(t *testing.T) {
+		r := settingsRig(t, `{"showCost": true}`)
+		r.Fire("session_start", obj{"reason": "new"})
+		eq(t, notices(r), []string{refusalText("these subagents.json settings (showCost: true)")})
 	})
 }
 
