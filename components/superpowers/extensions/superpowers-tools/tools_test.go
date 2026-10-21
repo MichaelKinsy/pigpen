@@ -362,35 +362,40 @@ func TestLifecycleAndPersistence(t *testing.T) {
 		t.Errorf("server-stopped %q", raw)
 	}
 
-	// --project-dir keeps the port and the key for a restart; server-info is owner-only
-	project := t.TempDir()
-	c1, i1 := start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
-	tok1, _ := c1.currentToken()
-	if !strings.HasPrefix(i1["screen_dir"].(string), filepath.Join(project, ".superpowers", "brainstorm")) {
-		t.Errorf("screen_dir %v", i1["screen_dir"])
-	}
-	if fi, err := os.Stat(filepath.Join(i1["state_dir"].(string), "server-info")); err != nil || runtime.GOOS != "windows" && fi.Mode().Perm() != 0o600 {
-		t.Errorf("server-info: %v %v", err, fi)
-	}
-	c1.Stop("restart")
+	// --project-dir keeps the port and the key for a restart; server-info is owner-only.
 	// The saved port is random and lies in the range the operating system also hands to outgoing connections, so on a busy
-	// host another process can hold it for a moment after the stop; the server then falls back, as server.cjs does. A restart
-	// is retried a few times: only a saved port that is never reused is the defect.
+	// host another process can hold it for a moment after the stop; the server then falls back, as server.cjs does. The
+	// whole scenario is therefore tried again on a fresh project directory, a few times: only a saved port that is never
+	// reused is the defect.
 	var (
-		c2   *Companion
-		i2   map[string]any
-		tok2 string
+		project  string
+		c1, c2   *Companion
+		i1, i2   map[string]any
+		tok1     string
+		tok2     string
+		restarts int
 	)
 	for range 5 {
+		restarts++
+		project = t.TempDir()
+		c1, i1 = start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
+		tok1, _ = c1.currentToken()
+		if !strings.HasPrefix(i1["screen_dir"].(string), filepath.Join(project, ".superpowers", "brainstorm")) {
+			t.Errorf("screen_dir %v", i1["screen_dir"])
+		}
+		if fi, err := os.Stat(filepath.Join(i1["state_dir"].(string), "server-info")); err != nil || runtime.GOOS != "windows" && fi.Mode().Perm() != 0o600 {
+			t.Errorf("server-info: %v %v", err, fi)
+		}
+		c1.Stop("restart")
 		c2, i2 = start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
 		tok2, _ = c2.currentToken()
 		if i2["port"] == i1["port"] {
 			break
 		}
-		c2.Stop("the saved port was taken, retry")
+		c2.Stop("the saved port was taken, try again")
 	}
 	if i2["port"] != i1["port"] || tok1 != tok2 {
-		t.Errorf("restart: port %v then %v, key reused %v", i1["port"], i2["port"], tok1 == tok2)
+		t.Errorf("restart: port %v then %v, key reused %v (after %d tries)", i1["port"], i2["port"], tok1 == tok2, restarts)
 	}
 	// a second server wanting the same port falls back to another and keeps the shared files
 	c3, i3 := start(t, func(o *CompanionOptions) { o.SessionDir = ""; o.ProjectDir = project })
