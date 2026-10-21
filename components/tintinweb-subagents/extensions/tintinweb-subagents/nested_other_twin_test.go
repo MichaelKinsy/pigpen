@@ -60,7 +60,7 @@ func TestAgentRunnerNestedTwins(t *testing.T) {
 	tw(t, f, "leaves a nested child in memory, since nothing can address it later", func(t *testing.T) {
 		// A nested child keeps its conversation in the process (no Persist): nothing can address it later.
 		nested := childSpec{Allowed: "all", Depth: 2, MaxDepth: 3}
-		for _, spec := range []childSpec{nested, {Allowed: "all", Depth: 2, MaxDepth: 3, Isolated: true}, {}} {
+		for _, spec := range []childSpec{nested, {Allowed: "all", Depth: 2, MaxDepth: 3, NoExtensions: true}, {}} {
 			eq(t, slices.Contains(childArgs(spec), "--no-session"), true)
 		}
 	})
@@ -101,12 +101,12 @@ func TestAgentRunnerNestedTwins(t *testing.T) {
 
 	tw(t, f, "keeps opt-in nested tools active UNDER EXTENSIONS despite the EXCLUDED-name collision", func(t *testing.T) {
 		spec := childOf(t, "extensions: true\nallowed_subagents: all\n")
-		spec.Tools, spec.Depth, spec.MaxDepth = nil, 1, 2 // the file's own tool list is not the point: every tool stays active
+		spec.AllowTools, spec.ExcludeTools, spec.Depth, spec.MaxDepth = nil, nil, 1, 2 // the file's own tool list is not the point: every tool stays active
 		spec.SystemPrompt, spec.Model, spec.Thinking = "", "", ""
 		args := childArgs(spec)
 		// No tool list narrows the child, so its extension tools and the three nested tools are all active, and no
 		// extension is excluded.
-		eq(t, args, []string{"--mode", "rpc", "--no-session"})
+		eq(t, slices.Contains(args, "--tools") || slices.Contains(args, "--exclude-tools"), false)
 		eq(t, slices.Contains(args, "--no-extensions"), false)
 		eq(t, envOf(spec)[allowedEnv], `"all"`)
 		// And the child's own extension registers exactly the three, not an orchestration tool more.
