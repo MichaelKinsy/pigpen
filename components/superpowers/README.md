@@ -36,7 +36,8 @@ instead of reading `skills/using-superpowers/SKILL.md` at run time, so the boots
 where the Package's Skills were loaded from by asking the host (a Go extension has no path of its own), which only matters
 for the original's `resources_discover` contribution of the Skills directory, a no-op when the Package is installed.
 
-The Piglet `pig-essentials` selects this Package's Skills but not this extension, so it does not inject the bootstrap.
+The Piglet `pig-essentials` selects this Package's Skills only. The extensions are an optional selection there, off by default: stage or build it
+with `--with pig-essentials:superpowers-extensions` (see the [Piglet README](../../piglets/pig-essentials/README.md)); installing this Package loads them.
 
 ## The Node helpers, in Go
 

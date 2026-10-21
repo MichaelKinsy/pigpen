@@ -133,8 +133,7 @@ The unmodified Skills tree stays at `port/oracle/skills`; `port/adapt.py` regene
    assert that (`Unchanged`) where upstream asserts `undefined`.
 4. **F4: the message objects are copies.** In JS the returned list holds the very objects the host sent; in Go they are decoded
    copies. Not observable through a provider request, and the twins compare by value where upstream compares by identity.
-5. **F5: the `pig-essentials` Piglet does not select the extension.** It selects the Package's Skills only, so its behavior is
-   unchanged. Adding the extension (about 7 KB in the first request of every session) is an owner decision.
+5. **F5: the `pig-essentials` Piglet offers the extensions as an optional selection, off by default.** A default stage or build selects the Skills only, so its behavior is unchanged; `--with pig-essentials:superpowers-extensions` (or `PIGPEN_WITH`) selects both extensions (see the Piglet README and `piglets/pig-essentials/optional.json`). The bootstrap adds about 7 KB to the first request of every session, which is why it is not on by default.
 
 ### Performance (imladris, CPUs 96-151, PiG 0.5.0, go1.27.2, Node 24.19.0)
 

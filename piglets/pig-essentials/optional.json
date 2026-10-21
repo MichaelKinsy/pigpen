@@ -1,0 +1,23 @@
+{
+  "superpowers-extensions": {
+    "description": "The Go bootstrap extension of the superpowers Package (injects the using-superpowers bootstrap into the first request of a session and after a compaction) and its tools extension (brainstorm_server, the brainstorming visual companion; render_skill_graphs, the writing-skills diagram renderer). Off by default.",
+    "extensions": [
+      {
+        "name": "superpowers",
+        "origins": [
+          "package:superpowers"
+        ]
+      },
+      {
+        "name": "superpowers-tools",
+        "origins": [
+          "package:superpowers"
+        ],
+        "tools": [
+          "brainstorm_server",
+          "render_skill_graphs"
+        ]
+      }
+    ]
+  }
+}
