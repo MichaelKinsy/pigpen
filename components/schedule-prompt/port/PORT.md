@@ -126,8 +126,9 @@ carries the `Model:` line, and the scheduler's subagent path (ported in slice 2)
   the skills block, and Pi and PiG word the host part differently, so the scenario's normalize rules keep only what the filter decides (the inserted text cut to the `<available_skills>` block;
   the long host text the harness reports as removed replaced by a fixed word, in both lanes alike). Recorded under Pi, `pigeq check` against the port under PiG: identical (23 events).
   The host check (the original under PiG's Node runtime) differs from the first widget on, the known B2.
-  **The extensions filter has no scenario**: with a probe extension in the agent directory, neither Pi nor PiG lists its tool in the child's model request (identical traces for a matching and a non-matching name),
-  and a child's call of an extension tool fails on PiG with `tool probe_tool: context canceled` where Pi answers `probe ok` (also with `extensions: true`): a finding for PiG's child-session SDK, reported to the lead; the filter itself stays host code.
+  Two scenarios show the extensions filter with a probe extension (`extensions/probe-ext.ts`, registers `probe_tool`) in the agent directory: `sub-extensions-filter-match` (`extensions: ["probe"]`: the child binds it and its
+  call of `probe_tool` answers `probe ok`) and `sub-extensions-filter` (`extensions: ["nomatch"]`: `Tool probe_tool not found`). Both identical to Pi (24 events). They need a PiG with the child-session extension fix
+  (`fix/child-session-extension-events` ecadba90: before it, a child's extensions stopped when `CreateAgentSession` returned and the call failed with `context canceled`); on 8ecc5a4b the match scenario differs.
 - The model is resolved by the port against `ModelRegistry.Find` and `GetAvailable`, as `ctx.modelRegistry.find` and `getAvailable()`.
 
 ## Close-out (slice 4 head)
@@ -140,6 +141,6 @@ carries the `Model:` line, and the scheduler's subagent path (ported in slice 2)
   (`l <= n` pads `n-l = 0` spaces). Two of the 392 were last re-judged on the final tree (`widget-status-error`, now killed by `TestWidgetStatusIcons`; `ext-sendmessage-trigger`, killed). `croner-fromtz-overlap` is killed by the direct `fromTZ` test; the gap case (`croner-fromtz-gap`) by six cases checked under Node.
 - **fire-cron, 30 runs** (original under Pi against the port under PiG, `pigeq` from Pigpen main 101eaf99 with the channel-order fix, child-session pig): **30 of 30 identical**.
 - **Host check** (original under PiG's Node runtime) on the 14 other older scenarios: `settings-workdir` and `tool-definition` identical; the other 12 differ only at the first widget (`widgetLines` that PiG's RPC mode emits for a component widget, core item B2, fixed on PiG train/2b; the oracle `pig` predates it); the port equals Pi in all 14.
-- **Filters**: `sub-skills-filter` (above); the extensions filter is not observable (finding in the slice 4 notes above).
+- **Filters**: `sub-skills-filter`, `sub-extensions-filter-match`, `sub-extensions-filter` (above); all 11 `sub-*` scenarios identical on a pig built from ecadba90.
 - **Gates** (xd670, tern-ci:v3, go1.27.2, `-count=1`): `go test -race ./...` pass; `go vet` GOOS=linux, windows, darwin exit 0 (each confirmed by `go env GOOS`); `npm ci`, `npm run check` (exit 0) and `npm run generate` (no diff); `pig package validate` valid.
 - **Performance** (`handoffs/pigpen-parity/perf-schedprompt/results.md`): binary 7.36 MB stripped (floor 5.75 MB); cold start 4.96 ms (floor 4.20); `pig --mode rpc` ready 89.9 ms (original 936 ms, bare host 28 ms); `/schedule-prompt` 1.2 ms (original 1.9 ms).

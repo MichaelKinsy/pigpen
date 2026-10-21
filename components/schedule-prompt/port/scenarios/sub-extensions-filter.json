@@ -1,0 +1,76 @@
+{
+  "name": "sub-extensions-filter",
+  "description": "extensions=[\"nomatch\"]: no extension's path matches, so the session binds none and its call of probe_tool finds no such tool.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "schedule_prompt",
+          "arguments": {
+            "action": "add",
+            "name": "bg",
+            "schedule": "+2s",
+            "type": "once",
+            "prompt": "check",
+            "model": "eq-1",
+            "extensions": [
+              "nomatch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "text": "scheduled"
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "probe_tool",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "called"
+    }
+  ],
+  "steps": [
+    {
+      "name": "add",
+      "rpc": {
+        "type": "prompt",
+        "message": "add"
+      }
+    },
+    {
+      "name": "wait",
+      "rpc": {
+        "type": "get_state"
+      },
+      "settleMs": 3500
+    }
+  ],
+  "tailMs": 500,
+  "normalize": [
+    {
+      "pattern": "\\(([A-Za-z0-9_-]{10})\\)",
+      "replacement": "(<id>)"
+    },
+    {
+      "pattern": "\\\"id\\\": \\\"[A-Za-z0-9_-]{10}\\\"",
+      "replacement": "\"id\": \"<id>\""
+    },
+    {
+      "pattern": "^[A-Za-z0-9_-]{10}$",
+      "replacement": "<id>"
+    },
+    {
+      "pattern": "job-[A-Za-z0-9_-]{6}",
+      "replacement": "job-<n>"
+    }
+  ],
+  "agentFiles": {
+    "extensions/probe-ext.ts": "export default function (pi) {\n  pi.registerTool({\n    name: \"probe_tool\", label: \"Probe\", description: \"A tool of the probe extension.\", parameters: { type: \"object\", properties: {} },\n    async execute() { return { content: [{ type: \"text\", text: \"probe ok\" }], details: {} }; },\n  });\n}\n"
+  }
+}

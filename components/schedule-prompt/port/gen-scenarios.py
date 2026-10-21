@@ -286,6 +286,22 @@ raw_scenario("sub-skills-filter", "skills=[\"alpha\"]: the session's system text
     normalize=NORM + [{"pattern": r"(?s)^.*(<available_skills>.*</available_skills>).*$", "replacement": "SKILLS:$1"},
                       {"pattern": r"(?s)^(?:[^S]|S[^K]|SK[^I]|SKI[^L]|SKIL[^L]|SKILL[^S]|SKILLS[^:]).{900}.*$", "replacement": "<host system text>"}],
     agentFiles={"skills/alpha/SKILL.md": SKILL % ("alpha", "Alpha", "alpha"), "skills/beta/SKILL.md": SKILL % ("beta", "Beta", "beta")})
+PROBE_EXT = """export default function (pi) {
+  pi.registerTool({
+    name: "probe_tool", label: "Probe", description: "A tool of the probe extension.", parameters: { type: "object", properties: {} },
+    async execute() { return { content: [{ type: "text", text: "probe ok" }], details: {} }; },
+  });
+}
+"""
+for name, filt, descr in [
+    ("sub-extensions-filter-match", ["probe"], "extensions=[\"probe\"]: the filter matches the path of the agent directory's probe extension, so the session binds it and its call of probe_tool works."),
+    ("sub-extensions-filter", ["nomatch"], "extensions=[\"nomatch\"]: no extension's path matches, so the session binds none and its call of probe_tool finds no such tool."),
+]:
+    raw_scenario(name, descr, [
+        {"toolCalls": [sp("add", name="bg", schedule="+2s", type="once", prompt="check", model="eq-1", extensions=filt)]}, {"text": "scheduled"},
+        {"toolCalls": [call("probe_tool")]}, {"text": "called"},
+    ], [prompt("add", name="add"), WAIT], tailMs=500, normalize=NORM, agentFiles={"extensions/probe-ext.ts": PROBE_EXT})
+
 print("wrote", len(os.listdir(out)), "scenarios")
 
 # ---- evidence: behavior of the original that the port deliberately does not copy (PORT.md D1). Recorded under Pi only. ----
