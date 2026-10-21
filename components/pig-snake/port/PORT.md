@@ -183,3 +183,9 @@ The golden traces were recorded again from the port itself (`--self`, a regressi
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). An event-by-event diff against the previous traces shows no other
 difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+
+## Owner decisions (2026-10-20)
+
+- Accepted: the 29 named skipped upstream twins (mechanics Pig Snake has no counterpart for) and the self-recorded golden traces (`port/golden`, a regression baseline, not equivalence).
+- Mini mode and sound stay tracked PiG SDK items (see the Gaps section).
+- The opt-in `gamemcp` server (PiG Runner and Angry Pigs have one) stays an owner-optional feature, not excluded.
