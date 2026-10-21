@@ -1,0 +1,56 @@
+{
+  "name": "workflow-unknown-option",
+  "description": "agent() rejects an option it does not know, by name, before anything runs.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "script": "export const meta = { name: \"opts\", description: \"bad option\" };\nreturn await agent(\"x\", { agenttype: \"Explore\" });"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    },
+    {
+      "text": "noted"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "tailMs": 2500,
+  "volatileNumbers": [
+    "message.details.durationMs"
+  ],
+  "normalize": [
+    {
+      "pattern": "pi-subagents-[0-9]+/[^/]+/",
+      "replacement": "pi-subagents-<uid>/<cwd-slug>/"
+    }
+  ]
+}

@@ -8,7 +8,7 @@
           "name": "SubagentWorkflow",
           "arguments": {
             "script": "export const meta = { name: \"p\", description: \"d\" };\n",
-            "resumeFromRunId": "wf_deadbeef1234"
+            "resumeFromRunId": "wf_nosuchrun"
           }
         }
       ]

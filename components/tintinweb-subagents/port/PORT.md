@@ -132,7 +132,18 @@ Differences from the original (each deliberate or forced by the engine):
 
 **Dependency.** goja `v0.0.0-20260723142020-b4aef50fa347` is MIT; its requirements are `dlclark/regexp2` (BSD-3-Clause),
 `go-sourcemap/sourcemap` (BSD-2-Clause), `google/pprof` (Apache-2.0) and `golang.org/x/text` (BSD-3-Clause), all recorded
-in `go.sum`. The source is 2.2 MB (regexp2 7.9 MB); the cost in the built extension is measured below.
+in `go.sum`. The source is 2.2 MB (regexp2 7.9 MB). **Cost in the built extension**, measured on imladris (linux/amd64, go1.27.1,
+`CGO_ENABLED=0`, `pig piglet build` of a one-extension Piglet, PiG 0.5.0 source 7a5422f6; the same Piglet built from this
+branch and from the base without the workflow package, `origin/parity/tintinweb-subagents-refusal` at 7dc3f789): Piglet Binary 80,920,736 bytes with the workflow package against
+71,049,376 without, +9.9 MB (+13.9%), the workflow package with goja and its requirements. The extension alone (`go build`, `-s -w`): 15.4 MB against 5.7 MB; unstripped 21.7 MB against 8.3 MB. Cold start
+to registration: `Extension()` builds in 0.51 ms against 0.41 ms (in process, median of 55); `GODEBUG=inittrace=1` shows the
+workflow package's added init at 0.5 ms (`google/pprof/profile` 0.36 ms, `goja/parser` 0.12 ms, both from goja's imports); a run of the
+extension binary from exec to exit takes 5.3 ms against 4.3 ms; in `pig` (`scripts/perf/measure.mjs startup --mode trace --n 20`,
+cpus 100-103) the extension's spawn-to-handshake takes 4 ms against 3 ms and `extensions-loaded` comes at 31 ms against 29 ms.
+The tools are registered at start; the engine only runs when a workflow does. License: goja is MIT, module version
+`v0.0.0-20260723142020-b4aef50fa347`, the one `pig-music` pins; no new module outside that set.
+
+Building the extension's Piglet: `npm run build:piglet -- pig-essentials` (`scripts/build-piglet.mjs`, `PIG_BIN` and a git checkout of the PiG source at `scripts/pig-requirement.json`'s `release.commit` as `PIG_SOURCE_ROOT`) is the repository's documented command; the per-extension Piglets used above are what `scripts/perf/build-singles.mjs` makes. Offline, the build needs `GOSUMDB=off` for the goja requirement `github.com/google/pprof` (the checksum database is unreachable); the fused-member vet notes that the five external modules were not vetted for process-global hazards (regexp2, goja, sourcemap, pprof, x/text).
 
 Manager hooks assumed (for the lane lead at stacking): `agentRecord.Owner` (a workflow's child is out of `list()`,
 `resolve()` and `onSettle`, in no pool slot as a foreground spawn), `manager.spawnOwned`, `app.startOwned`,
@@ -170,12 +181,26 @@ components; this port registers none.
 - Workflow scenarios, recorded under Pi `1.3.0.1402973a` (the pi-src pin): `workflow-tools`, `-bad-meta`, `-no-meta`, `-no-source`,
   `-unknown-name`, `-bad-name`, `-resume-unknown`, `-missing-script-path` and `-off` (the flag warning, the tool list and its
   order: `SubagentWorkflow` is registered between `Agent` and `get_subagent_result`, as the original does; a first check found
-  the port registering it last). **No scenario starts a run**: a run's task id (`wf_` + random hex) and `duration_ms` reach the
-  model in the tool result and the task notification, and pigeq's normalizer (N1-N6) has no rule for either, so such a scenario
-  fails against its own golden. Eight were written and dropped for that reason (`gen-scenarios.py` says which); a bare
-  `--subagents-workflow-file` cannot be recorded because Pi refuses to start (`Extension flag ... requires a value`). Those
-  behaviors are covered by the twins. When those scenarios were recorded, the original run under PiG differed from Pi at the
-  fleet `setWidget` (PiG emits it before `tool_execution_end`, Pi after): a PiG core difference, reported to the lane lead.
+  the port registering it last). **The eight run-starting scenarios** (`workflow-run-inline`, `-run-throws`, `-determinism`, `-unknown-option`, `-saved-name`,
+  `-title-ignored`, `-nested`, `-flag`) are written by `gen-scenarios.py` into `port/scenarios-pending/` and recorded under Pi
+  1.3.0+1402973a into `port/golden-pending/`, not into `scenarios/`/`golden/`. A run's task id (`wf_` + random hex), its
+  `duration_ms`, `details.durationMs` and the directory an inline script is saved in (`pi-subagents-<uid>/<cwd slug>/`) are
+  different every run; the scenarios normalize them with pigeq's N8/N9 (task ids and `<duration_ms>`, branch `pigeq-normalize-wf`),
+  the scenario rules `volatileNumbers: ["message.details.durationMs"]` (pigeq `pigeq-normalize-numbers`) and one `normalize` rule
+  for the directory. Recorded and compared with a pigeq built from `pigeq-normalize-wf` + `fix/pigeq-channel-order` + that
+  numbers rule. Result: the Go port under PiG equals Pi for every event up to the session shutdown (events 0-22 of the 25 of
+  `workflow-run-inline`, 0-10 of the 13 of `workflow-flag`: the task id, the task notification, the next turn). The one difference is
+  at `99-shutdown`: Pi shows `setWidget` for key `fleet` with no content (the original's fleet list clears its widget when
+  the session ends) and the port, which has no fleet list yet (the UI lane's G5), shows nothing. That is a missing feature of
+  another lane, not a bug of what is ported here, so the eight stay in `scenarios-pending/` (a red `pigeq check` would hide
+  real regressions) and move to `scenarios/` and `golden/` with the fleet list (`mv` both directories' files; regenerate
+  nothing). The original under PiG differs from the original under Pi in one more event: an extra `setWidget` for `fleet`
+  with `widgetLines` before `tool_execution_end` (PiG's Node runtime sends the factory widget over RPC, which Pi drops): B2
+  in `core-items.md`, with the event dump under B10; no host event is reordered. `pigeq record` therefore prints "host check:
+  pig-ts differs from pi-ts" for these eight until B2 lands; the goldens are Pi's. A bare `--subagents-workflow-file` cannot be
+  recorded because Pi refuses to start (`Extension flag ... requires a value`). The `workflow-resume-unknown` scenario names a
+  run id that is not 12 hex digits (`wf_nosuchrun`), so it does not depend on N8. The behaviors are also covered by the twins
+  (`workflow_tool_twin_test.go`).
 - `pigeq mutate --unit`: 81 mutations, all killed (the first run killed 58; 16 survived and 7 did not build; each
   survivor got a test in `extra_test.go` / `extra2_test.go` and each invalid mutation was rewritten). After the review
   fixes (finding 10): **101 mutations, all killed by the unit tests** (`--unit-only`); the first run after the fixes left

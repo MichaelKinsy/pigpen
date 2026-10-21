@@ -1,0 +1,56 @@
+{
+  "name": "workflow-determinism",
+  "description": "Date.now, new Date() and Math.random throw inside a script, with the guidance text.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "SubagentWorkflow",
+          "arguments": {
+            "script": "export const meta = { name: \"clock\", description: \"reads the clock\" };\ntry { Date.now(); } catch (e) { return e.message; }"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    },
+    {
+      "text": "noted"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"schedulingEnabled\": false, \"worktreeIsolation\": false}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "go"
+      }
+    }
+  ],
+  "tailMs": 2500,
+  "volatileNumbers": [
+    "message.details.durationMs"
+  ],
+  "normalize": [
+    {
+      "pattern": "pi-subagents-[0-9]+/[^/]+/",
+      "replacement": "pi-subagents-<uid>/<cwd-slug>/"
+    }
+  ]
+}
