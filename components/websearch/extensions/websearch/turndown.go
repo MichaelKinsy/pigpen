@@ -1,9 +1,7 @@
 package websearch
 
 import (
-	"errors"
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -640,7 +638,11 @@ func tdListItem(n *html.Node, content string) string {
 			}
 		}
 		if start != "" {
-			prefix = jsNumberString(jsToNumber(start)+float64(index)) + ".  "
+			n, ok := jsToNumber(start)
+			if !ok {
+				n = math.NaN()
+			}
+			prefix = jsNumberString(n+float64(index)) + ".  "
 		} else {
 			prefix = strconv.Itoa(index+1) + ".  "
 		}
@@ -825,49 +827,4 @@ func turndown(input string) string {
 	// postProcess: output.replace(/^[\t\r\n]+/, '').replace(/[\t\r\n\s]+$/, '')
 	output = strings.TrimLeft(output, "\t\r\n")
 	return strings.TrimRightFunc(output, jsSpace)
-}
-
-var (
-	jsDecimalRE = regexp.MustCompile(`^[+-]?(?:\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)$`)
-	jsRadixRE   = regexp.MustCompile(`^0([xXoObB])([0-9a-fA-F]+)$`)
-)
-
-// jsToNumber is Number(s) for a string: whitespace is trimmed, "" is 0, and anything that is not a
-// numeric literal is NaN.
-func jsToNumber(s string) float64 {
-	s = strings.TrimFunc(s, jsSpace)
-	if s == "" {
-		return 0
-	}
-	switch s {
-	case "Infinity", "+Infinity":
-		return math.Inf(1)
-	case "-Infinity":
-		return math.Inf(-1)
-	}
-	if m := jsRadixRE.FindStringSubmatch(s); m != nil {
-		base := map[string]int{"x": 16, "o": 8, "b": 2}[strings.ToLower(m[1])]
-		if n, err := strconv.ParseUint(m[2], base, 64); err == nil {
-			return float64(n)
-		}
-		return math.NaN()
-	}
-	if jsDecimalRE.MatchString(s) {
-		f, err := strconv.ParseFloat(s, 64)
-		if err == nil || errors.Is(err, strconv.ErrRange) {
-			return f
-		}
-	}
-	return math.NaN()
-}
-
-// jsNumberString is String(n) for a number.
-func jsNumberString(f float64) string {
-	switch {
-	case math.IsInf(f, 1):
-		return "Infinity"
-	case math.IsInf(f, -1):
-		return "-Infinity"
-	}
-	return jsNumber(f)
 }
