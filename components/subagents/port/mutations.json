@@ -1608,12 +1608,6 @@
   "replace": "if false {"
  },
  {
-  "name": "val-exclusive",
-  "file": "workflow_validate_action.go",
-  "find": "if isSet(\"workflowScript\") && isSet(\"workflowScriptPath\") {",
-  "replace": "if false {"
- },
- {
   "name": "mis-id-dotdot",
   "file": "mission_types.go",
   "find": "!workflowKeyPattern.MatchString(id) || strings.Contains(id, \"..\")",
@@ -1924,12 +1918,6 @@
   "file": "mission_actions.go",
   "find": "lines := []string{formatMission(record), \"State: \" + statePath}",
   "replace": "lines := []string{formatMission(record)}\n\t\t_ = statePath"
- },
- {
-  "name": "mis-act-trim-resolution",
-  "file": "mission_actions.go",
-  "find": "Resolution: jsTrim(summary)}}",
-  "replace": "Resolution: summary}}"
  },
  {
   "name": "mis-life-optout",

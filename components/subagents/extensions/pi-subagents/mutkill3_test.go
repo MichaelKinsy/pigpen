@@ -1,9 +1,11 @@
 package pi_subagents
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestExecutionProjectionOfDetachedAndTimedOutRuns(t *testing.T) {
@@ -68,4 +70,28 @@ func TestPreflightOrchestrationSkillAndForkDiagnostics(t *testing.T) {
 		found = found || d.Code == "host_required" && d.Message == "Exact fork session branching requires Pi host session snapshots."
 	}
 	equal(t, found, true, "a fork launch records that it needs the host")
+}
+
+func TestMissionUpdateKeepsReceiptTimeAndOpensDecisionOnActiveMissions(t *testing.T) {
+	f := newMissionFixture(t)
+	m := mkMission(t, f.loc, MissionCreateInput{Title: "T", Objective: "  Ship it  ", Status: "active"})
+	eq(t, m.Objective, "Ship it", "created objective is trimmed")
+	receipt := MissionReceipt{Kind: "pull_request", Status: "ready", Title: "PR", URL: "https://github.com/example/repo/pull/1"}
+	first, err := updateMission(f.loc, m.ID, MissionUpdateInput{AddReceipts: []MissionReceipt{receipt}}, time.Now(), -1)
+	first = mustMission(t, first, err)
+	receipt.Status = "succeeded"
+	later, err := updateMission(f.loc, m.ID, MissionUpdateInput{AddReceipts: []MissionReceipt{receipt}}, time.Now().Add(time.Hour), -1)
+	later = mustMission(t, later, err)
+	eq(t, len(later.Receipts), 1, "the same receipt is updated in place")
+	eq(t, later.Receipts[0].CreatedAt, first.Receipts[0].CreatedAt, "its first creation time is kept")
+	decided := updMission(t, f.loc, m.ID, MissionUpdateInput{AddDecisions: []MissionDecisionInput{{Title: "Pick"}}})
+	eq(t, decided.Status, "needs_decision", "an open decision of an active mission needs a decision")
+	path := mustRecordPath(f.loc, m.ID)
+	b, _ := os.ReadFile(path)
+	if err := os.WriteFile(path, []byte(strings.Replace(string(b), `"Ship it"`, `"  Ship it  "`, 1)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	rec, err := readMissionFile(path)
+	eq(t, err, nil, "read")
+	eq(t, rec.Objective, "Ship it", "a stored objective is trimmed when read")
 }

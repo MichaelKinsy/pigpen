@@ -687,7 +687,7 @@ func handleMissionAction(action string, params *jsObject, ctx MissionActionConte
 		if !ok {
 			return MissionActionResult{}, errors.New("mission.resolve-decision requires a non-empty summary")
 		}
-		record, err := updateMission(loc, id, MissionUpdateInput{ResolveDecision: &MissionResolveDecision{ID: decisionID, Resolution: jsTrim(summary)}}, time.Now(), -1)
+		record, err := updateMission(loc, id, MissionUpdateInput{ResolveDecision: &MissionResolveDecision{ID: decisionID, Resolution: summary}}, time.Now(), -1)
 		if err != nil {
 			return MissionActionResult{}, err
 		}

@@ -149,9 +149,7 @@ func validationObject(v WorkflowScriptValidationResult, preflight *WorkflowPrefl
 
 func validateAction(ctx sdk.Context, params map[string]any) (any, error) {
 	isSet := func(k string) bool { return params[k] != nil }
-	if isSet("workflowScript") && isSet("workflowScriptPath") {
-		return validationFailure("workflowScript and workflowScriptPath are mutually exclusive.")
-	}
+	// (workflowScript with workflowScriptPath is refused by the public boundary before this action runs)
 	if v := params["globalConcurrencyLimit"]; v != nil {
 		if _, ok := positiveSafeInt(v); !ok {
 			return validationFailure("globalConcurrencyLimit must be a positive safe integer.")
