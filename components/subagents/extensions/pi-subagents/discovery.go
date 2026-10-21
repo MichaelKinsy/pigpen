@@ -3,7 +3,6 @@ package pi_subagents
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -181,62 +180,6 @@ func isLegacySkillPath(root, file string) bool {
 		}
 	}
 	return false
-}
-
-// listFiles lists the files under dir for which keep is true, depth first, directories in name order, following
-// symlinked directories once.
-func listFiles(dir string, keep func(name string) bool) []string {
-	var out []string
-	visited := map[string]bool{}
-	var walk func(cur string)
-	walk = func(cur string) {
-		real, err := filepath.EvalSymlinks(cur)
-		if err != nil || visited[real] {
-			return
-		}
-		visited[real] = true
-		entries, err := os.ReadDir(cur)
-		if err != nil {
-			return
-		}
-		sort.Slice(entries, func(i, j int) bool { return localeLess(entries[i].Name(), entries[j].Name()) })
-		for _, e := range entries {
-			p := filepath.Join(cur, e.Name())
-			isD := e.IsDir()
-			isFile := e.Type().IsRegular()
-			if e.Type()&os.ModeSymlink != 0 {
-				st, err := os.Stat(p)
-				isD = err == nil && st.IsDir()
-				isFile = err == nil && st.Mode().IsRegular()
-			}
-			if isD {
-				if !shouldPrune(dir, p, e.Name()) {
-					walk(p)
-				}
-				continue
-			}
-			if isFile && keep(e.Name()) {
-				out = append(out, p)
-			}
-		}
-	}
-	if isDir(dir) {
-		walk(dir)
-	}
-	return out
-}
-
-func readDefinitions(dir string) []definitionFile {
-	var files []definitionFile
-	for _, p := range listFiles(dir, func(n string) bool { return strings.HasSuffix(n, ".md") && !strings.HasSuffix(n, ".chain.md") }) {
-		if isLegacySkillPath(dir, p) {
-			continue
-		}
-		if b, err := os.ReadFile(p); err == nil {
-			files = append(files, definitionFile{p, string(b)})
-		}
-	}
-	return files
 }
 
 func extraUserAgentDirs() []string {
