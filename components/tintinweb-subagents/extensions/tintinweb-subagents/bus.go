@@ -160,12 +160,12 @@ type startRequest struct {
 	Type, Prompt, Description, Model, Thinking string
 	MaxTurns                                   *int
 	Isolated, InheritContext                   bool
-	Worktree                                   bool         // run in a temporary git worktree (isolation: "worktree")
+	Worktree                                   bool // run in a temporary git worktree (isolation: "worktree")
 	// Registry is a nested spawn's agent registry (its branch's config root, never the process-wide one); Type is then
 	// already resolved. ConfigCwd is that root.
 	Registry  *agentRegistry
 	ConfigCwd string
-	Spawn                                      spawnOptions // the name, the pool and the signal of the spawn
+	Spawn     spawnOptions // the name, the pool and the signal of the spawn
 	// Per-call settings that only the Agent tool has (the RPC spawn path takes none).
 	Transcript bool // write a `.output` transcript (the Agent tool's decision: the agent file, else the default)
 	SessionID  string

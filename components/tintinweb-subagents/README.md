@@ -75,7 +75,8 @@ registry knows; see `port/PORT.md` for what that cannot reach.
 
 An agent whose file says `allowed_subagents` (`all`, `*`, `true`, or a list of agent types) can start agents of its own;
 without it a child has no agent tools. A nested agent gets three tools, the original's: `Agent` (a "child-safe" version:
-`prompt`, `description`, `subagent_type` limited to the allowed types, and the optional parameters; **foreground by
+`prompt`, `description`, `subagent_type` limited to the allowed types, and the optional parameters, `resume`, `isolation`,
+`inherit_context` and the model and `scopeModels` rules of the top-level tool; **foreground by
 default**, the call returns the child's answer inline), `get_subagent_result` and `steer_subagent`. All three work on
 the agents *that agent* started, and nothing else: another agent's id answers "not found or not owned by this parent".
 Nested agents take no concurrency slot, have no handle or name, appear nowhere in `/agents`, and emit none of the
@@ -134,17 +135,6 @@ input, output and cache-write tokens (cache reads are excluded, as in the origin
 a pi `usage`. `reportUsage: true` attaches the agents' spend to the next tool result so the parent session counts it.
 `showCost: true` adds `~$0.0042` to the tool results and `<estimated_cost_usd>` to the notification; the widgets that
 show it are another slice, so the setting is still announced as not fully supported.
-
-## Nested delegation
-
-An agent file with `allowed_subagents: all` (or a list of types) lets that agent start agents of its own, below the
-`maxSubagentDepth` cap (default 2; `isolated` agents get none). Each level is a `pig --mode rpc` process that loads this
-extension and registers three tools in place of the top-level ones: `Agent` (foreground by default, with `resume`,
-`isolation`, `inherit_context`, the model and `scopeModels` rules of the top-level tool), `get_subagent_result` and
-`steer_subagent`, which see only the agents that agent owns. A parent that settles, or whose session ends, stops what it
-owns, down the tree. A nested agent's spend (and its own children's) is added to its owner's record, so the top-level
-record counts the whole tree; its transcript is filed under the top-level session. `disallowed_tools` takes a nested tool
-back. Nothing nested is announced to the model or on the bus.
 
 ## Worktree isolation and persistent memory
 

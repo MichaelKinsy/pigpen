@@ -22,6 +22,10 @@ func TestMain(m *testing.M) {
 		fakePig(mode)
 		return
 	}
+	if os.Getenv("TW_PRINT_DEPTH") != "" { // a fresh process: the cap nothing has set yet (documented-defaults twin)
+		os.Stdout.WriteString(strconv.Itoa(getMaxSubagentDepth()))
+		return
+	}
 	// Transcripts go under the temp dir: keep them out of the real one.
 	dir, err := os.MkdirTemp("", "tw-obs-tmp-")
 	if err != nil {
@@ -31,11 +35,6 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	os.RemoveAll(dir)
 	os.Exit(code)
-	if os.Getenv("TW_PRINT_DEPTH") != "" { // a fresh process: the cap nothing has set yet (documented-defaults twin)
-		os.Stdout.WriteString(strconv.Itoa(getMaxSubagentDepth()))
-		return
-	}
-	os.Exit(m.Run())
 }
 
 func fakePig(mode string) {

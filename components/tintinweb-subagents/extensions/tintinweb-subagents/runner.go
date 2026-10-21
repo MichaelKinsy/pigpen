@@ -101,8 +101,8 @@ type childResult struct {
 	// Nested is what the agents the child owns spent, folded into the child's own count. upstream: nested-tools.ts onAssistantUsage.
 	Nested    lifetimeUsage
 	WrappedUp bool   // steered to wrap up at the turn limit. upstream: agent-runner.ts `steered`
-	Aborted           bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
-	Failure           string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
+	Aborted   bool   // aborted after the grace turns past the limit. upstream: agent-runner.ts `aborted`
+	Failure   string // the final turn failed (a provider error, or the output limit with no text). upstream: finalTurnError
 }
 
 // defaultGraceTurns is how many turns past the limit an agent that was told to wrap up may take before it is
@@ -254,13 +254,13 @@ func childArgs(spec childSpec) []string {
 // The environment a child is started with. depthEnv marks a child: it registers no top-level tools. The rest is set
 // only for a child that gets the nested tools, and says who it is and how far it may delegate (nested.go).
 const (
-	depthEnv     = "TINTINWEB_SUBAGENT_DEPTH"      // this child's depth, 1 for a top-level agent's child
-	maxDepthEnv  = "TINTINWEB_SUBAGENT_MAX_DEPTH"  // the branch's cap
-	allowedEnv   = "TINTINWEB_SUBAGENT_ALLOWED"    // JSON: "all" or the list of agent types
-	agentIDEnv   = "TINTINWEB_SUBAGENT_ID"         // this child's agent id: the owner of its children
-	configCwdEnv = "TINTINWEB_SUBAGENT_CONFIG_CWD" // the config root its children's agent files are read from
+	depthEnv       = "TINTINWEB_SUBAGENT_DEPTH"        // this child's depth, 1 for a top-level agent's child
+	maxDepthEnv    = "TINTINWEB_SUBAGENT_MAX_DEPTH"    // the branch's cap
+	allowedEnv     = "TINTINWEB_SUBAGENT_ALLOWED"      // JSON: "all" or the list of agent types
+	agentIDEnv     = "TINTINWEB_SUBAGENT_ID"           // this child's agent id: the owner of its children
+	configCwdEnv   = "TINTINWEB_SUBAGENT_CONFIG_CWD"   // the config root its children's agent files are read from
 	rootSessionEnv = "TINTINWEB_SUBAGENT_ROOT_SESSION" // the top-level session: nested transcripts are filed under it
-	usageEnv     = "TINTINWEB_SUBAGENT_USAGE_FILE" // where the child writes what its own children spent
+	usageEnv       = "TINTINWEB_SUBAGENT_USAGE_FILE"   // where the child writes what its own children spent
 )
 
 // envPrefix is the namespace of the variables above: every one of them starts with it, and nothing else does.
@@ -768,7 +768,6 @@ func (c *rpcChild) wait() (*childResult, error) {
 	case c.lastStop == "length" && strings.TrimSpace(c.lastText) == "":
 		res.Failure = "run hit the output token limit before producing any text"
 	}
-	res.Tokens += nestedTokens
 	if res.ToolUses == 0 {
 		res.ToolUses = c.toolUse
 	}

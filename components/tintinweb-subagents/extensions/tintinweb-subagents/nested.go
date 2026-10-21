@@ -144,7 +144,10 @@ func (a *app) nestedToolDefs(n *nestedConfig) []sdk.ToolDefinition {
 		Description: "Check or wait for a background nested agent owned by this parent.",
 		Parameters: sdk.Schema{"type": "object", "properties": map[string]any{
 			"agent_id": map[string]any{"type": "string"}, "wait": map[string]any{"type": "boolean"}}, "required": []any{"agent_id"}},
-		Execute: func(ctx sdk.Context, p map[string]any) (any, error) { a.touch(ctx); return a.nestedResult(ctx.Done(), p) },
+		Execute: func(ctx sdk.Context, p map[string]any) (any, error) {
+			a.touch(ctx)
+			return a.nestedResult(ctx.Done(), p)
+		},
 	}, {
 		Name: "steer_subagent", Label: "Steer Nested Agent",
 		Description: "Send guidance to a running nested agent owned by this parent.",
@@ -228,7 +231,9 @@ func nestedText(text string, isError bool) (sdk.ToolResult, error) {
 }
 
 // ownsRecord: the record exists and this agent owns it. upstream: ownsRecord.
-func (n *nestedConfig) ownsRecord(r *agentRecord) bool { return r != nil && r.ParentAgentID == n.AgentID }
+func (n *nestedConfig) ownsRecord(r *agentRecord) bool {
+	return r != nil && r.ParentAgentID == n.AgentID
+}
 
 // resultPosition is how the caller received a record, which decides the outcome wording. A foreground spawn holds the
 // whole output and no id, so the note must not invite a fetch; a background child's owner holds an id and can poll.

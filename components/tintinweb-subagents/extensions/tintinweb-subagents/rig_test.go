@@ -166,15 +166,15 @@ type rig struct {
 	// modelState answers the host's model registry (`ctx.ModelRegistry()`): {"models": [...], "providers": {...}}.
 	modelState any
 	// What the host answers about the parent session.
-	sessionFile string // getSessionFile
-	branch      []any  // sessionRead getBranch
-	registry    []any  // getAllTools
-	trusted     bool   // isProjectTrusted
+	sessionFile  string // getSessionFile
+	branch       []any  // sessionRead getBranch
+	registry     []any  // getAllTools
+	trusted      bool   // isProjectTrusted
 	systemPrompt string // getSystemPrompt
-	mu          sync.Mutex
-	extBus      map[string][]string
-	goBus       map[string][]func(any)
-	emits       []string
+	mu           sync.Mutex
+	extBus       map[string][]string
+	goBus        map[string][]func(any)
+	emits        []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
