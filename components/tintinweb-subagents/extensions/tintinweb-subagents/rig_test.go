@@ -87,6 +87,7 @@ func (c *fakeChild) finish(text string) {
 	}
 	c.releaseNow()
 }
+
 // die is the process ending because its context ended: the run in progress fails and no more prompts are taken.
 func (c *fakeChild) die() {
 	c.mu.Lock()

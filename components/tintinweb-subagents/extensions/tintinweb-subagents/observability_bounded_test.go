@@ -2,8 +2,8 @@ package tintinweb_subagents
 
 import (
 	"bufio"
-	"math"
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
