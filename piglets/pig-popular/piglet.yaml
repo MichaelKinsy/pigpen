@@ -3,7 +3,7 @@
 name: pig-popular
 description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (the tabbed questionnaire with notes, previews and locales; the collapse key shows a one-line row and the external editor key reports a refusal), the powerline status bar (no custom editor), pi-goal-x's durable goals (scheduler, goal and task tools, guided drafting, dashboard, auditor, oracle and the sixteen commands), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

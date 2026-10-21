@@ -3,7 +3,7 @@
 name: pig-extension-porter
 description: "Port a Pi TypeScript extension to a Go PiG extension: SDK gap check, tests first, differential equivalence against the original, mutation check, binary build and a Package with provenance."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused
