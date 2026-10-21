@@ -1,33 +1,51 @@
 package pi_goal_x
 
 import (
+	"context"
 	"encoding/json"
-	"sync"
+	"strconv"
+	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
-// The SDK wiring: sdkHost adapts a Context to the core's host interface; one core lives for the extension process.
+// The SDK wiring: sdkHost adapts a Context to the host interface (host.go). goal.go installs one core for the extension process and
+// binds the Context of each call (core.withCtx).
 
-type sdkHost struct{ ctx sdk.Context }
+type sdkHost struct {
+	ctx sdk.Context
+	c   *core
+}
 
 func (h sdkHost) Cwd() string { return h.ctx.Cwd() }
 func (h sdkHost) SessionID() string {
 	id, _ := h.ctx.GetSessionID()
 	return id
 }
-func (h sdkHost) HasUI() bool           { return h.ctx.HasUI() }
-func (h sdkHost) Rich() bool            { return h.ctx.HasUI() && h.ctx.Mode() != "rpc" }
-func (h sdkHost) Notify(m, l string)    { h.ctx.Notify(m, l) }
-func (h sdkHost) SetStatus(k, t string) { h.ctx.SetStatus(k, t) }
-func (h sdkHost) ClearWidget(k string)  { _ = h.ctx.SetWidget(k, nil) }
-func (h sdkHost) Confirm(t, m string) bool {
-	ok, _ := h.ctx.Confirm(t, m)
-	return ok
+func (h sdkHost) SessionFile() string {
+	f, err := h.ctx.GetSessionFile()
+	if err != nil || f == nil {
+		return ""
+	}
+	return *f
 }
-func (h sdkHost) Select(t string, o []string) (string, bool) {
-	v, ok, err := h.ctx.Select(t, o)
-	return v, ok && err == nil
+func (h sdkHost) HasUI() bool        { return h.ctx.HasUI() }
+func (h sdkHost) Mode() string       { return h.ctx.Mode() }
+func (h sdkHost) Notify(m, l string) { h.ctx.Notify(m, l) }
+func (h sdkHost) IsIdle() bool {
+	idle, err := h.ctx.IsIdle()
+	return err != nil || idle
+}
+func (h sdkHost) HasPendingMessages() bool {
+	pending, err := h.ctx.HasPendingMessages()
+	return err == nil && pending
+}
+func (h sdkHost) Abort() { h.ctx.Abort() }
+func (h sdkHost) Signal() context.Context {
+	if s := h.ctx.Signal(); s != nil {
+		return s
+	}
+	return context.Background()
 }
 func (h sdkHost) Branch() []any {
 	raw, err := h.ctx.SessionManager().GetBranch(nil)
@@ -46,79 +64,214 @@ func (h sdkHost) Branch() []any {
 	}
 	return out
 }
-func (h sdkHost) AppendEntry(t string, d *jsObject) { _ = h.ctx.AppendEntry(t, d) }
-func (h sdkHost) IsIdle() bool {
-	idle, err := h.ctx.IsIdle()
-	return err != nil || idle
-}
-func (h sdkHost) Abort() { h.ctx.Abort() }
-
-type app struct {
-	mu sync.Mutex
-	c  *core
-}
-
-// with runs fn against the core bound to this call's context and then does the UI update the original queues.
-func (a *app) with(ctx sdk.Context, fn func(c *core)) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	h := sdkHost{ctx: ctx}
-	if a.c == nil {
-		a.c = newCore(h)
-	}
-	a.c.h = h
-	a.c.st = storage{cwd: h.Cwd()}
-	fn(a.c)
-	a.c.flush()
-}
-
-func (a *app) command(fn func(c *core, args string) error) sdk.CommandFunc {
-	return func(ctx sdk.Context, args string) error {
-		var err error
-		a.with(ctx, func(c *core) { err = fn(c, args) })
-		return err
-	}
-}
-
-// Extension is pi-goal-x, the part that stores goals and runs the commands that need no scheduler.
-func Extension() *sdk.Extension {
-	e := sdk.New("pi-goal-x")
-	a := &app{}
-	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		invalidateGoalPoolCache()
-		a.with(ctx, func(c *core) { c.sessionStart() })
-		return nil, nil
-	})
-	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		a.with(ctx, func(c *core) { c.shutdown() })
-		return nil, nil
-	})
-	for _, d := range commandDefs {
-		e.RegisterCommand(d.name, sdk.CommandOptions{Description: d.desc, Handler: a.command(d.fn)})
-	}
-	for _, d := range unportedCommands {
-		e.RegisterCommand(d.name, sdk.CommandOptions{Description: d.desc, Handler: a.unported(d.feature)})
-	}
-	return e
-}
-
-// unported answers a command this port does not implement with the refusal (a notification, no action).
-func (a *app) unported(feature string) sdk.CommandFunc {
-	return func(ctx sdk.Context, _ string) error {
-		ctx.Notify(refusal(feature), "error")
+func (h sdkHost) Model() *auditorModel {
+	info, err := h.ctx.GetModelInfo()
+	if err != nil || info == nil {
 		return nil
 	}
+	return &auditorModel{provider: info.Provider, id: info.ID, name: info.Name}
+}
+func (h sdkHost) ModelRegistry() auditorModelRegistry { return sdkModelRegistry{h.ctx.ModelRegistry()} }
+func (h sdkHost) ContextUsage() *goalContextUsage {
+	u, err := h.ctx.GetContextUsage()
+	if err != nil || u == nil {
+		return nil
+	}
+	out := &goalContextUsage{contextWindow: float64(u.ContextWindow)}
+	if u.Tokens != nil {
+		out.tokens = new(float64(*u.Tokens))
+	}
+	return out
 }
 
-// commandDefs are the commands this port registers; the tests drive the same table.
-var commandDefs = []struct {
-	name, desc string
-	fn         func(c *core, args string) error
-}{
-	{"goal-direct", "Create and start a regular goal immediately, without drafting.", func(c *core, args string) error { return c.direct(args, false) }},
-	{"sisyphus-direct", "Create and start a Sisyphus goal immediately, without drafting.", func(c *core, args string) error { return c.direct(args, true) }},
-	{"goal-list", "List all open goals and the current focus.", func(c *core, _ string) error { c.list(); return nil }},
-	{"goal-pause", "Pause the currently running goal. Esc also pauses while running.", func(c *core, _ string) error { c.pause(); return nil }},
-	{"goal-clear", "Archive the current goal after confirmation (user-owned abandonment).", func(c *core, _ string) error { c.clear(); return nil }},
-	{"goal-unfocus", "Stop focusing the current goal (session only; goal stays open).", func(c *core, _ string) error { c.unfocus(); return nil }},
+func (h sdkHost) SetStatus(k, t string) { h.ctx.SetStatus(k, t) }
+
+// SetWidget drops non-clear pushes in RPC mode: Pi's RPC host shows no widget lines for a component factory, so the original
+// shows nothing there (G3).
+func (h sdkHost) SetWidget(key string, lines []string) {
+	if lines == nil {
+		_ = h.ctx.SetWidget(key, nil)
+		return
+	}
+	if h.ctx.Mode() == "rpc" {
+		return
+	}
+	// The wire carries a pushed widget without an answer the fake host records; tests read what was sent through this tap.
+	if h.c != nil && h.c.widgetPushTap != nil {
+		h.c.widgetPushTap(key, lines)
+	}
+	_ = h.ctx.SetWidget(key, lines)
 }
+func (h sdkHost) Width() int { return h.ctx.Width() }
+func (h sdkHost) Height() (int, bool) {
+	rows := h.ctx.Height()
+	return rows, rows > 0
+}
+func (h sdkHost) OnWidthChange(fn func(width int)) func() {
+	off, err := h.ctx.OnWidthChange(func(_ sdk.Context, width int) { fn(width) })
+	if err != nil {
+		return func() {}
+	}
+	return off
+}
+func (h sdkHost) Theme() goalHostTheme { return sdkTheme{h.ctx.UITheme()} }
+func (h sdkHost) Confirm(t, m string) bool {
+	ok, _ := h.ctx.Confirm(t, m)
+	return ok
+}
+func (h sdkHost) Select(t string, o []string) (string, bool) {
+	v, ok, err := h.ctx.Select(t, o)
+	return v, ok && err == nil
+}
+func (h sdkHost) Input(t, placeholder string) (string, bool) {
+	v, ok, err := h.ctx.Input(t, placeholder)
+	return v, ok && err == nil
+}
+func (h sdkHost) Custom(factory goalCustomFactory, opts goalCustomOptions) (any, error) {
+	if !h.ctx.HasUI() {
+		return nil, nil
+	}
+	rc := &remoteDialog{}
+	rc.comp = factory(rc, h.Theme(), func(v any) { rc.done, rc.value = true, v })
+	if rc.comp == nil {
+		return nil, nil
+	}
+	return h.ctx.Custom(rc, remoteOverlayOptions(opts))
+}
+func (h sdkHost) OnTerminalInput(cb func(data string) *goalInputResult) func() {
+	off, err := h.ctx.OnTerminalInput(func(data string) sdk.TerminalInputResult {
+		var out sdk.TerminalInputResult
+		h.c.locked(func() {
+			if r := cb(data); r != nil && r.consume {
+				out.Consume = true
+			}
+		})
+		return out
+	})
+	if err != nil {
+		return func() {}
+	}
+	return off
+}
+func (h sdkHost) SetWorkingVisible(visible bool)    { h.ctx.SetWorkingVisible(visible) }
+func (h sdkHost) AppendEntry(t string, d *jsObject) { _ = h.ctx.AppendEntry(t, d) }
+func (h sdkHost) SendMessage(customType, content string, display bool, details *jsObject, triggerTurn bool, deliverAs string) error {
+	msg := sdk.CustomMessage{CustomType: customType, Content: content, Display: display}
+	if details != nil {
+		msg.Details = details
+	}
+	return h.ctx.SendCustomMessage(msg, sdk.SendMessageOptions{TriggerTurn: &triggerTurn, DeliverAs: deliverAs})
+}
+func (h sdkHost) SendUserMessage(content, deliverAs string) error {
+	return h.ctx.SendUserMessage(content, deliverAs)
+}
+func (h sdkHost) GetActiveTools() ([]string, error) { return h.ctx.GetActiveTools() }
+func (h sdkHost) SetActiveTools(tools []string)     { h.ctx.SetActiveTools(tools) }
+
+// OnEvent is pi.events.on: the listener runs as one unit of work with the emitting request's context bound as the core's host.
+func (h sdkHost) OnEvent(channel string, fn func(payload any)) func() {
+	off, err := h.ctx.Events().On(channel, func(evCtx sdk.Context, data any) error {
+		h.c.withCtx(evCtx, func() { fn(data) })
+		return nil
+	})
+	if err != nil {
+		return func() {}
+	}
+	return off
+}
+
+// sdkTheme is ctx.ui.theme as the goal components use it.
+type sdkTheme struct{ t sdk.UITheme }
+
+func (s sdkTheme) fg(color, text string) string { return s.t.Fg(color, text) }
+func (s sdkTheme) bg(color, text string) string { return s.t.Bg(color, text) }
+func (s sdkTheme) bold(text string) string      { return s.t.Bold(text) }
+
+// remoteDialog runs a goalDialogComponent as the SDK's remote component: input goes to the component, which closes the dialog by
+// calling done. It is also the TUI object the factory gets: a render request invalidates the overlay.
+type remoteDialog struct {
+	comp       goalDialogComponent
+	done       bool
+	value      any
+	invalidate func()
+}
+
+func (r *remoteDialog) Render(width int) []string { return r.comp.Render(width) }
+func (r *remoteDialog) HandleInput(data string) (sdk.RemoteComponentResult, error) {
+	r.comp.HandleInput(data)
+	return sdk.RemoteComponentResult{Done: r.done, Value: r.value}, nil
+}
+func (r *remoteDialog) SetInvalidate(f func()) { r.invalidate = f }
+func (r *remoteDialog) Dispose()               { r.comp.dispose() }
+
+func (r *remoteDialog) getShowHardwareCursor() bool { return false }
+func (r *remoteDialog) setShowHardwareCursor(bool)  {}
+func (r *remoteDialog) requestRender() {
+	if r.invalidate != nil {
+		r.invalidate()
+	}
+}
+func (r *remoteDialog) terminalRows() (int, bool)     { return 0, false }
+func (r *remoteDialog) previousLinesLen() (int, bool) { return 0, false }
+
+func overlaySize(s string) *sdk.OverlaySize {
+	if s == "" {
+		return nil
+	}
+	if p, ok := strings.CutSuffix(s, "%"); ok {
+		if f, err := strconv.ParseFloat(p, 64); err == nil {
+			return sdk.OverlayPercent(f)
+		}
+		return nil
+	}
+	if n, err := strconv.Atoi(s); err == nil {
+		return sdk.OverlayCells(n)
+	}
+	return nil
+}
+
+func remoteOverlayOptions(o goalCustomOptions) any {
+	if !o.overlay {
+		return nil
+	}
+	return sdk.RemoteOverlayOptions{Overlay: true, OverlayOptions: &sdk.OverlayOptions{
+		Anchor: o.anchor, MinWidth: o.minWidth, Width: overlaySize(o.width), MaxHeight: overlaySize(o.maxHeight),
+	}}
+}
+
+// sdkModelRegistry is ctx.modelRegistry over the SDK's registry.
+type sdkModelRegistry struct{ r sdk.ModelRegistry }
+
+func modelOf(m map[string]any) *auditorModel {
+	provider, _ := m["provider"].(string)
+	id, _ := m["id"].(string)
+	name, _ := m["name"].(string)
+	return &auditorModel{provider: provider, id: id, name: name}
+}
+
+func (s sdkModelRegistry) find(provider, id string) *auditorModel {
+	all, err := s.r.GetAll()
+	if err != nil {
+		return nil
+	}
+	for _, m := range all {
+		if got := modelOf(m); got.provider == provider && got.id == id {
+			return got
+		}
+	}
+	return nil
+}
+
+func (s sdkModelRegistry) getAvailable() []*auditorModel {
+	all, err := s.r.GetAvailable()
+	if err != nil {
+		return nil
+	}
+	out := make([]*auditorModel, 0, len(all))
+	for _, m := range all {
+		out = append(out, modelOf(m))
+	}
+	return out
+}
+
+func (s sdkModelRegistry) runtime() any { return nil }

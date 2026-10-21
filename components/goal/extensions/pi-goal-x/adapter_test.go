@@ -174,8 +174,8 @@ func TestAdapterCreatesAGoalOwnedByTheHostSession(t *testing.T) {
 	if data["focusedGoalId"] != files[0]["id"] || data["reason"] != "created" {
 		t.Errorf("focus entry data %v", data)
 	}
-	// A terminal shows the goal as one status line (the original's dashboard is a component).
-	if got := lastStatus(t, h); got != "goal: running - Write the release notes" {
+	// The goal's home is the dashboard widget: the footer status of a focused goal is cleared, as in the original.
+	if got := lastStatus(t, h); got != "" {
 		t.Errorf("status %q", got)
 	}
 	want := "info: ● Goal running\n├─ ⟡ Write the release notes\n└─ auto-continue on\nBudget: none"
@@ -201,8 +201,8 @@ func TestAdapterRestoresFocusFromTheBranch(t *testing.T) {
 	if len(n) == 0 || !strings.Contains(n[len(n)-1], "\n* seed-b") || strings.Contains(n[len(n)-1], "\n* seed-a") {
 		t.Errorf("list %q", n)
 	}
-	if got := lastStatus(t, h); got != "goal: running - Second" {
-		t.Errorf("status %q", got)
+	if got := lastStatus(t, h); got != "" {
+		t.Errorf("status %q, want the focused goal's footer status cleared", got)
 	}
 }
 

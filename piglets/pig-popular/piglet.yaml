@@ -1,7 +1,7 @@
 # Pigpen composition input. Run npm run stage before selecting it in PiG.
 # PiG with popular Pi extensions, ported to Go. Each member is a Package under components/ and a row in ports/ports.json.
 name: pig-popular
-description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (dialog walker; the tabbed questionnaire is not ported), the powerline status bar (no custom editor), pi-goal-x's goal files and direct commands (no scheduler or drafting), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
+description: "PiG with Go ports of popular Pi extensions: the rpiv-todo task list (tool, /todos, live overlay), the ask_user_question tool (dialog walker; the tabbed questionnaire is not ported), the powerline status bar (no custom editor), pi-goal-x's durable goals (scheduler, goal and task tools, guided drafting, dashboard, auditor, oracle and the sixteen commands), a permission gate (rules for tool calls: no approval dialog, full bash parsing or path rules) and subagents (agent and chain definitions, list and get, single-agent and chain runs through a child pig; no parallel, async or workflow runs)."
 release:
   version: 0.1.0
 build:
@@ -27,10 +27,10 @@ extensions:
   - name: powerline-footer
     origins: [package:powerline]
     tools: []
-  # Durable goals as files under .pi/goals and /goal-direct, /goal-list, /goal-pause, /goal-unfocus, /goal-clear (tmonk, pi-goal-x 0.32.3, MIT); partial: no scheduler, drafting or auditor.
+  # Durable goals (files under .pi/goals) (tmonk, pi-goal-x 0.32.3, MIT): the scheduler, the goal and task tools, guided drafting, the dashboard, the completion auditor, the blocker oracle and the sixteen commands.
   - name: pi-goal-x
     origins: [package:goal]
-    tools: []
+    tools: [get_goal, create_goal, update_goal, set_goal_tasks, update_goal_task, goal_question, goal_questionnaire, propose_goal_draft]
   # Allow, ask and deny rules for tool calls and the tool_call gate (MasuRii and Christopher D. Lasher, @gotgenes/pi-permission-system 39.0.3, MIT); partial: no approval dialog, bash parsing or path rules.
   - name: pi-permission-system
     origins: [package:permissions]

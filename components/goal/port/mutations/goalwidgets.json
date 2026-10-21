@@ -1,0 +1,638 @@
+[
+ {
+  "name": "widget-reserve",
+  "file": "goal_widget.go",
+  "find": "const widgetHeightReserve = 6",
+  "replace": "const widgetHeightReserve = 5"
+ },
+ {
+  "name": "bound-floor",
+  "file": "goal_widget.go",
+  "find": "\tcap := *terminalRows - widgetHeightReserve\n\tif cap < 1 {\n\t\tcap = 1\n\t}\n\tif len(lines) <= cap {",
+  "replace": "\tcap := *terminalRows - widgetHeightReserve\n\tif cap < 0 {\n\t\tcap = 0\n\t}\n\tif len(lines) <= cap {"
+ },
+ {
+  "name": "bound-nonpositive-rows",
+  "file": "goal_widget.go",
+  "find": "if terminalRows == nil || *terminalRows <= 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - widgetHeightReserve",
+  "replace": "if terminalRows == nil || *terminalRows < 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - widgetHeightReserve"
+ },
+ {
+  "name": "bound-le-cap",
+  "file": "goal_widget.go",
+  "find": "if len(lines) <= cap {\n\t\treturn lines\n\t}\n\treturn lines[:cap]",
+  "replace": "if len(lines) < cap {\n\t\treturn lines\n\t}\n\treturn lines[:cap]"
+ },
+ {
+  "name": "stable-nonpositive-rows",
+  "file": "goal_widget.go",
+  "find": "if terminalRows == nil || *terminalRows <= 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - reserve",
+  "replace": "if terminalRows == nil || *terminalRows < 0 {\n\t\treturn lines\n\t}\n\tcap := *terminalRows - reserve"
+ },
+ {
+  "name": "stable-cap-floor",
+  "file": "goal_widget.go",
+  "find": "cap := *terminalRows - reserve\n\tif cap < 1 {\n\t\tcap = 1\n\t}",
+  "replace": "cap := *terminalRows - reserve\n\tif cap < 2 {\n\t\tcap = 2\n\t}"
+ },
+ {
+  "name": "stable-resize-no-reset",
+  "file": "goal_widget.go",
+  "find": "if state.stickyTerminalRows == nil || *state.stickyTerminalRows != *terminalRows {\n\t\tstate.stickyCap = nil",
+  "replace": "if state.stickyTerminalRows == nil || *state.stickyTerminalRows != *terminalRows {"
+ },
+ {
+  "name": "stable-reserve-no-reset",
+  "file": "goal_widget.go",
+  "find": "if state.stickyReserve == nil || *state.stickyReserve != reserve {\n\t\tstate.stickyCap = nil",
+  "replace": "if state.stickyReserve == nil || *state.stickyReserve != reserve {"
+ },
+ {
+  "name": "stable-regime-no-reset",
+  "file": "goal_widget.go",
+  "find": "if state.stickyRegime == nil || *state.stickyRegime != regime {\n\t\tstate.stickyCap = nil",
+  "replace": "if state.stickyRegime == nil || *state.stickyRegime != regime {"
+ },
+ {
+  "name": "stable-latch-max",
+  "file": "goal_widget.go",
+  "find": "n := len(lines)\n\t\tif cap < n {\n\t\t\tn = cap\n\t\t}",
+  "replace": "n := len(lines)\n\t\tif cap > n {\n\t\t\tn = cap\n\t\t}"
+ },
+ {
+  "name": "stable-no-pad",
+  "file": "goal_widget.go",
+  "find": "for len(padded) < sticky {\n\t\t\tpadded = append(padded, \"\")\n\t\t}",
+  "replace": "for len(padded) < sticky-1 {\n\t\t\tpadded = append(padded, \"\")\n\t\t}"
+ },
+ {
+  "name": "stable-no-slice",
+  "file": "goal_widget.go",
+  "find": "if len(lines) > sticky {\n\t\treturn lines[:sticky]",
+  "replace": "if len(lines) > sticky+1 {\n\t\treturn lines[:sticky]"
+ },
+ {
+  "name": "live-zero-seconds",
+  "file": "goal_widget.go",
+  "find": "if live == 0 {\n\t\treturn goal\n\t}",
+  "replace": "if live < 0 {\n\t\treturn goal\n\t}"
+ },
+ {
+  "name": "audit-details-expanded-only",
+  "file": "goal_widget.go",
+  "find": "options.expanded || options.debug, \"\"",
+  "replace": "options.expanded && options.debug, \"\""
+ },
+ {
+  "name": "unfocused-needs-open",
+  "file": "goal_widget.go",
+  "find": "if openGoalCount > 0 {\n\t\t\tlines = renderUnfocusedDashboard",
+  "replace": "if openGoalCount > 1 {\n\t\t\tlines = renderUnfocusedDashboard"
+ },
+ {
+  "name": "other-open-count",
+  "file": "goal_widget.go",
+  "find": "otherCount := openGoalCount - 1\n\tif otherCount < 0 {\n\t\totherCount = 0\n\t}",
+  "replace": "otherCount := openGoalCount\n\tif otherCount < 0 {\n\t\totherCount = 0\n\t}"
+ },
+ {
+  "name": "expanded-branch",
+  "file": "goal_widget.go",
+  "find": "if options.expanded {\n\t\tlines = renderExpandedDashboard",
+  "replace": "if !options.expanded {\n\t\tlines = renderExpandedDashboard"
+ },
+ {
+  "name": "default-open-count",
+  "file": "goal_widget.go",
+  "find": "if c.getGoal() != nil {\n\t\t\t\treturn 1\n\t\t\t}\n\t\t\treturn 0",
+  "replace": "if c.getGoal() != nil {\n\t\t\t\treturn 2\n\t\t\t}\n\t\t\treturn 0"
+ },
+ {
+  "name": "invalidate-no-render",
+  "file": "goal_widget.go",
+  "find": "func (c *goalWidgetComponent) Invalidate() { c.tui.requestRender() }",
+  "replace": "func (c *goalWidgetComponent) Invalidate() {}"
+ },
+ {
+  "name": "update-no-render",
+  "file": "goal_widget.go",
+  "find": "func (c *goalWidgetComponent) update() { c.tui.requestRender() }",
+  "replace": "func (c *goalWidgetComponent) update() {}"
+ },
+ {
+  "name": "result-card-first",
+  "file": "goal_widget.go",
+  "find": "if auditResult := c.getAuditResult(); auditResult != nil {",
+  "replace": "if auditResult := c.getAuditResult(); auditResult != nil && c.getAuditorProgress() == nil {"
+ },
+ {
+  "name": "regime-no-expanded",
+  "file": "goal_widget.go",
+  "find": "jsBool(c.getExpanded()), jsBool(c.getDebugMode())",
+  "replace": "\"\", jsBool(c.getDebugMode())"
+ },
+ {
+  "name": "regime-no-tasks",
+  "file": "goal_widget.go",
+  "find": "jsBool(settings.disableTasks), jsBool(hasTasks)}",
+  "replace": "jsBool(settings.disableTasks), \"\"}"
+ },
+ {
+  "name": "regime-unfocused",
+  "file": "goal_widget.go",
+  "find": "case c.getOpenGoalCount() > 0:\n\t\tstateKind = \"unfocused\"",
+  "replace": "case c.getOpenGoalCount() > 1:\n\t\tstateKind = \"unfocused\""
+ },
+ {
+  "name": "reanchor-same-goal",
+  "file": "goal_widget.go",
+  "find": "if same && latestAt == c.lastSeenLatestAt {",
+  "replace": "if same {"
+ },
+ {
+  "name": "reanchor-compact-top-level",
+  "file": "goal_widget.go",
+  "find": "if n.depth == 0 {\n\t\t\ttopLevel = append(topLevel, n)",
+  "replace": "if n.depth == 1 {\n\t\t\ttopLevel = append(topLevel, n)"
+ },
+ {
+  "name": "compact-scroll-expanded-guard",
+  "file": "goal_widget.go",
+  "find": "func (c *goalWidgetComponent) handleCompactScrollKey(key string) bool {\n\tif c.getExpanded() {\n\t\treturn false\n\t}",
+  "replace": "func (c *goalWidgetComponent) handleCompactScrollKey(key string) bool {"
+ },
+ {
+  "name": "compact-scroll-fits",
+  "file": "goal_widget.go",
+  "find": "if count <= rows {\n\t\treturn false\n\t}",
+  "replace": "if count < rows {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "nav-expanded-guard",
+  "file": "goal_widget.go",
+  "find": "func (c *goalWidgetComponent) handleNavigationKey(key string) bool {\n\tif !c.getExpanded() {\n\t\treturn false\n\t}",
+  "replace": "func (c *goalWidgetComponent) handleNavigationKey(key string) bool {"
+ },
+ {
+  "name": "nav-short-list-consumes",
+  "file": "goal_widget.go",
+  "find": "if maxO <= 0 {\n\t\treturn true\n\t}",
+  "replace": "if maxO <= 0 {\n\t\treturn false\n\t}"
+ },
+ {
+  "name": "nav-empty-list",
+  "file": "goal_widget.go",
+  "find": "if count == 0 {\n\t\treturn false\n\t}\n\trows := expandedTaskViewportRows",
+  "replace": "if count == 0 {\n\t\treturn true\n\t}\n\trows := expandedTaskViewportRows"
+ },
+ {
+  "name": "scroll-key-up",
+  "file": "goal_widget.go",
+  "find": "case \"up\":\n\t\toffset--",
+  "replace": "case \"up\":\n\t\toffset++"
+ },
+ {
+  "name": "scroll-key-pagedown",
+  "file": "goal_widget.go",
+  "find": "case \"pageDown\":\n\t\toffset += taskViewportPageSize(float64(rows))",
+  "replace": "case \"pageDown\":\n\t\toffset += 1"
+ },
+ {
+  "name": "scroll-key-home",
+  "file": "goal_widget.go",
+  "find": "case \"home\":\n\t\toffset = 0",
+  "replace": "case \"home\":\n\t\toffset = 1"
+ },
+ {
+  "name": "scroll-key-end",
+  "file": "goal_widget.go",
+  "find": "case \"end\":\n\t\toffset = maxO",
+  "replace": "case \"end\":\n\t\toffset = maxO - 1"
+ },
+ {
+  "name": "dock-slack",
+  "file": "goal_widget.go",
+  "find": "return total + 1, true",
+  "replace": "return total, true"
+ },
+ {
+  "name": "dock-skip-document",
+  "file": "goal_widget.go",
+  "find": "if i == 0 && sameDockList(dockList, top) {",
+  "replace": "if false && sameDockList(dockList, top) {"
+ },
+ {
+  "name": "dock-skip-container",
+  "file": "goal_widget.go",
+  "find": "if ch == widgetContainer {\n\t\t\tcontinue\n\t\t}",
+  "replace": "if false {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "dock-min-children",
+  "file": "goal_widget.go",
+  "find": "if len(top) < 2 {",
+  "replace": "if len(top) < 1 {"
+ },
+ {
+  "name": "debug-min-width",
+  "file": "goal_widget.go",
+  "find": "if safeWidth < 20 {\n\t\tsafeWidth = 20\n\t}",
+  "replace": "if safeWidth < 21 {\n\t\tsafeWidth = 21\n\t}"
+ },
+ {
+  "name": "debug-objective-cut",
+  "file": "goal_widget.go",
+  "find": "truncateText(gstr(goal, \"objective\"), 80)",
+  "replace": "truncateText(gstr(goal, \"objective\"), 60)"
+ },
+ {
+  "name": "debug-contract-cut",
+  "file": "goal_widget.go",
+  "find": "truncateText(s, 60)",
+  "replace": "truncateText(s, 80)"
+ },
+ {
+  "name": "debug-next-cut",
+  "file": "goal_widget.go",
+  "find": "truncateText(model.currentTask.title, 40)",
+  "replace": "truncateText(model.currentTask.title, 30)"
+ },
+ {
+  "name": "render-width-min",
+  "file": "goal_widget.go",
+  "find": "c.lastRenderWidth = width\n\tif c.lastRenderWidth < 1 {\n\t\tc.lastRenderWidth = 1\n\t}",
+  "replace": "c.lastRenderWidth = width"
+ },
+ {
+  "name": "escape-default-index",
+  "file": "goal_escape_dialog.go",
+  "find": "selectedIndex: 1}",
+  "replace": "selectedIndex: 0}"
+ },
+ {
+  "name": "escape-term-width",
+  "file": "goal_escape_dialog.go",
+  "find": "if termWidth > 80 {\n\t\ttermWidth = 80\n\t}",
+  "replace": "if termWidth > 90 {\n\t\ttermWidth = 90\n\t}"
+ },
+ {
+  "name": "escape-objective-width",
+  "file": "goal_escape_dialog.go",
+  "find": "innerWidth-14",
+  "replace": "innerWidth-12"
+ },
+ {
+  "name": "escape-label-width",
+  "file": "goal_escape_dialog.go",
+  "find": "innerWidth-6",
+  "replace": "innerWidth-4"
+ },
+ {
+  "name": "escape-desc-width",
+  "file": "goal_escape_dialog.go",
+  "find": "innerWidth-10",
+  "replace": "innerWidth-8"
+ },
+ {
+  "name": "escape-footer-width",
+  "file": "goal_escape_dialog.go",
+  "find": "innerWidth-2, \"…\"",
+  "replace": "innerWidth, \"…\""
+ },
+ {
+  "name": "escape-up-wrap",
+  "file": "goal_escape_dialog.go",
+  "find": "c.selectedIndex = (c.selectedIndex - 1 + n) % n",
+  "replace": "c.selectedIndex = max(0, c.selectedIndex-1)"
+ },
+ {
+  "name": "escape-down-wrap",
+  "file": "goal_escape_dialog.go",
+  "find": "c.selectedIndex = (c.selectedIndex + 1) % n",
+  "replace": "c.selectedIndex = min(n-1, c.selectedIndex+1)"
+ },
+ {
+  "name": "escape-key-result",
+  "file": "goal_escape_dialog.go",
+  "find": "c.done(escapeContinueWorking)",
+  "replace": "c.done(escapeCompleteWithoutAudit)"
+ },
+ {
+  "name": "escape-headless",
+  "file": "goal_escape_dialog.go",
+  "find": "if !ctx.hasUI() {\n\t\treturn escapeContinueWorking",
+  "replace": "if !ctx.hasUI() {\n\t\treturn escapeCompleteWithoutAudit"
+ },
+ {
+  "name": "escape-hide-cursor",
+  "file": "goal_escape_dialog.go",
+  "find": "t.setShowHardwareCursor(false)",
+  "replace": "t.setShowHardwareCursor(true)"
+ },
+ {
+  "name": "escape-restore-cursor",
+  "file": "goal_escape_dialog.go",
+  "find": "c.tui.setShowHardwareCursor(c.wasHardwareCursorShown)",
+  "replace": "c.tui.setShowHardwareCursor(false)"
+ },
+ {
+  "name": "escape-up-render",
+  "file": "goal_escape_dialog.go",
+  "find": "c.selectedIndex = (c.selectedIndex - 1 + n) % n\n\t\tc.tui.requestRender()",
+  "replace": "c.selectedIndex = (c.selectedIndex - 1 + n) % n"
+ },
+ {
+  "name": "scaffold-max-inner",
+  "file": "dialog_scaffold.go",
+  "find": "if termWidth > maxInner {",
+  "replace": "if termWidth >= maxInner+1 {"
+ },
+ {
+  "name": "scaffold-inner-minus",
+  "file": "dialog_scaffold.go",
+  "find": "return termWidth - 2",
+  "replace": "return termWidth - 1"
+ },
+ {
+  "name": "scaffold-fill",
+  "file": "dialog_scaffold.go",
+  "find": "if fill > 0 {",
+  "replace": "if fill > 1 {"
+ },
+ {
+  "name": "overlay-term-width",
+  "file": "task_list_overlay.go",
+  "find": "if termWidth > 100 {\n\t\ttermWidth = 100\n\t}",
+  "replace": "if termWidth > 110 {\n\t\ttermWidth = 110\n\t}"
+ },
+ {
+  "name": "overlay-inner-cap",
+  "file": "task_list_overlay.go",
+  "find": "innerWidth := dialogInnerWidth(termWidth, 90)",
+  "replace": "innerWidth := dialogInnerWidth(termWidth, 80)"
+ },
+ {
+  "name": "overlay-height-div",
+  "file": "task_list_overlay.go",
+  "find": "float64(innerWidth) / 2.8",
+  "replace": "float64(innerWidth) / 2.0"
+ },
+ {
+  "name": "overlay-height-min",
+  "file": "task_list_overlay.go",
+  "find": "if h < 8 {\n\t\th = 8\n\t}",
+  "replace": "if h < 6 {\n\t\th = 6\n\t}"
+ },
+ {
+  "name": "overlay-pause-icon",
+  "file": "task_list_overlay.go",
+  "find": "if gstr(goal, \"status\") == \"paused\" {\n\t\t\ticon = \"⏸\"",
+  "replace": "if gstr(goal, \"status\") == \"active\" {\n\t\t\ticon = \"⏸\""
+ },
+ {
+  "name": "overlay-sisyphus-icon",
+  "file": "task_list_overlay.go",
+  "find": "} else if gflag(goal, \"sisyphus\") {\n\t\t\ticon = \"◆\"",
+  "replace": "} else if !gflag(goal, \"sisyphus\") {\n\t\t\ticon = \"◆\""
+ },
+ {
+  "name": "overlay-skipped-summary",
+  "file": "task_list_overlay.go",
+  "find": "if c.skipped > 0 {",
+  "replace": "if c.skipped > 1 {"
+ },
+ {
+  "name": "overlay-first-branch",
+  "file": "task_list_overlay.go",
+  "find": "branch := \"├─\"\n\tif isLast {\n\t\tbranch = \"└─\"\n\t}",
+  "replace": "branch := \"├─\""
+ },
+ {
+  "name": "overlay-status-icons",
+  "file": "task_list_overlay.go",
+  "find": "case \"complete\":\n\t\tstatusIcon = \"✓\"",
+  "replace": "case \"pending\":\n\t\tstatusIcon = \"✓\""
+ },
+ {
+  "name": "overlay-indent",
+  "file": "task_list_overlay.go",
+  "find": "strings.Repeat(\"  \", depth-1)",
+  "replace": "strings.Repeat(\"  \", depth)"
+ },
+ {
+  "name": "overlay-goal-singular",
+  "file": "task_list_overlay.go",
+  "find": "if o.totalOpenGoals == 1 {\n\t\t\tword = \"goal\"",
+  "replace": "if o.totalOpenGoals == 0 {\n\t\t\tword = \"goal\""
+ },
+ {
+  "name": "overlay-task-singular",
+  "file": "task_list_overlay.go",
+  "find": "if o.totalTaskCount == 1 {\n\t\ttaskWord = \"task\"",
+  "replace": "if o.totalTaskCount == 0 {\n\t\ttaskWord = \"task\""
+ },
+ {
+  "name": "overlay-scroll-up-hint",
+  "file": "task_list_overlay.go",
+  "find": "canScrollUp := o.scrollOffset > 0",
+  "replace": "canScrollUp := o.scrollOffset > 1"
+ },
+ {
+  "name": "overlay-scroll-down-hint",
+  "file": "task_list_overlay.go",
+  "find": "canScrollDown := o.scrollOffset < maxOffset",
+  "replace": "canScrollDown := o.scrollOffset < maxOffset-1"
+ },
+ {
+  "name": "overlay-toggle-hint",
+  "file": "task_list_overlay.go",
+  "find": "toggleHint := \"show all\"\n\tif o.showAllGoals {\n\t\ttoggleHint = \"show current\"",
+  "replace": "toggleHint := \"show current\"\n\tif o.showAllGoals {\n\t\ttoggleHint = \"show all\""
+ },
+ {
+  "name": "overlay-interactive-hint",
+  "file": "task_list_overlay.go",
+  "find": "interactive = \"  ·  Enter toggle task\"",
+  "replace": "interactive = \"\""
+ },
+ {
+  "name": "overlay-a-resets-scroll",
+  "file": "task_list_overlay.go",
+  "find": "o.rebuildEntries()\n\t\to.scrollOffset = 0",
+  "replace": "o.rebuildEntries()"
+ },
+ {
+  "name": "overlay-down-clamp",
+  "file": "task_list_overlay.go",
+  "find": "o.scrollOffset = min(maxO, o.scrollOffset+1)",
+  "replace": "o.scrollOffset = o.scrollOffset + 1"
+ },
+ {
+  "name": "overlay-up-clamp",
+  "file": "task_list_overlay.go",
+  "find": "o.scrollOffset = max(0, o.scrollOffset-1)",
+  "replace": "o.scrollOffset = o.scrollOffset - 1"
+ },
+ {
+  "name": "overlay-page-size",
+  "file": "task_list_overlay.go",
+  "find": "o.scrollOffset = max(0, o.scrollOffset-visibleH)",
+  "replace": "o.scrollOffset = max(0, o.scrollOffset-1)"
+ },
+ {
+  "name": "overlay-end",
+  "file": "task_list_overlay.go",
+  "find": "case pitui.MatchesKey(data, \"end\"):\n\t\to.scrollOffset = maxO",
+  "replace": "case pitui.MatchesKey(data, \"end\"):\n\t\to.scrollOffset = 0"
+ },
+ {
+  "name": "overlay-empty-message",
+  "file": "task_list_overlay.go",
+  "find": "\"No open goals to display.\"",
+  "replace": "\"No goals.\""
+ },
+ {
+  "name": "overlay-no-tasks",
+  "file": "task_list_overlay.go",
+  "find": "text: \"(no tasks)\"",
+  "replace": "text: \"(none)\""
+ },
+ {
+  "name": "overlay-focus-filter",
+  "file": "task_list_overlay.go",
+  "find": "o.focusedGoalID != nil && gstr(g, \"id\") == *o.focusedGoalID",
+  "replace": "o.focusedGoalID == nil || gstr(g, \"id\") == *o.focusedGoalID"
+ },
+ {
+  "name": "overlay-separator",
+  "file": "task_list_overlay.go",
+  "find": "if gIdx > 0 {",
+  "replace": "if gIdx > 1 {"
+ },
+ {
+  "name": "overlay-clear-delay",
+  "file": "task_list_overlay.go",
+  "find": "2500 * time.Millisecond",
+  "replace": "25 * time.Millisecond"
+ },
+ {
+  "name": "keys-kitty-regexp",
+  "file": "goal_widget_keys.go",
+  "find": "`^[0-9:;]+:[23][u~ABCDHF]$`",
+  "replace": "`^[0-9:;]+:[3][u~ABCDHF]$`"
+ },
+ {
+  "name": "keys-modal-guard",
+  "file": "goal_widget_keys.go",
+  "find": "if core.goalModalDepth() > 0 {",
+  "replace": "if core.goalModalDepth() > 1 {"
+ },
+ {
+  "name": "keys-esc-abort-audit",
+  "file": "goal_widget_keys.go",
+  "find": "core.auditProgress() != nil {\n\t\t\tcore.abortAudit(ctx)",
+  "replace": "core.auditProgress() == nil {\n\t\t\tcore.abortAudit(ctx)"
+ },
+ {
+  "name": "keys-esc-collapse",
+  "file": "goal_widget_keys.go",
+  "find": "pitui.MatchesKey(data, \"escape\") && core.isDashboardExpanded() {\n\t\t\tcore.toggleDashboardExpanded()",
+  "replace": "pitui.MatchesKey(data, \"escape\") && !core.isDashboardExpanded() {\n\t\t\tcore.toggleDashboardExpanded()"
+ },
+ {
+  "name": "keys-esc-pause-auto",
+  "file": "goal_widget_keys.go",
+  "find": "&& gflag(g, \"autoContinue\") {",
+  "replace": "&& !gflag(g, \"autoContinue\") {"
+ },
+ {
+  "name": "keys-esc-pause-status",
+  "file": "goal_widget_keys.go",
+  "find": "gstr(g, \"status\") == \"active\" && gflag",
+  "replace": "gstr(g, \"status\") != \"paused\" && gflag"
+ },
+ {
+  "name": "keys-pause-consume",
+  "file": "goal_widget_keys.go",
+  "find": "core.pauseActiveGoal(ctx)\n\t\t\treturn nil",
+  "replace": "core.pauseActiveGoal(ctx)\n\t\t\treturn consume"
+ },
+ {
+  "name": "keys-auditor-invalidate",
+  "file": "goal_widget_keys.go",
+  "find": "core.toggleGoalAuditor(ctx)\n\t\t\tif w := core.widgetComponent(); w != nil {\n\t\t\t\tw.Invalidate()\n\t\t\t}",
+  "replace": "core.toggleGoalAuditor(ctx)"
+ },
+ {
+  "name": "keys-unsubscribe-old",
+  "file": "goal_widget_keys.go",
+  "find": "if u := core.terminalInputUnsubscribe(); u != nil {\n\t\tu()\n\t}",
+  "replace": "_ = core.terminalInputUnsubscribe()"
+ },
+ {
+  "name": "keys-no-ui",
+  "file": "goal_widget_keys.go",
+  "find": "if !ctx.hasUI() {\n\t\treturn\n\t}\n\tif u :=",
+  "replace": "if u :="
+ },
+ {
+  "name": "keys-debug-gated",
+  "file": "goal_widget_keys.go",
+  "find": "v == \"true\" || v == \"1\"",
+  "replace": "v == \"true\" || v == \"1\" || v != \"\""
+ },
+ {
+  "name": "keys-kitty-compact-scroll",
+  "file": "goal_widget_keys.go",
+  "find": "(!core.isDashboardExpanded() && core.widgetComponent() != nil &&",
+  "replace": "(core.widgetComponent() != nil &&"
+ },
+ {
+  "name": "keys-kitty-nav",
+  "file": "goal_widget_keys.go",
+  "find": "(core.isDashboardExpanded() && anyKeyMatches(data, navigationKeys...)) ||",
+  "replace": "(anyKeyMatches(data, navigationKeys...)) ||"
+ },
+ {
+  "name": "keys-kitty-esc",
+  "file": "goal_widget_keys.go",
+  "find": "(core.isDashboardExpanded() || core.currentGoal() != nil)",
+  "replace": "(core.isDashboardExpanded())"
+ },
+ {
+  "name": "format-details-version",
+  "file": "goal_format.go",
+  "find": "e.set(\"version\", 3.0)",
+  "replace": "e.set(\"version\", 2.0)"
+ },
+ {
+  "name": "format-result-expanded",
+  "file": "goal_format.go",
+  "find": "if rd, _ := details.str(\"resultDetail\"); rd != \"\" && expanded {",
+  "replace": "if rd, _ := details.str(\"resultDetail\"); rd != \"\" {"
+ },
+ {
+  "name": "format-history-audit-date",
+  "file": "goal_format.go",
+  "find": "utf16Prefix(gstr(audit, \"at\"), 10)",
+  "replace": "utf16Prefix(gstr(audit, \"at\"), 7)"
+ },
+ {
+  "name": "format-history-recent-limit",
+  "file": "goal_format.go",
+  "find": "gstr(goal, \"id\"), 6)",
+  "replace": "gstr(goal, \"id\"), 3)"
+ },
+ {
+  "name": "format-history-audit-cut",
+  "file": "goal_format.go",
+  "find": "truncateText(gstr(audit, \"report\"), 90)",
+  "replace": "truncateText(gstr(audit, \"report\"), 40)"
+ },
+ {
+  "name": "format-history-time",
+  "file": "goal_format.go",
+  "find": "jsSliceUTF16(at, 11, 19)",
+  "replace": "jsSliceUTF16(at, 11, 16)"
+ }
+]
