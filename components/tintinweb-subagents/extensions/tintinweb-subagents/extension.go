@@ -34,6 +34,8 @@ type app struct {
 	mentionMode    string                                                        // "model", "direct" or "off". upstream: index.ts agentMentionMode
 	mentionHooked  bool                                                          // the `@handle` autocomplete wrapper is stacked on the host's provider
 	steers         serialQueue                                                   // messages to running agents, in order, off the input path
+	life           context.Context                                               // ends when the session does: the work a mention started off the input path stops with it
+	endLife        context.CancelFunc                                            //
 	cloneFn        func(context.Context, mentionCloneOptions) mentionCloneResult // the conversation clone; a test replaces it
 	rememberAgents bool                                                          // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
 	cleanupEvery   time.Duration
@@ -44,7 +46,8 @@ type app struct {
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, mentionMode: "model", cloneFn: runMentionClone, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
+	life, endLife := context.WithCancel(context.Background())
+	a := &app{life: life, endLife: endLife, e: e, timers: map[string]*time.Timer{}, rememberAgents: true, mentionMode: "model", cloneFn: runMentionClone, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
 	a.mgr = newManager(start, a.onSettle)
 	return a
 }
@@ -198,6 +201,8 @@ func (a *app) shutdown() {
 		delete(a.timers, key)
 	}
 	a.latest = nil // nothing is announced to a session that is over
+	a.endLife()
+	a.life, a.endLife = context.WithCancel(context.Background()) // a session may start again
 	a.mu.Unlock()
 	a.mgr.dispose()
 }
@@ -208,6 +213,12 @@ func (a *app) onSettle(r *agentRecord) {
 	if !ok {
 		return
 	}
+	// A resume (the user's `@handle`, or the model) can start the next run while this one is announced, so what is
+	// announced is read under the manager's lock.
+	a.mgr.mu.Lock()
+	snap := *r
+	a.mgr.mu.Unlock()
+	orig, r := r, &snap
 	data := map[string]any{"id": r.ID, "type": r.Type, "description": r.Description, "status": r.Status,
 		"toolUses": r.ToolUses, "durationMs": r.CompletedAt.Sub(r.StartedAt).Milliseconds()}
 	if r.Result != "" {
@@ -226,13 +237,13 @@ func (a *app) onSettle(r *agentRecord) {
 	}
 	a.scheduleNudge(r.ID, func() {
 		a.mgr.mu.Lock()
-		consumed := r.Consumed
+		now := *orig
 		a.mgr.mu.Unlock()
-		if consumed {
+		if now.Consumed {
 			return
 		}
 		turn := true
-		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(r, 500), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
+		_ = ctx.SendMessage("subagent-notification", formatTaskNotification(&now, 500), true, sdk.SendMessageOptions{DeliverAs: "followUp", TriggerTurn: &turn})
 	})
 }
 

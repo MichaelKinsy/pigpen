@@ -230,8 +230,8 @@
  {
   "name": "consumed-still-notified",
   "file": "extension.go",
-  "find": "if consumed {\n\t\t\treturn\n\t\t}",
-  "replace": "if consumed && false {\n\t\t\treturn\n\t\t}"
+  "find": "if now.Consumed {\n\t\t\treturn\n\t\t}",
+  "replace": "if now.Consumed && false {\n\t\t\treturn\n\t\t}"
  },
  {
   "name": "foreground-announced",

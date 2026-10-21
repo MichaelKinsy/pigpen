@@ -212,4 +212,11 @@ Differences from the original, each deliberate:
   nested slice adds the filter with the field (two named skips).
 - **Output transcripts, the widget and the activity tracker** are not ported, so the three original cases about them are
   named skips.
+- **The original's clone does not work under the pinned Pi.** Recorded with Pi 1.3.0.1402973a, a mention in model mode
+  prompts `@explore`, the clone throws `Cannot set property systemPrompt of #<Object>` (`mention-clone.ts` assigns
+  `session.agent.state.systemPrompt`, which this Pi exposes without a setter), and the original starts the agent
+  directly with the warning `Started @explore directly — Cannot set property systemPrompt...`. That is a mismatch between
+  the original 0.19.0 and this Pi, not a PiG difference; this port's clone works, so there is no scenario for a model-mode
+  mention (it could only record that failure and a child agent's run). The scenarios cover what both sides agree on: `@main`,
+  an unknown handle, a bare handle, a file path, `@agent-<unknown>`, `off`, the legacy `false`, and direct mode headless.
 - **A PiG-vs-Pi observation:** none found.

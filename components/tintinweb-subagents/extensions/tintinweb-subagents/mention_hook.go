@@ -1,7 +1,6 @@
 package tintinweb_subagents
 
 import (
-	"context"
 	"errors"
 	"os"
 	"sync"
@@ -275,9 +274,10 @@ func (a *app) mentionViaClone(ctx sdk.Context, typ, message string) {
 	// "Prompting", not "Starting": nothing starts until the clone has taken a whole model turn writing the agent's prompt.
 	ctx.Notify("Prompting "+label+"…", "info")
 	goGuarded("mention clone", func() {
-		cctx, stop := contextOf(ctx)
-		defer stop()
-		res := a.cloneFn(cctx, mentionCloneOptions{
+		a.mu.Lock()
+		life := a.life
+		a.mu.Unlock()
+		res := a.cloneFn(life, mentionCloneOptions{
 			Host: sessionCloneHost{ctx}, Type: typ, Message: message,
 			Tool: cloneTool{Name: a.agentDef.Name, Description: a.agentDef.Description, Parameters: a.agentDef.Parameters, Run: func(params map[string]any) (string, bool) {
 				// The registered handler, on the MAIN context and with no tool-call id: the clone's own would file the
@@ -305,20 +305,6 @@ func (a *app) mentionViaClone(ctx sdk.Context, typ, message string) {
 		a.afterStart(r, func() { ctx.Notify("Started "+label+" directly — "+res.Error, "warning") },
 			func(err error) { ctx.Notify("Could not start "+label+": "+err.Error(), "error") })
 	})
-}
-
-// contextOf is a context that ends with the request's runtime, and a function that releases it.
-func contextOf(ctx sdk.Context) (context.Context, func()) {
-	c, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	goGuarded("mention context", func() {
-		select {
-		case <-ctx.Done():
-			cancel()
-		case <-done:
-		}
-	})
-	return c, func() { close(done); cancel() }
 }
 
 // reloadAgents re-reads the agent files of the workspace before a spawn, so a file added mid-session is spawnable.

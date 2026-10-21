@@ -57,7 +57,7 @@ m("handle-base-length", "mention.go", "if len(slug) > maxHandleLength {", "if le
 m("handle-base-empty", "mention.go", 'if slug == "" {\n\t\treturn "agent"\n\t}', 'if slug == "" {\n\t\treturn ""\n\t}')
 
 # extension.go: events and the notification
-m("consumed-still-notified", "extension.go", "if consumed {\n\t\t\treturn\n\t\t}", "if consumed && false {\n\t\t\treturn\n\t\t}")
+m("consumed-still-notified", "extension.go", "if now.Consumed {\n\t\t\treturn\n\t\t}", "if now.Consumed && false {\n\t\t\treturn\n\t\t}")
 m("foreground-announced", "extension.go", "if !r.Background {\n\t\treturn\n\t}", "if false {\n\t\treturn\n\t}")
 m("stopped-on-completed-channel", "extension.go", "return status == statusError || status == statusStopped || status == statusAborted", "return status == statusError || status == statusAborted")
 m("notification-not-escaped", "extension.go", '"<result>"+escapeXML(preview)+"</result>"', '"<result>"+preview+"</result>"')

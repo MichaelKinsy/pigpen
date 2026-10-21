@@ -43,12 +43,10 @@ scenario("mention-off", "With agentMentions off nothing is claimed.", [], settin
 scenario("mention-legacy-false", "The legacy boolean false reads as off.", [], settings={**SETTINGS, "agentMentions": False}, steps=say("@explore find the flaky test"))
 scenario("mention-direct-headless", "In direct mode a headless prompt is left to the main model.", [], settings={**SETTINGS, "agentMentions": "direct"}, steps=say("@explore find the flaky test"))
 scenario("mention-agent-prefix-unknown", "Claude Code's @agent-<type> spelling with no such type falls through.", [], steps=say("@agent-nosuchtype hello"))
-scenario("mention-clone-turn", "In model mode a mention is taken by an off-screen clone: its request carries the conversation, the reminder and only the Agent tool; the clone calls Agent (here refused by fallbackSubagent none) and the main model is never asked.",
-         [[call("Agent", prompt="x", description="d", subagent_type="typoo")]], settings={**SETTINGS, "fallbackSubagent": "none"},
-         steps=say("@explore find the flaky test", wait="response", settleMs=3000))
-# The oracle asks the model a third time after the clone's turns (the script is read in order, so a spare turn keeps the
-# run going and lets the golden show what each side does with it).
-_p = os.path.join(out, "mention-clone-turn.json"); _s = json.load(open(_p)); _s["llm"].append({"text": "done"}); json.dump(_s, open(_p, "w"), indent=2, ensure_ascii=False); open(_p, "a").write("\n")
+# Not generated: a mention in model mode. Under the pinned Pi (1.3.0.1402973a) the original's conversation clone throws
+# "Cannot set property systemPrompt of #<Object>" (mention-clone.ts assigns session.agent.state.systemPrompt, which that Pi
+# exposes as a getter), so the original falls back to a direct start and warns; the golden would record that failure and a
+# child agent's run, neither of which this port should copy. The clone is covered by twins and PORT.md.
 
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's
