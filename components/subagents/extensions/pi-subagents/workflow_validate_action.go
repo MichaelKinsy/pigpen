@@ -59,11 +59,7 @@ func loadWorkflowScriptPath(runtimeCwd string, params map[string]any) (script st
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		reason := err.Error()
-		if pe, ok := err.(*os.PathError); ok {
-			reason = pe.Err.Error()
-		}
-		return "", fmt.Sprintf("Failed to read workflowScriptPath '%s': %s", path, reason)
+		return "", fmt.Sprintf("Failed to read workflowScriptPath '%s': %s", path, nodeFSErrorText(err, "open", path))
 	}
 	if jsTrim(string(data)) == "" {
 		return "", fmt.Sprintf("workflowScriptPath file '%s' is empty.", path)
@@ -138,7 +134,7 @@ func validationObject(v WorkflowScriptValidationResult, preflight *WorkflowPrefl
 	if len(v.Warnings) > 0 {
 		ws := make([]any, len(v.Warnings))
 		for i, w := range v.Warnings {
-			ws[i] = jo("message", w.Message, "kind", w.Kind)
+			ws[i] = jo("kind", w.Kind, "message", w.Message)
 		}
 		out.set("warnings", ws)
 	}
@@ -218,7 +214,7 @@ func validateAction(ctx sdk.Context, params map[string]any) (any, error) {
 	if !validation.OK || extra != "" {
 		return nil, sdk.NewToolError(text)
 	}
-	return explicitOK{Content: text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
+	return sdk.ToolResult{Content: text, Details: map[string]any{"mode": "management", "results": []any{}}}, nil
 }
 
 func marshalAny(v any) string {

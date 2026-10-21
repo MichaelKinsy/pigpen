@@ -636,4 +636,3 @@ func TestWorkflowLateCallAfterAbortIsIgnored(t *testing.T) {
 		t.Fatalf("message %q launches %d", we.Message, launches.Load())
 	}
 }
-

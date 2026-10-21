@@ -13,4 +13,4 @@ s = open(p).read()
 open(p, "w").write(s.replace(oracle, "<oracle>"))
 PY
 done
-mkdir -p extensions/pi-subagents/testdata && cp port/host-bound/golden/get-builtin.jsonl extensions/pi-subagents/testdata/get-builtin.jsonl
+mkdir -p extensions/pi-subagents/testdata && cp port/host-bound/golden/*.jsonl extensions/pi-subagents/testdata/

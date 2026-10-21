@@ -133,7 +133,6 @@ func unknownFields(o *jsObject, allowed ...string) []string {
 	return out
 }
 
-
 func parseExternalCliMachine(value any, label string) error {
 	m, ok := recordOf(value)
 	if !ok {
