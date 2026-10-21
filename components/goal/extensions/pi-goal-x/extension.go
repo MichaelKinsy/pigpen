@@ -96,7 +96,18 @@ func Extension() *sdk.Extension {
 	for _, d := range commandDefs {
 		e.RegisterCommand(d.name, sdk.CommandOptions{Description: d.desc, Handler: a.command(d.fn)})
 	}
+	for _, d := range unportedCommands {
+		e.RegisterCommand(d.name, sdk.CommandOptions{Description: d.desc, Handler: a.unported(d.feature)})
+	}
 	return e
+}
+
+// unported answers a command this port does not implement with the refusal (a notification, no action).
+func (a *app) unported(feature string) sdk.CommandFunc {
+	return func(ctx sdk.Context, _ string) error {
+		ctx.Notify(refusal(feature), "error")
+		return nil
+	}
 }
 
 // commandDefs are the commands this port registers; the tests drive the same table.

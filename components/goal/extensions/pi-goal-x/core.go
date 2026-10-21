@@ -501,8 +501,8 @@ func allowanceReason(limit *float64) string {
 	return "Autonomous-run allowance exhausted. Increase or remove maxAutonomousRuns, or use /goal-resume to renew."
 }
 
-// kickoff starts the first autonomous run. This port has no scheduler: with the allowance at 0 it does what the original does
-// (a no-op write and a notice); otherwise it records the goal as ready, as the original would, and says it will not run.
+// kickoff is the first autonomous run's start. This port starts no runs: direct refuses a nonzero allowance before it creates
+// the goal, so here the allowance is 0, and the original does what this does (a no-op write and a notice).
 func (c *core) kickoff() {
 	c.schedulerSafe(func() error {
 		g := c.state()
@@ -510,23 +510,10 @@ func (c *core) kickoff() {
 			return nil
 		}
 		limit := loadGoalSettings(c.h.Cwd()).maxAutonomousRuns
-		if limit != nil && *limit == 0 {
-			if err := c.schedulerUpdate(func(*jsObject) {}); err != nil {
-				return err
-			}
-			c.h.Notify(allowanceReason(limit), "info")
-			return nil
-		}
-		if err := c.schedulerUpdate(func(s *jsObject) {
-			s.set("phase", "ready")
-			d := newObject()
-			d.set("kind", "ready")
-			d.set("purpose", "kickoff")
-			s.set("decision", d)
-		}); err != nil {
+		if err := c.schedulerUpdate(func(*jsObject) {}); err != nil {
 			return err
 		}
-		c.h.Notify("pi-goal-x (Go port): automatic continuation is not ported, so this goal is stored and ready but will not start by itself. Set maxAutonomousRuns to 0 to silence this notice.", "warning")
+		c.h.Notify(allowanceReason(limit), "info")
 		return nil
 	})
 }
@@ -654,7 +641,7 @@ func (c *core) schedule() error {
 			return nil
 		}
 	}
-	c.h.Notify("pi-goal-x (Go port): automatic continuation is not ported, so this goal is stored and ready but will not start by itself. Set maxAutonomousRuns to 0 to silence this notice.", "warning")
+	c.h.Notify(refusal(continuationFeature), "error")
 	return nil
 }
 
@@ -835,6 +822,14 @@ func (c *core) direct(raw string, sisyphus bool) error {
 	}
 	if sisyphus && !sisyphusObjectiveSufficient(raw) {
 		c.h.Notify("A Sisyphus objective needs ordered steps with per-step done criteria. Use /sisyphus for guided drafting, or provide numbered steps (1) ..., 2) ...) in the objective.", "warning")
+		return nil
+	}
+	if keys := unportedSettings(c.h.Cwd()); len(keys) > 0 {
+		c.h.Notify(refusal(unportedSettingsFeature(keys)), "error")
+		return nil
+	}
+	if limit := loadGoalSettings(c.h.Cwd()).maxAutonomousRuns; limit == nil || *limit != 0 {
+		c.h.Notify(refusal(continuationFeature), "error")
 		return nil
 	}
 	objective, contract := raw, ""

@@ -230,40 +230,6 @@ func TestSettingsLayers(t *testing.T) {
 	eq(t, loadGoalSettings(dir).disableContracts, false, "an environment value other than true/false is ignored")
 }
 
-func TestKickoffWithoutAScheduler(t *testing.T) {
-	cwd := t.TempDir()
-	t.Setenv("PI_CODING_AGENT_DIR", t.TempDir())
-	os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755)
-	os.WriteFile(filepath.Join(cwd, ".pi/pi-goal-x-settings.json"), []byte(`{"maxAutonomousRuns":1}`), 0o644)
-	invalidateGoalPoolCache()
-	h := &fakeHost{cwd: cwd}
-	co := newCore(h)
-	co.loadState()
-	co.flush()
-	h.events = nil
-	must(0, co.direct("Do the thing", false))
-	co.flush()
-	var warned bool
-	for _, e := range h.events {
-		if e[0] == "notify" && strings.Contains(e[2].(string), "(Go port): automatic continuation is not ported") {
-			warned = true
-		}
-	}
-	eq(t, warned, true, "the port says it does not continue by itself")
-	file := ""
-	for k := range readTree(t, cwd) {
-		if strings.Contains(k, "active_goal_") {
-			file = k
-		}
-	}
-	text, _ := os.ReadFile(filepath.Join(cwd, file))
-	for _, want := range []string{`"phase": "ready"`, `"kind": "ready"`, `"purpose": "kickoff"`} {
-		if !strings.Contains(string(text), want) {
-			t.Errorf("goal file lacks %s", want)
-		}
-	}
-}
-
 func TestHeadlessAndBusy(t *testing.T) {
 	cwd := t.TempDir()
 	t.Setenv("PI_CODING_AGENT_DIR", t.TempDir())
