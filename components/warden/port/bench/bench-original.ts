@@ -18,8 +18,12 @@ const benchTsc = (lines: number) => {
 const report = (n: number, tag: string) => Array.from({ length: n }, (_, i) => `${tag} line ${i}: the build of module ${i} passed with no warnings at all`).join("\n");
 const fresh = (chars: number) => Array.from({ length: Math.ceil(chars / 50) }, (_, i) => `new status line ${i} ${"n".repeat(28)}`).join("\n");
 
+// BENCH_ONLY (a regular expression on the case name) limits the run; BENCH_ITERS replaces the iteration count and
+// makes the warm-up as long as the timed run (default: 3 warm-up runs and 25 timed ones, as in the first measurements).
 function median(name: string, run: () => unknown, iterations = 25): void {
-  for (let i = 0; i < 3; i++) run();
+  if (process.env.BENCH_ONLY && !new RegExp(process.env.BENCH_ONLY).test(name)) return;
+  if (process.env.BENCH_ITERS) iterations = Number(process.env.BENCH_ITERS);
+  for (let i = 0; i < (process.env.BENCH_ITERS ? iterations : 3); i++) run();
   const times: number[] = [];
   for (let i = 0; i < iterations; i++) { const start = process.hrtime.bigint(); run(); times.push(Number(process.hrtime.bigint() - start) / 1e6); }
   times.sort((a, b) => a - b);
