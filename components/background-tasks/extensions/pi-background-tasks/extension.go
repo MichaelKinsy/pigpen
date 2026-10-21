@@ -7,7 +7,6 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"io"
 	"strings"
 
@@ -111,115 +110,98 @@ func toolDefs() map[string]toolDef {
 	return out
 }
 
-// refuseTool is the Execute of a tool whose action the port does not run yet.
-func refuseTool(tool string) sdk.ToolFunc {
-	return func(ctx sdk.Context, params map[string]any) (any, error) {
-		action, _ := params["action"].(string)
-		return nil, fmt.Errorf("%s", refusal("the `"+tool+"` tool (action `"+action+"`)"))
-	}
-}
+// instructionsMarker begins the block the original's npm postinstall writes into APPEND_SYSTEM.md (scripts/append-system.mjs).
+const instructionsMarker = "<!-- kendex:append-system @vanillagreen/pi-background-tasks begin -->"
 
 // Extension returns the port.
 func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
-	// upstream: background-tasks.ts:129. A package that is switched off registers nothing; the setting is read from the
+	// upstream: background-tasks.ts:151. A package that is switched off registers nothing; the setting is read from the
 	// user settings at load, as the original does (no project is trusted yet).
 	if !settingBoolean("enabled", true, "") {
 		return e
 	}
+	rt := newRuntime()
 	defs := toolDefs()
+	execute := map[string]sdk.ToolFunc{"bg_status": rt.bgStatusTool(), "bg_task": rt.bgTaskTool()}
 	// The original registers bg_status first.
 	for _, name := range []string{"bg_status", "bg_task"} {
 		d := defs[name]
 		e.RegisterTool(sdk.ToolDefinition{
 			Name: name, Label: d.Label, Description: d.Description, PromptSnippet: d.PromptSnippet, PromptGuidelines: d.PromptGuidelines,
-			Parameters: d.Parameters, RenderShell: sdk.ToolRenderShellSelf, Execute: refuseTool(name),
+			Parameters: d.Parameters, RenderShell: sdk.ToolRenderShellSelf, Execute: execute[name],
 		})
 	}
 
-	command := func(feature string) sdk.CommandFunc {
-		return func(ctx sdk.Context, args string) error {
+	e.RegisterCommand(bgCommand, sdk.CommandOptions{Description: "Background shell task dashboard and controls.", GetArgumentCompletions: rt.bgCompletions, Handler: rt.bgHandler()})
+	rt.simpleCommands(e)
+
+	// upstream: registrations.ts:276-309. Shortcuts register at load from the settings read then; "none" disables one.
+	refused := func(feature string) sdk.ShortcutFunc {
+		return func(ctx sdk.Context) error {
 			ctx.Notify(refusal(feature), "warning")
 			return nil
 		}
 	}
-	e.RegisterCommand(bgCommand, sdk.CommandOptions{Description: "Background shell task dashboard and controls.", Handler: command("the `/bg` command")})
-	e.Command(bgCommand+":list", "Show tracked background tasks", command("the `/bg:list` command"))
-	e.Command(bgCommand+":next", "Move the next bash command to a background task", command("the `/bg:next` command"))
-	e.Command(bgCommand+":clear", "Remove finished background tasks", command("the `/bg:clear` command"))
-	e.Command(bgCommand+":run", "Spawn a background shell task: /bg:run <command>", command("the `/bg:run` command"))
-	e.Command(bgCommand+":stop", "Terminate a running background task: /bg:stop <id>", command("the `/bg:stop` command"))
-
-	// upstream: registrations.ts:276-309. Shortcuts register at load from the settings read then; "none" disables one.
-	dashboard := settingString("dashboardShortcut", defaultDashboardShortcut, "")
-	backgroundBash := settingString("backgroundBashShortcut", defaultBackgroundBashShortcut, "")
-	widgetToggle := settingString("widgetToggleShortcut", defaultWidgetToggleShortcut, "")
-	shortcut := func(key, description, feature string) {
-		e.Shortcut(key, description, func(ctx sdk.Context) error {
-			ctx.Notify(refusal(feature), "warning")
+	if rt.dashboardShortcut != "none" {
+		e.Shortcut(rt.dashboardShortcut, "Open the background task dashboard", refused("the background task dashboard"))
+	}
+	if strings.ToLower(rt.dashboardShortcut) != "f5" {
+		e.Shortcut("f5", "Open the background task dashboard", refused("the background task dashboard"))
+	}
+	if rt.backgroundBashShortcut != "none" {
+		e.Shortcut(rt.backgroundBashShortcut, "Move the next not-yet-started bash command to a background task", func(ctx sdk.Context) error {
+			rt.adopt(ctx)
+			rt.armForcedBackground(ctx, "shortcut")
 			return nil
 		})
 	}
-	if dashboard != "none" {
-		shortcut(dashboard, "Open the background task dashboard", "the background task dashboard")
-	}
-	if strings.ToLower(dashboard) != "f5" {
-		shortcut("f5", "Open the background task dashboard", "the background task dashboard")
-	}
-	if backgroundBash != "none" {
-		shortcut(backgroundBash, "Move the next not-yet-started bash command to a background task", "forcing the next bash command into the background")
-	}
-	if widgetToggle != "none" {
-		shortcut(widgetToggle, "Toggle background task mini-dashboard", "the background task widget")
+	if rt.widgetToggleShortcut != "none" {
+		e.Shortcut(rt.widgetToggleShortcut, "Toggle background task mini-dashboard", refused("the background task widget"))
 	}
 
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, data map[string]any) (any, error) {
-		settings.clear()
+		rt.onSessionStart(ctx)
+		rt.settle()
 		return nil, nil
 	})
-	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, data map[string]any) (any, error) {
-		settings.clear()
+	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, data map[string]any) (any, error) {
+		rt.mu.Lock()
+		settings.recordProjectTrust(ctx.Cwd(), ctx.IsProjectTrusted)
+		rt.setContext(ctx)
+		rt.mu.Unlock()
+		appendInstructions(data)
 		return nil, nil
 	})
-
-	// A bash command the original would move into a background task is refused instead of running in the foreground.
-	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) {
-		if name, _ := data["toolName"].(string); name != "bash" {
+	for _, event := range []string{sdk.EventSessionTree, sdk.EventSessionCompact} {
+		e.OnEvent(event, func(ctx sdk.Context, data map[string]any) (any, error) {
+			rt.adopt(ctx)
 			return nil, nil
-		}
-		input, _ := data["input"].(map[string]any)
-		command, _ := input["command"].(string)
-		if reason := bashRefusal(ctx, command); reason != "" {
-			return map[string]any{"block": true, "reason": reason}, nil
-		}
+		})
+	}
+	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, data map[string]any) (any, error) {
+		rt.onSessionShutdown()
 		return nil, nil
 	})
-	// The same for a command the user typed (`!command`): its result is the refusal.
-	e.OnEvent(sdk.EventUserBash, func(ctx sdk.Context, data map[string]any) (any, error) {
-		command, _ := data["command"].(string)
-		if reason := bashRefusal(ctx, command); reason != "" {
-			return map[string]any{"result": map[string]any{"output": reason, "exitCode": 1, "cancelled": false, "truncated": false}}, nil
-		}
-		return nil, nil
-	})
+	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) { return rt.onToolCall(ctx, data) })
+	e.OnEvent(sdk.EventUserBash, func(ctx sdk.Context, data map[string]any) (any, error) { return rt.onUserBash(ctx, data) })
 	return e
 }
 
-// bashRefusal is the refusal text for a bash command that auto-backgrounding would divert, or "" when it may run.
-func bashRefusal(ctx sdk.Context, command string) string {
-	if jsTrim(command) == "" {
-		return ""
+// appendInstructions adds instructions.md to the system prompt of the run, as the original's install step adds it to
+// APPEND_SYSTEM.md: not when that file already carries the block (an install by the original package, or the kendex CLI).
+func appendInstructions(data map[string]any) {
+	options, _ := data["systemPromptOptions"].(map[string]any)
+	if options == nil {
+		return
 	}
-	cwd := ctx.Cwd()
-	settings.recordProjectTrust(cwd, ctx.IsProjectTrusted)
-	if !settingBoolean("autoBackgroundBash", true, cwd) {
-		return ""
+	current, _ := options["appendSystemPrompt"].(string)
+	if strings.Contains(current, instructionsMarker) {
+		return
 	}
-	if hasUserPatterns(settingString("autoBackgroundPatterns", "", cwd)) {
-		return refusal("the `autoBackgroundPatterns` setting")
+	text := strings.TrimSpace(instructions)
+	if current != "" {
+		text = current + "\n\n" + text
 	}
-	if d := builtinAutoBackgroundDecision(command); d != nil {
-		return refusal("moving a bash command into a background task (" + d.reason + ")")
-	}
-	return ""
+	options["appendSystemPrompt"] = text
 }

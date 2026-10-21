@@ -179,6 +179,12 @@ type task struct {
 	timeoutTimer      timer
 	restored          bool
 	outputReadVersion int
+	// outputUnits is the length of output in UTF-16 units (the original's output.length), kept so a chunk does not re-count
+	// the whole buffer. outBuf backs output: it only ever grows by append, so the strings that view it stay valid.
+	outputUnits int
+	outBuf      []byte
+	// gate is the producer's hold of the log writer: the task's pipes are not read until it resolves.
+	gate *future
 }
 
 // sortedVoided is the voided wake sequences in ascending order.
