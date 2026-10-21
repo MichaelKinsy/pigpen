@@ -34,7 +34,7 @@ original is in [`upstream/mitsuhiko-agent-stuff/commit.md`](upstream/mitsuhiko-a
 
 ## Adaptation map
 
-[`port/upstream-map.json`](port/upstream-map.json) maps every shipped file to its upstream path, its vendored copy and its
+[`upstream-map.json`](upstream-map.json) maps every shipped file to its upstream path, its vendored copy and its
 upstream blob, and records the list of adaptations; the table below is generated from it. `node scripts/dev-skills-drift.mjs`
 fails when a shipped file, a vendored copy, a pin or this table drifts from the map (`--online` also checks the blobs against
 the upstream repositories, `--latest` lists upstream changes since the pin).

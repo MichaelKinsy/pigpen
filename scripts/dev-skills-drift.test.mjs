@@ -19,8 +19,8 @@ function fixture() {
   cpSync(join(root, 'components/dev-skills'), join(dir, 'components/dev-skills'), { recursive: true });
   return dir;
 }
-const mapOf = (dir) => JSON.parse(readFileSync(join(dir, 'components/dev-skills/port/upstream-map.json'), 'utf8'));
-const writeMap = (dir, map) => writeFileSync(join(dir, 'components/dev-skills/port/upstream-map.json'), JSON.stringify(map, null, 2));
+const mapOf = (dir) => JSON.parse(readFileSync(join(dir, 'components/dev-skills/upstream-map.json'), 'utf8'));
+const writeMap = (dir, map) => writeFileSync(join(dir, 'components/dev-skills/upstream-map.json'), JSON.stringify(map, null, 2));
 const edit = (dir, rel, fn) => { const path = join(dir, 'components/dev-skills', rel); writeFileSync(path, fn(readFileSync(path, 'utf8'))); };
 const mentions = (errors, text) => errors.some((e) => e.includes(text));
 

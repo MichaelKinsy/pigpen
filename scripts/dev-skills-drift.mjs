@@ -2,7 +2,7 @@
 // "unchanged from upstream" is not the test. The test is that every shipped file is mapped to the upstream file it
 // was adapted from, at the commit the adaptation is based on, with its adaptations listed:
 //
-//   components/dev-skills/port/upstream-map.json   the map (one row per shipped file, plus the licenses)
+//   components/dev-skills/upstream-map.json   the map (one row per shipped file, plus the licenses)
 //   components/dev-skills/CREDITS.md               carries a table generated from the map (--write)
 //
 // Offline (default, and part of `npm run quality`):
@@ -62,8 +62,8 @@ export function renderTable(map) {
 export function checkDevSkills(root = defaultRoot) {
   const errors = [];
   const dir = join(root, COMPONENT);
-  const mapPath = join(dir, 'port/upstream-map.json');
-  if (!existsSync(mapPath)) return [`${COMPONENT}/port/upstream-map.json is missing`];
+  const mapPath = join(dir, 'upstream-map.json');
+  if (!existsSync(mapPath)) return [`${COMPONENT}/upstream-map.json is missing`];
   const map = readJson(mapPath);
   const provenance = readJson(join(dir, 'provenance.json'));
 
@@ -124,7 +124,7 @@ export function checkDevSkills(root = defaultRoot) {
 /** Rewrite the generated block of CREDITS.md from the map. */
 export function writeCredits(root = defaultRoot) {
   const dir = join(root, COMPONENT);
-  const map = readJson(join(dir, 'port/upstream-map.json'));
+  const map = readJson(join(dir, 'upstream-map.json'));
   const path = join(dir, 'CREDITS.md');
   const credits = readFileSync(path, 'utf8');
   const start = credits.indexOf(BEGIN);
@@ -153,7 +153,7 @@ function blobAt(dir, rev, path) {
 
 /** Network checks. `latest` also lists paths that changed upstream since the pin. Returns { errors, drift }. */
 export function checkOnline(root = defaultRoot, { latest = false } = {}) {
-  const map = readJson(join(root, COMPONENT, 'port/upstream-map.json'));
+  const map = readJson(join(root, COMPONENT, 'upstream-map.json'));
   const errors = [];
   const drift = [];
   const scratch = mkdtempSync(join(tmpdir(), 'dev-skills-drift-'));
@@ -203,7 +203,7 @@ function main(argv) {
     drift = result.drift;
   }
   if (errors.length) { console.error(errors.join('\n')); return 1; }
-  const count = readJson(join(root, COMPONENT, 'port/upstream-map.json')).skills.length;
+  const count = readJson(join(root, COMPONENT, 'upstream-map.json')).skills.length;
   console.log(`dev-skills drift check passed: ${count} shipped files mapped${online || latest ? ', pins verified against upstream' : ''}`);
   for (const line of drift) console.log(`upstream drift: ${line}`);
   if (latest && !drift.length) console.log('upstream drift: none');

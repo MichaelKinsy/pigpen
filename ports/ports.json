@@ -403,7 +403,7 @@
       "lane": "pigpen-pig-stuff",
       "status": "done",
       "credit": "Skills adapted from mattpocock/skills, https://github.com/mattpocock/skills, by Matt Pocock (MIT), at commit d81f3a183412e71a5b1e84ca21bc1a35eea03a60, and from mitsuhiko/agent-stuff, https://github.com/mitsuhiko/agent-stuff, by Armin Ronacher (Apache-2.0), at commit 0865c849befd2021490679f96a8dee58c84ac857. Adaptation by Michael Kinsy (MIT).",
-      "notes": "Names take the pigpen- prefix the Skill gate requires. Release 0.2.0 re-bases every adaptation on the pinned commits (the first release's earlier revision was not recorded); port/upstream-map.json maps each shipped file to its upstream path and blob with its adaptations, and scripts/dev-skills-drift.mjs fails on drift. Whether the Skills should instead be faithful copies is an owner decision (status/dev-skills.md). Reviewed and merged for the first release."
+      "notes": "Names take the pigpen- prefix the Skill gate requires. Release 0.2.0 re-bases every adaptation on the pinned commits (the first release's earlier revision was not recorded); upstream-map.json maps each shipped file to its upstream path and blob with its adaptations, and scripts/dev-skills-drift.mjs fails on drift. Whether the Skills should instead be faithful copies is an owner decision (status/dev-skills.md). Reviewed and merged for the first release."
     },
     {
       "id": "rpiv-todo",

@@ -28,7 +28,7 @@ as `/skill:pigpen-tdd` and so on, and the model can load them by name.
 
 ## Staying true to the upstream
 
-`port/upstream-map.json` maps every shipped file to the upstream file it was adapted from, at the pinned commit, with its
+`upstream-map.json` maps every shipped file to the upstream file it was adapted from, at the pinned commit, with its
 adaptations. `node scripts/dev-skills-drift.mjs` (part of `npm run quality`) fails when a shipped file or a vendored upstream
 copy changes without its row, and `node scripts/dev-skills-drift.mjs --online --latest` checks the pins against the upstream
 repositories and lists what upstream changed since.
