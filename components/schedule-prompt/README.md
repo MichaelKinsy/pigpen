@@ -16,13 +16,16 @@ schedules future prompts, reminders and recurring jobs for itself. Go only; no N
 - Safety: duplicate names, past or too-near timestamps, and the recursion guard are refused as the original refuses them; disabled jobs
   of a session are removed when it ends.
 
-## Status (0.2.0): what is not ported yet
+- `/schedule-prompt`: a menu with **Jobs** (a full-width overlay: select with the arrow keys, `a` add, `t` toggle, `s` switch between
+  session-bound and shared, `x` remove, `c` clean up disabled jobs, `q` quit; jobs of other sessions are listed read-only) and
+  **Settings** (widget visibility and whether new jobs bind to the session, saved to the project settings file).
 
-Everything in the original is ported except two parts, each refused with the program's message until its slice lands:
+## Status (0.3.0): what is not ported yet
+
+One part of the original is refused until its slice lands, with the program's message:
 
 > @pi-in-go/pigpen-schedule-prompt (Go port) does not support <feature> yet. Install the original extension, npm:pi-schedule-prompt@0.4.1, which runs unchanged in PiG.
 
-- **`/schedule-prompt`** (the Jobs overlay, the add flow and Settings): slice 3.
 - **The per-task `model` mode** (`model`, and with it `notify`, `extensions` and `skills` on a subagent job): slice 4. It needs an
   in-process agent session; the Go SDK has none yet (PiG branch `feat/sdk-child-agent-sessions`). A tool call that passes `model` is a tool
   error; a job that already has one (made by the original) reports the refusal as its run's error when it fires.

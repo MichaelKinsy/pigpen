@@ -14,14 +14,14 @@
 | Slice | Content | State |
 |---|---|---|
 | 1 | inventory and honest refusal | pushed (`port/schedule-prompt-1`, 0.1.0) |
-| 2 | tool, scheduling, croner and V8 date semantics, storage, settings, firing, events, the widget, the message and tool renderers | this revision (0.2.0); `model` and `/schedule-prompt` are refused |
-| 3 | `/schedule-prompt`: the Jobs overlay, the add flow and Settings (pitui, `Context.Custom` with `OnHandle`) | not started |
+| 2 | tool, scheduling, croner and V8 date semantics, storage, settings, firing, events, the widget, the message and tool renderers | pushed (`port/schedule-prompt-2`, 0.2.0) |
+| 3 | `/schedule-prompt`: the Jobs overlay, the add flow and Settings (`Context.Custom` with `OnHandle`) | this revision (0.3.0) |
 | 4 | the per-task `model` mode (`model`, `notify`, `extensions`, `skills` on a subagent job) | waits for PiG's `createAgentSession` for Go extensions (branch `feat/sdk-child-agent-sessions`) |
 
 The widget is in slice 2 (not 3): in Pi's RPC mode the original's startup already calls `setWidget(key, undefined)`, so the widget's show and hide
 logic is part of the observable trace of every scenario.
 
-Refused until its slice lands, with the program's message
+Refused until its slice lands (since slice 3 only the `model` mode), with the program's message
 (`@pi-in-go/pigpen-schedule-prompt (Go port) does not support <feature> yet. Install the original extension, npm:pi-schedule-prompt@0.4.1, which runs unchanged in PiG.`):
 `/schedule-prompt` (notification), a tool call that passes a non-empty `model` (tool error, nothing stored), and, when a job made by the original
 has a `model`, its run (the run's error, shown in the chat marker and stored as `lastStatus: "error"`).
@@ -82,3 +82,28 @@ Every observable behaviour of the original, its source, the Go SDK operation it 
 - **U3** (upstream, kept) `validateCronExpression` starts a croner timer loop for every validated expression and never stops it (a leaked no-op timer); the port validates without a timer.
 - **Host check (original under PiG's Node runtime)** was skipped for the goldens: B2 (`core-items.md`): PiG's RPC mode emits `widgetLines` for a component widget where Pi emits nothing. Not yet run on the scenarios without a widget.
 - **SDK table finding** `pigeq gaps --ts` reports `ctx.ui.custom(options.onHandle)` MISSING; the SDK source of 0.5.0 has `RemoteOverlayOptions.OnHandle` (`overlay_handle.go`). Accepted in `port/accepted-gaps.json` with that citation (not an owner approval); needed from slice 3.
+
+## Slice 3: `/schedule-prompt` (0.3.0)
+
+Ported: `index.ts` command handler, `ui/jobs-view.ts`, `ui/add-flow.ts` (M15) as `command.go`, `jobsview.go`, `addflow.go`. The Jobs overlay is an
+`sdk.RemoteComponent` opened with `Context.Custom` (full width, up to full height, `OnHandle` hides it while the add flow's dialogs are open and
+focuses it afterwards); the add flow and Settings use `Select`, `Input`, `Confirm` and `Notify`.
+
+The original has **no tests** for any of this (its five test files cover the tool, the scheduler, the settings, the widget and the subagent runner), so the evidence is
+built, not ported:
+
+- **Frames** (`port/frames`, as in ask-user-question): `record.ts` runs the unmodified `JobsView` and `runAddFlow` under Pi 1402973a9d's pi-tui with a recording theme
+  (`<fg:dim>text</fg>`, `<b>`: colour tokens and nesting are compared) and a scripted `ctx.ui`, for 38 scenarios (`gen-scenarios.py`): 19 overlay scenarios (empty, one
+  group, two groups, navigation and its bounds, toggle, scope, remove and cleanup with every way out of the prompt, foreign rows read-only, quit keys, the add key with a
+  runAdd that succeeds, adds a job or fails, unknown keys, missing fields), each rendered at widths 40, 90 and 120 after every key, with the store file and the calls to the scheduler;
+  19 add-flow scenarios (every branch: cancel or empty at each prompt, duplicate name, re-asking the schedule for cron, interval and once, trimming, scope order from the default,
+  declined, answers running out), with every dialog, notification, the store file and the scheduler call. `TestFramesAgainstOriginal` replays all 38 against the port: identical.
+- **Scenarios** (`port/scenarios/cmd-*`, original under Pi against the port under PiG over RPC): the menu and Settings with the dialogs answered from the scenario, the settings file
+  read back by the model: widget toggles, scope toggles, a failed write (`.pi` is a file), the global setting, cancel and empty answers, and `Jobs` (in RPC mode the host answers
+  the component with nothing and the command ends, in both). 11 scenarios identical (recorded under Pi, `pigeq check`).
+- `fire-cron` was reworked: its prompt step raced the job's first fire for the first model turn (2 of 30 reruns differed in the order of the widget removal and the tool result);
+  the step is now a `get_state` wait, so only the fire drives the model.
+
+Differences (all SDK-bound): **D8** the overlay's theme is the host's `UITheme` captured when the command runs (a theme change while the overlay is open shows at the next command; SDK
+request C3+ `OnThemeChange`); **D9** the add flow runs on its own goroutine as the original's un-awaited promise does, and a failure is logged `[pi-schedule-prompt] add flow failed: <err>` (the
+original prints the JavaScript error object).
