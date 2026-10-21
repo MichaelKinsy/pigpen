@@ -408,11 +408,12 @@ func TestGapScannerFlagsMissingAndPartialAPIs(t *testing.T) {
 export default function (pi) {
 	pi.events.on("herdr:blocked", () => {});
 	pi.registerCommand("c", { handler: async (_a, ctx) => {
-		await ctx.newSession({ withSession: async (c) => c.ui.notify("x") });
+		await ctx.newSession({ setup: async () => {}, withSession: async (c) => c.ui.notify("x") });
 		await ctx.ui.select("t", ["a"], { timeout: 5 });
 		await ctx.ui.select("t", ["a"]);
 	}});
 	pi.on("cache_warming_decision", () => {});
+	pi.on("after_provider_response", () => {});
 }`
 	gaps := ScanGaps(src, surfacePig030(t))
 	got := map[string]Gap{}
@@ -441,19 +442,22 @@ export default function (pi) {
 	if g := ScanGaps(`pi.events.emit("x", 1)`, surfacePig030(t)); len(g) != 1 || g[0].Symbol != "pi.events.emit" {
 		t.Errorf("emit: %+v", g)
 	}
-	// On the current surface (PiG 0.4.1) the bus and withSession are implemented for Go; the event PiG's host
-	// never emits is still missing and the dialog timeout still a stand-in.
+	// On the current surface (PiG 0.5.0) the bus, withSession and cache_warming_decision are implemented for
+	// Go; an event PiG's host does not emit is still a stand-in and the dialog timeout still a stand-in.
 	current := map[string]Gap{}
 	for _, g := range ScanGaps(src, "") {
 		current[g.Symbol] = g
 	}
-	for _, sym := range []string{"pi.events.on", "ctx.newSession(options.withSession)"} {
+	for _, sym := range []string{"pi.events.on", "ctx.newSession(options.withSession)", `pi.on("cache_warming_decision")`} {
 		if g, ok := current[sym]; ok {
-			t.Errorf("%s is implemented for Go in PiG 0.4.1 but reported: %+v", sym, g)
+			t.Errorf("%s is implemented for Go in PiG 0.5.0 but reported: %+v", sym, g)
 		}
 	}
-	if g := current[`pi.on("cache_warming_decision")`]; g.Severity != "missing" {
-		t.Errorf("cache_warming_decision on the current surface: %+v", g)
+	if g := current[`pi.on("after_provider_response")`]; g.Severity != "partial" {
+		t.Errorf("after_provider_response on the current surface: %+v", g)
+	}
+	if g := current["ctx.newSession(options.setup)"]; g.Severity != "missing" {
+		t.Errorf("newSession setup on the current surface: %+v", g)
 	}
 	if g := current["ctx.ui.select(opts.timeout)"]; g.Severity != "partial" {
 		t.Errorf("select timeout on the current surface: %+v", g)
