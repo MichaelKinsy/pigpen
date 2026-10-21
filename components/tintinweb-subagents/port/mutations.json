@@ -164,20 +164,20 @@
  {
   "name": "queue-lifo",
   "file": "manager.go",
-  "find": "next = m.queue[0]\n\t\tm.queue = m.queue[1:]",
-  "replace": "next = m.queue[len(m.queue)-1]\n\t\tm.queue = m.queue[:len(m.queue)-1]"
+  "find": "i = j\n\t\t\t\tbreak",
+  "replace": "i = j"
  },
  {
-  "name": "foreground-queued",
+  "name": "foreground-charged-to-background",
   "file": "manager.go",
-  "find": "if background && m.running >= m.maxConcurrent {",
-  "replace": "if m.running >= m.maxConcurrent {"
+  "find": "if occupiesPoolSlot(r) {\n\t\treturn poolBackground",
+  "replace": "if r.topLevel() {\n\t\treturn poolBackground"
  },
  {
   "name": "slot-not-released",
   "file": "manager.go",
-  "find": "if r.Background {\n\t\tm.running--\n\t}",
-  "replace": "if r.Background {\n\t}"
+  "find": "case poolBackground:\n\t\tm.runningBackground--",
+  "replace": "case poolBackground:\n\t\t_ = m"
  },
  {
   "name": "consume-running-agent",
@@ -188,14 +188,14 @@
  {
   "name": "stopped-reads-as-aborted",
   "file": "manager.go",
-  "find": "case r.stopped:\n\t\tr.Status = statusStopped",
-  "replace": "case r.stopped:\n\t\tr.Status = statusAborted"
+  "find": "r.Status = statusStopped\n\tcase err != nil:",
+  "replace": "r.Status = statusAborted\n\tcase err != nil:"
  },
  {
   "name": "steer-finished-agent",
   "file": "manager.go",
-  "find": "if status != statusRunning || c == nil {",
-  "replace": "if c == nil {"
+  "find": "if status != statusRunning {\n\t\tm.mu.Unlock()\n\t\treturn false, fmt.Errorf",
+  "replace": "if false {\n\t\tm.mu.Unlock()\n\t\treturn false, fmt.Errorf"
  },
  {
   "name": "handle-numbering-starts-late",
@@ -204,16 +204,16 @@
   "replace": "for n := 3; taken[candidate]; n++ {"
  },
  {
-  "name": "ambiguous-ref-resolved",
+  "name": "handle-compared-with-case",
   "file": "manager.go",
-  "find": "if found != nil {\n\t\t\t\treturn nil\n\t\t\t}",
-  "replace": "if found != nil {\n\t\t\t}"
+  "find": "strings.ToLower(r.Handle) != wanted",
+  "replace": "r.Handle != wanted"
  },
  {
   "name": "queued-abort-keeps-queue",
   "file": "manager.go",
-  "find": "m.queue = append(m.queue[:i], m.queue[i+1:]...)\n\t\t\t\tbreak",
-  "replace": "_ = i\n\t\t\t\tbreak"
+  "find": "m.dequeueLocked(func(q queueEntry) bool { return q.r == r })",
+  "replace": "m.dequeueLocked(func(q queueEntry) bool { return false })"
  },
  {
   "name": "handle-base-length",
@@ -230,14 +230,14 @@
  {
   "name": "consumed-still-notified",
   "file": "extension.go",
-  "find": "if consumed {\n\t\t\treturn\n\t\t}",
-  "replace": "if consumed && false {\n\t\t\treturn\n\t\t}"
+  "find": "if consumed { // the result was already delivered\n\t\treturn\n\t}",
+  "replace": "if consumed && false { // the result was already delivered\n\t\treturn\n\t}"
  },
  {
   "name": "foreground-announced",
-  "file": "extension.go",
-  "find": "if !r.Background {\n\t\treturn\n\t}",
-  "replace": "if false {\n\t\treturn\n\t}"
+  "file": "manager.go",
+  "find": "if !r.Background {\n\t\tr.Consumed = true\n\t}",
+  "replace": "if false {\n\t\tr.Consumed = true\n\t}"
  },
  {
   "name": "stopped-on-completed-channel",
@@ -259,7 +259,7 @@
  },
  {
   "name": "notification-steers",
-  "file": "extension.go",
+  "file": "joinmode.go",
   "find": "DeliverAs: \"followUp\"",
   "replace": "DeliverAs: \"steer\""
  },
@@ -282,28 +282,22 @@
   "replace": "return \"Error\""
  },
  {
-  "name": "spawn-not-background",
-  "file": "bus.go",
-  "find": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, true, false)",
-  "replace": "a.start(ctx, typ, prompt, description, name, model, thinking, maxTurns, false, false)"
- },
- {
   "name": "stop-error-text",
   "file": "bus.go",
   "find": "errors.New(\"Agent not found\")",
   "replace": "errors.New(\"Not found\")"
  },
  {
-  "name": "explore-model-forced",
+  "name": "default-model-ignores-availability",
   "file": "bus.go",
-  "find": "spec.Model = \"\" // the original",
-  "replace": "spec.Model = cfg.Model // the original"
+  "find": "(reg.GetAvailable == nil || findModel(reg.GetAvailable(), provider, id) != nil)",
+  "replace": "true"
  },
  {
   "name": "default-max-turns-ignored",
   "file": "bus.go",
-  "find": "if a.defaultMaxTurns != nil {",
-  "replace": "if a.defaultMaxTurns != nil && false {"
+  "find": "if rt := a.runtime(); rt.defaultMaxTurns != nil {",
+  "replace": "if rt := a.runtime(); rt.defaultMaxTurns != nil && false {"
  },
  {
   "name": "isolated-agent-file-ignored",
@@ -356,7 +350,7 @@
  {
   "name": "grace-setting-ignored",
   "file": "bus.go",
-  "find": "spec.GraceTurns = a.graceTurns",
+  "find": "spec.GraceTurns = a.runtime().graceTurns",
   "replace": "spec.GraceTurns = 0"
  },
  {
@@ -428,8 +422,8 @@
  {
   "name": "fallback-note-text",
   "file": "tools.go",
-  "find": "`Note: Unknown agent type \"` + fellBack + `\" — using ` + resolved",
-  "replace": "`Note: agent type \"` + fellBack + `\" is unknown; using ` + resolved"
+  "find": "`Note: Unknown agent type \"` + fellBack + `\" — using ` + using",
+  "replace": "`Note: agent type \"` + fellBack + `\" is unknown; using ` + using"
  },
  {
   "name": "harness-pig-ignored",
@@ -524,8 +518,8 @@
  {
   "name": "result-consumed-not-marked",
   "file": "tools.go",
-  "find": "r.Consumed = true\n\t\ta.mgr.mu.Unlock()\n\t\ta.mu.Lock()",
-  "replace": "a.mgr.mu.Unlock()\n\t\ta.mu.Lock()"
+  "find": "r.Consumed = true\n\t\ta.mgr.mu.Unlock()\n\t\ta.cancelNudge(id)",
+  "replace": "a.mgr.mu.Unlock()\n\t\ta.cancelNudge(id)"
  },
  {
   "name": "steer-event",
@@ -536,8 +530,8 @@
  {
   "name": "result-by-name-ignored",
   "file": "tools.go",
-  "find": "r := a.mgr.resolve(id)\n\tif r == nil {\n\t\treturn notFound(id), nil\n\t}\n\tif wait",
-  "replace": "r := a.mgr.get(id)\n\tif r == nil {\n\t\treturn notFound(id), nil\n\t}\n\tif wait"
+  "find": "r := a.mgr.resolve(id)\n\tif r == nil || !r.topLevel() {\n\t\treturn notFound(id), nil\n\t}\n\t// A wait",
+  "replace": "r := a.mgr.get(id)\n\tif r == nil || !r.topLevel() {\n\t\treturn notFound(id), nil\n\t}\n\t// A wait"
  },
  {
   "name": "prompt-header-spacing",
@@ -572,20 +566,20 @@
  {
   "name": "settings-project-wins",
   "file": "settings.go",
-  "find": "if p.MaxConcurrent != 0 {\n\t\ts.MaxConcurrent = p.MaxConcurrent\n\t}",
-  "replace": ""
+  "find": "if !ov.Field(i).IsNil() {",
+  "replace": "if !ov.Field(i).IsNil() && ob.Field(i).IsNil() {"
  },
  {
   "name": "settings-ceiling",
   "file": "settings.go",
-  "find": "n <= maxConcurrentCeiling {",
-  "replace": "n <= maxConcurrentCeiling+1 {"
+  "find": "intIn(r[\"maxConcurrent\"], 1, maxConcurrentCeiling)",
+  "replace": "intIn(r[\"maxConcurrent\"], 1, maxConcurrentCeiling+1)"
  },
  {
   "name": "fallback-false-spelling",
   "file": "settings.go",
-  "find": "if !v { // `false` is a spelling of \"none\"",
-  "replace": "if v {"
+  "find": "if !v { // `false` is a spelling of",
+  "replace": "if v { // `false` is a spelling of"
  },
  {
   "name": "fallback-trimmed",
@@ -666,12 +660,6 @@
   "replace": "default:\n\t\t\tcontinue\n\t\t\treturn \"the spawn RPC option"
  },
  {
-  "name": "rpc-foreground-accepted",
-  "file": "refuse.go",
-  "find": "if b, _ := v.(bool); !b {",
-  "replace": "if b, _ := v.(bool); b {"
- },
- {
   "name": "setting-bool-direction",
   "file": "refuse.go",
   "find": "return ok && b != r.okBool",
@@ -724,5 +712,941 @@
   "file": "bus.go",
   "find": "thinking, _ := opts[\"thinkingLevel\"].(string)",
   "replace": "thinking := \"\""
+ },
+ {
+  "name": "sanitize-turns-floor",
+  "file": "settings.go",
+  "find": "intIn(r[\"defaultMaxTurns\"], 0, maxTurnsCeiling)",
+  "replace": "intIn(r[\"defaultMaxTurns\"], 1, maxTurnsCeiling)"
+ },
+ {
+  "name": "sanitize-foreground-floor",
+  "file": "settings.go",
+  "find": "intIn(r[\"maxConcurrentForeground\"], 0, maxConcurrentCeiling)",
+  "replace": "intIn(r[\"maxConcurrentForeground\"], 1, maxConcurrentCeiling)"
+ },
+ {
+  "name": "sanitize-depth-ceiling",
+  "file": "settings.go",
+  "find": "intIn(r[\"maxSubagentDepth\"], 0, subagentDepthCeiling)",
+  "replace": "intIn(r[\"maxSubagentDepth\"], 0, subagentDepthCeiling+1)"
+ },
+ {
+  "name": "sanitize-grace-floor",
+  "file": "settings.go",
+  "find": "intIn(r[\"graceTurns\"], 1, graceTurnsCeiling)",
+  "replace": "intIn(r[\"graceTurns\"], 0, graceTurnsCeiling)"
+ },
+ {
+  "name": "mentions-legacy-bool-inverted",
+  "file": "settings.go",
+  "find": "mode := \"off\"\n\t\tif b {\n\t\t\tmode = \"model\"\n\t\t}",
+  "replace": "mode := \"model\"\n\t\tif b {\n\t\t\tmode = \"off\"\n\t\t}"
+ },
+ {
+  "name": "join-modes-incomplete",
+  "file": "settings.go",
+  "find": "[]string{\"async\", \"group\", \"smart\"}",
+  "replace": "[]string{\"async\", \"group\"}"
+ },
+ {
+  "name": "description-modes-incomplete",
+  "file": "settings.go",
+  "find": "[]string{\"full\", \"compact\", \"custom\"}",
+  "replace": "[]string{\"full\", \"compact\"}"
+ },
+ {
+  "name": "save-writes-global",
+  "file": "settings.go",
+  "find": "path := projectSettingsPath(cwd)\n\tdata, err := json.MarshalIndent",
+  "replace": "path := globalSettingsPath()\n\tdata, err := json.MarshalIndent"
+ },
+ {
+  "name": "save-no-mkdir",
+  "file": "settings.go",
+  "find": "if os.MkdirAll(filepath.Dir(path), 0o755) != nil {\n\t\treturn false\n\t}",
+  "replace": "_ = os.MkdirAll(filepath.Dir(path), 0o755)"
+ },
+ {
+  "name": "malformed-silent",
+  "file": "settings.go",
+  "find": "settingsWarn(fmt.Sprintf(\"[pi-subagents] Ignoring malformed settings at %s: %v\", path, err))\n\t\treturn settings{}\n\t}\n\treturn sanitizeSettings(raw)",
+  "replace": "return settings{}\n\t}\n\treturn sanitizeSettings(raw)"
+ },
+ {
+  "name": "missing-file-warns",
+  "file": "settings.go",
+  "find": "if os.IsNotExist(err) {\n\t\t\treturn settings{}\n\t\t}",
+  "replace": "if false {\n\t\t\treturn settings{}\n\t\t}"
+ },
+ {
+  "name": "apply-skips-zero",
+  "file": "settings.go",
+  "find": "func applyInt(v *int, set func(int)) {\n\tif v != nil && set != nil {",
+  "replace": "func applyInt(v *int, set func(int)) {\n\tif v != nil && *v != 0 && set != nil {"
+ },
+ {
+  "name": "apply-skips-false",
+  "file": "settings.go",
+  "find": "func applyBool(v *bool, set func(bool)) {\n\tif v != nil && set != nil {",
+  "replace": "func applyBool(v *bool, set func(bool)) {\n\tif v != nil && *v && set != nil {"
+ },
+ {
+  "name": "loaded-payload-empty",
+  "file": "settings.go",
+  "find": "map[string]any{\"settings\": s.payload()})\n\treturn s",
+  "replace": "map[string]any{\"settings\": map[string]any{}})\n\treturn s"
+ },
+ {
+  "name": "toast-suffix",
+  "file": "settings.go",
+  "find": "\" (session only; failed to persist)\"",
+  "replace": "\" (session only)\""
+ },
+ {
+  "name": "changed-event-persisted",
+  "file": "settings.go",
+  "find": "\"persisted\": persisted}",
+  "replace": "\"persisted\": true}"
+ },
+ {
+  "name": "background-default-off",
+  "file": "settings.go",
+  "find": "orBool(s.BackgroundByDefault, true)",
+  "replace": "orBool(s.BackgroundByDefault, false)"
+ },
+ {
+  "name": "depth-default",
+  "file": "settings.go",
+  "find": "defaultMaxSubagentDepth = 2",
+  "replace": "defaultMaxSubagentDepth = 3"
+ },
+ {
+  "name": "scheduling-default-off",
+  "file": "settings.go",
+  "find": "orBool(s.SchedulingEnabled, true)",
+  "replace": "orBool(s.SchedulingEnabled, false)"
+ },
+ {
+  "name": "worktree-default-off",
+  "file": "settings.go",
+  "find": "orBool(s.WorktreeIsolation, true)",
+  "replace": "orBool(s.WorktreeIsolation, false)"
+ },
+ {
+  "name": "grace-minimum",
+  "file": "settings_apply.go",
+  "find": "rt.graceTurns = max(1, n)",
+  "replace": "rt.graceTurns = n"
+ },
+ {
+  "name": "applier-background-limit",
+  "file": "settings_apply.go",
+  "find": "ap.SetMaxConcurrent = a.mgr.setMaxConcurrent",
+  "replace": ""
+ },
+ {
+  "name": "applier-foreground-limit",
+  "file": "settings_apply.go",
+  "find": "ap.SetMaxConcurrentForeground = a.mgr.setMaxConcurrentForeground",
+  "replace": ""
+ },
+ {
+  "name": "applier-default-turns",
+  "file": "settings_apply.go",
+  "find": "ap.SetDefaultMaxTurns = func(n int) { a.update(func(rt *runtimeSettings) { rt.defaultMaxTurns = &n }) }",
+  "replace": ""
+ },
+ {
+  "name": "applier-join-mode",
+  "file": "settings_apply.go",
+  "find": "ap.SetDefaultJoinMode = func(mode string) { a.update(func(rt *runtimeSettings) { rt.defaultJoinMode = mode }) }",
+  "replace": ""
+ },
+ {
+  "name": "applier-background-default",
+  "file": "settings_apply.go",
+  "find": "ap.SetBackgroundByDefault = func(b bool) { a.update(func(rt *runtimeSettings) { rt.backgroundByDefault = b }) }",
+  "replace": ""
+ },
+ {
+  "name": "applier-scope-models",
+  "file": "settings_apply.go",
+  "find": "ap.SetScopeModels = setScopeModelsEnabled",
+  "replace": ""
+ },
+ {
+  "name": "applier-strict-files",
+  "file": "settings_apply.go",
+  "find": "ap.SetStrictAgentFiles = func(b bool) { a.update(func(rt *runtimeSettings) { rt.strictAgentFiles = b }) }",
+  "replace": ""
+ },
+ {
+  "name": "applier-disable-defaults",
+  "file": "settings_apply.go",
+  "find": "ap.SetDisableDefaultAgents = func(b bool) { setDefaultsDisabled(b); a.reregisterAgents() }",
+  "replace": ""
+ },
+ {
+  "name": "applier-description-mode",
+  "file": "settings_apply.go",
+  "find": "ap.SetToolDescriptionMode = func(mode string) { a.update(func(rt *runtimeSettings) { rt.toolDescriptionMode = mode }) }",
+  "replace": ""
+ },
+ {
+  "name": "applier-fallback",
+  "file": "settings_apply.go",
+  "find": "ap.SetFallbackSubagent = func(v string) { setFallbackSubagent(&v) }",
+  "replace": ""
+ },
+ {
+  "name": "scheduling-flag-ignores-setting",
+  "file": "description.go",
+  "find": "scheduling:        featureScheduling && s.schedulingEnabled(),",
+  "replace": "scheduling:        featureScheduling,"
+ },
+ {
+  "name": "isolation-flag-ignores-setting",
+  "file": "description.go",
+  "find": "worktreeIsolation: featureWorktreeIsolation && s.worktreeIsolation(),",
+  "replace": "worktreeIsolation: featureWorktreeIsolation,"
+ },
+ {
+  "name": "workflows-flag-ignores-setting",
+  "file": "description.go",
+  "find": "workflows:         featureWorkflows && s.workflowsEnabled(),",
+  "replace": "workflows:         featureWorkflows,"
+ },
+ {
+  "name": "workflow-tool-always-listed",
+  "file": "description.go",
+  "find": "if f.workflows {\n\t\tnames = append(names",
+  "replace": "if true {\n\t\tnames = append(names"
+ },
+ {
+  "name": "first-sentence-needs-no-space",
+  "file": "description.go",
+  "find": "if (r == '.' || r == '!' || r == '?') && (i+1 == len(rs) || isJSSpace(rs[i+1])) {",
+  "replace": "if r == '.' || r == '!' || r == '?' {"
+ },
+ {
+  "name": "first-sentence-whole-text",
+  "file": "description.go",
+  "find": "end := len(rs)\n\tfor i, r := range rs {",
+  "replace": "end := len(rs)\n\tfor i, r := range rs[:0] {"
+ },
+ {
+  "name": "custom-template-untrimmed",
+  "file": "description.go",
+  "find": "if text := jsTrim(string(data)); text != \"\" {",
+  "replace": "if text := string(data); text != \"\" {"
+ },
+ {
+  "name": "custom-global-first",
+  "file": "description.go",
+  "find": "[]string{filepath.Join(d.cwd, \".pi\", \"agent-tool-description.md\"), filepath.Join(d.agentDir, \"agent-tool-description.md\")}",
+  "replace": "[]string{filepath.Join(d.agentDir, \"agent-tool-description.md\"), filepath.Join(d.cwd, \".pi\", \"agent-tool-description.md\")}"
+ },
+ {
+  "name": "unknown-placeholder-dropped",
+  "file": "description.go",
+  "find": "return raw\n\t})",
+  "replace": "return \"\"\n\t})"
+ },
+ {
+  "name": "unknown-placeholder-silent",
+  "file": "description.go",
+  "find": "d.warn(fmt.Sprintf(\"[pi-subagents] agent-tool-description.md: unknown placeholder %s left as-is\", raw))",
+  "replace": ""
+ },
+ {
+  "name": "custom-fallback-silent",
+  "file": "description.go",
+  "find": "d.warn(`[pi-subagents] toolDescriptionMode is \"custom\" but no agent-tool-description.md found — using \"full\"`)",
+  "replace": ""
+ },
+ {
+  "name": "empty-template-silent",
+  "file": "description.go",
+  "find": "d.warn(fmt.Sprintf(\"[pi-subagents] %s is empty — ignoring\", path))",
+  "replace": ""
+ },
+ {
+  "name": "schedule-param-missing",
+  "file": "description.go",
+  "find": "props[\"schedule\"] = texts.ScheduleParam",
+  "replace": ""
+ },
+ {
+  "name": "isolation-param-missing",
+  "file": "description.go",
+  "find": "props[\"isolation\"] = texts.IsolationParam",
+  "replace": ""
+ },
+ {
+  "name": "compact-isolation-bullet-kept",
+  "file": "description.go",
+  "find": "\"{{ISOLATIONCOMPACTGUIDELINE}}\", f.isolationCompactGuideline(),",
+  "replace": "\"{{ISOLATIONCOMPACTGUIDELINE}}\", texts.IsolationCompactGuideline,"
+ },
+ {
+  "name": "full-isolation-bullet-kept",
+  "file": "description.go",
+  "find": "\"{{ISOLATIONGUIDELINE}}\", f.isolationGuideline(), \"{{SCHEDULEGUIDELINE}}\", f.scheduleGuideline(),",
+  "replace": "\"{{ISOLATIONGUIDELINE}}\", texts.IsolationGuideline, \"{{SCHEDULEGUIDELINE}}\", f.scheduleGuideline(),"
+ },
+ {
+  "name": "custom-mode-ignored",
+  "file": "description.go",
+  "find": "case \"custom\":\n\t\tif text, ok := loadCustomDescription(f, d); ok {",
+  "replace": "case \"custom-off\":\n\t\tif text, ok := loadCustomDescription(f, d); ok {"
+ },
+ {
+  "name": "compact-mode-ignored",
+  "file": "description.go",
+  "find": "case \"compact\":\n\t\treturn compactDescription(f, d)",
+  "replace": "case \"compact-off\":\n\t\treturn compactDescription(f, d)"
+ },
+ {
+  "name": "tool-registered-without-agentdir",
+  "file": "tools.go",
+  "find": "agentDir: agentDir(), cwd: wd, warn: descriptionWarn}",
+  "replace": "agentDir: \"\", cwd: wd, warn: descriptionWarn}"
+ },
+ {
+  "name": "exact-match-case-sensitive",
+  "file": "models.go",
+  "find": "availableSet[strings.ToLower(input)]",
+  "replace": "availableSet[input]"
+ },
+ {
+  "name": "separators-not-normalized",
+  "file": "models.go",
+  "find": "strings.ReplaceAll(strings.ToLower(s), \".\", \"-\")",
+  "replace": "strings.ToLower(s)"
+ },
+ {
+  "name": "fuzzy-threshold",
+  "file": "models.go",
+  "find": "if best != nil && bestScore >= 20 {",
+  "replace": "if best != nil && bestScore > 20 {"
+ },
+ {
+  "name": "date-stamp-required",
+  "file": "models.go",
+  "find": "eightDigits.MatchString(part) || ",
+  "replace": ""
+ },
+ {
+  "name": "no-provider-fallback",
+  "file": "models.go",
+  "find": "if slash != -1 {\n\t\tif bare, msg",
+  "replace": "if false {\n\t\tif bare, msg"
+ },
+ {
+  "name": "error-list-unsorted",
+  "file": "models.go",
+  "find": "sort.Strings(list)\n\treturn nil, fmt.Sprintf",
+  "replace": "_ = sort.Strings\n\treturn nil, fmt.Sprintf"
+ },
+ {
+  "name": "claude-prefix-kept",
+  "file": "models.go",
+  "find": "strings.ToLower(claudePrefix.ReplaceAllString(name, \"\"))",
+  "replace": "strings.ToLower(name)"
+ },
+ {
+  "name": "substring-not-tighter",
+  "file": "models.go",
+  "find": "60 + float64(jsLen(query))/float64(jsLen(id))*30",
+  "replace": "60"
+ },
+ {
+  "name": "name-match-dropped",
+  "file": "models.go",
+  "find": "case strings.Contains(name, query):",
+  "replace": "case false:"
+ },
+ {
+  "name": "availability-ignored",
+  "file": "models.go",
+  "find": "if r.GetAvailable != nil {\n\t\treturn r.GetAvailable()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "global-enabled-models-first",
+  "file": "enabledmodels.go",
+  "find": "if p, ok := readEnabledModelsField(project); ok {",
+  "replace": "_ = project\n\tif p, ok := readEnabledModelsField(global); ok {"
+ },
+ {
+  "name": "enabled-models-memo-ignores-files",
+  "file": "enabledmodels.go",
+  "find": "if hash == cachedHash && key == cachedPatternsKey {",
+  "replace": "if key == cachedPatternsKey {"
+ },
+ {
+  "name": "enabled-models-case-sensitive",
+  "file": "enabledmodels.go",
+  "find": "provider, id := strings.ToLower(trimmed[:slash]), strings.ToLower(trimmed[slash+1:])",
+  "replace": "provider, id := trimmed[:slash], trimmed[slash+1:]"
+ },
+ {
+  "name": "enabled-models-untrimmed",
+  "file": "enabledmodels.go",
+  "find": "trimmed := jsTrim(pattern)",
+  "replace": "trimmed := pattern"
+ },
+ {
+  "name": "enabled-models-bare-id",
+  "file": "enabledmodels.go",
+  "find": "if slash == -1 {\n\t\t\tcontinue\n\t\t}",
+  "replace": "if slash == -1 {\n\t\t\tslash = 0\n\t\t}"
+ },
+ {
+  "name": "scope-error-for-pinned",
+  "file": "modelscope.go",
+  "find": "if c.callerSupplied {",
+  "replace": "if !c.callerSupplied {"
+ },
+ {
+  "name": "scope-label-missing",
+  "file": "modelscope.go",
+  "find": "if label == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "scope-needs-no-model",
+  "file": "modelscope.go",
+  "find": " || c.id == \"\"",
+  "replace": ""
+ },
+ {
+  "name": "scope-list-unsorted",
+  "file": "modelscope.go",
+  "find": "sort.Strings(list)\n\t\treturn modelScopeVerdict{kind: \"error\"",
+  "replace": "_ = sort.Strings\n\t\treturn modelScopeVerdict{kind: \"error\""
+ },
+ {
+  "name": "scope-state-inverted",
+  "file": "modelscope.go",
+  "find": "func isScopeModelsEnabled() bool         { return scopeModelsEnabled.Load() }",
+  "replace": "func isScopeModelsEnabled() bool         { return !scopeModelsEnabled.Load() }"
+ },
+ {
+  "name": "call-model-beats-file",
+  "file": "invocation.go",
+  "find": "out.modelInput = firstNonEmpty(cfg.Model, p.Model)",
+  "replace": "out.modelInput = firstNonEmpty(p.Model, cfg.Model)"
+ },
+ {
+  "name": "call-thinking-beats-file",
+  "file": "invocation.go",
+  "find": "out.thinking = firstNonEmpty(cfg.Thinking, p.Thinking)",
+  "replace": "out.thinking = firstNonEmpty(p.Thinking, cfg.Thinking)"
+ },
+ {
+  "name": "call-turns-beat-file",
+  "file": "invocation.go",
+  "find": "if cfg.MaxTurns != nil {\n\t\tout.maxTurns = cfg.MaxTurns\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "call-background-beats-file",
+  "file": "invocation.go",
+  "find": "boolFirst(cfg.RunInBackground, p.RunInBackground, o.defaultRunInBackground)",
+  "replace": "boolFirst(p.RunInBackground, cfg.RunInBackground, o.defaultRunInBackground)"
+ },
+ {
+  "name": "worktree-disallow-ignored",
+  "file": "invocation.go",
+  "find": "requested == \"worktree\" && !o.worktreeDisallowed",
+  "replace": "requested == \"worktree\""
+ },
+ {
+  "name": "file-isolation-no-veto",
+  "file": "invocation.go",
+  "find": "if cfg.Isolation != \"\" {\n\t\trequested = cfg.Isolation\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "override-always-recorded",
+  "file": "invocation.go",
+  "find": "cfg.Model != p.Model {",
+  "replace": "cfg.Model == p.Model {"
+ },
+ {
+  "name": "model-from-params-inverted",
+  "file": "invocation.go",
+  "find": "out.modelFromParams = cfg.Model == \"\" && p.Model != \"\"",
+  "replace": "out.modelFromParams = p.Model != \"\""
+ },
+ {
+  "name": "straggler-timeout-long",
+  "file": "groupjoin.go",
+  "find": "d = groupStragglerTimeout",
+  "replace": "d = g.timeout"
+ },
+ {
+  "name": "group-delivers-late",
+  "file": "groupjoin.go",
+  "find": "if len(grp.completed) >= len(grp.agentIDs) {",
+  "replace": "if len(grp.completed) > len(grp.agentIDs) {"
+ },
+ {
+  "name": "delivered-group-held-again",
+  "file": "groupjoin.go",
+  "find": "if grp == nil || grp.delivered {",
+  "replace": "if grp == nil {"
+ },
+ {
+  "name": "dispose-keeps-timers",
+  "file": "groupjoin.go",
+  "find": "if grp.stop != nil {\n\t\t\tgrp.stop()\n\t\t\tgrp.stop = nil\n\t\t}\n\t}\n\tg.groups, g.agentToGroup =",
+  "replace": "if grp.stop != nil && false {\n\t\t\tgrp.stop()\n\t\t\tgrp.stop = nil\n\t\t}\n\t}\n\tg.groups, g.agentToGroup ="
+ },
+ {
+  "name": "timeout-delivery-complete",
+  "file": "groupjoin.go",
+  "find": "g.deliver(records, true)",
+  "replace": "g.deliver(records, false)"
+ },
+ {
+  "name": "delivered-agents-stay-grouped",
+  "file": "groupjoin.go",
+  "find": "records = append(records, grp.completed[id])\n\t\tdelete(g.agentToGroup, id)",
+  "replace": "records = append(records, grp.completed[id])"
+ },
+ {
+  "name": "batch-never-closes",
+  "file": "joinmode.go",
+  "find": "a.batchStop = a.after(batchWindow, a.finalizeBatch)",
+  "replace": "a.batchStop = a.after(time.Hour, a.finalizeBatch)"
+ },
+ {
+  "name": "batch-not-debounced",
+  "file": "joinmode.go",
+  "find": "if a.batchStop != nil {\n\t\ta.batchStop()\n\t}\n\ta.batchStop = a.after",
+  "replace": "a.batchStop = a.after"
+ },
+ {
+  "name": "lone-agents-grouped",
+  "file": "joinmode.go",
+  "find": "if len(grouped) >= 2 {",
+  "replace": "if len(grouped) >= 1 {"
+ },
+ {
+  "name": "async-agents-batched",
+  "file": "joinmode.go",
+  "find": "if joinMode == \"\" || joinMode == \"async\" {",
+  "replace": "if joinMode == \"\" {"
+ },
+ {
+  "name": "group-label-partial",
+  "file": "joinmode.go",
+  "find": "(partial — others still running)",
+  "replace": "(partial)"
+ },
+ {
+  "name": "group-notifies-consumed",
+  "file": "joinmode.go",
+  "find": "if !a.mgr.isConsumed(r) {\n\t\t\t\tunconsumed",
+  "replace": "if true {\n\t\t\t\tunconsumed"
+ },
+ {
+  "name": "join-mode-for-foreground",
+  "file": "joinmode.go",
+  "find": "if runInBackground {\n\t\treturn defaultJoinMode",
+  "replace": "if !runInBackground {\n\t\treturn defaultJoinMode"
+ },
+ {
+  "name": "batch-skips-settled-agents",
+  "file": "joinmode.go",
+  "find": "finished := !r.CompletedAt.IsZero() && !r.Consumed\n\t\t\ta.mgr.mu.Unlock()\n\t\t\tif finished {\n\t\t\t\ta.groups",
+  "replace": "finished := false\n\t\t\ta.mgr.mu.Unlock()\n\t\t\tif finished {\n\t\t\t\ta.groups"
+ },
+ {
+  "name": "foreground-slot-without-blocking",
+  "file": "manager.go",
+  "find": "func occupiesForegroundSlot(r *agentRecord) bool { return r.Blocking && r.topLevel() }",
+  "replace": "func occupiesForegroundSlot(r *agentRecord) bool { return !r.Background && r.topLevel() }"
+ },
+ {
+  "name": "foreground-slot-for-nested",
+  "file": "manager.go",
+  "find": "func occupiesForegroundSlot(r *agentRecord) bool { return r.Blocking && r.topLevel() }",
+  "replace": "func occupiesForegroundSlot(r *agentRecord) bool { return r.Blocking }"
+ },
+ {
+  "name": "background-slot-for-nested",
+  "file": "manager.go",
+  "find": "func occupiesPoolSlot(r *agentRecord) bool { return r.Background && r.topLevel() }",
+  "replace": "func occupiesPoolSlot(r *agentRecord) bool { return r.Background }"
+ },
+ {
+  "name": "pool-charged-when-unlimited",
+  "file": "manager.go",
+  "find": "if m.maxConcurrentForeground > 0 && occupiesForegroundSlot(r) {",
+  "replace": "if occupiesForegroundSlot(r) {"
+ },
+ {
+  "name": "bypass-ignored",
+  "file": "manager.go",
+  "find": "p != poolNone && !o.BypassQueue && !m.poolHasRoom(p)",
+  "replace": "p != poolNone && !m.poolHasRoom(p)"
+ },
+ {
+  "name": "foreground-limit-negative",
+  "file": "manager.go",
+  "find": "m.maxConcurrentForeground = max(0, n)",
+  "replace": "m.maxConcurrentForeground = n"
+ },
+ {
+  "name": "background-limit-zero",
+  "file": "manager.go",
+  "find": "m.maxConcurrent = max(1, n)",
+  "replace": "m.maxConcurrent = n"
+ },
+ {
+  "name": "foreground-limit-no-drain",
+  "file": "manager.go",
+  "find": "m.maxConcurrentForeground = max(0, n)\n\tafter := m.drainLocked()",
+  "replace": "m.maxConcurrentForeground = max(0, n)\n\tvar after []func()"
+ },
+ {
+  "name": "aborted-signal-enqueued",
+  "file": "manager.go",
+  "find": "if signalDone(o.Signal) {\n\t\t\t// Never enqueue",
+  "replace": "if false {\n\t\t\t// Never enqueue"
+ },
+ {
+  "name": "aborted-signal-runs-on",
+  "file": "manager.go",
+  "find": "if signalDone(o.Signal) {\n\t\t// An already-aborted",
+  "replace": "if false {\n\t\t// An already-aborted"
+ },
+ {
+  "name": "signal-ignored",
+  "file": "manager.go",
+  "find": "case <-sig:\n\t\t\tm.abort(r)",
+  "replace": "case <-sig:\n\t\t\t_ = r"
+ },
+ {
+  "name": "dispose-keeps-waiters",
+  "file": "manager.go",
+  "find": "m.dequeueLocked(func(queueEntry) bool { return true })\n\tm.records",
+  "replace": "m.records"
+ },
+ {
+  "name": "retention-doubled",
+  "file": "manager.go",
+  "find": "cutoff := m.now().Add(-recordRetention)",
+  "replace": "cutoff := m.now().Add(-2 * recordRetention)"
+ },
+ {
+  "name": "gc-evicts-running",
+  "file": "manager.go",
+  "find": "if r.Status == statusRunning || r.Status == statusQueued {\n\t\t\tcontinue\n\t\t}\n\t\tif !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {",
+  "replace": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {"
+ },
+ {
+  "name": "gc-never-sweeps",
+  "file": "manager.go",
+  "find": "case <-t.C:\n\t\t\t\tm.cleanup()",
+  "replace": "case <-t.C:\n\t\t\t\t_ = m"
+ },
+ {
+  "name": "clear-wipes-unread",
+  "file": "manager.go",
+  "find": "if skipUnconsumed && !r.Consumed {",
+  "replace": "if false {"
+ },
+ {
+  "name": "clear-keeps-names",
+  "file": "manager.go",
+  "find": "m.tombstones, m.tombOrder = map[string]*tombstone{}, nil",
+  "replace": "_ = m"
+ },
+ {
+  "name": "tombstone-without-session",
+  "file": "manager.go",
+  "find": "if r.Handle == \"\" || r.SessionFile == \"\" {",
+  "replace": "if r.Handle == \"\" {"
+ },
+ {
+  "name": "tombstone-cap",
+  "file": "manager.go",
+  "find": "for len(m.tombstones) > maxTombstones {",
+  "replace": "for len(m.tombstones) > maxTombstones+1 {"
+ },
+ {
+  "name": "reclaim-ignored",
+  "file": "manager.go",
+  "find": "if o.Reclaim != nil && o.Reclaim.Handle != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "owned-child-gets-handle",
+  "file": "manager.go",
+  "find": "if r.topLevel() {\n\t\tif o.Reclaim",
+  "replace": "if true {\n\t\tif o.Reclaim"
+ },
+ {
+  "name": "tombstone-name-not-held",
+  "file": "manager.go",
+  "find": "for _, t := range m.tombstones {\n\t\ttaken[t.Handle] = true",
+  "replace": "for _, t := range m.tombstones {\n\t\t_ = t"
+ },
+ {
+  "name": "steers-not-flushed",
+  "file": "manager.go",
+  "find": "steers := r.pendingSteers\n\t\tr.pendingSteers = nil",
+  "replace": "steers := []string(nil)\n\t\tr.pendingSteers = nil"
+ },
+ {
+  "name": "steer-queue-replaces",
+  "file": "manager.go",
+  "find": "r.pendingSteers = append(r.pendingSteers, message)",
+  "replace": "r.pendingSteers = []string{message}"
+ },
+ {
+  "name": "owned-children-outlive-parent",
+  "file": "manager.go",
+  "find": "if r.ParentAgentID == parentID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "handle-held-by-owned-children",
+  "file": "manager.go",
+  "find": "if r.ParentAgentID != \"\" {\n\t\t\tcontinue\n\t\t}\n\t\tif (r.Handle",
+  "replace": "if false {\n\t\t\tcontinue\n\t\t}\n\t\tif (r.Handle"
+ },
+ {
+  "name": "registry-overwritten",
+  "file": "registry.go",
+  "find": "if activeEntry == nil {\n\t\tactiveEntry = e\n\t}",
+  "replace": "activeEntry = e"
+ },
+ {
+  "name": "registry-released-by-anyone",
+  "file": "registry.go",
+  "find": "if activeEntry == e {",
+  "replace": "if true {"
+ },
+ {
+  "name": "registry-shows-owned-children",
+  "file": "registry.go",
+  "find": "if r == nil || !r.topLevel() {",
+  "replace": "if r == nil {"
+ },
+ {
+  "name": "internal-options-kept",
+  "file": "registry.go",
+  "find": "for _, k := range internalSpawnOptions {\n\t\tdelete(out, k)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "strict-ignored-at-startup",
+  "file": "extension.go",
+  "find": "loadCustomAgentsStrict(wd, st.strictAgentFiles())",
+  "replace": "loadCustomAgentsStrict(wd, false)"
+ },
+ {
+  "name": "session-start-wipes-unread",
+  "file": "extension.go",
+  "find": "a.mgr.clearCompleted(true)\n\t\ta.refuseSettings(ctx)",
+  "replace": "a.mgr.clearCompleted(false)\n\t\ta.refuseSettings(ctx)"
+ },
+ {
+  "name": "session-switch-keeps-records",
+  "file": "extension.go",
+  "find": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\ta.mgr.clearCompleted(true)",
+  "replace": "e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {\n\t\t_ = a"
+ },
+ {
+  "name": "rpc-announced-every-session",
+  "file": "extension.go",
+  "find": "first := a.rpcOff == nil",
+  "replace": "first := true"
+ },
+ {
+  "name": "settings-loaded-never-announced",
+  "file": "extension.go",
+  "find": "if loaded != nil {\n\t\t_ = ctx.Events()",
+  "replace": "if false {\n\t\t_ = ctx.Events()"
+ },
+ {
+  "name": "rpc-not-unsubscribed",
+  "file": "extension.go",
+  "find": "for _, f := range off {\n\t\tf()\n\t}",
+  "replace": "_ = off"
+ },
+ {
+  "name": "registry-kept-after-shutdown",
+  "file": "extension.go",
+  "find": "releaseManagerRegistry(a.entry)\n\ta.mgr.abortAll()",
+  "replace": "a.mgr.abortAll()"
+ },
+ {
+  "name": "owned-child-announced",
+  "file": "extension.go",
+  "find": "if !r.topLevel() { // an owned child reports through its owner",
+  "replace": "if false { // an owned child reports through its owner"
+ },
+ {
+  "name": "rpc-stop-owned-child",
+  "file": "bus.go",
+  "find": "if !r.topLevel() {\n\t\t\treturn nil, errors.New(\"Agent is owned",
+  "replace": "if false {\n\t\t\treturn nil, errors.New(\"Agent is owned"
+ },
+ {
+  "name": "rpc-consume-owned-child",
+  "file": "bus.go",
+  "find": "if r == nil || !r.topLevel() || !a.mgr.consume(r.ID) {",
+  "replace": "if r == nil || !a.mgr.consume(r.ID) {"
+ },
+ {
+  "name": "rpc-model-soft-scope",
+  "file": "bus.go",
+  "find": "callerSupplied: true, agentLabel: typ, modelInput: override})",
+  "replace": "callerSupplied: false, agentLabel: typ, modelInput: override})"
+ },
+ {
+  "name": "rpc-null-model-resolved",
+  "file": "bus.go",
+  "find": "ok && override != \"\" {",
+  "replace": "ok {"
+ },
+ {
+  "name": "rpc-model-error-swallowed",
+  "file": "bus.go",
+  "find": "return \"\", errors.New(msg) // surfaced",
+  "replace": "_ = msg // surfaced"
+ },
+ {
+  "name": "rpc-strip-after-refusal",
+  "file": "bus.go",
+  "find": "opts := stripInternalSpawnOptions(options)",
+  "replace": "opts := options"
+ },
+ {
+  "name": "background-default-ignored",
+  "file": "tools.go",
+  "find": "defaultRunInBackground: rt.backgroundByDefault})",
+  "replace": "defaultRunInBackground: true})"
+ },
+ {
+  "name": "file-model-error-surfaced",
+  "file": "tools.go",
+  "find": "if inv.modelFromParams {\n\t\t\t\treturn textResult(msg), nil",
+  "replace": "if true {\n\t\t\t\treturn textResult(msg), nil"
+ },
+ {
+  "name": "pinned-model-refused",
+  "file": "tools.go",
+  "find": "callerSupplied: inv.modelFromParams, agentLabel: label",
+  "replace": "callerSupplied: true, agentLabel: label"
+ },
+ {
+  "name": "agent-files-not-reloaded",
+  "file": "tools.go",
+  "find": "a.reregisterAgents()\n\tres := resolveSpawnType(typ)",
+  "replace": "res := resolveSpawnType(typ)"
+ },
+ {
+  "name": "join-mode-ignored",
+  "file": "tools.go",
+  "find": "joinMode := resolveJoinMode(rt.defaultJoinMode, true)",
+  "replace": "joinMode := resolveJoinMode(\"async\", true)"
+ },
+ {
+  "name": "wait-cancel-swallowed",
+  "file": "tools.go",
+  "find": "return nil, context.Canceled",
+  "replace": "_ = context.Canceled\n\t\t\t\treturn textResult(\"cancelled\"), nil"
+ },
+ {
+  "name": "queued-result-reads-running",
+  "file": "tools.go",
+  "find": "case statusRunning:\n\t\tout += \"Agent is still running",
+  "replace": "case statusRunning, statusQueued:\n\t\tout += \"Agent is still running"
+ },
+ {
+  "name": "steer-queued-text",
+  "file": "tools.go",
+  "find": "\"Steering message queued for agent \"",
+  "replace": "\"Steering message sent to agent \""
+ },
+ {
+  "name": "foreground-not-blocking",
+  "file": "tools.go",
+  "find": "Blocking: !background}",
+  "replace": "Blocking: false}"
+ },
+ {
+  "name": "foreground-signal-dropped",
+  "file": "tools.go",
+  "find": "opts.Signal = ctx.Done()",
+  "replace": "_ = ctx"
+ },
+ {
+  "name": "pinned-model-notification",
+  "file": "tools.go",
+  "find": "ctx.Notify(v.message, \"warning\")",
+  "replace": "_ = v"
+ },
+ {
+  "name": "model-scope-skipped",
+  "file": "tools.go",
+  "find": "case \"error\":\n\t\treturn textResult(v.message), nil",
+  "replace": "case \"error-off\":\n\t\treturn textResult(v.message), nil"
+ },
+ {
+  "name": "record-entry-dropped",
+  "file": "extension.go",
+  "find": "_ = ctx.AppendEntry(\"subagents:record\", rec)",
+  "replace": "_ = rec"
+ },
+ {
+  "name": "created-event-for-foreground",
+  "file": "tools.go",
+  "find": "a.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText",
+  "replace": "_ = ctx.Events().Emit(\"subagents:created\", map[string]any{\"id\": r.ID})\n\ta.mgr.wait(r)\n\ta.mgr.mu.Lock()\n\tstatus, result, errText"
+ },
+ {
+  "name": "rpc-spawn-no-reload",
+  "file": "bus.go",
+  "find": "a.reregisterAgents() // an agent file added",
+  "replace": "_ = a // an agent file added"
+ },
+ {
+  "name": "rpc-spawn-always-background",
+  "file": "bus.go",
+  "find": "background, _ := opts[\"isBackground\"].(bool)",
+  "replace": "background, _ := true, opts"
+ },
+ {
+  "name": "schema-not-substituted",
+  "file": "description.go",
+  "find": "substitute(out, fill)",
+  "replace": "_ = fill"
+ },
+ {
+  "name": "removed-general-purpose-refused",
+  "file": "bus.go",
+  "find": "if cfg == nil {\n\t\t// The unset fallback",
+  "replace": "if cfg == nil && false {\n\t\t// The unset fallback"
+ },
+ {
+  "name": "fallback-note-names-type",
+  "file": "tools.go",
+  "find": "if resolveType(resolved) != \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "display-name-of-disabled-type",
+  "file": "tools.go",
+  "find": "func displayName(typ string) string { return getConfig(typ).DisplayName }",
+  "replace": "func displayName(typ string) string {\n\tif c := getAgentConfig(typ); c != nil {\n\t\treturn c.Name\n\t}\n\treturn typ\n}"
  }
 ]

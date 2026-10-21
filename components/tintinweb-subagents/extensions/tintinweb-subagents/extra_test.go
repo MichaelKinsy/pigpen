@@ -58,12 +58,13 @@ func TestDescriptionNamesTheTypesAndTheAgentDir(t *testing.T) {
 	resetTypes()
 	t.Cleanup(resetTypes)
 	t.Setenv("PIG_CODING_AGENT_DIR", "/the/agent")
-	d := agentToolDescription(currentRegistry())
+	dc := descriptionContext{reg: currentRegistry(), agentDir: agentDir(), warn: func(string) {}}
+	d := fullDescription(descriptionFlags{mode: "full"}, dc)
 	eq(t, strings.Contains(d, "- Plan: Software architect agent"), true)
 	eq(t, strings.Contains(d, "/the/agent/agents/<name>.md (global)"), true)
 	eq(t, strings.Contains(d, "{{"), false)
 	specs := loadToolSpecs()
-	s := agentToolSchema(currentRegistry(), specs["Agent"])
+	s := agentSchemaFor(descriptionFlags{mode: "full"}, dc, specs["Agent"])
 	props := s["properties"].(map[string]any)
 	eq(t, props["subagent_type"].(map[string]any)["description"],
 		"The type of specialized agent to use. Available types: general-purpose, Explore, Plan. Custom agents from .pi/agents/*.md (project) or /the/agent/agents/*.md (global) are also available.")

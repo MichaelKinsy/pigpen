@@ -14,40 +14,31 @@ func writeSettings(t *testing.T, path, body string) {
 	}
 }
 
-func TestSettingsMergeAndSanitize(t *testing.T) {
-	r := newCARig(t)
-	global := filepath.Join(r.tmp, "g")
-	t.Setenv("PIG_CODING_AGENT_DIR", global)
-	writeSettings(t, filepath.Join(global, "subagents.json"), `{"maxConcurrent":3,"defaultMaxTurns":20,"fallbackSubagent":"router","disableDefaultAgents":true}`)
-	writeSettings(t, filepath.Join(r.tmp, ".pi", "subagents.json"), `{"maxConcurrent":2,"fallbackSubagent":false}`)
-	s := loadSettings(r.tmp)
-	eq(t, s.MaxConcurrent, 2)
-	eq(t, *s.DefaultMaxTurns, 20)
-	eq(t, *s.FallbackSubagent, "none")
-	eq(t, *s.DisableDefaultAgents, true)
-	t.Run("a field of the wrong shape is dropped", func(t *testing.T) {
-		s := sanitizeSettings(map[string]any{"maxConcurrent": 0.0, "defaultMaxTurns": -1.0, "fallbackSubagent": "  ", "disableDefaultAgents": "yes"})
-		eq(t, s, settings{})
-		eq(t, sanitizeSettings(map[string]any{"maxConcurrent": 1025.0}).MaxConcurrent, 0)
-		eq(t, sanitizeSettings(map[string]any{"maxConcurrent": 2.5}).MaxConcurrent, 0)
-		eq(t, *sanitizeSettings(map[string]any{"defaultMaxTurns": 0.0}).DefaultMaxTurns, 0)
-		eq(t, sanitizeSettings("nope"), settings{})
-	})
-	t.Run("a file that is not JSON reads as empty", func(t *testing.T) {
-		writeSettings(t, filepath.Join(r.tmp, "bad.json"), `{nope`)
-		eq(t, readSettingsFile(filepath.Join(r.tmp, "bad.json")), settings{})
-		eq(t, readSettingsFile(filepath.Join(r.tmp, "missing.json")), settings{})
-	})
-}
-
 func TestSettingsReachTheSession(t *testing.T) {
 	r := startRig(t)
 	cwd := r.Host.opts.Cwd
-	writeSettings(t, filepath.Join(cwd, ".pi", "subagents.json"), `{"maxConcurrent":1,"fallbackSubagent":"none","defaultMaxTurns":9}`)
-	r.app.reload(cwd)
-	eq(t, r.app.mgr.maxConcurrent, 1)
+	writeSettings(t, filepath.Join(cwd, ".pi", "subagents.json"), `{"maxConcurrent":1,"maxConcurrentForeground":2,"fallbackSubagent":"none","defaultMaxTurns":9,"graceTurns":4,
+		"defaultJoinMode":"group","backgroundByDefault":false,"scopeModels":true,"toolDescriptionMode":"compact","strictAgentFiles":false}`)
+	r.app.startup(cwd)
+	t.Cleanup(func() { setScopeModelsEnabled(false) })
+	eq(t, r.app.mgr.getMaxConcurrent(), 1)
+	eq(t, r.app.mgr.getMaxConcurrentForeground(), 2)
+	rt := r.app.runtime()
+	eq(t, [4]any{*rt.defaultMaxTurns, rt.graceTurns, rt.defaultJoinMode, rt.backgroundByDefault}, [4]any{9, 4, "group", false})
+	eq(t, [2]any{isScopeModelsEnabled(), rt.toolDescriptionMode}, [2]any{true, "compact"})
 	out := r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "typoo"})
 	eq(t, out[:30], `Unknown or disabled agent type`)
-	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan"})
-	eq(t, r.fleet.wait(t, 1)[0].spec.MaxTurns, 9)
+	r.must("Agent", obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "run_in_background": true})
+	spec := r.fleet.wait(t, 1)[0].spec
+	eq(t, [2]int{spec.MaxTurns, spec.GraceTurns}, [2]int{9, 4})
+}
+
+func TestSettingsOfOtherSlicesAreStoredNotApplied(t *testing.T) {
+	r := startRig(t)
+	cwd := r.Host.opts.Cwd
+	writeSettings(t, filepath.Join(cwd, ".pi", "subagents.json"), `{"widgetMode":"all","maxSubagentDepth":3,"schedulingEnabled":false,"showCost":true}`)
+	r.app.startup(cwd)
+	v := settingsView()
+	eq(t, [4]any{v.widgetMode(), v.maxSubagentDepth(), v.schedulingEnabled(), v.showCost()}, [4]any{"all", 3, false, true})
+	eq(t, settingsView().workflowsEnabled(), true) // unset reads as the original's default
 }

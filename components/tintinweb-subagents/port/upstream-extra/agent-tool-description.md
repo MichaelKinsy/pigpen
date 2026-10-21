@@ -1,9 +1,9 @@
 Launch a new agent to handle complex, multi-step tasks autonomously. Each agent type has specific capabilities and tools available to it.
 
 Available agent types and the tools they have access to:
-{{TYPELIST}}
+{{typeList}}
 
-Custom agents can be defined in .pi/agents/<name>.md (project) or {{AGENTDIR}}/agents/<name>.md (global) — they are picked up automatically. Project-level agents override global ones. Creating a .md file with the same name as a default agent overrides it.
+Custom agents can be defined in .pi/agents/<name>.md (project) or {{agentDir}}/agents/<name>.md (global) — they are picked up automatically. Project-level agents override global ones. Creating a .md file with the same name as a default agent overrides it.
 
 When using the Agent tool, specify a subagent_type parameter to select which agent type to use.
 
@@ -26,7 +26,7 @@ If the target is already known, use a direct tool — `read` for a known path, `
 - If an agent's description says it should be used proactively, try to use it without the user having to ask for it first.
 - Use model to specify a different model (as "provider/modelId", or fuzzy e.g. "haiku", "sonnet").
 - Use thinking to control extended thinking level.
-- Use inherit_context if the agent needs the parent conversation history.
+- Use inherit_context if the agent needs the parent conversation history.{{isolationGuideline}}{{scheduleGuideline}}
 
 ## Writing the prompt
 

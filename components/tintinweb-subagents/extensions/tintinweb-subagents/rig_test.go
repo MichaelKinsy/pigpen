@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -98,11 +99,13 @@ type rig struct {
 	app   *app
 	fleet *fleet
 
-	exec   func(command string, args []string) (stdout string, code int)
-	mu     sync.Mutex
-	extBus map[string][]string
-	goBus  map[string][]func(any)
-	emits  []string
+	exec func(command string, args []string) (stdout string, code int)
+	// modelState answers the host's model registry (`ctx.ModelRegistry()`): {"models": [...], "providers": {...}}.
+	modelState any
+	mu         sync.Mutex
+	extBus     map[string][]string
+	goBus      map[string][]func(any)
+	emits      []string
 }
 
 func startRig(t *testing.T) *rig { return startRigIn(t, t.TempDir()) }
@@ -112,6 +115,11 @@ func startRigIn(t *testing.T, cwd string) *rig {
 	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
+	// Hermetic: a rig never reads a subagents.json of the machine it runs on (a test that wants a global dir sets its own first).
+	if os.Getenv("PIG_CODING_AGENT_DIR") == "" || os.Getenv("PIG_USE_PI_DIRS") == "1" {
+		t.Setenv("PIG_USE_PI_DIRS", "")
+		t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
+	}
 	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
@@ -126,6 +134,10 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {
+	case "getModelRegistryState":
+		if r.modelState != nil {
+			return r.modelState, ""
+		}
 	case "exec":
 		if r.exec != nil {
 			var argv []string

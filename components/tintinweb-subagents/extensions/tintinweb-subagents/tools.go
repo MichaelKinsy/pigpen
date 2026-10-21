@@ -17,9 +17,6 @@ import (
 
 func textResult(s string) sdk.ToolResult { return sdk.ToolResult{Content: s} }
 
-//go:embed agent_description.txt
-var agentDescriptionTemplate string
-
 //go:embed tool_specs.json
 var toolSpecsJSON []byte
 
@@ -27,8 +24,8 @@ var toolSpecsJSON []byte
 var agentGuidelinesJSON []byte
 
 // The model-facing text of the three tools is the original's, extracted from the request Pi sends with the
-// original loaded (port/gen-spec.py). The original's workflow, scheduling and worktree-isolation parts are left
-// out, as they are when those three features are switched off in its settings.
+// original loaded and from its source (port/gen-spec.py). The Agent description and its parameters are built by
+// description.go for the features this port offers (features.go); the other two tools are fixed.
 type toolSpec struct {
 	Parameters  map[string]any `json:"parameters"`
 	Description *string        `json:"description"`
@@ -92,47 +89,52 @@ func buildTypeListText(r *agentRegistry) string {
 	return strings.Join(lines, "\n")
 }
 
-func agentToolDescription(r *agentRegistry) string {
-	return strings.NewReplacer("{{TYPELIST}}", buildTypeListText(r), "{{AGENTDIR}}", agentDir()).Replace(agentDescriptionTemplate)
-}
-
-// agentToolSchema is the Agent parameters with the available types and the agent dir filled in.
-func agentToolSchema(r *agentRegistry, spec toolSpec) sdk.Schema {
-	raw, _ := json.Marshal(spec.Parameters)
-	text := strings.NewReplacer("{{TYPES}}", strings.Join(r.availableTypes(), ", "), "{{AGENTDIR}}", agentDir()).Replace(string(raw))
-	var out sdk.Schema
-	_ = json.Unmarshal([]byte(text), &out)
-	return out
-}
-
 func (a *app) registerTools(e *sdk.Extension) {
-	specs := loadToolSpecs()
-	// The workspace is fixed for an extension process, so the custom agents can be read before the tool is registered.
-	if wd, err := os.Getwd(); err == nil {
-		a.reload(wd)
+	wd, _ := os.Getwd()
+	for _, def := range a.toolDefinitions(wd) {
+		e.RegisterTool(def)
 	}
+}
+
+// toolDefinitions reads the settings and the custom agents of the workspace once, then builds the tools in the order
+// the original registers them. The workspace is fixed for an extension process, and the description and the schema are
+// fixed once pi has them. upstream: index.ts (applyAndEmitLoaded, the description picked once at registration).
+func (a *app) toolDefinitions(wd string) []sdk.ToolDefinition {
+	specs := loadToolSpecs()
+	a.startup(wd)
 	reg := currentRegistry()
+	flags := descriptionFlagsNow(settingsView(), a.runtime().toolDescriptionMode)
+	dc := descriptionContext{reg: reg, agentDir: agentDir(), cwd: wd, warn: descriptionWarn}
 	var guidelines []string
 	_ = json.Unmarshal(agentGuidelinesJSON, &guidelines)
-	e.RegisterTool(sdk.ToolDefinition{
-		Name: "Agent", Label: "Agent", Description: agentToolDescription(reg),
-		PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
-		PromptGuidelines: guidelines,
-		Parameters:       agentToolSchema(reg, specs["Agent"]),
-		Execute:          a.agentTool,
-	})
-	e.RegisterTool(sdk.ToolDefinition{
-		Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
-		PromptSnippet: "Check status and retrieve results from a background agent",
-		Parameters:    sdk.Schema(specs["get_subagent_result"].Parameters),
-		Execute:       a.getResultTool,
-	})
-	e.RegisterTool(sdk.ToolDefinition{
-		Name: "steer_subagent", Label: "Steer Agent", Description: *specs["steer_subagent"].Description,
-		PromptSnippet: "Send a steering message to redirect a running background agent",
-		Parameters:    sdk.Schema(specs["steer_subagent"].Parameters),
-		Execute:       a.steerTool,
-	})
+	defs := map[string]sdk.ToolDefinition{
+		"Agent": {
+			Name: "Agent", Label: "Agent", Description: agentDescription(flags, dc),
+			PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
+			PromptGuidelines: guidelines,
+			Parameters:       agentSchemaFor(flags, dc, specs["Agent"]),
+			Execute:          a.agentTool,
+		},
+		"get_subagent_result": {
+			Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
+			PromptSnippet: "Check status and retrieve results from a background agent",
+			Parameters:    sdk.Schema(specs["get_subagent_result"].Parameters),
+			Execute:       a.getResultTool,
+		},
+		"steer_subagent": {
+			Name: "steer_subagent", Label: "Steer Agent", Description: *specs["steer_subagent"].Description,
+			PromptSnippet: "Send a steering message to redirect a running background agent",
+			Parameters:    sdk.Schema(specs["steer_subagent"].Parameters),
+			Execute:       a.steerTool,
+		},
+	}
+	var out []sdk.ToolDefinition
+	for _, name := range registeredToolNames(flags) {
+		if def, ok := defs[name]; ok {
+			out = append(out, def)
+		}
+	}
+	return out
 }
 
 // formatMs is seconds with one decimal. upstream: ui/agent-widget.ts formatMs.
@@ -156,15 +158,9 @@ func notFound(ref string) sdk.ToolResult {
 	return textResult(`Agent not found: "` + ref + `". It may have been cleaned up.`)
 }
 
-func displayName(a *app, typ string) string {
-	if c := getAgentConfig(typ); c != nil {
-		if c.DisplayName != "" {
-			return c.DisplayName
-		}
-		return c.Name
-	}
-	return typ
-}
+// displayName is the display name of a type; an unknown or disabled one reads as general-purpose's.
+// upstream: ui/agent-widget.ts getDisplayName over agent-types.ts getConfig.
+func displayName(typ string) string { return getConfig(typ).DisplayName }
 
 // agentTool runs the Agent tool. upstream: index.ts Agent execute.
 func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
@@ -173,16 +169,11 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	description, _ := p["description"].(string)
 	typ, _ := p["subagent_type"].(string)
 	name, _ := p["name"].(string)
-	model, _ := p["model"].(string)
-	thinking, _ := p["thinking"].(string)
-	maxTurns := 0
-	if f, ok := p["max_turns"].(float64); ok {
-		maxTurns = int(f)
-	}
 	if feature := unportedCallParam(p); feature != "" {
 		return nil, refusal(feature)
 	}
-	isolated, _ := p["isolated"].(bool)
+	// Reload the agent files so a file added mid-session is picked up (a bad one only warns).
+	a.reregisterAgents()
 	res := resolveSpawnType(typ)
 	if !res.OK {
 		return textResult(res.Message), nil
@@ -193,24 +184,73 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	// upstream: index.ts:1796-1798.
 	fallbackNote := ""
 	if resolveEnabledTypeIn(reg, strings.TrimSpace(typ)) == "" {
-		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + resolved + ".\n\n"
+		using := "the fallback agent config"
+		if resolveType(resolved) != "" {
+			using = resolved
+		}
+		fallbackNote = `Note: Unknown agent type "` + fellBack + `" — using ` + using + ".\n\n"
 	}
-	background := true
-	if cfg := reg.get(resolved); cfg != nil && cfg.RunInBackground != nil {
-		background = *cfg.RunInBackground
+	cfg := reg.get(resolved)
+	cfgModel := ""
+	if cfg != nil {
+		cfgModel = cfg.Model
 	}
-	if b, ok := p["run_in_background"].(bool); ok {
-		background = b
+	rt := a.runtime()
+	inv := resolveInvocationConfig(cfg, invocationParamsOf(p), invocationOptions{
+		worktreeDisallowed: !settingsView().worktreeIsolation(), defaultRunInBackground: rt.backgroundByDefault})
+
+	// The model: the agent file's first, the call's only fills the gap. One that does not resolve is an error for the
+	// call's (the orchestrator can pick again) and a silent fallback to the parent's for the file's.
+	modelReg := registryOf(ctx)
+	model := ""
+	var effProvider, effID string
+	if inv.modelInput != "" {
+		found, msg := resolveModel(inv.modelInput, modelReg)
+		if msg != "" {
+			if inv.modelFromParams {
+				return textResult(msg), nil
+			}
+		} else {
+			effProvider, effID = str(found["provider"]), str(found["id"])
+			model = effProvider + "/" + effID
+		}
 	}
-	r, err := a.start(ctx, resolved, prompt, description, name, model, thinking, maxTurns, background, isolated)
+	if model == "" { // the model the agent will run: the parent's, unless its file names an available one
+		if q := resolveDefaultModel(ctx.ModelQualified(), modelReg, cfgModel); q != "" {
+			effProvider, effID, _ = strings.Cut(q, "/")
+			if effID == "" {
+				effProvider, effID = "", q
+			}
+		}
+	}
+	label := resolved
+	if cfg != nil && cfg.DisplayName != "" {
+		label = cfg.DisplayName
+	}
+	switch v := checkModelScope(modelScopeCheck{provider: effProvider, id: effID, cwd: ctx.Cwd(), registry: modelReg,
+		callerSupplied: inv.modelFromParams, agentLabel: label, modelInput: inv.modelInput}); v.kind {
+	case "error":
+		return textResult(v.message), nil
+	case "warn":
+		ctx.Notify(v.message, "warning")
+	}
+
+	background := inv.runInBackground
+	opts := spawnOptions{Name: name, Background: background, Blocking: !background}
+	if !background {
+		opts.Signal = ctx.Done() // the turn is interrupted: stop the agent, queued or running
+	}
+	r, err := a.start(ctx, resolved, prompt, description, model, inv.thinking, inv.maxTurns, inv.isolated, opts)
 	if err != nil {
 		return nil, err
 	}
 	if background {
+		joinMode := resolveJoinMode(rt.defaultJoinMode, true)
 		a.mgr.mu.Lock()
-		r.ToolCallID = ctx.ToolCallID()
+		r.JoinMode, r.ToolCallID = joinMode, ctx.ToolCallID()
 		queued, limit := r.Status == statusQueued, a.mgr.maxConcurrent
 		a.mgr.mu.Unlock()
+		a.joinBatch(r.ID, joinMode)
 		pos := ""
 		if queued {
 			pos = fmt.Sprintf("Position: queued (max %d concurrent)\n", limit)
@@ -222,14 +262,11 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 		}
 		return textResult(fmt.Sprintf("%sAgent %s in background.\nAgent ID: %s\nType: %s\nDescription: %s\n%s\nYou will be notified when this agent completes.\n"+
 			"Use get_subagent_result to retrieve full results, or steer_subagent to send it messages.\nDo not duplicate this agent's work.",
-			fallbackNote, state, r.ID, displayName(a, resolved), description, pos)), nil
+			fallbackNote, state, r.ID, displayName(resolved), description, pos)), nil
 	}
-	select {
-	case <-r.done:
-	case <-ctx.Done():
-		a.mgr.abort(r)
-		<-r.done
-	}
+	// Foreground: the call blocks. It is charged to the foreground pool (maxConcurrentForeground, unlimited unless
+	// set); a queued call waits for its slot, and an aborted one comes back as a stopped result, never an error.
+	a.mgr.wait(r)
 	a.mgr.mu.Lock()
 	status, result, errText, tokens, uses, dur := r.Status, r.Result, r.Error, r.Tokens, r.ToolUses, r.CompletedAt.Sub(r.StartedAt).Milliseconds()
 	a.mgr.mu.Unlock()
@@ -247,18 +284,40 @@ func (a *app) agentTool(ctx sdk.Context, p map[string]any) (any, error) {
 	return textResult(fmt.Sprintf("%sAgent completed in %s (%s)%s.\n\n%s", fallbackNote, formatMs(dur), strings.Join(stats, ", "), foregroundOutcomeNote(status), out)), nil
 }
 
+// invocationParamsOf reads the Agent call's parameters an agent file can also set.
+func invocationParamsOf(p map[string]any) invocationParams {
+	out := invocationParams{Model: str(p["model"]), Thinking: str(p["thinking"]), Isolation: p["isolation"]}
+	if f, ok := p["max_turns"].(float64); ok {
+		n := int(f)
+		out.MaxTurns = &n
+	}
+	for key, dst := range map[string]**bool{"run_in_background": &out.RunInBackground, "inherit_context": &out.InheritContext, "isolated": &out.Isolated} {
+		if b, ok := p[key].(bool); ok {
+			*dst = &b
+		}
+	}
+	return out
+}
+
 // getResultTool upstream: index.ts get_subagent_result execute.
 func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 	id, _ := p["agent_id"].(string)
 	r := a.mgr.resolve(id)
-	if r == nil {
+	if r == nil || !r.topLevel() {
 		return notFound(id), nil
 	}
+	// A wait is cancelled with the call and nothing else: the agent keeps running and stays unconsumed, so its
+	// completion notification can still be delivered. A queued agent is waited out through the queue too.
 	if wait, _ := p["wait"].(bool); wait {
-		select {
-		case <-r.done:
-		case <-ctx.Done():
-			return textResult(fmt.Sprintf("Agent %s is still running (the wait was cancelled).", r.ID)), nil
+		a.mgr.mu.Lock()
+		active := r.Status == statusRunning || r.Status == statusQueued
+		a.mgr.mu.Unlock()
+		if active {
+			select {
+			case <-r.done:
+			case <-ctx.Done():
+				return nil, context.Canceled
+			}
 		}
 	}
 	a.mgr.mu.Lock()
@@ -276,9 +335,9 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 		stats = append(stats, t)
 	}
 	stats = append(stats, "Duration: "+duration)
-	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(a, r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
+	out := fmt.Sprintf("Agent: %s\nType: %s | Status: %s%s | %s\nDescription: %s\n\n", r.ID, displayName(r.Type), status, statusNote(status), strings.Join(stats, " | "), r.Description)
 	switch status {
-	case statusRunning, statusQueued:
+	case statusRunning:
 		out += "Agent is still running. Use wait: true or check back later."
 	case statusError:
 		out += "Error: " + errText + partialOutputSuffix(result)
@@ -293,12 +352,7 @@ func (a *app) getResultTool(ctx sdk.Context, p map[string]any) (any, error) {
 		a.mgr.mu.Lock()
 		r.Consumed = true
 		a.mgr.mu.Unlock()
-		a.mu.Lock()
-		if t := a.timers[r.ID]; t != nil {
-			t.Stop()
-			delete(a.timers, r.ID)
-		}
-		a.mu.Unlock()
+		a.cancelNudge(id)
 	}
 	return textResult(out), nil
 }
@@ -308,7 +362,7 @@ func (a *app) steerTool(ctx sdk.Context, p map[string]any) (any, error) {
 	id, _ := p["agent_id"].(string)
 	msg, _ := p["message"].(string)
 	r := a.mgr.resolve(id)
-	if r == nil {
+	if r == nil || !r.topLevel() {
 		return notFound(id), nil
 	}
 	a.mgr.mu.Lock()
@@ -317,10 +371,14 @@ func (a *app) steerTool(ctx sdk.Context, p map[string]any) (any, error) {
 	if status != statusRunning {
 		return textResult(`Agent "` + id + `" is not running (status: ` + status + `). Cannot steer a non-running agent.`), nil
 	}
-	if err := a.mgr.steer(r, msg); err != nil {
+	queued, err := a.mgr.steer(r, msg)
+	if err != nil {
 		return textResult("Failed to steer agent: " + err.Error()), nil
 	}
 	_ = ctx.Events().Emit("subagents:steered", map[string]any{"id": r.ID, "message": msg})
+	if queued { // the child does not exist yet: delivered, in order, once it starts
+		return textResult("Steering message queued for agent " + r.ID + ". It will be delivered once the session initializes."), nil
+	}
 	a.mgr.mu.Lock()
 	uses, tokens := r.ToolUses, r.Tokens
 	a.mgr.mu.Unlock()
@@ -361,7 +419,7 @@ func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
 	sort.SliceStable(recs, func(i, j int) bool { return recs[i].StartedAt.Before(recs[j].StartedAt) })
 	for _, r := range recs {
 		a.mgr.mu.Lock()
-		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(a, r.Type), r.Status, r.Description))
+		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(r.Type), r.Status, r.Description))
 		a.mgr.mu.Unlock()
 	}
 	ctx.Notify(strings.Join(lines, "\n"), "info")
@@ -377,5 +435,3 @@ func firstLine(s string) string {
 	}
 	return s
 }
-
-var _ = context.Background

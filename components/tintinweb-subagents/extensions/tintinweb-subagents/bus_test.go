@@ -21,7 +21,7 @@ func TestBusProtocol(t *testing.T) {
 		}
 	})
 	t.Run("spawn returns the agent id and starts a background agent", func(t *testing.T) {
-		reply := r.request("subagents:rpc:spawn", obj{"type": "general-purpose", "prompt": "do stuff", "options": obj{"description": "search", "maxTurns": float64(5)}})
+		reply := r.request("subagents:rpc:spawn", obj{"type": "general-purpose", "prompt": "do stuff", "options": obj{"description": "search", "maxTurns": float64(5), "isBackground": true}})
 		eq(t, reply["success"], true)
 		id, _ := reply["data"].(map[string]any)["id"].(string)
 		eq(t, id != "", true)
