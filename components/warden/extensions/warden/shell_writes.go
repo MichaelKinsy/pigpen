@@ -188,7 +188,6 @@ var (
 	reHeredocEscape = lazyRE("\\\\([\"\\\\$`])")
 	reDupFd         = lazyRE(`^(?:\d+|-)`)
 	reFdDigits      = lazyRE(`^\d+$`)
-	reLeadTabs      = lazyRE(`^\t+`)
 	reEnvAssign     = lazyRE(`^[A-Za-z_][A-Za-z0-9_]*=`)
 	reDevPath       = lazyRE(`^/dev/`)
 	reEchoFlags     = lazyRE(`^-[neE]+$`)
@@ -202,10 +201,11 @@ var (
 // heredocText applies bash's heredoc rules for an unquoted delimiter: `\$`, “ \` “, `\\` and a line continuation are
 // escapes; other backslashes stay.
 func heredocText(body string, literal bool) (text string, expanded bool) {
-	if literal {
+	if literal || !strings.ContainsAny(body, "\\`$") {
 		return body, false
 	}
 	var out strings.Builder
+	out.Grow(len(body))
 	for index := 0; index < len(body); index++ {
 		char := body[index]
 		next := byteAt(body, index+1)
@@ -223,6 +223,61 @@ func heredocText(body string, literal bool) (text string, expanded bool) {
 		out.WriteByte(char)
 	}
 	return out.String(), false
+}
+
+// scanDoubleQuoted is where the double-quoted text that starts at from ends (the closing quote, or the end of the
+// command), whether it holds an expansion, and whether a backslash escape in it drops a character.
+func scanDoubleQuoted(command string, from int) (end int, expanded, escaped bool) {
+	end = from
+	for end < len(command) && command[end] != '"' {
+		at := command[end]
+		after := byteAt(command, end+1)
+		hasAfter := end+1 < len(command)
+		if at == '\\' && hasAfter && strings.IndexByte("\"\\$`\n", after) >= 0 {
+			escaped = true
+			end += 2
+			continue
+		}
+		if at == '`' || (at == '$' && hasAfter && isExpansionStart(after)) {
+			expanded = true
+		}
+		if at == '$' && after == '(' {
+			end = closeParen(command, end+1)
+			continue
+		}
+		end++
+	}
+	return end, expanded, escaped
+}
+
+// doubleQuotedText is the text of the double-quoted string that starts at from, with its escapes resolved.
+func doubleQuotedText(command string, from int) (text string, end int, expanded bool) {
+	var out strings.Builder
+	end = from
+	for end < len(command) && command[end] != '"' {
+		at := command[end]
+		after := byteAt(command, end+1)
+		hasAfter := end+1 < len(command)
+		if at == '\\' && hasAfter && strings.IndexByte("\"\\$`\n", after) >= 0 {
+			if after != '\n' {
+				out.WriteByte(after)
+			}
+			end += 2
+			continue
+		}
+		if at == '`' || (at == '$' && hasAfter && isExpansionStart(after)) {
+			expanded = true
+		}
+		if at == '$' && after == '(' {
+			closeAt := closeParen(command, end+1)
+			out.WriteString(command[end:closeAt])
+			end = closeAt
+			continue
+		}
+		out.WriteByte(at)
+		end++
+	}
+	return out.String(), end, expanded
 }
 
 type pendingHeredoc struct {
@@ -249,10 +304,27 @@ func scanShell(command string) []*scanSegment {
 		groups = groups[:len(groups)-1]
 		return g, true
 	}
+	// The open word's text is command[wordLo:wordHi] while it is contiguous there, and wordBuf once it is not.
+	var wordLo, wordHi int
+	var wordBuf []byte
+	wordBuffered := false
+	finalizeWord := func() {
+		if wordBuffered {
+			word.text = string(wordBuf)
+		} else {
+			word.text = command[wordLo:wordHi]
+		}
+	}
+	// fdWord: the open word is digits only, so it names a descriptor for a redirection that follows it.
+	fdWord := func() bool {
+		finalizeWord()
+		return reFdDigits.MatchString(word.text)
+	}
 	endWord := func() {
 		if word == nil {
 			return
 		}
+		finalizeWord()
 		bare := len(segment.words) == 0 && redirect == nil && !hereString && !inputFile
 		if bare && word.text == "{" {
 			groups = append(groups, len(segments))
@@ -293,11 +365,35 @@ func scanShell(command string) []*scanSegment {
 			segment.stdin = "pipe"
 		}
 	}
-	appendText := func(text string, expanded, tilde bool) {
-		if word == nil {
+	// appendSlice appends command[a:b] to the open word, opening one when there is none.
+	appendSlice := func(a, b int, expanded, tilde bool) {
+		switch {
+		case word == nil:
 			word = &scanWord{tilde: tilde}
+			wordLo, wordHi, wordBuffered = a, b, false
+		case wordBuffered:
+			wordBuf = append(wordBuf, command[a:b]...)
+		case wordHi == a:
+			wordHi = b
+		case a == b:
+		default:
+			wordBuf = append(append(wordBuf[:0], command[wordLo:wordHi]...), command[a:b]...)
+			wordBuffered = true
 		}
-		word.text += text
+		word.expanded = word.expanded || expanded
+	}
+	// appendString appends text that is not a slice of the command.
+	appendString := func(text string, expanded bool) {
+		switch {
+		case word == nil:
+			word = &scanWord{}
+			wordBuf = append(wordBuf[:0], text...)
+		case wordBuffered:
+			wordBuf = append(wordBuf, text...)
+		default:
+			wordBuf = append(append(wordBuf[:0], command[wordLo:wordHi]...), text...)
+		}
+		wordBuffered = true
 		word.expanded = word.expanded || expanded
 	}
 	index := 0
@@ -311,48 +407,28 @@ func scanShell(command string) []*scanSegment {
 			if end := strings.IndexByte(command[index+1:], '\''); end >= 0 {
 				stop = index + 1 + end
 			}
-			appendText(command[index+1:stop], false, false)
+			appendSlice(index+1, stop, false, false)
 			index = stop + 1
 			continue
 		case char == '"':
-			end := index + 1
-			var text strings.Builder
-			expanded := false
-			for end < len(command) && command[end] != '"' {
-				at := command[end]
-				after := byteAt(command, end+1)
-				hasAfter := end+1 < len(command)
-				if at == '\\' && hasAfter && strings.IndexByte("\"\\$`\n", after) >= 0 {
-					if after != '\n' {
-						text.WriteByte(after)
-					}
-					end += 2
-					continue
-				}
-				if at == '`' || (at == '$' && hasAfter && isExpansionStart(after)) {
-					expanded = true
-				}
-				if at == '$' && after == '(' {
-					closeAt := closeParen(command, end+1)
-					text.WriteString(command[end:closeAt])
-					end = closeAt
-					continue
-				}
-				text.WriteByte(at)
-				end++
+			end, expanded, escaped := scanDoubleQuoted(command, index+1)
+			if escaped {
+				text, _, _ := doubleQuotedText(command, index+1)
+				appendString(text, expanded)
+			} else {
+				appendSlice(index+1, end, expanded, false)
 			}
-			appendText(text.String(), expanded, false)
 			index = end + 1
 			continue
 		case char == '\\':
 			if next != '\n' {
 				if hasNext {
 					_, size := utf8.DecodeRuneInString(command[index+1:])
-					appendText(command[index+1:index+1+size], false, false)
+					appendSlice(index+1, index+1+size, false, false)
 					index += 1 + size
 					continue
 				}
-				appendText("", false, false)
+				appendSlice(index+1, index+1, false, false)
 			}
 			index += 2
 			continue
@@ -365,30 +441,46 @@ func scanShell(command string) []*scanSegment {
 			endSegment(false)
 			index++
 			for _, heredoc := range pending {
-				var lines []string
+				bodyStart, bodyEnd, lines := 0, 0, 0
+				var stripped strings.Builder
 				for index < len(command) {
 					lineEnd := strings.IndexByte(command[index:], '\n')
 					stop := len(command)
 					if lineEnd >= 0 {
 						stop = index + lineEnd
 					}
-					raw := command[index:stop]
-					line := raw
+					start := index
+					line := command[start:stop]
 					if heredoc.op.tabs {
-						line = reLeadTabs.ReplaceAllString(raw, "")
+						line = strings.TrimLeft(line, "\t")
 					}
 					index = stop + 1
 					if line == heredoc.op.delimiter {
 						break
 					}
-					lines = append(lines, line)
+					if lines == 0 {
+						bodyStart = start
+					}
+					lines++
+					bodyEnd = stop
+					if heredoc.op.tabs {
+						stripped.WriteString(line)
+						stripped.WriteByte('\n')
+					}
 				}
-				var body strings.Builder
-				for _, line := range lines {
-					body.WriteString(line)
-					body.WriteByte('\n')
+				// The body is each line and a newline: a slice of the command unless the tabs were stripped or the
+				// last line has no newline after it.
+				body := ""
+				switch {
+				case lines == 0:
+				case heredoc.op.tabs:
+					body = stripped.String()
+				case bodyEnd < len(command):
+					body = command[bodyStart : bodyEnd+1]
+				default:
+					body = command[bodyStart:bodyEnd] + "\n"
 				}
-				text, expanded := heredocText(body.String(), heredoc.op.literal)
+				text, expanded := heredocText(body, heredoc.op.literal)
 				heredoc.segment.input = &scanInput{kind: "heredoc", text: text, expanded: expanded}
 			}
 			pending = nil
@@ -402,16 +494,16 @@ func scanShell(command string) []*scanSegment {
 			if from > stop {
 				from = stop
 			}
-			appendText(command[from:stop], true, false)
+			appendSlice(from, stop, true, false)
 			index = stop + 1
 			continue
 		case char == '$' && next == '(':
 			closeAt := closeParen(command, index+1)
-			appendText(command[index:closeAt], true, false)
+			appendSlice(index, closeAt, true, false)
 			index = closeAt
 			continue
 		case char == '$' && hasNext && isExpansionStart(next):
-			appendText("$", true, false)
+			appendSlice(index, index+1, true, false)
 			index++
 			continue
 		case char == '`':
@@ -423,7 +515,7 @@ func scanShell(command string) []*scanSegment {
 			if upto > len(command) {
 				upto = len(command)
 			}
-			appendText(command[index:upto], true, false)
+			appendSlice(index, upto, true, false)
 			index = stop + 1
 			continue
 		case (char == '<' || char == '>') && next == '(':
@@ -453,7 +545,7 @@ func scanShell(command string) []*scanSegment {
 			if char == '&' {
 				fd = "&"
 				index++
-			} else if word != nil && reFdDigits.MatchString(word.text) && !word.expanded {
+			} else if word != nil && !word.expanded && fdWord() {
 				fd = word.text
 				word = nil
 			}
@@ -506,7 +598,7 @@ func scanShell(command string) []*scanSegment {
 			index += size
 			continue
 		}
-		appendText(command[index:index+size], false, word == nil && char == '~')
+		appendSlice(index, index+size, false, word == nil && char == '~')
 		index += size
 	}
 	endSegment(false)
