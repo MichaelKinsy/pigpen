@@ -1,0 +1,59 @@
+KILLED   leaf-is-first-entry
+         unit test: --- FAIL: TestTurnModeJSONReturnsTheWholeTurn (0.00s)
+KILLED   branch-not-followed
+         unit test: --- FAIL: TestForkedSessionShowsOnlyTheActiveBranch (0.00s)
+KILLED   off-branch-not-counted
+         unit test: --- FAIL: TestForkedSessionSaysHowMuchWasLeftOut (0.00s)
+KILLED   off-branch-note-dropped
+         unit test: --- FAIL: TestForkedSessionSaysHowMuchWasLeftOut (0.00s)
+KILLED   known-parent-ignored
+         unit test: --- FAIL: TestForkedSessionShowsOnlyTheActiveBranch (0.00s)
+KILLED   missing-parent-id-not-linear
+         unit test: --- FAIL: TestTurnModeJSONReturnsTheWholeTurn (0.00s)
+KILLED   id-not-indexed
+         unit test: --- FAIL: TestForkedSessionShowsOnlyTheActiveBranch (0.00s)
+KILLED   message-without-body-dropped-from-tree
+         unit test: --- FAIL: TestEntryWithoutAMessageBodyKeepsItsChildrenAttached (0.00s)
+KILLED   compaction-dropped
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   compaction-role-renamed
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   tokens-before-dropped
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   compaction-cost-dropped
+         unit test: --- FAIL: TestCompactionIsPartOfItsTurnAndCostsMoney (0.00s)
+KILLED   compaction-not-counted-in-turn
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   compaction-note-dropped
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   branch-summary-dropped
+         unit test: --- FAIL: TestBranchSummaryAndCustomMessageAreTranscriptItems (0.00s)
+KILLED   custom-message-dropped
+         unit test: --- FAIL: TestBranchSummaryAndCustomMessageAreTranscriptItems (0.00s)
+KILLED   custom-type-dropped
+         unit test: --- FAIL: TestBranchSummaryAndCustomMessageAreTranscriptItems (0.00s)
+KILLED   bash-command-dropped
+         unit test: --- FAIL: TestBashExecutionMessageShowsItsCommandAndOutput (0.00s)
+KILLED   bash-output-dropped
+         unit test: --- FAIL: TestBashExecutionMessageShowsItsCommandAndOutput (0.00s)
+KILLED   message-index-not-reassigned
+         unit test: --- FAIL: TestReadSessionTOCJSON (0.00s)
+KILLED   event-listed-twice
+         unit test: --- FAIL: TestEventsOnTheActiveBranchAreListedOnce (0.00s)
+KILLED   session-name-first-wins
+         unit test: --- FAIL: TestSessionNameAndSideUsageAreReported (0.00s)
+KILLED   side-usage-dropped
+         unit test: --- FAIL: TestSessionNameAndSideUsageAreReported (0.00s)
+KILLED   name-line-dropped
+         unit test: --- FAIL: TestSessionNameAndSideUsageAreReported (0.00s)
+KILLED   side-usage-not-in-total
+         unit test: --- FAIL: TestSessionNameAndSideUsageAreReported (0.00s)
+KILLED   other-usage-line-dropped
+         unit test: --- FAIL: TestStatsMarkdownShowsSpendOutsideMessages (0.00s)
+KILLED   turn-custom-type-dropped
+         unit test: --- FAIL: TestTurnMarkdownShowsCompactionAndCustomDetails (0.00s)
+KILLED   slice-tokens-before-dropped
+         unit test: --- FAIL: TestCompactionStaysInTheTranscript (0.00s)
+KILLED   inapplicable-parameter-refused
+         unit test: --- FAIL: TestForkedSessionSaysHowMuchWasLeftOut (0.00s)
+29 mutation(s), 0 not killed
