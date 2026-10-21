@@ -50,11 +50,11 @@ m("slot-not-released", "manager.go", "if r.slot {\n\t\tm.running--\n\t\tr.slot =
 m("consume-running-agent", "manager.go", "if r == nil || r.Status == statusRunning || r.Status == statusQueued {", "if r == nil {")
 m("stopped-reads-as-aborted", "manager.go", "case r.stopped:\n\t\tr.Status = statusStopped", "case r.stopped:\n\t\tr.Status = statusAborted")
 m("steer-finished-agent", "manager.go", "if status != statusRunning || c == nil {", "if c == nil {")
-m("handle-numbering-starts-late", "manager.go", "for n := 2; taken[candidate]; n++ {", "for n := 3; taken[candidate]; n++ {")
+m("handle-numbering-starts-late", "mention.go", "candidate := base\n\tfor n := 1;", "candidate := base\n\tfor n := 2;")
 m("ambiguous-ref-resolved", "manager.go", "if found != nil {\n\t\t\t\treturn nil\n\t\t\t}", "if found != nil {\n\t\t\t}")
 m("queued-abort-keeps-queue", "manager.go", "m.queue = append(m.queue[:i], m.queue[i+1:]...)\n\t\t\t\tbreak", "_ = i\n\t\t\t\tbreak")
-m("handle-base-length", "manager.go", "len(r) > 32", "len(r) > 33")
-m("handle-base-empty", "manager.go", 'if slug == "" {\n\t\treturn "agent"\n\t}', 'if slug == "" {\n\t\treturn ""\n\t}')
+m("handle-base-length", "mention.go", "if len(slug) > maxHandleLength {", "if len(slug) > maxHandleLength*2 {")
+m("handle-base-empty", "mention.go", 'if slug == "" {\n\t\treturn "agent"\n\t}', 'if slug == "" {\n\t\treturn ""\n\t}')
 
 # extension.go: events and the notification
 m("consumed-still-notified", "extension.go", "if consumed {\n\t\t\treturn\n\t\t}", "if consumed && false {\n\t\t\treturn\n\t\t}")
@@ -189,6 +189,82 @@ m("rpc-truthy-isolated-needs-bool", "bus.go", 'jsTruthy(opts["isolated"])', 'opt
 m("exclude-typo-checks-defaults-only", "scope.go", "which an exclude may name.\n\t\t\tfor _, e := range all {", "which an exclude may name.\n\t\t\tfor _, e := range in.Discovered {")
 m("refused-resume-rewrites-tool-call-id", "sessions.go", "if r.Status == statusRunning || r.Status == statusQueued {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tr.resume = &resumeRun", "if r.Status == statusRunning || r.Status == statusQueued {\n\t\tr.ToolCallID = toolCallID\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tr.resume = &resumeRun")
 m("remember-agents-resets-when-unset", "extension.go", "if st.RememberAgents != nil { // a setting that is gone keeps the value last applied. upstream: settings.ts applySettings\n\t\ta.rememberAgents = *st.RememberAgents\n\t}", "a.rememberAgents = st.RememberAgents == nil || *st.RememberAgents")
+
+# mention.go: the `@handle` grammar
+m("mention-handle-cap-halved", "mention.go", "const maxHandleLength = 64", "const maxHandleLength = 32")
+m("mention-main-allocated", "mention.go", "taken[candidate] || candidate == reservedHandle", "taken[candidate]")
+m("mention-main-case-sensitive", "mention.go", "strings.ToLower(handle) == reservedHandle", "handle == reservedHandle")
+m("mention-agent-prefix-anywhere", "mention.go", "!strings.EqualFold(handle[:len(prefix)], prefix)", "!strings.Contains(strings.ToLower(handle), prefix)")
+m("mention-describe-unclipped", "mention.go", "if len(units) <= 40 {", "if true {")
+m("mention-bare-handle-is-a-send", "mention.go", 'message = jsTrim(rest)\n\tif message == "" {', 'message = jsTrim(rest)\n\tif false {')
+m("mention-send-anywhere", "mention.go", "if len(text) == 0 || text[0] != '@' {", "if len(text) == 0 {")
+m("mention-trigger-any-boundary", "mention.go", "if !isJSSpace(r) && r != '。' && r != '、' && r != '？' && r != '！' {", "if r == 0 && false {")
+m("mention-slug-trailing-hyphen", "mention.go", 'slug = strings.TrimRight(slug, "-")', 'slug = slug + ""')
+m("mention-reminder-trailing-space", "mention.go", "to it. \\n</system-reminder>", "to it.\\n</system-reminder>")
+
+# mention_provider.go: the roster and the stacked provider
+m("roster-live-not-first", "mention_provider.go", "return a.live()", "return !a.live()")
+m("roster-latest-first", "mention_provider.go", "return a.StartedAt < b.StartedAt", "return a.StartedAt > b.StartedAt")
+m("roster-type-handle-of-alias-free", "mention_provider.go", "taken[strings.ToLower(r.Handle)] = true", "_ = r.Handle")
+m("roster-tombstone-type-handle-free", "mention_provider.go", "taken[strings.ToLower(e.Handle)] = true", "_ = e.Handle")
+m("roster-lists-type-twice", "mention_provider.go", "if taken[handle] {", "if false {")
+m("suggest-case-sensitive", "mention_provider.go", "strings.HasPrefix(strings.ToLower(t.Handle), typed)", "strings.HasPrefix(t.Handle, typedRaw)")
+m("suggest-prefix-from-below", "mention_provider.go", "Prefix: mine.Prefix}", "Prefix: theirs.Prefix}")
+m("suggest-files-dropped", "mention_provider.go", "items = append(append(items, mine.Items...), theirs.Items...)", "items = append(items, mine.Items...)")
+m("suggest-files-first", "mention_provider.go", "items = append(append(items, mine.Items...), theirs.Items...)", "items = append(append(items, theirs.Items...), mine.Items...)")
+m("suggest-ignores-disabled", "mention_provider.go", "if !isEnabled() {", "if false {")
+m("provider-claims-hash", "mention_provider.go", 'TriggerCharacters: []string{"@"},', 'TriggerCharacters: []string{"@", "#"},')
+m("provider-warns-every-keystroke", "mention_provider.go", "if err != nil && st.warned.CompareAndSwap(false, true) {", "if err != nil {")
+m("provider-apply-forced", "mention_provider.go", "return current.ApplyCompletion(ctx, lines, cursorLine, cursorCol, item, prefix)", "return sdk.AutocompleteCompletion{}, nil")
+m("provider-file-gate-forced-open", "mention_provider.go", "return current.ShouldTriggerFileCompletion(ctx, lines, cursorLine, cursorCol)", "return true, nil")
+m("describe-live-as-resume", "mention_provider.go", 'action = "send message"', 'action = "resume"')
+m("summarize-unclipped", "mention_provider.go", "if len(units) > 60 {", "if false {")
+
+# mention_hook.go: the input hook
+m("hook-claims-extension-input", "mention_hook.go", 'src == "extension"', 'src == "none"')
+m("hook-ignores-off", "mention_hook.go", 'if mode == "off" {', "if false {")
+m("hook-claims-headless-direct", "mention_hook.go", 'if !canDispatchDirectly && mode != "model" {', "if false {")
+m("hook-main-escape-dropped", "mention_hook.go", "if isReservedHandle(handle) {", "if false {")
+m("hook-transform-drops-images", "mention_hook.go", 'out["images"] = images', "_ = images")
+m("hook-unwrapped-spelling-first", "mention_hook.go", "if live == nil && dead == nil && hasStripped {", "if hasStripped {")
+m("hook-headless-steers", "mention_hook.go", "if (live != nil || dead != nil) && !canDispatchDirectly {", "if false {")
+m("hook-steer-keeps-consumed", "mention_hook.go", "r.Consumed = false", "r.Consumed = r.Consumed")
+m("hook-resume-keeps-tool-call", "mention_hook.go", 'a.mgr.resume(r, message, true, "")', "a.mgr.resume(r, message, true, r.ToolCallID)")
+m("hook-reopen-without-session-check", "mention_hook.go", "if _, err := os.Stat(entry.SessionFile); err != nil {", "if _, err := os.Stat(entry.SessionFile); err != nil && false {")
+m("hook-gone-session-kept", "mention_hook.go", "a.mgr.dropTombstone(entry.Handle)", "_ = entry.Handle")
+m("hook-reopen-without-reload", "mention_hook.go", "a.reloadAgents()\n\tres := resolveSpawnType(entry.Type)", "res := resolveSpawnType(entry.Type)")
+m("hook-reopen-under-substitute", "mention_hook.go", 'if !res.OK || res.FellBackFrom != "" {', "if !res.OK {")
+m("hook-reopen-renumbers", "mention_hook.go", "ResumeFile: entry.SessionFile, Reclaim: &reclaim{Handle: entry.Handle, Alias: entry.Alias}})", "ResumeFile: entry.SessionFile})")
+m("hook-reopen-relabels", "mention_hook.go", "Description: entry.Description, Background: true,", "Description: describeMention(message), Background: true,")
+m("hook-model-mode-starts-directly", "mention_hook.go", 'if mode == "model" {', 'if mode != "model" {')
+m("hook-clone-notice-says-started", "mention_hook.go", '"Prompting "+label+"…"', '"Started "+label')
+m("hook-clone-failure-swallowed", "mention_hook.go", "if res.Spawned {\n\t\t\treturn\n\t\t}", "if true {\n\t\t\treturn\n\t\t}")
+m("hook-failed-start-announced", "mention_hook.go", "if failed {\n\t\t\t\t\terr = errors.New(msg)", "if failed && false {\n\t\t\t\t\terr = errors.New(msg)")
+m("hook-unknown-handle-claimed", "mention_hook.go", "if !found {", "if false {")
+m("hook-provider-stacked-twice", "mention_hook.go", "if a.mentionHooked {", "if false {")
+m("hook-provider-in-headless", "mention_hook.go", 'if ctx.Mode() != "tui" {', "if false {")
+m("hook-steer-queue-unbounded", "mention_hook.go", "if len(q.pending) >= maxQueuedSteers {", "if len(q.pending) >= maxQueuedSteers*1000 {")
+
+# manager.go: messages parked for an agent with no process yet
+m("steer-not-flushed", "manager.go", "_ = c.steer(msg)", "_ = msg")
+m("steer-queued-refused", "manager.go", "if r.Status != statusRunning && r.Status != statusQueued {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tc := r.child", "if r.Status != statusRunning {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tc := r.child")
+m("failed-start-keeps-handle", "manager.go", "m.removeRecord(r.ID)", "_ = r")
+
+# settings.go and extension.go: the agentMentions setting
+m("mentions-true-reads-direct", "settings.go", 'if v {\n\t\t\tmode = "model"', 'if v {\n\t\t\tmode = "direct"')
+m("mentions-project-ignored", "settings.go", "if p.AgentMentions != nil {", "if false {")
+m("mentions-default-off", "extension.go", 'mentionMode: "model", cloneFn', 'mentionMode: "off", cloneFn')
+m("mentions-setting-ignored", "extension.go", "a.mentionMode = *st.AgentMentions", "a.mentionMode = a.mentionMode")
+
+# mention_clone.go: the conversation clone
+m("clone-foreground-allowed", "mention_clone.go", 'params["run_in_background"] = true', 'params["run_in_background"] = params["run_in_background"]')
+m("clone-second-spawn-allowed", "mention_clone.go", "case spawned:", "case false:")
+m("clone-reminder-dropped", "mention_clone.go", 'o.Message+"\\n\\n"+agentMentionReminder(o.Type)', "o.Message")
+m("clone-system-prompt-dropped", "mention_clone.go", '"systemPrompt": o.Host.systemPrompt()', '"systemPrompt": ""')
+m("clone-forgets-spawn-on-failure", "mention_clone.go", "mentionCloneResult{Spawned: spawned, Error: err.Error()}", "mentionCloneResult{Error: err.Error()}")
+m("clone-provider-error-ignored", "mention_clone.go", 'reason == "error" || reason == "aborted"', 'reason == "aborted"')
+m("clone-turns-unbounded", "mention_clone.go", "turn < maxCloneTurns;", "turn < maxCloneTurns*100;")
+m("clone-unknown-tool-runs", "mention_clone.go", "case call.name != o.Tool.Name:", "case false:")
 
 M = [x for x in M if x]
 by_file = {}

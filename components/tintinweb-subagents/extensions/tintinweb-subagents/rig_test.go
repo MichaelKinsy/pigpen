@@ -69,6 +69,7 @@ func (c *fakeChild) finish(text string) {
 	c.mu.Unlock()
 	c.releaseNow()
 }
+
 // die is the process ending because its context ended: the run in progress fails and no more prompts are taken.
 func (c *fakeChild) die() {
 	c.mu.Lock()
@@ -145,10 +146,12 @@ type rig struct {
 
 	exec func(command string, args []string) (stdout string, code int)
 	// What the host answers about the parent session.
-	sessionFile string // getSessionFile
-	branch      []any  // sessionRead getBranch
-	registry    []any  // getAllTools
-	trusted     bool   // isProjectTrusted
+	sessionFile string                                                       // getSessionFile
+	branch      []any                                                        // sessionRead getBranch
+	registry    []any                                                        // getAllTools
+	trusted     bool                                                         // isProjectTrusted
+	more        func(method string, args map[string]any) (any, string, bool) // answers what the rig does not
+	modelFn     func(model, request map[string]any) []map[string]any         // scripts the host's model stream
 	mu          sync.Mutex
 	extBus      map[string][]string
 	goBus       map[string][]func(any)
@@ -163,22 +166,43 @@ func startRigIn(t *testing.T, cwd string) *rig { return startRigTuned(t, cwd, ni
 // startRigTuned is startRigIn with a change to the app made before the session starts.
 func startRigTuned(t *testing.T, cwd string, tune func(*app)) *rig {
 	t.Helper()
+	return startRigIn2(t, cwd, "", tune, nil)
+}
+
+// startRigIn2 is startRigTuned with the host's mode ("": tui) and an answer for the host calls the rig does not know.
+func startRigIn2(t *testing.T, cwd, mode string, tune func(*app), more func(method string, args map[string]any) (any, string, bool)) *rig {
+	t.Helper()
 	resetTypes()
 	t.Cleanup(resetTypes)
-	r := &rig{fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r := &rig{more: more, fleet: &fleet{}, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
 	e := sdk.New("tintinweb-subagents")
 	r.app = newApp(e, r.fleet.start)
 	if tune != nil {
 		tune(r.app)
 	}
 	r.app.register(e)
-	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
+	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, Mode: mode, OnCallValue: r.answer, ModelStream: r.modelStream})
 	r.Fire("session_start", obj{"reason": "startup"})
 	t.Cleanup(func() { r.app.shutdown() })
 	return r
 }
 
+func (r *rig) modelStream(model, request map[string]any) []map[string]any {
+	r.mu.Lock()
+	fn := r.modelFn
+	r.mu.Unlock()
+	if fn == nil {
+		return ModelText("ok")
+	}
+	return fn(model, request)
+}
+
 func (r *rig) answer(method string, args map[string]any) (any, string) {
+	if r.more != nil {
+		if v, e, ok := r.more(method, args); ok {
+			return v, e
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	switch method {

@@ -199,9 +199,9 @@
  },
  {
   "name": "handle-numbering-starts-late",
-  "file": "manager.go",
-  "find": "for n := 2; taken[candidate]; n++ {",
-  "replace": "for n := 3; taken[candidate]; n++ {"
+  "file": "mention.go",
+  "find": "candidate := base\n\tfor n := 1;",
+  "replace": "candidate := base\n\tfor n := 2;"
  },
  {
   "name": "ambiguous-ref-resolved",
@@ -217,13 +217,13 @@
  },
  {
   "name": "handle-base-length",
-  "file": "manager.go",
-  "find": "len(r) > 32",
-  "replace": "len(r) > 33"
+  "file": "mention.go",
+  "find": "if len(slug) > maxHandleLength {",
+  "replace": "if len(slug) > maxHandleLength*2 {"
  },
  {
   "name": "handle-base-empty",
-  "file": "manager.go",
+  "file": "mention.go",
   "find": "if slug == \"\" {\n\t\treturn \"agent\"\n\t}",
   "replace": "if slug == \"\" {\n\t\treturn \"\"\n\t}"
  },
@@ -934,5 +934,389 @@
   "file": "extension.go",
   "find": "if st.RememberAgents != nil { // a setting that is gone keeps the value last applied. upstream: settings.ts applySettings\n\t\ta.rememberAgents = *st.RememberAgents\n\t}",
   "replace": "a.rememberAgents = st.RememberAgents == nil || *st.RememberAgents"
+ },
+ {
+  "name": "mention-handle-cap-halved",
+  "file": "mention.go",
+  "find": "const maxHandleLength = 64",
+  "replace": "const maxHandleLength = 32"
+ },
+ {
+  "name": "mention-main-allocated",
+  "file": "mention.go",
+  "find": "taken[candidate] || candidate == reservedHandle",
+  "replace": "taken[candidate]"
+ },
+ {
+  "name": "mention-main-case-sensitive",
+  "file": "mention.go",
+  "find": "strings.ToLower(handle) == reservedHandle",
+  "replace": "handle == reservedHandle"
+ },
+ {
+  "name": "mention-agent-prefix-anywhere",
+  "file": "mention.go",
+  "find": "!strings.EqualFold(handle[:len(prefix)], prefix)",
+  "replace": "!strings.Contains(strings.ToLower(handle), prefix)"
+ },
+ {
+  "name": "mention-describe-unclipped",
+  "file": "mention.go",
+  "find": "if len(units) <= 40 {",
+  "replace": "if true {"
+ },
+ {
+  "name": "mention-bare-handle-is-a-send",
+  "file": "mention.go",
+  "find": "message = jsTrim(rest)\n\tif message == \"\" {",
+  "replace": "message = jsTrim(rest)\n\tif false {"
+ },
+ {
+  "name": "mention-send-anywhere",
+  "file": "mention.go",
+  "find": "if len(text) == 0 || text[0] != '@' {",
+  "replace": "if len(text) == 0 {"
+ },
+ {
+  "name": "mention-trigger-any-boundary",
+  "file": "mention.go",
+  "find": "if !isJSSpace(r) && r != '。' && r != '、' && r != '？' && r != '！' {",
+  "replace": "if r == 0 && false {"
+ },
+ {
+  "name": "mention-slug-trailing-hyphen",
+  "file": "mention.go",
+  "find": "slug = strings.TrimRight(slug, \"-\")",
+  "replace": "slug = slug + \"\""
+ },
+ {
+  "name": "mention-reminder-trailing-space",
+  "file": "mention.go",
+  "find": "to it. \\n</system-reminder>",
+  "replace": "to it.\\n</system-reminder>"
+ },
+ {
+  "name": "roster-live-not-first",
+  "file": "mention_provider.go",
+  "find": "return a.live()",
+  "replace": "return !a.live()"
+ },
+ {
+  "name": "roster-latest-first",
+  "file": "mention_provider.go",
+  "find": "return a.StartedAt < b.StartedAt",
+  "replace": "return a.StartedAt > b.StartedAt"
+ },
+ {
+  "name": "roster-type-handle-of-alias-free",
+  "file": "mention_provider.go",
+  "find": "taken[strings.ToLower(r.Handle)] = true",
+  "replace": "_ = r.Handle"
+ },
+ {
+  "name": "roster-tombstone-type-handle-free",
+  "file": "mention_provider.go",
+  "find": "taken[strings.ToLower(e.Handle)] = true",
+  "replace": "_ = e.Handle"
+ },
+ {
+  "name": "roster-lists-type-twice",
+  "file": "mention_provider.go",
+  "find": "if taken[handle] {",
+  "replace": "if false {"
+ },
+ {
+  "name": "suggest-case-sensitive",
+  "file": "mention_provider.go",
+  "find": "strings.HasPrefix(strings.ToLower(t.Handle), typed)",
+  "replace": "strings.HasPrefix(t.Handle, typedRaw)"
+ },
+ {
+  "name": "suggest-prefix-from-below",
+  "file": "mention_provider.go",
+  "find": "Prefix: mine.Prefix}",
+  "replace": "Prefix: theirs.Prefix}"
+ },
+ {
+  "name": "suggest-files-dropped",
+  "file": "mention_provider.go",
+  "find": "items = append(append(items, mine.Items...), theirs.Items...)",
+  "replace": "items = append(items, mine.Items...)"
+ },
+ {
+  "name": "suggest-files-first",
+  "file": "mention_provider.go",
+  "find": "items = append(append(items, mine.Items...), theirs.Items...)",
+  "replace": "items = append(append(items, theirs.Items...), mine.Items...)"
+ },
+ {
+  "name": "suggest-ignores-disabled",
+  "file": "mention_provider.go",
+  "find": "if !isEnabled() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "provider-claims-hash",
+  "file": "mention_provider.go",
+  "find": "TriggerCharacters: []string{\"@\"},",
+  "replace": "TriggerCharacters: []string{\"@\", \"#\"},"
+ },
+ {
+  "name": "provider-warns-every-keystroke",
+  "file": "mention_provider.go",
+  "find": "if err != nil && st.warned.CompareAndSwap(false, true) {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "provider-apply-forced",
+  "file": "mention_provider.go",
+  "find": "return current.ApplyCompletion(ctx, lines, cursorLine, cursorCol, item, prefix)",
+  "replace": "return sdk.AutocompleteCompletion{}, nil"
+ },
+ {
+  "name": "provider-file-gate-forced-open",
+  "file": "mention_provider.go",
+  "find": "return current.ShouldTriggerFileCompletion(ctx, lines, cursorLine, cursorCol)",
+  "replace": "return true, nil"
+ },
+ {
+  "name": "describe-live-as-resume",
+  "file": "mention_provider.go",
+  "find": "action = \"send message\"",
+  "replace": "action = \"resume\""
+ },
+ {
+  "name": "summarize-unclipped",
+  "file": "mention_provider.go",
+  "find": "if len(units) > 60 {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-claims-extension-input",
+  "file": "mention_hook.go",
+  "find": "src == \"extension\"",
+  "replace": "src == \"none\""
+ },
+ {
+  "name": "hook-ignores-off",
+  "file": "mention_hook.go",
+  "find": "if mode == \"off\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-claims-headless-direct",
+  "file": "mention_hook.go",
+  "find": "if !canDispatchDirectly && mode != \"model\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-main-escape-dropped",
+  "file": "mention_hook.go",
+  "find": "if isReservedHandle(handle) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-transform-drops-images",
+  "file": "mention_hook.go",
+  "find": "out[\"images\"] = images",
+  "replace": "_ = images"
+ },
+ {
+  "name": "hook-unwrapped-spelling-first",
+  "file": "mention_hook.go",
+  "find": "if live == nil && dead == nil && hasStripped {",
+  "replace": "if hasStripped {"
+ },
+ {
+  "name": "hook-headless-steers",
+  "file": "mention_hook.go",
+  "find": "if (live != nil || dead != nil) && !canDispatchDirectly {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-steer-keeps-consumed",
+  "file": "mention_hook.go",
+  "find": "r.Consumed = false",
+  "replace": "r.Consumed = r.Consumed"
+ },
+ {
+  "name": "hook-resume-keeps-tool-call",
+  "file": "mention_hook.go",
+  "find": "a.mgr.resume(r, message, true, \"\")",
+  "replace": "a.mgr.resume(r, message, true, r.ToolCallID)"
+ },
+ {
+  "name": "hook-reopen-without-session-check",
+  "file": "mention_hook.go",
+  "find": "if _, err := os.Stat(entry.SessionFile); err != nil {",
+  "replace": "if _, err := os.Stat(entry.SessionFile); err != nil && false {"
+ },
+ {
+  "name": "hook-gone-session-kept",
+  "file": "mention_hook.go",
+  "find": "a.mgr.dropTombstone(entry.Handle)",
+  "replace": "_ = entry.Handle"
+ },
+ {
+  "name": "hook-reopen-without-reload",
+  "file": "mention_hook.go",
+  "find": "a.reloadAgents()\n\tres := resolveSpawnType(entry.Type)",
+  "replace": "res := resolveSpawnType(entry.Type)"
+ },
+ {
+  "name": "hook-reopen-under-substitute",
+  "file": "mention_hook.go",
+  "find": "if !res.OK || res.FellBackFrom != \"\" {",
+  "replace": "if !res.OK {"
+ },
+ {
+  "name": "hook-reopen-renumbers",
+  "file": "mention_hook.go",
+  "find": "ResumeFile: entry.SessionFile, Reclaim: &reclaim{Handle: entry.Handle, Alias: entry.Alias}})",
+  "replace": "ResumeFile: entry.SessionFile})"
+ },
+ {
+  "name": "hook-reopen-relabels",
+  "file": "mention_hook.go",
+  "find": "Description: entry.Description, Background: true,",
+  "replace": "Description: describeMention(message), Background: true,"
+ },
+ {
+  "name": "hook-model-mode-starts-directly",
+  "file": "mention_hook.go",
+  "find": "if mode == \"model\" {",
+  "replace": "if mode != \"model\" {"
+ },
+ {
+  "name": "hook-clone-notice-says-started",
+  "file": "mention_hook.go",
+  "find": "\"Prompting \"+label+\"…\"",
+  "replace": "\"Started \"+label"
+ },
+ {
+  "name": "hook-clone-failure-swallowed",
+  "file": "mention_hook.go",
+  "find": "if res.Spawned {\n\t\t\treturn\n\t\t}",
+  "replace": "if true {\n\t\t\treturn\n\t\t}"
+ },
+ {
+  "name": "hook-failed-start-announced",
+  "file": "mention_hook.go",
+  "find": "if failed {\n\t\t\t\t\terr = errors.New(msg)",
+  "replace": "if failed && false {\n\t\t\t\t\terr = errors.New(msg)"
+ },
+ {
+  "name": "hook-unknown-handle-claimed",
+  "file": "mention_hook.go",
+  "find": "if !found {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-provider-stacked-twice",
+  "file": "mention_hook.go",
+  "find": "if a.mentionHooked {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-provider-in-headless",
+  "file": "mention_hook.go",
+  "find": "if ctx.Mode() != \"tui\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "hook-steer-queue-unbounded",
+  "file": "mention_hook.go",
+  "find": "if len(q.pending) >= maxQueuedSteers {",
+  "replace": "if len(q.pending) >= maxQueuedSteers*1000 {"
+ },
+ {
+  "name": "steer-not-flushed",
+  "file": "manager.go",
+  "find": "_ = c.steer(msg)",
+  "replace": "_ = msg"
+ },
+ {
+  "name": "steer-queued-refused",
+  "file": "manager.go",
+  "find": "if r.Status != statusRunning && r.Status != statusQueued {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tc := r.child",
+  "replace": "if r.Status != statusRunning {\n\t\tm.mu.Unlock()\n\t\treturn false\n\t}\n\tc := r.child"
+ },
+ {
+  "name": "failed-start-keeps-handle",
+  "file": "manager.go",
+  "find": "m.removeRecord(r.ID)",
+  "replace": "_ = r"
+ },
+ {
+  "name": "mentions-true-reads-direct",
+  "file": "settings.go",
+  "find": "if v {\n\t\t\tmode = \"model\"",
+  "replace": "if v {\n\t\t\tmode = \"direct\""
+ },
+ {
+  "name": "mentions-project-ignored",
+  "file": "settings.go",
+  "find": "if p.AgentMentions != nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "mentions-default-off",
+  "file": "extension.go",
+  "find": "mentionMode: \"model\", cloneFn",
+  "replace": "mentionMode: \"off\", cloneFn"
+ },
+ {
+  "name": "mentions-setting-ignored",
+  "file": "extension.go",
+  "find": "a.mentionMode = *st.AgentMentions",
+  "replace": "a.mentionMode = a.mentionMode"
+ },
+ {
+  "name": "clone-foreground-allowed",
+  "file": "mention_clone.go",
+  "find": "params[\"run_in_background\"] = true",
+  "replace": "params[\"run_in_background\"] = params[\"run_in_background\"]"
+ },
+ {
+  "name": "clone-second-spawn-allowed",
+  "file": "mention_clone.go",
+  "find": "case spawned:",
+  "replace": "case false:"
+ },
+ {
+  "name": "clone-reminder-dropped",
+  "file": "mention_clone.go",
+  "find": "o.Message+\"\\n\\n\"+agentMentionReminder(o.Type)",
+  "replace": "o.Message"
+ },
+ {
+  "name": "clone-system-prompt-dropped",
+  "file": "mention_clone.go",
+  "find": "\"systemPrompt\": o.Host.systemPrompt()",
+  "replace": "\"systemPrompt\": \"\""
+ },
+ {
+  "name": "clone-forgets-spawn-on-failure",
+  "file": "mention_clone.go",
+  "find": "mentionCloneResult{Spawned: spawned, Error: err.Error()}",
+  "replace": "mentionCloneResult{Error: err.Error()}"
+ },
+ {
+  "name": "clone-provider-error-ignored",
+  "file": "mention_clone.go",
+  "find": "reason == \"error\" || reason == \"aborted\"",
+  "replace": "reason == \"aborted\""
+ },
+ {
+  "name": "clone-turns-unbounded",
+  "file": "mention_clone.go",
+  "find": "turn < maxCloneTurns;",
+  "replace": "turn < maxCloneTurns*100;"
+ },
+ {
+  "name": "clone-unknown-tool-runs",
+  "file": "mention_clone.go",
+  "find": "case call.name != o.Tool.Name:",
+  "replace": "case false:"
  }
 ]

@@ -1,0 +1,47 @@
+{
+  "name": "mention-clone-turn",
+  "description": "In model mode a mention is taken by an off-screen clone: its request carries the conversation, the reminder and only the Agent tool; the clone calls Agent (here refused by fallbackSubagent none) and the main model is never asked.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "Agent",
+          "arguments": {
+            "prompt": "x",
+            "description": "d",
+            "subagent_type": "typoo"
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p .pi && printf '%s' '{\"workflowsEnabled\": false, \"schedulingEnabled\": false, \"worktreeIsolation\": false, \"fallbackSubagent\": \"none\"}' > .pi/subagents.json"
+    ]
+  ],
+  "commands": {
+    "git": {
+      "mode": "missing"
+    },
+    "gh": {
+      "mode": "missing"
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "@explore find the flaky test"
+      },
+      "wait": "response",
+      "settleMs": 3000
+    }
+  ]
+}

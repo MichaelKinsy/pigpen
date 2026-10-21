@@ -178,8 +178,6 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 		{"strictAgentFiles", `{"strictAgentFiles": true}`, "strictAgentFiles: true"},
 		{"toolDescriptionMode", `{"toolDescriptionMode": "compact"}`, `toolDescriptionMode: "compact"`},
 		{"fleetView", `{"fleetView": true}`, "fleetView: true"},
-		{"agentMentions", `{"agentMentions": "direct"}`, `agentMentions: "direct"`},
-		{"agentMentions legacy true", `{"agentMentions": true}`, "agentMentions: true"},
 		{"widgetMode", `{"widgetMode": "all"}`, `widgetMode: "all"`},
 		{"outputTranscript", `{"outputTranscript": true}`, "outputTranscript: true"},
 		{"worktreeIsolation", `{"worktreeIsolation": true}`, "worktreeIsolation: true"},
@@ -223,7 +221,7 @@ func TestUnportedSettingsAreRefusedWithANotification(t *testing.T) {
 func TestSettingsThePortMatchesAreNotRefused(t *testing.T) {
 	r := settingsRig(t, `{"maxConcurrent": 3, "defaultMaxTurns": 5, "graceTurns": 2, "disableDefaultAgents": false, "fallbackSubagent": "none",
 		"maxConcurrentForeground": 0, "defaultJoinMode": "async", "backgroundByDefault": true, "schedulingEnabled": false, "scopeModels": false,
-		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "off", "rememberAgents": false,
+		"strictAgentFiles": false, "toolDescriptionMode": "full", "fleetView": false, "agentMentions": "direct", "rememberAgents": false,
 		"widgetMode": "off", "outputTranscript": false, "worktreeIsolation": false, "workflowsEnabled": false, "maxSubagentDepth": 1,
 		"reportUsage": false, "showCost": false, "showModel": false, "showCost2": "x", "fleetView2": 1, "agentMentions2": 1}`)
 	eq(t, len(notices(r)), 0)

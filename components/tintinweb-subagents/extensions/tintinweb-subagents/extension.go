@@ -30,7 +30,12 @@ type app struct {
 	timers          map[string]*time.Timer
 	settingsNotice  string
 
-	rememberAgents bool // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
+	agentDef       sdk.ToolDefinition                                            // the registered Agent tool, which the mention clone reuses
+	mentionMode    string                                                        // "model", "direct" or "off". upstream: index.ts agentMentionMode
+	mentionHooked  bool                                                          // the `@handle` autocomplete wrapper is stacked on the host's provider
+	steers         serialQueue                                                   // messages to running agents, in order, off the input path
+	cloneFn        func(context.Context, mentionCloneOptions) mentionCloneResult // the conversation clone; a test replaces it
+	rememberAgents bool                                                          // persist agent sessions by default. upstream: settings.ts rememberAgents (default true)
 	cleanupEvery   time.Duration
 	stopCleanup    chan struct{} // closed to end the cleanup timer; nil while none runs
 	disc           discoverCache
@@ -39,7 +44,7 @@ type app struct {
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
+	a := &app{e: e, timers: map[string]*time.Timer{}, rememberAgents: true, mentionMode: "model", cloneFn: runMentionClone, cleanupEvery: cleanupEvery, listExtensions: statusExtensions}
 	a.mgr = newManager(start, a.onSettle)
 	return a
 }
@@ -58,16 +63,25 @@ func (a *app) reload(cwd string) {
 	if st.RememberAgents != nil { // a setting that is gone keeps the value last applied. upstream: settings.ts applySettings
 		a.rememberAgents = *st.RememberAgents
 	}
+	if st.AgentMentions != nil {
+		a.mentionMode = *st.AgentMentions
+	}
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
+	a.mu.Lock()
+	a.cwd = cwd
+	a.mu.Unlock()
+	reloadAgentFiles(cwd)
+}
+
+// reloadAgentFiles re-reads the custom agent files, so one added, edited or disabled mid-session is seen.
+// upstream: index.ts reloadCustomAgents.
+func reloadAgentFiles(cwd string) {
 	custom, warnings := loadCustomAgents(cwd)
 	for _, w := range warnings {
 		fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n", w)
 	}
-	a.mu.Lock()
-	a.cwd = cwd
-	a.mu.Unlock()
 	registerAgents(custom)
 }
 
@@ -125,10 +139,12 @@ func (a *app) register(e *sdk.Extension) {
 		guard("session start cleanup", func() { a.mgr.clearCompleted(true) }) // the agents of the session before are not this one's
 		a.startCleanup()
 		a.refuseSettings(ctx)
+		a.stackMentionProvider(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
 		return nil, nil
 	})
+	e.OnEvent(sdk.EventInput, a.onInput)
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil })
 	e.OnEvent(sdk.EventSessionBeforeSwitch, func(ctx sdk.Context, _ map[string]any) (any, error) {

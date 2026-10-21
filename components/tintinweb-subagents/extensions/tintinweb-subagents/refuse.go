@@ -105,7 +105,6 @@ var settingRules = []settingRule{
 	{key: "strictAgentFiles", kind: "bool", okBool: false},
 	{key: "toolDescriptionMode", kind: "enum", enum: []string{"full", "compact", "custom"}, okEnum: []string{"full"}},
 	{key: "fleetView", kind: "bool", okBool: false},
-	{key: "agentMentions", kind: "enum", enum: []string{"model", "direct", "off"}, okEnum: []string{"off"}},
 	{key: "widgetMode", kind: "enum", enum: []string{"all", "background", "off"}, okEnum: []string{"off"}},
 	{key: "outputTranscript", kind: "bool", okBool: false},
 	{key: "worktreeIsolation", kind: "bool", okBool: false},
@@ -134,9 +133,6 @@ func (r settingRule) unported(v any) bool {
 		}
 		return true
 	case "enum":
-		if b, ok := v.(bool); ok && r.key == "agentMentions" { // the legacy boolean: true reads as "model", false as "off"
-			return b
-		}
 		s, ok := v.(string)
 		if !ok || !inList(r.enum, s) {
 			return false

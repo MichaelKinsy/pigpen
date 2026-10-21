@@ -5,7 +5,7 @@
 | Original | `@tintinweb/pi-subagents` 0.19.0 by tintinweb, https://github.com/tintinweb/pi-subagents, commit `4f572eaa04c09d3dbc16e4a5f13a16b295e84e14`, MIT |
 | Oracle | Pi 1.0.3 (goldens `tool-tools`, `agent-not-found`, `agent-unknown-type-strict`) and Pi 1.3.0.1402973a (goldens `agent-resume-not-found`, `agent-resume-ignores-type`), Node 24.19.0, with the unmodified package at `port/oracle` (dependencies from npm: `croner`, `nanoid`, `typebox`) |
 | Target | PiG 0.4.1+1.0.3 (release v0.4.1, commit `3ee745c8cda3c1a9a8d71112c140790c4d64d78d`), go1.27.1 |
-| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; **1907 deferred by name** in `port/slices.json`, each file with its reason |
+| Original's tests | 2029 cases in 105 files (`port/upstream-tests.json`). **122 exact twins** (`agent-types` 46, `custom-agents` 76), no skips; the mention slice adds all 166 cases of its 6 files (`mention*`, `agent-mention-*`, one e2e): 153 exact twins and 13 named skips (see "`@name` mentions" below); **1907 deferred by name** in `port/slices.json`, each file with its reason |
 | Kind | 1: an extension, no CLI built-in, no provider |
 | Not this | `nicobailon/pi-subagents`, ported as `components/subagents`. A different project |
 
@@ -106,7 +106,7 @@ components; this port registers none.
    announced once when a session starts, with the refusal message (`refuse.go`, `settingRules`); a malformed value is
    ignored silently, as in the original. Agent files that use an unported field, and the `subagents:rpc:spawn` options the
    port does not honor, are refused the same way.
-6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation, `@mentions`,
+6. **Not ported** (named in `port/slices.json`): the workflow runtime, scheduling, worktree isolation,
    widget, fleet and conversation viewer, agent memory, nested delegation, output transcripts, structured output, the
    settings menu, usage and cost display, model scope and fuzzy model resolution (the child resolves `--model`).
 7. **Order of work.** The agent-type and agent-file twins were written after their Go code was drafted, so there is no red
@@ -145,11 +145,10 @@ components; this port registers none.
       a project extension the parent lacks), or registered after the child started (MCP), are not excluded. A faithful
       form needs a child-side per-tool gate that PiG does not expose to an extension: the Pi API is
       `session.agent.beforeToolCall` with `setActiveToolsByName`. Reported to the lane lead.
-    - **Tombstones are created and cleared, but not yet reopened by a tool (M6).** `removeRecord` leaves one for an agent
+    - **Tombstones are created, cleared and reopened by `@handle` (M6).** `removeRecord` leaves one for an agent
       with a handle and a session file; it keeps the handle reserved (`explore-2`), `clearCompleted` forgets it at a
       session boundary, and the cap and order match the original. `resolveMention`, `listTombstones`, `dropTombstone`,
-      and `spawn` with `resumeSessionFile` and `reclaim` are implemented and tested, and are called by nothing in
-      production until the `@handle` input hook, which is the mention slice (`port/slices.json`, `agent-mention-wiring`).
+      and `spawn` with `resumeSessionFile` and `reclaim` are called by the `@handle` input hook (`mention_hook.go`).
     - **A foreground resume of an agent that is still running** answers `Agent failed: Agent is already processing...`
       (pi's `session.prompt` message) and leaves the running agent alone; the original's rejected prompt also flips the
       live record to `error` as a side effect, which this port does not copy.
@@ -167,3 +166,50 @@ components; this port registers none.
       truthy.
     - **The cleanup timer starts at the first `session_start`** and stops at `session_shutdown`, because an extension
       process can outlive a session in PiG; the original starts it in the manager's constructor and stops it in `dispose`.
+
+## `@name` mentions (G4)
+
+Ported: the grammar (`mention.go`), the input hook (`mention_hook.go`), the stacked `@` suggestions and the roster
+(`mention_provider.go`), the conversation clone (`mention_clone.go`), the `agentMentions` setting, and the numbered
+handles, which now cap at 64 characters as `mention.ts` does (the port capped them at 32). Twins: every case of
+`mention`, `agent-mention-provider`, `agent-mention-wiring`, `mention-clone`, `mention-start-notification` and
+`e2e/mention-clone-tool-reachability.e2e`, with named skips where the original's assertion is about Pi's SDK being mocked
+or about the widget. The `agent-mention-wiring` cases run the hook through the real extension on a fake host, with a fleet
+of scripted children in place of the original's mocked `runAgent` and `resumeAgent`; the clone is replaced by a scripted
+result in those, and exercised through the host's model API (scripted) in `mention_wiring_test.go`.
+
+Differences from the original, each deliberate:
+
+- **The hook does not wait for an agent to start.** PiG runs input hooks on the goroutine that owns the terminal, and a
+  child process takes long enough to start to freeze it. The hook creates the record and answers `handled`; `Started`,
+  `Resuming` (for a reopened agent) and a failed start are announced when startup ends. A launch that fails is reported
+  as `Could not start @x: <error>` (or `Could not resume`), and the record is dropped so that its handle goes back,
+  as the original's rejected `awaitStartup` does. Everything decidable without waiting (a gone session, an unavailable
+  type, a spawn that is refused) is announced before the hook returns, as in the original.
+- **A steer to a running agent is delivered off the input path**, in order, from a bounded queue (256 messages; past
+  it the user is told). The child call can take up to its 60 s timeout. A message for a queued agent, or one that is
+  starting, is parked on the record and delivered when its process exists (`pendingSteers` in the original).
+- **The clone is a model request, not an in-process session.** The original builds a throwaway pi session
+  (`createAgentSession`, in-memory, one custom tool) and prompts it. A Go extension has no in-process session, so the clone
+  sends the same turn through the host's model API: the session's own messages (`buildSessionContext`, compaction
+  applied, from memory), the live system prompt, the session's model and credentials, the reminder after the message, and
+  one tool, Agent. Each tool call is answered as Pi's agent loop would: the first spawns top-level in the background on the
+  main context with no tool-call id, a second is refused ("Already started an agent for this mention. Stop here."), and
+  the turn after the tool result is taken too. The thinking level passed is the session's (`getThinkingLevel`), never
+  `buildSessionContext`'s. Two bounds Pi's loop lacks: at most 8 model turns, and no schema validation of the
+  model's arguments before the call (Pi rejects a call whose arguments fail the schema; here the Agent tool answers
+  as it does for any call).
+- **`describeMention` and the suggestion summary clip at UTF-16 units, as JS does**; a cut inside a surrogate pair leaves
+  U+FFFD where JS leaves a lone surrogate.
+- **The provider is not observable by pigeq.** pigeq drives a headless host, which has no editor, so the suggestions and
+  their completion are covered by tests against the SDK's wire protocol (`mention_wiring_twin_test.go`, which plays the
+  editor's side), not by recorded scenarios. The four "against pi's real provider" cases are named skips: they run pi-tui's
+  `CombinedAutocompleteProvider.applyCompletion`, which lives in the host; the provider hands `applyCompletion` to it
+  unchanged. The provider calls the provider below on every `@` token, as the original does (one host round trip, off the
+  render path), builds the roster only for a token that can name an agent, answers from a snapshot, and recovers from a
+  panic in either half. `BenchmarkMentionSuggestions*` measure it.
+- **No nested children to filter.** The roster and the resolver do not look at an owner, because nothing here has one; the
+  nested slice adds the filter with the field (two named skips).
+- **Output transcripts, the widget and the activity tracker** are not ported, so the three original cases about them are
+  named skips.
+- **A PiG-vs-Pi observation:** none found.

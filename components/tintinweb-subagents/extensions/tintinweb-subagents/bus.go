@@ -93,6 +93,10 @@ type startRequest struct {
 	Background                                       bool
 	Isolated, InheritContext                         bool
 	BypassQueue                                      bool
+	// ResumeFile and Reclaim reopen an evicted agent's conversation under the names it held. Set only by the mention
+	// dispatcher, from a tombstone this extension wrote; the spawn RPC drops both. upstream: spawnTopLevel.
+	ResumeFile string
+	Reclaim    *reclaim
 }
 
 // start builds the child's spec from the agent type and spawns it.
@@ -193,7 +197,7 @@ func (a *app) start(ctx sdk.Context, q startRequest) (*agentRecord, error) {
 	if description == "" {
 		description = strings.Join(strings.Fields(q.Prompt)[:min(5, len(strings.Fields(q.Prompt)))], " ")
 	}
-	return a.mgr.spawnWith(resolved, description, q.Name, spec, spawnOptions{Background: q.Background, BypassQueue: q.BypassQueue}), nil
+	return a.mgr.spawnWith(resolved, description, q.Name, spec, spawnOptions{Background: q.Background, BypassQueue: q.BypassQueue, ResumeFile: q.ResumeFile, Reclaim: q.Reclaim}), nil
 }
 
 // jsTruthy is JS truthiness of a decoded JSON value: false, 0, "" and null are falsy; anything else, including an empty

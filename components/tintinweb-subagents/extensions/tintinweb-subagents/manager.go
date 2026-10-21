@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -40,6 +39,10 @@ type agentRecord struct {
 	WrappedUp                   bool
 	Consumed                    bool
 	slot                        bool // holds a background concurrency slot
+
+	// PendingSteers are messages sent before the agent's process exists (queued, or still starting); they are delivered
+	// once it does. upstream: AgentRecord.pendingSteers.
+	PendingSteers []string
 
 	SessionFile string // the agent's pi session file when it was persisted: what is left to reopen once the record is gone
 
@@ -80,35 +83,13 @@ func newManager(start childStarter, onSettle func(*agentRecord)) *manager {
 	return &manager{records: map[string]*agentRecord{}, maxConcurrent: defaultMaxConcurrent, start: start, onSettle: onSettle}
 }
 
+// assignHandle is base, else base-2, base-3, ... the first form no agent holds. The caller holds m.mu.
+func (m *manager) assignHandle(base string) string { return assignHandleIn(base, m.takenHandles()) }
+
 func (m *manager) get(id string) *agentRecord {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.records[id]
-}
-
-var notHandle = regexp.MustCompile(`[^a-z0-9_-]+`)
-
-// handleBase is the slug of a type or a name: lowercase, `[a-z0-9_-]` only. upstream: mention.ts handleBase.
-func handleBase(s string) string {
-	slug := notHandle.ReplaceAllString(strings.ToLower(s), "-")
-	slug = strings.Trim(slug, "-")
-	if r := []rune(slug); len(r) > 32 {
-		slug = strings.TrimRight(string(r[:32]), "-")
-	}
-	if slug == "" {
-		return "agent"
-	}
-	return slug
-}
-
-// assignHandle is base, else base-2, base-3, ... the first form no agent holds. The caller holds m.mu.
-func (m *manager) assignHandle(base string) string {
-	taken := m.takenHandles()
-	candidate := base
-	for n := 2; taken[candidate]; n++ {
-		candidate = fmt.Sprintf("%s-%d", base, n)
-	}
-	return candidate
 }
 
 // resolveID accepts an agent id, a unique prefix of one, or an agent's name.
@@ -249,8 +230,15 @@ func (m *manager) run(r *agentRecord) {
 		}
 	}
 	stop := r.stopped
+	var pending []string
+	if err == nil {
+		pending, r.PendingSteers = r.PendingSteers, nil
+	}
 	closeOnce(r.started)
 	m.mu.Unlock()
+	for _, msg := range pending { // steers that arrived before the process was ready. upstream: agent-manager.ts:840
+		_ = c.steer(msg)
+	}
 	if replaced != nil {
 		replaced.close()
 	}
@@ -416,4 +404,33 @@ func closeOnce(ch chan struct{}) {
 	default:
 		close(ch)
 	}
+}
+
+// steerRecord sends a message to a running or queued agent: at once when its process exists, else parked and flushed
+// when it does. It reports false for an agent that is neither running nor queued. The process call can block on the
+// child, so callers on an input path run it off that path. upstream: agent-manager.ts steer.
+func (m *manager) steerRecord(r *agentRecord, message string) bool {
+	m.mu.Lock()
+	if r.Status != statusRunning && r.Status != statusQueued {
+		m.mu.Unlock()
+		return false
+	}
+	c := r.child
+	if c == nil {
+		r.PendingSteers = append(r.PendingSteers, message)
+		m.mu.Unlock()
+		return true
+	}
+	m.mu.Unlock()
+	_ = c.steer(message)
+	return true
+}
+
+// discard forgets an agent that never started (its process could not be launched), giving its handle back.
+// upstream: agent-manager.ts launch (an immediate start that fails drops the record).
+func (m *manager) discard(r *agentRecord) {
+	m.mu.Lock()
+	r.child = nil
+	m.mu.Unlock()
+	m.removeRecord(r.ID)
 }

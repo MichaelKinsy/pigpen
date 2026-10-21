@@ -54,9 +54,28 @@ and takes the prompt into the same session. The call is detached unless `run_in_
 finished agent's record, and the process that holds an in-memory conversation, are removed ten minutes after it
 finished (a timer looks every minute, as in the original); a persisted one leaves a tombstone (its handle and session
 file) that keeps its handle reserved. A session start or switch removes the finished agents whose result has been read
-and forgets every tombstone, and the end of the session closes every process that holds a conversation. Reopening a
-tombstone by `@handle` (`resolveMention`, `spawn` with `resumeSessionFile` and `reclaim`) waits for the input hook, which
-is the mention slice.
+and forgets every tombstone, and the end of the session closes every process that holds a conversation. `@handle` reopens a
+tombstone (see "`@name` mentions" below).
+
+## `@name` mentions
+
+Typing `@explore also check the RPC path` at the prompt addresses that agent instead of the main model (Claude Code's
+grammar: a send is recognized only at the START of the input and only with a message after the handle, so `@src/foo.ts
+summarize this` and a bare `@explore` go to the main model). The handle names the agent, not one process: a running or
+queued agent is messaged (`Sent to @explore`; a queued one parks it until it starts), a finished one resumes in the
+background (`Resuming @explore`), an evicted one whose session is on disk is reopened under the handle it held (the
+tombstone stays until the reopened agent is evicted in its turn), and an agent type with no instance starts one. Handles
+are the type slug, numbered on collision (`explore`, `explore-2`), or the `name` a model gave the agent; the raw agent id
+and Claude Code's `@agent-<type>` spelling also work. `@main text` sends `text` to the main model, attachments kept.
+Text submitted by an extension is never taken for a mention. In the TUI the editor offers the handles after `@` (agents
+first, then the host's file rows), each row naming what Enter will do.
+
+The `agentMentions` setting (`subagents.json`) picks who starts a not-yet-running agent: `model` (the default) takes a
+conversation clone, a throwaway model turn over a copy of the conversation that holds one tool, Agent, and calls it off
+screen (`Prompting @explore…`; the clone's failure starts the agent directly); `direct` starts it here with no model
+call (`Started @explore`); `off` turns mentions and the suggestions off. `true` and `false`, the setting before the
+modes, read as `model` and `off`. Messaging and resuming are direct in every mode and TUI-only; `model` mode also works
+headless (print, RPC), where the agent's answer arrives as its completion notification.
 
 `inherit_context` (the call parameter, or `inherit_context: true` in the agent file, which wins) puts the parent
 conversation in front of the task, as text: the user and assistant messages of the current branch and the compaction
@@ -84,8 +103,7 @@ unknown type goes to `general-purpose`, to a named agent, or with `"none"` is re
 ## What is not ported, and how it answers
 
 This port ships the slice above. The original's other features are named in [port/slices.json](port/slices.json) and
-[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, `@name`
-mentions, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, the settings
+[port/PORT.md](port/PORT.md): the `SubagentWorkflow` JS workflow runtime, scheduled runs, worktree isolation, the widget, fleet and conversation-viewer UI, persistent agent memory, nested delegation, the settings
 menu, and output transcripts. The `Agent` tool is advertised with the
 original's text and schema as it is with workflows, scheduling and worktree isolation switched off, and
 `SubagentWorkflow` is not registered.

@@ -114,13 +114,14 @@ func (a *app) registerTools(e *sdk.Extension) {
 	reg := currentRegistry()
 	var guidelines []string
 	_ = json.Unmarshal(agentGuidelinesJSON, &guidelines)
-	e.RegisterTool(sdk.ToolDefinition{
+	a.agentDef = sdk.ToolDefinition{
 		Name: "Agent", Label: "Agent", Description: agentToolDescription(reg),
 		PromptSnippet:    "Launch autonomous sub-agents for complex multi-step tasks",
 		PromptGuidelines: guidelines,
 		Parameters:       agentToolSchema(reg, specs["Agent"]),
 		Execute:          a.agentTool,
-	})
+	}
+	e.RegisterTool(a.agentDef) // held: the mention clone hands its model this exact tool
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: "get_subagent_result", Label: "Get Agent Result", Description: *specs["get_subagent_result"].Description,
 		PromptSnippet: "Check status and retrieve results from a background agent",

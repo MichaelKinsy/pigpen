@@ -81,8 +81,8 @@ func TestHandles(t *testing.T) {
 	eq(t, r.app.mgr.resolve("auth-audit-2"), c)
 	eq(t, handleBase("My Agent!"), "my-agent")
 	eq(t, handleBase("!!!"), "agent")
-	eq(t, handleBase(strings.Repeat("a", 40)), strings.Repeat("a", 32))
-	eq(t, handleBase(strings.Repeat("a", 31)+"-b"), strings.Repeat("a", 31))
+	eq(t, handleBase(strings.Repeat("a", 70)), strings.Repeat("a", 64)) // mention.ts MAX_HANDLE_LENGTH
+	eq(t, handleBase(strings.Repeat("a", 63)+"-b"), strings.Repeat("a", 63))
 }
 
 func TestWaitBlocksUntilTheAgentFinishes(t *testing.T) {

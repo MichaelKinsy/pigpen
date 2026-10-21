@@ -30,6 +30,23 @@ scenario("agent-resume-not-found", "Agent with resume naming an agent that does 
 scenario("agent-resume-ignores-type", "resume replays a stored session and ignores subagent_type: an unusable type does not stop it, even with fallbackSubagent none.",
          [[call("Agent", prompt="x", description="d", subagent_type="typoo", resume="nope")]], settings={**SETTINGS, "fallbackSubagent": "none"})
 
+# @name mentions. The RPC prompt reaches the input hook as source "rpc" in a headless host, where only the `model` mode
+# acts; everything else falls through to the model, which then sees the text as typed (or, for @main, without the prefix).
+def say(text, **kw):
+    return [{"name": "prompt", "rpc": {"type": "prompt", "message": text}, **kw}]
+
+scenario("mention-main-escape", "`@main text` goes to the main model without the prefix.", [], steps=say("@main @explore is not a mention"))
+scenario("mention-unknown-handle", "A handle that names no agent is left to the main model, text intact.", [], steps=say("@nosuchagent hello"))
+scenario("mention-bare-handle", "A bare handle is not a send: the main model gets it as typed.", [], steps=say("@explore"))
+scenario("mention-file-path", "A leading file path is pi's attachment, not a mention.", [], steps=say("@src/index.ts summarize this"))
+scenario("mention-off", "With agentMentions off nothing is claimed.", [], settings={**SETTINGS, "agentMentions": "off"}, steps=say("@explore find the flaky test"))
+scenario("mention-legacy-false", "The legacy boolean false reads as off.", [], settings={**SETTINGS, "agentMentions": False}, steps=say("@explore find the flaky test"))
+scenario("mention-direct-headless", "In direct mode a headless prompt is left to the main model.", [], settings={**SETTINGS, "agentMentions": "direct"}, steps=say("@explore find the flaky test"))
+scenario("mention-agent-prefix-unknown", "Claude Code's @agent-<type> spelling with no such type falls through.", [], steps=say("@agent-nosuchtype hello"))
+scenario("mention-clone-turn", "In model mode a mention is taken by an off-screen clone: its request carries the conversation, the reminder and only the Agent tool; the clone calls Agent (here refused by fallbackSubagent none) and the main model is never asked.",
+         [[call("Agent", prompt="x", description="d", subagent_type="typoo")]], settings={**SETTINGS, "fallbackSubagent": "none"},
+         steps=say("@explore find the flaky test", wait="response", settleMs=3000))
+
 # Not generated: a foreground agent. The child's model request carries "inserted" text equal to the original's (the
 # agent's header, environment block and prompt) and the same user message; the harness's "removed" part is the host's
 # own default system prompt, which says "pi" under Pi and "pig" under PiG, so that comparison cannot pass. PORT.md.

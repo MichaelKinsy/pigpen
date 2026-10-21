@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent and
-// disableDefaultAgents. The global file (<agent dir>/subagents.json) is read first, the project file
+// The subagents.json settings this port honors: maxConcurrent, defaultMaxTurns, graceTurns, fallbackSubagent,
+// disableDefaultAgents, rememberAgents and agentMentions. The global file (<agent dir>/subagents.json) is read first, the project file
 // (<cwd>/.pi/subagents.json) overrides it. A field of the wrong shape is dropped, silently, as in the original.
 // upstream: src/settings.ts (sanitize, loadSettings).
 type settings struct {
@@ -19,6 +19,7 @@ type settings struct {
 	FallbackSubagent     *string
 	DisableDefaultAgents *bool
 	RememberAgents       *bool
+	AgentMentions        *string // "model", "direct" or "off"; the legacy boolean reads true as "model", false as "off"
 }
 
 const (
@@ -55,6 +56,18 @@ func sanitizeSettings(raw any) settings {
 	}
 	if b, ok := r["rememberAgents"].(bool); ok {
 		out.RememberAgents = &b
+	}
+	switch v := r["agentMentions"].(type) {
+	case bool:
+		mode := "off"
+		if v {
+			mode = "model"
+		}
+		out.AgentMentions = &mode
+	case string:
+		if v == "model" || v == "direct" || v == "off" {
+			out.AgentMentions = &v
+		}
 	}
 	switch v := r["fallbackSubagent"].(type) {
 	case bool:
@@ -103,6 +116,9 @@ func loadSettings(cwd string) settings {
 	}
 	if p.RememberAgents != nil {
 		s.RememberAgents = p.RememberAgents
+	}
+	if p.AgentMentions != nil {
+		s.AgentMentions = p.AgentMentions
 	}
 	return s
 }
