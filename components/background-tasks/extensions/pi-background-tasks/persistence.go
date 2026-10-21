@@ -282,3 +282,10 @@ func (p *persistence) persistSnapshots() persistResult {
 	}
 	return res
 }
+
+// forgetFingerprints makes the next persist write its session entry again, as after an append the host refused.
+func (p *persistence) forgetFingerprints() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.lastFpr = map[string]string{}
+}
