@@ -1,0 +1,36 @@
+{
+	"name": "edge-empty-preview-string",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Empty preview?",
+				"header": "Empty",
+				"options": [
+					{
+						"label": "A",
+						"description": "a",
+						"preview": ""
+					},
+					{
+						"label": "B",
+						"description": "b",
+						"preview": "has one"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

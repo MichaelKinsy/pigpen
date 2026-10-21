@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -19,7 +21,7 @@ import (
 
 // ServerSpec declares one fake HTTP upstream: an API the extension calls (a search provider, a
 // judge model, a remote agent). Every lane gets its own instance, with the same routes, on a
-// loopback port; {{server:NAME}} in the scenario's env, files and args is that server's base URL.
+// loopback port; {{server:NAME}} in the scenario's env, files, agent files, args and LLM script is that server's base URL.
 type ServerSpec struct {
 	Routes []Route `json:"routes"`
 	// RecordHeaders are the request headers copied into the trace, lower-case, in addition to
@@ -93,6 +95,44 @@ func (u *upstreams) expand(s string) string {
 		}
 		return u.URL(name)
 	})
+}
+
+// expandTurns returns the LLM script with {{server:NAME}} expanded in each turn's text and in every
+// string value of its tool-call arguments (nested objects and arrays included). The scenario is shared
+// by the lanes, each with its own ports, so it is copied, never changed.
+func (u *upstreams) expandTurns(turns []Turn) []Turn {
+	out := make([]Turn, len(turns))
+	for i, t := range turns {
+		out[i] = Turn{Text: u.expand(t.Text)}
+		for _, c := range t.ToolCalls {
+			args, _ := u.expandValue(c.Arguments).(map[string]any)
+			out[i].ToolCalls = append(out[i].ToolCalls, ToolCall{Name: c.Name, Arguments: args})
+		}
+	}
+	return out
+}
+
+func (u *upstreams) expandValue(v any) any {
+	switch x := v.(type) {
+	case string:
+		return u.expand(x)
+	case []any:
+		out := make([]any, len(x))
+		for i, e := range x {
+			out[i] = u.expandValue(e)
+		}
+		return out
+	case map[string]any:
+		if x == nil { // an omitted arguments object stays null on the wire
+			return x
+		}
+		out := make(map[string]any, len(x))
+		for k, e := range x {
+			out[k] = u.expandValue(e)
+		}
+		return out
+	}
+	return v
 }
 
 // normalize teaches the normalizer that a server's host:port is <server:NAME>, so a URL an
@@ -209,10 +249,14 @@ func (s *upstream) describe(r *http.Request, body []byte, matched bool) map[stri
 	return out
 }
 
-// writeAgentFiles writes the scenario's agentFiles under the lane's agent directory.
-func writeAgentFiles(agent string, files map[string]string, ups *upstreams) error {
+// writeFilesUnder writes files (relative paths, {{server:NAME}} expanded) under dir. A path that is
+// absolute or leaves dir is refused, so a lane's scenario cannot place a file outside the root it names.
+func writeFilesUnder(dir string, files map[string]string, ups *upstreams) error {
 	for rel, content := range files {
-		p := filepath.Join(agent, rel)
+		if err := confinedPath(rel); err != nil {
+			return err
+		}
+		p := filepath.Join(dir, rel)
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			return err
 		}
@@ -221,6 +265,23 @@ func writeAgentFiles(agent string, files map[string]string, ups *upstreams) erro
 		}
 	}
 	return nil
+}
+
+// confinedPath reports why rel is not a path strictly inside the directory it is joined to.
+func confinedPath(rel string) error {
+	clean := filepath.ToSlash(filepath.Clean(rel))
+	if rel == "" || filepath.IsAbs(rel) || clean == "." || clean == ".." || strings.HasPrefix(clean, "../") {
+		return fmt.Errorf("file %q must stay inside its directory", rel)
+	}
+	return nil
+}
+
+// laneHome is where a lane's host keeps its own state: PIG_HOME for pig, ~/.pi for pi.
+func laneHome(host, root string) string {
+	if host == "pig" {
+		return filepath.Join(root, "pighome")
+	}
+	return filepath.Join(root, "home", ".pi")
 }
 
 // validate checks the scenario's servers, env and {{server:...}} references.
@@ -269,10 +330,10 @@ func (s *Scenario) validateServers() error {
 		}
 	}
 	for k, v := range s.AgentFiles {
-		clean := filepath.ToSlash(filepath.Clean(k))
-		if filepath.IsAbs(k) || clean == ".." || strings.HasPrefix(clean, "../") {
+		if confinedPath(k) != nil {
 			return fmt.Errorf("agent file %q must stay inside the agent directory", k)
 		}
+		clean := filepath.ToSlash(filepath.Clean(k))
 		if len(s.LLM) > 0 && clean == "models.json" {
 			return errors.New("agent file models.json is written by the harness when the scenario scripts the model")
 		}
@@ -280,9 +341,48 @@ func (s *Scenario) validateServers() error {
 			return err
 		}
 	}
+	for k, v := range s.HomeFiles {
+		if confinedPath(k) != nil {
+			return fmt.Errorf("home file %q must stay inside the host home", k)
+		}
+		if err := check("home file "+k, v); err != nil {
+			return err
+		}
+	}
 	for i, v := range s.Args {
 		if err := check(fmt.Sprintf("arg %d", i), v); err != nil {
 			return err
+		}
+	}
+	for i, t := range s.LLM {
+		if err := check(fmt.Sprintf("llm turn %d text", i+1), t.Text); err != nil {
+			return err
+		}
+		for j, c := range t.ToolCalls {
+			if err := checkValue(check, fmt.Sprintf("llm turn %d tool call %d (%s) arguments", i+1, j+1, c.Name), c.Arguments); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// checkValue applies check to every string value of a decoded JSON value.
+func checkValue(check func(where, text string) error, where string, v any) error {
+	switch x := v.(type) {
+	case string:
+		return check(where, x)
+	case []any:
+		for _, e := range x {
+			if err := checkValue(check, where, e); err != nil {
+				return err
+			}
+		}
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(x)) {
+			if err := checkValue(check, where, x[k]); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

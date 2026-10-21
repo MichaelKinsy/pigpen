@@ -60,30 +60,6 @@
   "replace": "if false {"
  },
  {
-  "name": "reserved-next-lost",
-  "file": "logic.go",
-  "find": "var reservedLabels = []string{\"Other\", labelOther, labelNext}",
-  "replace": "var reservedLabels = []string{\"Other\", labelOther}"
- },
- {
-  "name": "reserved-other-lost",
-  "file": "logic.go",
-  "find": "var reservedLabels = []string{\"Other\", labelOther, labelNext}",
-  "replace": "var reservedLabels = []string{labelOther, labelNext}"
- },
- {
-  "name": "multi-has-no-next",
-  "file": "logic.go",
-  "find": "if q.MultiSelect {\n\t\titems = append(items, selectItem{Kind: \"next\"",
-  "replace": "if false {\n\t\titems = append(items, selectItem{Kind: \"next\""
- },
- {
-  "name": "option-keeps-preview-row",
-  "file": "logic.go",
-  "find": "items = append(items, selectItem{Kind: \"option\", Label: o.Label, Description: o.Description})",
-  "replace": "items = append(items, selectItem{Kind: \"option\", Label: o.Label, Description: o.Preview})"
- },
- {
   "name": "multi-empty-not-placeholder",
   "file": "logic.go",
   "find": "return noInput\n\tcase \"custom\":",
@@ -204,12 +180,6 @@
   "replace": "o.Label + \" - \" + o.Description"
  },
  {
-  "name": "other-row-number",
-  "file": "rpc.go",
-  "find": "strconv.Itoa(len(q.Options)+1)+\". \"+labelOther",
-  "replace": "strconv.Itoa(len(q.Options))+\". \"+labelOther"
- },
- {
   "name": "parse-index-zero-based",
   "file": "rpc.go",
   "find": "i := n - 1",
@@ -234,22 +204,10 @@
   "replace": ""
  },
  {
-  "name": "custom-input-placeholder",
-  "file": "rpc.go",
-  "find": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+customAnswerTitle, \"\")",
-  "replace": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+customAnswerTitle, \"x\")"
- },
- {
   "name": "custom-answer-trimmed",
   "file": "rpc.go",
   "find": "Kind: \"custom\", Answer: &typed}, nil",
   "replace": "Kind: \"custom\", Answer: func() *string { t := jsTrim(typed); return &t }()}, nil"
- },
- {
-  "name": "custom-answer-dismissed-not-cancel",
-  "file": "rpc.go",
-  "find": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+customAnswerTitle, \"\")\n\tif err != nil || !ok {\n\t\treturn nil, err\n\t}",
-  "replace": "typed, _, err := ui.Input(header+q.Question+\"\\n\\n\"+customAnswerTitle, \"\")\n\tif err != nil {\n\t\treturn nil, err\n\t}"
  },
  {
   "name": "multi-placeholder",
@@ -259,9 +217,9 @@
  },
  {
   "name": "multi-instructions",
-  "file": "rpc.go",
-  "find": "comma-separated (e.g. \"1,3\")",
-  "replace": "comma separated (e.g. \"1,3\")"
+  "file": "internal/ui/locales/en.json",
+  "find": "comma-separated (e.g. \\\"1,3\\\")",
+  "replace": "comma separated (e.g. \\\"1,3\\\")"
  },
  {
   "name": "multi-trim-lost",
@@ -414,34 +372,10 @@
   "replace": "questionnaireResult{Cancelled: true}"
  },
  {
-  "name": "no-ui-after-validation",
-  "file": "extension.go",
-  "find": "if !ctx.HasUI() {\n\t\treturn toResult(buildToolResult(errNoUIText",
-  "replace": "if false {\n\t\treturn toResult(buildToolResult(errNoUIText"
- },
- {
   "name": "event-before-validation",
   "file": "extension.go",
   "find": "if v := validateQuestionnaire(typed); !v.OK {",
-  "replace": "emit(ctx, promptEvent, promptEventPayload(typed))\n\tif v := validateQuestionnaire(typed); !v.OK {"
- },
- {
-  "name": "prompt-event-lost",
-  "file": "extension.go",
-  "find": "emit(ctx, promptEvent, promptEventPayload(typed))\n\treturn a.runDialogs",
-  "replace": "return a.runDialogs"
- },
- {
-  "name": "blocked-start-lost",
-  "file": "extension.go",
-  "find": "emit(ctx, blockedEvent, map[string]any{\"active\": true})\n",
-  "replace": ""
- },
- {
-  "name": "blocked-not-cleared",
-  "file": "extension.go",
-  "find": "defer emit(ctx, blockedEvent, map[string]any{\"active\": false})",
-  "replace": ""
+  "replace": "h.Emit(promptEvent, promptEventPayload(typed))\n\tif v := validateQuestionnaire(typed); !v.OK {"
  },
  {
   "name": "has-preview-always",
@@ -520,5 +454,251 @@
   "file": "extension.go",
   "find": "if g.PromptSnippet != \"\" {",
   "replace": "if false {"
+ },
+ {
+  "name": "reserved-next-lost",
+  "file": "logic.go",
+  "find": "var reservedLabels = []string{\"Other\", ui.RowIntent(ui.KindOther).Label, ui.RowIntent(ui.KindNext).Label}",
+  "replace": "var reservedLabels = []string{\"Other\", ui.RowIntent(ui.KindOther).Label}"
+ },
+ {
+  "name": "reserved-other-lost",
+  "file": "logic.go",
+  "find": "var reservedLabels = []string{\"Other\", ui.RowIntent(ui.KindOther).Label, ui.RowIntent(ui.KindNext).Label}",
+  "replace": "var reservedLabels = []string{ui.RowIntent(ui.KindOther).Label, ui.RowIntent(ui.KindNext).Label}"
+ },
+ {
+  "name": "option-keeps-preview-row",
+  "file": "logic.go",
+  "find": "items = append(items, ui.WrappingSelectItem{Kind: ui.KindOption, Label: o.Label, Description: o.Description})",
+  "replace": "items = append(items, ui.WrappingSelectItem{Kind: ui.KindOption, Label: o.Label, Description: o.Preview})"
+ },
+ {
+  "name": "sentinels-not-appended",
+  "file": "logic.go",
+  "find": "for _, kind := range ui.SentinelsToAppend(uiQuestion(q)) {",
+  "replace": "for _, kind := range []string{} {"
+ },
+ {
+  "name": "other-row-number",
+  "file": "rpc.go",
+  "find": "strconv.Itoa(len(q.Options)+1)+\". \"+qui.DisplayLabel(qui.KindOther)",
+  "replace": "strconv.Itoa(len(q.Options))+\". \"+qui.DisplayLabel(qui.KindOther)"
+ },
+ {
+  "name": "custom-input-placeholder",
+  "file": "rpc.go",
+  "find": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+qui.T(\"rpc.custom_answer_title\", customAnswerTitle), \"\")",
+  "replace": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+qui.T(\"rpc.custom_answer_title\", customAnswerTitle), \"x\")"
+ },
+ {
+  "name": "custom-answer-dismissed-not-cancel",
+  "file": "rpc.go",
+  "find": "typed, ok, err := ui.Input(header+q.Question+\"\\n\\n\"+qui.T(\"rpc.custom_answer_title\", customAnswerTitle), \"\")\n\tif err != nil || !ok {\n\t\treturn nil, err\n\t}",
+  "replace": "typed, _, err := ui.Input(header+q.Question+\"\\n\\n\"+qui.T(\"rpc.custom_answer_title\", customAnswerTitle), \"\")\n\tif err != nil {\n\t\treturn nil, err\n\t}"
+ },
+ {
+  "name": "no-ui-after-validation",
+  "file": "extension.go",
+  "find": "if !h.HasUI() {\n\t\treturn toResult(buildToolResult(errNoUIText",
+  "replace": "if false {\n\t\treturn toResult(buildToolResult(errNoUIText"
+ },
+ {
+  "name": "prompt-event-lost",
+  "file": "extension.go",
+  "find": "h.Emit(promptEvent, promptEventPayload(typed))\n",
+  "replace": ""
+ },
+ {
+  "name": "blocked-start-lost",
+  "file": "extension.go",
+  "find": "h.Emit(blockedEvent, map[string]any{\"active\": true})\n\tdefer h.Emit(",
+  "replace": "defer h.Emit("
+ },
+ {
+  "name": "blocked-not-cleared",
+  "file": "extension.go",
+  "find": "defer h.Emit(blockedEvent, map[string]any{\"active\": false})",
+  "replace": ""
+ },
+ {
+  "name": "rpc-mode-uses-questionnaire",
+  "file": "extension.go",
+  "find": "if h.Mode() == \"rpc\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "nil-custom-result-not-walked",
+  "file": "extension.go",
+  "find": "return a.walkDialogs(h, typed)\n\t}\n\tresult, ok := decodeResult(raw)",
+  "replace": "return toResult(buildQuestionnaireResponse(nil, typed))\n\t}\n\tresult, ok := decodeResult(raw)"
+ },
+ {
+  "name": "listener-not-removed",
+  "file": "extension.go",
+  "find": "if removeListener != nil {\n\t\t\tremoveListener()\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "overlay-handle-not-forwarded",
+  "file": "extension.go",
+  "find": "handle.set(oh)\n\t\tif s := session.get(); s != nil {",
+  "replace": "if s := session.get(); s != nil {"
+ },
+ {
+  "name": "canreopen-always-true",
+  "file": "extension.go",
+  "find": "canReopenWhileHidden := removeListener != nil",
+  "replace": "canReopenWhileHidden := true"
+ },
+ {
+  "name": "key-release-reaches-session",
+  "file": "questionnaire.go",
+  "find": "if tui.IsKeyRelease(data) {\n\t\treturn sdk.RemoteComponentResult{}, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "collapse-off-registers-listener",
+  "file": "questionnaire.go",
+  "find": "if collapseKey == collapseKeyOff {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "collapse-repeat-toggles",
+  "file": "questionnaire.go",
+  "find": "if tui.IsKeyRelease(data) || tui.IsKeyRepeat(data) {",
+  "replace": "if tui.IsKeyRelease(data) {"
+ },
+ {
+  "name": "collapse-ignores-focus",
+  "file": "questionnaire.go",
+  "find": "if !hd.IsHidden() && !hd.IsFocused() {",
+  "replace": "if false {"
+ },
+ {
+  "name": "collapse-announced-every-time",
+  "file": "questionnaire.go",
+  "find": "if hd.IsHidden() && !hasAnnouncedHide {",
+  "replace": "if hd.IsHidden() && !hasAnnouncedHide || hd.IsHidden() {"
+ },
+ {
+  "name": "collapse-any-key",
+  "file": "questionnaire.go",
+  "find": "if !tui.MatchesKey(data, collapseKey) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "editor-failure-silent",
+  "file": "questionnaire.go",
+  "find": "h.Notify(fmt.Sprintf(\"%s: %s\", ui.T(\"editor.failed\", \"External editor failed\"), unsupported(\"the external editor for custom answers\")), \"error\")",
+  "replace": ""
+ },
+ {
+  "name": "done-never-closes",
+  "file": "questionnaire.go",
+  "find": "return sdk.RemoteComponentResult{Done: true, Value: wireResult(*c.result)}, nil",
+  "replace": "return sdk.RemoteComponentResult{}, nil"
+ },
+ {
+  "name": "result-answer-lost",
+  "file": "questionnaire.go",
+  "find": "QuestionIndex: a.QuestionIndex, Question: a.Question, Kind: a.Kind, Answer: a.Answer,",
+  "replace": "QuestionIndex: a.QuestionIndex, Question: a.Question, Kind: a.Kind,"
+ },
+ {
+  "name": "global-note-lost",
+  "file": "questionnaire.go",
+  "find": "out := questionnaireResult{Cancelled: r.Cancelled, GlobalNote: r.GlobalNote, Error: r.Error}",
+  "replace": "out := questionnaireResult{Cancelled: r.Cancelled, Error: r.Error}"
+ },
+ {
+  "name": "rows-default-wrong",
+  "file": "questionnaire.go",
+  "find": "return 24\n}",
+  "replace": "return 0\n}"
+ },
+ {
+  "name": "refusal-collapse-key-allowed",
+  "file": "refusal.go",
+  "find": "if key := resolveCollapseKey(); key != defaultCollapseKey && key != collapseKeyOff {",
+  "replace": "if key := resolveCollapseKey(); false && key != defaultCollapseKey && key != collapseKeyOff {"
+ },
+ {
+  "name": "refusal-off-key-refused",
+  "file": "refusal.go",
+  "find": "key != defaultCollapseKey && key != collapseKeyOff",
+  "replace": "key != defaultCollapseKey"
+ },
+ {
+  "name": "refusal-long-preview-allowed",
+  "file": "refusal.go",
+  "find": "if utf16Len(o.Preview) > maxPreviewChars {",
+  "replace": "if utf16Len(o.Preview) > maxPreviewChars && false {"
+ },
+ {
+  "name": "refusal-preview-boundary",
+  "file": "refusal.go",
+  "find": "if utf16Len(o.Preview) > maxPreviewChars {",
+  "replace": "if utf16Len(o.Preview) >= maxPreviewChars {"
+ },
+ {
+  "name": "refusal-utf16-astral-one-unit",
+  "file": "refusal.go",
+  "find": "if r > 0xFFFF {",
+  "replace": "if r > 0x10FFFF {"
+ },
+ {
+  "name": "refusal-not-applied-in-fallback",
+  "file": "extension.go",
+  "find": "if err := refuseUnported(typed); err != nil {",
+  "replace": "if err := refuseUnported(typed); err != nil && false {"
+ },
+ {
+  "name": "legacy-keybinding-not-migrated",
+  "file": "keybindings.go",
+  "find": "if migrated, ok := legacyKeybindingNames[key]; ok {",
+  "replace": "if migrated, ok := legacyKeybindingNames[key]; ok && false {"
+ },
+ {
+  "name": "string-binding-dropped",
+  "file": "keybindings.go",
+  "find": "out[next] = []string{v}",
+  "replace": "out[next] = nil"
+ },
+ {
+  "name": "wraptab-no-wrap",
+  "file": "internal/ui/key_router.go",
+  "find": "return ((index % total) + total) % total",
+  "replace": "return index % total"
+ },
+ {
+  "name": "allanswered-empty-true",
+  "file": "internal/ui/key_router.go",
+  "find": "if len(runtime.Questions) == 0 {\n\t\treturn false\n\t}",
+  "replace": "if len(runtime.Questions) == 0 {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "active-view-notes-lost",
+  "file": "internal/ui/selectors_focus.go",
+  "find": "if notesVisible {\n\t\treturn ActiveViewNotes\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "active-view-submit-lost",
+  "file": "internal/ui/selectors_focus.go",
+  "find": "if currentTab == totalQuestions {",
+  "replace": "if false {"
+ },
+ {
+  "name": "preview-pane-not-clamped",
+  "file": "internal/ui/selectors_derivations.go",
+  "find": "return min(currentTab, totalQuestions-1)",
+  "replace": "return currentTab"
+ },
+ {
+  "name": "tab-label-fallback",
+  "file": "internal/ui/selectors_projections.go",
+  "find": "label = fmt.Sprintf(\"Q%d\", i+1)",
+  "replace": "label = fmt.Sprintf(\"Q%d\", i)"
  }
 ]

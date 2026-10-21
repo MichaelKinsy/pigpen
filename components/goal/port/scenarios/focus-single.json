@@ -1,0 +1,36 @@
+{
+  "name": "focus-single",
+  "description": "One open goal: /goal-focus focuses it, a second /goal-focus focuses it again; /goal-pause shows the focus.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-focus"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-pause"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"First goal\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\"\n}\n\n# Goal Prompt\n\nFirst goal\n\n## Progress\n\n- Status: active\n"
+  }
+}

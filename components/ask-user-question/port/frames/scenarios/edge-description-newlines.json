@@ -1,0 +1,34 @@
+{
+	"name": "edge-description-newlines",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Newlines in description?",
+				"header": "NL",
+				"options": [
+					{
+						"label": "One",
+						"description": "line one\nline two\n\nline four"
+					},
+					{
+						"label": "Two",
+						"description": "  leading and trailing  "
+					}
+				]
+			}
+		]
+	},
+	"width": 40,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

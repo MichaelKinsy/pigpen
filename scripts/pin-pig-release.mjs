@@ -6,6 +6,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { runners } from './runners.mjs';
 
 const version = process.argv[2]?.replace(/^v/, '');
 if (!version || !/^\d+\.\d+\.\d+$/.test(version)) {
@@ -34,7 +35,8 @@ const sums = new Map((await response.text()).trim().split('\n').map((line) => {
 }));
 
 const assets = {};
-for (const target of Object.keys(requirement.release.assets)) {
+// Every target a Piglet can build for, not the targets already pinned: the pin must be fillable from an empty `assets`.
+for (const target of Object.keys(runners)) {
   const [os, arch] = target.split('/');
   const file = `pig-${version}-${os}-${arch}.${os === 'windows' ? 'zip' : 'tar.gz'}`;
   const sha256 = sums.get(file);
@@ -42,7 +44,9 @@ for (const target of Object.keys(requirement.release.assets)) {
   assets[target] = { file, sha256 };
 }
 requirement.pig = version;
-requirement.release = { ...requirement.release, tag, commit, assets };
+// Pinning needs the release's SHA256SUMS, so a pinned release is a published one: no `published` flag survives.
+const { published: _published, ...pinned } = requirement.release;
+requirement.release = { ...pinned, tag, commit, assets };
 
 // Keep the file's layout: one asset per line.
 const body = JSON.stringify(requirement, null, 2).replace(/\{\n\s+"file": ("[^"]+"),\n\s+"sha256": ("[^"]+")\n\s+\}/g, '{ "file": $1, "sha256": $2 }');

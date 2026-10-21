@@ -1,0 +1,19 @@
+{"kind":"header","scenario":"lock-commands","lane":"pi-ts","host":"pi 1.3.0","extension":"sha256:fc767afcbeedf603d53e87866cd0a3437464faecb902e8c13e062532ef237e93","normalizer":"v3"}
+{"step":"00-startup","ch":"ui","data":{"message":"💡 No model preferences set. Run /pt-model-guard-pref to choose preferred models.","method":"notify","notifyType":"info"}}
+{"step":"01-list","ch":"ui","data":{"message":"OpenRouter provider locks (ON):\n  • vendor/a -> alpha\n  • vendor/b -> beta","method":"notify","notifyType":"info"}}
+{"step":"01-list","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"02-off","ch":"ui","data":{"message":"openrouter-lock-provider disabled","method":"notify","notifyType":"info"}}
+{"step":"02-off","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"03-list-off","ch":"ui","data":{"message":"OpenRouter provider locks (OFF):\n  • vendor/a -> alpha\n  • vendor/b -> beta","method":"notify","notifyType":"info"}}
+{"step":"03-list-off","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"04-on","ch":"ui","data":{"message":"openrouter-lock-provider enabled","method":"notify","notifyType":"info"}}
+{"step":"04-on","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"05-clear","ch":"ui","data":{"message":"Current model is not an OpenRouter model","method":"notify","notifyType":"warning"}}
+{"step":"05-clear","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"06-lock-provider","ch":"ui","data":{"message":"Current model is not an OpenRouter model","method":"notify","notifyType":"warning"}}
+{"step":"06-lock-provider","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"07-bare","ch":"ui","data":{"message":"Usage: /pt-openrouter-lock-provider <provider> | clear | list | on | off","method":"notify","notifyType":"info"}}
+{"step":"07-bare","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"08-lock-two-words","ch":"ui","data":{"message":"Current model is not an OpenRouter model","method":"notify","notifyType":"warning"}}
+{"step":"08-lock-two-words","ch":"response","data":{"command":"prompt","data":{"disposition":"handled"},"success":true}}
+{"step":"99-shutdown","ch":"exit","data":{"code":0}}

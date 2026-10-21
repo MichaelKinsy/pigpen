@@ -1,0 +1,62 @@
+{
+	"name": "notes-rows-10",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 10,
+	"steps": [
+		{
+			"input": "n",
+			"label": "n"
+		},
+		{
+			"input": "x",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[13;2u",
+			"label": "shift-enter"
+		},
+		{
+			"input": "y",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[13;2u",
+			"label": "shift-enter"
+		},
+		{
+			"input": "z",
+			"label": "type"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

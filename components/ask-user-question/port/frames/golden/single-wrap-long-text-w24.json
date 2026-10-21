@@ -1,0 +1,185 @@
+{
+	"scenario": "single-wrap-long-text-w24",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> A long header text </bg>   ",
+				"",
+				" <b>This is a deliberately ",
+				" <b>long question text     ",
+				" <b>that has to wrap       ",
+				" <b>across several lines   ",
+				" <b>at narrow terminal     ",
+				" <b>widths, and it keeps   ",
+				" <b>going so that wrapping ",
+				" <b>is exercised properly?</b> ",
+				"",
+				"<fg:accent><b>❯ 1. An option label</b></fg>",
+				"<fg:accent><b>     that is very long</b></fg>",
+				"<fg:accent><b>     and goes up to</b></fg>",
+				"<fg:accent><b>     sixty characters</b></fg>",
+				"<fg:accent><b>     wide</b></fg>",
+				"     <fg:muted>A description that</fg>",
+				"     <fg:muted>is also long enough</fg>",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				" <b>going so that wrapping ",
+				" <b>is exercised properly?</b> ",
+				"",
+				"  1. An option label",
+				"     that is very long",
+				"     and goes up to",
+				"     sixty characters",
+				"     wide",
+				"     <fg:muted>A description that</fg>",
+				"     <fg:muted>is also long enough</fg>",
+				"     <fg:muted>to wrap onto a</fg>",
+				"     <fg:muted>second and a third</fg>",
+				"     <fg:muted>line when the</fg>",
+				"     <fg:muted>terminal is narrow</fg>",
+				"<fg:accent><b>❯ 2. Short</b></fg>",
+				"     <fg:muted>short</fg>",
+				"  3. Third",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				"<fg:dim>↑</fg>",
+				" <b>going so that wrapping ",
+				" <b>is exercised properly?</b> ",
+				"",
+				"  1. An option label",
+				"     that is very long",
+				"     and goes up to",
+				"     sixty characters",
+				"     wide",
+				"     <fg:muted>A description that</fg>",
+				"     <fg:muted>is also long enough</fg>",
+				"     <fg:muted>to wrap onto a</fg>",
+				"     <fg:muted>second and a third</fg>",
+				"     <fg:muted>line when the</fg>",
+				"     <fg:muted>terminal is narrow</fg>",
+				"<fg:accent><b>❯ 2. Short ✔</b></fg>",
+				"     <fg:muted>short</fg>",
+				"  3. Third",
+				"<fg:dim>↓</fg>",
+				"<fg:accent>────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ <reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 3
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "This is a deliberately long question text that has to wrap across several lines at narrow terminal widths, and it keeps going so that wrapping is exercised properly?",
+				"kind": "option",
+				"answer": "Short"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"This is a deliberately long question text that has to wrap across several lines at narrow terminal widths, and it keeps going so that wrapping is exercised properly?\"=\"Short\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "This is a deliberately long question text that has to wrap across several lines at narrow terminal widths, and it keeps going so that wrapping is exercised properly?",
+					"kind": "option",
+					"answer": "Short"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "This is a deliberately long question text that has to wrap across several lines at narrow terminal widths, and it keeps going so that wrapping is exercised properly?",
+						"header": "A long header text",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "An option label that is very long and goes up to sixty characters wide",
+								"description": "A description that is also long enough to wrap onto a second and a third line when the terminal is narrow",
+								"hasPreview": false
+							},
+							{
+								"label": "Short",
+								"description": "short",
+								"hasPreview": false
+							},
+							{
+								"label": "Third",
+								"description": "",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

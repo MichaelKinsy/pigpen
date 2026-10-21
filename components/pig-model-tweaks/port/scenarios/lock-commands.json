@@ -1,0 +1,70 @@
+{
+  "name": "lock-commands",
+  "description": "Provider-lock commands with the session on a non-OpenRouter model: list, on, off, clear, lock, no-arg usage.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"openrouterModelProviderPref\": {\"enabled\": true, \"locks\": {\"vendor/a\": \"alpha\", \"vendor/b\": \"beta\"}}}"
+  },
+  "steps": [
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider list"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider off"
+      }
+    },
+    {
+      "name": "list-off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider list"
+      }
+    },
+    {
+      "name": "on",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider on"
+      }
+    },
+    {
+      "name": "clear",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider clear"
+      }
+    },
+    {
+      "name": "lock-provider",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider deepseek"
+      }
+    },
+    {
+      "name": "bare",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider"
+      }
+    },
+    {
+      "name": "lock-two-words",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider a b"
+      }
+    }
+  ]
+}

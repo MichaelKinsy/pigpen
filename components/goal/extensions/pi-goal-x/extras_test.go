@@ -210,7 +210,17 @@ func TestSettingsLayers(t *testing.T) {
 		os.WriteFile(p, []byte(text), 0o644)
 		return p
 	}
-	num := func(text string) *float64 { return readLayer(write("s.json", text)).maxRuns }
+	layerOf := func(name, text string) *jsObject {
+		invalidateGoalSettingsCache()
+		return readSettingsLayer(write(name, text), settingsScopeProject).layer
+	}
+	num := func(text string) *float64 {
+		n, ok := layerOf("s.json", text).num("maxAutonomousRuns")
+		if !ok {
+			return nil
+		}
+		return &n
+	}
 	if v := num(`{"maxAutonomousRuns":-1}`); v != nil {
 		t.Error("a negative allowance is ignored")
 	}
@@ -223,45 +233,13 @@ func TestSettingsLayers(t *testing.T) {
 	if v := num(`[1]`); v != nil {
 		t.Error("an array is not a settings object")
 	}
-	l := readLayer(write("b.json", `{"disableContracts":"true","autoSelectSingleGoal":false}`))
-	eq(t, l.disableContracts != nil && *l.disableContracts, true, "string true")
-	eq(t, l.autoSelect != nil && !*l.autoSelect, true, "false")
+	l := layerOf("b.json", `{"disableContracts":"true","autoSelectSingleGoal":false}`)
+	dc, _ := l.flag("disableContracts")
+	as, ok := l.flag("autoSelectSingleGoal")
+	eq(t, dc, true, "string true")
+	eq(t, ok && !as, true, "false")
 	t.Setenv("PI_GOAL_DISABLE_CONTRACTS", "1")
 	eq(t, loadGoalSettings(dir).disableContracts, false, "an environment value other than true/false is ignored")
-}
-
-func TestKickoffWithoutAScheduler(t *testing.T) {
-	cwd := t.TempDir()
-	t.Setenv("PI_CODING_AGENT_DIR", t.TempDir())
-	os.MkdirAll(filepath.Join(cwd, ".pi"), 0o755)
-	os.WriteFile(filepath.Join(cwd, ".pi/pi-goal-x-settings.json"), []byte(`{"maxAutonomousRuns":1}`), 0o644)
-	invalidateGoalPoolCache()
-	h := &fakeHost{cwd: cwd}
-	co := newCore(h)
-	co.loadState()
-	co.flush()
-	h.events = nil
-	must(0, co.direct("Do the thing", false))
-	co.flush()
-	var warned bool
-	for _, e := range h.events {
-		if e[0] == "notify" && strings.Contains(e[2].(string), "(Go port): automatic continuation is not ported") {
-			warned = true
-		}
-	}
-	eq(t, warned, true, "the port says it does not continue by itself")
-	file := ""
-	for k := range readTree(t, cwd) {
-		if strings.Contains(k, "active_goal_") {
-			file = k
-		}
-	}
-	text, _ := os.ReadFile(filepath.Join(cwd, file))
-	for _, want := range []string{`"phase": "ready"`, `"kind": "ready"`, `"purpose": "kickoff"`} {
-		if !strings.Contains(string(text), want) {
-			t.Errorf("goal file lacks %s", want)
-		}
-	}
 }
 
 func TestHeadlessAndBusy(t *testing.T) {
@@ -281,7 +259,7 @@ func TestHeadlessAndBusy(t *testing.T) {
 		t.Errorf("headless clear: %v", h.events[0])
 	}
 	// Two open goals and no focus: a headless pause explains instead of asking.
-	co.setFocusedGoalID(nil, "unfocused", false)
+	co.setFocusedGoalId(nil, "unfocused", false)
 	second := baseGoal("Second", false, clockMs()+1000)
 	must(co.st.writeActiveGoalFile(second))
 	invalidateGoalPoolCache()
@@ -291,11 +269,11 @@ func TestHeadlessAndBusy(t *testing.T) {
 	eq(t, strings.HasPrefix(h.events[0][2].(string), "No goal is focused in this session. 2 open goals"), true, "headless pause")
 	// A busy session aborts when the focus is dropped.
 	h.noUI, h.busy = false, true
-	co.setFocusedGoalID(strp(gstr(second, "id")), "selected", true)
+	co.setFocusedGoalId(new(gstr(second, "id")), "selected", true)
 	co.unfocus()
 	eq(t, h.aborted, 1, "abort")
 	h.busy, h.aborted = false, 0
-	co.setFocusedGoalID(strp(gstr(second, "id")), "selected", true)
+	co.setFocusedGoalId(new(gstr(second, "id")), "selected", true)
 	co.unfocus()
 	eq(t, h.aborted, 0, "idle sessions are not aborted")
 }
@@ -326,9 +304,9 @@ func testClearFocusMoves(t *testing.T) {
 	must(co.st.writeActiveGoalFile(second))
 	invalidateGoalPoolCache()
 	co.goals = co.st.readActiveGoalPool()
-	h.onConfirm = func() { co.assignFocused(strp("other")) }
+	h.onConfirm = func() { co.assignFocused(new("other")) }
 	if strings.Contains(t.Name(), "AndBack") {
-		h.onConfirm = func() { co.assignFocused(strp("other")); co.assignFocused(strp(first)) }
+		h.onConfirm = func() { co.assignFocused(new("other")); co.assignFocused(new(first)) }
 	}
 	h.confirm = []bool{true}
 	h.events = nil

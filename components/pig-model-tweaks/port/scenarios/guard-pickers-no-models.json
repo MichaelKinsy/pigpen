@@ -1,0 +1,27 @@
+{
+  "name": "guard-pickers-no-models",
+  "description": "No model has a key: add, remove and the bare command answer with the API-key warning.",
+  "steps": [
+    {
+      "name": "add",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref add"
+      }
+    },
+    {
+      "name": "remove",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref remove"
+      }
+    },
+    {
+      "name": "bare",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref"
+      }
+    }
+  ]
+}

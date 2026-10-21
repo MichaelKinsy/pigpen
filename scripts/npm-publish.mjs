@@ -9,17 +9,22 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readManifests, root } from './generate-index.mjs';
-import { buildPackageTree, npmName } from './npm-packages.mjs';
+import { buildPackageTree, libraryDeps, npmName } from './npm-packages.mjs';
 import { buildPigletTree, npmPigletSource, pigletNpmName } from './npm-piglets.mjs';
 import { readPackages } from './packages.mjs';
 
-/** [{kind, name, version, dir, needs?}] Packages first, then Piglets. `skipBuild` only computes names and directories. */
+/**
+ * [{kind, name, version, dir, needs?}] Packages first (a shared library before every Package that depends on it), then Piglets.
+ * `skipBuild` only computes names and directories.
+ */
 export function publishPlan(outRoot, { skipBuild = false, directory = root } = {}) {
   const repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository;
+  const versions = new Map(readPackages(directory).map(({ dir, manifest }) => [dir, manifest.version]));
   const packages = readPackages(directory).map(({ dir, manifest }) => {
     const tree = skipBuild ? join(outRoot, 'packages', dir) : buildPackageTree(dir, join(outRoot, 'packages'), { directory, repository });
-    return { kind: 'package', name: npmName(dir), version: manifest.version, dir: tree };
-  });
+    const needs = libraryDeps(dir, directory).map((lib) => `npm:${npmName(lib)}@^${versions.get(lib)}`);
+    return { kind: 'package', name: npmName(dir), version: manifest.version, dir: tree, needs };
+  }).sort((a, b) => a.needs.length - b.needs.length); // a library has none; the sort is stable
   const piglets = readManifests(directory).map(({ manifest }) => {
     const tree = skipBuild ? join(outRoot, 'piglets', manifest.name) : buildPigletTree(manifest.name, join(outRoot, 'piglets'), { directory, repository });
     const needs = Object.values(npmPigletSource(manifest.name, { directory }).data.packages ?? {});

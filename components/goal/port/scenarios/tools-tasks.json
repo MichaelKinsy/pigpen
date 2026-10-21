@@ -1,0 +1,214 @@
+{
+  "name": "tools-tasks",
+  "description": "set_goal_tasks proposes a task tree (select dialog, confirmed) and update_goal_task drives it: start, contract gate, batch, skip, reopen, completed tasks stay closed.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "set_goal_tasks",
+          "arguments": {
+            "tasks": [
+              {
+                "id": "task-1",
+                "title": "Write the parser"
+              },
+              {
+                "id": "task-2",
+                "title": "Wire the command line",
+                "verification_contract": "the CLI test passes",
+                "lightweight_subtasks": true
+              },
+              {
+                "id": "task-2a",
+                "title": "Add the flags",
+                "parent_id": "task-2"
+              },
+              {
+                "id": "task-2b",
+                "title": "Add the help text",
+                "parent_id": "task-2"
+              },
+              {
+                "id": "task-3",
+                "title": "Update the docs"
+              }
+            ],
+            "block_completion": true,
+            "change_summary": "Initial plan"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-1",
+            "status": "start"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-1",
+            "status": "complete",
+            "evidence": "parser tests pass"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-2",
+            "status": "complete"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-2",
+            "status": "complete",
+            "evidence": "CLI test green"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "updates": [
+              {
+                "task_id": "task-2a",
+                "status": "start"
+              },
+              {
+                "task_id": "task-2a",
+                "status": "complete",
+                "evidence": "flags parse"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-3",
+            "status": "skipped"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-3",
+            "status": "skipped",
+            "reason": "docs ship later"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-3",
+            "status": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "update_goal_task",
+          "arguments": {
+            "task_id": "task-1",
+            "status": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "get_goal",
+          "arguments": {
+            "section": "tasks"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Progress recorded."
+    }
+  ],
+  "steps": [
+    {
+      "name": "plan",
+      "rpc": {
+        "type": "prompt",
+        "message": "Plan it."
+      },
+      "ui": [
+        {
+          "value": "Confirm task list"
+        }
+      ]
+    },
+    {
+      "name": "work",
+      "rpc": {
+        "type": "prompt",
+        "message": "Work on it."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0, \"autoSelectSingleGoal\": true}",
+    ".pi/goals/active_goal_20260102030405_seed-t.md": "{\n  \"version\": 3,\n  \"id\": \"seed-t\",\n  \"objective\": \"Ship two files\",\n  \"status\": \"active\",\n  \"autoContinue\": false,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-t.md\"\n}\n\n# Goal Prompt\n\nShip two files\n\n## Progress\n\n- Status: active\n"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "Context snapshot: \\d{4,}/100000 tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <estimate>/100000 tokens"
+    }
+  ]
+}

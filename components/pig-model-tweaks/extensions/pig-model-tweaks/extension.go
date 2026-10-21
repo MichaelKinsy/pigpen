@@ -44,24 +44,26 @@ func Extension() *sdk.Extension {
 	ext := sdk.New(extensionName)
 	st := newStore()
 
-	registerRememberModel(ext, st)
-	registerOpenRouterLockProvider(ext, st)
-	registerModelGuard(ext, st)
-
-	// The settings file lives in PiG's agent directory, which only a session
-	// context knows. Taking it from the first session_start keeps one
-	// resolution of PIG_HOME and means a run that never starts a session writes
-	// nothing at all.
-	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
-		configHome, err := ctx.ConfigHome()
+	// The settings file lives in PiG's agent directory. The host's own answer
+	// (Pi's getAgentDir()) is taken when it provides one; otherwise it comes
+	// from the first session_start's context, which keeps one resolution of
+	// PIG_HOME and means a run that never starts a session writes nothing at
+	// all. One handler runs the features' session_start work in the original
+	// extensions' load order, after the directory is bound.
+	ext.OnSessionStart(func(ctx sdk.Context, data map[string]any) (any, error) {
+		agent, err := st.agent(ctx)
 		if err != nil {
 			return nil, err
 		}
-		agent := agentDir(configHome)
-		st.bind(agent)
 		st.rememberStartupModel(agent)
+		restoreRememberedModel(ctx, st, data)
+		hintNoPreferences(ctx, st)
 		return nil, nil
 	})
+
+	registerRememberModel(ext, st)
+	registerOpenRouterLockProvider(ext, st)
+	registerModelGuard(ext, st)
 
 	// A confirmation still open at shutdown is released by the host; this only
 	// stops the extension from starting or reporting another one.

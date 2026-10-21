@@ -90,7 +90,9 @@ compositions. The scenario needs a PiG build with Package Skill expansion and th
 print-mode tool-scope fix; PiG 0.4.1 has both, and CI runs it with the pig it builds from
 PiG's `v0.4.1` commit. Set `PIG_BIN` to a 0.4.1 pig (PiG 0.3.x fails it). `npm run test:moved` installs `session-ingest` and
 `context-info` into a scratch home and drives a real `pig` against a scripted local
-provider (needs `PIG_BIN` and a Go toolchain). Run `npm run quality` to check source alone.
+provider (needs `PIG_BIN` and a Go toolchain). `npm run test:go-ports` also needs `PIG_SOURCE_ROOT`, a PiG checkout at the commit pinned
+in `scripts/pig-requirement.json`: `bun-runtime` compares its Bun assets with that checkout's runtime lock, and CI sets it.
+Run `npm run quality` to check source alone.
 
 Use `npm run stage` for the edit/run loop. The script owns `dist/staged/` and
 replaces that generated tree. Never put authored Resources there. Local Package

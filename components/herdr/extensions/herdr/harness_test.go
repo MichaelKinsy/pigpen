@@ -266,6 +266,7 @@ type hostState struct {
 	sessionID      string
 	idle           bool
 	sessionFailure bool
+	idleFailure    bool
 }
 
 type fakeHost struct {
@@ -408,6 +409,10 @@ func (h *fakeHost) answer(env wireEnvelope) {
 			result["sessionId"] = st.sessionID
 		}
 	case "isIdle":
+		if st.idleFailure {
+			h.write(map[string]any{"type": "call_result", "id": env.ID, "call_result": map[string]any{"error": map[string]any{"message": "no idle state"}}})
+			return
+		}
 		result["idle"] = st.idle
 	}
 	h.write(map[string]any{"type": "call_result", "id": env.ID, "call_result": map[string]any{"result": result}})

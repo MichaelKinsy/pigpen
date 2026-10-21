@@ -1,0 +1,74 @@
+{
+	"name": "keybindings-editor-up-down",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"keybindings": {
+		"tui.editor.cursorUp": "ctrl+p",
+		"tui.editor.cursorDown": "ctrl+n"
+	},
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "a",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[13;2u",
+			"label": "shift-enter"
+		},
+		{
+			"input": "b",
+			"label": "type"
+		},
+		{
+			"input": "\u0010",
+			"label": "ctrl-p"
+		},
+		{
+			"input": "\u0010",
+			"label": "ctrl-p"
+		},
+		{
+			"input": "\u000e",
+			"label": "ctrl-n"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -13,5 +13,4 @@ https://github.com/juicesharp/rpiv-mono, by **juicesharp** (MIT, Copyright (c) 2
 
 The Go code, the scenarios and the tests were written for this Package by Michael Kinsy. Wording, tool schema,
 prompt guidance and behavior follow the original. Modified paths: none of the original is modified; the port is a
-separate implementation. Not ported: the locales (E1, English only: approved by the owner), the interactive questionnaire component and the overlay
-collapse key (see [port/PORT.md](port/PORT.md)).
+separate implementation. Not ported: the hide-while-collapsed overlay handle, the external editor and the terminal bell (see [port/PORT.md](port/PORT.md)).

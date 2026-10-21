@@ -1,0 +1,34 @@
+{
+	"name": "single-empty-description",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Empty descriptions?",
+				"header": "Empty",
+				"options": [
+					{
+						"label": "One",
+						"description": ""
+					},
+					{
+						"label": "Two",
+						"description": "second"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

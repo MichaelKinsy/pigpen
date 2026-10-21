@@ -359,30 +359,63 @@ func TestDaemonSurvivesMalformedTraffic(t *testing.T) {
 
 func TestDaemonLimitsClients(t *testing.T) {
 	r := startDaemon(t, 0)
-	var conns []net.Conn
-	for i := 0; i < maxClients+3; i++ {
+	var held []net.Conn
+	t.Cleanup(func() {
+		for _, c := range held {
+			_ = c.Close()
+		}
+	})
+	// A hello is answered only on a connection the daemon admitted. A refused one is closed unanswered, so the reply is the
+	// event that says which it was; the deadline only bounds a daemon that never answers.
+	hello := func(c net.Conn) (admitted bool) {
+		t.Helper()
+		_ = c.SetDeadline(time.Now().Add(10 * time.Second))
+		cod := newCodec(c)
+		err := cod.write(&message{ID: 1, Cmd: cmdHello})
+		if err == nil {
+			var m *message
+			if m, err = cod.read(); err == nil {
+				return m.OK
+			}
+		}
+		if os.IsTimeout(err) {
+			t.Fatalf("the daemon neither answered nor closed the connection: %v", err)
+		}
+		return false
+	}
+	dialOne := func() net.Conn {
+		t.Helper()
 		c, err := dial(bg, Endpoint(r.paths))
 		if err != nil {
 			t.Fatal(err)
 		}
-		conns = append(conns, c)
+		return c
 	}
-	defer func() {
-		for _, c := range conns {
+	// The readiness probe in startDaemon connected and closed, and the daemon frees that connection's slot only when its serve
+	// goroutine sees the close. Until then the daemon admits one client fewer than maxClients, so fill it first: a refused
+	// connection holds no slot, so dialing again is safe, and the daemon admits maxClients once the probe's slot is free.
+	eventually(t, "the daemon to admit maxClients clients", func() bool {
+		c := dialOne()
+		if !hello(c) {
 			_ = c.Close()
+			return false
 		}
-	}()
-	time.Sleep(100 * time.Millisecond)
-	// The surplus connections were closed by the daemon: a read returns EOF at once.
-	closed := 0
-	for _, c := range conns {
-		_ = c.SetReadDeadline(time.Now().Add(50 * time.Millisecond))
-		if _, err := c.Read(make([]byte, 1)); err != nil && !os.IsTimeout(err) {
-			closed++
+		held = append(held, c)
+		return len(held) == maxClients
+	})
+	// Every slot is taken, so each further connection is closed by the daemon: it never answers a hello.
+	for i := range 3 {
+		c := dialOne()
+		if hello(c) {
+			t.Fatalf("surplus connection %d was admitted beyond maxClients=%d", i+1, maxClients)
 		}
+		_ = c.Close()
 	}
-	if closed != 3 {
-		t.Fatalf("%d connections were refused, want 3", closed)
+	// The refusals did not disturb the admitted clients.
+	for i, c := range held {
+		if !hello(c) {
+			t.Fatalf("admitted client %d stopped answering after the surplus was refused", i+1)
+		}
 	}
 }
 

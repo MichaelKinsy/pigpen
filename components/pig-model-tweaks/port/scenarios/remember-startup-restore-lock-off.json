@@ -1,0 +1,63 @@
+{
+  "name": "remember-startup-restore-lock-off",
+  "description": "With the lock feature off the remembered model restores as the base id, and the toast and settings.json carry the base id.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat \"$PI_CODING_AGENT_DIR/settings.json\""
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "env": {
+    "OPENROUTER_API_KEY": "eq-or-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": true, \"last\": {\"provider\": \"openrouter\", \"modelId\": \"google/gemma-4-26b-a4b-it\"}}, \"modelGuard\": {\"enabled\": false, \"allowedModels\": []}, \"openrouterModelProviderPref\": {\"enabled\": false, \"locks\": {\"google/gemma-4-26b-a4b-it\": \"free\"}}}",
+    "settings.json": "{}\n"
+  },
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "state",
+      "rpc": {
+        "type": "get_state"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model off"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "read-settings",
+      "rpc": {
+        "type": "prompt",
+        "message": "show settings"
+      }
+    }
+  ]
+}

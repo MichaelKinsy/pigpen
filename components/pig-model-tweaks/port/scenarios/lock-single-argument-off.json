@@ -1,0 +1,63 @@
+{
+  "name": "lock-single-argument-off",
+  "description": "With the lock feature off nothing is active, so a single-argument lock still says `defaultModel -> base:provider` (the original builds the variant itself) but settings.json gets the base id.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat \"$PI_CODING_AGENT_DIR/settings.json\""
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "env": {
+    "OPENROUTER_API_KEY": "eq-or-key"
+  },
+  "args": [
+    "--provider",
+    "openrouter",
+    "--model",
+    "google/gemma-4-26b-a4b-it"
+  ],
+  "agentFiles": {
+    "settings.json": "{}\n",
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": false}, \"openrouterModelProviderPref\": {\"enabled\": false, \"locks\": {}}}"
+  },
+  "steps": [
+    {
+      "name": "lock",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider deepseek"
+      }
+    },
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-openrouter-lock-provider list"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "read-settings",
+      "rpc": {
+        "type": "prompt",
+        "message": "show settings"
+      }
+    }
+  ]
+}

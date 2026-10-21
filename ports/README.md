@@ -175,7 +175,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Structured multi-question questionnaire the model calls instead of guessing, with an RPC fallback and locales.
 - Upstream path: `packages/rpiv-ask-user-question` in rpiv-mono
-- Notes: npm 274,750 in 30 days. Size M, 6-10 days. Partial: slice A ported (tool, validation, envelope, dialog walker, events, reconciler): 148 twins and 25 named skips of 173 slice A cases, 16 Pi-recorded scenarios (two-calls flaky, G11), 87 mutations killed. Slice B (interactive questionnaire component, 474 upstream cases) not ported; locales (English only) and the hide-while-collapsed overlay handle are approved exclusions.
+- Notes: npm 274,750 in 30 days. Size M, 6-10 days. Ported: the tool, validation, envelope, dialog walker, events, reconciler and the interactive questionnaire (state and view layers, preview pane, locales) on the shared pitui Package: 624 exact twins and 23 named skips of the 647 upstream cases, 173 scenarios (1,276 frames) compared with the original under Pi 1402973a, 16 Pi-recorded RPC scenarios (15 pass; two-calls differs between PiG and Pi, PiG core bug B3), 111 mutations killed. Differences, each named in PORT.md: the collapse key shows a one-line row and the external editor key reports a refusal (PiG SDK lacks the overlay handle and terminal suspend), no terminal bell and keybinding overrides read from keybindings.json; syntax highlighting (PiG's highlight.js port, in pitui) and the locales (English unless rpiv-i18n is installed) match the original.
 
 ### `plannotator`: Plannotator
 
@@ -206,8 +206,8 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 ### `pi-goal-x`: pi-goal-x (tmonk)
 
-- Kind: port. Persistent goals kept as files under .pi/goals: focus, pause, list, clear and archive, with an event ledger (partial: storage and the direct commands).
-- Notes: Partial: goal records, goal files (byte for byte), the pool and its snapshot, the ledger, session start and the scheduler restore, and /goal-direct, /sisyphus-direct, /goal-list, /goal-pause, /goal-clear, /goal-unfocus. Not ported: continuation, drafting, the auditor, the goal tools, the dashboard. 41 twins and 4 named skips, 86 sessions replayed against the original (bad input, headless and busy hosts included), 17 Pi-recorded scenarios, 210 of 210 mutations killed.
+- Kind: port. Durable goals: the scheduler, the goal and task tools, guided drafting, the dashboard, the completion auditor, the blocker oracle and the sixteen commands, over goal files under .pi/goals and an event ledger.
+- Notes: Complete port of pi-goal-x 0.32.3. 1048 exact twins and 1 named skip (the real-SDK prompt cache e2e) of 1049 upstream tests, 74 Pi-recorded scenarios, 1983 mutations all killed (51 equivalent mutants listed with reasons). Differences from the original and PiG-versus-Pi findings are in components/goal/port/PORT.md.
 
 ### `pi-permission-system`: pi-permission-system (gotgenes)
 

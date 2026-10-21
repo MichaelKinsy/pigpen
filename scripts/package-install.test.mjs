@@ -54,7 +54,11 @@ test('every component Package installs from its tag with the real pig', { skip: 
     git(scratch, clone, 'tag', packageTag('herdr', '0.2.0'));
     git(scratch, clone, 'push', '-q', 'origin', packageTag('herdr', '0.2.0'));
     // A pinned tag is not moved by `pig update`.
-    run(pig, siblings, work, 'update', '--extensions');
+    // One Package per `pig update`: `pig update --extensions` updates the two Packages of this checkout concurrently and
+    // races on the checkout's index.lock (PiG bug B8, fixed on PiG branch fix/package-update-shared-checkout, not yet released).
+    // Remove this serialization (back to a single `update --extensions`) once a PiG release contains that fix and Pigpen CI uses it.
+    run(pig, siblings, work, 'update', '--extension', one);
+    run(pig, siblings, work, 'update', '--extension', two);
     assert.equal(JSON.parse(readFileSync(join(first, 'package.json'), 'utf8')).version, '0.1.0');
     // Installing the new tag replaces the old source of the same Package.
     const next = packageSpec(repository, 'herdr', '0.2.0');

@@ -1,0 +1,82 @@
+{
+  "name": "refresh-external",
+  "description": "Files edited behind the extension's back (a goal added, a goal removed, ledger lines, settings): /goal-refresh reports each change.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cp spare/active_goal_20260102030409_seed-new.md .pi/goals/ && cat spare/ledger.jsonl >> .pi/goals/goal_events.jsonl && cp spare/settings.json .pi/pi-goal-x-settings.json && rm .pi/goals/active_goal_20260102030405_seed-a.md"
+          }
+        }
+      ]
+    },
+    {
+      "text": "Done."
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-status"
+      }
+    },
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Change the files."
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-refresh"
+      }
+    },
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-refresh"
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}",
+    ".pi/goals/active_goal_20260102030405_seed-a.md": "{\n  \"version\": 3,\n  \"id\": \"seed-a\",\n  \"objective\": \"First goal\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 12500,\n    \"activeSeconds\": 3725\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:05.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:05.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030405_seed-a.md\"\n}\n\n# Goal Prompt\n\nFirst goal\n\n## Progress\n\n- Status: active\n",
+    "spare/active_goal_20260102030409_seed-new.md": "{\n  \"version\": 3,\n  \"id\": \"seed-new\",\n  \"objective\": \"Added from outside\",\n  \"status\": \"active\",\n  \"autoContinue\": true,\n  \"usage\": {\n    \"tokensUsed\": 0,\n    \"activeSeconds\": 0\n  },\n  \"sisyphus\": false,\n  \"revision\": 0,\n  \"createdAt\": \"2026-01-02T03:04:09.000Z\",\n  \"updatedAt\": \"2026-01-02T03:04:09.000Z\",\n  \"activePath\": \".pi/goals/active_goal_20260102030409_seed-new.md\"\n}\n\n# Goal Prompt\n\nAdded from outside\n\n## Progress\n\n- Status: active\n",
+    "spare/ledger.jsonl": "{\"type\": \"goal_created\", \"goalId\": \"seed-new\", \"objective\": \"Added\", \"sisyphus\": false, \"autoContinue\": true, \"at\": \"2020-01-02T03:04:05.000Z\"}\nnot json\n",
+    "spare/settings.json": "{\"maxAutonomousRuns\": 0, \"disableContracts\": true}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}

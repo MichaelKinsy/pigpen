@@ -1,10 +1,8 @@
 package tintinweb_tasks
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -17,6 +15,8 @@ import (
 	"unicode/utf16"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	sdkjson "github.com/MichaelKinsy/PiG/extensions/sdk/json"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/kit"
 )
 
 // RPC timeouts of the subagents integration. upstream: index.ts spawnSubagent (30 s) and stopSubagent (10 s).
@@ -54,15 +54,14 @@ func debug(args ...any) {
 	}
 }
 
-// jsonString is JSON.stringify: compact, with no HTML escaping.
+// jsonString is JSON.stringify: compact, no HTML escaping, numbers as JavaScript writes them and array-index keys
+// ahead of the others (the other keys stay in byte order: a Go map keeps no insertion order).
 func jsonString(v any) string {
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(v); err != nil {
+	out, err := sdkjson.MarshalStringify(v)
+	if err != nil {
 		return "null"
 	}
-	return strings.TrimRight(buf.String(), "\n")
+	return string(out)
 }
 
 // jsSlice is s.slice(0, n) for JavaScript strings, which count UTF-16 code units.
@@ -244,6 +243,8 @@ type app struct {
 	configuredCwd       string
 	persistedTasksShown bool
 	agentsReattached    bool
+	watchingWidth       bool
+	gate                orderGate
 }
 
 func newApp(e *sdk.Extension) *app {
@@ -295,8 +296,10 @@ func (a *app) resolveStoreTarget(cwd, sessionID string) storeTarget {
 	return storeTarget{key: "path:" + path, path: path}
 }
 
-// widgetUI draws on a retained host context. In Pi's RPC mode a component widget is not rendered (only its
-// removal reaches the client); the rows are not sent there either.
+// widgetUI draws on a retained host context. The widget is a kit view of the rows laid out at the terminal's
+// width (the kit form of the component factory the original registers: Pi draws it every frame and does not cut
+// it at ten rows). In Pi's RPC mode a component widget is not rendered (only its removal reaches the client);
+// the rows are not sent there either.
 type ctxUI struct{ ctx sdk.Context }
 
 func (u ctxUI) setWidget(key string, lines []string) {
@@ -310,7 +313,7 @@ func (u ctxUI) setWidget(key string, lines []string) {
 	if u.ctx.Mode() == "rpc" {
 		return
 	}
-	_ = u.ctx.SetWidget(key, lines, sdk.WidgetOptions{"placement": widgetPlacement})
+	_ = u.ctx.SetWidget(key, kit.View{Root: kit.NewLines(lines)}, sdk.WidgetOptions{"placement": widgetPlacement})
 }
 
 // alive reports whether the host connection still exists (the spinner timer stops when it does not).
@@ -324,11 +327,16 @@ func (u ctxUI) columns() int {
 	return 80
 }
 
-// touch records the latest context and points the widget at its UI.
+// touch records the latest context and points the widget at its UI. The rows are laid out at the terminal's
+// width, so the first context with a UI also subscribes to resizes (Pi renders the widget again at every frame).
 func (a *app) touch(ctx sdk.Context) {
 	c := ctx
 	a.latest = &c
 	a.widget.setUI(ctxUI{ctx})
+	if !a.watchingWidth && ctx.HasUI() {
+		a.watchingWidth = true
+		_, _ = ctx.OnWidthChange(func(sdk.Context, int) { a.widget.update() })
+	}
 }
 
 // unlocked runs fn without the app lock (a wait), and takes it back.

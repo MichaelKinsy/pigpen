@@ -1,0 +1,102 @@
+{
+  "name": "draft-questionnaire-custom",
+  "description": "A questionnaire with a custom answer (input dialog), a free-text question and a dismissed selector.",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "goal_questionnaire",
+          "arguments": {
+            "questions": [
+              {
+                "id": "cadence",
+                "question": "Release cadence?",
+                "context": "Pick the rhythm.",
+                "options": [
+                  "daily",
+                  "monthly"
+                ]
+              },
+              {
+                "id": "notes",
+                "question": "What goes in the notes?",
+                "options": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "goal_question",
+          "arguments": {
+            "question": "Which channel?",
+            "options": [
+              "web",
+              "mail"
+            ],
+            "allow_custom": false
+          }
+        }
+      ]
+    },
+    {
+      "text": "Drafting continues."
+    }
+  ],
+  "steps": [
+    {
+      "name": "draft",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal Plan the release"
+      },
+      "ui": [
+        {
+          "value": "3. Write your own answer..."
+        },
+        {
+          "value": "  weekly  "
+        },
+        {
+          "value": "Ship notes"
+        },
+        {
+          "cancelled": true
+        }
+      ],
+      "wait": "agent_end"
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    },
+    {
+      "pattern": "\\b20(?:2[1-9]|[3-9]\\d)-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\b",
+      "replacement": "<now>"
+    },
+    {
+      "pattern": "Context snapshot: \\d+/(\\d+) tokens \\(\\d+%\\)",
+      "replacement": "Context snapshot: <tokens>/${1} tokens (<pct>)"
+    }
+  ]
+}

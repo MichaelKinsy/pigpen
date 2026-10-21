@@ -1,0 +1,44 @@
+{
+  "name": "settings-thinking",
+  "description": "The thinking-level selector: pick a level, pick it again, return to the default.",
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "name": "cmd",
+      "rpc": {
+        "type": "prompt",
+        "message": "/goal-settings"
+      },
+      "ui": [
+        {
+          "value": "  thinking_level: (default) (default)"
+        },
+        {
+          "value": "  high"
+        },
+        {
+          "value": "  thinking_level: high (project override)"
+        },
+        {
+          "value": "\u2713 high"
+        },
+        {
+          "value": "  thinking_level: high (project override)"
+        },
+        {
+          "value": "  (default)"
+        },
+        {
+          "value": "Done"
+        }
+      ]
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  }
+}

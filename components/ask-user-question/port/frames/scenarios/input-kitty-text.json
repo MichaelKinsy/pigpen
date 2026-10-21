@@ -1,0 +1,58 @@
+{
+	"name": "input-kitty-text",
+	"description": "Kitty CSI-u text keys",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 80,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[97u",
+			"label": "k-a"
+		},
+		{
+			"input": "\u001b[98u",
+			"label": "k-b"
+		},
+		{
+			"input": "\u001b[97;2u",
+			"label": "k-A"
+		},
+		{
+			"input": "\u001b[13u",
+			"label": "k-enter"
+		}
+	]
+}

@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -266,5 +266,27 @@ describe('the Go build cache', () => {
     const w = workflows();
     w['gocache.yml'] = w['gocache.yml'].replace('hashFiles(\'.pig-src/go.sum\')', 'hashFiles(\'.pig-src/go.mod\')');
     assert.match(cacheProblems(w).join('\n'), /key differs/);
+  });
+});
+
+describe('goToolchainProblems', () => {
+  const workflow = (withs) => `
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-go@${sha} # v6
+        with: ${withs}
+`;
+  it("accepts a setup-go that reads PiG's .go-version", () => {
+    assert.deepEqual(goToolchainProblems('ci.yml', workflow('{ go-version-file: .pig-src/.go-version }')), []);
+  });
+  it('refuses a go.mod floor, a literal go-version and no version input', () => {
+    assert.match(goToolchainProblems('ci.yml', workflow('{ go-version-file: .pig-src/go.mod }')).join('\n'), /not \.pig-src\/\.go-version/);
+    assert.match(goToolchainProblems('ci.yml', workflow("{ go-version: '1.27.2' }")).join('\n'), /literal go-version/);
+    assert.match(goToolchainProblems('ci.yml', workflow('{ cache: false }')).join('\n'), /unset/);
+  });
+  it('ignores a workflow without setup-go', () => {
+    assert.deepEqual(goToolchainProblems('npm-publish.yml', 'jobs:\n  a:\n    steps:\n      - run: echo\n'), []);
   });
 });

@@ -1,0 +1,528 @@
+{
+	"scenario": "locale-ru-w40",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Library </fg></bg> <fg:muted> □ Features </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which library should we use for date   ",
+				" <b>formatting?</b>                            ",
+				"",
+				"<fg:accent><b>❯ 1. date-fns (Recommended)</b></fg>",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone</fg>",
+				"     <fg:muted>support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Введите что-нибудь.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · n <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Library </fg></bg> <fg:muted> □ Features </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which library should we use for date   ",
+				" <b>formatting?</b>                            ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"<fg:accent><b>❯ 2. Luxon</b></fg>",
+				"     <fg:muted>Immutable wrapper with time zone</fg>",
+				"     <fg:muted>support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Введите что-нибудь.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · n <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"lines": [
+				"<fg:dim> Ctrl+] to expand · Esc to cancel </fg>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <bg:selectedBg><fg:text> □ Library </fg></bg> <fg:muted> □ Features </fg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which library should we use for date   ",
+				" <b>formatting?</b>                            ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"<fg:accent><b>❯ 2. Luxon</b></fg>",
+				"     <fg:muted>Immutable wrapper with time zone</fg>",
+				"     <fg:muted>support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Введите что-нибудь.",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · n <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 4
+		},
+		{
+			"step": 4,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> □ Features </fg></bg> <fg:dim> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"<fg:accent>❯ </fg>1. <fg:muted>[ ]</fg> <fg:accent><b>Auth</b></fg>",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 5
+		},
+		{
+			"step": 5,
+			"label": "space",
+			"input": " ",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"<fg:accent>❯ </fg>1. <fg:accent>[✔]</fg> <fg:accent><b>Auth</b></fg>",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 6
+		},
+		{
+			"step": 6,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"  1. <fg:accent>[✔]</fg> Auth",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"<fg:accent>❯ </fg>2. <fg:muted>[ ]</fg> <fg:accent><b>Billing</b></fg>",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 7
+		},
+		{
+			"step": 7,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"  1. <fg:accent>[✔]</fg> Auth",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"<fg:accent>❯ </fg>3. <fg:muted>[ ]</fg> <fg:accent><b>Search</b></fg>",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 8
+		},
+		{
+			"step": 8,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"  1. <fg:accent>[✔]</fg> Auth",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"<fg:accent>❯ </fg>4. <fg:muted>[ ]</fg> <fg:accent><b>Export</b></fg>",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 9
+		},
+		{
+			"step": 9,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"  1. <fg:accent>[✔]</fg> Auth",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"<fg:accent><b><fg:accent>❯ </fg>5. <fg:muted>[ ]</fg> \u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"  Submit",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 10
+		},
+		{
+			"step": 10,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <bg:selectedBg><fg:text> ■ Features </fg></bg> <fg:success> ✓ Submit </fg> →",
+				"",
+				"",
+				" <b>Which features do you want to enable?</b>  ",
+				"",
+				"  1. <fg:accent>[✔]</fg> Auth",
+				"  <fg:muted>Sign-in and sessions</fg>",
+				"  2. <fg:muted>[ ]</fg> Billing",
+				"  <fg:muted>Plans and invoices</fg>",
+				"  3. <fg:muted>[ ]</fg> Search",
+				"  <fg:muted>Full-text search over records</fg>",
+				"  4. <fg:muted>[ ]</fg> Export",
+				"  <fg:muted>CSV and JSON download</fg>",
+				"  5. <fg:muted>[ ]</fg> Введите что-нибудь.",
+				"<fg:accent>❯ </fg><fg:accent><b>Submit</b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · Sp<reset>…<reset>",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 11
+		},
+		{
+			"step": 11,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <fg:success> ■ Features </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Проверьте свои ответы</fg></b>                  ",
+				"",
+				" <fg:muted> ● Library</fg>                             ",
+				"    <fg:muted>→</fg> <fg:text>Luxon</fg>                             ",
+				" <fg:muted> ● Features</fg>                            ",
+				"    <fg:muted>→</fg> <fg:text>Auth</fg>                              ",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Готовы отправить ответы?</fg>               ",
+				"❯ 1. <fg:accent><b>Отправить ответы</b></fg>",
+				"  2. <fg:text>Отмена</fg>",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · n <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 12
+		},
+		{
+			"step": 12,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────</fg>",
+				" ← <fg:success> ■ Library </fg> <fg:success> ■ Features </fg> <bg:selectedBg><fg:text> ✓ Submit </fg></bg> →",
+				"",
+				"",
+				" <b><fg:accent>Проверьте свои ответы</fg></b>                  ",
+				"",
+				" <fg:muted> ● Library</fg>                             ",
+				"    <fg:muted>→</fg> <fg:text>Luxon</fg>                             ",
+				" <fg:muted> ● Features</fg>                            ",
+				"    <fg:muted>→</fg> <fg:text>Auth</fg>                              ",
+				"",
+				"<fg:accent>────────────────────────────────────────</fg>",
+				"",
+				" <fg:muted>Готовы отправить ответы?</fg>               ",
+				"❯ 1. <fg:accent><b>Отправить ответы</b></fg>",
+				"  2. <fg:text>Отмена</fg>",
+				" <fg:dim>Enter — выбрать · ↑/↓ — навигация · n <reset>…<reset>",
+				"",
+				"",
+				"",
+				"",
+				"",
+				""
+			],
+			"hidden": false,
+			"renders": 13
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which library should we use for date formatting?",
+				"kind": "option",
+				"answer": "Luxon"
+			},
+			{
+				"questionIndex": 1,
+				"question": "Which features do you want to enable?",
+				"kind": "multi",
+				"answer": null,
+				"selected": [
+					"Auth"
+				]
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which library should we use for date formatting?\"=\"Luxon\". \"Which features do you want to enable?\"=\"Auth\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which library should we use for date formatting?",
+					"kind": "option",
+					"answer": "Luxon"
+				},
+				{
+					"questionIndex": 1,
+					"question": "Which features do you want to enable?",
+					"kind": "multi",
+					"answer": null,
+					"selected": [
+						"Auth"
+					]
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which library should we use for date formatting?",
+						"header": "Library",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "date-fns (Recommended)",
+								"description": "Modular, tree-shakeable functions",
+								"hasPreview": false
+							},
+							{
+								"label": "Luxon",
+								"description": "Immutable wrapper with time zone support",
+								"hasPreview": false
+							},
+							{
+								"label": "Day.js",
+								"description": "Tiny Moment-compatible API",
+								"hasPreview": false
+							}
+						]
+					},
+					{
+						"question": "Which features do you want to enable?",
+						"header": "Features",
+						"multiSelect": true,
+						"options": [
+							{
+								"label": "Auth",
+								"description": "Sign-in and sessions",
+								"hasPreview": false
+							},
+							{
+								"label": "Billing",
+								"description": "Plans and invoices",
+								"hasPreview": false
+							},
+							{
+								"label": "Search",
+								"description": "Full-text search over records",
+								"hasPreview": false
+							},
+							{
+								"label": "Export",
+								"description": "CSV and JSON download",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [],
+	"listener": {
+		"registered": false,
+		"removed": false
+	}
+}

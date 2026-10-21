@@ -3,7 +3,6 @@ package tintinweb_tasks
 import (
 	"fmt"
 	"slices"
-	"strconv"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -184,83 +183,3 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 }
 
 func hasPrefix(s, p string) bool { return len(s) >= len(p) && s[:len(p)] == p }
-
-// settingRow is one row of the settings panel. upstream: ui/settings-menu.ts items.
-type settingRow struct {
-	id, label string
-	current   func(cfg tasksConfig) string
-	values    []string
-	apply     func(cfg tasksConfig, v string)
-}
-
-func onOff(b bool) string {
-	if b {
-		return "on"
-	}
-	return "off"
-}
-
-func settingRows() []settingRow {
-	return []settingRow{
-		{"taskScope", "Task storage", func(c tasksConfig) string { return c.str("taskScope", "session") },
-			[]string{"memory", "session", "session-global", "project"}, func(c tasksConfig, v string) { c["taskScope"] = v }},
-		{"autoCascade", "Auto-cascade agent tasks", func(c tasksConfig) string { return onOff(c.flag("autoCascade")) },
-			[]string{"on", "off"}, func(c tasksConfig, v string) { c["autoCascade"] = v == "on" }},
-		{"collapseCompleted", "Collapse completed tasks", func(c tasksConfig) string { return onOff(c.flag("collapseCompleted")) },
-			[]string{"on", "off"}, func(c tasksConfig, v string) { c["collapseCompleted"] = v == "on" }},
-		{"showAll", "Show all tasks in widget", func(c tasksConfig) string { return onOff(c.flag("showAll")) },
-			[]string{"on", "off"}, func(c tasksConfig, v string) { c["showAll"] = v == "on" }},
-		{"maxVisible", "Max visible tasks in widget", func(c tasksConfig) string {
-			switch n := c["maxVisible"].(type) {
-			case float64:
-				return strconv.FormatFloat(n, 'f', -1, 64)
-			case int:
-				return strconv.Itoa(n)
-			}
-			return "10"
-		}, []string{"5", "10", "15", "20", "30", "50", "100"}, func(c tasksConfig, v string) { n, _ := strconv.Atoi(v); c["maxVisible"] = float64(n) }},
-		{"sortOrder", "Widget sort order", func(c tasksConfig) string {
-			if _, custom := c["sortOrder"].([]any); custom {
-				return "custom" // shown, but deliberately left out of the cycle
-			}
-			return c.str("sortOrder", "id")
-		}, builtInSortOrders, func(c tasksConfig, v string) { c["sortOrder"] = v }},
-		{"hiddenAt", "Hidden tasks position", func(c tasksConfig) string { return c.str("hiddenAt", "bottom") },
-			[]string{"bottom", "top"}, func(c tasksConfig, v string) { c["hiddenAt"] = v }},
-		{"autoClearCompleted", "Auto-clear completed tasks", func(c tasksConfig) string { return c.str("autoClearCompleted", "on_list_complete") },
-			[]string{"never", "on_list_complete", "on_task_complete"}, func(c tasksConfig, v string) { c["autoClearCompleted"] = v }},
-	}
-}
-
-// settingsMenu is /tasks → Settings: each row cycles to its next value when picked and saves it as a project
-// override. The original draws a SettingsList component; a Go extension has selects only (PORT.md).
-func (a *app) settingsMenu(ctx sdk.Context) error {
-	rows := settingRows()
-	for {
-		a.mu.Lock()
-		labels := make([]string, 0, len(rows)+1)
-		for _, r := range rows {
-			labels = append(labels, fmt.Sprintf("%s: %s", r.label, r.current(a.cfg)))
-		}
-		a.mu.Unlock()
-		labels = append(labels, "← Back")
-		selected, ok, err := ctx.Select("⚙  Task Settings", labels)
-		if err != nil {
-			return err
-		}
-		i := slices.Index(labels, selected)
-		if !ok || i < 0 || i >= len(rows) {
-			return nil
-		}
-		a.mu.Lock()
-		r := rows[i]
-		cur := r.current(a.cfg)
-		next := r.values[0]
-		if at := slices.Index(r.values, cur); at >= 0 {
-			next = r.values[(at+1)%len(r.values)]
-		}
-		r.apply(a.cfg, next)
-		_ = saveTasksConfig(a.cfg, ctx.Cwd(), agentDir())
-		a.mu.Unlock()
-	}
-}

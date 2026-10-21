@@ -113,6 +113,8 @@ function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
   const envFile = join(dir, 'env');
   writeFileSync(outputFile, '');
   writeFileSync(envFile, '');
+  const summaryFile = join(dir, 'summary'); // the job summary the cache step appends to; Actions provides this file to every step
+  writeFileSync(summaryFile, '');
   const exported = {};
   const outputs = { steps: {} };
   const base = { ...ctx, runner: { temp }, github: { workspace, token: 'rehearsal-github-token', ref: `refs/tags/${ref}` }, env: { ...workflow.env, ...(job.env ?? {}) }, steps: {}, secrets: { PIGLET_SIGNING_KEY: privateKey.trim() } };
@@ -135,6 +137,10 @@ function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
         }
       } else if (action === 'actions/setup-node' || action === 'actions/setup-go' || action === 'actions/attest-build-provenance') {
         // The host's node and go stand in; attestation needs GitHub.
+      } else if (action === 'actions/cache/restore') {
+        // The rehearsal has no cache service, so a restore is always a miss: the same thing a first run on a fresh runner
+        // does, with the outputs the following steps read.
+        if (step.id) base.steps[step.id] = { outputs: { 'cache-hit': 'false', 'cache-matched-key': '' } };
       } else if (action === 'actions/upload-artifact') {
         const from = join(workspace, dirname(w.path));
         const files = readdirSync(from).filter((f) => f.startsWith(basename(w.path).replace('*', '')));
@@ -158,7 +164,7 @@ function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
     const env = {
       ...Object.fromEntries(Object.entries(base.env).map(([k, v]) => [k, evaluate(v, stepCtx)])), ...exported, ...stepEnv,
       CI: 'true', GITHUB_ACTIONS: 'true', GITHUB_REF_TYPE: 'tag', GITHUB_REF_NAME: ref, GITHUB_REF: `refs/tags/${ref}`, GITHUB_SHA: sha, GITHUB_REPOSITORY: repository,
-      GITHUB_WORKSPACE: workspace, RUNNER_TEMP: temp, GITHUB_OUTPUT: outputFile, GITHUB_ENV: envFile,
+      GITHUB_WORKSPACE: workspace, RUNNER_TEMP: temp, GITHUB_OUTPUT: outputFile, GITHUB_ENV: envFile, GITHUB_STEP_SUMMARY: summaryFile,
     };
     const result = sh(workspace, evaluate(step.run, stepCtx), env);
     appendFileSync(log, `## ${label}\n${result.stdout}${result.stderr}\n`);

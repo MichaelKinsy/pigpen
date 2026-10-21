@@ -18,6 +18,15 @@ send, the welcome header and overlay, the working-message vibes, quote reply, `/
 shortcuts, autocomplete composition) and the editor profiler. The original's `shell_mode` and `subagents` segments are therefore
 never visible (the first needs bash mode, the second renders nothing in the original either).
 
+### Refusal of what is not ported
+
+Until the rest is ported, `refusal.go` refuses each unported command (`/reply`, `/queue`, `/stash-history`, `/bash-mode`,
+`/bash-reset`, `/powerline-perf`, `/vibe`, `/cd`) with an error notification and each unported setting (see the README) with a
+warning at session start, using the message `<package> (Go port) does not support <feature> yet. Install the original extension,
+npm:pi-powerline-footer@0.19.1, which runs unchanged in PiG.` `refusal_test.go` has one test per refused command and setting.
+The refusals live in the SDK adapter, not the core, so the render states and the Pi-recorded scenarios (which set none of these
+options) are unchanged.
+
 ## Mapping
 
 | ID | Original | Go | Checked by |

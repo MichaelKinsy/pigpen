@@ -1,0 +1,67 @@
+{
+  "name": "tools-create-get",
+  "description": "The model creates a goal with create_goal and reads it with get_goal (summary, then the objective page).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "create_goal",
+          "arguments": {
+            "objective": "Write the quarterly report\nSuccess criteria: three sections"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "get_goal",
+          "arguments": {
+            "section": "objective"
+          }
+        }
+      ]
+    },
+    {
+      "toolCalls": [
+        {
+          "name": "get_goal",
+          "arguments": {}
+        }
+      ]
+    },
+    {
+      "text": "The goal is set."
+    }
+  ],
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "Start working on the report."
+      }
+    }
+  ],
+  "files": {
+    ".pi/pi-goal-x-settings.json": "{\"maxAutonomousRuns\": 0}"
+  },
+  "normalize": [
+    {
+      "pattern": "(?s)<docs>\\n(?:PiG|Pi) documentation.*",
+      "replacement": "<docs>"
+    },
+    {
+      "pattern": "(^|[^a-z0-9])[mn][a-z0-9]{7}-[a-z0-9]{6}\\b",
+      "replacement": "${1}<goal-id>"
+    },
+    {
+      "pattern": "\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d\\.\\d{3}Z",
+      "replacement": "<iso>"
+    },
+    {
+      "pattern": "active_goal_\\d{16}_",
+      "replacement": "active_goal_<stamp>_"
+    }
+  ]
+}

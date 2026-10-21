@@ -1,0 +1,365 @@
+{
+	"name": "edge-input-wrap-then-nav-keys",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which library should we use for date formatting?",
+				"header": "Library",
+				"options": [
+					{
+						"label": "date-fns (Recommended)",
+						"description": "Modular, tree-shakeable functions"
+					},
+					{
+						"label": "Luxon",
+						"description": "Immutable wrapper with time zone support"
+					},
+					{
+						"label": "Day.js",
+						"description": "Tiny Moment-compatible API"
+					}
+				]
+			}
+		]
+	},
+	"width": 24,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "w",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "o",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "r",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": "d",
+			"label": "type",
+			"render": false
+		},
+		{
+			"input": " ",
+			"label": "type"
+		},
+		{
+			"input": "\u001b[A",
+			"label": "up"
+		},
+		{
+			"input": "\u001b[A",
+			"label": "up"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[H",
+			"label": "home"
+		},
+		{
+			"input": "\u001b[F",
+			"label": "end"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -3,10 +3,14 @@ package ask_user_question
 import (
 	"strconv"
 	"strings"
+
+	qui "github.com/MichaelKinsy/pigpen/ask-user-question/internal/ui"
 )
 
 // The dialog walker for hosts that cannot render the questionnaire component (RPC): one native select or input
 // dialog per question. upstream: rpc-fallback.ts.
+// Canonical-English fallbacks; the dialogs resolve them through the locale bridge each time they open, so the active
+// locale applies.
 const (
 	multiSelectInstructions = `Enter the numbers of all that apply, comma-separated (e.g. "1,3"), or type a custom answer as plain text.`
 	customAnswerTitle       = "Type your answer:"
@@ -120,7 +124,7 @@ func askSingleSelect(ui dialogUI, q question, qi int, header string) (*questionA
 	for i, o := range q.Options {
 		options = append(options, formatOptionLine(o, i))
 	}
-	options = append(options, strconv.Itoa(len(q.Options)+1)+". "+labelOther)
+	options = append(options, strconv.Itoa(len(q.Options)+1)+". "+qui.DisplayLabel(qui.KindOther))
 	chosen, ok, err := ui.Select(header+q.Question+buildPreviewBlock(q), options)
 	if err != nil || !ok {
 		return nil, err
@@ -133,7 +137,7 @@ func askSingleSelect(ui dialogUI, q question, qi int, header string) (*questionA
 		o := q.Options[idx]
 		return &questionAnswer{QuestionIndex: qi, Question: q.Question, Kind: "option", Answer: &o.Label, Preview: o.Preview}, nil
 	}
-	typed, ok, err := ui.Input(header+q.Question+"\n\n"+customAnswerTitle, "")
+	typed, ok, err := ui.Input(header+q.Question+"\n\n"+qui.T("rpc.custom_answer_title", customAnswerTitle), "")
 	if err != nil || !ok {
 		return nil, err
 	}
@@ -145,7 +149,7 @@ func askMultiSelect(ui dialogUI, q question, qi int, header string) (*questionAn
 	for i, o := range q.Options {
 		lines = append(lines, formatOptionLine(o, i))
 	}
-	value, ok, err := ui.Input(header+q.Question+"\n\n"+strings.Join(lines, "\n")+"\n\n"+multiSelectInstructions, multiSelectPlaceholder)
+	value, ok, err := ui.Input(header+q.Question+"\n\n"+strings.Join(lines, "\n")+"\n\n"+qui.T("rpc.multi_instructions", multiSelectInstructions), multiSelectPlaceholder)
 	if err != nil || !ok {
 		return nil, err
 	}

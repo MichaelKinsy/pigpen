@@ -1,0 +1,48 @@
+{
+	"name": "preview-mixed",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Which option has a preview?",
+				"header": "Mixed",
+				"options": [
+					{
+						"label": "Has preview",
+						"description": "Shows a preview",
+						"preview": "this option has a preview"
+					},
+					{
+						"label": "No preview",
+						"description": "Has none"
+					},
+					{
+						"label": "Also preview",
+						"description": "Another one",
+						"preview": "second\npreview"
+					}
+				]
+			}
+		]
+	},
+	"width": 90,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[B",
+			"label": "down"
+		},
+		{
+			"input": "\u001b[A",
+			"label": "up"
+		},
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "remember-startup-restore-locked",
+  "description": "A fresh startup restores the remembered OpenRouter model; the lock names the catalog variant `base:free`, which exists, so the variant is selected and its selection is remembered with the variant in the toast and in settings.json (read back after remembering is turned off).",
+  "llm": [
+    {
+      "toolCalls": [
+        {
+          "name": "bash",
+          "arguments": {
+            "command": "cat \"$PI_CODING_AGENT_DIR/settings.json\""
+          }
+        }
+      ]
+    },
+    {
+      "text": "done"
+    }
+  ],
+  "env": {
+    "OPENROUTER_API_KEY": "eq-or-key"
+  },
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"rememberModel\": {\"enabled\": true, \"last\": {\"provider\": \"openrouter\", \"modelId\": \"google/gemma-4-26b-a4b-it\"}}, \"modelGuard\": {\"enabled\": false, \"allowedModels\": []}, \"openrouterModelProviderPref\": {\"enabled\": true, \"locks\": {\"google/gemma-4-26b-a4b-it\": \"free\"}}}",
+    "settings.json": "{}\n"
+  },
+  "steps": [
+    {
+      "name": "status",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model"
+      }
+    },
+    {
+      "name": "state",
+      "rpc": {
+        "type": "get_state"
+      }
+    },
+    {
+      "name": "off",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-remember-model off"
+      }
+    },
+    {
+      "name": "set-eq-llm",
+      "rpc": {
+        "type": "set_model",
+        "provider": "eq-llm",
+        "modelId": "eq-1"
+      }
+    },
+    {
+      "name": "read-settings",
+      "rpc": {
+        "type": "prompt",
+        "message": "show settings"
+      }
+    }
+  ]
+}

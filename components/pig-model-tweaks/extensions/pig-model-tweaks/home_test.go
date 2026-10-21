@@ -88,3 +88,66 @@ func TestModelSelectRemembersTheDefaultUnderTheConfigHome(t *testing.T) {
 		t.Fatalf("settings.json = %s, %v; want the selected model", raw, err)
 	}
 }
+
+// remembered writes a remembered model into the settings file under home.
+func rememberedHome(t *testing.T) {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("PIG_HOME", home)
+	dir := filepath.Join(home, "agent")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "settings.json"), []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, settingsFileName),
+		[]byte(`{"version":1,"rememberModel":{"enabled":true,"last":{"provider":"acme","modelId":"model-1"}}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func restoreHost(t *testing.T, entries []map[string]any) *Host {
+	t.Helper()
+	h := StartHost(t, Extension(), HostOptions{OnCall: func(method string, args map[string]any) (map[string]any, string) {
+		switch method {
+		case "getModel":
+			return map[string]any{"id": "model-1", "provider": "acme"}, ""
+		case "watchSessionLog":
+			cursor, _ := args["cursor"].(float64)
+			page := entries[min(int(cursor), len(entries)):]
+			return map[string]any{"entries": page, "entryCount": len(entries), "hasMore": false, "leafId": "m1"}, ""
+		}
+		return map[string]any{}, ""
+	}})
+	return h
+}
+
+// The original restores the remembered model on a fresh startup as well as on
+// a new session, because settings.json cannot name a locked `:provider` model.
+func TestStartupWithAnEmptyBranchRestoresTheRememberedModel(t *testing.T) {
+	rememberedHome(t)
+	h := restoreHost(t, nil)
+	h.FireAll("session_start", map[string]any{"reason": "startup"})
+	if calls := h.CallsTo("setModel"); len(calls) != 1 || calls[0].Args["model"] != "acme/model-1" {
+		t.Fatalf("setModel calls = %v, want one for acme/model-1", calls)
+	}
+}
+
+func TestStartupWithMessagesKeepsTheSessionsOwnModel(t *testing.T) {
+	rememberedHome(t)
+	h := restoreHost(t, []map[string]any{{"id": "m1", "type": "message", "role": "user", "content": "hi"}})
+	h.FireAll("session_start", map[string]any{"reason": "startup"})
+	if calls := h.CallsTo("setModel"); len(calls) != 0 {
+		t.Fatalf("a session with history was switched: %v", calls)
+	}
+}
+
+func TestResumeNeverRestoresTheRememberedModel(t *testing.T) {
+	rememberedHome(t)
+	h := restoreHost(t, nil)
+	h.FireAll("session_start", map[string]any{"reason": "resume"})
+	if calls := h.CallsTo("setModel"); len(calls) != 0 {
+		t.Fatalf("resume was switched: %v", calls)
+	}
+}

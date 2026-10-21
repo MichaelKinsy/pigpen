@@ -280,7 +280,8 @@ When the original calls an HTTP API, declare it as a scenario `server` (routes w
 `{{server:NAME}}` in `env` for a base URL or a fake credential) instead of reaching the network:
 the trace then records every request each lane sent (method, path, query, body, the headers you list),
 so a port that calls an endpoint differently fails the diff. Give each route the error cases the
-original handles (status codes, `delayMs`, `drop`, `times`).
+original handles (status codes, `delayMs`, `drop`, `times`). `{{server:NAME}}` also works inside the
+`llm` script (turn text and the string values of a tool call's arguments), so the scripted model can ask for a fake server's URL.
 
 Declare **every** command the original may start in some scenario's `commands` (`real`,
 `canned` or `missing`), including the ones only an error path reaches. An undeclared
@@ -348,7 +349,7 @@ only), requests that reached the model (messages, every tool's full definition, 
 extension's difference from the host's baseline system prompt), tool executions and
 results, agent and turn lifecycle, `extension_error`, command responses and the host exit,
 including effects that land in the final quiet period after the last step. The normalizer removes only values
-that differ on every run (rules N1 to N6); anything else is a difference to fix.
+that differ on every run (rules N1 to N6); anything else is a difference to fix, except a value the extension invents on every run (a random id), which the scenario may list in `normalize` (rule N7: Go regular expression and replacement) as narrowly as possible.
 
 Rules:
 

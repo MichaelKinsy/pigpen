@@ -33,16 +33,15 @@ func TestExtensionExtra(t *testing.T) {
 		r.setScript(nil)
 		r.runTasks()
 		eqv(t, r.selects[0].Choices[len(r.selects[0].Choices)-1], "Settings")
-		// Settings shows the effective value of each row.
-		r.setScript("Settings", nil, nil)
+		// The panel opens (one ui.custom) and the menu comes back.
+		r.setScript("Settings", nil)
 		r.runTasks()
-		eqv(t, contains(r.selects[2].Choices[0], "Task storage: session"), true)
+		eqv(t, len(r.CallsTo("ui.custom")), 1)
+		// A project override written after startup is picked up by the next session_start: the store moves.
 		writeConfig(t, filepath.Join(cwd, ".pi", "tasks-config.json"), obj{"taskScope": "project"})
 		r.fireEvent("session_start", obj{"reason": "reload"})
-		r.setScript("Settings", nil, nil)
-		r.runTasks()
-		last := r.selects[len(r.selects)-2].Choices[0]
-		eqv(t, contains(last, "Task storage: project"), true)
+		r.must("TaskCreate", obj{"subject": "Shared", "description": "d"})
+		eqv(t, exists(filepath.Join(cwd, ".pi", "tasks", "tasks.json")), true)
 	})
 	t.Run("TaskUpdate reports every warning, joined by semicolons", func(t *testing.T) {
 		r, _ := boot(t, obj{"taskScope": "memory"})

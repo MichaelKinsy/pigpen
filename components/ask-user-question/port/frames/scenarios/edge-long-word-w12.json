@@ -1,0 +1,30 @@
+{
+	"name": "edge-long-word-w12",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "A question with averyveryverylongwordthatcannotbewrappedatspacesbecauseithasnone and more?",
+				"header": "Long word",
+				"options": [
+					{
+						"label": "averyveryverylongoptionlabelwithoutanyspacesinitatall",
+						"description": "adescriptionwithoutspacesthatisalsoverylongandmustbehardwrapped"
+					},
+					{
+						"label": "Second",
+						"description": "second"
+					}
+				]
+			}
+		]
+	},
+	"width": 12,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,37 @@
+{
+	"name": "edge-wide-preview-w24",
+	"description": "",
+	"params": {
+		"questions": [
+			{
+				"question": "Wide-character preview?",
+				"header": "Wide",
+				"options": [
+					{
+						"label": "日本語",
+						"description": "全角",
+						"preview": "┌──┐\n│日本│\n└──┘\n全角の行がボックスに入るかどうか、幅の計算を確認します。"
+					},
+					{
+						"label": "Emoji",
+						"description": "Emoji rows",
+						"preview": "😀😀😀 smile\n👨‍👩‍👧 family\n🇯🇵 flag\né combining"
+					},
+					{
+						"label": "Tabs",
+						"description": "Tab and ANSI",
+						"preview": "col1\tcol2\n\u001b[31mred text\u001b[0m plain\n  leading spaces\ntrailing   "
+					}
+				]
+			}
+		]
+	},
+	"width": 24,
+	"rows": 24,
+	"steps": [
+		{
+			"input": "\r",
+			"label": "enter"
+		}
+	]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "lock-routing-unmatched-suffix",
+  "description": "A catalog suffix that is not this lock stays.",
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"openrouterModelProviderPref\": {\"enabled\": true, \"locks\": {\"cohere/north-mini-code\": \"other\"}}}",
+    "models.json": "{\"providers\": {\"openrouter\": {\"baseUrl\": \"{{server:or}}/api/v1\", \"apiKey\": \"eq-or-key\"}}}"
+  },
+  "args": [
+    "--provider",
+    "openrouter",
+    "--model",
+    "cohere/north-mini-code:free",
+    "--system-prompt",
+    "eq",
+    "--no-tools"
+  ],
+  "servers": {
+    "or": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/api/v1/chat/completions",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "data: {\"id\": \"c1\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {\"role\": \"assistant\", \"content\": \"ok\"}, \"finish_reason\": null}]}\n\ndata: {\"id\": \"c1\", \"object\": \"chat.completion.chunk\", \"created\": 1, \"model\": \"m\", \"choices\": [{\"index\": 0, \"delta\": {}, \"finish_reason\": \"stop\"}]}\n\ndata: [DONE]\n\n"
+        }
+      ]
+    }
+  },
+  "steps": [
+    {
+      "name": "prompt",
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ]
+}

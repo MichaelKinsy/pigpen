@@ -56,8 +56,14 @@ func TestTaskOutputAndStop(t *testing.T) {
 		eqv(t, time.Since(started) >= 50*time.Millisecond, true)
 		eqv(t, contains(text, "[in_progress]"), true)
 	})
-	tskip(t, f, "stops waiting when the tool call is aborted",
-		"the fake host has no frame that cancels one request; the port's wait ends on the request's Done channel, which the SDK closes when the host cancels (see the extension's code)")
+	tw(t, f, "stops waiting when the tool call is aborted", func(t *testing.T) {
+		r, _ := boot(t)
+		launch(r)
+		// The host cancels the request when Pi's abort signal fires; the original awaits flush() first.
+		text, failure := r.toolAborted("TaskOutput", obj{"task_id": "1", "block": true, "timeout": 30000}, 60*time.Millisecond)
+		eqv(t, failure, "")
+		eqv(t, contains(text, "[in_progress]"), true)
+	})
 	tw(t, f, "does not wait for a task that is no longer in_progress", func(t *testing.T) {
 		r, _ := boot(t)
 		launch(r)

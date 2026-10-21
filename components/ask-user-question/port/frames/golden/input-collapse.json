@@ -1,0 +1,321 @@
+{
+	"scenario": "input-collapse",
+	"oracle": {
+		"package": "@juicesharp/rpiv-ask-user-question@2.11.0",
+		"pi": "1.3.0+1402973a9d"
+	},
+	"frames": [
+		{
+			"step": 0,
+			"label": "initial",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"<fg:accent><b>❯ 1. date-fns (Recommended)</b></fg>",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 1
+		},
+		{
+			"step": 1,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"<fg:accent><b>❯ 2. Luxon</b></fg>",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 2
+		},
+		{
+			"step": 2,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"<fg:accent><b>❯ 3. Day.js</b></fg>",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"  4. Type something.",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · n to add notes · Esc to cancel · Ctrl+] to<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 3
+		},
+		{
+			"step": 3,
+			"label": "down",
+			"input": "\u001b[B",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"<fg:accent><b>❯ 4. \u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Esc to cancel · Ctrl+] to collapse · Shift<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 4
+		},
+		{
+			"step": 6,
+			"label": "type",
+			"input": "c",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"<fg:accent><b>❯ 4. abc\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Esc to cancel · Ctrl+] to collapse · Shift<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 7
+		},
+		{
+			"step": 7,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"consumed": true,
+			"lines": [
+				"<fg:dim> Ctrl+] to expand · Esc to cancel </fg>"
+			],
+			"hidden": true,
+			"renders": 8
+		},
+		{
+			"step": 8,
+			"label": "x",
+			"input": "x",
+			"lines": [
+				"<fg:dim> Ctrl+] to expand · Esc to cancel </fg>"
+			],
+			"hidden": true,
+			"renders": 8
+		},
+		{
+			"step": 9,
+			"label": "ctrl-]",
+			"input": "\u001d",
+			"consumed": true,
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"<fg:accent><b>❯ 4. abc\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Esc to cancel · Ctrl+] to collapse · Shift<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 9
+		},
+		{
+			"step": 10,
+			"label": "type",
+			"input": "d",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"<fg:accent><b>❯ 4. abcd\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Esc to cancel · Ctrl+] to collapse · Shift<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 10
+		},
+		{
+			"step": 11,
+			"label": "enter",
+			"input": "\r",
+			"lines": [
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <bg:selectedBg> Library </bg>                                                                      ",
+				"",
+				" <b>Which library should we use for date formatting?</b>                               ",
+				"",
+				"  1. date-fns (Recommended)",
+				"     <fg:muted>Modular, tree-shakeable functions</fg>",
+				"  2. Luxon",
+				"     <fg:muted>Immutable wrapper with time zone support</fg>",
+				"  3. Day.js",
+				"     <fg:muted>Tiny Moment-compatible API</fg>",
+				"<fg:accent><b>❯ 4. abcd\u001b_pi:c\u0007<inv> </inv></b></fg>",
+				"",
+				"<fg:accent>────────────────────────────────────────────────────────────────────────────────</fg>",
+				"",
+				" <fg:dim>Enter to select · ↑/↓ to navigate · Esc to cancel · Ctrl+] to collapse · Shift<reset>…<reset>"
+			],
+			"hidden": false,
+			"renders": 11
+		}
+	],
+	"result": {
+		"answers": [
+			{
+				"questionIndex": 0,
+				"question": "Which library should we use for date formatting?",
+				"kind": "custom",
+				"answer": "abcd"
+			}
+		],
+		"cancelled": false
+	},
+	"toolResult": {
+		"content": [
+			{
+				"type": "text",
+				"text": "User has answered your questions: \"Which library should we use for date formatting?\"=\"abcd\". You can now continue with the user's answers in mind."
+			}
+		],
+		"details": {
+			"answers": [
+				{
+					"questionIndex": 0,
+					"question": "Which library should we use for date formatting?",
+					"kind": "custom",
+					"answer": "abcd"
+				}
+			],
+			"cancelled": false
+		}
+	},
+	"events": [
+		{
+			"channel": "rpiv:ask-user:prompt",
+			"payload": {
+				"questions": [
+					{
+						"question": "Which library should we use for date formatting?",
+						"header": "Library",
+						"multiSelect": false,
+						"options": [
+							{
+								"label": "date-fns (Recommended)",
+								"description": "Modular, tree-shakeable functions",
+								"hasPreview": false
+							},
+							{
+								"label": "Luxon",
+								"description": "Immutable wrapper with time zone support",
+								"hasPreview": false
+							},
+							{
+								"label": "Day.js",
+								"description": "Tiny Moment-compatible API",
+								"hasPreview": false
+							}
+						]
+					}
+				]
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": true
+			}
+		},
+		{
+			"channel": "rpiv:ask-user:blocked",
+			"payload": {
+				"active": false
+			}
+		}
+	],
+	"notifications": [
+		{
+			"message": "ask_user_question hidden — press Ctrl+] to reopen",
+			"level": "info"
+		}
+	],
+	"listener": {
+		"registered": true,
+		"removed": true
+	}
+}

@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"pause-goal","lane":"pi-ts","host":"pi 1.0.0","extension":"sha256:a1b1badfb1de3f1d8f403cca4142913ea577427f75f0cf9f4a2ef5413b29e41c","normalizer":"v3"}
+{"kind":"header","scenario":"pause-goal","lane":"pi-ts","host":"pi 1.3.0","extension":"sha256:7235a4d657e41e2242d288942136aa8611bdb154d415e033feab2d5bc41c6c58","normalizer":"v3"}
 {"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}
 {"step":"00-startup","ch":"ui","data":{"method":"setWidget","widgetKey":"goal"}}
 {"step":"00-startup","ch":"ui","data":{"method":"setStatus","statusKey":"goal"}}

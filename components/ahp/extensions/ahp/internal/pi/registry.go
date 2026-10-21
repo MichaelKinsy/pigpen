@@ -283,10 +283,9 @@ func (r *Registry) Create(_ context.Context, params ahptypes.CreateSessionParams
 	}
 
 	workingDirectory := r.opts.DefaultWorkingDirectory
-	if len(params.WorkingDirectories) > 0 {
-		// A set in the protocol, but this host does not declare multipleWorkingDirectories, which
-		// is what forbids a client from sending more than one. Anything past the first is ignored
-		// rather than refused: the session still runs, in the directory asked for first.
+	// Only the first directory is read; a falsy (empty) first entry means the default. upstream:
+	// session-registry.ts:263-266 (`request.workingDirectories?.[0]`, then a truthiness check).
+	if len(params.WorkingDirectories) > 0 && params.WorkingDirectories[0] != "" {
 		path, err := wire.FileURIToPath(params.WorkingDirectories[0])
 		if err != nil {
 			return wire.InvalidParams(err.Error())

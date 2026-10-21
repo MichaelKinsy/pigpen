@@ -49,8 +49,14 @@ type Scenario struct {
 	// paths; {{server:NAME}} is expanded). An extension's user-level configuration lives there
 	// (Pi's <agent dir>/settings.json, an extension's own <agent dir>/<name>.json).
 	AgentFiles map[string]string `json:"agentFiles,omitempty"`
+	// HomeFiles are written under the lane's host home before the host starts (relative paths;
+	// {{server:NAME}} is expanded): <PIG_HOME> on a pig lane, <HOME>/.pi on a pi lane. A port that
+	// keeps its own configuration under PIG_HOME (not the agent directory) and the original that
+	// reads the same file from Pi's home are compared with one entry.
+	HomeFiles map[string]string `json:"homeFiles,omitempty"`
 	// Servers are fake HTTP upstreams (APIs the extension calls). Their base URLs are available
-	// as {{server:NAME}} in Env, Files and Args, and every request they receive enters the trace.
+	// as {{server:NAME}} in Env, Files, AgentFiles, HomeFiles, Args and the LLM script (turn text and the string
+	// values of tool-call arguments), and every request they receive enters the trace.
 	Servers map[string]ServerSpec `json:"servers,omitempty"`
 	// Env is extra environment for the host process (an API base URL, a fake credential). The
 	// harness's own variables cannot be overridden: PATH, HOME, TMPDIR, LANG, TERM, NO_COLOR, the Go
@@ -58,6 +64,18 @@ type Scenario struct {
 	Env map[string]string `json:"env,omitempty"`
 	// Capture selects which host events enter the trace. Default DefaultCapture.
 	Capture []string `json:"capture,omitempty"`
+	// Normalize lists extra normalization rules (N7), applied in order to every string of every
+	// lane's trace after the built-in rules. For values the extension makes up on every run
+	// (a response id), not for text a port is expected to produce.
+	Normalize []NormalizeRule `json:"normalize,omitempty"`
+}
+
+// NormalizeRule is one scenario-level normalization rule (N7): every match of the Go regular
+// expression Pattern becomes Replacement, in which $1 and ${name} insert a capture group and $$ is a
+// literal dollar sign. A pattern that matches nothing is not an error.
+type NormalizeRule struct {
+	Pattern     string `json:"pattern"`
+	Replacement string `json:"replacement"`
 }
 
 // CommandSpec controls one shimmed child process.
@@ -189,6 +207,9 @@ func (s *Scenario) Validate() error {
 		}
 	}
 	if err := s.validateServers(); err != nil {
+		return err
+	}
+	if _, err := compileRules(s.Normalize); err != nil {
 		return err
 	}
 	for i, step := range s.Steps {

@@ -1,0 +1,16 @@
+{
+  "name": "guard-disabled-no-hint",
+  "description": "A disabled guard shows no session_start hint.",
+  "agentFiles": {
+    "pi-tweaks-settings.json": "{\"version\": 1, \"modelGuard\": {\"enabled\": false, \"allowedModels\": []}}"
+  },
+  "steps": [
+    {
+      "name": "list",
+      "rpc": {
+        "type": "prompt",
+        "message": "/pt-model-guard-pref list"
+      }
+    }
+  ]
+}

@@ -125,14 +125,6 @@ func isPaste(data string) bool {
 	return strings.HasPrefix(data, pasteStart) && strings.HasSuffix(data, pasteEnd)
 }
 
-// pastedText returns the text inside a bracketed paste.
-func pastedText(data string) (string, bool) {
-	if !isPaste(data) {
-		return "", false
-	}
-	return strings.TrimSuffix(strings.TrimPrefix(data, pasteStart), pasteEnd), true
-}
-
 // parseCSIu decodes `\x1b[<params>u` into the key it reports, accepting only an
 // unmodified press so a Ctrl+Space does not toggle a row.
 func parseCSIu(rest string) *parsedKey {

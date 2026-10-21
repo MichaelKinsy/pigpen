@@ -42,7 +42,10 @@ func stringList(desc string) map[string]any {
 // error, as the original throws) into the tool's error result.
 func (a *app) guarded(fn func(ctx sdk.Context, p map[string]any) (string, error)) sdk.ToolFunc {
 	return func(ctx sdk.Context, p map[string]any) (res any, err error) {
+		place := a.gate.enter()
+		a.gate.wait(place)
 		a.mu.Lock()
+		a.gate.pass(place)
 		defer a.mu.Unlock()
 		defer func() {
 			if r := recover(); r != nil {

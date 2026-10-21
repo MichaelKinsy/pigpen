@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-goal",
-  "version": "0.1.0",
-  "description": "Go port of pi-goal-x: durable goals kept as files under .pi/goals (/goal-direct, /sisyphus-direct, /goal-list, /goal-pause, /goal-clear, /goal-unfocus) (partial: storage and the direct lifecycle, not the scheduler, drafting or auditor)",
+  "version": "0.2.0",
+  "description": "Go port of pi-goal-x 0.32.3: durable goals with a scheduler, goal and task tools, guided drafting, the dashboard, the independent completion auditor and the oracle, 16 commands",
   "keywords": [
     "pig-package",
     "goal",
