@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -181,11 +183,7 @@ func expandHome(p string) string {
 
 func agentDirFromEnv() string {
 	if os.Getenv("PIG_USE_PI_DIRS") == "1" {
-		if v := os.Getenv("PI_CODING_AGENT_DIR"); v != "" {
-			return filepath.Clean(expandHome(v))
-		}
-		home, _ := os.UserHomeDir()
-		return filepath.Join(home, ".pi", "agent")
+		return piAgentDir()
 	}
 	if v := os.Getenv("PIG_CODING_AGENT_DIR"); v != "" {
 		return filepath.Clean(expandHome(v))
@@ -198,6 +196,35 @@ func agentDirFromEnv() string {
 	}
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".pig", "agent")
+}
+
+var winRoot = regexp.MustCompile(`^(?:[A-Za-z]:[\\/]|[\\/]{2}[^\\/]+[\\/][^\\/]+)`)
+
+// rootAnchored is the original's rule for PI_CODING_AGENT_DIR: a path rooted at a drive or UNC share on Windows, a leading
+// slash elsewhere. (isAbsolute calls a driveless `\root` absolute where the renderer does not.)
+func rootAnchored(path string, windows bool) bool {
+	if windows {
+		return winRoot.MatchString(path)
+	}
+	return strings.HasPrefix(path, "/")
+}
+
+// piAgentDir is the original's piUserDir: a root-anchored PI_CODING_AGENT_DIR (home-expanded), else ~/.pi/agent. It is the
+// user directory under PIG_USE_PI_DIRS=1, which makes PiG share Pi's tree.
+func piAgentDir() string {
+	override := expandHome(jsTrim(os.Getenv("PI_CODING_AGENT_DIR")))
+	if rootAnchored(override, runtime.GOOS == "windows") {
+		abs, err := filepath.Abs(override)
+		if err != nil {
+			return override
+		}
+		return abs
+	}
+	abs, err := filepath.Abs(expandHome("~/.pi/agent"))
+	if err != nil {
+		return expandHome("~/.pi/agent")
+	}
+	return abs
 }
 
 func exists(path string) bool {

@@ -2,9 +2,12 @@ package pi_background_tasks
 
 import (
 	"encoding/json"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -62,3 +65,22 @@ func newClockedStore(userDir string) *clockedStore {
 	s.clock = func() time.Duration { return s.now }
 	return s
 }
+
+func containsStr(s, sub string) bool { return strings.Contains(s, sub) }
+
+func jsonLen(v any) int {
+	b, _ := json.Marshal(v)
+	return len(b)
+}
+
+func mustJSON(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+func newCommand(name string, args ...string) *exec.Cmd { return exec.Command(name, args...) }
+
+func ioReadFull(r io.Reader, buf []byte) (int, error) { return io.ReadFull(r, buf) }

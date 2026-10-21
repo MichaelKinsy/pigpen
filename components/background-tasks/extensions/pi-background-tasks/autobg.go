@@ -1,6 +1,7 @@
 package pi_background_tasks
 
 import (
+	"errors"
 	"math"
 	"regexp"
 	"strconv"
@@ -133,7 +134,7 @@ func hasUserPatterns(raw string) bool {
 	return false
 }
 
-// builtinAutoBackgroundDecision is autoBackgroundDecision without the user's extra patterns: the built-in watch, follow,
+// builtinAutoBackgroundDecision is the built-in part of autoBackgroundDecision: the built-in watch, follow,
 // delayed-monitor and polling-loop rules. nil: the command is not diverted.
 func builtinAutoBackgroundDecision(command string) *bashBackgroundDecision {
 	normalized := foldASCII(normalizedCommand(command))
@@ -165,4 +166,93 @@ func builtinAutoBackgroundDecision(command string) *bashBackgroundDecision {
 		}
 	}
 	return nil
+}
+
+// parsePatternList reads the `autoBackgroundPatterns` setting: one pattern per line, `# comment` and blank lines ignored, a
+// `/source/flags` line as written and any other line as a case-insensitive pattern. A malformed pattern is ignored, as the
+// original's try/catch does; one the port cannot translate with certainty returns refused.
+func parsePatternList(raw string) (patterns []*jsRegex, refused string) {
+	for _, line := range jsSplitLines(raw) {
+		trimmed := jsTrim(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		source, flags := trimmed, "i"
+		if s, f, ok := splitRegexLiteral(trimmed); ok {
+			source, flags = s, f
+		}
+		re, err := compileJSRegex(source, flags)
+		var unsupported *jsUnsupportedError
+		switch {
+		case err == nil:
+			patterns = append(patterns, re)
+		case errors.As(err, &unsupported):
+			return nil, "the `autoBackgroundPatterns` setting (" + unsupported.msg + ")"
+		}
+	}
+	return patterns, ""
+}
+
+// autoBackgroundDecision decides whether a bash command is moved into a background task: a configured pattern, else the
+// built-in rules. nil: it is not. refused is set when a configured pattern cannot be honored.
+func autoBackgroundDecision(command, cwd string) (d *bashBackgroundDecision, refused string) {
+	normalized := normalizedCommand(command)
+	if normalized == "" {
+		return nil, ""
+	}
+	patterns, refused := parsePatternList(settingString("autoBackgroundPatterns", "", cwd))
+	if refused != "" {
+		return nil, refused
+	}
+	for _, p := range patterns {
+		if matched, _ := p.test(normalized, 0); matched {
+			return &bashBackgroundDecision{notifyOnExit: true, reason: "matched configured auto-background pattern", title: "auto: " + compactText(normalized, 72)}, ""
+		}
+	}
+	return builtinAutoBackgroundDecision(command), ""
+}
+
+// forcedBackgroundDecision is the decision for a command the shortcut or `/bg next` armed.
+func forcedBackgroundDecision(command, cwd string) bashBackgroundDecision {
+	return bashBackgroundDecision{forced: true, notifyOnExit: true, notifyOnOut: settingBoolean("forcedBackgroundNotifyOnOutput", false, cwd),
+		reason: "requested by background shortcut", title: "shortcut: " + compactText(normalizedCommand(command), 72)}
+}
+
+// bashBackgroundAckText is what the diverted bash command answers: the task, its log and how to inspect it.
+func bashBackgroundAckText(s *snapshot, d bashBackgroundDecision) string {
+	bound := func(v string) string { return truncateForTranscript(v, wakeManifestFieldMaxChars) }
+	pattern := "yes"
+	if s.NotifyPattern != "" {
+		pattern = bound(s.NotifyPattern)
+	}
+	wake := "no"
+	if s.NotifyOnOutput {
+		wake = pattern
+	}
+	mode := s.NotifyMode
+	if mode == "" {
+		mode = notifyAlways
+	}
+	dedupe := ""
+	if s.DedupeKey != "" {
+		dedupe = ", dedupeKey=" + bound(s.DedupeKey)
+	}
+	exit := "no"
+	if s.NotifyOnExit {
+		exit = "yes"
+	}
+	return strings.Join([]string{
+		"Started " + s.ID + " (pid " + itoa(s.Pid) + ") in the background.",
+		"Reason: " + d.reason + ".",
+		"Command: " + bound(s.Command),
+		"Cwd: " + bound(s.Cwd),
+		"Log: " + bound(s.LogFile),
+		"Wakeups: exit=" + exit + ", output=" + wake + ", mode=" + mode + dedupe,
+		"Continue the turn without waiting. Use bg_task list/log/stop to inspect or terminate this task.",
+	}, "\n")
+}
+
+// bashBackgroundAck is the replacement bash command: it prints the acknowledgement.
+func bashBackgroundAck(s *snapshot, d bashBackgroundDecision) string {
+	return "printf '%s\\n' " + shellQuote(bashBackgroundAckText(s, d))
 }
