@@ -37,15 +37,15 @@ func gateLits(g *gate) []string {
 
 func TestBuildGateFindsTheLiteralsAnExpressionCannotMatchWithout(t *testing.T) {
 	for expr, want := range map[string][]string{
-		`(?i)\bdrop\s+(?:table|database|schema)\b`:                     {"drop", "database", "schema", "table"},
-		`\bgit\s+push\b[^\n;&|]*--force-with-lease`:                    {"--force-with-lease", "push"},
-		`(?i)\becho\b`:                                                 {"echo"},
-		`\bfind\b[^\n;&|]*(?:-delete\b|-exec\w*\s+rm\b)`:               {"delete", "exec", "find"},
-		`^\s*wc\b`:                                                     {"wc"},
-		`[a-z]+`:                                                       nil,
-		`a|b`:                                                          nil,
-		`(?:foo|ba)r`:                                                  {"foo", "ba"},
-		`x?abc*`:                                                       {"ab"},
+		`(?i)\bdrop\s+(?:table|database|schema)\b`:  {"drop", "database", "schema", "table"},
+		`\bgit\s+push\b[^\n;&|]*--force-with-lease`: {"--force-with-lease", "push"},
+		`(?i)\becho\b`: {"echo"},
+		`\bfind\b[^\n;&|]*(?:-delete\b|-exec\w*\s+rm\b)`: {"delete", "exec", "find"},
+		`^\s*wc\b`:    {"wc"},
+		`[a-z]+`:      nil,
+		`a|b`:         nil,
+		`(?:foo|ba)r`: {"foo", "ba"},
+		`x?abc*`:      {"ab"},
 	} {
 		got := gateLits(buildGate(expr))
 		sortStrings(got)

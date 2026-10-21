@@ -13,13 +13,13 @@ import (
 // (Go's `\s` has no \v; the \u00a0 and \u2003 of JavaScript are not whitespace to it), blank lines (a leading
 // `\s+` runs through them), partial and doubled literals, and non-ASCII and invalid UTF-8.
 var (
-	refGoFail      = &lazyRegexp{expr: `(?m)^\s*--- FAIL: (\S+)`}
-	refGoBuild     = &lazyRegexp{expr: `(?m)^(\S+\.go):(\d+):(\d+): (.+)$`}
-	refGoDetail    = &lazyRegexp{expr: `(?m)^\s+(\S+_test\.go:\d+): (.+)$`}
-	refGoPackage   = &lazyRegexp{expr: `(?m)^FAIL\t(\S+)(?:\t| \[)`}
-	refTapFail     = &lazyRegexp{expr: `(?m)^# fail (\d+)$`}
-	refTapTests    = &lazyRegexp{expr: `(?m)^# tests (\d+)$`}
-	refEvExitCode  = &lazyRegexp{expr: `(?im)(?:exited with code|exit code:?|exit status|Error)\s+(\d+)\s*$`}
+	refGoFail     = &lazyRegexp{expr: `(?m)^\s*--- FAIL: (\S+)`}
+	refGoBuild    = &lazyRegexp{expr: `(?m)^(\S+\.go):(\d+):(\d+): (.+)$`}
+	refGoDetail   = &lazyRegexp{expr: `(?m)^\s+(\S+_test\.go:\d+): (.+)$`}
+	refGoPackage  = &lazyRegexp{expr: `(?m)^FAIL\t(\S+)(?:\t| \[)`}
+	refTapFail    = &lazyRegexp{expr: `(?m)^# fail (\d+)$`}
+	refTapTests   = &lazyRegexp{expr: `(?m)^# tests (\d+)$`}
+	refEvExitCode = &lazyRegexp{expr: `(?im)(?:exited with code|exit code:?|exit status|Error)\s+(\d+)\s*$`}
 )
 
 // genText joins up to maxPieces random pieces of a vocabulary.
