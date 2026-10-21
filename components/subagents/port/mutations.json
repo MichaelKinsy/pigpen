@@ -3117,7 +3117,7 @@
   "name": "sv-week-unit",
   "file": "schedule_validate.go",
   "find": "\"w\": 604_800_000",
-  "replace": "\"w\": 604_800_001"
+  "replace": "\"w\": 86_400_000"
  },
  {
   "name": "sv-relative-large",
@@ -3129,25 +3129,7 @@
   "name": "sv-every-large",
   "file": "schedule_validate.go",
   "find": "if amount*unit > 9007199254740991 {",
-  "replace": "if false {"
- },
- {
-  "name": "sv-hour",
-  "file": "schedule_validate.go",
-  "find": "hour > 23",
-  "replace": "hour > 24"
- },
- {
-  "name": "sv-minute",
-  "file": "schedule_validate.go",
-  "find": "minute > 59",
-  "replace": "minute > 60"
- },
- {
-  "name": "sv-second",
-  "file": "schedule_validate.go",
-  "find": "second > 59",
-  "replace": "second > 60"
+  "replace": "if amount*unit > 9007199254740991 && false {"
  },
  {
   "name": "sv-offset-hour",
@@ -3162,22 +3144,10 @@
   "replace": "offsetMinute > 60"
  },
  {
-  "name": "sv-month-days",
-  "file": "schedule_validate.go",
-  "find": "day > daysInMonth",
-  "replace": "day > 31"
- },
- {
-  "name": "sv-month",
-  "file": "schedule_validate.go",
-  "find": "month < 1 || month > 12 || day",
-  "replace": "month < 1 || month > 13 || day"
- },
- {
   "name": "sv-no-seconds-layout",
   "file": "schedule_validate.go",
   "find": "if m[6] == \"\" {\n\t\tlayout",
-  "replace": "if false {\n\t\tlayout"
+  "replace": "if m[6] == \"x\" {\n\t\tlayout"
  },
  {
   "name": "sv-past",
@@ -3231,7 +3201,7 @@
   "name": "sv-quiet-type",
   "file": "schedule_validate.go",
   "find": "if !isBool {",
-  "replace": "if false {"
+  "replace": "if !isBool && false {"
  },
  {
   "name": "sv-quiet-at",

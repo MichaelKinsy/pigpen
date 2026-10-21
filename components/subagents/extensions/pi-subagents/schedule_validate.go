@@ -38,21 +38,13 @@ func parseScheduledRunTime(at string, now time.Time) string {
 	if m == nil {
 		return fmt.Sprintf("Invalid at value \"%s\". Use a one-shot delay such as \"+10m\" or an ISO timestamp with timezone.", at)
 	}
-	num := func(s string) int { n, _ := strconv.Atoi(s); return n }
-	year, month, day, hour, minute := num(m[1]), num(m[2]), num(m[3]), num(m[4]), num(m[5])
-	second := 0
-	if m[6] != "" {
-		second = num(m[6])
-	}
 	offsetHour, offsetMinute := 0, 0
 	if m[7] != "Z" {
-		offsetHour, offsetMinute = num(m[7][1:3]), num(m[7][4:6])
+		offsetHour, offsetMinute = atoi2(m[7][1:3]), atoi2(m[7][4:6])
 	}
-	daysInMonth := 0
-	if month >= 1 && month <= 12 {
-		daysInMonth = time.Date(year, time.Month(month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
-	}
-	if month < 1 || month > 12 || day < 1 || day > daysInMonth || hour > 23 || minute > 59 || second > 59 || offsetHour > 23 || offsetMinute > 59 {
+	// the date and time fields are checked by time.Parse below (it refuses month 13, February 30, hour 24 and second 60 as Date.UTC's
+	// round trip does); it accepts offsets the original refuses, so those two are checked here
+	if offsetHour > 23 || offsetMinute > 59 {
 		return fmt.Sprintf("Invalid at value \"%s\". Use a valid ISO timestamp.", at)
 	}
 	layout := "2006-01-02T15:04:05.999999999Z07:00"
@@ -137,3 +129,5 @@ func scheduleArgumentError(action string, params map[string]any, now time.Time) 
 	}
 	return ""
 }
+
+func atoi2(s string) int { n, _ := strconv.Atoi(s); return n }
