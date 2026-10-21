@@ -23,8 +23,23 @@ func jsLen(s string) int {
 
 // jsSlice is String.prototype.slice(start, end) over UTF-16 units; pass math.MaxInt for no end.
 func jsSlice(s string, start, end int) string {
+	if isASCII(s) { // one unit per byte: slice the string itself
+		from, to := jsSliceBounds(len(s), start, end)
+		if from >= to {
+			return ""
+		}
+		return s[from:to]
+	}
 	u := utf16.Encode([]rune(s))
-	n := len(u)
+	from, to := jsSliceBounds(len(u), start, end)
+	if from >= to {
+		return ""
+	}
+	return string(utf16.Decode(u[from:to]))
+}
+
+// jsSliceBounds is slice's index clamping for a string of n units: negative indexes count from the end, both clamp to [0, n].
+func jsSliceBounds(n, start, end int) (from, to int) {
 	clamp := func(i int) int {
 		if i < 0 {
 			i += n
@@ -36,11 +51,17 @@ func jsSlice(s string, start, end int) string {
 		}
 		return i
 	}
-	from, to := clamp(start), clamp(end)
-	if from >= to {
-		return ""
+	return clamp(start), clamp(end)
+}
+
+// isASCII reports whether every byte of s is below 0x80.
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
 	}
-	return string(utf16.Decode(u[from:to]))
+	return true
 }
 
 const jsEnd = math.MaxInt

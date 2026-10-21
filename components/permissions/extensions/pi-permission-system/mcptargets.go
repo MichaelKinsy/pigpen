@@ -188,8 +188,19 @@ func resolvePiMcpServer(rest string, configured []string) (spellings []string, t
 
 // sanitizePiMcpName is Pi's name sanitization: every UTF-16 unit outside [A-Za-z0-9_] becomes `_`.
 func sanitizePiMcpName(name string) string {
-	units := utf16.Encode([]rune(name))
 	var b strings.Builder
+	if isASCII(name) { // one unit per byte
+		b.Grow(len(name))
+		for i := 0; i < len(name); i++ {
+			if c := name[i]; c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') {
+				b.WriteByte(c)
+			} else {
+				b.WriteByte('_')
+			}
+		}
+		return b.String()
+	}
+	units := utf16.Encode([]rune(name))
 	for _, u := range units {
 		if u < 0x80 && (u == '_' || (u >= '0' && u <= '9') || (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z')) {
 			b.WriteByte(byte(u))
