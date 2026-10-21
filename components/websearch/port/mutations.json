@@ -1371,7 +1371,7 @@
   "name": "ascii-run-ignores-high-bit",
   "file": "jsstr.go",
   "find": "if w&0x8080808080808080 != 0 {",
-  "replace": "if false {"
+  "replace": "if w&0x8080808080808080 != 0 && false {"
  },
  {
   "name": "ascii-run-ignores-limit",
