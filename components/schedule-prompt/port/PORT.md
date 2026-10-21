@@ -15,16 +15,13 @@
 |---|---|---|
 | 1 | inventory and honest refusal | pushed (`port/schedule-prompt-1`, 0.1.0) |
 | 2 | tool, scheduling, croner and V8 date semantics, storage, settings, firing, events, the widget, the message and tool renderers | pushed (`port/schedule-prompt-2`, 0.2.0) |
-| 3 | `/schedule-prompt`: the Jobs overlay, the add flow and Settings (`Context.Custom` with `OnHandle`) | this revision (0.3.0) |
-| 4 | the per-task `model` mode (`model`, `notify`, `extensions`, `skills` on a subagent job) | waits for PiG's `createAgentSession` for Go extensions (branch `feat/sdk-child-agent-sessions`) |
+| 3 | `/schedule-prompt`: the Jobs overlay, the add flow and Settings (`Context.Custom` with `OnHandle`) | pushed (`port/schedule-prompt-3`, 0.3.0) |
+| 4 | the per-task `model` mode (`model`, `notify`, `extensions`, `skills` on a subagent job) | this revision (0.4.0), on PiG's `Context.CreateAgentSession` (branch `feat/sdk-child-agent-sessions`, 8ecc5a4b) |
 
 The widget is in slice 2 (not 3): in Pi's RPC mode the original's startup already calls `setWidget(key, undefined)`, so the widget's show and hide
 logic is part of the observable trace of every scenario.
 
-Refused until its slice lands (since slice 3 only the `model` mode), with the program's message
-(`@pi-in-go/pigpen-schedule-prompt (Go port) does not support <feature> yet. Install the original extension, npm:pi-schedule-prompt@0.4.1, which runs unchanged in PiG.`):
-`/schedule-prompt` (notification), a tool call that passes a non-empty `model` (tool error, nothing stored), and, when a job made by the original
-has a `model`, its run (the run's error, shown in the chat marker and stored as `lastStatus: "error"`).
+Slices 2 and 3 refused what was not ported yet with the program's refusal message (`/schedule-prompt`, a tool call with `model`, a stored job's model run); since slice 4 nothing is refused.
 
 ## Inventory
 
@@ -77,7 +74,7 @@ Every observable behaviour of the original, its source, the Go SDK operation it 
 - **D4** A store file that is JSON but not `{"jobs": [...]}` of objects is refused with a message (the original throws a TypeError from the first member it misses and never rewrites the file); an unparsable file reads as empty, as in the original.
 - **D5** The widget is a `kit` view (host-rendered at the terminal width) pushed on change events, every 30 s and at mount; a theme change shows at the next push (SDK request C3+: `OnThemeChange`). In RPC mode nothing but the removal reaches the client, as in Pi.
 - **D6** The change events reach the widget through the scheduler directly and are also emitted on the `cron:change` channel; the original's widget listens on the channel, so an extension emitting `cron:change` itself would refresh it there and not here.
-- **D7** The per-task model refusal (above).
+- **D7** (slices 2 and 3 only, gone in slice 4) The per-task model refusal.
 - **U2** (upstream defect, kept) The recursion guard looks for a session entry of type `custom` with customType `scheduled_prompt`, but `pi.sendMessage` writes a `custom_message` entry: the guard never trips on a real session. Scenario `recursion-after-fire` shows the original accepting an add after a scheduled prompt ran; the port does the same.
 - **U3** (upstream, kept) `validateCronExpression` starts a croner timer loop for every validated expression and never stops it (a leaked no-op timer); the port validates without a timer.
 - **Host check (original under PiG's Node runtime)** was skipped for the goldens: B2 (`core-items.md`): PiG's RPC mode emits `widgetLines` for a component widget where Pi emits nothing. Not yet run on the scenarios without a widget.
@@ -107,3 +104,22 @@ built, not ported:
 Differences (all SDK-bound): **D8** the overlay's theme is the host's `UITheme` captured when the command runs (a theme change while the overlay is open shows at the next command; SDK
 request C3+ `OnThemeChange`); **D9** the add flow runs on its own goroutine as the original's un-awaited promise does, and a failure is logged `[pi-schedule-prompt] add flow failed: <err>` (the
 original prints the JavaScript error object).
+
+## Slice 4: the per-task model mode (0.4.0)
+
+`subagent.go` ports `subagent.ts` (`resolveModel`, `getLastAssistantText`, `describeAvailableModels`, `runSubagentOnce`) onto `sdk.Context.CreateAgentSession`
+(PiG's counterpart of Pi's `createAgentSession`, C2): `CreateAgentSessionOptions{Cwd, Model: <the resolved model object>, InMemory: true, Tools: DEFAULT_TOOL_NAMES unless
+extensions are on, Resources{NoExtensions, NoSkills, NoPromptTemplates, NoThemes, ExtensionNames, SkillNames}}`; `BindExtensions` when extensions are on; `Subscribe` collects the
+`text_delta`s of the last message; `Prompt` with the abort signal as its context (an already aborted signal aborts the idle session, which does nothing, and the run still happens, as in the
+original); the session is disposed afterwards (the original leaks it). The `model`, `notify`, `extensions` and `skills` parameters of `add` and `update` are accepted (the refusal, D7, is gone), the add result
+carries the `Model:` line, and the scheduler's subagent path (ported in slice 2) now runs the real session. `extensionsOverride` and `skillsOverride` are the host's
+`ExtensionNames` (path contains the name, case-insensitive) and `SkillNames` (exact name).
+
+- **Twins**: `pigeq twins check`: all 103 upstream cases are twinned (`twin_subagent_test.go`: the 27 cases of `subagent.test.ts`; the 7 `tool.test.ts` cases that pass `model` are
+  exact twins now). The mocks of the original (`createAgentSession`, `DefaultResourceLoader`) are the `subagentHost` seam: `loaderOptions.noExtensions` is `Resources.NoExtensions`,
+  `sessionOptions.tools` is `Tools`. Two twins ("filters extensions", "filters skills") check that the name list reaches the session options; the filter itself runs in the host
+  (`extensionsOverride`/`skillsOverride` are functions of the original's process), where PiG's own tests cover it.
+- **Scenarios** (`port/scenarios/sub-*`): original under Pi against the port under a PiG built from `feat/sdk-child-agent-sessions`, the one-shots firing after the parent's turns: a text
+  answer, notify (the parent wakes), an unknown model (the error lists the available models), a session that uses a tool, `extensions` and `skills` true, an empty answer, add/list/update with a
+  model and the store, and the empty-model refusals: 8 scenarios identical.
+- The model is resolved by the port against `ModelRegistry.Find` and `GetAvailable`, as `ctx.modelRegistry.find` and `getAvailable()`.

@@ -20,17 +20,17 @@ schedules future prompts, reminders and recurring jobs for itself. Go only; no N
   session-bound and shared, `x` remove, `c` clean up disabled jobs, `q` quit; jobs of other sessions are listed read-only) and
   **Settings** (widget visibility and whether new jobs bind to the session, saved to the project settings file).
 
-## Status (0.3.0): what is not ported yet
+- **The per-task `model` mode**: a job (or `add`/`update` call) with `model` runs its prompt in its own agent session with that model
+  (`provider/id`, an id, or part of an id or name, among the models with configured auth), instead of the chat. The session has the default
+  tools; `extensions` and `skills` (`true` or a list of names) load them, `notify: true` wakes the parent with the answer. A start marker, then a
+  done or error marker with the answer or the error, are posted to the chat.
 
-One part of the original is refused until its slice lands, with the program's message:
+## Requirements
 
-> @pi-in-go/pigpen-schedule-prompt (Go port) does not support <feature> yet. Install the original extension, npm:pi-schedule-prompt@0.4.1, which runs unchanged in PiG.
+The model mode runs on PiG's child agent sessions (`Context.CreateAgentSession`, PiG branch `feat/sdk-child-agent-sessions`): this package
+builds against an SDK that has them.
 
-- **The per-task `model` mode** (`model`, and with it `notify`, `extensions` and `skills` on a subagent job): slice 4. It needs an
-  in-process agent session; the Go SDK has none yet (PiG branch `feat/sdk-child-agent-sessions`). A tool call that passes `model` is a tool
-  error; a job that already has one (made by the original) reports the refusal as its run's error when it fires.
-
-Differences from the original are numbered in [port/PORT.md](port/PORT.md): long timers fire on time (the original fires a one-shot more
+Everything in the original is ported. Differences from the original are numbered in [port/PORT.md](port/PORT.md): long timers fire on time (the original fires a one-shot more
 than 24.8 days away at once and an interval of 25 days or more every millisecond: a Node limit), the global settings file lives in PiG's
 agent directory, and a store file that is not `{"jobs": [...]}` is refused instead of crashing on a missing member.
 

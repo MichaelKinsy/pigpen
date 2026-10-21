@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-schedule-prompt",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Go port of pi-schedule-prompt (Pi's Heartbeat): the agent schedules future prompts, reminders and recurring jobs with a schedule_prompt tool, a live widget and a /schedule-prompt manager",
   "keywords": [
     "pig-package",
