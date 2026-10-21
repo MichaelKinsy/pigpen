@@ -1683,7 +1683,7 @@
   "name": "cleanup-ignores-age",
   "file": "manager.go",
   "find": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) {\n\t\t\tcontinue",
-  "replace": "if !r.CompletedAt.IsZero() && false {\n\t\t\tcontinue"
+  "replace": "if !r.CompletedAt.IsZero() && !r.CompletedAt.Before(cutoff) && false {\n\t\t\tcontinue"
  },
  {
   "name": "cleanup-removes-running",
