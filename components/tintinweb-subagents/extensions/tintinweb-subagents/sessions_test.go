@@ -517,11 +517,11 @@ func TestSpawnRPCOptions(t *testing.T) {
 		r.app.mgr.mu.Lock()
 		r.app.mgr.maxConcurrent = 1
 		r.app.mgr.mu.Unlock()
-		spawn(r, obj{"description": "one"})
+		spawn(r, obj{"description": "one", "isBackground": true})
 		r.fleet.wait(t, 1)
-		spawn(r, obj{"description": "two", "bypassQueue": true})
+		spawn(r, obj{"description": "two", "bypassQueue": true, "isBackground": true})
 		r.fleet.wait(t, 2) // started at once, past the limit
-		spawn(r, obj{"description": "three"})
+		spawn(r, obj{"description": "three", "isBackground": true})
 		time.Sleep(100 * time.Millisecond)
 		eq(t, r.fleet.count(), 2) // the next one without it waits
 		r.app.mgr.mu.Lock()
