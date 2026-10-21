@@ -58,7 +58,7 @@ func TestLoadCustomAgentsPolicy(t *testing.T) {
 		r.writeAgent("no-wt", "---\ndescription: Never worktree\nisolation: off\n---\nNo worktree.")
 		eq(t, r.agent("no-wt").Isolation, "off")
 	})
-	tw(t, f, "accepts %s as a spelling of off", func(t *testing.T) {
+	t.Run("accepts false, none and no as spellings of off", func(t *testing.T) {
 		r := newCARig(t)
 		for _, p := range [][2]string{{"false", "isolation: false"}, {"none", "isolation: none"}, {"no", "isolation: no"}} {
 			r.writeAgent("off-"+p[0], "---\n"+p[1]+"\n---\nOff.")

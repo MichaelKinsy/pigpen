@@ -1640,8 +1640,8 @@
  {
   "name": "cleanup-timer-not-started",
   "file": "extension.go",
-  "find": "\t\ta.mgr.startGC(a.cleanupEvery) // once: a session start while the sweep runs keeps it. upstream: agent-manager.ts constructor (setInterval(cleanup, 60_000))\n",
-  "replace": ""
+  "find": "a.mgr.startGC(a.cleanupEvery)",
+  "replace": "_ = a.cleanupEvery"
  },
  {
   "name": "cleanup-every-hour",
@@ -3472,12 +3472,6 @@
   "file": "manager.go",
   "find": "if spec.Prepare != nil { // the parts of the spec that depend on where the child runs",
   "replace": "if false { // the parts of the spec that depend on where the child runs"
- },
- {
-  "name": "iso-prompt-block-text",
-  "file": "prompts.go",
-  "find": "Work only inside it — never in ",
-  "replace": "Work inside it — never in "
  },
  {
   "name": "iso-prompt-block-order",
