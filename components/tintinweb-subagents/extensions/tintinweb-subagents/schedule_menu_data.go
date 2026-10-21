@@ -9,8 +9,8 @@ import (
 )
 
 // The data layer of `/agents → Scheduled jobs` (list the jobs, one line per job, details for the cancel confirm). The
-// menu itself (the picker and the confirm dialog) belongs to the UI slice; it uses these, and the scheduler's isActive,
-// list and removeJob. upstream: src/ui/schedule-menu.ts relTime, statusIcon, formatJob, formatDetails, and the
+// menu itself (the picker and the confirm dialog) is agents_menu.go showSchedulesMenu; it uses these, and the
+// scheduler's isActive, list and removeJob. upstream: src/ui/schedule-menu.ts relTime, statusIcon, formatJob, formatDetails, and the
 // "Scheduled jobs (N)" entry of showAgentsMenu in src/index.ts.
 
 // scheduleMenuEntry is the `/agents` menu entry of the scheduled jobs, present when the scheduler is active.
@@ -19,24 +19,6 @@ func (a *app) scheduleMenuEntry() (string, bool) {
 		return "", false
 	}
 	return fmt.Sprintf("Scheduled jobs (%d)", len(a.scheduler().list())), true
-}
-
-// scheduleListing is the scheduled jobs as lines of the text `/agents` (which is a listing, not the original's menu):
-// the menu entry, one row per job, and the refusal for what only the interactive menu does, cancelling a job.
-func (a *app) scheduleListing(nowMs int64) []string {
-	entry, ok := a.scheduleMenuEntry()
-	if !ok {
-		return nil
-	}
-	jobs := a.scheduler().list()
-	lines := []string{"", entry + ":"}
-	if len(jobs) == 0 {
-		return append(lines, "  (none)")
-	}
-	for _, j := range jobs {
-		lines = append(lines, "  "+a.scheduleFormatJob(j, nowMs))
-	}
-	return append(lines, "  "+refusalText("cancelling a scheduled job (the /agents Scheduled jobs menu)"))
 }
 
 // scheduleRelTime formats an ISO timestamp as relative time ("in 4h", "2d ago", "—"). nowMs is Date.now().

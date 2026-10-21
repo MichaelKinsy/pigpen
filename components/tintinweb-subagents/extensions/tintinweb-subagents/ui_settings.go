@@ -67,24 +67,3 @@ func loadUISettings(cwd string) uiSettings {
 	}
 	return s
 }
-
-// persistViewerMarkdown writes a mode chosen with the viewer's `m` key into the project file, so the key and the
-// settings mean one thing. It reports whether the write succeeded. upstream: index.ts chooseViewerMarkdown ->
-// persistSettings, which writes the whole snapshot; this writes the one key (a settings writer that owns the snapshot
-// replaces this var).
-var persistViewerMarkdown = func(cwd string, mode viewerMarkdownMode) bool {
-	path := filepath.Join(cwd, ".pi", "subagents.json")
-	raw := map[string]any{}
-	if data, err := os.ReadFile(path); err == nil {
-		_ = json.Unmarshal(data, &raw)
-	}
-	raw["viewerMarkdown"] = string(mode)
-	out, err := json.MarshalIndent(raw, "", "  ")
-	if err != nil {
-		return false
-	}
-	if os.MkdirAll(filepath.Dir(path), 0o755) != nil {
-		return false
-	}
-	return os.WriteFile(path, out, 0o644) == nil
-}

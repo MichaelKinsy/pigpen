@@ -365,58 +365,6 @@ func (a *app) steerTool(ctx sdk.Context, p map[string]any) (any, error) {
 	return textResult(fmt.Sprintf("Steering message sent to agent %s. The agent will process it after its current tool execution.\nCurrent state: %s", r.ID, strings.Join(state, " · "))), nil
 }
 
-// agentsCommand lists the agent types and the agents of this session.
-func (a *app) agentsCommand(ctx sdk.Context, _ string) error {
-	a.touch(ctx)
-	reg := currentRegistry()
-	lines := []string{"Agent types:"}
-	for _, name := range reg.keys {
-		c := reg.m[name]
-		state := ""
-		if !c.Enabled {
-			state = " (disabled)"
-		}
-		src := "default"
-		if !c.IsDefault {
-			src = c.Source
-		}
-		lines = append(lines, fmt.Sprintf("  %s [%s]%s — %s", name, src, state, firstLine(c.Description)))
-	}
-	recs := a.mgr.list()
-	lines = append(lines, "", "Agents:")
-	if len(recs) == 0 {
-		lines = append(lines, "  (none)")
-	}
-	sort.SliceStable(recs, func(i, j int) bool { return recs[i].StartedAt.Before(recs[j].StartedAt) })
-	for _, r := range recs {
-		a.mgr.mu.Lock()
-		lines = append(lines, fmt.Sprintf("  %s %s %s — %s", r.ID, displayName(a, r.Type), r.Status, r.Description))
-		a.mgr.mu.Unlock()
-	}
-	if entry := a.workflowsMenuEntry(); entry != "" {
-		lines = append(lines, "", entry+":")
-		tasks := a.workflows().tasks.values()
-		if len(tasks) == 0 {
-			lines = append(lines, "  (none)")
-		}
-		sort.SliceStable(tasks, func(i, j int) bool { return tasks[i].StartTime < tasks[j].StartTime })
-		for _, t := range tasks {
-			t.mu.Lock()
-			name := t.ID
-			if t.Meta != nil {
-				name = t.Meta.Name
-			}
-			lines = append(lines, fmt.Sprintf("  %s %s %s", t.ID, name, t.Status))
-			t.mu.Unlock()
-		}
-		// The inspector (stop, pause, skip, retry) is the UI slice's: refused, never a menu that looks like it works.
-		lines = append(lines, "  "+refusalText("the Workflows menu (stop, pause, skip and retry of a run)"))
-	}
-	lines = append(lines, a.scheduleListing(time.Now().UnixMilli())...)
-	ctx.Notify(strings.Join(lines, "\n"), "info")
-	return nil
-}
-
 func firstLine(s string) string {
 	if i := strings.Index(s, "\n"); i >= 0 {
 		s = s[:i]

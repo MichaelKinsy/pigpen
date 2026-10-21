@@ -122,6 +122,8 @@ func (a *app) registerWorkflow(e *sdk.Extension) {
 		PromptGuidelines: workflowPromptGuidelines,
 		Parameters:       workflowToolParameters,
 		Execute:          a.workflowTool,
+		RenderCall:       a.renderWorkflowCall,
+		RenderResult:     a.renderWorkflowResult,
 	})
 }
 

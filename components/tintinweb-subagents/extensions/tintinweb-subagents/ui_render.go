@@ -305,6 +305,9 @@ func toolResultText(r sdk.ToolRenderResult) string {
 
 // registerRenderers registers the notification renderer; the Agent tool's renderers are part of its definition.
 func (a *app) registerRenderers(e *sdk.Extension) {
+	// A workflow launched from a flag has no tool call to hang its result card on, so it renders as a session entry
+	// through the same layout. Registered at activation: entries with no renderer are silently dropped by the host.
+	e.EntryRenderer(workflowEntryType, a.renderWorkflowEntry)
 	e.MessageRenderer("subagent-notification", func(ctx sdk.Context, message map[string]any, opts sdk.MessageRenderOptions, width int) ([]string, error) {
 		return protectLines("notification renderer", func() ([]string, error) {
 			d := decodeDetails[notificationDetails](message["details"])

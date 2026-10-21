@@ -43,28 +43,34 @@ func (h *uiHub) getShowCost() bool                     { return h.get().showCost
 func (h *uiHub) getShowModel() bool                    { return h.get().showModel }
 func (h *uiHub) getViewerMarkdown() viewerMarkdownMode { return h.get().viewerMarkdown }
 
-// chooseViewerMarkdown is the viewer's `m` key: set the mode and persist it.
+// chooseViewerMarkdown is the viewer's `m` key, from either entry point: set the mode and persist it (the whole
+// snapshot, as every settings change does), so the key and `/agents → Settings` stay one setting rather than one per
+// entry point. Silent on success: the overlay is the feedback. A failed write still speaks. upstream: index.ts
+// chooseViewerMarkdown -> persistSettings.
 func (h *uiHub) chooseViewerMarkdown(mode viewerMarkdownMode) {
+	h.setDisplay(func(s *uiSettings) { s.viewerMarkdown = mode }, false)
+	if ctx, ok := h.app.context(); ok {
+		h.app.persistSettings(func(message, level string) { guard(func() { ctx.Notify(message, level) }) }, "Viewer markdown set to "+string(mode))
+		return
+	}
+	// No context between sessions: the write still happens, with no UI to carry the warning to.
+	h.app.persistSettings(nil, "Viewer markdown set to "+string(mode))
+}
+
+// setDisplay changes the display settings and brings the surfaces up to date, as the original's setters do:
+// setFleetView toggles the list, setShowCost redraws the widget and the list, the others the widget.
+func (h *uiHub) setDisplay(change func(*uiSettings), updateFleet bool) {
 	h.mu.Lock()
-	h.settings.viewerMarkdown = mode
-	snapshot := h.settings
+	before := h.settings
+	change(&h.settings)
+	after := h.settings
 	h.mu.Unlock()
-	h.app.mu.Lock()
-	cwd := h.app.cwd
-	h.app.mu.Unlock()
-	if cwd == "" {
-		return
+	if after.fleetView != before.fleetView {
+		h.fleet.setEnabled(after.fleetView)
 	}
-	persisted := persistViewerMarkdown(cwd, mode)
-	ctx, ok := h.app.context()
-	if !ok {
-		return
-	}
-	// The event fires whatever the write's outcome, so listeners see the in-memory change.
-	_ = ctx.Events().Emit("subagents:settings_changed", map[string]any{"settings": snapshot.asMap(), "persisted": persisted})
-	// Silent on success (the overlay is the feedback); a failed write still speaks.
-	if !persisted {
-		ctx.Notify("Viewer markdown set to "+string(mode)+" (session only; failed to persist)", "warning")
+	h.widget.update()
+	if updateFleet {
+		h.fleet.update()
 	}
 }
 
@@ -140,7 +146,7 @@ func (h *uiHub) listAgents() []*agentView {
 	for _, id := range h.app.mgr.order {
 		r := h.app.mgr.records[id]
 		v := &agentView{ID: r.ID, Type: r.Type, Description: r.Description, Status: r.Status, ToolUses: r.ToolUses,
-			StartedAt: r.StartedAt.UnixMilli(), Error: r.Error}
+			StartedAt: r.StartedAt.UnixMilli(), Error: r.Error, WorkflowID: r.Owner}
 		bg := r.Background
 		v.IsBackground = &bg
 		if !r.CompletedAt.IsZero() {
@@ -463,6 +469,8 @@ type overlayComponent struct {
 
 	mu         sync.Mutex
 	closing    bool
+	value      any
+	label      string // "menu" for a menu panel; empty for the agent viewer
 	inInput    bool
 	handle     *sdk.OverlayHandle
 	invalidate func()
@@ -490,6 +498,9 @@ func (o *overlayComponent) RequestRender() {
 
 func (o *overlayComponent) Render(width int) (lines []string) {
 	if err := catch("viewer render", func() { lines = o.component.Render(width) }); err != nil {
+		if o.label == "menu" {
+			return []string{"(this menu failed to render; Esc closes it)"}
+		}
 		return []string{"(the agent viewer failed to render; Esc closes it)"}
 	}
 	return lines
@@ -507,9 +518,9 @@ func (o *overlayComponent) HandleInput(data string) (sdk.RemoteComponentResult, 
 	}
 	o.mu.Lock()
 	o.inInput = false
-	closing := o.closing
+	closing, value := o.closing, o.value
 	o.mu.Unlock()
-	return sdk.RemoteComponentResult{Done: closing}, nil
+	return sdk.RemoteComponentResult{Done: closing, Value: value}, nil
 }
 
 func (o *overlayComponent) SetInvalidate(f func()) {
@@ -532,9 +543,13 @@ func (o *overlayComponent) setHandle(h *sdk.OverlayHandle) {
 
 // close is the overlay's done: from the viewer's own input it ends the component (HandleInput reports Done); from
 // anywhere else (the list is disposed) the overlay is hidden through its handle.
-func (o *overlayComponent) close() {
+func (o *overlayComponent) close() { o.closeWith(nil) }
+
+// closeWith is close carrying the value Context.Custom returns (the original's done(value)).
+func (o *overlayComponent) closeWith(value any) {
 	o.mu.Lock()
 	o.closing = true
+	o.value = value
 	inInput, h := o.inInput, o.handle
 	o.mu.Unlock()
 	if !inInput && h != nil {

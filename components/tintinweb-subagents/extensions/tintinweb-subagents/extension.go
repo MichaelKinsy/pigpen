@@ -30,6 +30,7 @@ type app struct {
 	timers          map[string]*time.Timer
 	settingsNotice  string
 	ui              *uiHub // the widget, fleet list and conversation viewer
+	held            *heldSettings // the settings of features this port does not have: shown, written, not applied (settings_store.go)
 
 	wf     *workflowFeature // the SubagentWorkflow tool's state (workflow_tool.go)
 	wfOnce sync.Once
@@ -38,7 +39,7 @@ type app struct {
 
 func newApp(e *sdk.Extension, start childStarter) *app {
 	registerAgents(newRegistry())
-	a := &app{e: e, timers: map[string]*time.Timer{}}
+	a := &app{e: e, timers: map[string]*time.Timer{}, held: defaultHeldSettings()}
 	a.mgr = newManager(start, a.onSettle)
 	a.ui = newUIHub(a)
 	notice := func(message string) {
@@ -65,6 +66,7 @@ func (a *app) reload(cwd string) {
 	a.mu.Unlock()
 	setFallbackSubagent(st.FallbackSubagent)
 	setDefaultsDisabled(st.DisableDefaultAgents != nil && *st.DisableDefaultAgents)
+	a.held.load(loadSubagentsSettings(cwd))
 	custom, warnings := loadCustomAgents(cwd)
 	for _, w := range warnings {
 		fmt.Fprintf(os.Stderr, "[pi-subagents] %s\n", w)
@@ -125,11 +127,16 @@ func (a *app) register(e *sdk.Extension) {
 	a.registerRPC(e.Events())
 	e.OnEvent(sdk.EventSessionStart, protect("session_start", func(ctx sdk.Context, _ map[string]any) (any, error) {
 		a.touch(ctx)
+		a.clearCompleted(true) // the agents of the session before are not this one's; an unread result stays
 		a.reload(ctx.Cwd())
 		a.refuseSettings(ctx)
 		a.workflowSessionStart(ctx)
 		// Announce this extension, as the original does when it initializes. upstream: index.ts:827.
 		_ = ctx.Events().Emit("subagents:ready", map[string]any{})
+		return nil, nil
+	}))
+	e.OnEvent(sdk.EventSessionBeforeSwitch, protect("session_before_switch", func(sdk.Context, map[string]any) (any, error) {
+		a.clearCompleted(true)
 		return nil, nil
 	}))
 	e.OnEvent(sdk.EventBeforeAgentStart, protect("before_agent_start", func(ctx sdk.Context, _ map[string]any) (any, error) { a.touch(ctx); return nil, nil }))
@@ -148,6 +155,7 @@ func (a *app) register(e *sdk.Extension) {
 	}))
 	a.registerTools(e)
 	a.registerRenderers(e)
+	a.wireWorkflowFleet()
 	a.registerSchedule(e)
 	e.Command("agents", "List the agent types and the running agents", protectCommand("/agents", a.agentsCommand))
 }
