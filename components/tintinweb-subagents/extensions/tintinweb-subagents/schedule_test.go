@@ -247,8 +247,8 @@ func TestTheAgentToolTextCarriesTheScheduleParameterAndGuideline(t *testing.T) {
 		eq(t, required != "schedule", true) // optional
 	}
 	desc := agentDescription(flags, dc)
-	want := "- Use inherit_context if the agent needs the parent conversation history.\n- Use `schedule` only when the user explicitly asked for scheduled / recurring / delayed execution " +
-		"(e.g. \"every Monday\", \"in an hour\"). Don't auto-schedule from vague intent like \"monitor X\" — run once now or ask.\n\n## Writing the prompt"
+	want := "\n- Use `schedule` only when the user explicitly asked for scheduled / recurring / delayed execution " +
+		"(e.g. \"every Monday\", \"in an hour\"). Don't auto-schedule from vague intent like \"monitor X\" — run once now or ask."
 	eq(t, strings.Contains(desc, want), true)
 }
 
@@ -350,7 +350,8 @@ func TestASessionSwitchAndShutdownStopTheScheduler(t *testing.T) {
 	}
 }
 
-func TestAScheduleOfWhatThePortDoesNotDoIsRefusedNotScheduled(t *testing.T) {
+// A schedule of a worktree agent or a memory agent is scheduled like any other: the stack ports both features.
+func TestAScheduleOfAWorktreeOrAMemoryAgentIsScheduled(t *testing.T) {
 	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 	cwd := t.TempDir()
 	eq(t, os.MkdirAll(filepath.Join(cwd, ".pi", "agents"), 0o755), nil)
@@ -360,16 +361,15 @@ func TestAScheduleOfWhatThePortDoesNotDoIsRefusedNotScheduled(t *testing.T) {
 		"worktree isolation":                 {"isolation": "worktree"},
 		"an agent file that asks for memory": {"subagent_type": "memo"},
 	} {
-		call := obj{"prompt": "p", "description": "d", "subagent_type": "Plan", "schedule": "1h"}
+		call := obj{"prompt": "p", "description": name, "subagent_type": "Plan", "schedule": "1h"}
 		for k, v := range params {
 			call[k] = v
 		}
 		text, failure := r.tool("Agent", call)
-		eq(t, text, "")
-		eq(t, strings.Contains(failure, "does not support"), true)
-		eq(t, len(r.app.scheduler().list()), 0)
-		t.Log(name, failure)
+		eq(t, failure, "")
+		eq(t, strings.HasPrefix(text, `Scheduled "`+name+`" (id: `), true)
 	}
+	eq(t, len(r.app.scheduler().list()), 2)
 }
 
 func TestScheduleRejectsABadScheduleAndADuplicateName(t *testing.T) {

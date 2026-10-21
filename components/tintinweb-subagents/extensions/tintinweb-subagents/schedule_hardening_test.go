@@ -388,7 +388,7 @@ func BenchmarkCronNext(b *testing.B) {
 	}
 }
 
-func TestAJobStoredWithAWorktreeIsRefusedWhenItFiresNotRunWithoutOne(t *testing.T) {
+func TestAJobStoredWithAWorktreeFailsWhenItFiresWithoutOne(t *testing.T) {
 	t.Setenv("PIG_CODING_AGENT_DIR", t.TempDir())
 	cwd := t.TempDir()
 	every := 100.0
@@ -397,7 +397,7 @@ func TestAJobStoredWithAWorktreeIsRefusedWhenItFiresNotRunWithoutOne(t *testing.
 	r := startRigIn(t, cwd)
 	waitFor(t, 5*time.Second, "error event", func() bool {
 		for _, ev := range r.emittedOn("subagents:scheduled") {
-			if ev["type"] == "error" && ev["error"] == refusalText(`worktree isolation (isolation: "worktree")`) {
+			if ev["type"] == "error" && ev["error"] == worktreeStartupError {
 				return true
 			}
 		}

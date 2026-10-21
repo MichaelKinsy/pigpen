@@ -45,11 +45,10 @@ func TestAgentToolPersistsTheScheduledJob(t *testing.T) {
 		eq(t, *job.Isolated, true)
 		eq(t, job.Prompt, "do the thing")
 		eq(t, job.Enabled, true)
-		// The original also passes isolation: "worktree" and reads it back. Worktree isolation is not ported (it is
-		// refused, naming the feature, and nothing is scheduled), so the job could never carry it.
-		refused := scheduleCallRig(t, "", obj{"isolation": "worktree"})
-		eq(t, strings.Contains(refused.failure, refusalText(`worktree isolation (isolation: "worktree")`)), true)
-		eq(t, len(refused.jobs), 0)
+		// The original also passes isolation: "worktree" and reads it back.
+		iso := scheduleCallRig(t, "", obj{"isolation": "worktree"})
+		eq(t, len(iso.jobs), 1)
+		eq(t, iso.jobs[0].Isolation, "worktree")
 	})
 	tw(t, fScheduleParams, "persists the normalized turn limit, not the raw parameter", func(t *testing.T) {
 		// max_turns goes through normalizeMaxTurns and the agent-config/default fallback chain before it is stored.

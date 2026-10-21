@@ -126,6 +126,10 @@ func (m scheduleManagerOf) spawn(typ, prompt string, o spawnJobOptions) (string,
 	if err != nil {
 		return "", err
 	}
+	// A worktree agent starts once its copy exists; the strict failure is the fire's error, not a start that went well.
+	if err := m.a.mgr.awaitSetup(ctx.Done(), r); err != nil {
+		return "", err
+	}
 	return r.ID, nil
 }
 
