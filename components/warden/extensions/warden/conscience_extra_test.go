@@ -278,13 +278,14 @@ func TestConscienceReminderNotSentWhenTheFreshAssessmentAwaitsTheUser(t *testing
 	}
 }
 
-// maxNudges is a cap on reminders: 0 allows none.
-func TestConscienceMaxNudgesZeroAllowsNoReminder(t *testing.T) {
+// maxNudges below 1 in the config file is raised to 1 by the loader (config.ts: Math.max(1, Math.min(5, ...))), so a
+// zero cannot switch reminders off: one is still delivered.
+func TestConscienceMaxNudgesZeroInTheFileIsRaisedToOne(t *testing.T) {
 	e := newCsExt(t, csOpts{conscience: func(c *ConscienceConfig) { c.MaxNudges = 0 }})
 	e.set(csAdvance(3))
 	e.prompt("design a landing page", csDefaultSkillEvents())
 	csAgentEndToolCall(e)
-	if r := e.reminders(); len(r) != 0 {
+	if r := e.reminders(); len(r) != 1 {
 		t.Errorf("%v", r)
 	}
 }

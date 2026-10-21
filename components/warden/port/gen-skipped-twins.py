@@ -79,19 +79,6 @@ CONSCIENCE_CASES = {
     ("extension.test.ts", 4417): "the first half needs a saved key rejection (a 401 kept in the TypeSafe auth state file); the port reads the key from the environment and keeps no such state, so key_rejected is never traced (D17); the no_consent half is TestConscienceMissingConsentTracesNoConsent, a missing key is no_key (TestConscienceMissingKeyTracesNoKey)",
 }
 
-def reason(f, name, line=0):
-    if (f, line) in CONSCIENCE_CASES:
-        return CONSCIENCE_CASES[(f, line)]
-    if (f, line) in RULES_CASES:
-        return RULES_CASES[(f, line)]
-    if (f, line) in LEARNING_CASES:
-        return LEARNING_CASES[(f, line)]
-    for needle, why in CASES.get(f, []):
-        if needle in name:
-            return why
-    if f == "rules-replay.test.ts":
-        return "scripts/rules-replay.mjs (a repository maintainer script, npm run eval:*) is absent from the published package files (dist, extensions, examples) and not vendored; case: " + name
-
 # Per-case reasons for the cases that stay skipped in the configuration, host and backend files (each case says why).
 CASES = {
     "config.test.ts": [
@@ -148,6 +135,20 @@ CASES = {
         ("notice once, marker written", "the Oh My Pi migration notice (legacy data under Pi's agent directory moved to Oh My Pi's); PiG is not Oh My Pi and the port's data never lived in Pi's directory (D5)"),
     ],
 }
+
+
+def reason(f, name, line=0):
+    if (f, line) in CONSCIENCE_CASES:
+        return CONSCIENCE_CASES[(f, line)]
+    if (f, line) in RULES_CASES:
+        return RULES_CASES[(f, line)]
+    if (f, line) in LEARNING_CASES:
+        return LEARNING_CASES[(f, line)]
+    for needle, why in CASES.get(f, []):
+        if needle in name:
+            return why
+    if f == "rules-replay.test.ts":
+        return "scripts/rules-replay.mjs (a repository maintainer script, npm run eval:*) is absent from the published package files (dist, extensions, examples) and not vendored; case: " + name
 
     base = f[:-len(".test.ts")]
     n = name.lower()

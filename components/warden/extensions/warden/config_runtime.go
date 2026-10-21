@@ -34,7 +34,7 @@ func (w *warden) readConfigFiles(ctx sdk.Context, userPath string) (file, merged
 		if perr != nil {
 			problem = "warden: could not read " + w.projectPath + ": " + perr.Error() + ". The user configuration is in use."
 		} else {
-			merged = ApplyProjectOverrides(file, anyOf(project))
+			merged = ApplyProjectOverrides(file, mapOrNil(project))
 		}
 	}
 	var missing []string

@@ -19,6 +19,7 @@ func TestShippedFilesImportOnlyThePublicSDKAndSharedComponents(t *testing.T) {
 		"github.com/MichaelKinsy/PiG/extensions/sdk",
 		"github.com/MichaelKinsy/pigpen/components/typesafe/",
 		"github.com/MichaelKinsy/pigpen/components/pitui",
+		"modernc.org/sqlite", // the learning store (slice 7, owner approved 2026-10-21)
 	}
 	files, err := filepath.Glob("*.go")
 	if err != nil {

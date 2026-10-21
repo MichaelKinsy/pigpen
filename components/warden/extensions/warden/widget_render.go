@@ -325,7 +325,7 @@ func ParseVerdictLine(line, guard string) (status string, body []string) {
 // WidgetEntry is one guard's latest line.
 type WidgetEntry struct{ Guard, Line string }
 
-func padEnd(s string, width int) string {
+func panelPadEnd(s string, width int) string {
 	if n := utf16Len(s); n < width {
 		return s + strings.Repeat(" ", width-n)
 	}
@@ -387,7 +387,7 @@ func WidgetLines(entries []WidgetEntry, theme ThemeLike, width int) []string {
 		return "text"
 	}
 	rail := func(status string) string {
-		return theme.Bold(theme.Fg(color(status), padEnd(strings.ToUpper(status), railWidth)))
+		return theme.Bold(theme.Fg(color(status), panelPadEnd(strings.ToUpper(status), railWidth)))
 	}
 	dimSep := theme.Fg("dim", separator)
 	var lines []string
@@ -434,7 +434,7 @@ func WidgetLines(entries []WidgetEntry, theme ThemeLike, width int) []string {
 		body := strings.Join(segments, dimSep)
 		name := it.guard
 		if body != "" {
-			name = padEnd(it.guard, guardWidth)
+			name = panelPadEnd(it.guard, guardWidth)
 		}
 		chip, chipWidth := chipCell(it.status)
 		extra := 0

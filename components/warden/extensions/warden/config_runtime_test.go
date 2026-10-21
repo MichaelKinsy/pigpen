@@ -48,7 +48,7 @@ func startCfg(t *testing.T, o cfgOpts) (*harness, string) {
 	return h, cwd
 }
 
-func (h *harness) statusText() string {
+func (h *harness) configStatusText() string {
 	h.t.Helper()
 	if msg := h.host.Command("warden", ""); msg != "" {
 		h.t.Fatalf("/warden: %s", msg)
@@ -65,13 +65,13 @@ func (h *harness) statusText() string {
 func TestConfigReloadsWhenTheFileChanges(t *testing.T) {
 	h, _ := startCfg(t, cfgOpts{user: `{"enabled":true,"mode":"advise"}`})
 	h.start()
-	if got := h.statusText(); !strings.Contains(got, "advise mode") {
+	if got := h.configStatusText(); !strings.Contains(got, "advise mode") {
 		t.Fatalf("status %q", got)
 	}
 	if err := os.WriteFile(ConfigPath(h.home), []byte(`{"enabled":true,"mode":"confirm"}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if got := h.statusText(); !strings.Contains(got, "confirm mode") {
+	if got := h.configStatusText(); !strings.Contains(got, "confirm mode") {
 		t.Errorf("an edit to the file did not take effect: %q", got)
 	}
 }
@@ -79,7 +79,7 @@ func TestConfigReloadsWhenTheFileChanges(t *testing.T) {
 func TestTrustedProjectFileIsReadAndAWeakerValueIsIgnoredWithAWarning(t *testing.T) {
 	h, cwd := startCfg(t, cfgOpts{user: `{"enabled":true}`, project: `{"security":{"enabled":false},"stuck":{"window":7}}`, trusted: true})
 	h.start()
-	got := h.statusText()
+	got := h.configStatusText()
 	for _, want := range []string{"Config: " + ConfigPath(h.home) + " and " + filepath.Join(cwd, ".pig", ProjectConfigFile), "project file: security.enabled false is ignored"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("status lacks %q:\n%s", want, got)
@@ -100,7 +100,7 @@ func TestTrustedProjectFileIsReadAndAWeakerValueIsIgnoredWithAWarning(t *testing
 func TestUntrustedProjectFileIsNotRead(t *testing.T) {
 	h, cwd := startCfg(t, cfgOpts{user: `{"enabled":true}`, project: `{"security":{"enabled":false}}`, trusted: false})
 	h.start()
-	got := h.statusText()
+	got := h.configStatusText()
 	if strings.Contains(got, filepath.Join(cwd, ".pig")) || strings.Contains(got, "project file:") {
 		t.Errorf("an untrusted project was read:\n%s", got)
 	}
@@ -118,7 +118,7 @@ func TestHostileUserFileStartsCleanAndARefusedBackendIsSaid(t *testing.T) {
 	if !said {
 		t.Errorf("the refused backend was not said: %v", h.notices())
 	}
-	if got := h.statusText(); !strings.Contains(got, "steer mode") || !strings.Contains(got, `Judgments are off: Unknown judgment backend "azure"`) {
+	if got := h.configStatusText(); !strings.Contains(got, "steer mode") || !strings.Contains(got, `Judgments are off: Unknown judgment backend "azure"`) {
 		t.Errorf("status %q", got)
 	}
 }

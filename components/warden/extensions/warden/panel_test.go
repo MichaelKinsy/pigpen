@@ -173,12 +173,12 @@ func TestConfigPanelBrowseEditAndSave(t *testing.T) {
 
 func TestJSToNumber(t *testing.T) {
 	for in, want := range map[string]float64{"12": 12, " 7 ": 7, "": 0, "  ": 0, "1.5": 1.5, "-2": -2, "1e3": 1000, "0x10": 16, "0b11": 3, "0o17": 15, ".5": 0.5, "5.": 5} {
-		if got := jsToNumber(in); got != want {
+		if got := panelJSToNumber(in); got != want {
 			t.Errorf("%q: %v want %v", in, got, want)
 		}
 	}
 	for _, in := range []string{"abc", "1_0", "Infinity", "NaN", "0x", "1.2.3", "--1"} {
-		if got := jsToNumber(in); got == got {
+		if got := panelJSToNumber(in); got == got {
 			t.Errorf("%q should be NaN, got %v", in, got)
 		}
 	}

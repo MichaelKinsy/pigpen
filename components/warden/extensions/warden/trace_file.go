@@ -29,7 +29,7 @@ import (
 const TraceDirEnv = "PIGPEN_WARDEN_TRACE_DIR"
 
 // PackageVersion is the version in package.json (the trace file's `wardenVersion`); a test keeps the two equal.
-const PackageVersion = "0.1.3"
+const PackageVersion = "0.1.11"
 
 // JudgmentsOffReason is why no judge is available (backend.ts JudgmentsOffReason).
 type JudgmentsOffReason string
@@ -160,7 +160,7 @@ type traceAmendLine struct {
 	At   string `json:"at"`
 }
 
-func isoTime(t time.Time) string { return t.UTC().Format("2006-01-02T15:04:05.000Z") }
+func traceISOTime(t time.Time) string { return t.UTC().Format("2006-01-02T15:04:05.000Z") }
 
 // TraceFile appends the session's trace events in trace order, one write at a time.
 type TraceFile struct {
@@ -186,7 +186,7 @@ func NewTraceFile(path, dir string, session TraceFileSession, onFailure func(str
 	f := &TraceFile{Path: path, onFailure: onFailure, now: time.Now, ids: map[*TraceEntry]int{}, judgments: session.Judgments}
 	f.cond = sync.NewCond(&f.mu)
 	header := traceSessionLine{V: 1, Kind: "session", SessionID: session.SessionID, Cwd: shownPath(session.Cwd), WardenVersion: PackageVersion,
-		Mode: session.Mode, Judgments: string(session.Judgments), At: isoTime(f.now())}
+		Mode: session.Mode, Judgments: string(session.Judgments), At: traceISOTime(f.now())}
 	f.enqueue(func() error {
 		if err := os.MkdirAll(dir, 0o700); err != nil {
 			return err
@@ -210,7 +210,7 @@ func (f *TraceFile) Listener(event TraceEvent) {
 	if stopped || event.Kind == "clear" || event.Entry == nil {
 		return
 	}
-	at := isoTime(f.now())
+	at := traceISOTime(f.now())
 	switch event.Kind {
 	case "push":
 		f.mu.Lock()
@@ -219,7 +219,7 @@ func (f *TraceFile) Listener(event TraceEvent) {
 		f.ids[event.Entry] = local
 		f.mu.Unlock()
 		e := event.Entry
-		line := traceEntryLine{V: 1, Kind: "entry", At: isoTime(e.At), Guard: string(e.Guard), Line: e.Line, Details: append([]string{}, e.Details...)}
+		line := traceEntryLine{V: 1, Kind: "entry", At: traceISOTime(e.At), Guard: string(e.Guard), Line: e.Line, Details: append([]string{}, e.Details...)}
 		if e.Tokens != nil {
 			tokens := make(map[string]string, len(e.Tokens))
 			for k, v := range e.Tokens {
@@ -249,7 +249,7 @@ func (f *TraceFile) Judgments(state JudgmentsState) {
 	}
 	f.judgments = state
 	f.mu.Unlock()
-	line := traceJudgmentsLine{V: 1, Kind: "judgments", Judgments: string(state), At: isoTime(f.now())}
+	line := traceJudgmentsLine{V: 1, Kind: "judgments", Judgments: string(state), At: traceISOTime(f.now())}
 	f.enqueue(func() error { return appendLine(f.Path, line) })
 }
 

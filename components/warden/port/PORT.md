@@ -48,7 +48,7 @@
 | `config.ts` `userConfigPath`/`projectConfigPath`, `host-dirs.ts` `defaultHostDirs` | `host_dirs.go` | `HostDirs{ConfigHome, ConfigDirName}`: PIG_HOME or ~/.pig, and `.pig` (`.pi` under PIG_USE_PI_DIRS=1); the project file keeps upstream's name `pi-warden.json` |
 | `extension.ts` `configFor` (loading, trust, once-per-session notices), `/warden status` config lines | `config_runtime.go` | stat-based reload; trust asked once per cwd |
 | `extension.ts` `/warden config` | `config_cmd.go` | |
-| `shape.ts` `completeConfig`, `shapeWarning`, `CONFIG_SCHEMA` | `shape.go` | zero-section detection instead of `typeof` checks, see C6 |
+| `shape.ts` `completeConfig`, `shapeWarning`, `CONFIG_SCHEMA` | `shape.go` | zero-section detection instead of `typeof` checks, see D26 |
 | `host-compat.ts` | none | Oh My Pi adapter; PiG is not an adapted host |
 | `trace-file.ts` | `trace_file.go`, `trace_session.go` | writes on one goroutine, off the guard's path |
 | `widget.ts` `LEVEL_COLOR`, `SENTENCE_TEMPLATES`, `pickSentenceTemplate`, `renderSegment`, `parseVerdictLine`, `TOKEN_NAMES`; `widget-render.ts` | `widget_render.go`, `widget_sentences.go` | the sentence table is copied text |
@@ -151,21 +151,17 @@ PiG."
 | D17 | a TypeSafe `401`/`403` is saved in the auth state file, and the conscience traces `key_rejected` from then on | no such file: the key is read from the environment; a rejected request is one judge error (`skipReason: error`, category `network` or `auth`). A missing key traces `no_key`, missing consent `no_consent`. The case at `extension.test.ts` 4417 is a named skip for its first half | D3 |
 | D18 | skill frontmatter is parsed by a full YAML parser | `frontmatter.go` reads the top-level mapping of the YAML subset skill files use (plain, single and double quoted scalars, `\|` and `>` blocks, comments, flow and nested values kept as non-strings). Only `name`, `description` and `disable-model-invocation` are read; a document it cannot read is `load_failed`, as invalid YAML is. No new dependency | decision: no third-party YAML for three keys |
 | D19 | file identity (rule 4) compares `dev`, `ino`, size and mtime | the same on Linux and macOS; on Windows `dev` and `ino` are not read (Go's `FileInfo` has no file index without an open handle), so size and mtime decide | platform |
-
-### Deviations of the configuration, trace and panel slice
-
-| # | Original | Port | Why |
-|---|---|---|---|
-| C1 | a project file may switch warden on (`enabled: true`) | it may switch it off, never on: `enabled: true` is ignored with one config warning | D1: warden is off until the user runs `/warden enable`; a repository must not start it |
-| C2 | `typesafe` (consent) and `typesafeBackend` (a name or an endpoint object) | `consent` and `backend`: `""`, `typesafe` or `own-model`; any other value (including `openrouter`, `commandcode` and endpoint objects) is refused: judgments stay off, one notice, and `/warden status` quotes the reason | D2, D3 |
-| C3 | the user file is `<agentDir>/pi-warden/config.json`, the project file `<cwd>/.pi/pi-warden.json` | `<PIG_HOME>/pigpen-warden/config.json` and `<cwd>/.pig/pi-warden.json` (`.pi/` under `PIG_USE_PI_DIRS=1`); the project file keeps its name, so one repository file serves both extensions | D5; `host-dirs.ts` has no PiG counterpart for the agent directory |
-| C4 | `JSON.stringify(raw, null, 2)` keeps insertion order | the file is written with keys sorted; a command writes only the keys it changed (`SaveConfigChange`), so unknown keys and values the user did not touch survive | Go maps; the original also writes only what its command sets |
-| C5 | `PI_WARDEN_TRACE_DIR` | `PIGPEN_WARDEN_TRACE_DIR` | D6 |
-| C6 | `completeConfig` tests `typeof value === "number"` on a stale config module | a zero section means "missing" (all-zero struct, nil `notify.command`, empty enum); a zero number is a legal setting for `shouldProceed.threshold`, `escalationThreshold`, `intentMismatch`, `softThreshold`, `offTask.steer`, and `learning` and `prefs` are never reported missing | Go has no `undefined`; the stale-module-graph failure itself cannot occur in one Go package |
-| C7 | conscience numeric settings keep a fractional value | truncated (the Go fields are integers; nothing reads the fraction) | types |
-| C8 | warning text for an object-valued rule setting prints keys in insertion order | keys sorted | D10 |
-| C9 | `/warden config set` writes anything, including consent | the same: `/warden config set consent typesafe` grants consent without the disclosure dialog, exactly as upstream's `config set typesafe true` does; the user typed it | faithful; named so a reviewer sees it |
-| C10 | the config panel is opened by click, the status line is a click target (`MouseRegion`), `closed` settles when the overlay is removed | the sidebar opens by shortcut or `/warden trace`; the status widget's rows are static host rows, not a click target; closing from outside (second toggle) uses `OverlayHandle.Hide()` | SDK needs 1 and 2 below |
+| D20 | the learning database, the per-model steer counts and the hold log live in `PI_WARDEN_DB` / `PI_WARDEN_STEER_STATS` and Pi's agent directory; the module's promises are not awaited | `PIGPEN_WARDEN_DB` and `PIGPEN_WARDEN_STEER_STATS` (D6), files in `<PIG_HOME>/pigpen-warden/` (`holds.db`, `steer-stats.json`, `holds/`); database and log writes run on one ordered background queue, the hold log writes the newest snapshot only, the module's console warnings are kept (last 20) and counted by `/warden status` | PiG's config home; Go has no console; no tool call waits for a disk |
+| D21 | a project file may switch warden on (`enabled: true`) | it may switch it off, never on: `enabled: true` is ignored with one config warning | D1: warden is off until the user runs `/warden enable`; a repository must not start it |
+| D22 | `typesafe` (consent) and `typesafeBackend` (a name or an endpoint object) | `consent` and `backend`: `""`, `typesafe` or `own-model`; any other value (including `openrouter`, `commandcode` and endpoint objects) is refused: judgments stay off, one notice, and `/warden status` quotes the reason | D2, D3 |
+| D23 | the user file is `<agentDir>/pi-warden/config.json`, the project file `<cwd>/.pi/pi-warden.json` | `<PIG_HOME>/pigpen-warden/config.json` and `<cwd>/.pig/pi-warden.json` (`.pi/` under `PIG_USE_PI_DIRS=1`); the project file keeps its name, so one repository file serves both extensions | D5; `host-dirs.ts` has no PiG counterpart for the agent directory |
+| D24 | `JSON.stringify(raw, null, 2)` keeps insertion order | the file is written with keys sorted; a command writes only the keys it changed (`SaveConfigChange`), so unknown keys and values the user did not touch survive | Go maps; the original also writes only what its command sets |
+| D25 | `PI_WARDEN_TRACE_DIR` | `PIGPEN_WARDEN_TRACE_DIR` | D6 |
+| D26 | `completeConfig` tests `typeof value === "number"` on a stale config module | a zero section means "missing" (all-zero struct, nil `notify.command`, empty enum); a zero number is a legal setting for `shouldProceed.threshold`, `escalationThreshold`, `intentMismatch`, `softThreshold`, `offTask.steer`, and `learning` and `prefs` are never reported missing | Go has no `undefined`; the stale-module-graph failure itself cannot occur in one Go package |
+| D27 | conscience numeric settings keep a fractional value | truncated (the Go fields are integers; nothing reads the fraction) | types |
+| D28 | warning text for an object-valued rule setting prints keys in insertion order | keys sorted | D10 |
+| D29 | `/warden config set` writes anything, including consent | the same: `/warden config set consent typesafe` grants consent without the disclosure dialog, exactly as upstream's `config set typesafe true` does; the user typed it | faithful; named so a reviewer sees it |
+| D30 | the config panel is opened by click, the status line is a click target (`MouseRegion`), `closed` settles when the overlay is removed | the sidebar opens by shortcut or `/warden trace`; the status widget's rows are static host rows, not a click target; closing from outside (second toggle) uses `OverlayHandle.Hide()` | SDK needs 1 and 2 below |
 
 SDK needs found: (1) a `Context.Custom` call returns only when the component returns `Done`; Pi's `ui.custom` promise is
 settled by the factory's `done()`, which an extension can call from anywhere. The port runs `Custom` on its own
@@ -666,7 +662,7 @@ checked: `port/live-smoke/smoke.sh` creates `holds.db` from the built `pig-warde
 it means replacing `sqlite_store.go` (the only file that names the engine) with a store that answers every method with "learning
 is off" (the original's own NOOP answers).
 
-Deviations (D12): the original's `PI_WARDEN_DB` and `PI_WARDEN_STEER_STATS` are `PIGPEN_WARDEN_DB` and
+Deviations (D20): the original's `PI_WARDEN_DB` and `PI_WARDEN_STEER_STATS` are `PIGPEN_WARDEN_DB` and
 `PIGPEN_WARDEN_STEER_STATS` (D6); the files live in `<PIG_HOME>/pigpen-warden/` (`holds.db`, `steer-stats.json`, `holds/`).
 Database and log writes run on one ordered background queue (the original's promises are not awaited either), so a tool
 call never waits for a disk; the hold log writes the newest snapshot only (every snapshot is the whole state). The module's

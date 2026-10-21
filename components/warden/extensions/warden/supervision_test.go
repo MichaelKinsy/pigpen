@@ -232,7 +232,7 @@ func TestStuckLoopDiffThreeFailuresWithDifferingOutputsCarryADiffNote(t *testing
 }
 
 func TestStuckLoopDiffTheSameOutputAgainIsAOneLineNoteThatReusesTheSavedPath(t *testing.T) {
-	h := stuckHarness(t, func(c *Config) { c.Stuck.Cooldown = 0 })
+	h := stuckHarness(t, func(c *Config) { c.Stuck.Cooldown = 1 })
 	call := map[string]any{"command": "npm run build"}
 	a, b, c := longOutput("a"), longOutput("b"), longOutput("c")
 	h.result(call, a, true)
@@ -289,7 +289,7 @@ func TestStuckLoopDiffNeverGrowsAShortResult(t *testing.T) {
 }
 
 func TestStuckLoopDiffStopsWhenTheSameTargetChurnsPastTheThreshold(t *testing.T) {
-	h := stuckHarness(t, func(c *Config) { c.Stuck.Cooldown = 0 })
+	h := stuckHarness(t, func(c *Config) { c.Stuck.Cooldown = 1 })
 	call := map[string]any{"command": "npm run build"}
 	outputs := []string{longOutput("a"), longOutput("b"), longOutput("c"), longOutput("d"), longOutput("e")}
 	var patched []bool

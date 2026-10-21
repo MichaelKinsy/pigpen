@@ -27,9 +27,9 @@ func (w *warden) registerShortcut(e *sdk.Extension) {
 	})
 }
 
-// judgmentsOffReason says why no judge is available, or "" when one is (extension.ts judgmentsOffReason, for the port's
+// traceJudgmentsOffReason says why no judge is available, or "" when one is (extension.ts judgmentsOffReason, for the port's
 // backends: a refused backend, no consent for the configured one, the request budget, a missing TypeSafe key).
-func (w *warden) judgmentsOffReason(cfg Config) JudgmentsOffReason {
+func (w *warden) traceJudgmentsOffReason(cfg Config) JudgmentsOffReason {
 	switch {
 	case cfg.BackendRefusal != "":
 		return JudgmentsBadBackend
@@ -54,7 +54,7 @@ func (w *warden) noteJudgments(cfg Config) {
 	file := w.traceFile
 	w.mu.Unlock()
 	if file != nil {
-		file.Judgments(JudgmentsStateOf(w.judgmentsOffReason(cfg)))
+		file.Judgments(JudgmentsStateOf(w.traceJudgmentsOffReason(cfg)))
 	}
 }
 
@@ -96,7 +96,7 @@ func (w *warden) openSessionTrace(ctx sdk.Context) {
 	if err != nil || sessionID == "" {
 		sessionID = ""
 	}
-	file := NewTraceFile(TraceFilePath(dir, sessionID), dir, TraceFileSession{SessionID: sessionID, Cwd: ctx.Cwd(), Mode: cfg.Mode, Judgments: JudgmentsStateOf(w.judgmentsOffReason(cfg))},
+	file := NewTraceFile(TraceFilePath(dir, sessionID), dir, TraceFileSession{SessionID: sessionID, Cwd: ctx.Cwd(), Mode: cfg.Mode, Judgments: JudgmentsStateOf(w.traceJudgmentsOffReason(cfg))},
 		func(text string) { w.say(ctx, text, "warning") })
 	unsub := w.trace.Subscribe(file.Listener)
 	w.mu.Lock()

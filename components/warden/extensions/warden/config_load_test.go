@@ -37,7 +37,7 @@ func eq(t *testing.T, name string, got, want any) {
 	}
 }
 
-func ruleIDs[T any](rules []T, id func(T) string) []string {
+func cfgRuleIDs[T any](rules []T, id func(T) string) []string {
 	out := []string{}
 	for _, r := range rules {
 		out = append(out, id(r))
@@ -109,7 +109,7 @@ func TestUserOverridesAcceptValidValuesAndIgnoreJunk(t *testing.T) {
 	eq(t, "nudge", cfg.Stuck.Nudge, false)
 	eq(t, "claimsDone", cfg.Done.ClaimsDone, 0.5)
 	eq(t, "uiProof", cfg.Done.UIProof, true)
-	if !containsString(cfg.Done.UIFiles, "**/web/**/*.js") {
+	if !cfgContainsString(cfg.Done.UIFiles, "**/web/**/*.js") {
 		t.Error("default uiFiles lost")
 	}
 	ui := user(t, DefaultConfig(), `{"done":{"uiProof":false,"uiFiles":["**/*.css",3],"visualTools":{"commands":["cypress"],"images":[".gif"]}}}`).Done
@@ -166,8 +166,8 @@ func TestProjectActionBlockKeepsUserCommandRules(t *testing.T) {
 	base := user(t, DefaultConfig(), `{"action":{"commandRules":[{"id":"kubectl-delete","pattern":"\\bkubectl\\s+delete\\b","severity":"confirm"}],"commandDenyRules":[{"id":"never-reset","pattern":"\\btalosctl\\s+reset\\b"}],"exemptRules":["sudo"]}}`)
 	cfg := project(t, base, `{"action":{"tools":["bash","write","read"]}}`)
 	eq(t, "tools", cfg.Action.Tools, append(append([]string{}, DefaultConfig().Action.Tools...), "read"))
-	eq(t, "commandRules", ruleIDs(cfg.Action.CommandRules, func(r CommandRule) string { return r.ID }), []string{"kubectl-delete"})
-	eq(t, "deny", ruleIDs(cfg.Action.CommandDenyRules, func(r CommandRule) string { return r.ID }), []string{"never-reset"})
+	eq(t, "commandRules", cfgRuleIDs(cfg.Action.CommandRules, func(r CommandRule) string { return r.ID }), []string{"kubectl-delete"})
+	eq(t, "deny", cfgRuleIDs(cfg.Action.CommandDenyRules, func(r CommandRule) string { return r.ID }), []string{"never-reset"})
 	eq(t, "exempt", cfg.Action.ExemptRules, []string{"sudo"})
 }
 
@@ -181,7 +181,7 @@ func TestUserConfigAcceptsCommandRules(t *testing.T) {
 	eq(t, "deny severity", cfg.Action.CommandDenyRules[0].Severity, "deny")
 	eq(t, "exempt", cfg.Action.ExemptRules, []string{"infra-destroy", "sudo"})
 	messy := user(t, DefaultConfig(), `{"action":{"commandRules":[{"id":"x","pattern":".","severity":"warn"},{"id":"x","pattern":".","severity":"warn"},{"id":"","pattern":"."},{"id":"y","pattern":""}]}}`)
-	eq(t, "messy", ruleIDs(messy.Action.CommandRules, func(r CommandRule) string { return r.ID }), []string{"x"})
+	eq(t, "messy", cfgRuleIDs(messy.Action.CommandRules, func(r CommandRule) string { return r.ID }), []string{"x"})
 }
 
 // twin: tests/config.test.ts:158
@@ -194,7 +194,7 @@ func TestProjectCannotSetPathRules(t *testing.T) {
 func TestProjectActionBlockKeepsUserPathRules(t *testing.T) {
 	base := user(t, DefaultConfig(), `{"action":{"pathRules":[{"id":"ssh-keys","paths":["~/.ssh/id_*"],"access":"write","tools":["*"],"action":"block"}]}}`)
 	cfg := project(t, base, `{"action":{"tools":["bash","write"]}}`)
-	eq(t, "pathRules", ruleIDs(cfg.Action.PathRules, func(r PathRule) string { return r.ID }), []string{"ssh-keys"})
+	eq(t, "pathRules", cfgRuleIDs(cfg.Action.PathRules, func(r PathRule) string { return r.ID }), []string{"ssh-keys"})
 }
 
 // twin: tests/config.test.ts:172
@@ -348,7 +348,7 @@ func TestProjectCannotSetArmingRules(t *testing.T) {
 func TestProjectActionBlockKeepsUserArmingRules(t *testing.T) {
 	base := user(t, DefaultConfig(), `{"action":{"armingRules":[{"id":"gitops","when":{"edited":["**/kustomization.yaml"]},"arms":{"command":"\\bflux\\b","for":"10m"},"action":"confirm"}]}}`)
 	cfg := project(t, base, `{"action":{"tools":["bash","write"]}}`)
-	eq(t, "ids", ruleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"gitops"})
+	eq(t, "ids", cfgRuleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"gitops"})
 }
 
 // twin: tests/config.test.ts:270
@@ -361,7 +361,7 @@ func TestUserConfigAcceptsArmingRules(t *testing.T) {
 	  {"id":"no-command","when":{"edited":["**/x.yaml"]},"arms":{"command":""},"action":"confirm"},
 	  {"id":"no-action","when":{"edited":["**/x.yaml"]},"arms":{"command":"."}},
 	  {"id":"bad-when-tools","when":{"edited":["**/x.yaml"],"tools":["bash"]},"arms":{"command":"."},"action":"confirm"}]}}`)
-	eq(t, "ids", ruleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"gitops"})
+	eq(t, "ids", cfgRuleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"gitops"})
 	if cfg.Action.ArmingRules[0].When.Tools != nil {
 		t.Error("when.tools stays unset")
 	}
@@ -476,11 +476,11 @@ func TestDenyAndBlockAreTheSameValueWithNoWarning(t *testing.T) {
 	  "commandDenyRules":[{"id":"d-block","pattern":"c","severity":"block"}],
 	  "pathRules":[{"id":"p-deny","paths":["~/.ssh/*"],"action":"deny"},{"id":"p-block","paths":["~/.aws/*"],"action":"block"}],
 	  "armingRules":[{"id":"a-deny","when":{"edited":["**/x"]},"arms":{"command":"apply"},"action":"deny"},{"id":"a-block","when":{"edited":["**/y"]},"arms":{"command":"apply"},"action":"block"}]}}`)
-	eq(t, "command", ruleIDs(cfg.Action.CommandRules, func(r CommandRule) string { return r.Severity }), []string{"deny", "deny"})
+	eq(t, "command", cfgRuleIDs(cfg.Action.CommandRules, func(r CommandRule) string { return r.Severity }), []string{"deny", "deny"})
 	eq(t, "no dialog action", cfg.Action.CommandRules[0].Action, "")
-	eq(t, "deny list", ruleIDs(cfg.Action.CommandDenyRules, func(r CommandRule) string { return r.Severity }), []string{"deny"})
-	eq(t, "path", ruleIDs(cfg.Action.PathRules, func(r PathRule) string { return r.Action }), []string{"block", "block"})
-	eq(t, "arming", ruleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.Action }), []string{"block", "block"})
+	eq(t, "deny list", cfgRuleIDs(cfg.Action.CommandDenyRules, func(r CommandRule) string { return r.Severity }), []string{"deny"})
+	eq(t, "path", cfgRuleIDs(cfg.Action.PathRules, func(r PathRule) string { return r.Action }), []string{"block", "block"})
+	eq(t, "arming", cfgRuleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.Action }), []string{"block", "block"})
 	eq(t, "warnings", len(cfg.Warnings), 0)
 }
 
@@ -656,7 +656,7 @@ func TestArmingRuleWithNoActionIsIgnoredWithOneWarning(t *testing.T) {
 	cfg := user(t, DefaultConfig(), `{"action":{"armingRules":[
 	  {"id":"no-action","when":{"edited":["**/x"]},"arms":{"command":"apply","for":"5m"}},
 	  {"id":"kept","when":{"edited":["**/y"]},"arms":{"command":"apply","for":"5m"},"action":"hold"}]}}`)
-	eq(t, "ids", ruleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"kept"})
+	eq(t, "ids", cfgRuleIDs(cfg.Action.ArmingRules, func(r ArmingRule) string { return r.ID }), []string{"kept"})
 	eq(t, "warnings", cfg.Warnings, []string{`arming rule "no-action": has no action and is ignored; set action to confirm, hold, or block`})
 }
 

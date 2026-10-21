@@ -25,8 +25,8 @@ func asObj(v any) (jobj, bool) {
 	return m, ok
 }
 
-// jsNumber is `typeof value === "number"` for a decoded value.
-func jsNumber(v any) (float64, bool) {
+// cfgJSNumber is `typeof value === "number"` for a decoded value.
+func cfgJSNumber(v any) (float64, bool) {
 	switch n := v.(type) {
 	case float64:
 		return n, !math.IsNaN(n)
@@ -47,8 +47,8 @@ func isSafeInteger(f float64) bool {
 	return !math.IsInf(f, 0) && f == math.Trunc(f) && math.Abs(f) <= maxSafeInteger
 }
 
-func probability(v any, fallback float64) float64 {
-	if f, ok := jsNumber(v); ok && !math.IsInf(f, 0) && f >= 0 && f <= 1 {
+func configProbability(v any, fallback float64) float64 {
+	if f, ok := cfgJSNumber(v); ok && !math.IsInf(f, 0) && f >= 0 && f <= 1 {
 		return f
 	}
 	return fallback
@@ -61,8 +61,8 @@ func boolean(v any, fallback bool) bool {
 	return fallback
 }
 
-func positiveInteger(v any, fallback int) int {
-	if f, ok := jsNumber(v); ok && isSafeInteger(f) && f > 0 {
+func cfgPositiveInteger(v any, fallback int) int {
+	if f, ok := cfgJSNumber(v); ok && isSafeInteger(f) && f > 0 {
 		return int(f)
 	}
 	return fallback
@@ -70,7 +70,7 @@ func positiveInteger(v any, fallback int) int {
 
 // nonNegativeInteger is `Number.isSafeInteger(v) && v >= 0 ? v : fallback`.
 func nonNegativeInteger(v any, fallback int) int {
-	if f, ok := jsNumber(v); ok && isSafeInteger(f) && f >= 0 {
+	if f, ok := cfgJSNumber(v); ok && isSafeInteger(f) && f >= 0 {
 		return int(f)
 	}
 	return fallback
@@ -93,8 +93,8 @@ func nonBlank(v any) (string, bool) {
 	return s, true
 }
 
-// jsStringify is JSON.stringify for a decoded value (no HTML escaping; U+2028 and U+2029 stay raw).
-func jsStringify(v any) string {
+// cfgJSStringify is JSON.stringify for a decoded value (no HTML escaping; U+2028 and U+2029 stay raw).
+func cfgJSStringify(v any) string {
 	if v == nil {
 		return "null"
 	}
@@ -114,8 +114,8 @@ func threshold(v any, fallback Threshold) Threshold {
 	if !ok {
 		return fallback
 	}
-	warn := probability(m["warn"], fallback.Warn)
-	confirm := probability(m["confirm"], fallback.Confirm)
+	warn := configProbability(m["warn"], fallback.Warn)
+	confirm := configProbability(m["confirm"], fallback.Confirm)
 	return Threshold{Warn: math.Min(warn, confirm), Confirm: confirm}
 }
 
@@ -125,8 +125,8 @@ func offTaskThreshold(v any, fallback OffTaskThreshold) OffTaskThreshold {
 	if !ok {
 		return fallback
 	}
-	warn := probability(m["warn"], fallback.Warn)
-	steer := probability(coalesce(m["steer"], m["confirm"]), fallback.Steer)
+	warn := configProbability(m["warn"], fallback.Warn)
+	steer := configProbability(coalesce(m["steer"], m["confirm"]), fallback.Steer)
 	return OffTaskThreshold{Warn: math.Min(warn, steer), Steer: steer}
 }
 
@@ -135,7 +135,7 @@ func IsMode(v string) bool { return v == "steer" || v == "confirm" || v == "advi
 
 // unknownRuleValue is the config warning for a rule value no kind accepts; the rule still applies, at the level named.
 func unknownRuleValue(kind, id, key string, value any, valid []string, applied string) string {
-	shown := utf16Slice(jsStringify(value), 0, 40)
+	shown := utf16Slice(cfgJSStringify(value), 0, 40)
 	return kind + ` "` + id + `": ` + key + " " + shown + " is not one of " + strings.Join(valid, ", ") + "; the rule applies at " + applied
 }
 
@@ -154,8 +154,8 @@ func globList(v any, fallback []string) []string {
 	return out
 }
 
-// stringList is `Array.isArray(v) ? v.filter(x => typeof x === "string") : fallback` (no trimming).
-func stringList(v any, fallback []string) []string {
+// cfgStringList is `Array.isArray(v) ? v.filter(x => typeof x === "string") : fallback` (no trimming).
+func cfgStringList(v any, fallback []string) []string {
 	list, ok := v.([]any)
 	if !ok {
 		return fallback
@@ -340,7 +340,7 @@ var reArmDuration = lazyRE(`^(\d+(?:\.\d+)?)\s*(ms|s|m|h)?$`)
 // ParseDuration reads an arming duration in milliseconds: a number is milliseconds; a string takes ms, s, m or h, and a
 // string without a unit means minutes. Zero, negative and unreadable values give the fallback. The one parser for arms.for.
 func ParseDuration(raw any, fallback float64) float64 {
-	if f, ok := jsNumber(raw); ok {
+	if f, ok := cfgJSNumber(raw); ok {
 		if !math.IsInf(f, 0) && f > 0 {
 			return f
 		}
@@ -465,7 +465,7 @@ func parseArmingRules(raw any, warnings *[]string) []ArmingRule {
 
 // projectIgnored is the config warning for a project value that would weaken the action guard or security.
 func projectIgnored(key string, value, kept any) string {
-	return "project file: " + key + " " + jsStringify(value) + " is ignored; a project file may make the action guard and security stricter, not weaker, so the user value " + jsStringify(kept) + " applies"
+	return "project file: " + key + " " + cfgJSStringify(value) + " is ignored; a project file may make the action guard and security stricter, not weaker, so the user value " + cfgJSStringify(kept) + " applies"
 }
 
 // projectSwitch: a project switch may turn a guard on, never off.
@@ -479,7 +479,7 @@ func projectSwitch(key string, v any, base bool, warnings *[]string) bool {
 
 // projectProbability: a project threshold may be lowered (stricter), never raised above the user's.
 func projectProbability(key string, v any, base float64, warnings *[]string) float64 {
-	parsed := probability(v, base)
+	parsed := configProbability(v, base)
 	if parsed <= base {
 		return parsed
 	}
@@ -508,7 +508,7 @@ func applyAction(base ActionConfig, rawAny any, timeoutMs int, project bool, war
 	if project {
 		var dropped []string
 		for _, t := range base.Tools {
-			if !containsString(listed, t) {
+			if !cfgContainsString(listed, t) {
 				dropped = append(dropped, t)
 			}
 		}
@@ -517,7 +517,7 @@ func applyAction(base ActionConfig, rawAny any, timeoutMs int, project bool, war
 		}
 		tools = append([]string{}, base.Tools...)
 		for _, t := range listed {
-			if !containsString(base.Tools, t) {
+			if !cfgContainsString(base.Tools, t) {
 				tools = append(tools, t)
 			}
 		}
@@ -540,14 +540,14 @@ func applyAction(base ActionConfig, rawAny any, timeoutMs int, project bool, war
 	}
 	out.Enabled, out.Tools, out.FailOpen, out.Irreversible = enabled, tools, failOpen, irreversible
 	out.OffTask = offTaskThreshold(raw["offTask"], base.OffTask)
-	out.IntentMismatch = probability(raw["intentMismatch"], base.IntentMismatch)
-	out.VisibleMismatch = math.Min(probability(raw["visibleMismatch"], base.VisibleMismatch), probability(raw["intentMismatch"], base.IntentMismatch))
+	out.IntentMismatch = configProbability(raw["intentMismatch"], base.IntentMismatch)
+	out.VisibleMismatch = math.Min(configProbability(raw["visibleMismatch"], base.VisibleMismatch), configProbability(raw["intentMismatch"], base.IntentMismatch))
 	if v := raw["intentTraceOnly"]; v == "invisible" || v == "all" || v == "none" {
 		out.IntentTraceOnly = v.(string)
 	}
 	out.ShouldProceed = ShouldProceed{
 		// `hold` is the pre-1.0 name of `threshold`; files that still set it keep working through 1.x.
-		Threshold: probability(coalesce(shouldProceed["threshold"], shouldProceed["hold"]), base.ShouldProceed.Threshold),
+		Threshold: configProbability(coalesce(shouldProceed["threshold"], shouldProceed["hold"]), base.ShouldProceed.Threshold),
 		Steer:     boolean(shouldProceed["steer"], base.ShouldProceed.Steer),
 	}
 	out.FeedbackLog = boolean(raw["feedbackLog"], base.FeedbackLog)
@@ -563,11 +563,11 @@ func applyAction(base ActionConfig, rawAny any, timeoutMs int, project bool, war
 			out.Floor = f.(string)
 		}
 	}
-	out.EscalationThreshold = probability(raw["escalationThreshold"], base.EscalationThreshold)
+	out.EscalationThreshold = configProbability(raw["escalationThreshold"], base.EscalationThreshold)
 	return out
 }
 
-func containsString(list []string, s string) bool {
+func cfgContainsString(list []string, s string) bool {
 	for _, v := range list {
 		if v == s {
 			return true
@@ -581,19 +581,19 @@ func applyStuck(base StuckConfig, rawAny any) StuckConfig {
 	if !ok {
 		return base
 	}
-	window := positiveInteger(raw["window"], base.Window)
+	window := cfgPositiveInteger(raw["window"], base.Window)
 	return StuckConfig{
 		Enabled:        boolean(raw["enabled"], base.Enabled),
 		Window:         window,
-		MinFailures:    min(window, positiveInteger(raw["minFailures"], base.MinFailures)),
-		Cooldown:       positiveInteger(raw["cooldown"], base.Cooldown),
-		SameStrategy:   probability(raw["sameStrategy"], base.SameStrategy),
-		ChurnThreshold: min(window, positiveInteger(raw["churnThreshold"], base.ChurnThreshold)),
+		MinFailures:    min(window, cfgPositiveInteger(raw["minFailures"], base.MinFailures)),
+		Cooldown:       cfgPositiveInteger(raw["cooldown"], base.Cooldown),
+		SameStrategy:   configProbability(raw["sameStrategy"], base.SameStrategy),
+		ChurnThreshold: min(window, cfgPositiveInteger(raw["churnThreshold"], base.ChurnThreshold)),
 		Nudge:          boolean(raw["nudge"], base.Nudge),
 		RepeatSteer:    boolean(raw["repeatSteer"], base.RepeatSteer),
 		Evidence:       boolean(raw["evidence"], base.Evidence),
-		DiffLimit:      positiveInteger(raw["diffLimit"], base.DiffLimit),
-		TailLimit:      positiveInteger(raw["tailLimit"], base.TailLimit),
+		DiffLimit:      cfgPositiveInteger(raw["diffLimit"], base.DiffLimit),
+		TailLimit:      cfgPositiveInteger(raw["tailLimit"], base.TailLimit),
 	}
 }
 
@@ -605,9 +605,9 @@ func applyRunaway(base RunawayConfig, rawAny any) RunawayConfig {
 	return RunawayConfig{
 		Enabled: boolean(raw["enabled"], base.Enabled),
 		// One occurrence is not a repeat, so the floor is 2.
-		Repeats:         max(2, positiveInteger(raw["repeats"], base.Repeats)),
-		ThinkingRepeats: max(2, positiveInteger(raw["thinkingRepeats"], base.ThinkingRepeats)),
-		MinChars:        positiveInteger(raw["minChars"], base.MinChars),
+		Repeats:         max(2, cfgPositiveInteger(raw["repeats"], base.Repeats)),
+		ThinkingRepeats: max(2, cfgPositiveInteger(raw["thinkingRepeats"], base.ThinkingRepeats)),
+		MinChars:        cfgPositiveInteger(raw["minChars"], base.MinChars),
 		Recover:         boolean(raw["recover"], base.Recover),
 	}
 }
@@ -645,10 +645,10 @@ func applyJudge(base JudgeConfig, rawAny any) JudgeConfig {
 		return base
 	}
 	cooldown := base.CooldownMs
-	if f, ok := jsNumber(raw["cooldownMs"]); ok && isSafeInteger(f) && f >= 0 {
+	if f, ok := cfgJSNumber(raw["cooldownMs"]); ok && isSafeInteger(f) && f >= 0 {
 		cooldown = int(math.Min(f, maxJudgeCooldownMs))
 	}
-	return JudgeConfig{CooldownMs: cooldown, FailuresBeforeCooldown: positiveInteger(raw["failuresBeforeCooldown"], base.FailuresBeforeCooldown)}
+	return JudgeConfig{CooldownMs: cooldown, FailuresBeforeCooldown: cfgPositiveInteger(raw["failuresBeforeCooldown"], base.FailuresBeforeCooldown)}
 }
 
 func applySubagent(base SubagentConfig, rawAny any) SubagentConfig {
@@ -657,7 +657,7 @@ func applySubagent(base SubagentConfig, rawAny any) SubagentConfig {
 		return base
 	}
 	return SubagentConfig{Enabled: boolean(raw["enabled"], base.Enabled), Wake: boolean(raw["wake"], base.Wake),
-		Threshold: probability(raw["threshold"], base.Threshold), CooldownMs: nonNegativeInteger(raw["cooldownMs"], base.CooldownMs)}
+		Threshold: configProbability(raw["threshold"], base.Threshold), CooldownMs: nonNegativeInteger(raw["cooldownMs"], base.CooldownMs)}
 }
 
 func applyDone(base DoneConfig, rawAny any) DoneConfig {
@@ -673,7 +673,7 @@ func applyDone(base DoneConfig, rawAny any) DoneConfig {
 	}
 	return DoneConfig{
 		Enabled:    boolean(raw["enabled"], base.Enabled),
-		ClaimsDone: probability(raw["claimsDone"], base.ClaimsDone),
+		ClaimsDone: configProbability(raw["claimsDone"], base.ClaimsDone),
 		Nudge:      boolean(raw["nudge"], base.Nudge),
 		UIProof:    boolean(raw["uiProof"], base.UIProof),
 		UIFiles:    globList(raw["uiFiles"], base.UIFiles),
@@ -695,8 +695,8 @@ func applyProse(base ProseConfig, rawAny any) ProseConfig {
 	if s, ok := nonBlank(raw["audience"]); ok {
 		audience = jsTrim(s)
 	}
-	return ProseConfig{Enabled: boolean(raw["enabled"], base.Enabled), Audience: audience, Threshold: probability(raw["threshold"], base.Threshold),
-		Trend: min(3, positiveInteger(raw["trend"], base.Trend)), MinChars: positiveInteger(raw["minChars"], base.MinChars)}
+	return ProseConfig{Enabled: boolean(raw["enabled"], base.Enabled), Audience: audience, Threshold: configProbability(raw["threshold"], base.Threshold),
+		Trend: min(3, cfgPositiveInteger(raw["trend"], base.Trend)), MinChars: cfgPositiveInteger(raw["minChars"], base.MinChars)}
 }
 
 func applySlop(base SlopConfig, rawAny any) SlopConfig {
@@ -705,7 +705,7 @@ func applySlop(base SlopConfig, rawAny any) SlopConfig {
 		return base
 	}
 	// 0.2.x used `placeholder` for the stub threshold; it still sets the shared threshold.
-	return SlopConfig{Enabled: boolean(raw["enabled"], base.Enabled), Threshold: probability(coalesce(raw["threshold"], raw["placeholder"]), base.Threshold), Prose: applyProse(base.Prose, raw["prose"])}
+	return SlopConfig{Enabled: boolean(raw["enabled"], base.Enabled), Threshold: configProbability(coalesce(raw["threshold"], raw["placeholder"]), base.Threshold), Prose: applyProse(base.Prose, raw["prose"])}
 }
 
 func applyRules(base RulesConfig, rawAny any) RulesConfig {
@@ -724,11 +724,11 @@ func applyRules(base RulesConfig, rawAny any) RulesConfig {
 	}
 	return RulesConfig{
 		Enabled:        boolean(raw["enabled"], base.Enabled),
-		Threshold:      probability(raw["threshold"], base.Threshold),
-		SoftThreshold:  probability(raw["softThreshold"], base.SoftThreshold),
+		Threshold:      configProbability(raw["threshold"], base.Threshold),
+		SoftThreshold:  configProbability(raw["softThreshold"], base.SoftThreshold),
 		Files:          globList(raw["files"], base.Files),
 		Fallback:       boolean(raw["fallback"], base.Fallback),
-		MaxChars:       max(500, positiveInteger(raw["maxChars"], base.MaxChars)),
+		MaxChars:       max(500, cfgPositiveInteger(raw["maxChars"], base.MaxChars)),
 		Exclude:        globList(raw["exclude"], base.Exclude),
 		Skip:           globList(raw["skip"], base.Skip),
 		SensitivePaths: notes,
@@ -759,7 +759,7 @@ func applyWidget(base WidgetConfig, rawAny any) WidgetConfig {
 	if s, ok := raw["shortcut"].(string); ok {
 		out.Shortcut = jsTrim(s)
 	}
-	if f, ok := jsNumber(raw["panelWidth"]); ok && isSafeInteger(f) && f >= 20 {
+	if f, ok := cfgJSNumber(raw["panelWidth"]); ok && isSafeInteger(f) && f >= 20 {
 		out.PanelWidth = f
 	} else if s, ok := raw["panelWidth"].(string); ok && rePanelPercent.MatchString(jsTrim(s)) {
 		out.PanelWidth = jsTrim(s)
@@ -781,7 +781,7 @@ func applySecurity(base SecurityConfig, rawAny any, project bool, warnings *[]st
 	if !ok {
 		return base
 	}
-	out := SecurityConfig{Enabled: boolean(raw["enabled"], base.Enabled), Threshold: probability(raw["threshold"], base.Threshold), MaskOutput: base.MaskOutput}
+	out := SecurityConfig{Enabled: boolean(raw["enabled"], base.Enabled), Threshold: configProbability(raw["threshold"], base.Threshold), MaskOutput: base.MaskOutput}
 	if project {
 		out.Enabled = projectSwitch("security.enabled", raw["enabled"], base.Enabled, warnings)
 		out.Threshold = projectProbability("security.threshold", raw["threshold"], base.Threshold, warnings)
@@ -799,11 +799,11 @@ func applyContext(base ContextConfig, rawAny any, project bool) ContextConfig {
 	}
 	out := ContextConfig{
 		Enabled:           boolean(raw["enabled"], base.Enabled),
-		TailMinChars:      positiveInteger(raw["tailMinChars"], base.TailMinChars),
-		Confidence:        probability(raw["confidence"], base.Confidence),
-		DuplicateMinChars: positiveInteger(raw["duplicateMinChars"], base.DuplicateMinChars),
+		TailMinChars:      cfgPositiveInteger(raw["tailMinChars"], base.TailMinChars),
+		Confidence:        configProbability(raw["confidence"], base.Confidence),
+		DuplicateMinChars: cfgPositiveInteger(raw["duplicateMinChars"], base.DuplicateMinChars),
 		RecallTool:        base.RecallTool,
-		FormatConfidence:  probability(raw["formatConfidence"], base.FormatConfidence),
+		FormatConfidence:  configProbability(raw["formatConfidence"], base.FormatConfidence),
 		CompactAppendix:   boolean(raw["compactAppendix"], base.CompactAppendix),
 		DedupeRuns:        boolean(raw["dedupeRuns"], base.DedupeRuns),
 		DedupeMessages:    boolean(raw["dedupeMessages"], base.DedupeMessages),
@@ -814,21 +814,21 @@ func applyContext(base ContextConfig, rawAny any, project bool) ContextConfig {
 		out.RecallTool = RecallTool(s)
 	}
 	if lo, ok := asObj(raw["largeOutput"]); ok {
-		out.LargeOutput = LargeOutputConfig{Enabled: boolean(lo["enabled"], base.LargeOutput.Enabled), Threshold: probability(lo["threshold"], base.LargeOutput.Threshold)}
+		out.LargeOutput = LargeOutputConfig{Enabled: boolean(lo["enabled"], base.LargeOutput.Enabled), Threshold: configProbability(lo["threshold"], base.LargeOutput.Threshold)}
 	}
 	if f, ok := asObj(raw["filter"]); ok {
 		out.Filter = FilterConfig{
 			// User file only: turning it on sends whole redacted outputs to the judge and spends requests.
 			Enabled:      base.Filter.Enabled,
-			ChunkChars:   positiveInteger(f["chunkChars"], base.Filter.ChunkChars),
+			ChunkChars:   cfgPositiveInteger(f["chunkChars"], base.Filter.ChunkChars),
 			MinScore:     base.Filter.MinScore,
-			MaxKeptChars: positiveInteger(f["maxKeptChars"], base.Filter.MaxKeptChars),
-			TimeoutMs:    positiveInteger(f["timeoutMs"], base.Filter.TimeoutMs),
+			MaxKeptChars: cfgPositiveInteger(f["maxKeptChars"], base.Filter.MaxKeptChars),
+			TimeoutMs:    cfgPositiveInteger(f["timeoutMs"], base.Filter.TimeoutMs),
 		}
 		if !project {
 			out.Filter.Enabled = boolean(f["enabled"], base.Filter.Enabled)
 		}
-		if score, ok := jsNumber(f["minScore"]); ok && score >= 0 && score <= 3 {
+		if score, ok := cfgJSNumber(f["minScore"]); ok && score >= 0 && score <= 3 {
 			out.Filter.MinScore = score
 		}
 	}
@@ -841,7 +841,7 @@ func applyWaste(base WasteConfig, rawAny any) WasteConfig {
 		return base
 	}
 	return WasteConfig{
-		Enabled: boolean(raw["enabled"], base.Enabled), Tip: boolean(raw["tip"], base.Tip), Every: max(2, positiveInteger(raw["every"], base.Every)),
+		Enabled: boolean(raw["enabled"], base.Enabled), Tip: boolean(raw["tip"], base.Tip), Every: max(2, cfgPositiveInteger(raw["every"], base.Every)),
 		Sleep: boolean(raw["sleep"], base.Sleep), Paging: boolean(raw["paging"], base.Paging), Search: boolean(raw["search"], base.Search), Recheck: boolean(raw["recheck"], base.Recheck),
 	}
 }
@@ -861,10 +861,10 @@ func applyCompaction(base CompactionConfig, rawAny any, project bool) Compaction
 	}
 	return CompactionConfig{
 		Enabled:          enabled,
-		KeepThreshold:    probability(raw["keepThreshold"], base.KeepThreshold),
-		MaxSummaryTokens: max(1000, positiveInteger(raw["maxSummaryTokens"], base.MaxSummaryTokens)),
-		TimeoutMs:        min(maxCompactionTimeoutMs, positiveInteger(raw["timeoutMs"], base.TimeoutMs)),
-		MaxRequests:      positiveInteger(raw["maxRequests"], base.MaxRequests),
+		KeepThreshold:    configProbability(raw["keepThreshold"], base.KeepThreshold),
+		MaxSummaryTokens: max(1000, cfgPositiveInteger(raw["maxSummaryTokens"], base.MaxSummaryTokens)),
+		TimeoutMs:        min(maxCompactionTimeoutMs, cfgPositiveInteger(raw["timeoutMs"], base.TimeoutMs)),
+		MaxRequests:      cfgPositiveInteger(raw["maxRequests"], base.MaxRequests),
 		SkipProviders:    globList(raw["skipProviders"], base.SkipProviders),
 	}
 }
@@ -883,9 +883,9 @@ func applySteers(base SteersConfig, rawAny any) SteersConfig {
 		return base
 	}
 	return SteersConfig{
-		Adaptive: boolean(raw["adaptive"], base.Adaptive), MinSteers: positiveInteger(raw["minSteers"], base.MinSteers),
-		MinFollowed: probability(raw["minFollowed"], base.MinFollowed), MaxDisputed: probability(raw["maxDisputed"], base.MaxDisputed),
-		RecheckEvery: positiveInteger(raw["recheckEvery"], base.RecheckEvery), ProbeEvery: positiveInteger(raw["probeEvery"], base.ProbeEvery),
+		Adaptive: boolean(raw["adaptive"], base.Adaptive), MinSteers: cfgPositiveInteger(raw["minSteers"], base.MinSteers),
+		MinFollowed: configProbability(raw["minFollowed"], base.MinFollowed), MaxDisputed: configProbability(raw["maxDisputed"], base.MaxDisputed),
+		RecheckEvery: cfgPositiveInteger(raw["recheckEvery"], base.RecheckEvery), ProbeEvery: cfgPositiveInteger(raw["probeEvery"], base.ProbeEvery),
 	}
 }
 
@@ -902,7 +902,7 @@ func applyLearning(base LearningConfig, rawAny any) LearningConfig {
 // Go fields are integers; no upstream consumer reads the fraction).
 func clampedInt(v any, fallback, lo, hi int) int {
 	f := float64(fallback)
-	if n, ok := jsNumber(v); ok {
+	if n, ok := cfgJSNumber(v); ok {
 		f = n
 	}
 	return int(math.Max(float64(lo), math.Min(float64(hi), f)))
@@ -910,7 +910,7 @@ func clampedInt(v any, fallback, lo, hi int) int {
 
 func clampedProbability(v any, fallback float64) float64 {
 	f := fallback
-	if n, ok := jsNumber(v); ok {
+	if n, ok := cfgJSNumber(v); ok {
 		f = n
 	}
 	return math.Max(0, math.Min(1, f))
@@ -929,9 +929,9 @@ func applyConscience(base ConscienceConfig, rawAny any) ConscienceConfig {
 	}
 	return ConscienceConfig{
 		Enabled:            boolean(raw["enabled"], base.Enabled),
-		Skills:             ConscienceSkillConfig{Mode: mode, Exclude: stringList(skills["exclude"], base.Skills.Exclude)},
-		Tools:              ConscienceToolConfig{Enabled: boolean(tools["enabled"], base.Tools.Enabled), Exclude: stringList(tools["exclude"], base.Tools.Exclude)},
-		SkipTools:          stringList(raw["skipTools"], base.SkipTools),
+		Skills:             ConscienceSkillConfig{Mode: mode, Exclude: cfgStringList(skills["exclude"], base.Skills.Exclude)},
+		Tools:              ConscienceToolConfig{Enabled: boolean(tools["enabled"], base.Tools.Enabled), Exclude: cfgStringList(tools["exclude"], base.Tools.Exclude)},
+		SkipTools:          cfgStringList(raw["skipTools"], base.SkipTools),
 		TimeoutMs:          clampedInt(raw["timeoutMs"], base.TimeoutMs, 100, 10000),
 		MaxAssessments:     clampedInt(raw["maxAssessments"], base.MaxAssessments, 1, 10),
 		MaxNudges:          clampedInt(raw["maxNudges"], base.MaxNudges, 1, 5),
@@ -945,8 +945,8 @@ func applyConscience(base ConscienceConfig, rawAny any) ConscienceConfig {
 // applyShared: shared request settings; `action.timeoutMs` / `action.maxRequests` from 0.1.x files are still honoured.
 func applyShared(base Config, raw jobj) (timeoutMs, maxRequests int) {
 	legacy, _ := asObj(raw["action"])
-	return positiveInteger(coalesce(raw["timeoutMs"], legacy["timeoutMs"]), base.TimeoutMs),
-		positiveInteger(coalesce(raw["maxRequests"], legacy["maxRequests"]), base.MaxRequests)
+	return cfgPositiveInteger(coalesce(raw["timeoutMs"], legacy["timeoutMs"]), base.TimeoutMs),
+		cfgPositiveInteger(coalesce(raw["maxRequests"], legacy["maxRequests"]), base.MaxRequests)
 }
 
 // applyGuards lays the guard sections over base in upstream's order (which is the order warnings come out in).
@@ -969,7 +969,7 @@ func applyGuards(out *Config, base Config, raw jobj, timeoutMs int, project bool
 
 // BackendRefusalFor is the message for a configured backend the port does not have.
 func backendRefusalFor(value any) string {
-	return "Unknown judgment backend " + jsStringify(value) + "; judgments stay off. Use \"typesafe\", \"own-model\" or \"\" (offline patterns only)."
+	return "Unknown judgment backend " + cfgJSStringify(value) + "; judgments stay off. Use \"typesafe\", \"own-model\" or \"\" (offline patterns only)."
 }
 
 // ApplyUserOverrides lays a user file's raw JSON over base. Unknown keys and invalid values fall back to the base;
@@ -1015,7 +1015,7 @@ func ApplyUserOverrides(base Config, rawAny any) Config {
 
 // nonNegativeIntegerStrict is `Number.isInteger(v) && v >= 0` (steerBudget; any integer, not only a safe one).
 func nonNegativeIntegerStrict(v any, fallback int) int {
-	if f, ok := jsNumber(v); ok && !math.IsInf(f, 0) && f == math.Trunc(f) && f >= 0 && f <= maxSafeInteger {
+	if f, ok := cfgJSNumber(v); ok && !math.IsInf(f, 0) && f == math.Trunc(f) && f >= 0 && f <= maxSafeInteger {
 		return int(f)
 	}
 	return fallback

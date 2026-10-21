@@ -52,7 +52,7 @@ func LoadConfigWithProject(userPath, projectPath string, projectTrusted bool) (C
 	if err != nil {
 		return DefaultConfig(), err
 	}
-	cfg := ApplyUserOverrides(DefaultConfig(), anyOf(user))
+	cfg := ApplyUserOverrides(DefaultConfig(), mapOrNil(user))
 	if projectPath == "" || !projectTrusted {
 		return cfg, nil
 	}
@@ -60,12 +60,12 @@ func LoadConfigWithProject(userPath, projectPath string, projectTrusted bool) (C
 	if err != nil {
 		return cfg, err
 	}
-	return ApplyProjectOverrides(cfg, anyOf(project)), nil
+	return ApplyProjectOverrides(cfg, mapOrNil(project)), nil
 }
 
-// anyOf keeps a nil map from becoming a non-nil `any` that asObj would accept as an empty object (no difference to
+// mapOrNil keeps a nil map from becoming a non-nil `any` that asObj would accept as an empty object (no difference to
 // the loader, but a missing file stays "no file").
-func anyOf(m map[string]any) any {
+func mapOrNil(m map[string]any) any {
 	if m == nil {
 		return nil
 	}
@@ -168,13 +168,13 @@ func mergeChanged(dst, before, after map[string]any) {
 			}
 			continue
 		}
-		if !had || !jsonEqual(a, b) {
+		if !had || !configJSONEqual(a, b) {
 			dst[key] = a
 		}
 	}
 }
 
-func jsonEqual(a, b any) bool {
+func configJSONEqual(a, b any) bool {
 	x, _ := json.Marshal(a)
 	y, _ := json.Marshal(b)
 	return bytes.Equal(x, y)

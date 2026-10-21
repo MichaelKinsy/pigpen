@@ -69,14 +69,14 @@ func (w *warden) configCommand(ctx sdk.Context, tokens []string) error {
 		}); err != nil {
 			return err
 		}
-		w.say(ctx, "Saved "+keyPath+" = "+jsStringify(value)+".", "info")
+		w.say(ctx, "Saved "+keyPath+" = "+cfgJSStringify(value)+".", "info")
 	case strings.HasPrefix(tail, "get "):
 		keyPath := jsTrim(tail[4:])
 		value := GetNestedValue(ReadUserConfig(path), keyPath)
 		if value == nil && !hasNestedKey(ReadUserConfig(path), keyPath) {
 			w.say(ctx, keyPath+" not set (default: "+defaultAt(keyPath)+")", "info")
 		} else {
-			w.say(ctx, keyPath+" = "+jsStringify(value), "info")
+			w.say(ctx, keyPath+" = "+cfgJSStringify(value), "info")
 		}
 	default:
 		if !ctx.HasUI() {

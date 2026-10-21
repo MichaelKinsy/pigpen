@@ -199,7 +199,7 @@ func (p *TracePanel) lines(width int, entries []TraceEntry) []string {
 			chip = theme.Bold(theme.Fg(color, strings.ToUpper(status))) + "  "
 			indent += utf16Len(status) + 2
 		}
-		head := theme.Fg("muted", entry.At.Format("15:04:05")) + " " + theme.Fg(color, theme.Bold(padEnd(string(entry.Guard), 6))) + " "
+		head := theme.Fg("muted", entry.At.Format("15:04:05")) + " " + theme.Fg(color, theme.Bold(panelPadEnd(string(entry.Guard), 6))) + " "
 		segments := make([]string, len(body))
 		for n, segment := range body {
 			segments[n] = RenderSegment(segment, n == 0, theme)
@@ -387,8 +387,8 @@ func flattenObject(dec *json.Decoder, prefix string) []configEntry {
 
 var reDecimal = regexp.MustCompile(`^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$`)
 
-// jsToNumber is Number(text): blank is 0, decimal and 0x/0o/0b forms parse, anything else is NaN.
-func jsToNumber(text string) float64 {
+// panelJSToNumber is Number(text): blank is 0, decimal and 0x/0o/0b forms parse, anything else is NaN.
+func panelJSToNumber(text string) float64 {
 	s := jsTrim(text)
 	switch {
 	case s == "":
@@ -415,7 +415,7 @@ func parsePanelValue(raw, kind string) any {
 	case "boolean":
 		return raw == "true" || raw == "1"
 	case "number":
-		if n := jsToNumber(raw); !math.IsNaN(n) && !math.IsInf(n, 0) {
+		if n := panelJSToNumber(raw); !math.IsNaN(n) && !math.IsInf(n, 0) {
 			return n
 		}
 	}
