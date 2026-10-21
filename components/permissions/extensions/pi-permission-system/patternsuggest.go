@@ -68,14 +68,21 @@ func SuggestBashPattern(command string) string {
 // SuggestMcpPattern suggests an MCP session-approval pattern from a resolved target string: `server:tool` gives `server:*`,
 // `server_tool` gives `server_*`, a bare target gives `*`.
 func SuggestMcpPattern(target string) string {
+	head, tail := mcpPatternParts(target)
+	return head + tail
+}
+
+// mcpPatternParts splits SuggestMcpPattern's answer into the trimmed target's prefix and the wildcard suffix (":*", "_*" or the whole
+// answer "*"), so a caller that also builds a label around the pattern can concatenate once and slice the pattern out of the label.
+func mcpPatternParts(target string) (head, tail string) {
 	trimmed := jsTrim(target)
 	if i := strings.Index(trimmed, ":"); i > 0 {
-		return trimmed[:i] + ":*"
+		return trimmed[:i], ":*"
 	}
 	if i := strings.Index(trimmed, "_"); i > 0 {
-		return trimmed[:i] + "_*"
+		return trimmed[:i], "_*"
 	}
-	return "*"
+	return "", "*"
 }
 
 // ForwardedScopeLabels are the scope labels for the forwarded-approval two-step scope select.
@@ -194,7 +201,11 @@ func SuggestSessionPattern(surface, value string) SessionApprovalSuggestion {
 	case "bash":
 		pattern = SuggestBashPattern(value)
 	case "mcp":
-		pattern = SuggestMcpPattern(value)
+		// One allocation instead of two: the label is built around the pattern, so the pattern is a slice of it.
+		head, tail := mcpPatternParts(value)
+		const before = `Yes, allow mcp tool "`
+		label := before + head + tail + `" for this session`
+		return SessionApprovalSuggestion{Surface: surface, Pattern: label[len(before) : len(before)+len(head)+len(tail)], Label: label}
 	case "skill":
 		pattern = value
 	default:
