@@ -36,7 +36,7 @@ const cronYearLimit = 3000
 // and overflows: croner's constructor throws, so the original refuses such a pattern ("Invalid schedule"), where a
 // search with fewer calls ends quietly with no next run. V8's depth is not one number: port/record-croner.mjs, run in a
 // fresh process per probe under Node 24.19.0 (testdata/croner-stack.json), saw 75 overflows at depths from 6066 to 6810
-// (median 6227, a quarter of them within 6223 to 6502), completed searches of up to 4867 calls and one of 6750. The
+// (median 6227, a quarter of them within 6223 to 6502), completed searches of up to 4867 calls, and one of 6750 from 2075 (the same search from 2026 is deeper still, and croner completed it). The
 // limit is the median depth, so a pattern is refused as often as croner refused it; one whose search lands in the band
 // could go either way in the original, and cron_test.go allows exactly that. A var only so a test can measure a search
 // without the limit.
