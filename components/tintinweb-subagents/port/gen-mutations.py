@@ -131,7 +131,6 @@ m("refusal-wrong-original", "refuse.go", 'originalSpec = "npm:@tintinweb/pi-suba
 m("refusal-drops-install-advice", "refuse.go", '", which runs unchanged in PiG."', '"."')
 m("rpc-option-accepted", "refuse.go", 'default:\n\t\t\treturn "the spawn RPC option', 'default:\n\t\t\tcontinue\n\t\t\treturn "the spawn RPC option')
 m("setting-bool-direction", "refuse.go", "return ok && b != r.okBool", "return ok && b == r.okBool")
-m("setting-int-ok-values", "refuse.go", "if n == o {\n\t\t\t\treturn false", "if n != o {\n\t\t\t\treturn false")
 m("setting-enum-default-refused", "refuse.go", "return !inList(r.okEnum, s)", "return true")
 m("setting-notice-repeats", "extension.go", "if text != \"\" && !same {", "if text != \"\" && (!same || true) {")
 m("setting-notice-silent", "extension.go", 'ctx.Notify(text, "warning")', "_ = text")

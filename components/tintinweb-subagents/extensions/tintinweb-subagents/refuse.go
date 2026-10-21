@@ -57,9 +57,8 @@ func unportedSpawnOption(opts map[string]any) string {
 // a feature that is not ported. upstream: src/settings.ts sanitize.
 type settingRule struct {
 	key    string
-	kind   string // "bool", "int" or "enum"
+	kind   string // "bool" or "enum"
 	okBool bool
-	okInts []int
 	enum   []string // the valid strings of an enum setting
 	okEnum []string
 	note   string // names the part that is not ported when the setting is partly honored
@@ -80,17 +79,6 @@ func (r settingRule) unported(v any) bool {
 	case "bool":
 		b, ok := v.(bool)
 		return ok && b != r.okBool
-	case "int":
-		n, ok := integer(v)
-		if !ok || n < 0 {
-			return false
-		}
-		for _, o := range r.okInts {
-			if n == o {
-				return false
-			}
-		}
-		return true
 	case "enum":
 		if b, ok := v.(bool); ok && r.key == "agentMentions" { // the legacy boolean: true reads as "model", false as "off"
 			return b

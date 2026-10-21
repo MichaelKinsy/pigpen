@@ -606,12 +606,6 @@
   "replace": "return ok && b == r.okBool"
  },
  {
-  "name": "setting-int-ok-values",
-  "file": "refuse.go",
-  "find": "if n == o {\n\t\t\t\treturn false",
-  "replace": "if n != o {\n\t\t\t\treturn false"
- },
- {
   "name": "setting-enum-default-refused",
   "file": "refuse.go",
   "find": "return !inList(r.okEnum, s)",
