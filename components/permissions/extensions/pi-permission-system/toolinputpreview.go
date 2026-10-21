@@ -81,6 +81,12 @@ func collapseJSWhitespace(s string) string {
 	b.Grow(len(s))
 	inSpace := false
 	for i := 0; i < len(s); {
+		if c := s[i]; c > ' ' && c < utf8.RuneSelf { // a printable ASCII byte is never whitespace
+			inSpace = false
+			b.WriteByte(c)
+			i++
+			continue
+		}
 		r, size := utf8.DecodeRuneInString(s[i:])
 		if isJSSpace(r) {
 			if !inSpace {

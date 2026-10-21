@@ -239,6 +239,15 @@ func wtfSurrogate(s string, i int) (unit rune, ok bool) {
 func writeWTFString(b *bytes.Buffer, s string) {
 	b.WriteByte('"')
 	for i := 0; i < len(s); {
+		if c := s[i]; c >= 0x20 && c < utf8.RuneSelf && c != '"' && c != '\\' { // a run of ASCII that needs no escape
+			j := i + 1
+			for j < len(s) && s[j] >= 0x20 && s[j] < utf8.RuneSelf && s[j] != '"' && s[j] != '\\' {
+				j++
+			}
+			b.WriteString(s[i:j])
+			i = j
+			continue
+		}
 		if u, ok := wtfSurrogate(s, i); ok {
 			b.WriteString(`\u` + string(hexDigits[u>>12&15]) + string(hexDigits[u>>8&15]) + string(hexDigits[u>>4&15]) + string(hexDigits[u&15]))
 			i += 3
