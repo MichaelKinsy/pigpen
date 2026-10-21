@@ -26,6 +26,8 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+
+	herdr "github.com/MichaelKinsy/pigpen/components/herdr/extensions/herdr"
 )
 
 // ── Fake herdr ───────────────────────────────────────────────────────────────
@@ -47,6 +49,9 @@ type behavior struct {
 	Close bool
 	// Delay waits before answering.
 	Delay time.Duration
+	// Hold waits until the channel is closed before answering: a slow herdr whose answer comes when the test says,
+	// not after a time that a loaded host can outrun.
+	Hold <-chan struct{}
 }
 
 type fakeHerdr struct {
@@ -59,6 +64,11 @@ type fakeHerdr struct {
 	conns int
 	// behave picks the behavior of the n-th connection (0-based). Nil answers at once.
 	behave func(n int) behavior
+	// behaveReq, when set, picks the behavior of each request by what it is instead of by the order its connection
+	// was accepted in, which the extension's goroutines decide.
+	behaveReq func(req herdrRequest) behavior
+	// closed ends the holds when the fake herdr is torn down.
+	closed chan struct{}
 }
 
 // installFakeHerdr points the process environment at a fresh fake herdr pane
@@ -85,12 +95,12 @@ func newFakeHerdr(t *testing.T) *fakeHerdr {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(dir) })
-	h := &fakeHerdr{t: t, path: filepath.Join(dir, "s")}
+	h := &fakeHerdr{t: t, path: filepath.Join(dir, "s"), closed: make(chan struct{})}
 	h.ln, err = net.Listen("unix", h.path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = h.ln.Close() })
+	t.Cleanup(func() { close(h.closed); _ = h.ln.Close() })
 	go h.accept()
 	return h
 }
@@ -113,7 +123,7 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 	defer conn.Close()
 	var b behavior
 	h.mu.Lock()
-	behave := h.behave
+	behave, behaveReq := h.behave, h.behaveReq
 	h.mu.Unlock()
 	if behave != nil {
 		b = behave(n)
@@ -135,6 +145,9 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 			h.mu.Lock()
 			h.reqs = append(h.reqs, req)
 			h.mu.Unlock()
+			if behaveReq != nil {
+				b = behaveReq(req)
+			}
 			switch {
 			case b.Close:
 				return
@@ -143,6 +156,13 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 			}
 			if b.Delay > 0 {
 				time.Sleep(b.Delay)
+			}
+			if b.Hold != nil {
+				select {
+				case <-b.Hold:
+				case <-h.closed:
+					return
+				}
 			}
 			_, _ = io.WriteString(conn, `{"result":{}}`+"\n")
 		}
@@ -156,6 +176,13 @@ func (h *fakeHerdr) serve(conn net.Conn, n int) {
 func (h *fakeHerdr) setBehave(f func(n int) behavior) {
 	h.mu.Lock()
 	h.behave = f
+	h.mu.Unlock()
+}
+
+// setBehaveRequest sets the behavior of the requests that follow, picked by the request.
+func (h *fakeHerdr) setBehaveRequest(f func(req herdrRequest) behavior) {
+	h.mu.Lock()
+	h.behaveReq = f
 	h.mu.Unlock()
 }
 
@@ -194,8 +221,35 @@ func rawLines(all []herdrRequest) []string {
 	return out
 }
 
-// settle gives a request that must not happen time to show up.
-func settle() { time.Sleep(200 * time.Millisecond) }
+// waitSent waits until this fake herdr has seen every request the host's extension has started to send, each once
+// (a retry repeats a request id): when it returns, whatever the extension has taken to send is on the wire, in
+// flight or answered. It is what a step of a test needs before the next event so that connections open in the order
+// the events came in, which the extension's own goroutines do not promise.
+func (h *fakeHerdr) waitSent(host *fakeHost) {
+	h.t.Helper()
+	want := herdr.Taken(host.ext)
+	deadline := time.Now().Add(30 * time.Second)
+	for {
+		ids := map[string]bool{}
+		for _, r := range h.requests() {
+			ids[r.ID] = true
+		}
+		if len(ids) >= want {
+			return
+		}
+		if time.Now().After(deadline) {
+			h.t.Fatalf("the extension took %d requests to send and herdr saw %d", want, len(ids))
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+// settle returns once the host's extension has nothing queued or in flight, so that a request that must not
+// happen would already have been made. It does not guess a time: the extension says when its sending is over.
+func (h *fakeHost) settle() {
+	h.t.Helper()
+	herdr.Quiesce(h.ext)
+}
 
 func states(all []herdrRequest) []string {
 	out := make([]string, 0, len(all))
@@ -273,6 +327,7 @@ type hostState struct {
 
 type fakeHost struct {
 	t        *testing.T
+	ext      *sdk.Extension
 	nc       net.Conn
 	register wireRegister
 	runDone  chan error
@@ -294,6 +349,7 @@ func startHost(t *testing.T, ext *sdk.Extension, mode string) *fakeHost {
 	hostSide, extSide := net.Pipe()
 	h := &fakeHost{
 		t:         t,
+		ext:       ext,
 		nc:        hostSide,
 		runDone:   make(chan error, 1),
 		pending:   map[string]chan *wireResponse{},
@@ -330,6 +386,9 @@ func startHost(t *testing.T, ext *sdk.Extension, mode string) *fakeHost {
 	h.write(map[string]any{"type": "ready", "ready": map[string]any{"session_name": "", "cwd": t.TempDir(), "mode": mode, "width": 80}})
 	go h.serve()
 	t.Cleanup(h.stop)
+	// A test does not end before its extension has finished sending: a request still in flight would otherwise outlive
+	// the fake herdr, and its failure would be written to the stderr of whatever test runs next. This runs first.
+	t.Cleanup(func() { herdr.Quiesce(ext) })
 	return h
 }
 

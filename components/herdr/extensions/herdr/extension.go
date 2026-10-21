@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -264,10 +265,16 @@ func Extension() *sdk.Extension { return extensionFor(os.Getenv) }
 
 // extensionFor is Extension over an environment lookup, so a test can run several in one process.
 func extensionFor(getenv func(string) string) *sdk.Extension {
+	e, _ := newExtension(getenv)
+	return e
+}
+
+// newExtension builds the extension and the reporter behind it (nil outside a herdr pane), which a test waits on.
+func newExtension(getenv func(string) string) (*sdk.Extension, *reporter) {
 	e := sdk.New("herdr")
 	env, ok := readEnv(getenv)
 	if !ok {
-		return e
+		return e, nil
 	}
 	r := &reporter{env: env}
 
@@ -352,7 +359,7 @@ func extensionFor(getenv func(string) string) *sdk.Extension {
 		r.release()
 		return nil, nil
 	})
-	return e
+	return e, r
 }
 
 // promptMessage makes one short line for herdr's sidebar; prompt titles can be long and multi-line.
@@ -406,6 +413,12 @@ type reporter struct {
 	// never overlap, so herdr sees them in order (ts:145-174).
 	queued  *report
 	sending bool
+
+	// taken counts the requests this reporter has taken to send, and drains the drain goroutines still running. They
+	// carry no behavior: a test waits on them for "everything this reporter will send has been sent" and "every
+	// request it has taken is on the wire", which no sleep can promise on a loaded host.
+	taken  atomic.Int64
+	drains sync.WaitGroup
 }
 
 func (r *reporter) isRoot() bool {
@@ -508,7 +521,11 @@ func (r *reporter) queueLocked(state agentState, message jsValue) {
 	if !r.sending {
 		r.sending = true
 		first := r.takeLocked()
-		go r.drain(first)
+		r.drains.Add(1)
+		go func() {
+			defer r.drains.Done()
+			r.drain(first)
+		}()
 	}
 }
 
@@ -520,6 +537,7 @@ func (r *reporter) takeLocked() *outgoing {
 	if next == nil {
 		return nil
 	}
+	r.taken.Add(1)
 	return &outgoing{message: next.message, payload: statePayload{
 		PaneID: r.env.paneID, Source: source, Agent: agent, State: next.state, Seq: next.seq,
 		ResumeArgv: append([]string(nil), r.resume...),
@@ -577,6 +595,7 @@ func (r *reporter) release() {
 	r.queued = nil
 	seq := nextSeq()
 	r.mu.Unlock()
+	r.taken.Add(1)
 	r.send("release", "pane.release_agent", releasePayload{PaneID: r.env.paneID, Source: source, Agent: agent, Seq: seq})
 }
 

@@ -122,8 +122,8 @@ func TestTransport(t *testing.T) {
 	})
 
 	t.Run("a delivered request is sent once", func(t *testing.T) {
-		_, h := startSession(t)
-		settle()
+		host, h := startSession(t)
+		host.settle()
 		if n := h.connections(); n != 1 {
 			t.Fatalf("%d connections for one request", n)
 		}
@@ -134,7 +134,7 @@ func TestTransport(t *testing.T) {
 		h.setBehave(func(n int) behavior { return behavior{Close: n == 0} })
 		host.fire("session_start", nil)
 		all := h.waitFor(2)
-		settle()
+		host.settle()
 		if all[0].Raw != all[1].Raw {
 			t.Fatalf("retry differs from the first attempt:\n%s\n%s", all[0].Raw, all[1].Raw)
 		}
@@ -161,7 +161,7 @@ func TestTransport(t *testing.T) {
 		h.setBehave(func(int) behavior { return behavior{Delay: 150 * time.Millisecond} })
 		host.fire("session_start", nil)
 		h.waitFor(1)
-		time.Sleep(400 * time.Millisecond)
+		host.settle() // the answer is consumed; a retry would have been made by now
 		if n := h.connections(); n != 1 {
 			t.Fatalf("%d connections, want 1", n)
 		}
@@ -172,7 +172,7 @@ func TestTransport(t *testing.T) {
 		host, h := startTUI(t)
 		h.setBehave(func(int) behavior { return behavior{Silent: true} })
 		host.fire("session_start", nil)
-		time.Sleep(500 * time.Millisecond)
+		host.settle() // both attempts have timed out
 		if n := h.connections(); n != 2 {
 			t.Fatalf("%d connections for one report, want 2", n)
 		}
@@ -210,7 +210,7 @@ func TestTransport(t *testing.T) {
 }
 
 func TestDiagnostic(t *testing.T) {
-	captureStderr := func(t *testing.T) func() string {
+	captureStderr := func(t *testing.T, host *fakeHost) func() string {
 		t.Helper()
 		orig := os.Stderr
 		r, w, err := os.Pipe()
@@ -220,7 +220,7 @@ func TestDiagnostic(t *testing.T) {
 		os.Stderr = w
 		t.Cleanup(func() { os.Stderr = orig })
 		return func() string {
-			settle()
+			host.settle()
 			os.Stderr = orig
 			_ = w.Close()
 			b, _ := io.ReadAll(r)
@@ -232,11 +232,10 @@ func TestDiagnostic(t *testing.T) {
 		shortAttempts(t, 60*time.Millisecond, 60*time.Millisecond)
 		host, h := startTUI(t)
 		h.setBehave(func(int) behavior { return behavior{Close: true} })
-		read := captureStderr(t)
+		read := captureStderr(t, host)
 		host.fire("session_start", nil)
 		host.fire("agent_start", nil)
 		host.fire("agent_settled", nil)
-		time.Sleep(800 * time.Millisecond)
 		got := read()
 		if n := strings.Count(got, "herdr: pane.report_agent failed"); n != 1 {
 			t.Fatalf("diagnostic written %d times: %q", n, got)
@@ -245,7 +244,7 @@ func TestDiagnostic(t *testing.T) {
 
 	t.Run("a healthy herdr is silent", func(t *testing.T) {
 		host, h := startTUI(t)
-		read := captureStderr(t)
+		read := captureStderr(t, host)
 		host.fire("session_start", nil)
 		h.waitFor(1)
 		if got := read(); got != "" {
@@ -260,7 +259,7 @@ func TestStateReports(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("agent_settled", nil)
 		host.fire("agent_settled", nil)
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle"})
 	})
 
@@ -269,7 +268,7 @@ func TestStateReports(t *testing.T) {
 		host.fire("agent_start", nil)
 		h.waitFor(2)
 		host.fire("agent_start", nil)
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "working"})
 	})
 
@@ -299,7 +298,7 @@ func TestStateReports(t *testing.T) {
 		h.waitFor(2)
 		host.setState(func(s *hostState) { s.idle = false })
 		host.fire("agent_settled", nil)
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "working"})
 	})
 
@@ -311,7 +310,7 @@ func TestStateReports(t *testing.T) {
 		if _, failed := host.fireResult("agent_settled", nil); !failed {
 			t.Fatal("the handler did not fail")
 		}
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "working"})
 	})
 
@@ -321,7 +320,7 @@ func TestStateReports(t *testing.T) {
 		if _, failed := host.fireResult("session_start", nil); !failed {
 			t.Fatal("the handler did not fail")
 		}
-		settle()
+		host.settle()
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests from a failed session_start", n)
 		}
@@ -352,7 +351,7 @@ func TestStateReports(t *testing.T) {
 	t.Run("keeps seq increasing across extension instances in one process", func(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("session_shutdown", map[string]any{"reason": "new"})
-		second := startHost(t, herdr.Extension(), "tui")
+		second := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		second.fire("session_start", map[string]any{"reason": "new"})
 		order := seqs(t, h.waitFor(2))
 		if order[1] <= order[0] {
@@ -370,7 +369,7 @@ func TestStateReports(t *testing.T) {
 		host.emit("herdr:blocked", map[string]any{"active": false})
 		host.fire("agent_settled", nil) // the newest state: idle
 		h.waitFor(2)
-		settle()
+		host.settle()
 		final := h.requests()
 		equalStrings(t, states(final), []string{"idle", "idle"})
 		order := seqs(t, final)
@@ -402,7 +401,7 @@ func TestBlocked(t *testing.T) {
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "B"})
 		h.waitFor(3)
 		host.emit("herdr:blocked", map[string]any{"active": false})
-		settle()
+		host.settle()
 		all := h.requests()
 		equalStrings(t, states(all), []string{"idle", "blocked", "blocked"})
 		if param(t, all[2], "message") != "B" {
@@ -463,7 +462,7 @@ func TestBlocked(t *testing.T) {
 				equalStrings(t, states(h.waitFor(2)), []string{"idle", "blocked"})
 				return
 			}
-			settle()
+			host.settle()
 			equalStrings(t, states(h.requests()), []string{"idle"})
 		})
 	}
@@ -473,7 +472,7 @@ func TestBlocked(t *testing.T) {
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "same"})
 		h.waitFor(2)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "same"})
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "blocked"})
 		// JavaScript compares objects by reference: two label objects are never ===.
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": map[string]any{"k": 1}})
@@ -496,14 +495,14 @@ func TestBlocked(t *testing.T) {
 	t.Run("ignores the signal before a TUI session started and in other modes", func(t *testing.T) {
 		host, h := startTUI(t)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "early"})
-		settle()
+		host.settle()
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests before session_start", n)
 		}
-		rpc := startHost(t, herdr.Extension(), "rpc")
+		rpc := startHost(t, herdr.ExtensionFor(os.Getenv), "rpc")
 		rpc.fire("session_start", nil)
 		rpc.emit("herdr:blocked", map[string]any{"active": true, "label": "rpc"})
-		settle()
+		rpc.settle()
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests from an rpc session", n)
 		}
@@ -598,7 +597,7 @@ func TestSession(t *testing.T) {
 		h.waitFor(2)
 		host.fire("session_shutdown", map[string]any{"reason": "new"})
 		host.fire("agent_start", nil)
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "blocked"})
 		host.setState(func(s *hostState) { s.sessionFile, s.sessionID = "/x/s2.jsonl", "s2" })
 		host.fire("session_start", map[string]any{"reason": "new"})
@@ -620,7 +619,7 @@ func TestSession(t *testing.T) {
 		host, h := startTUI(t)
 		host.fire("agent_start", nil)
 		host.fire("agent_settled", nil)
-		settle()
+		host.settle()
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests before session_start", n)
 		}
@@ -637,7 +636,7 @@ func TestRelease(t *testing.T) {
 				data = nil
 			}
 			host.fire("session_shutdown", data)
-			settle()
+			host.settle()
 			equalStrings(t, states(h.requests()), []string{"idle"})
 		})
 	}
@@ -648,15 +647,15 @@ func TestRelease(t *testing.T) {
 		host.fire("agent_start", nil)
 		host.fire("agent_settled", nil)
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "late"})
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "release"})
 	})
 
 	t.Run("does not release a pane it never reported on", func(t *testing.T) {
 		h := installFakeHerdr(t)
-		host := startHost(t, herdr.Extension(), "print")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "print")
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		settle()
+		host.settle()
 		if n := len(h.requests()); n != 0 {
 			t.Fatalf("%d requests from a print-mode session", n)
 		}
@@ -666,26 +665,29 @@ func TestRelease(t *testing.T) {
 		host, h := startSession(t)
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "release"})
 	})
 
 	t.Run("drops a queued report and does not wait for the one in flight", func(t *testing.T) {
 		host, h := startTUI(t)
-		h.setBehave(func(n int) behavior {
-			if n == 0 {
-				return behavior{Delay: 600 * time.Millisecond}
+		answer := make(chan struct{})
+		// The report in flight is answered when the test says, the release at once. Which of the two connections herdr
+		// accepts first is the extension's goroutines' business, so the behavior is picked by the request, not by the
+		// order of the connections.
+		h.setBehaveRequest(func(req herdrRequest) behavior {
+			if req.Method == "pane.report_agent" {
+				return behavior{Hold: answer}
 			}
 			return behavior{}
 		})
-		host.fire("session_start", nil) // in flight, answered after 600 ms
+		host.fire("session_start", nil) // in flight, answered only when the test closes answer
 		host.fire("agent_start", nil)   // queued: must be dropped
-		begin := time.Now()
+		// A quit that waited for the report in flight would never return (fire fails after 10 s): the report is held
+		// until the quit is over.
 		host.fire("session_shutdown", map[string]any{"reason": "quit"})
-		if took := time.Since(begin); took > 400*time.Millisecond {
-			t.Fatalf("quit waited %v for the in-flight report", took)
-		}
-		time.Sleep(900 * time.Millisecond)
+		close(answer)
+		host.settle()
 		// The report in flight and the release run concurrently, as in the original: either may arrive first.
 		got := states(h.requests())
 		slices.Sort(got)
@@ -718,14 +720,14 @@ func TestPromptBlocked(t *testing.T) {
 			t.Fatal("prompt handlers registered without the opt-in")
 		}
 		host.fire("ui_prompt_start", prompt)
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle"})
 	})
 
 	t.Run("anything but 1 leaves it off", func(t *testing.T) {
 		h := installFakeHerdr(t)
 		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "true")
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		if host.registered("ui_prompt_start") {
 			t.Fatal("registered for PIGPEN_HERDR_UI_PROMPTS=true")
 		}
@@ -735,7 +737,7 @@ func TestPromptBlocked(t *testing.T) {
 	t.Run("with the opt-in, a prompt is blocked with its title and then restores the state", func(t *testing.T) {
 		h := installFakeHerdr(t)
 		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		host.fire("session_start", nil)
 		host.fire("agent_start", nil)
 		h.waitFor(2)
@@ -751,7 +753,7 @@ func TestPromptBlocked(t *testing.T) {
 	t.Run("with the opt-in, an untitled prompt uses its kind, a long title is one short line, and holders do not release each other", func(t *testing.T) {
 		h := installFakeHerdr(t)
 		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		host.fire("session_start", nil)
 		h.waitFor(1)
 		host.fire("ui_prompt_start", map[string]any{"kind": "custom"})
@@ -768,7 +770,7 @@ func TestPromptBlocked(t *testing.T) {
 		host.emit("herdr:blocked", map[string]any{"active": true, "label": "bus"})
 		h.waitFor(5)
 		host.emit("herdr:blocked", map[string]any{"active": false}) // the prompt's block stays
-		settle()
+		host.settle()
 		equalStrings(t, states(h.requests()), []string{"idle", "blocked", "idle", "blocked", "blocked"})
 		host.fire("ui_prompt_end", nil)
 		equalStrings(t, states(h.waitFor(6)), []string{"idle", "blocked", "idle", "blocked", "blocked", "idle"})
@@ -777,7 +779,7 @@ func TestPromptBlocked(t *testing.T) {
 	t.Run("with the opt-in, an unmatched prompt end is ignored", func(t *testing.T) {
 		h := installFakeHerdr(t)
 		t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
-		host := startHost(t, herdr.Extension(), "tui")
+		host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 		host.fire("session_start", nil)
 		h.waitFor(1)
 		host.fire("ui_prompt_end", prompt)
@@ -805,7 +807,7 @@ func TestOutsideHerdr(t *testing.T) {
 		t.Run("when "+tc.name, func(t *testing.T) {
 			h := installFakeHerdr(t)
 			tc.mutate(t)
-			host := startHost(t, herdr.Extension(), "tui")
+			host := startHost(t, herdr.ExtensionFor(os.Getenv), "tui")
 			if got := len(host.register.Handlers) != 0; got != tc.active {
 				t.Fatalf("handlers registered = %v, want %v", got, tc.active)
 			}
@@ -817,7 +819,7 @@ func TestOutsideHerdr(t *testing.T) {
 				h.waitFor(1)
 				return
 			}
-			settle()
+			host.settle()
 			if n := len(h.requests()); n != 0 {
 				t.Fatalf("%d requests outside herdr", n)
 			}
@@ -828,13 +830,13 @@ func TestOutsideHerdr(t *testing.T) {
 		for _, mode := range []string{"rpc", "json", "print"} {
 			h := installFakeHerdr(t)
 			t.Setenv("PIGPEN_HERDR_UI_PROMPTS", "1")
-			host := startHost(t, herdr.Extension(), mode)
+			host := startHost(t, herdr.ExtensionFor(os.Getenv), mode)
 			host.fire("session_start", nil)
 			host.fire("agent_start", nil)
 			host.fire("ui_prompt_start", map[string]any{"kind": "confirm"})
 			host.emit("herdr:blocked", map[string]any{"active": true, "label": "x"})
 			host.fire("session_shutdown", map[string]any{"reason": "quit"})
-			settle()
+			host.settle()
 			if n := len(h.requests()); n != 0 {
 				t.Fatalf("%d requests in %s mode", n, mode)
 			}
