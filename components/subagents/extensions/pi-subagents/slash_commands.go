@@ -36,6 +36,15 @@ func singleArg(args, usage string) (string, string) {
 	return parts[0], ""
 }
 
+// parseRefreshProviderArgs reads `/subagents-refresh-provider-models <provider> [--force]` ("force" without dashes also counts).
+func parseRefreshProviderArgs(args string) (provider string, force bool, usage string) {
+	trimmed := jsTrim(args)
+	force = forceSuffixRe.MatchString(trimmed)
+	without := jsTrim(forceSuffixRe.ReplaceAllString(trimmed, ""))
+	provider, usage = singleArg(without, "Usage: /subagents-refresh-provider-models <provider> [--force]")
+	return provider, force, usage
+}
+
 // runManagementCommand runs a management action as a command does and posts its text (a failure is notified).
 func runManagementCommand(ctx sdk.Context, action string, params map[string]any) {
 	params["action"] = action
@@ -259,10 +268,7 @@ func registerAdminCommands(e *sdk.Extension) {
 	e.RegisterCommand("subagents-refresh-provider-models", sdk.CommandOptions{
 		Description: "Refresh the cached model catalog for one provider",
 		Handler: func(ctx sdk.Context, args string) error {
-			trimmed := jsTrim(args)
-			force := forceSuffixRe.MatchString(trimmed)
-			without := jsTrim(forceSuffixRe.ReplaceAllString(trimmed, ""))
-			provider, usage := singleArg(without, "Usage: /subagents-refresh-provider-models <provider> [--force]")
+			provider, force, usage := parseRefreshProviderArgs(args)
 			if usage != "" {
 				ctx.Notify(usage, "error")
 				return nil
