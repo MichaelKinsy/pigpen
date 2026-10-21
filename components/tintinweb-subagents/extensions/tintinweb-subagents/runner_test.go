@@ -55,6 +55,7 @@ func fakePig(mode string) {
 	if p, f := os.Getenv("FAKE_PIG_SCHEMA"), os.Getenv(structuredSchemaFileEnv); p != "" && f != "" { // what the child would read
 		b, _ := os.ReadFile(f)
 		os.WriteFile(p, b, 0o644)
+	}
 	if mode == "nest" { // a pig that delegates: nested_fakepig_test.go
 		fakeNestingPig()
 		return
