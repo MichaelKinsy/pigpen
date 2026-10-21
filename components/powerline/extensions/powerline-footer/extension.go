@@ -194,6 +194,7 @@ func (a *app) onSessionStart(ctx sdk.Context, data map[string]any) (any, error) 
 	pl := a.core(ctx)
 	reason, _ := data["reason"].(string)
 	pl.sessionStart(reason)
+	pl.warnUnsupported()
 	a.widthOnce.Do(func() {
 		// The bar's widget rows are laid out at a width; lay them out again when the terminal changes size.
 		_, _ = ctx.OnWidthChange(func(c sdk.Context, _ int) {
@@ -229,6 +230,13 @@ func Extension() *sdk.Extension {
 	e := sdk.New("powerline-footer")
 	a := &app{}
 	e.Command("powerline", "Configure powerline status (toggle, preset)", a.command)
+	for _, c := range refusedCommands {
+		refused := refusal(c.feature)
+		e.Command(c.name, c.description, func(ctx sdk.Context, _ string) error {
+			ctx.Notify(refused, "error")
+			return nil
+		})
+	}
 	e.OnSessionStart(a.onSessionStart)
 	for _, ev := range []string{sdk.EventModelSelect, sdk.EventThinkingLevelSelect, sdk.EventSessionTree, sdk.EventSessionInfoChanged,
 		sdk.EventToolResult, sdk.EventUserBash, sdk.EventAgentStart, sdk.EventMessageUpdate, sdk.EventMessageEnd, sdk.EventTurnEnd,
