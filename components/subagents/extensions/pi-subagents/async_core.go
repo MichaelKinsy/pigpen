@@ -31,7 +31,6 @@ import (
 const (
 	subagentAsyncStartedEvent   = "subagent:async-started"
 	subagentAsyncCompleteEvent  = "subagent:async-complete"
-	subagentProcessTerminalEvt  = "subagent:process-terminal"
 	subagentForegroundCompleteE = "subagent:foreground-complete"
 	subagentControlEvent        = "subagent:control-event"
 	subagentControlIntercomEvt  = "subagent:control-intercom"

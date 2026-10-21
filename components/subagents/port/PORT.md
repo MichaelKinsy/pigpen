@@ -210,6 +210,14 @@ Known difference left: a failed foreground result returns `ToolResult{IsError, D
 
 Known cost kept: every `session_start` runs `npm root -g` once in the background (`advertise.go`, `resolveGlobalNpmRoot`), and the first prompt and every tool call wait for it. This is the original's behavior (`global-npm-root.ts` runs at every session start and `beforeAgentStart` awaits it), and the twin `TestAdvertisementBarrier` pins a fresh lookup per session (a newer session's root wins over an older lookup that is still running). Caching the root for the process would change that twin, so the cost is not removed; it is the same exec the original pays, off the render path.
 
+Mutation pass at this tip (every mutation of `gen-mutations.py` run against the tip alone). Mutants that were equivalent or whose
+code was dead were not kept as mutations: the status budget's `history := []any{}` and `var history []any` print the same JSON
+(`"grantHistory":[]`, pinned by `TestStatusCarriesTheBudgetLinesAndDetails`); the registry models always carry their `FullID`
+(`toModelInfo` sets it), so the run model no longer fills it; the run model's origin is `inherited` exactly when the model is inherited
+from the parent, so the second term of `PrimaryModelFromParent` is gone; the agent name check of the single run and the tool
+extension guard of the launch plan were repeats of the public execution boundary's; the process-terminal event name was a constant
+nothing used.
+
 ## Where a generated skeleton (`pig-codegen extension`) would have saved hand work
 
 - Module, `Extension()`, event and tool registration; the tool definition from a JSON Schema (here read from the original).

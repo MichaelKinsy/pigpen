@@ -1491,13 +1491,7 @@
   "name": "rm-parent-model",
   "file": "run_model.go",
   "find": "if id := ctx.Model(); id != \"\" {",
-  "replace": "if false {"
- },
- {
-  "name": "rm-fullid",
-  "file": "run_model.go",
-  "find": "if available[i].FullID == \"\" {",
-  "replace": "if false {"
+  "replace": "if id := ctx.Model(); id != \"\" && false {"
  },
  {
   "name": "rm-preferred-parent",
@@ -1509,7 +1503,7 @@
   "name": "rm-explicit",
   "file": "run_model.go",
   "find": "if m, _ := params[\"model\"].(string); m != \"\" {",
-  "replace": "if false {"
+  "replace": "if m, _ := params[\"model\"].(string); m != \"\" && false {"
  },
  {
   "name": "rm-configured",
@@ -1522,12 +1516,6 @@
   "file": "run_model.go",
   "find": "if origin == \"explicit\" {\n\t\tsource = \"explicit\"",
   "replace": "if false {\n\t\tsource = \"explicit\""
- },
- {
-  "name": "rm-from-parent",
-  "file": "run_model.go",
-  "find": "origin == \"inherited\" || inheritsParentModel(explicit, configured, parent)",
-  "replace": "origin == \"inherited\""
  },
  {
   "name": "rm-effective-error",
@@ -1592,8 +1580,8 @@
  {
   "name": "rf-cancelled",
   "file": "run_fanout.go",
-  "find": "if errors.Is(err, errCancelled) {\n\t\t\treturn res, err\n\t\t}",
-  "replace": ""
+  "find": "if errors.Is(err, errCancelled) {",
+  "replace": "if errors.Is(err, errCancelled) && false {"
  },
  {
   "name": "rf-snapshot-error",
@@ -1611,7 +1599,7 @@
   "name": "rf-config-limit",
   "file": "run_fanout.go",
   "find": "resolveMaxSubagentSpawnsPerRun(cfg.MaxSubagentSpawnsPerRun, osEnv)",
-  "replace": "resolveMaxSubagentSpawnsPerRun(nil, osEnv)"
+  "replace": "resolveMaxSubagentSpawnsPerRun(func() any { _ = cfg; return nil }(), osEnv)"
  },
  {
   "name": "ext-background-model",
@@ -1629,7 +1617,7 @@
   "name": "ext-model-failed",
   "file": "extension.go",
   "find": "if fan != nil && !modelFailed {",
-  "replace": "if fan != nil {"
+  "replace": "if fan != nil && (!modelFailed || true) {"
  },
  {
   "name": "ext-background-claim",
@@ -1659,7 +1647,7 @@
   "name": "ar-status-details",
   "file": "async_actions.go",
   "find": "\"spawnBudget\", spawnBudget, \"activeAsyncCapacity\", capacity)",
-  "replace": "\"spawnBudget\", nil, \"activeAsyncCapacity\", nil)"
+  "replace": "\"spawnBudget\", func() any { _ = spawnBudget; return nil }(), \"activeAsyncCapacity\", capacity)"
  },
  {
   "name": "ac-prefix",
@@ -1704,12 +1692,6 @@
   "replace": "\"previousLimit\", float64(g.Limit)"
  },
  {
-  "name": "bs-history-empty",
-  "file": "run_budget_status.go",
-  "find": "history := []any{}",
-  "replace": "var history []any"
- },
- {
   "name": "bs-unlimited",
   "file": "run_budget_status.go",
   "find": "if used.Limit > 0 {",
@@ -1732,12 +1714,6 @@
   "file": "run_budget_status.go",
   "find": "obj(\"used\", float64(used.Used), \"limit\", float64(used.Limit))",
   "replace": "obj(\"used\", float64(used.Limit), \"limit\", float64(used.Used))"
- },
- {
-  "name": "run-terminal-event-channel",
-  "file": "async_core.go",
-  "find": "subagentProcessTerminalEvt  = \"subagent:process-terminal\"",
-  "replace": "subagentProcessTerminalEvt  = \"subagent:process-terminalx\""
  },
  {
   "name": "run-launch-text",
