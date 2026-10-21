@@ -14,10 +14,11 @@ packages:
   pitui: local:../../components/pitui
   warden: local:../../components/warden
 extensions:
-  # /warden and the tool_call, tool_result and agent_end guards. Registers no tool. Does nothing until enabled.
+  # /warden, the tool_call, tool_result and agent_end guards, and three tools: warden_remember (a standing lesson),
+  # warden_loops (open loops) and warden_recall (what was already tried). Guards do nothing until /warden enable.
   - name: warden
     origins: [package:warden]
-    tools: []
+    tools: [warden_remember, warden_loops, warden_recall]
 skills: []
 # Warden adds no behavior beyond the guards, so the user's own extensions and skills stay available beside it.
 discovery:
