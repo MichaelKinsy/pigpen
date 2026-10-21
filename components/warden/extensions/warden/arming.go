@@ -3,7 +3,6 @@ package warden
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -71,7 +70,7 @@ type armedEntry struct {
 
 type compiledArmingRule struct {
 	rule         ArmingRule
-	commandRegex *regexp.Regexp
+	commandRegex *gatedRegexp
 	duration     time.Duration
 }
 
@@ -81,7 +80,7 @@ func compileArmingRule(rule ArmingRule) *compiledArmingRule {
 	if !rule.Arms.CaseSensitive {
 		pattern = "(?i)" + pattern
 	}
-	re, err := regexp.Compile(pattern)
+	re, err := compileGated(pattern)
 	if err != nil {
 		return nil
 	}

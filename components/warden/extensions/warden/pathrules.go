@@ -2,7 +2,6 @@ package warden
 
 import (
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 )
@@ -56,21 +55,21 @@ func writeSinkTargets(command string) []string {
 // userRegexps caches the regular expressions a user's rules compile to (nil for a pattern that does not compile).
 var userRegexps struct {
 	mu sync.Mutex
-	m  map[string]*regexp.Regexp
+	m  map[string]*gatedRegexp
 }
 
-func compileCached(pattern string) *regexp.Regexp {
+func compileCached(pattern string) *gatedRegexp {
 	userRegexps.mu.Lock()
 	defer userRegexps.mu.Unlock()
 	if c, ok := userRegexps.m[pattern]; ok {
 		return c
 	}
-	c, err := regexp.Compile(pattern)
+	c, err := compileGated(pattern)
 	if err != nil {
 		c = nil
 	}
 	if userRegexps.m == nil || len(userRegexps.m) >= 512 {
-		userRegexps.m = map[string]*regexp.Regexp{}
+		userRegexps.m = map[string]*gatedRegexp{}
 	}
 	userRegexps.m[pattern] = c
 	return c
@@ -156,12 +155,12 @@ const mentionTail = "(?:[\\s\\x{00a0}\\x{1680}\\x{2000}-\\x{200a}\\x{2028}\\x{20
 
 var mentionCache struct {
 	mu sync.Mutex
-	m  map[string][]*regexp.Regexp
+	m  map[string][]*gatedRegexp
 }
 
 // mentionRegexps: glob patterns become unanchored regexes: the command surface asks "does this text mention the path",
 // not "is this token the path", so `**/.env` must find `.env` inside `kubectl exec -- cat /x/.env`.
-func mentionRegexps(rule PathRule) []*regexp.Regexp {
+func mentionRegexps(rule PathRule) []*gatedRegexp {
 	key := strings.Join(rule.Paths, "\x00")
 	if rule.Regex {
 		key = "r\x00" + key
@@ -171,10 +170,10 @@ func mentionRegexps(rule PathRule) []*regexp.Regexp {
 	if c, ok := mentionCache.m[key]; ok {
 		return c
 	}
-	var out []*regexp.Regexp
+	var out []*gatedRegexp
 	for _, pattern := range rule.Paths {
 		if rule.Regex {
-			if re, err := regexp.Compile(pattern); err == nil {
+			if re, err := compileGated(pattern); err == nil {
 				out = append(out, re)
 			}
 			continue
@@ -205,18 +204,18 @@ func mentionRegexps(rule PathRule) []*regexp.Regexp {
 			tail = ""
 		}
 		body = strings.TrimSuffix(body, "$") + tail
-		if re, err := regexp.Compile(body); err == nil {
+		if re, err := compileGated(body); err == nil {
 			out = append(out, re)
 		}
 	}
 	if mentionCache.m == nil || len(mentionCache.m) >= 512 {
-		mentionCache.m = map[string][]*regexp.Regexp{}
+		mentionCache.m = map[string][]*gatedRegexp{}
 	}
 	mentionCache.m[key] = out
 	return out
 }
 
-func anyMatchText(res []*regexp.Regexp, text string) bool {
+func anyMatchText(res []*gatedRegexp, text string) bool {
 	for _, re := range res {
 		if re.MatchString(text) {
 			return true

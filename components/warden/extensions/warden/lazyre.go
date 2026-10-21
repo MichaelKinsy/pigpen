@@ -15,6 +15,7 @@ type lazyRegexp struct {
 	srcOnce sync.Once
 	once    sync.Once
 	re      *regexp.Regexp
+	gate    *gate
 }
 
 // lazyCompiled counts compilations, for the test that no expression is compiled at start.
@@ -55,9 +56,16 @@ func (l *lazyRegexp) get() *regexp.Regexp {
 	l.once.Do(func() {
 		lazyCompiled.Add(1)
 		l.re = regexp.MustCompile(l.source())
+		l.gate = buildGate(l.expr)
+		if lazyObserve != nil {
+			lazyObserve(l)
+		}
 	})
 	return l.re
 }
+
+// lazyObserve is set by a test to learn which expressions the process compiled; nil in production.
+var lazyObserve func(*lazyRegexp)
 
 // source is the expression's text; a built expression (lazyREBuilt) is produced on first use too, so that
 // assembling a long pattern does not allocate at package init either.
@@ -70,28 +78,81 @@ func (l *lazyRegexp) source() string {
 	return l.expr
 }
 
-func (l *lazyRegexp) MatchString(s string) bool            { return l.get().MatchString(s) }
-func (l *lazyRegexp) String() string                       { return l.source() }
-func (l *lazyRegexp) Split(s string, n int) []string       { return l.get().Split(s, n) }
-func (l *lazyRegexp) FindString(s string) string           { return l.get().FindString(s) }
-func (l *lazyRegexp) FindStringIndex(s string) []int       { return l.get().FindStringIndex(s) }
-func (l *lazyRegexp) FindStringSubmatch(s string) []string { return l.get().FindStringSubmatch(s) }
-func (l *lazyRegexp) FindStringSubmatchIndex(s string) []int {
-	return l.get().FindStringSubmatchIndex(s)
+// Every matching method asks the gate first (lazygate.go): a text that cannot match gets the answer the engine
+// gives for no match, without a scan of the text by the engine.
+func (l *lazyRegexp) MatchString(s string) bool {
+	re := l.get()
+	return l.gate.may(s) && re.MatchString(s)
 }
-func (l *lazyRegexp) FindAllString(s string, n int) []string { return l.get().FindAllString(s, n) }
+func (l *lazyRegexp) String() string                 { return l.source() }
+func (l *lazyRegexp) Split(s string, n int) []string { return l.get().Split(s, n) }
+func (l *lazyRegexp) FindString(s string) string {
+	re := l.get()
+	if !l.gate.may(s) {
+		return ""
+	}
+	return re.FindString(s)
+}
+func (l *lazyRegexp) FindStringIndex(s string) []int {
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindStringIndex(s)
+}
+func (l *lazyRegexp) FindStringSubmatch(s string) []string {
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindStringSubmatch(s)
+}
+func (l *lazyRegexp) FindStringSubmatchIndex(s string) []int {
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindStringSubmatchIndex(s)
+}
+func (l *lazyRegexp) FindAllString(s string, n int) []string {
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindAllString(s, n)
+}
 func (l *lazyRegexp) FindAllStringIndex(s string, n int) [][]int {
-	return l.get().FindAllStringIndex(s, n)
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindAllStringIndex(s, n)
 }
 func (l *lazyRegexp) FindAllStringSubmatch(s string, n int) [][]string {
-	return l.get().FindAllStringSubmatch(s, n)
+	re := l.get()
+	if !l.gate.may(s) {
+		return nil
+	}
+	return re.FindAllStringSubmatch(s, n)
 }
 func (l *lazyRegexp) ReplaceAllString(src, repl string) string {
-	return l.get().ReplaceAllString(src, repl)
+	re := l.get()
+	if !l.gate.may(src) {
+		return src
+	}
+	return re.ReplaceAllString(src, repl)
 }
 func (l *lazyRegexp) ReplaceAllStringFunc(src string, f func(string) string) string {
-	return l.get().ReplaceAllStringFunc(src, f)
+	re := l.get()
+	if !l.gate.may(src) {
+		return src
+	}
+	return re.ReplaceAllStringFunc(src, f)
 }
 func (l *lazyRegexp) ReplaceAllLiteralString(src, repl string) string {
-	return l.get().ReplaceAllLiteralString(src, repl)
+	re := l.get()
+	if !l.gate.may(src) {
+		return src
+	}
+	return re.ReplaceAllLiteralString(src, repl)
 }
