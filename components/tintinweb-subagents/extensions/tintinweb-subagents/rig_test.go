@@ -126,7 +126,13 @@ func startRigWith(t *testing.T, cwd string, noSession bool) *rig {
 	r.app.register(e)
 	r.Host = StartHost(t, e, HostOptions{Cwd: cwd, OnCallValue: r.answer})
 	r.FireAll("session_start", obj{"reason": "startup"})
-	t.Cleanup(func() { r.app.mgr.abortAll(); r.app.scheduler().stop() })
+	t.Cleanup(func() {
+		r.app.mgr.abortAll()
+		r.app.scheduler().stop()
+		// The surfaces' tickers read the wall clock: none may outlive the test, or a later test that changes time.Local races them.
+		r.app.ui.widget.dispose()
+		r.app.ui.dispose()
+	})
 	return r
 }
 
