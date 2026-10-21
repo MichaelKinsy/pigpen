@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -193,7 +194,7 @@ func TestBashEditorTwins(t *testing.T) {
 		if r.editor.history.index != -1 || len(r.editor.history.items) != 0 || r.editor.history.draft != "" {
 			t.Errorf("history browse not reset: %+v", r.editor.history)
 		}
-		if r.base.input[len(r.base.input)-1] != keyUndo {
+		if r.base.input[len(r.base.input)-1] != "\x1f" {
 			t.Errorf("the default editor was not told to undo: %q", r.base.input)
 		}
 		if len(r.resolved) == 0 {
@@ -317,7 +318,7 @@ func TestBashEditorBoundaryShortcutsSendTheDefaultEditorsDocumentKeys(t *testing
 	r := newBashRig(false)
 	r.key(t, "\x1b[1;10A") // super+shift+up, the default editorStart
 	r.key(t, "\x1b[1;10B")
-	if len(r.base.input) != 2 || r.base.input[0] != keyDocumentStart || r.base.input[1] != keyDocumentEnd {
+	if len(r.base.input) != 2 || r.base.input[0] != "\x1b[1;5H" || r.base.input[1] != "\x1b[1;5F" {
 		t.Errorf("input %q", r.base.input)
 	}
 }
@@ -388,5 +389,63 @@ func TestPiKeyDefaults(t *testing.T) {
 		if got := piKeyMatches(c.data, c.id); got != c.want {
 			t.Errorf("piKeyMatches(%q, %s) = %v, want %v", c.data, c.id, got, c.want)
 		}
+	}
+}
+
+func TestBashEditorRightArrowOutsideAShellContextIsTheEditors(t *testing.T) {
+	r := newBashRig(false)
+	r.base.text = "hel"
+	r.setGhost("hello")
+	r.key(t, "\x1b[C")
+	if r.base.text != "hel" || len(r.base.input) != 1 {
+		t.Errorf("text %q, default editor input %q", r.base.text, r.base.input)
+	}
+}
+
+func TestBashEditorShiftEnterIsNotASubmit(t *testing.T) {
+	r := newBashRig(true)
+	r.base.text = "echo a"
+	r.key(t, "\x1b[13;2u") // shift+enter
+	if len(r.submitted) != 0 || len(r.base.input) != 1 {
+		t.Errorf("submitted %q, default editor input %q", r.submitted, r.base.input)
+	}
+}
+
+func TestBashEditorDroppedPathEndsAHistoryBrowse(t *testing.T) {
+	r := newBashRig(true)
+	r.editor.history.index, r.editor.history.items, r.editor.history.draft = 3, []string{"git status"}, "git"
+	r.key(t, "/usr/bin/env")
+	if r.base.text != "/usr/bin/env" || r.editor.history.index != -1 || len(r.editor.history.items) != 0 {
+		t.Errorf("text %q history %+v", r.base.text, r.editor.history)
+	}
+}
+
+func TestBashEditorGhostThatTakesTooLongIsDropped(t *testing.T) {
+	r := newBashRig(true)
+	r.editor.env.resolveGhost = func(ctx context.Context, text string) *ghostSuggestion {
+		<-ctx.Done() // the resolver ignores the deadline and answers late
+		return &ghostSuggestion{Value: text + "late", Source: bashSourceProjectHistory}
+	}
+	start := time.Now()
+	r.key(t, "g")
+	if r.ghost() != nil {
+		t.Errorf("a ghost that arrived after the deadline was kept: %+v", r.ghost())
+	}
+	if time.Since(start) > 5*time.Second {
+		t.Error("the key waited far longer than the ghost deadline")
+	}
+}
+
+func TestBashEditorOneOffContextReadsTheFirstLine(t *testing.T) {
+	r := newBashRig(false)
+	r.base.text = "!ls\nfoo"
+	r.key(t, "\t")
+	if len(r.base.input) != 0 {
+		t.Errorf("Tab reached the default editor although the first line is a one-off command: %q", r.base.input)
+	}
+	r.base.text = "foo\n!ls"
+	r.key(t, "\t")
+	if len(r.base.input) != 1 {
+		t.Errorf("Tab was taken although only the second line is a one-off command: %q", r.base.input)
 	}
 }

@@ -163,3 +163,63 @@ func TestTheBashModeShortcutTogglesTheMode(t *testing.T) {
 	editorInput(b.h, "\x1b[98;6u") // ctrl+shift+b
 	waitUntil(t, "bash mode to start", func() bool { return hasNote(b.h, "info: Bash mode enabled (") })
 }
+
+func countNotes(h *Host, want string) int {
+	n := 0
+	for _, note := range notifications(h) {
+		if strings.Contains(note, want) {
+			n++
+		}
+	}
+	return n
+}
+
+func topBar(t *testing.T, h *Host) string {
+	t.Helper()
+	content, _ := lastWidget(t, h, "powerline-top")
+	return content
+}
+
+func TestTheShellModeSegmentFollowsBashMode(t *testing.T) {
+	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
+	b.h.Command("bash-mode", "on")
+	waitUntil(t, "the shell segment", func() bool {
+		return strings.Contains(topBar(t, b.h), "bash") && strings.Contains(topBar(t, b.h), "idle")
+	})
+	b.h.Command("bash-mode", "off")
+	waitUntil(t, "the shell segment to go", func() bool { return !strings.Contains(topBar(t, b.h), "idle") })
+}
+
+func TestTurningPowerlineOffEndsBashMode(t *testing.T) {
+	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
+	b.h.Command("bash-mode", "on")
+	b.h.Command("powerline", "") // off
+	b.h.Command("powerline", "") // on again
+	if strings.Contains(topBar(t, b.h), "idle") {
+		t.Errorf("the shell segment is back after the bar was turned off and on: %q", topBar(t, b.h))
+	}
+	b.h.Command("bash-mode", "")
+	if got := countNotes(b.h, "Bash mode enabled ("); got != 2 {
+		t.Errorf("toggling after the bar was turned off did not start the mode again (%d starts): %q", got, notifications(b.h))
+	}
+}
+
+func TestANewSessionStartsOutsideBashMode(t *testing.T) {
+	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
+	b.h.Command("bash-mode", "on")
+	b.h.Fire("session_start", map[string]any{"reason": "new"})
+	b.h.Command("bash-mode", "")
+	if got := countNotes(b.h, "Bash mode enabled ("); got != 2 {
+		t.Errorf("%d starts: %q", got, notifications(b.h))
+	}
+}
+
+func TestSessionShutdownEndsBashMode(t *testing.T) {
+	b := startBashHost(t, `{"powerline":{"welcome":false}}`)
+	b.h.Command("bash-mode", "on")
+	b.h.Fire("session_shutdown", map[string]any{"reason": "quit"})
+	b.h.Command("bash-mode", "")
+	if got := countNotes(b.h, "Bash mode enabled ("); got != 2 {
+		t.Errorf("%d starts: %q", got, notifications(b.h))
+	}
+}
