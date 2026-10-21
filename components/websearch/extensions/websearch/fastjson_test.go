@@ -55,7 +55,7 @@ func fixtureDocuments(t *testing.T) map[string]string {
 		"testdata/gemini-wire.json",
 		"testdata/provider-requests.json",
 		"testdata/provider-wire.json",
-		"../../port/fixtures/model-provider-requests.json",
+		"testdata/model-provider-requests.json",
 	}
 	docs := map[string]string{}
 	var walk func(label string, v any)

@@ -4,7 +4,7 @@
 // the oracle-derived wire proof instead. The Go twins (model_wire_fixtures_test.go) replay each case
 // against the port and compare the requests (method, URL, headers, raw body) and the result.
 //
-//   node port/record-model-requests.mjs            # rewrite port/fixtures/model-provider-requests.json
+//   node port/record-model-requests.mjs            # rewrite extensions/websearch/testdata/model-provider-requests.json
 //   node port/record-model-requests.mjs --check    # fail when the recorded fixture differs
 //
 // Run it in the component directory with the oracle's node_modules (Node 22.6 or later: the original
@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const oracle = (name) => new URL(`./oracle/${name}`, import.meta.url).href;
-const fixturePath = join(here, "fixtures", "model-provider-requests.json");
+const fixturePath = join(here, "..", "extensions", "websearch", "testdata", "model-provider-requests.json");
 
 const CODEX_KEY = `header.${Buffer.from(JSON.stringify({ "https://api.openai.com/auth": { chatgpt_account_id: "test-account" } })).toString("base64url")}.signature`;
 const openaiOfficial = { id: "gpt-5.6-terra", provider: "openai", api: "openai-responses", baseUrl: "https://api.openai.com/v1" };
@@ -151,7 +151,7 @@ const text = JSON.stringify({ oracle: "pi-web-access 0.33.0", cases: recorded },
 if (process.argv.includes("--check")) {
 	const current = await readFile(fixturePath, "utf8").catch(() => "");
 	if (current !== text) {
-		console.error("port/fixtures/model-provider-requests.json differs from what the original sends; rerun without --check");
+		console.error("extensions/websearch/testdata/model-provider-requests.json differs from what the original sends; rerun without --check");
 		process.exit(1);
 	}
 	console.log(`checked ${recorded.length} cases`);

@@ -52,10 +52,10 @@ type modelWireCase struct {
 var uuidRE = regexp.MustCompile(`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
 
 func TestModelProviderWireFixtures(t *testing.T) {
-	raw, err := os.ReadFile("../../port/fixtures/model-provider-requests.json")
+	raw, err := os.ReadFile("testdata/model-provider-requests.json")
 	if err != nil {
 		if os.IsNotExist(err) {
-			t.Skip("the Package files are not beside this module (a mutation run copies the module alone); the repository run checks them")
+			t.Skip("testdata/model-provider-requests.json is not beside this module")
 		}
 		t.Fatal(err)
 	}
