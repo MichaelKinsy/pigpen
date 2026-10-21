@@ -28,6 +28,14 @@ validation, the response envelope, the sequential select/input dialog walker, th
 - Locales (E1: English only, an approved exclusion, same as rpiv-todo).
 - The terminal bell (G10, below).
 
+## Refusals while slice B is open
+
+In `tui` mode (where the original shows its questionnaire) `refuseUnported` (`refusal.go`) fails the call, before any
+dialog or event, for an option preview beyond 600 UTF-16 units and for a `collapseKey` other than the default or
+`off`. The text is `@pi-in-go/pigpen-ask-user-question (Go port) does not support <feature> yet. Install the
+original extension, npm:@juicesharp/rpiv-ask-user-question@2.11.0, which runs unchanged in PiG.` In `rpc` mode the
+original runs the same dialog walker, so nothing is refused. Tests: `refusal_test.go`. Removed when slice B lands.
+
 ## Mapping
 
 | ID | Original | Go | Scenario / test |
