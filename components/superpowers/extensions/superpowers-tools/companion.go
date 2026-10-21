@@ -785,6 +785,9 @@ func (c *Companion) Stop(reason string) {
 		defer cancel()
 		_ = c.server.Shutdown(ctx)
 		_ = c.server.Close()
+		// http.Server only closes listeners it has tracked, and Serve runs in its own goroutine: a Stop that lands before
+		// Serve has started would leave the port bound until that goroutine is scheduled. Close it here as well.
+		_ = c.listener.Close()
 	})
 }
 

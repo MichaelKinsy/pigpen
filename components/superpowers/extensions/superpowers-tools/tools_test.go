@@ -412,6 +412,23 @@ func TestLifecycleAndPersistence(t *testing.T) {
 	}
 }
 
+// Stop returns with the port free even when it lands before the Serve goroutine has run (http.Server tracks a listener only
+// once Serve starts), so a restart can take the port straight away.
+func TestStopFreesThePortAtOnce(t *testing.T) {
+	for range 300 {
+		c, info, err := StartCompanion(CompanionOptions{SessionDir: filepath.Join(t.TempDir(), "session"), Env: envOf(nil), CheckPeriod: 20 * time.Millisecond})
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.Stop("test")
+		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%v", info["port"]))
+		if err != nil {
+			t.Fatalf("the port %v is still bound after Stop: %v", info["port"], err)
+		}
+		_ = ln.Close()
+	}
+}
+
 func TestUrlHostsAndBranding(t *testing.T) {
 	_, info := start(t, func(o *CompanionOptions) { o.Host = "127.0.0.1"; o.URLHost = "::1" })
 	if !strings.HasPrefix(info["url"].(string), "http://[::1]:") {
