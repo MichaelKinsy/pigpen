@@ -111,6 +111,12 @@ bridged in PiG 0.4 (`Context.Events()`).
    Binary: the reply is dispatched to an extension that has not finished loading; one extension per lane never shows
    it). The ping now waits for the first `session_start` (once), and is repeated from `subagents:ready` and
    `TaskExecute`. Load order still does not matter. Twin and tests: `TestPingWaitsForTheFirstSession`.
+   **The reply handler must not take the app lock.** `session_start` holds it while it reads the session file from the
+   host, and the host answers that read only after the ping reply it is delivering has been handled; a handler waiting
+   for the lock hung the host (about one start in 200 on a loaded amd64 host, and the first turn of `pig-essentials` on
+   linux/arm64 CI; a goroutine dump showed it). `applyPingReply` and its two results now have a lock of their own
+   (`pingMu`). Test: `TestPingReplyIsHandledWhileSessionStartWaitsForTheHost`, which holds the host's answer back until
+   the reply is delivered; mutant `ping-reply-takes-the-app-lock`.
 6. **G6 (closed in PR 2)** `ctx.Custom` with a `kit.ViewComponent` runs the settings panel.
 7. **Stale context.** Retained contexts outlive their request; the spinner timer stops when `Context.Err()` is non-nil.
 8. **Parallel tool calls finish in no fixed order in PiG.** Ten `TaskCreate` calls of one model turn run concurrently

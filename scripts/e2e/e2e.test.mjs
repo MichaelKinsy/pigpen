@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { connect } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { answerLines, herdrStates } from './piglets.mjs';
+import { answerLines, fakeHerdr, herdrStates } from './piglets.mjs';
 import { e2eEnv, isolatedPath, promptReady, shellQuote } from './tmux.mjs';
 
 describe('piglet e2e helpers', () => {
@@ -38,12 +42,40 @@ describe('piglet e2e helpers', () => {
     assert.equal(answerLines('reply with exactly: ok\nlook\n').length, 0);
   });
 
-  it('reads the reporter states from the fake herdr log, release included', () => {
-    const log = [
-      'pane report-agent p_1 --state idle --seq 1 --source custom:pig --agent pig',
-      'pane report-agent p_1 --state working --seq 2 --source custom:pig --agent pig',
-      'pane release-agent p_1 --source custom:pig --agent pig --seq 3',
-    ].join('\n');
-    assert.deepEqual(herdrStates(log), ['idle', 'working', 'release-agent']);
+  it('reads the reporter states from the requests a fake herdr took, release included', () => {
+    const params = { pane_id: 'p_1', source: 'pig', agent: 'pig' };
+    const requests = [
+      { id: 'pig:report:1', method: 'pane.report_agent', params: { ...params, state: 'idle', seq: 1 } },
+      { id: 'pig:report:2', method: 'pane.report_agent', params: { ...params, state: 'working', seq: 2 } },
+      { id: 'pig:release:3', method: 'pane.release_agent', params: { ...params, seq: 3 } },
+      { unparsed: 'not json' },
+    ];
+    assert.deepEqual(herdrStates(requests), ['idle', 'working', 'release-agent', 'unparsed']);
+  });
+
+  it('listens before it returns, and answers every request line of a connection, in order', { skip: process.platform === 'win32' && 'unix sockets' }, async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pigpen-fake-herdr-'));
+    const path = join(dir, 'herdr.sock');
+    const herdr = fakeHerdr(path);
+    try {
+      assert.ok(existsSync(path), 'the socket exists as soon as fakeHerdr returns: the Binary is started after that');
+      const replies = await new Promise((resolve, reject) => {
+        let got = '';
+        const client = connect(path, () => {
+          // one line split across two writes, then a second line: the server must frame on the newline, not on the write
+          client.write('{"id":"a","method":"pane.report_agent","par');
+          setTimeout(() => client.write('ams":{"state":"idle","seq":1}}\n{"id":"b","method":"pane.release_agent","params":{"seq":2}}\nnot json\n'), 20);
+        });
+        client.setEncoding('utf8');
+        client.on('data', (chunk) => { got += chunk; if (got.split('\n').filter(Boolean).length === 3) { client.end(); resolve(got); } });
+        client.on('error', reject);
+      });
+      assert.equal(replies, '{"result":{}}\n'.repeat(3));
+      assert.deepEqual(herdrStates(herdr.requests), ['idle', 'release-agent', 'unparsed']);
+      assert.equal(herdr.requests[0].id, 'a');
+    } finally {
+      herdr.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -42,6 +42,14 @@ type rig struct {
 	inputs    []string
 	extBus    map[string][]string // channel -> the extension's handler ids
 	goBus     map[string][]func(data any)
+	// holdSessionFile, when set, keeps every getSessionFile answer back until it is closed.
+	holdSessionFile chan struct{}
+	// sessionFileAsked receives a value when a getSessionFile call reaches the host while it is held back.
+	sessionFileAsked chan struct{}
+	// pingGate, when set, keeps the extension's subagents ping emit back until it is closed.
+	pingGate chan struct{}
+	// emitDone counts the extension's emits per channel that have been fully delivered (every listener returned).
+	emitDone map[string]int
 }
 
 type selectCall struct {
@@ -55,7 +63,7 @@ func startRig(t *testing.T, cwd string) *rig {
 	if cwd == "" {
 		cwd = t.TempDir()
 	}
-	r := &rig{cwd: cwd, sessionID: "s1", persisted: true, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r := &rig{cwd: cwd, sessionID: "s1", persisted: true, extBus: map[string][]string{}, goBus: map[string][]func(any){}, emitDone: map[string]int{}}
 	r.Host = StartHost(t, tintinweb_tasks.Extension(), HostOptions{Cwd: cwd, OnCallValue: r.answer})
 	// The extension pings pi-subagents on the first session_start (not while it loads: see onSessionStart); a test
 	// that needs the ping calls r.startSession.
@@ -109,6 +117,16 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 	switch method {
 	case "sessionRead":
 		r.mu.Lock()
+		hold := r.holdSessionFile
+		r.mu.Unlock()
+		if hold != nil && args["method"] == "getSessionFile" {
+			select {
+			case r.sessionFileAsked <- struct{}{}:
+			default:
+			}
+			<-hold // the host is busy: the extension waits for this answer
+		}
+		r.mu.Lock()
 		defer r.mu.Unlock()
 		switch args["method"] {
 		case "getSessionId":
@@ -140,7 +158,18 @@ func (r *rig) answer(method string, args map[string]any) (any, string) {
 		return obj{}, ""
 	case "events.emit":
 		ch, _ := args["channel"].(string)
+		if ch == "subagents:rpc:ping" {
+			r.mu.Lock()
+			gate := r.pingGate
+			r.mu.Unlock()
+			if gate != nil {
+				<-gate
+			}
+		}
 		r.emitWithin(ch, args["json"])
+		r.mu.Lock()
+		r.emitDone[ch]++
+		r.mu.Unlock()
 		return obj{}, ""
 	case "ui.select":
 		title, _ := args["title"].(string)

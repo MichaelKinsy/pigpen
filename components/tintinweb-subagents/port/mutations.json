@@ -604,5 +604,29 @@
   "file": "settings.go",
   "find": "if s := strings.TrimSpace(v); s != \"\" {",
   "replace": "if s := strings.TrimLeft(v, \" \"); s != \"\" {"
+ },
+ {
+  "name": "schema-agentdir-not-filled",
+  "file": "tools.go",
+  "find": "fill := strings.NewReplacer(\"{{TYPES}}\", strings.Join(r.availableTypes(), \", \"), \"{{AGENTDIR}}\", agentDir()).Replace",
+  "replace": "fill := strings.NewReplacer(\"{{TYPES}}\", strings.Join(r.availableTypes(), \", \")).Replace"
+ },
+ {
+  "name": "schema-strings-not-filled",
+  "file": "tools.go",
+  "find": "\tcase string:\n\t\treturn fill(v)\n",
+  "replace": "\tcase string:\n\t\treturn v\n"
+ },
+ {
+  "name": "schema-maps-not-walked",
+  "file": "tools.go",
+  "find": "out[key] = fillStrings(value, fill)",
+  "replace": "out[key] = value"
+ },
+ {
+  "name": "schema-arrays-not-walked",
+  "file": "tools.go",
+  "find": "out[i] = fillStrings(value, fill)",
+  "replace": "out[i] = value"
  }
 ]

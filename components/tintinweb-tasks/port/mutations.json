@@ -874,5 +874,11 @@
   "file": "store.go",
   "find": "json.Indent(&buf, compact, \"\", \"  \")",
   "replace": "json.Indent(&buf, compact, \"\", \"\\t\")"
+ },
+ {
+  "name": "ping-reply-takes-the-app-lock",
+  "file": "extension.go",
+  "find": "a.pingMu.Lock()\n\tdefer a.pingMu.Unlock()\n\tvar version",
+  "replace": "a.mu.Lock()\n\tdefer a.mu.Unlock()\n\tvar version"
  }
 ]

@@ -69,6 +69,45 @@ func TestDescriptionNamesTheTypesAndTheAgentDir(t *testing.T) {
 		"The type of specialized agent to use. Available types: general-purpose, Explore, Plan. Custom agents from .pi/agents/*.md (project) or /the/agent/agents/*.md (global) are also available.")
 }
 
+// What PIG_CODING_AGENT_DIR is on a Windows runner: backslashes, a short 8.3 name with a tilde, and (to be hard) a quote.
+// Put into the JSON text of the Agent schema they made it undecodable, the Agent tool then had no object schema, and the
+// SDK panics on that while the extension loads: the fused extension died before it registered ("connection closed before
+// register") on windows/amd64 only. The dir is only a string here, so these run on any host.
+const windowsAgentDir = `C:\Users\RUNNER~1\AppData\Local\Temp\pigpen "smoke"\agent`
+
+func TestAgentSchemaKeepsAWindowsAgentDirAndOddTypeNames(t *testing.T) {
+	resetTypes()
+	t.Cleanup(resetTypes)
+	t.Setenv("PIG_CODING_AGENT_DIR", windowsAgentDir)
+	custom := newRegistry()
+	custom.set(&agentConfig{Name: `we"ird\name`, Description: "d", Enabled: true})
+	registerAgents(custom)
+	s := agentToolSchema(currentRegistry(), loadToolSpecs()["Agent"])
+	eq(t, s["type"], "object")
+	desc := s["properties"].(map[string]any)["subagent_type"].(map[string]any)["description"].(string)
+	eq(t, strings.Contains(desc, `Available types: general-purpose, Explore, Plan, we"ird\name.`), true)
+	eq(t, strings.Contains(desc, windowsAgentDir+`/agents/*.md (global)`), true)
+	eq(t, strings.Contains(desc, "{{"), false)
+}
+
+func TestFillStringsReachesEveryStringAndKeepsTheRest(t *testing.T) {
+	fill := strings.NewReplacer("{{X}}", `a\b"c`).Replace
+	in := map[string]any{"s": "{{X}}", "n": 3.0, "b": true, "nil": nil, "list": []any{"{{X}}", 1.0, map[string]any{"deep": "x{{X}}"}}}
+	want := map[string]any{"s": `a\b"c`, "n": 3.0, "b": true, "nil": nil, "list": []any{`a\b"c`, 1.0, map[string]any{"deep": `xa\b"c`}}}
+	eq(t, fillStrings(in, fill), want)
+	eq(t, in["s"], "{{X}}") // the spec is shared by every load: filling must not change it
+	var none map[string]any
+	eq(t, fillStrings(none, fill), any(none))
+}
+
+func TestTheExtensionRegistersItsToolsWithAWindowsAgentDir(t *testing.T) {
+	t.Setenv("PIG_CODING_AGENT_DIR", windowsAgentDir)
+	r := startRig(t) // the factory's registerTools panics here if the Agent tool has no object schema
+	for _, name := range []string{"Agent", "get_subagent_result", "steer_subagent"} {
+		eq(t, r.Host.tools[name], true)
+	}
+}
+
 func TestHandles(t *testing.T) {
 	r := startRig(t)
 	a := r.app.mgr.spawn("Explore", "a", "", childSpec{}, true)
