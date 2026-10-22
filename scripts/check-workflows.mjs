@@ -203,6 +203,28 @@ export function targetProblems(workflow, declared, runners) {
   return problems;
 }
 
+/**
+ * ci.yml runs the govulncheck gate (scripts/govulncheck.mjs) on every run, as a job with no `if`, and the one required check,
+ * `ci-result`, needs that job and reads its result, so a reachable vulnerability or an unscanned module cannot merge.
+ */
+export function vulnerabilityProblems(workflow) {
+  const problems = [];
+  const jobs = Object.entries(workflow.jobs ?? {});
+  const scanning = jobs.filter(([, job]) => (job.steps ?? []).some((step) => /(^|[\s;&|(])node\s+scripts\/govulncheck\.mjs(\s|$)/.test(String(step.run ?? ''))));
+  if (scanning.length !== 1) {
+    problems.push(`ci.yml: ${scanning.length} jobs run scripts/govulncheck.mjs, not one`);
+    return problems;
+  }
+  const [id, job] = scanning[0];
+  if (job.if !== undefined) problems.push(`ci.yml: job ${id} (govulncheck) has an if: it must run on every run`);
+  const result = workflow.jobs?.['ci-result'];
+  const needs = [result?.needs ?? []].flat();
+  if (!needs.includes(id)) problems.push(`ci.yml: ci-result does not need job ${id} (govulncheck)`);
+  const reads = (result?.steps ?? []).some((step) => Object.values(step.env ?? {}).some((value) => String(value).replace(/\s/g, '') === `\${{needs.${id}.result}}`));
+  if (!reads) problems.push(`ci.yml: ci-result does not read needs.${id}.result in an env of its steps`);
+  return problems;
+}
+
 async function main() {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const { readManifests } = await import('./generate-index.mjs');
@@ -219,7 +241,7 @@ async function main() {
     if (file === 'ci.yml') {
       const workflow = parse(text);
       const declared = [...new Set(readManifests().flatMap(({ manifest }) => manifest.build?.targets ?? []))].sort();
-      problems.push(...pinProblems(workflow, requirement), ...targetProblems(workflow, declared, runners));
+      problems.push(...pinProblems(workflow, requirement), ...targetProblems(workflow, declared, runners), ...vulnerabilityProblems(workflow));
     }
   }
   problems.push(...tagProblems(parsed));

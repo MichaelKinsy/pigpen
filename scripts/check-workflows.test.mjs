@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -288,5 +288,44 @@ jobs:
   });
   it('ignores a workflow without setup-go', () => {
     assert.deepEqual(goToolchainProblems('npm-publish.yml', 'jobs:\n  a:\n    steps:\n      - run: echo\n'), []);
+  });
+});
+
+describe('vulnerabilityProblems', () => {
+  const workflow = () => parse(`
+jobs:
+  govulncheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - env: { PIG_SDK_DIR: x }
+        run: node scripts/govulncheck.mjs
+  ci-result:
+    needs: [validate, govulncheck]
+    steps:
+      - env:
+          GOVULNCHECK: \${{ needs.govulncheck.result }}
+        run: '[ "$GOVULNCHECK" = success ]'
+`);
+  it('accepts one govulncheck job that ci-result needs and reads', () => {
+    assert.deepEqual(vulnerabilityProblems(workflow()), []);
+  });
+  it('refuses a workflow that never runs the gate, or runs it twice', () => {
+    const none = workflow();
+    none.jobs.govulncheck.steps[0].run = 'echo skipped';
+    assert.match(vulnerabilityProblems(none).join('\n'), /0 jobs run scripts\/govulncheck\.mjs/);
+    const twice = workflow();
+    twice.jobs.again = structuredClone(twice.jobs.govulncheck);
+    assert.match(vulnerabilityProblems(twice).join('\n'), /2 jobs run scripts\/govulncheck\.mjs/);
+  });
+  it('refuses a gate that is conditional, or that the required check does not wait for and read', () => {
+    const conditional = workflow();
+    conditional.jobs.govulncheck.if = "github.event_name == 'push'";
+    assert.match(vulnerabilityProblems(conditional).join('\n'), /has an if/);
+    const unneeded = workflow();
+    unneeded.jobs['ci-result'].needs = ['validate'];
+    assert.match(vulnerabilityProblems(unneeded).join('\n'), /ci-result does not need job govulncheck/);
+    const unread = workflow();
+    unread.jobs['ci-result'].steps[0].env = {};
+    assert.match(vulnerabilityProblems(unread).join('\n'), /does not read needs\.govulncheck\.result/);
   });
 });

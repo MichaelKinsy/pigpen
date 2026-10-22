@@ -9,8 +9,11 @@
 #   platform-matrix every push to main, merge group, manual run, the weekly schedule, and a pull request labelled
 #                   `full-ci`: one job per OS on a native runner builds ALL eleven Piglets for that OS and smokes every Binary.
 #   android-cross   with platform-matrix: compile + vet every module for android/arm64 (Termux), CGO_ENABLED=0.
-#   ci-result       the one required check. Green when validate and every slow check passed and each other tier passed or
-#                   was skipped.
+#   govulncheck     every run, in parallel with validate: every Go module scanned for vulnerabilities its code can reach
+#                   (scripts/govulncheck.mjs, pinned govulncheck); an unscanned module fails it. The vulnerability database
+#                   is live, so a new advisory can turn it red with no change here: the weekly schedule shows that on main.
+#   ci-result       the one required check. Green when validate, every slow check and govulncheck passed and each other tier
+#                   passed or was skipped.
 name: Validate Pigpen
 on:
   pull_request:
@@ -223,10 +226,37 @@ jobs:
           PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
         run: node scripts/cross-check.mjs android/arm64
 
+  govulncheck:
+    name: govulncheck (every module)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check out the PiG SDK the modules build against
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Scan every module for reachable vulnerabilities
+        env:
+          PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
+        run: node scripts/govulncheck.mjs
+
   ci-result:
     name: CI result
     if: ${{ always() }}
-    needs: [validate, slow-checks, platform-matrix, android-cross]
+    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -236,10 +266,12 @@ jobs:
           SLOW_CHECKS: ${{ needs.slow-checks.result }}
           PLATFORM_MATRIX: ${{ needs.platform-matrix.result }}
           ANDROID_CROSS: ${{ needs.android-cross.result }}
+          GOVULNCHECK: ${{ needs.govulncheck.result }}
         run: |
-          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS"
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK"
           [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
           [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
+          [ "$GOVULNCHECK" = success ] || { echo "govulncheck did not pass"; exit 1; }
           for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
             case "$result" in
               success | skipped) ;;
