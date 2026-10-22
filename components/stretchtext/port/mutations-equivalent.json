@@ -1,0 +1,9 @@
+[
+ {
+  "name": "grow-token-boundary",
+  "why": "isSpaceAt is called with len(left) and len(run)-len(right)-1 only after reveal checked len(left)+len(right) != len(run), so the index never reaches len(run); the bound is not observable.",
+  "file": "grow.go",
+  "find": "return i >= 0 && i < len(run) && run[i].isSpace()",
+  "replace": "return i >= 0 && i <= len(run) && run[i].isSpace()"
+ }
+]

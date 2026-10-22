@@ -66,7 +66,7 @@ child_env = {"HOME": home, "PATH": env["PATH"], "TERM": "xterm-256color", "COLOR
              "GOMODCACHE": env.get("GOMODCACHE", "/go/pkg/mod"), "GOFLAGS": env.get("GOFLAGS", ""), "GOWORK": env.get("GOWORK", ""),
              "GOSUMDB": "off", "GOPROXY": "off", "GOTOOLCHAIN": "local"}
 child_env.update(scenario.get("env", {}))
-shell = "cd %s && exec env %s %s" % (work, " ".join(f"{k}={subprocess.list2cmdline([v])}" for k, v in child_env.items()), " ".join(subprocess.list2cmdline([c]) for c in cmd))
+shell = "cd %s && exec env %s %s" % (work, " ".join(f"{k}={subprocess.list2cmdline([v])}" for k, v in child_env.items()), " ".join(subprocess.list2cmdline([c]) for c in cmd)) + " 2>>" + subprocess.list2cmdline([os.path.join(out, "stderr.txt")])
 tmux = ["tmux", "-L", session]
 subprocess.run(tmux + ["new-session", "-d", "-s", session, "-x", str(width), "-y", str(height), "bash", "-c", shell], check=True)
 

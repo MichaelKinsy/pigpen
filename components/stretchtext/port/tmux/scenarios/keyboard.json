@@ -1,0 +1,100 @@
+{
+  "name": "keyboard",
+  "replies": [
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} and {{reads on|reads on without a break in the sentence}}.",
+      "chunk": 10000
+    }
+  ],
+  "steps": [
+    {
+      "until": "mock|Ask|>",
+      "timeout": 40,
+      "optional": true
+    },
+    {
+      "send": "hello"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "reads on",
+      "timeout": 40
+    },
+    {
+      "snap": "closed",
+      "settle": 1.0
+    },
+    {
+      "key": "M-o"
+    },
+    {
+      "wait": 1.5
+    },
+    {
+      "snap": "letters-open",
+      "settle": 0.5
+    },
+    {
+      "send": "a"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "opened-a",
+      "settle": 0.5
+    },
+    {
+      "key": "M-o"
+    },
+    {
+      "wait": 1.5
+    },
+    {
+      "snap": "letters-open-again",
+      "settle": 0.5
+    },
+    {
+      "key": "Escape"
+    },
+    {
+      "wait": 1.0
+    },
+    {
+      "snap": "letters-escaped",
+      "settle": 0.5
+    },
+    {
+      "key": "M-c"
+    },
+    {
+      "wait": 1.5
+    },
+    {
+      "snap": "letters-close",
+      "settle": 0.5
+    },
+    {
+      "send": "a"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "closed-a",
+      "settle": 0.5
+    },
+    {
+      "key": "M-c"
+    },
+    {
+      "wait": 1.5
+    },
+    {
+      "snap": "nothing-to-close",
+      "settle": 0.5
+    }
+  ]
+}

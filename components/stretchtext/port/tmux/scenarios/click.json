@@ -1,25 +1,71 @@
 {
   "name": "click",
   "replies": [
-    "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} and reads on."
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} and reads on.",
+      "chunk": 10000
+    }
   ],
   "steps": [
-    {"until": "mock|Ask|>", "timeout": 40, "optional": true},
-    {"send": "hello"},
-    {"key": "Enter"},
-    {"until": "reads on", "timeout": 40},
-    {"snap": "closed", "settle": 1.0},
-    {"click": "works in place"},
-    {"wait": 2.5},
-    {"snap": "open", "settle": 0.5},
-    {"click": "nested stretch"},
-    {"wait": 2.5},
-    {"snap": "nested-open", "settle": 0.5},
-    {"click": "«", "nth": 0},
-    {"wait": 2.5},
-    {"snap": "nested-closed", "settle": 0.5},
-    {"click": "«"},
-    {"wait": 2.5},
-    {"snap": "closed-again", "settle": 0.5}
+    {
+      "until": "mock|Ask|>",
+      "timeout": 40,
+      "optional": true
+    },
+    {
+      "send": "hello"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "reads on",
+      "timeout": 40
+    },
+    {
+      "snap": "closed",
+      "settle": 1.0
+    },
+    {
+      "click": "works in place"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "open",
+      "settle": 0.5
+    },
+    {
+      "click": "nested stretch"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "nested-open",
+      "settle": 0.5
+    },
+    {
+      "click": "«",
+      "nth": 0
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "nested-closed",
+      "settle": 0.5
+    },
+    {
+      "click": "«"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "closed-again",
+      "settle": 0.5
+    }
   ]
 }

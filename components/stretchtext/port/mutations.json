@@ -1,0 +1,338 @@
+[
+ {
+  "name": "letters-order",
+  "file": "state.go",
+  "find": "\"asdfghjklqwertyuiopzxcvbnm\"",
+  "replace": "\"qwertyuiopasdfghjklzxcvbnm\""
+ },
+ {
+  "name": "lettered-replies",
+  "file": "state.go",
+  "find": "const letteredReplies = 3",
+  "replace": "const letteredReplies = 4"
+ },
+ {
+  "name": "toggle-open-inverted",
+  "file": "state.go",
+  "find": "if _, isOpen := s.open[name]; isOpen {",
+  "replace": "if _, isOpen := s.open[name]; !isOpen {"
+ },
+ {
+  "name": "settle-keeps-closing",
+  "file": "state.go",
+  "find": "if !isOpening {\n\t\tdelete(s.open, name)",
+  "replace": "if isOpening {\n\t\tdelete(s.open, name)"
+ },
+ {
+  "name": "pick-letter-keeps-letters",
+  "file": "state.go",
+  "find": "\ts.lettering = nil\n\treturn target, ok",
+  "replace": "\treturn target, ok"
+ },
+ {
+  "name": "read-note-never-restarts",
+  "file": "state.go",
+  "find": "s.repliesAtPrompt = len(s.replies)",
+  "replace": "s.repliesAtPrompt = 0"
+ },
+ {
+  "name": "read-note-condition",
+  "file": "state.go",
+  "find": "len(s.read) == 0 && len(written) == 0",
+  "replace": "len(s.read) == 0 || len(written) == 0"
+ },
+ {
+  "name": "read-note-none-text",
+  "file": "state.go",
+  "find": "was recorded. The reader",
+  "replace": "was made. The reader"
+ },
+ {
+  "name": "read-note-unopened-text",
+  "file": "state.go",
+  "find": "They did not open ",
+  "replace": "They did not read "
+ },
+ {
+  "name": "lettering-mode-inverted",
+  "file": "state.go",
+  "find": "!= (mode == ModeClose)",
+  "replace": "!= (mode != ModeClose)"
+ },
+ {
+  "name": "lettering-letter-count",
+  "file": "state.go",
+  "find": "if n == len(letters) {",
+  "replace": "if n == len(letters)-1 {"
+ },
+ {
+  "name": "reachable-ignores-open",
+  "file": "state.go",
+  "find": " || s.isOpen(reply, segment.Stretch.Key) {",
+  "replace": " {"
+ },
+ {
+  "name": "hue-skip",
+  "file": "palette.go",
+  "find": "return count + 1",
+  "replace": "return count + 2"
+ },
+ {
+  "name": "colour-order",
+  "file": "palette.go",
+  "find": "{\"warning\", \"accent\", \"success\", \"mdLink\"}",
+  "replace": "{\"accent\", \"warning\", \"success\", \"mdLink\"}"
+ },
+ {
+  "name": "fade-amount",
+  "file": "palette.go",
+  "find": "const fade = 0.35",
+  "replace": "const fade = 0.5"
+ },
+ {
+  "name": "fade-direction",
+  "file": "palette.go",
+  "find": "if theme.Dark() {",
+  "replace": "if !theme.Dark() {"
+ },
+ {
+  "name": "newest-inverted",
+  "file": "palette.go",
+  "find": "if isNewest {\n\t\treturn full",
+  "replace": "if !isNewest {\n\t\treturn full"
+ },
+ {
+  "name": "underline-end",
+  "file": "render.go",
+  "find": "text + \"\\x1b[24m\"",
+  "replace": "text + \"\\x1b[0m\""
+ },
+ {
+  "name": "reverse-end",
+  "file": "render.go",
+  "find": "text + \"\\x1b[27m\"",
+  "replace": "text + \"\\x1b[0m\""
+ },
+ {
+  "name": "ease-shape",
+  "file": "render.go",
+  "find": "return 2 * t * t",
+  "replace": "return 2 * t"
+ },
+ {
+  "name": "closer-while-growing",
+  "file": "render.go",
+  "find": "if growing {\n\t\treturn long\n\t}",
+  "replace": "if false {\n\t\treturn long\n\t}"
+ },
+ {
+  "name": "closer-spacing",
+  "file": "render.go",
+  "find": "return long + \" \" + state.letter",
+  "replace": "return long + state.letter"
+ },
+ {
+  "name": "link-id-negative",
+  "file": "links.go",
+  "find": "id < 0 || ",
+  "replace": ""
+ },
+ {
+  "name": "link-id-bound",
+  "file": "links.go",
+  "find": "id >= len(l.targets)",
+  "replace": "id > len(l.targets)"
+ },
+ {
+  "name": "link-id-canonical",
+  "file": "links.go",
+  "find": " || strconv.Itoa(id) != rest",
+  "replace": ""
+ },
+ {
+  "name": "backtick-backtrack",
+  "file": "scan.go",
+  "find": "for k := n; k >= 1; k--",
+  "replace": "for k := n; k > 1; k--"
+ },
+ {
+  "name": "display-math-start",
+  "file": "scan.go",
+  "find": "lazyUntil(s, i+2, \"$$\")",
+  "replace": "lazyUntil(s, i+1, \"$$\")"
+ },
+ {
+  "name": "bare-numbers",
+  "file": "scan.go",
+  "find": " || unicode.IsNumber(r)",
+  "replace": ""
+ },
+ {
+  "name": "open-key",
+  "file": "extension.go",
+  "find": "openKey       = \"alt+o\"",
+  "replace": "openKey       = \"alt+p\""
+ },
+ {
+  "name": "close-key",
+  "file": "extension.go",
+  "find": "closeKey      = \"alt+c\"",
+  "replace": "closeKey      = \"alt+x\""
+ },
+ {
+  "name": "attach-skipped",
+  "file": "extension.go",
+  "find": "return nil, x.attach(ctx)",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "click-ignored",
+  "file": "extension.go",
+  "find": "func(_ sdk.Context, url string) { x.core.Click(url) }",
+  "replace": "func(_ sdk.Context, url string) { _ = url }"
+ },
+ {
+  "name": "invalidate-skipped",
+  "file": "extension.go",
+  "find": "if err := tui.Invalidate(); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "render-request-skipped",
+  "file": "extension.go",
+  "find": "if err := tui.RequestRender(false); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "shutdown-keeps-claim",
+  "file": "extension.go",
+  "find": "\tif unsubscribe != nil {\n\t\tunsubscribe()\n\t}\n",
+  "replace": "\t_ = unsubscribe\n"
+ },
+ {
+  "name": "shutdown-no-wait",
+  "file": "extension.go",
+  "find": "\tx.wg.Wait()\n}",
+  "replace": "}"
+ },
+ {
+  "name": "transform-all-messages",
+  "file": "ext.go",
+  "find": "messageType != \"assistant\" ||",
+  "replace": "messageType == \"\" ||"
+ },
+ {
+  "name": "transform-plain-text",
+  "file": "ext.go",
+  "find": "!strings.Contains(markdown, \"{{\")",
+  "replace": "strings.Contains(markdown, \"{{\")"
+ },
+ {
+  "name": "seconds-cap",
+  "file": "ext.go",
+  "find": "math.Min(1.4,",
+  "replace": "math.Min(2.0,"
+ },
+ {
+  "name": "seconds-base",
+  "file": "ext.go",
+  "find": "0.45+float64",
+  "replace": "0.5+float64"
+ },
+ {
+  "name": "seconds-per-length",
+  "file": "ext.go",
+  "find": "/70)",
+  "replace": "/60)"
+ },
+ {
+  "name": "opening-direction",
+  "file": "ext.go",
+  "find": "from, to = 0, 1",
+  "replace": "from, to = 1, 0"
+ },
+ {
+  "name": "attach-first-redraw",
+  "file": "ext.go",
+  "find": "if first {\n\t\tc.redraw()",
+  "replace": "if !first {\n\t\tc.redraw()"
+ },
+ {
+  "name": "redraw-before-attach",
+  "file": "ext.go",
+  "find": "if attached {\n\t\tc.redraw()",
+  "replace": "if !attached {\n\t\tc.redraw()"
+ },
+ {
+  "name": "nothing-notice",
+  "file": "ext.go",
+  "find": "\"stretchtext: nothing to \"",
+  "replace": "\"nothing to \""
+ },
+ {
+  "name": "prompt-text",
+  "file": "ext.go",
+  "find": "\"stretch: type a letter to \"",
+  "replace": "\"type a letter to \""
+ },
+ {
+  "name": "prompt-dim",
+  "file": "ext.go",
+  "find": "theme.Fg(\"dim\", line)",
+  "replace": "theme.Fg(\"muted\", line)"
+ },
+ {
+  "name": "prompt-negative-width",
+  "file": "ext.go",
+  "find": "width += len(line)",
+  "replace": "width -= len(line)"
+ },
+ {
+  "name": "guide-section",
+  "file": "ext.go",
+  "find": "sections.Set(\"stretchtext\", Guide)",
+  "replace": "sections.Set(\"stretch\", Guide)"
+ },
+ {
+  "name": "read-note-not-cleared",
+  "file": "ext.go",
+  "find": "sections.Delete(\"stretchtext_read\")",
+  "replace": "_ = 0"
+ },
+ {
+  "name": "key-duplicate-suffix",
+  "file": "parse.go",
+  "find": "own = name + \"~\" + itoa(seen)",
+  "replace": "own = name + \"~\" + itoa(seen+1)"
+ },
+ {
+  "name": "key-newline-mark",
+  "file": "parse.go",
+  "find": "\"\\n\", \"↵\")",
+  "replace": "\"\\n\", \" \")"
+ },
+ {
+  "name": "key-duplicate-test",
+  "file": "parse.go",
+  "find": "seen != 1",
+  "replace": "seen > 2"
+ },
+ {
+  "name": "fence-length",
+  "file": "parse.go",
+  "find": "if j-i < 3 {",
+  "replace": "if j-i < 2 {"
+ },
+ {
+  "name": "fence-close-count",
+  "file": "parse.go",
+  "find": "== len(trimmed)",
+  "replace": ">= 1"
+ },
+ {
+  "name": "code-fence-line-start",
+  "file": "parse.go",
+  "find": "if at == 0 || text[at-1] == '\\n' {",
+  "replace": "if at == 0 {"
+ }
+]

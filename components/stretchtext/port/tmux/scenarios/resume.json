@@ -1,0 +1,117 @@
+{
+  "name": "resume",
+  "replies": [
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} and reads on.",
+      "chunk": 10000
+    },
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} in the new session.",
+      "chunk": 10000
+    },
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} after the resume.",
+      "chunk": 10000
+    }
+  ],
+  "steps": [
+    {
+      "until": "mock|Ask|>",
+      "timeout": 40,
+      "optional": true
+    },
+    {
+      "send": "hello"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "reads on",
+      "timeout": 40
+    },
+    {
+      "wait": 1.0
+    },
+    {
+      "send": "/new"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "wait": 2.0
+    },
+    {
+      "send": "again"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "in the new session",
+      "timeout": 40
+    },
+    {
+      "snap": "new-closed",
+      "settle": 1.0
+    },
+    {
+      "send": "/resume"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "wait": 2.0
+    },
+    {
+      "snap": "resume-list",
+      "settle": 0.5
+    },
+    {
+      "key": "Down"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "wait": 3.0
+    },
+    {
+      "snap": "resumed",
+      "settle": 1.0
+    },
+    {
+      "click": "works in place"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "resumed-open",
+      "settle": 0.5
+    },
+    {
+      "send": "next"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "after the resume",
+      "timeout": 40
+    },
+    {
+      "click": "works in place",
+      "nth": 1
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "resumed-new-reply-open",
+      "settle": 0.5
+    }
+  ]
+}

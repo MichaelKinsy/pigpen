@@ -26,6 +26,9 @@ packages:
   websearch: local:../../components/websearch
   pig-music: local:../../components/pig-music
   pig-model-tweaks: local:../../components/pig-model-tweaks
+  # pitui is a Go library Package, not a member: stretchtext imports its word segmenter through a go.work that resolves to packages/pitui in the staged Piglet.
+  pitui: local:../../components/pitui
+  stretchtext: local:../../components/stretchtext
 extensions:
   # Reports idle, working and blocked to herdr and releases the pane on quit.
   # Does nothing outside a herdr pane. Same selection as piglets/herdr.
@@ -88,6 +91,14 @@ extensions:
   # allow-list. Commands and event handlers only: no tool is offered to the model.
   - name: pig-model-tweaks
     origins: [package:pig-model-tweaks]
+    tools: []
+  # Stretchtext replies: adds a guide to the system prompt, so the model answers in short sentences whose
+  # phrases open in place into longer text (a click on a phrase, or alt+o and alt+c). Unlike the other
+  # batteries it changes how replies read from the first prompt; /stretchtext does not exist to turn it
+  # off, so a user who does not want it removes this entry. Needs PiG's `tui` handle and OSC 8 link
+  # claims (D193): a Piglet built on an older PiG fails to load it. No tool is offered to the model.
+  - name: stretchtext
+    origins: [package:stretchtext]
     tools: []
   # Empty build-pipeline fixture: PiG rejects Binary builds with zero extensions.
   - name: seed-check

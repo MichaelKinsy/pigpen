@@ -1,0 +1,128 @@
+{
+  "name": "compaction",
+  "settings": {
+    "compaction": {
+      "enabled": false,
+      "keepRecentTokens": 1
+    }
+  },
+  "replies": [
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} and reads on.",
+      "chunk": 10000
+    },
+    {
+      "text": "Noted. A plain reply that carries no stretch but gives the session some length to compact. A plain reply that carries no stretch but gives the session some length to compact. A plain reply that carries no stretch but gives the session some length to compact. A plain reply that carries no stretch but gives the session some length to compact. A plain reply that carries no stretch but gives the session some length to compact. A plain reply that carries no stretch but gives the session some length to compact. ",
+      "chunk": 10000
+    },
+    {
+      "text": "Noted again. A second plain reply with some length so that the conversation is large enough to summarise. A second plain reply with some length so that the conversation is large enough to summarise. A second plain reply with some length so that the conversation is large enough to summarise. A second plain reply with some length so that the conversation is large enough to summarise. A second plain reply with some length so that the conversation is large enough to summarise. A second plain reply with some length so that the conversation is large enough to summarise. ",
+      "chunk": 10000
+    },
+    {
+      "text": "Summary of the conversation: a greeting, a stretch reply and two plain replies.",
+      "chunk": 10000
+    },
+    {
+      "text": "Stretchtext {{works in place|works in place, opening inside the text where a {{nested stretch|nested stretch holds a deeper phrase}} can sit}} after the compaction.",
+      "chunk": 10000
+    }
+  ],
+  "steps": [
+    {
+      "until": "mock|Ask|>",
+      "timeout": 40,
+      "optional": true
+    },
+    {
+      "send": "hello"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "reads on",
+      "timeout": 40
+    },
+    {
+      "click": "works in place"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "first-open",
+      "settle": 0.5
+    },
+    {
+      "send": "second prompt"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "Noted\\.",
+      "timeout": 40
+    },
+    {
+      "send": "third prompt"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "Noted again",
+      "timeout": 40
+    },
+    {
+      "wait": 1.0
+    },
+    {
+      "send": "/compact"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "wait": 6.0
+    },
+    {
+      "snap": "after-compact",
+      "settle": 0.5
+    },
+    {
+      "send": "once more"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "until": "after the compaction",
+      "timeout": 40
+    },
+    {
+      "snap": "third-closed",
+      "settle": 1.0
+    },
+    {
+      "click": "works in place"
+    },
+    {
+      "wait": 2.5
+    },
+    {
+      "snap": "third-open",
+      "settle": 0.5
+    },
+    {
+      "key": "M-o"
+    },
+    {
+      "wait": 1.5
+    },
+    {
+      "snap": "third-letters",
+      "settle": 0.5
+    }
+  ]
+}

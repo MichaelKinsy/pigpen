@@ -666,6 +666,36 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "stretchtext",
+      "name": "stretchtext (pi-stretchtext)",
+      "kind": "port",
+      "summary": "Replies that read short and grow where you click: the model answers in short sentences whose phrases open in place into longer text, with alt+o and alt+c letters for the keyboard.",
+      "upstream": {
+        "name": "pi-stretchtext",
+        "url": "https://github.com/MonadicMike/pi-stretchtext",
+        "commit": "c93b06876aefdfab99171145ef1cdf695bb5ada4",
+        "license": "MIT",
+        "author": "Michal Pikosz"
+      },
+      "targetPackage": "components/stretchtext",
+      "otherTargets": [
+        "piglets/pig-with-batteries"
+      ],
+      "lane": "stretchtext",
+      "status": "review",
+      "credit": "Go port of pi-stretchtext 0.1.0, https://github.com/MonadicMike/pi-stretchtext, by Michal Pikosz (MIT), at commit c93b06876aefdfab99171145ef1cdf695bb5ada4. Its parser, growth and guide come from cc-stretch, https://github.com/pro-vi/cc-stretch, by pro-vi (MIT), revision 910fb99d43bfad23d591b36aebd6c25bd0729081.",
+      "notes": "Needs the PiG release that carries the tui handle and OSC 8 link claims (D193). Equivalence: recorded states of the original, a fake host and tmux scenarios Pi against PiG (components/stretchtext/port/PORT.md).",
+      "additionalUpstreams": [
+        {
+          "name": "cc-stretch",
+          "url": "https://github.com/pro-vi/cc-stretch",
+          "commit": "910fb99d43bfad23d591b36aebd6c25bd0729081",
+          "license": "MIT",
+          "author": "pro-vi"
+        }
+      ]
     }
   ]
 }

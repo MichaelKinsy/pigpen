@@ -18,6 +18,10 @@ The colour conversions in `extensions/stretchtext/colour.go` port the part of pi
 a colour into an SGR sequence. Oklab is Bjorn Ottosson's colour space (MIT, Copyright (c) 2021 Bjorn Ottosson,
 https://bottosson.github.io/posts/colorpicker/).
 
+The word segmentation that grows Thai, Lao, Khmer and Myanmar text in the pieces ICU finds is the shared
+`components/pitui/wordsegmenter`, which carries ICU 78.3's dictionary engines and Unicode 17's data under the notices in
+[`../pitui/CREDITS.md`](../pitui/CREDITS.md); stretchtext imports it and copies none of it.
+
 The Go code, the scenarios, the differential cases and the tests were written for this Package by Michael Kinsy. Behavior,
 wording, colours and the order of effects follow the original; where they differ, [port/PORT.md](port/PORT.md) numbers the
 difference. Modified paths: none of the original is modified; the port is a separate implementation. The one file generated
