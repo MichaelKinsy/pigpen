@@ -4,7 +4,7 @@
 # games and a snake that start only on their command, the pig-doctor command, jev, an A2A Package whose
 # listener is off until configured, the websearch first slice, and the /music player (nothing until /music). Add further resources only after owner review.
 name: pig-with-batteries
-description: "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), the websearch first slice (search, fetch, retained sources), and pig-music (/music, a music player that does nothing until you type /music). Protocol bridges and more capability ports are planned."
+description: "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), the websearch first slice (search, fetch, retained sources), pig-music (/music, a music player that does nothing until you type /music), ahp (an Agent Host Protocol server, no listener until /ahp start or --ahp), and ollama-native (an Ollama provider, inert until you select an Ollama model). Protocol bridges and more capability ports are planned."
 release:
   version: 0.1.2
 build:
@@ -26,6 +26,8 @@ packages:
   websearch: local:../../components/websearch
   pig-music: local:../../components/pig-music
   pig-model-tweaks: local:../../components/pig-model-tweaks
+  ahp: local:../../components/ahp
+  ollama-native: local:../../components/ollama-native
 extensions:
   # Reports idle, working and blocked to herdr and releases the pane on quit.
   # Does nothing outside a herdr pane. Same selection as piglets/herdr.
@@ -89,6 +91,13 @@ extensions:
   - name: pig-model-tweaks
     origins: [package:pig-model-tweaks]
     tools: []
+  # Serves the running session to Agent Host Protocol clients over WebSocket. No listener opens unless
+  # `pig --ahp` or `/ahp start` is used.
+  - name: ahp
+    origins: [package:ahp]
+  # Ollama native /api/chat provider. Does nothing until an Ollama model is selected; no network call at start.
+  - name: ollama-native
+    origins: [package:ollama-native]
   # Empty build-pipeline fixture: PiG rejects Binary builds with zero extensions.
   - name: seed-check
     origins: [local:./extensions/seed-check]

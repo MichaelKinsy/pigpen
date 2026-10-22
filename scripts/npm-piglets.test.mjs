@@ -64,7 +64,8 @@ describe('the npm package of a Piglet', () => {
       assert.equal(pkg.name, pigletNpmName(name));
       assert.equal(pkg.name, `@pi-in-go/pigpen-piglet-${name}`);
       assert.equal(pkg.version, readManifests().find(({ manifest }) => manifest.name === name).manifest.release.version);
-      assert.ok(pkg.keywords.includes('pig-piglet'));
+      const { metadata } = readManifests().find(({ manifest }) => manifest.name === name);
+      assert.equal(pkg.keywords.includes('pig-piglet'), metadata.listed !== false);
       assert.equal(pkg.keywords.includes('pig-package'), false, 'a Piglet is classified by the most specific keyword; it carries only its own');
       assert.deepEqual(pkg.pig, { piglet: 'piglet.yaml' });
       assert.deepEqual(pkg.publishConfig, { access: 'public' });
@@ -72,6 +73,14 @@ describe('the npm package of a Piglet', () => {
       assert.ok(pkg.files.includes('piglet.yaml'));
       assert.equal('private' in pkg, false);
     }
+  });
+});
+
+describe('unlisted Piglets', () => {
+  it('are exactly the bench fixtures, and none carries the pig-piglet keyword', () => {
+    const unlisted = readManifests().filter(({ metadata }) => metadata.listed === false).map(({ manifest }) => manifest.name);
+    assert.deepEqual(unlisted, names.filter((n) => n.startsWith('bench-')));
+    for (const name of unlisted) assert.equal(pigletPackageJson(name, { repository }).keywords.includes('pig-piglet'), false);
   });
 });
 

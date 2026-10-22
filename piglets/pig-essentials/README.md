@@ -13,6 +13,7 @@ needs nothing else to start. **Everything stays quiet until used**: no network c
 | `ask-user-question` | `@juicesharp/rpiv-ask-user-question` 2.11.0 by juicesharp, MIT | the `ask_user_question` tool (partial: dialogs) |
 | `ponytail` | `@dietrichgebert/ponytail` 4.10.0 by Dietrich Gebert, MIT | the "lazy senior dev" mode: `/ponytail`, five more commands and six skills |
 | `superpowers` (skills) | `obra/superpowers` v7.0.0 by Jesse Vincent, MIT | fifteen skills: brainstorming, plans, TDD, debugging, review, verification |
+| `dev-skills` (skills) | `mattpocock/skills` (MIT), adapted | eight development skills: `pigpen-tdd`, `pigpen-diagnosing-bugs`, `pigpen-code-review`, `pigpen-commit`, `pigpen-grilling`, `pigpen-handoff`, `pigpen-prototype`, `pigpen-research`. Skills enter the system prompt as a list; no code runs |
 
 ## Install
 

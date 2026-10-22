@@ -145,7 +145,7 @@ first-release steps are in [OWNER-ACTIONS.md](OWNER-ACTIONS.md); what remains op
 ## Install
 
 Pigpen is published to npm under the `@pi-in-go` scope, the way Pi publishes its packages: Packages carry the keyword
-`pig-package`, Piglet sources `pig-piglet`, and pi-in-go.dev lists them by keyword. Not published yet: the owner's first
+`pig-package`, Piglet sources `pig-piglet` (not the `bench-*` fixtures, whose `catalog.json` sets `"listed": false`), and pi-in-go.dev lists them by keyword. Not published yet: the owner's first
 publish is [FIRST-NPM-PUBLISH.md](FIRST-NPM-PUBLISH.md); until it is done these commands do not resolve.
 
 ```bash
@@ -430,6 +430,10 @@ downloads and verifies it. Add the `full-ci` label to a pull request to run the 
   [PiG issues](https://github.com/MichaelKinsy/PiG/issues).
 - Suspected vulnerabilities: follow [SECURITY.md](SECURITY.md), not a public bug
   report. Never post credentials, private keys or unredacted session files.
+
+- Want a Pi extension ported to Go? File a [port request](https://github.com/MichaelKinsy/pigpen/issues/new?template=port-request.yml).
+  It is a public issue that a maintainer reads before anything is built; requests never run code, and copyleft or unlicensed
+  upstreams are blocked by default. See [Port requests](CONTRIBUTING.md#port-requests) for the lifecycle and license policy.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
 

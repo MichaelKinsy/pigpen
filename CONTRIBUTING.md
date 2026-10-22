@@ -120,6 +120,97 @@ For publication, select approved immutable Package references instead of sibling
   Source checks cannot establish legal permission or detect every modified copy.
   Review the dependency closure and license obligations before release.
 
+## Port requests
+
+Anyone can ask for a Pi extension to be ported to Go with the
+[Port request](https://github.com/MichaelKinsy/pigpen/issues/new?template=port-request.yml) issue form. A request is
+**data, never code**: filing one runs nothing, and no workflow reads an issue's text with secrets. Nothing is installed,
+built or executed until a maintainer has read the request and chosen to start the porting lane by hand.
+
+Lifecycle (labels are in [`.github/labels.json`](.github/labels.json); only a maintainer sets a `port:` status after the form's first two):
+
+1. `port-request` + `port:requested`: the form applied them; no maintainer has read it.
+2. `port:needs-info`: waiting for the requester or upstream.
+3. `port:triaged`: a maintainer accepted it and added (or will add) the [`ports.json`](ports/README.md) row at a pinned commit.
+4. `port:in-progress` then `port:review`: a lane is porting, then the port awaits review. Once a row exists it is authoritative
+   and the label follows its `status`.
+5. `port:released`: published as `@pi-in-go/pigpen-<name>` and the issue closed.
+6. Closed without a port: `port:declined`, `port:duplicate`, `port:builtin` (PiG already has it, for example MCP) or `port:blocked-license`.
+
+A request promises neither a port nor a date. The requester never chooses the Package name or directory; the maintainer does.
+
+### License policy
+
+The license is read from the upstream's LICENSE file at the pinned commit, not from npm metadata or from the request; if the two
+disagree it counts as unknown. A request cannot reach `port:in-progress` while `port:blocked-license` is set.
+
+| Upstream license (SPDX at the pinned commit) | Action |
+|---|---|
+| `MIT`, `MIT-0`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `Unlicense`, `CC0-1.0`, `MIT OR Apache-2.0` | Eligible. The port keeps the notice: `LICENSE`, `CREDITS.md`, `provenance.json` and the row's `credit` text naming upstream, URL and author. |
+| `MPL-2.0` | File-level copyleft. Owner decision per request. |
+| `GPL-*`, `AGPL-*`, `LGPL-*`, `SSPL`, `BUSL`, `CC-BY-NC*`, source-available, custom | `port:blocked-license`. A Go port is a derivative and Pigpen is MIT. Proceeds only with an explicit owner decision or the author's written grant. |
+| No license, `UNLICENSED`, "all rights reserved", unknown | Refused by default. A comment from the upstream author (a GitHub account that owns the repository) granting permission may reopen it. |
+| License differs between npm metadata and the repository file at the commit | Treated as unknown. |
+
+`node scripts/ports.mjs verify-pins` re-checks the pin and license; the porting lane stops without writing code if it fails.
+
+### Labels
+
+The labels do not exist until a maintainer creates them (GitHub does not add a form label that is missing). From a clone, with
+`gh` logged in as a maintainer:
+
+```sh
+node -e 'for (const l of require("./.github/labels.json")) console.log([l.name, l.color, l.description].join("\t"))' |
+  while IFS=
+[`ports/ports.json`](ports/README.md) is the dispatch list for every port and move: one row each, with
+the upstream URL, the **full commit it is pinned to**, its license and author, the target Package, the port
+lane, the status and the credit text. Edit the JSON, then run `npm run generate` (it rewrites the generated
+`ports/README.md`); `npm run check` fails on drift, on a malformed row, on a credit text that omits the upstream
+name, URL or author, on a Package whose `provenance.json` pins another commit or license than its row, and on
+a port or move whose Package `provenance.json` does not record the row's upstream.
+
+- **Credit the copyright holder** the upstream's LICENSE names as `author` (for example `Ryan Gapac (DevMortimer)`,
+  not only the GitHub account), and name the Package the lane actually builds as `targetPackage`.
+- **Add a row** when a port is approved: status `queued`, a `priority` if it has a place in the queue, the
+  pinned commit (the commit of the latest npm release when the registry records one, else the default branch
+  head) and the license read from the upstream's own license file at that commit. `node scripts/ports.mjs verify-pins`
+  fetches every pin from its upstream (network; not run in CI; git credential helpers and askpass are disabled for it).
+- **Status** moves one stage at a time: `queued`, `porting` (a lane started), `review` (the completion checklist of
+  the porting Skill is met), `done` (a reviewer accepted). `node scripts/ports.mjs set-status <id> <status> [--note TEXT]`
+  updates the JSON and the README together. A `done` row's Package must exist with its `provenance.json`.
+- **Port a row:** `/skill:pigpen-pi-extension-port port row <id>`. The Skill reads the row with
+  `node scripts/ports.mjs show <id>`, uses its pin, target, license and credit, and sets `porting`, then `review`.
+  Never `done`: that is the reviewer's. A re-pin needs approval and a row edit.
+- Kinds: `port` translates an upstream program, `adapter` is original code on an upstream SDK or protocol,
+  `move` brings existing code in from another repository, `original` is new work (it may credit an upstream asset).
+  MCP is built into PiG and has no row.
+
+The YAML parser rejects duplicate keys; PiG validates each
+manifest and its selected resources. Validation may compile or load extension
+code, so run untrusted contributions in an isolated environment without secrets.
+CI is validation-only and has a read-only token. It must not sign or publish
+Piglet Binaries while [release blockers](RELEASE-BLOCKERS.md) remain unresolved.
+Do not add a workaround publisher to this repository or the site.
+
+## Sign off commits
+
+Use your own public contributor identity and sign off each commit:
+
+```sh
+git commit -s -m "Describe the change"
+```
+
+A `Signed-off-by` line certifies that you have the right to submit the contribution
+under this repository's license, as described by the
+[Developer Certificate of Origin 1.1](https://developercertificate.org/).
+Cryptographic signatures are welcome but separate from this sign-off.
+
+Include the checks you ran, any limits or known failures, and the relevant
+Piglet/core issue links in your pull request. Maintainers review before merging;
+a green validation run is not authorization to publish a release.
+\t' read -r name color desc; do gh label create "$name" --color "$color" --description "$desc" --force --repo MichaelKinsy/pigpen; done
+```
+
 ## The ports list
 
 [`ports/ports.json`](ports/README.md) is the dispatch list for every port and move: one row each, with

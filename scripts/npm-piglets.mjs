@@ -1,4 +1,4 @@
-// The npm form of a Piglet: a publishable source package `@pi-in-go/pigpen-piglet-<name>` (keyword `pig-piglet`) that
+// The npm form of a Piglet: a publishable source package `@pi-in-go/pigpen-piglet-<name>` (keyword `pig-piglet`, omitted when catalog.json says `"listed": false`) that
 // `pig piglet add npm:<package>` registers. PiG reads the Piglet from `pig.piglet` in package.json, and refuses local Resource
 // sources and `extends` of a local file in a remote source, so the generator (never a hand edit) makes dist/npm/piglets/<name>
 // from the authored piglets/<name>:
@@ -60,7 +60,7 @@ export function pigletPackageJson(name, { directory = root, repository } = {}) {
   const { data, metadata } = npmPigletSource(name, { directory });
   return {
     name: pigletNpmName(name), version: data.release.version, description: data.description,
-    keywords: ['pig-piglet', 'pigpen', ...(metadata.languages ?? [])], license: 'MIT', author: 'Michael Kinsy',
+    keywords: [...(metadata.listed === false ? [] : ['pig-piglet']), 'pigpen', ...(metadata.languages ?? [])], license: 'MIT', author: 'Michael Kinsy',
     repository: { type: 'git', url: `git+https://github.com/${repository}.git`, directory: `piglets/${name}` },
     homepage: `https://github.com/${repository}/tree/main/piglets/${name}#readme`,
     bugs: { url: `https://github.com/${repository}/issues` },

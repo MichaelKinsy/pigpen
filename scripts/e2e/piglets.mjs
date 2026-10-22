@@ -93,6 +93,9 @@ export const piglets = {
   jev: {
     steps: [
       { say: '/jev', expect: 'Jev is off. Nothing is judged and nothing is sent.' },
+      { say: '/ahp', expect: 'AHP listener is off' },
+      // An argument other than refresh answers locally: no Ollama server is contacted.
+      { say: '/ollama nope', expect: 'Usage: /ollama refresh' },
       { say: '/jev on', expect: 'Turn on Jev for this session?' },
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
@@ -102,6 +105,8 @@ export const piglets = {
       { say: '/tasks', expect: 'View all tasks (0)' },
       { key: ['Escape'], gone: 'View all tasks (0)' },
       { say: '/agents', expect: 'Agent types:' },
+      // The dev-skills are listed by the skill completion (typing only: a skill turn is not part of the faux provider's script).
+      { run: async (t) => { t.type('/skill:pigpen-td'); await t.waitFor('Test-driven development'); t.key('C-u'); } },
       { run: async (t) => { await t.waitFor(/ponytail: .*FULL/); } },
     ],
   },

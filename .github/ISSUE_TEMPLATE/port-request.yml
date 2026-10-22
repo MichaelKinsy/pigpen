@@ -1,0 +1,55 @@
+name: Port request
+description: Ask for a Pi extension to be ported to Go for Pigpen. A maintainer reads it before anything is built.
+title: "[Port request]: "
+labels: ["port-request", "port:requested"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This opens a **public** issue under your GitHub account. A maintainer triages every request by hand.
+        Nothing is built or run until then. A request does not promise a port or a date.
+        Do not paste credentials, private repository names or private code. Security reports go through SECURITY.md.
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream (npm package name or public GitHub repository URL)
+      description: "For example @scope/name, or https://github.com/owner/repo"
+      placeholder: "@scope/pi-something"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit you use (optional)
+      description: A maintainer pins the exact commit.
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you use it for, and what would you lose without it?
+      description: Up to 1,000 characters. Plain text.
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License as you see it
+      description: "SPDX name from the upstream's LICENSE file, if you know it. A maintainer re-checks the file at the pinned commit."
+  - type: dropdown
+    id: relation
+    attributes:
+      label: Are you the upstream author?
+      options: ["No", "Yes, and I agree to a Go port under a compatible license"]
+      default: 0
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched ports/README.md and the open port requests for this upstream.
+          required: true
+        - label: This is not something PiG already has built in (for example MCP).
+          required: true
+        - label: I understand this issue is public and I included no secrets.
+          required: true

@@ -1,5 +1,6 @@
 {
   "featured": false,
+  "listed": false,
   "updatedAt": "2026-10-12",
   "languages": [
     "go"

@@ -17,7 +17,9 @@ const validIndex = ajv.compile(JSON.parse(readFileSync(join(root, 'index.schema.
 const validMetadata = ajv.compile({ type: 'object', additionalProperties: false,
   required: ['featured', 'updatedAt', 'languages', 'notes'], properties: {
     // No status here: a Piglet is `available` exactly when a verified release receipt is committed, else `planned`.
-    featured: { type: 'boolean' }, updatedAt: { type: 'string', format: 'date' },
+    featured: { type: 'boolean' },
+    // false keeps the npm source package off npm's `pig-piglet` keyword search (and so off pi-in-go.dev); the Piglet stays buildable.
+    listed: { type: 'boolean' }, updatedAt: { type: 'string', format: 'date' },
     languages: { type: 'array', uniqueItems: true, items: { type: 'string', minLength: 1 } },
     notes: { type: 'array', items: { type: 'string', minLength: 1 } },
   } });

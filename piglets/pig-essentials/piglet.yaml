@@ -2,7 +2,7 @@
 # A fast, single-binary PiG with the essentials and no Node: web search and fetch, Claude Code-style sub-agents and
 # task tracking, structured questions, and the Superpowers skills. Every member is a Go Package of components/.
 name: pig-essentials
-description: "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, and the Superpowers skills. Everything stays quiet until used: no network call and no process at start-up."
+description: "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, the Superpowers skills, and eight development skills (TDD, diagnosing bugs, code review, commit, and more). Everything stays quiet until used: no network call and no process at start-up."
 release:
   version: 0.1.1
 build:
@@ -17,6 +17,7 @@ packages:
   web-tools: local:../../components/rpiv-web-tools
   subagents: local:../../components/tintinweb-subagents
   ponytail: local:../../components/ponytail
+  dev-skills: local:../../components/dev-skills
 extensions:
   # Task tracking (tintinweb, @tintinweb/pi-tasks 0.9.0, MIT): TaskCreate, TaskList, TaskGet, TaskUpdate, TaskOutput, TaskStop, TaskExecute and /tasks.
   - name: tintinweb-tasks
@@ -82,6 +83,23 @@ skills:
     origins: [package:superpowers]
   - name: pigpen-superpowers-writing-skills
     origins: [package:superpowers]
+  # The general development skills (dev-skills, adapted from mattpocock/skills, MIT); names prefixed pigpen-.
+  - name: pigpen-code-review
+    origins: [package:dev-skills]
+  - name: pigpen-commit
+    origins: [package:dev-skills]
+  - name: pigpen-diagnosing-bugs
+    origins: [package:dev-skills]
+  - name: pigpen-grilling
+    origins: [package:dev-skills]
+  - name: pigpen-handoff
+    origins: [package:dev-skills]
+  - name: pigpen-prototype
+    origins: [package:dev-skills]
+  - name: pigpen-research
+    origins: [package:dev-skills]
+  - name: pigpen-tdd
+    origins: [package:dev-skills]
 discovery:
   extensions: [user, workspace]
   skills: [user, workspace]

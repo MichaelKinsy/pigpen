@@ -297,7 +297,7 @@
       "id": "pig-essentials",
       "kind": "piglet",
       "name": "pig-essentials",
-      "description": "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, and the Superpowers skills. Everything stays quiet until used: no network call and no process at start-up.",
+      "description": "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, the Superpowers skills, and eight development skills (TDD, diagnosing bugs, code review, commit, and more). Everything stays quiet until used: no network call and no process at start-up.",
       "maintainer": "MichaelKinsy",
       "official": false,
       "featured": false,
@@ -311,7 +311,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-essentials"
       },
-      "manifestSha256": "6abbd5539e0262b98512f893b010ff458cd2bf0ddead3b22669a5c8991a8c3dd",
+      "manifestSha256": "fb9ba3f1f13759561741180ac0abe0977defebb8ed8d830197eb3c48e7605776",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -512,7 +512,7 @@
       "id": "pig-with-batteries",
       "kind": "piglet",
       "name": "pig-with-batteries",
-      "description": "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), the websearch first slice (search, fetch, retained sources), and pig-music (/music, a music player that does nothing until you type /music). Protocol bridges and more capability ports are planned.",
+      "description": "The batteries-included Piglet: default PiG with curated extensions. Today: the herdr agent-state reporter, the read_session tool, the /context, /tools, /cost and /prompts inspection commands, PiG Runner (/runner) and Angry Pigs (/angry-pigs), the Pig Snake game (/pig-snake), which start only on their command, the pig-doctor /doctor command (nothing runs unless you invoke it), Jev, a typed judge for tool calls that is off until you run /jev on, the a2a Package (A2A tools; its listener stays off until you configure it), the websearch first slice (search, fetch, retained sources), pig-music (/music, a music player that does nothing until you type /music), ahp (an Agent Host Protocol server, no listener until /ahp start or --ahp), and ollama-native (an Ollama provider, inert until you select an Ollama model). Protocol bridges and more capability ports are planned.",
       "maintainer": "MichaelKinsy",
       "official": false,
       "featured": true,
@@ -526,7 +526,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "240ccbdbeaa10f7bdb3de97f19f886ce229dfc17a80d514e0a0e4b9e2f67845b",
+      "manifestSha256": "743b7e13879d93ed72f1a39c972fd8b24357f1e0fcc05deaade8b02bd68b39e1",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

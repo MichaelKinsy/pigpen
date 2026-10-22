@@ -1,0 +1,68 @@
+[
+  {
+    "name": "port-request",
+    "color": "5319E7",
+    "description": "A request to port a Pi extension to Go",
+    "setBy": "template or App"
+  },
+  {
+    "name": "port:requested",
+    "color": "C5DEF5",
+    "description": "Received, not yet read by a maintainer",
+    "setBy": "template or App"
+  },
+  {
+    "name": "port:needs-info",
+    "color": "FBCA04",
+    "description": "Waiting for the requester or upstream",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:triaged",
+    "color": "0E8A16",
+    "description": "Accepted into the queue; a ports.json row exists or is coming",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:in-progress",
+    "color": "1D76DB",
+    "description": "A porter lane is working (ports.json porting)",
+    "setBy": "maintainer or script"
+  },
+  {
+    "name": "port:review",
+    "color": "006B75",
+    "description": "Port complete, awaiting review (ports.json review)",
+    "setBy": "maintainer or script"
+  },
+  {
+    "name": "port:released",
+    "color": "0E8A16",
+    "description": "Published as @pi-in-go/pigpen-<name>",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:declined",
+    "color": "E4E669",
+    "description": "Not accepted, with a reason in a comment",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:duplicate",
+    "color": "CFD3D7",
+    "description": "Already requested or already ported",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:builtin",
+    "color": "CFD3D7",
+    "description": "PiG already provides this",
+    "setBy": "maintainer"
+  },
+  {
+    "name": "port:blocked-license",
+    "color": "B60205",
+    "description": "License does not permit a port, or is unknown",
+    "setBy": "maintainer"
+  }
+]
