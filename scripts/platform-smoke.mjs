@@ -56,13 +56,40 @@ export function smokeEnv(home) {
 
 const firstLine = (text) => (text ?? '').trim().split(/\r?\n/)[0] ?? '';
 
+/**
+ * What a run that had to be stopped was doing: its stderr up to the stop, and, from a Go goroutine dump (`SIGQUIT: quit`
+ * and one `goroutine N [state]:` block each), the blocks that run PiG or Pigpen code, without the runtime's own frames and
+ * the addresses, so a deadlock shows as a few short stacks. Capped, for a log.
+ */
+export function hangReport(stderr, maxLines = 220) {
+  const text = stderr ?? '';
+  const at = text.indexOf('SIGQUIT: quit');
+  const before = (at < 0 ? text : text.slice(0, at)).trim().split(/\r?\n/).filter(Boolean).slice(-15);
+  const out = [before.length ? `stderr before the stop:\n${before.join('\n')}` : 'nothing on stderr before the stop'];
+  if (at < 0) {
+    out.push('no goroutine dump (the process did not dump on SIGQUIT)');
+  } else {
+    const blocks = text.slice(at).split(/\r?\n(?=goroutine \d+ )/).slice(1);
+    const mine = blocks.filter((block) => /github\.com\/MichaelKinsy\//.test(block));
+    out.push(`goroutines in PiG or Pigpen code: ${mine.length} of ${blocks.length}`);
+    for (const block of mine) {
+      const lines = block.split(/\r?\n/).filter((line) => !/^(runtime|internal\/sync|sync)[./]/.test(line) && !/^\t(runtime|internal\/sync|sync)\//.test(line) && !/^created by /.test(line));
+      out.push(lines.map((line) => line.replace(/ fp=0x[0-9a-f]+ sp=0x[0-9a-f]+ pc=0x[0-9a-f]+/, '').replace(/\((?:0x|\{|\.\.\.)[^()]*\)$/, '(...)')).join('\n'));
+    }
+  }
+  const lines = out.join('\n').split('\n');
+  return lines.length > maxLines ? `${lines.slice(0, maxLines).join('\n')}\n... ${lines.length - maxLines} more lines` : lines.join('\n');
+}
+
 /** Run the two smoke checks on one Binary. Returns [{ name, ok, detail }]. */
 export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion()) } = {}) {
   const home = mkdtempSync(join(tmpdir(), 'pigpen-smoke-'));
   try {
     for (const dir of ['tmp', 'work']) mkdirSync(join(home, dir), { recursive: true });
     const env = smokeEnv(home);
-    const run = (args) => spawnSync(bin, args, { cwd: join(home, 'work'), env, encoding: 'utf8', timeout: RUN_LIMIT_MS });
+    // A run that hangs is stopped with SIGQUIT, which makes a Go program print every goroutine's stack and exit, so the job
+    // log shows where it was stuck. (Windows has no SIGQUIT: the run is killed and only its stderr so far is shown.)
+    const run = (args) => spawnSync(bin, args, { cwd: join(home, 'work'), env, encoding: 'utf8', timeout: RUN_LIMIT_MS, killSignal: process.platform === 'win32' ? 'SIGTERM' : 'SIGQUIT', maxBuffer: 64 << 20 });
     const checks = [];
 
     const version = run(['--version']);
@@ -80,9 +107,10 @@ export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion
     checks.push({
       name: 'faux turn',
       ok: turn.status === 0 && answered && failed.length === 0,
-      detail: turn.error ? turn.error.message
-        : failed.length ? loadFailure(output)
-          : `exit ${turn.status}, stdout ${JSON.stringify(firstLine(turn.stdout))}${turn.status === 0 ? '' : `, stderr ${JSON.stringify(firstLine(turn.stderr))}`}`,
+      detail: turn.error?.code === 'ETIMEDOUT' ? `${turn.error.message} after ${RUN_LIMIT_MS / 1000} s\n${hangReport(turn.stderr)}`
+        : turn.error ? turn.error.message
+          : failed.length ? loadFailure(output)
+            : `exit ${turn.status}, stdout ${JSON.stringify(firstLine(turn.stdout))}${turn.status === 0 ? '' : `, stderr ${JSON.stringify(firstLine(turn.stderr))}`}`,
     });
     return checks;
   } finally {
@@ -184,7 +212,7 @@ async function main() {
       row.sha256 = sha256(built.target);
       row.checks = smokeBinary(built.target);
       const bad = row.checks.filter((check) => !check.ok);
-      console.log(`  ${bad.length ? 'FAIL' : 'ok  '} ${name} (${built.seconds}s, ${(row.bytes / 1048576).toFixed(1)} MiB)${bad.map((c) => `\n       ${c.name}: ${c.detail}`).join('')}`);
+      console.log(`  ${bad.length ? 'FAIL' : 'ok  '} ${name} (${built.seconds}s, ${(row.bytes / 1048576).toFixed(1)} MiB)${bad.map((c) => `\n       ${c.name}: ${c.detail.replaceAll('\n', '\n         ')}`).join('')}`);
     }
     rows.push(row);
   }

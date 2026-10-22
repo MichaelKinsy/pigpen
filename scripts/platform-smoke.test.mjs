@@ -4,7 +4,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
-import { FAUX_PROMPT, loadErrors, loadFailure, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
+import { FAUX_PROMPT, hangReport, loadErrors, loadFailure, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
 import { requiredPigVersion } from './pig-bin.mjs';
 
 const posix = process.platform !== 'win32';
@@ -105,6 +105,41 @@ describe('helpers', () => {
     assert.equal(loadFailure(output), 'Error: Failed to load extension "<unknown>": register handshake: connection closed before register | cause: extension tintinweb-subagents (fused): construct fused extension "tintinweb-subagents": Tool "Agent" must define an object parameter schema.');
     assert.equal(loadFailure('Error: Failed to load extension "/a": b'), 'Error: Failed to load extension "/a": b');
     assert.equal(loadFailure('all fine'), '');
+  });
+
+  it('shows what a hung Go program was doing: stderr before the stop, and only the PiG and Pigpen goroutines, trimmed', () => {
+    const dump = [
+      'extension x: something said before the hang',
+      'SIGQUIT: quit',
+      'PC=0x1 m=0 sigcode=0',
+      '',
+      'goroutine 1 gp=0xc000 m=nil [select]:',
+      'runtime.gopark(0x1?, 0x2?)',
+      '\truntime/proc.go:474 +0xca fp=0xc1 sp=0xc2 pc=0xc3',
+      'github.com/MichaelKinsy/PiG/coding/extension/host/subprocess.(*Conn).Request(0x451f588?, {0x1?})',
+      '\tgithub.com/MichaelKinsy/PiG/coding/extension/host/subprocess/conn.go:661 +0x28 fp=0xc4 sp=0xc5 pc=0xc6',
+      '',
+      'goroutine 2 gp=0xc001 m=nil [force gc (idle)]:',
+      'runtime.gopark(0x1?)',
+      '\truntime/proc.go:474 +0xca fp=0xc1 sp=0xc2 pc=0xc3',
+      '',
+      'goroutine 9 gp=0xc002 m=nil [sync.Mutex.Lock]:',
+      'sync.(*Mutex).Lock(...)',
+      '\tsync/mutex.go:46',
+      'github.com/MichaelKinsy/pigpen/tintinweb-tasks.(*app).applyPingReply(0x26ec3d228200, {0x4174cc0, 0x26ec3d0e42d0})',
+      '\ttintinweb-tasks@v0.0.0/extension.go:458 +0x67 fp=0xc7 sp=0xc8 pc=0xc9',
+      'created by sync.(*WaitGroup).Go in goroutine 62',
+      '\tsync/waitgroup.go:238 +0x7d',
+      '',
+    ].join('\n');
+    const report = hangReport(dump);
+    assert.match(report, /^stderr before the stop:\nextension x: something said before the hang\ngoroutines in PiG or Pigpen code: 2 of 3\n/);
+    assert.match(report, /goroutine 1 gp=0xc000 m=nil \[select\]:\ngithub\.com\/MichaelKinsy\/PiG\/coding\/extension\/host\/subprocess\.\(\*Conn\)\.Request\(\.\.\.\)\n\tgithub\.com\/MichaelKinsy\/PiG\/coding\/extension\/host\/subprocess\/conn\.go:661 \+0x28/);
+    assert.match(report, /goroutine 9 [^\n]*\[sync\.Mutex\.Lock\]:\ngithub\.com\/MichaelKinsy\/pigpen\/tintinweb-tasks\.\(\*app\)\.applyPingReply\(\.\.\.\)/);
+    assert.doesNotMatch(report, /force gc|runtime\.gopark|created by|fp=0x/);
+    assert.match(hangReport('only this on stderr'), /^stderr before the stop:\nonly this on stderr\nno goroutine dump/);
+    assert.match(hangReport(''), /^nothing on stderr before the stop\nno goroutine dump/);
+    assert.ok(hangReport(`SIGQUIT: quit\n${'goroutine 5 [x]:\ngithub.com/MichaelKinsy/PiG/a.f()\n'.repeat(300)}`).split('\n').length <= 222);
   });
 
   it('keeps nothing of the caller\'s PIG or credential variables', () => {
