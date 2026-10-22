@@ -1,0 +1,39 @@
+{
+  "name": "@pi-in-go/pigpen-stretchtext",
+  "version": "0.1.0",
+  "description": "Go port of pi-stretchtext: the model answers in short sentences whose phrases open in place into longer text; fold and unfold with a click or alt+o and alt+c",
+  "keywords": [
+    "pig-package",
+    "stretchtext",
+    "markdown",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/stretchtext"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/stretchtext#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/stretchtext"
+    ]
+  }
+}

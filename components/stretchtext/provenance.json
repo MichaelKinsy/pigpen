@@ -1,0 +1,34 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-stretchtext",
+      "authors": [
+        "Michal Pikosz"
+      ],
+      "url": "https://github.com/MonadicMike/pi-stretchtext",
+      "revision": "c93b06876aefdfab99171145ef1cdf695bb5ada4",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "cc-stretch",
+      "authors": [
+        "pro-vi"
+      ],
+      "url": "https://github.com/pro-vi/cc-stretch",
+      "revision": "910fb99d43bfad23d591b36aebd6c25bd0729081",
+      "path": "port/oracle/src",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
