@@ -3,7 +3,7 @@
 name: pig-music
 description: "PiG with a music player: /music opens a full-screen YouTube Music player (yt-dlp resolves, mpv plays) that keeps playing while it is hidden. Nothing starts until you type /music."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

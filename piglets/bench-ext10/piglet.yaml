@@ -3,7 +3,7 @@
 name: bench-ext10
 description: "The ten bench-ext extensions of the overhead bench, fused into one Piglet Binary, for pi-arena."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

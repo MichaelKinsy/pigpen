@@ -76,7 +76,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-aot"
       },
-      "manifestSha256": "2e2e17a1b963e9cd7e8dc3727912984a6634983372f9c0c49983a9ad23650705",
+      "manifestSha256": "f8bb26937e3b8e35441580e46153de0a40da6ee7fa1de3fc7b234f50258a8b0e",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -101,7 +101,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-bun"
       },
-      "manifestSha256": "393ba44388956a656117924549fe5f1aa7bf4a038a58a3f126fa0d9229a6bfb8",
+      "manifestSha256": "5625b7a5b21f6c8d602c7228d86dd2bf19bfbba03aab900a85481f7bf81b8b76",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -126,7 +126,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10"
       },
-      "manifestSha256": "7188f9f63a6b3afb4645490066f14b10c1adda3ef2be383d2b75d6bfab500478",
+      "manifestSha256": "33c0e7a817071e5b3ee18cf0b2e04a8963ab78e80691cfd52f581bd871538cc0",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -152,7 +152,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10-aot"
       },
-      "manifestSha256": "b7b069c1b1312358df6852a0f164dbe83da29d33241c3c058d42c5ed2c75bb06",
+      "manifestSha256": "a6abada3ed44265ff8a973da4ba816906b083f08ca5b5ba7f026e50beae24128",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -178,7 +178,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-ext10-split"
       },
-      "manifestSha256": "1b7f59aacaeef75ea2ef158719e2654d87191513ab4b6b33ea7532aa5b501ebd",
+      "manifestSha256": "896376c791f17742c731dcecb583a17b4cb74a76756ac6962b901439c95ba2d1",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -227,7 +227,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/bench-standard"
       },
-      "manifestSha256": "eb456b02f0f210f6cbaa035e04755eb44ca62ab56595c1d8933e33ae4224a4b8",
+      "manifestSha256": "8aad76fad58bfe1e293f8d40c72c963abd53accde33aafc8a7ed8abb93811aec",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -311,7 +311,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-essentials"
       },
-      "manifestSha256": "dda80528638e808f7ca735d1941730359ac19578faa97a490d1a440cf8cd231d",
+      "manifestSha256": "6abbd5539e0262b98512f893b010ff458cd2bf0ddead3b22669a5c8991a8c3dd",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -391,7 +391,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-music"
       },
-      "manifestSha256": "982c5f89022b47d754539d1d78ea7ba32edb73856133e4869acf010746a83357",
+      "manifestSha256": "7ead662354086703c895b9f1513667a2f70ea57ae1685680f30f17fc8f42145d",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -526,7 +526,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "f05d9a2814ef19f0464d6eb1d9da7b255c497c1205484761c3b823e4307b0ac0",
+      "manifestSha256": "240ccbdbeaa10f7bdb3de97f19f886ce229dfc17a80d514e0a0e4b9e2f67845b",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

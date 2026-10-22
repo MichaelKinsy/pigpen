@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-bun-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Bun TypeScript runtime slot for PiG (Go): installs a pinned, signature-checked Bun and runs TypeScript and JavaScript extensions on it instead of Node.",
   "keywords": [
     "pig-package",

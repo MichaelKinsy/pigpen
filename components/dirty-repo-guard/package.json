@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-dirty-repo-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of Pi's dirty-repo-guard example: blocks a session switch or fork while the git tree has uncommitted changes unless you allow it",
   "keywords": [
     "pig-package",

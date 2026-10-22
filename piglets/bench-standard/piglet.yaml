@@ -4,7 +4,7 @@
 name: bench-standard
 description: "PiG Standard for pi-arena: the two pig games and the Bun runtime slot in one Piglet Binary."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

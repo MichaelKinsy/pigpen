@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-ponytail",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go port of @dietrichgebert/ponytail for PiG: the lazy-senior-dev ruleset (lite, full, ultra), /ponytail and its review, audit, gain, debt and help commands, and six Skills",
   "keywords": [
     "pig-package",
