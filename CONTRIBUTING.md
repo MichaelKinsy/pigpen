@@ -131,6 +131,11 @@ a port or move whose Package `provenance.json` does not record the row's upstrea
 
 - **Credit the copyright holder** the upstream's LICENSE names as `author` (for example `Ryan Gapac (DevMortimer)`,
   not only the GitHub account), and name the Package the lane actually builds as `targetPackage`.
+- **Look for an existing PiG or Go version first.** Before any port, and before filing or approving a port request,
+  search GitHub and npm for one: a `pig-<name>` repository or package, packages with the `pig-package` keyword, and
+  Go-language repositories that implement the same extension. If one exists, evaluate it for listing instead of
+  porting, and port only when none exists or it does not build against the current PiG. Record what you searched in
+  the row or the request.
 - **Add a row** when a port is approved: status `queued`, a `priority` if it has a place in the queue, the
   pinned commit (the commit of the latest npm release when the registry records one, else the default branch
   head) and the license read from the upstream's own license file at that commit. `node scripts/ports.mjs verify-pins`
