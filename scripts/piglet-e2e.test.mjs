@@ -4,8 +4,9 @@
 //   PIGLET_E2E_BIN_DIR=dir npm run test:piglet-e2e     (use Binaries already built there, named by Piglet)
 //   PIGLET_E2E_ONLY=a2a,pig-games npm run test:piglet-e2e
 //
-// Each test starts one Binary in its own tmux server with PATH=/usr/bin:/bin, so no Node, Go or other tool is available:
-// a Go-only Piglet Binary must start, load every fused extension, answer a turn and exit cleanly on its own. The model is
+// Each test starts one Binary in its own tmux server with a PATH of a few linked system tools, so no Node, Go or other tool
+// is available: a Go-only Piglet Binary must start, load every fused extension, answer a turn and exit cleanly on its own.
+// (The two Piglets that carry TypeScript extensions get the Node that runs this test, and nothing else.) The model is
 // PiG's test-faux provider; nothing uses the network. POSIX only (tmux).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -90,6 +91,7 @@ describe('Piglet Binaries in a real terminal', { skip }, () => {
         const status = await t.waitExit();
         assert.equal(status, 0, `${name} exited with status ${status}\n${t.screen()}`);
       } finally {
+        spec.cleanup?.(t);
         t.close();
       }
     });
