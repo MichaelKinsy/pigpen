@@ -4,7 +4,7 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, wr
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, describe, it } from 'node:test';
-import { FAUX_PROMPT, loadErrors, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
+import { FAUX_PROMPT, loadErrors, loadFailure, loadsInPig, smokeBinary, smokeEnv, stagedPiglets } from './platform-smoke.mjs';
 import { requiredPigVersion } from './pig-bin.mjs';
 
 const posix = process.platform !== 'win32';
@@ -67,6 +67,13 @@ describe('smokeBinary', { skip: !posix && 'fake Binaries are shell scripts' }, (
     assert.match(turn.detail, /Failed to load extension/);
   });
 
+  it('puts the cause of a dead fused extension in the failure detail of the turn', () => {
+    const stderr = 'extension x (fused): construct fused extension "x": boom\nError: Failed to load extension "<unknown>": connection closed before register';
+    const turn = smokeBinary(fake({ stderr })).find((c) => c.name === 'faux turn');
+    assert.equal(turn.ok, false);
+    assert.match(turn.detail, /Failed to load extension.*\| cause: extension x \(fused\): construct fused extension "x": boom/);
+  });
+
   it('fails a turn that exits nonzero', () => {
     const turn = smokeBinary(fake({ stdout: '', stderr: 'test-faux: unhandled request "hi"', status: 1 })).find((c) => c.name === 'faux turn');
     assert.equal(turn.ok, false);
@@ -87,6 +94,17 @@ describe('helpers', () => {
   it('finds load errors in either stream and ignores other text', () => {
     assert.deepEqual(loadErrors('hi\nError: Failed to load extension "/a": b\nHint: x'), ['Error: Failed to load extension "/a": b']);
     assert.deepEqual(loadErrors('Warning: something else\r\nok'), []);
+  });
+
+  it('reports the cause of a fused extension that died, not only that its connection closed', () => {
+    const output = [
+      'extension tintinweb-subagents (fused): construct fused extension "tintinweb-subagents": Tool "Agent" must define an object parameter schema.',
+      'Error: Failed to load extension "<unknown>": register handshake: connection closed before register',
+      'Hint: Start without extensions using "pig -ne".',
+    ].join('\n');
+    assert.equal(loadFailure(output), 'Error: Failed to load extension "<unknown>": register handshake: connection closed before register | cause: extension tintinweb-subagents (fused): construct fused extension "tintinweb-subagents": Tool "Agent" must define an object parameter schema.');
+    assert.equal(loadFailure('Error: Failed to load extension "/a": b'), 'Error: Failed to load extension "/a": b');
+    assert.equal(loadFailure('all fine'), '');
   });
 
   it('keeps nothing of the caller\'s PIG or credential variables', () => {

@@ -31,6 +31,16 @@ export function loadErrors(text) {
   return text.split(/\r?\n/).filter((line) => /Failed to load extension/.test(line));
 }
 
+/**
+ * The failure a run reports for an extension that did not load: the first "Failed to load extension" line, which for a
+ * fused extension that died only says the connection closed before register, and the cause pig prints beside it
+ * (`extension <name> (fused): <panic or error>`). Without the cause a Windows-only panic is not findable from the job log.
+ */
+export function loadFailure(text) {
+  const causes = text.split(/\r?\n/).filter((line) => /^extension \S+ \(fused\): /.test(line));
+  return [loadErrors(text)[0], ...causes.map((line) => `cause: ${line}`)].filter(Boolean).join(' | ');
+}
+
 /** A clean environment for one run: nothing of the caller's PIG_*, PI_* or credentials, everything under `home`. */
 export function smokeEnv(home) {
   const env = {
@@ -71,7 +81,7 @@ export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion
       name: 'faux turn',
       ok: turn.status === 0 && answered && failed.length === 0,
       detail: turn.error ? turn.error.message
-        : failed.length ? failed[0]
+        : failed.length ? loadFailure(output)
           : `exit ${turn.status}, stdout ${JSON.stringify(firstLine(turn.stdout))}${turn.status === 0 ? '' : `, stderr ${JSON.stringify(firstLine(turn.stderr))}`}`,
     });
     return checks;
@@ -90,9 +100,10 @@ export function loadsInPig(pig, extension) {
   try {
     for (const dir of ['tmp', 'work']) mkdirSync(join(home, dir), { recursive: true });
     const turn = spawnSync(pig, ['-e', extension, '-p', FAUX_PROMPT, '--model', 'test-faux/faux-1', '--no-session'], { cwd: join(home, 'work'), env: smokeEnv(home), encoding: 'utf8', timeout: RUN_LIMIT_MS });
-    const failed = loadErrors(`${turn.stdout ?? ''}\n${turn.stderr ?? ''}`);
+    const output = `${turn.stdout ?? ''}\n${turn.stderr ?? ''}`;
+    const failed = loadErrors(output);
     const ok = !turn.error && turn.status === 0 && (turn.stdout ?? '').trim() === 'ok' && failed.length === 0;
-    return { ok, detail: turn.error ? turn.error.message : failed[0] ?? `exit ${turn.status}, stdout ${JSON.stringify(firstLine(turn.stdout))}, stderr ${JSON.stringify(firstLine(turn.stderr))}` };
+    return { ok, detail: turn.error ? turn.error.message : failed.length ? loadFailure(output) : `exit ${turn.status}, stdout ${JSON.stringify(firstLine(turn.stdout))}, stderr ${JSON.stringify(firstLine(turn.stderr))}` };
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
