@@ -221,9 +221,6 @@ export const piglets = {
   jev: {
     steps: [
       { say: '/jev', expect: 'Jev is off. Nothing is judged and nothing is sent.' },
-      { say: '/ahp', expect: 'AHP listener is off' },
-      // An argument other than refresh answers locally: no Ollama server is contacted.
-      { say: '/ollama nope', expect: 'Usage: /ollama refresh' },
       { say: '/jev on', expect: 'Turn on Jev for this session?' },
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
@@ -265,6 +262,9 @@ export const piglets = {
       { say: '/tools', expect: /✓ a2a_agents/ },
       { say: '/a2a', expect: 'a2a: listener off' },
       { say: '/jev', expect: 'Jev is off. Nothing is judged and nothing is sent.' },
+      { say: '/ahp', expect: 'AHP listener is off' },
+      // An argument other than refresh answers locally: no Ollama server is contacted.
+      { say: '/ollama nope', expect: 'Usage: /ollama refresh' },
       { run: gameOverlay('/runner', 'PiG RUNNER', /PiG RUNNER {2}score 0*[1-9]/, /PiG Runner score \d/) },
       { run: gameOverlay('/pig-snake', 'PIG SNAKE', /PIG SNAKE {2}score/, /Pig Snake score \d/) },
       { run: music },
