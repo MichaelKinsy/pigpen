@@ -17,8 +17,8 @@ type fakeRegistry struct {
 	scope    string
 }
 
-func (r *fakeRegistry) Find(provider, id string) map[string]any {
-	return map[string]any{"id": id, "provider": provider, "api": "fake-api"}
+func (r *fakeRegistry) Find(provider, id string) (map[string]any, error) {
+	return map[string]any{"id": id, "provider": provider, "api": "fake-api"}, nil
 }
 
 func (r *fakeRegistry) GetApiKeyAndHeaders(map[string]any) (map[string]any, error) {

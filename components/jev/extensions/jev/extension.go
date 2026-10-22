@@ -321,7 +321,7 @@ func (x *ext) toolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		ctx.Notify(x.headlessNote(tool, v, s.cfg), "warning")
 		return nil, nil
 	}
-	allow, cerr := ctx.Confirm("Jev flagged this tool call", x.confirmMessage(tool, input, v, s.cfg, s.be.Destination()))
+	answer, cerr := ctx.Confirm("Jev flagged this tool call", x.confirmMessage(tool, input, v, s.cfg, s.be.Destination()))
 	if cerr != nil {
 		// The judge answered and flagged the call; only the user's answer is missing.
 		// Fail-open covers an unavailable judge, not a missing approval: the original's
@@ -329,7 +329,7 @@ func (x *ext) toolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		// _installAgentToolHooks, "Extension failed, blocking execution").
 		return map[string]any{"block": true, "reason": fmt.Sprintf("%s (not confirmed: %s)", reason, x.redact(cerr.Error()))}, nil
 	}
-	if allow {
+	if allow, _ := answer.(bool); allow {
 		return nil, nil
 	}
 	return map[string]any{"block": true, "reason": reason + " (declined)"}, nil

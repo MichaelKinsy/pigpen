@@ -47,7 +47,11 @@ func (a *app) setup(ctx sdk.Context, download bool) error {
 		return nil
 	}
 	in := selfmanage.NewInstaller(paths.Data, env)
-	ask := func(title, message string) (bool, error) { return ctx.Confirm(title, message) }
+	ask := func(title, message string) (bool, error) {
+		answer, err := ctx.Confirm(title, message)
+		confirmed, _ := answer.(bool)
+		return confirmed, err
+	}
 	did, err := in.Setup(context.Background(), rep, ask)
 	if len(did) > 0 {
 		ctx.Notify("pig-music setup:\n"+strings.Join(did, "\n"), "info")

@@ -33,7 +33,7 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 		}
 		actions = append(actions, "✗ Delete", "← Back")
 		title := fmt.Sprintf("#%s [%s] %s\n%s", t.ID, t.Status, t.Subject, t.Description)
-		action, ok, err := ctx.Select(title, actions)
+		action, ok, err := selectString(ctx, title, actions)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 		var glyphs taskGlyphs
 		locked(func() { tasks, glyphs = a.store.list(nil), resolveTaskGlyphs(a.cfg["glyphs"]) })
 		if len(tasks) == 0 {
-			if _, _, err := ctx.Select("No tasks", []string{"← Back"}); err != nil {
+			if _, _, err := selectString(ctx, "No tasks", []string{"← Back"}); err != nil {
 				return err
 			}
 			return mainMenu()
@@ -83,7 +83,7 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 			choices = append(choices, fmt.Sprintf("%s #%s [%s] %s", statusGlyph(t.Status), t.ID, t.Status, t.Subject))
 		}
 		choices = append(choices, "← Back")
-		selected, ok, err := ctx.Select("Tasks", choices)
+		selected, ok, err := selectString(ctx, "Tasks", choices)
 		if err != nil {
 			return err
 		}
@@ -99,14 +99,14 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 	}
 
 	createTask = func() error {
-		subject, ok, err := ctx.Input("Task subject", "")
+		subject, ok, err := inputString(ctx, "Task subject", "")
 		if err != nil {
 			return err
 		}
 		if !ok || subject == "" {
 			return mainMenu()
 		}
-		description, ok, err := ctx.Input("Task description", "")
+		description, ok, err := inputString(ctx, "Task description", "")
 		if err != nil {
 			return err
 		}
@@ -144,7 +144,7 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 			choices = append(choices, fmt.Sprintf("Clear all (%d)", len(tasks)))
 		}
 		choices = append(choices, "Settings")
-		choice, ok, err := ctx.Select("Tasks", choices)
+		choice, ok, err := selectString(ctx, "Tasks", choices)
 		if err != nil {
 			return err
 		}
@@ -183,3 +183,18 @@ func (a *app) tasksCommand(ctx sdk.Context, _ string) error {
 }
 
 func hasPrefix(s, p string) bool { return len(s) >= len(p) && s[:len(p)] == p }
+
+// selectString is ctx.Select with the answer as a string: a dialog resolves with whatever JSON the client answered, and a
+// task menu entry is always a string.
+func selectString(ctx sdk.Context, title string, options []string) (string, bool, error) {
+	answer, ok, err := ctx.Select(title, options)
+	choice, _ := answer.(string)
+	return choice, ok, err
+}
+
+// inputString is ctx.Input with the answer as a string.
+func inputString(ctx sdk.Context, title, placeholder string) (string, bool, error) {
+	answer, ok, err := ctx.Input(title, placeholder)
+	text, _ := answer.(string)
+	return text, ok, err
+}

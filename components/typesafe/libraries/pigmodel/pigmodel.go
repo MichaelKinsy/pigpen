@@ -29,7 +29,7 @@ import (
 
 // Registry is the part of the PiG Go SDK's ModelRegistry this package uses.
 type Registry interface {
-	Find(providerID, modelID string) map[string]any
+	Find(providerID, modelID string) (map[string]any, error)
 	GetApiKeyAndHeaders(model map[string]any) (map[string]any, error)
 	Complete(model, request, options map[string]any) map[string]any
 }
@@ -104,7 +104,10 @@ func (m *Model) resolve() (map[string]any, error) {
 	if m.model != nil {
 		return m.model, nil
 	}
-	found := m.reg.Find(m.ref.Provider, m.ref.ID)
+	found, err := m.reg.Find(m.ref.Provider, m.ref.ID)
+	if err != nil {
+		return nil, err
+	}
 	if found == nil {
 		return nil, &typesafe.TypeSafeError{Message: fmt.Sprintf("The model %s/%s was not found in the model registry.", m.ref.Provider, m.ref.ID)}
 	}

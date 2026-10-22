@@ -25,6 +25,7 @@ type fakeRegistry struct {
 	models   map[string]map[string]any // "provider/id" -> model
 	auth     map[string]any
 	authErr  error
+	findErr  error
 	complete func(model, request, options map[string]any) map[string]any
 
 	finds     []string
@@ -34,11 +35,11 @@ type fakeRegistry struct {
 	modelsIn  []map[string]any
 }
 
-func (r *fakeRegistry) Find(providerID, modelID string) map[string]any {
+func (r *fakeRegistry) Find(providerID, modelID string) (map[string]any, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.finds = append(r.finds, providerID+"/"+modelID)
-	return r.models[providerID+"/"+modelID]
+	return r.models[providerID+"/"+modelID], r.findErr
 }
 
 func (r *fakeRegistry) GetApiKeyAndHeaders(model map[string]any) (map[string]any, error) {
@@ -169,6 +170,15 @@ func TestComplete_ReportsAModelTheRegistryDoesNotKnow(t *testing.T) {
 	_, err = m.Complete(context.Background(), conversation())
 	asErr[*typesafe.TypeSafeError](t, err)
 	if !strings.Contains(err.Error(), "prov/missing") {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestComplete_AFailedModelLookupIsTheError(t *testing.T) {
+	r := newRegistry(func(model, request, options map[string]any) map[string]any { return message("x", 1, 1) })
+	r.findErr = errors.New("host down")
+	_, err := mustModel(t, r).Complete(context.Background(), conversation())
+	if err == nil || !strings.Contains(err.Error(), "host down") {
 		t.Fatalf("got %v", err)
 	}
 }

@@ -3,7 +3,7 @@
 name: bench-bun
 description: "PiG with the Bun TypeScript runtime slot: installs a pinned, signature-checked Bun and runs TypeScript extensions on it, for pi-arena."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

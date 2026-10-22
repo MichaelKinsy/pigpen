@@ -150,15 +150,21 @@ func resolveModelSpec(ctx sdk.Context, state *settings, provider, modelID string
 	if provider == openRouterProvider {
 		if lock := lockFor(state, baseID); lock != "" {
 			variant := makeVariantID(baseID, lock)
-			if ctx.ModelRegistry().Find(provider, variant) != nil {
+			if modelKnown(ctx, provider, variant) {
 				return provider + "/" + variant
 			}
 		}
 	}
-	if ctx.ModelRegistry().Find(provider, baseID) != nil {
+	if modelKnown(ctx, provider, baseID) {
 		return provider + "/" + baseID
 	}
 	return ""
+}
+
+// modelKnown reports whether the host's model registry has the model. A failed registry call is "no".
+func modelKnown(ctx sdk.Context, provider, modelID string) bool {
+	model, err := ctx.ModelRegistry().Find(provider, modelID)
+	return err == nil && model != nil
 }
 
 // currentModel is the session's active model. Model() and ModelProvider() are

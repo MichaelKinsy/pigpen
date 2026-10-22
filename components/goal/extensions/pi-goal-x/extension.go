@@ -163,22 +163,25 @@ func (h sdkHost) awaitDialog(fn func()) {
 func (sdkHost) flushesAfterDialogRequest() {}
 
 func (h sdkHost) Confirm(t, m string) (ok bool) {
-	h.awaitDialog(func() { ok, _ = h.ctx.Confirm(t, m) })
+	h.awaitDialog(func() {
+		answer, _ := h.ctx.Confirm(t, m)
+		ok, _ = answer.(bool)
+	})
 	return ok
 }
 func (h sdkHost) Select(t string, o []string) (v string, ok bool) {
 	h.awaitDialog(func() {
-		var err error
-		v, ok, err = h.ctx.Select(t, o)
-		ok = ok && err == nil
+		answer, answered, err := h.ctx.Select(t, o)
+		v, _ = answer.(string)
+		ok = answered && err == nil
 	})
 	return v, ok
 }
 func (h sdkHost) Input(t, placeholder string) (v string, ok bool) {
 	h.awaitDialog(func() {
-		var err error
-		v, ok, err = h.ctx.Input(t, placeholder)
-		ok = ok && err == nil
+		answer, answered, err := h.ctx.Input(t, placeholder)
+		v, _ = answer.(string)
+		ok = answered && err == nil
 	})
 	return v, ok
 }

@@ -4,7 +4,7 @@
 name: pig-essentials
 description: "A fast single-binary PiG with the essentials, no Node: web search and fetch (rpiv-web-tools), sub-agents (tintinweb pi-subagents, a tested slice), Claude Code-style task tracking (tintinweb pi-tasks), structured questions (rpiv-ask-user-question), the ponytail mode, and the Superpowers skills. Everything stays quiet until used: no network call and no process at start-up."
 release:
-  version: 0.1.0
+  version: 0.1.1
 build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused

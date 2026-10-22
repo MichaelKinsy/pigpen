@@ -44,3 +44,8 @@ issues, CI logs, test fixtures or catalog metadata. Future production signing
 requires protected keys and PiG's verified monorepo publication path. Current CI
 is validation-only and has no signing or publication permissions. Catalog
 inclusion, a checksum or a passing validation check is not proof of safety.
+
+Every Go module is scanned with `govulncheck` (version pinned in `scripts/govulncheck.mjs`) on every CI run, with the Go toolchain
+of the pinned PiG release (`.go-version`) and the staged PiG SDK. A vulnerable function that a module's code can call fails the run; a
+vulnerable dependency that is only imported is reported and does not. The vulnerability database is live, so a new advisory can fail
+a run with no change in this repository: raise the toolchain or the dependency, not the gate.

@@ -111,5 +111,7 @@ func PromptForAPIKey(ctx sdk.Context) (key string, ok bool, err error) {
 	}
 	// Any failure to open the component (the host has no custom components, as in RPC mode) falls back to the
 	// plain dialog; a failure of that dialog is the error reported.
-	return ctx.Input("TypeSafe API key (visible while typing)", "Paste the key, then press Enter")
+	answer, ok, err := ctx.Input("TypeSafe API key (visible while typing)", "Paste the key, then press Enter")
+	key, _ = answer.(string)
+	return key, ok, err
 }

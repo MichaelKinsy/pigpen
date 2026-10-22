@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-aot-runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The aot TypeScript runtime slot for PiG (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start.",
   "keywords": [
     "pig-package",

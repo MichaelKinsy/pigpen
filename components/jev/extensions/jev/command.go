@@ -62,8 +62,8 @@ func (x *ext) turnOn(ctx sdk.Context) {
 	}
 	if !s.cfg.Enabled && !s.on {
 		// Turning it on sends content off the machine: ask, with the disclosure.
-		ok, err := ctx.Confirm("Turn on Jev for this session?", disclosure(s.cfg, s.be.Destination())+"\n\nTurn Jev on?")
-		if err != nil || !ok {
+		answer, err := ctx.Confirm("Turn on Jev for this session?", disclosure(s.cfg, s.be.Destination())+"\n\nTurn Jev on?")
+		if confirmed, _ := answer.(bool); err != nil || !confirmed {
 			ctx.Notify("pi-jev: still off; nothing is sent", "info")
 			return
 		}

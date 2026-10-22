@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-bench-ext10",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The ten bench-ext extensions of the overhead bench as Go factories, fused into one Piglet Binary: no subprocess, no IPC.",
   "keywords": [
     "pig-package",

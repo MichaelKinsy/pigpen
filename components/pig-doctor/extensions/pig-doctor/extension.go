@@ -168,8 +168,8 @@ func restoreCmd(ctx sdk.Context, o doctor.Options, fields []string) error {
 	if !ctx.HasUI() {
 		return fmt.Errorf("restore needs an interactive session; run `pig-doctor restore %s`", ts)
 	}
-	ok, err := ctx.Confirm("Restore backup "+ts+"?", "Moves the backed-up files back. Nothing that exists now is overwritten"+map[bool]string{true: ", except an edited settings.json (--force)", false: ""}[force]+".")
-	if err != nil || !ok {
+	answer, err := ctx.Confirm("Restore backup "+ts+"?", "Moves the backed-up files back. Nothing that exists now is overwritten"+map[bool]string{true: ", except an edited settings.json (--force)", false: ""}[force]+".")
+	if confirmed, _ := answer.(bool); err != nil || !confirmed {
 		return err
 	}
 	rr, err := doctor.Restore(o, ts, force)
@@ -249,10 +249,13 @@ func fixCmd(ctx sdk.Context, o doctor.Options, fields []string) error {
 		}
 		msg := strings.Join(lines, "\n")
 		if g.Safety == doctor.Credentials {
-			phrase, ok, err := ctx.Input("Delete credential copies WITHOUT a backup? Type '"+doctor.CredentialsPhrase+"'", msg)
+			answer, ok, err := ctx.Input("Delete credential copies WITHOUT a backup? Type '"+doctor.CredentialsPhrase+"'", msg)
+			phrase, _ := answer.(string)
 			return err == nil && ok && strings.TrimSpace(phrase) == doctor.CredentialsPhrase, err
 		}
-		return ctx.Confirm(fmt.Sprintf("%s [%s]", g.Title, g.Safety), msg)
+		answer, err := ctx.Confirm(fmt.Sprintf("%s [%s]", g.Title, g.Safety), msg)
+		confirmed, _ := answer.(bool)
+		return confirmed, err
 	})
 	if err != nil {
 		return err

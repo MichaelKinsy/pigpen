@@ -1,6 +1,6 @@
 {
   "name": "@pi-in-go/pigpen-typesafe",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Shared Go client for the TypeSafe AI API (a port of the official TypeScript SDK) with an own-model backend that answers the same typed questions with the model PiG is configured with. Libraries only, no extension of its own.",
   "keywords": [
     "pig-package",

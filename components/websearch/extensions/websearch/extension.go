@@ -106,7 +106,8 @@ type ctxUI struct{ ctx sdk.Context }
 
 func (u ctxUI) Notify(message, level string) { u.ctx.Notify(message, level) }
 func (u ctxUI) Select(title string, options []string) (string, bool) {
-	choice, ok, err := u.ctx.Select(title, options)
+	answer, ok, err := u.ctx.Select(title, options)
+	choice, _ := answer.(string)
 	return choice, ok && err == nil
 }
 
