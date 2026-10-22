@@ -3,9 +3,11 @@
 // test-faux provider, which makes every Piglet complete a real turn with no network and no credentials.
 //
 // A step is `{ say, expect }` (type a line, wait for text), `{ key, expect }` (press keys, wait for text) or
-// `{ run: async (t) => {} }` for anything that needs more. The offline rule applies: no step may need the network, a
-// credential or another program (mpv, yt-dlp, a browser).
-import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+// `{ run: async (t) => {} }` for anything that needs more. An entry may also carry `prepare(home)` (the environment the
+// Binary needs, made before it starts), `run(t)` (after the steps) and `cleanup(t)`. The offline rule applies: no step
+// may need the network, a credential or another program (mpv, yt-dlp, a browser).
+import { chmodSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:net';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -18,10 +20,37 @@ export const FAUX_TURN = 'reply with exactly: ok';
 /** The lines of a pane that are the answer `ok`, and nothing else. */
 export const answerLines = (screen) => screen.split('\n').filter((line) => line.trim() === 'ok');
 
-/** Every state a fake herdr was told about, in order, from its call log. */
-export function herdrStates(log) {
-  return log.split('\n').filter(Boolean).map((line) => (/ --state (\w+)/.exec(line)?.[1] ?? line.split(' ')[1]));
+/**
+ * A stand-in for herdr's socket. herdr is told about a pane's agent by newline-delimited JSON requests over
+ * HERDR_SOCKET_PATH (`pane.report_agent`, `pane.release_agent`), one request per connection, and answers each with one
+ * JSON line. The server records every request in order. It is listening when this returns, before the Binary starts.
+ */
+export function fakeHerdr(path) {
+  const requests = [];
+  const open = new Set(); // net.Server.close waits for open connections: a run that failed must not keep the test process alive
+  const server = createServer((socket) => {
+    let pending = '';
+    open.add(socket);
+    socket.on('close', () => open.delete(socket));
+    socket.setEncoding('utf8');
+    socket.on('error', () => {});
+    socket.on('data', (chunk) => {
+      pending += chunk;
+      for (let end = pending.indexOf('\n'); end >= 0; end = pending.indexOf('\n')) {
+        const line = pending.slice(0, end);
+        pending = pending.slice(end + 1);
+        if (line === '') continue;
+        try { requests.push(JSON.parse(line)); } catch { requests.push({ unparsed: line }); }
+        socket.write('{"result":{}}\n');
+      }
+    });
+  });
+  server.listen(path);
+  return { requests, close: () => { for (const socket of open) socket.destroy(); server.close(); } };
 }
+
+/** What a fake herdr was told, in order: the reported state, or `release-agent` for the release on quit. */
+export const herdrStates = (requests) => requests.map((request) => (request.method === 'pane.release_agent' ? 'release-agent' : (request.params?.state ?? request.method ?? 'unparsed')));
 
 const gameOverlay = (command, title, started, done) => async (t) => {
   await t.say(command);
@@ -61,35 +90,133 @@ const music = async (t) => {
   await t.waitGone('space play');
 };
 
+// One fake herdr per run, keyed by the run's home: `prepare` starts it before the Binary does, `run` reads it, `cleanup` closes it.
+const fakeHerdrs = new Map();
+
 const herdr = {
   prepare: (home) => {
-    const bin = join(home, 'herdr');
-    const log = join(home, 'herdr-calls.log');
-    writeFileSync(bin, `#!/bin/sh\necho "$@" >> "${log}"\n`);
-    chmodSync(bin, 0o755);
-    return { HERDR_ENV: '1', HERDR_PANE_ID: 'p_1', HERDR_BIN_PATH: bin, HERDR_SOCKET_PATH: join(home, 'herdr.sock') };
+    const socket = join(home, 'herdr.sock');
+    fakeHerdrs.set(home, fakeHerdr(socket));
+    return { HERDR_ENV: '1', HERDR_PANE_ID: 'p_1', HERDR_SOCKET_PATH: socket };
+  },
+  cleanup: (t) => {
+    fakeHerdrs.get(t.home)?.close();
+    fakeHerdrs.delete(t.home);
   },
   run: async (t) => {
-    const log = join(t.home, 'herdr-calls.log');
-    const calls = () => { try { return readFileSync(log, 'utf8'); } catch { return ''; } };
-    const until = async (what, ok) => { for (let i = 0; i < 600; i++) { if (ok(herdrStates(calls()))) return; await new Promise((r) => setTimeout(r, 50)); } assert.fail(`herdr: ${what}; saw ${herdrStates(calls()).join(',')}\n${t.screen()}`); };
+    const { requests } = fakeHerdrs.get(t.home);
+    const states = () => herdrStates(requests);
+    const until = async (what, ok) => {
+      for (let i = 0; i < 600; i++) {
+        if (ok(states())) return;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      assert.fail(`herdr: ${what}; saw ${states().join(',')}\n${t.screen()}`);
+    };
+    const working = () => states().filter((state) => state === 'working').length;
     await until('the startup idle report', (s) => s.length >= 1);
+    await until('the faux turn reported working, then idle', (s) => s.includes('working') && s.at(-1) === 'idle');
+    const before = working();
     await t.say('TUI_LIVE_STREAM');
-    await until('working then idle again', (s) => s.join(',').startsWith('idle,working,idle'));
+    await until('working then idle again for a second turn', (s) => working() > before && s.at(-1) === 'idle');
     t.type('/quit');
     t.key('Enter');
     await until('the release on quit', (s) => s.at(-1) === 'release-agent');
-    const all = calls().split('\n').filter(Boolean);
-    for (const line of all) assert.match(line, /--source custom:pig --agent pig/, 'every call names the custom:pig source');
-    const seqs = all.map((line) => Number(/ --seq (\d+)/.exec(line)?.[1] ?? NaN)).filter(Number.isFinite);
-    assert.ok(seqs.every((n, i) => i === 0 || n > seqs[i - 1]), `seq must increase: ${seqs}`);
+    for (const request of requests) {
+      assert.equal(request.params?.source, 'pig', `every request names the pig source: ${JSON.stringify(request)}`);
+      assert.equal(request.params?.agent, 'pig', `every request names the pig agent: ${JSON.stringify(request)}`);
+      assert.equal(request.params?.pane_id, 'p_1', `every request names the pane: ${JSON.stringify(request)}`);
+    }
+    const seqs = requests.map((request) => request.params?.seq);
+    assert.ok(seqs.every((n, i) => Number.isFinite(n) && (i === 0 || n > seqs[i - 1])), `seq must increase: ${seqs}`);
   },
   quits: true, // run() types /quit itself: the release on quit is what it checks
+};
+
+/** The two games of pig-games, played and quit. bench-standard carries the same two. */
+const games = [
+  { run: gameOverlay('/runner', 'PiG RUNNER', /PiG RUNNER {2}score 0*[1-9]/, /PiG Runner score \d/) },
+  { run: gameOverlay('/angry-pigs', 'ANGRY PIGS', /level 1\/3/, /Angry Pigs score \d/) },
+];
+
+/**
+ * The porting Skill (pig-extension-porter, and pig-porter, which extends it): found in the command list, then run. The
+ * faux model only answers a prompt that carries `reply with exactly:`; a bare `/skill:` line fails the turn and the failure
+ * echoes the whole Skill (over 500 lines) into a screen of 40 rows, so a marker inside the Skill, such as its `**L1**`
+ * rule, is never on the screen. The end of the expansion always is: `</skill>` follows the complete Skill text, and the
+ * faux answer to the instruction after it shows the turn completed.
+ */
+const porterSkill = [{
+  run: async (t) => {
+    t.type('/skill:pigpen-pi-ex');
+    await t.waitFor(/→ skill:pigpen-pi-extension-port\s+Port a Pi TypeScript extension to a Go PiG extension/);
+    await t.say(`tension-port ${FAUX_TURN}`);
+    await t.waitFor('</skill>');
+    await t.until('the faux answer `done`', (screen) => screen.split('\n').some((line) => line.trim() === 'done'));
+    assert.doesNotMatch(t.screen(), /unhandled request/, 'the Skill prompt reached the faux model as an unhandled request');
+  },
+}];
+
+/**
+ * The Piglets that carry TypeScript extensions run them on Node, as any user of them has it; every other Binary here runs
+ * with no Node at all. This links the Node that runs the test, and nothing else, onto the Binary's PATH.
+ */
+const nodeTool = (home) => {
+  const bin = join(home, 'nodebin');
+  mkdirSync(bin, { recursive: true });
+  symlinkSync(process.execPath, join(bin, 'node'));
+  return { PATH: `${bin}:${isolatedPath(home)}` };
+};
+
+/** /aot-runtime status: it reads the slot only, and the compiler is not downloaded until a TypeScript set asks for it. */
+const aotRuntime = { say: '/aot-runtime', expect: /Pi-Bolt [\d.]+\)\s+platform: \S+/ };
+
+/** /bun-runtime in a home with no Bun installed: nothing to download or remove. */
+const bunRuntime = [
+  { say: '/bun-runtime', expect: 'Bun runtime: not usable' },
+  { say: '/bun-runtime remove', expect: 'Bun runtime: nothing to remove.' },
+];
+
+/** The ten bench-ext commands (bench-01 to bench-10), each once, listed by the editor's command completion. */
+const benchCommands = async (t) => {
+  t.type('/bench-');
+  await t.waitFor('(1/10)');
+  await t.waitFor(/bench-01\s.*Bench command 01/);
+  t.key('Down', 'Down', 'Down', 'Down', 'Down', 'Down', 'Down', 'Down', 'Down');
+  await t.waitFor('(10/10)');
+  await t.waitFor(/bench-10\s.*Bench command 10/);
+  t.key('Escape');
+  await t.waitGone('(10/10)');
+  t.key('C-u');
+  await t.waitGone(/^\/bench-/m);
+};
+
+/**
+ * bench-lean strips every built-in extension. The core's own slash commands stay (`/session`, `/compact`), and the
+ * command of a stripped built-in (`/mcp`, which the stock Binaries list beside `/compact`) is gone from the list.
+ */
+const lean = async (t) => {
+  await t.say('/session');
+  await t.waitFor('Session Info');
+  t.type('/mc');
+  await t.waitFor('Manually compact the session context');
+  assert.doesNotMatch(t.screen(), /Manage MCP servers/, 'the stripped mcp extension still has its command');
+  t.key('Escape');
+  await t.waitGone('Manually compact the session context');
+  t.key('C-u');
+  await t.waitGone(/^\/mc/m);
 };
 
 export const piglets = {
   a2a: { steps: [{ say: '/a2a', expect: 'a2a: listener off' }] },
   acp: { steps: [{ say: '/acp', expect: 'pig-acp --pig' }] },
+  'bench-aot': { steps: [aotRuntime] },
+  'bench-bun': { steps: bunRuntime },
+  'bench-ext10': { steps: [{ run: benchCommands }] },
+  'bench-ext10-aot': { prepare: nodeTool, steps: [aotRuntime, ...bunRuntime, { run: benchCommands }] },
+  'bench-ext10-split': { prepare: nodeTool, steps: [aotRuntime, ...bunRuntime, { run: benchCommands }] },
+  'bench-lean': { steps: [{ run: lean }] },
+  'bench-standard': { steps: [...games, ...bunRuntime] },
   herdr,
   jev: {
     steps: [
@@ -111,13 +238,8 @@ export const piglets = {
       { run: async (t) => { await t.waitFor(/ponytail: .*FULL/); } },
     ],
   },
-  'pig-extension-porter': { steps: [{ say: '/skill:pigpen-pi-extension-port', expect: /\*\*L1\*\*/ }] },
-  'pig-games': {
-    steps: [
-      { run: gameOverlay('/runner', 'PiG RUNNER', /PiG RUNNER {2}score 0*[1-9]/, /PiG Runner score \d/) },
-      { run: gameOverlay('/angry-pigs', 'ANGRY PIGS', /level 1\/3/, /Angry Pigs score \d/) },
-    ],
-  },
+  'pig-extension-porter': { steps: porterSkill },
+  'pig-games': { steps: games },
   'pig-music': { prepare: musicTools, steps: [{ run: music }] },
   'pig-popular': {
     steps: [
@@ -126,7 +248,7 @@ export const piglets = {
       { run: async (t) => { await t.waitFor(/Test Faux \| think:off/); } },
     ],
   },
-  'pig-porter': { steps: [{ say: '/skill:pigpen-pi-extension-port', expect: /\*\*L1\*\*/ }] },
+  'pig-porter': { steps: porterSkill },
   'pig-typesafe': { steps: [{ say: '/typesafe', expect: 'TypeSafe: disabled.' }] },
   'pig-warden': {
     steps: [

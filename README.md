@@ -403,13 +403,17 @@ extension does is the Go tests' job. Run it yourself with `npm run platform-smok
 for one Piglet) and the android check with `npm run cross-check` (set `PIG_SDK_DIR` or `PIG_BIN`).
 
 **Each Binary in a real terminal.** `npm run test:piglet-e2e` (tmux; POSIX only) starts every Piglet Binary in its own tmux server with a
-PATH of a few linked system tools and nothing else (no Node, no Go: a Go-only Binary must run alone), under a throwaway home and
+PATH of a few linked system tools and nothing else (no Node, no Go: a Go-only Binary must run alone; `bench-ext10-aot` and
+`bench-ext10-split`, which carry TypeScript extensions, also get the Node that runs the test), under a throwaway home and
 runtime directory, and drives the features its Piglet is for through the keyboard: `/a2a` and `/acp` status, the Jev and warden consent
-dialogs, `/tasks` and `/agents`, `/todos` and `/goal-list`, `/typesafe`, the porter Skill, the two games and Pig Snake played and quit,
-the music player opened (with stand-ins for mpv and yt-dlp: nothing is played), the herdr reporter's idle/working/release calls to a fake
-`herdr`, and `/cost`, `/tools` and the rest for `pig-with-batteries`. Each run also answers a faux turn, must print no `Failed to
-load extension` and must exit 0 on `/quit`. A Piglet without a scenario in `scripts/e2e/piglets.mjs` fails the suite. Use
-`PIGLET_E2E_BIN_DIR=dir` for Binaries you already built and `PIGLET_E2E_ONLY=a2a,pig-games` for a few.
+dialogs, `/tasks` and `/agents`, `/todos` and `/goal-list`, `/typesafe`, the porter Skill (found in the command list, then run), the two games
+and Pig Snake played and quit, the music player opened (with stand-ins for mpv and yt-dlp: nothing is played), the herdr reporter's
+idle/working/release requests to a fake herdr socket, and `/cost`, `/tools` and the rest for `pig-with-batteries`. The benchmark Piglets
+are driven too: `/aot-runtime` and `/bun-runtime` status in a home with nothing installed, the ten `bench-01` to `bench-10` commands
+each listed once, the games of `bench-standard`, and for `bench-lean` the core's own commands present and the stripped `/mcp` absent.
+Each run also answers a faux turn, must print no `Failed to load extension` and must exit 0 on `/quit`. A Piglet without a scenario in
+`scripts/e2e/piglets.mjs` fails the suite. Use `PIGLET_E2E_BIN_DIR=dir` for Binaries you already built and
+`PIGLET_E2E_ONLY=a2a,pig-games` for a few.
 
 The numbers for every Piglet, the 0.5 readiness list and the stripped-vs-stock measurements are in [`docs/plan/progress/piglets-pigpen.md`](docs/plan/progress/piglets-pigpen.md); `node scripts/perf/strip-matrix.mjs` regenerates the sizes (needs PiG 0.5).
 

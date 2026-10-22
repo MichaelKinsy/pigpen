@@ -474,11 +474,11 @@ func (a *app) taskStop(ctx sdk.Context, p map[string]any) (string, error) {
 // taskExecute launches tasks as background subagents through pi-subagents, and saves the cascade
 // configuration for the completion listener. upstream: index.ts TaskExecute.
 func (a *app) taskExecute(ctx sdk.Context, p map[string]any) (string, error) {
-	if !a.subagentsAvailable {
+	if !a.subagentsReady() {
 		// The original pings once at load; ping again here, so a pi-subagents that appeared since is found.
 		a.unlocked(func() { a.ping(ctx.Events()) })
 	}
-	if !a.subagentsAvailable {
+	if !a.subagentsReady() {
 		return "Subagent execution is currently unavailable (@tintinweb/pi-subagents not loaded " +
 			"or version mismatch). You can run these as plain Agent-tool spawns, but pi-tasks " +
 			"won't track them — status stays pending, cascade won't fire, TaskOutput stays empty.", nil

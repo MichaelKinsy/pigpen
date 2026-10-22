@@ -113,6 +113,58 @@ func TestPingWaitsForTheFirstSession(t *testing.T) {
 	eqv(t, len(r.emittedOn("subagents:rpc:ping")), 1)
 }
 
+// session_start holds the app lock while it reads the session file from the host, and the host answers that read only
+// after the ping reply it is delivering has been handled. A reply handler that waits for the app lock therefore
+// deadlocks the whole host: found as a hang of the first turn of pig-essentials on linux/arm64 CI (a goroutine dump
+// shows the handler on the lock, session_start on the host call), and as about one start in 200 under load on amd64.
+// The rig holds the session-file answer back, and holds the ping back until session_start is waiting for that answer,
+// so the ordering is not left to the scheduler.
+func TestPingReplyIsHandledWhileSessionStartWaitsForTheHost(t *testing.T) {
+	useEnv(t, "PI_TASKS", "")
+	useConfig(t, obj{})
+	r := startRig(t, "")
+	installSubagents(r)
+	hold, gate := make(chan struct{}), make(chan struct{})
+	r.mu.Lock()
+	r.holdSessionFile, r.pingGate, r.sessionFileAsked = hold, gate, make(chan struct{}, 1)
+	before := r.emitDone["subagents:rpc:ping"] // installing the fake pi-subagents already announced it once
+	r.mu.Unlock()
+	started := make(chan struct{})
+	go func() {
+		r.fireEvent("session_start", obj{"reason": "startup"})
+		close(started)
+	}()
+	fail := func(msg string) {
+		close(gate)
+		close(hold)
+		<-started
+		t.Fatal(msg)
+	}
+	select {
+	case <-r.sessionFileAsked:
+	case <-time.After(5 * time.Second):
+		fail("session_start never asked the host for the session file")
+	}
+	close(gate) // session_start now holds the app lock and waits for the host
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		r.mu.Lock()
+		delivered := r.emitDone["subagents:rpc:ping"]
+		r.mu.Unlock()
+		if delivered == before+1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			close(hold)
+			<-started
+			t.Fatal("the ping reply was not handled while session_start waited for the host: the handler waits for the app lock")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	close(hold)
+	<-started
+}
+
 // Three mutants of the first full run were "killed" only by a scenario difference that had nothing to do with the
 // mutated code (a timing flake under load), so they never had a test of their own; these are those tests.
 func TestLaunchResultAndCadenceEdges(t *testing.T) {
