@@ -4,6 +4,8 @@ import (
 	"math"
 	"strings"
 	"unicode"
+
+	"github.com/MichaelKinsy/pigpen/components/pitui/wordsegmenter"
 )
 
 // How a long form grows around its short form. A port of src/grow.ts of pi-stretchtext, itself a
@@ -65,6 +67,16 @@ var (
 	// segmented scripts are written without spaces whose words only a dictionary finds.
 	segmentedTables = []*unicode.RangeTable{unicode.Thai, unicode.Lao, unicode.Khmer, unicode.Myanmar}
 )
+
+// hasSegmented is /[\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]/u.test(text).
+func hasSegmented(text string) bool {
+	for _, r := range text {
+		if unicode.In(r, segmentedTables...) {
+			return true
+		}
+	}
+	return false
+}
 
 func isUnspaced(r rune) bool {
 	return unicode.In(r, unspacedTables...) || (r >= 0x3000 && r <= 0x303f) || (r >= 0xff00 && r <= 0xffef)
@@ -264,21 +276,35 @@ func breakables(text string) []string {
 		return []string{text}
 	}
 	var pieces []string
+	// Thai, Lao, Khmer and Myanmar words are found by a dictionary: the start of each segment of the
+	// word segmenter (the original's Intl.Segmenter, ICU's dictionaries) is a place a row may break.
+	var wordStarts map[int]struct{}
+	if hasSegmented(text) {
+		wordStarts = map[int]struct{}{}
+		for segment := range wordsegmenter.Segments(text) {
+			wordStarts[segment.Index] = struct{}{}
+		}
+	}
 	start := 0
 	var last rune
 	haveLast := false
 	isAfterUnspaced := false
+	at := 0 // the UTF-16 index of char, as the segments count
 	for i, char := range text {
 		unspaced := isUnspaced(char)
-		// Thai, Lao, Khmer and Myanmar words are found by a dictionary in the original (Intl.Segmenter);
-		// see PORT.md D1: here a run of those scripts is one piece.
-		mayBreak := unspaced || isAfterUnspaced
+		_, atWordStart := wordStarts[at]
+		isWordStart := atWordStart && (unicode.In(char, segmentedTables...) || (haveLast && unicode.In(last, segmentedTables...)))
+		mayBreak := unspaced || isAfterUnspaced || isWordStart
 		if i > start && mayBreak && !noStart(char) && !(haveLast && noEnd(last)) && !zeroWidth(char) {
 			pieces = append(pieces, text[start:i])
 			start = i
 		}
 		last, haveLast = char, true
 		isAfterUnspaced = unspaced || (isAfterUnspaced && noStart(char))
+		at++
+		if char >= 0x10000 {
+			at++
+		}
 	}
 	if start < len(text) {
 		pieces = append(pieces, text[start:])

@@ -4,3 +4,13 @@ go 1.26
 
 // PiG resolves this requirement to the version-matched staged SDK at build time.
 require github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1
+
+// The shared pi-tui subset (components/pitui), found through go.work in this directory: its word
+// segmenter is ICU's dictionary engine for Thai, Lao, Khmer and Myanmar, as the original's Intl.Segmenter is.
+require github.com/MichaelKinsy/pigpen/components/pitui v0.0.0
+
+require (
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
+	github.com/dlclark/regexp2 v1.12.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
+)

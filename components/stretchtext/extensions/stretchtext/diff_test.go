@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"unicode"
 )
 
 // The differential test: port/golden/states.json is what the unmodified original (port/oracle, under
@@ -135,51 +134,29 @@ func TestParseMatchesOriginal(t *testing.T) {
 	}
 }
 
-// isSegmented reports text holding Thai, Lao, Khmer or Myanmar: the one place the port differs in how
-// a long form is cut into the words that arrive one at a time (PORT.md D1).
-func isSegmented(text string) bool {
-	for _, r := range text {
-		if unicode.In(r, segmentedTables...) {
-			return true
-		}
-	}
-	return false
-}
-
-// withoutMarks removes what Grow's callbacks add around the words, leaving the text the reader sees.
-func withoutMarks(s string) string {
-	return strings.NewReplacer("[", "", "]", "").Replace(s)
-}
-
 func TestGrowMatchesOriginal(t *testing.T) {
 	c, g := loadCases(t)
-	deviating := 0
+	segmented := 0
 	for i, gc := range c.Grow {
 		long := Parse(gc.Long)
 		want := g.Grow[i]
-		segmented := isSegmented(gc.Short) || isSegmented(gc.Long)
-		got := LengthOf(long)
-		if !segmented && got != want.Length {
+		if got := LengthOf(long); got != want.Length {
 			t.Fatalf("grow case %d (%q, %q) length %d, want %d", i, gc.Short, gc.Long, got, want.Length)
 		}
 		for j, p := range c.Progress {
 			got := Grow(gc.Short, long, p, func(n *Stretch) string { return "<" + n.Key + ">" }, func(w string) string { return "[" + w + "]" })
-			if segmented {
-				// D1: the words of these scripts arrive in other pieces, so only the finished text is the same.
-				if p == 1 && withoutMarks(got) != withoutMarks(want.Frames[j]) {
-					t.Fatalf("grow case %d (%q, %q) finished:\n got %q\nwant %q", i, gc.Short, gc.Long, got, want.Frames[j])
-				}
-				continue
-			}
 			if got != want.Frames[j] {
 				t.Fatalf("grow case %d (%q, %q) at %v:\n got %q\nwant %q", i, gc.Short, gc.Long, p, got, want.Frames[j])
 			}
 		}
-		if segmented {
-			deviating++
+		if hasSegmented(gc.Short) || hasSegmented(gc.Long) {
+			segmented++
 		}
 	}
-	t.Logf("%d of %d grow cases hold Thai, Lao, Khmer or Myanmar and are compared on their finished text only (D1)", deviating, len(c.Grow))
+	if segmented == 0 {
+		t.Fatal("no grow case holds Thai, Lao, Khmer or Myanmar: the dictionary segmenter is not compared with the original's Intl.Segmenter")
+	}
+	t.Logf("%d of %d grow cases hold Thai, Lao, Khmer or Myanmar, compared with the original frame by frame", segmented, len(c.Grow))
 }
 
 // fakeClock is the test's time: Every callbacks run in due order as Advance moves it.
