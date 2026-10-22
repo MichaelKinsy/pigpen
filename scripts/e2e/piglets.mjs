@@ -48,7 +48,8 @@ case "$1" in --version) echo ${date};; *) echo "[debug] yt-dlp version ${date}" 
   writeFileSync(join(bin, 'mpv'), `#!${process.execPath}\nimport(${JSON.stringify(fakeMpv)});\n`);
   chmodSync(join(bin, 'yt-dlp'), 0o755);
   chmodSync(join(bin, 'mpv'), 0o755);
-  return { PATH: `${bin}:${isolatedPath(home)}` };
+  // PULSE_SERVER satisfies pig-music's audio check on a machine with no sound stack (nothing is played: mpv is the stand-in above).
+  return { PATH: `${bin}:${isolatedPath(home)}`, PULSE_SERVER: 'unix:/nonexistent' };
 };
 
 const music = async (t) => {
