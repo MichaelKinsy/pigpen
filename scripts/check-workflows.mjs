@@ -225,6 +225,29 @@ export function vulnerabilityProblems(workflow) {
   return problems;
 }
 
+/**
+ * ci.yml verifies every third-party listing (`npm run verify:listings`, scripts/verify-listings.mjs) on every run, as a job with no
+ * `if`, and the one required check, `ci-result`, needs that job and reads its result, so a listing that no longer installs, builds
+ * or loads with the pinned PiG cannot merge.
+ */
+export function listingsProblems(workflow) {
+  const problems = [];
+  const jobs = Object.entries(workflow.jobs ?? {});
+  const verifying = jobs.filter(([, job]) => (job.steps ?? []).some((step) => /(^|[\s;&|(])(npm\s+run\s+verify:listings|node\s+scripts\/verify-listings\.mjs)(\s|$)/.test(String(step.run ?? ''))));
+  if (verifying.length !== 1) {
+    problems.push(`ci.yml: ${verifying.length} jobs verify the third-party listings (npm run verify:listings), not one`);
+    return problems;
+  }
+  const [id, job] = verifying[0];
+  if (job.if !== undefined) problems.push(`ci.yml: job ${id} (listings) has an if: it must run on every run`);
+  const result = workflow.jobs?.['ci-result'];
+  const needs = [result?.needs ?? []].flat();
+  if (!needs.includes(id)) problems.push(`ci.yml: ci-result does not need job ${id} (listings)`);
+  const reads = (result?.steps ?? []).some((step) => Object.values(step.env ?? {}).some((value) => String(value).replace(/\s/g, '') === `\${{needs.${id}.result}}`));
+  if (!reads) problems.push(`ci.yml: ci-result does not read needs.${id}.result in an env of its steps`);
+  return problems;
+}
+
 async function main() {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const { readManifests } = await import('./generate-index.mjs');
@@ -241,7 +264,7 @@ async function main() {
     if (file === 'ci.yml') {
       const workflow = parse(text);
       const declared = [...new Set(readManifests().flatMap(({ manifest }) => manifest.build?.targets ?? []))].sort();
-      problems.push(...pinProblems(workflow, requirement), ...targetProblems(workflow, declared, runners), ...vulnerabilityProblems(workflow));
+      problems.push(...pinProblems(workflow, requirement), ...targetProblems(workflow, declared, runners), ...vulnerabilityProblems(workflow), ...listingsProblems(workflow));
     }
   }
   problems.push(...tagProblems(parsed));
