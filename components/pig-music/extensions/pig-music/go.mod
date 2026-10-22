@@ -4,7 +4,7 @@ go 1.26.0
 
 // Built against the Go SDK of PiG 0.4.0. A source build through pig resolves this
 // requirement to the version-matched SDK staged by the running binary.
-require github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1
+require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
 
 require (
 	github.com/Microsoft/go-winio v0.6.2

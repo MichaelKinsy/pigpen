@@ -101,7 +101,9 @@ func configureOllama(ui configUI, current providerConfigCurrent) (*providerConfi
 type ctxConfigUI struct{ ctx sdk.Context }
 
 func (u ctxConfigUI) input(label, placeholder string) (string, bool, error) {
-	return u.ctx.Input(label, placeholder)
+	answer, ok, err := u.ctx.Input(label, placeholder)
+	text, _ := answer.(string)
+	return text, ok, err
 }
 
 // formatShowConfigMessage is the text of `/web-tools --show`, with every key masked. upstream: web-tools.ts:471-510.
@@ -239,7 +241,8 @@ func webToolsCommand(ctx sdk.Context, args string) error {
 	for i, p := range ordered {
 		labels[i] = labelOf(p)
 	}
-	selected, ok, err := ctx.SelectWithOptions("Search provider", labels, sdk.DialogOptions{})
+	answer, ok, err := ctx.SelectWithOptions("Search provider", labels, sdk.DialogOptions{})
+	selected, _ := answer.(string)
 	if err != nil {
 		return err
 	}
@@ -299,13 +302,14 @@ func webToolsCommand(ctx sdk.Context, args string) error {
 	if hasExisting && existing != "" {
 		placeholder = fmt.Sprintf("Press Enter to keep current (%s), or type new key", maskAPIKey(existing, true))
 	}
-	input, got, err := ctx.Input(meta.Label+" API key", placeholder)
+	answer, got, err := ctx.Input(meta.Label+" API key", placeholder)
 	if err != nil {
 		return err
 	}
 	if !got {
 		return unchanged()
 	}
+	input, _ := answer.(string)
 	trimmed := jsTrim(input)
 	keyToWrite := trimmed
 	if keyToWrite == "" && hasExisting {

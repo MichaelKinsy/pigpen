@@ -172,11 +172,11 @@ func (w *warden) enable(ctx sdk.Context, args []string) error {
 			w.show(ctx, "Turning on a judged backend needs you to read what it sends and agree, which takes a dialog. Run /warden enable "+backendWord(backend)+" in an interactive session, or set PIGPEN_WARDEN_ENABLED=1 and PIGPEN_WARDEN_BACKEND="+backend+" to agree in the environment.\n\n"+Disclosure(backend, target))
 			return nil
 		}
-		agreed, err := ctx.Confirm("Send redacted call summaries to "+describeBackend(backend, target)+"?", Disclosure(backend, target))
+		answer, err := ctx.Confirm("Send redacted call summaries to "+describeBackend(backend, target)+"?", Disclosure(backend, target))
 		if err != nil {
 			return err
 		}
-		if !agreed {
+		if agreed, _ := answer.(bool); !agreed {
 			w.show(ctx, "warden: nothing changed; nothing was sent.")
 			return nil
 		}

@@ -3,7 +3,7 @@ module github.com/MichaelKinsy/pigpen/a2a
 go 1.26.0
 
 // PiG resolves this requirement to the version-matched staged SDK at build time.
-require github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1
+require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
 
 require github.com/a2aproject/a2a-go/v2 v2.6.0
 

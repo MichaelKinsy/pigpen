@@ -12,7 +12,8 @@ func Extension() *sdk.Extension {
 		Name: "ask", Label: "Ask", Description: "Ask the user where to deploy",
 		Parameters: sdk.Schema{"type": "object", "properties": map[string]any{}},
 		Execute: func(ctx sdk.Context, _ map[string]any) (any, error) {
-			choice, ok, err := ctx.Select("Deploy where?", []string{"staging", "production"})
+			answer, ok, err := ctx.Select("Deploy where?", []string{"staging", "production"})
+			choice, _ := answer.(string)
 			if err != nil {
 				return nil, err
 			}

@@ -49,7 +49,7 @@ func (s *store) confirmOffLoop(ctx sdk.Context, model modelRef, state *settings,
 		if s.approvals.stopped.Load() || ctx.Err() != nil {
 			return
 		}
-		ok, err := ctx.Confirm("Model not preferred",
+		answer, err := ctx.Confirm("Model not preferred",
 			fmt.Sprintf("Current model: %s\n\nNot in your preferred list:\n%s\n\nContinue with %s?",
 				model, formatAllowList(state.ModelGuard.AllowedModels), model))
 		if err != nil {
@@ -57,7 +57,7 @@ func (s *store) confirmOffLoop(ctx sdk.Context, model modelRef, state *settings,
 			s.notifyRefused(ctx, model, state)
 			return
 		}
-		if !ok {
+		if confirmed, _ := answer.(bool); !confirmed {
 			s.notifyRefused(ctx, model, state)
 			return
 		}
@@ -91,7 +91,7 @@ func (s *store) confirmSelectOffLoop(ctx sdk.Context, model, previous modelRef, 
 		if s.approvals.stopped.Load() || ctx.Err() != nil {
 			return
 		}
-		ok, err := ctx.Confirm("Model not preferred",
+		answer, err := ctx.Confirm("Model not preferred",
 			fmt.Sprintf("Switch to %s?\n\nNot in your preferred list:\n%s\n\nUse it for this session? It will not be remembered as your default.",
 				model, formatAllowList(state.ModelGuard.AllowedModels)))
 		if err != nil {
@@ -104,7 +104,7 @@ func (s *store) confirmSelectOffLoop(ctx sdk.Context, model, previous modelRef, 
 			// or approve a model the user has already moved off.
 			return
 		}
-		if ok {
+		if confirmed, _ := answer.(bool); confirmed {
 			s.approveForSession(model)
 			ctx.Notify("using "+model.String()+" for this session (not remembered)", "info")
 			return

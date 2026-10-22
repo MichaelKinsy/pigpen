@@ -171,12 +171,12 @@ func (w *warden) onToolCall(ctx sdk.Context, data map[string]any) (any, error) {
 		}
 	}
 	askUser := func() (any, error) {
-		allowed, err := ctx.Confirm("warden: allow this "+tool+" call?", confirmMessage(verdict))
+		answer, err := ctx.Confirm("warden: allow this "+tool+" call?", confirmMessage(verdict))
 		if err != nil {
 			return nil, err
 		}
 		deliverNotes()
-		if allowed {
+		if allowed, _ := answer.(bool); allowed {
 			w.record(ctx, verdict, "allowed by you")
 			return nil, nil
 		}

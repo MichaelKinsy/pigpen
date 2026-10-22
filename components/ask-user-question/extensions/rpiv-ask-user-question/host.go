@@ -39,10 +39,14 @@ type ctxHost struct{ ctx sdk.Context }
 func (h ctxHost) HasUI() bool  { return h.ctx.HasUI() }
 func (h ctxHost) Mode() string { return h.ctx.Mode() }
 func (h ctxHost) Select(title string, options []string) (string, bool, error) {
-	return h.ctx.Select(title, options)
+	answer, ok, err := h.ctx.Select(title, options)
+	choice, _ := answer.(string)
+	return choice, ok, err
 }
 func (h ctxHost) Input(title, placeholder string) (string, bool, error) {
-	return h.ctx.Input(title, placeholder)
+	answer, ok, err := h.ctx.Input(title, placeholder)
+	text, _ := answer.(string)
+	return text, ok, err
 }
 func (h ctxHost) Emit(channel string, payload any) { emit(h.ctx, channel, payload) }
 func (h ctxHost) Notify(message, level string)     { h.ctx.Notify(message, level) }

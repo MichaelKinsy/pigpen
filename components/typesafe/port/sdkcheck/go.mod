@@ -3,7 +3,7 @@ module sdkcheck
 go 1.26
 
 require (
-	github.com/MichaelKinsy/PiG/extensions/sdk v0.4.1
+	github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
 	github.com/MichaelKinsy/pigpen/components/typesafe v0.0.0
 )
 

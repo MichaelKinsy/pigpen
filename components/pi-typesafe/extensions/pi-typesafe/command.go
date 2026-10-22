@@ -157,11 +157,11 @@ func (s *state) run(ctx sdk.Context, action string, fields []string, report func
 			report("The stored key cannot be used. "+situation.Reason, "warning")
 			return nil
 		}
-		ok, err := ctx.Confirm("Enable TypeSafe for this session?", disclosure(backend))
+		answer, err := ctx.Confirm("Enable TypeSafe for this session?", disclosure(backend))
 		if err != nil {
 			return err
 		}
-		if ok {
+		if confirmed, _ := answer.(bool); confirmed {
 			s.setEnabled(true)
 			report(fmt.Sprintf("TypeSafe enabled. Up to %d attempts in this session; /typesafe disable stops future agent calls.", pitypesafe.DefaultMaxRequests), "info")
 		}
@@ -176,7 +176,8 @@ func (s *state) sample(ctx sdk.Context, action string) error {
 	var request any = mustParse(sampleJSON)
 	if action == "playground" {
 		pretty := indent(sampleJSON)
-		text, ok, err := ctx.Editor("TypeSafe request JSON · edit state and questions", pretty)
+		answer, ok, err := ctx.Editor("TypeSafe request JSON · edit state and questions", pretty)
+		text, _ := answer.(string)
 		if err != nil {
 			return err
 		}
@@ -195,8 +196,8 @@ func (s *state) sample(ctx sdk.Context, action string) error {
 		return err
 	}
 	consent := s.consentNow()
-	ok, err := ctx.Confirm("Send this TypeSafe request?", disclosure(s.currentBackend()))
-	if err != nil || !ok {
+	answer, err := ctx.Confirm("Send this TypeSafe request?", disclosure(s.currentBackend()))
+	if confirmed, _ := answer.(bool); err != nil || !confirmed {
 		return err
 	}
 	// The operator confirmed one destination; a backend switch while the dialog was open voids that.

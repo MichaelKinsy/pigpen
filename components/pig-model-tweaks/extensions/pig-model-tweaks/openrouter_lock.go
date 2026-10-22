@@ -219,13 +219,14 @@ func showLockPicker(ctx sdk.Context, st *store) error {
 	if current == "" {
 		current = "deepseek"
 	}
-	input, answered, err := ctx.Input("Provider for "+selected+" (empty to clear):", current)
+	answer, answered, err := ctx.Input("Provider for "+selected+" (empty to clear):", current)
 	if err != nil {
 		return err
 	}
 	if !answered {
 		return nil
 	}
+	input, _ := answer.(string)
 	value := strings.TrimSpace(input)
 	applyLock(ctx, st, selected, value)
 	if value != "" {
