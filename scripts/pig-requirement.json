@@ -1,16 +1,16 @@
 {
-  "pig": "0.5.0",
+  "pig": "0.5.2",
   "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. Re-pin with scripts/pin-pig-release.mjs <version>.",
   "release": {
     "repository": "MichaelKinsy/PiG",
-    "tag": "v0.5.0",
-    "commit": "7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d",
+    "tag": "v0.5.2",
+    "commit": "07a8631fb54a6a1e8a0f463dc4998cb7aff6ac40",
     "assets": {
-      "linux/amd64": { "file": "pig-0.5.0-linux-amd64.tar.gz", "sha256": "91de15fc532073c15ae4e881d8958b92fe0af4f3a2b6c80590a5c4701fe89080" },
-      "linux/arm64": { "file": "pig-0.5.0-linux-arm64.tar.gz", "sha256": "51c2d320b2b8013484b5ba386c2eaf618d71a0999b193fc8547594ae1ef89ec3" },
-      "darwin/arm64": { "file": "pig-0.5.0-darwin-arm64.tar.gz", "sha256": "20d500a2ec5bbbe10963c58bc08fe851335b056c0ffe758a2e429d93199c94d6" },
-      "darwin/amd64": { "file": "pig-0.5.0-darwin-amd64.tar.gz", "sha256": "88c027cf519586c05acfebe4d91312686bdd34059f902c3312a3e86289732611" },
-      "windows/amd64": { "file": "pig-0.5.0-windows-amd64.zip", "sha256": "3c699b1012e36d8c64a6c4f0fbe38913d7d3c11b4a9ce9896c2071deb1963b34" }
+      "linux/amd64": { "file": "pig-0.5.2-linux-amd64.tar.gz", "sha256": "c878c8c13b354abefc04994c20a95daf892a6eea5efe5aa59768885e97594206" },
+      "linux/arm64": { "file": "pig-0.5.2-linux-arm64.tar.gz", "sha256": "96c52a3ee27f91ed14fb6856a1c168c85d9ee0bb24e4a571938901f97ff75259" },
+      "darwin/arm64": { "file": "pig-0.5.2-darwin-arm64.tar.gz", "sha256": "76e59111450800af7ad5a7114c17eb8414b0a329c742afe229d9c12677a94205" },
+      "darwin/amd64": { "file": "pig-0.5.2-darwin-amd64.tar.gz", "sha256": "577e7bcda8e229cd6e5bc7fd298ad0eba1be111414bcc7fee1e82d0571c64b2b" },
+      "windows/amd64": { "file": "pig-0.5.2-windows-amd64.zip", "sha256": "de015189dbda4690f2e13896a6d2494d71a7cb7581f3aabea706ab5eb296f81d" }
     }
   }
 }

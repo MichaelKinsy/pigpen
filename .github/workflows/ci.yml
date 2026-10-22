@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
-  PIG_COMMIT: '7a5422f66d2f7a73ed566abdb7c4b29bf1571e3d' # PiG v0.5.0
+  PIG_COMMIT: '07a8631fb54a6a1e8a0f463dc4998cb7aff6ac40' # PiG v0.5.2
 jobs:
   validate:
     runs-on: ubuntu-24.04
