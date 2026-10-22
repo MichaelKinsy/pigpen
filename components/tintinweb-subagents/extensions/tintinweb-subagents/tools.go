@@ -96,13 +96,38 @@ func agentToolDescription(r *agentRegistry) string {
 	return strings.NewReplacer("{{TYPELIST}}", buildTypeListText(r), "{{AGENTDIR}}", agentDir()).Replace(agentDescriptionTemplate)
 }
 
-// agentToolSchema is the Agent parameters with the available types and the agent dir filled in.
+// agentToolSchema is the Agent parameters with the available types and the agent dir filled in. The values go into the
+// decoded strings, never into JSON text: a Windows agent dir (C:\Users\...) holds backslashes that make JSON text invalid,
+// and a type name may hold a quote. Text substitution left the Agent tool without parameters on Windows, and the SDK
+// refuses such a tool with a panic while the extension loads.
 func agentToolSchema(r *agentRegistry, spec toolSpec) sdk.Schema {
-	raw, _ := json.Marshal(spec.Parameters)
-	text := strings.NewReplacer("{{TYPES}}", strings.Join(r.availableTypes(), ", "), "{{AGENTDIR}}", agentDir()).Replace(string(raw))
-	var out sdk.Schema
-	_ = json.Unmarshal([]byte(text), &out)
-	return out
+	fill := strings.NewReplacer("{{TYPES}}", strings.Join(r.availableTypes(), ", "), "{{AGENTDIR}}", agentDir()).Replace
+	schema, _ := fillStrings(spec.Parameters, fill).(map[string]any)
+	return sdk.Schema(schema)
+}
+
+// fillStrings is v with fill applied to every string in it, at any depth of maps and arrays.
+func fillStrings(v any, fill func(string) string) any {
+	switch v := v.(type) {
+	case string:
+		return fill(v)
+	case map[string]any:
+		if v == nil {
+			return v
+		}
+		out := make(map[string]any, len(v))
+		for key, value := range v {
+			out[key] = fillStrings(value, fill)
+		}
+		return out
+	case []any:
+		out := make([]any, len(v))
+		for i, value := range v {
+			out[i] = fillStrings(value, fill)
+		}
+		return out
+	}
+	return v
 }
 
 func (a *app) registerTools(e *sdk.Extension) {

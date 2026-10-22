@@ -59,7 +59,9 @@ components; this port registers none.
   survivor got a test in `extra_test.go` / `extra2_test.go` and each invalid mutation was rewritten). After the review
   fixes (finding 10): **101 mutations, all killed by the unit tests** (`--unit-only`); the first run after the fixes left
   three (a setting that never reached the child, a process-group signal the test waited long enough to miss, and a test
-  whose failure text the runner read as a build failure), each closed by a test.
+  whose failure text the runner read as a build failure), each closed by a test. The Windows fix (finding 11) added four
+  mutations of the schema fill (`schema-*` in `port/mutations.json`): `pigeq mutate --unit-only --jobs 8` on all **105**,
+  0 not killed.
 - `pig package validate components/tintinweb-subagents` and `pig install <extension dir> --validate-only --json`: valid.
 - Live check of the child's protocol against `pig-0.4.1 --mode rpc`: `get_session_stats` returns `data.tokens.total` and
   `data.toolCalls`, `get_last_assistant_text` returns `data.text` (or `{}`), a `prompt` without a usable model
@@ -116,3 +118,10 @@ components; this port registers none.
    test (`turnlimit_test.go`, `proc_unix_test.go`, `runner_test.go`) and a mutant in `port/mutations.json`.
    The remaining differences of the notification: no `<output-file>`, `<context_percent>`, `<compactions>` or cost (their
    features are deferred), and a 500-character preview counted in code points where JavaScript counts UTF-16 units.
+11. **Windows: the agent directory is a backslash path (found by the full CI, windows/amd64).** The tool's `{{AGENTDIR}}`
+   and `{{TYPES}}` were substituted into the JSON text of the `Agent` schema. A Windows agent directory
+   (`C:\Users\...\agent`) is not valid inside JSON text, the schema failed to decode (the error was dropped), the `Agent`
+   tool had no object schema, and the SDK panics on that while the extension loads: in a fused Binary the extension died
+   before it registered (`connection closed before register`), so `pig-essentials` did not start on Windows. The values now
+   go into the decoded strings (`fillStrings`). `extra_test.go` runs this with a Windows-style `PIG_CODING_AGENT_DIR` and
+   an agent type named with a quote and a backslash, on any host; only a native Windows run shows the Binary itself loading.
