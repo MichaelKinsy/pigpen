@@ -1,10 +1,12 @@
 // Deterministic, generated view of authored Piglet manifests. Never hand-edit index.json.
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync, writeFileSync, lstatSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync, lstatSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
-import { packageEntry, readPackageRecords } from './packages.mjs';
+import { packageEntry, readPackageRecords, readPackages } from './packages.mjs';
+import { npmName } from './npm-packages.mjs';
+import { listingEntry, listingProblems, readListings } from './listings.mjs';
 import { readPinnedKeys, readReceipts, releaseFromReceipt } from './receipts.mjs';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -41,6 +43,13 @@ export function readManifests(directory = root) {
   });
 }
 
+/** Every id and name a third-party listing must not take: Pigpen's own Piglets and components, in each form they are published. */
+export function reservedNames(directory = root, manifests = readManifests(directory)) {
+  const names = manifests.map(({ manifest }) => manifest.name);
+  for (const { dir, manifest } of existsSync(join(directory, 'components')) ? readPackages(directory) : []) names.push(dir, manifest.name, `pigpen-${dir}`, npmName(dir));
+  return new Set(names.filter((name) => typeof name === 'string').map((name) => name.toLowerCase()));
+}
+
 export function validateIndex(index) {
   if (!validIndex(index)) throw new Error(ajv.errorsText(validIndex.errors));
 }
@@ -58,6 +67,16 @@ export function generateIndex(directory = root, repository = config.repository) 
   const released = [...readPackageRecords(directory)].map(([name, record]) => ({ record, entry: packageEntry(name, record, { directory, repository }) }));
   const index = { schemaVersion: 1, updatedAt: [...manifests.map(m => m.metadata.updatedAt), ...released.map(({ record }) => record.date)].sort().at(-1),
     entries: [...manifests.map(({ manifest, metadata, raw }) => pigletEntry({ manifest, metadata, raw }, receipts.get(manifest.name) ?? [], { repository, keys })), ...released.map(({ entry }) => entry)] };
+  // Third-party listings (listings/<id>.json): official: false, the real maintainer, pinned to a full commit.
+  const found = readListings(join(directory, 'listings'));
+  const problems = listingProblems(found, { reserved: reservedNames(directory, manifests), repository });
+  if (problems.length) throw new Error(`Invalid third-party listings:\n${problems.join('\n')}`);
+  const listed = found.map(({ listing }) => listing);
+  index.entries.push(...listed.map(listingEntry));
+  index.updatedAt = [index.updatedAt, ...listed.map((listing) => listing.verified.date)].sort().at(-1);
+  const ids = index.entries.map((entry) => entry.id);
+  const clash = ids.find((id, at) => ids.indexOf(id) !== at);
+  if (clash) throw new Error(`Two index entries have the id ${clash}`);
   validateIndex(index);
   return index;
 }

@@ -12,8 +12,12 @@
 #   govulncheck     every run, in parallel with validate: every Go module scanned for vulnerabilities its code can reach
 #                   (scripts/govulncheck.mjs, pinned govulncheck); an unscanned module fails it. The vulnerability database
 #                   is live, so a new advisory can turn it red with no change here: the weekly schedule shows that on main.
-#   ci-result       the one required check. Green when validate, every slow check and govulncheck passed and each other tier
-#                   passed or was skipped.
+#   listings        every run, in parallel with validate: every third-party listing (listings/<id>.json) is installed from its
+#                   pinned commit with the pig built from PIG_COMMIT, validated, built and loaded in a faux-model session
+#                   (scripts/verify-listings.mjs), after a fixture Package proves the check itself. A failing listing fails
+#                   the job and is named in its log and summary.
+#   ci-result       the one required check. Green when validate, every slow check, govulncheck and listings passed and each
+#                   other tier passed or was skipped.
 name: Validate Pigpen
 on:
   pull_request:
@@ -253,25 +257,68 @@ jobs:
           PIG_SDK_DIR: ${{ github.workspace }}/.pig-src/extensions/sdk
         run: node scripts/govulncheck.mjs
 
+  # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
+  # pig this run builds (PiG v0.5.2), before index.json may claim it. The fixture test runs first so a broken check cannot pass
+  # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
+  listings:
+    name: Third-party listings (verify:listings)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: The check on a fixture Package (test:listings)
+        run: npm run test:listings
+      - name: Install, validate, build and load every listing (verify:listings)
+        run: npm run verify:listings
+
   ci-result:
     name: CI result
     if: ${{ always() }}
-    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck]
+    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Require validate and the slow checks, and every other tier that ran
+      - name: Require validate, the slow checks, govulncheck and the listings, and every other tier that ran
         env:
           VALIDATE: ${{ needs.validate.result }}
           SLOW_CHECKS: ${{ needs.slow-checks.result }}
           PLATFORM_MATRIX: ${{ needs.platform-matrix.result }}
           ANDROID_CROSS: ${{ needs.android-cross.result }}
           GOVULNCHECK: ${{ needs.govulncheck.result }}
+          LISTINGS: ${{ needs.listings.result }}
         run: |
-          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK"
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS"
           [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
           [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
           [ "$GOVULNCHECK" = success ] || { echo "govulncheck did not pass"; exit 1; }
+          [ "$LISTINGS" = success ] || { echo "a third-party listing did not verify (see the listings job)"; exit 1; }
           for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
             case "$result" in
               success | skipped) ;;
