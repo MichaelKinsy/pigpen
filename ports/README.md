@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 1 · review: 11 · done: 19
+Status: queued: 2 · porting: 1 · review: 12 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -43,6 +43,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 | `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`bb92a7774141`](https://github.com/obra/superpowers/commit/bb92a77741419a4ab5f06e711a283343f1ada0c3) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v7.0.0, commit bb92a77741419a4ab5f06e711a283343f1ada0c3. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 | `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
+| `stretchtext` | [pi-stretchtext](https://github.com/MonadicMike/pi-stretchtext)<br>[cc-stretch](https://github.com/pro-vi/cc-stretch) | [`c93b06876aef`](https://github.com/MonadicMike/pi-stretchtext/commit/c93b06876aefdfab99171145ef1cdf695bb5ada4)<br>[`910fb99d43bf`](https://github.com/pro-vi/cc-stretch/commit/910fb99d43bfad23d591b36aebd6c25bd0729081) | MIT<br>MIT | Michal Pikosz<br>pro-vi | `components/stretchtext`<br>`piglets/pig-with-batteries` | `stretchtext` | review | Go port of pi-stretchtext 0.1.0, https://github.com/MonadicMike/pi-stretchtext, by Michal Pikosz (MIT), at commit c93b06876aefdfab99171145ef1cdf695bb5ada4. Its parser, growth and guide come from cc-stretch, https://github.com/pro-vi/cc-stretch, by pro-vi (MIT), revision 910fb99d43bfad23d591b36aebd6c25bd0729081. |
 
 ## How to read it
 
@@ -242,3 +243,8 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.
 - Upstream path: `extensions` in pi-tweaks
+
+### `stretchtext`: stretchtext (pi-stretchtext)
+
+- Kind: port. Replies that read short and grow where you click: the model answers in short sentences whose phrases open in place into longer text, with alt+o and alt+c letters for the keyboard.
+- Notes: Needs the PiG release that carries the tui handle and OSC 8 link claims (D193). Equivalence: recorded states of the original, a fake host and tmux scenarios Pi against PiG (components/stretchtext/port/PORT.md).
