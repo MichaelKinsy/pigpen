@@ -61,7 +61,7 @@ func startRigMode(t *testing.T, cwd, mode string) *rig {
 	if cwd == "" {
 		cwd = t.TempDir()
 	}
-	r := &rig{cwd: cwd, sessionID: "s1", persisted: true, extBus: map[string][]string{}, goBus: map[string][]func(any){}}
+	r := &rig{cwd: cwd, sessionID: "s1", persisted: true, extBus: map[string][]string{}, goBus: map[string][]func(any){}, emitDone: map[string]int{}}
 	r.Host = StartHost(t, tintinweb_tasks.Extension(), HostOptions{Cwd: cwd, Mode: mode, OnCallValue: r.answer})
 	return r
 }

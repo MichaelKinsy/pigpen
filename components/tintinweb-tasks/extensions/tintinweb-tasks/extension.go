@@ -234,9 +234,11 @@ type app struct {
 	autoClear *autoClearManager
 	cadence   *cadenceState
 
-	latest              *sdk.Context
-	cascade             *cascadeConfig
-	agents              *agentMap
+	latest  *sdk.Context
+	cascade *cascadeConfig
+	agents  *agentMap
+	// pingMu guards the ping reply's two results; see applyPingReply.
+	pingMu              sync.Mutex
 	subagentsAvailable  bool
 	pendingWarning      string
 	configured          bool
@@ -454,9 +456,12 @@ func (a *app) ping(bus sdk.EventBus) bool {
 	return true
 }
 
+// applyPingReply records pi-subagents' answer. It takes pingMu, never the app lock: the reply is dispatched to this
+// extension while session_start may hold the app lock across a host call, and the host answers that call only after the
+// dispatch returns, so waiting for the app lock here deadlocked the whole host (about one start in 200 under load).
 func (a *app) applyPingReply(raw any) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+	a.pingMu.Lock()
+	defer a.pingMu.Unlock()
 	var version *float64
 	if m, ok := raw.(map[string]any); ok {
 		if d, ok := m["data"].(map[string]any); ok {
@@ -716,10 +721,20 @@ func (a *app) showPersistedTasks(isResume bool) {
 }
 
 func (a *app) warnIfPending(ctx sdk.Context) {
-	if a.pendingWarning != "" {
-		ctx.Notify(a.pendingWarning, "warning")
-		a.pendingWarning = ""
+	a.pingMu.Lock()
+	warning := a.pendingWarning
+	a.pendingWarning = ""
+	a.pingMu.Unlock()
+	if warning != "" {
+		ctx.Notify(warning, "warning")
 	}
+}
+
+// subagentsReady reports whether a ping reply showed a compatible pi-subagents.
+func (a *app) subagentsReady() bool {
+	a.pingMu.Lock()
+	defer a.pingMu.Unlock()
+	return a.subagentsAvailable
 }
 
 func (a *app) onTurnStart(ctx sdk.Context, _ map[string]any) (any, error) {
