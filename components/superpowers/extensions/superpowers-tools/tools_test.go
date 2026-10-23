@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -412,20 +413,27 @@ func TestLifecycleAndPersistence(t *testing.T) {
 	}
 }
 
-// Stop returns with the port free even when it lands before the Serve goroutine has run (http.Server tracks a listener only
-// once Serve starts), so a restart can take the port straight away.
+// Stop returns with the listener closed even when it lands before the Serve goroutine has run (http.Server tracks a
+// listener only once Serve starts), so a restart can take the port straight away.
+//
+// The claim is about our own socket, so it is asserted on that socket: a closed listener refuses Accept with
+// net.ErrClosed. Binding the same port again would also test whether some other process took it in between, which on a
+// shared host happens: the random port lies in the range the operating system hands to outgoing connections.
 func TestStopFreesThePortAtOnce(t *testing.T) {
 	for range 300 {
-		c, info, err := StartCompanion(CompanionOptions{SessionDir: filepath.Join(t.TempDir(), "session"), Env: envOf(nil), CheckPeriod: 20 * time.Millisecond})
+		c, _, err := StartCompanion(CompanionOptions{SessionDir: filepath.Join(t.TempDir(), "session"), Env: envOf(nil), CheckPeriod: 20 * time.Millisecond})
 		if err != nil {
 			t.Fatal(err)
 		}
 		c.Stop("test")
-		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%v", info["port"]))
-		if err != nil {
-			t.Fatalf("the port %v is still bound after Stop: %v", info["port"], err)
+		// An already-expired deadline keeps a listener that Stop left open from blocking here: it answers with a timeout.
+		_ = c.listener.(*net.TCPListener).SetDeadline(time.Unix(1, 0))
+		if conn, err := c.listener.Accept(); !errors.Is(err, net.ErrClosed) {
+			if conn != nil {
+				_ = conn.Close()
+			}
+			t.Fatalf("the listener on port %d is still open after Stop: Accept returned %v", c.port, err)
 		}
-		_ = ln.Close()
 	}
 }
 
