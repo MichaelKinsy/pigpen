@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { goModules, registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
+import { frontendMemberOf, goModules, registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
 
 const scratch = mkdtempSync(join(tmpdir(), 'go-modules-test-'));
 const fakePig = join(scratch, 'pig');
@@ -75,6 +75,24 @@ describe('goModules', () => {
     piglet('broken', 'name: broken\nslots:\n  frontend:\n    member: ./ui\n', false);
     piglet('plain', 'name: plain\n', true);
     assert.deepEqual(goModules(own).map((dir) => dir.slice(own.length)), ['/piglets/native/ui']);
+  });
+});
+
+// The member is read without a YAML library: the govulncheck and android jobs run this script before any npm ci.
+describe('frontendMemberOf', () => {
+  it('reads slots.frontend.member, quoted or not, with a trailing comment', () => {
+    assert.equal(frontendMemberOf('name: a\nslots:\n  frontend:\n    member: ./ui\n'), './ui');
+    assert.equal(frontendMemberOf('slots:\n  frontend:\n    member: "./ui dir" # the member\n'), './ui dir');
+    assert.equal(frontendMemberOf("slots:\r\n  frontend:\r\n    member: './ui'\r\n"), './ui');
+  });
+  it('ignores a member key anywhere else', () => {
+    assert.equal(frontendMemberOf('name: a\nmember: ./x\nslots:\n  other:\n    member: ./y\nbuild:\n  frontend:\n    member: ./z\n'), undefined);
+    assert.equal(frontendMemberOf('slots:\n  frontend:\n    other: 1\nskills: []\nmember: ./w\n'), undefined);
+    assert.equal(frontendMemberOf('name: a\n'), undefined);
+  });
+  it('has no import outside node built-ins, so it runs without node_modules', () => {
+    const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'go-modules.mjs'), 'utf8');
+    for (const [, from] of source.matchAll(/^import .* from '([^']+)'/gm)) assert.ok(from.startsWith('node:') || from.startsWith('./'), from);
   });
 });
 
