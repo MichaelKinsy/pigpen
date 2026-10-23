@@ -1,0 +1,35 @@
+{
+  "name": "@pi-in-go/pigpen-bend-sdk",
+  "version": "0.1.0",
+  "description": "EXPERIMENTAL extension SDK for the Bend 2 language: a pure-Bend client of the PiG subprocess wire, pinned to Bend 2.0.38. Library and examples only, no extension of its own.",
+  "keywords": [
+    "pig-package",
+    "bend",
+    "experimental",
+    "library",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/bend-sdk"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/bend-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "pig_sdk",
+    "examples",
+    "tests",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
+  "pi": {}
+}

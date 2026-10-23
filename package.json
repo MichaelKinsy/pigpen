@@ -18,6 +18,7 @@
     "test:tool-scope": "node --test --test-timeout=600000 scripts/tool-scope.test.mjs",
     "test:pig": "node --test --test-timeout=120000 piglets/herdr/tests/pig.integration.test.ts piglets/herdr/tests/plugin.test.mjs",
     "test:piglet-e2e": "node --test --test-timeout=1800000 scripts/piglet-e2e.test.mjs",
+    "test:bend-sdk": "node --test --test-timeout=300000 components/bend-sdk/tests/bend.integration.test.mjs",
     "test:pig-music": "node --test --test-timeout=300000 components/pig-music/tests/hello.integration.test.mjs",
     "test:pig-music-player": "PIG_MUSIC_SMOKE=1 node --test --test-timeout=400000 components/pig-music/tests/player.integration.test.mjs",
     "test:pig-snake": "node --test --test-timeout=240000 piglets/pig-with-batteries/tests/pig-snake.integration.test.mjs",
