@@ -3,8 +3,8 @@ module github.com/MichaelKinsy/pigpen/piglets/pig-tern/frontend
 go 1.26.0
 
 // Pig resolves this requirement to the version-matched staged SDK at build time.
-// The frontend package first ships in PiG 0.4.2 (D91).
-require github.com/MichaelKinsy/PiG/extensions/sdk v0.4.2
+// The frontend package (D91) and the component kit (D103) first ship in PiG 0.5.0.
+require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
 
 require (
 	github.com/stencil-hq/tern-sdk/go/tern v0.1.0
