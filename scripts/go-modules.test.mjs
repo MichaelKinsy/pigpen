@@ -67,12 +67,12 @@ describe('goModules', () => {
     if (module) writeFileSync(join(dir, 'ui', 'go.mod'), 'module example.com/ui\n');
     return join(dir, 'ui');
   };
-  it('lists the directory build.frontend names, wherever it is', () => {
-    const member = piglet('native', 'name: native\nbuild:\n  frontend: ./ui\n', true);
+  it('lists the directory slots.frontend.member names, wherever it is', () => {
+    const member = piglet('native', 'name: native\nslots:\n  frontend:\n    member: ./ui\n', true);
     assert.deepEqual(goModules(own), [member]);
   });
-  it('skips a frontend directory without go.mod and a Piglet without build.frontend', () => {
-    piglet('broken', 'name: broken\nbuild:\n  frontend: ./ui\n', false);
+  it('skips a frontend directory without go.mod and a Piglet without a frontend slot', () => {
+    piglet('broken', 'name: broken\nslots:\n  frontend:\n    member: ./ui\n', false);
     piglet('plain', 'name: plain\n', true);
     assert.deepEqual(goModules(own).map((dir) => dir.slice(own.length)), ['/piglets/native/ui']);
   });
