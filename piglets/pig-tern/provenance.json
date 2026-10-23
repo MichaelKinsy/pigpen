@@ -3,5 +3,16 @@
   "authors": ["Michael Kinsy"],
   "license": "MIT",
   "licenseFile": "../../LICENSE",
-  "upstreams": []
+  "upstreams": [],
+  "dependencies": [
+    {
+      "name": "tern-sdk",
+      "authors": ["Stencil Labs, Inc."],
+      "url": "https://github.com/stencil-hq/tern-sdk",
+      "revision": "46bd7df153d3135d84a0b5658dfb4705d0bddb81",
+      "license": "MIT",
+      "licenseFile": "licenses/tern-sdk-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
 }
