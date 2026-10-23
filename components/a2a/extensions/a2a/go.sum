@@ -1,5 +1,5 @@
-github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2 h1:V6R50PNK6nu/icwHRMYCeeIwkJedAMFCIDcgCyhb5R0=
-github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2/go.mod h1:4j0XhCW0EPOBWvqYE7XKjTvIAahI7K1VyyW3KpjTKj8=
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3 h1:mgLZchfHrmjoyuKNzP5rpn/D/6hx6ZFoDfwHsqcU8Yo=
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3/go.mod h1:4j0XhCW0EPOBWvqYE7XKjTvIAahI7K1VyyW3KpjTKj8=
 github.com/a2aproject/a2a-go/v2 v2.6.0 h1:QflB0gHxOP0o5quvA/h9EbYgfOsmRsSmFkeBYtKdwwk=
 github.com/a2aproject/a2a-go/v2 v2.6.0/go.mod h1:rvFIb0sBJl2qmJRYU2fQxI6hhIQksmGGMEhT/uRwWww=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=

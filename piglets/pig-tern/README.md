@@ -2,7 +2,7 @@
 
 PiG drawn natively in [Tern](https://stencil.so/tern). Run directly in a Tern pane, PiG's interactive mode becomes a Tern Surface Protocol surface: messages render as Markdown, tool calls as tool cards, edits as diffs, selectors as pickers, settings as a prefs sheet, and the input editor as a Tern editor. Outside Tern, PiG draws as usual.
 
-**Needs PiG 0.5.2 or later.** The Piglet fills the frontend slot (`slots.frontend`, PiG D91) and the member uses PiG's component kit and extension mouse delivery (D103), all in PiG's SDK since 0.5.0. Pigpen builds and tests it on PiG 0.5.2, its pinned release, and the member compiles and passes its tests on 0.5.3 as well. PiG 0.4.1 rejects `slots.frontend`.
+**Needs PiG 0.5.3 or later (the member requires SDK v0.5.3).** The Piglet fills the frontend slot (`slots.frontend`, PiG D91) and the member uses PiG's component kit and extension mouse delivery (D103), all in PiG's SDK since 0.5.0. Pigpen builds and tests it on PiG 0.5.3, its pinned release. PiG 0.4.1 rejects `slots.frontend`.
 
 **Source only, not a published release.** No release Binary is published. A frontend member is fused into a Piglet Binary, so build one with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it):
 

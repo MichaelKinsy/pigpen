@@ -3,7 +3,7 @@ module github.com/MichaelKinsy/pigpen/warden
 go 1.26
 
 // PiG resolves this requirement to the version-matched staged SDK at build time.
-require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
+require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3
 
 // The shared TypeSafe client (components/typesafe), found through go.work in this directory.
 require github.com/MichaelKinsy/pigpen/components/typesafe v0.0.0
