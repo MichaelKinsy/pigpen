@@ -130,7 +130,8 @@ func randomHexToken() string {
 	return hex.EncodeToString(b)
 }
 
-func randomPort() int {
+// randomPort is a variable so a test can make the old fixed fallback port known and occupy it.
+var randomPort = func() int {
 	n, _ := rand.Int(rand.Reader, big.NewInt(16383))
 	return 49152 + int(n.Int64())
 }
@@ -718,7 +719,11 @@ func StartCompanion(opts CompanionOptions) (*Companion, map[string]any, error) {
 			return nil, nil, errors.New("Server failed to bind: preferred port is in use and BRAINSTORM_TOKEN is set; refusing fallback with explicit token")
 		}
 		fellBack = true
-		c.port = randomPort()
+		// DIVERGENCE superpowers-tools #6 (port/PORT.md): server.cjs falls back once to a random port from 49152-65535 and
+		// fails if that one is taken too. Here the fallback binds port 0 so the OS picks a free one, and c.port is set to
+		// the port it got (below) so the log, server-info, the URL and the cookie name report it. Remove when upstream
+		// server.cjs retries or uses an OS-chosen port.
+		c.port = 0
 		if c.tokenSource == "file" {
 			c.token, c.tokenSource = randomHexToken(), "generated-fallback"
 		}
@@ -728,6 +733,9 @@ func StartCompanion(opts CompanionOptions) (*Companion, map[string]any, error) {
 		return nil, nil, fmt.Errorf("Server failed to bind: %w", err)
 	}
 	c.listener = ln
+	if fellBack {
+		c.port = ln.Addr().(*net.TCPAddr).Port
+	}
 	c.cookieName = "brainstorm-key-" + strconv.Itoa(c.port)
 	if c.opts.portFile != "" && !fellBack {
 		_ = os.WriteFile(c.opts.portFile, []byte(strconv.Itoa(c.port)), 0o644)

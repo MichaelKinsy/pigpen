@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -342,6 +343,46 @@ func TestWebSocket(t *testing.T) {
 	conn3.Write(maskedFrame(0x02, []byte("bin")))
 	if op, p := readFrame(t, rd3); op != opClose || p != "\x03\xeb" {
 		t.Errorf("binary frame answer %d %q", op, p)
+	}
+}
+
+// The fallback when the preferred port is taken binds an OS-chosen port and reports it (divergence 6 in port/PORT.md).
+// The preferred port and the port the old code would have fallen back to are both held; the server must still start,
+// report the port it really got, and answer on it.
+func TestFallbackReportsTheRealPort(t *testing.T) {
+	hold := func() (net.Listener, int) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { ln.Close() })
+		return ln, ln.Addr().(*net.TCPAddr).Port
+	}
+	_, preferred := hold()
+	_, oldFallback := hold()
+	saved := randomPort
+	randomPort = func() int { return oldFallback }
+	t.Cleanup(func() { randomPort = saved })
+
+	c, info := start(t, func(o *CompanionOptions) { o.Port = preferred })
+	got, _ := info["port"].(int)
+	if got == preferred || got == oldFallback || got == 0 {
+		t.Fatalf("reported port %v, preferred %d, old fallback %d", info["port"], preferred, oldFallback)
+	}
+	if want := c.listener.Addr().(*net.TCPAddr).Port; got != want {
+		t.Errorf("reported port %d, listening on %d", got, want)
+	}
+	if u, _ := info["url"].(string); !strings.Contains(u, ":"+strconv.Itoa(got)+"/") {
+		t.Errorf("url %q does not carry port %d", u, got)
+	}
+	raw, _ := os.ReadFile(filepath.Join(info["state_dir"].(string), "server-info"))
+	var onDisk map[string]any
+	if json.Unmarshal(raw, &onDisk) != nil || onDisk["port"] != float64(got) {
+		t.Errorf("server-info %q", raw)
+	}
+	tok, _ := c.currentToken()
+	if status, _, _ := get(t, fmt.Sprintf("http://127.0.0.1:%d/?key=%s", got, tok), nil); status != 200 {
+		t.Errorf("GET on the reported port: %d", status)
 	}
 }
 
