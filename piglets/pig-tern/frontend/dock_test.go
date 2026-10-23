@@ -218,7 +218,7 @@ func TestDockLinesAreRawText(t *testing.T) {
 		{[]string{"a", "b"}, jsonOps(t, []any{"text", "dock.dock", "append", "\nb"})},
 		{[]string{"a", "b"}, nil},
 		{[]string{"c"}, jsonOps(t, []any{"text", "dock.dock", "replace", "c"})},
-		{[]string{" "}, jsonOps(t, []any{"text", "dock.dock", "replace", " "}, []any{"set", "dock.dock", map[string]any{"hidden": true}})},
+		{[]string{" "}, jsonOps(t, []any{"text", "dock.dock", "replace", ""}, []any{"set", "dock.dock", map[string]any{"hidden": true}})},
 		{[]string{"d"}, jsonOps(t, []any{"text", "dock.dock", "replace", "d"}, []any{"set", "dock.dock", map[string]any{"hidden": nil}})},
 	} {
 		if ops := h.applyOps(lines(fe.Update, tc.lines...)); !reflect.DeepEqual(ops, tc.want) {
@@ -268,7 +268,8 @@ func TestFooterIsATernStatusStrip(t *testing.T) {
 	}
 	doc := shownBy(ops)
 	for id, want := range map[string]map[string]any{
-		"cwd":      {"icon": "folder", "text": "~/src/pig", "priority": 7, "min": map[string]any{"w": "12ch"}},
+		"cwd": {"icon": "folder", "spans": []any{map[string]any{"t": "~/src/pig", "s": "path dim"}}, "priority": 7, "min": map[string]any{"w": "12ch"},
+			"href": "~/src/pig", "actions": map[string]any{"click": "open", "menu": []any{"open", "copy"}}},
 		"branch":   {"icon": "branch", "text": "main", "priority": 5},
 		"session":  {"icon": "message", "priority": 3, "hidden": true},
 		"status.0": {"text": "lint ok", "priority": 2},
@@ -361,6 +362,12 @@ func TestFooterChangesAreSets(t *testing.T) {
 		}},
 		{"session name", func(f *fe.Footer) { f.SessionName = "refactor" }, []any{
 			[]any{"set", "dock.footer.session", map[string]any{"text": "refactor", "hidden": nil}},
+		}},
+		// The folder is a path span linked to the folder, which a click opens
+		// in Tern's Files pane; a new folder replaces both, a literal "%"
+		// escaped because Tern decodes %XX in a link.
+		{"folder", func(f *fe.Footer) { f.Cwd = "~/src/100%" }, []any{
+			[]any{"set", "dock.footer.cwd", map[string]any{"spans": []any{map[string]any{"t": "~/src/100%", "s": "path dim"}}, "href": "~/src/100%25"}},
 		}},
 		{"status", func(f *fe.Footer) { f.ExtensionStatuses = []string{"lint failed"} }, []any{
 			[]any{"set", "dock.footer.status.0", map[string]any{"text": "lint failed"}},

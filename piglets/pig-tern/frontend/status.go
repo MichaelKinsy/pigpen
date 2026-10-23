@@ -116,8 +116,10 @@ func footerElement(id string, footer fe.Footer) tern.Element {
 	common := func(key string, h hot) ui.Common {
 		return ui.Common{Key: key, Tone: h.tone, Hidden: h.hidden}
 	}
-	cwd := ui.Seg{Common: common("cwd", slots[segCwd]), Icon: ui.IconFolder, Text: slots[segCwd].text, Priority: 7}
+	cwd := ui.Seg{Common: common("cwd", slots[segCwd]), Icon: ui.IconFolder, Spans: cwdSpans(slots[segCwd].text), Priority: 7}
 	cwd.Min = wide
+	cwd.Href = cwdHref(slots[segCwd].text)
+	cwd.Actions = &ui.Actions{Click: "open", Menu: []string{"open", "copy"}}
 	segs := make([]tern.Element, 0, 7+len(statuses))
 	segs = append(segs,
 		cwd,
@@ -157,7 +159,7 @@ func (s *session) queueFooter(e *entry, prev, next fe.Footer, fresh bool) {
 		f.slots, f.statuses = footerHot(next)
 	} else {
 		if prev.Cwd != next.Cwd {
-			s.setSlot(f, segCwd, "text", hot{text: next.Cwd})
+			s.setCwd(f, next.Cwd)
 		}
 		if prev.GitBranch != next.GitBranch {
 			s.setSlot(f, segBranch, "text", hot{text: next.GitBranch, hidden: next.GitBranch == ""})
@@ -205,6 +207,30 @@ func (s *session) queueFooter(e *entry, prev, next fe.Footer, fresh bool) {
 
 func (s *session) setSlot(f *footerProps, slot int, textKey string, next hot) {
 	s.setProps(f.ids[slot], textKey, &f.slots[slot], next)
+}
+
+// cwdSpans is the working directory as one span styled as a path, as omp
+// draws its footer's folder.
+func cwdSpans(cwd string) []ui.Span {
+	return []ui.Span{{T: cwd, S: "path dim"}}
+}
+
+// cwdHref links the folder segment to the working directory, which its
+// click action "open" opens in Tern's Files pane. Tern resolves a link
+// without a scheme as a path, "~/" included, after %XX-decoding it, so a
+// literal "%" is escaped.
+func cwdHref(cwd string) string {
+	return strings.ReplaceAll(cwd, "%", "%25")
+}
+
+// setCwd queues the folder segment's new spans and link: the segment draws
+// spans, not text, so a change must replace them.
+func (s *session) setCwd(f *footerProps, cwd string) {
+	if f.slots[segCwd].text == cwd {
+		return
+	}
+	s.queue(tern.OpSet(f.ids[segCwd], map[string]any{"spans": cwdSpans(cwd), "href": cwdHref(cwd)}))
+	f.slots[segCwd].text = cwd
 }
 
 // sameRate reports equal cache-hit rates, both absent or both the same.

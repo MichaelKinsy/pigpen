@@ -35,9 +35,10 @@ func TestSessionFileIsAHiddenNodeAheadOfTheTranscript(t *testing.T) {
 	if !reflect.DeepEqual(ops, want) {
 		t.Fatalf("first frame = %#v, want %#v", ops, want)
 	}
-	// A node PiG puts first goes before the transcript, after the session node.
+	// A node PiG puts first goes before the transcript, after the session
+	// node, and settles: a node follows it. The session node never settles.
 	ops = h.applyFrameOps(fe.Frame{Ops: []fe.Op{{Kind: fe.Insert, Region: fe.RegionMain, ID: "w", Index: 0, Node: fe.Lines{Lines: []string{"w"}}}}})
-	if len(ops) != 1 || ops[0].([]any)[3] != "n.x" || len(opsOn(ops, "pig.session")) != 0 {
+	if len(ops) != 2 || ops[0].([]any)[3] != "n.x" || !reflect.DeepEqual(ops[1], []any{"settle", "n.w"}) || len(opsOn(ops, "pig.session")) != 0 {
 		t.Fatalf("insert at the top = %#v", ops)
 	}
 	for _, tc := range []struct {

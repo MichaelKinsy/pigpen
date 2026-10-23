@@ -122,8 +122,12 @@ func (s *session) dropPending(id string) {
 	})
 }
 
-// applyDock applies an op on the dock.
+// applyDock applies an op on the dock, which a fullscreen overlay's screen
+// mirrors.
 func (s *session) applyDock(op fe.Op) {
+	if s.screen != nil {
+		s.screen.dirty = true
+	}
 	at := slices.IndexFunc(s.dock, func(e *entry) bool { return e.id == op.ID })
 	if op.Kind == fe.Remove {
 		if at >= 0 {
@@ -131,6 +135,7 @@ func (s *session) applyDock(op fe.Op) {
 			s.dock = slices.Delete(s.dock, at, at+1)
 			s.dirty = true
 			s.dockNodeChanged(e, e.node, nil)
+			s.dropViewRules(e.tid)
 		}
 		return
 	}
@@ -216,8 +221,12 @@ func restructured(e *entry, prev, next fe.Node, rows pickerRows) bool {
 		p, ok := prev.(fe.Footer)
 		return !ok || len(p.ExtensionStatuses) != len(n.ExtensionStatuses)
 	case fe.Lines:
-		_, ok := prev.(fe.Lines)
-		return !ok
+		p, ok := prev.(fe.Lines)
+		if !ok {
+			return true
+		}
+		view := validView(n.View, n.Lines)
+		return view != validView(p.View, p.Lines) || view && (!sameView(p.View, n.View) || !slices.Equal(p.Lines, n.Lines))
 	case fe.Selector:
 		p, ok := prev.(fe.Selector)
 		return !ok || rows.tree != e.tree || !samePickerShell(p, n)
@@ -248,7 +257,7 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 	fresh := false
 	if e.unsent || restructure || restructured(e, prev, e.node, rows) {
 		e.tree = rows.tree
-		view := buildNode(s.element(e))
+		view := buildNode(s.element(e, true))
 		view.Handlers = e.handlers
 		fresh = e.unsent || e.view.Kind != view.Kind
 		if _, ok := e.node.(fe.Footer); ok && !fresh {
@@ -323,6 +332,7 @@ func (s *session) applyOverlay(op fe.Op) {
 	switch {
 	case op.Kind == fe.Remove:
 		if at >= 0 {
+			s.dropViewRules(s.overlays[at].tid)
 			s.overlays = slices.Delete(s.overlays, at, at+1)
 			s.dirty = true
 		}
@@ -355,19 +365,25 @@ func (s *session) view() tern.View {
 	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
 }
 
-// setCellWidth rebuilds the overlays, which are sized in pixels.
-func (s *session) setCellWidth(cellPx float64) {
-	if cellPx == s.cellPx {
+// setCols keeps the pane's width in cells and rebuilds the overlays, whose
+// cards hold columns of it.
+func (s *session) setCols(cols int) {
+	if cols == s.cols {
 		return
 	}
-	s.cellPx = cellPx
+	s.cols = cols
 	for _, e := range s.overlays {
 		s.rebuild(e, e.node, true)
 	}
 }
 
-// element describes a node's view, without handlers.
-func (s *session) element(e *entry) tern.Element {
+// element describes a node's view, without handlers. clicks reports whether
+// the elements of the node's view take clicks, as PiG's clicks on the node.
+func (s *session) element(e *entry, clicks bool) tern.Element {
+	var node string
+	if clicks {
+		node = e.id
+	}
 	switch n := e.node.(type) {
 	case fe.Editor:
 		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: n.Placeholder, Sendable: n.Sendable}}
@@ -380,9 +396,19 @@ func (s *session) element(e *entry) tern.Element {
 	case fe.Settings:
 		return prefsElement(e.id, n, e.editing)
 	case fe.Overlay:
-		return overlayElement(e.id, n, s.cellPx)
+		var body tern.Element
+		if validView(n.View, n.Lines) {
+			body = s.viewElement("view", e.tid+".view", n.View, n.Lines, node)
+		} else {
+			s.dropViewRules(e.tid)
+		}
+		return overlayElement(e.id, n, s.cols, body)
 	case fe.Lines:
-		text := strings.Join(n.Lines, "\n")
+		if validView(n.View, n.Lines) {
+			return s.viewElement(e.id, e.tid, n.View, n.Lines, node)
+		}
+		s.dropViewRules(e.tid)
+		text := linesText(n.Lines)
 		return ui.Ansi{Common: ui.Common{Key: e.id, Hidden: blank(text)}, Text: text}
 	}
 	return ui.Ansi{Common: ui.Common{Key: e.id, Hidden: true}}
@@ -404,10 +430,14 @@ func (s *session) handlers(e *entry, node fe.Node) tern.Handlers {
 // queueLines queues a change of the dock lines' text and of whether they
 // hide. Fresh lines' view holds them.
 func (s *session) queueLines(e *entry, prev fe.Node, lines fe.Lines, fresh bool) {
+	if validView(lines.View, lines.Lines) {
+		// The view's elements hold the lines; a change renders them.
+		return
+	}
 	if p, ok := prev.(fe.Lines); ok && !fresh && slices.Equal(p.Lines, lines.Lines) {
 		return
 	}
-	text := strings.Join(lines.Lines, "\n")
+	text := linesText(lines.Lines)
 	if fresh {
 		e.raw.text, e.raw.hot = text, hot{hidden: blank(text)}
 		return

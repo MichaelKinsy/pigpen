@@ -2,8 +2,10 @@ package frontend
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
@@ -364,10 +366,53 @@ func (s *session) setEditing(id, row string) {
 	_ = s.flushLocked()
 }
 
-// overlayElement draws an overlay as a card around its lines: modal while
+// Tern draws an overlay as a card in the layer, in the 13px design units the
+// layer zooms with the font as main and the dock
+// (https://docs.stencil.so/tern/elements/chrome.md#overlay, Tern 0.4.5's
+// sheet): sm, md and lg cards are 320, 480 and 720px wide, never wider than
+// the layer inside its 12px padding, and pad their body by 6px; a full sheet
+// fills the layer inside 8px. The layer is 20px (unzoomed) wider than the
+// dock's ansi block, which holds the pane's cols.
+const (
+	overlayLayerPaddingPx = 12
+	overlayBodyPaddingPx  = 6
+	smOverlayPx           = 320
+	mdOverlayPx           = 480
+	lgOverlayPx           = 720
+)
+
+// overlaySheetName names the stylesheet that fits a full sheet of lines to
+// the pane (overlaySheet).
+const overlaySheetName = "pig-overlay"
+
+// linesRole is the role of an overlay that shows terminal lines, which
+// overlaySheet fits to a full sheet: its body is its ansi lines, or its view
+// keeps rows as lines wider than a padded full sheet holds (wideRows).
+const linesRole = "pig.lines"
+
+// overlaySheet lets a full sheet of lines hold the pane's cols and rows. PiG
+// gives an extension's overlay over the whole terminal the pty's size: lines
+// of the pane's cols, as many as its rows. Tern's sheet held a column fewer
+// at 13px and two at 16 and 20px, and a row fewer at 16 and 20px (Tern
+// 0.4.5), so every line wrapped into a second row and the sheet scrolled.
+// With the sheet's inset at 2px and no padding in its body, its ansi block
+// spans the layer less 4 design px: wider than the dock's block while the
+// zoom keeps 4 design px under the layer's 20px more, up to a 65px font
+// (measured: a column or more over cols from 11 to 24px), and as tall as the
+// pty's rows or a row taller in every geometry measured. The rules hold only
+// overlays of lines (linesRole): a sheet that draws a view's elements, which
+// lay themselves out, keeps Tern's padding, unless the view keeps rows of the
+// pty's width as lines (pig-music's tab rule and idle play bar), which
+// wrapped in it.
+const overlaySheet = `.sf-overlay.sz-full[data-role='` + linesRole + `']{padding:2px}.sf-overlay.sz-full[data-role='` + linesRole + `'] .sf-ov-body{padding:0}`
+
+// overlayElement draws an overlay as a card around its lines, cut at its
+// columns, or around body, its view's element, when it has one: modal while
 // it takes the keys, placed at the top, center or bottom as Pi anchors it,
-// and as wide as the lines need.
-func overlayElement(id string, node fe.Node, cellPx float64) tern.Element {
+// and in the smallest card that holds its columns in a pane of cols. It has
+// the role linesRole when it draws its lines, or a full sheet whose view
+// holds wide rows of lines.
+func overlayElement(id string, node fe.Node, cols int, body tern.Element) tern.Element {
 	overlay, _ := node.(fe.Overlay)
 	anchor := ui.AnchorCenter
 	switch {
@@ -376,21 +421,135 @@ func overlayElement(id string, node fe.Node, cellPx float64) tern.Element {
 	case strings.HasPrefix(overlay.Anchor, "bottom"):
 		anchor = ui.AnchorBottom
 	}
-	// The card pads its body by 6px on each side.
-	px := float64(overlay.Width)*cellPx + 12
+	columns := overlayColumns(overlay, cols)
 	size := ui.SizeFull
-	switch {
-	case px <= 320:
-		size = ui.SizeSM
-	case px <= 480:
-		size = ui.SizeMD
-	case px <= 720:
-		size = ui.SizeLG
+	for _, card := range []struct {
+		size ui.Size
+		px   float64
+	}{{ui.SizeSM, smOverlayPx}, {ui.SizeMD, mdOverlayPx}, {ui.SizeLG, lgOverlayPx}} {
+		if columns <= cardColumns(card.px, cols) {
+			size = card.size
+			break
+		}
+	}
+	role := ""
+	if body == nil {
+		body = ui.Ansi{Common: ui.Common{Key: "lines"}, Text: linesText(clipLines(overlay.Lines, columns))}
+		role = linesRole
+	} else if size == ui.SizeFull && wideRows(body, cols) {
+		role = linesRole
 	}
 	return ui.Overlay{
-		Common: ui.Common{Key: id}, Modal: !overlay.NonCapturing, Anchor: anchor, Size: size,
-		Children: []tern.Element{ui.Ansi{Common: ui.Common{Key: "lines"}, Text: strings.Join(overlay.Lines, "\n")}},
+		Common: ui.Common{Key: id, Role: role}, Modal: !overlay.NonCapturing, Anchor: anchor, Size: size,
+		Children: []tern.Element{body},
 	}
+}
+
+// wideRows reports whether el shows an ansi row wider than a full sheet's
+// body holds inside Tern's padding in a pane of cols (counted as a card as
+// wide as the layer, so with the layer's 12px over the sheet's 8px). A
+// pane whose width Tern has not said yet has none.
+func wideRows(el tern.Element, cols int) bool {
+	if cols <= 0 {
+		return false
+	}
+	held := cardColumns(math.Inf(1), cols)
+	var wide func(tern.Element) bool
+	wide = func(el tern.Element) bool {
+		n := el.Node()
+		if n.Props["hidden"] == true {
+			return false
+		}
+		if n.Kind == tern.KindAnsi {
+			text, _ := n.Props["text"].(string)
+			return linesCells([]string{text}) > held
+		}
+		return slices.ContainsFunc(n.Children, wide)
+	}
+	return wide(el)
+}
+
+// overlayColumns is the columns an overlay's lines show in, as a terminal
+// composites them: its Width, at which PiG lays it out in the dock's
+// columns. An extension renders its overlay at the pty's size instead, and
+// its lines may run past the overlay (pig-music's quick settings highlight
+// a row across the whole terminal), which a terminal cuts at the overlay's
+// width. An overlay as wide as the dock spans the pty, whose width is the
+// pane's cols.
+func overlayColumns(overlay fe.Overlay, cols int) int {
+	if cols > 0 && overlay.Width >= cols-columnMargin {
+		return cols
+	}
+	return overlay.Width
+}
+
+// clipLines cuts each line past its first n cells (none when n is 0 or
+// less), keeping every escape sequence, so a cut line leaves the colors and
+// links as the whole line does. It returns lines itself when none is cut.
+func clipLines(lines []string, n int) []string {
+	if n <= 0 {
+		return lines
+	}
+	var clipped []string
+	for i, line := range lines {
+		cut := cellEnd(line, n)
+		if cut == len(line) {
+			continue
+		}
+		if clipped == nil {
+			clipped = slices.Clone(lines)
+		}
+		var b strings.Builder
+		b.WriteString(line[:cut])
+		for j := cut; j < len(line); {
+			if line[j] == 0x1b {
+				k := escapeLen(line[j:])
+				b.WriteString(line[j : j+k])
+				j += k
+				continue
+			}
+			_, k := utf8.DecodeRuneInString(line[j:])
+			j += k
+		}
+		clipped[i] = b.String()
+	}
+	if clipped == nil {
+		return lines
+	}
+	return clipped
+}
+
+// cellEnd is the byte offset of the first character of line past its first
+// n cells, or len(line) when it has none. A wide character that does not
+// fit is past them.
+func cellEnd(line string, n int) int {
+	column := 0
+	for i := 0; i < len(line); {
+		if line[i] == 0x1b {
+			i += escapeLen(line[i:])
+			continue
+		}
+		r, k := utf8.DecodeRuneInString(line[i:])
+		if column += runeCells(r); column > n {
+			return i
+		}
+		i += k
+	}
+	return len(line)
+}
+
+// cardColumns is how many columns the body of a card px wide holds at least
+// in a pane of cols (0: not known), a column short, under every face: the
+// card's width, counted with the widest advance, or, where the layer is
+// narrower, the dock's cols less the layer's and the body's padding, counted
+// with the narrowest (the layer's 20px more than the dock left out).
+func cardColumns(px float64, cols int) int {
+	few, many := 1/(designFontPx*widestAdvance), 1/(designFontPx*narrowestAdvance)
+	held := (px - 2*overlayBodyPaddingPx) * few
+	if cols > 0 {
+		held = min(held, float64(cols)-2*(overlayLayerPaddingPx+overlayBodyPaddingPx)*many)
+	}
+	return int(math.Floor(held)) - columnMargin
 }
 
 // sameSettings reports whether two settings nodes draw the same prefs sheet.
@@ -404,5 +563,5 @@ func sameSettings(a, b fe.Settings) bool {
 
 // sameOverlay reports whether two overlays draw the same card.
 func sameOverlay(a, b fe.Overlay) bool {
-	return a.Width == b.Width && a.Anchor == b.Anchor && a.NonCapturing == b.NonCapturing && slices.Equal(a.Lines, b.Lines)
+	return a.Width == b.Width && a.Anchor == b.Anchor && a.NonCapturing == b.NonCapturing && slices.Equal(a.Lines, b.Lines) && sameView(a.View, b.View)
 }

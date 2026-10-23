@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"bytes"
 	"fmt"
 	"runtime"
 	"strings"
@@ -270,4 +271,81 @@ func BenchmarkHeapAfterTokens10000(b *testing.B) {
 		b.ReportMetric(float64(int64(after.HeapInuse)-int64(half.HeapInuse))/500, "heapB/token")
 		runtime.KeepAlive(s)
 	}
+}
+
+// frameOut is the terminal for the hidden stream: it counts the frames and
+// the bytes the member writes.
+type frameOut struct {
+	bytes, writes, frames atomic.Int64
+}
+
+func (o *frameOut) Write(p []byte) (int, error) {
+	o.bytes.Add(int64(len(p)))
+	o.writes.Add(1)
+	if bytes.HasPrefix(p, []byte("\x1b_tsp;f;")) {
+		o.frames.Add(1)
+	}
+	return len(p), nil
+}
+
+// hiddenTokens is how many tokens the hidden stream streams: a 32 KB reply.
+const hiddenTokens = 8000
+
+// A reply streamed while the pane is hidden, as an agent in a background tab
+// does: Tern answers with the default two credits and acknowledges what it
+// drew, then the tab is hidden and no ack arrives until it shows again. The
+// metrics are per stream: what reached the terminal while hidden, what the
+// member allocated, and the frames that went out when the pane showed.
+func BenchmarkHiddenStream8000(b *testing.B) {
+	text := "Start" + strings.Repeat(" tok", hiddenTokens)
+	var hiddenWrites, hiddenBytes, shownFrames, allocated int64
+	for b.Loop() {
+		out := &frameOut{}
+		env := fe.Env{
+			Out: out, Columns: 120, Version: "bench",
+			Getenv:   func(key string) string { return map[string]string{"TERM_PROGRAM": "tern"}[key] },
+			Fallback: func(reason string) { b.Errorf("fallback: %s", reason) },
+			Edit:     func(fe.Edit) {}, Undo: func() {}, Send: func(string) {}, Act: func(fe.Action) {},
+		}
+		s, err := Frontend().Open(env)
+		if err != nil || s == nil {
+			b.Fatalf("open: %v %v", s, err)
+		}
+		time.Sleep(10 * time.Millisecond)
+		s.HandleInput("\x1b_tsp;r;{\"r\":\"hello\",\"v\":1,\"credits\":2,\"cols\":120,\"cell\":{\"w\":8,\"h\":16}}\x1b\\")
+		s.InputReady()
+		time.Sleep(20 * time.Millisecond)
+		ops := []fe.Op{
+			{Kind: fe.Insert, Region: fe.RegionDock, ID: "editor", Index: 0, Node: fe.Editor{Sendable: true}},
+			{Kind: fe.Insert, Region: fe.RegionMain, ID: "stream", Index: 0, Node: fe.MarkdownText{Role: fe.RoleAssistant, Text: text[:5], Streaming: true}},
+		}
+		if err := s.Apply(fe.Frame{Ops: ops}); err != nil {
+			b.Fatal(err)
+		}
+		s.HandleInput(fmt.Sprintf("\x1b_tsp;e;{\"ev\":\"ack\",\"sf\":\"pig\",\"s\":%d}\x1b\\", out.frames.Load()))
+		time.Sleep(20 * time.Millisecond)
+		s.HandleInput("\x1b_tsp;e;{\"ev\":\"visible\",\"sf\":\"pig\",\"visible\":false}\x1b\\")
+		writes0, bytes0 := out.writes.Load(), out.bytes.Load()
+		var before, after runtime.MemStats
+		runtime.ReadMemStats(&before)
+		for i := 1; i <= hiddenTokens; i++ {
+			node := fe.MarkdownText{Role: fe.RoleAssistant, Text: text[:5+4*i], Streaming: true}
+			if err := s.Apply(fe.Frame{Ops: []fe.Op{{Kind: fe.Update, Region: fe.RegionMain, ID: "stream", Index: 0, Node: node}}}); err != nil {
+				b.Fatal(err)
+			}
+		}
+		runtime.ReadMemStats(&after)
+		hiddenWrites += out.writes.Load() - writes0
+		hiddenBytes += out.bytes.Load() - bytes0
+		allocated += int64(after.TotalAlloc - before.TotalAlloc)
+		frames := out.frames.Load()
+		s.HandleInput("\x1b_tsp;e;{\"ev\":\"visible\",\"sf\":\"pig\",\"visible\":true}\x1b\\")
+		shownFrames += out.frames.Load() - frames
+		_ = s.Close()
+	}
+	n := float64(b.N)
+	b.ReportMetric(float64(hiddenWrites)/n, "hiddenWrites/stream")
+	b.ReportMetric(float64(hiddenBytes)/n, "hiddenWireB/stream")
+	b.ReportMetric(float64(allocated)/n, "allocB/stream")
+	b.ReportMetric(float64(shownFrames)/n, "framesOnShow/stream")
 }

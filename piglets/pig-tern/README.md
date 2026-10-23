@@ -2,7 +2,7 @@
 
 PiG drawn natively in [Tern](https://stencil.so/tern). Run directly in a Tern pane, PiG's interactive mode becomes a Tern Surface Protocol surface: messages render as Markdown, tool calls as tool cards, edits as diffs, selectors as pickers, settings as a prefs sheet, and the input editor as a Tern editor. Outside Tern, PiG draws as usual.
 
-**Needs PiG 0.4.2 or later.** The Piglet fills the frontend slot (`slots.frontend`, PiG D91), which PiG 0.4.1 rejects.
+**Needs PiG 0.4.2 or later.** The Piglet fills the frontend slot (`slots.frontend`, PiG D91), which PiG 0.4.1 rejects. The member also uses PiG's component kit and extension mouse delivery (D102), which no released PiG has yet, so it builds only against a PiG source tree that has them.
 
 **Source only, not a published release.** No release Binary is published. A frontend member is fused into a Piglet Binary, so build one with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it):
 
@@ -41,13 +41,21 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 | `/settings` | a prefs sheet: on/off settings as switches, settings with a submenu as buttons, the rest as a choice of values |
 | Overlays | a card over the transcript around the overlay's lines |
 | Session file | a hidden `text` node with id and role `pig.session` whose `href` is the session file PiG writes (none while the session is not persisted), so a Tern plugin can find a pane's session |
-| Everything else (widgets, an extension's own footer, other extension output) | plain lines inside the surface |
+| Extension components drawn with PiG's component kit (D102), for example pig-music | Tern elements: text, Markdown, boxes as cards, stacks, lists, select and settings lists, progress bars, loaders, images in their cells, and a titled overlay's frame as its card. A view's theme overrides apply to its own element only |
+| Clicks on an extension's view | PiG's terminal click, with the view path, the clicked list item and the click count (so a double click counts), reaches the extension's component as a mouse click does in PiG's own renderer |
+| Footer folder | a path span that opens in Tern's Files pane on click |
+| PiG's theme | Tern's program palette, sent before the first frame and whenever PiG's colors change. PiG picks a light or dark theme from Tern's appearance, so switching Tern's appearance switches PiG's theme |
+| Contrast | an extension view's theme overrides are corrected as Tern corrects a palette: text reads at least 4.5:1 (3:1 for muted, dim and border tokens) on every Tern surface it can land on, in light and dark, so a theme made for a dark terminal stays readable on Tern's light surface |
+| PiG's mark | the pig head of PiG's active sprite in the settings sheet's brand tile, as pixel art in place of Tern's π icon |
+| Fullscreen easter eggs | a Tern screen surface that plays the animation as one `ansi` node, with the dock (editor and footer) kept under it |
+| External editor | PiG lends the pane to the editor: the surface closes, keeping its transcript, and is adopted again when the editor exits |
+| Everything else (widgets drawn as raw lines, an extension's own footer, other extension output) | plain lines inside the surface |
 
 Keys still reach PiG directly, so a picker or prefs sheet behaves like PiG's own selector; Tern's pointer events on it become the same actions.
 
 Because the editor takes `send`, Tern agent blocks and Carly can prompt PiG. A prompt that arrives while PiG cannot take input, for example during first-time setup, waits until it can.
 
-Frames respect Tern's credits. Tern acknowledges no frame while a pane is hidden, so PiG's startup fits in two frames: an agent started in a background tab still receives its prompt.
+Frames respect Tern's credits. Tern acknowledges no frame while a pane is hidden, so PiG's startup fits in two frames and later frames wait until the pane shows: an agent started in a background tab still receives its prompt.
 
 ## Credits
 
