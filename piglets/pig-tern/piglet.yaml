@@ -2,7 +2,7 @@
 # Default PiG drawn natively in Tern. The frontend member changes how the interactive
 # mode is drawn, not what PiG does: outside Tern it declines and PiG draws as usual.
 name: pig-tern
-description: "PiG drawn natively in Tern: the transcript, tool cards, diffs and the input editor become Tern Surface Protocol nodes. Outside Tern, PiG draws as usual."
+description: "PiG drawn natively in Tern: the transcript, tool cards, diffs, the input editor and the footer become Tern Surface Protocol nodes. Outside Tern, PiG draws as usual."
 release:
   version: 0.1.0
 build:

@@ -458,7 +458,7 @@
       "id": "pig-tern",
       "kind": "piglet",
       "name": "pig-tern",
-      "description": "PiG drawn natively in Tern: the transcript, tool cards, diffs and the input editor become Tern Surface Protocol nodes. Outside Tern, PiG draws as usual.",
+      "description": "PiG drawn natively in Tern: the transcript, tool cards, diffs, the input editor and the footer become Tern Surface Protocol nodes. Outside Tern, PiG draws as usual.",
       "maintainer": "MichaelKinsy",
       "official": false,
       "featured": false,
@@ -472,13 +472,13 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-tern"
       },
-      "manifestSha256": "377e322dcfe7927d02f12ca447f3a0eb479256cf4b3a30342aa548b214197f9a",
+      "manifestSha256": "06506e99068ad8baf377f9bdce4de63a6119332e1d5fd80f75b6b30f7d0e1c4b",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
         "Needs a PiG with Piglet frontend members (D91), which first ships in PiG 0.4.2. PiG 0.4.1 rejects build.frontend.",
         "The frontend member draws only when PiG runs directly in a Tern pane (TERM_PROGRAM=tern) with no multiplexer between them (TMUX, STY, ZELLIJ and HERDR_ENV unset). Anywhere else, with PIG_TUI_NATIVE=0, or when Tern does not answer the surface protocol hello within a second, PiG draws with its own ANSI renderer.",
-        "Native today: user and assistant messages as Markdown, thinking, tool cards (with cancelled status and edit diffs) and the input editor, which takes Tern's edit, undo and send events, so Tern agent blocks and Carly can prompt it. Selectors, overlays and anything else PiG draws still appear as plain lines inside the native surface.",
+        "Native today: user and assistant messages as Markdown, thinking, tool cards (with cancelled status and edit diffs), the working indicator as a Tern spinner, the footer as a Tern status strip, and the input editor, which takes Tern's edit, undo and send events, so Tern agent blocks and Carly can prompt it. Selectors, overlays, widgets and other extension output still appear as plain lines inside the native surface.",
         "It is a Go frontend member on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js.",
         "A local Piglet Binary builds and runs in Tern on darwin/arm64, but none is signed or published. The other targets are listed in the manifest and compile-checked only, so no platform is a support claim."
       ]

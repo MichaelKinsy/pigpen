@@ -32,8 +32,10 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 | Thinking | a collapsible card |
 | Tool calls | `tool` nodes with name, target, status (including cancelled) and output |
 | Edit results | `diff` nodes |
-| Input editor | an `editor` node with `edit`, `undo` and `send`; it reports `sendable` when PiG can take a prompt |
-| Everything else (selectors, overlays, footer, extension output) | plain lines inside the surface |
+| Input editor | an `editor` node with `edit`, `undo` and `send`, without PiG's border lines; it reports `sendable` when PiG can take a prompt |
+| Working indicator | a `spinner` above the editor that Tern animates, so spinner ticks send no frames; a retry countdown has the warning tone |
+| Footer | a `status` strip: directory, branch, session name, token usage and cost, context with a `meter` (warning above 70%, error above 90%), model with an `effort` for the thinking level, and extension statuses |
+| Everything else (selectors, overlays, widgets, an extension's own footer, other extension output) | plain lines inside the surface |
 
 Because the editor takes `send`, Tern agent blocks and Carly can prompt PiG. A prompt that arrives while PiG cannot take input, for example during first-time setup, waits until it can.
 
