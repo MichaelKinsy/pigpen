@@ -87,8 +87,8 @@ fails on drift and runs the source quality gates. `npm run validate` also runs
 those gates, rebuilds the local stage, and invokes PiG on Packages and staged
 manifests. `npm run test:porter` exercises independent installation and two staged
 compositions. The scenario needs a PiG build with Package Skill expansion and the
-print-mode tool-scope fix; PiG 0.5.2 has both, and CI runs it with the pig it builds from
-PiG's `v0.5.2` commit. Set `PIG_BIN` to a 0.5.2 pig (PiG 0.3.x fails it). `npm run test:moved` installs `session-ingest` and
+print-mode tool-scope fix; PiG 0.5.3 has both, and CI runs it with the pig it builds from
+PiG's `v0.5.3` commit. Set `PIG_BIN` to a 0.5.3 pig (PiG 0.3.x fails it). `npm run test:moved` installs `session-ingest` and
 `context-info` into a scratch home and drives a real `pig` against a scripted local
 provider (needs `PIG_BIN` and a Go toolchain). `npm run test:go-ports` also needs `PIG_SOURCE_ROOT`, a PiG checkout at the commit pinned
 in `scripts/pig-requirement.json`: `bun-runtime` compares its Bun assets with that checkout's runtime lock, and CI sets it.

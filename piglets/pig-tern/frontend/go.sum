@@ -1,3 +1,5 @@
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3 h1:mgLZchfHrmjoyuKNzP5rpn/D/6hx6ZFoDfwHsqcU8Yo=
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3/go.mod h1:4j0XhCW0EPOBWvqYE7XKjTvIAahI7K1VyyW3KpjTKj8=
 github.com/stencil-hq/tern-sdk/go/tern v0.1.0 h1:FTxvBukWnVL6s45om7UnIeVSGhj3ELdzdLVbDomCNEc=
 github.com/stencil-hq/tern-sdk/go/tern v0.1.0/go.mod h1:A/gAtHLX+wy4UO7jMTOvmo6HrviXmCoYav0P9q+tFro=
 golang.org/x/sys v0.48.0 h1:bbX/i/6MgT9BVLM9RT1thmxL04yeTAhbEz4SyadbXoo=
