@@ -16,7 +16,7 @@
 // it changes; the props that change while it stays (the editor's text, a
 // picker's rows, the dock lines, the spinner's label, the footer's values)
 // travel as raw ops on the rendered nodes, like the transcript's. An
-// extension surface that carries its components' view (D102) draws each
+// extension surface that carries its components' view (D103) draws each
 // component as a Tern element (view.go), its lines wherever one is not.
 package frontend
 
