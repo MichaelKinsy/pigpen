@@ -21,7 +21,42 @@ export function scratchDir(prefix) {
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 
-/** Every Go module: a component's own root go.mod (a shared library Package), and each components/<name>/extensions/<dir> and piglets/<name>/extensions/<dir>. */
+/**
+ * The value of slots.frontend.member in a piglet.yaml, read without a YAML library: the jobs that list Go modules
+ * (govulncheck, the android cross-compile) run before any `npm ci`, so this file imports node built-ins only. A Piglet
+ * manifest is block-style YAML, so the key is found by indentation: slots, then frontend under it, then member under that.
+ */
+export function frontendMemberOf(manifest) {
+  const path = [];
+  for (const line of manifest.split(/\r?\n/)) {
+    const key = /^( *)([A-Za-z0-9_-]+):(?:\s+(.*))?$/.exec(line);
+    if (!key) continue;
+    const indent = key[1].length;
+    while (path.length && path.at(-1).indent >= indent) path.pop();
+    path.push({ indent, key: key[2] });
+    if (path.length !== 3 || path[0].key !== 'slots' || path[1].key !== 'frontend' || path[2].key !== 'member') continue;
+    const value = (key[3] ?? '').trim();
+    const quoted = /^(["'])(.*?)\1(?:\s+#.*)?$/.exec(value);
+    const plain = quoted ? quoted[2] : value.replace(/\s+#.*$/, '');
+    return plain || undefined;
+  }
+  return undefined;
+}
+
+/** The directory of a Piglet's frontend member (slots.frontend.member in its piglet.yaml) when it holds go.mod, else undefined. */
+export function frontendMember(piglet) {
+  const manifest = join(piglet, 'piglet.yaml');
+  if (!existsSync(manifest)) return undefined;
+  const frontend = frontendMemberOf(readFileSync(manifest, 'utf8'));
+  if (!frontend) return undefined;
+  const dir = resolve(piglet, frontend);
+  return existsSync(join(dir, 'go.mod')) ? dir : undefined;
+}
+
+/**
+ * Every Go module: a component's own root go.mod (a shared library Package), each components/<name>/extensions/<dir>
+ * and piglets/<name>/extensions/<dir>, and a Piglet's frontend member (piglet.yaml slots.frontend.member).
+ */
 export function goModules(directory = root) {
   const found = [];
   for (const kind of ['components', 'piglets']) {
@@ -34,6 +69,10 @@ export function goModules(directory = root) {
       if (existsSync(join(base, owner.name, 'go.mod'))) {
         found.push(join(base, owner.name));
         found.push(...nestedModules(join(base, owner.name)));
+      }
+      if (kind === 'piglets') {
+        const frontend = frontendMember(join(base, owner.name));
+        if (frontend) found.push(frontend);
       }
       const extensions = join(base, owner.name, 'extensions');
       if (!existsSync(extensions)) continue;

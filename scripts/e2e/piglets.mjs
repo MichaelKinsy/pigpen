@@ -243,6 +243,20 @@ export const piglets = {
     ],
   },
   'pig-porter': { steps: porterSkill },
+  'pig-tern': {
+    // CI has no Tern. TERM_PROGRAM=tern and the multiplexer tmux puts between them are what the member sees in Tern's own
+    // pane inside tmux, and PIG_TUI_NATIVE=0 is the user's switch: either way the member declines and PiG draws its own
+    // ANSI UI. The run checks that UI end to end, and that no Surface Protocol bytes reach the terminal as text.
+    prepare: () => ({ TERM_PROGRAM: 'tern', PIG_TUI_NATIVE: '0' }),
+    steps: [
+      // The faux model writes a file, then edits it: PiG's own tool lines and diff, then its closing text.
+      { say: 'Run: write then edit parity-batched-target.txt', expect: 'batched-done' },
+      { run: async (t) => { assert.match(t.screen(), /-1 REPLACE_ME[\s\S]*\+1 DONE/, 'the edit diff is drawn as ANSI lines'); } },
+      { say: '/settings', expect: 'Auto-compact' },
+      { key: ['Escape'], gone: 'Auto-compact' },
+      { run: async (t) => assert.doesNotMatch(t.screen(), /tsp;|\x1b_/, 'Surface Protocol bytes reached the screen as text') },
+    ],
+  },
   'pig-typesafe': { steps: [{ say: '/typesafe', expect: 'TypeSafe: disabled.' }] },
   'pig-warden': {
     steps: [

@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { after, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { goModules, registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
+import { frontendMemberOf, goModules, registersNativeProvider, sdkBuildTags } from './go-modules.mjs';
 
 const scratch = mkdtempSync(join(tmpdir(), 'go-modules-test-'));
 const fakePig = join(scratch, 'pig');
@@ -53,6 +53,46 @@ describe('sdkBuildTags', () => {
   });
   it('is empty for a directory that is not there', () => {
     assert.deepEqual(sdkBuildTags(join(own, 'missing')), []);
+  });
+});
+
+// A frontend member is a Go module the Binary fuses, so vet, test and the cross-checks must reach it.
+describe('goModules', () => {
+  const own = mkdtempSync(join(tmpdir(), 'go-modules-list-test-'));
+  after(() => rmSync(own, { recursive: true, force: true }));
+  const piglet = (name, manifest, module) => {
+    const dir = join(own, 'piglets', name);
+    mkdirSync(join(dir, 'ui'), { recursive: true });
+    writeFileSync(join(dir, 'piglet.yaml'), manifest);
+    if (module) writeFileSync(join(dir, 'ui', 'go.mod'), 'module example.com/ui\n');
+    return join(dir, 'ui');
+  };
+  it('lists the directory slots.frontend.member names, wherever it is', () => {
+    const member = piglet('native', 'name: native\nslots:\n  frontend:\n    member: ./ui\n', true);
+    assert.deepEqual(goModules(own), [member]);
+  });
+  it('skips a frontend directory without go.mod and a Piglet without a frontend slot', () => {
+    piglet('broken', 'name: broken\nslots:\n  frontend:\n    member: ./ui\n', false);
+    piglet('plain', 'name: plain\n', true);
+    assert.deepEqual(goModules(own).map((dir) => dir.slice(own.length)), ['/piglets/native/ui']);
+  });
+});
+
+// The member is read without a YAML library: the govulncheck and android jobs run this script before any npm ci.
+describe('frontendMemberOf', () => {
+  it('reads slots.frontend.member, quoted or not, with a trailing comment', () => {
+    assert.equal(frontendMemberOf('name: a\nslots:\n  frontend:\n    member: ./ui\n'), './ui');
+    assert.equal(frontendMemberOf('slots:\n  frontend:\n    member: "./ui dir" # the member\n'), './ui dir');
+    assert.equal(frontendMemberOf("slots:\r\n  frontend:\r\n    member: './ui'\r\n"), './ui');
+  });
+  it('ignores a member key anywhere else', () => {
+    assert.equal(frontendMemberOf('name: a\nmember: ./x\nslots:\n  other:\n    member: ./y\nbuild:\n  frontend:\n    member: ./z\n'), undefined);
+    assert.equal(frontendMemberOf('slots:\n  frontend:\n    other: 1\nskills: []\nmember: ./w\n'), undefined);
+    assert.equal(frontendMemberOf('name: a\n'), undefined);
+  });
+  it('has no import outside node built-ins, so it runs without node_modules', () => {
+    const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'go-modules.mjs'), 'utf8');
+    for (const [, from] of source.matchAll(/^import .* from '([^']+)'/gm)) assert.ok(from.startsWith('node:') || from.startsWith('./'), from);
   });
 });
 
