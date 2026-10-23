@@ -56,6 +56,28 @@ describe('sdkBuildTags', () => {
   });
 });
 
+// A frontend member is a Go module the Binary fuses, so vet, test and the cross-checks must reach it.
+describe('goModules', () => {
+  const own = mkdtempSync(join(tmpdir(), 'go-modules-list-test-'));
+  after(() => rmSync(own, { recursive: true, force: true }));
+  const piglet = (name, manifest, module) => {
+    const dir = join(own, 'piglets', name);
+    mkdirSync(join(dir, 'ui'), { recursive: true });
+    writeFileSync(join(dir, 'piglet.yaml'), manifest);
+    if (module) writeFileSync(join(dir, 'ui', 'go.mod'), 'module example.com/ui\n');
+    return join(dir, 'ui');
+  };
+  it('lists the directory build.frontend names, wherever it is', () => {
+    const member = piglet('native', 'name: native\nbuild:\n  frontend: ./ui\n', true);
+    assert.deepEqual(goModules(own), [member]);
+  });
+  it('skips a frontend directory without go.mod and a Piglet without build.frontend', () => {
+    piglet('broken', 'name: broken\nbuild:\n  frontend: ./ui\n', false);
+    piglet('plain', 'name: plain\n', true);
+    assert.deepEqual(goModules(own).map((dir) => dir.slice(own.length)), ['/piglets/native/ui']);
+  });
+});
+
 // `pig install --validate-only` loads an extension in a host that binds no native provider registry (PiG 0.4.0 and 0.4.1:
 // "native provider registry is not bound"), so an extension that registers a native Provider needs another load check.
 describe('registersNativeProvider', () => {
