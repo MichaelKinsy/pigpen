@@ -180,13 +180,19 @@ func (s *session) start() {
 	go s.connect(opts)
 }
 
+// noHelloReason is the fallback reason when Tern does not speak TSP to the
+// member. Tern answers no hello while its "Native program surfaces" setting
+// (native_surfaces) is off, the usual cause in a plain Tern pane.
+const noHelloReason = `Tern did not answer the surface protocol hello. Turn on "Native program surfaces" in Tern's settings to draw PiG natively.`
+
 func (s *session) connect(opts tern.Options) {
 	defer close(s.connectDone)
 	tsp, err := tern.Connect(s.ctx, opts)
 	if err != nil {
 		// After Close, fallback does nothing: only the hello timeout and an
-		// answer that is not TSP fall back.
-		s.fallback("Tern did not answer the surface protocol hello")
+		// answer that is not TSP fall back. Tern stays silent when its
+		// "Native program surfaces" setting is off, so the reason names it.
+		s.fallback(noHelloReason)
 		return
 	}
 	sf, err := tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session"})

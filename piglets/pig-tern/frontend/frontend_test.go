@@ -250,7 +250,8 @@ func TestMissingHelloReplyFallsBackOnce(t *testing.T) {
 	if err := h.session.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(h.fallbacks, []string{"Tern did not answer the surface protocol hello"}) {
+	// One fallback, and its reason tells the user which Tern setting makes Tern silent.
+	if len(h.fallbacks) != 1 || !strings.Contains(h.fallbacks[0], "did not answer the surface protocol hello") || !strings.Contains(h.fallbacks[0], `"Native program surfaces"`) {
 		t.Fatalf("fallbacks = %q", h.fallbacks)
 	}
 	if got := h.messages(); len(got) != 0 {
