@@ -1,5 +1,5 @@
-github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2 h1:V6R50PNK6nu/icwHRMYCeeIwkJedAMFCIDcgCyhb5R0=
-github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2/go.mod h1:4j0XhCW0EPOBWvqYE7XKjTvIAahI7K1VyyW3KpjTKj8=
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3 h1:mgLZchfHrmjoyuKNzP5rpn/D/6hx6ZFoDfwHsqcU8Yo=
+github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3/go.mod h1:4j0XhCW0EPOBWvqYE7XKjTvIAahI7K1VyyW3KpjTKj8=
 github.com/clipperhouse/uax29/v2 v2.7.0 h1:+gs4oBZ2gPfVrKPthwbMzWZDaAFPGYK72F0NJv2v7Vk=
 github.com/clipperhouse/uax29/v2 v2.7.0/go.mod h1:EFJ2TJMRUaplDxHKj1qAEhCtQPW2tJSwu5BF98AuoVM=
 github.com/dlclark/regexp2 v1.12.0 h1:0j4c5qQmnC6XOWNjP3PIXURXN2gWx76rd3KvgdPkCz8=

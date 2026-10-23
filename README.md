@@ -30,11 +30,11 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.5.2** (Pi 1.4.0; `pig --version` prints `0.5.2+1.4.0`). The pin is the published release `v0.5.2`
-(commit `07a8631fb54a`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
-`node scripts/pin-pig-release.mjs 0.5.2`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
+**Target: PiG 0.5.3** (Pi 1.4.0; `pig --version` prints `0.5.3+1.4.0`). The pin is the published release `v0.5.3`
+(commit `526c86df885e`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
+`node scripts/pin-pig-release.mjs 0.5.3`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
 minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3). Every Go module requires
-`github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2`, the version PiG's own go.mod pins (a Piglet build refuses a member that
+`github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3`, the version PiG's own go.mod pins (a Piglet build refuses a member that
 requires a newer one), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
 renderers (`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an
 SDK that has them). `npm run govulncheck` scans every Go module for vulnerabilities its code can reach (CI runs it on every run).
@@ -330,7 +330,7 @@ SECURITY.md                         private security reporting guidance
 
 ## Maintain and validate
 
-Use Node.js 24 and PiG 0.5.2 (CI builds the pig from the pinned PiG commit). PiG is the
+Use Node.js 24 and PiG 0.5.3 (CI builds the pig from the pinned PiG commit). PiG is the
 authority for the closed Piglet manifest and resource contract.
 
 ```sh
@@ -377,7 +377,7 @@ fixture provider. It checks exact Skill delivery, selection, source preservation
 restaging, and path safety. It does not measure an LLM's ability to follow the Skill.
 
 The scenario also checks that an explicit `tools: []` reaches the provider with
-no tools; it passes on PiG 0.5.2 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
+no tools; it passes on PiG 0.5.3 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
 `test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. No hosted CI pass is
 claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages`, `test:npm-packages`,
 `test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute

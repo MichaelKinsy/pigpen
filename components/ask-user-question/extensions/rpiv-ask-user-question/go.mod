@@ -3,7 +3,7 @@ module github.com/MichaelKinsy/pigpen/ask-user-question
 go 1.26.0
 
 // PiG resolves this requirement to the version-matched staged SDK at build time.
-require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.2
+require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3
 
 // The shared pi-tui subset (components/pitui), found through go.work in this directory.
 require github.com/MichaelKinsy/pigpen/components/pitui v0.0.0
