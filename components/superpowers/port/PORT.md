@@ -179,6 +179,12 @@ Differences, recorded and deliberate:
    `DISABLE_TELEMETRY` or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set, exactly as in the original.
 5. The Skills' text still names the scripts; the tools' prompt guidelines redirect the model. The Skills tree is not edited because it is
    the original's byte for byte (the drift check enforces it).
+6. **Fallback port (divergence 6).** `server.cjs` falls back once, to a random port from 49152-65535, and fails with `Server failed to
+   bind` if that one is taken too, which happens on a busy host (`TestLifecycleAndPersistence` saw it). The port binds port 0 on the
+   fallback, so the operating system picks a free port, and reports the port it got in `server-info`, the `server-started` log line,
+   the URL, the cookie name and the tool output. Everything else of the fallback is unchanged (the key is regenerated for a `file` key,
+   an explicit `BRAINSTORM_TOKEN` still refuses, the port file is not overwritten). Marked `DIVERGENCE superpowers-tools #6` in
+   `companion.go`; test `TestFallbackReportsTheRealPort`. Remove when upstream `server.cjs` retries or uses an OS-chosen port.
 
 Results (imladris, PiG 0.5.0, go1.27.2, Node 24.19.0):
 
