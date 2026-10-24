@@ -149,22 +149,34 @@ func TestHarnessConfigExternalWriteAsk(t *testing.T) {
 	eq(t, blocked, true, "another path asks")
 }
 
-// A bash command the port cannot read asks (it could hide a wrapper); a guard asks; yoloMode grants both.
-func TestHarnessConfigUnreadableBashAsks(t *testing.T) {
+// A wrapper's allow is floored to ask; an external write asks; a plain allow decides a command the port cannot
+// read, exactly as the original decides it.
+func TestHarnessConfigBashFloors(t *testing.T) {
 	r := harnessRig(t)
-	blocked, _ := r.toolCall("bash", map[string]any{"command": `echo "hi" > out.txt`})
-	eq(t, blocked, true, "an unreadable command asks, and the dismissed dialog denies")
+	// A wrapper whose payload writes is floored to ask, and the dismissed dialog denies.
+	blocked, _ := r.toolCall("bash", map[string]any{"command": "sudo rm x"})
+	eq(t, blocked, true, "a wrapper around a writer asks")
 	calls := selects(r)
-	eq(t, calls[0]["title"], `pi-permission-system: bash: echo "hi" > out.txt`, "the human sees the command")
-	blocked, _ = r.toolCall("bash", map[string]any{"command": "ssh host ls"})
-	eq(t, blocked, true, "a guarded command asks")
-	eq(t, selects(r)[1]["options"].([]any)[1], `Yes, allow bash "ssh *" for this session`, "the session grant names the guard's prefix")
+	eq(t, calls[0]["title"], "pi-permission-system: bash: sudo rm x", "the human sees the command")
+	eq(t, calls[0]["options"].([]any)[1], `Yes, allow bash "sudo *" for this session`, "the session grant names the wrapper's prefix")
+
+	// An indirection around a pure reader is exempt and allowed; a non-wrapper command is decided by the rules
+	// alone; and a command the port cannot read is allowed by the plain allow, as the original allows it.
+	for _, cmd := range []string{"sudo ls", "ssh host ls", `echo "hi" > out.txt`, "echo $(hostname)"} {
+		blocked, _ = r.toolCall("bash", map[string]any{"command": cmd})
+		eq(t, blocked, false, "allowed by the plain allow: "+cmd)
+	}
 
 	// A command with an external path: reads are allowed, writes ask.
 	blocked, _ = r.toolCall("bash", map[string]any{"command": "cat " + filepath.Join(r.h.opts.Cwd, "..", "hosts")})
 	eq(t, blocked, false, "an external read is allowed")
 	blocked, _ = r.toolCall("bash", map[string]any{"command": "touch " + filepath.Join(r.h.opts.Cwd, "..", "new.txt")})
 	eq(t, blocked, true, "an external write asks")
+	// The typed path's session grant answers the next external write.
+	opts := selects(r)[len(selects(r))-1]["options"].([]any)
+	r.selectAnswer = opts[1].(string)
+	blocked, _ = r.toolCall("bash", map[string]any{"command": "touch " + filepath.Join(r.h.opts.Cwd, "..", "new.txt")})
+	eq(t, blocked, false, "the path grant answers the next external write")
 }
 
 // Without a UI no dialog can answer, and the refusal says so.
