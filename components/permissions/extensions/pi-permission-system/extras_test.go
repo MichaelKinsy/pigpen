@@ -3,6 +3,7 @@ package pi_permission_system
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -27,7 +28,9 @@ func TestIsSimpleCommand(t *testing.T) {
 		"echo 'a'": false, "echo \"a\"": false, "a && b": false, "cat < f": false, "cat > f": false, "ls\nrm": false, "ls\trm": false,
 		// a wrapper is a simple command too: it is classified per unit (classifyWrapperWords), not refused here
 		"sudo rm x": true, "env A=1 ls": true, "A=1 ls": false, "bash x.sh": true, "xargs rm": true, "find . -name x": true,
-		"echo (x)": false, "echo {a,b}": false, "echo *": false, "echo ~": false, "echo é": false, "git status\\": false,
+		"echo (x)": false, "echo {a,b}": false, "echo *": false, "echo ~": false, "echo é": false,
+		// a backslash is a word character only on Windows, where it is a path separator
+		"git status\\": runtime.GOOS == "windows",
 	} {
 		eq(t, isSimpleCommand(cmd), want, cmd)
 	}
@@ -43,6 +46,8 @@ func TestDecideBash(t *testing.T) {
 	eq(t, p.Decide("bash", map[string]any{"command": "git status; ls"}).Reason, "[pi-permission-system] Denied by policy: 'bash' (rule '*').", "chain catch-all")
 	eq(t, p.Decide("bash", map[string]any{"command": "git status || git status"}), Verdict{}, "chain allowed")
 	eq(t, p.Decide("bash", map[string]any{"command": "  git status\n"}), Verdict{}, "the command is trimmed")
+	// A command the port cannot read is refused while bash has value patterns: the raw text cannot be matched
+	// against patterns the original matches against its parse.
 	for _, cmd := range []string{"echo $(ls)", "", "ls &", "ls;", "git status > x"} {
 		v := p.Decide("bash", map[string]any{"command": cmd})
 		eq(t, v.Block, true, "blocked: "+cmd)
@@ -58,26 +63,31 @@ func TestDecideBash(t *testing.T) {
 	eq(t, d.Decide("bash", map[string]any{"command": "ls | wc"}).Reason, "[pi-permission-system] Denied by policy: 'bash' (rule '*').", "constant deny")
 	// a wrapper unit's allow is floored to ask (the original's <indirection-bash-wrapper> and <opaque-bash-wrapper>)
 	for _, cmd := range []string{"nice touch a", "echo x && sudo rm x", "/bin/sh -c ls", "fd -x rm", "eval x"} {
-		eq(t, q.Decide("bash", map[string]any{"command": cmd}), asked("bash"), "floored: "+cmd)
+		eq(t, isBashAsk(q.Decide("bash", map[string]any{"command": cmd})), true, "floored: "+cmd)
 	}
-	// a command the port cannot read is refused while the catch-all allows: it could hide a wrapper
-	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}).Reason, "does not support analysing this bash command"), true, "unreadable")
+	// a command the port cannot read asks while the catch-all allows: it could hide a wrapper
+	eq(t, isBashAsk(q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"})), true, "unreadable asks")
 	// yoloMode grants the floored ask, and anything the catch-all allows
 	y := policyOf(t, `{"yoloMode":true,"permission":{`+allowPaths+`,"bash":"allow"}}`)
 	eq(t, y.Decide("bash", map[string]any{"command": "nice touch a"}), Verdict{}, "yolo floor")
 	eq(t, y.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}), Verdict{}, "yolo unreadable")
-	// a command the port guards (it runs another command the original reads by its own rule) is refused when allowed
-	eq(t, strings.Contains(q.Decide("bash", map[string]any{"command": "ssh host rm x"}).Reason, "does not support checking the command that 'ssh' runs yet."), true, "guard")
+	// a command the port guards (it runs another command the original reads by its own rule) asks when allowed
+	g := q.Decide("bash", map[string]any{"command": "ssh host rm x"})
+	eq(t, isBashAsk(g), true, "guard asks")
+	eq(t, g.Ask.Session.Pattern, "ssh *", "the session grant suggests the guarded command's prefix")
 }
+
+// isBashAsk reports whether a verdict is the bash surface asking.
+func isBashAsk(v Verdict) bool { return !v.Block && v.Ask != nil && v.Ask.Surface == "bash" }
 
 func TestDecideAsk(t *testing.T) {
 	p := policyOf(t, `{"permission":{`+allowPaths+`,"bash":{"*":"ask","git *":"allow"},"foo":"ask"}}`)
-	eq(t, p.Decide("bash", map[string]any{"command": "ls"}).Block, true, "ask blocks")
-	eq(t, strings.Contains(p.Decide("bash", map[string]any{"command": "ls"}).Reason, "does not support the approval dialog (the 'bash' call needs approval) yet."), true, "ask says so")
+	eq(t, isBashAsk(p.Decide("bash", map[string]any{"command": "ls"})), true, "bash asks")
 	eq(t, p.Decide("bash", map[string]any{"command": "git log"}), Verdict{}, "allow")
-	eq(t, p.Decide("foo", nil).Block, true, "extension tool ask")
+	foo := p.Decide("foo", nil)
+	eq(t, foo.Ask != nil && foo.Ask.Surface == "foo" && foo.Ask.Session.Surface == "foo" && foo.Ask.Session.Pattern == "*", true, "extension tool ask with a session option")
 	// The universal fallback is ask without any config.
-	eq(t, NewPolicy(Config{}).Decide("anything", nil).Block, true, "default ask")
+	eq(t, NewPolicy(Config{}).Decide("anything", nil).Ask != nil, true, "default ask")
 	// yoloMode turns asks into allows and leaves denies.
 	y := policyOf(t, `{"yoloMode":true,"permission":{`+allowPaths+`,"bash":{"*":"ask","rm *":"deny"},"foo":"deny"}}`)
 	eq(t, y.Decide("bash", map[string]any{"command": "ls"}), Verdict{}, "yolo allows an ask")
@@ -106,21 +116,40 @@ func TestDecideGuards(t *testing.T) {
 	q := policyOf(t, `{"permission":{`+allowPaths+`,"read":"allow","write":"deny"}}`)
 	eq(t, q.Decide("read", map[string]any{"path": "a"}), Verdict{}, "read allowed")
 	eq(t, q.Decide("write", map[string]any{"path": "a"}).Reason, "[pi-permission-system] Denied by policy: 'write' (rule '*').", "write denied")
-	// The path surfaces must allow everything, or the port cannot stand in for the path gates.
+	// The cross-cutting path gates: rules the operator wrote decide a call's path, and only then. A config without
+	// a `path` key does not prompt on its paths (#58); the external boundary always asks through the
+	// external_directory surface (describePathGate, describeExternalDirectoryGate).
+	cwd := t.TempDir()
 	n := policyOf(t, `{"permission":{"read":"allow","bash":"allow"}}`)
-	eq(t, has(n.Decide("read", map[string]any{"path": "a"}), "a 'path_read' surface that does not allow every path"), true, "default path ask")
-	eq(t, has(n.Decide("bash", map[string]any{"command": "ls"}), "path checks for the 'bash' tool (a 'path_read' surface that does not allow every path)"), true, "bash needs it too")
+	eq(t, n.DecideIn("read", map[string]any{"path": "a"}, nil, cwd), Verdict{}, "no path rules: the universal default alone does not prompt")
 	o := policyOf(t, `{"permission":{"path":{"*":"allow","*.env":"deny"},"external_directory":"allow","read":"allow"}}`)
-	eq(t, has(o.Decide("read", map[string]any{"path": "a"}), "(path rules with value patterns)"), true, "path patterns")
-	e := policyOf(t, `{"permission":{"path":"allow","external_directory":"ask","read":"allow"}}`)
-	eq(t, has(e.Decide("read", map[string]any{"path": "a"}), "a 'external_directory_read' surface that does not allow every path"), true, "external ask")
-	w := policyOf(t, `{"permission":{"path":"allow","external_directory":{"*":"allow"},"external_directory_write":"ask","read":"allow"}}`)
-	eq(t, has(w.Decide("read", map[string]any{"path": "a"}), "a 'external_directory_write' surface that does not allow every path"), true, "external write ask")
+	eq(t, o.DecideIn("read", map[string]any{"path": "a.md"}, nil, cwd), Verdict{}, "an allowed path")
+	env := o.DecideIn("read", map[string]any{"path": ".env"}, nil, cwd)
+	eq(t, env.Block && strings.Contains(env.Reason, "Denied by policy: 'path_read' (rule '*.env')."), true, "a denied path names the directional surface")
+	e := policyOf(t, `{"permission":{"path":"allow","external_directory":"ask","read":"allow","write":"allow"}}`)
+	eq(t, e.DecideIn("read", map[string]any{"path": "a"}, nil, cwd), Verdict{}, "inside the working directory: no boundary gate")
+	external := filepath.Join(cwd, "..", "outside.txt")
+	ev := e.DecideIn("read", map[string]any{"path": external}, nil, cwd)
+	eq(t, ev.Ask != nil && ev.Ask.Surface == "external_directory_read", true, "an external read asks on the read member")
+	w := policyOf(t, `{"permission":{"path":"allow","external_directory":{"*":"allow"},"external_directory_write":"ask","read":"allow","write":"allow"}}`)
+	eq(t, w.DecideIn("read", map[string]any{"path": external}, nil, cwd), Verdict{}, "external reads allow")
+	wv := w.DecideIn("write", map[string]any{"path": external}, nil, cwd)
+	eq(t, wv.Ask != nil && wv.Ask.Surface == "external_directory_write", true, "external writes ask")
+	// `edit` proves no direction, so its external path folds both members: the ask is on the bare family, whose
+	// session grant expands onto both members.
+	fold := policyOf(t, `{"permission":{"path":"allow","external_directory_read":"allow","external_directory_write":"ask","edit":"allow"}}`)
+	fv := fold.DecideIn("edit", map[string]any{"path": external}, nil, cwd)
+	eq(t, fv.Ask != nil && fv.Ask.Surface == "external_directory", true, "the folded ask is on the bare family")
+	eq(t, len(fv.Ask.sessionGrants()), 2, "the grant expands to both members")
+	// A deny on the external surface denies even when the tool allows.
+	dd := policyOf(t, `{"permission":{"path":"allow","external_directory":{"*":"deny"},"read":"allow"}}`)
+	dv := dd.DecideIn("read", map[string]any{"path": external}, nil, cwd)
+	eq(t, has(dv, "Denied by policy: 'external_directory_read' (rule '*')."), true, "external deny")
 	// MCP and skill surfaces.
 	eq(t, has(q.Decide("mcp", nil), "does not support permissions for the 'mcp' tool (the MCP and skill surfaces) yet."), true, "mcp")
 	eq(t, has(q.Decide("skill", nil), "does not support permissions for the 'skill' tool (the MCP and skill surfaces) yet."), true, "skill")
 	eq(t, has(q.Decide("mcp__srv__tool", nil), "does not support permissions for the 'mcp__srv__tool' tool (the MCP and skill surfaces) yet."), true, "pi mcp tool")
-	eq(t, q.Decide("mcp__srv", nil).Block, true, "not an MCP name: an extension tool under the default ask")
+	eq(t, q.Decide("mcp__srv", nil).Ask != nil, true, "not an MCP name: an extension tool under the default ask")
 }
 
 func TestPolicyComposition(t *testing.T) {

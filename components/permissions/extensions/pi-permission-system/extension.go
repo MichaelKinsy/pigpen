@@ -1,6 +1,6 @@
-// Package pi_permission_system is a Go port (partial) of @gotgenes/pi-permission-system: allow, ask and deny rules for tool calls,
-// read from the global config. It ports the rule engine and the tool_call gate for tools whose decision does not depend on a path;
-// see port/PORT.md for what is not ported.
+// Package pi_permission_system is a Go port (partial) of @gotgenes/pi-permission-system: allow, ask and deny rules for tool
+// calls, read from the global config. It ports the rule engine, the ask dialog (with session approvals), the tool_call gate for
+// the tools and paths it can decide, and the skill gates; see port/PORT.md for what is not ported.
 package pi_permission_system
 
 import (
@@ -17,6 +17,9 @@ type state struct {
 	baseline surfaceBaseline
 	skills   []skillEntry // the listed skills the policy does not deny, from the last system prompt
 	cwd      string
+	// sessionRules are the session approvals the dialog's "for this session" option recorded (the original's
+	// SessionRules store): allow rules appended after the config's at check time, cleared with the session.
+	sessionRules Ruleset
 	// agentName is the last known active agent (session.resolveAgentName's knownAgentName).
 	agentName string
 }
@@ -47,6 +50,40 @@ func syncStatus(ctx sdk.Context, p *Policy) {
 	ctx.SetStatus(extensionID, "")
 }
 
+// decide gates one tool call against the current policy, the session approvals and the skill-read gate, and
+// refuses (fail-closed) a call a scope the port cannot read could change.
+func (s *state) decide(ctx sdk.Context, name string, input map[string]any) Verdict {
+	p := s.current()
+	s.mu.Lock()
+	session := append(Ruleset(nil), s.sessionRules...)
+	skills, cwd := s.skills, s.cwd
+	s.mu.Unlock()
+	v := p.DecideIn(name, input, session, ctx.Cwd())
+	if !v.Block && v.Ask == nil {
+		s.mu.Lock()
+		v = skillRead(name, input, skills, cwd)
+		s.mu.Unlock()
+	}
+	if !v.Block {
+		if feature := s.unportedScope(ctx); feature != "" {
+			v = unsupported(feature)
+		}
+	}
+	return v
+}
+
+// recordSession stores an ask's session grant, so the next matching call is allowed without asking.
+func (s *state) recordSession(a Ask) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.sessionRules = append(s.sessionRules, a.sessionGrants()...)
+}
+
+// blockResult is the tool_call handler's block reply.
+func blockResult(reason string) map[string]any {
+	return map[string]any{"block": true, "reason": reason}
+}
+
 // Extension returns the permission gate.
 func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
@@ -57,6 +94,7 @@ func Extension() *sdk.Extension {
 		st.mu.Lock()
 		st.baseline.reset()
 		st.skills = nil
+		st.sessionRules = nil
 		st.agentName = ""
 		st.mu.Unlock()
 		syncStatus(ctx, p)
@@ -114,25 +152,31 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		st.mu.Lock()
+		st.sessionRules = nil
+		st.mu.Unlock()
 		ctx.SetStatus(extensionID, "")
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventToolCall, func(ctx sdk.Context, data map[string]any) (any, error) {
 		name, _ := data["toolName"].(string)
 		input, _ := data["input"].(map[string]any)
-		v := st.current().Decide(name, input)
-		if !v.Block {
-			st.mu.Lock()
-			v = skillRead(name, input, st.skills, st.cwd)
-			st.mu.Unlock()
-		}
-		if !v.Block {
-			if feature := st.unportedScope(ctx); feature != "" {
-				v = unsupported(feature)
+		v := st.decide(ctx, name, input)
+		if v.Ask != nil {
+			// The skill gates carry no session approval in the original, so their dialog offers none.
+			d := promptAsk(ctx, *v.Ask, v.Ask.Surface != "skill")
+			if !d.approved {
+				if d.unavailable {
+					return blockResult(askUnavailable(*v.Ask)), nil
+				}
+				return blockResult(askDenial(*v.Ask, d.reason)), nil
+			}
+			if d.forSession {
+				st.recordSession(*v.Ask)
 			}
 		}
 		if v.Block {
-			return map[string]any{"block": true, "reason": v.Reason}, nil
+			return blockResult(v.Reason), nil
 		}
 		return nil, nil
 	})

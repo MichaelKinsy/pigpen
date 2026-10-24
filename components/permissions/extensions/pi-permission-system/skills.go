@@ -83,7 +83,8 @@ func comparablePath(value, cwd string) string {
 	return filepath.Join(cwd, t)
 }
 
-// isWithinDir is the POSIX flavor's isWithin: the directory itself or a path below it.
+// isWithinDir is the isWithin of the platform's flavor: the directory itself or a path below it. The parent and
+// its prefix are outside, judged with the platform's separator so a Windows `..` is caught too.
 func isWithinDir(path, dir string) bool {
 	if path == "" || dir == "" {
 		return false
@@ -92,7 +93,10 @@ func isWithinDir(path, dir string) bool {
 		return true
 	}
 	rel, err := filepath.Rel(dir, path)
-	return err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, "../") && !filepath.IsAbs(rel)
+	if err != nil || rel == "." || rel == ".." || filepath.IsAbs(rel) {
+		return false
+	}
+	return !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 // visibleSkillEntries lists the prompt's skills the policy does not deny, in catalogue order.
@@ -133,7 +137,9 @@ func findSkillPathMatch(path string, entries []skillEntry) *skillEntry {
 	return best
 }
 
-// skillRead is the skill-read gate for a `read` call: a refusal when the file belongs to a listed skill the policy asks about.
+// skillRead is the skill-read gate for a `read` call: an ask when the file belongs to a listed skill the policy
+// asks about (the entry's state is pre-resolved, describeSkillReadGate preResolved). The gate carries no session
+// approval in the original, so the ask offers none.
 func skillRead(tool string, input map[string]any, entries []skillEntry, cwd string) Verdict {
 	if tool != "read" || len(entries) == 0 {
 		return Verdict{}
@@ -143,10 +149,11 @@ func skillRead(tool string, input map[string]any, entries []skillEntry, cwd stri
 		return Verdict{}
 	}
 	m := findSkillPathMatch(comparablePath(path, cwd), entries)
-	if m == nil || m.state == "allow" {
+	if m == nil || m.state != "ask" {
 		return Verdict{}
 	}
-	return unsupported("the approval dialog (reading a file of the skill '" + m.name + "' needs approval)")
+	a := skillAsk(m.name, "read")
+	return Verdict{Ask: &a}
 }
 
 // promptText is the system prompt of a before_agent_start event, a string or a list of strings.

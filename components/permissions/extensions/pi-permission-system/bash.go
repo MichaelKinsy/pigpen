@@ -109,32 +109,38 @@ func bashUnits(cmd string) (units []string, ok bool) {
 	return units, true
 }
 
-// decideBash is the bash surface's decision for one command. Each unit is matched on its own and the most restrictive result
-// wins (deny, then the port's refusal, then ask); a unit that runs another command has its allow floored to ask, which yoloMode
-// grants, as in the original.
-func (p *Policy) decideBash(command string) Verdict {
+// decideBash is the bash surface's decision for one command. Each unit is matched on its own and the most
+// restrictive result wins (deny, then ask); a unit that runs another command has its allow floored to ask, which
+// yoloMode grants, as in the original. A command the port cannot read decides by its catch-all when there are no
+// bash patterns — an allow there is floored to ask, since it could hide a wrapper (or a pattern match) the original
+// reads — and is refused while bash has value patterns, which the raw text cannot be matched against. When the
+// surface allows, the words of the simple command are scanned for paths outside the working directory, the word
+// subset of the original's bash external-directory gate.
+func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict {
 	cmd := jsTrim(command)
 	patterns := p.valuePatterns("bash")
 	units, ok := bashUnits(cmd)
 	if !ok {
-		if !patterns {
-			// Every unit of any command gets the bash surface's one rule: only an allow can be floored, and yoloMode grants that.
-			if c := p.constant("bash"); c.Action != "allow" || p.yolo || cmd == "" {
-				return p.outcome("bash", c)
-			}
-			return unsupported("analysing this bash command (only simple commands joined by &&, ||, ;, | or newlines can be " +
-				"checked for a wrapper the original asks about)")
+		if patterns {
+			return unsupported("matching this bash command against bash patterns (only simple commands joined by &&, ||, ;, | or " +
+				"newlines are supported)")
 		}
-		return unsupported("matching this bash command against bash patterns (only simple commands joined by &&, ||, ;, | or " +
-			"newlines are supported)")
+		r := p.constantIn("bash", session)
+		if r.Action != "allow" {
+			return p.outcome(r, bashAsk(cmd, r))
+		}
+		if p.yolo || cmd == "" {
+			return Verdict{}
+		}
+		return p.floorAsk(bashAsk(cmd, r))
 	}
 	best, rank := Verdict{}, 0
 	for _, u := range units {
-		r := p.constant("bash")
+		r := p.constantIn("bash", session)
 		if patterns {
-			r = Evaluate("bash", u, p.rules, PosixPathFlavor, "")
+			r = Evaluate("bash", u, p.sessionWith(session), PosixPathFlavor, "")
 		}
-		v, k := p.outcome("bash", r), 0
+		v, k := p.outcome(r, bashAsk(u, r)), 0
 		switch r.Action {
 		case "deny":
 			k = 3
@@ -143,18 +149,19 @@ func (p *Policy) decideBash(command string) Verdict {
 		default:
 			words := strings.Fields(u)
 			switch {
-			case classifyWrapperWords(words) != "":
-				if p.yolo {
-					continue
-				}
-				v, k = asked("bash"), 1
-			case portGuardWords[commandBasename(words[0])]:
-				v, k = unsupported("checking the command that '"+commandBasename(words[0])+"' runs"), 2
+			case classifyWrapperWords(words) != "", portGuardWords[commandBasename(words[0])]:
+				// A wrapper's and a guarded command's allow is floored to ask: the port cannot stand in for
+				// what the original does with the command they run (a wrapper exemption it reads, an inner
+				// rule it matches), and yoloMode grants the ask.
+				v, k = p.floorAsk(bashAsk(u, r)), 1
 			}
 		}
 		if k > rank {
 			best, rank = v, k
 		}
 	}
-	return best
+	if best.Block || best.Ask != nil {
+		return best
+	}
+	return worstVerdict(best, p.bashExternalGate(cmd, cwd, session))
 }
