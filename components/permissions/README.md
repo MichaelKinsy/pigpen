@@ -9,8 +9,12 @@ It is a port of `@gotgenes/pi-permission-system` 39.0.3 (see [CREDITS.md](CREDIT
 
 ## Use
 
-Put the rules in `<agent dir>/extensions/pi-permission-system/config.json` (`PI_CODING_AGENT_DIR`, default `~/.pi/agent`), in the
-original's format:
+Put the rules in `<agent dir>/extensions/pi-permission-system/config.json`, in the original's format. The agent
+directory is the one the session runs with: the port reads it from the host (`PIG_EXT_HOST_INFO`, the same fact the
+original read through the coding-agent's `getAgentDir()`, without which a default-mode PiG session resolves
+`~/.pi/agent`, finds no file and asks on every call), and falls back outside a host to PiG's own rule
+(`PIG_CODING_AGENT_DIR`, then `PIG_HOME`, `XDG_CONFIG_HOME`, else `~/.pig/agent`; with `PIG_USE_PI_DIRS=1` Pi's
+`PI_CODING_AGENT_DIR`, else `~/.pi/agent`):
 
 ```json
 {

@@ -30,6 +30,7 @@ type scopeRig struct {
 func newScopeRig(t *testing.T, config string) *scopeRig {
 	t.Helper()
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	if config != "" {

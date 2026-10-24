@@ -40,6 +40,7 @@ type adapterRig struct {
 func rigWith(t *testing.T, config string, active ...string) *adapterRig {
 	t.Helper()
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "") // the host's agent dir would win over the environment
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	if config != "" {
@@ -181,6 +182,7 @@ func TestAdapterBeforeAgentStart(t *testing.T) {
 // dialog decides it.
 func TestAdapterSkillRead(t *testing.T) {
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	os.MkdirAll(filepath.Dir(configPath()), 0o755)

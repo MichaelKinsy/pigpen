@@ -37,6 +37,7 @@ const harnessConfig = `{
 func harnessRig(t *testing.T) *adapterRig {
 	t.Helper()
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	os.MkdirAll(filepath.Dir(configPath()), 0o755)
@@ -182,6 +183,7 @@ func TestHarnessConfigBashFloors(t *testing.T) {
 // Without a UI no dialog can answer, and the refusal says so.
 func TestAskWithoutUI(t *testing.T) {
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	os.MkdirAll(filepath.Dir(configPath()), 0o755)
