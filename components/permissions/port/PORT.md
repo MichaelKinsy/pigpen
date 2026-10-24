@@ -33,7 +33,13 @@ against the original without a person: the rules and the tool gate for what they
   original's parse gives such a command): each unit is matched against the bash patterns, the most restrictive unit wins (the
   first of equals is named), and a wrapper unit (`classifyWrapperWords`: `eval`, a shell with a `-c` flag cluster, `sudo`, `env`,
   `xargs`, `nice`, `timeout`, `flock`, ... and `find`/`fd` with an exec flag, by basename) has its allow floored to ask, which
-  `yoloMode` grants; tools whose rules have no value patterns; extension tools by name; the original's denial text
+  `yoloMode` grants — unless the floor has no reason left to hold (`isTransparentWrapper`): an indirection whose unwrapped
+  payload provably only reads (`sudo ls`, `xargs grep foo`, by the pure-reader core and its retraction guards) is decided by the
+  inner command's rule instead. A command that merely runs another one without a wrapper flag (`ssh`, `source`, `bash script.sh`)
+  and a command the port reads by neither its patterns nor its parser are decided by the rules alone, exactly as the original
+  decides them; the bash external-directory gate scans each unit's words, a redirect operator's target judged by the operator
+  (`> out` writes, `< in` reads). With no bash patterns at all the value decides every command — the parse only ever adds floors;
+  tools whose rules have no value patterns; extension tools by name; the original's denial text
   (`[pi-permission-system] Denied by policy: 'bash' (rule 'npm *'). Reason: ...`);
 - the **ask**: the approval dialog (`authority/permission-prompt-decision.ts` and `local-user-authorizer.ts`'s decisions,
   rendered with PiG's `ui.select`/`ui.input` instead of the original's inline keybind component) — Approve, Approve for this
@@ -58,8 +64,8 @@ against the original without a person: the rules and the tool gate for what they
 
 - a bash command that is not simple commands joined by `&&`, `||`, `;`, `|` or newlines (quoting, expansion, substitution,
   redirection, `&`, an assignment prefix, non-ASCII) **while bash has value patterns**: the raw text cannot be matched against
-  rules the original matches against its parse. With no patterns the command's catch-all decides it — a deny or ask from the
-  rule, and a floor ask (granted by `yoloMode`) when it allows, since it could hide a wrapper or a pattern match;
+  rules the original matches against its parse. With no patterns the value decides every command — the units are still split
+  (quote-aware) so a wrapper's floor and its reader exemption apply wherever the first words show one;
 - a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose own rules have path patterns: the tool-surface path
   matching (lexical plus canonical aliases) is not ported. The cross-cutting `path` and `external_directory` gates are (above);
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
@@ -75,10 +81,11 @@ against the original without a person: the rules and the tool gate for what they
 - config options the schema accepts and nothing reads yet (dialog keys, double-press, forwarding, logging, limits,
   `piInfrastructureReadPaths`, `authorizerChain`): a warning at session start names the ones that are set.
 
-A wrapper running a pure reader (`sudo ls`, `nice echo`, `xargs grep`) asks: the original's floor exemption lets the inner
-command's rule allow it; a unit starting with a command that runs another one the original reads by its own rule (`ssh`, `su`,
-`source`, `command`, `bash script.sh`, ...) asks too. Both are stricter than the original and are listed, with every other
-difference, in `testdata/port-differences.json`.
+The only bash differences left are commands the port refuses against value patterns (the bullet above); the wrapper
+floors, their pure-reader exemptions (`sudo ls` allowed, `sudo rm x` asked, `sudo sort -o` asked through the retraction
+flags), and the non-wrapper commands the original leaves to the rules (`ssh`, `su`, `source`, `bash script.sh`) now give
+the original's decisions on all 646 recorded commands. They are listed, with every other difference, in
+`testdata/port-differences.json`.
 
 **Not ported at all, and diverging rather than refused:** path canonicalization (a pattern that names only a symlink-resolved or
 otherwise spelled alias of a path is not matched; the port matches the path resolved against the working directory), the
@@ -130,12 +137,19 @@ for path-bearing tools behind a non-open `external_directory`, and for the floor
 against bash patterns. `isWithinDir` (the skill-read gate's containment test) learned the platform's `..` prefix, without which
 a Windows session gated every read in the working directory as a skill file.
 
+The flood of asks that configuration then produced — a plain `bash: allow` asking on every quoted command, every redirect,
+every `$(...)`, every wrapper and every non-wrapper runner (`ssh`, `source`, `bash script.sh`) — was the port's floors
+overreaching where the original decides by value alone. `bash.go` learned the original's exemptions and its quote-aware unit
+split (`isTransparentWrapper`, the pure-reader core and its retraction flags, `splitChainUnits`, `fieldWords`), the external
+gate learned to judge a redirect's target by the operator, and the guard list was deleted: `testdata/port-differences.json`
+went from 134 entries to 60, every one of them a command still refused against bash patterns.
+
 ## Results
 
 - `go test -race`: pass. 229 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded
-  decisions: none of the 646 commands is allowed where the original asks or denies; 512 get the original's decision and text,
-  134 are differences listed in `testdata/port-differences.json` (60 commands the port still refuses against bash patterns, 74
-  asks where the original decides); all 91 config files get the original's verdict, messages (a parse error: Go's message) and
+  decisions: none of the 646 commands is allowed where the original asks or denies; 586 get the original's decision and text,
+  60 are differences listed in `testdata/port-differences.json` (commands the port still refuses against bash patterns — it
+  decides by value alone wherever there are no patterns, exactly as the original); all 91 config files get the original's verdict, messages (a parse error: Go's message) and
   output map; 48 of 48 wrapper units.
 - `pigeq check` against the Pi 1.0.0 goldens: 8 of 8 scenarios + port-gaps + exec-coverage, three runs in a row. The scenarios
   cover bash patterns with a reason, last-match-wins across allow and deny, allowed built-in tools, a universal allow (with its

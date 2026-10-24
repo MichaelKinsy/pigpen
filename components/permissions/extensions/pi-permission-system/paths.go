@@ -213,45 +213,60 @@ func isPathToken(word string) bool {
 	return false
 }
 
-// bashExternalGate scans a chain of simple commands' words for paths outside the working directory and resolves
-// each on the external_directory surface, the direction its command proves. It is the word-level subset of
-// describeBashExternalDirectoryGate: the original's parser finds paths in any command shape (redirections,
-// heredocs, expansion); the port finds them only where its simple-command reader is exact, and a command it cannot
-// read is asked about on the bash surface anyway.
+// bashExternalGate scans a command's units word by word for paths outside the working directory and resolves each on
+// the external_directory surface, the direction its command proves: the command-effect tables for an ordinary word, a
+// redirect operator's target for the path it names (`> out` and `>> out` write, `< in` reads). It is the word-level
+// subset of describeBashExternalDirectoryGate: the original's parser finds paths in any command shape (heredocs,
+// expansion); the port finds them in the words of each unit, quoted pairs stripped, and a path it cannot see stays
+// ungated.
 func (p *Policy) bashExternalGate(cmd, cwd string, session Ruleset) Verdict {
 	if cwd == "" {
-		return Verdict{}
-	}
-	units, ok := bashUnits(cmd)
-	if !ok {
 		return Verdict{}
 	}
 	worst := Found{}
 	haveWorst := false
 	worstSurface, worstValue := "", ""
-	for _, unit := range units {
-		direction := tokenDirection(unit)
-		surface := "external_directory"
-		switch direction {
-		case "read":
-			surface = "external_directory_read"
-		case "write":
-			surface = "external_directory_write"
+	judge := func(surface, word string) Verdict {
+		resolved := comparablePath(word, cwd)
+		if resolved == "" || isWithinDir(resolved, cwd) {
+			return Verdict{}
 		}
-		for _, word := range strings.Fields(unit) {
+		found := p.checkPathSurface(surface, []string{resolved, word}, session)
+		switch {
+		case found.Rule.Action == "deny":
+			return p.pathGateVerdict(found, surface, word)
+		case found.Rule.Action == "ask" && !haveWorst:
+			worst, worstSurface, worstValue, haveWorst = found, surface, word, true
+		}
+		return Verdict{}
+	}
+	for _, unit := range splitChainUnits(cmd) {
+		defaultSurface := "external_directory"
+		switch tokenDirection(unit) {
+		case "read":
+			defaultSurface = "external_directory_read"
+		case "write":
+			defaultSurface = "external_directory_write"
+		}
+		words := fieldWords(unit)
+		for i := 0; i < len(words); i++ {
+			word := words[i]
+			if isRedirectOperator(word) {
+				// An operator's target is judged by the operator, not by the command: `> out` and
+				// `>> out` write, `< in` reads (describeBashExternalDirectoryGate's redirect scan).
+				if i+1 < len(words) {
+					i++
+					if v := judge(externalSurfaceForDirection(redirectDirection(word)), words[i]); v.Block {
+						return v
+					}
+				}
+				continue
+			}
 			if !isPathToken(word) {
 				continue
 			}
-			resolved := comparablePath(word, cwd)
-			if resolved == "" || isWithinDir(resolved, cwd) {
-				continue
-			}
-			found := p.checkPathSurface(surface, []string{resolved, word}, session)
-			switch {
-			case found.Rule.Action == "deny":
-				return p.pathGateVerdict(found, surface, word)
-			case found.Rule.Action == "ask" && !haveWorst:
-				worst, worstSurface, worstValue, haveWorst = found, surface, word, true
+			if v := judge(defaultSurface, word); v.Block {
+				return v
 			}
 		}
 	}
@@ -259,6 +274,42 @@ func (p *Policy) bashExternalGate(cmd, cwd string, session Ruleset) Verdict {
 		return Verdict{}
 	}
 	return p.pathGateVerdict(worst, worstSurface, worstValue)
+}
+
+// redirectDirection is the direction a redirect operator proves for its target: "read" for the input forms, "write"
+// for everything else.
+func redirectDirection(operator string) string {
+	if strings.HasPrefix(operator, "<") {
+		return "read"
+	}
+	return "write"
+}
+
+// externalSurfaceForDirection names the external_directory family member a direction resolves on.
+func externalSurfaceForDirection(direction string) string {
+	return "external_directory_" + direction
+}
+
+// isRedirectOperator reports a bare redirect operator word: >, >>, &>, <, <<, <<-, <<<, or a digit prefix before one
+// of the writing forms (2>, 1>>). Only an operator's target is judged by the operator; the rest of the unit keeps the
+// command's own direction.
+func isRedirectOperator(word string) bool {
+	switch word {
+	case ">", ">>", "&>", "<", "<<", "<<-", "<<<":
+		return true
+	}
+	i := strings.IndexByte(word, '>')
+	if i > 0 {
+		digits := true
+		for c := range word[:i] {
+			if c < '0' || c > '9' {
+				digits = false
+				break
+			}
+		}
+		return digits
+	}
+	return false
 }
 
 // withSession is the composed ruleset the checks run on: the policy's rules with the session approvals appended

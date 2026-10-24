@@ -39,8 +39,10 @@ The wildcard matcher (`*`, `?`, a trailing ` *` that also matches the bare comma
 merging, the config's `permission` map and `yoloMode` (comments and a `$schema` key allowed; a file the original's schema
 rejects is not used at all, and a warning says why), the `tool_call` gate for `bash` (simple commands, alone or joined by
 `&&`, `||`, `;`, `|` or newlines, each matched on its own; a wrapper such as `sudo`, `env`, `xargs`, `nice`, `eval` or
-`sh -c`, and a command the port reads by neither its patterns nor its parser, has its allow floored to **ask**, as in the
-original) and for the other tools by name, reading a listed skill's files under the `skill` rules, the original's denial text,
+`sh -c` has its allow floored to **ask** unless its payload provably only reads (`sudo ls` is allowed by the inner
+command's rule, `sudo rm x` asks), while a command that merely runs another one without a wrapper flag — `ssh`, `source`,
+`bash script.sh` — and a command the port reads by neither its patterns nor its parser are decided by the rules alone, as
+in the original) and for the other tools by name, reading a listed skill's files under the `skill` rules, the original's denial text,
 withholding fully denied tools, and the permissive-`*` warning.
 
 **The ask** is the approval dialog, in PiG's select dialog: *Approve*, *Approve for this session*, *Deny* and *Deny with a
