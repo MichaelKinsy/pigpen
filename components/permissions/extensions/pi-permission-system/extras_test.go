@@ -61,20 +61,30 @@ func TestDecideBash(t *testing.T) {
 	eq(t, q.Decide("bash", map[string]any{"command": "ls | wc -l; rm x"}), Verdict{}, "constant allow")
 	d := policyOf(t, `{"permission":{`+allowPaths+`,"bash":"deny"}}`)
 	eq(t, d.Decide("bash", map[string]any{"command": "ls | wc"}).Reason, "[pi-permission-system] Denied by policy: 'bash' (rule '*').", "constant deny")
-	// a wrapper unit's allow is floored to ask (the original's <indirection-bash-wrapper> and <opaque-bash-wrapper>)
+	// a wrapper unit's allow is floored to ask (the original's <indirection-bash-wrapper> and <opaque-bash-wrapper>),
+	// while an indirection whose payload proves a read is exempt and allowed by the inner command's rule (below)
 	for _, cmd := range []string{"nice touch a", "echo x && sudo rm x", "/bin/sh -c ls", "fd -x rm", "eval x"} {
 		eq(t, isBashAsk(q.Decide("bash", map[string]any{"command": cmd})), true, "floored: "+cmd)
 	}
-	// a command the port cannot read asks while the catch-all allows: it could hide a wrapper
-	eq(t, isBashAsk(q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"})), true, "unreadable asks")
+	// an indirection wrapper around a pure reader is exempt from the floor and allowed (isTransparentWrapper)
+	for _, cmd := range []string{"sudo ls", "env echo b", "timeout 5 wc -l", "xargs grep foo"} {
+		eq(t, q.Decide("bash", map[string]any{"command": cmd}), Verdict{}, "transparent wrapper: "+cmd)
+	}
+	// a command that runs another command without a wrapper flag is decided by the rules alone: the original
+	// does not floor it, so the port does not either (the port once refused these, stricter than the original)
+	for _, cmd := range []string{"ssh host rm x", "source x.sh", "bash script.sh", "su root", "command ls"} {
+		eq(t, q.Decide("bash", map[string]any{"command": cmd}), Verdict{}, "non-wrapper command: "+cmd)
+	}
+	// a command the port cannot read is allowed by a plain allow: the value decides it, and the parse only
+	// ever added wrapper floors on top (the original allows it too)
+	eq(t, q.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}), Verdict{}, "unreadable is allowed")
 	// yoloMode grants the floored ask, and anything the catch-all allows
 	y := policyOf(t, `{"yoloMode":true,"permission":{`+allowPaths+`,"bash":"allow"}}`)
 	eq(t, y.Decide("bash", map[string]any{"command": "nice touch a"}), Verdict{}, "yolo floor")
 	eq(t, y.Decide("bash", map[string]any{"command": "echo $(sudo rm x)"}), Verdict{}, "yolo unreadable")
-	// a command the port guards (it runs another command the original reads by its own rule) asks when allowed
+	// the session grant for a floored wrapper suggests the wrapper's prefix, the unit that runs
 	g := q.Decide("bash", map[string]any{"command": "ssh host rm x"})
-	eq(t, isBashAsk(g), true, "guard asks")
-	eq(t, g.Ask.Session.Pattern, "ssh *", "the session grant suggests the guarded command's prefix")
+	eq(t, isBashAsk(g), false, "a non-wrapper command is not floored")
 }
 
 // isBashAsk reports whether a verdict is the bash surface asking.
