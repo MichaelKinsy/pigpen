@@ -210,10 +210,10 @@ func TestSkillInputGate(t *testing.T) {
 	eq(t, r.input("  /skill:secret\tgo"), "handled", "denied")
 	got := r.notices()
 	eq(t, got[len(got)-1], "Skill 'secret' is not permitted by the current skill policy.", "deny notice")
-	eq(t, r.input("/skill:other"), "handled", "asked: refused")
-	got = r.notices()
-	eq(t, len(got), n+2, "a notice each")
-	eq(t, got[len(got)-1], refusalHead+"the approval dialog (the skill 'other' needs approval)"+refusalTail, "ask refusal text")
+	// An ask opens the dialog; the default fake host dismisses it, which denies fail-closed, with no notice (the
+	// notice belongs to a policy deny; a human's refusal is the tool result).
+	eq(t, r.input("/skill:other"), "handled", "asked: the dismissed dialog denies")
+	eq(t, len(r.notices()), n+1, "no notice for the ask denial")
 
 	y := newScopeRig(t, `{"yoloMode":true,"permission":{"*":"ask","skill":{"secret":"deny"}}}`)
 	y.h.Fire("session_start", map[string]any{})

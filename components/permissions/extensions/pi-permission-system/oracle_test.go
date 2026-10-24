@@ -52,8 +52,8 @@ func loadOracle(t *testing.T) oracleRecord {
 }
 
 // portDifference is a case where the port does not give the original's decision, and blocks instead: "unsupported" (a command
-// the port cannot read without a parser) or "stricter" (an ask where the original's floor exemption for a wrapper running a
-// pure reader allows; the exemption is not ported).
+// the port cannot read without a parser) or "stricter" (an ask where the original decides; the dialog is the port's fail-closed
+// stand-in for machinery it does not have).
 type portDifference struct {
 	Config  string `json:"config"`
 	Command string `json:"command"`
@@ -61,9 +61,9 @@ type portDifference struct {
 }
 
 // TestBashGateAgainstOriginal: the port never allows a command the original asks about or denies; where it decides, it gives the
-// original's decision and text; and the cases where it refuses instead are exactly the ones listed in
-// testdata/port-differences.json (reviewed by hand: each is a command the port cannot read, a port guard word, or the floor
-// exemption).
+// original's decision and text; and the cases where it asks or refuses instead are exactly the ones listed in
+// testdata/port-differences.json (reviewed by hand: each is a command the port cannot read, or a floor the original
+// reads through machinery the port does not have).
 func TestBashGateAgainstOriginal(t *testing.T) {
 	r := loadOracle(t)
 	var listed []portDifference
@@ -87,14 +87,27 @@ func TestBashGateAgainstOriginal(t *testing.T) {
 		p := NewPolicy(cfg)
 		v := p.Decide("bash", map[string]any{"command": c.Command})
 		name := c.Config + ": " + c.Command
-		if c.State != "allow" && !v.Block {
-			t.Errorf("%s: the original says %s, the port allows", name, c.State)
-			continue
-		}
-		var want Verdict
+		isRefusal := strings.HasPrefix(v.Reason, packageName+" (Go port) does not support ")
+		record := func(kind string) { got = append(got, portDifference{c.Config, c.Command, kind}) }
 		switch c.State {
+		case "allow":
+			switch {
+			case v == (Verdict{}):
+			case v.Ask != nil:
+				record("stricter")
+			case isRefusal:
+				record("unsupported")
+			default:
+				t.Errorf("%s: got %#v, want allow", name, v)
+			}
 		case "ask":
-			want = asked("bash")
+			switch {
+			case v.Ask != nil && v.Ask.Surface == "bash":
+			case isRefusal:
+				record("unsupported")
+			default:
+				t.Errorf("%s: got %#v, want the port's ask", name, v)
+			}
 		case "deny":
 			text := "Denied by policy: 'bash'"
 			if c.MatchedPattern != nil {
@@ -104,16 +117,16 @@ func TestBashGateAgainstOriginal(t *testing.T) {
 			if c.Reason != nil && *c.Reason != "" {
 				text += " Reason: " + *c.Reason + "."
 			}
-			want = Verdict{Block: true, Reason: tagged(text)}
-		}
-		switch {
-		case v == want:
-		case strings.HasPrefix(v.Reason, packageName+" (Go port) does not support ") && v != asked("bash"):
-			got = append(got, portDifference{c.Config, c.Command, "unsupported"})
-		case c.State == "allow" && v == asked("bash"):
-			got = append(got, portDifference{c.Config, c.Command, "stricter"})
-		default:
-			t.Errorf("%s: got %#v, want %#v", name, v, want)
+			want := Verdict{Block: true, Reason: tagged(text)}
+			switch {
+			case v == want:
+			case v.Ask != nil:
+				record("stricter")
+			case isRefusal:
+				record("unsupported")
+			default:
+				t.Errorf("%s: got %#v, want %#v", name, v, want)
+			}
 		}
 	}
 	key := func(d portDifference) string { return d.Config + "\x00" + d.Command + "\x00" + d.Kind }
@@ -267,7 +280,8 @@ func TestLoadConfigRefusesASchemaViolation(t *testing.T) {
 	os.WriteFile(p, []byte(`{"permission":{"*":"allow","bash":{"*":"allow","rm *":"dney"}}}`), 0o644)
 	c := loadConfig()
 	eq(t, c.Issue, "Invalid config value at 'permission.bash': Invalid input", "issue")
-	eq(t, NewPolicy(c).Decide("bash", map[string]any{"command": "rm x"}).Block, true, "rm is not allowed by a refused file")
+	v := NewPolicy(c).Decide("bash", map[string]any{"command": "rm x"})
+	eq(t, v == Verdict{}, false, "rm is not allowed by a refused file: it asks at least")
 	os.WriteFile(p, []byte("{\n  // comments are allowed\n  \"permission\": {\"*\": \"deny\"} /* end */\n}"), 0o644)
 	c = loadConfig()
 	eq(t, c.Issue, "", "comments")

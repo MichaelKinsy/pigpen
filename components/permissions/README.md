@@ -36,31 +36,42 @@ pig install ./components/permissions
 ## What is ported
 
 The wildcard matcher (`*`, `?`, a trailing ` *` that also matches the bare command, `~` and `$HOME`), rule evaluation and
-merging, the config's `permission` map and `yoloMode` (comments allowed; a file the original's schema rejects is not used at
-all, and a warning says why), the `tool_call` gate for `bash` (simple commands, alone or joined by `&&`, `||`, `;`, `|` or
-newlines, each matched on its own; a wrapper such as `sudo`, `env`, `xargs`, `nice`, `eval` or `sh -c` is asked about even when
-bash is allowed, as in the original) and for tools whose rules do not depend on a path, reading a listed skill's files under the
-`skill` rules, the original's denial text, withholding fully denied tools, and the permissive-`*` warning.
+merging, the config's `permission` map and `yoloMode` (comments and a `$schema` key allowed; a file the original's schema
+rejects is not used at all, and a warning says why), the `tool_call` gate for `bash` (simple commands, alone or joined by
+`&&`, `||`, `;`, `|` or newlines, each matched on its own; a wrapper such as `sudo`, `env`, `xargs`, `nice`, `eval` or
+`sh -c`, and a command the port reads by neither its patterns nor its parser, has its allow floored to **ask**, as in the
+original) and for the other tools by name, reading a listed skill's files under the `skill` rules, the original's denial text,
+withholding fully denied tools, and the permissive-`*` warning.
 
-**Not ported, and refused rather than allowed.** Every call the port cannot decide yet is blocked with one text,
-`@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension,
-npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` It is never allowed and never partly run. The features:
+**The ask** is the approval dialog, in PiG's select dialog: *Approve*, *Approve for this session*, *Deny* and *Deny with a
+reason*. A dismissal, a missing UI or a dialog failure denies, fail-closed; an approval for the session records a rule that
+answers the next matching call, cleared with the session; `yoloMode` turns asks into allows, as in the original. The skill
+gates (a listed skill's files, a `/skill:<name>` input) ask without the session option, as in the original, and a denied
+`/skill:` input is handled with the original's notice.
 
-- an `ask` (the approval dialog and session approvals; `yoloMode` turns asks into allows, as in the original), including a
-  wrapper running a harmless reader (`sudo ls`: the original allows it, the port asks) and a `/skill:<name>` input the skill
-  rules ask about (an allowed skill continues and a denied one is handled with the original's notice);
-- path-bearing tools (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose rules have path patterns, or whose `path` and
-  `external_directory` surfaces do not allow everything (path matching is not ported);
-- a bash command the port cannot read (quotes, `$`, redirection, `&`, ...) when bash has patterns or would be allowed, and a
-  command that runs another one the original reads by its own rule (`ssh`, `su`, `source`, ...);
-- the `shellTools` option, and the MCP and skill tools;
-- the project scope (`<project>/.pi/extensions/pi-permission-system/config.json`, read by the original only for a trusted project)
-  and the agent scope (`permission` in the frontmatter of `<agent dir>/agents/<name>.md` and `<project>/.pi/agents/<name>.md`, for the
-  active agent): while one applies, every call the port would allow is refused, and a warning at session start says which file;
-- the config options that nothing reads yet (`debugLog`, `permissionReviewLog`, `doublePressToConfirm`, `permissionDialogKeys`,
-  `promptNotifications`, `forwardingTimeoutMs`, the prompt and log width limits, `piInfrastructureReadPaths`, `authorizerChain`):
-  a warning at session start names the ones that are set.
+**Paths.** A call's `path` input and the words of a simple `bash` command are judged against the working directory: a path
+inside it is decided by the tool's rules (and by explicit `path` rules, which the original's backward-compatibility rule
+makes fire only when the config writes them), and a path outside it consults `external_directory_read` /
+`external_directory_write` (or the bare `external_directory`, folded most-restrictive, when the tool proves no direction:
+`edit`, an unknown command). Reads and writes of your project work; an external write asks.
 
-Not registered at all, and so absent rather than refused: the `/permission-system` command and its config modal, the cross-extension
-service, the review and debug logs and forwarding between sessions. PiG's `powershell` tool is not a bash alias here: deny it, or
-name it in `shellTools` so that it is refused. See [port/PORT.md](port/PORT.md).
+**Refused, and never allowed** (`refusal.go`; each is machinery the original has and the port does not):
+
+- a `bash` command the port cannot read (quotes, `$`, redirection, `&`, ...) while the config has bash *patterns*: the raw
+text cannot be matched against rules the original matches against its parse. With no patterns the command asks instead;
+- a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose own rules have path patterns;
+- a tool that `shellTools` routes through the bash surface, and the MCP and skill *surfaces* (a `mcp`, `skill` or
+`mcp__server__tool` tool call);
+- the project scope (`<project>/.pi/extensions/pi-permission-system/config.json`, read by the original only for a trusted
+project) and the agent scope (`permission` in the frontmatter of an agent definition): while one applies, every call the
+port would allow is refused, and a warning at session start says which file;
+- the config options that nothing reads yet (`debugLog`, `permissionReviewLog`, `doublePressToConfirm`,
+`permissionDialogKeys`, `promptNotifications`, `forwardingTimeoutMs`, the prompt and log width limits,
+`piInfrastructureReadPaths`, `authorizerChain`): a warning at session start names the ones that are set.
+
+**Not ported at all, and diverging rather than refused:** path *canonicalization* (a pattern that names only a symlink-
+resolved or differently spelled alias of a path is not matched; the port matches the path as resolved against the working
+directory), the original's inline keybind dialog (PiG's picker instead), the bash arity table (a session grant suggests
+`<first word> *` where the original can suggest a longer exact prefix), forwarding of approvals between sessions, the
+review and debug logs, the config modal and the cross-extension service. PiG's `powershell` tool is not a bash alias here:
+deny it, or name it in `shellTools` so that it is refused. See [port/PORT.md](port/PORT.md).

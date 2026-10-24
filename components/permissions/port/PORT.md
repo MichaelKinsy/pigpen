@@ -1,4 +1,4 @@
-# Port record: @gotgenes/pi-permission-system (partial: the rule engine and tool-name gating)
+# Port record: @gotgenes/pi-permission-system (partial: the rule engine, the ask dialog and name/path gating)
 
 | Input | Identity |
 |---|---|
@@ -35,46 +35,61 @@ against the original without a person: the rules and the tool gate for what they
   `xargs`, `nice`, `timeout`, `flock`, ... and `find`/`fd` with an exec flag, by basename) has its allow floored to ask, which
   `yoloMode` grants; tools whose rules have no value patterns; extension tools by name; the original's denial text
   (`[pi-permission-system] Denied by policy: 'bash' (rule 'npm *'). Reason: ...`);
+- the **ask**: the approval dialog (`authority/permission-prompt-decision.ts` and `local-user-authorizer.ts`'s decisions,
+  rendered with PiG's `ui.select`/`ui.input` instead of the original's inline keybind component) — Approve, Approve for this
+  session, Deny, Deny with a reason — with the user-denial and no-UI renders of `presentation/agent-renderer.ts` in the port's
+  compact clause style; the session grants (`session/session-rules.ts`: allow rules appended after the config's at check time,
+  a bare path family expanded to both members, cleared with the session; `presentation/pattern-suggest.ts`'s labels, with
+  `<first token> *` where the original's arity table can suggest a longer exact prefix); a dismissal, a missing UI or a dialog
+  failure denies fail-closed; `yoloMode` grants every ask, floors included;
+- the **path and external-directory gates** for what the port can read (`handlers/gates/path.ts`,
+  `external-directory.ts`, `access-intent/tool-input-path.ts`, `path-surfaces.ts`): a call's `path` input and the words of a
+  simple bash command resolve against the working directory; inside it, explicit `path` rules decide (the original's
+  backward-compatibility skip when only the universal default fired, #58); outside it, `external_directory_read` /
+  `external_directory_write` decide per the direction the tool (or a small command table for a bash word) proves, and the bare
+  family folds both members most-restrictive for what proves nothing (`edit`, an unknown command);
 - the skill-read gate: a `read` of a file inside a skill that the system prompt lists is decided by the `skill` surface for that
-  skill's name, so it is refused while that surface asks (with the default `*: ask`, every listed skill);
+  skill's name, so it asks while that surface asks (with the default `*: ask`, every listed skill), and without a session option,
+  as in the original (its skill gates carry no SessionApproval);
 - withholding tools the policy denies outright from the model at `before_agent_start`, and restoring them (the tool-surface
   baseline), the `yolo` status, and the permissive-`*` warning at session start.
 
-**Refused, fail-closed** (the original decides these by machinery that is not ported). Each is blocked with the Package's one refusal text, `@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` (`refusal.go`; `refusal_test.go` has one exact-text test per refused option and checks the Package name and the pinned original):
+**Refused, never allowed** (each is machinery the original has and the port does not; blocked with the Package's one refusal text, `@pi-in-go/pigpen-permissions (Go port) does not support <feature> yet. Install the original extension, npm:@gotgenes/pi-permission-system@39.0.3, which runs unchanged in PiG.` — `refusal.go`; `refusal_test.go` has one exact-text test per refused option and checks the Package name and the pinned original):
 
-- an `ask`: the approval dialog (and its session grants) is not ported, so the call is refused and the message says so.
-  `yoloMode` turns asks into allows, as in the original;
-- a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) when its rules have path patterns, or when the `path` and
-  `external_directory` surfaces have patterns or do not allow everything: path matching (aliases, canonicalization, symlinks) is
-  not ported;
-- a `bash` call when the path surfaces are not wide open (the original checks the paths in the command);
 - a bash command that is not simple commands joined by `&&`, `||`, `;`, `|` or newlines (quoting, expansion, substitution,
-  redirection, `&`, an assignment prefix, non-ASCII), when bash has value patterns, or when the catch-all would allow it (it could
-  hide a wrapper the original asks about); with no bash patterns, a deny or ask catch-all decides it, and `yoloMode` allows it;
-- a wrapper running a pure reader (`sudo ls`, `nice echo`, `xargs grep`): the original's floor exemption lets the inner command's
-  rule decide; the port asks (it is stricter here). A unit starting with a command that runs another one which the original
-  reads by its own rule (`ssh`, `su`, `source`, `command`, `bash script.sh`, ...) is refused when allowed. Both are listed with
-  every other refusal in `testdata/port-differences.json`;
+  redirection, `&`, an assignment prefix, non-ASCII) **while bash has value patterns**: the raw text cannot be matched against
+  rules the original matches against its parse. With no patterns the command's catch-all decides it — a deny or ask from the
+  rule, and a floor ask (granted by `yoloMode`) when it allows, since it could hide a wrapper or a pattern match;
+- a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose own rules have path patterns: the tool-surface path
+  matching (lexical plus canonical aliases) is not ported. The cross-cutting `path` and `external_directory` gates are (above);
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
-- MCP and skill tools;
+- the MCP and skill surfaces (`mcp`, `skill` and `mcp__server__tool` tool calls);
 - the project scope while the project is trusted (`ctx.IsProjectTrusted`; unknown counts as trusted) and a project config file exists,
   and the agent scope while the active agent (the last `active_agent` session entry, else the `<active_agent name="...">` tag of the
   system prompt) has a definition file with a `permission` frontmatter block: every call the port would allow is refused
   (`unported.go`, `scope_test.go`); a deny the global scope gives stays a deny. Before this the scopes were ignored, which let a call
   through that a project or agent rule denies;
 - a `/skill:<name>` input: the `input` handler decides it by the skill surface (allow continues, deny is `handled` with the original's
-  notice, an ask or an unreadable scope is `handled` with the refusal text). Before this every input continued, so a denied skill
-  could be invoked;
-- config options the schema accepts and nothing reads yet (dialog, forwarding, logging, limits, `piInfrastructureReadPaths`,
-  `authorizerChain`): a warning at session start names the ones that are set.
+  notice, an ask is put to the dialog and a dismissal denies, an unreadable scope is `handled` with the refusal text). Before this
+  every input continued, so a denied skill could be invoked;
+- config options the schema accepts and nothing reads yet (dialog keys, double-press, forwarding, logging, limits,
+  `piInfrastructureReadPaths`, `authorizerChain`): a warning at session start names the ones that are set.
 
-**Not ported at all:** project and agent scopes (the project scope is withheld in the original until the project is trusted;
-the port reads the global scope only), session approvals and rules, the review and debug logs, forwarding and subagent authority,
-the config modal, the cross-extension service, removing denied skills from the system prompt (`withoutDeniedSkills`: a denied
-skill stays listed, and its files are not gated by the skill-read gate, as in the original). A file that does not parse warns
-with the original's lead text but Go's parse error, not JavaScript's; a schema violation warns once with the original's
-messages, where the original warns twice. PiG's `powershell` tool is a shell the original does not know: it is decided by its own
-name (or the `*` fallback), not by the bash rules; deny it, or name it in `shellTools`, which makes the port refuse it.
+A wrapper running a pure reader (`sudo ls`, `nice echo`, `xargs grep`) asks: the original's floor exemption lets the inner
+command's rule allow it; a unit starting with a command that runs another one the original reads by its own rule (`ssh`, `su`,
+`source`, `command`, `bash script.sh`, ...) asks too. Both are stricter than the original and are listed, with every other
+difference, in `testdata/port-differences.json`.
+
+**Not ported at all, and diverging rather than refused:** path canonicalization (a pattern that names only a symlink-resolved or
+otherwise spelled alias of a path is not matched; the port matches the path resolved against the working directory), the
+original's inline keybind dialog and its `permissionDialogKeys`/`doublePressToConfirm` (PiG's picker instead), the bash arity
+behind the exact-prefix session suggestion, forwarding of approvals between sessions and the authorizer chain, the review and
+debug logs, the config modal, the cross-extension service, removing denied skills from the system prompt
+(`withoutDeniedSkills`: a denied skill stays listed, and its files are not gated by the skill-read gate, as in the original).
+A file that does not parse warns with the original's lead text but Go's parse error, not JavaScript's; a schema violation warns
+once with the original's messages, where the original warns twice. PiG's `powershell` tool is a shell the original does not know:
+it is decided by its own name (or the `*` fallback), not by the bash rules; deny it, or name it in `shellTools`, which makes the
+port refuse it.
 
 ## Mapping
 
@@ -89,6 +104,8 @@ name (or the `*` fallback), not by the bash rules; deny it, or name it in `shell
 | M7 | `access-intent/bash/wrapper-analysis.ts` (`classifyWrapperWords`), `handlers/gates/bash-command.ts` (units, floors, most restrictive) | `bash.go` | 4 twins and the upstream tables; 646 recorded decisions (`oracle_test.go`) |
 | M8 | `config/config-loader.ts` (`stripJsonComments`, `validateUnifiedConfig`), `config/config-schema.ts` | `schema.go`, `config.go` | 91 recorded files (`oracle_test.go`); scenario `config-comments` |
 | M9 | `handlers/gates/skill-read.ts`, `exposure/skill-prompt-sanitizer.ts` (parsing, visibility, path match) | `skills.go` | 15 twins; `skills_test.go`; `adapter_test.go` |
+| M10 | `authority/permission-prompt-decision.ts`, `authority/local-user-authorizer.ts` (the decisions), `policy/permission-gate.ts`, `session/session-rules.ts`, `presentation/pattern-suggest.ts`, `presentation/agent-renderer.ts` (the user and unavailable renders) | `ask.go` | `ask_test.go`; the dialog flow through a fake interactive host (`askflow_test.go`) |
+| M11 | `handlers/gates/path.ts`, `handlers/gates/external-directory.ts`, `access-intent/tool-input-path.ts`, `access-intent/path-surfaces.ts`, and the word-level part of the bash path gates | `paths.go` | `extras_test.go` (the gates); `ask_test.go` (the word scan); the harness-shape scenarios |
 
 ## Process: what was written before its tests
 
@@ -105,13 +122,21 @@ The review (rev-port-popular-4) found that the gate allowed what the original as
 about or denies ran unasked), `227df1c` and `987d19a` are green. The red tests compare with the original's own decisions,
 recorded by `port/record-probe.sh`, not with the port.
 
+The ask and the path gates came later, driven by a real configuration that leans on both (a universal `*: ask` with the day's
+tools allowed, `external_directory_read: allow` / `external_directory_write: ask`, and `bash: allow`): the refusals for an ask,
+for path-bearing tools behind a non-open `external_directory`, and for the floors became asks and gate checks (`ask.go`,
+`paths.go`), the oracle comparison learned to tell a port ask from a refusal (`TestBashGateAgainstOriginal`), and
+`testdata/port-differences.json` was regenerated: 134 entries, 74 asks where the original decides and 60 commands still refused
+against bash patterns. `isWithinDir` (the skill-read gate's containment test) learned the platform's `..` prefix, without which
+a Windows session gated every read in the working directory as a skill file.
+
 ## Results
 
 - `go test -race`: pass. 229 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded
-  decisions: none of the 646 commands is allowed where the original asks or denies; 498 get the original's decision and text,
-  148 are refusals listed in `testdata/port-differences.json` (121 commands the port cannot read or guards, 27 floor
-  exemptions); all 91 config files get the original's verdict, messages (a parse error: Go's message) and output map; 48 of 48
-  wrapper units.
+  decisions: none of the 646 commands is allowed where the original asks or denies; 512 get the original's decision and text,
+  134 are differences listed in `testdata/port-differences.json` (60 commands the port still refuses against bash patterns, 74
+  asks where the original decides); all 91 config files get the original's verdict, messages (a parse error: Go's message) and
+  output map; 48 of 48 wrapper units.
 - `pigeq check` against the Pi 1.0.0 goldens: 8 of 8 scenarios + port-gaps + exec-coverage, three runs in a row. The scenarios
   cover bash patterns with a reason, last-match-wins across allow and deny, allowed built-in tools, a universal allow (with its
   warning) and one with an explicit bash policy, a universal deny with a bash exception (the other tools are withheld, visible in
