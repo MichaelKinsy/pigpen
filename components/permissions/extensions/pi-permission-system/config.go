@@ -7,20 +7,62 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 // Port of the global config scope of src/config: config.json under the agent directory, its `permission` map and `yoloMode`.
 
 const extensionID = "pi-permission-system"
 
+// agentDir is the agent directory the config lives in. First the host's own answer: PiG starts every extension
+// process with PIG_EXT_HOST_INFO carrying the directory the session runs with (its own tree, or Pi's when it shares
+// it), which is the fact the original read through the coding-agent's getAgentDir(). Reading it here is what makes
+// the port find the config file the original found — guessing from PI_CODING_AGENT_DIR does not, because in the
+// default mode PiG sets no such variable (it is a shared-mode variable only) and the guess falls back to
+// ~/.pi/agent, where no config exists: every call then falls to the universal ask and the whole allow list is lost.
+// Without a host (tests, a standalone run) the directory is resolved with PiG's own rule (divergence D2, the same
+// order pi-typesafe-api's AgentDir uses), then Pi's variable for compatibility with the original's environment.
 func agentDir() string {
-	if o := jsTrim(os.Getenv("PI_CODING_AGENT_DIR")); o != "" {
-		if filepath.IsAbs(o) {
-			return filepath.Clean(o)
+	if d, err := sdk.AgentDir(); err == nil {
+		if d = jsTrim(d); d != "" {
+			return d
 		}
-		return filepath.Join(homeDir(), o)
 	}
-	return filepath.Join(homeDir(), ".pi", "agent")
+	if os.Getenv("PIG_USE_PI_DIRS") == "1" {
+		if o := jsTrim(os.Getenv("PI_CODING_AGENT_DIR")); o != "" {
+			return expandAgentHome(o)
+		}
+		return filepath.Join(homeDir(), ".pi", "agent")
+	}
+	for _, name := range []string{"PIG_CODING_AGENT_DIR", "PI_CODING_AGENT_DIR"} {
+		if o := jsTrim(os.Getenv(name)); o != "" {
+			return expandAgentHome(o)
+		}
+	}
+	if h := jsTrim(os.Getenv("PIG_HOME")); h != "" {
+		return filepath.Join(expandAgentHome(h), "agent")
+	}
+	if x := jsTrim(os.Getenv("XDG_CONFIG_HOME")); x != "" {
+		return filepath.Join(expandAgentHome(x), "pig", "agent")
+	}
+	return filepath.Join(homeDir(), ".pig", "agent")
+}
+
+// expandAgentHome makes an agent directory absolute: a path stays as it is, ~ and a relative segment resolve
+// against the home directory. A leading separator counts as absolute the way Node's path.isAbsolute does on
+// Windows, so a POSIX-spelled root is not joined onto the home directory a second time.
+func expandAgentHome(v string) string {
+	if filepath.IsAbs(v) || strings.HasPrefix(v, "/") || strings.HasPrefix(v, `\`) {
+		return filepath.Clean(v)
+	}
+	if v == "~" {
+		return homeDir()
+	}
+	if strings.HasPrefix(v, "~/") || strings.HasPrefix(v, `~\`) {
+		return filepath.Join(homeDir(), v[2:])
+	}
+	return filepath.Join(homeDir(), v)
 }
 
 func globalConfigPath() string {

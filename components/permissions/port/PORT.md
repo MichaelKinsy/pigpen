@@ -144,6 +144,15 @@ split (`isTransparentWrapper`, the pure-reader core and its retraction flags, `s
 gate learned to judge a redirect's target by the operator, and the guard list was deleted: `testdata/port-differences.json`
 went from 134 entries to 60, every one of them a command still refused against bash patterns.
 
+A live session then exposed the deepest divergence yet: with the day's config in place the allow list was gone
+entirely and every call asked (`todo` included). The port read its config from `PI_CODING_AGENT_DIR` — a shared-mode
+variable a default-mode session never sets — and fell back to `~/.pi/agent`, where no file exists; a missing file is
+silently an empty config, so the universal ask decided everything. The original read the directory from the host's
+`getAgentDir()`; the port now reads the same fact from the SDK's host info (`PIG_EXT_HOST_INFO`, the variable the host
+starts every extension process with) and resolves PiG's own rule outside a host (`PIG_CODING_AGENT_DIR`, `PIG_HOME`,
+`XDG_CONFIG_HOME`, `~/.pig/agent`, and Pi's directories under `PIG_USE_PI_DIRS=1`; `config.go` `agentDir`, the same
+order as `pi-typesafe-api`'s `AgentDir`). The package hash changed with it, so the next session rebuilds.
+
 ## Results
 
 - `go test -race`: pass. 229 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded
