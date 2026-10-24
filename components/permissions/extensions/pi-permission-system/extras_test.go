@@ -203,6 +203,7 @@ func TestDetectPermissiveBashFallback(t *testing.T) {
 
 func TestLoadConfig(t *testing.T) {
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "") // without a host the fallback chain decides
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	eq(t, globalConfigPath(), filepath.Join(dir, "extensions", "pi-permission-system", "config.json"), "path")
 	eq(t, loadConfig(), Config{}, "missing")
@@ -223,12 +224,32 @@ func TestLoadConfig(t *testing.T) {
 	eq(t, loadConfig().Issue != "", true, "invalid JSON is an issue")
 	write(`[1]`)
 	eq(t, loadConfig(), Config{Issue: "Invalid config value at '(root)': Invalid input: expected object, received array"}, "not an object")
-	// a relative agent directory is under the home directory
+	// the host's own answer wins: PiG starts every extension process with PIG_EXT_HOST_INFO carrying the directory
+	// the session runs with, which is the fact the original read through getAgentDir()
 	useFakeHome(t)
+	for _, k := range []string{"PIG_CODING_AGENT_DIR", "PI_CODING_AGENT_DIR", "PIG_HOME", "XDG_CONFIG_HOME", "PIG_USE_PI_DIRS"} {
+		t.Setenv(k, "")
+	}
+	t.Setenv("PIG_EXT_HOST_INFO", `{"agentDir":"C:\\host\\agent","configDirName":".pig","version":"0.0.0"}`)
+	eq(t, agentDir(), `C:\host\agent`, "host info is the agent directory")
+	t.Setenv("PIG_EXT_HOST_INFO", "")
+	// without a host: a relative agent directory is under the home directory
 	t.Setenv("PI_CODING_AGENT_DIR", "rel/agent")
 	eq(t, agentDir(), filepath.Join(fakeHome, "rel/agent"), "relative")
 	t.Setenv("PI_CODING_AGENT_DIR", "  ")
-	eq(t, agentDir(), filepath.Join(fakeHome, ".pi", "agent"), "default")
+	eq(t, agentDir(), filepath.Join(fakeHome, ".pig", "agent"), "default is PiG's agent directory")
+	t.Setenv("PIG_HOME", filepath.Join(fakeHome, "ph"))
+	eq(t, agentDir(), filepath.Join(fakeHome, "ph", "agent"), "PIG_HOME")
+	t.Setenv("PIG_HOME", "")
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(fakeHome, "xdg"))
+	eq(t, agentDir(), filepath.Join(fakeHome, "xdg", "pig", "agent"), "XDG_CONFIG_HOME")
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("PIG_CODING_AGENT_DIR", filepath.Join(fakeHome, "pcad"))
+	eq(t, agentDir(), filepath.Join(fakeHome, "pcad"), "PIG_CODING_AGENT_DIR before PI_CODING_AGENT_DIR")
+	t.Setenv("PIG_CODING_AGENT_DIR", "")
+	t.Setenv("PI_CODING_AGENT_DIR", "")
+	t.Setenv("PIG_USE_PI_DIRS", "1")
+	eq(t, agentDir(), filepath.Join(fakeHome, ".pi", "agent"), "the shared Pi directories mode")
 }
 
 func TestWildcardExtras(t *testing.T) {

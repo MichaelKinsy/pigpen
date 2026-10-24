@@ -274,6 +274,7 @@ func TestDenyWithEmptyReason(t *testing.T) {
 // The config file is read once per session start and turn: a file that breaks the schema is reported and not used.
 func TestLoadConfigRefusesASchemaViolation(t *testing.T) {
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	p := globalConfigPath()
 	os.MkdirAll(filepath.Dir(p), 0o755)
