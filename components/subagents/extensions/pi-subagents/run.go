@@ -209,10 +209,11 @@ func hasThinkingSuffix(model string) bool {
 	return i >= 0 && thinkingLevels[model[i+1:]]
 }
 
-// buildChildArgs is the child's command line: no extension discovery, print mode, and what the agent definition pins
-// (model, thinking, tools, system prompt). The task is not an argument: it travels on stdin (childPrompt).
+// buildChildArgs is the child's command line: print mode and what the agent definition pins (model, thinking, tools,
+// system prompt). The child discovers extensions as the original's background child (its own process) does: a model
+// provider (and its login) comes from one. The task is not an argument: it travels on stdin (childPrompt).
 func buildChildArgs(a *AgentConfig, modelOverride string) []string {
-	args := []string{"--no-extensions", "--print"}
+	args := []string{"--print"}
 	model := modelOverride
 	if model == "" && a.Model != "" && a.Model != "inherit" {
 		model = a.Model

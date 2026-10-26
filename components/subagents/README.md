@@ -28,8 +28,8 @@ original); then:
 
 Thirteen agents ship with the package (the original's `scout`, `worker`, `reviewer`, ...). `PIG_SUBAGENT_PIG_BINARY` names the pig
 to start for a child; otherwise the pig running this extension, then a `pig` beside this program, then `PATH`. A child gets the
-task on stdin, runs with `--no-extensions`, and may itself delegate only to depth 2 (`PI_SUBAGENT_MAX_DEPTH`, as in the
-original); at most 4 children run at once, and a cancelled call (Escape) stops its child. An agent with
+task on stdin, discovers extensions as the original's background child does (a model provider and its login come from one), and
+may itself delegate only to depth 2 (`PI_SUBAGENT_MAX_DEPTH`, as in the original); at most 4 children run at once, and a cancelled call (Escape) stops its child. An agent with
 `systemPromptMode: replace` cannot run in a Piglet Binary child (a Binary keeps its own system prompt).
 
 ```sh

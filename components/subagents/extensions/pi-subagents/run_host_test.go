@@ -76,7 +76,7 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	}
 	req := (*calls)[0]
 	eq(t, req.Cwd, filepath.Join(cwd, "sub"), "a relative cwd is the session's")
-	eq(t, req.Args[:4], []string{"--no-extensions", "--print", "--model", "p/m:low"}, "model override, its thinking")
+	eq(t, req.Args[:3], []string{"--print", "--model", "p/m:low"}, "model override, its thinking")
 	eq(t, req.Stdin, "Task: build", "stdin")
 
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "cwd": "nope"})

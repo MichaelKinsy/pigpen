@@ -342,10 +342,10 @@
   "replace": "args = append(args, \"--thinking\", \"low\")"
  },
  {
-  "name": "run-no-extensions",
+  "name": "run-ambient-extensions",
   "file": "run.go",
-  "find": "args := []string{\"--no-extensions\", \"--print\"}",
-  "replace": "args := []string{\"--print\"}"
+  "find": "args := []string{\"--print\"}",
+  "replace": "args := []string{\"--no-extensions\", \"--print\"}"
  },
  {
   "name": "chain-default-first",

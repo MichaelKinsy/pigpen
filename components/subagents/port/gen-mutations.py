@@ -83,7 +83,7 @@ m("run-model-inherit", "run.go", 'model == "" && a.Model != "" && a.Model != "in
 m("run-model-override", "run.go", 'model := modelOverride\n\tif model == "" &&', 'model := ""\n\tif model == "" &&')
 m("run-replace-flag", "run.go", 'if a.SystemPromptMode == "append" {', 'if a.SystemPromptMode == "replace" {')
 m("run-thinking-off", "run.go", 'args = append(args, "--thinking", "off")', 'args = append(args, "--thinking", "low")')
-m("run-no-extensions", "run.go", 'args := []string{"--no-extensions", "--print"}', 'args := []string{"--print"}')
+m("run-ambient-extensions", "run.go", 'args := []string{"--print"}', 'args := []string{"--no-extensions", "--print"}')
 m("chain-default-first", "run.go", "if i == 0 {\n\t\t\tt = \"{task}\"", "if i == 1 {\n\t\t\tt = \"{task}\"")
 m("chain-previous", "run.go", '"{task}", request, "{previous}", previous', '"{task}", request, "{previous}", request')
 m("chain-resolve-first", "run.go", "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps {", "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps[:0] {")
