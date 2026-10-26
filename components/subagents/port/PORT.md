@@ -34,7 +34,12 @@ Pi) in-process child sessions. The port starts a child `pig --print` with the ag
 tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`). The child discovers extensions as
 the original's background child, which runs in its own process, does: a provider extension, and the login it brings, is
 what lets the child reach a provider-qualified model. (The original's foreground child runs in the parent's process and
-loads no extensions; it uses the providers the parent already loaded, which a pig child process cannot.) An agent's `extensions` and `subagentOnlyExtensions` are not read yet. Running a child is:
+loads no extensions; it uses the providers the parent already loaded, which a pig child process cannot.) An agent picks its child's extensions as in the original: `extensions` (a list, even an empty one) turns
+discovery off and loads only those (`--no-extensions` and one `--extension` each), `subagentOnlyExtensions` adds to whatever
+loads, and an entry starting `./` or `../` is relative to the agent file. An agent that sets neither takes
+`subagents.defaultExtensions` / `defaultSubagentOnlyExtensions` from the project's `settings.json`, else the user's; a
+malformed value refuses the run with the original's message, and an empty `extensions` list shows the original's warning
+(as a notification: the original's `console.warn`). `get` shows both fields. Running a child is:
 `subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a `.chain.md` chain (steps in order, `{task}` and
 `{previous}`, the first failing step stops it, every agent is resolved before any child starts). The original's trace cannot
 check this (a Pi child session is not a pig child process); it is covered by the port's own tests (a fake child runner, a real
@@ -90,7 +95,7 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M4 | `agents/agents.ts` (discovery, loading, project root) | `discovery.go`, `agents.go`, `builtin/` | 15 twins + 5 Pi scenarios |
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
-| M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
+| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults) | `run.go`, `child_*.go`, `agents.go`, `discovery.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 
 ## Process: what was written before its tests

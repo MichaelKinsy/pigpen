@@ -3,6 +3,7 @@ package pi_subagents
 import (
 	"embed"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -136,6 +137,8 @@ func loadAgent(f definitionFile, source AgentSource, priority int) (*AgentConfig
 			a.Skills = s
 		}
 	}
+	a.Extensions = agentRelativePaths(ParseFrontmatterList(optional(fm, "extensions")), f.path)
+	a.SubagentOnlyExtensions = agentRelativePaths(ParseFrontmatterList(optional(fm, "subagentOnlyExtensions")), f.path)
 	if fm.Has("model") {
 		a.Model = fm.Get("model")
 	}
@@ -181,6 +184,22 @@ func loadAgent(f definitionFile, source AgentSource, priority int) (*AgentConfig
 	}
 	a.DefaultProgress = fm.Get("defaultProgress") == "true"
 	return a, nil
+}
+
+// agentRelativePaths is the original's resolveAgentRelativeExtensionPaths: an entry that starts with ./ or ../ (or is . or
+// ..) is relative to the agent file; any other entry is passed on as written.
+func agentRelativePaths(paths []string, agentFile string) []string {
+	if paths == nil {
+		return nil
+	}
+	out := make([]string, len(paths))
+	for i, p := range paths {
+		if t := jsTrim(p); t == "." || t == ".." || strings.HasPrefix(t, "./") || strings.HasPrefix(t, "../") {
+			p = filepath.Join(filepath.Dir(agentFile), t)
+		}
+		out[i] = p
+	}
+	return out
 }
 
 // builtinAgents loads the agents that ship with the package (the original's agents directory, unmodified).

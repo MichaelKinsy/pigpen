@@ -1,6 +1,9 @@
 package pi_subagents
 
 import (
+	"errors"
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -114,6 +117,90 @@ func projectRootResolution(root string) string {
 		}
 	}
 	return ""
+}
+
+// extensionDefaults are `subagents.defaultExtensions` and `subagents.defaultSubagentOnlyExtensions` (nil when unset).
+type extensionDefaults struct{ extensions, subagentOnly []string }
+
+// readExtensionDefaults is the original's readSubagentSettings for the two extension defaults: a missing file sets
+// nothing; an unreadable or malformed file, or a value that is not an array of non-empty strings, is an error.
+func readExtensionDefaults(path string) (extensionDefaults, error) {
+	var d extensionDefaults
+	b, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return d, nil
+	}
+	if err != nil {
+		return d, fmt.Errorf("Failed to read settings file '%s': %s", path, err)
+	}
+	v, err := parseJSON(b)
+	if err != nil {
+		return d, fmt.Errorf("Failed to parse settings file '%s': %s", path, err)
+	}
+	o, _ := v.(*jsObject)
+	if o == nil || o.obj("subagents") == nil {
+		return d, nil
+	}
+	s := o.obj("subagents")
+	for _, f := range []struct {
+		key string
+		dst *[]string
+	}{{"defaultExtensions", &d.extensions}, {"defaultSubagentOnlyExtensions", &d.subagentOnly}} {
+		raw, ok := s.get(f.key)
+		if !ok {
+			continue
+		}
+		items, valid := raw.([]any)
+		list := []string{}
+		for _, item := range items {
+			str, isStr := item.(string)
+			if !isStr || jsTrim(str) == "" {
+				valid = false
+				break
+			}
+			list = append(list, jsTrim(str))
+		}
+		if !valid {
+			return d, fmt.Errorf("Subagent settings in '%s' have invalid '%s'; expected an array of non-empty strings.", path, f.key)
+		}
+		*f.dst = list
+	}
+	return d, nil
+}
+
+// extensionDefaultsFor is the default for the scope: the project's settings when a project root exists and they set it,
+// else the user's. Scope "project" reads no user settings, "user" no project settings.
+func extensionDefaultsFor(cwd string, scope AgentScope) (extensionDefaults, error) {
+	var user, project extensionDefaults
+	var err error
+	if scope != ScopeProject {
+		if user, err = readExtensionDefaults(filepath.Join(agentDir(), "settings.json")); err != nil {
+			return user, err
+		}
+	}
+	if root := FindConfiguredProjectRoot(cwd); scope != ScopeUser && root != "" {
+		if project, err = readExtensionDefaults(filepath.Join(projectConfigDir(root), "settings.json")); err != nil {
+			return project, err
+		}
+	}
+	if project.extensions == nil {
+		project.extensions = user.extensions
+	}
+	if project.subagentOnly == nil {
+		project.subagentOnly = user.subagentOnly
+	}
+	return project, nil
+}
+
+// apply gives an agent the defaults for the fields its definition leaves unset.
+func (d extensionDefaults) apply(a AgentConfig) AgentConfig {
+	if a.Extensions == nil {
+		a.Extensions = d.extensions
+	}
+	if a.SubagentOnlyExtensions == nil {
+		a.SubagentOnlyExtensions = d.subagentOnly
+	}
+	return a
 }
 
 // FindConfiguredProjectRoot is the project root for cwd ("" for none): the nearest directory with a .pi or .agents,

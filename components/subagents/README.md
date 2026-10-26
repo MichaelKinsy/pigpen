@@ -32,6 +32,16 @@ task on stdin, discovers extensions as the original's background child does (a m
 may itself delegate only to depth 2 (`PI_SUBAGENT_MAX_DEPTH`, as in the original); at most 4 children run at once, and a cancelled call (Escape) stops its child. An agent with
 `systemPromptMode: replace` cannot run in a Piglet Binary child (a Binary keeps its own system prompt).
 
+An agent chooses its child's extensions as in the original. `extensions: a, b` loads only those (an empty `extensions:` loads
+none, not even a model provider), and `subagentOnlyExtensions: c` loads `c` in the child on top of the rest. Entries are what
+`pig --extension` takes: a path (`./` and `../` are relative to the agent file), `builtin:<name>`, or an `npm:`/`git:`
+source. For agents that set neither, `subagents.defaultExtensions` and `subagents.defaultSubagentOnlyExtensions` in
+`.pi/settings.json` (the project's, else `~/.pi/agent/settings.json`) are the default:
+
+```json
+{ "subagents": { "defaultSubagentOnlyExtensions": ["/path/to/child-only-extension"] } }
+```
+
 ```sh
 pig install ./components/subagents
 ```

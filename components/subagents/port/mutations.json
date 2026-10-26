@@ -60,6 +60,42 @@
   "replace": "strings.Split(value, \";\")"
  },
  {
+  "name": "ext-relative",
+  "file": "agents.go",
+  "find": "strings.HasPrefix(t, \"./\") ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "ext-settings-valid",
+  "file": "discovery.go",
+  "find": "if !isStr || jsTrim(str) == \"\" {",
+  "replace": "if !isStr {"
+ },
+ {
+  "name": "ext-settings-user-scope",
+  "file": "discovery.go",
+  "find": "if scope != ScopeProject {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ext-settings-project-scope",
+  "file": "discovery.go",
+  "find": "scope != ScopeUser && root",
+  "replace": "root"
+ },
+ {
+  "name": "ext-settings-project-first",
+  "file": "discovery.go",
+  "find": "if project.extensions == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ext-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions",
+  "replace": "if true {\n\t\ta.Extensions = d.extensions"
+ },
+ {
   "name": "chain-budget-soft",
   "file": "chain.go",
   "find": "soft.(float64) > hard.(float64)",
@@ -346,6 +382,24 @@
   "file": "run.go",
   "find": "args := []string{\"--print\"}",
   "replace": "args := []string{\"--no-extensions\", \"--print\"}"
+ },
+ {
+  "name": "run-extensions-allowlist",
+  "file": "run.go",
+  "find": "args = append(args, \"--no-extensions\")",
+  "replace": ""
+ },
+ {
+  "name": "run-extensions-once",
+  "file": "run.go",
+  "find": "if !seen[e] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "run-extensions-warning",
+  "file": "run.go",
+  "find": "if a.Extensions == nil || len(a.Extensions) > 0 {",
+  "replace": "if a.Extensions == nil {"
  },
  {
   "name": "chain-default-first",

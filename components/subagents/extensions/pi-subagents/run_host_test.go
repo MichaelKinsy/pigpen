@@ -107,3 +107,40 @@ func TestChainThroughTheCommand(t *testing.T) {
 	notes := h.CallsTo("ui.notify")
 	eq(t, fmt.Sprint(notes[len(notes)-1].Args["message"]), "step two", "the chain's answer")
 }
+
+func TestExtensionsThroughTheTool(t *testing.T) {
+	calls := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": ["/provider.ts"]}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "def.md"), agentMD("def", "Def", "Def."))
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "none.md"), "---\nname: none\ndescription: None\nextensions:\nsubagentOnlyExtensions: /child.ts\n---\n")
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	eq(t, failure, "", "failure")
+	args := (*calls)[0].Args
+	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/provider.ts"}, "the settings default")
+
+	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t"})
+	eq(t, failure, "", "failure")
+	args = (*calls)[1].Args
+	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/child.ts"}, "the agent's own empty list, plus child-only")
+	notes := h.CallsTo("ui.notify")
+	if len(notes) != 1 || notes[0].Args["level"] != "warning" || !strings.HasPrefix(fmt.Sprint(notes[0].Args["message"]), "extensions: [] override for agent 'none'") {
+		t.Errorf("warning: %v", notes)
+	}
+
+	raw, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "def"})
+	eq(t, failure, "", "get")
+	if !strings.Contains(string(raw), `Extensions: /provider.ts`) {
+		t.Errorf("get shows the default: %s", raw)
+	}
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": [1]}}`)
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	if !strings.Contains(failure, "have invalid 'defaultExtensions'") {
+		t.Errorf("invalid settings: %q", failure)
+	}
+	eq(t, len(*calls), 2, "no child for invalid settings")
+}

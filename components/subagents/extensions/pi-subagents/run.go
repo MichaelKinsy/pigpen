@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -210,8 +211,9 @@ func hasThinkingSuffix(model string) bool {
 }
 
 // buildChildArgs is the child's command line: print mode and what the agent definition pins (model, thinking, tools,
-// system prompt). The child discovers extensions as the original's background child (its own process) does: a model
-// provider (and its login) comes from one. The task is not an argument: it travels on stdin (childPrompt).
+// system prompt, extensions). Without `extensions` the child discovers extensions as the original's background child (its
+// own process) does: a model provider (and its login) comes from one. The task is not an argument: it travels on stdin
+// (childPrompt).
 func buildChildArgs(a *AgentConfig, modelOverride string) []string {
 	args := []string{"--print"}
 	model := modelOverride
@@ -241,7 +243,29 @@ func buildChildArgs(a *AgentConfig, modelOverride string) []string {
 		}
 		args = append(args, flag, a.SystemPrompt)
 	}
+	exts := a.SubagentOnlyExtensions
+	if a.Extensions != nil {
+		args = append(args, "--no-extensions")
+		exts = append(slices.Clone(a.Extensions), exts...)
+	}
+	seen := map[string]bool{}
+	for _, e := range exts {
+		if !seen[e] {
+			seen[e] = true
+			args = append(args, "--extension", e)
+		}
+	}
 	return args
+}
+
+// noExtensionsWarning is the original's warning for an empty `extensions` list, or "".
+func noExtensionsWarning(a *AgentConfig) string {
+	if a.Extensions == nil || len(a.Extensions) > 0 {
+		return ""
+	}
+	return fmt.Sprintf(`extensions: [] override for agent '%s' disables ALL ambient extensions for this child (not just "adds nothing"), `+
+		"including any model-provider extension needed to resolve a provider-qualified model. "+
+		"List the extensions this child actually needs instead of an empty array.", a.Name)
 }
 
 // childPrompt is the message a child gets on stdin: the original prompts its children with "Task: <task>". On stdin

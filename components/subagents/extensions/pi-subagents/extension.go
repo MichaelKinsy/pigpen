@@ -259,10 +259,19 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		}
 		return nil, sdk.NewToolError(msg)
 	}
+	defaults, err := extensionDefaultsFor(ctx.Cwd(), scope)
+	if err != nil {
+		return nil, sdk.NewToolError(err.Error())
+	}
+	withDefaults := defaults.apply(*a)
+	a = &withDefaults
 	requested, _ := params["cwd"].(string)
 	cwd, err := resolveRunCwd(ctx.Cwd(), requested)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
+	}
+	if w := noExtensionsWarning(a); w != "" {
+		ctx.Notify(w, "warning")
 	}
 	model, _ := params["model"].(string)
 	done, stop := cancellation(ctx)
@@ -292,7 +301,22 @@ func runChainCommand(ctx sdk.Context, args string) error {
 		ctx.Notify(fmt.Sprintf("Unknown chain '%s'.", fields[0]), "error")
 		return nil
 	}
+	defaults, err := extensionDefaultsFor(ctx.Cwd(), ScopeBoth)
+	if err != nil {
+		ctx.Notify(err.Error(), "error")
+		return nil
+	}
 	agents := MergeAgentsForScope(ScopeBoth, d.User, d.Project, d.Builtin, d.Package)
+	for i := range agents {
+		agents[i] = defaults.apply(agents[i])
+	}
+	for _, s := range chain.Steps {
+		if a, _ := ResolveAgentName(s.Agent, agents); a != nil {
+			if w := noExtensionsWarning(a); w != "" {
+				ctx.Notify(w, "warning")
+			}
+		}
+	}
 	done, stop := cancellation(ctx)
 	defer stop()
 	out, err := runChain(done, ctx.Cwd(), chain, agents, jsTrim(fields[1]), func(s string) { ctx.Notify(s, "info") })

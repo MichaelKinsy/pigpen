@@ -23,6 +23,14 @@ m("fm-crlf", "frontmatter.go", 'strings.ReplaceAll(content, "\\r\\n", "\\n")', "
 m("fm-list-dash", "frontmatter.go", 'if strings.HasPrefix(value, "-") {', 'if false {')
 m("fm-list-comma", "frontmatter.go", 'strings.Split(value, ",")', 'strings.Split(value, ";")')
 
+# agents.go, discovery.go: extensions
+m("ext-relative", "agents.go", 'strings.HasPrefix(t, "./") ||', "false ||")
+m("ext-settings-valid", "discovery.go", 'if !isStr || jsTrim(str) == "" {', "if !isStr {")
+m("ext-settings-user-scope", "discovery.go", "if scope != ScopeProject {", "if true {")
+m("ext-settings-project-scope", "discovery.go", "scope != ScopeUser && root", "root")
+m("ext-settings-project-first", "discovery.go", "if project.extensions == nil {", "if true {")
+m("ext-default-own-wins", "discovery.go", "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions", "if true {\n\t\ta.Extensions = d.extensions")
+
 # chain.go
 m("chain-budget-soft", "chain.go", "soft.(float64) > hard.(float64)", "soft.(float64) >= hard.(float64)")
 m("chain-budget-hard", "chain.go", "if !isInt(hard, 1) {", "if !isInt(hard, 0) {")
@@ -84,6 +92,9 @@ m("run-model-override", "run.go", 'model := modelOverride\n\tif model == "" &&',
 m("run-replace-flag", "run.go", 'if a.SystemPromptMode == "append" {', 'if a.SystemPromptMode == "replace" {')
 m("run-thinking-off", "run.go", 'args = append(args, "--thinking", "off")', 'args = append(args, "--thinking", "low")')
 m("run-ambient-extensions", "run.go", 'args := []string{"--print"}', 'args := []string{"--no-extensions", "--print"}')
+m("run-extensions-allowlist", "run.go", 'args = append(args, "--no-extensions")', '')
+m("run-extensions-once", "run.go", "if !seen[e] {", "if true {")
+m("run-extensions-warning", "run.go", "if a.Extensions == nil || len(a.Extensions) > 0 {", "if a.Extensions == nil {")
 m("chain-default-first", "run.go", "if i == 0 {\n\t\t\tt = \"{task}\"", "if i == 1 {\n\t\t\tt = \"{task}\"")
 m("chain-previous", "run.go", '"{task}", request, "{previous}", previous', '"{task}", request, "{previous}", request')
 m("chain-resolve-first", "run.go", "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps {", "resolved := make([]*AgentConfig, len(c.Steps))\n\tfor i, s := range c.Steps[:0] {")
