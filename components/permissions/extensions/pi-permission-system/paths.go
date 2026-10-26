@@ -218,7 +218,10 @@ func isPathToken(word string) bool {
 // redirect operator's target for the path it names (`> out` and `>> out` write, `< in` reads). It is the word-level
 // subset of describeBashExternalDirectoryGate: the original's parser finds paths in any command shape (heredocs,
 // expansion); the port finds them in the words of each unit, quoted pairs stripped, and a path it cannot see stays
-// ungated.
+// ungated. A unit's command word is executed, not accessed as an operand, so it is not gated: the original's
+// external accesses come from the parser's argument positions and the program name is not one
+// (bash-path-resolver.ts collectPathCandidates), so `C:/tools/bash -lc …` does not gate C:/tools/bash while
+// `bash /c/x.sh` still gates its script operand.
 func (p *Policy) bashExternalGate(cmd, cwd string, session Ruleset) Verdict {
 	if cwd == "" {
 		return Verdict{}
@@ -249,7 +252,11 @@ func (p *Policy) bashExternalGate(cmd, cwd string, session Ruleset) Verdict {
 			defaultSurface = "external_directory_write"
 		}
 		words := fieldWords(unit)
-		for i := 0; i < len(words); i++ {
+		first := 0
+		if len(words) > 0 && !isRedirectOperator(words[0]) && !isEnvAssignment(words[0]) {
+			first = 1 // the unit's command word: executed, not accessed
+		}
+		for i := first; i < len(words); i++ {
 			word := words[i]
 			if isRedirectOperator(word) {
 				// An operator's target is judged by the operator, not by the command: `> out` and

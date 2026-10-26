@@ -153,6 +153,17 @@ starts every extension process with) and resolves PiG's own rule outside a host 
 `XDG_CONFIG_HOME`, `~/.pig/agent`, and Pi's directories under `PIG_USE_PI_DIRS=1`; `config.go` `agentDir`, the same
 order as `pi-typesafe-api`'s `AgentDir`). The package hash changed with it, so the next session rebuilds.
 
+The next live session hit the re-approval loop: a wrapper's `for this session` approval did not stick, and the same
+command asked again on every call. The port's floor replaced *every* wrapper allow with an ask — and a session-granted
+allow is an allow. The original floors the wrapper but spreads the base result, so its `source: "session"` survives to
+GateRunner's session fast path, which tests the source before the state (runner.ts step 2); the port now lets a
+session-layer allow past the floor (`bash.go` decideBash). Two sibling gaps fell with it: the unit's command word was
+gated as an external path, where the original's external accesses come from the parser's argument positions and the
+program name is not one (`paths.go` bashExternalGate skips it; `bash /c/x.sh` still gates its script operand), and the
+no-patterns resolution probed the ruleset with `"*"`, which no session grant's command-text pattern could match — it
+now resolves each unit by its own text against the composed rules, as resolveOnBashSurface does. The harness's own
+bash shape — an absolute-path shell with a quoted payload — now takes one approval per session and then stays silent.
+
 ## Results
 
 - `go test -race`: pass. 229 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded

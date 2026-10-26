@@ -90,6 +90,28 @@ func TestDecideBash(t *testing.T) {
 // isBashAsk reports whether a verdict is the bash surface asking.
 func isBashAsk(v Verdict) bool { return !v.Block && v.Ask != nil && v.Ask.Surface == "bash" }
 
+// A session approval for a wrapper's prefix stands: the floor must not re-ask a command the human already granted
+// for the session (the original floors the wrapper but spreads the base result, so its `source: "session"` survives
+// to GateRunner's session fast path, runner.ts step 2, which tests the source before the state). The harness's own
+// bash shape — an absolute-path shell with an inline payload — is the case this decides, and its program word is
+// executed rather than accessed, so the external gate stays silent on it too.
+func TestBashSessionApprovalDefeatsWrapperFloor(t *testing.T) {
+	p := policyOf(t, `{"permission":{"bash":"allow","external_directory":"ask"}}`)
+	shell := "/c/Users/dev/workspace/cygwin/tools/msys2/root/usr/bin/bash"
+	cmd := shell + ` -lc "export PATH=/opt/bin:\$PATH; cd /c/Users/dev/workspace/cygwin && git status"`
+	v := p.DecideIn("bash", map[string]any{"command": cmd}, nil, `C:\Users\dev\workspace\pigpen`)
+	if v.Block || v.Ask == nil {
+		t.Fatalf("without a grant: block=%v ask=%v, want the wrapper floor to ask", v.Block, v.Ask)
+	}
+	session := Ruleset{{Surface: "bash", Pattern: shell + " *", Action: "allow", Layer: "session", Origin: "session"}}
+	for _, later := range []string{cmd, shell + ` -lc "git log --oneline"`} {
+		v = p.DecideIn("bash", map[string]any{"command": later}, session, `C:\Users\dev\workspace\pigpen`)
+		if v.Block || v.Ask != nil {
+			t.Fatalf("with the session grant (%s): block=%v reason=%q ask=%v, want allow", later, v.Block, v.Reason, v.Ask)
+		}
+	}
+}
+
 func TestDecideAsk(t *testing.T) {
 	p := policyOf(t, `{"permission":{`+allowPaths+`,"bash":{"*":"ask","git *":"allow"},"foo":"ask"}}`)
 	eq(t, isBashAsk(p.Decide("bash", map[string]any{"command": "ls"})), true, "bash asks")

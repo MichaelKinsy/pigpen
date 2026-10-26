@@ -347,7 +347,7 @@ func bashUnits(cmd string) (units []string, ok bool) {
 }
 
 // decideBash is the bash surface's decision for one command (resolveBashCommandCheck): each unit is resolved on its
-// own — its patterns when bash has value patterns, else the surface's constant — and the most restrictive result wins
+// own — its own text against the composed config and session rules — and the most restrictive result wins
 // (deny, then ask). A wrapper unit's allow is floored to ask (the original's <opaque-bash-wrapper> and
 // <indirection-bash-wrapper>), unless the floor has no reason left to hold: an indirection whose payload proves a
 // read is resolved by the inner command's rule instead (isTransparentWrapper, ADR 0013 §11). Ordinary commands and
@@ -371,10 +371,7 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 		// A trivially-empty command (empty, whitespace-only, comments only) has nothing to decompose, so
 		// the surface's rule resolves it as a whole — its ask and its deny stand (the original's
 		// isTriviallyEmptyCommand path in resolveBashCommandCheck).
-		r := p.constantIn("bash", session)
-		if patterns {
-			r = Evaluate("bash", cmd, p.sessionWith(session), PosixPathFlavor, "")
-		}
+		r := Evaluate("bash", cmd, p.sessionWith(session), PosixPathFlavor, "")
 		return p.outcome(r, bashAsk(cmd, r))
 	}
 	best, rank := Verdict{}, 0
@@ -382,10 +379,10 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 		if u == "" {
 			continue
 		}
-		r := p.constantIn("bash", session)
-		if patterns {
-			r = Evaluate("bash", u, p.sessionWith(session), PosixPathFlavor, "")
-		}
+		// The unit resolves by its own text against the composed config and session rules (the original's
+		// resolveOnBashSurface passes the command, never a "*" probe), so a session grant for this
+		// command's pattern matches it even when the config has no bash patterns.
+		r := Evaluate("bash", u, p.sessionWith(session), PosixPathFlavor, "")
 		v, k := p.outcome(r, bashAsk(u, r)), 0
 		switch r.Action {
 		case "deny":
@@ -394,7 +391,11 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 			k = 1
 		default:
 			words := fieldWords(u)
-			if classifyWrapperWords(words) != "" && !(p.yolo && !patterns) {
+			// A session-granted allow keeps its grant: the original floors the wrapper but spreads the
+			// base result, so its `source: "session"` survives to GateRunner's session fast path, which
+			// tests the source before the state — a grant the user gave for this command still holds
+			// (runner.ts step 2), and the floor must not re-ask what the session already approved.
+			if r.Layer != "session" && classifyWrapperWords(words) != "" && !(p.yolo && !patterns) {
 				floored := true
 				if isTransparentWrapper(words, hasWriteRedirect(words)) {
 					// The floor has no reason left to hold: the inner command's rule decides, and the
@@ -402,9 +403,7 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 					// resolveWrapperUnit). Its decision stands whatever it is; only an inner allow
 					// reaches the caller without a block or an ask.
 					if inner, ok := unwrapIndirection(words); ok {
-						if patterns {
-							r = Evaluate("bash", strings.Join(inner, " "), p.sessionWith(session), PosixPathFlavor, "")
-						}
+						r = Evaluate("bash", strings.Join(inner, " "), p.sessionWith(session), PosixPathFlavor, "")
 						v, k = p.outcome(r, bashAsk(u, r)), 0
 						switch r.Action {
 						case "deny":
