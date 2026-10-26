@@ -27,8 +27,11 @@ m("fm-list-comma", "frontmatter.go", 'strings.Split(value, ",")', 'strings.Split
 m("ext-relative", "agents.go", 'strings.HasPrefix(t, "./") ||', "false ||")
 m("ext-settings-valid", "discovery.go", 'if !isStr || jsTrim(str) == "" {', "if !isStr {")
 m("ext-settings-user-scope", "discovery.go", "if scope != ScopeProject {", "if true {")
-m("ext-settings-project-scope", "discovery.go", "scope != ScopeUser && root", "root")
-m("ext-settings-project-first", "discovery.go", "if project.extensions == nil {", "if true {")
+m("ext-settings-project-scope", "discovery.go", "if scope != ScopeUser {", "if true {")
+m("ext-settings-first-wins", "discovery.go", "if d.subagentOnly == nil {", "if true {")
+m("ext-host-project", "discovery.go", "files = append(files, hostProject)", "")
+m("ext-host-user", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"))')
+m("ext-host-user-first", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"), hostUser)')
 m("ext-default-own-wins", "discovery.go", "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions", "if true {\n\t\ta.Extensions = d.extensions")
 
 # chain.go

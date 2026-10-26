@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
 func isDir(p string) bool {
@@ -168,28 +170,51 @@ func readExtensionDefaults(path string) (extensionDefaults, error) {
 	return d, nil
 }
 
-// extensionDefaultsFor is the default for the scope: the project's settings when a project root exists and they set it,
-// else the user's. Scope "project" reads no user settings, "user" no project settings.
+// extensionDefaultsFor is the default for the scope: project settings over user settings, and at each level the PiG
+// host's own file (`<cwd>/.pig/settings.json`, `~/.pig/agent/settings.json`, as the host resolves them) over the
+// original's (`.pi/settings.json` at the project root, `~/.pi/agent/settings.json`). Each field comes from the first
+// file that sets it. Scope "project" reads no user settings, "user" no project settings.
 func extensionDefaultsFor(cwd string, scope AgentScope) (extensionDefaults, error) {
-	var user, project extensionDefaults
-	var err error
+	hostProject, hostUser := hostSettingsFiles(cwd)
+	var files []string
+	if scope != ScopeUser {
+		files = append(files, hostProject)
+		if root := FindConfiguredProjectRoot(cwd); root != "" {
+			files = append(files, filepath.Join(projectConfigDir(root), "settings.json"))
+		}
+	}
 	if scope != ScopeProject {
-		if user, err = readExtensionDefaults(filepath.Join(agentDir(), "settings.json")); err != nil {
-			return user, err
+		files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))
+	}
+	var d extensionDefaults
+	for _, f := range files {
+		if f == "" {
+			continue
+		}
+		set, err := readExtensionDefaults(f)
+		if err != nil {
+			return d, err
+		}
+		if d.extensions == nil {
+			d.extensions = set.extensions
+		}
+		if d.subagentOnly == nil {
+			d.subagentOnly = set.subagentOnly
 		}
 	}
-	if root := FindConfiguredProjectRoot(cwd); scope != ScopeUser && root != "" {
-		if project, err = readExtensionDefaults(filepath.Join(projectConfigDir(root), "settings.json")); err != nil {
-			return project, err
-		}
+	return d, nil
+}
+
+// hostSettingsFiles are the project and user settings files the PiG host running this extension reads ("" outside a
+// host, or for what it does not report).
+func hostSettingsFiles(cwd string) (project, user string) {
+	if name, err := sdk.ConfigDirName(); err == nil && name != "" {
+		project = filepath.Join(cwd, name, "settings.json")
 	}
-	if project.extensions == nil {
-		project.extensions = user.extensions
+	if dir, err := sdk.AgentDir(); err == nil {
+		user = filepath.Join(dir, "settings.json")
 	}
-	if project.subagentOnly == nil {
-		project.subagentOnly = user.subagentOnly
-	}
-	return project, nil
+	return project, user
 }
 
 // apply gives an agent the defaults for the fields its definition leaves unset.

@@ -80,14 +80,32 @@
  {
   "name": "ext-settings-project-scope",
   "file": "discovery.go",
-  "find": "scope != ScopeUser && root",
-  "replace": "root"
+  "find": "if scope != ScopeUser {",
+  "replace": "if true {"
  },
  {
-  "name": "ext-settings-project-first",
+  "name": "ext-settings-first-wins",
   "file": "discovery.go",
-  "find": "if project.extensions == nil {",
+  "find": "if d.subagentOnly == nil {",
   "replace": "if true {"
+ },
+ {
+  "name": "ext-host-project",
+  "file": "discovery.go",
+  "find": "files = append(files, hostProject)",
+  "replace": ""
+ },
+ {
+  "name": "ext-host-user",
+  "file": "discovery.go",
+  "find": "files = append(files, hostUser, filepath.Join(agentDir(), \"settings.json\"))",
+  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"))"
+ },
+ {
+  "name": "ext-host-user-first",
+  "file": "discovery.go",
+  "find": "files = append(files, hostUser, filepath.Join(agentDir(), \"settings.json\"))",
+  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"), hostUser)"
  },
  {
   "name": "ext-default-own-wins",

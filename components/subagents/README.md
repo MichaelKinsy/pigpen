@@ -36,7 +36,9 @@ An agent chooses its child's extensions as in the original. `extensions: a, b` l
 none, not even a model provider), and `subagentOnlyExtensions: c` loads `c` in the child on top of the rest. Entries are what
 `pig --extension` takes: a path (`./` and `../` are relative to the agent file), `builtin:<name>`, or an `npm:`/`git:`
 source. For agents that set neither, `subagents.defaultExtensions` and `subagents.defaultSubagentOnlyExtensions` in
-`.pi/settings.json` (the project's, else `~/.pi/agent/settings.json`) are the default:
+`settings.json` are the default: PiG's own files (`.pig/settings.json` in the cwd, `~/.pig/agent/settings.json`) and the
+original's (`.pi/settings.json` at the project root, `~/.pi/agent/settings.json`) are all read, project over user and PiG's
+over Pi's at each level:
 
 ```json
 { "subagents": { "defaultSubagentOnlyExtensions": ["/path/to/child-only-extension"] } }

@@ -72,3 +72,34 @@ func TestExtensionSettings(t *testing.T) {
 	_, err = extensionDefaultsFor(cwd, ScopeBoth)
 	hasMatch(t, err, "Failed to parse settings file '"+projectSettings+"'")
 }
+
+func TestExtensionSettingsFromTheHost(t *testing.T) {
+	home := withTempHome(t)
+	cwd := tmp(t)
+	pigUser := filepath.Join(home, ".pig", "agent", "settings.json")
+	piUser := filepath.Join(home, ".pi", "agent", "settings.json")
+	pigProject := filepath.Join(cwd, ".pig", "settings.json")
+	piProject := filepath.Join(cwd, ".pi", "settings.json")
+	t.Setenv("PIG_EXT_HOST_INFO", `{"agentDir": "`+filepath.Join(home, ".pig", "agent")+`", "configDirName": ".pig"}`)
+
+	writeFile(t, piUser, `{"subagents": {"defaultExtensions": ["/pi-user.ts"], "defaultSubagentOnlyExtensions": ["/pi-user-child.ts"]}}`)
+	writeFile(t, pigUser, `{"subagents": {"defaultSubagentOnlyExtensions": ["/pig-user-child.ts"]}}`)
+	d, err := extensionDefaultsFor(cwd, ScopeBoth)
+	eq(t, err, nil, "error")
+	eq(t, d, extensionDefaults{[]string{"/pi-user.ts"}, []string{"/pig-user-child.ts"}}, "the host's user file over Pi's, field by field")
+
+	writeFile(t, piProject, `{"subagents": {"defaultSubagentOnlyExtensions": ["/pi-project-child.ts"]}}`)
+	d, _ = extensionDefaultsFor(cwd, ScopeBoth)
+	eq(t, d.subagentOnly, []string{"/pi-project-child.ts"}, "any project file over any user file")
+	writeFile(t, pigProject, `{"subagents": {"defaultSubagentOnlyExtensions": ["/pig-project-child.ts"]}}`)
+	d, _ = extensionDefaultsFor(cwd, ScopeBoth)
+	eq(t, d.subagentOnly, []string{"/pig-project-child.ts"}, "the host's project file over Pi's")
+	d, _ = extensionDefaultsFor(cwd, ScopeUser)
+	eq(t, d.subagentOnly, []string{"/pig-user-child.ts"}, "scope user reads no project file")
+
+	writeFile(t, pigUser, `{"subagents": {"defaultExtensions": {}}}`)
+	_, err = extensionDefaultsFor(cwd, ScopeBoth)
+	hasMatch(t, err, "Subagent settings in '"+pigUser+"' have invalid 'defaultExtensions'")
+	_, err = extensionDefaultsFor(cwd, ScopeProject)
+	eq(t, err, nil, "scope project does not read the user file")
+}

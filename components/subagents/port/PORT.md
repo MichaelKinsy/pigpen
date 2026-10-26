@@ -37,7 +37,9 @@ what lets the child reach a provider-qualified model. (The original's foreground
 loads no extensions; it uses the providers the parent already loaded, which a pig child process cannot.) An agent picks its child's extensions as in the original: `extensions` (a list, even an empty one) turns
 discovery off and loads only those (`--no-extensions` and one `--extension` each), `subagentOnlyExtensions` adds to whatever
 loads, and an entry starting `./` or `../` is relative to the agent file. An agent that sets neither takes
-`subagents.defaultExtensions` / `defaultSubagentOnlyExtensions` from the project's `settings.json`, else the user's; a
+`subagents.defaultExtensions` / `defaultSubagentOnlyExtensions` from the project's `settings.json`, else the user's, where
+at each level the PiG host's file (`sdk.AgentDir`, `sdk.ConfigDirName`) comes before the original's `.pi` one (an addition:
+the original reads only Pi's tree, and agent and chain discovery here still do); a
 malformed value refuses the run with the original's message, and an empty `extensions` list shows the original's warning
 (as a notification: the original's `console.warn`). `get` shows both fields. Running a child is:
 `subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a `.chain.md` chain (steps in order, `{task}` and
