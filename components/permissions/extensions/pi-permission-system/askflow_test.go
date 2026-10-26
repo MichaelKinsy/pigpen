@@ -180,6 +180,29 @@ func TestHarnessConfigBashFloors(t *testing.T) {
 	eq(t, blocked, false, "the path grant answers the next external write")
 }
 
+// The wrapper floor asks once; "for this session" then covers the wrapper's prefix, so later bash calls under the
+// same shell pass with no dialog — the harness's absolute-path shell with an inline payload is the shape its own
+// tooling spawns, and neither the floor nor the external gate re-asks it (the program word is executed, not
+// accessed).
+func TestHarnessConfigBashSessionGrantSticks(t *testing.T) {
+	r := harnessRig(t)
+	shell := "/c/Users/dev/workspace/cygwin/tools/msys2/root/usr/bin/bash"
+	cmd := shell + ` -lc "git status"`
+	blocked, _ := r.toolCall("bash", map[string]any{"command": cmd})
+	eq(t, blocked, true, "the wrapper floor asks, and the dismissed dialog denies")
+	calls := selects(r)
+	eq(t, calls[0]["title"], "pi-permission-system: bash: "+cmd, "the human sees the command")
+	label := calls[0]["options"].([]any)[1].(string)
+	eq(t, label, `Yes, allow bash "`+shell+` *" for this session`, "the session grant names the wrapper's prefix")
+	r.selectAnswer = label
+	blocked, _ = r.toolCall("bash", map[string]any{"command": cmd})
+	eq(t, blocked, false, "approved for the session")
+	// Another payload under the same shell passes with no dialog.
+	blocked, _ = r.toolCall("bash", map[string]any{"command": shell + ` -lc "git diff --stat"`})
+	eq(t, blocked, false, "another command under the granted prefix")
+	eq(t, len(selects(r)), 2, "the two asks, and nothing after")
+}
+
 // Without a UI no dialog can answer, and the refusal says so.
 func TestAskWithoutUI(t *testing.T) {
 	dir := t.TempDir()

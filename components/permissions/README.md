@@ -51,7 +51,9 @@ withholding fully denied tools, and the permissive-`*` warning.
 
 **The ask** is the approval dialog, in PiG's select dialog: *Approve*, *Approve for this session*, *Deny* and *Deny with a
 reason*. A dismissal, a missing UI or a dialog failure denies, fail-closed; an approval for the session records a rule that
-answers the next matching call, cleared with the session; `yoloMode` turns asks into allows, as in the original. The skill
+answers the next matching call — a wrapper's floor included, since the grant is matched against the command's own text and
+a session-layer allow is never re-floored, as in the original's session fast path — cleared with the session; `yoloMode`
+turns asks into allows, as in the original. The skill
 gates (a listed skill's files, a `/skill:<name>` input) ask without the session option, as in the original, and a denied
 `/skill:` input is handled with the original's notice.
 
@@ -59,7 +61,9 @@ gates (a listed skill's files, a `/skill:<name>` input) ask without the session 
 inside it is decided by the tool's rules (and by explicit `path` rules, which the original's backward-compatibility rule
 makes fire only when the config writes them), and a path outside it consults `external_directory_read` /
 `external_directory_write` (or the bare `external_directory`, folded most-restrictive, when the tool proves no direction:
-`edit`, an unknown command). Reads and writes of your project work; an external write asks.
+`edit`, an unknown command). Reads and writes of your project work; an external write asks. A unit's command word is
+executed, not accessed as an operand, so it is not gated: `C:/tools/bash -lc …` does not gate C:/tools/bash, while
+`bash /c/x.sh` still gates its script operand.
 
 **Refused, and never allowed** (`refusal.go`; each is machinery the original has and the port does not):
 
