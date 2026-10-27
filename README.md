@@ -265,6 +265,8 @@ components/herdr/                   directly installable herdr reporter Package
                                     (Go extension and its tests)
 components/ollama-native/            directly installable Ollama provider Package (native /api/chat;
                                     started by Peder Munksgaard, see its CREDITS.md)
+components/pi-opencode-free/         directly installable OpenCode Zen free-model provider Package
+                                    (Go port of pi-opencode-free, GPL-3.0-or-later; see its CREDITS.md)
 components/pig-play/                Go library Package: pig sprite, pixel, arcade, termgame, gamemcp (no extension)
 components/pig-runner/              PiG Runner, /runner (Go, from PiG Standard)
 components/angry-pigs/              Angry Pigs, /angry-pigs (Go, from PiG Standard)

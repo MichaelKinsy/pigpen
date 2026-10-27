@@ -1,0 +1,18 @@
+{
+  "origin": "ported",
+  "authors": ["Yu Li"],
+  "license": "GPL-3.0-or-later",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-opencode-free",
+      "authors": ["Pedro Alexis"],
+      "url": "https://github.com/pedrostarkealexis/pi-opencode-free",
+      "revision": "0f4c16bade33106847ae4abd8d2be2d1b0058e36",
+      "path": "port/oracle",
+      "license": "GPL-3.0-or-later",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
