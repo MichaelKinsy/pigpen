@@ -94,6 +94,8 @@ provider (needs `PIG_BIN` and a Go toolchain). `npm run test:go-ports` also need
 in `scripts/pig-requirement.json`: `bun-runtime` compares its Bun assets with that checkout's runtime lock, and CI sets it.
 `npm run govulncheck` (`PIG_SDK_DIR` or `PIG_BIN`, and Go) scans every `go.mod` in the repository with the pinned govulncheck and fails
 on a vulnerability that module's code can reach, on a module it could not load, and on a module it did not scan; CI runs it on every run.
+`npm run test:listings` and `npm run verify:listings` (`PIG_BIN`, and `PIG_SOURCE_ROOT` for a Piglet) check the
+[third-party listings](#third-party-listings); CI runs both on every run.
 Run `npm run quality` to check source alone.
 
 Use `npm run stage` for the edit/run loop. The script owns `dist/staged/` and
@@ -131,6 +133,11 @@ a port or move whose Package `provenance.json` does not record the row's upstrea
 
 - **Credit the copyright holder** the upstream's LICENSE names as `author` (for example `Ryan Gapac (DevMortimer)`,
   not only the GitHub account), and name the Package the lane actually builds as `targetPackage`.
+- **Look for an existing PiG or Go version first.** Before any port, and before filing or approving a port request,
+  search GitHub and npm for one: a `pig-<name>` repository or package, packages with the `pig-package` keyword, and
+  Go-language repositories that implement the same extension. If one exists, evaluate it for listing instead of
+  porting, and port only when none exists or it does not build against the current PiG. Record what you searched in
+  the row or the request.
 - **Add a row** when a port is approved: status `queued`, a `priority` if it has a place in the queue, the
   pinned commit (the commit of the latest npm release when the registry records one, else the default branch
   head) and the license read from the upstream's own license file at that commit. `node scripts/ports.mjs verify-pins`
@@ -151,6 +158,58 @@ code, so run untrusted contributions in an isolated environment without secrets.
 CI is validation-only and has a read-only token. It must not sign or publish
 Piglet Binaries while [release blockers](RELEASE-BLOCKERS.md) remain unresolved.
 Do not add a workaround publisher to this repository or the site.
+
+## Third-party listings
+
+Pigpen can list a PiG Package or Piglet it does not own. A listing is one file, `listings/<id>.json`, that pins a
+public GitHub repository to a **full commit** and names its license and maintainer. `npm run generate` turns it into
+an `index.json` entry with `official: false` and the maintainer you name, never Pigpen's owner. A listing is not an
+endorsement and not a security review: Pigpen checks that the pinned source installs, builds and loads, nothing more.
+The entry says so in its notes.
+
+**Before proposing one, look for what exists** (the first bullet of [The ports list](#the-ports-list)): search GitHub and
+npm for a `pig-<name>` repository or package, the `pig-package` keyword and Go repositories that implement the same
+extension. Listing an existing PiG or Go version is the answer when one builds against the current PiG; port only when none
+exists or it does not build. Record what you searched in the pull request. An id that is a Pigpen Piglet or component, or
+another listing, is refused.
+
+To propose a listing, open a pull request that adds the file, and nothing else but the regenerated `index.json`:
+
+1. Copy [`scripts/fixtures/listings/example-hello.json`](scripts/fixtures/listings/example-hello.json) to
+   `listings/<id>.json`. [`listing.schema.json`](listing.schema.json) names every field. A **Package** lists its
+   `version` and `resources` as its `package.json` declares them at the pin; a **Piglet** lists neither. Set
+   `subdirectory` when the Package or Piglet is not at the repository root.
+2. **Pin `commit`** to the full 40-character hash you reviewed. A branch, `HEAD`, a tag or an abbreviated hash is not a
+   pin and is refused. `tag` is an optional label for that commit; verification fails if the tag has moved off it.
+3. Name the SPDX **`license`** the repository's own license file grants at that commit (`MIT`, `Apache-2.0 OR MIT`).
+   A missing license, `UNLICENSED`, `NONE` or a free-text name is refused; verification also fails when the repository
+   has no license file or a Package's `package.json` names another license.
+4. Name the real **`maintainer`** (the person or organisation that owns the repository), a one-sentence
+   `description` and, optionally, `languages` and `notes`.
+5. Verify it with the pig Pigpen targets and record what you ran in `verified` (`pigVersion`, the full `pigCommit` of
+   that release in `scripts/pig-requirement.json`, and the `date`):
+
+   ```sh
+   PIG_BIN=/path/to/pig PIG_SOURCE_ROOT=/path/to/PiG-checkout npm run verify:listings -- --only <id>
+   ```
+
+6. `npm run generate`, then `npm run check` and `npm test`. `check` fails on drift, an unpinned or missing `commit`, a
+   missing or malformed `license`, and an id that clashes with a Pigpen Piglet, component or listing.
+
+CI runs `npm run verify:listings` on every run, in its own job built from the same PiG as the platform jobs
+(`PIG_COMMIT`). For each listing it fetches the pinned commit, checks the layout and license, then: for a Package,
+installs it with the command the index shows, checks the installed version and Resources against the listing, runs
+`pig package validate`, builds and registers each extension (`--validate-only`) and opens a faux-model session with
+the Package installed; for a Piglet, runs `pig piglet add` and `validate`, builds the Binary for the runner and runs a
+faux-model turn on it. A listing that fails fails CI, and the job log and summary name the listing and the step.
+`npm run test:listings` runs the same check against a local fixture Package, including the failing cases.
+
+A listing is verified with one PiG release. When Pigpen moves to a newer PiG, each listing's `verified` record is stale and
+the job fails until the listing is re-verified on the new pig and `verified` updated; that is the change that proves it
+still works. To list a newer version of the upstream, change `commit` (and `version`, `resources`, `license` if they
+changed) in a pull request and verify again. A listing whose upstream no longer builds, changes license or is withdrawn is
+removed. Verification runs the listed code (it is built and loaded), so it runs only in CI, which has a read-only token and no
+secrets, or in an isolated environment of your own.
 
 ## Sign off commits
 

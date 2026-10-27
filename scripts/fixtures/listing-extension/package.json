@@ -1,0 +1,8 @@
+{
+  "name": "listing-fixture-hello",
+  "version": "1.0.0",
+  "description": "Test fixture for scripts/verify-listings.mjs: one TypeScript extension with a tool and a command, no imports, no dependencies.",
+  "keywords": ["pig-package", "extension"],
+  "license": "MIT",
+  "pi": { "extensions": ["extensions/hello.ts"] }
+}

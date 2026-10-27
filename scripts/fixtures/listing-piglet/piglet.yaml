@@ -1,0 +1,12 @@
+# Fixture for scripts/verify-listings.test.mjs: a Piglet with no Packages, as small as bench-lean.
+name: listing-fixture-lean
+description: "Test fixture for the Piglet path of scripts/verify-listings.mjs: PiG with every built-in extension stripped."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+strip:
+  keep:
+    extensions: []
+    apis: []
+    features: []
