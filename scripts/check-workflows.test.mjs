@@ -198,12 +198,25 @@ describe('the npm publish workflow', () => {
   const npm = `
 on:
   push:
+    branches: [main]
     tags: ['npm/v*']
   workflow_dispatch: {}
 permissions:
   contents: read
 jobs:
+  pending:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      count: \${{ steps.pending.outputs.count }}
+    steps:
+      - uses: actions/checkout@${sha}
+        with: { persist-credentials: false }
+      - id: pending
+        run: npm ci --ignore-scripts && node scripts/npm-publish.mjs --pending
   publish:
+    needs: pending
+    if: \${{ needs.pending.outputs.count != '0' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions: { contents: read, id-token: write }
@@ -213,21 +226,37 @@ jobs:
       - run: npm ci --ignore-scripts && node scripts/npm-publish.mjs --provenance
 `;
   const problems = (text) => [...hardeningProblems('npm-publish.yml', text), ...npmPublishProblems('npm-publish.yml', text)].join('\n');
-  it('accepts OIDC publishing: id-token in the publish job, no secret, tag or manual run', () => {
+  it('accepts OIDC publishing on a merge to main, a tag or a manual run, publishing only when something is pending', () => {
     assert.equal(problems(npm), '');
   });
   it('allows id-token: write only in the publish job, and no other write', () => {
     assert.match(problems(npm.replace('  publish:\n', '  other:\n    runs-on: ubuntu-24.04\n    timeout-minutes: 5\n    permissions: { id-token: write }\n    steps: []\n  publish:\n')), /job other: id-token: write/);
     assert.match(problems(npm.replace('{ contents: read, id-token: write }', '{ contents: write, id-token: write }')), /job publish: contents: write/);
+    assert.match(problems(npm.replace('  pending:\n    runs-on: ubuntu-24.04\n', '  pending:\n    permissions: { id-token: write }\n    runs-on: ubuntu-24.04\n')), /job pending: id-token: write/);
   });
   it('refuses a token: no secret, no NODE_AUTH_TOKEN, no NPM_TOKEN', () => {
     assert.match(problems(npm.replace('      - run: npm ci', '      - env: { NODE_AUTH_TOKEN: x }\n        run: npm ci')), /token/);
     assert.match(problems(npm + '      - run: echo ${{ secrets.NPM_TOKEN }}\n'), /uses a secret/);
   });
-  it('requires provenance and trusted publishing, and only tag or manual triggers', () => {
+  it('requires provenance and trusted publishing, and only a push or a manual run', () => {
     assert.match(problems(npm.replace(' --provenance', '')), /--provenance/);
-    assert.match(problems(npm.replace("push:\n    tags: ['npm/v*']", 'push:\n    branches: [main]')), /npm\/v\*/);
     assert.match(problems(npm.replace('workflow_dispatch: {}', 'pull_request: {}')), /only/);
+  });
+  it('publishes a version bump: a merge to main must start it, and only a merge to main', () => {
+    assert.match(problems(npm.replace('    branches: [main]\n', '')), /merge to main/);
+    assert.match(problems(npm.replace('branches: [main]', 'branches: [main, next]')), /merge to main/);
+    assert.match(problems(npm.replace("    tags: ['npm/v*']\n", '')), /npm\/v\*/);
+    assert.match(problems(npm.replace('  push:\n    branches: [main]\n    tags: [\'npm/v*\']\n', '')), /merge to main/);
+  });
+  it('gates the publish job on a cheap pending check that finds a version not yet on npm', () => {
+    assert.match(problems(npm.replace('    needs: pending\n', '')), /needs.*pending/s);
+    assert.match(problems(npm.replace("    if: ${{ needs.pending.outputs.count != '0' }}\n", '')), /needs\.pending\.outputs\.count/);
+    assert.match(problems(npm.replace('npm-publish.mjs --pending', 'npm-publish.mjs --dry-run')), /--pending/);
+  });
+  it('is the real workflow: the same rules hold for .github/workflows/npm-publish.yml', () => {
+    const real = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.github/workflows/npm-publish.yml'), 'utf8');
+    assert.equal(problems(real), '');
+    assert.match(real, /branches: \[main\]/);
   });
   it('is a tag no Piglet or Package workflow filter can be mistaken for, and release.yml skips it', () => {
     assert.deepEqual(tagProblems({ 'npm-publish.yml': on('npm/v*'), 'release-package.yml': on('components/*/v*') }), []);
