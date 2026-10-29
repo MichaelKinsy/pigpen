@@ -10,13 +10,13 @@ From a clean checkout of `main` (merged, up to date), on macOS or Linux, with No
 
 ```bash
 npm login                          # an account that can publish to the @pi-in-go scope
-scripts/first-npm-publish.sh --dry-run    # checks everything, runs `npm publish --dry-run` on all 40, publishes nothing
+scripts/first-npm-publish.sh --dry-run    # checks everything, runs `npm publish --dry-run` on everything not on npm yet, publishes nothing
 scripts/first-npm-publish.sh              # the real thing
 ```
 
 The script refuses a dirty tree or a commit that is not on `origin/main`, requires `npm whoami`, runs `npm ci --ignore-scripts`
-and `npm run check` (the npm manifest contract, the quality gates, the index), then publishes the 29 Packages and after them
-the 11 Piglet sources, skipping any name@version already on npm, and stops at the first failure so no Piglet is published
+and `npm run check` (the npm manifest contract, the quality gates, the index), then publishes the Packages and after them
+the Piglet sources, skipping any name@version already on npm, and stops at the first failure so no Piglet is published
 after a failed Package. Run it again after an interruption. If your npm account asks for a one-time password on writes,
 npm will ask at each publish.
 
@@ -26,8 +26,8 @@ tree is in the README ("Install").
 
 ## 2. Add the Trusted Publisher to each package
 
-The script prints this at the end (`node scripts/npm-publish.mjs --trusted-publishers` prints it again). For each of the 40
-packages, on npmjs.com open the package, then Settings, Trusted Publisher, GitHub Actions, and enter:
+The script prints this at the end (`node scripts/npm-publish.mjs --trusted-publishers` prints it again). For each
+package, on npmjs.com open the package, then Settings, Trusted Publisher, GitHub Actions, and enter:
 
 | Field | Value |
 |---|---|
@@ -42,15 +42,22 @@ publishing is the only way in.
 ## 3. Later releases (CI)
 
 Bump the `version` in a Package's `package.json` or a Piglet's `piglet.yaml` (`release.version`; the Piglet's npm version
-follows it), merge to `main`, then either push a tag or run the workflow by hand:
+follows it) and merge to `main`. Every push to `main` starts `.github/workflows/npm-publish.yml`: its `pending` job asks npm
+which name@version is missing (`node scripts/npm-publish.mjs --pending`) and, if any is, its `publish` job checks that the
+commit is on `main`, runs `npm run check`, and publishes exactly those with provenance. A merge that bumps nothing publishes
+nothing. Nothing else is needed: no tag, no manual run.
+
+A failed publish (an npm outage, a package without a Trusted Publisher) leaves the missing versions missing and the run red;
+fix the cause and run it again, either by a manual run (GitHub, Actions, Publish to npm, Run workflow, branch `main`) or by
+the next merge to `main`, or by pushing a tag:
 
 ```bash
 git tag -a npm/v0.1.1 -m "npm release" && git push origin npm/v0.1.1
-# or: GitHub, Actions, Publish to npm, Run workflow
 ```
 
-`.github/workflows/npm-publish.yml` checks that the commit is on `main`, runs `npm run check`, and publishes with provenance
-what is not on npm yet. The tag name is only a trigger; each package is published at its own version. A Piglet's signed
+The tag name is only a trigger; each package is published at its own version. A Package that is not on npm at all cannot be
+published by CI, because a Trusted Publisher can only be added to an existing package: publish a new Package or Piglet once
+with `scripts/first-npm-publish.sh` (section 1), add its Trusted Publisher (section 2), and CI does the rest. A Piglet's signed
 Binary is a separate release (`<name>/v<version>`, `release.yml`, [OWNER-ACTIONS.md](OWNER-ACTIONS.md)).
 If you use the tag ruleset from OWNER-ACTIONS.md, add `refs/tags/npm/v*` to it.
 
