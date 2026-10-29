@@ -63,7 +63,11 @@ makes fire only when the config writes them), and a path outside it consults `ex
 `external_directory_write` (or the bare `external_directory`, folded most-restrictive, when the tool proves no direction:
 `edit`, an unknown command). Reads and writes of your project work; an external write asks. A unit's command word is
 executed, not accessed as an operand, so it is not gated: `C:/tools/bash -lc …` does not gate C:/tools/bash, while
-`bash /c/x.sh` still gates its script operand.
+`bash /c/x.sh` still gates its script operand. The port option `disableBashExternalDirectory` (a top-level boolean in
+the config file, off by default; a key the original's schema rejects as unrecognized) skips that word scan entirely:
+a `bash` command's external paths are then decided by the `bash` rules alone, while the path and external-directory
+gates on the path-bearing tools keep applying. Set it when the external-directory asks on `bash` are not wanted, e.g.
+for build commands that write caches outside the working directory.
 
 **Refused, and never allowed** (`refusal.go`; each is machinery the original has and the port does not):
 

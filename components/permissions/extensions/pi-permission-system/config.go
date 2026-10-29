@@ -74,6 +74,10 @@ type Config struct {
 	Permission *jsObject // the `permission` map, nil when absent or not an object
 	Yolo       bool
 	ShellTools []string // the tools `shellTools` routes through the bash surface
+	// DisableBashExternal is `disableBashExternalDirectory`: it skips the bash word scan's external-directory
+	// gate entirely, so a bash command's external paths are decided by the bash rules alone. A port option: the
+	// original's schema rejects the key, and it exists because the original's gate cannot be configured off.
+	DisableBashExternal bool
 	Issue      string   // the reason the file could not be used, "" when it could
 	Unported   []string // the options set in the file that the port accepts and does not read yet (unported.go)
 }
@@ -104,6 +108,7 @@ func parseConfig(data []byte, path string) Config {
 	root := v.(*jsObject)
 	c := Config{}
 	c.Yolo, _ = root.vals["yoloMode"].(bool)
+	c.DisableBashExternal, _ = root.vals["disableBashExternalDirectory"].(bool)
 	if perm := root.obj("permission"); perm != nil {
 		c.Permission = schemaPermission(perm)
 	}
@@ -140,6 +145,8 @@ type Policy struct {
 	rules      Ruleset
 	yolo       bool
 	shellTools map[string]bool
+	// disableBashExternal skips the bash external-directory gate (Config.DisableBashExternal).
+	disableBashExternal bool
 }
 
 // NewPolicy composes the ruleset the way PermissionManager does for one scope: the `*` key is the default rule only, the other
@@ -168,7 +175,7 @@ func NewPolicy(c Config) *Policy {
 	if c.Yolo {
 		rules = RewriteAsksToYolo(rules)
 	}
-	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}}
+	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}, disableBashExternal: c.DisableBashExternal}
 	for _, t := range c.ShellTools {
 		p.shellTools[t] = true
 	}
