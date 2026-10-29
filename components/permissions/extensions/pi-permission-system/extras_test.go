@@ -318,3 +318,42 @@ func TestRuleExtras(t *testing.T) {
 	arr := NormalizeFlatConfig(jo(t, `{"bash":["allow","bogus","deny"]}`))
 	eq(t, arr, Ruleset{rule("bash", "0", "allow", "", "builtin"), rule("bash", "2", "deny", "", "builtin")}, "array")
 }
+
+// The config option `disableBashExternalDirectory` skips the bash word scan's external-directory gate for every
+// direction: a command whose words name paths outside the working directory is decided by the bash rules alone,
+// for a read command, a writing command and a command that proves no direction alike. It is a port option the
+// original's schema rejects as unrecognized; here the schema accepts it as a boolean, and false (or absence)
+// leaves the gate in place.
+func TestDisableBashExternalDirectory(t *testing.T) {
+	cwd := t.TempDir()
+	outside := filepath.Join(cwd, "..", "out.txt")
+	decide := func(t *testing.T, config, command string) Verdict {
+		t.Helper()
+		c := parseConfig([]byte(config), "/cfg.json")
+		eq(t, c.Issue, "", "the config is used")
+		return NewPolicy(c).DecideIn("bash", map[string]any{"command": command}, nil, cwd)
+	}
+	deny := `"permission":{"path":"allow","bash":"allow",` +
+		`"external_directory":"deny","external_directory_read":"deny","external_directory_write":"deny"}`
+	for command, surface := range map[string]string{
+		"cat " + outside:     "external_directory_read",
+		"touch " + outside:   "external_directory_write",
+		"mystery " + outside: "external_directory",
+	} {
+		v := decide(t, `{`+deny+`}`, command)
+		eq(t, v.Block && strings.Contains(v.Reason, "Denied by policy: '"+surface+"'"), true, "without the option the gate denies "+command)
+	}
+	// With the option the gate is skipped: the bash surface's allow stands, external paths and all.
+	with := `{"disableBashExternalDirectory":true,` + deny + `}`
+	for _, command := range []string{"cat " + outside, "touch " + outside, "mystery " + outside, "cat " + filepath.Join(cwd, "in.txt")} {
+		eq(t, decide(t, with, command), Verdict{}, "with the option: "+command)
+	}
+	// A deny on the bash surface itself still denies: only the external gate is skipped.
+	d := `{"disableBashExternalDirectory":true,"permission":{"*":"allow","bash":{"*":"deny","cat *":"allow"}}}`
+	eq(t, decide(t, d, "touch "+outside).Block, true, "the bash rules alone decide")
+	eq(t, decide(t, d, "cat "+outside), Verdict{}, "an allowed read stays allowed")
+	// false and a non-boolean are not a disable: false leaves the gate, a non-boolean is a schema issue.
+	eq(t, decide(t, `{"disableBashExternalDirectory":false,`+deny+`}`, "touch "+outside).Block, true, "false keeps the gate")
+	c := parseConfig([]byte(`{"disableBashExternalDirectory":"yes"}`), "/cfg.json")
+	eq(t, c.Issue, "Invalid config value at 'disableBashExternalDirectory': Invalid input: expected boolean, received string", "not a boolean")
+}
