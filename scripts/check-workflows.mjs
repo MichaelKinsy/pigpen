@@ -163,7 +163,7 @@ export function npmPublishProblems(name, text) {
   if (/NODE_AUTH_TOKEN|NPM_TOKEN|_authToken/.test(text)) problems.push(`${name}: a token is referenced; publish with trusted publishing (OIDC), never a token`);
   if (!/--provenance/.test(text)) problems.push(`${name}: publish with --provenance`);
   const needs = [workflow.jobs?.publish?.needs ?? []].flat();
-  if (!needs.includes('pending')) problems.push(`${name}: the publish job must have `needs: pending`, so a merge that bumps nothing does not run the publish job`);
+  if (!needs.includes('pending')) problems.push(`${name}: the publish job must have needs: pending, so a merge that bumps nothing does not run the publish job`);
   if (!/needs\.pending\.outputs\.count/.test(String(workflow.jobs?.publish?.if ?? ''))) problems.push(`${name}: the publish job must run only if needs.pending.outputs.count is not 0`);
   if (!/node scripts\/npm-publish\.mjs --pending/.test(JSON.stringify(workflow.jobs?.pending?.steps ?? []))) problems.push(`${name}: the pending job must run node scripts/npm-publish.mjs --pending`);
   return problems;
