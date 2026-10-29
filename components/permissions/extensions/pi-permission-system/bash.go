@@ -355,7 +355,8 @@ func bashUnits(cmd string) (units []string, ok bool) {
 // alone, exactly as the original decides them. A command the port cannot read is refused while bash has value
 // patterns, which the raw text cannot be matched against; without patterns the value decides it — the parse only
 // ever added wrapper floors on top. When the surface allows, the words of each unit are scanned for paths outside
-// the working directory, the word-level subset of the original's bash external-directory gate.
+// the working directory, the word-level subset of the original's bash external-directory gate, unless the config's
+// `disableBashExternalDirectory` option skips that scan (a port option; the original cannot configure the gate off).
 func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict {
 	cmd := jsTrim(command)
 	patterns := p.valuePatterns("bash")
@@ -425,6 +426,11 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 		}
 	}
 	if best.Block || best.Ask != nil {
+		return best
+	}
+	if p.disableBashExternal {
+		// The config skips the external-directory gate: reads, writes and unproven external paths in the
+		// command's words are all left to the bash rules alone.
 		return best
 	}
 	return worstVerdict(best, p.bashExternalGate(cmd, cwd, session))
