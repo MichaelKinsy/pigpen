@@ -259,7 +259,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		}
 		return nil, sdk.NewToolError(msg)
 	}
-	defaults, err := extensionDefaultsFor(ctx.Cwd(), scope)
+	defaults, err := subagentSettingsFor(ctx.Cwd(), scope)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
@@ -301,7 +301,7 @@ func runChainCommand(ctx sdk.Context, args string) error {
 		ctx.Notify(fmt.Sprintf("Unknown chain '%s'.", fields[0]), "error")
 		return nil
 	}
-	defaults, err := extensionDefaultsFor(ctx.Cwd(), ScopeBoth)
+	defaults, err := subagentSettingsFor(ctx.Cwd(), ScopeBoth)
 	if err != nil {
 		ctx.Notify(err.Error(), "error")
 		return nil

@@ -34,6 +34,23 @@ m("ext-host-user", "discovery.go", 'files = append(files, hostUser, filepath.Joi
 m("ext-host-user-first", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"), hostUser)')
 m("ext-default-own-wins", "discovery.go", "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions", "if true {\n\t\ta.Extensions = d.extensions")
 
+# discovery.go: model settings
+m("model-settings-valid", "discovery.go", 'if jsTrim(str) == "" {', "if false {")
+m("model-settings-trim", "discovery.go", "*f.dst = jsTrim(str)", "*f.dst = str")
+m("model-override-object", "discovery.go", "if entry == nil {", "if false {")
+m("model-override-type", "discovery.go", "if _, isStr := raw.(string); !isStr && raw != false {", "if false {")
+m("model-override-false", "discovery.go", "!isStr && raw != false {", "!isStr {")
+m("model-default-first-wins", "discovery.go", 'if d.defaultModel == "" {', "if true {")
+m("model-thinking-first-wins", "discovery.go", 'if d.defaultThinking == "" {', "if true {")
+m("model-override-first-wins", "discovery.go", "if _, ok := first[k]; !ok {", "if true {")
+m("model-override-applies", "discovery.go", "a.Model, _ = v.(string) // false clears it", "_ = v")
+m("model-override-clears", "discovery.go", "a.Model, _ = v.(string) // false clears it", "if s, isStr := v.(string); isStr {\n\t\t\ta.Model = s\n\t\t}")
+m("thinking-override-applies", "discovery.go", "a.Thinking = s\n", "_ = s\n")
+m("thinking-override-clears", "discovery.go", "a.Thinking = nil // false clears it", "")
+m("model-default-own-wins", "discovery.go", 'if a.Model == "" {', "if true {")
+m("thinking-default-own-wins", "discovery.go", 'if a.Thinking == nil && d.defaultThinking != "" {', 'if d.defaultThinking != "" {')
+m("thinking-default-unset", "discovery.go", 'if a.Thinking == nil && d.defaultThinking != "" {', "if a.Thinking == nil {")
+
 # chain.go
 m("chain-budget-soft", "chain.go", "soft.(float64) > hard.(float64)", "soft.(float64) >= hard.(float64)")
 m("chain-budget-hard", "chain.go", "if !isInt(hard, 1) {", "if !isInt(hard, 0) {")

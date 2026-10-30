@@ -44,6 +44,15 @@ over Pi's at each level:
 { "subagents": { "defaultSubagentOnlyExtensions": ["/path/to/child-only-extension"] } }
 ```
 
+A child's model and thinking level come, strongest first, from the call's `model`, `subagents.agentOverrides.<name>.model`
+and `.thinking` (`false` clears the agent's own), the agent's frontmatter, then `subagents.defaultModel` and
+`defaultThinking`, read from the same files, each from the first file that sets it. Without any of them the child runs on
+the host's default model. Other `agentOverrides` fields, `defaultProvider` and `modelScope` are not read:
+
+```json
+{ "subagents": { "defaultModel": "provider/small-model", "agentOverrides": { "oracle": { "model": "provider/large-model", "thinking": "high" } } } }
+```
+
 ```sh
 pig install ./components/subagents
 ```
@@ -57,7 +66,7 @@ addition: the original runs children through its own executor and scripted workf
 
 **Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
-the supervisor channel, the watchdog, missions, profiles and settings overrides, `.chain.json` chains, the management actions other
+the supervisor channel, the watchdog, missions, profiles, `agentOverrides` other than `model` and `thinking`, `.chain.json` chains, the management actions other
 than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
 `async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`. Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused

@@ -144,3 +144,36 @@ func TestExtensionsThroughTheTool(t *testing.T) {
 	}
 	eq(t, len(*calls), 2, "no child for invalid settings")
 }
+
+func TestModelSettingsThroughTheTool(t *testing.T) {
+	calls := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": "p/default", "agentOverrides": {"def": {"model": "p/role", "thinking": "off"}}}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "def.md"), agentMD("def", "Def", "Def."))
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "other.md"), agentMD("other", "Other", "Other."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[0].Args[:5], []string{"--print", "--model", "p/role", "--thinking", "off"}, "the role's override")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "model": "p/call"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[1].Args[:5], []string{"--print", "--model", "p/call", "--thinking", "off"}, "a per-call model wins")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[2].Args[:3], []string{"--print", "--model", "p/default"}, "the default for an agent without its own")
+
+	raw, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "def"})
+	eq(t, failure, "", "get")
+	if !strings.Contains(string(raw), `Model: p/role`) {
+		t.Errorf("get shows the override: %s", raw)
+	}
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": 1}}`)
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	if !strings.Contains(failure, "have invalid 'defaultModel'") {
+		t.Errorf("invalid settings: %q", failure)
+	}
+	eq(t, len(*calls), 3, "no child for invalid settings")
+}

@@ -121,13 +121,20 @@ func projectRootResolution(root string) string {
 	return ""
 }
 
-// extensionDefaults are `subagents.defaultExtensions` and `subagents.defaultSubagentOnlyExtensions` (nil when unset).
-type extensionDefaults struct{ extensions, subagentOnly []string }
+// subagentSettings are the `subagents` settings that change an agent's definition at launch:
+// `defaultExtensions` and `defaultSubagentOnlyExtensions` (nil when unset), `defaultModel` and `defaultThinking` ("" when
+// unset), and the `model` and `thinking` of `agentOverrides.<name>`, keyed by agent name: a string, or false to clear
+// what the definition sets.
+type subagentSettings struct {
+	extensions, subagentOnly      []string
+	defaultModel, defaultThinking string
+	model, thinking               map[string]any
+}
 
-// readExtensionDefaults is the original's readSubagentSettings for the two extension defaults: a missing file sets
-// nothing; an unreadable or malformed file, or a value that is not an array of non-empty strings, is an error.
-func readExtensionDefaults(path string) (extensionDefaults, error) {
-	var d extensionDefaults
+// readSubagentSettings is the original's readSubagentSettings for the fields above: a missing file sets nothing; an
+// unreadable or malformed file, or a field of the wrong type, is an error with the original's message.
+func readSubagentSettings(path string) (subagentSettings, error) {
+	var d subagentSettings
 	b, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return d, nil
@@ -167,14 +174,56 @@ func readExtensionDefaults(path string) (extensionDefaults, error) {
 		}
 		*f.dst = list
 	}
+	for _, f := range []struct {
+		key string
+		dst *string
+	}{{"defaultModel", &d.defaultModel}, {"defaultThinking", &d.defaultThinking}} {
+		raw, ok := s.get(f.key)
+		if !ok {
+			continue
+		}
+		str, _ := raw.(string)
+		if jsTrim(str) == "" {
+			return d, fmt.Errorf("Subagent settings in '%s' have invalid '%s'; expected a non-empty string.", path, f.key)
+		}
+		*f.dst = jsTrim(str)
+	}
+	// The original ignores an agentOverrides that is not an object, and reads every field of each entry; only model and
+	// thinking are ported.
+	if overrides := s.obj("agentOverrides"); overrides != nil {
+		for _, name := range overrides.order() {
+			v, _ := overrides.get(name)
+			entry, _ := v.(*jsObject)
+			if entry == nil {
+				return d, fmt.Errorf("Builtin override '%s' in '%s' must be an object.", name, path)
+			}
+			for _, f := range []struct {
+				key string
+				dst *map[string]any
+			}{{"model", &d.model}, {"thinking", &d.thinking}} {
+				raw, ok := entry.get(f.key)
+				if !ok {
+					continue
+				}
+				if _, isStr := raw.(string); !isStr && raw != false {
+					return d, fmt.Errorf("Builtin override '%s' in '%s' has invalid '%s'; expected a string or false.", name, path, f.key)
+				}
+				if *f.dst == nil {
+					*f.dst = map[string]any{}
+				}
+				(*f.dst)[name] = raw
+			}
+		}
+	}
 	return d, nil
 }
 
-// extensionDefaultsFor is the default for the scope: project settings over user settings, and at each level the PiG
+// subagentSettingsFor is the settings for the scope: project settings over user settings, and at each level the PiG
 // host's own file (`<cwd>/.pig/settings.json`, `~/.pig/agent/settings.json`, as the host resolves them) over the
-// original's (`.pi/settings.json` at the project root, `~/.pi/agent/settings.json`). Each field comes from the first
-// file that sets it. Scope "project" reads no user settings, "user" no project settings.
-func extensionDefaultsFor(cwd string, scope AgentScope) (extensionDefaults, error) {
+// original's (`.pi/settings.json` at the project root, `~/.pi/agent/settings.json`). Each field, and each override's
+// model and thinking, comes from the first file that sets it. Scope "project" reads no user settings, "user" no project
+// settings.
+func subagentSettingsFor(cwd string, scope AgentScope) (subagentSettings, error) {
 	hostProject, hostUser := hostSettingsFiles(cwd)
 	var files []string
 	if scope != ScopeUser {
@@ -186,12 +235,12 @@ func extensionDefaultsFor(cwd string, scope AgentScope) (extensionDefaults, erro
 	if scope != ScopeProject {
 		files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))
 	}
-	var d extensionDefaults
+	var d subagentSettings
 	for _, f := range files {
 		if f == "" {
 			continue
 		}
-		set, err := readExtensionDefaults(f)
+		set, err := readSubagentSettings(f)
 		if err != nil {
 			return d, err
 		}
@@ -201,8 +250,29 @@ func extensionDefaultsFor(cwd string, scope AgentScope) (extensionDefaults, erro
 		if d.subagentOnly == nil {
 			d.subagentOnly = set.subagentOnly
 		}
+		if d.defaultModel == "" {
+			d.defaultModel = set.defaultModel
+		}
+		if d.defaultThinking == "" {
+			d.defaultThinking = set.defaultThinking
+		}
+		d.model = underlay(d.model, set.model)
+		d.thinking = underlay(d.thinking, set.thinking)
 	}
 	return d, nil
+}
+
+// underlay adds the entries of later that first lacks.
+func underlay(first, later map[string]any) map[string]any {
+	for k, v := range later {
+		if first == nil {
+			first = map[string]any{}
+		}
+		if _, ok := first[k]; !ok {
+			first[k] = v
+		}
+	}
+	return first
 }
 
 // hostSettingsFiles are the project and user settings files the PiG host running this extension reads ("" outside a
@@ -217,8 +287,24 @@ func hostSettingsFiles(cwd string) (project, user string) {
 	return project, user
 }
 
-// apply gives an agent the defaults for the fields its definition leaves unset.
-func (d extensionDefaults) apply(a AgentConfig) AgentConfig {
+// apply gives an agent its override's model and thinking, then the defaults for the fields still unset (the original's
+// applyBuiltinOverride, then applySubagentDefaults).
+func (d subagentSettings) apply(a AgentConfig) AgentConfig {
+	if v, ok := d.model[a.Name]; ok {
+		a.Model, _ = v.(string) // false clears it
+	}
+	if v, ok := d.thinking[a.Name]; ok {
+		a.Thinking = nil // false clears it
+		if s, isStr := v.(string); isStr {
+			a.Thinking = s
+		}
+	}
+	if a.Model == "" {
+		a.Model = d.defaultModel
+	}
+	if a.Thinking == nil && d.defaultThinking != "" {
+		a.Thinking = d.defaultThinking
+	}
 	if a.Extensions == nil {
 		a.Extensions = d.extensions
 	}

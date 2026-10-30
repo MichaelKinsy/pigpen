@@ -312,7 +312,7 @@ func getAgent(cwd string, params map[string]any) manageResult {
 		}
 		return manageResult{fmt.Sprintf("Agent '%s' not found. Available: %s.", name, avail), true}
 	}
-	defaults, err := extensionDefaultsFor(cwd, scope)
+	defaults, err := subagentSettingsFor(cwd, scope)
 	if err != nil {
 		return manageResult{err.Error(), true}
 	}

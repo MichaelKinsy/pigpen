@@ -114,6 +114,96 @@
   "replace": "if true {\n\t\ta.Extensions = d.extensions"
  },
  {
+  "name": "model-settings-valid",
+  "file": "discovery.go",
+  "find": "if jsTrim(str) == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-settings-trim",
+  "file": "discovery.go",
+  "find": "*f.dst = jsTrim(str)",
+  "replace": "*f.dst = str"
+ },
+ {
+  "name": "model-override-object",
+  "file": "discovery.go",
+  "find": "if entry == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-override-type",
+  "file": "discovery.go",
+  "find": "if _, isStr := raw.(string); !isStr && raw != false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-override-false",
+  "file": "discovery.go",
+  "find": "!isStr && raw != false {",
+  "replace": "!isStr {"
+ },
+ {
+  "name": "model-default-first-wins",
+  "file": "discovery.go",
+  "find": "if d.defaultModel == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-thinking-first-wins",
+  "file": "discovery.go",
+  "find": "if d.defaultThinking == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-override-first-wins",
+  "file": "discovery.go",
+  "find": "if _, ok := first[k]; !ok {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-override-applies",
+  "file": "discovery.go",
+  "find": "a.Model, _ = v.(string) // false clears it",
+  "replace": "_ = v"
+ },
+ {
+  "name": "model-override-clears",
+  "file": "discovery.go",
+  "find": "a.Model, _ = v.(string) // false clears it",
+  "replace": "if s, isStr := v.(string); isStr {\n\t\t\ta.Model = s\n\t\t}"
+ },
+ {
+  "name": "thinking-override-applies",
+  "file": "discovery.go",
+  "find": "a.Thinking = s\n",
+  "replace": "_ = s\n"
+ },
+ {
+  "name": "thinking-override-clears",
+  "file": "discovery.go",
+  "find": "a.Thinking = nil // false clears it",
+  "replace": ""
+ },
+ {
+  "name": "model-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Model == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "thinking-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Thinking == nil && d.defaultThinking != \"\" {",
+  "replace": "if d.defaultThinking != \"\" {"
+ },
+ {
+  "name": "thinking-default-unset",
+  "file": "discovery.go",
+  "find": "if a.Thinking == nil && d.defaultThinking != \"\" {",
+  "replace": "if a.Thinking == nil {"
+ },
+ {
   "name": "chain-budget-soft",
   "file": "chain.go",
   "find": "soft.(float64) > hard.(float64)",
