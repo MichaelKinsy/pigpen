@@ -165,8 +165,9 @@ func formatSkillDenyNotice(skill, agent string) string {
 	return "Skill '" + skill + "' is not permitted by the current skill policy."
 }
 
-// skillInput is the `input` handler: a `/skill:<name>` input is decided by the skill surface for that name. An allow continues, a
-// deny is handled with a warning, and an ask (the approval dialog is not ported) or a scope the port cannot read is refused.
+// skillInput is the `input` handler: a `/skill:<name>` input is decided by the skill surface for that name. An
+// allow continues, a deny is handled with a warning, and an ask is put to the approval dialog (which carries no
+// session option for the skill gates, as in the original); a scope the port cannot read is refused.
 func (s *state) skillInput(ctx sdk.Context, data map[string]any) (any, error) {
 	text, _ := data["text"].(string)
 	skill := extractSkillNameFromInput(text)
@@ -181,13 +182,18 @@ func (s *state) skillInput(ctx sdk.Context, data map[string]any) (any, error) {
 	s.mu.Lock()
 	agent := s.agentName
 	s.mu.Unlock()
-	switch Evaluate("skill", skill, s.current().rules, PosixPathFlavor, "").Action {
+	rule := Evaluate("skill", skill, s.current().rules, PosixPathFlavor, "")
+	switch rule.Action {
 	case "allow":
 		return nil, nil
 	case "deny":
 		ctx.Notify(formatSkillDenyNotice(skill, agent), "warning")
 	default:
-		ctx.Notify(refusal("the approval dialog (the skill '"+skill+"' needs approval)"), "warning")
+		a := skillAsk(skill, "")
+		if d := promptAsk(ctx, a, false); !d.approved {
+			return handled, nil
+		}
+		return nil, nil // approved: the input continues, as an allow does
 	}
 	return handled, nil
 }
