@@ -319,12 +319,12 @@ func TestRuleExtras(t *testing.T) {
 	eq(t, arr, Ruleset{rule("bash", "0", "allow", "", "builtin"), rule("bash", "2", "deny", "", "builtin")}, "array")
 }
 
-// The config option `disableBashExternalDirectory` skips the bash word scan's external-directory gate for every
+// `bash_unchecked: "allow"` in the permission map skips the bash word scan's external-directory gate for every
 // direction: a command whose words name paths outside the working directory is decided by the bash rules alone,
-// for a read command, a writing command and a command that proves no direction alike. It is a port option the
-// original's schema rejects as unrecognized; here the schema accepts it as a boolean, and false (or absence)
-// leaves the gate in place.
-func TestDisableBashExternalDirectory(t *testing.T) {
+// for a read command, a writing command and a command that proves no direction alike. It is a port directive the
+// original would read as an ordinary (and unused) surface rule; any other state or an absent key leaves the gate
+// in place, and the key never becomes a rule of its own.
+func TestBashUnchecked(t *testing.T) {
 	cwd := t.TempDir()
 	outside := filepath.Join(cwd, "..", "out.txt")
 	decide := func(t *testing.T, config, command string) Verdict {
@@ -333,27 +333,38 @@ func TestDisableBashExternalDirectory(t *testing.T) {
 		eq(t, c.Issue, "", "the config is used")
 		return NewPolicy(c).DecideIn("bash", map[string]any{"command": command}, nil, cwd)
 	}
-	deny := `"permission":{"path":"allow","bash":"allow",` +
-		`"external_directory":"deny","external_directory_read":"deny","external_directory_write":"deny"}`
+	perm := `"path":"allow","bash":"allow",` +
+		`"external_directory":"deny","external_directory_read":"deny","external_directory_write":"deny"`
+	without, with := `{"permission":{`+perm+`}}`, `{"permission":{`+perm+`,"bash_unchecked":"allow"}}`
 	for command, surface := range map[string]string{
 		"cat " + outside:     "external_directory_read",
 		"touch " + outside:   "external_directory_write",
 		"mystery " + outside: "external_directory",
 	} {
-		v := decide(t, `{`+deny+`}`, command)
-		eq(t, v.Block && strings.Contains(v.Reason, "Denied by policy: '"+surface+"'"), true, "without the option the gate denies "+command)
+		v := decide(t, without, command)
+		eq(t, v.Block && strings.Contains(v.Reason, "Denied by policy: '"+surface+"'"), true, "without the directive the gate denies "+command)
 	}
-	// With the option the gate is skipped: the bash surface's allow stands, external paths and all.
-	with := `{"disableBashExternalDirectory":true,` + deny + `}`
+	// With the directive the gate is skipped: the bash surface's allow stands, external paths and all.
 	for _, command := range []string{"cat " + outside, "touch " + outside, "mystery " + outside, "cat " + filepath.Join(cwd, "in.txt")} {
-		eq(t, decide(t, with, command), Verdict{}, "with the option: "+command)
+		eq(t, decide(t, with, command), Verdict{}, "with the directive: "+command)
 	}
-	// A deny on the bash surface itself still denies: only the external gate is skipped.
-	d := `{"disableBashExternalDirectory":true,"permission":{"*":"allow","bash":{"*":"deny","cat *":"allow"}}}`
-	eq(t, decide(t, d, "touch "+outside).Block, true, "the bash rules alone decide")
-	eq(t, decide(t, d, "cat "+outside), Verdict{}, "an allowed read stays allowed")
-	// false and a non-boolean are not a disable: false leaves the gate, a non-boolean is a schema issue.
-	eq(t, decide(t, `{"disableBashExternalDirectory":false,`+deny+`}`, "touch "+outside).Block, true, "false keeps the gate")
-	c := parseConfig([]byte(`{"disableBashExternalDirectory":"yes"}`), "/cfg.json")
-	eq(t, c.Issue, "Invalid config value at 'disableBashExternalDirectory': Invalid input: expected boolean, received string", "not a boolean")
+	// The directive is not a rule: no surface of that name reaches the ruleset.
+	for _, r := range NewPolicy(parseConfig([]byte(with), "/cfg.json")).rules {
+		eq(t, r.Surface == "bash_unchecked", false, "the directive never becomes a rule")
+	}
+	// A deny on the bash surface itself still denies: only the external gate is skipped. The commands here are
+	// fixed and plainly simple — the temp dir of this sandbox contains braces, which make a command unreadable
+	// to the port's word parser, and a command the port cannot read is refused while bash has patterns.
+	d := `{"permission":{"*":"allow","external_directory":"deny","bash":{"*":"deny","cat *":"allow"},"bash_unchecked":"allow"}}`
+	tv := decide(t, d, "touch /pigpen-external-cache.txt")
+	eq(t, tv.Block && strings.Contains(tv.Reason, "Denied by policy: 'bash'"), true, "the bash rules alone decide")
+	eq(t, decide(t, d, "cat /pigpen-external-cache.txt"), Verdict{}, "an allowed read stays allowed, gate and all")
+	// Any other state keeps the gate.
+	for _, state := range []string{"ask", "deny"} {
+		cfg := `{"permission":{` + perm + `,"bash_unchecked":"` + state + `"}}`
+		eq(t, decide(t, cfg, "touch "+outside).Block, true, "bash_unchecked: "+state+" keeps the gate")
+	}
+	// A non-state value is a schema issue at the key.
+	c := parseConfig([]byte(`{"permission":{"bash_unchecked":"yes"}}`), "/cfg.json")
+	eq(t, c.Issue, "Invalid config value at 'permission.bash_unchecked': Invalid input", "not a permission state")
 }

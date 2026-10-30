@@ -74,10 +74,6 @@ type Config struct {
 	Permission *jsObject // the `permission` map, nil when absent or not an object
 	Yolo       bool
 	ShellTools []string // the tools `shellTools` routes through the bash surface
-	// DisableBashExternal is `disableBashExternalDirectory`: it skips the bash word scan's external-directory
-	// gate entirely, so a bash command's external paths are decided by the bash rules alone. A port option: the
-	// original's schema rejects the key, and it exists because the original's gate cannot be configured off.
-	DisableBashExternal bool
 	Issue      string   // the reason the file could not be used, "" when it could
 	Unported   []string // the options set in the file that the port accepts and does not read yet (unported.go)
 }
@@ -108,7 +104,6 @@ func parseConfig(data []byte, path string) Config {
 	root := v.(*jsObject)
 	c := Config{}
 	c.Yolo, _ = root.vals["yoloMode"].(bool)
-	c.DisableBashExternal, _ = root.vals["disableBashExternalDirectory"].(bool)
 	if perm := root.obj("permission"); perm != nil {
 		c.Permission = schemaPermission(perm)
 	}
@@ -145,7 +140,7 @@ type Policy struct {
 	rules      Ruleset
 	yolo       bool
 	shellTools map[string]bool
-	// disableBashExternal skips the bash external-directory gate (Config.DisableBashExternal).
+	// disableBashExternal skips the bash external-directory gate; see NewPolicy (the `bash_unchecked` directive).
 	disableBashExternal bool
 }
 
@@ -160,9 +155,18 @@ func NewPolicy(c Config) *Policy {
 	if s, ok := isPermissionState(permission.vals["*"]); ok {
 		universal = s
 	}
+	// `bash_unchecked: "allow"` in the permission map skips the bash word scan's external-directory gate: every
+	// external path a bash command names is then decided by the bash rules alone (a port directive, not a surface:
+	// any other state or an absent key leaves the gate on, and the key never becomes a rule below).
+	bashUnchecked := false
+	if c.Permission != nil {
+		if s, _ := c.Permission.vals["bash_unchecked"].(string); s == "allow" {
+			bashUnchecked = true
+		}
+	}
 	without := newObject()
 	for _, k := range permission.order() {
-		if k != "*" {
+		if k != "*" && k != "bash_unchecked" {
 			without.set(k, permission.vals[k])
 		}
 	}
@@ -175,7 +179,7 @@ func NewPolicy(c Config) *Policy {
 	if c.Yolo {
 		rules = RewriteAsksToYolo(rules)
 	}
-	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}, disableBashExternal: c.DisableBashExternal}
+	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}, disableBashExternal: bashUnchecked}
 	for _, t := range c.ShellTools {
 		p.shellTools[t] = true
 	}
