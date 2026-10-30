@@ -163,12 +163,9 @@ func (s *schemaIssues) strictObject(path []string, v any, fields []string, check
 	s.unrecognized(extra)
 }
 
-// `disableBashExternalDirectory` is a port option the original's schema does not name: it accepts the key as a
-// boolean instead of reporting it unrecognized, the one relaxation of the original's strict top-level object.
 var topLevelFields = []string{"$schema", "debugLog", "permissionReviewLog", "yoloMode", "doublePressToConfirm", "permissionDialogKeys",
 	"promptNotifications", "forwardingTimeoutMs", "promptMaxRows", "promptFieldMaxWidth", "reviewLogFieldMaxWidth",
-	"toolInputPreviewMaxLength", "toolTextSummaryMaxLength", "piInfrastructureReadPaths", "authorizerChain", "permission", "shellTools",
-	"disableBashExternalDirectory"}
+	"toolInputPreviewMaxLength", "toolTextSummaryMaxLength", "piInfrastructureReadPaths", "authorizerChain", "permission", "shellTools"}
 
 var dialogKeyFields = []string{"approve", "approveSession", "approveSessionBoth", "deny", "denyWithReason"}
 
@@ -188,7 +185,7 @@ func validateUnifiedConfig(v any) []string {
 		switch field {
 		case "$schema":
 			s.str(path, x, 0)
-		case "debugLog", "permissionReviewLog", "yoloMode", "doublePressToConfirm", "disableBashExternalDirectory":
+		case "debugLog", "permissionReviewLog", "yoloMode", "doublePressToConfirm":
 			s.boolean(path, x)
 		case "permissionDialogKeys":
 			s.strictObject(path, x, dialogKeyFields, func(_ string, p []string, y any) { s.str(p, y, 0) }, nil)
