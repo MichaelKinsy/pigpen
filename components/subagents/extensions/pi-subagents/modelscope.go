@@ -26,9 +26,9 @@ type ModelScopeRule struct {
 // ModelScopeConfig is the parsed `subagents.modelScope` settings value: the
 // global rule plus optional per-agent restrictions keyed by canonical name.
 type ModelScopeConfig struct {
-	Enforce *bool                     `json:"enforce,omitempty"`
-	Strict  *bool                     `json:"strict,omitempty"`
-	Allow   []string                  `json:"allow,omitempty"`
+	Enforce *bool                      `json:"enforce,omitempty"`
+	Strict  *bool                      `json:"strict,omitempty"`
+	Allow   []string                   `json:"allow,omitempty"`
 	Agents  map[string]*ModelScopeRule `json:"agents,omitempty"`
 }
 
