@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: MIT
+name: Discord notifications
+
+# Posts to this repository's Discord channel through a webhook: one message for every pull request merged into main, and
+# one for every published release. Nothing else is announced: no opened or updated pull request, no comment, no red CI
+# run, no branch push that is not a merge.
+#
+# A merge is announced from the resulting push to main rather than from `pull_request: closed`, because a pull_request run
+# started by a fork or by a dependency bot receives no repository secret, and would drop the message for exactly the pull
+# requests a maintainer does not author. The push always runs in this repository and always carries the secret.
+#
+# A webhook URL is a write credential for one channel, so it is read from the `notifications` environment, whose secret
+# policy and deployment branch policy are the owner's (OWNER-ACTIONS.md), and never from a repository secret. This
+# workflow runs on nothing but a push to main and a published release; scripts/check-workflows.mjs enforces both rules.
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.after || github.event.release.id }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: notifications
+    steps:
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PUSH_SUBJECT: ${{ github.event.head_commit.message }}
+          PUSH_AUTHOR: ${{ github.event.head_commit.author.name }}
+          PUSH_SHA: ${{ github.event.after }}
+          PUSH_COMPARE: ${{ github.event.compare }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DISCORD_WEBHOOK_URL}" ]; then
+            echo "DISCORD_WEBHOOK_URL is not set; nothing to post."
+            exit 0
+          fi
+
+          # jq builds the payload so that a commit subject or a release body cannot break the JSON, and every message is
+          # cut to 1990 characters after it is assembled: Discord rejects content longer than 2000, and a commit subject
+          # or a release body alone does not bound the total, which also carries the tag, the name, the repository and
+          # the URL.
+          if [ "${EVENT_NAME}" = "push" ]; then
+            # A squash merge titles the commit "… (#123)"; link that pull request when the title carries it.
+            subject=$(printf '%s' "${PUSH_SUBJECT}" | head -1)
+            if [ -z "${subject}" ]; then
+              echo "no commit subject (a branch delete or an empty push); nothing to post."
+              exit 0
+            fi
+            pr=$(printf '%s' "${subject}" | sed -nE 's/.*\(#([0-9]+)\)[[:space:]]*$/\1/p')
+            payload=$(jq -n \
+              --arg repo "${REPO}" \
+              --arg subject "${subject}" \
+              --arg author "${PUSH_AUTHOR}" \
+              --arg sha "$(printf '%s' "${PUSH_SHA}" | cut -c1-12)" \
+              --arg pr "${pr}" \
+              --arg url "${PUSH_COMPARE}" \
+              '{
+                username: "Pigpen",
+                content: (("**Merged to main** on `" + $repo + "`\n" + $subject
+                  + (if $pr == "" then "" else "\nhttps://github.com/" + $repo + "/pull/" + $pr end)
+                  + "\n`" + $sha + "` · by " + $author + "\n" + $url) | .[0:1990]),
+                allowed_mentions: { parse: [] }
+              }')
+          else
+            payload=$(jq -n \
+              --arg repo "${REPO}" \
+              --arg tag "${RELEASE_TAG}" \
+              --arg name "${RELEASE_NAME}" \
+              --arg url "${RELEASE_URL}" \
+              --arg body "${RELEASE_BODY}" \
+              '{
+                username: "Pigpen",
+                content: (("**Release " + $tag + " published**" + (if $name == "" then "" else " — " + $name end)
+                  + " on `" + $repo + "`\n" + $url
+                  + (if $body == "" then "" else "\n\n" + ($body | .[0:1500]) end)) | .[0:1990]),
+                allowed_mentions: { parse: [] }
+              }')
+          fi
+
+          curl -fsS --retry 3 --retry-delay 2 \
+            -H 'Content-Type: application/json' \
+            --data-binary "${payload}" \
+            "${DISCORD_WEBHOOK_URL}" > /dev/null
+          echo "posted ${EVENT_NAME} notification"
