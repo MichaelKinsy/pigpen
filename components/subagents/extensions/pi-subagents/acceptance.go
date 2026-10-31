@@ -9,7 +9,7 @@ import (
 // launches. It returns the messages of every problem, in the original's order.
 
 var (
-	acceptanceLevels = map[string]bool{"auto": true, "none": true, "attested": true, "checked": true, "verified": true}
+	acceptanceLevels        = map[string]bool{"auto": true, "none": true, "attested": true, "checked": true, "verified": true}
 	acceptanceEvidenceKinds = []string{
 		"changed-files", "tests-added", "commands-run", "validation-output",
 		"residual-risks", "no-staged-files", "diff-summary", "review-findings", "manual-notes",

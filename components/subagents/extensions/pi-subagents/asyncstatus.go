@@ -38,24 +38,24 @@ func isoTime(ms int64) string {
 
 // runView is the summary both live and disk-backed runs render from.
 type runView struct {
-	ID            string
-	State         string
-	Mode          string
-	Cwd           string
-	Dir           string
-	StartedAt     int64
-	LastUpdate    int64
-	EndedAt       int64
-	OutputFile    string
-	CurrentStep   *int
-	StepCount     int
-	Steps         []*asyncStep
-	Error         string
-	TimedOut      bool
-	Stopped       bool
-	SessionID     string
-	ResultPath    string
-	fromDisk      bool
+	ID          string
+	State       string
+	Mode        string
+	Cwd         string
+	Dir         string
+	StartedAt   int64
+	LastUpdate  int64
+	EndedAt     int64
+	OutputFile  string
+	CurrentStep *int
+	StepCount   int
+	Steps       []*asyncStep
+	Error       string
+	TimedOut    bool
+	Stopped     bool
+	SessionID   string
+	ResultPath  string
+	fromDisk    bool
 }
 
 func viewOfRun(r *asyncRun) *runView {

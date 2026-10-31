@@ -39,9 +39,9 @@ func normalizeWorktreeBaseRef(value string) (string, string) {
 }
 
 var (
-	gitRefComponentPattern       = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
-	fullCommitIDPattern          = regexp.MustCompile(`^[0-9a-fA-F]{40}$|^[0-9a-fA-F]{64}$`)
-	revisionExpressionPattern    = regexp.MustCompile(`\.\.|\^|~|@`)
+	gitRefComponentPattern    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+	fullCommitIDPattern       = regexp.MustCompile(`^[0-9a-fA-F]{40}$|^[0-9a-fA-F]{64}$`)
+	revisionExpressionPattern = regexp.MustCompile(`\.\.|\^|~|@`)
 )
 
 // validGitRef is the original's validGitRef: slash-separated valid components.

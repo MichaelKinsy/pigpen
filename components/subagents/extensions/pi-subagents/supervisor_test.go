@@ -76,7 +76,7 @@ func TestSupervisorDiscoveryAndReply(t *testing.T) {
 	}
 	// The async child's stdin carries the protocol and its env the channel dir.
 	// (Covered end-to-end in the host test; here the prompt text itself.)
-instructions := supervisorPromptInstructions("/chan")
+	instructions := supervisorPromptInstructions("/chan")
 	if !strings.Contains(instructions, "Supervisor channel:") || !strings.Contains(instructions, filepath.Join("/chan", "requests")) || !strings.Contains(instructions, filepath.Join("/chan", "replies")) {
 		t.Errorf("instructions: %s", instructions)
 	}

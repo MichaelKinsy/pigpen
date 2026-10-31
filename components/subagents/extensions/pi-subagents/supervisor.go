@@ -26,13 +26,13 @@ func supervisorDir(runDir string) string { return filepath.Join(runDir, "supervi
 
 // supervisorRequest is one question a child wrote (requests/<id>.json).
 type supervisorRequest struct {
-	ID       string `json:"id"`
-	Agent    string `json:"agent"`
-	RunID    string `json:"runId"`
-	Message  string `json:"message"`
-	TS       int64  `json:"ts"`
+	ID        string `json:"id"`
+	Agent     string `json:"agent"`
+	RunID     string `json:"runId"`
+	Message   string `json:"message"`
+	TS        int64  `json:"ts"`
 	ReplyPath string
-	Dir      string
+	Dir       string
 }
 
 // supervisorReplyHint is the original's reply hint on a pending line.

@@ -21,11 +21,11 @@ const (
 
 // subagentConfig is the subset of the original's ExtensionConfig this port reads.
 type subagentConfig struct {
-	AsyncByDefault             *bool           `json:"asyncByDefault"`
-	TimeoutMs                  *int64          `json:"timeoutMs"`
-	MaxActiveAsyncRunsPerSess  *int64          `json:"maxActiveAsyncRunsPerSession"`
-	WaitTool                   json.RawMessage `json:"waitTool"` // bool or {enabled, defaultTimeoutMs}
-	DefaultSubagentContext     *string         `json:"defaultSubagentContext"`
+	AsyncByDefault            *bool           `json:"asyncByDefault"`
+	TimeoutMs                 *int64          `json:"timeoutMs"`
+	MaxActiveAsyncRunsPerSess *int64          `json:"maxActiveAsyncRunsPerSession"`
+	WaitTool                  json.RawMessage `json:"waitTool"` // bool or {enabled, defaultTimeoutMs}
+	DefaultSubagentContext    *string         `json:"defaultSubagentContext"`
 }
 
 // configPath is the original's getConfigPath.
@@ -66,8 +66,8 @@ func resolveMaxActiveAsyncRunsPerSession(value *int64) int {
 
 // waitToolConfig is the original's ResolvedWaitToolConfig.
 type waitToolConfig struct {
-	Enabled         bool
-	DefaultTimeout  int64 // 0 when unset
+	Enabled        bool
+	DefaultTimeout int64 // 0 when unset
 }
 
 // resolveWaitToolConfig is the original's (runs/background/wait-config.ts):

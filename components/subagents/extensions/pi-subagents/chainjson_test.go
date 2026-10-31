@@ -108,7 +108,7 @@ func TestAcceptanceValidation(t *testing.T) {
 		{map[string]any{"review": map[string]any{"agent": 5}}, ".review.agent must be a string."},
 		{map[string]any{"stopRules": []any{5}}, ".stopRules[0] must be a string."},
 		{map[string]any{"criteria": "x"}, ".criteria must be an array."},
-		{map[string]any{"criteria": []any{map[string]any{"id": "Same Id", "must": "passes"}}, },
+		{map[string]any{"criteria": []any{map[string]any{"id": "Same Id", "must": "passes"}}},
 			""},
 		{map[string]any{"criteria": []any{map[string]any{"id": "same_id", "must": "passes"}, map[string]any{"id": "Same-Id", "must": "passes"}}},
 			".criteria[1].id duplicates normalized criterion id 'same-id'."},

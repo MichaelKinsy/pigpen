@@ -14,13 +14,13 @@ import (
 // child starts, as the original does.
 
 var (
-	safeOutputNamePattern  = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
-	dynamicStepKeys        = setOf("expand", "parallel", "collect", "concurrency", "failFast", "phase", "label", "acceptance", "agentContract", "gateOn")
-	dynamicExpandKeys      = setOf("from", "item", "key", "maxItems", "onEmpty")
-	dynamicExpandFromKeys  = setOf("output", "path")
-	dynamicParallelKeys    = setOf("agent", "task", "phase", "label", "outputSchema", "cwd", "machine", "output", "outputMode", "reads", "progress", "skill", "model", "fast", "toolBudget", "acceptance", "agentContract", "gateOn")
-	dynamicCollectKeys     = setOf("as", "outputSchema")
-	reservedTemplateNames  = setOf("task", "previous", "chain_dir", "outputs")
+	safeOutputNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+	dynamicStepKeys       = setOf("expand", "parallel", "collect", "concurrency", "failFast", "phase", "label", "acceptance", "agentContract", "gateOn")
+	dynamicExpandKeys     = setOf("from", "item", "key", "maxItems", "onEmpty")
+	dynamicExpandFromKeys = setOf("output", "path")
+	dynamicParallelKeys   = setOf("agent", "task", "phase", "label", "outputSchema", "cwd", "machine", "output", "outputMode", "reads", "progress", "skill", "model", "fast", "toolBudget", "acceptance", "agentContract", "gateOn")
+	dynamicCollectKeys    = setOf("as", "outputSchema")
+	reservedTemplateNames = setOf("task", "previous", "chain_dir", "outputs")
 )
 
 // dynamicFanoutError is the original's DynamicFanoutError.

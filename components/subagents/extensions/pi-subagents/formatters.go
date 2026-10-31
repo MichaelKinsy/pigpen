@@ -48,9 +48,9 @@ func formatActivityAge(ms int64) string {
 		return "now"
 	}
 	if ms < 60000 {
-		return formatInt(ms / 1000) + "s"
+		return formatInt(ms/1000) + "s"
 	}
-	return formatInt(ms / 60000) + "m"
+	return formatInt(ms/60000) + "m"
 }
 
 // formatActivityLabel is the original's formatActivityLabel.
