@@ -17,40 +17,38 @@ takes what can be checked against the original by running it, and one execution 
 
 **Ported (checked against the original)**
 
-- the frontmatter parser (block scalars, quoted values, lists) and the markdown chain format (`.chain.md`: parse and write, tool
-  budgets, outputs, reads, skills, packages);
+- the frontmatter parser (block scalars, quoted values, lists, and the management fields) and both chain formats: the markdown
+  `.chain.md` (parse and write, tool budgets, outputs, reads, skills, packages) and `.chain.json` (parse and write, raw-step
+  round-trip), with the acceptance validator, the tool-budget validator, the dynamic fan-out shape validator and the
+  `{outputs.x}` output-binding validator;
 - agent definitions: discovery in the project (`.agents` and `.pi/agents` of the project root, `.pi/chains`), the user's
   directories (`~/.agents`, `<agent dir>/agents`, `<agent dir>/chains`, `PI_SUBAGENT_EXTRA_AGENT_DIRS`) and the builtin set (the
   original's thirteen agent files, embedded byte for byte), precedence project over user over builtin, the project-root rule
   (the nearest `.pi` or `.agents`, never the home directory; `projectRootResolution` from `.pi/settings.json`), packages in
-  frontmatter, aliases, name resolution, diagnostics for a malformed file;
-- the tool the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
+  frontmatter, aliases, name resolution, diagnostics for a malformed file, and the `disabled` settings override
+  (`settings.subagents.agentOverrides`) with the original's disable/enable/reset texts;
+- the tools the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
   tools the original registers beside them, with the original's descriptions and JSON Schemas (read from the request the original
-  made, `port/gen-tooldefs.py`); `subagent {action: "list"}` and `{action: "get"}` with the original's text;
+  made, `port/gen-tooldefs.py`); `subagent` actions `list`, `get`, `models`, `create`, `update`, `delete`, `eject`, `disable`,
+  `enable`, `reset`, `status`, `stop`, `interrupt`, `steer` and `guide` with the original's texts; `bg_wait` (the blocking wait
+  over this session's async runs: `all`, `id`, `timeoutMs`, `nonBlocking` subscriptions, the supervisor-request yield);
+  `subagent_supervisor` (`status`, `pending`, `list`, `reply`) over the run's supervisor channel;
+- the management serializer (the original's field order, unknown keys preserved), the model warning on create/update, and the
+  `list` capabilities rows;
+- missions (`mission.create`, `mission.list`, `mission.show`, `mission.update`, `mission.resolve-decision`,
+  `mission.attach-run`, `mission.close`) over the original's durable JSON store, with the original's texts and validations;
+- worktree isolation for a run (`isolation: "worktree"`, `worktree`, `baseRef`: the original's repository, clean-tree and
+  ref checks, a real `git worktree` on a `pi-subagents/` branch, the child runs inside it and the status renders the worktree
+  and branch) and `worktree.cleanup` (plan only, as the original);
 - the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
-Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,
-tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`). The child discovers extensions as
-the original's background child, which runs in its own process, does: a provider extension, and the login it brings, is
-what lets the child reach a provider-qualified model. (The original's foreground child runs in the parent's process and
-loads no extensions; it uses the providers the parent already loaded, which a pig child process cannot.) An agent picks its child's extensions as in the original: `extensions` (a list, even an empty one) turns
-discovery off and loads only those (`--no-extensions` and one `--extension` each), `subagentOnlyExtensions` adds to whatever
-loads, and an entry starting `./` or `../` is relative to the agent file. An agent that sets neither takes
-`subagents.defaultExtensions` / `defaultSubagentOnlyExtensions` from the project's `settings.json`, else the user's, where
-at each level the PiG host's file (`sdk.AgentDir`, `sdk.ConfigDirName`) comes before the original's `.pi` one (an addition:
-the original reads only Pi's tree, and agent and chain discovery here still do); a
-malformed value refuses the run with the original's message, and an empty `extensions` list shows the original's warning
-(as a notification: the original's `console.warn`). `get` shows both fields. A child's model and thinking follow the
-original's precedence: the call's `model`, then `agentOverrides.<name>.model` / `thinking` (`false` clears the agent's own),
-then the agent's frontmatter, then `subagents.defaultModel` / `defaultThinking`, from the same files, each from the first file
-that sets it (for a builtin agent the original takes a project `agentOverrides` entry whole, over the user's; the port takes
-each field from the first file that sets it, as the original does for custom agents); malformed values refuse the run with the
-original's messages, and `get` shows the resulting model. Running a child is:
-`subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a `.chain.md` chain (steps in order, `{task}` and
-`{previous}`, the first failing step stops it, every agent is resolved before any child starts). The original's trace cannot
-check this (a Pi child session is not a pig child process); it is covered by the port's own tests (a fake child runner, a real
-child process, the fake host) and shown live in tmux (`port/demo`). What keeps it safe:
+Pi) in-process child sessions. The port starts a child `pig --no-extensions --print` with the agent's model, thinking,
+tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`), as PiG's own subagents do:
+`subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a chain (steps in order, `{task}` and
+`{previous}`, named outputs `{outputs.x}`, the first failing step stops it, every agent is resolved before any child starts).
+The original's trace cannot check this (a Pi child session is not a pig child process); it is covered by the port's own tests
+(a fake child runner, a real child process, the fake host) and shown live in tmux (`port/demo`). What keeps it safe:
 
 - the task reaches the child on stdin as `Task: <task>`, the original's child prompt; it is never an argument, so nothing in it
   is read as an option (`--version`, `- fix it`) or a file to attach (`@notes.txt`), and its length is not bounded by the
@@ -70,28 +68,33 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
 
 The pig to start is `PIG_SUBAGENT_PIG_BINARY`, else the pig running this extension (`PIG_HARNESS_BINARY`), else a `pig` next
 to this program, else `PATH`. A Piglet Binary as the child refuses `--system-prompt`, so a `replace`-mode agent cannot run in one
-(finding 9).
+(finding 9). An `external-cli` runner agent runs its own binary (the task on stdin); an unavailable binary or an
+`external-job` provider is reported, never launched through pig.
 
-**Not ported:** parallel, async and background runs and their status; scripted workflows (they need the original's JavaScript
-workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
-commands other than `/run-chain`; steering, the supervisor channel and `bg_wait` (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; missions; profiles, `agentOverrides` fields other than `model` and `thinking`,
-`defaultProvider`, `maxThinking`, `disableThinking` and model scopes; the agent serializer and
-the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
-dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
-agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
-document features that are not ported); the original's session-resume memory of whether `subagent` was enabled.
+**Background runs** follow the original's observable behavior with the port's process model: `async` (the default comes from
+the original's `asyncByDefault` config), the started message with the original's interactive/headless guidance, the completion
+notice (`Background task completed: **agent**` through `sendMessage`, batched like the original's), the deadline (`timeoutMs`,
+default 30m), the active-run capacity (`maxActiveAsyncRunsPerSession`), the durable output binding (`output`, `outputMode`
+with the original's `Output saved to: ...` reference), the `subagent-async` widget, stale-run reconciliation, and the artifacts
+under the original's temp layout as plain JSON. A run's child gets a supervisor channel directory (the prompt carries the
+protocol) so it can ask the parent (`subagent_supervisor`) and receive steering; a run blocked on a question reports
+`needs attention` in status and yields `bg_wait`.
+
+**Not ported:** scripted workflows (they need the original's JavaScript workflow runtime, which no Package may carry);
+council mode; lanes; the fleet TUI inspector (the fleet text view is ported); the watchdog;
+profiles, model scopes and the settings-override fields besides `disabled`; scheduled runs (their only target is a
+workflowScript); the `doctor`, `validate`, `resume` and `debug.run` actions; the advertised agent catalog; the original's
+skills and prompt templates (their names would have to change to be Pigpen skills, and they document features that are not
+ported). The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`, `async`, `timeoutMs`, `maxRuntimeMs`, `output`,
+`outputMode` and, per action, the parameters listed in `refuse.go`. Any other parameter or action is refused with one message
+and nothing runs.
 
 **Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
-accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`), `async` other than
-`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
-other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
-original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
-<feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
-original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
-the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
+accepted and ignored: `workflow`, `workflowScript`, `workflowScriptPath`, the legacy `tasks`/`chain`/`parallel`/`concurrency`
+inputs, the actions listed above, and any parameter the port does not honor. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
+<feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error.
+The original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
+`refuse_test.go` (every parameter of the original's schema, one case each).
 
 ## Mapping
 
@@ -209,3 +212,11 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 - The twin ledger and slice file (264 entries by name, grouped by hand) and the 41 twins' file layout.
 - The mutation generator (116 pairs by hand, 42 of them the review's) and the scenario generator.
 - A tool-definition importer that reads a recorded request would replace `gen-tooldefs.py`.
+
+## Tool-name coexistence (checked against pi-background-tasks 2.6.10)
+
+pi-background-tasks registers `bg_run`, `bg_status`, `bg_logs`, `bg_kill`, `bg_run_pi_attested` and
+`delegate_read_artifact`. This port registers `subagent`, `bg_wait`, `subagent_supervisor` and `subagents_enable`.
+The sets are disjoint, so installing both in one PiG session triggers no tool conflict (PiG's only duplicate rule is
+Pi's tool-conflict error, extensions.md:239). No rename is warranted; a harness that ships its own `bg_wait` and also
+loads this extension is the only overlap case, and the remedy there would be an alias config rather than a rename.

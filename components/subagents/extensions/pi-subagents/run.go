@@ -273,18 +273,23 @@ func noExtensionsWarning(a *AgentConfig) string {
 func childPrompt(task string) string { return "Task: " + task }
 
 // childEnv is this process's environment without the host's internals for this extension (its socket, packed cell and
-// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent.
-func childEnv(base []string, depth int, role string) []string {
+// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent; an async
+// child also gets its run's supervisor channel directory.
+func childEnv(base []string, depth int, role string, channelDir string) []string {
 	out := []string{}
 	for _, kv := range base {
 		k, _, _ := strings.Cut(kv, "=")
 		switch {
-		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE":
+		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE", k == supervisorDirEnv:
 			continue
 		}
 		out = append(out, kv)
 	}
-	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	out = append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	if channelDir != "" {
+		out = append(out, supervisorDirEnv+"="+channelDir)
+	}
+	return out
 }
 
 func nonNegativeInt(s string) (int, bool) {
@@ -379,6 +384,65 @@ func (e *childExit) Error() string {
 }
 
 func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string) (string, error) {
+	return runAgentChannelled(done, cwd, a, task, model, "")
+}
+
+// runAgentExternalCLI runs an external CLI agent through its own binary (the
+// original's runner contract: the task reaches the CLI on stdin, its stdout is
+// the answer). The original's per-adapter flags are part of the external-runner
+// slice; this is the generic stdin-prompt delivery.
+func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {
+	select {
+	case childSlots <- struct{}{}:
+	case <-done:
+		return "", fmt.Errorf("%s was cancelled", a.Name)
+	}
+	defer func() { <-childSlots }()
+	bin, err := exec.LookPath(a.Runner.Command)
+	if err != nil {
+		return "", fmt.Errorf("External CLI '%s' is not available for agent '%s': %s", a.Runner.Command, a.Name, err.Error())
+	}
+	// The external CLI is not a subagent of this extension: it gets no channel.
+	res, err := runChild(done, childRequest{Bin: bin, Stdin: task, Cwd: cwd, Env: cleanChildEnv(os.Environ())})
+	switch {
+	case errors.Is(err, errCancelled):
+		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
+	case err != nil:
+		return "", fmt.Errorf("could not start %s: %w", a.Name, err)
+	case res.Exit != 0:
+		detail := res.Stderr
+		if detail == "" {
+			detail = res.Stdout
+		}
+		return res.Stdout, &childExit{agent: a.Name, code: res.Exit, detail: detail}
+	}
+	return res.Stdout, nil
+}
+
+// cleanChildEnv is this process's environment without the host's internals and
+// without this extension's subagent identity (an external CLI is not a subagent).
+func cleanChildEnv(base []string) []string {
+	out := []string{}
+	for _, kv := range base {
+		k, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(k, "PIG_EXT_") || strings.HasPrefix(k, "PIG_HARNESS_") || strings.HasPrefix(k, "PIG_SUBAGENT") || k == "PIG_AGENT_ROLE" {
+			continue
+		}
+		out = append(out, kv)
+	}
+	return out
+}
+
+// runAgentChannelled is runAgent with the run's supervisor channel: the child
+// gets the channel directory in its environment and the protocol on stdin.
+// An external-runner agent goes through its own binary instead of pig.
+func runAgentChannelled(done <-chan struct{}, cwd string, a *AgentConfig, task, model, channelDir string) (string, error) {
+	if a.Runner != nil && a.Runner.Type == "external-cli" {
+		return runAgentExternalCLI(done, cwd, a, task)
+	}
+	if a.Runner != nil && a.Runner.Type == "external-job" {
+		return "", fmt.Errorf("External-job runner '%s' is not available in the Go port. Install the original extension, %s, which runs unchanged in PiG.", a.Runner.Command, originalSpec)
+	}
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
@@ -386,7 +450,11 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	}
 	defer func() { <-childSlots }()
 	depth, _ := subagentDepth(os.Getenv)
-	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
+	stdin := childPrompt(task)
+	if channelDir != "" {
+		stdin += supervisorPromptInstructions(channelDir)
+	}
+	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: stdin, Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name, channelDir)})
 	switch {
 	case errors.Is(err, errCancelled):
 		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
@@ -403,7 +471,8 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 }
 
 // chainTask is a step's task: its own template, else {task} for the first step and {previous} for the rest.
-func chainTask(steps []ChainStep, i int, request, previous string) string {
+// Named outputs ({outputs.x}) resolve through the map, as the original's resolveOutputReferences does.
+func chainTask(steps []ChainStep, i int, request, previous string, outputs map[string]string) string {
 	t := steps[i].Task
 	if t == "" {
 		if i == 0 {
@@ -412,7 +481,11 @@ func chainTask(steps []ChainStep, i int, request, previous string) string {
 			t = "{previous}"
 		}
 	}
-	return strings.NewReplacer("{task}", request, "{previous}", previous).Replace(t)
+	t = strings.NewReplacer("{task}", request, "{previous}", previous).Replace(t)
+	for name, value := range outputs {
+		t = strings.ReplaceAll(t, "{outputs."+name+"}", value)
+	}
+	return t
 }
 
 // runChain runs the steps in order, each one's output flowing into the next; it stops at the first failing step. Every
@@ -430,10 +503,11 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 		resolved[i] = a
 	}
 	previous := ""
+	outputs := map[string]string{}
 	for i, s := range c.Steps {
 		progress(fmt.Sprintf("[%d/%d] %s", i+1, len(c.Steps), s.Agent))
 		model := s.Model
-		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model)
+		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous, outputs), model)
 		if err != nil {
 			var ce *childExit
 			if errors.As(err, &ce) {
@@ -442,6 +516,9 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 			return out, fmt.Errorf("step %d (%s): %w", i+1, s.Agent, err)
 		}
 		previous = out
+		if s.As != "" {
+			outputs[s.As] = out
+		}
 	}
 	return previous, nil
 }

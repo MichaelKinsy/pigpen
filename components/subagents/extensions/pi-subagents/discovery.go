@@ -441,7 +441,23 @@ func loadChains(dir string, source AgentSource) ([]ChainConfig, []Diagnostic) {
 	var order []string
 	byName := map[string]ChainConfig{}
 	var diags []Diagnostic
-	for _, p := range listFiles(dir, func(n string) bool { return strings.HasSuffix(n, ".chain.md") }) {
+	for _, p := range listFiles(dir, func(n string) bool { return strings.HasSuffix(n, ".chain.md") || strings.HasSuffix(n, ".chain.json") }) {
+		if chainPathIsJSON(p) {
+			c, diag := loadJSONChain(p, source)
+			if diag.Error != "" {
+				diags = append(diags, diag)
+				continue
+			}
+			// A .chain.json wins a name collision with a .chain.md (the original).
+			if existing, ok := byName[c.Name]; ok && chainPathIsJSON(existing.FilePath) && !chainPathIsJSON(p) {
+				continue
+			}
+			if _, ok := byName[c.Name]; !ok {
+				order = append(order, c.Name)
+			}
+			byName[c.Name] = c
+			continue
+		}
 		b, err := os.ReadFile(p)
 		if err != nil {
 			continue
@@ -449,6 +465,9 @@ func loadChains(dir string, source AgentSource) ([]ChainConfig, []Diagnostic) {
 		c, err := ParseChain(string(b), source, p)
 		if err != nil {
 			diags = append(diags, Diagnostic{Source: source, FilePath: p, Error: err.Error()})
+			continue
+		}
+		if existing, ok := byName[c.Name]; ok && chainPathIsJSON(existing.FilePath) {
 			continue
 		}
 		if _, ok := byName[c.Name]; !ok {
@@ -527,12 +546,24 @@ func DiscoverAgentsAll(cwd string) DiscoveryAll {
 			r.ChainDiagnostics = append(r.ChainDiagnostics, cd...)
 		}
 	}
+	applySettingsOverrides(&r, cwd)
 	return r
 }
 
-// DiscoverAgents is the effective set of agents for a scope: project over user over builtin.
+// withoutDisabled is the runtime/list view: a disabled definition is hidden.
+func withoutDisabled(agents []AgentConfig) []AgentConfig {
+	out := make([]AgentConfig, 0, len(agents))
+	for _, a := range agents {
+		if !a.Disabled {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// DiscoverAgents is the effective set of agents for a scope: project over user over builtin, disabled ones hidden.
 func DiscoverAgents(cwd string, scope AgentScope) Discovery {
 	all := DiscoverAgentsAll(cwd)
-	d := Discovery{Agents: MergeAgentsForScope(scope, all.User, all.Project, all.Builtin, all.Package), Diagnostics: all.Diagnostics, ProjectAgentsDir: all.ProjectDir, UserDir: all.UserDir}
+	d := Discovery{Agents: withoutDisabled(MergeAgentsForScope(scope, all.User, all.Project, all.Builtin, all.Package)), Diagnostics: all.Diagnostics, ProjectAgentsDir: all.ProjectDir, UserDir: all.UserDir}
 	return d
 }

@@ -46,6 +46,9 @@ type ChainConfig struct {
 	FilePath                                  string
 	Steps                                     []ChainStep
 	ExtraFields                               *jsObject
+	// rawJSON keeps a .chain.json's decoded steps (in order), so the writer
+	// emits the definition back unchanged, fields this port does not model included.
+	rawJSON []any
 }
 
 // validateToolBudget is the original's validateToolBudgetConfig; it returns the message of the first problem.

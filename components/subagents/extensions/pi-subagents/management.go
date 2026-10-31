@@ -117,14 +117,17 @@ func diagnosticsForScope(diags []Diagnostic, scope AgentScope) []Diagnostic {
 	return out
 }
 
-// listAgents is the `list` action without capabilities.
+// listAgents is the `list` action; capabilities renders the original's rows.
 func listAgents(cwd string, params map[string]any) manageResult {
+	if capabilities, _ := params["capabilities"].(bool); capabilities {
+		return capabilitiesText(cwd, params)
+	}
 	scope, _ := normalizeListScope(params["agentScope"])
 	if scope == "" {
 		scope = ScopeBoth // the original lists everything for a scope it does not know
 	}
 	d := DiscoverAgentsAll(cwd)
-	agents := MergeAgentsForScope(scope, d.User, d.Project, d.Builtin, d.Package)
+	agents := withoutDisabled(MergeAgentsForScope(scope, d.User, d.Project, d.Builtin, d.Package))
 	sort.SliceStable(agents, func(i, j int) bool { return localeLess(agents[i].Name, agents[j].Name) })
 	lines := []string{"Executable agents:"}
 	if len(agents) == 0 {
@@ -197,8 +200,8 @@ func formatDetail(a AgentConfig) string {
 	if a.AcceptanceRole != "" {
 		lines = append(lines, "Acceptance role: "+a.AcceptanceRole)
 	}
-	if a.Source == SourceBuiltin {
-		lines = append(lines, "Disabled: false")
+	if a.Source == SourceBuiltin || a.Disabled {
+		lines = append(lines, "Disabled: "+boolWordPtr(a.Disabled))
 	}
 	orNone := func(l []string) string {
 		if len(l) == 0 {
