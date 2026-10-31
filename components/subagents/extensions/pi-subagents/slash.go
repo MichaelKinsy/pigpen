@@ -31,6 +31,8 @@ func init() {
 		e.Command("subagents-stop", "Stop a current-session async subagent run, or one child of it with /subagents-stop <run-id> <child-id>", stopSlashCommand)
 		e.Command("subagents-steer", "Steer a live async subagent run with a message", steerSlashCommand)
 		e.Command("subagents-fleet", "Show the live subagent fleet", fleetSlashCommand)
+		e.Command("subagents-profiles", "List saved subagent profiles", profileSlashCommand)
+		e.Command("subagents-load-profile", "Load a subagent profile into ~/.pi/agent/settings.json", loadProfileSlashCommand)
 	})
 }
 

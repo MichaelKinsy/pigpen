@@ -184,5 +184,4 @@ func winningModelScope(cwd string, onErr func(string)) *ModelScopeConfig {
 	} else {
 		return settings.ModelScope
 	}
-	return nil
 }

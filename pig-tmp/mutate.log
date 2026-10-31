@@ -1,1 +1,279 @@
-mutation run-exit: find text occurs 2 times in run.go, want exactly 1
+KILLED   fm-fold-blank
+         unit test: --- FAIL: TestFrontmatterBlocks (0.00s)
+KILLED   fm-fold-more-indented
+         unit test: --- FAIL: TestFrontmatterBlocks (0.00s)
+KILLED   fm-fold-space
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   fm-quoted
+         unit test: --- FAIL: TestFrontmatterBlocks (0.00s)
+KILLED   fm-literal
+         unit test: --- FAIL: TestFrontmatterBlocks (0.00s)
+KILLED   fm-block-blank-lines
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   fm-end-marker
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   fm-crlf
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   fm-list-dash
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   fm-list-comma
+         unit test: --- FAIL: TestFrontmatterEdges (0.00s)
+KILLED   chain-budget-soft
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-budget-hard
+         unit test: --- FAIL: TestJSONChainValidation (0.00s)
+KILLED   chain-inline-schema
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-output-false
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-outputmode
+         unit test: --- FAIL: TestChainSerializer (0.00s)
+KILLED   chain-task-trim
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-needs-name
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-extra-fields
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-serialize-package
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-serialize-reads
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   chain-heading-trailing
+         unit test: --- FAIL: TestChainEdges (0.00s)
+KILLED   pkg-lower
+         unit test: --- FAIL: TestDiscovery (0.41s)
+KILLED   pkg-edges
+         unit test: --- FAIL: TestPackageNames (0.00s)
+KILLED   pkg-pattern
+         unit test: --- FAIL: TestPackageNames (0.00s)
+KILLED   pkg-local-name
+         unit test: --- FAIL: TestPackageNames (0.00s)
+KILLED   scope-default
+         unit test: --- FAIL: TestResolveExecutionAgentScope (0.00s)
+KILLED   merge-user-before-project
+         unit test: --- FAIL: TestMergeAgentsForScope (0.00s)
+KILLED   merge-package
+         unit test: --- FAIL: TestMergeAgentsForScope (0.00s)
+KILLED   resolve-canonical
+         unit test: --- FAIL: TestChainJSONDiscoveryAndRun (0.02s)
+KILLED   resolve-rank
+         unit test: --- FAIL: TestResolveEdges (0.00s)
+KILLED   resolve-local-guard
+         unit test: --- FAIL: TestResolveEdges (0.00s)
+KILLED   disc-home-stop
+         unit test: --- FAIL: TestChainJSONDiscoveryAndRun (0.02s)
+KILLED   disc-legacy-skills
+         unit test: --- FAIL: TestDiscovery (0.39s)
+KILLED   disc-chain-md
+         unit test: --- FAIL: TestDiscoveryEdges (0.12s)
+KILLED   disc-prune-git
+         unit test: --- FAIL: TestDiscoveryEdges (0.10s)
+KILLED   disc-preferred-last
+         unit test: --- FAIL: TestDiscovery (0.38s)
+KILLED   disc-user-new
+         unit test: --- FAIL: TestDiscovery (0.34s)
+KILLED   disc-git-root
+         unit test: --- FAIL: TestGitRootResolution (0.27s)
+KILLED   disc-user-chains
+         unit test: --- FAIL: TestDiscovery (0.17s)
+KILLED   agents-needs-description
+         unit test: --- FAIL: TestDiscoveryEdges (0.09s)
+KILLED   agents-thinking-false
+         unit test: --- FAIL: TestAgentFields (0.02s)
+KILLED   agents-delegate-append
+         unit test: --- FAIL: TestDiscoveryDefaults (0.04s)
+KILLED   agents-alias-self
+         unit test: --- FAIL: TestAgentFields (0.03s)
+KILLED   agents-mcp-split
+         unit test: --- FAIL: TestAgentFields (0.03s)
+KILLED   agents-runner-type
+         unit test: --- FAIL: TestGetBuiltinMatchesOriginal (0.04s)
+KILLED   agents-async
+         unit test: --- FAIL: TestAgentFields (0.02s)
+KILLED   list-section-order
+         unit test: --- FAIL: TestManagementEdges (0.18s)
+KILLED   list-sort
+         list-diagnostics: pig-go differs from pi-ts: first difference at event 19
+KILLED   list-aliases
+         unit test: --- FAIL: TestManagementEdges (0.15s)
+KILLED   list-diagnostics
+         unit test: --- FAIL: TestManagementEdges (0.16s)
+KILLED   get-blocking
+         unit test: --- FAIL: TestManagementEdges (0.14s)
+KILLED   get-detail-prompt
+         unit test: --- FAIL: TestGetBuiltinMatchesOriginal (0.03s)
+KILLED   get-scope-diagnostics
+         unit test: --- FAIL: TestManagementEdges (0.14s)
+KILLED   run-model-inherit
+         unit test: --- FAIL: TestBuildChildArgs (0.00s)
+INVALID  run-model-override
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-replace-flag
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-thinking-off
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-no-extensions
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  chain-default-first
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  chain-previous
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  chain-resolve-first
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  chain-stop
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-exit
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-exit-ext
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-env-role
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-task-argv
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-prompt-prefix
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-suffix-wins
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-suffix-level
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-env-ext
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-env-harness
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-env-depth
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-env-exact
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-dir
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-stdin
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-stderr-apart
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-exit-code
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cancel
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cancel-term
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cancel-kill
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cancel-error
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-out-bytes
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-out-lines
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-out-rune
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-out-marker
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-stderr-tail
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-harness-bin
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-depth-env
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-depth-flag
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-depth-max
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-depth-negative
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-depth-compare
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cap
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cap-ext
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cap-cancel
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cap-cancel-ext
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-fail-stderr
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-fail-stderr-ext
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cwd-relative
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cwd-missing
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cwd-file
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-cwd-resolution
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  run-either-b
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-widget-clear
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-git-probe
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-deselect
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-enable-append
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-loader-active
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-dedupe
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-details
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-refuse
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-single-needs-task
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-single-agent-type
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-action-type
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-refuse-first
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-bgwait
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-supervisor
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-spec
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-package
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-async-true
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-async-text
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-workflow-list
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-legacy-list
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-legacy-text
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-option
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-option-plural
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-null
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-action
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-list-params
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-get-params
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ref-run-params
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-run-depth
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-chain-depth
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-run-cwd
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-run-scope
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-run-model
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-chain-task
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-chain-answer
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+INVALID  ext-chain-last-wins
+         mutant does not build: # github.com/MichaelKinsy/pigpen/pi-subagents [github.com/MichaelKinsy/pigpen/pi-subagents.test]
+139 mutation(s), 85 not killed

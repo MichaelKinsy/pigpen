@@ -1,4 +1,4 @@
-74 exact twins, 0 skipped
+88 exact twins, 0 skipped
 DEFERRED abort-recovery (13 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
 DEFERRED acceptance (76 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
 DEFERRED acceptance-compaction (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
@@ -127,7 +127,6 @@ DEFERRED mock-pi (1 cases): not ported: a part of the original runtime outside t
 DEFERRED model-info (15 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
 DEFERRED model-resolution (14 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
 DEFERRED model-resolution-diagnostic (6 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
-DEFERRED model-scope-settings (8 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
 DEFERRED mutation-evidence (7 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
 DEFERRED native-supervisor-channel (26 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
 DEFERRED nested-control (27 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
@@ -153,7 +152,7 @@ DEFERRED pi-web-session-liveness (9 cases): not ported: the child session runtim
 DEFERRED preflight (31 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
 DEFERRED proactive-skills (5 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
 DEFERRED process-terminal (10 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
-DEFERRED profiles (13 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED profiles (7 cases): not ported: profile generation, provider model catalogs and live probes (the profile application layer - parse, validate, list, load into settings - is ported)
 DEFERRED project-panes-public-api (9 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
 DEFERRED prompt-audit-optional-peers (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
 DEFERRED prompt-audit-provider-routing (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling

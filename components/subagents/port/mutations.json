@@ -536,8 +536,14 @@
  {
   "name": "run-exit",
   "file": "run.go",
-  "find": "case res.Exit != 0:",
-  "replace": "case res.Exit < 0:"
+  "find": "Env: childEnv(os.Environ(), depth, a.Name, channelDir)})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:",
+  "replace": "Env: childEnv(os.Environ(), depth, a.Name, channelDir)})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit < 0:"
+ },
+ {
+  "name": "run-exit-ext",
+  "file": "run.go",
+  "find": "Env: cleanChildEnv(os.Environ())})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:",
+  "replace": "Env: cleanChildEnv(os.Environ())})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit < 0:"
  },
  {
   "name": "run-env-role",
@@ -548,8 +554,8 @@
  {
   "name": "run-task-argv",
   "file": "run.go",
-  "find": "Args: buildChildArgs(a, model), Stdin: childPrompt(task)",
-  "replace": "Args: append(buildChildArgs(a, model), task), Stdin: childPrompt(task)"
+  "find": "Args: buildChildArgs(a, model), Stdin: stdin",
+  "replace": "Args: append(buildChildArgs(a, model), task), Stdin: stdin"
  },
  {
   "name": "run-prompt-prefix",
@@ -710,20 +716,38 @@
  {
   "name": "run-cap",
   "file": "run.go",
-  "find": "case childSlots <- struct{}{}:",
-  "replace": "default:"
+  "find": "which runs unchanged in PiG.\", a.Runner.Command, originalSpec)\n\t}\n\tselect {\n\tcase childSlots <- struct{}{}:",
+  "replace": "which runs unchanged in PiG.\", a.Runner.Command, originalSpec)\n\t}\n\tselect {\n\tdefault:"
+ },
+ {
+  "name": "run-cap-ext",
+  "file": "run.go",
+  "find": "func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {\n\tselect {\n\tcase childSlots <- struct{}{}:",
+  "replace": "func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {\n\tselect {\n\tdefault:"
  },
  {
   "name": "run-cap-cancel",
   "file": "run.go",
-  "find": "\tcase <-done:\n\t\treturn \"\", fmt.Errorf(\"%s was cancelled\", a.Name)",
-  "replace": "\tcase <-make(chan struct{}):\n\t\treturn \"\", fmt.Errorf(\"%s was cancelled\", a.Name)"
+  "find": "which runs unchanged in PiG.\", a.Runner.Command, originalSpec)\n\t}\n\tselect {\n\tcase childSlots <- struct{}{}:\n\tcase <-done:",
+  "replace": "which runs unchanged in PiG.\", a.Runner.Command, originalSpec)\n\t}\n\tselect {\n\tcase childSlots <- struct{}{}:\n\tcase <-make(chan struct{}):"
+ },
+ {
+  "name": "run-cap-cancel-ext",
+  "file": "run.go",
+  "find": "func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {\n\tselect {\n\tcase childSlots <- struct{}{}:\n\tcase <-done:",
+  "replace": "func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {\n\tselect {\n\tcase childSlots <- struct{}{}:\n\tcase <-make(chan struct{}):"
  },
  {
   "name": "run-fail-stderr",
   "file": "run.go",
-  "find": "\t\tdetail := res.Stderr\n",
-  "replace": "\t\tdetail := \"\"\n"
+  "find": "Env: childEnv(os.Environ(), depth, a.Name, channelDir)})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:\n\t\tdetail := res.Stderr",
+  "replace": "Env: childEnv(os.Environ(), depth, a.Name, channelDir)})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:\n\t\tdetail := \"\""
+ },
+ {
+  "name": "run-fail-stderr-ext",
+  "file": "run.go",
+  "find": "Env: cleanChildEnv(os.Environ())})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:\n\t\tdetail := res.Stderr",
+  "replace": "Env: cleanChildEnv(os.Environ())})\n\tswitch {\n\tcase errors.Is(err, errCancelled):\n\t\treturn res.Stdout, fmt.Errorf(\"%s was cancelled\", a.Name)\n\tcase err != nil:\n\t\treturn \"\", fmt.Errorf(\"could not start %s: %w\", a.Name, err)\n\tcase res.Exit != 0:\n\t\tdetail := \"\""
  },
  {
   "name": "run-cwd-relative",
@@ -829,15 +853,15 @@
  },
  {
   "name": "ext-bgwait",
-  "file": "extension.go",
-  "find": "refuseTool(\"waiting for background work (`bg_wait`)\")",
-  "replace": "refuseTool(\"waiting\")"
+  "file": "bgwait.go",
+  "find": "if nonBlocking && all {",
+  "replace": "if false && all {"
  },
  {
   "name": "ext-supervisor",
-  "file": "extension.go",
-  "find": "refuseTool(\"the supervisor channel (`subagent_supervisor`)\")",
-  "replace": "refuseTool(\"the supervisor\")"
+  "file": "supervisor.go",
+  "find": "case \"pending\", \"list\":",
+  "replace": "case \"list\":"
  },
  {
   "name": "ref-spec",
@@ -854,8 +878,8 @@
  {
   "name": "ref-async-true",
   "file": "refuse.go",
-  "find": "v != nil && v != false",
-  "replace": "v != nil && v != true"
+  "find": "if v, ok := params[\"async\"]; ok && v != nil {",
+  "replace": "if v, ok := params[\"async\"]; ok && v == nil {"
  },
  {
   "name": "ref-async-text",
@@ -908,8 +932,8 @@
  {
   "name": "ref-list-params",
   "file": "extension.go",
-  "find": "registerAction(\"list\", []string{\"agentScope\"}",
-  "replace": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}"
+  "find": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}",
+  "replace": "registerAction(\"list\", []string{\"agentScope\"}"
  },
  {
   "name": "ref-get-params",
@@ -950,8 +974,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "out, err := runAgent(done, cwd, a, task, model)",
-  "replace": "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model"
+  "find": "out, err := runAgent(runDone, childCwd, a, taskForChild, model)",
+  "replace": "out, err := runAgent(runDone, childCwd, a, taskForChild, \"\")\n\t_ = model"
  },
  {
   "name": "ext-chain-task",

@@ -5,6 +5,7 @@ package pi_subagents
 // parsing.
 
 import (
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -317,4 +318,96 @@ func TestModelScope(t *testing.T) {
 // ruleOf adapts a resolved scope back to a check rule.
 func ruleOf(scope resolvedModelScope) *ModelScopeRule {
 	return &ModelScopeRule{Enforce: boolPtrT(scope.Enforce), Strict: boolPtrT(scope.Strict), Allow: scope.Allow}
+}
+
+// TestModelScopeSettings twins the original's model-scope-settings.test.ts:
+// the winning scope as discoverAgents exposes it, and the parse errors the
+// original throws (here surfaced as a discovery diagnostic).
+func TestModelScopeSettings(t *testing.T) {
+	const f = "model-scope-settings"
+	writeSettings := func(t *testing.T, path string, content string) {
+		t.Helper()
+		writeFile(t, path, content)
+	}
+	findDiagnostic := func(d Discovery) string {
+		for _, diag := range d.Diagnostics {
+			if strings.Contains(diag.Error, "modelScope") || strings.Contains(diag.Error, "Subagent settings") {
+				return diag.Error
+			}
+		}
+		return ""
+	}
+	tw(t, f, "exposes a user modelScope from discoverAgents", func(t *testing.T) {
+		home := withTempHome(t)
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true, "strict": true, "allow": ["anthropic/*", "openai/gpt-5-*"], "agents": {"reviewer": {"allow": ["inherit"]}}}}}`)
+		config := DiscoverAgents(t.TempDir(), ScopeBoth).ModelScope
+		if config == nil || config.Enforce == nil || !*config.Enforce || config.Strict == nil || !*config.Strict ||
+			!reflect.DeepEqual(config.Allow, []string{"anthropic/*", "openai/gpt-5-*"}) || len(config.Agents) != 1 {
+			t.Errorf("scope %+v", config)
+		}
+	})
+	tw(t, f, "accepts enforcement with only named agent allow lists", func(t *testing.T) {
+		home := withTempHome(t)
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true, "agents": {"worker": {"allow": ["openai/gpt-5-mini"]}}}}}`)
+		config := DiscoverAgents(t.TempDir(), ScopeBoth).ModelScope
+		if config == nil || len(config.Allow) != 0 || config.Agents["worker"] == nil ||
+			!reflect.DeepEqual(config.Agents["worker"].Allow, []string{"openai/gpt-5-mini"}) {
+			t.Errorf("scope %+v", config)
+		}
+	})
+	tw(t, f, "returns undefined when no modelScope is configured", func(t *testing.T) {
+		withTempHome(t)
+		if config := DiscoverAgents(t.TempDir(), ScopeBoth).ModelScope; config != nil {
+			t.Errorf("scope %+v", config)
+		}
+	})
+	tw(t, f, "prefers project modelScope over user modelScope", func(t *testing.T) {
+		home := withTempHome(t)
+		project := t.TempDir()
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true, "allow": ["anthropic/*"], "agents": {"reviewer": {"allow": ["inherit"]}}}}}`)
+		writeSettings(t, filepath.Join(project, ".pi", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true, "agents": {"worker": {"allow": ["deepseek/*"]}}}}}`)
+		config := DiscoverAgents(project, ScopeBoth).ModelScope
+		if config == nil || len(config.Allow) != 0 || config.Agents["worker"] == nil ||
+			!reflect.DeepEqual(config.Agents["worker"].Allow, []string{"deepseek/*"}) || config.Agents["reviewer"] != nil {
+			t.Errorf("scope %+v", config)
+		}
+	})
+	tw(t, f, "falls back to user modelScope when project does not set one", func(t *testing.T) {
+		home := withTempHome(t)
+		project := t.TempDir()
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true, "allow": ["anthropic/*"]}}}`)
+		config := DiscoverAgents(project, ScopeBoth).ModelScope
+		if config == nil || !reflect.DeepEqual(config.Allow, []string{"anthropic/*"}) {
+			t.Errorf("scope %+v", config)
+		}
+	})
+	tw(t, f, "rejects an invalid modelScope config at discovery time", func(t *testing.T) {
+		home := withTempHome(t)
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"enforce": true}}}`)
+		if msg := findDiagnostic(DiscoverAgents(t.TempDir(), ScopeBoth)); !strings.Contains(msg, "without a non-empty 'allow'") {
+			t.Errorf("diagnostic %q", msg)
+		}
+	})
+	tw(t, f, "rejects a malformed modelScope value at discovery time", func(t *testing.T) {
+		home := withTempHome(t)
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": "anthropic/*"}}`)
+		if msg := findDiagnostic(DiscoverAgents(t.TempDir(), ScopeBoth)); !strings.Contains(msg, "invalid 'modelScope'") {
+			t.Errorf("diagnostic %q", msg)
+		}
+	})
+	tw(t, f, "rejects malformed per-agent scopes at discovery time", func(t *testing.T) {
+		home := withTempHome(t)
+		writeSettings(t, filepath.Join(home, ".pi", "agent", "settings.json"),
+			`{"subagents": {"modelScope": {"agents": {"worker": {"allow": []}}}}}`)
+		if msg := findDiagnostic(DiscoverAgents(t.TempDir(), ScopeBoth)); !strings.Contains(msg, "modelScope.agents.worker.allow") {
+			t.Errorf("diagnostic %q", msg)
+		}
+	})
 }

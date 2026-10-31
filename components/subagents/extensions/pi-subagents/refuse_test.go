@@ -175,12 +175,12 @@ func TestUnportedToolsRefuse(t *testing.T) {
 // lacks is not offered, and the README says so. The portable ones are registered (slash.go).
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"subagent-cost", "subagents-doctor", "subagents-watchdog", "subagents-detach", "subagents-profiles", "subagents-refine", "prompt-workflow"} {
+	for _, name := range []string{"subagent-cost", "subagents-doctor", "subagents-watchdog", "subagents-detach", "subagents-refine", "prompt-workflow"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}
 	}
-	for _, name := range []string{"subagents", "run", "subagents-guide", "subagents-models", "subagents-stop", "subagents-steer", "subagents-fleet", "run-chain"} {
+	for _, name := range []string{"subagents", "run", "subagents-guide", "subagents-models", "subagents-stop", "subagents-steer", "subagents-fleet", "run-chain", "subagents-profiles", "subagents-load-profile"} {
 		if !h.cmds[name] {
 			t.Errorf("/%s is missing", name)
 		}

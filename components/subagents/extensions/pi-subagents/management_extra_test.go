@@ -263,13 +263,17 @@ func TestDisableEnableReset(t *testing.T) {
 	}
 
 	// reset removes a custom file and clears the override. A same-named custom
-	// file shadows the builtin, so disable reports it (as the original does)
-	// but still writes the override that reset then clears.
+	// file shadows the builtin; the settings override applies to the custom
+	// agent too (applyCustomAgentOverrides in the original), so disable hides
+	// it and reset then clears both.
 	r = ejectAction(cwd, map[string]any{"agent": "scout"})
 	eq(t, r.isError, false, "eject")
 	r = disableAction(cwd, map[string]any{"agent": "scout"})
-	if !r.isError || !strings.Contains(r.text, "but the agent is still enabled. A higher-precedence project override is likely winning.") {
+	if r.isError || !strings.Contains(r.text, "Disabled agent 'scout' via user settings override at "+settingsPath+".") {
 		t.Errorf("disable with a custom file: %q", r.text)
+	}
+	if listAgents(cwd, map[string]any{}); strings.Contains(listAgents(cwd, map[string]any{}).text, "- scout ") {
+		t.Error("list still shows the disabled custom scout")
 	}
 	r = resetAction(cwd, map[string]any{"agent": "scout"})
 	if r.isError {

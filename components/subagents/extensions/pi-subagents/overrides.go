@@ -261,13 +261,11 @@ func applySettingsOverrides(d *DiscoveryAll, cwd string) {
 			d.Builtin[i].OverrideScope, d.Builtin[i].OverridePath = "user", userPath
 		}
 	}
-	for i := range d.Builtin {
-		applyDefaultsToAgent(&d.Builtin[i], userSettings, projectSettings)
-		applyOverrideToAgent(&d.Builtin[i], userSettings, projectSettings)
-	}
-	for i := range d.Package {
-		applyDefaultsToAgent(&d.Package[i], userSettings, projectSettings)
-		applyOverrideToAgent(&d.Package[i], userSettings, projectSettings)
+	for _, list := range [][]AgentConfig{d.Builtin, d.Package, d.User, d.Project} {
+		for i := range list {
+			applyDefaultsToAgent(&list[i], userSettings, projectSettings)
+			applyOverrideToAgent(&list[i], userSettings, projectSettings)
+		}
 	}
 }
 
