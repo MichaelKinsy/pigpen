@@ -636,12 +636,6 @@
   "replace": ""
  },
  {
-  "name": "run-cancel-kill",
-  "file": "run.go",
-  "find": "\t\t\t_ = cmd.Process.Kill()\n",
-  "replace": ""
- },
- {
   "name": "run-cancel-error",
   "file": "run.go",
   "find": "\tif cancelled {\n\t\treturn res, errCancelled",
@@ -943,9 +937,9 @@
  },
  {
   "name": "ref-run-params",
-  "file": "refuse.go",
-  "find": "\"cwd\": true, \"model\": true, \"async\": true}",
-  "replace": "\"cwd\": true, \"model\": true, \"async\": true, \"output\": true}"
+  "file": "runparams.go",
+  "find": "registerRunParams(\"timeoutMs\", \"maxRuntimeMs\", \"output\", \"outputMode\")",
+  "replace": "registerRunParams(\"timeoutMs\", \"maxRuntimeMs\", \"outputMode\")"
  },
  {
   "name": "ext-run-depth",

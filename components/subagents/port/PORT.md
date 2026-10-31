@@ -82,7 +82,12 @@ protocol) so it can ask the parent (`subagent_supervisor`) and receive steering;
 
 **Not ported:** scripted workflows (they need the original's JavaScript workflow runtime, which no Package may carry);
 council mode; lanes; the fleet TUI inspector (the fleet text view is ported); the watchdog;
-profiles, model scopes and the settings-override fields besides `disabled`; scheduled runs (their only target is a
+profile generation, provider model catalogs and their live probes (the profile application layer - parse, validate, list,
+load into settings - is ported, with `/subagents-profiles` and `/subagents-load-profile`); the settings fields the port does not
+apply (`disableThinking`, `defaultProvider`, `maxThinking`, `defaultExtensions`, `agentScanDirs`, `agentExcludeDirs`,
+`agentOverridesByProvider`, `providerOverrides`) - the port applies `disableBuiltins`, `defaultModel`, `defaultThinking`,
+`modelScope` and the override fields `disabled`, `model`, `thinking`, `machine`, and refuses every other settings key the
+defines; scheduled runs (their only target is a
 workflowScript); the `doctor`, `validate`, `resume` and `debug.run` actions; the advertised agent catalog; the original's
 skills and prompt templates (their names would have to change to be Pigpen skills, and they document features that are not
 ported). The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`, `async`, `timeoutMs`, `maxRuntimeMs`, `output`,
@@ -108,6 +113,7 @@ The original's own errors for an empty call, a blank agent, a non-string task an
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M9 | `runs/shared/model-scope.ts` (scope rules, decision, settings parse), `agents/agents.ts` (`readSubagentSettings`, `applyBuiltinOverrides`, `applyCustomAgentOverrides`), `profiles/profiles.ts` (parse, validate, list, apply) | `modelscope.go`, `settings.go`, `profiles.go`, `overrides.go` | 41 twins (33 `model-scope`, 8 `model-scope-settings`) + 6 `profiles` twins |
 
 ## Process: what was written before its tests
 
@@ -120,7 +126,8 @@ addition is tests first (`79ee551` red, then the code), and so are the review's 
 
 ## Results
 
-- `go test -race`: pass. 41 twins (`pigeq twins check --deferred port/slices.json`: exit 0).
+- `go test -race`: pass. 88 exact twins (`pigeq twins check --deferred port/slices.json`: exit 0).
+- The checkout is LF-only (`.gitattributes`: `* text=auto eol=lf`; `.bat`/`.cmd` keep CRLF), so `gofmt -l` is clean.
 - `pigeq check` against the Pi 1.0.0 goldens: 5 of 5 scenarios (enable, list, list with scopes, list with diagnostics, get) +
   port-gaps + exec-coverage, three runs in a row. The golden is recorded from `port/oracle/index.ts`, not from the package
   directory: Pi would also load the original's skills when given the directory, which the port does not ship.
@@ -134,6 +141,15 @@ addition is tests first (`79ee551` red, then the code), and so are the review's 
   sees them) and were removed; 4 did not build and were rebuilt. The review (rev-port-popular-5) found the run path untested
   (the real runner's directory and environment, the tool's `cwd` and `agentScope`, `/run-chain`'s task, the binary override all
   survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**.
+- Second mutation run (this change): **138 mutations, all killed** (`pigeq mutate --unit`, jobs 4, Windows). The list grew
+  for the added surface (the external runner's exit handling, both slot-capacity selects) and `gen-mutations.py` re-validated
+  every `find` against the LF-normalized tree - the CRLF checkout had made eight of them unlocatable. Two survivors exposed
+  port gaps the new tests closed (a registered `list{capabilities}` call through the tool; an external CLI whose usage reaches
+  stderr - `findstr` on Windows, POSIX `git` elsewhere), and the portable cancellation suite (`run_cancel_portable_test.go`)
+  kills the cancel trio and both slot cancels on Windows, where the unix suite does not build. `run-cancel-kill` is removed
+  as equivalent: `terminate()` already ends the child directly (always `Kill` on Windows), so the grace escalation is
+  unreachable in a portable test; four mutants misreported as build failures were a lane bug (a Windows test message
+  containing `cannot find` matched the build sniff) and are fixed in extension-equivalence.
 - `pig install --validate-only --json`: valid (1 command, 3 handlers, 4 tools).
 - Piglet: `piglets/pig-popular` now selects six ports. A Binary built from this member alone gives traces equal to the Pi goldens in
   every event outside the `llm` channel (5 of 5); the `llm` channel differs by the host (a Binary's default tool set), as for the permissions port.

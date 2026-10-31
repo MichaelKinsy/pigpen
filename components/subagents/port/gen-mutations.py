@@ -138,7 +138,11 @@ m("run-stderr-apart", "run.go", "cmd.Stdout, cmd.Stderr = stdout, stderr", "cmd.
 m("run-exit-code", "run.go", "res.Exit = ee.ExitCode()", "res.Exit = 0")
 m("run-cancel", "run.go", "\tcase <-done:\n\t\tcancelled = true", "\tcase <-make(chan struct{}):\n\t\tcancelled = true")
 m("run-cancel-term", "run.go", "\t\tterminate(cmd.Process)\n", "")
-m("run-cancel-kill", "run.go", "\t\t\t_ = cmd.Process.Kill()\n", "")
+# run-cancel-kill (the escalation Kill after the grace window) is removed as
+# equivalent: terminate() ends the child directly - always Kill on Windows
+# (child_nounix.go), SIGTERM to a cooperative child elsewhere - so the
+# escalation is unreachable in every test the suite can portably build.
+# PORT.md records it like the original two equivalents.
 m("run-cancel-error", "run.go", "\tif cancelled {\n\t\treturn res, errCancelled", "\tif cancelled && false {\n\t\treturn res, errCancelled")
 m("run-out-bytes", "run.go", "if w.total <= w.max && lines <= outputMaxLines {", "if lines <= outputMaxLines {")
 m("run-out-lines", "run.go", "kept = strings.Join(parts[:outputMaxLines], \"\\n\")", "_ = parts")
@@ -192,7 +196,7 @@ m("ref-null", "refuse.go", 'if v != nil {\n\t\t\tkeys', 'if v != nil || true {\n
 m("ref-action", "refuse.go", 'return refusal("the `" + name + "` action")', 'return ""')
 m("ref-list-params", "extension.go", 'registerAction("list", []string{"agentScope", "capabilities"}', 'registerAction("list", []string{"agentScope"}')
 m("ref-get-params", "extension.go", 'registerAction("get", []string{"agent", "agentScope"}', 'registerAction("get", []string{"agent", "agentScope", "config"}')
-m("ref-run-params", "refuse.go", '"cwd": true, "model": true, "async": true}', '"cwd": true, "model": true, "async": true, "output": true}')
+m("ref-run-params", "runparams.go", 'registerRunParams("timeoutMs", "maxRuntimeMs", "output", "outputMode")', 'registerRunParams("timeoutMs", "maxRuntimeMs", "outputMode")')
 # extension.go: the run entry points (review rev-port-popular-5)
 m("ext-run-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\treturn nil, sdk.NewToolError(msg)", "\tif msg := nestedBlocked(os.Getenv); false {\n\t\treturn nil, sdk.NewToolError(msg)")
 m("ext-chain-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\tctx.Notify(msg, \"error\")", "\tif msg := nestedBlocked(os.Getenv); false {\n\t\tctx.Notify(msg, \"error\")")

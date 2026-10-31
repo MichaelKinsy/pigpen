@@ -89,15 +89,20 @@ directories and the builtin set, precedence project over user over builtin, pack
 `disabled` settings override), `.chain.md` **and `.chain.json`** files (parse and write) with the acceptance, tool-budget,
 dynamic fan-out shape and output-binding validators, the `subagents_enable` loader, the `subagent` tool's `list`, `get`,
 `models`, `create`, `update`, `delete`, `eject`, `disable`, `enable`, `reset`, `status`, `stop`, `interrupt`, `steer` and
-`guide`, both tools (`bg_wait`, `subagent_supervisor`), running one agent or a chain through a child process (a Go addition:
+`guide`, both tools (`bg_wait`, `subagent_supervisor`), model scopes enforced at launch (an explicit out-of-scope model is
+an error, an inherited one warns), the settings layer (disableBuiltins, defaultModel/defaultThinking, and the
+`disabled`/`model`/`thinking`/`machine` override fields applied to builtin, package, user and project agents), profiles
+loaded from `~/.pi/agent/profiles/pi-subagents/` into settings, running one agent or a chain through a child process (a Go addition:
 the original runs children through its own executor and scripted workflows), background runs with the original's started
 message, completion notifications, deadlines and durable output binding, and the supervisor channel over the run directory.
 
 **Not ported, and refused:** scripted workflows (`workflow`, `workflowScript`, `workflowScriptPath`) and the legacy
 `tasks`/`chain` inputs (they need the original's JavaScript workflow runtime, which no Go package can carry), lanes,
-council mode, the watchdog, profiles and model scopes, scheduled runs (whose only target is a
+council mode, the watchdog, profile generation and the provider model catalog checks (the profile application layer is
+ported: `/subagents-profiles`, `/subagents-load-profile`), scheduled runs (whose only target is a
 workflowScript), the `doctor`, `validate`, `resume` and `debug.run` actions, the run parameters that need the child's runtime
-cooperation (`acceptance`, `toolBudget`, `context`, `skills`, `gate`, `fast`, ...), and the original's skills and prompt
+cooperation (`acceptance`, `toolBudget`, `context`, `skills`, `gate`, `fast`, ...), the settings fields the port does not
+apply (`defaultProvider`, `maxThinking`, `agentScanDirs`, `agentOverridesByProvider`, ...), and the original's skills and prompt
 templates. Everything in that list is refused with one message naming the original and nothing runs:
 
 > @pi-in-go/pigpen-subagents (Go port) does not support workflow runs (`workflowScript`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.

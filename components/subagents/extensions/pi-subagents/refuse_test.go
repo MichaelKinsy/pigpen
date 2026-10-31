@@ -187,6 +187,18 @@ func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	}
 }
 
+// a registered action must accept its registered parameters: removing one
+// from the registration is a defect the tool call must expose
+func TestListCapabilitiesIsRegisteredThroughTheTool(t *testing.T) {
+	h, _ := refusedHost(t)
+	raw, failure := h.Tool("subagent", map[string]any{"action": "list", "capabilities": true})
+	eq(t, failure, "", "list with capabilities")
+	text := resultContent(t, raw)
+	if !strings.Contains(text, "capabilities") {
+		t.Errorf("no capabilities text: %s", text)
+	}
+}
+
 // a JSON null is an unset parameter, not an option the port ignores
 func TestNullParametersAreUnset(t *testing.T) {
 	h, calls := refusedHost(t)
