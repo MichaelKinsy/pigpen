@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -198,6 +199,40 @@ func pigBinary() string {
 		return p
 	}
 	return "pig"
+}
+
+// enforceModelScope applies the settings model scope (modelscope.go) at
+// launch: an explicit model (the model parameter) outside the scope is a hard
+// error; an inherited model (agent frontmatter, defaultModel) only warns, as
+// the original console.warns. The port's children are separate processes and
+// do not inherit a parent model, so `inherit` patterns expand against nothing
+// and match only themselves.
+func enforceModelScope(cwd string, a *AgentConfig, modelParam string) error {
+	scope := winningModelScope(cwd, func(msg string) { log.Printf("[pi-subagents] %s", msg) })
+	if scope == nil {
+		return nil
+	}
+	scopes := resolveModelScopesForAgent(scope, a.Name, "", "")
+	if len(scopes) == 0 {
+		return nil
+	}
+	model, source := modelParam, "explicit"
+	if model == "" {
+		model = a.Model
+		source = "inherited"
+		if model == "inherit" {
+			model = ""
+		}
+	}
+	if model == "" {
+		return nil
+	}
+	if v := checkResolvedScopes(model, scopes, source, func(v *modelScopeViolation) {
+		log.Printf("[pi-subagents] %s", v.Message)
+	}); v != nil {
+		return errors.New(v.Message)
+	}
+	return nil
 }
 
 func fileExists(p string) bool { st, err := os.Stat(p); return err == nil && !st.IsDir() }
@@ -437,6 +472,12 @@ func cleanChildEnv(base []string) []string {
 // gets the channel directory in its environment and the protocol on stdin.
 // An external-runner agent goes through its own binary instead of pig.
 func runAgentChannelled(done <-chan struct{}, cwd string, a *AgentConfig, task, model, channelDir string) (string, error) {
+	if err := enforceModelScope(cwd, a, model); err != nil {
+		return "", err
+	}
+	if err := enforceModelScope(cwd, a, model); err != nil {
+		return "", err
+	}
 	if a.Runner != nil && a.Runner.Type == "external-cli" {
 		return runAgentExternalCLI(done, cwd, a, task)
 	}

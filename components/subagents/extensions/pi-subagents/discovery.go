@@ -564,6 +564,6 @@ func withoutDisabled(agents []AgentConfig) []AgentConfig {
 // DiscoverAgents is the effective set of agents for a scope: project over user over builtin, disabled ones hidden.
 func DiscoverAgents(cwd string, scope AgentScope) Discovery {
 	all := DiscoverAgentsAll(cwd)
-	d := Discovery{Agents: withoutDisabled(MergeAgentsForScope(scope, all.User, all.Project, all.Builtin, all.Package)), Diagnostics: all.Diagnostics, ProjectAgentsDir: all.ProjectDir, UserDir: all.UserDir}
+	d := Discovery{Agents: withoutDisabled(MergeAgentsForScope(scope, all.User, all.Project, all.Builtin, all.Package)), Diagnostics: all.Diagnostics, ProjectAgentsDir: all.ProjectDir, UserDir: all.UserDir, ModelScope: all.ModelScope}
 	return d
 }

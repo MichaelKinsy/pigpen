@@ -228,30 +228,102 @@ func removeBuiltinAgentOverride(cwd, name, scope string, preserveMachine bool) (
 	return filePath, true, machinePreserved, ""
 }
 
-// applySettingsOverrides sets the disabled flag on builtin and package agents
-// from the project's settings (winning) and the user's.
+// applySettingsOverrides applies the settings layer (settings.go) to the
+// discovered agents: the project's settings win over the user's per agent and
+// per field. A settings error becomes a diagnostic, as a broken settings file
+// must not silently apply nothing where the original would have thrown.
 func applySettingsOverrides(d *DiscoveryAll, cwd string) {
 	userPath := userAgentSettingsPath()
 	projectPath := projectAgentSettingsPath(cwd)
+	var userSettings, projectSettings *subagentSettings
+	if settings, errText := parseSubagentSettingsFile(userPath); errText != "" {
+		d.Diagnostics = append(d.Diagnostics, Diagnostic{Error: errText})
+	} else {
+		userSettings = settings
+	}
+	if projectPath != "" {
+		if settings, errText := parseSubagentSettingsFile(projectPath); errText != "" {
+			d.Diagnostics = append(d.Diagnostics, Diagnostic{Error: errText})
+		} else {
+			projectSettings = settings
+		}
+	}
+	if projectSettings != nil && projectSettings.ModelScope != nil {
+		d.ModelScope = projectSettings.ModelScope
+	} else if userSettings != nil {
+		d.ModelScope = userSettings.ModelScope
+	}
+	disableBuiltins := (userSettings != nil && userSettings.DisableBuiltins != nil && *userSettings.DisableBuiltins) ||
+		(projectSettings != nil && projectSettings.DisableBuiltins != nil && *projectSettings.DisableBuiltins)
+	if disableBuiltins {
+		for i := range d.Builtin {
+			d.Builtin[i].Disabled = true
+			d.Builtin[i].OverrideScope, d.Builtin[i].OverridePath = "user", userPath
+		}
+	}
 	for i := range d.Builtin {
-		applyOverrideToAgent(&d.Builtin[i], userPath, projectPath)
+		applyDefaultsToAgent(&d.Builtin[i], userSettings, projectSettings)
+		applyOverrideToAgent(&d.Builtin[i], userSettings, projectSettings)
 	}
 	for i := range d.Package {
-		applyOverrideToAgent(&d.Package[i], userPath, projectPath)
+		applyDefaultsToAgent(&d.Package[i], userSettings, projectSettings)
+		applyOverrideToAgent(&d.Package[i], userSettings, projectSettings)
 	}
 }
 
-func applyOverrideToAgent(a *AgentConfig, userPath, projectPath string) {
-	for _, scope := range []struct{ scope, path string }{{"project", projectPath}, {"user", userPath}} {
-		entry := settingsOverrideFor(scope.path, a.Name)
-		if entry == nil {
+// applyDefaultsToAgent applies defaultModel and defaultThinking when the agent
+// pins neither (applySubagentDefaults in the original: defaults first, then
+// overrides).
+func applyDefaultsToAgent(a *AgentConfig, userSettings, projectSettings *subagentSettings) {
+	for _, settings := range []*subagentSettings{userSettings, projectSettings} {
+		if settings == nil {
+			continue
+		}
+		if a.Model == "" && settings.DefaultModel != "" {
+			a.Model = settings.DefaultModel
+		}
+		if a.Thinking == nil && settings.DefaultThinking != "" {
+			a.Thinking = settings.DefaultThinking
+		}
+	}
+}
+
+func applyOverrideToAgent(a *AgentConfig, userSettings, projectSettings *subagentSettings) {
+	for _, scope := range []struct {
+		scope    string
+		settings *subagentSettings
+	}{{"project", projectSettings}, {"user", userSettings}} {
+		if scope.settings == nil || scope.settings.AgentOverrides == nil {
+			continue
+		}
+		entry, ok := scope.settings.AgentOverrides[a.Name]
+		if !ok {
 			continue
 		}
 		if disabled, ok := entry["disabled"].(bool); ok {
 			a.Disabled = disabled
-			a.OverrideScope, a.OverridePath = scope.scope, scope.path
+			a.OverrideScope, a.OverridePath = scope.scope, ""
 		}
-		// The original's other override fields belong to the settings-override slice.
+		if model, ok := entry["model"].(string); ok {
+			a.Model = model
+			a.OverrideScope, a.OverridePath = scope.scope, ""
+		}
+		if thinking, present := entry["thinking"]; present {
+			if s, ok := thinking.(string); ok {
+				a.Thinking = s
+			} else {
+				a.Thinking = false
+			}
+			a.OverrideScope, a.OverridePath = scope.scope, ""
+		}
+		if machine, present := entry["machine"]; present {
+			if s, ok := machine.(string); ok {
+				a.Machine = s
+			} else {
+				a.Machine = ""
+			}
+			a.OverrideScope, a.OverridePath = scope.scope, ""
+		}
 		return
 	}
 }

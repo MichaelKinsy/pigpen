@@ -1,0 +1,264 @@
+74 exact twins, 0 skipped
+DEFERRED abort-recovery (13 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED acceptance (76 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED acceptance-compaction (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED accessible-dir (3 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED active-async-capacity (18 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED advertised-agent-prompt (6 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED advertised-agent-refresh (2 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED advertisement-barrier (1 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-contract (1 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-disabled (9 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-discovery-cache (10 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-eject-disable (26 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-exclude-dirs (10 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-frontmatter (66 cases): partial: the 21 twinned cases cover the frontmatter parser, discovery and defaults; the rest need the agent serializer, the management actions (create, update, delete), output and acceptance schemas, runners, launch defaults, package manifests from Pi settings, linked worktrees and the in-process child launch, none of which is ported
+DEFERRED agent-global-root-override (3 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-management (57 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-memory (41 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-overrides (60 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-refinements (5 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-scan-dirs (8 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED agent-stream-options (1 cases): not ported: agent settings overrides, memory, eject and disable, scan and exclude directories, the discovery cache, the agent contract and advertisement of agents in the system prompt
+DEFERRED anti-slop-oxlint (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED artifacts (4 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED async-execution (17 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-interrupt-action (45 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-permission-session (3 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-recovery-descriptor (11 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-result-timeout-evidence (2 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-resume (29 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-retention (19 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-spawn-package-dir (5 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-spawn-preload (1 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-status-projection (20 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED async-status-snapshot (6 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED atomic-json (9 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED authority-policy (3 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED auto-drain (10 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED background-process-options (2 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED background-work (12 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED binary-async-spawn (1 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED binary-pi-spawn (3 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED capability-ceiling (5 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED capability-ceiling-agent-allowlist (7 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED capacity-resilient-json (7 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED chain-append (6 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED chain-root-attachment (9 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED chain-serializer (6 cases): partial: the 5 markdown-chain cases are twinned; the JSON chain format (.chain.json) needs the acceptance, dynamic fan-out and chain-output validators of the workflow runtime
+DEFERRED changelog-format (1 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED child-cache-retention (9 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED child-external-job-bridge (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-launch-plan (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-lifecycle (4 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-runtime-config (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-session-host-sdk (17 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-session-name (7 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-session-parent-providers (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-session-queued (7 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-tool-plan (10 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-tool-plan-permission-system (19 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED child-transcript (9 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED claude-code-adapter (12 cases): not ported: external CLI and external job runners
+DEFERRED codex-exec-adapter (9 cases): not ported: external CLI and external job runners
+DEFERRED compaction-resume (2 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED completion-batcher (11 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED completion-dedupe (4 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED completion-replay (8 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED config-dir-runtime (8 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED control-channel (35 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED control-notices (3 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED cursor-agent-adapter (13 cases): not ported: external CLI and external job runners
+DEFERRED cursor-smoke-inputs (4 cases): not ported: external CLI and external job runners
+DEFERRED default-extensions (9 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED delegation-api (17 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED doctor (4 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED dynamic-fanout (9 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED ensure-accessible-dir (5 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED extension-bindings (5 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED extension-context (2 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED extension-lazy-loading (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED extension-maintenance-lifecycle (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED external-cli-runner (19 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED external-job-runner (24 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED external-runs (8 cases): not ported: external CLI and external job runners
+DEFERRED extra-agent-dirs (4 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED fast-mode-extension (2 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED file-coalescer (4 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED file-system-retry (6 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED fleet (42 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED fleet-status (42 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED fleet-transcript (16 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED foreground-control (2 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED foreground-tool-call-compaction (11 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED foreign-workflow-steering (2 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED fork-cache-key (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED fork-context (20 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED formatters (2 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED get-final-output (15 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED ghostty-inspector (7 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED git-environment (3 cases): not ported: worktree isolation, lanes and handoffs
+DEFERRED global-npm-root (7 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED herdr-connection (6 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-external-adapters (40 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-inspector (12 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-inspector-bootstrap (2 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-machine (16 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-native-placement (37 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-session-roots-codec (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED herdr-shell-command (6 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED herdr-status-bridge (18 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED host-command (6 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED host-peer-runtime-imports (6 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED host-step-status (5 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED index-child-registration (27 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED index-segment (8 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED inspect-rpc (33 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED inspector-authority-policy (10 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED inspector-registration (4 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED intercom-bridge (23 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED jsonl-writer (6 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED mcp-direct-tool-grant (13 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED mcp-direct-tool-resolution (3 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED mission-goal-driver (5 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED mission-lifecycle (7 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED mission-store (16 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED mock-pi (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED model-info (15 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED model-resolution (14 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED model-resolution-diagnostic (6 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED model-scope-settings (8 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED mutation-evidence (7 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED native-supervisor-channel (26 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED nested-control (27 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED nested-control-fanout (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED nested-events (19 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED node-executable (3 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED notify (61 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED notify-diagnostics (1 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED opencode-session-headers (2 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED orca-progress-tabs (18 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED owned-process-tree (3 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED package-manifest (8 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED parallel-handoff (11 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED parallel-utils (23 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED path-handling (5 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED path-resolution (4 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED permissions (4 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED pi-coding-agent-dir (23 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED pi-spawn (17 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED pi-spawn-host-root (10 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED pi-subagents-policy-guidance (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED pi-web-session-liveness (9 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED preflight (31 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED proactive-skills (5 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED process-terminal (10 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED profiles (13 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED project-panes-public-api (9 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED prompt-audit-optional-peers (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED prompt-audit-provider-routing (1 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED prompt-template-bridge (6 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED prompt-workflows (4 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED pruned-fork (11 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED public-execution (12 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED readonly-drain-observation (6 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED reads-resolution (8 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED recursion-guard (33 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED render-helpers (36 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED required-child-extensions (6 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED result-delivery-ownership (2 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED result-files (23 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED result-intercom (11 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED retained-children (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED retained-nested-route-tracker (6 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED rpc (35 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED run-child-session (2 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED run-fanout-budget (9 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED run-id-resolver (12 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED run-status (50 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED runner-bootstrap (5 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED runner-http-dispatcher (9 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED runner-peer-loader (4 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED runner-peer-symlinks (1 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED running-tone (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED runtime-acknowledged-extensions (3 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED runtime-agent-registration (18 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED scheduled-runs (45 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED scheduled-store-root (4 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED scheduled-supervisor-demand (3 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED schemas (18 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED scripted-workflow (139 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED selector (2 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED session-lease (9 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED single-output (34 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED skills-disable-model-invocation (6 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED skills-fallback (31 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED slash-bridge (3 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED spawn-budget (7 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED stale-run-reconciler (15 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED status-format (3 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED steering (14 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED steering-action (14 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED steering-notices (3 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED streamed-progress-bounds (6 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED structured-output-rejection (5 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED structured-output-validation (12 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED subagent-action-recovery (5 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED subagent-control (22 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED subagent-guide (7 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED subagent-prompt-runtime (53 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED subagent-wait (59 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED supervisor-ask-registration (20 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED supervisor-ui (5 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED temp-paths (10 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED thinking-ceiling (4 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED timeout-defaults (20 cases): not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling
+DEFERRED tool-activation (11 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED tool-activation-stale-peer (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED tool-budget (7 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED tool-description (12 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED tool-timeout (11 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED total-cost (4 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED ts-loader (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED typed-gate-output (9 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED types-fork-preamble (3 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED usage-reconciliation (1 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED usage-reconciliation-owners (2 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED wait-completions (16 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED wait-subscriptions (16 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED watch-strategy (2 cases): not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)
+DEFERRED watchdog-change-signature (15 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-child-status (8 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED watchdog-compaction-scope (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-diff-tool (5 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-emission-guard (5 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-lsp-diagnostics (5 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-model-selection (8 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-native-scheduling (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-permission-arbiter (6 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-register-child (1 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED watchdog-render (3 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-review (17 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-rules (2 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-runtime (40 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-scope (2 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-settings (15 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-stable-host-layout (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-tool-actions (6 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED watchdog-turn-delta (8 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel
+DEFERRED widget-nested-render (9 cases): not ported: the terminal views (fleet, status widgets, renderers), slash commands, inspectors and terminal pane integrations
+DEFERRED workflow-chat-progress (22 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-checklist (13 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-child-summary (3 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED workflow-detach-reconcile (27 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED workflow-graph (6 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-launch-params (26 cases): not ported: the child session runtime (in-process child sessions, Pi process launch, forks, transcripts); the port starts a child pig process instead
+DEFERRED workflow-preflight (6 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-receipt (23 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-resources (11 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-resume-hint (3 cases): not ported: background (async) runs, their status, retention, recovery and completion delivery
+DEFERRED workflow-terminal-proof (7 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED workflow-worktree-admission (1 cases): not ported: scripted workflows, parallel and dynamic fan-out, council mode, missions and the chain runtime of the original (it runs them through a JavaScript workflow runtime)
+DEFERRED worktree (53 cases): not ported: worktree isolation, lanes and handoffs
+DEFERRED worktree-cleanup-plan (14 cases): not ported: worktree isolation, lanes and handoffs
+DEFERRED writer-budget-guidance (1 cases): not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel

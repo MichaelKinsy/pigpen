@@ -127,7 +127,6 @@
  "model-info": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "model-resolution": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "model-resolution-diagnostic": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
- "model-scope": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "model-scope-settings": "not ported: profiles, subagent settings, model and provider resolution, extension bindings, skills, the doctor and package handling",
  "mutation-evidence": "not ported: a part of the original runtime outside the slice (the executor, results, artifacts, history, utilities and their tests)",
  "native-supervisor-channel": "not ported: acceptance gates, tool budgets, capability ceilings, authority policy, the watchdog, steering and the supervisor channel",

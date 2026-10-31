@@ -101,6 +101,8 @@ type Discovery struct {
 	Diagnostics      []Diagnostic
 	ProjectAgentsDir string
 	UserDir          string
+	// ModelScope is the winning settings model scope (the project's over the user's).
+	ModelScope *ModelScopeConfig
 }
 
 // DiscoveryAll is the result of DiscoverAgentsAll: every source separately, plus the chains.
@@ -113,4 +115,6 @@ type DiscoveryAll struct {
 	UserDir                         string
 	ProjectChainDir                 string
 	UserChainDir                    string
+	// ModelScope is the winning settings model scope (the project's over the user's).
+	ModelScope *ModelScopeConfig
 }
