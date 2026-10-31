@@ -97,7 +97,7 @@ func TestSubagentsAdminCommand(t *testing.T) {
 	last := texts[len(texts)-1]
 	for _, want := range []string{
 		"Agent: helper (project)",
-		"Path: " + filepath.Join(cwd, ".pi", "agents", "helper.md"),
+		"Path: " + filepath.ToSlash(filepath.Join(cwd, ".pi", "agents", "helper.md")),
 		"Description: Helps",
 		"Model: default / inherit",
 		"System prompt mode: replace",

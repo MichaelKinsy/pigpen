@@ -167,6 +167,7 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		// The original clears its widget at shutdown; the golden's [99-shutdown] event is this clear.
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})

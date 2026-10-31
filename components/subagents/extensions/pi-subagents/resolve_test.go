@@ -43,7 +43,7 @@ func TestFindConfiguredProjectRoot(t *testing.T) {
 			t.Fatal(err)
 		}
 		if err := os.Symlink(home, alias); err != nil {
-			t.Fatal(err)
+			t.Skipf("symlink creation unavailable on this platform: %v", err)
 		}
 		t.Setenv("HOME", home)
 		t.Setenv("USERPROFILE", home)

@@ -2,6 +2,7 @@ package pi_subagents
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -164,7 +165,7 @@ func formatDetail(a AgentConfig) string {
 	for _, t := range a.McpDirectTools {
 		tools = append(tools, "mcp:"+t)
 	}
-	lines := []string{fmt.Sprintf("Agent: %s (%s)", a.Name, a.Source), "Path: " + a.FilePath, "Description: " + a.Description}
+	lines := []string{fmt.Sprintf("Agent: %s (%s)", a.Name, a.Source), "Path: " + filepath.ToSlash(a.FilePath), "Description: " + a.Description}
 	if a.PackageName != "" {
 		lines = append(lines, "Local name: "+frontmatterName(a.Name, a.LocalName, a.PackageName), "Package: "+a.PackageName)
 	}

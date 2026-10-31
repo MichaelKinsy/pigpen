@@ -3,6 +3,7 @@ package pi_subagents
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -59,7 +60,7 @@ func adminMetadataFor(a *AgentConfig) string {
 	}
 	lines := []string{
 		fmt.Sprintf("Agent: %s (%s)", a.Name, a.Source),
-		"Path: " + a.FilePath,
+		"Path: " + filepath.ToSlash(a.FilePath),
 		"Description: " + a.Description,
 	}
 	if a.PackageName != "" {
