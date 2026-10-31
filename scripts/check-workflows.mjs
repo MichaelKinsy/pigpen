@@ -144,16 +144,28 @@ export function cacheProblems(workflows) {
   return problems;
 }
 
-/** npm-publish.yml: OIDC trusted publishing only (no token anywhere), provenance on, a pushed `npm/v*` tag or a manual run. */
+/**
+ * npm-publish.yml: OIDC trusted publishing only (no token anywhere), provenance on. A version bump merged to main must start it
+ * (a tag or a manual run alone never did: the workflow has had no run since it was added), a pushed `npm/v*` tag and a manual run
+ * stay, and the job that holds the id-token waits for a cheap `pending` job that finds a name@version not yet on npm.
+ */
 export function npmPublishProblems(name, text) {
   if (name !== 'npm-publish.yml') return [];
   const problems = [];
   const workflow = parse(text) ?? {};
   const triggers = Object.keys(workflow.on ?? {}).sort().join();
-  if (!['push', 'push,workflow_dispatch', 'workflow_dispatch,push'].includes(triggers)) problems.push(`${name}: runs only on a pushed tag or a manual run`);
-  if (workflow.on?.push && !(Array.isArray(workflow.on.push.tags) && workflow.on.push.tags.includes('npm/v*') && Object.keys(workflow.on.push).join() === 'tags')) problems.push(`${name}: push must be the tag filter npm/v* only`);
+  if (triggers !== 'push,workflow_dispatch') problems.push(`${name}: runs only on a push (a merge to main or a tag) and a manual run`);
+  const push = workflow.on?.push;
+  if (!push || !Array.isArray(push.branches) || push.branches.join() !== 'main' || Object.keys(push).sort().join() !== 'branches,tags') {
+    problems.push(`${name}: a merge to main must publish a version bump: push must be branches: [main] and the tag filter npm/v*, nothing else`);
+  }
+  if (push && !(Array.isArray(push.tags) && push.tags.includes('npm/v*'))) problems.push(`${name}: push must include the tag filter npm/v*`);
   if (/NODE_AUTH_TOKEN|NPM_TOKEN|_authToken/.test(text)) problems.push(`${name}: a token is referenced; publish with trusted publishing (OIDC), never a token`);
   if (!/--provenance/.test(text)) problems.push(`${name}: publish with --provenance`);
+  const needs = [workflow.jobs?.publish?.needs ?? []].flat();
+  if (!needs.includes('pending')) problems.push(`${name}: the publish job must have needs: pending, so a merge that bumps nothing does not run the publish job`);
+  if (!/needs\.pending\.outputs\.count/.test(String(workflow.jobs?.publish?.if ?? ''))) problems.push(`${name}: the publish job must run only if needs.pending.outputs.count is not 0`);
+  if (!/node scripts\/npm-publish\.mjs --pending/.test(JSON.stringify(workflow.jobs?.pending?.steps ?? []))) problems.push(`${name}: the pending job must run node scripts/npm-publish.mjs --pending`);
   return problems;
 }
 

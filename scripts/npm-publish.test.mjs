@@ -2,7 +2,10 @@
 // fails (a Piglet's Packages must exist before the Piglet that names them). npm and the filesystem are injected.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { publishAll, publishPlan, trustedPublisherInstructions } from './npm-publish.mjs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pendingEntries, publishAll, publishPlan, reportPending, trustedPublisherInstructions } from './npm-publish.mjs';
 
 const plan = [
   { kind: 'package', name: '@pi-in-go/pigpen-a', version: '0.1.0', dir: '/t/packages/a' },
@@ -78,6 +81,40 @@ describe('publishAll', () => {
   });
 });
 
+describe('pendingEntries', () => {
+  const on = (...ids) => (name, version) => ids.includes(`${name}@${version}`);
+  it('lists, in plan order, exactly the name@version that is not on npm: what a version bump publishes', () => {
+    assert.deepEqual(pendingEntries(plan, on('@pi-in-go/pigpen-b@0.1.0')).map((e) => `${e.name}@${e.version}`), ['@pi-in-go/pigpen-a@0.1.0', '@pi-in-go/pigpen-piglet-x@0.1.0']);
+  });
+  it('is empty once everything is published, so a merge that bumps nothing publishes nothing', () => {
+    assert.deepEqual(pendingEntries(plan, () => true), []);
+  });
+  it('counts a bumped version as pending although the package name is on npm at an older version', () => {
+    const bumped = [{ ...plan[0], version: '0.1.1' }];
+    assert.deepEqual(pendingEntries(bumped, on('@pi-in-go/pigpen-a@0.1.0')).map((e) => e.version), ['0.1.1']);
+  });
+});
+
+describe('reportPending', () => {
+  it('prints each pending name@version and writes count=<n> to the GitHub Actions output file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'npm-pending-'));
+    try {
+      const file = join(dir, 'out');
+      const lines = [];
+      reportPending(plan.slice(0, 2), { outputFile: file, log: (line) => lines.push(line) });
+      assert.equal(readFileSync(file, 'utf8'), 'count=2\n');
+      assert.ok(lines.some((l) => l.includes('@pi-in-go/pigpen-a@0.1.0')));
+      reportPending([], { outputFile: file, log: () => {} });
+      assert.equal(readFileSync(file, 'utf8'), 'count=2\ncount=0\n');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it('needs no output file outside Actions', () => {
+    assert.doesNotThrow(() => reportPending([], { log: () => {} }));
+  });
+});
+
 describe('trustedPublisherInstructions', () => {
   const text = trustedPublisherInstructions(plan, { repository: 'MichaelKinsy/pigpen' });
   it('gives the exact npmjs.com settings, once, and the settings page of every package', () => {
@@ -86,6 +123,9 @@ describe('trustedPublisherInstructions', () => {
     assert.match(text, /Workflow filename: npm-publish\.yml/);
     assert.match(text, /Environment name: \(leave empty\)/);
     for (const e of plan) assert.ok(text.includes(`https://www.npmjs.com/package/${e.name}/access`), e.name);
+  });
+  it('says that a merge to main publishes a version bump', () => {
+    assert.match(text, /merge to main/);
   });
   it('never mentions a token', () => {
     assert.doesNotMatch(text, /token/i);

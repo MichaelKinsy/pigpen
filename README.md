@@ -171,8 +171,8 @@ How the npm form differs from this tree (generated, never hand-edited):
 - `npm run test:npm-packages` and `npm run test:npm-piglets` pack everything, serve it from a local registry and run
   `pig install npm:...`, `pig piglet add npm:...` and `pig piglet validate` with the real pig (the second also builds a
   fused `pig-games` Binary from the registered source). `npm run publish:npm -- --dry-run` shows what would be published.
-- `.github/workflows/npm-publish.yml` publishes later releases (tag `npm/v<x>` or a manual run) with npm trusted
-  publishing and provenance, no token.
+- `.github/workflows/npm-publish.yml` publishes every Package or Piglet whose version is not on npm yet when a merge to
+  `main` bumps it (a tag `npm/v<x>` or a manual run retries), with npm trusted publishing and provenance, no token.
 
 ## Releases
 
@@ -182,7 +182,7 @@ Two more channels stay available. The Git-tag channel for Packages and the signe
 |---|---|---|---|
 | Package (`components/<name>`) | `components/<name>/v<version>` | `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'` | `release-package.yml`: validates and installs from the tag; no secret |
 | Piglet (`piglets/<name>`) | `<name>/v<release.version>` | `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'` | `release.yml`: builds every target natively, signs, publishes one GitHub Release |
-| npm (all of the above) | `npm/v<x>` | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
+| npm (all of the above) | a merge to `main` (or `npm/v<x>`) | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
 
 The three tag shapes cannot start each other's workflow. `index.json` lists a Package as `available` once its Git tag is
 recorded (`npm run record -- package <name> <version>`) and a Piglet as `available` once its signed receipt verifies

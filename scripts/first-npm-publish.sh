@@ -52,5 +52,5 @@ node scripts/npm-publish.mjs --trusted-publishers
 if [ -n "$DRY" ]; then
   printf '\nDry run only: nothing was published.\n'
 else
-  printf '\nDone. Next: add the Trusted Publisher above to each package, then push the tag npm/v0.1.0 (or run the workflow) to confirm CI can publish.\n'
+  printf '\nDone. Next: add the Trusted Publisher above to each package, then merge a version bump to main (or run the Publish to npm workflow) to confirm CI can publish.\n'
 fi
