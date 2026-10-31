@@ -200,6 +200,18 @@ func formatDetail(a AgentConfig) string {
 	if a.Source == SourceBuiltin {
 		lines = append(lines, "Disabled: false")
 	}
+	orNone := func(l []string) string {
+		if len(l) == 0 {
+			return "(none)"
+		}
+		return strings.Join(l, ", ")
+	}
+	if a.Extensions != nil {
+		lines = append(lines, "Extensions: "+orNone(a.Extensions))
+	}
+	if a.SubagentOnlyExtensions != nil {
+		lines = append(lines, "Subagent-only extensions: "+orNone(a.SubagentOnlyExtensions))
+	}
 	if s, ok := a.Thinking.(string); ok && s != "" {
 		lines = append(lines, "Thinking: "+s)
 	}
@@ -300,9 +312,13 @@ func getAgent(cwd string, params map[string]any) manageResult {
 		}
 		return manageResult{fmt.Sprintf("Agent '%s' not found. Available: %s.", name, avail), true}
 	}
+	defaults, err := subagentSettingsFor(cwd, scope)
+	if err != nil {
+		return manageResult{err.Error(), true}
+	}
 	details := make([]string, len(matches))
 	for i, m := range matches {
-		details[i] = formatDetail(m)
+		details[i] = formatDetail(defaults.apply(m))
 	}
 	return manageResult{text: strings.Join(details, "\n\n")}
 }

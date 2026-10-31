@@ -60,6 +60,150 @@
   "replace": "strings.Split(value, \";\")"
  },
  {
+  "name": "ext-relative",
+  "file": "agents.go",
+  "find": "strings.HasPrefix(t, \"./\") ||",
+  "replace": "false ||"
+ },
+ {
+  "name": "ext-settings-valid",
+  "file": "discovery.go",
+  "find": "if !isStr || jsTrim(str) == \"\" {",
+  "replace": "if !isStr {"
+ },
+ {
+  "name": "ext-settings-user-scope",
+  "file": "discovery.go",
+  "find": "if scope != ScopeProject {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ext-settings-project-scope",
+  "file": "discovery.go",
+  "find": "if scope != ScopeUser {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ext-settings-first-wins",
+  "file": "discovery.go",
+  "find": "if d.subagentOnly == nil {",
+  "replace": "if true {"
+ },
+ {
+  "name": "ext-host-project",
+  "file": "discovery.go",
+  "find": "files = append(files, hostProject)",
+  "replace": ""
+ },
+ {
+  "name": "ext-host-user",
+  "file": "discovery.go",
+  "find": "files = append(files, hostUser, filepath.Join(agentDir(), \"settings.json\"))",
+  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"))"
+ },
+ {
+  "name": "ext-host-user-first",
+  "file": "discovery.go",
+  "find": "files = append(files, hostUser, filepath.Join(agentDir(), \"settings.json\"))",
+  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"), hostUser)"
+ },
+ {
+  "name": "ext-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions",
+  "replace": "if true {\n\t\ta.Extensions = d.extensions"
+ },
+ {
+  "name": "model-settings-valid",
+  "file": "discovery.go",
+  "find": "if jsTrim(str) == \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-settings-trim",
+  "file": "discovery.go",
+  "find": "*f.dst = jsTrim(str)",
+  "replace": "*f.dst = str"
+ },
+ {
+  "name": "model-override-object",
+  "file": "discovery.go",
+  "find": "if entry == nil {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-override-type",
+  "file": "discovery.go",
+  "find": "if _, isStr := raw.(string); !isStr && raw != false {",
+  "replace": "if false {"
+ },
+ {
+  "name": "model-override-false",
+  "file": "discovery.go",
+  "find": "!isStr && raw != false {",
+  "replace": "!isStr {"
+ },
+ {
+  "name": "model-default-first-wins",
+  "file": "discovery.go",
+  "find": "if d.defaultModel == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-thinking-first-wins",
+  "file": "discovery.go",
+  "find": "if d.defaultThinking == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-override-first-wins",
+  "file": "discovery.go",
+  "find": "if _, ok := first[k]; !ok {",
+  "replace": "if true {"
+ },
+ {
+  "name": "model-override-applies",
+  "file": "discovery.go",
+  "find": "a.Model, _ = v.(string) // false clears it",
+  "replace": "_ = v"
+ },
+ {
+  "name": "model-override-clears",
+  "file": "discovery.go",
+  "find": "a.Model, _ = v.(string) // false clears it",
+  "replace": "if s, isStr := v.(string); isStr {\n\t\t\ta.Model = s\n\t\t}"
+ },
+ {
+  "name": "thinking-override-applies",
+  "file": "discovery.go",
+  "find": "a.Thinking = s\n",
+  "replace": "_ = s\n"
+ },
+ {
+  "name": "thinking-override-clears",
+  "file": "discovery.go",
+  "find": "a.Thinking = nil // false clears it",
+  "replace": ""
+ },
+ {
+  "name": "model-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Model == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "thinking-default-own-wins",
+  "file": "discovery.go",
+  "find": "if a.Thinking == nil && d.defaultThinking != \"\" {",
+  "replace": "if d.defaultThinking != \"\" {"
+ },
+ {
+  "name": "thinking-default-unset",
+  "file": "discovery.go",
+  "find": "if a.Thinking == nil && d.defaultThinking != \"\" {",
+  "replace": "if a.Thinking == nil {"
+ },
+ {
   "name": "chain-budget-soft",
   "file": "chain.go",
   "find": "soft.(float64) > hard.(float64)",
@@ -342,10 +486,28 @@
   "replace": "args = append(args, \"--thinking\", \"low\")"
  },
  {
-  "name": "run-no-extensions",
+  "name": "run-ambient-extensions",
   "file": "run.go",
-  "find": "args := []string{\"--no-extensions\", \"--print\"}",
-  "replace": "args := []string{\"--print\"}"
+  "find": "args := []string{\"--print\"}",
+  "replace": "args := []string{\"--no-extensions\", \"--print\"}"
+ },
+ {
+  "name": "run-extensions-allowlist",
+  "file": "run.go",
+  "find": "args = append(args, \"--no-extensions\")",
+  "replace": ""
+ },
+ {
+  "name": "run-extensions-once",
+  "file": "run.go",
+  "find": "if !seen[e] {",
+  "replace": "if true {"
+ },
+ {
+  "name": "run-extensions-warning",
+  "file": "run.go",
+  "find": "if a.Extensions == nil || len(a.Extensions) > 0 {",
+  "replace": "if a.Extensions == nil {"
  },
  {
   "name": "chain-default-first",

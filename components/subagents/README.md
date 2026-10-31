@@ -28,9 +28,30 @@ original); then:
 
 Thirteen agents ship with the package (the original's `scout`, `worker`, `reviewer`, ...). `PIG_SUBAGENT_PIG_BINARY` names the pig
 to start for a child; otherwise the pig running this extension, then a `pig` beside this program, then `PATH`. A child gets the
-task on stdin, runs with `--no-extensions`, and may itself delegate only to depth 2 (`PI_SUBAGENT_MAX_DEPTH`, as in the
-original); at most 4 children run at once, and a cancelled call (Escape) stops its child. An agent with
+task on stdin, discovers extensions as the original's background child does (a model provider and its login come from one), and
+may itself delegate only to depth 2 (`PI_SUBAGENT_MAX_DEPTH`, as in the original); at most 4 children run at once, and a cancelled call (Escape) stops its child. An agent with
 `systemPromptMode: replace` cannot run in a Piglet Binary child (a Binary keeps its own system prompt).
+
+An agent chooses its child's extensions as in the original. `extensions: a, b` loads only those (an empty `extensions:` loads
+none, not even a model provider), and `subagentOnlyExtensions: c` loads `c` in the child on top of the rest. Entries are what
+`pig --extension` takes: a path (`./` and `../` are relative to the agent file), `builtin:<name>`, or an `npm:`/`git:`
+source. For agents that set neither, `subagents.defaultExtensions` and `subagents.defaultSubagentOnlyExtensions` in
+`settings.json` are the default: PiG's own files (`.pig/settings.json` in the cwd, `~/.pig/agent/settings.json`) and the
+original's (`.pi/settings.json` at the project root, `~/.pi/agent/settings.json`) are all read, project over user and PiG's
+over Pi's at each level:
+
+```json
+{ "subagents": { "defaultSubagentOnlyExtensions": ["/path/to/child-only-extension"] } }
+```
+
+A child's model and thinking level come, strongest first, from the call's `model`, `subagents.agentOverrides.<name>.model`
+and `.thinking` (`false` clears the agent's own), the agent's frontmatter, then `subagents.defaultModel` and
+`defaultThinking`, read from the same files, each from the first file that sets it. Without any of them the child runs on
+the host's default model. Other `agentOverrides` fields, `defaultProvider` and `modelScope` are not read:
+
+```json
+{ "subagents": { "defaultModel": "provider/small-model", "agentOverrides": { "oracle": { "model": "provider/large-model", "thinking": "high" } } } }
+```
 
 ```sh
 pig install ./components/subagents
@@ -45,7 +66,7 @@ addition: the original runs children through its own executor and scripted workf
 
 **Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
-the supervisor channel, the watchdog, missions, profiles and settings overrides, `.chain.json` chains, the management actions other
+the supervisor channel, the watchdog, missions, profiles, `agentOverrides` other than `model` and `thinking`, `.chain.json` chains, the management actions other
 than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
 `async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`. Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused

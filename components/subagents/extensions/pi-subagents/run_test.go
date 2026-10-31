@@ -12,11 +12,11 @@ import (
 func TestBuildChildArgs(t *testing.T) {
 	a := &AgentConfig{Name: "helper", Model: "claude-x", Thinking: "high", Tools: []string{"read", "grep"}, SystemPromptMode: "append", SystemPrompt: "You help."}
 	// The task is not an argument (it travels on stdin: run_safety_test.go).
-	eq(t, buildChildArgs(a, ""), []string{"--no-extensions", "--print", "--model", "claude-x", "--thinking", "high", "--tools", "read,grep", "--append-system-prompt", "You help."}, "append mode")
+	eq(t, buildChildArgs(a, ""), []string{"--print", "--model", "claude-x", "--thinking", "high", "--tools", "read,grep", "--append-system-prompt", "You help."}, "append mode")
 	a.SystemPromptMode = "replace"
-	eq(t, buildChildArgs(a, "other/model"), []string{"--no-extensions", "--print", "--model", "other/model", "--thinking", "high", "--tools", "read,grep", "--system-prompt", "You help."}, "replace mode, model override wins")
-	eq(t, buildChildArgs(&AgentConfig{Name: "bare", SystemPromptMode: "replace", Thinking: false}, ""), []string{"--no-extensions", "--print", "--thinking", "off"}, "bare agent, thinking off")
-	eq(t, buildChildArgs(&AgentConfig{Name: "inherit", Model: "inherit", SystemPromptMode: "replace"}, ""), []string{"--no-extensions", "--print"}, "inherit means no model flag")
+	eq(t, buildChildArgs(a, "other/model"), []string{"--print", "--model", "other/model", "--thinking", "high", "--tools", "read,grep", "--system-prompt", "You help."}, "replace mode, model override wins")
+	eq(t, buildChildArgs(&AgentConfig{Name: "bare", SystemPromptMode: "replace", Thinking: false}, ""), []string{"--print", "--thinking", "off"}, "bare agent, thinking off")
+	eq(t, buildChildArgs(&AgentConfig{Name: "inherit", Model: "inherit", SystemPromptMode: "replace"}, ""), []string{"--print"}, "inherit means no model flag")
 }
 
 func TestChainTask(t *testing.T) {
