@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -398,5 +398,75 @@ jobs:
     const unread = workflow();
     unread.jobs['ci-result'].steps[0].env = {};
     assert.match(listingsProblems(unread).join('\n'), /does not read needs\.listings\.result/);
+  });
+});
+
+describe('notifyProblems', () => {
+  const notify = `
+on:
+  push: { branches: [main] }
+  release: { types: [published] }
+permissions: { contents: read }
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: notifications
+    steps:
+      - env:
+          DISCORD_WEBHOOK_URL: \${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: curl -fsS -d @- https://discord.example
+`;
+  const problems = (text) => [...hardeningProblems('discord-notify.yml', text), ...notifyProblems('discord-notify.yml', text)].join('\n');
+
+  it('accepts a webhook read in a step of the notifications environment', () => {
+    assert.equal(problems(notify), '');
+  });
+
+  it('refuses the webhook outside the notifications environment', () => {
+    assert.match(problems(notify.replace('    environment: notifications\n', '')), /outside environment: notifications/);
+    assert.match(problems(notify.replace('environment: notifications', 'environment: release')), /outside environment: notifications/);
+  });
+
+  it('refuses a secret that is not a webhook URL', () => {
+    assert.match(problems(notify.replaceAll('DISCORD_WEBHOOK_URL', 'API_TOKEN')), /the only secrets are DISCORD_WEBHOOK_\* webhook URLs/);
+  });
+
+  it('refuses a webhook anywhere but the env of a step', () => {
+    const inRun = notify.replace('        run: curl -fsS -d @- https://discord.example',
+      '        run: curl -fsS -d "${{ secrets.DISCORD_WEBHOOK_URL }}" https://discord.example');
+    assert.match(problems(inRun), /may appear only in the env of a step/);
+    const withInput = `
+on:
+  push: { branches: [main] }
+permissions: { contents: read }
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: notifications
+    steps:
+      - uses: example/post@${sha}
+        with:
+          url: \${{ secrets.DISCORD_WEBHOOK_URL }}
+`;
+    assert.match(problems(withInput), /may appear only in the env of a step/);
+  });
+
+  it('refuses a step that holds the webhook without posting with curl', () => {
+    assert.match(problems(notify.replace('run: curl -fsS -d @- https://discord.example', 'run: echo posted')), /does not post with curl/);
+  });
+
+  it('refuses any trigger other than a push to main and a published release', () => {
+    assert.match(problems(notify.replace('  push: { branches: [main] }', '  push: { branches: [main] }\n  pull_request: {}')), /must run only on a push to main and a published release/);
+    assert.match(problems(notify.replace('  push: { branches: [main] }', '  push: { branches: [main, next] }')), /on\.push must name branches: \[main\]/);
+    assert.match(problems(notify.replace('  release: { types: [published] }', '  release: { types: [published, edited] }')), /on\.release must name types: \[published\]/);
+    // A notifier that announces only releases is allowed: the trigger rule bounds the set, it does not require both.
+    assert.equal(problems(notify.replace('  push: { branches: [main] }\n', '')), '');
+  });
+
+  it('leaves the blanket rule in place for every other workflow', () => {
+    assert.match(hardeningProblems('ci.yml', good.replace('echo ok', 'echo ${{ secrets.DISCORD_WEBHOOK_URL }}')).join('\n'), /uses a secret/);
+    assert.deepEqual(notifyProblems('ci.yml', notify), []);
   });
 });
