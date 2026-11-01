@@ -76,6 +76,18 @@ const sessions = new Map<string, Session>();
 let nextSession = 0;
 let initialized = false;
 
+/**
+ * The vendor a model ref names: `pig/openrouter/x` and `openrouter/x` both name `openrouter`.
+ * Archon hands the plugin the model a node named, which may or may not carry our own prefix, so
+ * the vendor is the first segment after stripping it — never the provider id itself.
+ */
+export function vendorOf(model: string | undefined): string | undefined {
+  if (model === undefined) return undefined;
+  const ref = model.startsWith('pig/') ? model.slice('pig/'.length) : model;
+  const vendor = ref.split('/')[0];
+  return vendor !== undefined && vendor.length > 0 && vendor !== 'pig' ? vendor : undefined;
+}
+
 /** Runs `pig auth check` for one model or vendor and reports what it answered. */
 async function checkCredential(model: string | undefined, vendor: string | undefined) {
   const args = ['auth', 'check', '--json'];
@@ -182,7 +194,8 @@ function onRequest(writer: ReturnType<typeof createWriter>, message: JsonRpcRequ
 
     if (method === '_archon/check_credential') {
       const parsed = params as { vendor?: string; model?: string; nodeConfig?: { model?: string } };
-      return checkCredential(parsed.model ?? parsed.nodeConfig?.model, parsed.vendor);
+      const model = parsed.model ?? parsed.nodeConfig?.model;
+      return checkCredential(model, parsed.vendor ?? vendorOf(model));
     }
 
     if (method === '_archon/diagnose') {

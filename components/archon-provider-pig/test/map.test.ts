@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { vendorOf } from '../src/main';
 import {
   PigTurnMapper,
   failureOfExit,
@@ -142,5 +143,12 @@ describe('PigTurnMapper over a recorded PiG turn', () => {
     const chunks = mapper.push({ type: 'agent_settled' });
     expect(chunks[0]).toMatchObject({ type: 'result', tokens: { input: 3, output: 4 } });
     expect(chunks[0]).not.toHaveProperty('usage');
+  });
+
+  it('reads the vendor from a model ref, with or without the pig prefix', () => {
+    expect(vendorOf('pig/openrouter/anthropic/claude-haiku-5.5')).toBe('openrouter');
+    expect(vendorOf('openrouter/anthropic/claude-haiku-5.5')).toBe('openrouter');
+    expect(vendorOf('pig')).toBeUndefined();
+    expect(vendorOf(undefined)).toBeUndefined();
   });
 });
