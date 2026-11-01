@@ -141,6 +141,16 @@ addition is tests first (`79ee551` red, then the code), and so are the review's 
   sees them) and were removed; 4 did not build and were rebuilt. The review (rev-port-popular-5) found the run path untested
   (the real runner's directory and environment, the tool's `cwd` and `agentScope`, `/run-chain`'s task, the binary override all
   survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**.
+- The branch is rebased on upstream main (`b7c0950a`) with the history rewritten CRLF-free: every text blob in every
+  own commit is LF (the nine binary blobs - PNG, gz, bin - keep their bytes, as `.gitattributes` intends). Upstream's #59
+  (a child's extensions, and model/thinking from settings) landed on the same ground as this port's settings layer; the
+  two merged into one `subagentSettings` type and one per-file reader - the original's launch fields plus the port's
+  `disableBuiltins`, `modelScope` and the full `agentOverrides` entries, unapplied subagents keys still refused by name -
+  with `subagentSettingsFor`'s host-file precedence over Pi's tree kept. The merge needed Windows fixes the upstream
+  tests never ran: `PIG_EXT_HOST_INFO` is JSON-encoded (raw backslashes are invalid JSON), #59's tool tests ask for
+  `async: false` (the port detaches by default, as the original), and a reloaded agent's `extensions` are the resolved
+  paths while the file keeps the declaration (`ExtensionsDeclared`). `pigeq twins check` and `pigeq check` pass on the
+  merged tree; `gen-mutations.py` re-validated (three settings mutations retargeted, 165 total).
 - Second mutation run (this change): **138 mutations, all killed** (`pigeq mutate --unit`, jobs 4, Windows). The list grew
   for the added surface (the external runner's exit handling, both slot-capacity selects) and `gen-mutations.py` re-validated
   every `find` against the LF-normalized tree - the CRLF checkout had made eight of them unlocatable. Two survivors exposed

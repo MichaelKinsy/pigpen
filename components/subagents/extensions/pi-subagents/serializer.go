@@ -105,11 +105,19 @@ func serializeAgent(a *AgentConfig, preserve map[string]bool) string {
 	if sp := joinComma(a.SkillPath); sp != "" || preserving("skillPath") {
 		lines = append(lines, "skillPath: "+sp)
 	}
-	if a.Extensions != nil || preserving("extensions") {
-		lines = append(lines, "extensions: "+joinComma(a.Extensions))
+	extensions := a.Extensions
+	if a.ExtensionsDeclared != nil {
+		extensions = a.ExtensionsDeclared
 	}
-	if a.SubagentOnlyExtensions != nil || preserving("subagentOnlyExtensions") {
-		lines = append(lines, "subagentOnlyExtensions: "+joinComma(a.SubagentOnlyExtensions))
+	subagentOnly := a.SubagentOnlyExtensions
+	if a.SubagentOnlyExtensionsDeclared != nil {
+		subagentOnly = a.SubagentOnlyExtensionsDeclared
+	}
+	if extensions != nil || preserving("extensions") {
+		lines = append(lines, "extensions: "+joinComma(extensions))
+	}
+	if subagentOnly != nil || preserving("subagentOnlyExtensions") {
+		lines = append(lines, "subagentOnlyExtensions: "+joinComma(subagentOnly))
 	}
 	if mt := joinComma(a.MutationTools); mt != "" || preserving("mutationTools") {
 		lines = append(lines, "mutationTools: "+mt)

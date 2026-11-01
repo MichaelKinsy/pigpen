@@ -133,15 +133,15 @@
  },
  {
   "name": "model-override-type",
-  "file": "discovery.go",
-  "find": "if _, isStr := raw.(string); !isStr && raw != false {",
+  "file": "settings.go",
+  "find": "if v, present := entry[\"model\"]; present {",
   "replace": "if false {"
  },
  {
   "name": "model-override-false",
-  "file": "discovery.go",
-  "find": "!isStr && raw != false {",
-  "replace": "!isStr {"
+  "file": "settings.go",
+  "find": "'model'; expected a string or false.\"\n\t\t\t}\n\t\t} else if v != false {",
+  "replace": "'model'; expected a string or false.\"\n\t\t\t}\n\t\t} else if true {"
  },
  {
   "name": "model-default-first-wins",
@@ -158,8 +158,8 @@
  {
   "name": "model-override-first-wins",
   "file": "discovery.go",
-  "find": "if _, ok := first[k]; !ok {",
-  "replace": "if true {"
+  "find": "d.model = underlay(d.model, set.model)",
+  "replace": "d.model = underlay(set.model, d.model)"
  },
  {
   "name": "model-override-applies",

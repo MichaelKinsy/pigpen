@@ -248,13 +248,13 @@ func applySettingsOverrides(d *DiscoveryAll, cwd string) {
 			projectSettings = settings
 		}
 	}
-	if projectSettings != nil && projectSettings.ModelScope != nil {
-		d.ModelScope = projectSettings.ModelScope
+	if projectSettings != nil && projectSettings.modelScope != nil {
+		d.ModelScope = projectSettings.modelScope
 	} else if userSettings != nil {
-		d.ModelScope = userSettings.ModelScope
+		d.ModelScope = userSettings.modelScope
 	}
-	disableBuiltins := (userSettings != nil && userSettings.DisableBuiltins != nil && *userSettings.DisableBuiltins) ||
-		(projectSettings != nil && projectSettings.DisableBuiltins != nil && *projectSettings.DisableBuiltins)
+	disableBuiltins := (userSettings != nil && userSettings.disableBuiltins != nil && *userSettings.disableBuiltins) ||
+		(projectSettings != nil && projectSettings.disableBuiltins != nil && *projectSettings.disableBuiltins)
 	if disableBuiltins {
 		for i := range d.Builtin {
 			d.Builtin[i].Disabled = true
@@ -277,11 +277,11 @@ func applyDefaultsToAgent(a *AgentConfig, userSettings, projectSettings *subagen
 		if settings == nil {
 			continue
 		}
-		if a.Model == "" && settings.DefaultModel != "" {
-			a.Model = settings.DefaultModel
+		if a.Model == "" && settings.defaultModel != "" {
+			a.Model = settings.defaultModel
 		}
-		if a.Thinking == nil && settings.DefaultThinking != "" {
-			a.Thinking = settings.DefaultThinking
+		if a.Thinking == nil && settings.defaultThinking != "" {
+			a.Thinking = settings.defaultThinking
 		}
 	}
 }
@@ -291,10 +291,10 @@ func applyOverrideToAgent(a *AgentConfig, userSettings, projectSettings *subagen
 		scope    string
 		settings *subagentSettings
 	}{{"project", projectSettings}, {"user", userSettings}} {
-		if scope.settings == nil || scope.settings.AgentOverrides == nil {
+		if scope.settings == nil || scope.settings.agentOverrides == nil {
 			continue
 		}
-		entry, ok := scope.settings.AgentOverrides[a.Name]
+		entry, ok := scope.settings.agentOverrides[a.Name]
 		if !ok {
 			continue
 		}

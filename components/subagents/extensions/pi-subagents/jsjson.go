@@ -20,6 +20,27 @@ type jsObject struct {
 
 func newObject() *jsObject { return &jsObject{vals: map[string]any{}} }
 
+// plainJSON converts the parsed tree (jsObject wrappers) to plain Go maps and slices, for parsers written against the
+// readSettingsStrict shape (modelScope).
+func plainJSON(v any) any {
+	switch t := v.(type) {
+	case *jsObject:
+		out := map[string]any{}
+		for _, k := range t.keys {
+			out[k] = plainJSON(t.vals[k])
+		}
+		return out
+	case []any:
+		out := make([]any, len(t))
+		for i, e := range t {
+			out[i] = plainJSON(e)
+		}
+		return out
+	default:
+		return v
+	}
+}
+
 func (o *jsObject) set(k string, v any) {
 	if _, ok := o.vals[k]; !ok {
 		o.keys = append(o.keys, k)

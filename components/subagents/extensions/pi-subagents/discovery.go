@@ -121,16 +121,6 @@ func projectRootResolution(root string) string {
 	return ""
 }
 
-// subagentSettings are the `subagents` settings that change an agent's definition at launch:
-// `defaultExtensions` and `defaultSubagentOnlyExtensions` (nil when unset), `defaultModel` and `defaultThinking` ("" when
-// unset), and the `model` and `thinking` of `agentOverrides.<name>`, keyed by agent name: a string, or false to clear
-// what the definition sets.
-type subagentSettings struct {
-	extensions, subagentOnly      []string
-	defaultModel, defaultThinking string
-	model, thinking               map[string]any
-}
-
 // readSubagentSettings is the original's readSubagentSettings for the fields above: a missing file sets nothing; an
 // unreadable or malformed file, or a field of the wrong type, is an error with the original's message.
 func readSubagentSettings(path string) (subagentSettings, error) {
@@ -151,6 +141,12 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 		return d, nil
 	}
 	s := o.obj("subagents")
+	// A subagents key the port does not apply is refused, never silently ignored (the port's message).
+	for _, key := range s.order() {
+		if !appliedSettingsFields[key] {
+			return d, refuseSubagentSettingsField(key)
+		}
+	}
 	for _, f := range []struct {
 		key string
 		dst *[]string
@@ -188,8 +184,22 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 		}
 		*f.dst = jsTrim(str)
 	}
-	// The original ignores an agentOverrides that is not an object, and reads every field of each entry; only model and
-	// thinking are ported.
+	if raw, ok := s.get("disableBuiltins"); ok {
+		b, isBool := raw.(bool)
+		if !isBool {
+			return d, fmt.Errorf("Subagent settings in '%s' have invalid 'disableBuiltins'; expected a boolean.", path)
+		}
+		d.disableBuiltins = &b
+	}
+	if raw, ok := s.get("modelScope"); ok {
+		scope, errText := parseModelScopeConfig(plainJSON(raw), path)
+		if errText != "" {
+			return d, errors.New(errText)
+		}
+		d.modelScope = scope
+	}
+	// The original ignores an agentOverrides that is not an object, and reads every field of each entry; the port
+	// applies disabled/model/thinking/machine (validated in the original's wording) and leaves the rest unread.
 	if overrides := s.obj("agentOverrides"); overrides != nil {
 		for _, name := range overrides.order() {
 			v, _ := overrides.get(name)
@@ -197,6 +207,18 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 			if entry == nil {
 				return d, fmt.Errorf("Builtin override '%s' in '%s' must be an object.", name, path)
 			}
+			raw := map[string]any{}
+			for _, f := range entry.order() {
+				fv, _ := entry.get(f)
+				raw[f] = fv
+			}
+			if errText := validateOverrideEntry(name, path, raw); errText != "" {
+				return d, errors.New(errText)
+			}
+			if d.agentOverrides == nil {
+				d.agentOverrides = map[string]map[string]any{}
+			}
+			d.agentOverrides[name] = raw
 			for _, f := range []struct {
 				key string
 				dst *map[string]any
@@ -204,9 +226,6 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 				raw, ok := entry.get(f.key)
 				if !ok {
 					continue
-				}
-				if _, isStr := raw.(string); !isStr && raw != false {
-					return d, fmt.Errorf("Builtin override '%s' in '%s' has invalid '%s'; expected a string or false.", name, path, f.key)
 				}
 				if *f.dst == nil {
 					*f.dst = map[string]any{}
@@ -258,8 +277,28 @@ func subagentSettingsFor(cwd string, scope AgentScope) (subagentSettings, error)
 		}
 		d.model = underlay(d.model, set.model)
 		d.thinking = underlay(d.thinking, set.thinking)
+		if d.disableBuiltins == nil {
+			d.disableBuiltins = set.disableBuiltins
+		}
+		if d.modelScope == nil {
+			d.modelScope = set.modelScope
+		}
+		d.agentOverrides = underlayEntries(d.agentOverrides, set.agentOverrides)
 	}
 	return d, nil
+}
+
+// underlayEntries adds the entries of later that first lacks, per agent.
+func underlayEntries(first, later map[string]map[string]any) map[string]map[string]any {
+	for k, v := range later {
+		if first == nil {
+			first = map[string]map[string]any{}
+		}
+		if _, ok := first[k]; !ok {
+			first[k] = v
+		}
+	}
+	return first
 }
 
 // underlay adds the entries of later that first lacks.

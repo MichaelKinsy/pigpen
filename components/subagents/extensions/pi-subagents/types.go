@@ -55,19 +55,23 @@ type AgentConfig struct {
 	SkillPath              []string
 	Extensions             []string
 	SubagentOnlyExtensions []string
-	MutationTools          []string
-	AllowNestedSubagents   *bool
-	AllowedAgents          []string
-	DefaultTimeoutMs       *int64
-	DefaultToolTimeoutMs   *int64
-	DefaultAcceptance      string // raw JSON (or "true"/"false"), as declared
-	ToolBudget             string // raw JSON, as declared
-	Machine                string
-	Output                 string
-	OutputMode             string
-	OutputSchema           string // raw JSON, as declared
-	Interactive            bool
-	MaxSubagentDepth       *int
+	// ExtensionsDeclared and SubagentOnlyExtensionsDeclared keep the frontmatter as written (relative entries stay
+	// relative): the update writer preserves the declaration, while Extensions carry the resolved paths the child loads.
+	ExtensionsDeclared             []string
+	SubagentOnlyExtensionsDeclared []string
+	MutationTools                  []string
+	AllowNestedSubagents           *bool
+	AllowedAgents                  []string
+	DefaultTimeoutMs               *int64
+	DefaultToolTimeoutMs           *int64
+	DefaultAcceptance              string // raw JSON (or "true"/"false"), as declared
+	ToolBudget                     string // raw JSON, as declared
+	Machine                        string
+	Output                         string
+	OutputMode                     string
+	OutputSchema                   string // raw JSON, as declared
+	Interactive                    bool
+	MaxSubagentDepth               *int
 	// ExtraFrontmatter holds declared keys the typed loader does not model, in
 	// file order, so an update can write them back unchanged.
 	ExtraFrontmatter []ExtraField

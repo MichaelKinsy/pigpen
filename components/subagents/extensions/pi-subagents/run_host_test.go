@@ -135,12 +135,12 @@ func TestExtensionsThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "none.md"), "---\nname: none\ndescription: None\nextensions:\nsubagentOnlyExtensions: /child.ts\n---\n")
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
 	args := calls.at(0).Args
 	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/provider.ts"}, "the settings default")
 
-	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
 	args = calls.at(1).Args
 	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/child.ts"}, "the agent's own empty list, plus child-only")
@@ -156,7 +156,7 @@ func TestExtensionsThroughTheTool(t *testing.T) {
 	}
 
 	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": [1]}}`)
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	if !strings.Contains(failure, "have invalid 'defaultExtensions'") {
 		t.Errorf("invalid settings: %q", failure)
 	}
@@ -172,13 +172,13 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "other.md"), agentMD("other", "Other", "Other."))
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
 	eq(t, calls.at(0).Args[:5], []string{"--print", "--model", "p/role", "--thinking", "off"}, "the role's override")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "model": "p/call"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false, "model": "p/call"})
 	eq(t, failure, "", "failure")
 	eq(t, calls.at(1).Args[:5], []string{"--print", "--model", "p/call", "--thinking", "off"}, "a per-call model wins")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
 	eq(t, calls.at(2).Args[:3], []string{"--print", "--model", "p/default"}, "the default for an agent without its own")
 
@@ -189,7 +189,7 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 	}
 
 	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": 1}}`)
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	if !strings.Contains(failure, "have invalid 'defaultModel'") {
 		t.Errorf("invalid settings: %q", failure)
 	}

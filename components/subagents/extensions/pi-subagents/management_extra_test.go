@@ -118,7 +118,8 @@ func TestUpdateRoundTripPreservesDeclaredKeys(t *testing.T) {
 	if a == nil || a.Description != "Updated agent" {
 		t.Fatalf("reload: %+v", a)
 	}
-	if len(a.Extensions) != 2 || a.Extensions[0] != "./tools/parent.ts" {
+	// The declaration on disk stays relative; the loaded config carries the resolved path (#59's semantics).
+	if len(a.Extensions) != 2 || a.Extensions[0] != filepath.Join(cwd, ".pi", "agents", "tools", "parent.ts") {
 		t.Errorf("extensions: %v", a.Extensions)
 	}
 
