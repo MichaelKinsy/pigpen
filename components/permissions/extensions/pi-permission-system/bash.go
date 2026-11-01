@@ -346,7 +346,21 @@ func bashUnits(cmd string) (units []string, ok bool) {
 	return units, true
 }
 
-// decideBash is the bash surface's decision for one command (resolveBashCommandCheck): each unit is resolved on its
+// decideBash is the bash surface's decision for one command. The permission map's `bash_unchecked: "allow"`
+// directive (a port directive; the original reads it as an ordinary surface rule and leaves the gate and the
+// floors on) makes the surface unchecked: the external-directory word scan is skipped and every ask the surface
+// raises — a rule's ask or a wrapper unit's floored allow — is granted, so the approval dialog never appears for
+// a bash command. A deny still denies, and a command the port cannot read while bash has value patterns is still
+// refused: the directive removes the prompts, not the checks that answer without one.
+func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict {
+	v := p.decideBashChecked(command, session, cwd)
+	if p.bashUnchecked && v.Ask != nil {
+		return Verdict{}
+	}
+	return v
+}
+
+// decideBashChecked is the bash surface's decision for one command (resolveBashCommandCheck): each unit is resolved on its
 // own — its own text against the composed config and session rules — and the most restrictive result wins
 // (deny, then ask). A wrapper unit's allow is floored to ask (the original's <opaque-bash-wrapper> and
 // <indirection-bash-wrapper>), unless the floor has no reason left to hold: an indirection whose payload proves a
@@ -356,9 +370,9 @@ func bashUnits(cmd string) (units []string, ok bool) {
 // patterns, which the raw text cannot be matched against; without patterns the value decides it — the parse only
 // ever added wrapper floors on top. When the surface allows, the words of each unit are scanned for paths outside
 // the working directory, the word-level subset of the original's bash external-directory gate, unless the
-// permission map's `bash_unchecked: "allow"` directive skips that scan (a port directive; the original's gate
+// permission map's `bash_unchecked: "allow"` directive skips that scan (see decideBash; the original's gate
 // cannot be configured off).
-func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict {
+func (p *Policy) decideBashChecked(command string, session Ruleset, cwd string) Verdict {
 	cmd := jsTrim(command)
 	patterns := p.valuePatterns("bash")
 	units, simple := bashUnits(cmd)
@@ -429,9 +443,10 @@ func (p *Policy) decideBash(command string, session Ruleset, cwd string) Verdict
 	if best.Block || best.Ask != nil {
 		return best
 	}
-	if p.disableBashExternal {
+	if p.bashUnchecked {
 		// `bash_unchecked: "allow"` skips the external-directory gate: reads, writes and unproven external
-		// paths in the command's words are all left to the bash rules alone.
+		// paths in the command's words are all left to the bash rules alone (any ask they raise was
+		// already granted by decideBash).
 		return best
 	}
 	return worstVerdict(best, p.bashExternalGate(cmd, cwd, session))
