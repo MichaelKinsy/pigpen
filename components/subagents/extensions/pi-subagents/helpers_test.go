@@ -34,7 +34,7 @@ func withTempHome(t *testing.T) string {
 	for _, k := range []string{"HOME", "USERPROFILE"} {
 		t.Setenv(k, home)
 	}
-	for _, k := range []string{"PI_CODING_AGENT_DIR", "PI_SUBAGENT_EXTRA_AGENT_DIRS"} {
+	for _, k := range []string{"PI_CODING_AGENT_DIR", "PI_SUBAGENT_EXTRA_AGENT_DIRS", "PIG_EXT_HOST_INFO"} {
 		old, had := os.LookupEnv(k)
 		os.Unsetenv(k)
 		t.Cleanup(func() {

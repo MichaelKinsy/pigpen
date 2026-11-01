@@ -76,7 +76,7 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	}
 	req := (*calls)[0]
 	eq(t, req.Cwd, filepath.Join(cwd, "sub"), "a relative cwd is the session's")
-	eq(t, req.Args[:4], []string{"--no-extensions", "--print", "--model", "p/m:low"}, "model override, its thinking")
+	eq(t, req.Args[:3], []string{"--print", "--model", "p/m:low"}, "model override, its thinking")
 	eq(t, req.Stdin, "Task: build", "stdin")
 
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "cwd": "nope"})
@@ -106,4 +106,74 @@ func TestChainThroughTheCommand(t *testing.T) {
 	eq(t, (*calls)[1].Stdin, "Task: step one", "second step")
 	notes := h.CallsTo("ui.notify")
 	eq(t, fmt.Sprint(notes[len(notes)-1].Args["message"]), "step two", "the chain's answer")
+}
+
+func TestExtensionsThroughTheTool(t *testing.T) {
+	calls := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": ["/provider.ts"]}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "def.md"), agentMD("def", "Def", "Def."))
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "none.md"), "---\nname: none\ndescription: None\nextensions:\nsubagentOnlyExtensions: /child.ts\n---\n")
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	eq(t, failure, "", "failure")
+	args := (*calls)[0].Args
+	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/provider.ts"}, "the settings default")
+
+	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t"})
+	eq(t, failure, "", "failure")
+	args = (*calls)[1].Args
+	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/child.ts"}, "the agent's own empty list, plus child-only")
+	notes := h.CallsTo("ui.notify")
+	if len(notes) != 1 || notes[0].Args["level"] != "warning" || !strings.HasPrefix(fmt.Sprint(notes[0].Args["message"]), "extensions: [] override for agent 'none'") {
+		t.Errorf("warning: %v", notes)
+	}
+
+	raw, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "def"})
+	eq(t, failure, "", "get")
+	if !strings.Contains(string(raw), `Extensions: /provider.ts`) {
+		t.Errorf("get shows the default: %s", raw)
+	}
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": [1]}}`)
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	if !strings.Contains(failure, "have invalid 'defaultExtensions'") {
+		t.Errorf("invalid settings: %q", failure)
+	}
+	eq(t, len(*calls), 2, "no child for invalid settings")
+}
+
+func TestModelSettingsThroughTheTool(t *testing.T) {
+	calls := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": "p/default", "agentOverrides": {"def": {"model": "p/role", "thinking": "off"}}}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "def.md"), agentMD("def", "Def", "Def."))
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "other.md"), agentMD("other", "Other", "Other."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[0].Args[:5], []string{"--print", "--model", "p/role", "--thinking", "off"}, "the role's override")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "model": "p/call"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[1].Args[:5], []string{"--print", "--model", "p/call", "--thinking", "off"}, "a per-call model wins")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, (*calls)[2].Args[:3], []string{"--print", "--model", "p/default"}, "the default for an agent without its own")
+
+	raw, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "def"})
+	eq(t, failure, "", "get")
+	if !strings.Contains(string(raw), `Model: p/role`) {
+		t.Errorf("get shows the override: %s", raw)
+	}
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": 1}}`)
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	if !strings.Contains(failure, "have invalid 'defaultModel'") {
+		t.Errorf("invalid settings: %q", failure)
+	}
+	eq(t, len(*calls), 3, "no child for invalid settings")
 }

@@ -30,8 +30,23 @@ takes what can be checked against the original by running it, and one execution 
 - the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
-Pi) in-process child sessions. The port starts a child `pig --no-extensions --print` with the agent's model, thinking,
-tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`), as PiG's own subagents do:
+Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,
+tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`). The child discovers extensions as
+the original's background child, which runs in its own process, does: a provider extension, and the login it brings, is
+what lets the child reach a provider-qualified model. (The original's foreground child runs in the parent's process and
+loads no extensions; it uses the providers the parent already loaded, which a pig child process cannot.) An agent picks its child's extensions as in the original: `extensions` (a list, even an empty one) turns
+discovery off and loads only those (`--no-extensions` and one `--extension` each), `subagentOnlyExtensions` adds to whatever
+loads, and an entry starting `./` or `../` is relative to the agent file. An agent that sets neither takes
+`subagents.defaultExtensions` / `defaultSubagentOnlyExtensions` from the project's `settings.json`, else the user's, where
+at each level the PiG host's file (`sdk.AgentDir`, `sdk.ConfigDirName`) comes before the original's `.pi` one (an addition:
+the original reads only Pi's tree, and agent and chain discovery here still do); a
+malformed value refuses the run with the original's message, and an empty `extensions` list shows the original's warning
+(as a notification: the original's `console.warn`). `get` shows both fields. A child's model and thinking follow the
+original's precedence: the call's `model`, then `agentOverrides.<name>.model` / `thinking` (`false` clears the agent's own),
+then the agent's frontmatter, then `subagents.defaultModel` / `defaultThinking`, from the same files, each from the first file
+that sets it (for a builtin agent the original takes a project `agentOverrides` entry whole, over the user's; the port takes
+each field from the first file that sets it, as the original does for custom agents); malformed values refuse the run with the
+original's messages, and `get` shows the resulting model. Running a child is:
 `subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a `.chain.md` chain (steps in order, `{task}` and
 `{previous}`, the first failing step stops it, every agent is resolved before any child starts). The original's trace cannot
 check this (a Pi child session is not a pig child process); it is covered by the port's own tests (a fake child runner, a real
@@ -41,8 +56,9 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
   is read as an option (`--version`, `- fix it`) or a file to attach (`@notes.txt`), and its length is not bounded by the
   per-argument limit;
 - nesting stops at the original's depth (`DEFAULT_SUBAGENT_MAX_DEPTH` 2, changed by `PI_SUBAGENT_MAX_DEPTH`) with its text: a
-  child knows its depth from `PIG_SUBAGENT_DEPTH` (`PIG_SUBAGENT` alone counts as 1). `--no-extensions` alone is not enough: a
-  Piglet Binary keeps its fused members under it, so a Binary that starts itself would nest without end;
+  child knows its depth from `PIG_SUBAGENT_DEPTH` (`PIG_SUBAGENT` alone counts as 1). The child loads this extension again from the
+  settings, and even `--no-extensions` would not help: a Piglet Binary keeps its fused members under it, so a Binary that
+  starts itself would nest without end;
 - at most 4 children run at once (the original's `MAX_CONCURRENCY`), whatever one model turn asks for;
 - a cancelled call (Escape, the session ending) sends the child SIGTERM and kills it 5 s later; on Linux a child also gets
   SIGTERM when its parent dies, so a host killed outright leaves none behind;
@@ -59,7 +75,8 @@ to this program, else `PATH`. A Piglet Binary as the child refuses `--system-pro
 **Not ported:** parallel, async and background runs and their status; scripted workflows (they need the original's JavaScript
 workflow runtime, which no Package may carry); council mode; worktree isolation and lanes; the fleet and status views, slash
 commands other than `/run-chain`; steering, the supervisor channel and `bg_wait` (declared so the model sees the same tools; they
-answer that they are not ported); the watchdog; missions; profiles, settings overrides and model scopes; the agent serializer and
+answer that they are not ported); the watchdog; missions; profiles, `agentOverrides` fields other than `model` and `thinking`,
+`defaultProvider`, `maxThinking`, `disableThinking` and model scopes; the agent serializer and
 the management actions create, update, delete, eject and disable; `.chain.json` chains and the acceptance, tool-budget and
 dynamic fan-out validators they need; external CLI and external job runners (their agents are listed, not run); the advertised
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
@@ -86,7 +103,7 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M4 | `agents/agents.ts` (discovery, loading, project root) | `discovery.go`, `agents.go`, `builtin/` | 15 twins + 5 Pi scenarios |
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
-| M7 | (addition) child process runs | `run.go`, `child_*.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go` |
+| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 
 ## Process: what was written before its tests

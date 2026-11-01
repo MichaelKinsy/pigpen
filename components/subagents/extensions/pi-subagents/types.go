@@ -27,25 +27,29 @@ type AgentConfig struct {
 	Description string
 	Model       string
 	// Thinking is nil when unset, false when the frontmatter turns thinking off, or a level string.
-	Thinking              any
-	Tools                 []string
-	McpDirectTools        []string
-	DefaultContext        string // "fork", "fresh" or ""
-	AcceptanceRole        string
-	DefaultReads          []string
-	DefaultProgress       bool
-	DefaultAsync          *bool
-	Runner                *Runner
-	Skills                []string
-	Aliases               []string
-	SystemPromptMode      string // "replace" or "append"
-	InheritProjectContext bool
-	InheritGlobalContext  bool
-	InheritSkills         bool
-	SystemPrompt          string
-	Source                AgentSource
-	FilePath              string
-	discoveryPriority     int
+	Thinking        any
+	Tools           []string
+	McpDirectTools  []string
+	DefaultContext  string // "fork", "fresh" or ""
+	AcceptanceRole  string
+	DefaultReads    []string
+	DefaultProgress bool
+	DefaultAsync    *bool
+	Runner          *Runner
+	Skills          []string
+	// Extensions is nil when unset (the child discovers extensions); a list, even an empty one, is all the child loads.
+	Extensions []string
+	// SubagentOnlyExtensions load in the child on top of the others.
+	SubagentOnlyExtensions []string
+	Aliases                []string
+	SystemPromptMode       string // "replace" or "append"
+	InheritProjectContext  bool
+	InheritGlobalContext   bool
+	InheritSkills          bool
+	SystemPrompt           string
+	Source                 AgentSource
+	FilePath               string
+	discoveryPriority      int
 }
 
 // Runner is the `runner:` frontmatter block; only the type and the command are read.

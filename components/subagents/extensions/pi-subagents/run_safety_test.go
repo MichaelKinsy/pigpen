@@ -107,9 +107,9 @@ func TestTaskTravelsOnStdin(t *testing.T) {
 func TestThinkingSuffixOfModelOverrideWins(t *testing.T) {
 	// The schema: "Suffix :off/minimal/low/medium/high/xhigh/max overrides agent thinking default."
 	a := &AgentConfig{Name: "a", Thinking: "high", SystemPromptMode: "replace"}
-	eq(t, buildChildArgs(a, "prov/m:low"), []string{"--no-extensions", "--print", "--model", "prov/m:low"}, "suffix overrides")
-	eq(t, buildChildArgs(a, "prov/m"), []string{"--no-extensions", "--print", "--model", "prov/m", "--thinking", "high"}, "no suffix")
-	eq(t, buildChildArgs(a, "prov/m:latest"), []string{"--no-extensions", "--print", "--model", "prov/m:latest", "--thinking", "high"}, "not a level")
+	eq(t, buildChildArgs(a, "prov/m:low"), []string{"--print", "--model", "prov/m:low"}, "suffix overrides")
+	eq(t, buildChildArgs(a, "prov/m"), []string{"--print", "--model", "prov/m", "--thinking", "high"}, "no suffix")
+	eq(t, buildChildArgs(a, "prov/m:latest"), []string{"--print", "--model", "prov/m:latest", "--thinking", "high"}, "not a level")
 }
 
 func TestChildEnvironmentDropsTheParentsInternals(t *testing.T) {
