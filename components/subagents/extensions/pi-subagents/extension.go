@@ -80,7 +80,7 @@ func textResult(text string, isError bool) sdk.ToolResult {
 }
 
 func init() {
-	registerAction("list", []string{"agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+	registerAction("list", []string{"agentScope", "capabilities"}, func(ctx sdk.Context, params map[string]any) (any, error) {
 		return manageOutcome(listAgents(ctx.Cwd(), params))
 	})
 	registerAction("get", []string{"agent", "agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {

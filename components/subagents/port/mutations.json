@@ -908,8 +908,20 @@
  {
   "name": "ref-list-params",
   "file": "extension.go",
-  "find": "registerAction(\"list\", []string{\"agentScope\"}",
-  "replace": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}"
+  "find": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\"}",
+  "replace": "registerAction(\"list\", []string{\"agentScope\", \"capabilities\", \"agent\"}"
+ },
+ {
+  "name": "list-capabilities",
+  "file": "management.go",
+  "find": "if params[\"capabilities\"] == true {",
+  "replace": "if false {"
+ },
+ {
+  "name": "list-capabilities-ambient",
+  "file": "management.go",
+  "find": "tools = \"default/ambient\"",
+  "replace": "tools = \"none\""
  },
  {
   "name": "ref-get-params",

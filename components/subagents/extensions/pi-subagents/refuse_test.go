@@ -119,13 +119,16 @@ func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
 			wantRefusal(t, failure, "the `"+a+"` action")
 		})
 	}
-	_, failure := h.Tool("subagent", map[string]any{"action": "list", "capabilities": true})
-	wantRefusal(t, failure, "the `capabilities` option")
+	raw, failure := h.Tool("subagent", map[string]any{"action": "list", "capabilities": true})
+	eq(t, failure, "", "list with capabilities runs")
+	if !strings.Contains(string(raw), "Executable agents (capabilities):") {
+		t.Errorf("capabilities list: %s", raw)
+	}
 	_, failure = h.Tool("subagent", map[string]any{"action": "get", "agent": "helper", "config": map[string]any{}})
 	wantRefusal(t, failure, "the `config` option")
 	_, failure = h.Tool("subagent", map[string]any{"action": "list", "agent": "helper"})
 	wantRefusal(t, failure, "the `agent` option")
-	raw, failure := h.Tool("subagent", map[string]any{"action": "list", "agentScope": "both"})
+	raw, failure = h.Tool("subagent", map[string]any{"action": "list", "agentScope": "both"})
 	eq(t, failure, "", "list still works")
 	if !strings.Contains(string(raw), "helper") {
 		t.Errorf("list: %s", raw)

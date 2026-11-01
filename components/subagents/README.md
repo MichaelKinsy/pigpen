@@ -21,7 +21,8 @@ You help.
 The model sees two tools. `subagents_enable` makes the `subagent` tool available (it is not offered until then, as in the
 original); then:
 
-- `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both), `{action: "get", agent: "helper"}` shows one;
+- `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both; `capabilities: true` adds each one's tools, model
+  and thinking), `{action: "get", agent: "helper"}` shows one;
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
@@ -68,7 +69,7 @@ addition: the original runs children through its own executor and scripted workf
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
 the supervisor channel, the watchdog, missions, profiles, `agentOverrides` other than `model` and `thinking`, `.chain.json` chains, the management actions other
 than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
-`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope`. Any other
+`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope` (and `capabilities` for `list`). Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused
 with one message and nothing runs:
 
