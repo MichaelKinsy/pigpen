@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pigpen third-party listing",
+  "description": "One file listings/<id>.json: a PiG Package or Piglet that Pigpen does not own, pinned to a full commit. node scripts/generate-index.mjs turns it into an index.json entry with official: false and the maintainer named here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "name", "description", "maintainer", "repository", "commit", "license", "verified"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "description": "The index id and the file name (listings/<id>.json). Never the id of a Pigpen Piglet or component.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "maxLength": 100
+    },
+    "kind": { "enum": ["package", "piglet"] },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "maintainer": {
+      "description": "The real maintainer: the person or organisation that owns the repository. Never Pigpen's owner.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "repository": {
+      "description": "https://github.com/<owner>/<repo>, no .git, no trailing slash.",
+      "type": "string",
+      "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/(?!.*\\.git$)[A-Za-z0-9_.-]+$",
+      "maxLength": 200
+    },
+    "commit": {
+      "description": "The full 40-character commit hash the listing is pinned to. This is the pin: a branch, HEAD or an abbreviated hash is refused.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "tag": {
+      "description": "Optional human label for the commit. A tag can be moved, so it never replaces commit; scripts/verify-listings.mjs fails when the tag no longer points at commit.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+/-]*$",
+      "maxLength": 100
+    },
+    "subdirectory": {
+      "description": "Where the Package or Piglet lives inside the repository, relative, with / separators.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_@+-][A-Za-z0-9_.@+-]*(?:/[A-Za-z0-9_@+-][A-Za-z0-9_.@+-]*)*$",
+      "maxLength": 200
+    },
+    "license": {
+      "description": "The SPDX license expression the repository's own license file at the pinned commit grants, for example MIT or Apache-2.0 OR MIT.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "version": {
+      "description": "A Package: the version in its package.json at the pinned commit. Not used for a Piglet.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "resources": {
+      "description": "A Package: the Resources its package.json declares at the pinned commit. scripts/verify-listings.mjs compares them with the installed Package.",
+      "type": "array",
+      "items": { "enum": ["extension", "skill", "prompt", "theme", "hook", "mcp", "agent-environment"] },
+      "uniqueItems": true
+    },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "uniqueItems": true
+    },
+    "verified": {
+      "description": "The PiG this listing was last verified with by scripts/verify-listings.mjs, and when.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pigVersion", "pigCommit", "date"],
+      "properties": {
+        "pigVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "pigCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "date": { "type": "string", "format": "date" }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 1500 },
+      "uniqueItems": true
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "package" } }, "required": ["kind"] },
+      "then": { "required": ["version", "resources"] },
+      "else": { "properties": { "version": false, "resources": false } }
+    }
+  ]
+}

@@ -1,11 +1,12 @@
 // Publish every Package, then every Piglet source, to npm; skip a name@version that is already there.
 //   node scripts/npm-publish.mjs [--dry-run] [--provenance] [--out dist/npm]
+//   node scripts/npm-publish.mjs --pending     list the name@version not on npm yet; builds nothing, publishes nothing
 // Packages go first because a Piglet names them (`npm:@pi-in-go/pigpen-<dir>@^<version>`) and PiG resolves them when the
 // Piglet is added. The first failure stops the run, so no Piglet is published after a failed Package. Authentication is
 // whatever npm has: the owner's `npm login` (scripts/first-npm-publish.sh) or, in .github/workflows/npm-publish.yml,
 // npm trusted publishing (OIDC; --provenance). No token is read, written or accepted by this script.
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readManifests, root } from './generate-index.mjs';
@@ -31,6 +32,21 @@ export function publishPlan(outRoot, { skipBuild = false, directory = root } = {
     return { kind: 'piglet', name: pigletNpmName(manifest.name), version: manifest.release.version, dir: tree, needs };
   });
   return [...packages, ...piglets];
+}
+
+/** The entries of `plan` whose name@version is not on npm: what a version bump merged to main has to publish. */
+export function pendingEntries(plan, exists) {
+  return plan.filter((entry) => !exists(entry.name, entry.version));
+}
+
+/**
+ * Print what is pending and, inside GitHub Actions, write `count=<n>` to $GITHUB_OUTPUT (`outputFile`) so npm-publish.yml
+ * starts its publish job, the only one that holds `id-token: write`, only when there is something to publish.
+ */
+export function reportPending(pending, { outputFile = process.env.GITHUB_OUTPUT, log = console.log } = {}) {
+  for (const entry of pending) log(`pending  ${entry.name}@${entry.version}`);
+  log(`${pending.length} not on npm yet`);
+  if (outputFile) appendFileSync(outputFile, `count=${pending.length}\n`);
 }
 
 /** Run `plan` through the injected `exists` and `publish`; returns {published, skipped} as name@version lists. */
@@ -70,7 +86,7 @@ export function trustedPublisherInstructions(plan, { repository, workflow = 'npm
     'Settings pages:',
     ...plan.map((e) => `  https://www.npmjs.com/package/${e.name}/access`),
     '',
-    `After that, a pushed tag npm/v<x> (or a manual run of ${workflow}) publishes new versions with provenance, authenticated by OIDC (no stored credential).`,
+    `After that, every merge to main that bumps a version (and a pushed tag npm/v<x> or a manual run of ${workflow}) publishes what is not on npm yet, with provenance, authenticated by OIDC (no stored credential).`,
   ].join('\n');
 }
 
@@ -92,6 +108,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
   const args = process.argv.slice(2);
   if (args.includes('--trusted-publishers')) {
     console.log(trustedPublisherInstructions(publishPlan(resolve(root, 'dist/npm'), { skipBuild: true }), { repository: JSON.parse(readFileSync(join(root, 'catalog.config.json'), 'utf8')).repository }));
+    process.exit(0);
+  }
+  if (args.includes('--pending')) {
+    reportPending(pendingEntries(publishPlan(resolve(root, 'dist/npm'), { skipBuild: true }), npmExists));
     process.exit(0);
   }
   const out = resolve(root, args.includes('--out') ? args[args.indexOf('--out') + 1] : 'dist/npm');

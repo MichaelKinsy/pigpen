@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../listing.schema.json",
+  "id": "example-hello",
+  "kind": "package",
+  "name": "Example hello",
+  "description": "Test fixture: a one-tool TypeScript extension. The verify test builds scripts/fixtures/listing-extension into a local repository and substitutes that repository's commit for the one below.",
+  "maintainer": "Example Maintainer",
+  "repository": "https://github.com/example-maintainer/pig-hello",
+  "commit": "0123456789abcdef0123456789abcdef01234567",
+  "license": "MIT",
+  "version": "1.0.0",
+  "resources": ["extension"],
+  "languages": ["typescript"],
+  "verified": { "pigVersion": "0.5.2", "pigCommit": "07a8631fb54a6a1e8a0f463dc4998cb7aff6ac40", "date": "2026-10-22" }
+}

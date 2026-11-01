@@ -1,7 +1,9 @@
 # Publishes the Packages and Piglet sources to npm (scripts/npm-publish.mjs): every `@pi-in-go/pigpen-<dir>` Package, then every
 # `@pi-in-go/pigpen-piglet-<name>` Piglet source, skipping any name@version already on npm. pi-in-go.dev finds them by keyword
-# (`pig-package`, `pig-piglet`). A pushed tag `npm/v<x>` or a manual run starts it; the tag only starts the run, each package
-# is published at its own version.
+# (`pig-package`, `pig-piglet`). A merge to main starts it, so bumping a Package's `version` (or a Piglet's `release.version`)
+# publishes it with no further step; a pushed tag `npm/v<x>` or a manual run starts it too (the retry after a failed run).
+# Whatever starts it, each package is published at its own version. The `pending` job asks npm which name@version is missing
+# (scripts/npm-publish.mjs --pending); the `publish` job, the only one with id-token, runs only if something is.
 #
 # Authentication is npm trusted publishing (OIDC): no token and no secret exist here, `id-token: write` lets the job prove
 # who it is and npm checks that against the Trusted Publisher the owner added to each package on npmjs.com (organization
@@ -14,6 +16,7 @@ name: Publish to npm
 
 on:
   push:
+    branches: [main]
     tags: ['npm/v*']
   workflow_dispatch:
 
@@ -25,7 +28,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  pending:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      count: ${{ steps.pending.outputs.count }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Which name@version is not on npm yet
+        id: pending
+        run: node scripts/npm-publish.mjs --pending
   publish:
+    needs: pending
+    if: ${{ needs.pending.outputs.count != '0' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
