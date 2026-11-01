@@ -39,7 +39,8 @@ and PiG version are involved and whether the issue reproduces without the Piglet
 7. Releases are the owner's (OWNER-ACTIONS.md). A Package version is its `package.json` `version`; bump it in the change that
    needs a new release, and the tag `components/<name>/v<version>` is pushed by the owner. A Piglet's version is
    `release.version` in its `piglet.yaml`. `npm run test:packages` (real pig) and `npm run rehearse:release` check the
-   release path; a change to a workflow also has to pass `npm run quality`, which enforces where the signing key may appear.
+   release path; a change to a workflow also has to pass `npm run quality`, which enforces where the signing key and the
+   Discord webhook may appear.
 
 ## Port and composition process
 

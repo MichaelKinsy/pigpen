@@ -236,3 +236,32 @@ Follow-ups for PiG (none blocks a release):
 - **android/arm64 Binary.** A GitHub android runner does not exist; the native builder would need a cross target (a fused
   Go Binary is a plain cross-compile with cgo off, which `scripts/cross-check.mjs` already proves compiles).
 - **Source add.** `pig piglet add` from this repository still fails for composed Piglets (RELEASE-BLOCKERS.md item 1).
+
+## 8. Discord notifications (optional)
+
+`.github/workflows/discord-notify.yml` announces merged pull requests and published releases in one Discord channel. A
+webhook URL is a write credential for that channel, so it is an ENVIRONMENT secret of a `notifications` environment that
+only `main` may deploy to, never a repository secret.
+
+```bash
+REPO=MichaelKinsy/pigpen
+# Create the environment; only main may deploy to it.
+gh api -X PUT "repos/$REPO/environments/notifications" --input - <<'JSON'
+{ "wait_timer": 0, "deployment_branch_policy": { "protected_branches": false, "custom_branch_policies": true } }
+JSON
+gh api -X POST "repos/$REPO/environments/notifications/deployment-branch-policies" -f name=main -f type=branch
+# The Discord channel's webhook URL, as an ENVIRONMENT secret.
+gh secret set DISCORD_WEBHOOK_URL --env notifications --repo "$REPO"
+```
+
+Check it:
+
+```bash
+gh api "repos/$REPO/environments/notifications/deployment-branch-policies" --jq '.branch_policies[] | {name, type}'   # main  branch
+gh secret list --env notifications --repo "$REPO"   # DISCORD_WEBHOOK_URL
+gh secret list --repo "$REPO"                       # must NOT list DISCORD_WEBHOOK_URL
+```
+
+Without the secret the workflow posts nothing and the run passes. `scripts/check-workflows.mjs` refuses a
+`DISCORD_WEBHOOK_*` secret that is not the value of a step env in a job of this environment, and refuses any trigger other
+than a push to `main` and a published release.

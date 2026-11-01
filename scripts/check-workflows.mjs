@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // Workflow hardening gate, part of `npm run quality`: the checks PiG's `make compliance` makes on its own workflows.
 // Every workflow under .github/workflows must pin each action to a full commit SHA, ask for a read-only token, use no
-// secrets and no pull_request_target, never persist the checkout token, and bound every job. The one exception is
-// release.yml (see releaseProblems): PIGLET_SIGNING_KEY, an environment secret read only by a step that runs the pinned
-// pig, the release writes it needs, and a tag filter that no Package tag can match. ci.yml must also keep its one
+// secrets and no pull_request_target, never persist the checkout token, and bound every job. Two workflows are excepted,
+// each with its own rules below. release.yml (releaseProblems) reads PIGLET_SIGNING_KEY, an environment secret read only
+// by a step that runs the pinned pig, holds the release writes it needs, and has a tag filter that no Package tag can
+// match. discord-notify.yml (notifyProblems) reads DISCORD_WEBHOOK_* URLs from the notifications environment, only in the
+// env of a step that posts to Discord, and runs on nothing but a push to main and a published release. ci.yml must also keep its one
 // PiG pin equal to scripts/pig-requirement.json and build every target a Piglet manifest declares on that target's native
 // runner (scripts/runners.mjs), so the pin and the target list each have one source. Any other workflow that checks out
 // PiG must use the same pin.
@@ -44,10 +46,10 @@ export function hardeningProblems(name, text) {
   if (workflow.permissions === undefined) problems.push(`${name}: no top-level permissions (the default token may be read-write)`);
   for (const grant of writes(workflow.permissions)) problems.push(`${name}: top-level permissions grant ${grant}`);
   if (workflow.on && typeof workflow.on === 'object' && 'pull_request_target' in workflow.on) problems.push(`${name}: runs on pull_request_target`);
-  if (name !== 'release.yml' && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
+  if (![RELEASE_WORKFLOW, NOTIFY_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
 
   for (const [id, job] of jobs) {
-    const allowed = name === 'release.yml' ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
+    const allowed = name === RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
     for (const grant of writes(job.permissions)) if (!allowed.includes(grant)) problems.push(`${name}: job ${id}: ${grant}`);
     if (job.uses && !job.uses.startsWith('./') && !shaPinned.test(job.uses)) problems.push(`${name}: ${job.uses} is not pinned to a full commit SHA`);
     if (!job.uses && !boundedTimeout(job)) problems.push(`${name}: job ${id} has no timeout-minutes`);
@@ -85,6 +87,9 @@ export function goToolchainProblems(name, text) {
 }
 
 const SIGNING_KEY = 'PIGLET_SIGNING_KEY';
+const RELEASE_WORKFLOW = 'release.yml';
+const NOTIFY_WORKFLOW = 'discord-notify.yml';
+const WEBHOOK_SECRET = /^DISCORD_WEBHOOK_[A-Z0-9_]+$/;
 const secretRef = new RegExp(`\\$\\{\\{\\s*secrets\\.([A-Za-z0-9_]+)`, 'g');
 
 /**
@@ -93,7 +98,7 @@ const secretRef = new RegExp(`\\$\\{\\{\\s*secrets\\.([A-Za-z0-9_]+)`, 'g');
  * OWNER-ACTIONS.md), and that step must run the pinned pig and no repository script or package manager.
  */
 export function releaseProblems(name, text) {
-  if (name !== 'release.yml') return [];
+  if (name !== RELEASE_WORKFLOW) return [];
   const problems = [];
   const workflow = parse(text) ?? {};
   const triggers = Object.keys(workflow.on ?? {});
@@ -260,6 +265,51 @@ export function listingsProblems(workflow) {
   return problems;
 }
 
+/**
+ * discord-notify.yml's own rules, on top of hardeningProblems. It announces merged pull requests and published releases
+ * in Discord. A webhook URL is a write credential for one channel, so every secret it reads must be named
+ * DISCORD_WEBHOOK_*, must appear only as the value of a step env, and that step must be in a job of the `notifications`
+ * environment (its secret and branch policy are the owner's, see OWNER-ACTIONS.md), whose step posts with curl. It runs on
+ * nothing but a pushed merge into main and a published release, so a pull request, a fork and a workflow_run never reach it.
+ */
+export function notifyProblems(name, text) {
+  if (name !== NOTIFY_WORKFLOW) return [];
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  const on = workflow.on ?? {};
+  const triggers = Object.keys(on);
+  if (!triggers.length || triggers.some((trigger) => !['push', 'release'].includes(trigger))) {
+    problems.push(`${name}: must run only on a push to main and a published release (on.push, on.release), nothing else`);
+  }
+  if ('push' in on && (Object.keys(on.push ?? {}).join() !== 'branches' || (on.push?.branches ?? []).join() !== 'main')) {
+    problems.push(`${name}: on.push must name branches: [main] and nothing else`);
+  }
+  if ('release' in on && (Object.keys(on.release ?? {}).join() !== 'types' || (on.release?.types ?? []).join() !== 'published')) {
+    problems.push(`${name}: on.release must name types: [published] and nothing else`);
+  }
+  const found = [...text.matchAll(secretRef)].map((m) => m[1]);
+  for (const other of new Set(found.filter((secret) => !WEBHOOK_SECRET.test(secret)))) {
+    problems.push(`${name}: uses secrets.${other}; the only secrets are DISCORD_WEBHOOK_* webhook URLs`);
+  }
+  let legitimate = 0;
+  for (const [id, job] of Object.entries(workflow.jobs ?? {})) {
+    const environment = typeof job.environment === 'string' ? job.environment : job.environment?.name;
+    for (const step of job.steps ?? []) {
+      for (const [key, value] of Object.entries(step.env ?? {})) {
+        const reference = new RegExp(`^\\$\\{\\{\\s*secrets\\.${key}\\s*\\}\\}$`);
+        if (!WEBHOOK_SECRET.test(key) || !reference.test(String(value).trim())) continue;
+        legitimate += 1;
+        if (environment !== 'notifications') problems.push(`${name}: job ${id} reads secrets.${key} outside environment: notifications`);
+        if (!/\bcurl\s/.test(String(step.run ?? ''))) problems.push(`${name}: job ${id}: the step that reads secrets.${key} does not post with curl`);
+      }
+    }
+  }
+  if (found.length !== legitimate) {
+    problems.push(`${name}: a DISCORD_WEBHOOK_* secret may appear only in the env of a step (as NAME: \${{ secrets.NAME }}), nowhere else`);
+  }
+  return problems;
+}
+
 async function main() {
   const root = fileURLToPath(new URL('../', import.meta.url));
   const { readManifests } = await import('./generate-index.mjs');
@@ -270,7 +320,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {
