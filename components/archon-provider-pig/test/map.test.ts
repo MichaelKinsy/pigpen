@@ -58,6 +58,37 @@ describe('PigTurnMapper over a recorded PiG turn', () => {
     expect(resultIndex).toBeGreaterThan(callIndex);
   });
 
+  it('keeps streamed tool-call arguments out of the assistant text', () => {
+    // Captured from `pig --mode json` (github-copilot/claude-haiku-5.5) reading note.txt: the
+    // toolcall_delta events stream `{"path": "note.txt"}`, which must never become reply text.
+    const { chunks } = replay('tool-turn-args.ndjson');
+    const text = chunks.flatMap(chunk => (chunk.type === 'agent_message_chunk' ? [chunk.text] : []));
+    expect(text.join('')).not.toContain('path');
+    expect(text.join('')).toContain('PIG_E2E_FILE_CONTENT');
+    expect(chunks.find(chunk => chunk.type === 'tool_call')).toMatchObject({ name: 'read' });
+  });
+
+  it('accumulates only text and thinking deltas and ignores every other event type', () => {
+    const mapper = new PigTurnMapper();
+    const update = (assistantMessageEvent: Record<string, unknown>) =>
+      mapper.push({ type: 'message_update', assistantMessageEvent });
+    const chunks = [
+      ...update({ type: 'start' }),
+      ...update({ type: 'toolcall_start', contentIndex: 0 }),
+      ...update({ type: 'toolcall_delta', contentIndex: 0, delta: '{"path": "a"}' }),
+      ...update({ type: 'toolcall_checkpoint', contentIndex: 0, delta: 'x' }),
+      ...update({ type: 'toolcall_end', contentIndex: 0, content: 'x' }),
+      ...update({ type: 'mystery_delta', delta: 'leak' }),
+      ...update({ type: 'text_delta', delta: 'ok' }),
+      ...update({ type: 'text_end' }),
+      ...update({ type: 'done' }),
+      ...update({ type: 'error' }),
+    ];
+    expect(JSON.stringify(chunks)).not.toContain('path');
+    expect(JSON.stringify(chunks)).not.toContain('leak');
+    expect(JSON.stringify(chunks)).toContain('ok');
+  });
+
   it('reports a cancelled turn when PiG settled as aborted', () => {
     const mapper = new PigTurnMapper();
     const chunks = mapper.push({ type: 'agent_settled', aborted: true });

@@ -239,17 +239,20 @@ export class PigTurnMapper {
     if (kind === 'message_update') {
       const update = event.assistantMessageEvent ?? {};
       const eventType = update.type ?? '';
-      // Deltas accumulate; an end event repeats the whole block in `content`, so appending
-      // it would double the text. An end that arrives with nothing buffered (a runtime that
-      // sends only start/end) still contributes its block.
-      const isThought = eventType.startsWith('thinking');
-      const buffer = isThought ? () => this.thought : () => this.text;
-      if (eventType.endsWith('_delta')) {
+      // Only text and thinking blocks are reply content. Tool-call arguments stream as
+      // `toolcall_*` (the call itself comes from the tool execution events), and `start`, `done`,
+      // `error` and any type this mapper does not know carry no text, so they are ignored.
+      // Deltas accumulate; an end event repeats the whole block in `content`, so appending it
+      // would double the text. An end that arrives with nothing buffered (a runtime that sends
+      // only start/end) still contributes its block.
+      const isThought = eventType.startsWith('thinking_');
+      if (eventType === 'text_delta' || eventType === 'thinking_delta') {
         const delta = update.delta ?? update.content ?? update.text ?? '';
         if (isThought) this.thought += delta;
         else this.text += delta;
-      } else if (eventType.endsWith('_end')) {
-        if (buffer().length === 0) {
+      } else if (eventType === 'text_end' || eventType === 'thinking_end') {
+        const buffered = isThought ? this.thought : this.text;
+        if (buffered.length === 0) {
           const whole = update.content ?? update.text ?? '';
           if (isThought) this.thought = whole;
           else this.text = whole;
