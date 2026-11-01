@@ -94,20 +94,86 @@ describe('PigTurnMapper over a recorded PiG turn', () => {
     });
   });
 
-  it('classifies a failed message from its status code, never from prose', () => {
-    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 401 }, errorMessage: 'bad key' })).toEqual({
-      class: 'auth',
-      evidence: 'bad key',
-    });
-    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 429 } })?.class).toBe(
+  // errorMessage strings captured from `pig --mode json` (0.5.3) against a bad key; PiG's failed
+  // assistant message has stopReason "error" and carries no structured error object.
+  const failed = (errorMessage: string) => failureOfMessage({ stopReason: 'error', errorMessage });
+  const ANTHROPIC_401 =
+    '401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"},"request_id":"req_011CgchPmY9rvs5rAvNwxDyX"}';
+  const OPENAI_401 =
+    'OpenAI API error (401): {"message":"Incorrect API key provided: sk-bad-k**-000. You can find your API key at https://platform.openai.com/account/api-keys.","type":"invalid_request_error","code":"invalid_api_key","param":null}';
+  const GOOGLE_BAD_KEY = JSON.stringify({
+    error: {
+      message: JSON.stringify(
+        {
+          error: {
+            code: 400,
+            message: 'API key not valid. Please pass a valid API key.',
+            status: 'INVALID_ARGUMENT',
+            details: [{ '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'API_KEY_INVALID' }],
+          },
+        },
+        null,
+        2
+      ),
+      code: 400,
+      status: 'Bad Request',
+    },
+  });
+
+  it('classifies a real Anthropic 401 as auth, keeping the message as evidence', () => {
+    expect(failed(ANTHROPIC_401)).toEqual({ class: 'auth', evidence: ANTHROPIC_401 });
+  });
+
+  it('classifies a real OpenAI 401 as auth although its body type is invalid_request_error', () => {
+    expect(failed(OPENAI_401)).toEqual({ class: 'auth', evidence: OPENAI_401 });
+  });
+
+  it('classifies a real Google bad-key failure as auth from the ErrorInfo reason', () => {
+    expect(failed(GOOGLE_BAD_KEY)?.class).toBe('auth');
+  });
+
+  it('reads 403, 429 and 5xx from the leading status of each provider shape', () => {
+    const anthropic = (status: number, type: string) =>
+      `${status} {"type":"error","error":{"type":"${type}","message":"x"}}`;
+    expect(failed(anthropic(403, 'permission_error'))?.class).toBe('auth');
+    expect(failed(anthropic(429, 'rate_limit_error'))?.class).toBe('rate_limited');
+    expect(failed(anthropic(529, 'overloaded_error'))?.class).toBe('overloaded');
+    expect(failed(anthropic(500, 'api_error'))?.class).toBe('overloaded');
+    expect(failed('OpenAI API error (429): {"message":"slow down","type":"requests"}')?.class).toBe(
       'rate_limited'
     );
-    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 503 } })?.class).toBe(
-      'overloaded'
-    );
-    expect(failureOfMessage({ stopReason: 'error', error: { type: 'invalid_request_error' } })?.class).toBe(
+    expect(failed('OpenAI API error (503): upstream down')?.class).toBe('overloaded');
+    expect(failed('anthropic: HTTP 403: permission_error: nope')?.class).toBe('auth');
+    expect(failed('402 Payment Required: out of credit')?.class).toBe('quota_exhausted');
+    expect(
+      failed(JSON.stringify({ error: { message: 'quota', code: 429, status: 'Too Many Requests' } }))?.class
+    ).toBe('rate_limited');
+  });
+
+  it('falls back to the provider error type when the status is not mapped', () => {
+    expect(failed('400 {"type":"error","error":{"type":"invalid_request_error","message":"x"}}')?.class).toBe(
       'misconfigured'
     );
+    expect(failed('409 {"type":"error","error":{"type":"overloaded_error","message":"x"}}')?.class).toBe(
+      'overloaded'
+    );
+  });
+
+  it('leaves a failure with no HTTP status or provider type as unknown, never guessed from prose', () => {
+    for (const text of [
+      'Request aborted',
+      'Anthropic stream ended without a stop reason',
+      'connection reset by peer',
+      'the server returned 401 unauthorized',
+      'got status: UNAVAILABLE. {"error":{"code":503}}',
+      '{"error":{"message":"plain"}}',
+    ]) {
+      expect(failed(text)).toEqual({ class: 'unknown', evidence: text });
+    }
+    expect(failureOfMessage({ stopReason: 'error' })).toEqual({
+      class: 'unknown',
+      evidence: 'PiG reported a failed message',
+    });
     expect(failureOfMessage({ stopReason: 'stop' })).toBeUndefined();
   });
 
@@ -126,13 +192,16 @@ describe('PigTurnMapper over a recorded PiG turn', () => {
     mapper.push({ type: 'session', id: 'abc' });
     mapper.push({
       type: 'message_end',
-      message: { stopReason: 'error', error: { statusCode: 403 }, errorMessage: 'forbidden' },
+      message: { stopReason: 'error', errorMessage: '403 {"type":"error","error":{"type":"permission_error","message":"forbidden"}}' },
     });
     const chunks = mapper.push({ type: 'agent_settled', aborted: false });
     expect(chunks[0]).toMatchObject({
       type: 'result',
       isError: true,
-      failure: { class: 'auth', evidence: 'forbidden' },
+      failure: {
+        class: 'auth',
+        evidence: '403 {"type":"error","error":{"type":"permission_error","message":"forbidden"}}',
+      },
     });
     expect(chunks[1]).toEqual({ type: 'settled' });
   });

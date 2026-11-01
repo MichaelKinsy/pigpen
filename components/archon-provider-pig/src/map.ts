@@ -37,9 +37,10 @@ export type ProviderChunk =
   | { type: 'settled' };
 
 /**
- * Why a turn failed, from PiG's structured signals only. The contract forbids classifying free
- * prose, so the class comes from the status code PiG's error payload carries and from whether the
- * run ever started; the vendor's own words travel as `evidence`, which nothing branches on.
+ * Why a turn failed. The contract forbids classifying free prose, so the class comes from the HTTP
+ * status and provider error type PiG's error text carries in fixed shapes (see `httpFailureOf`)
+ * and from whether the run ever started; the vendor's own words travel as `evidence`, which
+ * nothing branches on.
  */
 export type FailureClass =
   | 'auth'
@@ -51,30 +52,89 @@ export type FailureClass =
   | 'transient'
   | 'unknown';
 
+interface HttpFailure {
+  status?: number;
+  type?: string;
+  reason?: string;
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+function recordOf(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+/** The provider error type inside a JSON error body: Anthropic's `error.type` or OpenAI's flat `type`. */
+function typeOfBody(body: unknown): string | undefined {
+  const record = recordOf(body);
+  const inner = recordOf(record?.error);
+  if (typeof inner?.type === 'string') return inner.type;
+  return typeof record?.type === 'string' && record.type !== 'error' ? record.type : undefined;
+}
+
+/**
+ * PiG's failed assistant message has `stopReason: "error"` and nothing structured: Go's
+ * `ai.AssistantMessage` (messages.go) and Pi's carry only `errorMessage`. The HTTP status and the
+ * provider's error envelope live inside that string, in the shapes PiG's own formatters produce.
+ * Only those anchored shapes are read; any other text is not an HTTP failure.
+ *
+ *  - Anthropic (SDK form): `401 {"type":"error","error":{"type":"authentication_error",...}}`
+ *  - OpenAI: `OpenAI API error (401): {"message":...,"type":"invalid_request_error",...}`
+ *    (PiG ai/openai_error.go `openAIHTTPError`, prefix from the provider)
+ *  - Anthropic-compatible (PiG ai/anthropic.go `anthHTTPError`): `<provider>: HTTP 401: <type>: <message>`
+ *  - Pi-messages (PiG ai/pi_messages.go): `401 Unauthorized: <message>`
+ *  - Google: the SDK ApiError, a bare JSON `{"error":{"message":...,"code":400,"status":"..."}}`
+ */
+function httpFailureOf(text: string): HttpFailure | undefined {
+  const leading = /^([45]\d\d)(?:\s|:|$)/.exec(text);
+  if (leading !== null) {
+    return { status: Number(leading[1]), type: typeOfBody(parseJson(text.slice(leading[0].length))) };
+  }
+  const openai = /^OpenAI API error \(([45]\d\d)\):\s*/.exec(text);
+  if (openai !== null) {
+    return { status: Number(openai[1]), type: typeOfBody(parseJson(text.slice(openai[0].length))) };
+  }
+  const compatible = /^[\w.-]+: HTTP ([45]\d\d): ([a-z][a-z_]*): /.exec(text);
+  if (compatible !== null) return { status: Number(compatible[1]), type: compatible[2] };
+  const envelope = recordOf(recordOf(parseJson(text))?.error);
+  if (typeof envelope?.code === 'number' && envelope.code >= 400 && envelope.code < 600) {
+    // The SDK wraps the API's own body, as a string, in `message`; its ErrorInfo names the reason.
+    const inner = recordOf(recordOf(parseJson(typeof envelope.message === 'string' ? envelope.message : ''))?.error);
+    const details = Array.isArray(inner?.details) ? (inner.details as unknown[]) : [];
+    const info = details.map(recordOf).find(detail => typeof detail?.reason === 'string');
+    return {
+      status: envelope.code,
+      reason: typeof info?.reason === 'string' ? info.reason : undefined,
+    };
+  }
+  return undefined;
+}
+
 /** The failure a finished assistant message reports, or undefined when it succeeded. */
 export function failureOfMessage(message: unknown): { class: FailureClass; evidence: string } | undefined {
-  const value = message as
-    | { stopReason?: string; errorMessage?: string; error?: unknown; usage?: unknown }
-    | undefined;
+  const value = message as { stopReason?: string; errorMessage?: string } | undefined;
   if (value?.stopReason !== 'error') return undefined;
-  const error = value.error as { statusCode?: unknown; status?: unknown; code?: unknown; type?: unknown } | undefined;
-  const status = [error?.statusCode, error?.status, error?.code].find(
-    (candidate): candidate is number => typeof candidate === 'number'
-  );
-  const evidence = typeof value.errorMessage === 'string' && value.errorMessage.length > 0
-    ? value.errorMessage
-    : error === undefined
-      ? 'PiG reported a failed message'
-      : JSON.stringify(error).slice(0, 500);
+  const text = typeof value.errorMessage === 'string' ? value.errorMessage : '';
+  const evidence = text.length > 0 ? text : 'PiG reported a failed message';
+  const failure = httpFailureOf(text);
+  const status = failure?.status;
   if (status === 401 || status === 403) return { class: 'auth', evidence };
   if (status === 402) return { class: 'quota_exhausted', evidence };
   if (status === 429) return { class: 'rate_limited', evidence };
   if (status !== undefined && status >= 500) return { class: 'overloaded', evidence };
-  const type = typeof error?.type === 'string' ? error.type : undefined;
-  if (type === 'authentication_error') return { class: 'auth', evidence };
-  if (type === 'rate_limit_error') return { class: 'rate_limited', evidence };
-  if (type === 'overloaded_error') return { class: 'overloaded', evidence };
-  if (type === 'invalid_request_error') return { class: 'misconfigured', evidence };
+  if (failure?.reason === 'API_KEY_INVALID') return { class: 'auth', evidence };
+  if (failure?.type === 'authentication_error') return { class: 'auth', evidence };
+  if (failure?.type === 'rate_limit_error') return { class: 'rate_limited', evidence };
+  if (failure?.type === 'overloaded_error') return { class: 'overloaded', evidence };
+  if (failure?.type === 'invalid_request_error') return { class: 'misconfigured', evidence };
   return { class: 'unknown', evidence };
 }
 
