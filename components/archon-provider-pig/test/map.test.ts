@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PigTurnMapper, toolOutputOf, usageOf, type PigEvent } from '../src/map';
+import {
+  PigTurnMapper,
+  failureOfExit,
+  failureOfMessage,
+  toolOutputOf,
+  usageOf,
+  type PigEvent,
+} from '../src/map';
 
 function replay(file: string) {
   const mapper = new PigTurnMapper();
@@ -84,5 +91,56 @@ describe('PigTurnMapper over a recorded PiG turn', () => {
       output: 7,
       cacheRead: 1,
     });
+  });
+
+  it('classifies a failed message from its status code, never from prose', () => {
+    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 401 }, errorMessage: 'bad key' })).toEqual({
+      class: 'auth',
+      evidence: 'bad key',
+    });
+    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 429 } })?.class).toBe(
+      'rate_limited'
+    );
+    expect(failureOfMessage({ stopReason: 'error', error: { statusCode: 503 } })?.class).toBe(
+      'overloaded'
+    );
+    expect(failureOfMessage({ stopReason: 'error', error: { type: 'invalid_request_error' } })?.class).toBe(
+      'misconfigured'
+    );
+    expect(failureOfMessage({ stopReason: 'stop' })).toBeUndefined();
+  });
+
+  it('reports a turn that never started as misconfigured and a signal as transient', () => {
+    expect(failureOfExit({ code: 1, started: false, stderr: 'no model configured' })).toEqual({
+      class: 'misconfigured',
+      evidence: 'no model configured',
+    });
+    expect(failureOfExit({ code: 143, started: true, stderr: '' })?.class).toBe('transient');
+    expect(failureOfExit({ code: 0, started: true, stderr: '' })).toBeUndefined();
+    expect(failureOfExit({ code: 1, started: true, stderr: 'boom' })?.class).toBe('unknown');
+  });
+
+  it('carries a failed message into the settled result as a typed failure', () => {
+    const mapper = new PigTurnMapper();
+    mapper.push({ type: 'session', id: 'abc' });
+    mapper.push({
+      type: 'message_end',
+      message: { stopReason: 'error', error: { statusCode: 403 }, errorMessage: 'forbidden' },
+    });
+    const chunks = mapper.push({ type: 'agent_settled', aborted: false });
+    expect(chunks[0]).toMatchObject({
+      type: 'result',
+      isError: true,
+      failure: { class: 'auth', evidence: 'forbidden' },
+    });
+    expect(chunks[1]).toEqual({ type: 'settled' });
+  });
+
+  it('names token usage `tokens`, the field the contract reads', () => {
+    const mapper = new PigTurnMapper();
+    mapper.push({ type: 'message_end', message: undefined, usage: { input: 3, output: 4 } });
+    const chunks = mapper.push({ type: 'agent_settled' });
+    expect(chunks[0]).toMatchObject({ type: 'result', tokens: { input: 3, output: 4 } });
+    expect(chunks[0]).not.toHaveProperty('usage');
   });
 });

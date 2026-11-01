@@ -6,7 +6,7 @@
  * and a caller that leaves the pipe open makes startup wait (PiG documents this divergence).
  */
 import { spawn } from 'node:child_process';
-import { PigTurnMapper, type PigEvent, type ProviderChunk } from './map';
+import { PigTurnMapper, failureOfExit, type PigEvent, type ProviderChunk } from './map';
 import { readMessages } from './wire';
 
 export interface PigTurnOptions {
@@ -71,9 +71,11 @@ export async function* runPigTurn(options: PigTurnOptions): AsyncGenerator<Provi
   });
 
   let settled = false;
+  let started = false;
   try {
     for await (const message of readMessages(child.stdout as AsyncIterable<Uint8Array>)) {
       const event = message as unknown as PigEvent;
+      if (event.type === 'session') started = true;
       for (const chunk of mapper.push(event)) {
         if (chunk.type === 'settled') settled = true;
         yield chunk;
@@ -89,12 +91,20 @@ export async function* runPigTurn(options: PigTurnOptions): AsyncGenerator<Provi
     return;
   }
   if (!settled) {
-    const detail = stderr.trim().split('\n').slice(-3).join(' ').slice(0, 500);
+    const failure = failureOfExit({ code, started, stderr });
+    if (failure === undefined) {
+      yield { type: 'result', stopReason: 'end_turn' };
+      return;
+    }
     yield {
       type: 'warning',
-      code: 'pig.exit_without_settle',
-      message: `pig exited (${String(code)}) without settling${detail ? `: ${detail}` : ''}`,
+      code: 'pig.failed',
+      message: `PiG reported a ${failure.class} failure`,
     };
-    yield { type: 'result', stopReason: code === 0 ? 'end_turn' : 'refusal' };
+    yield {
+      type: 'result',
+      failure: { class: failure.class as never, evidence: failure.evidence },
+      isError: true,
+    };
   }
 }

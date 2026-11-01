@@ -29,15 +29,80 @@ export type ProviderChunk =
       type: 'result';
       sessionId?: string;
       stopReason?: 'end_turn' | 'max_tokens' | 'max_turn_requests' | 'refusal' | 'cancelled';
-      usage?: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
+      tokens?: { input: number; output: number; cacheRead?: number; cacheWrite?: number };
+      failure?: { class: FailureClass; evidence: string };
+      isError?: boolean;
     }
   | { type: 'warning'; code: string; message: string }
   | { type: 'settled' };
+
+/**
+ * Why a turn failed, from PiG's structured signals only. The contract forbids classifying free
+ * prose, so the class comes from the status code PiG's error payload carries and from whether the
+ * run ever started; the vendor's own words travel as `evidence`, which nothing branches on.
+ */
+export type FailureClass =
+  | 'auth'
+  | 'quota_exhausted'
+  | 'budget_exceeded'
+  | 'misconfigured'
+  | 'rate_limited'
+  | 'overloaded'
+  | 'transient'
+  | 'unknown';
+
+/** The failure a finished assistant message reports, or undefined when it succeeded. */
+export function failureOfMessage(message: unknown): { class: FailureClass; evidence: string } | undefined {
+  const value = message as
+    | { stopReason?: string; errorMessage?: string; error?: unknown; usage?: unknown }
+    | undefined;
+  if (value?.stopReason !== 'error') return undefined;
+  const error = value.error as { statusCode?: unknown; status?: unknown; code?: unknown; type?: unknown } | undefined;
+  const status = [error?.statusCode, error?.status, error?.code].find(
+    (candidate): candidate is number => typeof candidate === 'number'
+  );
+  const evidence = typeof value.errorMessage === 'string' && value.errorMessage.length > 0
+    ? value.errorMessage
+    : error === undefined
+      ? 'PiG reported a failed message'
+      : JSON.stringify(error).slice(0, 500);
+  if (status === 401 || status === 403) return { class: 'auth', evidence };
+  if (status === 402) return { class: 'quota_exhausted', evidence };
+  if (status === 429) return { class: 'rate_limited', evidence };
+  if (status !== undefined && status >= 500) return { class: 'overloaded', evidence };
+  const type = typeof error?.type === 'string' ? error.type : undefined;
+  if (type === 'authentication_error') return { class: 'auth', evidence };
+  if (type === 'rate_limit_error') return { class: 'rate_limited', evidence };
+  if (type === 'overloaded_error') return { class: 'overloaded', evidence };
+  if (type === 'invalid_request_error') return { class: 'misconfigured', evidence };
+  return { class: 'unknown', evidence };
+}
+
+/**
+ * Why a turn ended when PiG exited without settling. A run that never wrote its Session header
+ * could not start at all, which is the operator's configuration (a missing or unknown model);
+ * a signal is a cancellation; anything else is unknown until a structured signal says otherwise.
+ */
+export function failureOfExit(options: {
+  code: number | null;
+  started: boolean;
+  stderr: string;
+}): { class: FailureClass; evidence: string } | undefined {
+  const detail = options.stderr.trim().split('\n').slice(-3).join(' ').slice(0, 500);
+  const evidence = detail.length > 0 ? detail : `pig exited ${String(options.code)}`;
+  if (options.code === 0) return undefined;
+  if (options.code === 130 || options.code === 129 || options.code === 143) {
+    return { class: 'transient', evidence };
+  }
+  if (!options.started) return { class: 'misconfigured', evidence };
+  return { class: 'unknown', evidence };
+}
 
 /** The subset of a PiG event this mapper reads. Anything else passes through untouched. */
 export interface PigEvent {
   type?: string;
   id?: string;
+  message?: unknown;
   aborted?: boolean;
   usage?: Record<string, unknown>;
   assistantMessageEvent?: { type?: string; delta?: string; content?: string; text?: string };
@@ -91,6 +156,7 @@ export class PigTurnMapper {
   private text = '';
   private thought = '';
   private sessionId: string | undefined;
+  private failure: { class: FailureClass; evidence: string } | undefined;
   private lastUsage: ReturnType<typeof usageOf>;
 
   /** The PiG session id, once the Session header has been seen. */
@@ -157,6 +223,12 @@ export class PigTurnMapper {
       return chunks;
     }
 
+    if (kind === 'message_end') {
+      const failure = failureOfMessage((event as { message?: unknown }).message);
+      if (failure !== undefined) this.failure = failure;
+      return chunks;
+    }
+
     if (kind === 'auto_retry_start') {
       chunks.push({ type: 'warning', code: 'pig.auto_retry', message: 'PiG is retrying the turn' });
       return chunks;
@@ -165,12 +237,20 @@ export class PigTurnMapper {
     if (kind === 'agent_settled') {
       chunks.push(...this.flushText());
       chunks.push(...this.flushThought());
+      if (this.failure !== undefined) {
+        // A failed message settles like any other: the class, never the exit status, says so.
+        chunks.push(
+          { type: 'result', failure: this.failure, isError: true },
+          { type: 'settled' }
+        );
+        return chunks;
+      }
       const result: ProviderChunk = {
         type: 'result',
         stopReason: event.aborted === true ? 'cancelled' : 'end_turn',
       };
       if (this.sessionId !== undefined) result.sessionId = this.sessionId;
-      if (this.lastUsage !== undefined) result.usage = this.lastUsage;
+      if (this.lastUsage !== undefined) result.tokens = this.lastUsage;
       chunks.push(result, { type: 'settled' });
     }
 
