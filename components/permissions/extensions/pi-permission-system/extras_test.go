@@ -319,11 +319,14 @@ func TestRuleExtras(t *testing.T) {
 	eq(t, arr, Ruleset{rule("bash", "0", "allow", "", "builtin"), rule("bash", "2", "deny", "", "builtin")}, "array")
 }
 
-// `bash_unchecked: "allow"` in the permission map skips the bash word scan's external-directory gate for every
-// direction: a command whose words name paths outside the working directory is decided by the bash rules alone,
-// for a read command, a writing command and a command that proves no direction alike. It is a port directive the
-// original would read as an ordinary (and unused) surface rule; any other state or an absent key leaves the gate
-// in place, and the key never becomes a rule of its own.
+// `bash_unchecked: "allow"` in the permission map makes the bash surface unchecked: the bash word scan's
+// external-directory gate is skipped for every direction — a command whose words name paths outside the working
+// directory is decided by the bash rules alone, for a read command, a writing command and a command that proves
+// no direction alike — and every ask the surface raises is granted, so the dialog never appears for a bash
+// command (a rule's ask and a wrapper unit's floored allow). A deny still denies, and a command the port cannot
+// read is still refused while bash has value patterns. It is a port directive the original would read as an
+// ordinary (and unused) surface rule; any other state or an absent key leaves the gate and the asks in place, and
+// the key never becomes a rule of its own.
 func TestBashUnchecked(t *testing.T) {
 	cwd := t.TempDir()
 	outside := filepath.Join(cwd, "..", "out.txt")
@@ -352,17 +355,36 @@ func TestBashUnchecked(t *testing.T) {
 	for _, r := range NewPolicy(parseConfig([]byte(with), "/cfg.json")).rules {
 		eq(t, r.Surface == "bash_unchecked", false, "the directive never becomes a rule")
 	}
-	// A deny on the bash surface itself still denies: only the external gate is skipped. The commands here are
-	// fixed and plainly simple — the temp dir of this sandbox contains braces, which make a command unreadable
+	// A deny on the bash surface itself still denies: only the asks and the external gate go. The commands here
+	// are fixed and plainly simple — the temp dir of this sandbox contains braces, which make a command unreadable
 	// to the port's word parser, and a command the port cannot read is refused while bash has patterns.
 	d := `{"permission":{"*":"allow","external_directory":"deny","bash":{"*":"deny","cat *":"allow"},"bash_unchecked":"allow"}}`
 	tv := decide(t, d, "touch /pigpen-external-cache.txt")
 	eq(t, tv.Block && strings.Contains(tv.Reason, "Denied by policy: 'bash'"), true, "the bash rules alone decide")
 	eq(t, decide(t, d, "cat /pigpen-external-cache.txt"), Verdict{}, "an allowed read stays allowed, gate and all")
-	// Any other state keeps the gate.
+	// Every ask on the bash surface is granted: an ask from the rules, and a wrapper unit's floored allow. The
+	// second is the shape that prompted the change: `timeout` around a program that proves no read is an
+	// indirection wrapper, so its allow used to be floored to ask even with the directive on.
+	asked := `{"permission":{"bash":{"*":"ask","cat *":"allow"},"bash_unchecked":"allow"}}`
+	floor := `{"permission":{"bash":"allow","bash_unchecked":"allow"}}`
+	for _, tc := range []struct{ config, command string }{
+		{asked, "touch /pigpen-external-cache.txt"},   // a rule's ask
+		{floor, "sudo rm /pigpen-external-cache.txt"}, // a wrapper unit's floored allow
+		{floor, "timeout 600 ./target/release/gen --filter g 2>&1 | tail -40"},
+	} {
+		eq(t, decide(t, tc.config, tc.command), Verdict{}, "granted: "+tc.command)
+	}
+	// Without the directive the same asks ask.
+	noDirective := `{"permission":{"bash":{"*":"ask","cat *":"allow"}}}`
+	eq(t, isBashAsk(decide(t, noDirective, "touch /pigpen-external-cache.txt")), true, "a rule's ask still asks")
+	askOnly := `{"permission":{"bash":"allow"}}`
+	eq(t, isBashAsk(decide(t, askOnly, "sudo rm /pigpen-external-cache.txt")), true, "a wrapper floor still asks")
+	// Any other state keeps the gate and the asks.
 	for _, state := range []string{"ask", "deny"} {
 		cfg := `{"permission":{` + perm + `,"bash_unchecked":"` + state + `"}}`
 		eq(t, decide(t, cfg, "touch "+outside).Block, true, "bash_unchecked: "+state+" keeps the gate")
+		eq(t, isBashAsk(decide(t, `{"permission":{"bash":"allow","bash_unchecked":"`+state+`"}}`,
+			"sudo rm /pigpen-external-cache.txt")), true, "bash_unchecked: "+state+" keeps the wrapper floor")
 	}
 	// A non-state value is a schema issue at the key.
 	c := parseConfig([]byte(`{"permission":{"bash_unchecked":"yes"}}`), "/cfg.json")

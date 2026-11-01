@@ -140,8 +140,9 @@ type Policy struct {
 	rules      Ruleset
 	yolo       bool
 	shellTools map[string]bool
-	// disableBashExternal skips the bash external-directory gate; see NewPolicy (the `bash_unchecked` directive).
-	disableBashExternal bool
+	// bashUnchecked is the permission map's `bash_unchecked: "allow"` directive: the bash surface is unchecked —
+	// no external-directory gate over its words and no ask it raises; see NewPolicy.
+	bashUnchecked bool
 }
 
 // NewPolicy composes the ruleset the way PermissionManager does for one scope: the `*` key is the default rule only, the other
@@ -155,9 +156,12 @@ func NewPolicy(c Config) *Policy {
 	if s, ok := isPermissionState(permission.vals["*"]); ok {
 		universal = s
 	}
-	// `bash_unchecked: "allow"` in the permission map skips the bash word scan's external-directory gate: every
-	// external path a bash command names is then decided by the bash rules alone (a port directive, not a surface:
-	// any other state or an absent key leaves the gate on, and the key never becomes a rule below).
+	// `bash_unchecked: "allow"` in the permission map makes the bash surface unchecked: the bash word scan's
+	// external-directory gate is skipped (every external path a bash command names is then decided by the bash
+	// rules alone) and every ask on the bash surface is granted — a rule's ask and a wrapper unit's floored allow
+	// alike — so a dialog never appears for a bash command; a deny still denies (a port directive, not a surface:
+	// any other state or an absent key leaves the gate and the asks in place, and the key never becomes a rule
+	// below).
 	bashUnchecked := false
 	if c.Permission != nil {
 		if s, _ := c.Permission.vals["bash_unchecked"].(string); s == "allow" {
@@ -179,7 +183,7 @@ func NewPolicy(c Config) *Policy {
 	if c.Yolo {
 		rules = RewriteAsksToYolo(rules)
 	}
-	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}, disableBashExternal: bashUnchecked}
+	p := &Policy{rules: rules, yolo: c.Yolo, shellTools: map[string]bool{}, bashUnchecked: bashUnchecked}
 	for _, t := range c.ShellTools {
 		p.shellTools[t] = true
 	}

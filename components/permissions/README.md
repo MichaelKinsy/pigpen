@@ -44,7 +44,8 @@ merging, the config's `permission` map and `yoloMode` (comments and a `$schema` 
 rejects is not used at all, and a warning says why), the `tool_call` gate for `bash` (simple commands, alone or joined by
 `&&`, `||`, `;`, `|` or newlines, each matched on its own; a wrapper such as `sudo`, `env`, `xargs`, `nice`, `eval` or
 `sh -c` has its allow floored to **ask** unless its payload provably only reads (`sudo ls` is allowed by the inner
-command's rule, `sudo rm x` asks), while a command that merely runs another one without a wrapper flag — `ssh`, `source`,
+command's rule, `sudo rm x` asks, and the `"bash_unchecked": "allow"` directive grants the floored ask — see Paths
+below), while a command that merely runs another one without a wrapper flag — `ssh`, `source`,
 `bash script.sh` — and a command the port reads by neither its patterns nor its parser are decided by the rules alone, as
 in the original) and for the other tools by name, reading a listed skill's files under the `skill` rules, the original's denial text,
 withholding fully denied tools, and the permissive-`*` warning.
@@ -64,11 +65,14 @@ makes fire only when the config writes them), and a path outside it consults `ex
 `edit`, an unknown command). Reads and writes of your project work; an external write asks. A unit's command word is
 executed, not accessed as an operand, so it is not gated: `C:/tools/bash -lc …` does not gate C:/tools/bash, while
 `bash /c/x.sh` still gates its script operand. The permission map's `"bash_unchecked": "allow"` directive (a port
-key: the original reads it as an ordinary surface rule and leaves the gate on) skips that word scan entirely: a
-`bash` command's external paths are then decided by the `bash` rules alone, while the path and external-directory
-gates on the path-bearing tools keep applying. Any other state or an absent key leaves the gate in place. Set it
-when the external-directory asks on `bash` are not wanted, e.g. for build commands that write caches outside the
-working directory.
+key: the original reads it as an ordinary surface rule and leaves both the gate and the asks on) leaves the bash
+surface unchecked: it skips that word scan entirely — a `bash` command's external paths are then decided by the
+`bash` rules alone — and it grants every ask the surface raises, a rule's ask and a wrapper unit's floored allow
+alike, so the approval dialog never appears for a `bash` call. A deny on the `bash` surface still denies, and a
+command the port cannot read is still refused while `bash` has value patterns; the path and external-directory
+gates on the path-bearing tools keep applying. Any other state or an absent key leaves the gate and the asks in
+place. Set it when `bash` should run unchecked, e.g. for build commands that wrap other commands or write caches
+outside the working directory.
 
 **Refused, and never allowed** (`refusal.go`; each is machinery the original has and the port does not):
 
