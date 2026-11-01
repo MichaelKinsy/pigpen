@@ -1,7 +1,7 @@
 # Releases one Package. A pushed tag `components/<name>/v<version>` is the release: Packages install from a Git tag, so
 # there is nothing to build, sign or upload and this workflow holds no secret and no write permission. It proves the tag
 # before anyone is told about it:
-#   - the tag names a component whose package.json has that version, on a commit of main;
+#   - the tag names a component whose package.json has that version (an Archon plugin: the version it answers), on a commit of main;
 #   - the Package passes `pig package validate`;
 #   - the exact command the index shows, `pig install 'git:https://github.com/<repo>.git@<tag>#subdirectory=components%2F<name>'`,
 #     installs it from GitHub, its Go extensions build and register under the pinned pig, and it removes cleanly.
@@ -62,12 +62,26 @@ jobs:
           go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
           echo "PIG_BIN=$PWD/.pig-bin/pig" >> "$GITHUB_ENV"
       - name: Validate the Package
+        if: steps.tag.outputs.kind == 'package'
         env:
           NAME: ${{ steps.tag.outputs.name }}
           PIG_HOME: ${{ runner.temp }}/pig-home
         run: '"$PIG_BIN" package validate "components/$NAME"'
       - name: Install it from the tag, as a user does
+        if: steps.tag.outputs.kind == 'package'
         env:
           NAME: ${{ steps.tag.outputs.name }}
           VERSION: ${{ steps.tag.outputs.version }}
         run: node scripts/package-smoke.mjs "$NAME" "$VERSION"
+      # An Archon plugin is not a PiG Package: Archon installs it from the tag, so there is no `pig package validate` or
+      # `pig install` to run. Its descriptor rules and its own tests are the gate (scripts/archon-plugins.mjs).
+      - name: Bun for the Archon plugin tests
+        if: steps.tag.outputs.kind == 'archon-plugin'
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.3'
+      - name: Validate the Archon plugin
+        if: steps.tag.outputs.kind == 'archon-plugin'
+        env:
+          NAME: ${{ steps.tag.outputs.name }}
+        run: node scripts/archon-plugins.mjs check "components/$NAME"
