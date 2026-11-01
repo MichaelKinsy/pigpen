@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "kind": "provider",
+  "name": "provider-pig",
+  "description": "PiG provider: runs Archon agent sessions through the pig CLI.",
+  "executable": "archon-provider-pig"
+}

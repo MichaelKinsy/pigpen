@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { readManifests, generateIndex, root } from './generate-index.mjs';
+import { componentKind, validatePlugin } from './archon-plugins.mjs';
 import { goModules, isLibraryModule, registersNativeProvider } from './go-modules.mjs';
 import { requirePig } from './pig-bin.mjs';
 import { loadsInPig } from './platform-smoke.mjs';
@@ -20,7 +21,11 @@ function loadInPig(module) {
 }
 generateIndex();
 for (const component of readdirSync(join(root, 'components'), { withFileTypes: true })) {
-  if (component.isDirectory()) run(['package', 'validate', join(root, 'components', component.name)]);
+  if (!component.isDirectory()) continue;
+  const path = join(root, 'components', component.name);
+  // A PiG Package goes to PiG's validator; an Archon plugin is not a Package and has its own rules (archon-plugins.mjs).
+  if (componentKind(path) === 'package') run(['package', 'validate', path]);
+  else validatePlugin(path);
 }
 for (const { path } of readManifests(join(root, 'dist/staged'))) run(['piglet', 'validate', path]);
 // A Go extension that passes the workspace tests can still fail under pig (a stale go.mod, a missing require:
