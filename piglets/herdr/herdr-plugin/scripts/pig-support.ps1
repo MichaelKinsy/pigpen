@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 # The Package version this plugin was released with. `refresh` keeps an installed
 # copy in step with it. A test keeps it equal to components/herdr/package.json.
 $PackageName = "npm:@pi-in-go/pigpen-herdr"
-$PackageVersion = "0.2.0"
+$PackageVersion = "0.3.0"
 # PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
 # or a packed tarball of the Package; it is never refreshed.
 $Package = if ($env:PIGPEN_HERDR_PACKAGE) { $env:PIGPEN_HERDR_PACKAGE } else { "$PackageName@$PackageVersion" }
@@ -64,7 +64,7 @@ function Test-Installed {
 }
 
 # The pinned entry of this Package that `pig list` shows, if any, for example
-# npm:@pi-in-go/pigpen-herdr@0.1.1. An entry without a version follows `pig update`.
+# npm:@pi-in-go/pigpen-herdr@0.2.0. An entry without a version follows `pig update`.
 function Get-PinnedEntry {
     $match = [regex]::Match((Get-Listing), [regex]::Escape($PackageName) + "@\S*")
     if ($match.Success) { return $match.Value }
