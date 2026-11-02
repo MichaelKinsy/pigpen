@@ -227,6 +227,16 @@ func TestManagementEdges(t *testing.T) {
 	w := mk("worker", SourceProject, "p")
 	w.Aliases = []string{"dev", "coder"}
 	eq(t, listLine(w), "- worker (project, aliases: dev, coder): worker agent", "aliases in a list line")
+	eq(t, capabilitiesLine(w), "- worker (project, aliases: dev, coder): Description: worker agent; Tools: default/ambient; Model: inherits current session; Thinking: default", "ambient capabilities line")
+	w.Tools, w.McpDirectTools, w.Model, w.Thinking, w.AcceptanceRole = []string{"read"}, []string{"gh"}, "x/y", false, "reviewer"
+	eq(t, capabilitiesLine(w), "- worker (project, aliases: dev, coder): Description: worker agent; Tools: read, mcp:gh; Model: x/y; Thinking: off; Acceptance role: reviewer", "declared capabilities line")
+	w.Tools, w.McpDirectTools, w.Description = []string{}, nil, strings.Repeat("é", 300)
+	if l := capabilitiesLine(w); !strings.Contains(l, "Tools: none;") || !strings.Contains(l, strings.Repeat("é", 237)+"...;") {
+		t.Errorf("empty tools and a 240-character description cut: %s", l)
+	}
+	if !strings.Contains(listAgents(dir, map[string]any{"capabilities": true}).text, "Executable agents (capabilities):") {
+		t.Error("capabilities header")
+	}
 }
 
 func TestToolSelection(t *testing.T) {

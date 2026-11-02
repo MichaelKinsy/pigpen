@@ -84,7 +84,7 @@ document features that are not ported); the original's session-resume memory of 
 
 **Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
 accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`), `async` other than
+`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`, plus `capabilities` for `list`, which gives the original's capability rows as text without its `agentCapabilities` details), `async` other than
 `false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
 other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
 original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support

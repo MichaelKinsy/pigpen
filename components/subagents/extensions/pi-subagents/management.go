@@ -72,6 +72,48 @@ func runnerBadge(a AgentConfig) string {
 }
 
 func listLine(a AgentConfig) string {
+	return fmt.Sprintf("- %s (%s): %s", a.Name, listMeta(a), a.Description)
+}
+
+// capabilitiesLine is the original's formatAgentCapabilitiesLine for the fields the port reads.
+func capabilitiesLine(a AgentConfig) string {
+	tools := "none"
+	declared := append([]string{}, a.Tools...)
+	for _, t := range a.McpDirectTools {
+		declared = append(declared, "mcp:"+t)
+	}
+	if a.Tools == nil && a.McpDirectTools == nil {
+		tools = "default/ambient"
+	} else if len(declared) > 0 {
+		tools = strings.Join(declared, ", ")
+	}
+	model := "inherits current session"
+	if a.Model != "" {
+		model = a.Model
+	}
+	thinking := "default"
+	if a.Thinking == false {
+		thinking = "off"
+	} else if t, ok := a.Thinking.(string); ok {
+		thinking = t
+	}
+	line := fmt.Sprintf("- %s (%s): Description: %s; Tools: %s; Model: %s; Thinking: %s", a.Name, listMeta(a), preview(a.Description, 240), tools, model, thinking)
+	if a.AcceptanceRole != "" {
+		line += "; Acceptance role: " + a.AcceptanceRole
+	}
+	return line
+}
+
+// preview is the original's previewDisplayText length cut (in characters, with "...").
+func preview(s string, max int) string {
+	r := []rune(s)
+	if len(r) <= max {
+		return s
+	}
+	return string(r[:max-3]) + "..."
+}
+
+func listMeta(a AgentConfig) string {
 	parts := []string{string(a.Source)}
 	if b := runnerBadge(a); b != "" {
 		parts = append(parts, b)
@@ -82,7 +124,7 @@ func listLine(a AgentConfig) string {
 	if len(a.Aliases) > 0 {
 		parts = append(parts, "aliases: "+strings.Join(a.Aliases, ", "))
 	}
-	return fmt.Sprintf("- %s (%s): %s", a.Name, strings.Join(parts, ", "), a.Description)
+	return strings.Join(parts, ", ")
 }
 
 func diagnosticLines(diags []Diagnostic) []string {
@@ -117,7 +159,7 @@ func diagnosticsForScope(diags []Diagnostic, scope AgentScope) []Diagnostic {
 	return out
 }
 
-// listAgents is the `list` action without capabilities.
+// listAgents is the `list` action; `capabilities: true` gives the original's capability rows (text only, no details snapshot).
 func listAgents(cwd string, params map[string]any) manageResult {
 	scope, _ := normalizeListScope(params["agentScope"])
 	if scope == "" {
@@ -126,7 +168,10 @@ func listAgents(cwd string, params map[string]any) manageResult {
 	d := DiscoverAgentsAll(cwd)
 	agents := MergeAgentsForScope(scope, d.User, d.Project, d.Builtin, d.Package)
 	sort.SliceStable(agents, func(i, j int) bool { return localeLess(agents[i].Name, agents[j].Name) })
-	lines := []string{"Executable agents:"}
+	line, lines := listLine, []string{"Executable agents:"}
+	if params["capabilities"] == true {
+		line, lines = capabilitiesLine, []string{"Executable agents (capabilities):"}
+	}
 	if len(agents) == 0 {
 		lines = append(lines, "- (none)")
 	}
@@ -138,7 +183,7 @@ func listAgents(cwd string, params map[string]any) manageResult {
 		var section []string
 		for _, a := range agents {
 			if a.Source == sec.src {
-				section = append(section, listLine(a))
+				section = append(section, line(a))
 			}
 		}
 		if len(section) == 0 {
