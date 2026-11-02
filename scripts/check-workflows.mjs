@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Workflow hardening gate, part of `npm run quality`: the checks PiG's `make compliance` makes on its own workflows.
 // Every workflow under .github/workflows must pin each action to a full commit SHA, ask for a read-only token, use no
-// secrets and no pull_request_target, never persist the checkout token, and bound every job. Two workflows are excepted,
+// secrets and no pull_request_target, never persist the checkout token, and bound every job. Three workflows are excepted,
 // each with its own rules below. release.yml (releaseProblems) reads PIGLET_SIGNING_KEY, an environment secret read only
 // by a step that runs the pinned pig, holds the release writes it needs, and has a tag filter that no Package tag can
-// match. discord-notify.yml (notifyProblems) reads DISCORD_WEBHOOK_* URLs from the notifications environment, only in the
+// match. release-archon-provider.yml (archonReleaseProblems) reads ARCHON_PROVIDER_PIG_TOKEN, an environment secret read only
+// by a step that runs git and gh and no repository script, on a pushed Archon plugin tag. discord-notify.yml (notifyProblems)
+// reads DISCORD_WEBHOOK_* URLs from the notifications environment, only in the
 // env of a step that posts to Discord, and runs on nothing but a push to main and a published release. ci.yml must also keep its one
 // PiG pin equal to scripts/pig-requirement.json and build every target a Piglet manifest declares on that target's native
 // runner (scripts/runners.mjs), so the pin and the target list each have one source. Any other workflow that checks out
@@ -46,7 +48,7 @@ export function hardeningProblems(name, text) {
   if (workflow.permissions === undefined) problems.push(`${name}: no top-level permissions (the default token may be read-write)`);
   for (const grant of writes(workflow.permissions)) problems.push(`${name}: top-level permissions grant ${grant}`);
   if (workflow.on && typeof workflow.on === 'object' && 'pull_request_target' in workflow.on) problems.push(`${name}: runs on pull_request_target`);
-  if (![RELEASE_WORKFLOW, NOTIFY_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
+  if (![RELEASE_WORKFLOW, NOTIFY_WORKFLOW, ARCHON_RELEASE_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
 
   for (const [id, job] of jobs) {
     const allowed = name === RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
@@ -89,6 +91,8 @@ export function goToolchainProblems(name, text) {
 const SIGNING_KEY = 'PIGLET_SIGNING_KEY';
 const RELEASE_WORKFLOW = 'release.yml';
 const NOTIFY_WORKFLOW = 'discord-notify.yml';
+const ARCHON_RELEASE_WORKFLOW = 'release-archon-provider.yml';
+const ARCHON_TOKEN = 'ARCHON_PROVIDER_PIG_TOKEN';
 const WEBHOOK_SECRET = /^DISCORD_WEBHOOK_[A-Z0-9_]+$/;
 const secretRef = new RegExp(`\\$\\{\\{\\s*secrets\\.([A-Za-z0-9_]+)`, 'g');
 
@@ -122,6 +126,39 @@ export function releaseProblems(name, text) {
   const planIf = String(workflow.jobs?.plan?.if ?? '');
   if (!planIf.includes("'npm/'")) problems.push(`${name}: the plan job must skip an npm/ tag (if: \${{ !startsWith(github.ref_name, 'npm/') }}): npm-publish.yml owns it`);
   if (found.filter((secret) => secret === SIGNING_KEY).length !== legitimate) problems.push(`${name}: ${SIGNING_KEY} may appear only in the env of a step (as ${SIGNING_KEY}: \${{ secrets.${SIGNING_KEY} }}), nowhere else`);
+  return problems;
+}
+
+/**
+ * release-archon-provider.yml's own rules, on top of hardeningProblems. It publishes components/archon-provider-pig to its own repository,
+ * which a workflow's own token cannot write, so it holds one personal access token, ARCHON_PROVIDER_PIG_TOKEN: read only in the env of a
+ * step in a job of the `archon-provider-release` environment (whose secret and tag policy are the owner's, see OWNER-ACTIONS.md), by a
+ * step that runs no repository script and no package manager. It runs only on a pushed tag, and the tag filter must start it for the
+ * Archon plugin's tag and no other.
+ */
+export function archonReleaseProblems(name, text) {
+  if (name !== ARCHON_RELEASE_WORKFLOW) return [];
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  const triggers = Object.keys(workflow.on ?? {});
+  if (triggers.join() !== 'push' || !Array.isArray(workflow.on.push?.tags) || Object.keys(workflow.on.push).join() !== 'tags') {
+    problems.push(`${name}: must run only on a pushed tag (on.push.tags), nothing else`);
+  }
+  const found = [...text.matchAll(secretRef)].map((m) => m[1]);
+  for (const other of new Set(found.filter((secret) => secret !== ARCHON_TOKEN))) problems.push(`${name}: uses secrets.${other}; the only secret is ${ARCHON_TOKEN}`);
+  let legitimate = 0;
+  for (const [id, job] of Object.entries(workflow.jobs ?? {})) {
+    for (const step of job.steps ?? []) {
+      if (!new RegExp(`^\\$\\{\\{\\s*secrets\\.${ARCHON_TOKEN}\\s*\\}\\}$`).test(String(step.env?.[ARCHON_TOKEN] ?? '').trim())) continue;
+      legitimate += 1;
+      const environment = typeof job.environment === 'string' ? job.environment : job.environment?.name;
+      if (environment !== 'archon-provider-release') problems.push(`${name}: job ${id} reads ${ARCHON_TOKEN} outside environment: archon-provider-release`);
+      const run = String(step.run ?? '');
+      if (!/\bgit\s/.test(run) || !/\bgh\s/.test(run)) problems.push(`${name}: job ${id}: the step that reads ${ARCHON_TOKEN} must publish with git and gh`);
+      if (/(^|[\s;&|(])(npm|npx|node|pnpm|yarn|bun)\s|\.\/|scripts\//.test(run)) problems.push(`${name}: job ${id}: the step that reads ${ARCHON_TOKEN} runs a repository script or package manager`);
+    }
+  }
+  if (found.filter((secret) => secret === ARCHON_TOKEN).length !== legitimate) problems.push(`${name}: ${ARCHON_TOKEN} may appear only in the env of a step (as ${ARCHON_TOKEN}: \${{ secrets.${ARCHON_TOKEN} }}), nowhere else`);
   return problems;
 }
 
@@ -185,7 +222,7 @@ export function tagProblems(workflows) {
   const problems = [];
   const piglet = 'herdr/v0.1.0';
   const pkg = 'components/herdr/v0.1.0';
-  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'], 'npm-publish.yml': ['npm/v0.1.0', pkg, 'npm publish', 'Package'] })) {
+  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'], 'npm-publish.yml': ['npm/v0.1.0', pkg, 'npm publish', 'Package'], [ARCHON_RELEASE_WORKFLOW]: ['components/archon-provider-pig/v0.1.0', pkg, 'Archon plugin', 'Package'] })) {
     const patterns = workflows[file]?.on?.push?.tags;
     if (!patterns) continue;
     const regexes = patterns.map((pattern) => [pattern, tagFilter(pattern)]);
@@ -320,7 +357,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...archonReleaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {

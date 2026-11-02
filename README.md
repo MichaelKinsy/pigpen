@@ -182,9 +182,10 @@ Two more channels stay available. The Git-tag channel for Packages and the signe
 |---|---|---|---|
 | Package (`components/<name>`) | `components/<name>/v<version>` | `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'` | `release-package.yml`: validates and installs from the tag; no secret |
 | Piglet (`piglets/<name>`) | `<name>/v<release.version>` | `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'` | `release.yml`: builds every target natively, signs, publishes one GitHub Release |
+| Archon plugin (`components/archon-provider-pig`) | `components/archon-provider-pig/v<version>`, released as plain `v<version>` in the generated repository | `archon plugin add MichaelKinsy/archon-provider-pig` | `release-archon-provider.yml`: generates the standalone repository, builds six `bun build --compile` binaries and `checksums.txt`, publishes the release there with `ARCHON_PROVIDER_PIG_TOKEN` (OWNER-ACTIONS.md, section 9) |
 | npm (all of the above) | a merge to `main` (or `npm/v<x>`) | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
 
-The three tag shapes cannot start each other's workflow. `index.json` lists a Package as `available` once its Git tag is
+The Piglet, Package and npm tag shapes cannot start each other's workflow. An Archon plugin tag has the Package shape, so it also runs `release-package.yml`, which only verifies it. `index.json` lists a Package as `available` once its Git tag is
 recorded (`npm run record -- package <name> <version>`) and a Piglet as `available` once its signed receipt verifies
 against the key in `release-keys/` (`npm run record -- piglet <name> <version>`); until then a Piglet is `planned` and a
 Package is not listed. `npm run test:packages` installs every Package from its Git tag with the real pig;
@@ -323,6 +324,8 @@ index.schema.json                   machine-readable catalog format
 .github/workflows/ci.yml             validation, platform build matrix and smoke; no publishing or signing
 .github/workflows/release.yml        a Piglet tag: native builds, signing, one GitHub Release
 .github/workflows/release-package.yml a Package tag: validate and install from the tag
+.github/workflows/release-archon-provider.yml an Archon plugin tag: generate its repository, build, release it there
+scripts/archon-provider-repo.mjs     the standalone repository's layout, release tag, asset names, checksums and descriptor check
 RELEASE-BLOCKERS.md                  exact core PiG work needed for releases
 CONTRIBUTING.md                     changes, checks, sign-off and issue routing
 SECURITY.md                         private security reporting guidance
