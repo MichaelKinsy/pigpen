@@ -59,7 +59,7 @@ The reporter never fails the agent. When a request gets no answer after both att
 
 ## Herdr Desktop
 
-Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr: its terminals carry `HC_TERMINAL_ID`, not `HERDR_*`, so the reporter stays inactive there. PiG writes its own status there (OSC 7501), so it needs no reporter. The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop with `hc` and `herdr-app`. See [Herdr Desktop](../../components/herdr/README.md#herdr-desktop) in the Package README for the rest.
+Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr: its terminals carry `HC_TERMINAL_ID`, not `HERDR_*`, so the reporter stays inactive there. PiG writes its own status there (OSC 7501), so it needs no reporter. The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop with `hc` and `herdr-app`. See the [Package README](../../components/herdr/README.md) for the rest.
 
 ## Install from herdr
 

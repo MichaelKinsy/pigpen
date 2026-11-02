@@ -2,18 +2,6 @@
 
 Go extension, written against PiG's public Go extension SDK, that reports PiG's `idle`, `working` and `blocked` state to [herdr](https://github.com/herdrdev/herdr), the terminal workspace manager, over herdr's socket, as [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) does. Outside a herdr pane it registers nothing. It needs no Node.js: PiG builds it from source with a Go toolchain, and a Piglet Binary fuses it. It reports state, the resume command (herdr 0.9.2+) and release. See the [herdr Piglet](../../piglets/herdr/README.md) for what it reports and how it behaves.
 
-## Herdr Desktop
-
-Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr. Its terminals carry `HC_TERMINAL_ID` and `HC_TERMINAL_SOCKET`, not `HERDR_*`, so the reporter stays inactive there.
-
-It needs no reporter. PiG writes its own status as OSC 7501: `working`, `blocked` while a dialog is open, `done`, `error` and `idle`, with app `pig`. Checked with PiG 0.5.3, Herdr 0.1.11 and herdr-core 0.1.16.
-
-Not carried over: the `herdr:blocked` event on `pi.events`, and the resume command. Herdr Desktop keeps its terminals running, and a lost program gets a shell, not its command again.
-
-The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop: `hc` to start, read, message and wait on agents, and `herdr-app` to change the window when the person asks. It applies only when `HC_TERMINAL_ID` is set.
-
-With pigpen-subagents 0.3.0 or later, `"subagents": { "herdrPanes": true }` opens the `subagent` tool's children as panes beside the parent.
-
 **It works on its own.** Installing this Package is enough: no Piglet is needed.
 The [`herdr` Piglet](../../piglets/herdr/README.md) is an optional composition that
 selects this same Package. Use it directly from the Pigpen checkout root:
@@ -42,5 +30,13 @@ What the port adds or does differently, and why it does not change what herdr se
 **`herdr:blocked`.** The extension listens for `herdr:blocked` on `pi.events` (`{ active, label }`), the bus herdr's own Pi integration handles, so another extension can mark a block that is not a UI prompt. It uses PiG's Go SDK bridge (`Extension.Events()`, PiG 0.4.0 and later). The label is sent as given, and `active` is read with JavaScript's truthiness, as in [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions (Apache-2.0). It does not run on Pi: Pi users keep herdr's own Pi integration.
 
 To install it from herdr instead, use the herdr plugin in [`piglets/herdr/herdr-plugin`](../../piglets/herdr/README.md#install-from-herdr).
+
+**Herdr Desktop.** Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr, and needs no reporter:
+
+- Its terminals carry `HC_TERMINAL_ID` and `HC_TERMINAL_SOCKET`, not `HERDR_*`, so the reporter stays inactive there.
+- PiG writes its own status as OSC 7501: `working`, `blocked` while a dialog is open, `done`, `error` and `idle`, with app `pig`. Checked with PiG 0.5.3, Herdr 0.1.11 and herdr-core 0.1.16.
+- Not carried over: the `herdr:blocked` event on `pi.events`, and the resume command. Herdr Desktop keeps its terminals running, and a lost program gets a shell, not its command again.
+- The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop: `hc` to start, read, message and wait on agents, and `herdr-app` to change the window when the person asks. It applies only when `HC_TERMINAL_ID` is set.
+- With pigpen-subagents 0.3.0 or later, `"subagents": { "herdrPanes": true }` opens the `subagent` tool's children as panes beside the parent.
 
 [MIT](LICENSE), by Michael Kinsy, with the port of herdr-pig's extension under the Apache License 2.0 ([LICENSE-herdr-pig](LICENSE-herdr-pig), [NOTICE](NOTICE)); see `provenance.json`.
