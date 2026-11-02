@@ -119,7 +119,8 @@ The twins are tests first: 38 were written from the original's tests, with their
 were added after the code. The extension is **not** tests first: the six scenarios were recorded from the original under Pi
 first (so the goldens are the original's), the extension was written against them, and its own tests came after. The running
 addition is tests first (`79ee551` red, then the code), and so are the review's safety fixes (22 tests red on the stubs,
-`port/red-run-review.log`, then the code).
+`port/red-run-review.log`, then the code). The pane runner and the herdr-core client were written before their tests, in their
+first commit (`a34f8e42`); the later fixes were tests first.
 
 ## Results
 
@@ -136,7 +137,8 @@ addition is tests first (`79ee551` red, then the code), and so are the review's 
   `get` has a second path that finds the same agent; trailing blanks at the end of a file are trimmed before the chain parser
   sees them) and were removed; 4 did not build and were rebuilt. The review (rev-port-popular-5) found the run path untested
   (the real runner's directory and environment, the tool's `cwd` and `agentScope`, `/run-chain`'s task, the binary override all
-  survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**.
+  survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**. The pane work added `pane-*` mutations (the setting, the labels, the environment, the cleanup, the
+  fallback, the chain wiring) and the pane tests (`panes_test.go`, `hc_test.go`, the wiring tests in `run_host_test.go`): **174 mutations** in the generator now.
 - `pig install --validate-only --json`: valid (1 command, 3 handlers, 4 tools).
 - Piglet: `piglets/pig-popular` now selects six ports. A Binary built from this member alone gives traces equal to the Pi goldens in
   every event outside the `llm` channel (5 of 5); the `llm` channel differs by the host (a Binary's default tool set), as for the permissions port.
