@@ -1,9 +1,16 @@
 package pi_subagents
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestHerdrPanesSetting(t *testing.T) {
@@ -102,4 +109,234 @@ func TestSessionAnswer(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "1_id.jsonl"), `{"type":"session"}`+"\n")
 	_, ok = sessionAnswer(dir, "id")
 	eq(t, ok, false, "no assistant message")
+}
+
+// paneRig is a scripted herdr-core with a stand-in child that writes `answer` as its session transcript.
+type paneRig struct {
+	fake   *fakeHC
+	host   *paneHost
+	notes  []string
+	levels []string
+	req    childRequest
+}
+
+func newPaneRig(t *testing.T, parentLabels map[string]any, script []string, answer string) *paneRig {
+	t.Helper()
+	old := panePoll
+	panePoll = time.Millisecond
+	t.Cleanup(func() { panePoll = old })
+	r := &paneRig{}
+	var mu sync.Mutex
+	step := 0
+	r.fake = startFakeHC(t, func(method string, params map[string]any) (any, *hcError) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch method {
+		case "hello":
+			return map[string]any{}, nil
+		case "terminal.get":
+			if params["terminal"] == "t1" {
+				return map[string]any{"address": "t1", "state": "live", "labels": parentLabels}, nil
+			}
+			s := script[min(step, len(script)-1)]
+			step++
+			if strings.HasPrefix(s, "close") {
+				return nil, nil
+			}
+			if strings.HasPrefix(s, "{") {
+				return json.RawMessage(s), nil
+			}
+			name, turn, _ := strings.Cut(s, "/")
+			return json.RawMessage(`{"address":"t9","state":"live","status":{"state":"` + name + `"},"turn":` + turn + `}`), nil
+		case "terminal.run":
+			argv := params["argv"].([]any)
+			var dir, id string
+			for i, a := range argv {
+				if a == "--session-dir" {
+					dir = argv[i+1].(string)
+				}
+				if a == "--session-id" {
+					id = argv[i+1].(string)
+				}
+			}
+			if answer != "" {
+				line := `{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":` + strconv.Quote(answer) + `}],"stopReason":"stop"}}` + "\n"
+				os.WriteFile(filepath.Join(dir, "1_"+id+".jsonl"), []byte(line), 0o600)
+			}
+			return map[string]any{"address": "t9"}, nil
+		case "terminal.kill":
+			return map[string]any{"state": "finished"}, nil
+		case "terminal.read":
+			return map[string]any{"text": "one\nfatal: x\n"}, nil
+		}
+		return map[string]any{}, nil
+	})
+	r.host = &paneHost{socket: r.fake.socket, parent: "t1", notify: func(m, l string) {
+		mu.Lock()
+		r.notes, r.levels = append(r.notes, m), append(r.levels, l)
+		mu.Unlock()
+	}}
+	r.req = childRequest{Bin: "pig", Args: []string{"--print", "--no-extensions"}, Stdin: "Task: t", Cwd: "/w", Env: []string{"PIG_SUBAGENT=1", "HC_TERMINAL_ID=t1"}}
+	return r
+}
+
+var bothLabels = map[string]any{"herdr.space": "s1", "herdr.tab": "b1"}
+
+func TestPaneRun(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{"idle/0", "working/0", "blocked/1", "blocked/1", "working/1", "done/2"}, "answer")
+	r.host.sessionDir = ""
+	res, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
+	eq(t, res, childResult{Stdout: "answer\n"}, "result")
+	p := r.fake.calls("terminal.run")[0]
+	argv := p["argv"].([]any)
+	eq(t, argv[0], "pig", "bin")
+	eq(t, argv[len(argv)-2:], []any{"--", "Task: t"}, "prompt")
+	for _, a := range argv {
+		eq(t, a == "--print", false, "no --print")
+	}
+	env := p["env"].(map[string]any)
+	_, hasHC := env["HC_TERMINAL_ID"]
+	eq(t, hasHC, false, "no HC_")
+	eq(t, env["PIG_SUBAGENT"], "1", "PIG_SUBAGENT")
+	eq(t, p["labels"], map[string]any{"herdr.space": "s1", "herdr.tab": "b1"}, "labels")
+	eq(t, p["parent"], "t1", "parent")
+	eq(t, p["no_notify"], true, "no_notify")
+	eq(t, p["cwd"], "/w", "cwd")
+	if !regexp.MustCompile(`^scout-[0-9a-f]{4}$`).MatchString(p["name"].(string)) {
+		t.Fatalf("name %v", p["name"])
+	}
+	eq(t, len(r.notes), 1, "one notification")
+	eq(t, r.levels[0], "warning", "level")
+	if !strings.Contains(r.notes[0], "scout") || !strings.Contains(r.notes[0], "t9") {
+		t.Fatalf("note %q", r.notes[0])
+	}
+	m := r.fake.methods()
+	eq(t, m[len(m)-2:], []string{"terminal.kill", "terminal.rm"}, "cleanup")
+	eq(t, r.fake.calls("terminal.kill")[0]["terminal"], "t9", "kill target")
+	eq(t, r.fake.calls("terminal.rm")[0]["terminal"], "t9", "rm target")
+	// the temporary session directory is gone
+	argvDir := argv[indexOf(argv, "--session-dir")+1].(string)
+	if _, err := os.Stat(argvDir); !os.IsNotExist(err) {
+		t.Fatalf("session dir %s still exists", argvDir)
+	}
+}
+
+func indexOf(argv []any, s string) int {
+	for i, a := range argv {
+		if a == s {
+			return i
+		}
+	}
+	return -1
+}
+
+func TestPaneRunParentWithoutTab(t *testing.T) {
+	r := newPaneRig(t, map[string]any{"herdr.space": "s1"}, []string{"done/1"}, "answer")
+	_, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
+	eq(t, r.fake.calls("terminal.run")[0]["labels"], map[string]any{}, "labels")
+}
+
+func TestPaneRunExitBeforeTurn(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{`{"address":"t9","state":"finished","turn":0,"exit_code":3}`}, "")
+	res, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
+	eq(t, res.Exit, 3, "exit")
+	if !strings.Contains(res.Stderr, "fatal: x") {
+		t.Fatalf("stderr %q", res.Stderr)
+	}
+	eq(t, r.fake.calls("terminal.read")[0]["lines"], float64(40), "lines")
+	eq(t, len(r.fake.calls("terminal.kill")), 0, "no kill")
+	eq(t, len(r.fake.calls("terminal.rm")), 1, "one rm")
+}
+
+func TestPaneRunKilledWithoutCode(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{`{"address":"t9","state":"finished","turn":0,"exit_code":null}`}, "")
+	res, _ := r.host.run(nil, r.req, "scout")
+	eq(t, res.Exit, -1, "exit")
+}
+
+func TestPaneRunCancel(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{"working/0"}, "")
+	done := make(chan struct{})
+	go func() {
+		for len(r.fake.calls("terminal.get")) < 2 { // the parent, then the first poll
+			time.Sleep(time.Millisecond)
+		}
+		close(done)
+	}()
+	_, err := r.host.run(done, r.req, "scout")
+	eq(t, errors.Is(err, errCancelled), true, "cancelled")
+	m := r.fake.methods()
+	eq(t, m[len(m)-2:], []string{"terminal.kill", "terminal.rm"}, "cleanup")
+
+	closed := make(chan struct{})
+	close(closed)
+	r2 := newPaneRig(t, bothLabels, []string{"working/0"}, "")
+	_, err = r2.host.run(closed, r2.req, "scout")
+	eq(t, errors.Is(err, errCancelled), true, "cancelled before start")
+	eq(t, len(r2.fake.methods()), 0, "no calls")
+}
+
+func TestPaneRunFallback(t *testing.T) {
+	check := func(name string, r *paneRig, wantCalls bool) {
+		var got childRequest
+		old := runChild
+		t.Cleanup(func() { runChild = old })
+		runChild = func(_ <-chan struct{}, req childRequest) (childResult, error) {
+			got = req
+			return childResult{Stdout: "hidden"}, nil
+		}
+		res, err := r.host.run(nil, r.req, "scout")
+		eq(t, err, nil, name+" error")
+		eq(t, res.Stdout, "hidden", name+" result")
+		eq(t, got, r.req, name+" request unchanged")
+		eq(t, len(r.levels), 1, name+" one notification")
+		eq(t, r.levels[0], "warning", name+" level")
+		if !strings.Contains(r.notes[0], "scout") {
+			t.Fatalf("%s: note %q", name, r.notes[0])
+		}
+		eq(t, len(r.fake.methods()) > 0, wantCalls, name+" fake calls")
+		eq(t, len(r.fake.calls("terminal.run")), 0, name+" no terminal.run")
+	}
+	r := newPaneRig(t, bothLabels, []string{"done/1"}, "answer")
+	r.host.socket = filepath.Join(tmp(t), "nope")
+	check("no socket", r, false)
+
+	r = newPaneRig(t, bothLabels, []string{"done/1"}, "answer")
+	bad := startFakeHC(t, func(method string, _ map[string]any) (any, *hcError) {
+		if method == "terminal.get" {
+			return nil, &hcError{Kind: "not_found", Message: "no such terminal"}
+		}
+		return map[string]any{}, nil
+	})
+	r.host.socket = bad.socket
+	r.fake = bad
+	check("parent not found", r, true)
+
+	r = newPaneRig(t, bothLabels, []string{"done/1"}, "answer")
+	r.req.Stdin = strings.Repeat("x", 100<<10+1)
+	check("big task", r, false)
+}
+
+func TestPaneRunLostCore(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{"working/0", "close"}, "")
+	res, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
+	eq(t, res.Exit, 1, "exit")
+	if !strings.Contains(res.Stderr, "herdr-core") {
+		t.Fatalf("stderr %q", res.Stderr)
+	}
+	eq(t, len(r.fake.calls("terminal.rm")), 1, "cleanup over a fresh connection")
+}
+
+func TestPaneRunCap(t *testing.T) {
+	text := strings.Repeat("line of the answer\n", 300<<10/19)
+	r := newPaneRig(t, bothLabels, []string{"done/1"}, strings.TrimSuffix(text, "\n"))
+	res, _ := r.host.run(nil, r.req, "scout")
+	w := &headWriter{max: outputMaxBytes}
+	w.Write([]byte(strings.TrimSuffix(text, "\n") + "\n"))
+	eq(t, res.Stdout, w.text(), "capped like the hidden runner")
+	eq(t, len(res.Stdout) < len(text), true, "actually capped")
 }
