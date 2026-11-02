@@ -22,14 +22,32 @@ var (
 	Extension    = sub.Extension
 )
 
-func fakeChildren(t *testing.T, outputs map[string]string) *[]sub.ChildRequest {
+// childCalls records the children one test's fake runner started. Reads are
+// synchronized with the background runs that append asynchronously.
+type childCalls struct {
+	mu  sync.Mutex
+	got []sub.ChildRequest
+}
+
+func (c *childCalls) len() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.got)
+}
+
+func (c *childCalls) at(i int) sub.ChildRequest {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.got[i]
+}
+
+func fakeChildren(t *testing.T, outputs map[string]string) *childCalls {
 	t.Helper()
-	var mu sync.Mutex
-	var got []sub.ChildRequest
+	rec := &childCalls{}
 	sub.SetRunChild(t, func(done <-chan struct{}, req sub.ChildRequest) (sub.ChildResult, error) {
-		mu.Lock()
-		got = append(got, req)
-		mu.Unlock()
+		rec.mu.Lock()
+		rec.got = append(rec.got, req)
+		rec.mu.Unlock()
 		task := strings.TrimPrefix(req.Stdin, "Task: ")
 		for k, v := range outputs {
 			if strings.Contains(task, k) {
@@ -38,7 +56,7 @@ func fakeChildren(t *testing.T, outputs map[string]string) *[]sub.ChildRequest {
 		}
 		return sub.ChildResult{Stdout: "ok"}, nil
 	})
-	return &got
+	return rec
 }
 
 func TestNestedCallsAreBlockedBeforeAnyChild(t *testing.T) {
@@ -57,7 +75,7 @@ func TestNestedCallsAreBlockedBeforeAnyChild(t *testing.T) {
 	if len(notes) == 0 || !strings.HasPrefix(fmt.Sprint(notes[len(notes)-1].Args["message"]), "Nested subagent call blocked") {
 		t.Errorf("command: %v", notes)
 	}
-	eq(t, len(*calls), 0, "no child started")
+	eq(t, calls.len(), 0, "no child started")
 }
 
 func TestSingleRunThroughTheTool(t *testing.T) {
@@ -69,27 +87,27 @@ func TestSingleRunThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(home, ".pi", "agent", "agents", "mine.md"), agentMD("mine", "Mine", "Mine."))
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "cwd": "sub", "model": "p/m:low"})
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "cwd": "sub", "model": "p/m:low", "async": false})
 	eq(t, failure, "", "failure")
 	if !strings.Contains(string(raw), "built it") {
 		t.Errorf("result %s", raw)
 	}
-	req := (*calls)[0]
+	req := calls.at(0)
 	eq(t, req.Cwd, filepath.Join(cwd, "sub"), "a relative cwd is the session's")
 	eq(t, req.Args[:3], []string{"--print", "--model", "p/m:low"}, "model override, its thinking")
 	eq(t, req.Stdin, "Task: build", "stdin")
 
-	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "cwd": "nope"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "cwd": "nope", "async": false})
 	if !strings.HasPrefix(failure, "Subagent launch aborted: cwd does not exist: ") {
 		t.Errorf("bad cwd: %q", failure)
 	}
-	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "project"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "project", "async": false})
 	if !strings.HasPrefix(failure, "Unknown agent 'mine'") {
 		t.Errorf("agentScope: %q", failure)
 	}
-	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "user"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "mine", "task": "t", "agentScope": "user", "async": false})
 	eq(t, failure, "", "a user agent in user scope")
-	eq(t, len(*calls), 2, "children")
+	eq(t, calls.len(), 2, "children")
 }
 
 func TestChainThroughTheCommand(t *testing.T) {
@@ -101,9 +119,9 @@ func TestChainThroughTheCommand(t *testing.T) {
 	writeFile(t, filepath.Join(cwd, ".pi", "chains", "ab.chain.md"), "---\nname: ab\ndescription: AB\n---\n\n## a\n\n{task}\n\n## b\n\n{previous}\n")
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 	eq(t, h.Command("run-chain", "  ab   the request  "), "", "command")
-	eq(t, len(*calls), 2, "children")
-	eq(t, (*calls)[0].Stdin, "Task: the request", "first step")
-	eq(t, (*calls)[1].Stdin, "Task: step one", "second step")
+	eq(t, calls.len(), 2, "children")
+	eq(t, calls.at(0).Stdin, "Task: the request", "first step")
+	eq(t, calls.at(1).Stdin, "Task: step one", "second step")
 	notes := h.CallsTo("ui.notify")
 	eq(t, fmt.Sprint(notes[len(notes)-1].Args["message"]), "step two", "the chain's answer")
 }
@@ -117,14 +135,14 @@ func TestExtensionsThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "none.md"), "---\nname: none\ndescription: None\nextensions:\nsubagentOnlyExtensions: /child.ts\n---\n")
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
-	args := (*calls)[0].Args
+	args := calls.at(0).Args
 	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/provider.ts"}, "the settings default")
 
-	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "none", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
-	args = (*calls)[1].Args
+	args = calls.at(1).Args
 	eq(t, args[len(args)-3:], []string{"--no-extensions", "--extension", "/child.ts"}, "the agent's own empty list, plus child-only")
 	notes := h.CallsTo("ui.notify")
 	if len(notes) != 1 || notes[0].Args["level"] != "warning" || !strings.HasPrefix(fmt.Sprint(notes[0].Args["message"]), "extensions: [] override for agent 'none'") {
@@ -138,11 +156,11 @@ func TestExtensionsThroughTheTool(t *testing.T) {
 	}
 
 	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultExtensions": [1]}}`)
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	if !strings.Contains(failure, "have invalid 'defaultExtensions'") {
 		t.Errorf("invalid settings: %q", failure)
 	}
-	eq(t, len(*calls), 2, "no child for invalid settings")
+	eq(t, calls.len(), 2, "no child for invalid settings")
 }
 
 func TestModelSettingsThroughTheTool(t *testing.T) {
@@ -154,15 +172,15 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 	writeFile(t, filepath.Join(cwd, ".pi", "agents", "other.md"), agentMD("other", "Other", "Other."))
 	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
 
-	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure := h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
-	eq(t, (*calls)[0].Args[:5], []string{"--print", "--model", "p/role", "--thinking", "off"}, "the role's override")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "model": "p/call"})
+	eq(t, calls.at(0).Args[:5], []string{"--print", "--model", "p/role", "--thinking", "off"}, "the role's override")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false, "model": "p/call"})
 	eq(t, failure, "", "failure")
-	eq(t, (*calls)[1].Args[:5], []string{"--print", "--model", "p/call", "--thinking", "off"}, "a per-call model wins")
-	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t"})
+	eq(t, calls.at(1).Args[:5], []string{"--print", "--model", "p/call", "--thinking", "off"}, "a per-call model wins")
+	_, failure = h.Tool("subagent", map[string]any{"agent": "other", "task": "t", "async": false})
 	eq(t, failure, "", "failure")
-	eq(t, (*calls)[2].Args[:3], []string{"--print", "--model", "p/default"}, "the default for an agent without its own")
+	eq(t, calls.at(2).Args[:3], []string{"--print", "--model", "p/default"}, "the default for an agent without its own")
 
 	raw, failure := h.Tool("subagent", map[string]any{"action": "get", "agent": "def"})
 	eq(t, failure, "", "get")
@@ -171,9 +189,9 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 	}
 
 	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"defaultModel": 1}}`)
-	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t"})
+	_, failure = h.Tool("subagent", map[string]any{"agent": "def", "task": "t", "async": false})
 	if !strings.Contains(failure, "have invalid 'defaultModel'") {
 		t.Errorf("invalid settings: %q", failure)
 	}
-	eq(t, len(*calls), 3, "no child for invalid settings")
+	eq(t, calls.len(), 3, "no child for invalid settings")
 }

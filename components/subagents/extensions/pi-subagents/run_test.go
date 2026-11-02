@@ -20,10 +20,11 @@ func TestBuildChildArgs(t *testing.T) {
 }
 
 func TestChainTask(t *testing.T) {
-	steps := []ChainStep{{Agent: "a"}, {Agent: "b"}, {Agent: "c", Task: "Review {previous} for {task}"}}
-	eq(t, chainTask(steps, 0, "the request", ""), "the request", "first step defaults to {task}")
-	eq(t, chainTask(steps, 1, "the request", "out-a"), "out-a", "later steps default to {previous}")
-	eq(t, chainTask(steps, 2, "the request", "out-b"), "Review out-b for the request", "templates substitute both")
+	steps := []ChainStep{{Agent: "a"}, {Agent: "b"}, {Agent: "c", Task: "Review {previous} for {task}"}, {Agent: "d", Task: "Use {outputs.x}"}}
+	eq(t, chainTask(steps, 0, "the request", "", nil), "the request", "first step defaults to {task}")
+	eq(t, chainTask(steps, 1, "the request", "out-a", nil), "out-a", "later steps default to {previous}")
+	eq(t, chainTask(steps, 2, "the request", "out-b", nil), "Review out-b for the request", "templates substitute both")
+	eq(t, chainTask(steps, 3, "the request", "out-c", map[string]string{"x": "named"}), "Use named", "named outputs substitute")
 }
 
 func fakeRunner(t *testing.T, outputs map[string]string, failOn string) (calls *[][]string) {

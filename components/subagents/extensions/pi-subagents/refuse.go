@@ -114,8 +114,12 @@ func refuseUnsupported(params map[string]any, name string) string {
 		allowed = a.params
 	}
 	if name == "" {
-		if v, ok := params["async"]; ok && v != nil && v != false {
-			return refusal("async (background) runs (`async: " + fmt.Sprint(v) + "`)")
+		// async is ported: both boolean values run (the original's schema is boolean;
+		// a non-boolean value is not a run this port accepts).
+		if v, ok := params["async"]; ok && v != nil {
+			if _, isBool := v.(bool); !isBool {
+				return refusal("async (background) runs (`async: " + fmt.Sprint(v) + "`)")
+			}
 		}
 	}
 	for _, k := range present(params) {

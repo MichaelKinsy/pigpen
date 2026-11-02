@@ -1,9 +1,12 @@
 package pi_subagents
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +19,8 @@ import (
 )
 
 // Running a subagent is an addition of the Go port. The original runs child Pi sessions through its executor and its
-// scripted workflows; the port starts a child `pig --print` process per agent, as PiG's own subagents do.
+// scripted workflows; the port starts a child `pig --print` process per agent (a background child in `--mode json`,
+// so its events stream into the run's artifacts), as PiG's own subagents do.
 
 const (
 	// maxChildren is the original's MAX_CONCURRENCY: no more children run at once, whatever the model asks for in one turn.
@@ -33,13 +37,14 @@ const (
 )
 
 // childRequest is one child process: the program, its arguments, what it reads on stdin, where it runs and its whole
-// environment.
+// environment. OnLine, when set, receives each stdout line while the child runs (JSON event stream children).
 type childRequest struct {
-	Bin   string
-	Args  []string
-	Stdin string
-	Cwd   string
-	Env   []string
+	Bin    string
+	Args   []string
+	Stdin  string
+	Cwd    string
+	Env    []string
+	OnLine func([]byte)
 }
 
 // childResult is what a child gave back: its answer (stdout, bounded), the end of its stderr and its exit code.
@@ -66,8 +71,15 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 	}
 	cmd.Stdin = strings.NewReader(req.Stdin)
 	stdout := &headWriter{max: outputMaxBytes}
+	var stream *streamWriter
+	if req.OnLine != nil {
+		stream = &streamWriter{dst: stdout, onLine: req.OnLine}
+		cmd.Stdout = stream
+	} else {
+		cmd.Stdout = stdout
+	}
 	stderr := &tailWriter{max: stderrTail}
-	cmd.Stdout, cmd.Stderr = stdout, stderr
+	cmd.Stderr = stderr
 	configureChild(cmd)
 	unlock := lockThread()
 	defer unlock()
@@ -90,6 +102,10 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 			err = <-waited
 		}
 	}
+	// Wait has drained stdout into the stream writer, so every line was delivered.
+	if stream != nil {
+		stream.flush()
+	}
 	res := childResult{Stdout: stdout.text(), Stderr: strings.TrimSpace(stderr.String())}
 	if cancelled {
 		return res, errCancelled
@@ -100,6 +116,42 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 		return res, nil
 	}
 	return res, err
+}
+
+// streamWriter delivers a child's stdout line by line while the child runs and keeps the head buffer for the
+// childResult. os/exec copies the pipe into it and Wait waits for that copy, so by Wait's return every line has been
+// delivered and flush only sees a final line the child left without a newline.
+type streamWriter struct {
+	dst    io.Writer
+	onLine func([]byte)
+	buf    []byte
+}
+
+func (w *streamWriter) Write(p []byte) (int, error) {
+	if _, err := w.dst.Write(p); err != nil {
+		return 0, err
+	}
+	w.buf = append(w.buf, p...)
+	for {
+		i := bytes.IndexByte(w.buf, '\n')
+		if i < 0 {
+			break
+		}
+		line := w.buf[:i]
+		w.buf = w.buf[i+1:]
+		w.onLine(trimLineEnd(line))
+	}
+	return len(p), nil
+}
+
+// flush delivers a trailing line the child ended without a newline.
+func (w *streamWriter) flush() {
+	if len(w.buf) == 0 {
+		return
+	}
+	line := w.buf
+	w.buf = nil
+	w.onLine(trimLineEnd(line))
 }
 
 // headWriter keeps the first max bytes and counts the whole stream.
@@ -200,6 +252,40 @@ func pigBinary() string {
 	return "pig"
 }
 
+// enforceModelScope applies the settings model scope (modelscope.go) at
+// launch: an explicit model (the model parameter) outside the scope is a hard
+// error; an inherited model (agent frontmatter, defaultModel) only warns, as
+// the original console.warns. The port's children are separate processes and
+// do not inherit a parent model, so `inherit` patterns expand against nothing
+// and match only themselves.
+func enforceModelScope(cwd string, a *AgentConfig, modelParam string) error {
+	scope := winningModelScope(cwd, func(msg string) { log.Printf("[pi-subagents] %s", msg) })
+	if scope == nil {
+		return nil
+	}
+	scopes := resolveModelScopesForAgent(scope, a.Name, "", "")
+	if len(scopes) == 0 {
+		return nil
+	}
+	model, source := modelParam, "explicit"
+	if model == "" {
+		model = a.Model
+		source = "inherited"
+		if model == "inherit" {
+			model = ""
+		}
+	}
+	if model == "" {
+		return nil
+	}
+	if v := checkResolvedScopes(model, scopes, source, func(v *modelScopeViolation) {
+		log.Printf("[pi-subagents] %s", v.Message)
+	}); v != nil {
+		return errors.New(v.Message)
+	}
+	return nil
+}
+
 func fileExists(p string) bool { st, err := os.Stat(p); return err == nil && !st.IsDir() }
 
 // thinkingLevels are the suffixes a model may carry (`provider/id:high`).
@@ -258,6 +344,16 @@ func buildChildArgs(a *AgentConfig, modelOverride string) []string {
 	return args
 }
 
+// buildChildJSONArgs is buildChildArgs in pig's JSON event stream mode: the same options, stdout as the events of
+// one run, so a background child's progress is visible while it works.
+func buildChildJSONArgs(a *AgentConfig, modelOverride string) []string {
+	args := buildChildArgs(a, modelOverride)
+	if len(args) > 0 && args[0] == "--print" {
+		args = append([]string{"--mode", "json"}, args[1:]...)
+	}
+	return args
+}
+
 // noExtensionsWarning is the original's warning for an empty `extensions` list, or "".
 func noExtensionsWarning(a *AgentConfig) string {
 	if a.Extensions == nil || len(a.Extensions) > 0 {
@@ -273,18 +369,23 @@ func noExtensionsWarning(a *AgentConfig) string {
 func childPrompt(task string) string { return "Task: " + task }
 
 // childEnv is this process's environment without the host's internals for this extension (its socket, packed cell and
-// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent.
-func childEnv(base []string, depth int, role string) []string {
+// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent; an async
+// child also gets its run's supervisor channel directory.
+func childEnv(base []string, depth int, role string, channelDir string) []string {
 	out := []string{}
 	for _, kv := range base {
 		k, _, _ := strings.Cut(kv, "=")
 		switch {
-		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE":
+		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE", k == supervisorDirEnv:
 			continue
 		}
 		out = append(out, kv)
 	}
-	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	out = append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
+	if channelDir != "" {
+		out = append(out, supervisorDirEnv+"="+channelDir)
+	}
+	return out
 }
 
 func nonNegativeInt(s string) (int, bool) {
@@ -379,6 +480,71 @@ func (e *childExit) Error() string {
 }
 
 func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string) (string, error) {
+	return runAgentChannelled(done, cwd, a, task, model, "")
+}
+
+// runAgentExternalCLI runs an external CLI agent through its own binary (the
+// original's runner contract: the task reaches the CLI on stdin, its stdout is
+// the answer). The original's per-adapter flags are part of the external-runner
+// slice; this is the generic stdin-prompt delivery.
+func runAgentExternalCLI(done <-chan struct{}, cwd string, a *AgentConfig, task string) (string, error) {
+	select {
+	case childSlots <- struct{}{}:
+	case <-done:
+		return "", fmt.Errorf("%s was cancelled", a.Name)
+	}
+	defer func() { <-childSlots }()
+	bin, err := exec.LookPath(a.Runner.Command)
+	if err != nil {
+		return "", fmt.Errorf("External CLI '%s' is not available for agent '%s': %s", a.Runner.Command, a.Name, err.Error())
+	}
+	// The external CLI is not a subagent of this extension: it gets no channel.
+	res, err := runChild(done, childRequest{Bin: bin, Stdin: task, Cwd: cwd, Env: cleanChildEnv(os.Environ())})
+	switch {
+	case errors.Is(err, errCancelled):
+		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
+	case err != nil:
+		return "", fmt.Errorf("could not start %s: %w", a.Name, err)
+	case res.Exit != 0:
+		detail := res.Stderr
+		if detail == "" {
+			detail = res.Stdout
+		}
+		return res.Stdout, &childExit{agent: a.Name, code: res.Exit, detail: detail}
+	}
+	return res.Stdout, nil
+}
+
+// cleanChildEnv is this process's environment without the host's internals and
+// without this extension's subagent identity (an external CLI is not a subagent).
+func cleanChildEnv(base []string) []string {
+	out := []string{}
+	for _, kv := range base {
+		k, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(k, "PIG_EXT_") || strings.HasPrefix(k, "PIG_HARNESS_") || strings.HasPrefix(k, "PIG_SUBAGENT") || k == "PIG_AGENT_ROLE" {
+			continue
+		}
+		out = append(out, kv)
+	}
+	return out
+}
+
+// runAgentChannelled is runAgent with the run's supervisor channel: the child
+// gets the channel directory in its environment and the protocol on stdin.
+// An external-runner agent goes through its own binary instead of pig.
+func runAgentChannelled(done <-chan struct{}, cwd string, a *AgentConfig, task, model, channelDir string) (string, error) {
+	if err := enforceModelScope(cwd, a, model); err != nil {
+		return "", err
+	}
+	if err := enforceModelScope(cwd, a, model); err != nil {
+		return "", err
+	}
+	if a.Runner != nil && a.Runner.Type == "external-cli" {
+		return runAgentExternalCLI(done, cwd, a, task)
+	}
+	if a.Runner != nil && a.Runner.Type == "external-job" {
+		return "", fmt.Errorf("External-job runner '%s' is not available in the Go port. Install the original extension, %s, which runs unchanged in PiG.", a.Runner.Command, originalSpec)
+	}
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
@@ -386,7 +552,11 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	}
 	defer func() { <-childSlots }()
 	depth, _ := subagentDepth(os.Getenv)
-	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
+	stdin := childPrompt(task)
+	if channelDir != "" {
+		stdin += supervisorPromptInstructions(channelDir)
+	}
+	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: stdin, Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name, channelDir)})
 	switch {
 	case errors.Is(err, errCancelled):
 		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
@@ -403,7 +573,8 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 }
 
 // chainTask is a step's task: its own template, else {task} for the first step and {previous} for the rest.
-func chainTask(steps []ChainStep, i int, request, previous string) string {
+// Named outputs ({outputs.x}) resolve through the map, as the original's resolveOutputReferences does.
+func chainTask(steps []ChainStep, i int, request, previous string, outputs map[string]string) string {
 	t := steps[i].Task
 	if t == "" {
 		if i == 0 {
@@ -412,7 +583,11 @@ func chainTask(steps []ChainStep, i int, request, previous string) string {
 			t = "{previous}"
 		}
 	}
-	return strings.NewReplacer("{task}", request, "{previous}", previous).Replace(t)
+	t = strings.NewReplacer("{task}", request, "{previous}", previous).Replace(t)
+	for name, value := range outputs {
+		t = strings.ReplaceAll(t, "{outputs."+name+"}", value)
+	}
+	return t
 }
 
 // runChain runs the steps in order, each one's output flowing into the next; it stops at the first failing step. Every
@@ -430,10 +605,11 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 		resolved[i] = a
 	}
 	previous := ""
+	outputs := map[string]string{}
 	for i, s := range c.Steps {
 		progress(fmt.Sprintf("[%d/%d] %s", i+1, len(c.Steps), s.Agent))
 		model := s.Model
-		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model)
+		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous, outputs), model)
 		if err != nil {
 			var ce *childExit
 			if errors.As(err, &ce) {
@@ -442,6 +618,9 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 			return out, fmt.Errorf("step %d (%s): %w", i+1, s.Agent, err)
 		}
 		previous = out
+		if s.As != "" {
+			outputs[s.As] = out
+		}
 	}
 	return previous, nil
 }

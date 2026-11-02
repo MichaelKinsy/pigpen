@@ -64,7 +64,9 @@ func TestRefusalNamesThePackageAndTheOriginal(t *testing.T) {
 	}
 }
 
-// Each refused option, in the exact words: the call is blocked and the reason is the refusal of that feature.
+// Each refused option, in the exact words: the call is blocked and the reason is the refusal of that feature. The
+// ask, the wrapper floors and the path-surface checks are no longer refusals: they are asks (ask.go) and path
+// gates (paths.go), decided by the dialog or the config.
 func TestEveryRefusalIsExact(t *testing.T) {
 	const wide = `"path":"allow","external_directory":"allow"`
 	for _, c := range []struct {
@@ -72,25 +74,10 @@ func TestEveryRefusalIsExact(t *testing.T) {
 		input              map[string]any
 		feature            string
 	}{
-		{"ask", `{"permission":{` + wide + `,"bash":{"*":"ask"}}}`, "bash", map[string]any{"command": "ls"},
-			"the approval dialog (the 'bash' call needs approval)"},
-		{"ask on an extension tool", `{"permission":{"foo":"ask"}}`, "foo", nil, "the approval dialog (the 'foo' call needs approval)"},
-		{"a wrapper's floored allow", `{"permission":{` + wide + `,"bash":"allow"}}`, "bash", map[string]any{"command": "sudo ls"},
-			"the approval dialog (the 'bash' call needs approval)"},
-		{"unreadable bash, catch-all allows", `{"permission":{` + wide + `,"bash":"allow"}}`, "bash", map[string]any{"command": "echo $(ls)"},
-			"analysing this bash command (only simple commands joined by &&, ||, ;, | or newlines can be checked for a wrapper the original asks about)"},
-		{"unreadable bash, patterns", `{"permission":{` + wide + `,"bash":{"*":"deny","ls":"allow"}}}`, "bash", map[string]any{"command": "echo \"x\""},
+		{"unreadable bash against patterns", `{"permission":{` + wide + `,"bash":{"*":"deny","ls":"allow"}}}`, "bash", map[string]any{"command": "echo \"x\""},
 			"matching this bash command against bash patterns (only simple commands joined by &&, ||, ;, | or newlines are supported)"},
-		{"a command that runs another", `{"permission":{` + wide + `,"bash":"allow"}}`, "bash", map[string]any{"command": "ssh host ls"},
-			"checking the command that 'ssh' runs"},
-		{"bash and the path surfaces", `{"permission":{"bash":"allow"}}`, "bash", map[string]any{"command": "ls"},
-			"path checks for the 'bash' tool (a 'path_read' surface that does not allow every path)"},
-		{"path patterns", `{"permission":{"path":{"*":"allow","*.env":"deny"},"external_directory":"allow","bash":"allow"}}`, "bash", map[string]any{"command": "ls"},
-			"path checks for the 'bash' tool (path rules with value patterns)"},
 		{"a path tool with patterns", `{"permission":{` + wide + `,"read":{"*":"deny","*.md":"allow"}}}`, "read", map[string]any{"path": "a.md"},
 			"path rules with value patterns for the 'read' tool (path matching)"},
-		{"a path tool and the path surfaces", `{"permission":{"read":"allow"}}`, "edit", map[string]any{"path": "a"},
-			"path checks for the 'edit' tool (a 'path_read' surface that does not allow every path)"},
 		{"shellTools", `{"permission":{` + wide + `,"exec_command":"allow"},"shellTools":{"exec_command":{"commandArgument":"cmd"}}}`, "exec_command", map[string]any{"cmd": "ls"},
 			"the 'shellTools' option (the 'exec_command' tool routed through the bash surface)"},
 		{"the MCP proxy", `{"permission":{"mcp":"allow"}}`, "mcp", nil, "permissions for the 'mcp' tool (the MCP and skill surfaces)"},
@@ -108,9 +95,13 @@ func TestEveryRefusalIsExact(t *testing.T) {
 	}
 }
 
-func TestSkillReadRefusalIsExact(t *testing.T) {
+// A read of a listed skill's file while the skill surface asks is an ask, not a refusal: the dialog decides it,
+// and the ask carries no session option (the original's skill-read gate holds no SessionApproval).
+func TestSkillReadIsAnAsk(t *testing.T) {
 	p := policyOf(t, `{"permission":{"*":"ask"}}`)
 	entries := p.visibleSkillEntries("<available_skills><skill><name>demo</name><description>d</description><location>/s/demo/SKILL.md</location></skill></available_skills>", "/cwd")
-	eq(t, skillRead("read", map[string]any{"path": "/s/demo/SKILL.md"}, entries, "/cwd"),
-		Verdict{Block: true, Reason: refusal("the approval dialog (reading a file of the skill 'demo' needs approval)")}, "skill read")
+	got := skillRead("read", map[string]any{"path": "/s/demo/SKILL.md"}, entries, "/cwd")
+	eq(t, got.Block, false, "an ask does not block by itself")
+	eq(t, got.Ask != nil && got.Ask.Surface == "skill" && got.Ask.Value == "demo" && got.Ask.Tool == "read", true, "the skill asks")
+	eq(t, got.Ask.Session.Surface, "", "no session option")
 }

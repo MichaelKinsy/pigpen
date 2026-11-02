@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -80,7 +81,7 @@ func textResult(text string, isError bool) sdk.ToolResult {
 }
 
 func init() {
-	registerAction("list", []string{"agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
+	registerAction("list", []string{"agentScope", "capabilities"}, func(ctx sdk.Context, params map[string]any) (any, error) {
 		return manageOutcome(listAgents(ctx.Cwd(), params))
 	})
 	registerAction("get", []string{"agent", "agentScope"}, func(ctx sdk.Context, params map[string]any) (any, error) {
@@ -106,10 +107,9 @@ func Extension() *sdk.Extension {
 	e := sdk.New(extensionID)
 	defs := toolDefs()
 
-	// The tools the original registers besides subagent: a wait tool and the supervisor channel are declared so the
-	// model sees the same tools, and refuse (refuse.go).
+	// The wait tool is ported: it blocks on this session's tracked async runs (bgwait.go).
 	e.RegisterTool(sdk.ToolDefinition{Name: "bg_wait", Label: "Wait for Background Work", Description: defs["bg_wait"].Description, Parameters: defs["bg_wait"].Parameters,
-		Execute: refuseTool("waiting for background work (`bg_wait`)")})
+		Execute: bgWaitTool})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: loaderName, Label: "Enable Subagents", Description: defs[loaderName].Description, Parameters: defs[loaderName].Parameters,
 		PromptSnippet: "pi-subagents is installed. For authorized specialist, independent-review, or parallel work, call subagents_enable, then subagent. Authorization must come from the current request or applicable instructions; complexity alone is not authorization.",
@@ -132,7 +132,7 @@ func Extension() *sdk.Extension {
 		},
 	})
 	e.RegisterTool(sdk.ToolDefinition{Name: "subagent_supervisor", Label: "Subagent Supervisor", Description: defs["subagent_supervisor"].Description, Parameters: defs["subagent_supervisor"].Parameters,
-		Execute: refuseTool("the supervisor channel (`subagent_supervisor`)")})
+		Execute: supervisorTool})
 	e.RegisterTool(sdk.ToolDefinition{
 		Name: subagentName, Label: "Subagent", Description: defs[subagentName].Description, Parameters: defs[subagentName].Parameters,
 		PromptSnippet:    promptSnippet,
@@ -146,8 +146,10 @@ func Extension() *sdk.Extension {
 		// the subagent tool stays out of the model's tools until subagents_enable is called
 		_ = setSelection(ctx, false)
 		// The original asks git for the repository root while it starts (recovery of its worktrees); the port probes the
-		// same way and has no worktrees to recover.
+		// same way and has no worktrees to recover. A run the previous extension process owned is reconciled from disk:
+		// its runner (that process) is gone.
 		_, _ = ctx.Exec("git", []string{"-C", ctx.Cwd(), "rev-parse", "--show-toplevel"})
+		restoreRunsAfterReload()
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
@@ -165,6 +167,7 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		// The original clears its widget at shutdown; the golden's [99-shutdown] event is this clear.
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
@@ -215,6 +218,15 @@ func cancellation(ctx sdk.Context) (<-chan struct{}, func()) {
 		run = sig.Done()
 	}
 	return eitherDone(ctx.Done(), run)
+}
+
+// asyncRequested is the original's requestedAsync: the call's async, else
+// asyncByDefault (config asyncByDefault, true unless it is false).
+func asyncRequested(params map[string]any) bool {
+	if v, ok := params["async"].(bool); ok {
+		return v
+	}
+	return resolveAsyncByDefault(loadSubagentConfig())
 }
 
 // findChain returns the chain called name; of several with that name (user, then project) the last one wins.
@@ -274,11 +286,89 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		ctx.Notify(w, "warning")
 	}
 	model, _ := params["model"].(string)
+	deadline, deadlineErr := resolveRunDeadlineMs(params)
+	if deadlineErr != "" {
+		return nil, sdk.NewToolError(deadlineErr)
+	}
+	binding, bindErr := resolveOutputBinding(params, cwd, fmt.Sprintf("Single run (%s)", a.Name))
+	if bindErr != "" {
+		return nil, sdk.NewToolError(bindErr)
+	}
+	taskForChild := task
+	if binding.Path != "" {
+		taskForChild = injectSingleOutputInstruction(taskForChild, binding.Path)
+	}
+	childCwd := cwd
+	var wt *worktreeAllocation
+	isolation, _ := params["isolation"].(string)
+	if isolation != "" && isolation != "none" && isolation != "worktree" {
+		return nil, sdk.NewToolError("isolation must be 'none' or 'worktree'.")
+	}
+	worktreeRequested, _ := params["worktree"].(bool)
+	if isolation == "worktree" || worktreeRequested {
+		baseRef, _ := params["baseRef"].(string)
+		allocation, wtErr := allocateRunWorktree(cwd, newRunID(), baseRef, "")
+		if wtErr != "" {
+			return nil, sdk.NewToolError(wtErr)
+		}
+		wt = allocation
+		childCwd = wt.Path
+	}
+	if asyncRequested(params) {
+		// The original's default: a run detaches unless async:false. The tool returns
+		// the started message and the completion arrives as a native notification.
+		cfg := loadSubagentConfig()
+		timeoutMs := deadline
+		if timeoutMs == 0 {
+			timeoutMs = resolveRunTimeoutMs(cfg)
+		}
+		run, err := startAsyncRun(ctx, asyncRunRequest{
+			SessionID: sessionIDOf(ctx), Cwd: childCwd, Agent: a, Task: taskForChild, Model: model,
+			TimeoutMs: timeoutMs, Output: binding, Worktree: wt,
+		})
+		if err != nil {
+			return nil, sdk.NewToolError(err.Error())
+		}
+		updateAsyncWidget(ctx)
+		return explicitOK{
+			Content: formatAsyncStartedMessage(fmt.Sprintf("Async: %s [%s]", a.Name, run.ID), ctx.HasUI()),
+			Details: map[string]any{
+				"mode": "single", "runId": run.ID, "results": []any{}, "asyncId": run.ID,
+				"asyncDir": run.Dir, "timeoutMs": run.TimeoutMs, "deadlineAt": run.DeadlineAt,
+			},
+		}, nil
+	}
+	cfg := loadSubagentConfig()
+	timeoutMs := deadline
+	if timeoutMs == 0 {
+		timeoutMs = resolveRunTimeoutMs(cfg)
+	}
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runAgent(done, cwd, a, task, model)
+	deadlineCh := make(chan struct{})
+	timer := time.AfterFunc(time.Duration(timeoutMs)*time.Millisecond, func() { close(deadlineCh) })
+	defer timer.Stop()
+	runDone, stopDone := eitherDone(done, deadlineCh)
+	defer stopDone()
+	out, err := runAgent(runDone, childCwd, a, taskForChild, model)
+	timedOut := false
+	select {
+	case <-deadlineCh:
+		timedOut = true
+	default:
+	}
+	if timedOut {
+		return nil, sdk.NewToolError(fmt.Sprintf("Subagent timed out after %dms.", timeoutMs))
+	}
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
+	}
+	if binding.Suppress {
+		out = "(no output)"
+	} else if binding.Path != "" {
+		if ref, werr := savedOutputReference(binding.Path, out); werr == nil {
+			out = ref
+		}
 	}
 	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
 }

@@ -27,29 +27,65 @@ type AgentConfig struct {
 	Description string
 	Model       string
 	// Thinking is nil when unset, false when the frontmatter turns thinking off, or a level string.
-	Thinking        any
-	Tools           []string
-	McpDirectTools  []string
-	DefaultContext  string // "fork", "fresh" or ""
-	AcceptanceRole  string
-	DefaultReads    []string
-	DefaultProgress bool
-	DefaultAsync    *bool
-	Runner          *Runner
-	Skills          []string
-	// Extensions is nil when unset (the child discovers extensions); a list, even an empty one, is all the child loads.
-	Extensions []string
-	// SubagentOnlyExtensions load in the child on top of the others.
+	Thinking              any
+	Tools                 []string
+	McpDirectTools        []string
+	DefaultContext        string // "fork", "fresh" or ""
+	AcceptanceRole        string
+	DefaultReads          []string
+	DefaultProgress       bool
+	DefaultAsync          *bool
+	Runner                *Runner
+	Skills                []string
+	Aliases               []string
+	SystemPromptMode      string // "replace" or "append"
+	InheritProjectContext bool
+	InheritGlobalContext  bool
+	InheritSkills         bool
+	SystemPrompt          string
+	Source                AgentSource
+	FilePath              string
+	discoveryPriority     int
+
+	// Fields the management actions read and write (the original's AgentConfig);
+	// the loader fills them from frontmatter and the serializer writes them back.
+	Advertise              *bool
+	Fast                   *bool
+	ExcludeTools           []string
+	SkillPath              []string
+	Extensions             []string
 	SubagentOnlyExtensions []string
-	Aliases                []string
-	SystemPromptMode       string // "replace" or "append"
-	InheritProjectContext  bool
-	InheritGlobalContext   bool
-	InheritSkills          bool
-	SystemPrompt           string
-	Source                 AgentSource
-	FilePath               string
-	discoveryPriority      int
+	// ExtensionsDeclared and SubagentOnlyExtensionsDeclared keep the frontmatter as written (relative entries stay
+	// relative): the update writer preserves the declaration, while Extensions carry the resolved paths the child loads.
+	ExtensionsDeclared             []string
+	SubagentOnlyExtensionsDeclared []string
+	MutationTools                  []string
+	AllowNestedSubagents           *bool
+	AllowedAgents                  []string
+	DefaultTimeoutMs               *int64
+	DefaultToolTimeoutMs           *int64
+	DefaultAcceptance              string // raw JSON (or "true"/"false"), as declared
+	ToolBudget                     string // raw JSON, as declared
+	Machine                        string
+	Output                         string
+	OutputMode                     string
+	OutputSchema                   string // raw JSON, as declared
+	Interactive                    bool
+	MaxSubagentDepth               *int
+	// ExtraFrontmatter holds declared keys the typed loader does not model, in
+	// file order, so an update can write them back unchanged.
+	ExtraFrontmatter []ExtraField
+	// Disabled is the settings override's `disabled` flag (builtin/package agents).
+	Disabled bool
+	// OverrideScope and OverridePath name the settings override that disabled the agent.
+	OverrideScope string
+	OverridePath  string
+}
+
+// ExtraField is one declared frontmatter key the typed loader keeps verbatim.
+type ExtraField struct {
+	Key   string
+	Value string
 }
 
 // Runner is the `runner:` frontmatter block; only the type and the command are read.
@@ -69,6 +105,8 @@ type Discovery struct {
 	Diagnostics      []Diagnostic
 	ProjectAgentsDir string
 	UserDir          string
+	// ModelScope is the winning settings model scope (the project's over the user's).
+	ModelScope *ModelScopeConfig
 }
 
 // DiscoveryAll is the result of DiscoverAgentsAll: every source separately, plus the chains.
@@ -81,4 +119,6 @@ type DiscoveryAll struct {
 	UserDir                         string
 	ProjectChainDir                 string
 	UserChainDir                    string
+	// ModelScope is the winning settings model scope (the project's over the user's).
+	ModelScope *ModelScopeConfig
 }

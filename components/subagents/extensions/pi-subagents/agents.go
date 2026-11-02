@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -183,6 +184,54 @@ func loadAgent(f definitionFile, source AgentSource, priority int) (*AgentConfig
 		a.DefaultReads = reads
 	}
 	a.DefaultProgress = fm.Get("defaultProgress") == "true"
+
+	// The management fields: read for create/update round-trips (the original's AgentConfig).
+	if v, ok := frontmatterBool(fm, "advertise"); ok {
+		a.Advertise = &v
+	}
+	if v, ok := frontmatterBool(fm, "fast"); ok {
+		a.Fast = &v
+	}
+	if v, ok := frontmatterBool(fm, "allowNestedSubagents"); ok {
+		a.AllowNestedSubagents = &v
+	}
+	a.ExcludeTools = ParseFrontmatterList(optional(fm, "excludeTools"))
+	a.AllowedAgents = ParseFrontmatterList(optional(fm, "allowedAgents"))
+	a.SkillPath = ParseFrontmatterList(optional(fm, "skillPath"))
+	a.ExtensionsDeclared = ParseFrontmatterList(optional(fm, "extensions"))
+	a.Extensions = agentRelativePaths(a.ExtensionsDeclared, f.path)
+	a.SubagentOnlyExtensionsDeclared = ParseFrontmatterList(optional(fm, "subagentOnlyExtensions"))
+	a.SubagentOnlyExtensions = agentRelativePaths(a.SubagentOnlyExtensionsDeclared, f.path)
+	a.MutationTools = ParseFrontmatterList(optional(fm, "mutationTools"))
+	a.Machine = fm.Get("machine")
+	a.Output = fm.Get("output")
+	a.OutputMode = fm.Get("outputMode")
+	a.Interactive = fm.Get("interactive") == "true"
+	if n, ok := frontmatterInt(fm, "timeoutMs"); ok {
+		a.DefaultTimeoutMs = &n
+	}
+	if n, ok := frontmatterInt(fm, "toolTimeoutMs"); ok {
+		a.DefaultToolTimeoutMs = &n
+	}
+	if n64, ok := frontmatterInt(fm, "maxSubagentDepth"); ok {
+		n := int(n64)
+		a.MaxSubagentDepth = &n
+	}
+	if fm.Has("acceptance") {
+		a.DefaultAcceptance = fm.Get("acceptance")
+	}
+	if fm.Has("toolBudget") {
+		a.ToolBudget = fm.Get("toolBudget")
+	}
+	if fm.Has("outputSchema") {
+		a.OutputSchema = fm.Get("outputSchema")
+	}
+	// Declared keys the typed loader does not model stay verbatim, in file order.
+	for _, k := range fm.Keys() {
+		if !consumedFrontmatterKey(k) {
+			a.ExtraFrontmatter = append(a.ExtraFrontmatter, ExtraField{Key: k, Value: fm.Get(k)})
+		}
+	}
 	return a, nil
 }
 
@@ -201,6 +250,45 @@ func agentRelativePaths(paths []string, agentFile string) []string {
 	}
 	return out
 }
+
+func frontmatterBool(fm Frontmatter, k string) (bool, bool) {
+	if !fm.Has(k) {
+		return false, false
+	}
+	v := fm.Get(k)
+	if v == "true" {
+		return true, true
+	}
+	if v == "false" {
+		return false, true
+	}
+	return false, false
+}
+
+func frontmatterInt(fm Frontmatter, k string) (int64, bool) {
+	if !fm.Has(k) {
+		return 0, false
+	}
+	n, err := strconv.ParseInt(jsTrim(fm.Get(k)), 10, 64)
+	return n, err == nil
+}
+
+// consumedFrontmatterKeys are the keys loadAgent reads itself; every other
+// declared key is kept verbatim in AgentConfig.ExtraFrontmatter.
+var consumedFrontmatterKeys = map[string]bool{
+	"name": true, "package": true, "description": true, "alias": true, "aliases": true,
+	"tools": true, "skill": true, "skills": true, "model": true, "thinking": true,
+	"systemPromptMode": true, "inheritProjectContext": true, "inheritGlobalContext": true,
+	"inheritSkills": true, "defaultContext": true, "async": true, "acceptanceRole": true,
+	"defaultReads": true, "defaultProgress": true, "runner": true, "advertise": true,
+	"excludeTools": true, "allowNestedSubagents": true, "allowedAgents": true, "fast": true,
+	"timeoutMs": true, "toolTimeoutMs": true, "acceptance": true, "toolBudget": true,
+	"machine": true, "output": true, "outputMode": true, "outputSchema": true,
+	"interactive": true, "maxSubagentDepth": true, "skillPath": true, "extensions": true,
+	"subagentOnlyExtensions": true, "mutationTools": true,
+}
+
+func consumedFrontmatterKey(k string) bool { return consumedFrontmatterKeys[k] }
 
 // builtinAgents loads the agents that ship with the package (the original's agents directory, unmodified).
 func builtinAgents() ([]AgentConfig, []Diagnostic) {

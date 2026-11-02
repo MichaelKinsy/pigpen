@@ -116,7 +116,7 @@ func TestChildEnvironmentDropsTheParentsInternals(t *testing.T) {
 	base := []string{"HOME=/h", "PIG_EXT_SOCKET_PI_SUBAGENTS=/run/s.sock", "PIG_EXT_PACKED_CELL=1", "PIG_EXT_ACTIVE_MEMBERS=x",
 		"PIG_HARNESS_BINARY=/bin/pig", "PIG_HARNESS_ARGV_FILE=/run/argv.json", "OPENAI_API_KEY=k", "PIG_SUBAGENT=1",
 		"PIG_SUBAGENT_DEPTH=1", "PIG_AGENT_ROLE=old"}
-	eq(t, childEnv(base, 1, "scout"), []string{"HOME=/h", "OPENAI_API_KEY=k", "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH=2", "PIG_AGENT_ROLE=scout"}, "env")
+	eq(t, childEnv(base, 1, "scout", ""), []string{"HOME=/h", "OPENAI_API_KEY=k", "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH=2", "PIG_AGENT_ROLE=scout"}, "env")
 }
 
 func TestPigBinaryOrder(t *testing.T) {

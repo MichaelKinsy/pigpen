@@ -1,9 +1,20 @@
 package pi_subagents
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"testing"
 )
+
+// hostInfoJSON is PIG_EXT_HOST_INFO for a test, JSON-encoded: filepath.Join on Windows yields backslashes, which a
+// hand-built JSON string would not escape.
+func hostInfoJSON(agentDir, configDir string) string {
+	b, err := json.Marshal(map[string]string{"agentDir": agentDir, "configDirName": configDir})
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
 
 // The original's `extensions` / `subagentOnlyExtensions` frontmatter and `subagents.defaultExtensions` /
 // `defaultSubagentOnlyExtensions` settings, applied to the port's child command line.
@@ -80,7 +91,7 @@ func TestExtensionSettingsFromTheHost(t *testing.T) {
 	piUser := filepath.Join(home, ".pi", "agent", "settings.json")
 	pigProject := filepath.Join(cwd, ".pig", "settings.json")
 	piProject := filepath.Join(cwd, ".pi", "settings.json")
-	t.Setenv("PIG_EXT_HOST_INFO", `{"agentDir": "`+filepath.Join(home, ".pig", "agent")+`", "configDirName": ".pig"}`)
+	t.Setenv("PIG_EXT_HOST_INFO", hostInfoJSON(filepath.Join(home, ".pig", "agent"), ".pig"))
 
 	writeFile(t, piUser, `{"subagents": {"defaultExtensions": ["/pi-user.ts"], "defaultSubagentOnlyExtensions": ["/pi-user-child.ts"]}}`)
 	writeFile(t, pigUser, `{"subagents": {"defaultSubagentOnlyExtensions": ["/pig-user-child.ts"]}}`)
