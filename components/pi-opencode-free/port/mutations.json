@@ -1,0 +1,98 @@
+[
+  {
+    "name": "free-ids-inverted",
+    "file": "discovery.go",
+    "find": "var freeModelID = regexp.MustCompile(`(?i)^(opencode/)?.*-free$|^(opencode/)?big-pickle$`)",
+    "replace": "var freeModelID = regexp.MustCompile(`(?i)^(opencode/)?.*-paid$|^(opencode/)?big-pickle$`)"
+  },
+  {
+    "name": "context-default-short",
+    "file": "discovery.go",
+    "find": "\t\t\tContextWindow: 128_000,",
+    "replace": "\t\t\tContextWindow: 1_000,"
+  },
+  {
+    "name": "output-default-short",
+    "file": "discovery.go",
+    "find": "\t\t\tMaxTokens:     16_384,",
+    "replace": "\t\t\tMaxTokens:     1_000,"
+  },
+  {
+    "name": "models-dev-api-ignored",
+    "file": "discovery.go",
+    "find": "\t\t\tif meta.ProviderNPM == \"@ai-sdk/openai\" {\n\t\t\t\tinfo.API = \"openai-responses\"\n\t\t\t}",
+    "replace": "\t\t\t_ = meta.ProviderNPM"
+  },
+  {
+    "name": "empty-discovery-wipes-snapshot",
+    "file": "extension.go",
+    "find": "\t\t\tif len(found) == 0 {\n\t\t\t\t// Keep the previous snapshot and retry on the next refresh.\n\t\t\t\treturn nil\n\t\t\t}",
+    "replace": "\t\t\tif false {\n\t\t\t\treturn nil\n\t\t\t}"
+  },
+  {
+    "name": "abort-check-ignored",
+    "file": "extension.go",
+    "find": "\t\t\tif in.Signal != nil && in.Signal.Err() != nil {\n\t\t\t\treturn nil\n\t\t\t}",
+    "replace": "\t\t\tif false {\n\t\t\t\treturn nil\n\t\t\t}"
+  },
+  {
+    "name": "client-header-wrong",
+    "file": "extension.go",
+    "find": "\t\t\"x-opencode-client\":  \"cli\",",
+    "replace": "\t\t\"x-opencode-client\":  \"paid\","
+  },
+  {
+    "name": "stored-provider-dropped",
+    "file": "extension.go",
+    "find": "\tstored[\"provider\"] = ProviderID",
+    "replace": "\t_ = stored"
+  },
+  {
+    "name": "chat-no-max-tokens",
+    "file": "chat.go",
+    "find": "\t\trequest.MaxTokens = int(maxTokens)",
+    "replace": "\t\t_ = maxTokens"
+  },
+  {
+    "name": "chat-no-reasoning",
+    "file": "chat.go",
+    "find": "\t\tif effort, ok := reasoningEffort(model, opts.Values); ok {\n\t\t\trequest.Reasoning = effort\n\t\t}",
+    "replace": "\t\t_ = reasoningEffort"
+  },
+  {
+    "name": "chat-tool-arguments-skipped",
+    "file": "chat.go",
+    "find": "\t\t\t\tif call.Function.Arguments != \"\" {\n\t\t\t\t\tstate.args.WriteString(call.Function.Arguments)\n\t\t\t\t\tr.toolCallDelta(state.block, call.Function.Arguments)\n\t\t\t\t\tsawContent = true\n\t\t\t\t}",
+    "replace": "\t\t\t\tif false {\n\t\t\t\t\tsawContent = true\n\t\t\t\t}"
+  },
+  {
+    "name": "chat-finish-reason-ignored",
+    "file": "chat.go",
+    "find": "\t\t\tif choice.FinishReason != nil && *choice.FinishReason != \"\" {",
+    "replace": "\t\t\tif false {"
+  },
+  {
+    "name": "responses-no-store",
+    "file": "responses.go",
+    "find": "\t\t\"store\":  false,",
+    "replace": "\t\t\"store\":  true,"
+  },
+  {
+    "name": "responses-no-function-call",
+    "file": "responses.go",
+    "find": "\t\t\tcase \"function_call\":\n\t\t\t\tstate := ensureTool(event.OutputIndex, firstNonEmpty(item.CallID, item.ID), item.Name)",
+    "replace": "\t\t\tcase \"function_call_disabled\":\n\t\t\t\tstate := ensureTool(event.OutputIndex, firstNonEmpty(item.CallID, item.ID), item.Name)"
+  },
+  {
+    "name": "responses-usage-ignored",
+    "file": "responses.go",
+    "find": "\t\t\tif event.Response.Usage != nil {",
+    "replace": "\t\t\tif false {"
+  },
+  {
+    "name": "error-status-masked",
+    "file": "stream.go",
+    "find": "\treturn fmt.Errorf(\"OpenCode Zen answered %d: %s%s\", resp.StatusCode, text, note)",
+    "replace": "\treturn fmt.Errorf(\"OpenCode Zen request failed%s\", note)"
+  }
+]

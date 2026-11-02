@@ -1,0 +1,43 @@
+{
+  "name": "@pi-in-go/pigpen-pi-opencode-free",
+  "version": "0.1.0",
+  "description": "PiG model provider (Go extension) for OpenCode Zen's free models: discovers them from the Zen endpoint and calls them keylessly with the OpenCode client headers",
+  "keywords": [
+    "pig-package",
+    "pigpen",
+    "extension",
+    "provider",
+    "opencode",
+    "free-models"
+  ],
+  "license": "GPL-3.0-or-later",
+  "author": "Yu Li",
+  "contributors": [
+    "Pedro Alexis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/pi-opencode-free"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/pi-opencode-free#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/pi-opencode-free"
+    ]
+  }
+}
