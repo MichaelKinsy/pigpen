@@ -103,6 +103,12 @@ func TestSessionAnswer(t *testing.T) {
 	r, _ = answer(asst(`{"type":"text","text":"part"}`, `,"stopReason":"length"`))
 	eq(t, r, childResult{Stdout: "part\n", Exit: 1, Stderr: "Response was truncated: the model reached its output token limit."}, "length")
 
+	_, ok = answer(asst(`{"type":"text","text":"part"},{"type":"toolCall","name":"x"}`, `,"stopReason":"toolUse"`))
+	eq(t, ok, false, "ends mid-turn: assistant toolUse")
+	_, ok = answer(asst(`{"type":"toolCall","name":"x"}`, `,"stopReason":"toolUse"`) +
+		`{"type":"message","message":{"role":"toolResult","content":[{"type":"text","text":"r"}]}}` + "\n")
+	eq(t, ok, false, "ends mid-turn: toolUse then toolResult")
+
 	_, ok = sessionAnswer(tmp(t), "id")
 	eq(t, ok, false, "no file")
 	dir := tmp(t)
@@ -159,7 +165,9 @@ func newPaneRig(t *testing.T, parentLabels map[string]any, script []string, answ
 					id = argv[i+1].(string)
 				}
 			}
-			if answer != "" {
+			if strings.HasPrefix(answer, "{") { // a raw transcript
+				os.WriteFile(filepath.Join(dir, "1_"+id+".jsonl"), []byte(answer), 0o600)
+			} else if answer != "" {
 				line := `{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":` + strconv.Quote(answer) + `}],"stopReason":"stop"}}` + "\n"
 				os.WriteFile(filepath.Join(dir, "1_"+id+".jsonl"), []byte(line), 0o600)
 			}
@@ -203,7 +211,7 @@ func TestPaneRun(t *testing.T) {
 	eq(t, p["parent"], "t1", "parent")
 	eq(t, p["no_notify"], true, "no_notify")
 	eq(t, p["cwd"], "/w", "cwd")
-	if !regexp.MustCompile(`^scout-[0-9a-f]{4}$`).MatchString(p["name"].(string)) {
+	if !regexp.MustCompile(`^scout-[0-9a-f]{6}$`).MatchString(p["name"].(string)) {
 		t.Fatalf("name %v", p["name"])
 	}
 	eq(t, len(r.notes), 1, "one notification")
@@ -252,9 +260,47 @@ func TestPaneRunExitBeforeTurn(t *testing.T) {
 }
 
 func TestPaneRunKilledWithoutCode(t *testing.T) {
-	r := newPaneRig(t, bothLabels, []string{`{"address":"t9","state":"finished","turn":0,"exit_code":null}`}, "")
-	res, _ := r.host.run(nil, r.req, "scout")
+	midTurn := `{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"part"},{"type":"toolCall","name":"x"}],"stopReason":"toolUse"}}` + "\n"
+	r := newPaneRig(t, bothLabels, []string{`{"address":"t9","state":"finished","turn":1,"exit_code":null}`}, midTurn)
+	res, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
 	eq(t, res.Exit, -1, "exit")
+	eq(t, res.Stdout, "", "no partial answer")
+	if !strings.Contains(res.Stderr, "fatal: x") {
+		t.Fatalf("stderr %q", res.Stderr)
+	}
+	eq(t, len(r.fake.calls("terminal.kill")), 0, "no kill")
+	eq(t, len(r.fake.calls("terminal.rm")), 1, "one rm")
+}
+
+func TestPaneRunQuitWithoutAnswer(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{`{"address":"t9","state":"finished","turn":0,"exit_code":0}`}, "")
+	res, err := r.host.run(nil, r.req, "scout")
+	eq(t, err, nil, "error")
+	eq(t, res.Exit, 1, "a clean exit without an answer is a failure")
+	if !strings.Contains(res.Stderr, "fatal: x") {
+		t.Fatalf("stderr %q", res.Stderr)
+	}
+}
+
+func TestPaneRunEmptyAddress(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{"done/1"}, "answer")
+	r.fake = startFakeHC(t, func(method string, _ map[string]any) (any, *hcError) {
+		switch method {
+		case "terminal.get":
+			return map[string]any{"address": "t1", "state": "live", "labels": bothLabels}, nil
+		case "terminal.run":
+			return map[string]any{"address": ""}, nil
+		}
+		return map[string]any{}, nil
+	})
+	r.host.socket = r.fake.socket
+	_, err := r.host.run(nil, r.req, "scout")
+	if err == nil || !strings.Contains(err.Error(), "herdr-core") {
+		t.Fatalf("error %v", err)
+	}
+	eq(t, len(r.fake.calls("terminal.get")), 1, "only the parent was read")
+	eq(t, len(r.fake.calls("terminal.kill"))+len(r.fake.calls("terminal.rm")), 0, "nothing to clean")
 }
 
 func TestPaneRunCancel(t *testing.T) {

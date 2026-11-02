@@ -80,12 +80,15 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 	var started hcTerminal
 	err = h.call("terminal.run", map[string]any{
 		"argv": append([]string{req.Bin}, paneArgs(req.Args, dir, id, req.Stdin)...), "cwd": req.Cwd, "env": paneEnv(req.Env),
-		"labels": labels, "name": paneName(agent, randHex(2)), "parent": p.parent, "no_notify": true,
+		"labels": labels, "name": paneName(agent, randHex(3)), "parent": p.parent, "no_notify": true,
 	}, &started)
 	if err != nil {
 		return childResult{}, fmt.Errorf("herdr-core: %w", err) // the child never started
 	}
 	addr := started.Address
+	if addr == "" {
+		return childResult{}, fmt.Errorf("herdr-core started %s without an address; the child is unknown", agent)
+	}
 	live := true // unknown after a lost connection: cleanup then tries the kill anyway
 	defer func() {
 		c, err := dialHC(p.socket) // never reuse a connection after an error: a late reply would desync it
@@ -135,6 +138,9 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 			res = childResult{Exit: -1}
 			if t.ExitCode != nil {
 				res.Exit = *t.ExitCode
+			}
+			if res.Exit == 0 {
+				res.Exit = 1 // it ended cleanly without answering (/quit): not a success
 			}
 			var screen struct{ Text string }
 			if err := h.call("terminal.read", map[string]any{"terminal": addr, "lines": 40}, &screen); err == nil {
@@ -198,8 +204,8 @@ func paneName(agent, suffix string) string {
 	return name + "-" + suffix
 }
 
-// sessionAnswer reads the child's final answer from its transcript, mirroring PiG print mode: the last assistant
-// message decides. It reports false when there is no transcript or no assistant message.
+// sessionAnswer reads the child's final answer from its transcript, mirroring PiG print mode: the last message
+// decides. It reports false when there is no transcript or it ends mid-turn (not an assistant message, or stopReason toolUse).
 func sessionAnswer(dir, id string) (childResult, bool) {
 	files, _ := filepath.Glob(filepath.Join(dir, "*_"+id+".jsonl"))
 	if len(files) == 0 {
@@ -227,7 +233,7 @@ func sessionAnswer(dir, id string) (childResult, bool) {
 			Type    string  `json:"type"`
 			Message message `json:"message"`
 		}
-		if json.Unmarshal(line, &l) == nil && l.Type == "message" && l.Message.Role == "assistant" {
+		if json.Unmarshal(line, &l) == nil && l.Type == "message" {
 			m := l.Message
 			last = &m
 		}
@@ -235,7 +241,8 @@ func sessionAnswer(dir, id string) (childResult, bool) {
 			break
 		}
 	}
-	if last == nil {
+	// the answer exists only when the transcript ends with a finished assistant message, not mid-turn
+	if last == nil || last.Role != "assistant" || last.StopReason == "toolUse" {
 		return childResult{}, false
 	}
 	if last.StopReason == "error" || last.StopReason == "aborted" {
