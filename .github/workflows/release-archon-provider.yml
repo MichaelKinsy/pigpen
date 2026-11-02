@@ -1,0 +1,217 @@
+# SPDX-License-Identifier: MIT
+name: Release the Archon provider
+
+# Publishes components/archon-provider-pig as the standalone repository MichaelKinsy/archon-provider-pig, which is what
+# `archon plugin add MichaelKinsy/archon-provider-pig` installs. Why a separate repository, and what Archon requires of it, is
+# in scripts/archon-provider-repo.mjs. A pushed tag `components/archon-provider-pig/vX.Y.Z` is the release:
+#   plan     the tag names the plugin at the version it answers, on a commit of main; the plugin's own tests pass; the asset names,
+#            checksums.txt and the release tag are checked against Archon's source (ARCHON_COMMIT), no secret;
+#   build    the standalone repository is generated, its tests run, `bun build --compile` makes the six binaries
+#            (linux, darwin, windows on x64 and arm64), checksums.txt is written and the linux-x64 binary answers
+#            Archon's descriptor check, no secret;
+#   publish  the only job with the secret: it commits the generated repository to main of MichaelKinsy/archon-provider-pig, tags
+#            it vX.Y.Z and publishes the release there with the six binaries and checksums.txt.
+# release-package.yml also runs on this tag: it verifies the component and publishes nothing.
+#
+# The token is a fine-grained personal access token for that one repository, held as the secret ARCHON_PROVIDER_PIG_TOKEN of
+# the `archon-provider-release` environment, whose tag policy is the owner's (OWNER-ACTIONS.md). A workflow cannot write to
+# another repository with its own token. scripts/check-workflows.mjs enforces where the token may appear.
+on:
+  push:
+    tags: ['components/archon-provider-pig/v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-archon-provider-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The Archon commit whose release-asset.ts and plugin-source.ts the plan job compares with (packages/paths, packages/cli).
+  ARCHON_COMMIT: 'b8d01782fac602231a95685dabf42cc0edb0f1c1' # Archon 0.13.2
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      name: ${{ steps.plan.outputs.name }}
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      repository: ${{ steps.plan.outputs.repository }}
+      executable: ${{ steps.plan.outputs.executable }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.3'
+      - name: The tagged commit must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: The tag must be components/<name>/v<version the plugin answers>; its release tag must be one Archon accepts
+        id: plan
+        run: node scripts/archon-provider-repo.mjs plan
+      - name: Validate the Archon plugin
+        env:
+          NAME: ${{ steps.plan.outputs.name }}
+        run: node scripts/archon-plugins.mjs check "components/$NAME"
+      - name: Check out Archon, for its release-asset.ts and plugin-source.ts
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: coleam00/Archon
+          ref: ${{ env.ARCHON_COMMIT }}
+          path: .archon-src
+          sparse-checkout: |
+            packages/paths/src/release-asset.ts
+            packages/cli/src/commands/plugin-source.ts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Asset names, checksums.txt and the release tag against Archon's source
+        env:
+          ARCHON_CHECKOUT: ${{ github.workspace }}/.archon-src
+        run: node --test scripts/archon-provider-repo.test.mjs
+
+  build:
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NAME: ${{ needs.plan.outputs.name }}
+      EXECUTABLE: ${{ needs.plan.outputs.executable }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.3'
+      - name: Generate the standalone repository
+        run: node scripts/archon-provider-repo.mjs generate "components/$NAME" "$RUNNER_TEMP/repo"
+      - name: Test it as the standalone repository
+        working-directory: ${{ runner.temp }}/repo
+        run: bun test
+      - name: Compile the six binaries from it
+        working-directory: ${{ runner.temp }}/repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/assets"
+          mapfile -t targets < <(node "$GITHUB_WORKSPACE/scripts/archon-provider-repo.mjs" assets "$EXECUTABLE")
+          [ "${#targets[@]}" -eq 6 ]
+          for line in "${targets[@]}"; do
+            read -r target asset <<< "$line"
+            bun build --compile --target="$target" src/main.ts --outfile "$RUNNER_TEMP/assets/$asset"
+          done
+          node "$GITHUB_WORKSPACE/scripts/archon-provider-repo.mjs" checksums "$RUNNER_TEMP/assets" "$EXECUTABLE"
+          (cd "$RUNNER_TEMP/assets" && sha256sum --check checksums.txt && ls -l)
+      - name: The linux-x64 binary answers Archon's descriptor check
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset=$(node scripts/archon-provider-repo.mjs assets "$EXECUTABLE" | grep '^bun-linux-x64 ' | cut -d' ' -f2)
+          node scripts/archon-provider-repo.mjs handshake "$RUNNER_TEMP/assets/$asset" "components/$NAME"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: archon-provider-assets
+          path: ${{ runner.temp }}/assets
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: archon-provider-repo
+          path: ${{ runner.temp }}/repo
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [plan, build]
+    runs-on: ubuntu-24.04
+    environment: archon-provider-release
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: archon-provider-assets
+          path: ${{ runner.temp }}/assets
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: archon-provider-repo
+          path: ${{ runner.temp }}/repo
+      - name: Commit the generated repository, tag it and publish the release
+        shell: bash
+        env:
+          ARCHON_PROVIDER_PIG_TOKEN: ${{ secrets.ARCHON_PROVIDER_PIG_TOKEN }}
+          TARGET: ${{ needs.plan.outputs.repository }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          EXECUTABLE: ${{ needs.plan.outputs.executable }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ARCHON_PROVIDER_PIG_TOKEN" ]; then
+            echo "ARCHON_PROVIDER_PIG_TOKEN is not set in the archon-provider-release environment (OWNER-ACTIONS.md)." >&2
+            exit 1
+          fi
+          # git reads the token from the environment, never from argv or the clone's config.
+          auth=$(printf 'x-access-token:%s' "$ARCHON_PROVIDER_PIG_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0='http.https://github.com/.extraheader' GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $auth"
+          export GH_TOKEN="$ARCHON_PROVIDER_PIG_TOKEN"
+          export GIT_TERMINAL_PROMPT=0
+
+          # An existing published release is never replaced. A draft left by a run that failed part-way is removed and redone.
+          if state=$(gh release view "$TAG" --repo "$TARGET" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$state" != "true" ]; then
+              echo "$TARGET already has a published release $TAG; a released tag never moves. Bump the version for a new release." >&2
+              exit 1
+            fi
+            gh release delete "$TAG" --repo "$TARGET" --yes
+          fi
+
+          git clone --quiet "https://github.com/$TARGET.git" "$RUNNER_TEMP/target"
+          cd "$RUNNER_TEMP/target"
+          if git rev-parse -q --verify HEAD >/dev/null; then
+            [ "$(git symbolic-ref --short HEAD)" = main ] || { echo "The default branch of $TARGET must be main." >&2; exit 1; }
+          else
+            git symbolic-ref HEAD refs/heads/main
+          fi
+          git rm -rq --ignore-unmatch -- .
+          cp -R "$RUNNER_TEMP/repo/." .
+          git add --all
+          export GIT_AUTHOR_NAME='pigpen release' GIT_AUTHOR_EMAIL='41898282+github-actions[bot]@users.noreply.github.com'
+          export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
+          if ! git diff --cached --quiet; then
+            git commit --quiet -m "Release $TAG" -m "Generated from $SOURCE_REPOSITORY@$SOURCE_SHA by $RUN_URL."
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            git fetch --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
+            [ "$(git rev-parse "$TAG^{tree}")" = "$(git rev-parse 'HEAD^{tree}')" ] || {
+              echo "$TARGET has a tag $TAG with different content; a released tag never moves." >&2
+              exit 1
+            }
+          else
+            git tag -a "$TAG" -m "$EXECUTABLE $VERSION"
+            git push --atomic origin HEAD:refs/heads/main "refs/tags/$TAG"
+          fi
+
+          notes="Install: archon plugin add $TARGET
+          Pinned: archon plugin add $TARGET@$TAG
+
+          Generated from $SOURCE_REPOSITORY@$SOURCE_SHA by $RUN_URL. The assets are $EXECUTABLE-<os>-<arch> for linux, darwin and windows on x64 and arm64, and checksums.txt lists their sha256 digests."
+          flags=(--latest)
+          case "$VERSION" in *-*) flags=(--prerelease) ;; esac
+          gh release create "$TAG" --repo "$TARGET" --verify-tag --draft --title "$EXECUTABLE $VERSION" --notes "$notes" \
+            "$RUNNER_TEMP"/assets/*
+          gh release edit "$TAG" --repo "$TARGET" --draft=false "${flags[@]}"

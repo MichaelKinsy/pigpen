@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, archonReleaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -191,6 +191,34 @@ describe('tagProblems', () => {
     assert.match(tagProblems({ 'release.yml': on('**/v*') }).join('\n'), /release\.yml.*\*\*\/v\*.*components\/herdr\/v0\.1\.0/);
     assert.match(tagProblems({ 'release-package.yml': on('**') }).join('\n'), /release-package\.yml.*herdr\/v0\.1\.0/);
     assert.match(tagProblems({ 'release.yml': on('v*') }).join('\n'), /does not match the Piglet tag/);
+  });
+});
+
+describe('the Archon provider release workflow', () => {
+  const file = 'release-archon-provider.yml';
+  const workflow = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.github', 'workflows', file), 'utf8');
+  const problems = (text, name = file) => [...hardeningProblems(name, text), ...archonReleaseProblems(name, text)].join('\n');
+  it('accepts the committed workflow: the token only in the publish step of its environment', () => {
+    assert.equal(problems(workflow), '');
+    assert.deepEqual(tagProblems({ [file]: parse(workflow) }), []);
+  });
+  it('refuses the token in any other workflow, and any other secret', () => {
+    assert.match(problems(workflow, 'ci.yml'), /uses a secret/);
+    assert.match(problems(workflow.replace('secrets.ARCHON_PROVIDER_PIG_TOKEN', 'secrets.OTHER')), /secrets\.OTHER/);
+  });
+  it('refuses the token outside the env of a step, or outside its environment', () => {
+    assert.match(problems(workflow.replace('    timeout-minutes: 30\n    env:', '    timeout-minutes: 30\n    env:\n      T: ${{ secrets.ARCHON_PROVIDER_PIG_TOKEN }}')), /only in the env of a step/);
+    assert.match(problems(workflow.replace('    environment: archon-provider-release\n', '')), /outside environment: archon-provider-release/);
+    assert.match(problems(workflow.replace('environment: archon-provider-release', 'environment: release')), /outside environment: archon-provider-release/);
+  });
+  it('refuses the token in a step that runs a repository script or a package manager', () => {
+    assert.match(problems(workflow.replace('set -euo pipefail\n          if [ -z', 'set -euo pipefail\n          node scripts/archon-provider-repo.mjs plan\n          if [ -z')), /runs a repository script/);
+    assert.match(problems(workflow.replace('set -euo pipefail\n          if [ -z', 'set -euo pipefail\n          bun install\n          if [ -z')), /runs a repository script/);
+  });
+  it('runs only on a pushed tag, and the filter starts it for the Archon plugin tag and no Package tag', () => {
+    assert.match(problems(workflow.replace("push:\n    tags: ['components/archon-provider-pig/v*']", "push:\n    tags: ['components/archon-provider-pig/v*']\n  workflow_dispatch: {}")), /only on a pushed tag/);
+    assert.match(tagProblems({ [file]: on('components/*/v*') }).join('\n'), /also matches the Package tag components\/herdr\/v0\.1\.0/);
+    assert.match(tagProblems({ [file]: on('v*') }).join('\n'), /does not match the Archon plugin tag/);
   });
 });
 
