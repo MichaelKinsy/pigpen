@@ -1,6 +1,6 @@
 # herdr reporter Package
 
-Go extension, written against PiG's public Go extension SDK, that reports PiG's `idle`, `working` and `blocked` state to [herdr](https://github.com/herdrdev/herdr), the terminal workspace manager, over herdr's socket, as [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) does. Outside a herdr pane it registers nothing. It needs no Node.js: PiG builds it from source with a Go toolchain, and a Piglet Binary fuses it. It reports state, the resume command (herdr 0.9.2+) and release. See the [herdr Piglet](../../piglets/herdr/README.md) for what it reports and how it behaves.
+Go extension, written against PiG's public Go extension SDK, that reports PiG's `idle`, `working` and `blocked` state to [herdr](https://github.com/herdrdev/herdr), the terminal workspace manager, over herdr's socket, as [herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) does. Outside a herdr pane the reporter registers nothing. It needs no Node.js: PiG builds it from source with a Go toolchain, and a Piglet Binary fuses it. It reports state, the resume command (herdr 0.9.2+) and release. See the [herdr Piglet](../../piglets/herdr/README.md) for what it reports and how it behaves.
 
 **It works on its own.** Installing this Package is enough: no Piglet is needed.
 The [`herdr` Piglet](../../piglets/herdr/README.md) is an optional composition that
@@ -34,8 +34,8 @@ To install it from herdr instead, use the herdr plugin in [`piglets/herdr/herdr-
 **Herdr Desktop.** Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr, and needs no reporter:
 
 - Its terminals carry `HC_TERMINAL_ID` and `HC_TERMINAL_SOCKET`, not `HERDR_*`, so the reporter stays inactive there.
-- PiG writes its own status as OSC 7501: `working`, `blocked` while a dialog is open, `done`, `error` and `idle`, with app `pig`. Checked with PiG 0.5.3, Herdr 0.1.11 and herdr-core 0.1.16.
-- Not carried over: the `herdr:blocked` event on `pi.events`, and the resume command. Herdr Desktop keeps its terminals running, and a lost program gets a shell, not its command again.
+- PiG writes its own status as OSC 7501: `working`, `blocked` while a dialog is open, `done`, `error` and `idle`, with app `pig`. Checked with PiG 0.5.3, the Herdr app 0.1.11 and herdr-core 0.1.16.
+- Not carried over: the `herdr:blocked` event on `pi.events`, and the resume command. Herdr Desktop keeps its terminals running across window restarts, and a lost program gets a shell, not its command again.
 - The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop: `hc` to start, read, message and wait on agents, and `herdr-app` to change the window when the person asks. It applies only when `HC_TERMINAL_ID` is set.
 - With pigpen-subagents 0.3.0 or later, `"subagents": { "herdrPanes": true }` opens the `subagent` tool's children as panes beside the parent.
 

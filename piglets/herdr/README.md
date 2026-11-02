@@ -1,11 +1,11 @@
 # herdr
 
-PiG that reports its state to [herdr](https://github.com/herdrdev/herdr), the terminal workspace manager. Run inside a herdr pane, it shows `pig` with its `idle`, `working` and `blocked` state in herdr's sidebar and `herdr agent list`, notifies you when it finishes or needs a decision, and lets `herdr agent wait` and other automation follow it. Outside herdr it does nothing.
+PiG that reports its state to [herdr](https://github.com/herdrdev/herdr), the terminal workspace manager. Run inside a herdr pane, it shows `pig` with its `idle`, `working` and `blocked` state in herdr's sidebar and `herdr agent list`, notifies you when it finishes or needs a decision, and lets `herdr agent wait` and other automation follow it. Outside herdr the reporter does nothing; the Package's Skill applies only in Herdr Desktop.
 
 **This Piglet is optional.** The reporter is the standalone extension Package
 [`components/herdr`](../../components/herdr/README.md). It works on its own in a
 plain `pig` session, without this Piglet: from the checkout root,
-`pig install ./components/herdr`. This Piglet only packages the same extension as
+`pig install ./components/herdr`. This Piglet only packages the same Package (reporter and Skill) as
 a named agent (`pig --piglet ...`).
 
 **Source only, not a published release.** No release Binary is published and no remote install command (release or source add) is offered yet; use the local checkout commands on this page. The extension is Go, so `pig piglet build dist/staged/piglets/herdr/piglet.yaml --format binary --out <path>` builds a Binary with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it). See the root [release blockers](../../RELEASE-BLOCKERS.md).
