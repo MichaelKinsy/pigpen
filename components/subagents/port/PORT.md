@@ -52,6 +52,13 @@ original's messages, and `get` shows the resulting model. Running a child is:
 check this (a Pi child session is not a pig child process); it is covered by the port's own tests (a fake child runner, a real
 child process, the fake host) and shown live in tmux (`port/demo`). What keeps it safe:
 
+**An addition, not a port: panes in Herdr Desktop.** With `subagents.herdrPanes` set, in a Herdr Desktop terminal (not on Windows),
+a child runs as an interactive `pig` in a herdr-core terminal labelled with the parent's space and tab, not as a hidden
+`pig --print`. The tool waits for the child's first turn to end, reads its last assistant message from the session file
+(pinned with `--session-dir` and `--session-id`) and ends the child and its pane. herdr-core is asked not to notify the
+parent. A `blocked` child waits for the person, with one notification per block. When herdr-core cannot be reached, or the
+task is over 100 KiB, the call falls back to the hidden child with a warning. The original has no such mode.
+
 - the task reaches the child on stdin as `Task: <task>`, the original's child prompt; it is never an argument, so nothing in it
   is read as an option (`--version`, `- fix it`) or a file to attach (`@notes.txt`), and its length is not bounded by the
   per-argument limit;
@@ -103,7 +110,7 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M4 | `agents/agents.ts` (discovery, loading, project root) | `discovery.go`, `agents.go`, `builtin/` | 15 twins + 5 Pi scenarios |
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
-| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
+| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go`, `panes.go`, `hc.go` | `run_test.go`, `panes_test.go`, `hc_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 
 ## Process: what was written before its tests

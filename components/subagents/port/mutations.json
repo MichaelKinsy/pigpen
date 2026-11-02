@@ -93,13 +93,13 @@
   "name": "ext-host-project",
   "file": "discovery.go",
   "find": "files = append(files, hostProject)",
-  "replace": ""
+  "replace": "_ = hostProject"
  },
  {
   "name": "ext-host-user",
   "file": "discovery.go",
   "find": "files = append(files, hostUser, filepath.Join(agentDir(), \"settings.json\"))",
-  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"))"
+  "replace": "files = append(files, filepath.Join(agentDir(), \"settings.json\"))\n\t_ = hostUser"
  },
  {
   "name": "ext-host-user-first",
@@ -962,8 +962,8 @@
  {
   "name": "ext-run-model",
   "file": "extension.go",
-  "find": "out, err := runAgent(done, cwd, a, task, model)",
-  "replace": "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model"
+  "find": "out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))",
+  "replace": "out, err := runAgent(done, cwd, a, task, \"\", paneHostFor(ctx, defaults))\n\t_ = model"
  },
  {
   "name": "ext-chain-task",
@@ -982,5 +982,59 @@
   "file": "extension.go",
   "find": "\t\t\tfound = &chains[i]\n",
   "replace": "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n"
+ },
+ {
+  "name": "pane-notify",
+  "file": "panes.go",
+  "find": "\"no_notify\": true,",
+  "replace": "\"no_notify\": false,"
+ },
+ {
+  "name": "pane-turn",
+  "file": "panes.go",
+  "find": "t.Turn >= 1 && (st == \"done\"",
+  "replace": "(st == \"done\""
+ },
+ {
+  "name": "pane-env-hc",
+  "file": "panes.go",
+  "find": "!strings.HasPrefix(k, \"HC_\")",
+  "replace": "true"
+ },
+ {
+  "name": "pane-labels-both",
+  "file": "panes.go",
+  "find": "s != \"\" && b != \"\"",
+  "replace": "s != \"\" || b != \"\""
+ },
+ {
+  "name": "pane-print",
+  "file": "panes.go",
+  "find": "if len(args) > 0 && args[0] == \"--print\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pane-rm",
+  "file": "panes.go",
+  "find": "_ = c.call(\"terminal.rm\", map[string]any{\"terminal\": addr}, nil)",
+  "replace": "_ = addr"
+ },
+ {
+  "name": "pane-dial-fallback",
+  "file": "panes.go",
+  "find": "h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn unreachable(err)",
+  "replace": "h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn childResult{}, err"
+ },
+ {
+  "name": "pane-task-size",
+  "file": "panes.go",
+  "find": "if len(req.Stdin) > paneTaskMax {",
+  "replace": "if false {"
+ },
+ {
+  "name": "pane-goos",
+  "file": "panes.go",
+  "find": "*s.herdrPanes && goos != \"windows\" &&",
+  "replace": "*s.herdrPanes &&"
  }
 ]

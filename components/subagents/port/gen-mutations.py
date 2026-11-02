@@ -29,8 +29,8 @@ m("ext-settings-valid", "discovery.go", 'if !isStr || jsTrim(str) == "" {', "if 
 m("ext-settings-user-scope", "discovery.go", "if scope != ScopeProject {", "if true {")
 m("ext-settings-project-scope", "discovery.go", "if scope != ScopeUser {", "if true {")
 m("ext-settings-first-wins", "discovery.go", "if d.subagentOnly == nil {", "if true {")
-m("ext-host-project", "discovery.go", "files = append(files, hostProject)", "")
-m("ext-host-user", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"))')
+m("ext-host-project", "discovery.go", "files = append(files, hostProject)", "_ = hostProject")
+m("ext-host-user", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"))\n\t_ = hostUser')
 m("ext-host-user-first", "discovery.go", 'files = append(files, hostUser, filepath.Join(agentDir(), "settings.json"))', 'files = append(files, filepath.Join(agentDir(), "settings.json"), hostUser)')
 m("ext-default-own-wins", "discovery.go", "if a.Extensions == nil {\n\t\ta.Extensions = d.extensions", "if true {\n\t\ta.Extensions = d.extensions")
 
@@ -196,10 +196,21 @@ m("ext-run-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg !=
 m("ext-chain-depth", "extension.go", "\tif msg := nestedBlocked(os.Getenv); msg != \"\" {\n\t\tctx.Notify(msg, \"error\")", "\tif msg := nestedBlocked(os.Getenv); false {\n\t\tctx.Notify(msg, \"error\")")
 m("ext-run-cwd", "extension.go", "cwd, err := resolveRunCwd(ctx.Cwd(), requested)", "cwd, err := resolveRunCwd(ctx.Cwd(), requested[:0])")
 m("ext-run-scope", "extension.go", 'scope := ResolveExecutionAgentScope(params["agentScope"])', "scope := ResolveExecutionAgentScope(nil)")
-m("ext-run-model", "extension.go", "out, err := runAgent(done, cwd, a, task, model)", "out, err := runAgent(done, cwd, a, task, \"\")\n\t_ = model")
+m("ext-run-model", "extension.go", "out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))", "out, err := runAgent(done, cwd, a, task, \"\", paneHostFor(ctx, defaults))\n\t_ = model")
 m("ext-chain-task", "extension.go", "agents, jsTrim(fields[1]), func", "agents, fields[1], func")
 m("ext-chain-answer", "extension.go", "\tctx.Notify(out, \"info\")\n", "\tctx.Notify(out[:0], \"info\")\n")
 m("ext-chain-last-wins", "extension.go", "\t\t\tfound = &chains[i]\n", "\t\t\tif found == nil {\n\t\t\t\tfound = &chains[i]\n\t\t\t}\n")
+
+# panes.go, hc.go: Herdr Desktop panes
+m("pane-notify", "panes.go", '"no_notify": true,', '"no_notify": false,')
+m("pane-turn", "panes.go", 't.Turn >= 1 && (st == "done"', '(st == "done"')
+m("pane-env-hc", "panes.go", '!strings.HasPrefix(k, "HC_")', 'true')
+m("pane-labels-both", "panes.go", 's != "" && b != ""', 's != "" || b != ""')
+m("pane-print", "panes.go", 'if len(args) > 0 && args[0] == "--print" {', 'if false {')
+m("pane-rm", "panes.go", '_ = c.call("terminal.rm", map[string]any{"terminal": addr}, nil)', '_ = addr')
+m("pane-dial-fallback", "panes.go", 'h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn unreachable(err)', 'h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn childResult{}, err')
+m("pane-task-size", "panes.go", 'if len(req.Stdin) > paneTaskMax {', 'if false {')
+m("pane-goos", "panes.go", '*s.herdrPanes && goos != "windows" &&', '*s.herdrPanes &&')
 
 bad = False
 for x in M:

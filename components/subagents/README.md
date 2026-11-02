@@ -58,6 +58,33 @@ the host's default model. Other `agentOverrides` fields, `defaultProvider` and `
 pig install ./components/subagents
 ```
 
+## Panes in Herdr Desktop (opt-in)
+
+Set `herdrPanes` to show each child in a pane beside yours. It is read from the same settings files as the options above
+(project over user, PiG's file over Pi's):
+
+```json
+{ "subagents": { "herdrPanes": true } }
+```
+
+It applies only when PiG runs in a Herdr Desktop terminal (`HC_TERMINAL_SOCKET` and `HC_TERMINAL_ID` are set), and never on
+Windows. Each `subagent` child and `/run-chain` step then starts as an interactive `pig` in a herdr-core terminal labelled
+with your Herdr space and tab, so Herdr Desktop shows it as a pane beside yours (split to the right, focus unchanged).
+Without those labels the child runs with no pane and is listed under yours in Herdr's agents list. herdr-core is told not to
+type notes about the child into your terminal.
+
+The tool waits until the child's first turn ends, returns the same text the hidden child would (its last assistant message,
+read from its session file), then ends the child and closes its pane. Escape ends it too. A child that stops on a dialog
+(`blocked`) waits for you, with one notification per block.
+
+The child's session file goes in your session's directory, so you can resume it with `pig --session <file>`. When your session
+has no file, it goes in a temporary directory that is removed afterwards.
+
+The child runs hidden, as without the setting, with one warning, when herdr-core cannot be reached or your terminal is unknown,
+and when the task is over 100 KiB (it travels as an argument).
+
+Checked with PiG 0.5.3 and herdr-core 0.1.16 (the Herdr app 0.1.11).
+
 ## What is ported
 
 Frontmatter parsing, agent and chain definitions (discovery in the project, the user's directories and the builtin set,
