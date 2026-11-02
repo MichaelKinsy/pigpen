@@ -55,7 +55,12 @@ type runView struct {
 	Stopped     bool
 	SessionID   string
 	ResultPath  string
-	fromDisk    bool
+	// Live child detail (the original's current-tool and usage fields): the tool in flight
+	// with its duration, and the child's token usage.
+	ToolLine     string
+	TokensWindow int64
+	TokensSpent  int64
+	fromDisk     bool
 }
 
 func viewOfRun(r *asyncRun) *runView {
@@ -66,6 +71,7 @@ func viewOfRun(r *asyncRun) *runView {
 		StartedAt: r.StartedAt, LastUpdate: r.LastUpdate, EndedAt: r.EndedAt,
 		OutputFile: r.OutputFile, StepCount: len(r.Steps), Error: r.Error,
 		TimedOut: r.TimedOut, Stopped: r.Stopped, SessionID: r.SessionID,
+		ToolLine: r.toolLineLocked(nowMs()), TokensWindow: r.TokensWindow, TokensSpent: r.TokensSpent,
 	}
 	for _, s := range r.Steps {
 		cp := *s
@@ -80,7 +86,8 @@ func viewOfStatus(st *asyncStatusFile, dir string) *runView {
 		StartedAt: st.StartedAt, LastUpdate: st.LastUpdate, EndedAt: st.EndedAt,
 		OutputFile: st.OutputFile, CurrentStep: st.CurrentStep, StepCount: st.ChainStepCount,
 		Error: st.Error, TimedOut: st.TimedOut, Stopped: st.Stopped, SessionID: st.SessionID,
-		fromDisk: true,
+		TokensSpent: st.TotalTokens,
+		fromDisk:    true,
 	}
 	if v.StepCount == 0 {
 		v.StepCount = len(st.Steps)
@@ -302,6 +309,19 @@ func formatRunStatus(v *runView) string {
 		updated = "n/a"
 	}
 	lines = append(lines, "Updated: "+updated)
+	if v.TokensSpent > 0 || v.TokensWindow > 0 {
+		parts := []string{}
+		if v.TokensWindow > 0 {
+			parts = append(parts, "↓"+formatTokens(v.TokensWindow)+" window")
+		}
+		if v.TokensSpent > 0 {
+			parts = append(parts, formatTokens(v.TokensSpent)+" spent")
+		}
+		lines = append(lines, "Tokens: "+strings.Join(parts, " · "))
+	}
+	if v.ToolLine != "" && v.State == "running" {
+		lines = append(lines, "Tool: "+v.ToolLine)
+	}
 	lines = append(lines, "Dir: "+v.Dir)
 	if p := v.outputPath(); p != "" {
 		lines = append(lines, "Output: "+p)
@@ -478,6 +498,19 @@ func inspectFleet(sessionID string) manageResult {
 	lines := []string{fmt.Sprintf("Subagent fleet: %d tracked", len(views)), "", "Async runs:"}
 	for _, v := range views {
 		lines = append(lines, "- "+v.runHeader(now))
+		if v.ToolLine != "" && v.State == "running" {
+			lines = append(lines, "    tool: "+v.ToolLine)
+		}
+		if v.TokensSpent > 0 || v.TokensWindow > 0 {
+			parts := []string{}
+			if v.TokensWindow > 0 {
+				parts = append(parts, "↓"+formatTokens(v.TokensWindow)+" window")
+			}
+			if v.TokensSpent > 0 {
+				parts = append(parts, formatTokens(v.TokensSpent)+" spent")
+			}
+			lines = append(lines, "    tokens: "+strings.Join(parts, " · "))
+		}
 		lines = append(lines, fmt.Sprintf("  status: subagent({ action: \"status\", id: \"%s\" })", v.ID))
 		lines = append(lines, fmt.Sprintf("  transcript: subagent({ action: \"status\", id: \"%s\", view: \"transcript\" })", v.ID))
 		for i, s := range v.Steps {

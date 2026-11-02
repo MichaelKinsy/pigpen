@@ -21,7 +21,13 @@ You help.
 The model sees two tools. `subagents_enable` makes the `subagent` tool available (it is not offered until then, as in the
 original); then:
 
-- `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process. The run **detaches by default**
+- `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process; a **background** child
+  runs in `pig --mode json` instead, so its work is visible live: tool and message activity stream into the run's
+  `output-<n>.log` (the file `view: "transcript"` tails while the run is live), child events are mirrored into
+  `events.jsonl`, and `status.json` heartbeats at the original's 100ms coalescing so `Updated` shows child activity.
+  The under-editor async widget and `/subagents-fleet` show each run's current tool with its duration, the latest
+  activity line, activity freshness and token spend (`status` reports `Tokens: ↓window · spent` and `Tool:` lines).
+  The run **detaches by default**
   (`asyncByDefault`, as in the original): the tool returns a started message, the answer arrives as a native completion
   notification, and `bg_wait` can block the turn on it. `async: false` blocks the parent and returns the answer directly;
   `timeoutMs` (alias `maxRuntimeMs`) bounds the run, `output` binds the answer to a file, `cwd` and `model` steer the child.

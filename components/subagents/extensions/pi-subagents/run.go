@@ -1,8 +1,10 @@
 package pi_subagents
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -17,7 +19,8 @@ import (
 )
 
 // Running a subagent is an addition of the Go port. The original runs child Pi sessions through its executor and its
-// scripted workflows; the port starts a child `pig --print` process per agent, as PiG's own subagents do.
+// scripted workflows; the port starts a child `pig --print` process per agent (a background child in `--mode json`,
+// so its events stream into the run's artifacts), as PiG's own subagents do.
 
 const (
 	// maxChildren is the original's MAX_CONCURRENCY: no more children run at once, whatever the model asks for in one turn.
@@ -34,13 +37,14 @@ const (
 )
 
 // childRequest is one child process: the program, its arguments, what it reads on stdin, where it runs and its whole
-// environment.
+// environment. OnLine, when set, receives each stdout line while the child runs (JSON event stream children).
 type childRequest struct {
-	Bin   string
-	Args  []string
-	Stdin string
-	Cwd   string
-	Env   []string
+	Bin    string
+	Args   []string
+	Stdin  string
+	Cwd    string
+	Env    []string
+	OnLine func([]byte)
 }
 
 // childResult is what a child gave back: its answer (stdout, bounded), the end of its stderr and its exit code.
@@ -67,8 +71,15 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 	}
 	cmd.Stdin = strings.NewReader(req.Stdin)
 	stdout := &headWriter{max: outputMaxBytes}
+	var stream *streamWriter
+	if req.OnLine != nil {
+		stream = &streamWriter{dst: stdout, onLine: req.OnLine}
+		cmd.Stdout = stream
+	} else {
+		cmd.Stdout = stdout
+	}
 	stderr := &tailWriter{max: stderrTail}
-	cmd.Stdout, cmd.Stderr = stdout, stderr
+	cmd.Stderr = stderr
 	configureChild(cmd)
 	unlock := lockThread()
 	defer unlock()
@@ -91,6 +102,10 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 			err = <-waited
 		}
 	}
+	// Wait has drained stdout into the stream writer, so every line was delivered.
+	if stream != nil {
+		stream.flush()
+	}
 	res := childResult{Stdout: stdout.text(), Stderr: strings.TrimSpace(stderr.String())}
 	if cancelled {
 		return res, errCancelled
@@ -101,6 +116,42 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 		return res, nil
 	}
 	return res, err
+}
+
+// streamWriter delivers a child's stdout line by line while the child runs and keeps the head buffer for the
+// childResult. os/exec copies the pipe into it and Wait waits for that copy, so by Wait's return every line has been
+// delivered and flush only sees a final line the child left without a newline.
+type streamWriter struct {
+	dst    io.Writer
+	onLine func([]byte)
+	buf    []byte
+}
+
+func (w *streamWriter) Write(p []byte) (int, error) {
+	if _, err := w.dst.Write(p); err != nil {
+		return 0, err
+	}
+	w.buf = append(w.buf, p...)
+	for {
+		i := bytes.IndexByte(w.buf, '\n')
+		if i < 0 {
+			break
+		}
+		line := w.buf[:i]
+		w.buf = w.buf[i+1:]
+		w.onLine(trimLineEnd(line))
+	}
+	return len(p), nil
+}
+
+// flush delivers a trailing line the child ended without a newline.
+func (w *streamWriter) flush() {
+	if len(w.buf) == 0 {
+		return
+	}
+	line := w.buf
+	w.buf = nil
+	w.onLine(trimLineEnd(line))
 }
 
 // headWriter keeps the first max bytes and counts the whole stream.
@@ -289,6 +340,16 @@ func buildChildArgs(a *AgentConfig, modelOverride string) []string {
 			seen[e] = true
 			args = append(args, "--extension", e)
 		}
+	}
+	return args
+}
+
+// buildChildJSONArgs is buildChildArgs in pig's JSON event stream mode: the same options, stdout as the events of
+// one run, so a background child's progress is visible while it works.
+func buildChildJSONArgs(a *AgentConfig, modelOverride string) []string {
+	args := buildChildArgs(a, modelOverride)
+	if len(args) > 0 && args[0] == "--print" {
+		args = append([]string{"--mode", "json"}, args[1:]...)
 	}
 	return args
 }

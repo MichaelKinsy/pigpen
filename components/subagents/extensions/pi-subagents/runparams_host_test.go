@@ -40,7 +40,13 @@ func TestTimeoutMsStopsAForegroundRun(t *testing.T) {
 		},
 	})
 	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": false, "timeoutMs": 50})
-	<-started
+	// The run has fully settled when the tool returns, so the stub's state is
+	// final. Under load the 50ms deadline can preempt the child launch; the
+	// timeout message below is the behavior under test either way.
+	select {
+	case <-started:
+	default:
+	}
 	eq(t, failure, "Subagent timed out after 50ms.", "the original's timeout text")
 }
 

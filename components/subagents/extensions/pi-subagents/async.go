@@ -17,7 +17,7 @@ import (
 
 // Background (async) runs: the original runs a child through its own executor
 // and a detached runner process (src/runs/background/*); the port starts the
-// child `pig --print` process in a goroutine of this extension process and
+// child `pig --mode json` process in a goroutine of this extension process and
 // tracks it in a session-scoped registry, persisting the original's artifacts
 // (async dir with status.json / events.jsonl / output logs, result file under
 // async-subagent-results) so status, bg_wait, stop and the completion
@@ -28,6 +28,14 @@ const (
 	maxWidgetJobs = 4
 	// stoppedMessage is the original's STOP_MESSAGE.
 	stoppedMessage = "Subagent stopped by user."
+	// statusHeartbeatMs is how often a live run refreshes status.json while its child works: the original coalesces
+	// its runner status writes to the same 100ms.
+	statusHeartbeatMs = 100
+	// staleAlivePidMs is the original's grace before an unprobeable runner pid fails a run: only a confirmed-dead
+	// runner fails a run outright.
+	staleAlivePidMs = 24 * 60 * 60 * 1000
+	// recentLineCap is how many activity lines a run remembers for the widget and fleet detail.
+	recentLineCap = 5
 )
 
 // nowMs is the clock; tests replace it.
@@ -131,6 +139,7 @@ type asyncStatusFile struct {
 	Cwd            string       `json:"cwd,omitempty"`
 	CurrentStep    *int         `json:"currentStep,omitempty"`
 	ChainStepCount int          `json:"chainStepCount,omitempty"`
+	TotalTokens    int64        `json:"totalTokens,omitempty"`
 	OutputFile     string       `json:"outputFile,omitempty"`
 	Steps          []*asyncStep `json:"steps,omitempty"`
 }
@@ -153,6 +162,34 @@ type asyncResultFile struct {
 	Timestamp  int64        `json:"timestamp"`
 	DurationMs int64        `json:"durationMs"`
 	Results    []*asyncStep `json:"results,omitempty"`
+}
+
+// activeToolState is one child tool call in flight: its display line and when it started, as the original's
+// current-tool detail keeps them.
+type activeToolState struct {
+	Display   string
+	StartedAt int64
+}
+
+// usageCounts is the child's usage record (json.md: {input, output, cacheRead, ...}).
+type usageCounts struct {
+	input     int64
+	output    int64
+	cacheRead int64
+}
+
+func usageCountsOf(v any) (usageCounts, bool) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return usageCounts{}, false
+	}
+	num := func(key string) int64 {
+		if f, ok := m[key].(float64); ok {
+			return int64(f)
+		}
+		return 0
+	}
+	return usageCounts{input: num("input"), output: num("output"), cacheRead: num("cacheRead")}, true
 }
 
 // asyncRun is one live or remembered run of this session.
@@ -186,6 +223,20 @@ type asyncRun struct {
 	cancel    func()
 	doneCh    chan struct{}
 	retention time.Duration
+
+	// statusMu serializes status.json writes: the heartbeat and stop can race for the same temp file.
+	statusMu sync.Mutex
+	// lastHeartbeat is when status.json was last refreshed while the child worked.
+	lastHeartbeat int64
+
+	// Live child detail for the widget, fleet and status (guarded by mu): the tools in flight,
+	// the child's token usage, the current message's usage so far, and the bounded tail of
+	// activity lines.
+	ActiveTools  map[string]activeToolState
+	TokensWindow int64
+	TokensSpent  int64
+	RecentLines  []string
+	pendingUsage usageCounts
 }
 
 // statusSnapshot renders the persisted status subset of the run.
@@ -197,6 +248,7 @@ func (r *asyncRun) statusSnapshot() *asyncStatusFile {
 		Error: r.Error, StartedAt: r.StartedAt, EndedAt: r.EndedAt, LastUpdate: r.LastUpdate,
 		TimeoutMs: r.TimeoutMs, DeadlineAt: r.DeadlineAt, TimedOut: r.TimedOut, Stopped: r.Stopped,
 		PID: r.PID, Cwd: r.Cwd, ChainStepCount: len(r.Steps), OutputFile: r.OutputFile,
+		TotalTokens: r.TokensSpent,
 	}
 	for _, s := range r.Steps {
 		cp := *s
@@ -393,7 +445,16 @@ func (r *asyncRun) execute(req asyncRunRequest, notify func(*asyncRun), widget f
 	r.writeStatus()
 	r.appendEvent("step_start", "0")
 
-	out, err := runAgentChannelled(cancelCh, req.Cwd, req.Agent, taskForChild, req.Model, supervisorDir(r.Dir))
+	out, err := runAgentJSON(cancelCh, req.Cwd, req.Agent, taskForChild, req.Model, supervisorDir(r.Dir), childEventSink{
+		// The original's background runner mirrors its child session's events into the run artifacts and writes
+		// status as they arrive; here the child's JSON event stream plays that role.
+		OnEvent: func(event map[string]any) {
+			r.noteChildEvent(event)
+			r.appendChildEvent(event)
+			r.heartbeat(widget)
+		},
+		OnOutputLine: r.appendOutputLine,
+	})
 	if err == nil && r.OutputBinding.Path != "" {
 		if ref, werr := savedOutputReference(r.OutputBinding.Path, out); werr == nil {
 			out = ref
@@ -513,7 +574,161 @@ func isCancelled(err error) bool {
 // appendEvent writes one events.jsonl line, as the original's run directories carry.
 func (r *asyncRun) appendEvent(kind, detail string) {
 	line, _ := json.Marshal(map[string]any{"ts": nowMs(), "event": kind, "detail": detail})
-	f, err := os.OpenFile(filepath.Join(r.Dir, "events.jsonl"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	appendRunLine(filepath.Join(r.Dir, "events.jsonl"), line)
+}
+
+// appendOutputLine appends one activity line to the run's output log, the original's writeOutputLine: the file the
+// transcript view tails, so it shows the child's work while the run is live. The line is also remembered for the
+// widget and fleet detail.
+func (r *asyncRun) appendOutputLine(line string) {
+	if strings.TrimSpace(line) == "" {
+		return
+	}
+	r.noteOutputLine(line)
+	appendRunLine(filepath.Join(r.Dir, "output-0.log"), []byte(line))
+}
+
+// noteChildEvent updates the live child detail — the tools in flight and the child's token
+// usage — from one child event. It sees every event, including the message_update stream the
+// persistence filter drops, so usage still accumulates.
+func (r *asyncRun) noteChildEvent(event map[string]any) {
+	switch typ, _ := event["type"].(string); typ {
+	case "tool_execution_start":
+		name, _ := event["toolName"].(string)
+		if name == "" {
+			return
+		}
+		args, _ := event["args"].(map[string]any)
+		display := name
+		if preview := toolArgsPreview(args); preview != "" {
+			display = name + ": " + preview
+		}
+		callID, _ := event["toolCallId"].(string)
+		if callID == "" {
+			callID = name
+		}
+		r.mu.Lock()
+		if r.ActiveTools == nil {
+			r.ActiveTools = map[string]activeToolState{}
+		}
+		r.ActiveTools[callID] = activeToolState{Display: display, StartedAt: nowMs()}
+		r.mu.Unlock()
+	case "tool_execution_end":
+		callID, _ := event["toolCallId"].(string)
+		r.mu.Lock()
+		if callID == "" {
+			r.ActiveTools = nil
+		} else {
+			delete(r.ActiveTools, callID)
+		}
+		r.mu.Unlock()
+	case "message_update":
+		// The stream's usage is cumulative for the current message: it is the window and the
+		// pending total until the message ends.
+		u, ok := usageCountsOf(event["usage"])
+		if !ok {
+			return
+		}
+		r.mu.Lock()
+		r.TokensWindow = u.input + u.cacheRead
+		r.pendingUsage = u
+		r.mu.Unlock()
+	case "message_end":
+		// The message's own usage is authoritative; the pending stream counts stand in when the
+		// message carries none. One message contributes its tokens once.
+		message, _ := event["message"].(map[string]any)
+		r.mu.Lock()
+		u := r.pendingUsage
+		if message != nil {
+			if mu, ok := usageCountsOf(message["usage"]); ok {
+				u = mu
+				r.TokensWindow = mu.input + mu.cacheRead
+			}
+		}
+		r.TokensSpent += u.input + u.output
+		r.pendingUsage = usageCounts{}
+		r.mu.Unlock()
+	}
+}
+
+// noteOutputLine remembers one activity line for the widget and fleet detail, bounded as the
+// original's recent-output tail.
+func (r *asyncRun) noteOutputLine(line string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.RecentLines = append(r.RecentLines, line)
+	if len(r.RecentLines) > recentLineCap {
+		r.RecentLines = r.RecentLines[len(r.RecentLines)-recentLineCap:]
+	}
+}
+
+// toolLineLocked is the current-tool detail: the oldest tool in flight with its duration.
+func (r *asyncRun) toolLineLocked(now int64) string {
+	var oldest activeToolState
+	found := false
+	for _, t := range r.ActiveTools {
+		if !found || t.StartedAt < oldest.StartedAt {
+			oldest, found = t, true
+		}
+	}
+	if !found {
+		return ""
+	}
+	return fmt.Sprintf("%s | %s", oldest.Display, formatDuration(maxInt64(0, now-oldest.StartedAt)))
+}
+
+// liveDetailLocked is what the child is doing right now: the tool in flight, else the latest
+// activity line — the original's current-tool and recent-output detail.
+func (r *asyncRun) liveDetailLocked(now int64) string {
+	if line := r.toolLineLocked(now); line != "" {
+		return line
+	}
+	if n := len(r.RecentLines); n > 0 {
+		return r.RecentLines[n-1]
+	}
+	return ""
+}
+
+// appendChildEvent mirrors one child JSON event into events.jsonl with the original's annotations. message_update is
+// dropped, as the original's shouldPersistChildEvent drops it: stream deltas are noise, not diagnostics.
+func (r *asyncRun) appendChildEvent(event map[string]any) {
+	if typ, _ := event["type"].(string); typ == "message_update" {
+		return
+	}
+	event["subagentSource"] = "child"
+	event["subagentRunId"] = r.ID
+	event["subagentStepIndex"] = 0
+	event["subagentAgent"] = r.Agent
+	event["observedAt"] = nowMs()
+	line, err := json.Marshal(event)
+	if err != nil {
+		return
+	}
+	appendRunLine(filepath.Join(r.Dir, "events.jsonl"), line)
+}
+
+// heartbeat records child activity. lastUpdate always advances in memory, so the owning session's status shows fresh
+// activity; status.json and the async widget refresh at the coalesced rate, as the original's runner status writes.
+func (r *asyncRun) heartbeat(widget func()) {
+	now := nowMs()
+	r.mu.Lock()
+	r.LastUpdate = now
+	due := now-r.lastHeartbeat >= statusHeartbeatMs
+	if due {
+		r.lastHeartbeat = now
+	}
+	r.mu.Unlock()
+	if due {
+		r.writeStatus()
+		if widget != nil {
+			widget()
+		}
+	}
+}
+
+// appendRunLine appends one record to a run artifact file.
+func appendRunLine(path string, line []byte) {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return
 	}
@@ -523,6 +738,8 @@ func (r *asyncRun) appendEvent(kind, detail string) {
 
 // writeStatus persists status.json atomically.
 func (r *asyncRun) writeStatus() {
+	r.statusMu.Lock()
+	defer r.statusMu.Unlock()
 	data, err := json.MarshalIndent(r.statusSnapshot(), "", "  ")
 	if err != nil {
 		return
@@ -592,7 +809,9 @@ func readStatusFile(dir string) *asyncStatusFile {
 
 // reconcileDiskRun repairs a status that says running while no live run backs it:
 // the extension process (the run's runner here) is gone. The original reconciles
-// the same way through its runner-process proof.
+// the same way through its runner-process proof: a run is only repaired when its
+// runner pid is confirmed dead, so a startup sweep in another process never
+// fails a run that another live process still runs.
 func reconcileDiskRun(dir string) *asyncStatusFile {
 	st := readStatusFile(dir)
 	if st == nil {
@@ -606,7 +825,24 @@ func reconcileDiskRun(dir string) *asyncStatusFile {
 	}
 	now := nowMs()
 	pid := st.PID
-	message := fmt.Sprintf("Async runner process %d exited or disappeared before writing a result. Marked run failed by stale-run reconciliation.", pid)
+	var message string
+	switch pidLiveness(pid) {
+	case pidAlive:
+		// The runner process still runs this session's child; another session's sweep must leave it alone.
+		return st
+	case pidUnknown:
+		// The original's grace: an unprobeable pid only fails after staleAlivePidMs without a status update.
+		last := st.LastUpdate
+		if last == 0 {
+			last = st.StartedAt
+		}
+		if now-last <= staleAlivePidMs {
+			return st
+		}
+		message = fmt.Sprintf("Async runner PID %d cannot be probed from this process; status has not updated for %dms, so stale-run reconciliation marked the run failed because PID ownership is unverified.", pid, now-last)
+	default: // pidDead
+		message = fmt.Sprintf("Async runner process %d exited or disappeared before writing a result. Marked run failed by stale-run reconciliation.", pid)
+	}
 	st.State = "failed"
 	st.Error = message
 	st.EndedAt = now
@@ -678,7 +914,8 @@ func formatAsyncStartedMessage(headline string, interactive bool) string {
 
 // updateAsyncWidget shows the session's active async runs, as the original's
 // subagent-async widget does (a static line list is the Go port's form of the
-// original's animated component).
+// original's animated component): state, elapsed time, activity freshness and
+// spend, with the current tool or latest activity line beneath each run.
 func updateAsyncWidget(ctx sdk.Context) {
 	if !ctx.HasUI() {
 		return
@@ -688,6 +925,11 @@ func updateAsyncWidget(ctx sdk.Context) {
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return
 	}
+	_ = ctx.SetWidget(asyncWidget, asyncWidgetLines(active, nowMs()))
+}
+
+// asyncWidgetLines renders the widget's line list for the given runs.
+func asyncWidgetLines(active []*asyncRun, now int64) []string {
 	lines := []string{}
 	for i, r := range active {
 		if i >= maxWidgetJobs {
@@ -695,8 +937,20 @@ func updateAsyncWidget(ctx sdk.Context) {
 			break
 		}
 		r.mu.Lock()
-		lines = append(lines, fmt.Sprintf("%s · %s · %s", r.Agent, r.State, formatDuration(maxInt64(0, nowMs()-r.StartedAt))))
+		header := fmt.Sprintf("%s · %s · %s", r.Agent, r.State, formatDuration(maxInt64(0, now-r.StartedAt)))
+		if r.State == "running" {
+			if label := formatActivityLabel(&r.LastUpdate, now); label != "" {
+				header += " · " + label
+			}
+		}
+		if r.TokensSpent > 0 {
+			header += " · " + formatTokens(r.TokensSpent) + " spent"
+		}
+		lines = append(lines, header)
+		if detail := r.liveDetailLocked(now); detail != "" {
+			lines = append(lines, "  ⎿ "+detail)
+		}
 		r.mu.Unlock()
 	}
-	_ = ctx.SetWidget(asyncWidget, lines)
+	return lines
 }

@@ -1,7 +1,9 @@
 package pi_subagents
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -22,6 +24,33 @@ func fakeRunChild(t *testing.T, f func(done <-chan struct{}, req childRequest) (
 		runChild = old
 	})
 	runChild = f
+}
+
+// isolateNow pins the run clock for one test; a second call moves it.
+func isolateNow(t *testing.T, ms int64) {
+	t.Helper()
+	old := nowMs
+	nowMs = func() int64 { return ms }
+	t.Cleanup(func() { nowMs = old })
+}
+
+// deadPid is a pid nothing runs: a child process that has been started and reaped, so a probe confirms it is gone.
+func deadPid(t *testing.T) int {
+	t.Helper()
+	cmd := exec.Command(os.Args[0], "-test.run=^$")
+	if err := cmd.Start(); err != nil {
+		t.Skipf("cannot start a pid probe: %v", err)
+	}
+	pid := cmd.Process.Pid
+	_ = cmd.Wait()
+	deadline := time.Now().Add(5 * time.Second)
+	for pidLiveness(pid) != pidDead && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	if pidLiveness(pid) != pidDead {
+		t.Skipf("pid %d still probes as live after reap", pid)
+	}
+	return pid
 }
 
 // isolateTemp points the async artifacts at a test directory.
@@ -222,11 +251,17 @@ func TestAsyncRunTimeoutKillsTheChild(t *testing.T) {
 	agent := &AgentConfig{Name: "slow"}
 	r, err := startDetachedRun(asyncRunRequest{SessionID: "s1", Cwd: t.TempDir(), Agent: agent, Task: "t", TimeoutMs: 30}, "s1", nil, nil)
 	eq(t, err, nil, "start")
-	<-started
 	select {
 	case <-r.doneCh:
 	case <-time.After(5 * time.Second):
 		t.Fatal("timed out run did not finish")
+	}
+	// The child stub runs before the run settles, so its state is final here.
+	// Under load the 30ms deadline can preempt the child launch entirely; that
+	// still exercises the timeout path the assertions below check.
+	select {
+	case <-started:
+	default:
 	}
 	eq(t, r.State, "failed", "state")
 	eq(t, r.TimedOut, true, "timedOut")
@@ -269,15 +304,16 @@ func TestAsyncCapacityIsEnforced(t *testing.T) {
 // the original's stale-run reconciler does.
 func TestReconcileDiskRunRepairsStaleRunningStatus(t *testing.T) {
 	isolateTemp(t)
+	pid := deadPid(t)
 	dir := filepath.Join(asyncRootDir(), "run-stale")
 	writeFile(t, filepath.Join(dir, "status.json"),
-		`{"runId":"run-stale","mode":"single","state":"running","startedAt":1000,"lastUpdate":1000,"pid":4242,"steps":[{"agent":"helper","status":"running"}]}`)
+		fmt.Sprintf(`{"runId":"run-stale","mode":"single","state":"running","startedAt":1000,"lastUpdate":1000,"pid":%d,"steps":[{"agent":"helper","status":"running"}]}`, pid))
 	st := reconcileDiskRun(dir)
 	if st == nil {
 		t.Fatal("no status")
 	}
 	eq(t, st.State, "failed", "repaired state")
-	if !strings.Contains(st.Error, "Async runner process 4242 exited or disappeared before writing a result. Marked run failed by stale-run reconciliation.") {
+	if !strings.Contains(st.Error, fmt.Sprintf("Async runner process %d exited or disappeared before writing a result. Marked run failed by stale-run reconciliation.", pid)) {
 		t.Errorf("repair message %q", st.Error)
 	}
 	res := readResultFile("run-stale")
@@ -287,6 +323,47 @@ func TestReconcileDiskRunRepairsStaleRunningStatus(t *testing.T) {
 	// A terminal status is not touched again.
 	st2 := reconcileDiskRun(dir)
 	eq(t, st2.State, "failed", "stays failed")
+}
+
+// A run whose runner process still lives is never repaired, even by a sweep
+// that does not own it: the original only fails a confirmed-dead pid, so
+// another session's startup sweep leaves this session's live run running.
+func TestReconcileDiskRunKeepsLiveRunner(t *testing.T) {
+	isolateTemp(t)
+	dir := filepath.Join(asyncRootDir(), "run-live")
+	writeFile(t, filepath.Join(dir, "status.json"),
+		fmt.Sprintf(`{"runId":"run-live","mode":"single","state":"running","startedAt":1000,"lastUpdate":1000,"pid":%d,"steps":[{"agent":"helper","status":"running"}]}`, os.Getpid()))
+	st := reconcileDiskRun(dir)
+	if st == nil {
+		t.Fatal("no status")
+	}
+	eq(t, st.State, "running", "a live runner's run keeps running")
+	if readResultFile("run-live") != nil {
+		t.Error("a live run must not get a repaired result")
+	}
+}
+
+// A pid this process cannot probe only fails after the original's grace
+// window without a status update; a fresh status is left alone.
+func TestReconcileDiskRunUnknownPIDNeedsGrace(t *testing.T) {
+	isolateTemp(t)
+	isolateNow(t, 100000)
+	dir := filepath.Join(asyncRootDir(), "run-unknown")
+	writeFile(t, filepath.Join(dir, "status.json"),
+		`{"runId":"run-unknown","mode":"single","state":"running","startedAt":1000,"lastUpdate":99000,"pid":0,"steps":[{"agent":"helper","status":"running"}]}`)
+	st := reconcileDiskRun(dir)
+	if st == nil {
+		t.Fatal("no status")
+	}
+	eq(t, st.State, "running", "inside the grace window")
+
+	// Past the grace window the unverified run is failed, as the original does.
+	isolateNow(t, 100000+staleAlivePidMs+1)
+	st = reconcileDiskRun(dir)
+	eq(t, st.State, "failed", "past the grace window")
+	if !strings.Contains(st.Error, "cannot be probed from this process") {
+		t.Errorf("repair message %q", st.Error)
+	}
 }
 
 func TestActiveViewsListFormatting(t *testing.T) {

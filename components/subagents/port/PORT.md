@@ -44,7 +44,16 @@ takes what can be checked against the original by running it, and one execution 
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
 Pi) in-process child sessions. The port starts a child `pig --no-extensions --print` with the agent's model, thinking,
-tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`), as PiG's own subagents do:
+tools and system prompt (`--system-prompt` or `--append-system-prompt` by `systemPromptMode`), as PiG's own subagents do.
+A background (async) child runs in `pig --mode json` instead, mirroring the original runner's live observability: its
+events are appended to the run's `events.jsonl` with the original's annotations (dropping `message_update`), its tool and
+message activity streams into `output-<n>.log` — the file the transcript view tails while the run is live — and
+`status.json` heartbeats at the original's 100ms status-write coalescing so `lastUpdate` shows child activity. Stale-run
+reconciliation probes the recorded runner pid (as the original's `checkPidLiveness`) and fails only a confirmed-dead
+runner, keeping a live run running even when another session's startup sweep sees it. The child's `tool_execution_*`
+and `usage` events feed the original's live detail: the async widget and `/subagents-fleet` render each run's current
+tool with its duration, the latest activity line, activity freshness and token spend, and `status` carries `Tokens:`
+and `Tool:` lines plus `totalTokens` in `status.json`. Running an agent is
 `subagent {agent, task}` for one agent, and `/run-chain <chain> <task>` for a chain (steps in order, `{task}` and
 `{previous}`, named outputs `{outputs.x}`, the first failing step stops it, every agent is resolved before any child starts).
 The original's trace cannot check this (a Pi child session is not a pig child process); it is covered by the port's own tests
