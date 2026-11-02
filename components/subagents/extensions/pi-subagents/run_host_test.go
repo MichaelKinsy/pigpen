@@ -177,3 +177,23 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 	}
 	eq(t, len(*calls), 3, "no child for invalid settings")
 }
+
+func TestSubagentToolPanes(t *testing.T) {
+	socket, fakeCalls := sub.StartPaneFake(t, "answer")
+	t.Setenv("HC_TERMINAL_SOCKET", socket)
+	t.Setenv("HC_TERMINAL_ID", "t1")
+	hidden := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "scout.md"), agentMD("scout", "Scouts", "You scout."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, []any{fakeCalls("terminal.run"), len(*hidden), strings.Contains(string(raw), "ok")}, []any{0, 1, true}, "setting off: the hidden runner")
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"herdrPanes": true}}`)
+	raw, failure = h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, []any{fakeCalls("terminal.run"), len(*hidden), strings.Contains(string(raw), "answer")}, []any{1, 1, true}, "setting on: a pane")
+}

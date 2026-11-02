@@ -52,7 +52,7 @@ func TestRunChainThreadsOutput(t *testing.T) {
 	chain := &ChainConfig{Name: "ab", Steps: []ChainStep{{Agent: "a"}, {Agent: "b", Task: "Check {previous}"}}}
 	calls := fakeRunner(t, map[string]string{"build it": "built", "Check built": "checked"}, "")
 	var progress []string
-	out, err := runChain(nil, ".", chain, agents, "build it", func(s string) { progress = append(progress, s) })
+	out, err := runChain(nil, ".", chain, agents, "build it", func(s string) { progress = append(progress, s) }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,24 +64,24 @@ func TestRunChainThreadsOutput(t *testing.T) {
 func TestRunChainStopsOnFailureAndChecksAgentsFirst(t *testing.T) {
 	agents := []AgentConfig{{Name: "a", SystemPromptMode: "replace"}}
 	calls := fakeRunner(t, map[string]string{"x": "ok"}, "")
-	_, err := runChain(nil, ".", &ChainConfig{Name: "bad", Steps: []ChainStep{{Agent: "a"}, {Agent: "ghost"}}}, agents, "x", func(string) {})
+	_, err := runChain(nil, ".", &ChainConfig{Name: "bad", Steps: []ChainStep{{Agent: "a"}, {Agent: "ghost"}}}, agents, "x", func(string) {}, nil)
 	hasMatch(t, err, "Unknown agent 'ghost' in step 2 of chain 'bad'")
 	eq(t, len(*calls), 0, "no child runs when a step names an unknown agent")
 
 	calls = fakeRunner(t, nil, "fail-me")
 	agents = append(agents, AgentConfig{Name: "b", SystemPromptMode: "replace"})
-	_, err = runChain(nil, ".", &ChainConfig{Name: "stop", Steps: []ChainStep{{Agent: "a"}, {Agent: "b"}}}, agents, "fail-me", func(string) {})
+	_, err = runChain(nil, ".", &ChainConfig{Name: "stop", Steps: []ChainStep{{Agent: "a"}, {Agent: "b"}}}, agents, "fail-me", func(string) {}, nil)
 	hasMatch(t, err, "step 1 (a) exited with code 3: boom")
 	eq(t, len(*calls), 1, "the chain stops at the failing step")
 }
 
 func TestRunAgentReportsExit(t *testing.T) {
 	fakeRunner(t, map[string]string{"hi": "hello"}, "")
-	out, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "hi", "")
+	out, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "hi", "", nil)
 	if err != nil || out != "hello" {
 		t.Errorf("out %q err %v", out, err)
 	}
 	fakeRunner(t, nil, "bad")
-	_, err = runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "bad", "")
+	_, err = runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "bad", "", nil)
 	hasMatch(t, err, "exited with code 3")
 }

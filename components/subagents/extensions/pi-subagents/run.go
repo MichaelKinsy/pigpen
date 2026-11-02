@@ -378,7 +378,7 @@ func (e *childExit) Error() string {
 	return fmt.Sprintf("%s exited with code %d: %s", e.agent, e.code, e.detail)
 }
 
-func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string) (string, error) {
+func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes *paneHost) (string, error) {
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
@@ -386,7 +386,14 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	}
 	defer func() { <-childSlots }()
 	depth, _ := subagentDepth(os.Getenv)
-	res, err := runChild(done, childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)})
+	req := childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)}
+	var res childResult
+	var err error
+	if panes != nil {
+		res, err = panes.run(done, req, a.Name)
+	} else {
+		res, err = runChild(done, req)
+	}
 	switch {
 	case errors.Is(err, errCancelled):
 		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
@@ -417,7 +424,7 @@ func chainTask(steps []ChainStep, i int, request, previous string) string {
 
 // runChain runs the steps in order, each one's output flowing into the next; it stops at the first failing step. Every
 // agent is resolved before any child starts.
-func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string)) (string, error) {
+func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string), panes *paneHost) (string, error) {
 	resolved := make([]*AgentConfig, len(c.Steps))
 	for i, s := range c.Steps {
 		a, msg := ResolveAgentName(s.Agent, agents)
@@ -433,7 +440,7 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 	for i, s := range c.Steps {
 		progress(fmt.Sprintf("[%d/%d] %s", i+1, len(c.Steps), s.Agent))
 		model := s.Model
-		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model)
+		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model, panes)
 		if err != nil {
 			var ce *childExit
 			if errors.As(err, &ce) {

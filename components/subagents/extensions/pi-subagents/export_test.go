@@ -33,3 +33,10 @@ func ToolParamNames() []string {
 }
 
 var Refusal = refusal
+
+// StartPaneFake is a scripted herdr-core whose parent terminal is "t1"; it returns its socket and a counter of the calls
+// it got for a method.
+func StartPaneFake(t *testing.T, answer string) (string, func(method string) int) {
+	r := newPaneRig(t, bothLabels, []string{"idle/0", "working/0", "blocked/1", "blocked/1", "working/1", "done/2"}, answer)
+	return r.fake.socket, func(m string) int { return len(r.fake.calls(m)) }
+}

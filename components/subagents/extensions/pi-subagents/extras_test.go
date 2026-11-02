@@ -261,7 +261,7 @@ func TestChildEnvironment(t *testing.T) {
 		env = req.Env
 		return childResult{Stdout: "ok"}, nil
 	}
-	if _, err := runAgent(nil, ".", &AgentConfig{Name: "scout", SystemPromptMode: "replace"}, "t", ""); err != nil {
+	if _, err := runAgent(nil, ".", &AgentConfig{Name: "scout", SystemPromptMode: "replace"}, "t", "", nil); err != nil {
 		t.Fatal(err)
 	}
 	// the whole environment is given (childEnv: this process's, less the host's internals), ending with who the child is
