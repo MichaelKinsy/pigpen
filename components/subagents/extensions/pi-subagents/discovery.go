@@ -124,11 +124,12 @@ func projectRootResolution(root string) string {
 // subagentSettings are the `subagents` settings that change an agent's definition at launch:
 // `defaultExtensions` and `defaultSubagentOnlyExtensions` (nil when unset), `defaultModel` and `defaultThinking` ("" when
 // unset), and the `model` and `thinking` of `agentOverrides.<name>`, keyed by agent name: a string, or false to clear
-// what the definition sets.
+// what the definition sets; and `herdrPanes` (nil when unset), which runs subagents in Herdr Desktop panes.
 type subagentSettings struct {
 	extensions, subagentOnly      []string
 	defaultModel, defaultThinking string
 	model, thinking               map[string]any
+	herdrPanes                    *bool
 }
 
 // readSubagentSettings is the original's readSubagentSettings for the fields above: a missing file sets nothing; an
@@ -187,6 +188,13 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 			return d, fmt.Errorf("Subagent settings in '%s' have invalid '%s'; expected a non-empty string.", path, f.key)
 		}
 		*f.dst = jsTrim(str)
+	}
+	if raw, ok := s.get("herdrPanes"); ok {
+		b, isBool := raw.(bool)
+		if !isBool {
+			return d, fmt.Errorf("Subagent settings in '%s' have invalid 'herdrPanes'; expected true or false.", path)
+		}
+		d.herdrPanes = &b
 	}
 	// The original ignores an agentOverrides that is not an object, and reads every field of each entry; only model and
 	// thinking are ported.
@@ -255,6 +263,9 @@ func subagentSettingsFor(cwd string, scope AgentScope) (subagentSettings, error)
 		}
 		if d.defaultThinking == "" {
 			d.defaultThinking = set.defaultThinking
+		}
+		if d.herdrPanes == nil {
+			d.herdrPanes = set.herdrPanes
 		}
 		d.model = underlay(d.model, set.model)
 		d.thinking = underlay(d.thinking, set.thinking)

@@ -90,7 +90,7 @@ func TestTaskTravelsOnStdin(t *testing.T) {
 	// original prompts its children with ("Task: ...").
 	calls := fakeChildren(t, nil)
 	for _, task := range []string{"--version", "- fix the list", "@notes.txt", strings.Repeat("x", 300*1024)} {
-		if _, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, task, ""); err != nil {
+		if _, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, task, "", nil); err != nil {
 			t.Fatal(err)
 		}
 		req := (*calls)[len(*calls)-1]
@@ -170,7 +170,7 @@ func TestAtMostFourChildrenAtOnce(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if _, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "t", ""); err != nil {
+			if _, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "t", "", nil); err != nil {
 				t.Error(err)
 			}
 		}()
@@ -192,13 +192,13 @@ func TestCancelWhileWaitingForASlot(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
-		go func() { defer wg.Done(); _, _ = runAgent(nil, ".", &AgentConfig{Name: "a"}, "t", "") }()
+		go func() { defer wg.Done(); _, _ = runAgent(nil, ".", &AgentConfig{Name: "a"}, "t", "", nil) }()
 		<-started
 	}
 	done := make(chan struct{})
 	close(done)
 	errc := make(chan error, 1)
-	go func() { _, err := runAgent(done, ".", &AgentConfig{Name: "w"}, "t", ""); errc <- err }()
+	go func() { _, err := runAgent(done, ".", &AgentConfig{Name: "w"}, "t", "", nil); errc <- err }()
 	select {
 	case err := <-errc:
 		hasMatch(t, err, "w was cancelled")
@@ -293,9 +293,9 @@ func TestRunAgentReportsStderrOnFailure(t *testing.T) {
 	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
 		return childResult{Stdout: "half an answer", Stderr: "Error: no model", Exit: 1}, nil
 	}
-	_, err := runAgent(nil, ".", &AgentConfig{Name: "a"}, "t", "")
+	_, err := runAgent(nil, ".", &AgentConfig{Name: "a"}, "t", "", nil)
 	hasMatch(t, err, "a exited with code 1: Error: no model")
-	_, err = runChain(nil, ".", &ChainConfig{Name: "c", Steps: []ChainStep{{Agent: "a"}}}, []AgentConfig{{Name: "a"}}, "t", func(string) {})
+	_, err = runChain(nil, ".", &ChainConfig{Name: "c", Steps: []ChainStep{{Agent: "a"}}}, []AgentConfig{{Name: "a"}}, "t", func(string) {}, nil)
 	hasMatch(t, err, "step 1 (a) exited with code 1: Error: no model")
 }
 

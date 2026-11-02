@@ -68,6 +68,12 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
 - a relative `cwd` is the session's, and a missing one or a file is refused with the original's text; a `:level` suffix on
   `model` overrides the agent's thinking, as the schema says.
 
+**An addition, not a port: panes in Herdr Desktop.** With `subagents.herdrPanes` set, in a Herdr Desktop terminal (not on Windows),
+a child runs as an interactive `pig` in a herdr-core terminal labelled with the parent's space and tab, not as a hidden
+`pig --print`. The tool waits for the child's first turn to end, reads its last assistant message from the session file
+(pinned with `--session-dir` and `--session-id`) and ends the child and its pane. herdr-core is told "not to type notes about the child into the parent". A `blocked` child waits for the person, with one notification per block. When herdr-core cannot be reached, or the
+task is over 100 KiB, the call falls back to the hidden child with a warning. The original has no such mode. In a pane the task is an argument after `--`, not stdin, so the stdin bullet above does not hold there; the 4-child cap and the environment filtering (`PIG_EXT_*`, `PIG_HARNESS_*`, and `HC_*` for a pane) still apply.
+
 The pig to start is `PIG_SUBAGENT_PIG_BINARY`, else the pig running this extension (`PIG_HARNESS_BINARY`), else a `pig` next
 to this program, else `PATH`. A Piglet Binary as the child refuses `--system-prompt`, so a `replace`-mode agent cannot run in one
 (finding 9).
@@ -103,7 +109,7 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M4 | `agents/agents.ts` (discovery, loading, project root) | `discovery.go`, `agents.go`, `builtin/` | 15 twins + 5 Pi scenarios |
 | M5 | `agents/agent-management.ts` (list, get) | `management.go` | 5 Pi scenarios, `builtin_test.go` (the original's recorded text), `extras_test.go` |
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
-| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go` | `run_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
+| M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go`, `panes.go`, `hc.go` | `run_test.go`, `panes_test.go`, `hc_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 
 ## Process: what was written before its tests
@@ -113,7 +119,8 @@ The twins are tests first: 38 were written from the original's tests, with their
 were added after the code. The extension is **not** tests first: the six scenarios were recorded from the original under Pi
 first (so the goldens are the original's), the extension was written against them, and its own tests came after. The running
 addition is tests first (`79ee551` red, then the code), and so are the review's safety fixes (22 tests red on the stubs,
-`port/red-run-review.log`, then the code).
+`port/red-run-review.log`, then the code). The pane runner and the herdr-core client were written before their tests, in their
+first commit (`a34f8e42`); the later fixes were tests first.
 
 ## Results
 
@@ -130,7 +137,8 @@ addition is tests first (`79ee551` red, then the code), and so are the review's 
   `get` has a second path that finds the same agent; trailing blanks at the end of a file are trimmed before the chain parser
   sees them) and were removed; 4 did not build and were rebuilt. The review (rev-port-popular-5) found the run path untested
   (the real runner's directory and environment, the tool's `cwd` and `agentScope`, `/run-chain`'s task, the binary override all
-  survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**.
+  survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**. The pane work added `pane-*` mutations (the setting, the labels, the environment, the cleanup, the
+  fallback, the chain wiring) and the pane tests (`panes_test.go`, `hc_test.go`, the wiring tests in `run_host_test.go`): **174 mutations** in the generator now.
 - `pig install --validate-only --json`: valid (1 command, 3 handlers, 4 tools).
 - Piglet: `piglets/pig-popular` now selects six ports. A Binary built from this member alone gives traces equal to the Pi goldens in
   every event outside the `llm` channel (5 of 5); the `llm` channel differs by the host (a Binary's default tool set), as for the permissions port.
@@ -207,5 +215,5 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 - Module, `Extension()`, event and tool registration; the tool definition from a JSON Schema (here read from the original).
 - The JS helper layer a fourth time (`jsjson.go`, `jsutil.go`: 375 lines copied).
 - The twin ledger and slice file (264 entries by name, grouped by hand) and the 41 twins' file layout.
-- The mutation generator (116 pairs by hand, 42 of them the review's) and the scenario generator.
+- The mutation generator (173 pairs by hand, 42 of them the review's) and the scenario generator.
 - A tool-definition importer that reads a recorded request would replace `gen-tooldefs.py`.

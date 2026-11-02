@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
@@ -276,7 +277,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	model, _ := params["model"].(string)
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runAgent(done, cwd, a, task, model)
+	out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
@@ -319,11 +320,24 @@ func runChainCommand(ctx sdk.Context, args string) error {
 	}
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runChain(done, ctx.Cwd(), chain, agents, jsTrim(fields[1]), func(s string) { ctx.Notify(s, "info") })
+	out, err := runChain(done, ctx.Cwd(), chain, agents, jsTrim(fields[1]), func(s string) { ctx.Notify(s, "info") }, paneHostFor(ctx, defaults))
 	if err != nil {
 		ctx.Notify(err.Error(), "error")
 		return nil
 	}
 	ctx.Notify(out, "info")
 	return nil
+}
+
+// paneHostFor is the pane runner for this session, or nil when children run hidden (the setting, Herdr Desktop's
+// environment, the platform). An in-memory parent session has no directory, so the runner uses a temporary one.
+func paneHostFor(ctx sdk.Context, s subagentSettings) *paneHost {
+	if !panesEnabled(s, os.Getenv, runtime.GOOS) {
+		return nil
+	}
+	dir := ""
+	if f, err := ctx.GetSessionFile(); err == nil && f != nil {
+		dir, _ = ctx.SessionManager().GetSessionDir()
+	}
+	return &paneHost{socket: os.Getenv("HC_TERMINAL_SOCKET"), parent: os.Getenv("HC_TERMINAL_ID"), sessionDir: dir, notify: ctx.Notify}
 }
