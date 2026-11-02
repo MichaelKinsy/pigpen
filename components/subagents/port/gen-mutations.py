@@ -210,6 +210,7 @@ m("pane-print", "panes.go", 'if len(args) > 0 && args[0] == "--print" {', 'if fa
 m("pane-rm", "panes.go", '_ = c.call("terminal.rm", map[string]any{"terminal": addr}, nil)', '_ = addr')
 m("pane-dial-fallback", "panes.go", 'h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn unreachable(err)', 'h, err := dialHC(p.socket)\n\tif err != nil {\n\t\treturn childResult{}, err')
 m("pane-task-size", "panes.go", 'if len(req.Stdin) > paneTaskMax {', 'if false {')
+m("pane-chain-wiring", "extension.go", "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, paneHostFor(ctx, defaults))", "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, nil)\n\t_ = defaults")
 m("pane-goos", "panes.go", '*s.herdrPanes && goos != "windows" &&', '*s.herdrPanes &&')
 
 bad = False

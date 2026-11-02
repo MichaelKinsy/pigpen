@@ -197,3 +197,51 @@ func TestSubagentToolPanes(t *testing.T) {
 	eq(t, failure, "", "failure")
 	eq(t, []any{fakeCalls("terminal.run"), len(*hidden), strings.Contains(string(raw), "answer")}, []any{1, 1, true}, "setting on: a pane")
 }
+
+func TestChainPanes(t *testing.T) {
+	socket, fakeCalls := sub.StartPaneFake(t, "answer")
+	t.Setenv("HC_TERMINAL_SOCKET", socket)
+	t.Setenv("HC_TERMINAL_ID", "t1")
+	hidden := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"herdrPanes": true}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "a.md"), agentMD("a", "A", "A."))
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "b.md"), agentMD("b", "B", "B."))
+	writeFile(t, filepath.Join(cwd, ".pi", "chains", "ab.chain.md"), "---\nname: ab\ndescription: AB\n---\n\n## a\n\n{task}\n\n## b\n\n{previous}\n")
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+	eq(t, h.Command("run-chain", "ab the request"), "", "command")
+	eq(t, []any{fakeCalls("terminal.run"), len(*hidden)}, []any{2, 0}, "two panes, no hidden child")
+}
+
+func TestPaneChildGetsTheParentSessionDir(t *testing.T) {
+	socket, _, params := sub.StartPaneFakeParams(t, "answer")
+	t.Setenv("HC_TERMINAL_SOCKET", socket)
+	t.Setenv("HC_TERMINAL_ID", "t1")
+	cwd := tmp(t)
+	sessions := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"herdrPanes": true}}`)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "scout.md"), agentMD("scout", "Scouts", "You scout."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd, OnCallValue: func(method string, args map[string]any) (any, string) {
+		switch method {
+		case "getSessionFile":
+			return map[string]any{"sessionFile": filepath.Join(sessions, "1_parent.jsonl")}, ""
+		case "sessionRead":
+			if args["method"] == "getSessionDir" {
+				return sessions, ""
+			}
+		}
+		return map[string]any{}, ""
+	}})
+	_, failure := h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
+	eq(t, failure, "", "failure")
+	argv := params("terminal.run")[0]["argv"].([]any)
+	i := -1
+	for j, a := range argv {
+		if a == "--session-dir" {
+			i = j
+		}
+	}
+	eq(t, i >= 0 && argv[i+1] == sessions, true, "--session-dir is the parent's session directory")
+}

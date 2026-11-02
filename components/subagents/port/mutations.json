@@ -1032,6 +1032,12 @@
   "replace": "if false {"
  },
  {
+  "name": "pane-chain-wiring",
+  "file": "extension.go",
+  "find": "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, paneHostFor(ctx, defaults))",
+  "replace": "jsTrim(fields[1]), func(s string) { ctx.Notify(s, \"info\") }, nil)\n\t_ = defaults"
+ },
+ {
   "name": "pane-goos",
   "file": "panes.go",
   "find": "*s.herdrPanes && goos != \"windows\" &&",
