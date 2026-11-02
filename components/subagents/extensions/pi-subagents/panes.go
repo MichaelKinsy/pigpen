@@ -83,7 +83,7 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 		"labels": labels, "name": paneName(agent, randHex(2)), "parent": p.parent, "no_notify": true,
 	}, &started)
 	if err != nil {
-		return childResult{Exit: 1, Stderr: fmt.Sprintf("herdr-core could not start %s: %v", agent, err)}, nil
+		return childResult{}, fmt.Errorf("herdr-core: %w", err) // the child never started
 	}
 	addr := started.Address
 	live := true // unknown after a lost connection: cleanup then tries the kill anyway
@@ -147,9 +147,7 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 	out, errw := &headWriter{max: outputMaxBytes}, &tailWriter{max: stderrTail}
 	out.Write([]byte(res.Stdout))
 	errw.Write([]byte(res.Stderr))
-	if out.total > out.max || out.lines+1 > outputMaxLines { // only an oversize answer is cut; a small one keeps its newline
-		res.Stdout = out.text()
-	}
+	res.Stdout = out.text() // same trimming and cap as the hidden runner
 	res.Stderr = strings.TrimSpace(errw.String())
 	return res, nil
 }

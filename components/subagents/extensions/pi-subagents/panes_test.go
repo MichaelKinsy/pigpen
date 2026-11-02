@@ -187,7 +187,7 @@ func TestPaneRun(t *testing.T) {
 	r.host.sessionDir = ""
 	res, err := r.host.run(nil, r.req, "scout")
 	eq(t, err, nil, "error")
-	eq(t, res, childResult{Stdout: "answer\n"}, "result")
+	eq(t, res, childResult{Stdout: "answer"}, "result")
 	p := r.fake.calls("terminal.run")[0]
 	argv := p["argv"].([]any)
 	eq(t, argv[0], "pig", "bin")
@@ -336,7 +336,33 @@ func TestPaneRunCap(t *testing.T) {
 	r := newPaneRig(t, bothLabels, []string{"done/1"}, strings.TrimSuffix(text, "\n"))
 	res, _ := r.host.run(nil, r.req, "scout")
 	w := &headWriter{max: outputMaxBytes}
-	w.Write([]byte(strings.TrimSuffix(text, "\n") + "\n"))
+	w.Write([]byte(text))
 	eq(t, res.Stdout, w.text(), "capped like the hidden runner")
 	eq(t, len(res.Stdout) < len(text), true, "actually capped")
+}
+
+func TestPaneRunStartFails(t *testing.T) {
+	r := newPaneRig(t, bothLabels, []string{"done/1"}, "answer")
+	r.fake = startFakeHC(t, func(method string, _ map[string]any) (any, *hcError) {
+		switch method {
+		case "terminal.get":
+			return map[string]any{"address": "t1", "state": "live", "labels": bothLabels}, nil
+		case "terminal.run":
+			return nil, &hcError{Kind: "spawn_failed", Message: "no such program"}
+		}
+		return map[string]any{}, nil
+	})
+	r.host.socket = r.fake.socket
+	old := runChild
+	t.Cleanup(func() { runChild = old })
+	runChild = func(<-chan struct{}, childRequest) (childResult, error) {
+		t.Fatal("hidden runner must not run")
+		return childResult{}, nil
+	}
+	_, err := r.host.run(nil, r.req, "scout")
+	if err == nil || !strings.Contains(err.Error(), "no such program") {
+		t.Fatalf("error %v", err)
+	}
+	eq(t, len(r.fake.calls("terminal.kill")), 0, "no kill")
+	eq(t, len(r.fake.calls("terminal.rm")), 0, "no rm")
 }
