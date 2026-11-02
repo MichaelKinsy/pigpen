@@ -6,20 +6,28 @@ An [Archon](https://github.com/coleam00/Archon) agent provider that runs Archon 
 Archon loads providers as separate processes over newline-delimited JSON-RPC on stdio; this component
 implements that wire and translates PiG's own event stream into the provider contract's chunks.
 
-## Why this lives in Pigpen
+## Where it lives
+
+The source is `components/archon-provider-pig` in [MichaelKinsy/pigpen](https://github.com/MichaelKinsy/pigpen).
+Archon installs from `owner/repo[/path][@tag]`, and its release tags cannot contain `/`, so pigpen's own
+component tags (`components/archon-provider-pig/v0.1.0`) can never be named in an install. Without a tag
+Archon takes the repository's latest release, which in a monorepo belongs to some other component. So the
+installable plugin is a separate repository, [MichaelKinsy/archon-provider-pig](https://github.com/MichaelKinsy/archon-provider-pig),
+that pigpen's release workflow generates from this directory: pushing the tag
+`components/archon-provider-pig/vX.Y.Z` here commits this directory to that repository's `main`, tags it
+`vX.Y.Z` and publishes a release there with the six `archon-provider-pig-<os>-<arch>` binaries
+(linux, darwin and windows, on x64 and arm64) and a `checksums.txt`. Change the plugin here, never there.
 
 Archon keeps only Claude Code, Codex and Pi in its own repository. Its contributor guide,
 "Build a community provider", says a community provider "ships from its authors' repository as an
 optional plugin" and attaches "without an import in Archon's registry", and its plugin guide says no
-Archon pull request is required. Archon's plugin index walks a repository tree for
-`archon-plugin.json` and derives the plugin id from the containing directory, so this path is listed
-as `MichaelKinsy/pigpen/components/archon-provider-pig` once the repository carries the
-`archon-plugin` topic.
+Archon pull request is required. The generated repository carries the `archon-plugin` topic, which is
+what lists it in Archon's plugin index.
 
 ## Install
 
 ```bash
-archon plugin add MichaelKinsy/pigpen/components/archon-provider-pig@components/archon-provider-pig/v0.1.0
+archon plugin add MichaelKinsy/archon-provider-pig
 ```
 
 Then name the provider and a model in a workflow. Pi already owns unprefixed model refs, so a model
@@ -53,16 +61,16 @@ before anything is published. Stage it by hand:
 
 ```bash
 AH=${ARCHON_HOME:-$HOME/.archon}
-mkdir -p "$AH/plugins/installed/MichaelKinsy/pigpen/components/archon-provider-pig"
+mkdir -p "$AH/plugins/installed/MichaelKinsy/archon-provider-pig"
 printf '#!/bin/sh\nexec %s %s "$@"\n' "$(command -v bun)" "$PWD/src/main.ts" \
   > "$AH/plugins/archon-provider-pig"
 chmod 755 "$AH/plugins/archon-provider-pig"
 ```
 
-and write `$AH/plugins/installed/MichaelKinsy/pigpen/components/archon-provider-pig/receipt.json`
+and write `$AH/plugins/installed/MichaelKinsy/archon-provider-pig/receipt.json`
 with the descriptor the plugin answers `initialize` with, `tag: dev`, the repository commit, and
 `files: [{ path: "archon-provider-pig", sha256 }]` over the staged executable. The executable lives
-at the plugins root, not inside `installed/` — Archon spawns `plugins/<executable>` and stages the
+at the plugins root, not inside `installed/`: Archon spawns `plugins/<executable>` and stages the
 receipt separately. `archon doctor providers` then lists `pig`, and a workflow can name
 `provider: pig`.
 

@@ -4,7 +4,7 @@
  * newline-delimited JSON-RPC on stdio, running each turn through `pig`.
  *
  * Capabilities are the narrow set this implementation enforces. PiG can do more than is
- * claimed here — extensions, MCP servers, skills, sub-agents — but the contract treats a
+ * claimed here (extensions, MCP servers, skills, sub-agents), but the contract treats a
  * capability as a promise, and a promise means the plugin suppresses ambient configuration and
  * loads exactly what a node names. Until that boundary is implemented and tested, the flags say
  * so instead of letting a workflow believe its skills or MCP servers were loaded.
@@ -79,7 +79,7 @@ let initialized = false;
 /**
  * The vendor a model ref names: `pig/openrouter/x` and `openrouter/x` both name `openrouter`.
  * Archon hands the plugin the model a node named, which may or may not carry our own prefix, so
- * the vendor is the first segment after stripping it — never the provider id itself.
+ * the vendor is the first segment after stripping it, never the provider id itself.
  */
 export function vendorOf(model: string | undefined): string | undefined {
   if (model === undefined) return undefined;
