@@ -14,7 +14,7 @@ set -eu
 # copy in step with it, as herdr-pig's refresh keeps the extension file in step
 # with its own copy. A test keeps it equal to components/herdr/package.json.
 PACKAGE_NAME="npm:@pi-in-go/pigpen-herdr"
-PACKAGE_VERSION="0.2.0"
+PACKAGE_VERSION="0.3.0"
 # PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
 # or a packed tarball of the Package; it is never refreshed.
 PACKAGE="${PIGPEN_HERDR_PACKAGE:-$PACKAGE_NAME@$PACKAGE_VERSION}"
@@ -52,7 +52,7 @@ installed() {
 }
 
 # The pinned entry of this Package that `pig list` shows, if any, for example
-# npm:@pi-in-go/pigpen-herdr@0.1.1. An entry without a version (installed by an
+# npm:@pi-in-go/pigpen-herdr@0.2.0. An entry without a version (installed by an
 # earlier plugin, or by hand) follows `pig update`, not this plugin.
 pinned_entry() {
     pig list 2>/dev/null | grep -o "$PACKAGE_NAME@[^[:space:]]*" | head -n 1

@@ -1,11 +1,12 @@
 {
   "name": "@pi-in-go/pigpen-herdr",
-  "version": "0.2.0",
-  "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager",
+  "version": "0.3.0",
+  "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager, with a Skill for driving Herdr Desktop",
   "keywords": [
     "pig-package",
     "pigpen",
-    "extension"
+    "extension",
+    "skill"
   ],
   "license": "MIT AND Apache-2.0",
   "author": "Michael Kinsy",
@@ -23,6 +24,7 @@
   },
   "files": [
     "extensions",
+    "skills",
     "port",
     "README.md",
     "LICENSE",
@@ -33,6 +35,9 @@
   "pi": {
     "extensions": [
       "extensions/herdr"
+    ],
+    "skills": [
+      "skills/pigpen-herdr-desktop"
     ]
   }
 }

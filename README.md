@@ -263,7 +263,7 @@ components/pi-typesafe/             a Go port of pi-typesafe as a Package (types
 components/pi-typesafe-api/         the typed Go API half of the pi-typesafe port (library, no extension)
 components/pig-doctor/              /doctor, the read-only pig_doctor tool and the pig-doctor command line: find and fix cruft
 components/herdr/                   directly installable herdr reporter Package
-                                    (Go extension and its tests)
+                                    (Go extension and its tests, and the pigpen-herdr-desktop Skill)
 components/ollama-native/            directly installable Ollama provider Package (native /api/chat;
                                     started by Peder Munksgaard, see its CREDITS.md)
 components/pig-play/                Go library Package: pig sprite, pixel, arcade, termgame, gamemcp (no extension)
