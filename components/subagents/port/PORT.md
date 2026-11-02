@@ -52,13 +52,6 @@ original's messages, and `get` shows the resulting model. Running a child is:
 check this (a Pi child session is not a pig child process); it is covered by the port's own tests (a fake child runner, a real
 child process, the fake host) and shown live in tmux (`port/demo`). What keeps it safe:
 
-**An addition, not a port: panes in Herdr Desktop.** With `subagents.herdrPanes` set, in a Herdr Desktop terminal (not on Windows),
-a child runs as an interactive `pig` in a herdr-core terminal labelled with the parent's space and tab, not as a hidden
-`pig --print`. The tool waits for the child's first turn to end, reads its last assistant message from the session file
-(pinned with `--session-dir` and `--session-id`) and ends the child and its pane. herdr-core is asked not to notify the
-parent. A `blocked` child waits for the person, with one notification per block. When herdr-core cannot be reached, or the
-task is over 100 KiB, the call falls back to the hidden child with a warning. The original has no such mode.
-
 - the task reaches the child on stdin as `Task: <task>`, the original's child prompt; it is never an argument, so nothing in it
   is read as an option (`--version`, `- fix it`) or a file to attach (`@notes.txt`), and its length is not bounded by the
   per-argument limit;
@@ -74,6 +67,12 @@ task is over 100 KiB, the call falls back to the hidden child with a warning. Th
   stderr (its last 8 KB) explains a failure;
 - a relative `cwd` is the session's, and a missing one or a file is refused with the original's text; a `:level` suffix on
   `model` overrides the agent's thinking, as the schema says.
+
+**An addition, not a port: panes in Herdr Desktop.** With `subagents.herdrPanes` set, in a Herdr Desktop terminal (not on Windows),
+a child runs as an interactive `pig` in a herdr-core terminal labelled with the parent's space and tab, not as a hidden
+`pig --print`. The tool waits for the child's first turn to end, reads its last assistant message from the session file
+(pinned with `--session-dir` and `--session-id`) and ends the child and its pane. herdr-core is told "not to type notes about the child into the parent". A `blocked` child waits for the person, with one notification per block. When herdr-core cannot be reached, or the
+task is over 100 KiB, the call falls back to the hidden child with a warning. The original has no such mode. In a pane the task is an argument after `--`, not stdin, so the stdin bullet above does not hold there; the 4-child cap and the environment filtering (`PIG_EXT_*`, `PIG_HARNESS_*`, and `HC_*` for a pane) still apply.
 
 The pig to start is `PIG_SUBAGENT_PIG_BINARY`, else the pig running this extension (`PIG_HARNESS_BINARY`), else a `pig` next
 to this program, else `PATH`. A Piglet Binary as the child refuses `--system-prompt`, so a `replace`-mode agent cannot run in one
@@ -214,5 +213,5 @@ runs) and take this port's definitions, discovery and activation. Nothing of the
 - Module, `Extension()`, event and tool registration; the tool definition from a JSON Schema (here read from the original).
 - The JS helper layer a fourth time (`jsjson.go`, `jsutil.go`: 375 lines copied).
 - The twin ledger and slice file (264 entries by name, grouped by hand) and the 41 twins' file layout.
-- The mutation generator (116 pairs by hand, 42 of them the review's) and the scenario generator.
+- The mutation generator (173 pairs by hand, 42 of them the review's) and the scenario generator.
 - A tool-definition importer that reads a recorded request would replace `gen-tooldefs.py`.
