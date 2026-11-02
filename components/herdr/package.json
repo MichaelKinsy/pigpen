@@ -1,7 +1,7 @@
 {
   "name": "@pi-in-go/pigpen-herdr",
   "version": "0.3.0",
-  "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager",
+  "description": "PiG agent-state reporter (Go extension) for the herdr terminal workspace manager, with a Skill for driving Herdr Desktop",
   "keywords": [
     "pig-package",
     "pigpen",

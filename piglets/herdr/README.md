@@ -57,6 +57,10 @@ The command is `pig --session <session file>` when the session file is an absolu
 
 The reporter never fails the agent. When a request gets no answer after both attempts (herdr not running, a socket that is gone) it writes one line to stderr, which PiG collects as the extension's output, naming the cause: `herdr: pane.report_agent failed: dial unix /run/herdr.sock: connect: no such file or directory`. The same failure is written once until a request is delivered again. herdr-pig fails silently here; the line is an addition that herdr cannot see. It came from the `herdr-agent-state` extension of pigpen pull request 2 (Yu Li, @liyu1981).
 
+## Herdr Desktop
+
+Herdr Desktop (the Herdr app with herdr-core, `hc`) is not herdr: its terminals carry `HC_TERMINAL_ID`, not `HERDR_*`, so the reporter stays inactive there. PiG writes its own status there (OSC 7501), so it needs no reporter. The Package's `pigpen-herdr-desktop` Skill teaches PiG to drive Herdr Desktop with `hc` and `herdr-app`. See [Herdr Desktop](../../components/herdr/README.md#herdr-desktop) in the Package README for the rest.
+
 ## Install from herdr
 
 The [`herdr-plugin/`](herdr-plugin/) directory is a herdr plugin, ported from herdr-pig, that installs the reporter Package
@@ -106,7 +110,7 @@ piglet.yaml                     authored composition, input to staging
 catalog.json                    presentation metadata
 tests/pig.integration.test.ts   real pig in tmux against a fake herdr (npm run test:pig)
 tests/fixtures/ask/             Go fixture: /ask opens a confirmation for the blocked step
-../../components/herdr/         the reporter Package: extensions/herdr/ (Go, with its tests)
+../../components/herdr/         the reporter Package: extensions/herdr/ (Go, with its tests) and skills/pigpen-herdr-desktop/
 herdr-plugin/                   herdr plugin ported from herdr-pig (Apache-2.0, LICENSE and NOTICE inside)
 ```
 

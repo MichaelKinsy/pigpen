@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-23",
+  "updatedAt": "2026-11-02",
   "entries": [
     {
       "id": "a2a",
@@ -252,7 +252,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/herdr"
       },
-      "manifestSha256": "1170a84a9c2696de12b884fdae31ed1419819796bf893a91fd7b31ee80b79de6",
+      "manifestSha256": "c25d9e1883a3cbd5d4e6646f3a6a18245d11b42adea9bcb7dcc10af2a56f8334",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
@@ -261,7 +261,8 @@
         "With herdr 0.9.2 or later it also reports the resume command `pig --session <session file>` (or the session id), so herdr restores the pig session in its pane after a server restart. The restore runs plain `pig` (no Piglet or launch flags). Older herdr keeps the state reports and the release; it ignores the resume command.",
         "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It also honors the herdr:blocked event on pi.events, through the Go SDK's bridge, as herdr-pig does. Setting PIGPEN_HERDR_UI_PROMPTS=1 also reports `blocked` while a PiG dialog is open (off by default: Pi has no such event and herdr-pig never reports one).",
         "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim.",
-        "Ported from herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions, Apache-2.0: the reporter's behavior, proven against the unmodified original (components/herdr/port/PORT.md), and the herdr plugin in herdr-plugin/ (herdr plugin install MichaelKinsy/pigpen/piglets/herdr/herdr-plugin). Their LICENSE and NOTICE ship beside that code."
+        "Ported from herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions, Apache-2.0: the reporter's behavior, proven against the unmodified original (components/herdr/port/PORT.md), and the herdr plugin in herdr-plugin/ (herdr plugin install MichaelKinsy/pigpen/piglets/herdr/herdr-plugin). Their LICENSE and NOTICE ship beside that code.",
+        "In Herdr Desktop (the Herdr app with herdr-core) PiG reports its status itself (OSC 7501) and the reporter stays inactive; the Package's pigpen-herdr-desktop Skill teaches PiG to drive Herdr Desktop with hc and herdr-app."
       ]
     },
     {
