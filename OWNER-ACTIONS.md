@@ -265,3 +265,90 @@ gh secret list --repo "$REPO"                       # must NOT list DISCORD_WEBH
 Without the secret the workflow posts nothing and the run passes. `scripts/check-workflows.mjs` refuses a
 `DISCORD_WEBHOOK_*` secret that is not the value of a step env in a job of this environment, and refuses any trigger other
 than a push to `main` and a published release.
+
+## 9. The Archon provider repository
+
+`archon plugin add MichaelKinsy/archon-provider-pig` installs the Archon provider plugin from its own repository, which
+`.github/workflows/release-archon-provider.yml` generates from `components/archon-provider-pig` and releases. Archon's tag
+grammar has no `/`, so `components/archon-provider-pig/v0.1.0` can never be named in an install, and an untagged install takes a
+repository's latest release, which in this monorepo is some other component's. A workflow's own token cannot write to another
+repository, so the release job holds a personal access token, as the environment secret `ARCHON_PROVIDER_PIG_TOKEN` of the
+`archon-provider-release` environment (never a repository secret: see section 2).
+
+`gh` on this machine may be logged into another host. `gh auth login --hostname github.com` first, as `MichaelKinsy`.
+
+**a. Create the empty public repository.** No README, license or `.gitignore` (the workflow's first push is its first commit,
+to `main`), and the `archon-plugin` topic, which lists it in Archon's plugin index:
+
+```bash
+gh repo create MichaelKinsy/archon-provider-pig --public \
+  --description "Archon agent provider that runs sessions through PiG. Generated from MichaelKinsy/pigpen; change it there."
+gh repo edit MichaelKinsy/archon-provider-pig --add-topic archon-plugin
+gh repo view MichaelKinsy/archon-provider-pig --json visibility,isEmpty,repositoryTopics --jq '{visibility, isEmpty, topics: [.repositoryTopics[].name]}'
+```
+
+The first push creates `main`, and in an empty repository the first branch pushed becomes the default branch, which is
+what Archon reads. A repository that already has a commit must have `main` as its default: the workflow refuses any other.
+
+**b. Create the token.** Only the web UI creates a fine-grained token (GitHub, Settings, Developer settings, Personal access
+tokens, Fine-grained tokens, Generate new token):
+
+| Field | Value |
+|---|---|
+| Token name | `pigpen archon-provider-pig release` |
+| Resource owner | `MichaelKinsy` |
+| Expiration | the longest you will renew (a year); put the date in your calendar, a release fails with 401 after it |
+| Repository access | Only select repositories: `MichaelKinsy/archon-provider-pig` (create it first, step a) |
+| Repository permissions | **Contents: Read and write** (push `main` and the tag, create the release and upload its assets). Metadata: Read-only is added by GitHub. Nothing else. |
+| Account and organization permissions | none |
+
+A deploy key is not enough: it can push but cannot create a release. A classic token with `repo` scope works but reaches
+every repository you own; use the fine-grained one.
+
+**c. Add it as a pigpen secret, in its own environment** that only the plugin's tag may deploy to:
+
+```bash
+REPO=MichaelKinsy/pigpen
+gh api -X PUT "repos/$REPO/environments/archon-provider-release" --input - <<'JSON'
+{ "wait_timer": 0, "deployment_branch_policy": { "protected_branches": false, "custom_branch_policies": true } }
+JSON
+gh api -X POST "repos/$REPO/environments/archon-provider-release/deployment-branch-policies" -f name='components/archon-provider-pig/v*' -f type=tag
+gh secret set ARCHON_PROVIDER_PIG_TOKEN --env archon-provider-release --repo "$REPO"      # paste the token when asked
+```
+
+Check it:
+
+```bash
+gh api "repos/$REPO/environments/archon-provider-release/deployment-branch-policies" --jq '.branch_policies[] | {name, type}'   # components/archon-provider-pig/v*  tag
+gh secret list --env archon-provider-release --repo "$REPO"   # ARCHON_PROVIDER_PIG_TOKEN
+gh secret list --repo "$REPO"                                 # must NOT list ARCHON_PROVIDER_PIG_TOKEN
+```
+
+**d. Tag.** The tag `components/archon-provider-pig/v0.1.0` already exists on the commit before this workflow was merged,
+so a run of it would use no workflow and nothing was released from it. Once the pull request that adds the workflow is merged,
+move the tag to the merged `main` (the tag ruleset in section 3 lets an admin delete it), or bump `VERSION` in
+`components/archon-provider-pig/src/main.ts` to a new version and tag that:
+
+```bash
+git switch main && git pull --ff-only
+t=components/archon-provider-pig/v0.1.0
+git push origin ":refs/tags/$t" && git tag -d "$t"
+git tag -a "$t" -m "archon-provider-pig 0.1.0" && git push origin "$t"
+gh run watch --repo "$REPO" "$(gh run list --repo "$REPO" --workflow release-archon-provider.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
+```
+
+The run checks the tag against the version the plugin answers, runs Archon's own naming and tag rules against Archon's source,
+tests the generated repository, builds the six binaries (`archon-provider-pig-<os>-<arch>[.exe]`, linux, darwin and windows on x64
+and arm64), writes `checksums.txt`, makes the linux-x64 binary answer Archon's descriptor check, then commits the repository
+to `main` of `MichaelKinsy/archon-provider-pig`, tags it `v0.1.0` and publishes the release. Commits there are made by
+`github-actions[bot]`, unsigned; the tag is annotated. A published release is never replaced: a re-run after a failure removes
+only a draft left behind, and fails on a tag whose content differs. Release a fix as a new version.
+
+Check it as a user would, with a scratch Archon home:
+
+```bash
+gh release view v0.1.0 --repo MichaelKinsy/archon-provider-pig --json assets --jq '.assets[].name'   # six binaries and checksums.txt
+( export ARCHON_HOME="$(mktemp -d)"
+  archon plugin add MichaelKinsy/archon-provider-pig
+  archon doctor providers )      # lists pig (0.1.0)
+```
