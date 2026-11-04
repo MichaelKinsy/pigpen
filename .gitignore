@@ -6,3 +6,4 @@ dist/
 .upstream
 # go test -c output
 *.test
+pig-tmp/

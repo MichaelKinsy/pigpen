@@ -83,20 +83,22 @@ func TestSkillReadGate(t *testing.T) {
 		t.Fatalf("entries: %#v", entries)
 	}
 	eq(t, entries[1].location, fakeHome+"/skills/open/SKILL.md", "home expanded")
-	blocked := func(path string) bool {
-		return skillRead("read", map[string]any{"path": path}, entries, "/work").Block
+	gated := func(path string) bool {
+		v := skillRead("read", map[string]any{"path": path}, entries, "/work")
+		return v.Block || v.Ask != nil
 	}
-	eq(t, blocked("/agent/skills/demo/SKILL.md"), true, "the skill file of an ask skill")
-	eq(t, blocked("../agent/skills/demo/ref/x.md"), true, "a file inside it, relative to cwd")
-	eq(t, blocked(` "@/agent/skills/demo/SKILL.md" `), true, "trimmed, unquoted, @ dropped")
-	eq(t, blocked("/agent/skills/demo-x/SKILL.md"), false, "a sibling")
-	eq(t, blocked("~/skills/open/SKILL.md"), false, "an allowed skill")
-	eq(t, blocked("/agent/skills/gone/SKILL.md"), false, "a denied skill is not listed, so its files are not gated here")
-	eq(t, blocked("/agent/skills/a&b/x"), true, "XML entities decoded")
-	eq(t, blocked("a.txt"), false, "another file")
-	eq(t, blocked(""), false, "no path")
+	eq(t, gated("/agent/skills/demo/SKILL.md"), true, "the skill file of an ask skill asks")
+	eq(t, gated("../agent/skills/demo/ref/x.md"), true, "a file inside it, relative to cwd")
+	eq(t, gated(` "@/agent/skills/demo/SKILL.md" `), true, "trimmed, unquoted, @ dropped")
+	eq(t, gated("/agent/skills/demo-x/SKILL.md"), false, "a sibling")
+	eq(t, gated("~/skills/open/SKILL.md"), false, "an allowed skill")
+	eq(t, gated("/agent/skills/gone/SKILL.md"), false, "a denied skill is not listed, so its files are not gated here")
+	eq(t, gated("/agent/skills/a&b/x"), true, "XML entities decoded")
+	eq(t, gated("a.txt"), false, "another file")
+	eq(t, gated(""), false, "no path")
 	eq(t, skillRead("bash", map[string]any{"path": "/agent/skills/demo/SKILL.md"}, entries, "/work").Block, false, "only read")
-	eq(t, strings.Contains(skillRead("read", map[string]any{"path": "/agent/skills/demo/SKILL.md"}, entries, "/work").Reason, "skill 'demo'"), true, "names the skill")
+	sr := skillRead("read", map[string]any{"path": "/agent/skills/demo/SKILL.md"}, entries, "/work")
+	eq(t, sr.Ask != nil && sr.Ask.Surface == "skill" && sr.Ask.Value == "demo" && sr.Ask.Tool == "read", true, "the ask names the skill")
 	// yoloMode grants the ask
 	y := policyOf(t, `{"yoloMode":true,"permission":{"*":"ask",`+allowPaths+`,"read":"allow"}}`)
 	eq(t, skillRead("read", map[string]any{"path": "/agent/skills/demo/SKILL.md"}, y.visibleSkillEntries(prompt, "/work"), "/work").Block, false, "yolo")
