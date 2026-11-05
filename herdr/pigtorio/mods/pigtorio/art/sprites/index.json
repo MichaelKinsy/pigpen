@@ -1,0 +1,45 @@
+{
+ "skins": [
+  "pig-default",
+  "pink",
+  "green",
+  "mint",
+  "sandy",
+  "grey",
+  "blush",
+  "lavender",
+  "cloud",
+  "pigrogu",
+  "darth-vader",
+  "kratos",
+  "piglet",
+  "spider-ham",
+  "sheriff"
+ ],
+ "states": [
+  "idle",
+  "asleep",
+  "thinking",
+  "reading",
+  "editing",
+  "running",
+  "blocked",
+  "failed",
+  "done",
+  "aborted",
+  "queued",
+  "completing",
+  "orphaned",
+  "unknown"
+ ],
+ "size": {
+  "w": 512,
+  "h": 384
+ },
+ "size1x": {
+  "w": 128,
+  "h": 96
+ },
+ "scale": 4,
+ "format": "webp"
+}

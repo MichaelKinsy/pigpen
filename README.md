@@ -248,6 +248,8 @@ components/extension-port/          directly installable shared Skill Package (t
 components/extension-equivalence/   directly installable Go extension Package: the
                                     differential harness (pigeq) and SDK gap scanner
 demo/                               codemode demo scripts (jev-plays.js: Jev plays both pig games over MCP)
+herdr/pigtorio/                     Pigtorio: a Herdr app layout, mod and Go helper (not a PiG Package);
+                                    see herdr/pigtorio/SPEC.md and README.md
 ports/                              the ports list: ports.json (the dispatch list), ports.schema.json,
                                     README.md (GENERATED table; npm run generate)
 components/dirty-repo-guard/        a Go port (Pi's dirty-repo-guard example) as a Package,

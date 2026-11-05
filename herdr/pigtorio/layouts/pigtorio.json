@@ -1,0 +1,141 @@
+{
+  "id": "root",
+  "type": "column",
+  "titlebar": "none",
+  "traffic_lights": [
+    16,
+    15
+  ],
+  "preview": "layouts/pigtorio.png",
+  "movable": false,
+  "font": "Menlo",
+  "children": [
+    {
+      "id": "bar",
+      "type": "block",
+      "size": {
+        "px": 44
+      },
+      "window_drag": true,
+      "content": {
+        "mod": "pigtorio",
+        "props": {
+          "role": "bar"
+        }
+      }
+    },
+    {
+      "id": "main",
+      "type": "stack",
+      "active": "farm",
+      "children": [
+        {
+          "id": "farm",
+          "type": "block",
+          "background": "#2f6b45",
+          "content": {
+            "mod": "pigtorio",
+            "props": {
+              "role": "farm"
+            }
+          }
+        },
+        {
+          "id": "terminals",
+          "type": "row",
+          "background": "#0f1512",
+          "children": [
+            {
+              "id": "t-sidebar",
+              "type": "column",
+              "size": {
+                "px": 250
+              },
+              "min": 180,
+              "children": [
+                {
+                  "id": "t-spaces",
+                  "type": "block",
+                  "size": {
+                    "weight": 1
+                  },
+                  "content": {
+                    "mod": "spaces"
+                  }
+                },
+                {
+                  "id": "t-agents",
+                  "type": "block",
+                  "size": {
+                    "weight": 1
+                  },
+                  "content": {
+                    "mod": "agents"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "t-work",
+              "type": "column",
+              "children": [
+                {
+                  "id": "t-tabs",
+                  "type": "block",
+                  "size": {
+                    "px": 42
+                  },
+                  "content": {
+                    "mod": "tabs"
+                  }
+                },
+                {
+                  "id": "t-main",
+                  "type": "block",
+                  "padding": 8,
+                  "content": {
+                    "tab": "active",
+                    "pane": {
+                      "gap": 8,
+                      "radius": 6,
+                      "lone": true,
+                      "border": {
+                        "width": 1,
+                        "color": "#2b3d33"
+                      },
+                      "focus": {
+                        "width": 1,
+                        "color": "#4ed1a1"
+                      },
+                      "header": {
+                        "content": {
+                          "mod": "pane"
+                        },
+                        "height": 28,
+                        "position": "top",
+                        "reveal": "always"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "footer",
+      "type": "block",
+      "size": {
+        "px": 28
+      },
+      "content": {
+        "mod": "pigtorio",
+        "props": {
+          "role": "footer"
+        }
+      }
+    }
+  ]
+}
