@@ -1,7 +1,7 @@
 {
   "$schema": "./ports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-10-07",
+  "updatedAt": "2026-11-05",
   "ports": [
     {
       "id": "extension-porter",
@@ -666,6 +666,24 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "autolith-bridge",
+      "name": "autolith-bridge: run Autolith jobs and sessions from PiG",
+      "kind": "adapter",
+      "summary": "Original Common Lisp extension that drives Autolith through its documented run-job, detached-session and localgroup commands. Autolith is not bundled; it must be installed separately.",
+      "upstream": {
+        "name": "Autolith",
+        "url": "https://github.com/lambda-symbolics/autolith",
+        "commit": "505e814610cd4ad10ea8d30654fe89b4f1113341",
+        "license": "ISC",
+        "author": "Lambda Symbolics OÜ"
+      },
+      "targetPackage": "piglets/pig-autolith",
+      "lane": "pigpen-autolith",
+      "status": "review",
+      "credit": "Original adapter that calls Autolith, https://github.com/lambda-symbolics/autolith, by Lambda Symbolics OÜ (ISC), pinned at commit 505e814610cd4ad10ea8d30654fe89b4f1113341. Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied.",
+      "notes": "Common Lisp on the PiG 0.7.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review."
     }
   ]
 }

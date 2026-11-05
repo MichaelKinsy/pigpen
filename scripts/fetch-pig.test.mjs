@@ -48,7 +48,8 @@ after(() => { server.close(); rmSync(scratch, { recursive: true, force: true });
 
 describe('the committed pin', () => {
   const requirement = readRequirement();
-  it('names a release asset with a sha256 for every target the Piglet manifests build', () => {
+  // An unpublished pin (release.published false) has no archives to name yet; scripts/pin-pig-release.mjs fills them in.
+  it('names a release asset with a sha256 for every target the Piglet manifests build', { skip: requirement.release.published === false && 'the pinned PiG release has no pig archives yet' }, () => {
     for (const t of ['linux/amd64', 'linux/arm64', 'darwin/arm64', 'darwin/amd64', 'windows/amd64']) {
       const asset = requirement.release.assets[t];
       assert.ok(asset, `no pinned asset for ${t}`);

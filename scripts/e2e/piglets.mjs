@@ -224,6 +224,9 @@ export const piglets = {
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
   },
+  // Its extension is Lisp, so a Binary needs SBCL 2.6.9 to load it, and this terminal's PATH holds system tools only. The CI job
+  // `autolith-binary` builds the Binary, loads the extension in a faux turn and runs the bridge's own tests with SBCL installed.
+  'pig-autolith': { skip: 'needs SBCL, which the isolated PATH of this test does not have (CI job autolith-binary covers this Piglet)', steps: [] },
   'pig-essentials': {
     steps: [
       { say: '/tasks', expect: 'View all tasks (0)' },

@@ -1,16 +1,11 @@
 {
-  "pig": "0.5.3",
-  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. Re-pin with scripts/pin-pig-release.mjs <version>.",
+  "pig": "0.7.0",
+  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG v0.7.0 is tagged (commit beb56447c476) but its GitHub release carries only the source archives so far: `published` is false and `assets` stays empty until the release has pig archives and its SHA256SUMS can be recorded (node scripts/pin-pig-release.mjs 0.7.0), so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
   "release": {
     "repository": "MichaelKinsy/PiG",
-    "tag": "v0.5.3",
-    "commit": "526c86df885eba5e214355e7f70205e06d59bfa2",
-    "assets": {
-      "linux/amd64": { "file": "pig-0.5.3-linux-amd64.tar.gz", "sha256": "1e45e5e591a06d087587d5f09d2b6d61673a1e262cb2609e6189defffd5ae7ec" },
-      "linux/arm64": { "file": "pig-0.5.3-linux-arm64.tar.gz", "sha256": "c94acaa8b2a5d3d2b1f59e679f70bba6762dc7a01655369b2ffc40fb9be4552b" },
-      "darwin/arm64": { "file": "pig-0.5.3-darwin-arm64.tar.gz", "sha256": "b243e00305e2c7d3d5de12743bb4654cf6324a6282b0c2e0671cc29bfbde3a99" },
-      "darwin/amd64": { "file": "pig-0.5.3-darwin-amd64.tar.gz", "sha256": "1a836381d46ca14e72c9b28e4d33c247de115cf4f980e4879587c3fa4ff4387a" },
-      "windows/amd64": { "file": "pig-0.5.3-windows-amd64.zip", "sha256": "bc041c18f63318985d8f9c68c83ba67c8cce7281baaa9dda055e287db6c6d6ed" }
-    }
+    "tag": "v0.7.0",
+    "commit": "beb56447c476da70d05d8e1e1ca9e993b367cb8b",
+    "assets": {},
+    "published": false
   }
 }
