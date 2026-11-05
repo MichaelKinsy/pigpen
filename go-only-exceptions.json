@@ -1,4 +1,5 @@
 {
   "bench-ext10-aot": "The aot arm of the overhead bench: its subject is the ten TypeScript extensions the aot runtime compiles, so they cannot be Go.",
-  "bench-ext10-split": "The split arm of the overhead bench: five of the ten extensions are the TypeScript originals the aot runtime compiles, so they cannot be Go."
+  "bench-ext10-split": "The split arm of the overhead bench: five of the ten extensions are the TypeScript originals the aot runtime compiles, so they cannot be Go.",
+  "pig-autolith": "Its one extension, autolith-bridge, is Common Lisp on the PiG 0.7.0 Lisp SDK: it is the point of the Piglet (a bridge to Autolith, itself Common Lisp). PiG builds it into a cached SBCL image instead of fusing it into the Binary."
 }

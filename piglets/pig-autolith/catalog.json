@@ -1,0 +1,15 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-05",
+  "languages": [
+    "lisp",
+    "go"
+  ],
+  "notes": [
+    "Needs PiG 0.7.1 or later to run as a Binary (Common Lisp extensions first ship in 0.7.0, but 0.7.0 has a known issue: it builds a Binary with a Lisp member without embedding the Lisp cell, and that Binary stops at startup). Running the Piglet from source works on 0.7.0. Pigpen builds it with PiG at commit 7c2c1da2bcba of fix/071-lisp-packed until 0.7.1 ships.",
+    "Not bundled: Autolith (https://autolith.rocks, by Lambda Symbolics, ISC) must be installed and on PATH (nix run github:lambda-symbolics/autolith), SBCL 2.6.9 is needed to build the Lisp image (pig setup shows what is missing; PIG_SBCL names another executable; a Binary built by PiG 0.7.1 carries the image), and Autolith needs its own model login.",
+    "The extension is Lisp and runs in an SBCL image that PiG embeds in the Binary (0.7.1) or builds at first load when run from source. An empty Go factory (fuse-anchor, no tools or hooks) is the one fused member, because PiG refuses a Binary build with nothing to fuse. The Binary is a static build (CGO_ENABLED=0 by default) that ships only the Go and Lisp extension runtimes. Measured on linux/amd64: Binary 112,193,696 bytes, Lisp image 48,207,344 bytes, Binary first start 0.26 s, source first load 16.9 s (see the README).",
+    "Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied.",
+    "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+  ]
+}

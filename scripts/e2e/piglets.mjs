@@ -224,6 +224,9 @@ export const piglets = {
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
   },
+  // Building this Piglet's Binary needs SBCL (it builds the Lisp image the Binary embeds), which the platform matrix does not install, so
+  // the matrix leaves it out. The CI job `autolith-binary` builds it and runs it (start, tool registration) with SBCL installed.
+  'pig-autolith': { skip: 'its Binary is built by CI job autolith-binary (building needs SBCL), not by the platform matrix', steps: [] },
   'pig-essentials': {
     steps: [
       { say: '/tasks', expect: 'View all tasks (0)' },
