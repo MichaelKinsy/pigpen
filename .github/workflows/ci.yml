@@ -18,7 +18,7 @@
 #                   the job and is named in its log and summary.
 #   autolith-binary every run, in parallel with validate: the Lisp Piglet pig-autolith needs SBCL, which no other job installs, so it is
 #                   left out of platform-matrix and proved here on linux/amd64: the bridge's own tests, a native Piglet Binary build
-#                   (statically linked, --version), and the size and first-load time of its SBCL image (scripts/measure-lisp-piglet.mjs).
+#                   (statically linked, starts, registers its tools), and the size and first-load time of its SBCL image (scripts/measure-lisp-piglet.mjs).
 #   ci-result       the one required check. Green when validate, every slow check, govulncheck, listings and autolith-binary passed and each
 #                   other tier passed or was skipped.
 name: Validate Pigpen
@@ -41,7 +41,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
-  PIG_COMMIT: 'beb56447c476da70d05d8e1e1ca9e993b367cb8b' # PiG v0.7.0
+  PIG_COMMIT: '7c2c1da2bcbae34cecac0d420b6967d5630cf032' # PiG fix/071-lisp-packed (unreleased 0.7.1)
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -266,9 +266,10 @@ jobs:
 
   # pig-autolith has a Common Lisp extension (an ASDF system), so loading it needs SBCL 2.6.9, which PiG does not bundle. The archive
   # is the official linux/x86-64 binary; its SHA-256 is the one of the file downloaded on 2026-11-05 (the release signature is not verified).
-  # PiG 0.7.0 builds a Binary with a Lisp member but that Binary stops at startup (its baked closure expects the Lisp cell inside it), so
-  # the proof is: the Binary builds, is statically linked and reports its version; the Piglet source answers a faux turn through the
-  # real Lisp image; the size and first-load time are printed in the job summary. measure-lisp-piglet.mjs records the Binary's own startup.
+  # The pig is built from PIG_COMMIT, PiG's fix/071-lisp-packed (0.7.1), which embeds the Lisp cell in a Piglet Binary; PiG 0.7.0 builds a
+  # Binary that stops at startup. The proof: the Binary builds, is statically linked, starts, loads the embedded cell and registers
+  # autolith_job and autolith_session in a faux turn (the step fails otherwise); the Piglet source answers a faux turn through the real
+  # Lisp image; the sizes and the cold and warm times are printed in the job summary.
   autolith-binary:
     name: Lisp Piglet pig-autolith (SBCL, Binary build, image size)
     runs-on: ubuntu-24.04
@@ -326,11 +327,11 @@ jobs:
           node scripts/build-piglet.mjs pig-autolith --out dist/bin/pig-autolith
           file dist/bin/pig-autolith | tee /dev/stderr | grep -q 'statically linked'
           dist/bin/pig-autolith --version
-      - name: Size and first-load time of the SBCL image, and the Piglet source answering a faux turn through it
-        run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --binary dist/bin/pig-autolith --runs 5
+      - name: Binary start and tool registration, size and first-load time of the SBCL image
+        run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
 
   # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
-  # pig this run builds (PiG v0.7.0), before index.json may claim it. The fixture test runs first so a broken check cannot pass
+  # pig this run builds (PiG fix/071-lisp-packed, 7c2c1da2bcba), before index.json may claim it. The fixture test runs first so a broken check cannot pass
   # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
   listings:
     name: Third-party listings (verify:listings)

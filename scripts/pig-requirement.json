@@ -1,10 +1,10 @@
 {
   "pig": "0.7.0",
-  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG v0.7.0 is tagged (commit beb56447c476) but its GitHub release carries only the source archives so far: `published` is false and `assets` stays empty until the release has pig archives and its SHA256SUMS can be recorded (node scripts/pin-pig-release.mjs 0.7.0), so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
+  "note": "The pig these scripts and tests target: the same major.minor, at least this patch. Raise it with the SDK bump (scripts/pig-bin.mjs). `release` pins the public PiG release CI downloads (scripts/fetch-pig.mjs) and the source commit its Piglet builds need; the sha256 values are the release's SHA256SUMS, checked against a download of each archive. PiG 0.7.1 is not released: `release.commit` is 7c2c1da2bcba on PiG's fix/071-lisp-packed (it embeds a Lisp member's cell in a Piglet Binary; v0.7.0, beb56447c476, does not), and that commit still reports 0.7.0, so `pig` and `tag` stay 0.7.0 / v0.7.0 (tag v0.7.1 does not exist yet). `published` is false and `assets` stays empty until a release has pig archives and its SHA256SUMS can be recorded (swap commit and tag with scripts/pin-pig-release.mjs 0.7.1 at publish), so scripts/fetch-pig.mjs refuses to download a pig until then; Piglet builds use the source checkout at `commit`.",
   "release": {
     "repository": "MichaelKinsy/PiG",
     "tag": "v0.7.0",
-    "commit": "beb56447c476da70d05d8e1e1ca9e993b367cb8b",
+    "commit": "7c2c1da2bcbae34cecac0d420b6967d5630cf032",
     "assets": {},
     "published": false
   }

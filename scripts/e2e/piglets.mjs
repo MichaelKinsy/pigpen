@@ -224,9 +224,9 @@ export const piglets = {
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
   },
-  // Its extension is Lisp, so a Binary needs SBCL 2.6.9 to load it, and this terminal's PATH holds system tools only. The CI job
-  // `autolith-binary` builds the Binary, loads the extension in a faux turn and runs the bridge's own tests with SBCL installed.
-  'pig-autolith': { skip: 'needs SBCL, which the isolated PATH of this test does not have (CI job autolith-binary covers this Piglet)', steps: [] },
+  // Building this Piglet's Binary needs SBCL (it builds the Lisp image the Binary embeds), which the platform matrix does not install, so
+  // the matrix leaves it out. The CI job `autolith-binary` builds it and runs it (start, tool registration) with SBCL installed.
+  'pig-autolith': { skip: 'its Binary is built by CI job autolith-binary (building needs SBCL), not by the platform matrix', steps: [] },
   'pig-essentials': {
     steps: [
       { say: '/tasks', expect: 'View all tasks (0)' },

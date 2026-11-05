@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Measures a Piglet whose extension is Common Lisp: the cached SBCL image PiG builds at the first load, and the time of that
 // first load (a cold run: empty PIG_HOME and cache) against a warm run (image cached). PiG 0.7.0 builds a Piglet Binary with
-// a Lisp member but that Binary stops at startup (its baked closure expects the Lisp cell inside it), so the runs use the
-// Piglet source with PIG_BIN; --binary reports the size of a Binary built from the same manifest, checks its --version and
-// records whether it starts (never a failure: the stop is PiG's, and this line shows when a newer PiG fixes it).
+// a Lisp member but that Binary stops at startup (its baked closure expects the Lisp cell inside it); PiG 0.7.1 embeds the cell.
+// The image runs use the Piglet source with PIG_BIN. --binary also measures a Binary built from the same manifest: its size, its
+// --version, and cold and warm starts (a faux turn in JSON mode); it fails when the Binary does not start or when a tool named
+// by --expect-tools is not registered.
 //
-//   PIG_BIN=<pig> node scripts/measure-lisp-piglet.mjs --piglet <piglet.yaml> [--without <extension>] [--binary <built Binary>] [--runs 5] [--json]
+//   PIG_BIN=<pig> node scripts/measure-lisp-piglet.mjs --piglet <piglet.yaml> [--without <extension>] [--binary <built Binary> [--expect-tools a,b]] [--runs 5] [--json]
 //
 // --without leaves one extension out of the measured manifest (a copy written beside it and removed after). The Piglet's empty
 // Go member exists only so a Binary can build; run from source it would add a Go cell build to every cold run.
@@ -44,24 +45,43 @@ export function filesBySize(dir) {
   return found.sort((a, b) => b.bytes - a.bytes);
 }
 
-/** Whether a built Binary starts: its --version, then the faux turn. Reports, never throws; the stop is PiG 0.7.0's, not the Piglet's. */
-export function binaryStartup(binary) {
-  const home = mkdtempSync(join(tmpdir(), 'pigpen-lisp-binary-'));
+/**
+ * One run of the built Binary in `home`: a faux turn in JSON mode, which lists the tools the model is offered. Returns wall-clock
+ * milliseconds; throws if the Binary does not start, an extension fails to load, or an expected tool is not registered.
+ */
+function binaryRun(binary, home, expectTools) {
+  const env = { ...smokeEnv(home), XDG_CACHE_HOME: join(home, 'cache') };
+  for (const name of ['PIG_SBCL', 'SBCL_HOME']) if (process.env[name]) env[name] = process.env[name];
+  const started = process.hrtime.bigint();
+  const turn = spawnSync(binary, ['--mode', 'json', '-p', FAUX_PROMPT, '--model', 'test-faux/faux-1', '--no-session'], { cwd: join(home, 'work'), env, encoding: 'utf8', timeout: RUN_LIMIT_MS, maxBuffer: 64 << 20 });
+  const ms = Number(process.hrtime.bigint() - started) / 1e6;
+  const output = `${turn.stdout ?? ''}\n${turn.stderr ?? ''}`;
+  if (turn.error || turn.status !== 0 || loadErrors(output).length) {
+    throw new Error(`the Binary did not start (exit ${turn.status}): ${turn.error?.message ?? output.trim().split('\n').slice(0, 5).join('\n')}`);
+  }
+  const missing = expectTools.filter((tool) => !(turn.stdout ?? '').includes(tool));
+  if (missing.length) throw new Error(`the Binary started but did not register ${missing.join(', ')}`);
+  return ms;
+}
+
+/** The built Binary: --version, then `runs` cold runs (empty PIG_HOME and cache) and `runs` warm runs (the first cold home reused). */
+export function binaryRuns(binary, runs, expectTools) {
+  const base = mkdtempSync(join(tmpdir(), 'pigpen-lisp-binary-'));
   try {
-    for (const dir of ['tmp', 'work']) mkdirSync(join(home, dir), { recursive: true });
-    const env = { ...smokeEnv(home), XDG_CACHE_HOME: join(home, 'cache') };
-    for (const name of ['PIG_SBCL', 'SBCL_HOME']) if (process.env[name]) env[name] = process.env[name];
-    const run = (args) => spawnSync(binary, args, { cwd: join(home, 'work'), env, encoding: 'utf8', timeout: RUN_LIMIT_MS, maxBuffer: 64 << 20 });
-    const version = run(['--version']);
-    const turn = run(['-p', FAUX_PROMPT, '--model', 'test-faux/faux-1', '--no-session']);
-    const first = (text) => (text ?? '').trim().split('\n')[0];
-    return {
-      version: version.status === 0 ? first(version.stdout) : `exit ${version.status}`,
-      startsAndAnswers: turn.status === 0 && (turn.stdout ?? '').trim() === 'ok',
-      detail: turn.status === 0 ? first(turn.stdout) : first(turn.stderr) || `exit ${turn.status}`,
-    };
+    const version = spawnSync(binary, ['--version'], { encoding: 'utf8', env: smokeEnv(base) });
+    if (version.status !== 0) throw new Error(`--version exited ${version.status}`);
+    const cold = [];
+    const warm = [];
+    for (let i = 0; i < runs; i++) {
+      const home = join(base, `cold-${i}`);
+      for (const dir of ['tmp', 'work']) mkdirSync(join(home, dir), { recursive: true });
+      cold.push(binaryRun(binary, home, expectTools));
+      if (i === 0) for (let w = 0; w < runs; w++) warm.push(binaryRun(binary, home, expectTools));
+      else removeTree(home);
+    }
+    return { path: binary, bytes: statSync(binary).size, version: (version.stdout ?? '').trim().split('\n')[0], coldMs: cold, warmMs: warm, coldMedianMs: median(cold), warmMedianMs: median(warm) };
   } finally {
-    removeTree(home);
+    removeTree(base);
   }
 }
 
@@ -88,7 +108,7 @@ function runOnce(pig, manifest, home) {
   return ms;
 }
 
-export function measure(pig, manifest, runs, binary) {
+export function measure(pig, manifest, runs, binary, expectTools) {
   const base = mkdtempSync(join(tmpdir(), 'pigpen-lisp-measure-'));
   try {
     const cold = [];
@@ -105,7 +125,7 @@ export function measure(pig, manifest, runs, binary) {
         for (let w = 0; w < runs; w++) warm.push(runOnce(pig, manifest, home));
       } else removeTree(home);
     }
-    return { binary: binary ? { path: binary, bytes: statSync(binary).size, ...binaryStartup(binary) } : undefined, runs, image, coldMs: cold, warmMs: warm, coldMedianMs: median(cold), warmMedianMs: median(warm) };
+    return { binary: binary ? binaryRuns(binary, runs, expectTools) : undefined, runs, image, coldMs: cold, warmMs: warm, coldMedianMs: median(cold), warmMedianMs: median(warm) };
   } finally {
     removeTree(base);
   }
@@ -119,9 +139,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
   const manifest = value('--piglet');
   const binary = value('--binary');
   const runs = Number(value('--runs') ?? 5);
-  if (!manifest || !Number.isInteger(runs) || runs < 1) { console.error('usage: PIG_BIN=<pig> node scripts/measure-lisp-piglet.mjs --piglet <piglet.yaml> [--binary <built Binary>] [--runs N] [--json]'); process.exit(2); }
+  if (!manifest || !Number.isInteger(runs) || runs < 1) { console.error('usage: PIG_BIN=<pig> node scripts/measure-lisp-piglet.mjs --piglet <piglet.yaml> [--binary <built Binary> [--expect-tools a,b]] [--runs N] [--json]'); process.exit(2); }
   try {
     const without = value('--without');
+    const expectTools = (value('--expect-tools') ?? '').split(',').filter(Boolean);
     let measured = resolve(manifest);
     let copy;
     if (without) {
@@ -134,10 +155,14 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
       measured = copy;
     }
     let result;
-    try { result = measure(requirePig(), measured, runs, binary && resolve(binary)); } finally { if (copy) rmSync(copy, { force: true }); }
+    try { result = measure(requirePig(), measured, runs, binary && resolve(binary), expectTools); } finally { if (copy) rmSync(copy, { force: true }); }
     if (args.includes('--json')) console.log(JSON.stringify(result, null, 2));
     const lines = [
-      ...(result.binary ? [`Binary: ${mib(result.binary.bytes)}; --version ${JSON.stringify(result.binary.version)}; faux turn ${result.binary.startsAndAnswers ? 'answers ok' : `does not start: ${result.binary.detail}`}`] : []),
+      ...(result.binary ? [
+        `Binary: ${mib(result.binary.bytes)}; --version ${JSON.stringify(result.binary.version)}`,
+        `Binary first start, cold (median of ${runs}): ${(result.binary.coldMedianMs / 1000).toFixed(3)} s; runs ${result.binary.coldMs.map((ms) => (ms / 1000).toFixed(3)).join(', ')} s; started, loaded the embedded Lisp cell${expectTools.length ? ` and registered ${expectTools.join(', ')}` : ''}`,
+        `Binary start, cell already extracted (median of ${result.binary.warmMs.length}): ${(result.binary.warmMedianMs / 1000).toFixed(3)} s`,
+      ] : []),
       result.image ? `Image built at first load: ${mib(result.image.bytes)} (${result.image.path}); cache written: ${mib(result.image.cacheBytes)}` : 'no cache file written',
       `First load, cold (median of ${runs}): ${(result.coldMedianMs / 1000).toFixed(2)} s; runs ${result.coldMs.map((ms) => (ms / 1000).toFixed(2)).join(', ')} s`,
       `Load with the image cached (median of ${result.warmMs.length}): ${(result.warmMedianMs / 1000).toFixed(3)} s; runs ${result.warmMs.map((ms) => (ms / 1000).toFixed(3)).join(', ')} s`,

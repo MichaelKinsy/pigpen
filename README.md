@@ -30,11 +30,12 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.7.0** (Pi 1.5.0; `pig --version` prints `0.7.0+1.5.0`). The pin is the tag `v0.7.0`
-(commit `beb56447c476`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows). The tag's GitHub release carries only source
-archives so far, so `release.published` is false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.7.0` can
-record the SHA-256 of its pig archives; until then `scripts/fetch-pig.mjs` (the platform matrix) refuses to download a pig, and CI
-builds pig from the pinned commit. `scripts/pig-requirement.json` makes every script and test refuse a pig of another
+**Target: PiG 0.7.0 line, built from commit `7c2c1da2bcba`** (Pi 1.5.0; that pig prints `0.7.0+1.5.0`). The pin is not a release: it is PiG's
+`fix/071-lisp-packed` branch, which will ship as 0.7.1 and embeds a Lisp member's cell in a Piglet Binary (the `v0.7.0` tag,
+`beb56447c476`, builds such a Binary that stops at startup). It is recorded in `scripts/pig-requirement.json` and `PIG_COMMIT` in the
+workflows; the version stays `0.7.0` because the commit reports it. No release has pig archives for it, so `release.published` is
+false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.7.1` can record the SHA-256 of its archives; until then
+`scripts/fetch-pig.mjs` (the platform matrix) refuses to download a pig, and CI builds pig from the pinned commit. `scripts/pig-requirement.json` makes every script and test refuse a pig of another
 minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3). Every Go module still requires
 `github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3` (a Piglet build refuses a member that requires a newer SDK than PiG's, not an
 older one; moving the modules to SDK v0.7.0 is a separate change), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool

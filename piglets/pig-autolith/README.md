@@ -25,14 +25,16 @@ finished call twice) and resets its counters when Autolith's launcher re-runs a 
 
 This Piglet does not bundle any of these. Without them the tools report the missing program.
 
-1. **SBCL 2.6.9** for PiG's Lisp extension runtime. `pig setup` shows what is missing; `PIG_SBCL` names another executable.
+1. **SBCL 2.6.9** to build the Lisp image (building the Binary, or running the Piglet from source). A Binary built with PiG 0.7.1
+   carries the image. `pig setup` shows what is missing; `PIG_SBCL` names another executable.
    Official binaries: <https://www.sbcl.org/platform-table.html>.
 2. **Autolith** installed and on `PATH`: `nix run github:lambda-symbolics/autolith`, or the installer on
    <https://autolith.rocks>. It was developed against Autolith 0.67.24.
 3. **A model login** for Autolith (it keeps its own) and one for PiG. With a GitHub Copilot login the bundled Autolith roles fail
    (`Unsupported reasoning effort "medium" for model copilot/auto`); give the project a role that pins a Copilot model and
    `:reasoning-effort :none` in `.autolith/agents/`.
-4. **PiG 0.7.0 or later**: Common Lisp extensions first ship in 0.7.0.
+4. **PiG 0.7.1 or later.** Common Lisp extensions first ship in 0.7.0, but 0.7.0 has a known issue: it builds a Piglet Binary with
+   a Lisp member and does not embed the Lisp cell, so that Binary stops at startup (see below). Running the Piglet from source works on 0.7.0.
 
 Autolith's `--permissions auto` denied a plain test command in one real run, where `sandbox` ran it; the tool has a `permissions`
 parameter for that.
@@ -65,46 +67,54 @@ pig --piglet dist/staged/piglets/pig-autolith/piglet.yaml
 
 The first start builds the Lisp image (below); later starts reuse it.
 
-## Binary: builds, but does not start under PiG 0.7.0
+## Binary
 
-`pig piglet build` with PiG 0.7.0 builds the Binary. It is statically linked (`CGO_ENABLED=0` is the default when nothing in the
-Binary uses cgo; `file` reports `statically linked`, `ldd` `not a dynamic executable`), and `--version` prints `0.7.0+1.5.0`. The
-build warns `cell "packed-lisp:..." is not embedded; the Piglet Binary will build it at runtime and needs a toolchain`, and the
-Binary then stops at its first real start:
+`pig piglet build` produces a statically linked Binary (`CGO_ENABLED=0` is the default when nothing in the Binary uses cgo; `file`
+reports `statically linked`, `ldd` `not a dynamic executable`). With PiG 0.7.1 the Binary embeds the Lisp cell, so it starts with
+no SBCL build step and registers `autolith_job`, `autolith_session` and `/autolith`. The Lisp cell is the image below (an SBCL core),
+which is why the Binary is larger than a Go-only Piglet. The built Binary started and registered its tools on a PATH with no `sbcl`
+(checked on imladris); building it, and running the Piglet from source, need SBCL. Autolith and a model login are still needed for
+the tools to do anything.
+
+**PiG 0.7.0 known issue.** 0.7.0 plans a Lisp member as binary-packed but does not embed its cell (the build warns
+`cell "packed-lisp:..." is not embedded`), and the Binary stops at startup:
 
 ```
 pig: baked Piglet Binary binary-packed extensions do not match its plan: missing [autolith-bridge], unexpected []
 ```
 
-PiG 0.7.0 records a Lisp member in the Binary's baked plan as binary-packed but does not embed its cell, and the startup check
-fails closed. This is in PiG 0.7.0, not in this Piglet's sources; the Piglet runs from source, as above.
-CI builds the Binary on every run and records this startup result (`scripts/measure-lisp-piglet.mjs`), so the line changes when a
-PiG release embeds Lisp cells. Nothing here is signed or published.
+PiG 0.7.1 fixes this (`fix/071-lisp-packed`). Pigpen builds this Piglet with PiG at commit `7c2c1da2bcba` of that branch until 0.7.1
+ships. Nothing here is signed or published.
 
 ## Measured size and first-load time
 
-Measured on **imladris** (Linux 6.8 x86-64, Intel Xeon 6746E, a shared host at load average 13 during the final runs; PiG
-`v0.7.0` built from commit `beb56447c476`, Go 1.27.3, SBCL 2.6.9 official binary, PiG and cache directories in a scratch HOME,
-`PIG_TEST_FAUX` model so no network is used), `linux/amd64`, 2026-11-05. Not measured on any other platform.
+Measured on **imladris** (Linux 6.8 x86-64, Intel Xeon 6746E, a shared host at load average 17 to 33 during the final runs; PiG
+built from commit `7c2c1da2bcba` of `fix/071-lisp-packed`, Go 1.27.3, SBCL 2.6.9 official binary for the image build, PiG and cache
+directories in a scratch HOME, `PIG_TEST_FAUX` model so no network is used), `linux/amd64`, 2026-11-05. Not measured on any other
+platform.
 
 | What | Result |
 | --- | --- |
-| Binary (`pig piglet build ... --targets linux/amd64`, static, stripped) | 64,016,544 bytes (61.1 MiB) |
-| Lisp image PiG builds at first load (`cells/lisp/<hash>/runner`, an uncompressed SBCL core with the SDK and the bridge) | 48,174,568 bytes (45.9 MiB) |
-| First load, cold: empty PIG_HOME and cache, build the image, load the extension, answer a turn | **16.81 s** median of 9 (16.69 to 17.05 s) |
-| Same run with the image cached | **0.076 s** median of 9 (0.070 to 0.081 s) |
+| Binary (`pig piglet build ... --targets linux/amd64`, static, stripped, Lisp cell embedded) | 112,193,696 bytes (107.0 MiB) |
+| Lisp image (`cells/lisp/<hash>/runner`, an uncompressed SBCL core with the SDK and the bridge) | 48,207,344 bytes (46.0 MiB) |
+| Binary first start, cold: empty PIG_HOME, extract the embedded cell, load the extension, register the tools, answer a faux turn | **0.260 s** median of 9 (0.245 to 0.269 s) |
+| Binary start with the cell already extracted | **0.164 s** median of 9 |
+| Piglet source, first load, cold: empty PIG_HOME and cache, build the image, load the extension, answer a turn | **16.86 s** median of 9 (16.65 to 16.99 s) |
+| Piglet source with the image cached | **0.087 s** median of 9 (0.078 to 0.093 s) |
 
-The cold run includes the image build, which is repeated when the extension source or the SDK changes (`/reload` builds it
-again). It was measured on the Piglet source without `fuse-anchor`, so that no Go cell build is in it
-(`--without fuse-anchor`); the Binary could not be used for the runs for the reason above. Reproduce:
+The Binary rows are the built Binary running a faux turn in JSON mode, which lists the tools the model is offered; the run fails
+unless `autolith_job` and `autolith_session` are in it. The source rows were measured without `fuse-anchor` (`--without
+fuse-anchor`), so that no Go cell build is in them; the image build is repeated when the extension source or the SDK changes
+(`/reload` builds it again). The Binary skips that build because the image is embedded. Reproduce:
 
 ```sh
-PIG_BIN=<pig 0.7.0> PIG_SBCL=<sbcl> node scripts/measure-lisp-piglet.mjs \
-  --piglet piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary <built Binary> --runs 9
+PIG_BIN=<pig built from the pinned commit> PIG_SBCL=<sbcl> node scripts/measure-lisp-piglet.mjs \
+  --piglet piglets/pig-autolith/piglet.yaml --without fuse-anchor \
+  --binary <built Binary> --expect-tools autolith_job,autolith_session --runs 9
 ```
 
 ## Platform status
 
-The manifest lists five build targets. Only `linux/amd64` was built and run (the Binary build and the source run above).
+The manifest lists five build targets. Only `linux/amd64` was built and run (the Binary and the source run above).
 `darwin/arm64`, `darwin/amd64`, `linux/arm64` and `windows/amd64` are listed and not built or run for this Piglet, so no platform is
-a support claim. The CI platform matrix leaves this Piglet out (it needs SBCL); the job `autolith-binary` covers it on linux/amd64.
+a support claim. The CI platform matrix leaves this Piglet out (building it needs SBCL); the job `autolith-binary` builds it and starts it on linux/amd64.
