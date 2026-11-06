@@ -1,7 +1,7 @@
 {
   "$schema": "./ports.schema.json",
   "schemaVersion": 1,
-  "updatedAt": "2026-10-07",
+  "updatedAt": "2026-11-06",
   "ports": [
     {
       "id": "extension-porter",
@@ -666,6 +666,36 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "langsmith-pi-extension",
+      "name": "langsmith-pi-extension (LangSmith tracing)",
+      "kind": "port",
+      "summary": "Official LangChain extension: traces Pi sessions to LangSmith (agent runs, turns, LLM calls, tool calls, usage, replicas, redaction, sampling) through a Go re-implementation of the langsmith JS SDK run tree and batching client, wire-compatible with the original.",
+      "upstream": {
+        "name": "langsmith-pi-extension",
+        "url": "https://github.com/langchain-ai/langsmith-pi-extension",
+        "commit": "b0d83c3c3bc994fc7570f2bfc7b12561b8282bef",
+        "license": "MIT",
+        "author": "LangChain"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "langsmith-sdk (JavaScript, langsmith 0.10.5)",
+          "url": "https://github.com/langchain-ai/langsmith-sdk",
+          "commit": "ad399f1da7a775119eda41e2644be1c050153445",
+          "license": "MIT",
+          "author": "LangChain",
+          "path": "js"
+        }
+      ],
+      "targetPackage": "components/langsmith",
+      "otherTargets": [
+        "piglets/pig-langsmith"
+      ],
+      "lane": "pigpen-langsmith",
+      "status": "porting",
+      "credit": "Go port of @langchain/langsmith-pi-extension 0.2.1, https://github.com/langchain-ai/langsmith-pi-extension, by LangChain (MIT, Copyright 2026 LangChain), at commit b0d83c3c3bc994fc7570f2bfc7b12561b8282bef. It re-implements the parts of the LangSmith JavaScript SDK (langsmith 0.10.5, https://github.com/langchain-ai/langsmith-sdk, by LangChain, MIT, commit ad399f1da7a775119eda41e2644be1c050153445) that the extension reaches."
     }
   ]
 }

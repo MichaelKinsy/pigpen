@@ -1,0 +1,41 @@
+{
+  "name": "@pi-in-go/pigpen-langsmith",
+  "version": "0.1.0",
+  "description": "Go port of @langchain/langsmith-pi-extension: traces Pi sessions to LangSmith (runs, turns, LLM calls, tool calls, usage, replicas), wire-compatible with the original",
+  "keywords": [
+    "pig-package",
+    "langsmith",
+    "tracing",
+    "observability",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/langsmith"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/langsmith#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "LICENSE-langsmith-sdk",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/langsmith"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "langsmith-pi-extension",
+      "authors": [
+        "LangChain"
+      ],
+      "url": "https://github.com/langchain-ai/langsmith-pi-extension",
+      "revision": "b0d83c3c3bc994fc7570f2bfc7b12561b8282bef",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "langsmith-sdk (JavaScript)",
+      "authors": [
+        "LangChain"
+      ],
+      "url": "https://github.com/langchain-ai/langsmith-sdk",
+      "revision": "ad399f1da7a775119eda41e2644be1c050153445",
+      "path": "js",
+      "license": "MIT",
+      "licenseFile": "LICENSE-langsmith-sdk",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
