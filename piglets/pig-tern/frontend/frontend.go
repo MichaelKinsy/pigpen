@@ -241,6 +241,9 @@ type session struct {
 	blobDir    string
 	blobCache  bool
 	blobInline map[string]bool
+
+	// ompRoles is the omp role trial (roles.go).
+	ompRoles bool
 }
 
 func newSession(env fe.Env) *session {
@@ -262,6 +265,7 @@ func newSession(env fe.Env) *session {
 		hasJSON:      true,
 		hostname:     hostname(),
 		blobDir:      env.Getenv("TERN_BLOB_DIR"),
+		ompRoles:     ompRolesOn(env.Getenv),
 	}
 }
 

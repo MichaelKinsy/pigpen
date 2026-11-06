@@ -49,6 +49,9 @@ func (s *session) queueWorking(e *entry, working fe.Working, fresh bool) {
 	switch {
 	case fresh:
 		e.raw.text, e.raw.hot = h.text, h
+	case s.ompRoles:
+		// omp's row keeps the message and tone on its label child.
+		s.setProps(e.tid+".label", "text", &e.raw.hot, h)
 	case spinnerless(working):
 		s.patchText(e.tid, e.raw.text, h.text)
 		e.raw.text = h.text
@@ -110,11 +113,15 @@ func footerHot(footer fe.Footer) (slots [footerSlots]hot, statuses []hot) {
 // meter's value, the effort level and whether a segment hides are raw
 // props (see queueFooter), so only a change in the number of extension
 // statuses renders.
-func footerElement(id string, footer fe.Footer) tern.Element {
+func footerElement(id string, footer fe.Footer, ompRoles bool) tern.Element {
 	slots, statuses := footerHot(footer)
 	wide := &ui.Bounds{W: ui.Ch(12)}
 	common := func(key string, h hot) ui.Common {
-		return ui.Common{Key: key, Tone: h.tone, Hidden: h.hidden}
+		c := ui.Common{Key: key, Tone: h.tone, Hidden: h.hidden}
+		if ompRoles {
+			c.Role = footerRoles[key]
+		}
+		return c
 	}
 	cwd := ui.Seg{Common: common("cwd", slots[segCwd]), Icon: ui.IconFolder, Spans: cwdSpans(slots[segCwd].text), Priority: 7}
 	cwd.Min = wide
@@ -144,7 +151,11 @@ func footerElement(id string, footer fe.Footer) tern.Element {
 		xp,
 		model,
 	)
-	return ui.Status{Common: ui.Common{Key: id, Role: "pig.footer"}, Children: segs}
+	role := "pig.footer"
+	if ompRoles {
+		role = "omp.status"
+	}
+	return ui.Status{Common: ui.Common{Key: id, Role: role}, Children: segs}
 }
 
 // queueFooter queues the raw props of the footer's segments that changed

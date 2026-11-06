@@ -42,6 +42,15 @@ type mainEntry struct {
 	settled, gone bool
 }
 
+// textRef is the boxed TSP id that streamed assistant text patches: the
+// node itself, or its md child in the omp role trial (markdownNode).
+func (s *session) textRef(id string, node fe.Node) any {
+	if md, ok := node.(fe.MarkdownText); ok && s.ompRoles && md.Role != fe.RoleUser {
+		return id + ".md"
+	}
+	return id
+}
+
 // convertMain queues the raw ops for an op on a node of main.
 func (s *session) convertMain(op fe.Op) {
 	switch op.Kind {
@@ -58,7 +67,7 @@ func (s *session) convertMain(op fe.Op) {
 		id := nodeID(op.ID)
 		before := s.liveFrom(op.Index)
 		s.order = insertID(s.order, op.Index, id)
-		e := &mainEntry{id: id, ref: id, node: op.Node}
+		e := &mainEntry{id: id, ref: s.textRef(id, op.Node), node: op.Node}
 		s.sent[op.ID] = e
 		s.queue(tern.OpAdd("main", before, s.mainNode(id, op.Node)))
 		s.settle(e, op.Index)
@@ -81,6 +90,7 @@ func (s *session) convertMain(op fe.Op) {
 		queued := s.queued
 		if !s.patchMain(e, prev, op.Node) {
 			// A node whose kind or children change is replaced in place.
+			e.ref = s.textRef(e.id, op.Node)
 			s.queue(tern.OpDel(e.id), tern.OpAdd("main", s.liveFrom(op.Index+1), s.mainNode(e.id, op.Node)))
 		}
 		if s.queued != queued {
@@ -160,7 +170,12 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 		}
 		s.patchText(e.ref, p.Text, n.Text)
 		if p.Streaming != n.Streaming {
-			s.queue(tern.OpSet(id, map[string]any{"stream": n.Streaming}))
+			// The md is the node itself, or its child in the omp trial.
+			target := id
+			if s.ompRoles {
+				target = id + ".md"
+			}
+			s.queue(tern.OpSet(target, map[string]any{"stream": n.Streaming}))
 		}
 		return true
 	case fe.Thinking:
@@ -355,11 +370,11 @@ func utf16Len(text string) int {
 func (s *session) mainNode(id string, node fe.Node) tern.WireNode {
 	switch n := node.(type) {
 	case fe.Thinking:
-		return thinkingNode(id, n)
+		return thinkingNode(id, n, s.ompRoles)
 	case fe.ToolCard:
 		return s.toolNode(id, n)
 	case fe.MarkdownText:
-		return markdownNode(id, n)
+		return markdownNode(id, n, s.ompRoles)
 	case fe.Lines:
 		if n.Click != nil {
 			return clickLinesNode(id, n.Lines, *n.Click)
@@ -609,10 +624,23 @@ func parseCommaInt(s string) int {
 // Tern's chat style lays it out, and a user message as an md node in a card
 // with the user tone. While the text streams, md shows Tern's caret, and an
 // update that only grew the source travels as a text append.
-func markdownNode(id string, md fe.MarkdownText) tern.WireNode {
+//
+// In the omp role trial (roles.go) the user card takes omp.user, and the
+// assistant md sits in a col with role omp.assistant, as omp sends it:
+// Tern's chat styles reach the md only as that col's child.
+func markdownNode(id string, md fe.MarkdownText, ompRoles bool) tern.WireNode {
 	if md.Role == fe.RoleUser {
-		return tern.WireNode{ID: id, K: tern.KindCard, P: map[string]any{"role": "pig.user", "tone": "user"}, C: []tern.WireNode{
+		role := "pig.user"
+		if ompRoles {
+			role = "omp.user"
+		}
+		return tern.WireNode{ID: id, K: tern.KindCard, P: map[string]any{"role": role, "tone": "user"}, C: []tern.WireNode{
 			{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": md.Text}},
+		}}
+	}
+	if ompRoles {
+		return tern.WireNode{ID: id, K: tern.KindCol, P: map[string]any{"role": "omp.assistant"}, C: []tern.WireNode{
+			{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": md.Text, "stream": md.Streaming}},
 		}}
 	}
 	return tern.WireNode{ID: id, K: tern.KindMd, P: map[string]any{"text": md.Text, "stream": md.Streaming, "role": "pig.assistant"}}
@@ -620,12 +648,16 @@ func markdownNode(id string, md fe.MarkdownText) tern.WireNode {
 
 // thinkingNode draws a thinking run as a muted collapsible card around its
 // Markdown. PiG's thinking toggle sets the fold; a fold the user flips in
-// Tern stays local until PiG's state changes.
-func thinkingNode(id string, thinking fe.Thinking) tern.WireNode {
+// Tern stays local until PiG's state changes. In the omp role trial it is
+// a section with role omp.thinking, as omp sends it.
+func thinkingNode(id string, thinking fe.Thinking, ompRoles bool) tern.WireNode {
+	md := tern.WireNode{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": thinking.Text, "stream": thinking.Streaming}}
+	if ompRoles {
+		props := map[string]any{"head": "Thinking", "role": "omp.thinking", "collapsible": true, "collapsed": thinking.Hidden}
+		return tern.WireNode{ID: id, K: tern.KindSection, P: props, C: []tern.WireNode{md}}
+	}
 	props := map[string]any{"head": "Thinking", "role": "pig.thinking", "tone": "muted", "collapsible": true, "collapsed": thinking.Hidden}
-	return tern.WireNode{ID: id, K: tern.KindCard, P: props, C: []tern.WireNode{
-		{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": thinking.Text, "stream": thinking.Streaming}},
-	}}
+	return tern.WireNode{ID: id, K: tern.KindCard, P: props, C: []tern.WireNode{md}}
 }
 
 // structuredPreviewLines is how many top lines a collapsed tool card shows of

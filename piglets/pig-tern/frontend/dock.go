@@ -388,9 +388,12 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 	case fe.Editor:
 		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: ui.T(n.Placeholder), Sendable: n.Sendable}}
 	case fe.Working:
+		if s.ompRoles {
+			return ompWorkingElement(e.id, n)
+		}
 		return workingElement(e.id, n)
 	case fe.Footer:
-		return footerElement(e.id, n)
+		return footerElement(e.id, n, s.ompRoles)
 	case fe.Selector:
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:
