@@ -200,10 +200,6 @@ func (s *session) suspendScreen() {
 	}
 }
 
-// clickID is the TSP id of the cells of a transcript node that take a
-// click.
-func clickID(id string) string { return id + ".hit" }
-
 // transcriptClick turns Tern's click on a transcript node's click cells into
 // PiG's click on the first cell of its Click area: Tern does not say which
 // cell was clicked.

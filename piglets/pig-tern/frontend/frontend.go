@@ -679,7 +679,7 @@ func (s *session) Close() error {
 	s.mu.Unlock()
 	if tsp == nil || sf == nil {
 		if tsp != nil {
-			go tsp.Close()
+			go func() { _ = tsp.Close() }()
 		}
 		return err
 	}
@@ -696,8 +696,9 @@ func (s *session) Close() error {
 		err = errors.Join(err, sf.Close())
 	}
 	// With the surface closed and no terminal modes set (NoPaste, NoKitty,
-	// a no-op MakeRaw), the session's Close writes nothing more.
-	go tsp.Close()
+	// a no-op MakeRaw), the session's Close writes nothing more, so its
+	// error has nowhere to go.
+	go func() { _ = tsp.Close() }()
 	return err
 }
 
