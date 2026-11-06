@@ -167,10 +167,8 @@ type session struct {
 	sessionNode bool
 	sessionFile string
 
-	// theme is the palette of PiG's theme, and paletteSent reports that the
-	// surface has it.
-	theme       *fe.Theme
-	paletteSent bool
+	// theme is PiG's theme.
+	theme *fe.Theme
 	// mark is PiG's mark (mark.go), markDirty reports that the surface's
 	// sheet does not draw it yet, and markInstalled that the surface has a
 	// mark sheet. overlaySheetSent reports that the surface has the sheet
@@ -224,6 +222,7 @@ type session struct {
 	// reduceMotion reports that the user asked Tern for reduced motion, and
 	// screen is the fullscreen overlay shown (screen.go), or nil.
 	reduceMotion bool
+	hasJSON      bool
 	screen       *screen
 
 	// progress reports that a Working node shows, and progressStop and
@@ -248,6 +247,7 @@ func newSession(env fe.Env) *session {
 		cols:         env.Columns,
 		cellHeightPx: defaultCellHeightPx,
 		credits:      tern.DefaultCredits,
+		hasJSON:      true,
 	}
 }
 
@@ -266,6 +266,7 @@ func (s *session) start() {
 		CancelRead: s.in.Close,
 		NoPaste:    true,
 		NoKitty:    true,
+		RunTmux:    func(...string) (string, error) { return "", tern.ErrUnsupported },
 	}
 	go s.connect(opts)
 }
@@ -390,7 +391,7 @@ func (s *session) Apply(frame fe.Frame) error {
 	}
 	if frame.Theme != nil {
 		theme := *frame.Theme
-		s.theme, s.paletteSent, s.themeTokens = &theme, false, nil
+		s.theme, s.themeTokens = &theme, nil
 		// The views' rules read on the new palette's tints, and views take
 		// their spans' tokens from the theme's colors.
 		s.rethemeViewRules()
@@ -423,8 +424,8 @@ func (s *session) Apply(frame fe.Frame) error {
 	return s.flushLocked()
 }
 
-// flushLocked sends PiG's palette and the mark's stylesheet when they
-// changed, renders the dock and the layer when they changed (the overlay
+// flushLocked sends the mark's stylesheet when it changed, renders the dock
+// and the layer when they changed (the overlay
 // sheet first, once a surface's layer holds an overlay), and hands the
 // transcript's ops to the SDK. A render the credits hold back waits in the
 // SDK, which then sends the latest view's difference; the transcript's ops
@@ -443,12 +444,6 @@ func (s *session) Apply(frame fe.Frame) error {
 func (s *session) flushLocked() error {
 	if s.sf == nil || !s.live || s.fellBack || s.closed || s.suspended {
 		return nil
-	}
-	if !s.paletteSent && s.theme != nil {
-		if err := s.sendErr(s.sf.Palette(palette(*s.theme))); err != nil {
-			return err
-		}
-		s.paletteSent = true
 	}
 	if s.markDirty {
 		if css := markSheet(s.mark); css != "" || s.markInstalled {
@@ -555,6 +550,7 @@ func (s *session) HandleInput(data string) bool {
 			s.owedDA1 = true
 			s.setCell(hello.Cols, hello.Cell)
 			s.reduceMotion = hello.ReduceMotion
+			s.hasJSON = len(hello.Kinds) == 0 || slices.Contains(hello.Kinds, tern.KindJSON)
 			if hello.Credits > 0 {
 				s.credits = int64(hello.Credits)
 			}

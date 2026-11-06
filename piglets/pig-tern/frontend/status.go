@@ -119,7 +119,7 @@ func footerElement(id string, footer fe.Footer) tern.Element {
 	cwd := ui.Seg{Common: common("cwd", slots[segCwd]), Icon: ui.IconFolder, Spans: cwdSpans(slots[segCwd].text), Priority: 7}
 	cwd.Min = wide
 	cwd.Href = cwdHref(slots[segCwd].text)
-	cwd.Actions = &ui.Actions{Click: "open", Menu: []string{"open", "copy"}}
+	cwd.Actions = &ui.Actions{Click: "open", Menu: []ui.MenuEntry{ui.MenuAct("open"), ui.MenuAct("copy")}}
 	segs := make([]tern.Element, 0, 7+len(statuses))
 	segs = append(segs,
 		cwd,

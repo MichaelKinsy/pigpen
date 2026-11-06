@@ -13,7 +13,7 @@ PIG_SOURCE_ROOT=/path/to/pig-git-checkout \
   pig piglet build dist/staged/piglets/pig-tern/piglet.yaml --format binary --out ./pig-tern
 ```
 
-Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` v0.1.0 and its `golang.org/x` requirements. See the root [release blockers](../../RELEASE-BLOCKERS.md).
+Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` v0.2.0 and its `golang.org/x` requirements. See the root [release blockers](../../RELEASE-BLOCKERS.md).
 
 ## When it draws natively
 
@@ -31,8 +31,9 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 | User messages | a card around an `md` node |
 | Assistant messages | `md` nodes; streamed text arrives as appends |
 | Thinking | a collapsible card that follows PiG's thinking toggle |
-| Tool calls | collapsible `tool` nodes with name, target, status (including cancelled), elapsed time and output |
+| Tool calls | collapsible `tool` nodes with name, target, status (including cancelled), a toned status badge, elapsed time and output; JSON output renders as a foldable `json` node (or `tree` when `json` is absent) and the output of a successful `ls`, `find` or `tree` as a `tree` node. A collapsed card shows the last 5 lines of plain output and the first 10 of a JSON value or tree |
 | Edit results | `diff` nodes inside the tool card, with the added and removed line counts |
+| `/session` | a `stats` strip of headline figures and a `table` with `MeterCell` and `SparkCell` shares and splits |
 | Input editor | an `editor` node with `edit`, `undo` and `send`, without PiG's border lines; it reports `sendable` when PiG can take a prompt |
 | Working indicator | a `spinner` above the editor that Tern animates, so spinner ticks send no frames; a retry countdown has the warning tone |
 | Working and idle state | OSC 9;4 terminal progress while PiG works, repeated every second, and cleared when it stops, so Tern's agent list and `cx.agents:wait` see a working PiG whatever PiG's `showTerminalProgress` setting says |
@@ -44,7 +45,7 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 | Extension components drawn with PiG's component kit (D103), for example pig-music | Tern elements: text, Markdown, boxes as cards, stacks, lists, select and settings lists, progress bars, loaders, images in their cells, and a titled overlay's frame as its card. A view's theme overrides apply to its own element only |
 | Clicks on an extension's view | PiG's terminal click, with the view path, the clicked list item and the click count (so a double click counts), reaches the extension's component as a mouse click does in PiG's own renderer |
 | Footer folder | a path span that opens in Tern's Files pane on click |
-| PiG's theme | Tern's program palette, sent before the first frame and whenever PiG's colors change. PiG picks a light or dark theme from Tern's appearance, so switching Tern's appearance switches PiG's theme |
+| PiG's theme | PiG picks a light or dark theme from Tern's appearance, so switching Tern's appearance switches PiG's theme |
 | Contrast | an extension view's theme overrides are corrected as Tern corrects a palette: text reads at least 4.5:1 (3:1 for muted, dim and border tokens) on every Tern surface it can land on, in light and dark, so a theme made for a dark terminal stays readable on Tern's light surface |
 | PiG's mark | the pig head of PiG's active sprite in the settings sheet's brand tile, as pixel art in place of Tern's π icon |
 | Fullscreen easter eggs | a Tern screen surface that plays the animation as one `ansi` node, with the dock (editor and footer) kept under it |
@@ -59,4 +60,4 @@ Frames respect Tern's credits. Tern acknowledges no frame while a pane is hidden
 
 ## Credits
 
-The composition and the frontend member are MIT, Michael Kinsy. The member is built on **tern-sdk**, Stencil's official Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern` v0.1.0, MIT, © Stencil Labs, Inc., <https://github.com/stencil-hq/tern-sdk>). A Binary that fuses the member redistributes it; see [CREDITS.md](CREDITS.md) and [licenses/tern-sdk-LICENSE](licenses/tern-sdk-LICENSE).
+The composition and the frontend member are MIT, Michael Kinsy. The member is built on **tern-sdk**, Stencil's official Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern` v0.2.0, MIT, © Stencil Labs, Inc., <https://github.com/stencil-hq/tern-sdk>). A Binary that fuses the member redistributes it; see [CREDITS.md](CREDITS.md) and [licenses/tern-sdk-LICENSE](licenses/tern-sdk-LICENSE).

@@ -386,7 +386,7 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 	}
 	switch n := e.node.(type) {
 	case fe.Editor:
-		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: n.Placeholder, Sendable: n.Sendable}}
+		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: ui.T(n.Placeholder), Sendable: n.Sendable}}
 	case fe.Working:
 		return workingElement(e.id, n)
 	case fe.Footer:

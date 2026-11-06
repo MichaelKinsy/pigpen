@@ -153,7 +153,7 @@ func TestSuspendPausesTheProgressKeepalive(t *testing.T) {
 
 // After a job-control stop, the shell's prompt discards the surface, and Tern
 // answers the adopt with gone. The member opens a new surface and sends it
-// the whole document from what it keeps: the palette, the regions, the
+// the whole document from what it keeps: the regions, the
 // transcript in order, the session file's node before it, and the dock with
 // the editor's text and the keys. Its frames count from 1, and acks count
 // them.
@@ -185,7 +185,6 @@ func TestAdoptAnsweredGoneOpensANewSurfaceWithTheWholeDocument(t *testing.T) {
 	h.eventually("the new surface", func() bool { return strings.Count(h.out.peek(), "\x1b_tsp;f;") == 2 })
 	expectWire(t, "reopen", h.messages(),
 		`o {"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
-		`t {"dark":{"accent":"#8abeb7"},"name":{"dark":"dark"},"sf":"pig"}`,
 		`f {"ops":[["add","main","pig",null,{"id":"main","k":"col"}],["add","dock","pig",null,{"c":[{"id":"dock.editor","k":"editor","p":{"key":"editor"}}],"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":1,"sf":"pig"}`,
 		`f {"ops":[["add","n.a","main",null,{"id":"n.a","k":"ansi","p":{"hidden":false,"text":"one"}}],["add","n.b","main",null,{"id":"n.b","k":"md","p":{"role":"pig.assistant","stream":false,"text":"two"}}],["settle","n.a"],["settle","n.b"],["add","pig.session","main","n.a",{"id":"pig.session","k":"text","p":{"hidden":true,"href":"/tmp/s.jsonl","role":"pig.session","text":""}}],["text","dock.editor","replace","draft"],["set","dock.editor",{"cursor":5}],["focus","dock.editor"]],"s":2,"sf":"pig"}`,
 	)

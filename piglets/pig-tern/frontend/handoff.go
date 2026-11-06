@@ -103,7 +103,7 @@ func (s *session) Resume() {
 
 // reopen opens a new surface when Tern answers an adopt with gone, and
 // sends it the whole document: the transcript, the session file's node,
-// the palette, the mark, the dock and the layer. It reports false for any
+// the mark, the dock and the layer. It reports false for any
 // other gone.
 func (s *session) reopen() bool {
 	s.mu.Lock()
@@ -140,7 +140,7 @@ func (s *session) reopenLocked() error {
 // redrawAll queues the whole document for a new surface: every transcript
 // node Tern still had in order, each final one settled again so retention
 // can evict it from the new surface too, then the session file's node
-// before them, and the dock, the layer, the palette and the sheets.
+// before them, and the dock, the layer and the sheets.
 // Nodes Tern evicted stay out, as the old surface showed them.
 func (s *session) redrawAll() {
 	clear(s.pending)
@@ -160,7 +160,6 @@ func (s *session) redrawAll() {
 		s.sessionNode = false
 		s.publishSessionFile(s.sessionFile)
 	}
-	s.paletteSent = false
 	s.markDirty, s.markInstalled, s.overlaySheetSent = true, false, false
 	s.viewSheetSent = false
 	s.redrawDock()

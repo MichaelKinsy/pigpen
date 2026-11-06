@@ -23,7 +23,7 @@ const (
 )
 
 // PiG's mark goes out as the stylesheet that hides the brand tile's icon
-// and draws the mark's pixels in its place, after the palette and before
+// and draws the mark's pixels in its place, before
 // the surface's first frame; again when PiG reports another mark, even in
 // a frame with no ops; and not when a frame carries no mark or the same
 // one. The zero mark removes the sheet, so Tern's π shows again, once.
@@ -40,7 +40,6 @@ func TestMarkIsTheBrandTilesStylesheet(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectWire(t, "first frame", h.messages(),
-		`t {"dark":{"accent":"#8abeb7"},"name":{"dark":"dark"},"sf":"pig"}`,
 		markSheetWire(pinkSheet),
 		`f {"ops":[["add","main","pig",null,{"id":"main","k":"col"}],["add","dock","pig",null,{"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":1,"sf":"pig"}`,
 		`f {"ops":[["add","n.a","main",null,{"id":"n.a","k":"ansi","p":{"hidden":false,"text":"one"}}]],"s":2,"sf":"pig"}`,

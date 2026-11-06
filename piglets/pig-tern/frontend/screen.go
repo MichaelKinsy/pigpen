@@ -179,7 +179,7 @@ func (s *session) screenDock(click func()) tern.Nodes {
 		el := s.element(e, false)
 		if editor, ok := e.node.(fe.Editor); ok {
 			cursor := editor.Cursor
-			el = ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Text: editor.Text, Cursor: &cursor, Placeholder: editor.Placeholder}}
+			el = ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Text: editor.Text, Cursor: &cursor, Placeholder: ui.T(editor.Placeholder)}}
 		}
 		node := buildNode(el)
 		if click != nil {

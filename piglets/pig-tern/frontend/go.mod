@@ -7,7 +7,7 @@ go 1.26.0
 require github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3
 
 require (
-	github.com/stencil-hq/tern-sdk/go/tern v0.1.0
+	github.com/stencil-hq/tern-sdk/go/tern v0.2.0
 	golang.org/x/text v0.35.0
 )
 
