@@ -229,6 +229,18 @@ type session struct {
 	// progressDone run the terminal progress keepalive meanwhile.
 	progress                   bool
 	progressStop, progressDone chan struct{}
+
+	// cwd.go: cwdShown is the footer's directory as PiG shows it, cwdAbs
+	// the same as an absolute path ("" when it is not one), and hostname
+	// the host the OSC 7 report names.
+	cwdShown, cwdAbs, hostname string
+
+	// blobcache.go: blobDir is Tern's blob cache folder (TERN_BLOB_DIR),
+	// blobCache reports that Tern's hello offered the blobs query, and
+	// blobInline are the images that must go through the pty.
+	blobDir    string
+	blobCache  bool
+	blobInline map[string]bool
 }
 
 func newSession(env fe.Env) *session {
@@ -248,6 +260,8 @@ func newSession(env fe.Env) *session {
 		cellHeightPx: defaultCellHeightPx,
 		credits:      tern.DefaultCredits,
 		hasJSON:      true,
+		hostname:     hostname(),
+		blobDir:      env.Getenv("TERN_BLOB_DIR"),
 	}
 }
 
@@ -551,6 +565,7 @@ func (s *session) HandleInput(data string) bool {
 			s.setCell(hello.Cols, hello.Cell)
 			s.reduceMotion = hello.ReduceMotion
 			s.hasJSON = len(hello.Kinds) == 0 || slices.Contains(hello.Kinds, tern.KindJSON)
+			s.blobCache = slices.Contains(hello.Features, tern.TermFeatureBlobs)
 			if hello.Credits > 0 {
 				s.credits = int64(hello.Credits)
 			}

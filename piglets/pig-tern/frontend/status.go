@@ -203,6 +203,7 @@ func (s *session) queueFooter(e *entry, prev, next fe.Footer, fresh bool) {
 		s.dropPending(f.statusIDs[i])
 	}
 	f.statuses = f.statuses[:n]
+	s.reportCwd(next.Cwd)
 }
 
 func (s *session) setSlot(f *footerProps, slot int, textKey string, next hot) {

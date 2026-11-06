@@ -646,6 +646,12 @@ func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
 	if badge := toolStatusBadge(tool.Status); badge != nil {
 		props["badges"] = []any{badge}
 	}
+	// A path target links to its file, so ⌘-click opens it in Tern.
+	if kind == "path" && target != "" {
+		if href := s.pathHref(target); href != "" {
+			props["href"] = href
+		}
+	}
 	if tool.Elapsed > 0 {
 		props["took"] = tool.Elapsed.Milliseconds()
 	}

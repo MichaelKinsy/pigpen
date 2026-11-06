@@ -1235,25 +1235,6 @@ func (s *session) blob(img *fe.ViewImage) string {
 	return id
 }
 
-// flushBlobs sends the images queued, before the frame that names them.
-// Tern keeps blobs a node shows, and stores them by their hash, so each
-// goes out once per session.
-func (s *session) flushBlobs() error {
-	for len(s.blobQueue) > 0 {
-		img := s.blobQueue[0]
-		if _, err := s.tsp.Blob(img.Data, img.MimeType); err != nil {
-			return err
-		}
-		if s.blobsSent == nil {
-			s.blobsSent = map[string]bool{}
-		}
-		s.blobsSent[img.Ref] = true
-		s.blobQueue[0] = nil
-		s.blobQueue = s.blobQueue[1:]
-	}
-	return nil
-}
-
 // flushViewSheet sends the views' stylesheet when it changed.
 func (s *session) flushViewSheet() error {
 	if !s.viewsShown || !s.viewSheetDirty && s.viewSheetSent {
