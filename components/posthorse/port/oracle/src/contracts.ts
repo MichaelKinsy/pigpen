@@ -1,0 +1,134 @@
+import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { PosthorseDisplay } from "../ui.ts";
+
+export { isRecord } from "./records.ts";
+
+export type CompactionPolicy = {
+	readonly enabled: boolean;
+	readonly reserveTokens: number;
+	readonly keepRecentTokens?: number | undefined;
+};
+export type ContextUsage = {
+	readonly tokens: number | null;
+	readonly contextWindow: number;
+	readonly percent: number | null;
+};
+export type PolicyContext = {
+	readonly getCompactionSettings: () => CompactionPolicy;
+	readonly getContextUsage: () => ContextUsage | undefined;
+	readonly getSystemPrompt: () => string;
+};
+export type PolicyReader = (ctx: ExtensionContext) => CompactionPolicy;
+export type SnapshotReader = (
+	ctx: ExtensionContext,
+	livePolicy?: CompactionPolicy,
+) => PolicyContext;
+export type ImageLike = {
+	readonly type: "image";
+	readonly data: string;
+	readonly mimeType: string;
+};
+export type ToolCallLike = {
+	readonly type?: string | undefined;
+	readonly id?: string | undefined;
+	readonly name?: string | undefined;
+	readonly namespace?: string | undefined;
+	readonly arguments?: unknown;
+	readonly executionArguments?: unknown;
+	readonly async?: boolean | undefined;
+};
+export type MessageLike = {
+	readonly role?: string | undefined;
+	readonly stopReason?: string | undefined;
+	readonly errorMessage?: string | undefined;
+	readonly content?: unknown;
+	readonly summary?: string | undefined;
+	readonly toolName?: string | undefined;
+	readonly customType?: string | undefined;
+	readonly namespace?: string | undefined;
+	readonly toolCallId?: string | undefined;
+	readonly isError?: boolean | undefined;
+	readonly details?: unknown;
+	readonly nestedCalls?: unknown;
+	readonly command?: string | undefined;
+	readonly output?: string | undefined;
+	readonly excludeFromContext?: boolean | undefined;
+};
+export type EntryLike = {
+	readonly type?: string | undefined;
+	readonly id?: string | undefined;
+	readonly parentId?: string | null | undefined;
+	readonly timestamp?: string | undefined;
+	readonly message?: MessageLike | undefined;
+	readonly summary?: string | undefined;
+	readonly customType?: string | undefined;
+	readonly content?: unknown;
+	readonly details?: unknown;
+	readonly display?: boolean | undefined;
+	readonly data?: unknown;
+	readonly cwd?: string | undefined;
+	readonly parentSession?: string | undefined;
+	readonly handoff?: string | undefined;
+	readonly firstKeptEntryId?: string | null | undefined;
+	readonly targetId?: string | undefined;
+	readonly replacement?: { readonly content: unknown } | null | undefined;
+};
+export type WindowedEntry = {
+	readonly entry: EntryLike;
+	readonly windowId: string;
+	readonly text: string;
+	readonly images: readonly ImageLike[];
+};
+export type ProjectedEntry = {
+	readonly sourceEntry: EntryLike;
+	readonly messages: readonly MessageLike[];
+};
+export type HistoryHit = {
+	readonly id: string;
+	readonly text: string;
+	readonly headerLength: number;
+	readonly priority: 0 | 1;
+};
+export type ReminderFingerprint = {
+	readonly windowId: string;
+	readonly contextWindow?: number | undefined;
+	readonly reserveTokens?: number | undefined;
+};
+export type TextResult = {
+	content: Array<
+		{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }
+	>;
+	details: PosthorseDisplay | undefined;
+};
+
+export const MAX_HANDOFF_CHARS = 20_000;
+export const MAX_PAGE_CHARS = 40_000;
+export const MIN_PAGE_CHARS = 1_000;
+export const PAGE_MARGIN_TOKENS = 1_000;
+export const ESTIMATED_IMAGE_CHARS = 4_800;
+export const REMINDER_TYPE = "posthorse-reminder";
+export const AUTO_HANDOFF_PREFIX = "Automatic context rollover recovery record.";
+export const EMPTY_HANDOFF = "Fresh context. Restore relevant notes and history before continuing.";
+
+export function unknownArray(value: unknown): readonly unknown[] | undefined {
+	return Array.isArray(value) ? value : undefined;
+}
+export function optionalString(value: unknown): string | undefined {
+	return typeof value === "string" ? value : undefined;
+}
+export function requireValue(value: string | undefined, name: string, op: string): string {
+	if (value === undefined || value === "") {
+		throw new Error(`"${name}" is required for op "${op}".`);
+	}
+	return value;
+}
+export function isReminderType(customType: unknown): boolean {
+	return customType === REMINDER_TYPE;
+}
+export function textResult(
+	text: string,
+	images: readonly ImageLike[] = [],
+	display?: PosthorseDisplay,
+): TextResult {
+	return { content: [{ type: "text", text }, ...images], details: display };
+}

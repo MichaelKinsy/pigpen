@@ -1,0 +1,82 @@
+{
+	"name": "pi-posthorse",
+	"version": "0.10.11",
+	"type": "module",
+	"description": "Posthorse: fresh context, same journey. No-summary context rollover for Pi, with sparse budget reminders, handoffs, notes, and history.",
+	"keywords": [
+		"pi-package",
+		"pi-extension",
+		"context",
+		"posthorse",
+		"rollover"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/fitchmultz/pi-posthorse.git"
+	},
+	"license": "MIT",
+	"files": [
+		"index.ts",
+		"ui.ts",
+		"src"
+	],
+	"engines": {
+		"node": ">=24.12.0"
+	},
+	"packageManager": "npm@12.2.0",
+	"pi": {
+		"extensions": [
+			"./index.ts"
+		],
+		"image": "https://raw.githubusercontent.com/fitchmultz/pi-posthorse/main/diagram.png"
+	},
+	"scripts": {
+		"check": "tsc --noEmit",
+		"quality:policy": "node scripts/quality-policy.ts",
+		"quality:probes": "node --test test/quality*.test.ts",
+		"lint": "node scripts/verify.ts quality:policy quality:config lint:oxlint",
+		"lint:agent": "node scripts/verify.ts quality:policy quality:config lint:agent:oxlint",
+		"lint:fix": "node scripts/verify.ts quality:policy quality:config lint:fix:oxlint",
+		"format": "oxfmt --write .",
+		"format:check": "oxfmt --check .",
+		"build": "npm pack --dry-run",
+		"verify": "node scripts/toolchain-policy.ts && node scripts/verify.ts quality:policy quality:config lint:oxlint format:check check test build",
+		"check:compat": "node scripts/verify.ts check test",
+		"test:native": "node --import ./test/pi-loader.ts --test test/host.test.mjs",
+		"test": "node --import ./test/pi-loader.ts --test test/*.test.ts test/host.test.mjs",
+		"prepublishOnly": "npm run verify",
+		"quality:config": "node scripts/config-policy.ts",
+		"lint:oxlint": "oxlint --deny-warnings .",
+		"lint:agent:oxlint": "oxlint --deny-warnings --format=agent .",
+		"lint:fix:oxlint": "oxlint --fix ."
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": ">=1.5.0",
+		"@earendil-works/pi-tui": ">=1.5.0",
+		"typebox": "*"
+	},
+	"peerDependenciesMeta": {
+		"@earendil-works/pi-coding-agent": {
+			"optional": true
+		},
+		"@earendil-works/pi-tui": {
+			"optional": true
+		},
+		"typebox": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@earendil-works/pi-ai": "1.5.0",
+		"@earendil-works/pi-coding-agent": "1.5.0",
+		"@earendil-works/pi-tui": "1.5.0",
+		"@types/node": "24.19.1",
+		"oxc-parser": "0.157.0",
+		"oxfmt": "0.76.0",
+		"oxlint": "1.91.0",
+		"oxlint-tsgolint": "7.0.2005",
+		"typebox": "1.3.27",
+		"typescript": "7.0.2",
+		"yaml": "2.9.1"
+	}
+}

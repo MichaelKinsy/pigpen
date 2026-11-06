@@ -1,0 +1,514 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { suite, test } from "node:test";
+import { objectValue } from "../scripts/quality-settings.ts";
+import { ruleCases } from "./quality-rule-cases.ts";
+import { optionCases } from "./quality-rule-options.ts";
+import {
+	expectFindings,
+	fixture,
+	probeConcurrency,
+	repository,
+	runCli,
+} from "./quality-support.ts";
+
+function branches(count: number): string {
+	return `export function choose(input: number): number {\n${Array.from({ length: count }, (_, index) => `if (input > ${index}) { return ${index}; }`).join("\n")}\nreturn -1;\n}`;
+}
+
+function parameters(count: number): string {
+	const names = Array.from({ length: count }, (_, index) => `p${index}`);
+	return `export function sum(${names.map((name) => `${name}: number`).join(",")}): number { return ${names.join("+")}; }`;
+}
+
+function nesting(count: number): string {
+	return `export function choose(input: number): number {\n${Array.from({ length: count }, (_, index) => `if (input > ${index}) {`).join("\n")}\nreturn 1;\n${"}\n".repeat(count)}return 0;\n}`;
+}
+
+function statements(count: number): string {
+	return `export function count(): number {\nlet value = 0;\n${"value += 1;\n".repeat(count - 2)}return value;\n}`;
+}
+
+function functionLines(count: number): string {
+	return `export function values(): readonly number[] {\nreturn [\n${"1,\n".repeat(count - 4)}];\n}`;
+}
+
+function fileLines(count: number): string {
+	return Array.from(
+		{ length: count },
+		(_, index) => `export const value${index} = ${index};`,
+	).join("\n");
+}
+
+const structuralCases = [
+	{
+		name: "modified production complexity",
+		code: "eslint/complexity",
+		pass: branches(9),
+		fail: branches(10),
+	},
+	{ name: "production nesting", code: "eslint/max-depth", pass: nesting(3), fail: nesting(4) },
+	{
+		name: "production parameter count",
+		code: "eslint/max-params",
+		pass: parameters(4),
+		fail: parameters(5),
+	},
+	{
+		name: "production statements",
+		code: "eslint/max-statements",
+		pass: statements(40),
+		fail: statements(41),
+	},
+	{
+		name: "production function lines",
+		code: "eslint/max-lines-per-function",
+		pass: functionLines(80),
+		fail: functionLines(81),
+	},
+	{
+		name: "production file lines",
+		code: "eslint/max-lines",
+		pass: fileLines(500),
+		fail: fileLines(501),
+	},
+];
+
+// Every probe owns a temporary project, so independent CLI runs can overlap.
+await suite("configured lint policy", { concurrency: probeConcurrency }, async () => {
+	for (const example of [...ruleCases, ...optionCases]) {
+		await test(`configured rule boundary: ${example.name}`, async () => {
+			await expectFindings(
+				{ compiler: { types: ["node"] }, files: { "pass.ts": example.pass } },
+				[],
+			);
+			const expected = example.rules.map((code) => ({
+				code,
+				file: "fail.ts",
+				line: example.name === "deprecated declarations" ? 3 : 1,
+			}));
+			await expectFindings(
+				{ compiler: { types: ["node"] }, files: { "fail.ts": example.fail } },
+				expected,
+			);
+		});
+	}
+
+	for (const example of structuralCases) {
+		await test(`configured structural boundary: ${example.name}`, async () => {
+			await expectFindings(
+				{ compiler: { types: ["node"] }, files: { "pass.ts": example.pass } },
+				[],
+			);
+			const specialLocations: Readonly<Record<string, number>> = {
+				"eslint/max-depth": 5,
+				"eslint/max-lines": 501,
+			};
+			const expectedLine = specialLocations[example.code] ?? 1;
+			await expectFindings(
+				{ compiler: { types: ["node"] }, files: { "fail.ts": example.fail } },
+				[{ code: example.code, file: "fail.ts", line: expectedLine }],
+			);
+		});
+	}
+
+	await test("test role retains branching and parameter limits while exempting size", async () => {
+		await expectFindings({ files: { "pass.test.ts": branches(14) } }, []);
+		await expectFindings({ files: { "fail.test.ts": branches(15) } }, [
+			{ code: "eslint/complexity", file: "fail.test.ts", line: 1 },
+		]);
+		await expectFindings({ files: { "pass.test.ts": nesting(4) } }, []);
+		await expectFindings({ files: { "fail.test.ts": nesting(5) } }, [
+			{ code: "eslint/max-depth", file: "fail.test.ts", line: 6 },
+		]);
+		await expectFindings({ files: { "pass.test.ts": parameters(6) } }, []);
+		await expectFindings({ files: { "fail.test.ts": parameters(7) } }, [
+			{ code: "eslint/max-params", file: "fail.test.ts", line: 1 },
+		]);
+		await expectFindings(
+			{
+				files: {
+					"large.test.ts": `${statements(100)}\n${fileLines(501)}\n${functionLines(100).replace("values", "manyValues")}`,
+				},
+			},
+			[],
+		);
+	});
+
+	await test("modified complexity counts one switch rather than every case", async () => {
+		const cases = Array.from(
+			{ length: 20 },
+			(_, index) => `case ${index}: return ${index};`,
+		).join("\n");
+		await expectFindings(
+			{
+				files: {
+					"switch.ts": `export function choose(input: number): number { switch (input) {\n${cases}\ndefault: return -1;\n} }`,
+				},
+			},
+			[],
+		);
+	});
+
+	await test("declaration files retain API safety without structural metrics", async () => {
+		await expectFindings(
+			{
+				files: {
+					"boundary.d.ts":
+						"export declare function call(a: number, b: number, c: number, d: number, e: number, f: number, g: number): number;",
+				},
+			},
+			[],
+		);
+		await expectFindings(
+			{ files: { "boundary.d.ts": "export interface Boundary { call(): void; }" } },
+			[{ code: "typescript/method-signature-style", file: "boundary.d.ts", line: 1 }],
+		);
+	});
+
+	await test("defined baseline choices retain accurate resource and diagnostic contracts", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts": [
+						"export function read(input: { count: number }): number { return input.count; }",
+						"export const callback: () => void = () => Math.abs(1);",
+						"export function diagnostic(input: unknown): string { return String(input); }",
+						"export async function forward(input: unknown): Promise<void> { await Promise.reject(input); }",
+						"export const controls = /[\\u0000]/u;",
+						"export function isString(input: unknown): input is string { return typeof input === 'string'; }",
+						"export function alreadyString(input: string): boolean { if (isString(input)) { return true; } return false; }",
+					].join("\n"),
+				},
+			},
+			[],
+		);
+	});
+
+	await test("nullable object presence checks and genuine void shorthand remain permitted", async () => {
+		await expectFindings(
+			{
+				files: {
+					"presence.ts":
+						"export function value(input: { readonly count: number } | undefined): number { if (input) { return input.count; } return 0; }",
+					"void.ts": "export const value: () => void = () => console.log('done');",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("async interfaces may complete immediately and caught failures retain identity", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export async function value(): Promise<number> { return 1; } export function propagate(): void { try { console.log('done'); } catch (error) { console.log('failed'); throw error; } }",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("sequential asynchronous work retains native await ownership", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export async function persist(items: readonly number[]): Promise<void> { for (const item of items) { await Promise.resolve(item); } }",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("terminal Promise callbacks may be void but interior callbacks must return", async () => {
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"pass.ts":
+						"export async function value(): Promise<void> { await Promise.resolve(1).then((input) => { console.log(input); }); }",
+				},
+			},
+			[],
+		);
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"fail.ts":
+						"export async function value(): Promise<void> { await Promise.resolve(1).then((input) => { console.log(input); }).then(() => 1); }",
+				},
+			},
+			[{ code: "promise/always-return", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("redundant catch rethrows remain detectable", async () => {
+		await expectFindings(
+			{
+				files: {
+					"fail.ts":
+						"export function value(): number { try { return Number('1'); } catch (error) { throw error; } }",
+				},
+			},
+			[{ code: "eslint/no-useless-catch", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("local sort and reverse stay allowed while void generic contracts stay real", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export const sorted = [2, 1].sort((a, b) => a - b); export const reversed = [1, 2].reverse(); export const pending: PromiseWithResolvers<void> = Promise.withResolvers();",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("dynamic execution constructs remain forbidden", async () => {
+		await expectFindings(
+			{
+				files: {
+					"fail.ts":
+						"export function value(input: string): unknown { return eval(input); }",
+				},
+			},
+			[{ code: "eslint/no-eval", file: "fail.ts", line: 1 }],
+		);
+		await expectFindings(
+			{ files: { "fail.ts": "export const value = new Function('return 1');" } },
+			[
+				{ code: "eslint/no-new-func", file: "fail.ts", line: 1 },
+				{ code: "typescript/no-implied-eval", file: "fail.ts", line: 1 },
+			],
+		);
+	});
+
+	await test("type imports and exports preserve runtime module contracts", async () => {
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"pass.ts": "import type { Stats } from 'node:fs'; export type Value = Stats;",
+					"fail.ts": "import { Stats } from 'node:fs'; export type Value = Stats;",
+				},
+			},
+			[{ code: "typescript/consistent-type-imports", file: "fail.ts", line: 1 }],
+		);
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"pass.ts": "interface Value { readonly count: number } export type { Value };",
+					"fail.ts": "interface Value { readonly count: number } export { Value };",
+				},
+			},
+			[{ code: "typescript/consistent-type-exports", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("duplicate and self imports remain detectable", async () => {
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"fail.ts":
+						"import { basename } from 'node:path'; import { dirname } from 'node:path'; export const value = basename('path') + dirname('path');",
+				},
+			},
+			[{ code: "import/no-duplicates", file: "fail.ts", line: 1 }],
+		);
+		await expectFindings(
+			{ files: { "fail.ts": "import './fail.ts'; export const value = 1;" } },
+			[
+				{ code: "import/no-self-import", file: "fail.ts", line: 1 },
+				{ code: "import/no-cycle", file: "fail.ts", line: 1 },
+				{ code: "import/no-unassigned-import", file: "fail.ts", line: 1 },
+			],
+		);
+	});
+
+	await test("native import analysis detects static dependency cycles", async () => {
+		await expectFindings(
+			{
+				files: {
+					"a.ts": "import { b } from './b.ts'; export function a(): string { return b(); }",
+					"b.ts": "import { a } from './a.ts'; export function b(): string { return a(); }",
+				},
+			},
+			[
+				{ code: "import/no-cycle", file: "a.ts", line: 1 },
+				{ code: "import/no-cycle", file: "b.ts", line: 1 },
+			],
+		);
+	});
+
+	await test("QX-011 records the published importer's external and awaited-dynamic cycle limits", async () => {
+		await expectFindings(
+			{
+				files: {
+					"external.ts":
+						"import { foreign } from '@quality/cycle'; export function external(): number { return foreign(); }",
+					"node_modules/@quality/cycle/package.json": JSON.stringify({
+						name: "@quality/cycle",
+						version: "1.0.0",
+						type: "module",
+						exports: "./index.ts",
+					}),
+					"node_modules/@quality/cycle/index.ts":
+						"import { external } from '../../../external.ts'; export function foreign(): number { return external(); }",
+				},
+				paths: ["external.ts"],
+			},
+			[],
+		);
+		await expectFindings(
+			{
+				files: {
+					"a.ts": "export async function a(): Promise<number> { const { b } = await import('./b.ts'); return b(); }",
+					"b.ts": "import { a } from './a.ts'; export async function b(): Promise<number> { return a(); }",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("type-only cycles are not exempt from import boundaries", async () => {
+		await expectFindings(
+			{
+				files: {
+					"a.ts": "import type { B } from './b.ts'; export interface A { readonly b: B }",
+					"b.ts": "import type { A } from './a.ts'; export interface B { readonly a: A }",
+				},
+			},
+			[
+				{ code: "import/no-cycle", file: "a.ts", line: 1 },
+				{ code: "import/no-cycle", file: "b.ts", line: 1 },
+			],
+		);
+	});
+
+	await test("string timer callbacks are implied evaluation", async () => {
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"pass.ts": "export const timer = setTimeout(() => { console.log(1); }, 1);",
+				},
+			},
+			[],
+		);
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: { "fail.ts": "export const timer = setTimeout('console.log(1)', 1);" },
+			},
+			[{ code: "typescript/no-implied-eval", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("allowed scalar interpolation and contextual void contracts stay valid", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export function value(input: boolean, count: number): string { return `value: ${input}, count: ${count}`; } export function noContext(this: void): void { console.log('done'); }",
+				},
+			},
+			[],
+		);
+	});
+
+	await test("generic callback results retain their actual contract without artificial readonly wrappers", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export function invoke<T>(operation: () => T): T { return operation(); }",
+					"fail.ts":
+						"export function invoke<T>(operation: () => T): T { console.log(JSON.parse('null').name); return operation(); }",
+				},
+			},
+			[{ code: "typescript/no-unsafe-member-access", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("inferred callback inputs do not waive parameter-property mutation protection", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts": "export const values = [{ count: 1 }].map((item) => item.count);",
+					"fail.ts":
+						"export const values = [{ count: 1 }].map((item) => { item.count += 1; return item.count; });",
+				},
+			},
+			[{ code: "eslint/no-param-reassign", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("native Promise executors deliberately discard timer handles using block bodies", async () => {
+		await expectFindings(
+			{
+				compiler: { types: ["node"] },
+				files: {
+					"pass.ts":
+						"export const work = new Promise<void>((resolve) => { setTimeout(resolve, 1); });",
+					"fail.ts":
+						"export const work = new Promise<void>((resolve) => setTimeout(resolve, 1));",
+				},
+			},
+			[{ code: "eslint/no-promise-executor-return", file: "fail.ts", line: 1 }],
+		);
+	});
+
+	await test("PromiseLike values have readonly permission but no floating-Promise exemption", async () => {
+		await expectFindings(
+			{
+				files: {
+					"pass.ts":
+						"export declare const work: PromiseLike<number>; export async function value(): Promise<number> { return await work; }",
+					"fail.ts":
+						"export declare const work: PromiseLike<number>; export function value(): void { work; }",
+				},
+			},
+			[
+				{ code: "typescript/no-floating-promises", file: "fail.ts", line: 1 },
+				{ code: "eslint/no-unused-expressions", file: "fail.ts", line: 1 },
+			],
+		);
+	});
+
+	await test("normal lint fixes cannot manufacture unknown contracts from explicit any", async () => {
+		const text = "export type Value = any;";
+		const project = fixture({ files: { "fail.ts": text } });
+		try {
+			const result = await runCli(
+				join(repository, "node_modules/.bin/oxlint"),
+				["--fix", "--format=json", "fail.ts"],
+				project.root,
+			);
+			assert.equal(result.signal, null);
+			assert.equal(result.stderr, "");
+			assert.equal(result.status, 1);
+			const output: unknown = JSON.parse(result.stdout);
+			assert.ok(objectValue(output) && Array.isArray(output.diagnostics));
+			const locations = output.diagnostics.map((value: unknown) => {
+				assert.ok(objectValue(value) && Array.isArray(value.labels));
+				const label: unknown = value.labels[0];
+				assert.ok(objectValue(label) && objectValue(label.span));
+				return { code: value.code, file: value.filename, line: label.span.line };
+			});
+			assert.deepEqual(locations, [
+				{ code: "typescript(no-explicit-any)", file: "fail.ts", line: 1 },
+			]);
+			assert.equal(readFileSync(join(project.root, "fail.ts"), "utf8"), text);
+		} finally {
+			project.dispose();
+		}
+	});
+});

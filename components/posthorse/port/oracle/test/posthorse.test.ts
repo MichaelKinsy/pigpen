@@ -1,0 +1,5249 @@
+import { strict as assert } from "node:assert";
+import { execFile, execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import {
+	chmodSync,
+	existsSync,
+	mkdirSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	realpathSync,
+	rmSync,
+	statSync,
+	symlinkSync,
+	unlinkSync,
+	utimesSync,
+	writeFileSync,
+	type StatOptions,
+} from "node:fs";
+import fsPromises from "node:fs/promises";
+import { syncBuiltinESMExports } from "node:module";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test, mock } from "node:test";
+import { createEditTool, SessionManager } from "@earendil-works/pi-coding-agent";
+import { fixturePolicy, loadFixture, requireValue, record, stringValue } from "./harness.ts";
+import { createPosthorse } from "../index.ts";
+import { buildAutoHandoff } from "../src/recovery.ts";
+import type { EntryLike } from "../src/contracts.ts";
+import { noteOperations } from "../src/note-tool-effects.ts";
+import type { PosthorseDisplay } from "../ui.ts";
+import { Type, type TSchema } from "typebox";
+import { Check } from "typebox/value";
+import { fixtureResult } from "./results.ts";
+
+type ContextInput = Readonly<Omit<TestContext, "sessionManager">> & {
+	readonly sessionManager: Readonly<TestContext["sessionManager"]>;
+};
+type Handler = (event: Readonly<Record<string, unknown>>, context: ContextInput) => unknown;
+type Tool = {
+	readonly execute: (
+		id: string,
+		params: Readonly<Record<string, unknown>>,
+		signal: AbortSignal,
+		onUpdate: () => void,
+		context: ContextInput,
+	) => Promise<{
+		content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>;
+		details?: PosthorseDisplay;
+	}>;
+};
+type TestContext = {
+	cwd: string;
+	model: { readonly contextWindow: number };
+	sessionManager: {
+		getHeader: SessionManager["getHeader"];
+		getEntries: () => readonly unknown[];
+		getBranch: () => readonly unknown[];
+		getLeafId?: () => string | null;
+		getEntry?: (id: string) => unknown;
+		getSessionId?: () => string;
+		getSessionFile: () => string | undefined;
+		getSessionDir: () => string;
+		buildSessionProjection: () => {
+			readonly entries: readonly {
+				readonly sourceEntry: unknown;
+				readonly messages: readonly unknown[];
+			}[];
+		};
+	};
+	getContextUsage: () =>
+		| {
+				readonly tokens: number | null;
+				readonly contextWindow: number;
+				readonly percent: number | null;
+		  }
+		| undefined;
+	getCompactionSettings: () => { readonly enabled: boolean; readonly reserveTokens: number };
+	getSystemPrompt: () => string;
+	hasPendingMessages?: (() => boolean) | undefined;
+};
+
+/** Fixture branches put nothing in the model's active context unless a test projects entries. */
+const emptyProjection = () => ({ entries: [] });
+
+function sessionIdentity() {
+	const manager = SessionManager.inMemory();
+	return {
+		getHeader: () => manager.getHeader(),
+		getSessionId: () => manager.getSessionId(),
+		getEntries(this: Pick<TestContext["sessionManager"], "getBranch">): readonly unknown[] {
+			return this.getBranch();
+		},
+	};
+}
+
+/** Unit branches have implicit ancestry; supply the same by-id access as SessionManager. */
+function indexedBranch(branch: readonly Readonly<Record<string, unknown>>[]) {
+	// Own normalized entries and keep their identity stable, like SessionManager's by-id index.
+	const normalized = new WeakMap<object, Record<string, unknown>>();
+	const link = () =>
+		branch.map((entry, index) => {
+			let owned = normalized.get(entry);
+			if (owned === undefined) {
+				owned = {};
+				normalized.set(entry, owned);
+			}
+			Object.assign(owned, entry, {
+				id: entry.id ?? `fixture-${index}`,
+				parentId:
+					entry.parentId ??
+					(index > 0
+						? (requireValue(branch[index - 1]).id ?? `fixture-${index - 1}`)
+						: null),
+			});
+			return owned;
+		});
+	return {
+		...sessionIdentity(),
+		getBranch: () => link(),
+		getLeafId: () => {
+			const id = link().at(-1)?.id;
+			return id === undefined ? null : stringValue(id);
+		},
+		getEntry: (id: string) => link().find((entry) => entry.id === id),
+		getSessionFile: (): string | undefined => undefined,
+	};
+}
+
+async function setup() {
+	const loaded = await loadFixture(createPosthorse(fixturePolicy));
+	const handlers = new Map<string, Handler>();
+	for (const [name, callbacks] of loaded.extension.handlers) {
+		const callback = requireValue(callbacks[0], name);
+		handlers.set(name, callback);
+	}
+	const tools = new Map<string, Tool>();
+	for (const [name, registration] of loaded.extension.tools) {
+		tools.set(name, {
+			async execute(id, params, signal, onUpdate, context) {
+				assert.ok(
+					Check(registration.definition.parameters, params),
+					"Unit tool arguments must satisfy the registered schema",
+				);
+				handlers.get("tool_execution_start")?.(
+					{ type: "tool_execution_start", toolCallId: id, toolName: name, args: params },
+					context,
+				);
+				const value: unknown = await Reflect.apply(
+					registration.definition.execute.bind(registration.definition),
+					undefined,
+					[id, params, signal, onUpdate, context],
+				);
+				handlers.get("tool_execution_end")?.(
+					{
+						type: "tool_execution_end",
+						toolCallId: id,
+						toolName: name,
+						result: value,
+						isError: false,
+					},
+					context,
+				);
+				return fixtureResult(value);
+			},
+		});
+	}
+	const toolDefinitions: Array<{ name: string; description?: string; parameters?: TSchema }> = [
+		...loaded.extension.tools.values(),
+	].map(({ definition }) => definition);
+	const messages: Array<{
+		customType?: string;
+		content: string;
+		display?: boolean;
+		details?: { windowId?: string | undefined } | undefined;
+	}> = [];
+	loaded.runtime.sendMessage = (message) => {
+		const details = message.details === undefined ? undefined : record(message.details);
+		const windowId = details?.windowId;
+		assert.ok(windowId === undefined || typeof windowId === "string");
+		messages.push({
+			...message,
+			content: stringValue(message.content),
+			details: details === undefined ? undefined : { ...details, windowId },
+		});
+	};
+	loaded.runtime.appendEntry = () => {
+		// Automatic-boundary fixtures provide their sentinel id through getLeafId.
+	};
+	loaded.runtime.getActiveTools = () => [...tools.keys()];
+	loaded.runtime.getAllTools = () =>
+		toolDefinitions.map((tool) => ({
+			name: tool.name,
+			description: tool.description ?? "",
+			parameters: tool.parameters ?? Type.Unknown(),
+			exposure: "direct",
+			sourceInfo: loaded.extension.sourceInfo,
+		}));
+	const context: TestContext = {
+		cwd: process.cwd(),
+		model: { contextWindow: 100_000 },
+		sessionManager: {
+			...indexedBranch([]),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getSessionDir: () => tmpdir(),
+		},
+		getContextUsage: () => ({ tokens: 1000, contextWindow: 100_000, percent: 1 }),
+		getCompactionSettings: () => ({ enabled: true, reserveTokens: 16_384 }),
+		getSystemPrompt: () => "You are a test assistant.",
+	};
+	return { handlers, tools, toolDefinitions, messages, context };
+}
+
+function toolText(result: { readonly content: readonly { readonly text?: string }[] }): string {
+	return result.content.map((part) => part.text ?? "").join("\n");
+}
+
+function guidanceFor(
+	handlers: { readonly get: (name: string) => Handler | undefined },
+	context: ContextInput,
+): string {
+	const event = {
+		messages: [{ role: "system", content: "", sections: record({}), timestamp: 0 }],
+	};
+	requireValue(handlers.get("context_with_system"))(event, context);
+	return stringValue(requireValue(event.messages[0]).sections.posthorse);
+}
+
+/** Calibrate fake native usage so an exact page boundary includes the delivered guidance. */
+function pageContext(
+	handlers: { readonly get: (name: string) => Handler | undefined },
+	context: ContextInput,
+): TestContext {
+	const guidanceTokens = Math.ceil(guidanceFor(handlers, context).length / 4);
+	return {
+		...context,
+		getContextUsage() {
+			const usage = context.getContextUsage();
+			if (!usage || usage.tokens === null) {
+				return usage;
+			}
+			const tokens = usage.tokens - guidanceTokens;
+			return { ...usage, tokens, percent: (tokens / usage.contextWindow) * 100 };
+		},
+	};
+}
+
+/** The file-qualified id search prints; 0.6 printed the whole digest (`legacy`), which still reads. */
+function archivedId(id: string, source: string, legacy = false): string {
+	const digest = createHash("sha256").update(source).digest("base64url");
+	return `${id}@${legacy ? digest : digest.slice(0, 10)}`;
+}
+
+function writeArchive(file: string, content: string) {
+	writeFileSync(
+		file,
+		`${JSON.stringify({ type: "session", id: file, cwd: process.cwd() })}\n${content}`,
+	);
+}
+
+function run(
+	tools: { readonly get: (name: string) => Tool | undefined },
+	name: string,
+	params: Readonly<Record<string, unknown>>,
+	context: ContextInput,
+) {
+	return requireValue(tools.get(name)).execute(
+		"id",
+		params,
+		new AbortController().signal,
+		() => {
+			// These direct executions do not stream updates.
+		},
+		context,
+	);
+}
+
+function notesIn(tools: ReadonlyMap<string, Tool>, context: TestContext) {
+	const sessions = new Map<string, SessionManager>();
+	return (cwd: string, params: Readonly<Record<string, unknown>>) => {
+		const sessionManager = sessions.get(cwd) ?? SessionManager.inMemory(cwd);
+		sessions.set(cwd, sessionManager);
+		return run(tools, "notes", params, { ...context, cwd, sessionManager });
+	};
+}
+
+function turnEnd(
+	handlers: { readonly get: (name: string) => Handler | undefined },
+	context: ContextInput,
+	toolResults: readonly Readonly<Record<string, unknown>>[] = [],
+) {
+	requireValue(handlers.get("turn_end"))(
+		{
+			message: {
+				role: "assistant",
+				stopReason: toolResults.length > 0 ? "toolUse" : "stop",
+				content: [],
+			},
+			toolResults,
+			continue: true,
+			entries: [],
+			context: { pendingMessages: [] },
+		},
+		context,
+	);
+}
+
+/** A context whose usage sits at `tokens` inside a window of `contextWindow`. */
+function usageContext(
+	base: ContextInput,
+	contextWindow: number,
+	tokens: number,
+	reserveTokens = 16_384,
+	enabled = true,
+): TestContext {
+	return {
+		...base,
+		model: { contextWindow },
+		getContextUsage: () => ({ tokens, contextWindow, percent: (tokens / contextWindow) * 100 }),
+		getCompactionSettings: () => ({ enabled, reserveTokens }),
+	};
+}
+
+function automaticResult(
+	handlers: { readonly get: (name: string) => Handler | undefined },
+	context: ContextInput,
+	branchEntries: readonly Readonly<Record<string, unknown>>[],
+	projected?: readonly {
+		readonly sourceEntry: unknown;
+		readonly messages: readonly unknown[];
+	}[],
+) {
+	const entries =
+		projected ??
+		branchEntries
+			.filter((entry) => entry.type === "message")
+			.map((entry) => ({ sourceEntry: entry, messages: [entry.message] }));
+	const result = requireValue(handlers.get("session_before_compact"))(
+		{
+			reason: "threshold",
+			branchEntries,
+			signal: new AbortController().signal,
+			preparation: {
+				settings: { ...context.getCompactionSettings(), keepRecentTokens: 0 },
+				tokensBefore: 100,
+			},
+		},
+		{
+			...context,
+			sessionManager: {
+				...context.sessionManager,
+				getLeafId: () => "boundary",
+				getBranch: () => {
+					throw new Error("Use compaction event history");
+				},
+				buildSessionProjection: () => ({ entries }),
+			},
+		},
+	);
+	return result === undefined ? undefined : record(result);
+}
+function automaticHandoff(
+	handlers: { readonly get: (name: string) => Handler | undefined },
+	context: ContextInput,
+	branchEntries: readonly Readonly<Record<string, unknown>>[],
+) {
+	const result = record(automaticResult(handlers, context, branchEntries));
+	return stringValue(record(result.compaction).summary);
+}
+
+await test("new_context requests a turn-boundary reset and automatic rollover builds a recovery record", async () => {
+	const { handlers, tools, context } = await setup();
+	const result = await run(tools, "new_context", { handoff: "continue here" }, context);
+	assert.match(toolText(result), /Requested a fresh Pi context/);
+	assert.equal(
+		requireValue(handlers.get("session_before_compact"))({ reason: "manual" }, context),
+		undefined,
+		"manual /compact is left to Pi",
+	);
+
+	const handoff = automaticHandoff(handlers, context, [
+		{
+			type: "message",
+			id: "user",
+			timestamp: "2026-09-02T10:00:00Z",
+			message: { role: "user", content: "keep working on the fix" },
+		},
+	]);
+	assert.match(handoff, /^Automatic context rollover recovery record\./);
+	assert.match(handoff, /owner input.*entry user/);
+	assert.match(handoff, /keep working on the fix/);
+	assert.match(handoff, /not current progress/);
+
+	const prior = automaticHandoff(handlers, context, [
+		{
+			type: "context_window",
+			id: "prior",
+			timestamp: "2026-09-02T10:01:00Z",
+			handoff: "persisted task",
+		},
+	]);
+	assert.match(prior, /older checkpoint; possibly stale/);
+	assert.match(prior, /persisted task/);
+	assert.match(prior, /No selected current-window/);
+	assert.ok(prior.indexOf("No selected current-window") < prior.indexOf("older checkpoint"));
+
+	const nonRecursive = automaticHandoff(handlers, context, [
+		{
+			type: "context_window",
+			id: "prior-auto",
+			timestamp: "2026-09-02T10:02:00Z",
+			handoff: "Automatic context rollover recovery record.\nSECRET NESTED TEXT",
+		},
+	]);
+	assert.match(nonRecursive, /Earlier automatic records skipped/);
+	assert.match(nonRecursive, /prior-auto/);
+	assert.doesNotMatch(nonRecursive, /SECRET NESTED TEXT/);
+});
+
+await test("a minimum-budget automatic record keeps a complete history pointer without nested evidence", () => {
+	const boundary = {
+		type: "compaction",
+		id: "deadbeef",
+		firstKeptEntryId: null,
+		details: { posthorse: 1, reason: "threshold" },
+		summary: "Automatic context rollover recovery record.\nOLD_EVIDENCE",
+	};
+	const branches = [
+		[boundary],
+		Array.from({ length: 100 }, (_unused, index) => ({
+			...boundary,
+			id: `record-${index}`,
+		})),
+	];
+	for (const [index, entries] of branches.entries()) {
+		const handoff = buildAutoHandoff(entries, [], 1_000, {
+			ownerQuestionRegistered: false,
+		});
+		assert.ok(handoff.length <= 1_000);
+		assert.match(
+			handoff,
+			index === 0 ? /use history read.*deadbeef/ : /use history read.*record-99/,
+		);
+		assert.doesNotMatch(handoff, /OLD_EVIDENCE/);
+		if (index === 1) {
+			assert.match(handoff, /99 earlier record\(s\) not listed/);
+		}
+	}
+});
+
+await test("automatic ancestry stops at the nearest owner window without resurrecting superseded intent", async () => {
+	const { handlers, context } = await setup();
+	const automatic = (id: string) => ({
+		type: "compaction",
+		id,
+		firstKeptEntryId: null,
+		details: { posthorse: 1, reason: "threshold" },
+		summary: "Automatic context rollover recovery record.\nSECRET_NESTED_TOOL_EVIDENCE",
+	});
+	const branch = [
+		{
+			type: "message",
+			id: "superseded",
+			message: { role: "user", content: "SUPERSEDED_OWNER_INTENT" },
+		},
+		automatic("auto-1"),
+		{
+			type: "message",
+			id: "nearest-owner",
+			timestamp: "2026-10-10T16:40:00Z",
+			message: {
+				role: "user",
+				content: `CURRENT_OWNER_START ${"x".repeat(15_000)} CURRENT_OWNER_TAIL`,
+			},
+		},
+		automatic("auto-2"),
+		automatic("auto-3"),
+	];
+	const handoff = automaticHandoff(handlers, context, branch);
+	assert.ok(handoff.length <= 20_000);
+	assert.match(handoff, /CURRENT_OWNER_START/);
+	assert.match(handoff, /CURRENT_OWNER_TAIL/);
+	assert.match(handoff, /owner input; carried from an earlier window/);
+	assert.match(handoff, /2026-10-10T16:40:00Z \| entry nearest-owner/);
+	assert.match(handoff, /auto-3, auto-2/);
+	assert.doesNotMatch(handoff, /SUPERSEDED_OWNER_INTENT|SECRET_NESTED_TOOL_EVIDENCE|auto-1/);
+});
+
+await test("automatic recovery keeps owner anchors and visible coordination without stale transcript guesses", async () => {
+	const { handlers, context, toolDefinitions } = await setup();
+	toolDefinitions.push({ name: "ask_question" });
+	const branch: Record<string, unknown>[] = [
+		{
+			type: "message",
+			id: "old",
+			message: { role: "user", content: "old completed task" },
+		},
+		{
+			type: "context_window",
+			id: "window-2",
+			timestamp: "2026-09-02T10:00:00Z",
+			handoff: "Original approved goal",
+		},
+		{
+			type: "custom_message",
+			id: "hidden",
+			timestamp: "2026-09-02T10:01:00Z",
+			customType: "todo-list-context",
+			content: "hidden state",
+			display: false,
+		},
+		{
+			type: "custom_message",
+			id: "reminder",
+			timestamp: "2026-09-02T10:02:00Z",
+			customType: "posthorse-reminder",
+			content: "stale reminder",
+			display: true,
+		},
+		{
+			type: "message",
+			id: "owner-start",
+			timestamp: "2026-09-02T10:03:00Z",
+			message: {
+				role: "user",
+				content: `FIRST OWNER REQUEST ${"a".repeat(9_000)} OWNER REQUEST TAIL`,
+			},
+		},
+		{
+			type: "message",
+			id: "ordinary-tool",
+			timestamp: "2026-09-02T10:04:00Z",
+			message: {
+				role: "toolResult",
+				toolName: "bash",
+				content: "assistant-derived state",
+			},
+		},
+	];
+	for (let index = 0; index < 8; index++) {
+		branch.push({
+			type: "custom_message",
+			id: `coord-${index}`,
+			timestamp: `2026-09-02T10:${10 + index}:00Z`,
+			customType: "intercom_message",
+			content: `coordination ${index} ${"x".repeat(3_500)}`,
+			display: true,
+		});
+		if (index === 3) {
+			branch.push({
+				type: "message",
+				id: "owner-middle",
+				timestamp: "2026-09-02T10:13:30Z",
+				message: {
+					role: "user",
+					content: "Do not touch the billing tables\n\nuntil I confirm",
+				},
+			});
+		}
+	}
+	branch.push(
+		{
+			type: "message",
+			id: "question-call",
+			message: {
+				role: "assistant",
+				content: [
+					{ type: "toolCall", id: "question", name: "ask_question", arguments: {} },
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "owner-answer",
+			timestamp: "2026-09-02T10:20:00Z",
+			message: {
+				role: "toolResult",
+				toolName: "ask_question",
+				toolCallId: "question",
+				isError: false,
+				content: "OWNER APPROVED SHIP",
+			},
+		},
+		{
+			type: "custom_message",
+			id: "latest-correction",
+			timestamp: "2026-09-02T10:21:00Z",
+			customType: "agent-irc",
+			content: "LATEST COORDINATION CORRECTION",
+			display: true,
+		},
+	);
+
+	const handoff = automaticHandoff(handlers, context, branch);
+	assert.ok(handoff.length <= 20_000);
+	assert.match(handoff, /Original approved goal/);
+	assert.match(handoff, /FIRST OWNER REQUEST/);
+	assert.match(handoff, /OWNER REQUEST TAIL/);
+	assert.match(handoff, /middle omitted/);
+	assert.match(handoff, /OWNER APPROVED SHIP/);
+	assert.match(handoff, /LATEST COORDINATION CORRECTION/);
+	assert.match(handoff, /not direct owner input/);
+	// Inputs outside the fixed anchors are indexed by entry; owner inputs keep a one-line preview.
+	assert.match(
+		handoff,
+		/Other current-window inputs, oldest first \(recover with history read\):/,
+	);
+	for (let index = 0; index < 8; index++) {
+		assert.match(handoff, new RegExp(`\\| entry coord-${index}\\]`));
+	}
+	assert.doesNotMatch(handoff, /coordination \d x/);
+	assert.match(
+		handoff,
+		/\[owner input \| 2026-09-02T10:13:30Z \| entry owner-middle\] Do not touch the billing tables until I confirm/,
+	);
+	assert.ok(handoff.indexOf("entry owner-start") < handoff.indexOf("entry owner-answer"));
+	assert.ok(handoff.indexOf("entry owner-answer") < handoff.indexOf("entry latest-correction"));
+	assert.ok(handoff.indexOf("entry latest-correction") < handoff.indexOf("older checkpoint"));
+	assert.doesNotMatch(
+		handoff,
+		/old completed task|hidden state|stale reminder|assistant-derived state/,
+	);
+});
+
+for (const { contextWindow, reserve, remindAt } of [
+	{ contextWindow: 100_000, reserve: 64_000, remindAt: 32_401 },
+	{ contextWindow: 335_000, reserve: 16_384, remindAt: 286_756 },
+	{ contextWindow: 335_000, reserve: 64_000, remindAt: 243_901 },
+	{ contextWindow: 262_144, reserve: 64_000, remindAt: 178_331 },
+	{ contextWindow: 262_144, reserve: 16_384, remindAt: 221_185 },
+	{ contextWindow: 1_048_576, reserve: 16_384, remindAt: 1_000_193 },
+]) {
+	await test(`budget policy sends one reminder and lets Pi own rollover (window=${contextWindow}, reserve=${reserve})`, async () => {
+		const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-test-"));
+		try {
+			// A project file that disagrees with Pi's effective policy must be ignored: Pi decides trust, not Posthorse.
+			mkdirSync(join(dir, ".pi"));
+			writeFileSync(
+				join(dir, ".pi", "settings.json"),
+				JSON.stringify({ compaction: { enabled: false, reserveTokens: 1 } }),
+			);
+			const { handlers, messages, tools } = await setup();
+			const threshold = contextWindow - reserve;
+			const rolloverAt = threshold + 1;
+			let tokens = remindAt - 1;
+			const branch: Record<string, unknown>[] = [{ type: "context_window", id: "window-2" }];
+			let branchReads = 0;
+			const context: TestContext = {
+				cwd: dir,
+				model: { contextWindow },
+				sessionManager: {
+					...indexedBranch(branch),
+					getSessionFile: (): string | undefined => undefined,
+					buildSessionProjection: emptyProjection,
+					getBranch: () => {
+						branchReads++;
+						return branch;
+					},
+					getSessionDir: () => dir,
+				},
+				getContextUsage: () => ({
+					tokens,
+					contextWindow,
+					percent: (tokens / contextWindow) * 100,
+				}),
+				getCompactionSettings: () => ({
+					enabled: true,
+					reserveTokens: reserve,
+				}),
+				getSystemPrompt: () => "You are a test assistant.",
+			};
+
+			requireValue(handlers.get("session_start"))({}, context);
+			turnEnd(handlers, context);
+			assert.equal(messages.length, 0, "no reminder below the band");
+			assert.equal(branchReads, 0, "below-band turns must not fetch history");
+			tokens = remindAt;
+			await run(tools, "new_context", {}, context);
+			turnEnd(handlers, context, [{ toolName: "new_context", toolCallId: "id" }]);
+			assert.equal(messages.length, 0);
+			requireValue(handlers.get("turn_end"))(
+				{ message: { role: "assistant", stopReason: "error" }, toolResults: [] },
+				context,
+			);
+			assert.equal(messages.length, 0);
+			requireValue(handlers.get("turn_end"))(
+				{ message: { role: "assistant", stopReason: "aborted" }, toolResults: [] },
+				context,
+			);
+			assert.equal(messages.length, 0);
+			assert.equal(
+				branchReads,
+				0,
+				"successful rollover batches, errors, and aborts need no history",
+			);
+
+			turnEnd(handlers, context);
+			assert.equal(messages.length, 1);
+			assert.match(requireValue(messages[0]).content, /Routine task-note update/);
+			assert.deepEqual(requireValue(messages[0]).details, {
+				windowId: "window-2",
+				contextWindow,
+				reserveTokens: reserve,
+			});
+			assert.equal(
+				branchReads,
+				0,
+				"reminder checks use by-id ancestry, not a full branch copy",
+			);
+			branch.push({
+				type: "custom_message",
+				customType: "posthorse-reminder",
+				details: requireValue(messages[0]).details,
+			});
+
+			tokens = threshold;
+			turnEnd(handlers, context);
+			assert.equal(messages.length, 1, "Pi does not roll at exact threshold equality");
+			branch.pop();
+			messages.length = 0;
+			turnEnd(handlers, context);
+			assert.equal(messages.length, 1, "Posthorse still offers a checkpoint at equality");
+			assert.equal(branchReads, 0, "in-band checks do not materialize the branch");
+
+			messages.length = 0;
+			tokens = rolloverAt;
+			turnEnd(handlers, context);
+			assert.equal(
+				messages.length,
+				0,
+				"Pi owns the first token that actually triggers rollover",
+			);
+			assert.equal(branchReads, 0, "rollover equality must not fetch history");
+			tokens += 1_000;
+			turnEnd(handlers, context);
+			assert.equal(
+				messages.length,
+				0,
+				"Posthorse also stays out of Pi's over-threshold path",
+			);
+			assert.equal(branchReads, 0, "over-threshold turns must not fetch history");
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+}
+
+await test("reminders respect live pending messages and tool calls even with a stop reason", async () => {
+	await Promise.all(
+		[undefined, false, true].map(async (pending) => {
+			const { handlers, messages, context } = await setup();
+			const host = {
+				...usageContext(context, 100_000, 80_000),
+				hasPendingMessages: pending === undefined ? undefined : () => pending,
+			};
+			const event = {
+				message: { role: "assistant", stopReason: "stop", content: [] },
+				toolResults: [],
+				entries: [],
+				continue: false,
+				context: { pendingMessages: [] },
+			};
+			requireValue(handlers.get("turn_end"))(event, host);
+			assert.equal(messages.length, pending === true ? 1 : 0);
+		}),
+	);
+	const { handlers, messages, context } = await setup();
+	requireValue(handlers.get("turn_end"))(
+		{
+			message: {
+				role: "assistant",
+				stopReason: "stop",
+				content: [
+					{
+						type: "toolCall",
+						id: "id",
+						name: "get_context_remaining",
+						arguments: {},
+					},
+				],
+			},
+			toolResults: [],
+			entries: [],
+			continue: false,
+			context: { pendingMessages: [] },
+		},
+		usageContext(context, 100_000, 80_000),
+	);
+	assert.equal(messages.length, 1, "tool calls make a stop turn a working turn");
+});
+
+await test("a large reserve does not send checkpoint reminders in a fresh window", async () => {
+	const { handlers, messages, context: base } = await setup();
+	for (const tokens of [1000, 9000]) {
+		turnEnd(handlers, usageContext(base, 400_000, tokens, 390_000));
+	}
+	assert.equal(
+		messages.length,
+		0,
+		"a fresh 10K usable window must not immediately checkpoint again",
+	);
+	turnEnd(handlers, usageContext(base, 400_000, 9001, 390_000));
+	assert.equal(messages.length, 1);
+	assert.match(requireValue(messages[0]).content, /Routine task-note update/);
+});
+
+await test("each safety evaluation reads native usage and policy once, including unknown pages and final handoff validation", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "posthorse-snapshot-"));
+	try {
+		mkdirSync(join(dir, ".pi", "notes"), { recursive: true });
+		writeFileSync(join(dir, ".pi", "notes", "state.md"), "saved state");
+		const { handlers, tools, context } = await setup();
+		context.cwd = dir;
+		let usageReads = 0,
+			policyReads = 0,
+			known = true,
+			enabled = true,
+			available = true;
+		context.getContextUsage = () => {
+			usageReads++;
+			if (!available) {
+				return;
+			}
+			return {
+				tokens: known ? 1000 : null,
+				contextWindow: 100_000,
+				percent: known ? 1 : null,
+			};
+		};
+		context.getCompactionSettings = () => {
+			policyReads++;
+			return { enabled, reserveTokens: 16_384 };
+		};
+		const once = async <T>(action: () => T, expectedPolicyReads = 1): Promise<Awaited<T>> => {
+			usageReads = 0;
+			policyReads = 0;
+			const result = await action();
+			assert.equal(usageReads, 1, "one authoritative native acquisition per evaluation");
+			assert.equal(
+				policyReads,
+				expectedPolicyReads,
+				"at most one settings acquisition per evaluation, only when needed",
+			);
+			return result;
+		};
+		const guidance = await once(() => guidanceFor(handlers, context));
+		assert.match(guidance, /rollover line is 83,617 tokens used/);
+		for (known of [true, false]) {
+			for (const op of ["read", "list", "search"]) {
+				assert.match(
+					toolText(
+						// Each evaluation owns the shared acquisition counters and current policy state.
+						await once(() =>
+							run(tools, "notes", { op, path: "state.md", query: "saved" }, context),
+						),
+					),
+					/state\.md|saved state/,
+				);
+			}
+			assert.match(
+				toolText(
+					// Finish the current policy evaluation before changing the shared fixture state.
+					await once(() => run(tools, "new_context", { handoff: "continue" }, context)),
+				),
+				/Requested/,
+			);
+		}
+		enabled = false;
+		const drafts = record(
+			await once(() =>
+				requireValue(handlers.get("turn_end"))(
+					{
+						message: { role: "assistant", stopReason: "toolUse" },
+						toolResults: [{ toolName: "new_context", toolCallId: "id" }],
+						entries: [],
+						context: { pendingMessages: [] },
+					},
+					context,
+				),
+			),
+		);
+		assert.ok(Array.isArray(drafts.entries));
+		assert.equal(
+			record(drafts.entries[0]).summary,
+			"continue",
+			"final handoff evaluation is independent of execute",
+		);
+		const reminder = {
+			role: "custom",
+			customType: "posthorse-reminder",
+			details: { windowId: "initial", contextWindow: 100_000, reserveTokens: 16_384 },
+		};
+		assert.deepEqual(
+			await once(() =>
+				requireValue(handlers.get("context"))(
+					{ messages: Array.from({ length: 30 }, () => ({ ...reminder })) },
+					context,
+				),
+			),
+			{ messages: [] },
+		);
+		available = false;
+		assert.match(
+			toolText(
+				await once(() => run(tools, "notes", { op: "read", path: "state.md" }, context), 0),
+			),
+			/saved state/,
+			"an absent native reading is memoized too",
+		);
+		assert.match(
+			guidanceFor(handlers, {
+				...context,
+				model: { contextWindow: 2_000_000 },
+				getContextUsage: (): ReturnType<TestContext["getContextUsage"]> => undefined,
+			}),
+			/capacity is unknown/,
+			"a virtual declaration is not a replacement for the native routed limit",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+for (const archived of [10, 43_000]) {
+	await test(`reminder lookups are leaf-certified and preserve the full kept range (${archived} archived entries)`, async () => {
+		const { handlers, messages, context: base } = await setup();
+		const manager = SessionManager.inMemory();
+		for (let i = 0; i < archived; i++) {
+			manager.appendCustomEntry("old", {});
+		}
+		const window = manager.appendCompaction("carry on", null, 100, { posthorse: 1 });
+		const fingerprint = { windowId: window, contextWindow: 100_000, reserveTokens: 16_384 };
+		const reminder = manager.appendCustomMessageEntry(
+			"posthorse-reminder",
+			"Checkpoint now",
+			true,
+			fingerprint,
+		);
+		manager.appendMessage({ role: "user", content: "kept", timestamp: 1 });
+		manager.appendCompaction("native summary", reminder, 100);
+		let reads = 0;
+		const context = {
+			...usageContext(base, 100_000, 76_000),
+			sessionManager: {
+				getHeader: () => manager.getHeader(),
+				getEntries: () => manager.getEntries(),
+				getSessionId: () => manager.getSessionId(),
+				getLeafId: () => manager.getLeafId(),
+				getEntry: (id: string) => {
+					reads++;
+					return manager.getEntry(id);
+				},
+				getBranch: () => {
+					throw new Error("Reminder checks must not copy full history");
+				},
+				getSessionDir: () => manager.getSessionDir(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+			},
+		};
+		turnEnd(handlers, context);
+		assert.equal(
+			messages.length,
+			0,
+			"native compaction retains a reminder before its own entry",
+		);
+		assert.equal(
+			reads,
+			4,
+			"cold lookup stops at the Posthorse boundary, independent of archive size",
+		);
+		for (let i = 0; i < 5; i++) {
+			turnEnd(handlers, context);
+		}
+		assert.equal(reads, 9, "unchanged leaf needs only one by-id certification");
+		manager.appendCustomEntry("new", {});
+		reads = 0;
+		turnEnd(handlers, context);
+		assert.equal(reads, 2, "append lookup stops at the certified previous leaf");
+		assert.equal(messages.length, 0);
+		const removed = manager.appendCompaction("removed reminder", null, 100);
+		turnEnd(handlers, context);
+		assert.equal(
+			messages.length,
+			1,
+			"removal permits a new reminder in the same logical window",
+		);
+		assert.deepEqual(requireValue(messages[0]).details, fingerprint);
+		manager.branch(reminder);
+		turnEnd(handlers, context);
+		assert.equal(
+			messages.length,
+			1,
+			"navigation back restores the kept reminder without stale negative state",
+		);
+		manager.branch(removed);
+		requireValue(handlers.get("session_tree"))({}, context);
+		turnEnd(handlers, context);
+		assert.equal(messages.length, 2, "navigation forward restores its absence");
+		requireValue(handlers.get("session_start"))({}, context);
+		turnEnd(handlers, context);
+		assert.equal(
+			messages.length,
+			3,
+			"session lifecycle invalidates branch facts, not safety snapshots",
+		);
+
+		const initial = SessionManager.inMemory();
+		for (let i = 0; i < archived; i++) {
+			initial.appendCustomEntry("old", {});
+		}
+		const noWindow = {
+			...context,
+			sessionManager: {
+				...context.sessionManager,
+				getHeader: () => initial.getHeader(),
+				getEntries: () => initial.getEntries(),
+				getSessionId: () => initial.getSessionId(),
+				getLeafId: () => initial.getLeafId(),
+				getEntry: (id: string) => {
+					reads++;
+					return initial.getEntry(id);
+				},
+			},
+		};
+		reads = 0;
+		turnEnd(handlers, noWindow);
+		assert.equal(reads, archived, "a negative cold lookup is complete, never capped");
+		reads = 0;
+		turnEnd(handlers, noWindow);
+		assert.equal(reads, 1, "negative state is cached only for the certified leaf and session");
+		assert.equal(messages.at(-1)?.details?.windowId, "initial");
+	});
+}
+
+await test("guidance uses request-local sections and preserves custom or forced prompts", async () => {
+	const { handlers, context } = await setup();
+	const handler = requireValue(handlers.get("before_agent_start"));
+	const sections: Record<string, string> = { other: "Keep this policy" };
+	const options = { sections, customPrompt: "Custom instructions" };
+	assert.equal(
+		handler({ systemPrompt: "Custom instructions", systemPromptOptions: options }, context),
+		undefined,
+	);
+	assert.equal(sections.other, "Keep this policy");
+	const guidance = guidanceFor(handlers, context);
+	assert.match(guidance, /Automatic context management \(Posthorse\)/);
+	assert.match(guidance, /goal, progress, decisions, and next steps[\s\S]*file-editing tools/);
+	assert.match(guidance, /verify live state/);
+	assert.match(guidance, /Configured context capacity: 100,000 tokens/);
+	assert.match(guidance, /rollover line is 83,617 tokens used/);
+	assert.match(
+		guidance,
+		/Before reporting a remaining-token count or changing your work plan because of context limits, call get_context_remaining/,
+	);
+	assert.match(guidance, /If usage is unknown, report it as unknown/);
+
+	const forcedOptions = { sections: {}, forceSystemPrompt: "Forced instructions" };
+	handler({ systemPromptOptions: forcedOptions }, context);
+	const event = {
+		messages: [{ role: "system", content: "Forced instructions", timestamp: 0 }],
+	};
+	requireValue(handlers.get("context_with_system"))(event, context);
+	assert.equal(forcedOptions.forceSystemPrompt, "Forced instructions");
+	assert.equal(requireValue(event.messages[0]).content, "Forced instructions");
+	assert.match(
+		requireValue(event.messages[1]).content,
+		/Configured context capacity: 100,000 tokens/,
+	);
+});
+
+await test("disabled Pi compaction disables automatic Posthorse behavior but not new_context", async () => {
+	const { handlers, messages, tools, context: base } = await setup();
+	const context: TestContext = {
+		...base,
+		getContextUsage: () => ({ tokens: 99_000, contextWindow: 100_000, percent: 99 }),
+		getCompactionSettings: () => ({ enabled: false, reserveTokens: 16_384 }),
+	};
+	const guidance = guidanceFor(handlers, context);
+	assert.match(guidance, /Pi compaction is disabled/);
+	assert.match(guidance, /Automatic context management \(Posthorse\)/);
+	assert.match(guidance, /Configured context capacity: 100,000 tokens/);
+	assert.doesNotMatch(guidance, /rollover line is .* tokens used/);
+	turnEnd(handlers, context);
+	assert.equal(messages.length, 0);
+	const remaining = toolText(await run(tools, "get_context_remaining", {}, context));
+	assert.match(remaining, /Automatic rollover is disabled/);
+	assert.match(remaining, /1,000 tokens until the configured context limit/);
+	const result = await run(tools, "new_context", {}, context);
+	assert.match(toolText(result), /Requested a fresh Pi context/);
+});
+
+await test("disabling compaction filters persisted reminders without changing history or deduplication", async () => {
+	const { handlers, context: base, messages } = await setup();
+	let enabled = true;
+	const reminder = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "Checkpoint now",
+		details: { windowId: "initial", contextWindow: 100_000, reserveTokens: 16_384 },
+	};
+	const branch = [{ ...reminder, type: "custom_message", id: "reminder" }];
+	const context = {
+		...usageContext(base, 100_000, 76_000),
+		getCompactionSettings: () => ({ enabled, reserveTokens: 16_384 }),
+		sessionManager: {
+			...indexedBranch(branch),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getSessionDir: () => tmpdir(),
+		},
+	};
+	const owner = { role: "user", content: "continue" };
+	assert.equal(
+		requireValue(handlers.get("context"))({ messages: [owner, reminder] }, context),
+		undefined,
+	);
+	enabled = false;
+	assert.deepEqual(
+		requireValue(handlers.get("context"))({ messages: [owner, reminder] }, context),
+		{
+			messages: [owner],
+		},
+	);
+	assert.equal(requireValue(branch[0]).content, "Checkpoint now", "raw history stays intact");
+	enabled = true;
+	turnEnd(handlers, context);
+	assert.equal(messages.length, 0, "reenabling does not emit another reminder");
+});
+
+await test("reminder-free context and fork reminder filtering never read history", async () => {
+	const { handlers, context } = await setup();
+	const marker = {
+		role: "custom",
+		customType: "context-window",
+		content: "new",
+		details: { windowId: "new" },
+	};
+	const user = { role: "user", content: "posthorse-reminder is just text here" };
+	const other = { role: "custom", customType: "intercom_message", content: "keep" };
+	let branchReads = 0;
+	context.sessionManager.getBranch = () => {
+		branchReads++;
+		return [];
+	};
+	for (const messages of [[], [user, other], [marker, user, other]]) {
+		const original = structuredClone(messages);
+		assert.equal(requireValue(handlers.get("context"))({ messages }, context), undefined);
+		assert.deepEqual(messages, original, "unrelated messages remain unchanged");
+	}
+	const current = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "current",
+		details: { windowId: "new", contextWindow: 100_000, reserveTokens: 16_384 },
+	};
+	const stale = {
+		...current,
+		content: "stale",
+		details: { ...current.details, windowId: "old" },
+	};
+	assert.deepEqual(
+		requireValue(handlers.get("context"))(
+			{ messages: [marker, user, other, stale, current] },
+			context,
+		),
+		{ messages: [marker, user, other, current] },
+	);
+	assert.equal(branchReads, 0, "the fork's window marker identifies the window");
+});
+
+await test("context filtering removes reminders from an older window or a different budget", async () => {
+	const { handlers, context } = await setup();
+	const marker = {
+		role: "custom",
+		customType: "context-window",
+		content: "new",
+		details: { windowId: "new" },
+	};
+	const current = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "current",
+		details: { windowId: "new", contextWindow: 100_000, reserveTokens: 16_384 },
+	};
+	const old = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "old",
+		details: { windowId: "old", contextWindow: 100_000, reserveTokens: 16_384 },
+	};
+	const otherModel = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "smaller model",
+		details: { windowId: "new", contextWindow: 50_000, reserveTokens: 16_384 },
+	};
+	const otherReserve = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "other reserve",
+		details: { windowId: "new", contextWindow: 100_000, reserveTokens: 64_000 },
+	};
+	const other = { role: "custom", customType: "intercom_message", content: "keep" };
+	const filtered = record(
+		requireValue(handlers.get("context"))(
+			{ messages: [marker, old, otherModel, otherReserve, other, current] },
+			context,
+		),
+	);
+	assert.deepEqual(filtered.messages, [marker, other, current]);
+	assert.equal(
+		requireValue(handlers.get("context"))({ messages: [marker, other, current] }, context),
+		undefined,
+	);
+	// Before any rollover the window is "initial"; a reminder computed for another model size is still stale.
+	const initial = {
+		role: "custom",
+		customType: "posthorse-reminder",
+		content: "initial",
+		details: { windowId: "initial", contextWindow: 100_000, reserveTokens: 16_384 },
+	};
+	const filteredInitial = record(
+		requireValue(handlers.get("context"))({ messages: [otherModel, initial] }, context),
+	);
+	assert.deepEqual(filteredInitial.messages, [initial]);
+});
+
+await test("history reads current entries without opening every archived session", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-history-test-"));
+	try {
+		mkdirSync(join(dir, "unrelated.jsonl"));
+		const { tools, context: base } = await setup();
+		const context: TestContext = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [
+					{
+						type: "message",
+						id: "current",
+						parentId: null,
+						timestamp: "1",
+						message: { role: "user", content: "keep me" },
+					},
+				],
+				getSessionDir: () => dir,
+			},
+		};
+
+		const reads = await Promise.all(
+			Array.from({ length: 5 }, () =>
+				run(tools, "history", { op: "read", id: "current" }, context),
+			),
+		);
+		for (const result of reads) {
+			assert.match(toolText(result), /keep me/);
+		}
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session history recurses and returns newest matching entries first", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-recursive-history-test-"));
+	try {
+		const nested = join(dir, "subagents");
+		mkdirSync(nested);
+		const oldFile = join(dir, "old.jsonl");
+		const newFile = join(nested, "new.jsonl");
+		writeArchive(
+			oldFile,
+			JSON.stringify({
+				type: "message",
+				id: "old",
+				parentId: null,
+				timestamp: "1",
+				message: { role: "user", content: "recursive needle old" },
+			}),
+		);
+		writeArchive(
+			newFile,
+			[
+				JSON.stringify({
+					type: "context_window",
+					id: "nested-window",
+					parentId: null,
+					timestamp: "2",
+					handoff: "resume",
+				}),
+				JSON.stringify({
+					type: "message",
+					id: "nested-old",
+					parentId: "nested-window",
+					timestamp: "3",
+					message: { role: "user", content: "recursive needle nested old" },
+				}),
+				JSON.stringify({
+					type: "message",
+					id: "nested-new",
+					parentId: "nested-old",
+					timestamp: "4",
+					message: { role: "user", content: "recursive needle nested newest" },
+				}),
+			].join("\n"),
+		);
+		utimesSync(oldFile, new Date(1_000), new Date(1_000));
+		utimesSync(newFile, new Date(2_000), new Date(2_000));
+		const { tools, context: base } = await setup();
+		let mayReadCurrentBranch = false;
+		const context: TestContext = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => {
+					assert.ok(
+						mayReadCurrentBranch,
+						"all-session search must not normalize the current branch",
+					);
+					return [];
+				},
+				getSessionDir: () => dir,
+			},
+		};
+		const search = await requireValue(tools.get("history")).execute(
+			"id",
+			{ op: "search", query: "recursive needle", all: true, limit: 2 },
+			new AbortController().signal,
+			() => {
+				// Direct tool execution does not stream updates into this fixture.
+			},
+			context,
+		);
+		const text = toolText(search);
+		assert.match(
+			text,
+			/^4 \[subagent\] \[window nested-window\] \[nested-new@[\w-]{10}\] .+nested newest/s,
+		);
+		assert.doesNotMatch(text, /new\.jsonl/);
+		assert.ok(text.includes(`[${archivedId("nested-new", "subagents/new.jsonl")}]`));
+		assert.ok(text.indexOf("nested-new") < text.indexOf("nested-old"));
+		assert.ok(!text.includes(`[${archivedId("old", "old.jsonl")}]`));
+		mayReadCurrentBranch = true;
+		const read = await requireValue(tools.get("history")).execute(
+			"id",
+			{ op: "read", id: archivedId("nested-new", "subagents/new.jsonl") },
+			new AbortController().signal,
+			() => {
+				// Direct tool execution does not stream updates into this fixture.
+			},
+			context,
+		);
+		assert.match(toolText(read), /^4 \[subagent\] \[window nested-window\] .+nested newest/s);
+		const legacy = await run(
+			tools,
+			"history",
+			{ op: "read", id: archivedId("nested-new", "subagents/new.jsonl", true) },
+			context,
+		);
+		assert.match(toolText(legacy), /nested newest/);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("history keeps the selected session after a cwd override but excludes foreign and unidentified archives", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-history-scope-"));
+	try {
+		const entry = (id: string, content: string) =>
+			JSON.stringify({
+				type: "message",
+				id,
+				parentId: null,
+				message: { role: "user", content },
+			});
+		const header = (cwd?: string) => JSON.stringify({ type: "session", id: "fixture", cwd });
+		const current = join(dir, "current.jsonl");
+		writeFileSync(
+			current,
+			`${header(join(dir, "prior-cwd"))}\n${entry("current", "scope needle current")}`,
+		);
+		writeFileSync(
+			join(dir, "same.jsonl"),
+			`invalid prefix\nnull\n${header(process.cwd())}\n${entry("same", "scope needle same")}`,
+		);
+		writeFileSync(
+			join(dir, "foreign.jsonl"),
+			`${header(join(dir, "foreign"))}\n${entry("foreign", "scope needle foreign")}`,
+		);
+		writeFileSync(
+			join(dir, "legacy.jsonl"),
+			`${header()}\n${entry("legacy", "scope needle legacy")}`,
+		);
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+				getSessionFile: () => current,
+			},
+		};
+		const hits = toolText(
+			await run(
+				tools,
+				"history",
+				{ op: "search", query: "scope needle", all: true },
+				context,
+			),
+		);
+		assert.match(hits, /\[user\] scope needle current/);
+		assert.match(hits, /\[user\] scope needle same/);
+		assert.doesNotMatch(hits, /\[user\] scope needle (foreign|legacy)/);
+		assert.match(
+			toolText(
+				await run(
+					tools,
+					"history",
+					{ op: "read", id: archivedId("current", "current.jsonl") },
+					context,
+				),
+			),
+			/scope needle current/,
+		);
+		await Promise.all(
+			["foreign", "legacy"].map((source) =>
+				assert.rejects(
+					run(
+						tools,
+						"history",
+						{ op: "read", id: archivedId(source, `${source}.jsonl`) },
+						context,
+					),
+					/No history entry/,
+				),
+			),
+		);
+		await assert.rejects(
+			run(tools, "history", { op: "read", id: "same@" }, context),
+			/No history entry/,
+		);
+		await assert.rejects(
+			run(tools, "history", { op: "read", id: "21:45:25.912Z" }, context),
+			/Pass an id exactly as history search prints it, such as 1a2f07de/,
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("history searches normalized text and reports native window ids", async () => {
+	const { tools, context: base } = await setup();
+	const branch = [
+		{
+			type: "message",
+			id: "needle-only-in-id",
+			parentId: null,
+			timestamp: "1",
+			message: { role: "user", content: "plain" },
+		},
+		{
+			type: "message",
+			id: "before",
+			parentId: "needle-only-in-id",
+			timestamp: "2",
+			message: { role: "user", content: "needle before" },
+		},
+		{
+			type: "context_window",
+			id: "window-2",
+			parentId: "before",
+			timestamp: "3",
+			handoff: "continue",
+		},
+		{
+			type: "message",
+			id: "after",
+			parentId: "window-2",
+			timestamp: "4",
+			message: { role: "assistant", content: "needle after" },
+		},
+		{
+			type: "message",
+			id: "long",
+			parentId: "after",
+			timestamp: "5",
+			message: { role: "user", content: `${"x".repeat(40_100)}needle tail` },
+		},
+	];
+	const context: TestContext = {
+		...base,
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+	const result = await requireValue(tools.get("history")).execute(
+		"id",
+		{ op: "search", query: "needle" },
+		new AbortController().signal,
+		() => {
+			// Direct tool execution does not stream updates into this fixture.
+		},
+		context,
+	);
+	const text = toolText(result);
+	assert.doesNotMatch(text, /needle-only-in-id/);
+	assert.ok(text.indexOf("[long]") < text.indexOf("[after]"));
+	assert.match(text, /\[window initial\] \[before\]/);
+	assert.match(text, /\[window window-2\] \[after\]/);
+
+	const firstPage = await requireValue(tools.get("history")).execute(
+		"id",
+		{ op: "read", id: "long" },
+		new AbortController().signal,
+		() => {
+			// Direct tool execution does not stream updates into this fixture.
+		},
+		context,
+	);
+	assert.match(toolText(firstPage), /offset 40000/);
+	const secondPage = await requireValue(tools.get("history")).execute(
+		"id",
+		{ op: "read", id: "long", offset: 40_000 },
+		new AbortController().signal,
+		() => {
+			// Direct tool execution does not stream updates into this fixture.
+		},
+		context,
+	);
+	assert.match(toolText(secondPage), /needle tail/);
+});
+
+await test("history search skips entries already in the active context and says how many", async () => {
+	const { tools, context: base } = await setup();
+	const branch = [
+		{
+			type: "message",
+			id: "earlier",
+			parentId: null,
+			timestamp: "1",
+			message: { role: "user", content: "needle from an earlier window" },
+		},
+		{
+			type: "context_window",
+			id: "window-2",
+			parentId: "earlier",
+			timestamp: "2",
+			handoff: "needle handoff",
+		},
+		{
+			type: "message",
+			id: "current",
+			parentId: "window-2",
+			timestamp: "3",
+			message: { role: "user", content: "needle already visible" },
+		},
+		{
+			type: "context_edit",
+			id: "edit",
+			parentId: "current",
+			timestamp: "4",
+			targetId: "current",
+			replacement: { content: "needle replacement visible" },
+		},
+		{
+			type: "custom_message",
+			id: "reminder",
+			parentId: "edit",
+			timestamp: "5",
+			customType: "posthorse-reminder",
+			content: "needle checkpoint",
+			display: true,
+		},
+	];
+	// Pi projects the edited entry under its own id with the replacement text, as the model sees it. Pi also
+	// projects checkpoint reminders that Posthorse may strip from model input.
+	const context = {
+		...base,
+		sessionManager: {
+			...base.sessionManager,
+			getBranch: () => branch,
+			buildSessionProjection: () => ({
+				entries: [
+					{
+						sourceEntry: requireValue(branch[1]),
+						messages: [
+							{
+								role: "custom",
+								content:
+									"Context window window-2 starts here.\n\nHandoff from the previous window:\nneedle handoff",
+							},
+						],
+					},
+					{
+						sourceEntry: requireValue(branch[2]),
+						messages: [{ role: "user", content: "needle replacement visible" }],
+					},
+					{
+						sourceEntry: requireValue(branch[4]),
+						messages: [{ role: "custom", content: "needle checkpoint" }],
+					},
+				],
+			}),
+		},
+	};
+	const result = await run(tools, "history", { op: "search", query: "needle" }, context);
+	const text = toolText(result);
+	assert.match(text, /\[earlier\] \[user\] needle from an earlier window/);
+	// The model sees only the replacement, so the original stays searchable even though "needle" survived the edit.
+	assert.match(text, /\[current\] \[user\] needle already visible/);
+	assert.match(text, /\[reminder\] \[custom:posthorse-reminder\] needle checkpoint/);
+	assert.doesNotMatch(text, /replacement visible|needle handoff/);
+	assert.match(text, /\n\[Skipped 2 matches already in your active context\.\]$/);
+	assert.deepEqual(
+		[
+			result.details?.kind === "history-search" && result.details.skipped,
+			result.details?.kind === "history-search" && result.details.more,
+		],
+		[2, false],
+	);
+
+	// An edit that keeps the text but drops an image leaves the image recoverable.
+	const shot = {
+		type: "message",
+		id: "shot",
+		parentId: null,
+		timestamp: "6",
+		message: {
+			role: "user",
+			content: [
+				{ type: "text", text: "keep this text" },
+				{ type: "image", data: "AA==", mimeType: "image/png" },
+			],
+		},
+	};
+	const trimmed = {
+		...context,
+		sessionManager: {
+			...context.sessionManager,
+			getBranch: () => [
+				shot,
+				{
+					type: "context_edit",
+					id: "shot-edit",
+					parentId: "shot",
+					timestamp: "7",
+					targetId: "shot",
+					replacement: { content: "keep this text" },
+				},
+			],
+			buildSessionProjection: () => ({
+				entries: [
+					{
+						sourceEntry: shot,
+						messages: [{ role: "user", content: "keep this text" }],
+					},
+				],
+			}),
+		},
+	};
+	const image = toolText(
+		await run(tools, "history", { op: "search", query: "image/png" }, trimmed),
+	);
+	assert.match(image, /\[shot\] \[user\] keep this text\n\[1 image: image\/png\]/);
+	assert.doesNotMatch(image, /Skipped/);
+});
+
+await test("history ranks matching original content before recovery and lookup echoes without hiding either", async () => {
+	const { tools, context: base } = await setup();
+	const image = { type: "image", data: "UE5HREFUQQ==", mimeType: "image/png" };
+	const branch = [
+		{
+			type: "message",
+			id: "owner",
+			message: { role: "user", content: "needle original request" },
+		},
+		{
+			type: "message",
+			id: "assistant",
+			message: { role: "assistant", content: "needle original response" },
+		},
+		{
+			type: "message",
+			id: "result",
+			message: {
+				role: "toolResult",
+				toolName: "read",
+				content: "needle original output",
+			},
+		},
+		{ type: "context_window", id: "window", handoff: "needle checkpoint" },
+		{ type: "compaction", id: "summary", summary: "needle summary" },
+		{ type: "branch_summary", id: "branch-summary", summary: "needle branch summary" },
+		{
+			type: "custom_message",
+			id: "reminder",
+			customType: "posthorse-reminder",
+			content: "needle reminder",
+		},
+		{
+			type: "message",
+			id: "notes",
+			message: { role: "toolResult", toolName: "notes", content: "needle saved note" },
+		},
+		{
+			type: "message",
+			id: "lookup",
+			message: {
+				role: "toolResult",
+				toolName: "history",
+				content: [{ type: "text", text: "needle recovered output" }, image],
+			},
+		},
+		{
+			type: "message",
+			id: "rollover",
+			message: {
+				role: "assistant",
+				content: [
+					{ type: "toolCall", name: "new_context", arguments: { handoff: "needle" } },
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "mixed-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						name: "notes",
+						arguments: { op: "write", content: `needle ECHO ${"x".repeat(500)}` },
+					},
+					{
+						type: "toolCall",
+						name: "bash",
+						arguments: { command: "needle MATCHING SIBLING" },
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "mixed-prose",
+			message: {
+				role: "assistant",
+				content: [
+					{ type: "text", text: "needle MATCHING PROSE" },
+					{ type: "text", text: "second line" },
+					{
+						type: "toolCall",
+						name: "history",
+						arguments: { op: "search", query: `needle ECHO ${"x".repeat(500)}` },
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "mixed-echo",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						name: "history",
+						arguments: { op: "search", query: "needle lookup-only" },
+					},
+					{ type: "text", text: "ordinary prose does not match" },
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "current-search",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						name: "history",
+						arguments: { op: "search", query: "[assistant] needle MATCHING PROSE" },
+					},
+				],
+			},
+		},
+	].map((entry, index, entries) =>
+		Object.assign({}, entry, {
+			timestamp: `${index}`,
+			parentId: entries[index - 1]?.id ?? null,
+		}),
+	);
+	const context = {
+		...base,
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+	const search = async (query: string, limit = 50) =>
+		toolText(await run(tools, "history", { op: "search", query, limit }, context));
+	const ids = (text: string) =>
+		[...text.matchAll(/\[window [^\]]+\] \[([^\]]+)\]/g)].map((match) => match[1]);
+	const all = await search("NEEDLE");
+	assert.deepEqual(ids(all), [
+		"mixed-prose",
+		"mixed-call",
+		"result",
+		"assistant",
+		"owner",
+		"current-search",
+		"mixed-echo",
+		"rollover",
+		"lookup",
+		"notes",
+		"reminder",
+		"branch-summary",
+		"summary",
+		"window",
+	]);
+	const originals = await search("needle", 5);
+	assert.deepEqual(ids(originals), ids(all).slice(0, 5));
+	assert.match(originals, /MATCHING PROSE/);
+	assert.match(originals, /MATCHING SIBLING/);
+	assert.doesNotMatch(originals, /ECHO/);
+	assert.deepEqual(ids(await search("needle", 1)), ["mixed-prose"]);
+	assert.deepEqual(ids(await search("needle MATCHING PROSE\nsecond line", 1)), ["mixed-prose"]);
+	assert.deepEqual(ids(await search("[assistant] needle MATCHING PROSE", 1)), ["mixed-prose"]);
+	assert.deepEqual(ids(await search("lookup-only")), ["mixed-echo"]);
+	assert.match(all, /\[window window\] \[mixed-call\]/);
+	const read = await run(tools, "history", { op: "read", id: "mixed-call" }, context);
+	assert.match(toolText(read), /needle ECHO/);
+	assert.match(toolText(read), /MATCHING SIBLING/);
+	const recovered = await run(tools, "history", { op: "read", id: "lookup" }, context);
+	assert.match(toolText(recovered), /needle recovered output/);
+	assert.deepEqual(recovered.content.slice(1), [image]);
+});
+
+await test("archived history preserves Unicode separators across chunks and an unterminated final record", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-jsonl-"));
+	try {
+		const { tools, context: base } = await setup();
+		const body = `${"x".repeat(66_000)}unicode needle\u2028line\u2029paragraph`;
+		const entries = [
+			{
+				type: "context_window",
+				id: "unicode-window",
+				parentId: null,
+				handoff: "prior\u2028checkpoint",
+			},
+			{
+				type: "message",
+				id: "unicode",
+				parentId: "unicode-window",
+				message: { role: "user", content: body },
+			},
+			{
+				type: "message",
+				id: "last",
+				parentId: "unicode",
+				message: { role: "user", content: "final needle\u2029tail" },
+			},
+		];
+		writeArchive(
+			join(dir, "session.jsonl"),
+			entries.map((entry) => JSON.stringify(entry)).join("\r\n"),
+		);
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const hits = toolText(
+			await run(tools, "history", { op: "search", query: "needle", all: true }, context),
+		);
+		assert.ok(
+			hits.includes(`[window unicode-window] [${archivedId("unicode", "session.jsonl")}]`),
+		);
+		assert.ok(
+			hits.includes(`[window unicode-window] [${archivedId("last", "session.jsonl")}]`),
+		);
+		const read = toolText(
+			await run(tools, "history", { op: "read", id: "unicode", offset: 66_000 }, context),
+		);
+		assert.ok(read.endsWith(body.slice(66_000 - "[user] ".length)));
+		assert.ok(
+			toolText(await run(tools, "history", { op: "read", id: "last" }, context)).endsWith(
+				"[user] final needle\u2029tail",
+			),
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("history preserves assistant failures and ranks them ahead of recovery echoes", async () => {
+	const { tools, context: base } = await setup();
+	const branch = [
+		{
+			type: "message",
+			id: "failed",
+			message: {
+				role: "assistant",
+				content: [],
+				stopReason: "error",
+				errorMessage: "HTTP 429 QUOTA_EXCEEDED",
+			},
+		},
+		{
+			type: "message",
+			id: "partial",
+			message: {
+				role: "assistant",
+				content: [
+					{ type: "text", text: "Partial response" },
+					{
+						type: "toolCall",
+						name: "history",
+						arguments: { op: "search", query: "prior state" },
+					},
+				],
+				stopReason: "aborted",
+				errorMessage: "QUOTA_EXCEEDED while streaming",
+			},
+		},
+		{
+			type: "message",
+			id: "echo",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				content: "QUOTA_EXCEEDED copied into notes",
+			},
+		},
+	];
+	const context = {
+		...base,
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+	assert.ok(
+		toolText(await run(tools, "history", { op: "read", id: "failed" }, context)).endsWith(
+			"[assistant] [error] HTTP 429 QUOTA_EXCEEDED",
+		),
+	);
+	const partial = toolText(await run(tools, "history", { op: "read", id: "partial" }, context));
+	assert.match(partial, /Partial response/);
+	assert.match(partial, /\[aborted\] QUOTA_EXCEEDED while streaming/);
+	const hit = toolText(
+		await run(tools, "history", { op: "search", query: "QUOTA_EXCEEDED", limit: 1 }, context),
+	);
+	assert.match(hit, /\[partial\] \[assistant\] \[aborted\] QUOTA_EXCEEDED while streaming/);
+	assert.doesNotMatch(hit, /\[echo\]/);
+});
+
+await test("all-session ranking keeps older originals ahead of newer echoes before applying the result limit", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-ranking-test-"));
+	try {
+		const old = {
+			type: "message",
+			id: "old",
+			message: { role: "user", content: "needle oldest original" },
+		};
+		const newer = {
+			type: "message",
+			id: "newer",
+			message: { role: "toolResult", toolName: "bash", content: "needle newer original" },
+		};
+		const echoes = Array.from({ length: 6 }, (_, index) => ({
+			type: "message",
+			id: `echo-${index}`,
+			message: {
+				role: "toolResult",
+				toolName: "history",
+				content: `needle echo-only ${index}`,
+			},
+		}));
+		for (const [index, entries] of [[old], [newer, ...echoes], [echoes[5]]].entries()) {
+			const file = join(dir, `${index}.jsonl`);
+			writeArchive(file, entries.map((entry) => JSON.stringify(entry)).join("\n"));
+			utimesSync(file, new Date((index + 1) * 1000), new Date((index + 1) * 1000));
+		}
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const search = async (query: string, limit: number) =>
+			toolText(
+				await run(tools, "history", { op: "search", query, all: true, limit }, context),
+			);
+		const ids = (text: string) =>
+			[...text.matchAll(/\[window initial\] \[([^\]]+)\]/g)].map((match) => match[1]);
+		assert.deepEqual(ids(await search("needle", 1)), [archivedId("newer", "1.jsonl")]);
+		assert.deepEqual(ids(await search("needle", 2)), [
+			archivedId("newer", "1.jsonl"),
+			archivedId("old", "0.jsonl"),
+		]);
+		assert.deepEqual(ids(await search("needle", 4)), [
+			archivedId("newer", "1.jsonl"),
+			archivedId("old", "0.jsonl"),
+			archivedId("echo-5", "2.jsonl"),
+			archivedId("echo-5", "1.jsonl"),
+		]);
+		const all = await search("needle", 50);
+		assert.deepEqual(ids(all), [
+			archivedId("newer", "1.jsonl"),
+			archivedId("old", "0.jsonl"),
+			archivedId("echo-5", "2.jsonl"),
+			...echoes.map((entry) => archivedId(entry.id, "1.jsonl")).reverse(),
+		]);
+		assert.ok(
+			all
+				.split("\n")
+				.some(
+					(line) =>
+						line.includes(`[${archivedId("echo-5", "2.jsonl")}]`) &&
+						!line.includes("[subagent]"),
+				),
+		);
+		assert.doesNotMatch(all, /\d\.jsonl/);
+		assert.deepEqual(ids(await search("echo-only", 2)), [
+			archivedId("echo-5", "2.jsonl"),
+			archivedId("echo-5", "1.jsonl"),
+		]);
+		const controller = new AbortController();
+		controller.abort();
+		await assert.rejects(
+			requireValue(tools.get("history")).execute(
+				"id",
+				{ op: "search", query: "needle", all: true },
+				controller.signal,
+				() => {
+					// These direct executions do not stream updates.
+				},
+				context,
+			),
+			{ name: "AbortError" },
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+// PR #51 review: a reminder that Pi's own compaction summarized away must not block the next one.
+await test("a reminder before a native compaction does not suppress the next reminder", async () => {
+	const { handlers, messages, context: base } = await setup();
+	const branch: Record<string, unknown>[] = [
+		{
+			type: "custom_message",
+			id: "old-reminder",
+			customType: "posthorse-reminder",
+			details: { windowId: "initial", contextWindow: 100_000, reserveTokens: 16_384 },
+		},
+		{ type: "message", id: "kept", message: { role: "user", content: "kept tail" } },
+		{ type: "compaction", id: "native", summary: "native summary", firstKeptEntryId: "kept" },
+	];
+	const context = {
+		...usageContext(base, 100_000, 76_000),
+		sessionManager: {
+			...indexedBranch(branch),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getSessionDir: () => tmpdir(),
+		},
+	};
+	turnEnd(handlers, context);
+	assert.equal(messages.length, 1);
+	branch.push({
+		type: "custom_message",
+		id: "new-reminder",
+		customType: "posthorse-reminder",
+		details: requireValue(messages[0]).details,
+	});
+	turnEnd(handlers, context);
+	assert.equal(messages.length, 1, "still one reminder per window and budget");
+});
+
+await test("new_context beside a failed sibling tool does not suppress the reminder", async () => {
+	const { handlers, messages, tools, context: base } = await setup();
+	const context = usageContext(base, 100_000, 76_000);
+	await run(tools, "new_context", {}, context);
+	turnEnd(handlers, context, [
+		{ toolName: "new_context", toolCallId: "id" },
+		{ toolName: "bash", isError: true },
+	]);
+	assert.equal(
+		messages.length,
+		1,
+		"Pi will not commit the boundary, so the checkpoint reminder still applies",
+	);
+	messages.length = 0;
+	await run(tools, "new_context", {}, context);
+	turnEnd(handlers, context, [
+		{ toolName: "new_context", toolCallId: "id" },
+		{ toolName: "bash", isError: false },
+	]);
+	assert.equal(messages.length, 0, "a fully successful batch rolls over; no reminder needed");
+});
+
+await test("automatic handoff carries trailing synchronous results, with entry ids and no base64", async () => {
+	const { handlers, context } = await setup();
+	const image = {
+		type: "image",
+		data: "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=",
+		mimeType: "image/png",
+	};
+	const batch: Record<string, unknown>[] = [
+		{
+			type: "context_window",
+			id: "older-window",
+			handoff: "FIRST read obsolete-checkpoint.md",
+		},
+		{
+			type: "message",
+			id: "owner",
+			timestamp: "1",
+			message: { role: "user", content: "run the checks" },
+		},
+		{
+			type: "message",
+			id: "assistant-1",
+			timestamp: "2",
+			message: {
+				role: "assistant",
+				content: [
+					{ type: "text", text: "ASSISTANT PROSE" },
+					{
+						type: "toolCall",
+						id: "call-1",
+						name: "bash",
+						arguments: { command: "npm test" },
+					},
+					{
+						type: "toolCall",
+						id: "call-2",
+						name: "read",
+						arguments: { path: "missing.txt" },
+					},
+					{ type: "toolCall", id: "call-3", name: "screenshot", arguments: {} },
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "result-1",
+			timestamp: "3",
+			message: {
+				role: "toolResult",
+				toolCallId: "call-1",
+				toolName: "bash",
+				content: [
+					{
+						type: "text",
+						text: `3 tests failed FAILURE DETAIL ${"z".repeat(30_000)} FAILURE TAIL`,
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "result-2",
+			timestamp: "4",
+			message: {
+				role: "toolResult",
+				toolCallId: "call-2",
+				toolName: "read",
+				isError: true,
+				content: "ENOENT missing.txt",
+			},
+		},
+		{
+			type: "message",
+			id: "result-3",
+			timestamp: "5",
+			message: {
+				role: "toolResult",
+				toolCallId: "call-3",
+				toolName: "screenshot",
+				content: [image],
+			},
+		},
+	];
+	const handoff = automaticHandoff(handlers, context, batch);
+	assert.ok(handoff.length <= 20_000);
+	assert.match(
+		handoff,
+		/Tool result evidence \(current projected window; may already have been received or handled; not current progress\)/,
+	);
+	assert.match(handoff, /Tool-call entry assistant-1/);
+	assert.match(handoff, /\[result entry result-1\]\n3 tests failed FAILURE DETAIL/);
+	assert.match(handoff, /Call arguments: \{"command":"npm test"\}/);
+	assert.match(handoff, /middle omitted[\s\S]*FAILURE TAIL/);
+	assert.match(handoff, /\[error entry result-2\]\nENOENT missing.txt/);
+	assert.match(
+		handoff,
+		/\[result entry result-3\]\n\[1 image: image\/png\] — recover with history read id result-3/,
+	);
+	assert.doesNotMatch(handoff, /ASSISTANT PROSE|QUJDREVG/);
+	assert.ok(
+		handoff.indexOf("entry result-1") < handoff.indexOf("entry result-2"),
+		"results keep their order",
+	);
+	assert.ok(handoff.indexOf("entry owner") < handoff.indexOf("Tool result evidence"));
+	assert.ok(handoff.indexOf("entry result-3") < handoff.indexOf("older checkpoint"));
+	assert.match(handoff, /FIRST read obsolete-checkpoint\.md/);
+
+	for (const stopReason of ["error", "aborted", "length"]) {
+		const interrupted = automaticHandoff(handlers, context, [
+			...batch,
+			{
+				type: "message",
+				id: "assistant-interrupted",
+				timestamp: "6",
+				message: { role: "assistant", stopReason, content: "I received these results" },
+			},
+		]);
+		assert.match(interrupted, /Tool result evidence/);
+		assert.match(interrupted, /entry result-3/);
+		assert.doesNotMatch(interrupted, /no model has seen|no model has consumed/);
+	}
+
+	const truncatedCall = automaticHandoff(handlers, context, [
+		...batch,
+		{
+			type: "message",
+			id: "assistant-length",
+			timestamp: "6",
+			message: {
+				role: "assistant",
+				stopReason: "length",
+				content: [
+					{
+						type: "toolCall",
+						id: "truncated-call",
+						name: "write",
+						arguments: { path: "secret" },
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "truncated-result",
+			timestamp: "7",
+			message: {
+				role: "toolResult",
+				toolCallId: "truncated-call",
+				toolName: "write",
+				isError: true,
+				content: "not executed",
+			},
+		},
+	]);
+	assert.match(truncatedCall, /Tool-call entry assistant-length/);
+	assert.match(truncatedCall, /\[error entry truncated-result\]\nnot executed/);
+	assert.doesNotMatch(truncatedCall, /entry result-3/);
+
+	const consumed = automaticHandoff(handlers, context, [
+		...batch,
+		{
+			type: "message",
+			id: "assistant-2",
+			timestamp: "6",
+			message: { role: "assistant", stopReason: "stop", content: "All done." },
+		},
+	]);
+	assert.doesNotMatch(consumed, /Tool result evidence|FAILURE DETAIL|ENOENT/);
+	assert.match(consumed, /run the checks/);
+
+	const calls = Array.from({ length: 300 }, (_, index) => ({
+		type: "toolCall",
+		id: `stress-call-${index}`,
+		name: "read",
+		arguments: { path: `${index}.txt` },
+	}));
+	const resultIds = calls.map(
+		(_, index) => `00000000-0000-7000-8000-${index.toString().padStart(12, "0")}`,
+	);
+	const stressed = automaticHandoff(handlers, context, [
+		{ type: "context_window", id: "prior", handoff: "p".repeat(6000) },
+		{
+			type: "message",
+			id: "first-owner",
+			timestamp: "1",
+			message: { role: "user", content: "a".repeat(6000) },
+		},
+		{
+			type: "message",
+			id: "latest-owner",
+			timestamp: "2",
+			message: { role: "user", content: "b".repeat(6000) },
+		},
+		{
+			type: "custom_message",
+			id: "latest-input",
+			timestamp: "3",
+			customType: "intercom",
+			content: "c".repeat(6000),
+			display: true,
+		},
+		{
+			type: "message",
+			id: "stress-assistant",
+			timestamp: "4",
+			message: { role: "assistant", stopReason: "toolUse", content: calls },
+		},
+		...calls.map((call, index) => ({
+			type: "message",
+			id: resultIds[index],
+			timestamp: `${index + 5}`,
+			message: {
+				role: "toolResult",
+				toolCallId: call.id,
+				toolName: call.name,
+				content: `result ${index} ${"r".repeat(1000)}`,
+			},
+		})),
+	]);
+	assert.ok(stressed.length <= 20_000);
+	for (const id of resultIds) {
+		assert.match(stressed, new RegExp(`entry ${id}\\]`));
+	}
+});
+
+await test("retained edited async receipts are excluded by source identity while discarded edits keep history pointers", () => {
+	const call = {
+		type: "message",
+		id: "call-entry",
+		message: {
+			role: "assistant",
+			stopReason: "toolUse",
+			content: [
+				{
+					type: "toolCall",
+					id: "receipt-call",
+					name: "work",
+					async: true,
+					arguments: {},
+				},
+			],
+		},
+	};
+	const result = {
+		type: "message",
+		id: "result-entry",
+		message: {
+			role: "toolResult",
+			toolCallId: "receipt-call",
+			toolName: "work",
+			content: "PRIVATE_ORIGINAL_RECEIPT",
+		},
+	};
+	const edit = {
+		type: "context_edit",
+		id: "edit-entry",
+		targetId: result.id,
+		replacement: { content: "APPROVED_RECEIPT" },
+	};
+	const projected = [
+		{ sourceEntry: call, messages: [call.message] },
+		{
+			sourceEntry: result,
+			messages: [{ ...result.message, content: edit.replacement.content }],
+		},
+	];
+	const entries = [call, result, edit];
+	const discarded = buildAutoHandoff(entries, projected, 20_000, {
+		ownerQuestionRegistered: false,
+	});
+	assert.match(discarded, /\[result entry edit-entry\]\nAPPROVED_RECEIPT/);
+	assert.doesNotMatch(discarded, /PRIVATE_ORIGINAL_RECEIPT/);
+	const retained = buildAutoHandoff(entries, projected, 20_000, {
+		ownerQuestionRegistered: false,
+		retainedEntryIds: new Set([call.id, result.id]),
+	});
+	assert.doesNotMatch(retained, /Tool result evidence|APPROVED_RECEIPT|PRIVATE_ORIGINAL_RECEIPT/);
+});
+
+await test("async receipt recovery shares the handoff header budget across earlier batches", async () => {
+	const { handlers, context } = await setup();
+	const branch: Record<string, unknown>[] = [
+		{
+			type: "message",
+			id: "owner",
+			message: { role: "user", content: "Check prior receipts before taking action." },
+		},
+	];
+	for (let index = 0; index < 600; index++) {
+		const id = `00000000-0000-7000-8000-${index.toString().padStart(12, "0")}`;
+		branch.push(
+			{
+				type: "message",
+				id: `call-${index}`,
+				message: {
+					role: "assistant",
+					stopReason: "toolUse",
+					content: [
+						{
+							type: "toolCall",
+							id,
+							name: "work",
+							async: true,
+							arguments: { index },
+						},
+					],
+				},
+			},
+			{
+				type: "message",
+				id,
+				message: {
+					role: "toolResult",
+					toolCallId: id,
+					toolName: "work",
+					content: `Receipt ${index} ${"r".repeat(1000)}`,
+				},
+			},
+			{
+				type: "message",
+				id: `response-${index}`,
+				message: { role: "assistant", stopReason: "stop", content: "Complete" },
+			},
+		);
+	}
+	const handoff = automaticHandoff(handlers, context, branch);
+	assert.ok(handoff.length <= 20_000);
+	const omitted = Number(
+		handoff.match(/Omitted (\d+) earlier tool result\(s\) whose headers could not fit/)?.[1],
+	);
+	assert.ok(
+		omitted > 0 && omitted < 599,
+		"earlier batches remain eligible under the shared header budget",
+	);
+	assert.equal((handoff.match(/\[result entry /g) ?? []).length, 600 - omitted);
+	assert.match(handoff, /entry 00000000-0000-7000-8000-000000000599\]/);
+	assert.match(handoff, /history search\/read to recover them/);
+	assert.match(handoff, /owner input.*entry owner/);
+	assert.doesNotMatch(handoff, /no model has seen|no model has consumed/);
+});
+
+await test("history returns stored images for a requested entry and summarizes them elsewhere", async () => {
+	const { handlers, tools, context: base } = await setup();
+	const png = { type: "image", data: "UE5HREFUQQ==", mimeType: "image/png" };
+	const jpeg = { type: "image", data: "SlBFR0RBVEE=", mimeType: "image/jpeg" };
+	const webp = { type: "image", data: "V0VCUERBVEE=", mimeType: "image/webp" };
+	const branch = [
+		{
+			type: "message",
+			id: "img-user",
+			parentId: null,
+			timestamp: "1",
+			message: { role: "user", content: [png] },
+		},
+		{
+			type: "message",
+			id: "img-tool",
+			parentId: "img-user",
+			timestamp: "2",
+			message: { role: "toolResult", toolName: "screenshot", content: [jpeg] },
+		},
+		{
+			type: "message",
+			id: "mixed",
+			parentId: "img-tool",
+			timestamp: "3",
+			message: {
+				role: "user",
+				content: [
+					{ type: "text", text: "look at this" },
+					webp,
+					{ type: "text", text: "and fix it" },
+				],
+			},
+		},
+	];
+	const context = {
+		...base,
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+
+	const user = await run(tools, "history", { op: "read", id: "img-user" }, context);
+	assert.match(
+		stringValue(requireValue(user.content[0]).text),
+		/\[user\] \[1 image: image\/png\]/,
+	);
+	assert.deepEqual(user.content.slice(1), [png]);
+	const tool = await run(tools, "history", { op: "read", id: "img-tool" }, context);
+	assert.match(
+		stringValue(requireValue(tool.content[0]).text),
+		/\[toolResult\] \[1 image: image\/jpeg\]/,
+	);
+	assert.deepEqual(tool.content.slice(1), [jpeg]);
+	const mixed = await run(tools, "history", { op: "read", id: "mixed" }, context);
+	assert.match(
+		stringValue(requireValue(mixed.content[0]).text),
+		/look at this\nand fix it\n\[1 image: image\/webp\]/,
+	);
+	assert.deepEqual(mixed.content.slice(1), [webp]);
+	const laterPage = await run(tools, "history", { op: "read", id: "mixed", offset: 5 }, context);
+	assert.equal(laterPage.content.length, 1, "images ride along with the first page only");
+
+	const longImage = [
+		{
+			type: "message",
+			id: "long-image",
+			parentId: null,
+			timestamp: "4",
+			message: {
+				role: "user",
+				content: [{ type: "text", text: "z".repeat(25_000) }, png],
+			},
+		},
+	];
+	const tightImage = {
+		...usageContext(base, 100_000, 82_117),
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => longImage,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+	await assert.rejects(
+		run(tools, "history", { op: "read", id: "long-image" }, tightImage),
+		/Too little context remains/,
+	);
+
+	const search = toolText(
+		await run(tools, "history", { op: "search", query: "image/" }, context),
+	);
+	assert.match(search, /\[img-tool\] \[toolResult\] \[1 image: image\/jpeg\]/);
+	assert.match(search, /\[img-user\] \[user\] \[1 image: image\/png\]/);
+	assert.doesNotMatch(search, /UE5HREFUQQ|SlBFR0RBVEE/);
+
+	const handoff = automaticHandoff(handlers, context, branch);
+	assert.match(
+		handoff,
+		/\[owner input \| 1 \| entry img-user\]\n\[1 image: image\/png\] — recover with history read id img-user/,
+	);
+	assert.match(
+		handoff,
+		/look at this\nand fix it\n\[1 image: image\/webp\] — recover with history read id mixed/,
+	);
+	assert.doesNotMatch(handoff, /UE5HREFUQQ|SlBFR0RBVEE|V0VCUERBVEE/);
+});
+
+await test("history image continuations preserve order, text, and retry offsets", async () => {
+	await Promise.all(
+		["short", "x".repeat(25_000)].map(async (text) => {
+			const { handlers, tools, context: base } = await setup();
+			const images = Array.from({ length: 13 }, (_, index) => ({
+				type: "image",
+				mimeType: "image/png",
+				data: Buffer.from(`image ${index}`).toString("base64"),
+			}));
+			const context = {
+				...usageContext(base, 32_000, 1_000),
+				sessionManager: {
+					...sessionIdentity(),
+					getSessionFile: (): string | undefined => undefined,
+					buildSessionProjection: emptyProjection,
+					getBranch: () => [
+						{
+							type: "message",
+							id: "images",
+							message: { role: "user", content: [{ type: "text", text }, ...images] },
+						},
+					],
+					getSessionDir: () => join(tmpdir(), "missing"),
+				},
+			};
+			let offset = 0,
+				imageOffset = 0;
+			let recoveredText = "";
+			const recoveredImages = [];
+			for (let page = 0; page < 30; page++) {
+				requireValue(handlers.get("turn_start"))({}, context);
+				// The next page depends on this receipt's text and image continuation offsets.
+				const result = await run(
+					tools,
+					"history",
+					{ op: "read", id: "images", offset, imageOffset },
+					context,
+				);
+				const display = result.details;
+				assert.equal(display?.kind, "history-read");
+				recoveredText += toolText(result).slice(
+					display.headerLength,
+					display.headerLength + display.end - display.offset,
+				);
+				recoveredImages.push(...result.content.slice(1));
+				const next =
+					toolText(result).match(/and offset (\d+) and imageOffset (\d+)\./) ?? undefined;
+				if (next === undefined) {
+					break;
+				}
+				offset = Number(next[1]);
+				imageOffset = Number(next[2]);
+				assert.ok(offset > display.offset || imageOffset > (display.imageOffset ?? 0));
+			}
+			assert.equal(recoveredText, `[user] ${text}\n[13 images: image/png]`);
+			assert.deepEqual(recoveredImages, images);
+			await assert.rejects(
+				run(tools, "history", { op: "read", id: "images", imageOffset: 14 }, context),
+				/Image offset 14 is past the end/,
+			);
+			const tight = usageContext(context, 32_000, 14_117);
+			await assert.rejects(
+				run(
+					tools,
+					"history",
+					{ op: "read", id: "images", offset: 5, imageOffset: 4 },
+					tight,
+				),
+				/retry with offset 5 and imageOffset 4/,
+			);
+		}),
+	);
+});
+
+await test("small-context configurations are unsupported; larger ones derive honest budgets", async () => {
+	await Promise.all(
+		[4096, 8_192, 16_384].map(async (contextWindow) => {
+			const { handlers, tools, messages, context: base } = await setup();
+			const context = usageContext(base, contextWindow, contextWindow - 500);
+			const guidance = guidanceFor(handlers, context);
+			assert.match(guidance, /unsupported configuration/);
+			assert.match(
+				guidance,
+				new RegExp(
+					`Configured context capacity: ${contextWindow.toLocaleString("en-US")} tokens`,
+				),
+			);
+			assert.match(
+				guidance,
+				/Lower compaction.reserveTokens in Pi settings or use a larger-context model/,
+			);
+			assert.doesNotMatch(guidance, /% used/);
+			turnEnd(handlers, context);
+			assert.equal(messages.length, 0, `${contextWindow}: no reminder`);
+			assert.equal(
+				automaticResult(handlers, context, []),
+				undefined,
+				`${contextWindow}: Pi keeps its own compaction`,
+			);
+			const remaining = toolText(await run(tools, "get_context_remaining", {}, context));
+			assert.match(remaining, /unsupported configuration/);
+			assert.match(remaining, /500 tokens until the configured context limit/);
+			const rollover = await run(tools, "new_context", { handoff: "still works" }, context);
+			assert.match(toolText(rollover), /Requested a fresh Pi context/);
+			const oldLimit = Math.min(20_000, Math.floor(contextWindow / 2) * 4);
+			if (oldLimit < 20_000) {
+				await assert.rejects(
+					run(tools, "new_context", { handoff: "x".repeat(oldLimit) }, context),
+					/too large for the active model/i,
+				);
+			}
+		}),
+	);
+
+	{
+		const { handlers, messages, context: base } = await setup();
+		// 32,768 - 16,384 leaves 16,384 usable: line at 16,385 (50%), band 1,638 tokens wide.
+		const context = usageContext(base, 32_768, 15_000);
+		const guidance = guidanceFor(handlers, context);
+		assert.match(guidance, /rollover line is 16,385 tokens used/);
+		turnEnd(handlers, context);
+		assert.equal(messages.length, 1);
+		assert.match(requireValue(messages[0]).content, /Routine task-note update/);
+		assert.ok(automaticResult(handlers, context, []));
+	}
+
+	{
+		const { handlers, tools, context: base } = await setup();
+		const large = usageContext(base, 400_000, 1_000, 64_000);
+		const guidance = guidanceFor(handlers, large);
+		assert.match(guidance, /Configured context capacity: 400,000 tokens/);
+		assert.match(guidance, /rollover line is 336,001 tokens used/);
+		assert.match(guidance, /No routine budget checks are needed/);
+		// A 272K window with a 64K reserve has its line at 208,001 (76%).
+		const sol = usageContext(base, 272_000, 205_000, 64_000);
+		const switched = guidanceFor(handlers, sol);
+		assert.match(switched, /Configured context capacity: 272,000 tokens/);
+		assert.match(switched, /rollover line is 208,001 tokens used/);
+		assert.doesNotMatch(switched, /400,000|336,001/);
+		const unknownCapacity = guidanceFor(handlers, {
+			...base,
+			model: { contextWindow: 0 },
+			getContextUsage: (): ReturnType<TestContext["getContextUsage"]> => undefined,
+		});
+		assert.match(unknownCapacity, /Configured context capacity is unknown/);
+		assert.doesNotMatch(unknownCapacity, /rollover line is .* tokens used/);
+		assert.match(
+			toolText(await run(tools, "get_context_remaining", {}, sol)),
+			/^≈3,001 tokens until automatic rollover \(line at 208,001\); ≈67,000 tokens until the configured context limit/,
+		);
+		const remaining = toolText(
+			await run(
+				tools,
+				"get_context_remaining",
+				{},
+				usageContext(base, 100_000, 36_000, 64_000),
+			),
+		);
+		assert.match(
+			remaining,
+			/^≈1 tokens until automatic rollover \(line at 36,001\); ≈64,000 tokens until the configured context limit \(36,000\/100,000 used, 36%\)\. Best available native estimate\./,
+		);
+		const unknown = toolText(
+			await run(
+				tools,
+				"get_context_remaining",
+				{},
+				{
+					...base,
+					getContextUsage: (): ReturnType<TestContext["getContextUsage"]> => undefined,
+				},
+			),
+		);
+		assert.match(unknown, /not known until the next model response/);
+	}
+});
+
+await test("fresh payload budgets count the system prompt and cancel unsafe automatic recovery", async () => {
+	const { handlers, tools, context: base } = await setup();
+	const context = {
+		...usageContext(base, 32_768, 1000),
+		getSystemPrompt: () => "s".repeat(60_000),
+	};
+	await assert.rejects(
+		run(tools, "new_context", { handoff: "h".repeat(10_000) }, context),
+		/limit 0/,
+	);
+	assert.deepEqual(automaticResult(handlers, context, []), { cancel: true });
+});
+
+await test("read pages shrink to the remaining budget and refuse unsafe pages while preserving the offset", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-page-test-")));
+	try {
+		const { tools, handlers, context: base } = await setup();
+		const branch = [
+			{
+				type: "message",
+				id: "long",
+				parentId: null,
+				timestamp: "1",
+				message: { role: "user", content: "h".repeat(25_000) },
+			},
+		];
+		const withBranch = (context: ContextInput) =>
+			pageContext(handlers, {
+				...context,
+				cwd: dir,
+				sessionManager: {
+					...sessionIdentity(),
+					getSessionFile: (): string | undefined => undefined,
+					buildSessionProjection: emptyProjection,
+					getBranch: () => branch,
+					getSessionDir: () => dir,
+				},
+			});
+		await run(
+			tools,
+			"notes",
+			{ op: "write", path: "long.md", content: "n".repeat(25_000) },
+			withBranch(base),
+		);
+
+		// Line at 83,617; 1,500 tokens short of it leaves 500 tokens after the margin: a 2,000-character page.
+		const tight = withBranch(usageContext(base, 100_000, 82_117));
+		const note = toolText(await run(tools, "notes", { op: "read", path: "long.md" }, tight));
+		const header = `File: ${join(dir, ".pi", "notes", "long.md")}\n`;
+		const end = 2000 - header.length;
+		assert.equal(
+			note,
+			`${header}${"n".repeat(end)}\n[chars 0-${end} of 25000; continue with offset ${end}]`,
+		);
+		// These compare independent reads at the same starting usage, not sibling calls.
+		handlers.get("turn_start")?.({}, tight);
+		const entry = toolText(await run(tools, "history", { op: "read", id: "long" }, tight));
+		assert.match(
+			entry,
+			/\[chars 0-2000 of 25007\] \[user\] h{1993}\nMore remains; call history read with id "long" and offset 2000\.$/,
+		);
+
+		const tighter = withBranch(usageContext(base, 100_000, 82_517));
+		await assert.rejects(
+			run(tools, "notes", { op: "read", path: "long.md", offset: 2000 }, tighter),
+			/Call new_context first, then retry with offset 2000/,
+		);
+		await assert.rejects(
+			run(tools, "history", { op: "read", id: "long", offset: 2000 }, tighter),
+			/Call new_context first, then retry with offset 2000/,
+		);
+
+		// Disabled compaction measures against the configured context limit instead of the rollover line.
+		const disabled = withBranch(usageContext(base, 100_000, 98_000, 16_384, false));
+		assert.match(
+			toolText(await run(tools, "notes", { op: "read", path: "long.md" }, disabled)),
+			new RegExp(`continue with offset ${4000 - header.length}`),
+		);
+		const unknown = withBranch({
+			...base,
+			model: { contextWindow: 4096 },
+			getContextUsage: () => ({ tokens: null, contextWindow: 4096, percent: null }),
+		});
+		handlers.get("turn_start")?.({}, unknown);
+		const unknownPage = toolText(
+			await run(tools, "notes", { op: "read", path: "long.md" }, unknown),
+		);
+		const unknownOffset = unknownPage.match(/continue with offset (\d+)/)?.[1];
+		assert.notEqual(unknownOffset, undefined);
+		assert.ok(Number(unknownOffset) < 8192);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("note and history pages share a batch budget without double-counting consumed pages", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-batch-pages-")));
+	try {
+		const { tools, handlers, context: base } = await setup();
+		let tokens = 98_000;
+		const context = pageContext(handlers, {
+			...usageContext(base, 100_000, tokens, 16_384, false),
+			cwd: dir,
+			getContextUsage: () => ({ tokens, contextWindow: 100_000, percent: tokens / 1000 }),
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [
+					{
+						type: "message",
+						id: "long",
+						message: { role: "user", content: "h".repeat(25_000) },
+					},
+				],
+				getSessionDir: () => dir,
+			},
+		});
+		await run(
+			tools,
+			"notes",
+			{ op: "write", path: "long.md", content: "n".repeat(25_000) },
+			context,
+		);
+		await run(
+			tools,
+			"notes",
+			{ op: "write", path: "short.md", content: "s".repeat(800) },
+			context,
+		);
+		const header = `File: ${join(dir, ".pi", "notes", "long.md")}\n`;
+		const startTurn = () => handlers.get("turn_start")?.({}, context);
+		startTurn();
+		assert.match(
+			toolText(await run(tools, "notes", { op: "read", path: "long.md" }, context)),
+			new RegExp(`continue with offset ${4000 - header.length}`),
+		);
+		await assert.rejects(
+			run(tools, "history", { op: "read", id: "long", offset: 4000 }, context),
+			/retry with offset 4000/,
+		);
+		startTurn();
+		assert.match(
+			toolText(await run(tools, "history", { op: "read", id: "long" }, context)),
+			/offset 4000/,
+		);
+		await assert.rejects(
+			run(tools, "notes", { op: "read", path: "long.md", offset: 4000 }, context),
+			/retry with offset 4000/,
+		);
+
+		startTurn();
+		tokens = 97_000;
+		const shortHeader = `File: ${join(dir, ".pi", "notes", "short.md")}\n`;
+		assert.equal(
+			toolText(await run(tools, "notes", { op: "read", path: "short.md" }, context)),
+			shortHeader + "s".repeat(800),
+		);
+		// Serial execution has already added the complete result to native usage.
+		tokens += Math.ceil((shortHeader.length + 800) / 4);
+		assert.match(
+			toolText(await run(tools, "notes", { op: "read", path: "long.md" }, context)),
+			new RegExp(`continue with offset ${(99_000 - tokens) * 4 - header.length}`),
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("notes list and search page every result through the shared budget, including oversized paths", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-search-pages-")));
+	try {
+		const { tools, handlers, context: base } = await setup();
+		const context = pageContext(handlers, {
+			...usageContext(base, 100_000, 98_750, 16_384, false),
+			cwd: dir,
+		});
+		const root = join(dir, ".pi", "notes");
+		const nested = Array.from({ length: 4 }, () => "d".repeat(180)).join("/");
+		mkdirSync(join(root, nested), { recursive: true });
+		const files = Array.from(
+			{ length: 120 },
+			(_, index) => `${index.toString().padStart(3, "0")}-${"n".repeat(180)}.md`,
+		);
+		files.push(`${nested}/long-${"f".repeat(70)}.md`);
+		const modified = (index: number) =>
+			new Date(Date.UTC(2026, 0, 1) + (files.length - index) * 60_000);
+		for (const [index, path] of files.entries()) {
+			writeFileSync(join(root, path), `needle sample ${"s".repeat(180)}`);
+			utimesSync(join(root, path), modified(index), modified(index));
+		}
+		for (const op of ["list", "search"]) {
+			const expectedRows = files.map((path, index) =>
+				op === "list"
+					? `${path}  194B  ${modified(index).toISOString().slice(0, 16)}Z`
+					: `${path}:1: needle sample ${"s".repeat(180)}`,
+			);
+			const expected = expectedRows.join("\n");
+			const header = op === "list" ? `Notes directory: ${root}\n` : "";
+			let offset = 0;
+			let recovered = "";
+			for (let page = 0; page < 100; page++) {
+				requireValue(handlers.get("turn_start"))({}, context);
+				// Each page supplies the exact next offset and completes the current turn reservation.
+				const result = await run(tools, "notes", { op, query: "needle", offset }, context);
+				const display = result.details;
+				assert.ok(display?.kind === "notes-list" || display?.kind === "notes-search");
+				assert.ok(display.page, "list/search must expose continuation metadata");
+				const { end, total } = display.page;
+				const text = toolText(result);
+				assert.ok(
+					text.startsWith(header),
+					"every listing page identifies the shared directory",
+				);
+				assert.ok(text.length <= 1000, "headers and continuation fit the admitted page");
+				if (display.more === true) {
+					// Search stops reading once the page is decided, so its total is a lower bound.
+					assert.ok(op === "search" && end < total && total <= expected.length);
+					assert.match(text, /; more matches follow; continue with offset/);
+				} else {
+					assert.equal(total, expected.length);
+				}
+				let position = 0;
+				const count = expectedRows.filter((row) => {
+					const overlap = position < end && position + row.length > offset;
+					position += row.length + 1;
+					return overlap;
+				}).length;
+				assert.equal(
+					display.count,
+					count,
+					"count describes only row portions actually returned",
+				);
+				assert.ok(op !== "search" || count <= 20);
+				recovered += text.slice(header.length, header.length + end - offset);
+				assert.ok(end > offset);
+				if (end === total) {
+					break;
+				}
+				assert.match(text, new RegExp(`continue with offset ${end}`));
+				offset = end;
+			}
+			assert.equal(
+				recovered,
+				expected,
+				"no result tail is lost even when a single path spans pages",
+			);
+		}
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("mixed search/list/read outputs and no-match refusals share one reservation", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-mixed-pages-")));
+	try {
+		const { tools, handlers, context: base } = await setup();
+		const branch = Array.from({ length: 60 }, (_, index) => ({
+			type: "message",
+			id: `entry-${index}`,
+			message: { role: "user", content: `needle ${"h".repeat(500)}` },
+		}));
+		const context = {
+			...usageContext(base, 100_000, 98_000, 16_384, false),
+			cwd: dir,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => branch,
+				getSessionDir: () => dir,
+			},
+		};
+		mkdirSync(join(dir, ".pi", "notes"), { recursive: true });
+		writeFileSync(
+			join(dir, ".pi", "notes", "long.md"),
+			Array.from({ length: 60 }, () => `needle ${"n".repeat(300)}`).join("\n"),
+		);
+		for (const first of ["history", "notes"]) {
+			requireValue(handlers.get("turn_start"))({}, context);
+			// Complete this sibling batch before resetting its shared reservation for the next order.
+			const results = await Promise.allSettled([
+				run(tools, first, { op: "search", query: "needle", limit: 50 }, context),
+				run(tools, "notes", { op: "list" }, context),
+				run(tools, "notes", { op: "read", path: "long.md" }, context),
+				run(tools, "history", { op: "read", id: "entry-0" }, context),
+			]);
+			const text = results.map((result) =>
+				result.status === "fulfilled"
+					? toolText(result.value)
+					: stringValue(record(result.reason).message),
+			);
+			assert.ok(
+				text.reduce((total, value) => total + Math.ceil(value.length / 4), 0) <= 2000,
+			);
+			assert.ok(results.some((result) => result.status === "rejected"));
+		}
+		requireValue(handlers.get("turn_start"))({}, context);
+		const hugeQuery = "absent".repeat(20_000);
+		for (const tool of ["notes", "history"]) {
+			const output = toolText(
+				// These no-match results intentionally consume one shared batch reservation in order.
+				await run(tools, tool, { op: "search", query: hugeQuery }, context),
+			);
+			assert.ok(output.length < 300, "a no-match echo cannot reprint an unbounded query");
+			assert.match(output, /No (notes|history) match/);
+		}
+		const tight = { ...context, ...usageContext(context, 100_000, 99_750, 16_384, false) };
+		requireValue(handlers.get("turn_start"))({}, tight);
+		let refusalTokens = 0;
+		for (let index = 0; index < 20; index++) {
+			// Each refusal spends the remaining shared budget before the next refusal is admitted.
+			await assert.rejects(
+				run(
+					tools,
+					index % 2 !== 0 ? "notes" : "history",
+					{ op: "search", query: hugeQuery, offset: 123 },
+					tight,
+				),
+				(error: unknown) => {
+					assert.ok(error instanceof Error);
+					refusalTokens += Math.ceil(error.message.length / 4);
+					return true;
+				},
+			);
+		}
+		assert.ok(
+			refusalTokens <= 250,
+			"even repeated no-match refusals stay inside the remaining budget",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+function historySearchPage(result: {
+	readonly content: readonly { readonly text?: string }[];
+	readonly details?: PosthorseDisplay;
+}): { readonly output: string; readonly body: string; readonly id: string } {
+	const output = toolText(result);
+	assert.ok(output.length <= 1200);
+	assert.equal(result.details?.kind, "history-search");
+	assert.equal(
+		result.details.entries.reduce((sum, span) => sum + span.length + 1, -1),
+		output.length - (result.details.footerLength ?? 0),
+	);
+	for (const span of result.details.entries) {
+		assert.ok(span.headerLength >= 0 && span.headerLength <= span.length);
+	}
+	const body = output.slice(0, output.length - (result.details.footerLength ?? 0));
+	const id =
+		body.match(/^\[entry ([^;]+); from char \d+\]/)?.[1] ??
+		body.match(/\[window [^\]]+\] \[([^\]]+)\]/)?.[1];
+	assert.notEqual(id, undefined, "every partial page keeps a usable native entry id");
+	return { output, body, id: requireValue(id) };
+}
+
+await test("history cursors finish partial headers and progress past growing lookup echoes", async () => {
+	const { tools, handlers, context: base } = await setup();
+	const branch: Record<string, unknown>[] = [
+		{
+			type: "message",
+			id: "old",
+			timestamp: "1",
+			message: { role: "user", content: "needle oldest" },
+		},
+		{
+			type: "message",
+			id: "long",
+			parentId: "old",
+			timestamp: "T".repeat(4000),
+			message: { role: "user", content: "needle long metadata" },
+		},
+		{
+			type: "message",
+			id: "echo",
+			parentId: "long",
+			message: {
+				role: "toolResult",
+				toolName: "history",
+				content: "needle prior lookup",
+			},
+		},
+	];
+	const context = pageContext(handlers, {
+		...usageContext(base, 100_000, 98_700, 16_384, false),
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	});
+	let cursor: string | undefined;
+	let recovered = "";
+	const returned: string[] = [];
+	let pages = 0;
+	for (; pages < 20; pages++) {
+		requireValue(handlers.get("turn_start"))({}, context);
+		branch.push({
+			type: "message",
+			id: `call-${pages}`,
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						name: "history",
+						arguments: { op: "search", query: "needle", cursor },
+					},
+				],
+			},
+		});
+		// Persist this lookup echo and obtain its cursor before appending the next lookup.
+		const result = await run(
+			tools,
+			"history",
+			{ op: "search", query: "needle", limit: 1, cursor },
+			context,
+		);
+		const { output, body, id } = historySearchPage(result);
+		returned.push(id);
+		if (id === "old" || id === "long") {
+			recovered += body.replace(/^\[entry [^;]+; from char \d+\] /, "");
+		}
+		branch.push({
+			type: "message",
+			id: `result-${pages}`,
+			message: { role: "toolResult", toolName: "history", content: output },
+		});
+		const next = output.match(
+			/\[More results; continue with cursor "([^"]+)" and the same query\/scope\.\]$/,
+		)?.[1];
+		assert.notEqual(next, cursor ?? "never", "every continued page advances");
+		if (next === undefined) {
+			break;
+		}
+		cursor = next;
+	}
+	assert.ok(
+		pages < 20,
+		`new echoes must not keep the search alive forever: ${JSON.stringify(returned)}`,
+	);
+	assert.match(
+		recovered,
+		new RegExp(`T{4000} \\[window initial\\] \\[long\\] \\[user\\] needle long metadata`),
+	);
+	assert.equal(recovered.match(/\[old\] \[user\] needle oldest/g)?.length, 1);
+	assert.equal(returned.filter((id) => id === "echo").length, 1);
+	assert.equal(returned.filter((id) => id === "old").length, 1);
+	for (const params of [
+		{ query: "different", cursor },
+		{ query: "needle", cursor, all: true },
+		{ query: "needle", cursor: "not-json" },
+	]) {
+		requireValue(handlers.get("turn_start"))({}, context);
+		// Each invalid-cursor call follows its own turn reservation reset.
+		await assert.rejects(
+			run(tools, "history", { op: "search", ...params }, context),
+			/Invalid history cursor/,
+		);
+	}
+});
+
+await test("all-session cursors retain ranking and per-file entries across pages", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-cursor-forks-"));
+	try {
+		const { tools, handlers, context: base } = await setup();
+		const original = {
+			type: "message",
+			id: "shared",
+			message: { role: "user", content: "needle shared ancestor" },
+		};
+		const older = [
+			original,
+			{
+				type: "message",
+				id: "older",
+				message: { role: "user", content: "needle older source" },
+			},
+		];
+		const current: Record<string, unknown>[] = [
+			original,
+			{
+				type: "message",
+				id: "newer",
+				message: { role: "user", content: "needle newer source" },
+			},
+			{
+				type: "message",
+				id: "prior-echo",
+				message: { role: "toolResult", toolName: "notes", content: "needle prior echo" },
+			},
+		];
+		const oldFile = join(dir, "old.jsonl"),
+			activeFile = join(dir, "current.jsonl");
+		writeArchive(oldFile, older.map((entry) => JSON.stringify(entry)).join("\n"));
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		let cursor: string | undefined;
+		const ids: string[] = [];
+		for (let page = 0; page < 20; page++) {
+			requireValue(handlers.get("turn_start"))({}, context);
+			current.push({
+				type: "message",
+				id: `lookup-${page}`,
+				message: {
+					role: "assistant",
+					content: [
+						{
+							type: "toolCall",
+							name: "history",
+							arguments: { op: "search", query: "needle", cursor },
+						},
+					],
+				},
+			});
+			writeArchive(activeFile, current.map((entry) => JSON.stringify(entry)).join("\n"));
+			utimesSync(oldFile, new Date(1000), new Date(1000));
+			utimesSync(activeFile, new Date(2000 + page), new Date(2000 + page));
+			// Write this page's lookup echo before reopening archives with its returned cursor.
+			const result = await run(
+				tools,
+				"history",
+				{ op: "search", query: "needle", limit: 1, all: true, cursor },
+				context,
+			);
+			const text = toolText(result);
+			ids.push(
+				requireValue(requireValue(text.match(/^[^\n]*?\[window [^\]]+\] \[([^\]]+)\]/))[1]),
+			);
+			current.push({
+				type: "message",
+				id: `result-${page}`,
+				message: { role: "toolResult", toolName: "history", content: text },
+			});
+			const next = text.match(
+				/\[More results; continue with cursor "([^"]+)" and the same query\/scope\.\]$/,
+			)?.[1];
+			if (next === undefined) {
+				break;
+			}
+			cursor = next;
+		}
+		assert.deepEqual(ids.slice(0, 3), [
+			archivedId("newer", "current.jsonl"),
+			archivedId("shared", "current.jsonl"),
+			archivedId("older", "old.jsonl"),
+		]);
+		assert.equal(new Set(ids).size, ids.length);
+		assert.ok(
+			ids.includes(archivedId("shared", "old.jsonl")),
+			"copied entries keep distinct file references",
+		);
+		assert.ok(
+			ids.includes(archivedId("prior-echo", "current.jsonl")),
+			"pagination reaches the oldest echo and terminates",
+		);
+		assert.ok(ids.length < 20);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test(
+	"note replacement keeps the existing checkpoint on a real file-size failure",
+	{ skip: process.platform === "win32" },
+	async () => {
+		const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-write-failure-"));
+		try {
+			const notesDir = join(dir, ".pi", "notes");
+			mkdirSync(notesDir, { recursive: true });
+			const path = join(notesDir, "durable.md");
+			writeFileSync(path, "original checkpoint");
+			const code = `import assert from "node:assert/strict";
+import posthorse from ${JSON.stringify(new URL("../index.ts", import.meta.url).href)};
+import { SessionManager } from ${JSON.stringify(import.meta.resolve("@earendil-works/pi-coding-agent"))};
+const sessionManager = SessionManager.inMemory(process.cwd());
+let notes;
+posthorse({ on() {}, appendEntry: (type, data) => sessionManager.appendCustomEntry(type, data), registerMessageRenderer() {}, registerTool(tool) { if (tool.name === "notes") notes = tool; } });
+process.on("SIGXFSZ", () => { /* Publication surfaces EFBIG through the awaited rejection. */ });
+await assert.rejects(notes.execute("fault", { op: "write", path: "durable.md", content: "N".repeat(8192) }, new AbortController().signal, undefined, { cwd: process.cwd(), sessionManager }), { code: "EFBIG" });`;
+			execFileSync(
+				"/bin/bash",
+				[
+					"-c",
+					'ulimit -f 2; exec "$@"',
+					"note-publication",
+					process.execPath,
+					"--input-type=module",
+					"-e",
+					code,
+				],
+				{
+					cwd: dir,
+					env: {
+						PATH: process.env.PATH,
+						HOME: dir,
+						TMPDIR: dir,
+						PI_CODING_AGENT_DIR: join(dir, "agent"),
+						PI_OFFLINE: "1",
+						PI_TELEMETRY: "0",
+						NODE_DISABLE_COMPILE_CACHE: "1",
+						NODE_OPTIONS: process.env.NODE_OPTIONS,
+						PI_PACKAGE_DIR: process.env.PI_PACKAGE_DIR,
+					},
+					encoding: "utf8",
+					timeout: 30_000,
+				},
+			);
+			assert.equal(readFileSync(path, "utf8"), "original checkpoint");
+			assert.deepEqual(readdirSync(notesDir), ["durable.md"]);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	},
+);
+
+await test("notes resolve the repository root from nested directories, worktrees, and plain folders", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-root-test-")));
+	try {
+		const repo = join(dir, "repo");
+		const main = join(dir, "main");
+		const worktree = join(dir, "wt");
+		const plain = join(dir, "plain", "sub");
+		mkdirSync(join(repo, ".git"), { recursive: true });
+		mkdirSync(join(repo, "packages", "app"), { recursive: true });
+		mkdirSync(join(main, ".git", "worktrees", "wt"), { recursive: true });
+		writeFileSync(join(main, ".git", "worktrees", "wt", "commondir"), "../..\n");
+		mkdirSync(join(worktree, "packages", "app"), { recursive: true });
+		writeFileSync(join(worktree, ".git"), `gitdir: ${join(main, ".git", "worktrees", "wt")}\n`);
+		mkdirSync(plain, { recursive: true });
+		const { tools, context } = await setup();
+		const notes = notesIn(tools, context);
+		const write = (cwd: string) => notes(cwd, { op: "write", path: "state.md", content: cwd });
+
+		await write(join(repo, "packages", "app"));
+		assert.equal(
+			readFileSync(join(repo, ".pi", "notes", "state.md"), "utf8"),
+			join(repo, "packages", "app"),
+		);
+		assert.equal(existsSync(join(repo, "packages", "app", ".pi")), false);
+		await write(worktree);
+		assert.equal(readFileSync(join(main, ".pi", "notes", "state.md"), "utf8"), worktree);
+		const notePath = join(main, ".pi", "notes", "state.md");
+		const listing = toolText(await notes(worktree, { op: "list" }));
+		assert.ok(listing.startsWith(`Notes directory: ${join(main, ".pi", "notes")}\n`));
+		assert.match(
+			requireValue(listing.split("\n")[1]),
+			/^state\.md  \d+B  \d{4}-\d\d-\d\dT\d\d:\d\dZ$/,
+		);
+		const read = toolText(await notes(worktree, { op: "read", path: "state.md" }));
+		const editPath = requireValue(read.split("\n")[0]).replace(/^File: /, "");
+		assert.equal(editPath, notePath);
+		await createEditTool(worktree).execute("edit-note", {
+			path: editPath,
+			edits: [{ oldText: worktree, newText: "Updated continuation." }],
+		});
+		assert.equal(
+			readFileSync(notePath, "utf8"),
+			"Updated continuation.",
+			"the returned absolute path edits the shared note, not a worktree-local copy",
+		);
+		writeFileSync(join(worktree, ".git"), "gitdir: ../main/.git/worktrees/wt\n");
+		await write(join(worktree, "packages", "app"));
+		assert.equal(
+			readFileSync(join(main, ".pi", "notes", "state.md"), "utf8"),
+			join(worktree, "packages", "app"),
+		);
+		assert.equal(existsSync(join(worktree, ".pi")), false);
+		await write(plain);
+		assert.equal(readFileSync(join(plain, ".pi", "notes", "state.md"), "utf8"), plain);
+
+		// A copied or orphaned worktree must still be able to keep local notes.
+		const orphan = join(dir, "orphan");
+		mkdirSync(join(orphan, "nested"), { recursive: true });
+		writeFileSync(join(orphan, ".git"), "gitdir: ../missing/.git/worktrees/orphan\n");
+		await write(join(orphan, "nested"));
+		assert.equal(
+			readFileSync(join(orphan, ".pi", "notes", "state.md"), "utf8"),
+			join(orphan, "nested"),
+		);
+		assert.equal(
+			toolText(await notes(orphan, { op: "read", path: "state.md" })),
+			`File: ${join(orphan, ".pi", "notes", "state.md")}\n${join(orphan, "nested")}`,
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("notes for Pi package checkouts move to the agent directory and survive pi update", async () => {
+	// A linked agent directory must retain the same package storage owner.
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-package-notes-")));
+	const agentDir = join(dir, "agent");
+	const previous = process.env.PI_CODING_AGENT_DIR;
+	process.env.PI_CODING_AGENT_DIR = agentDir;
+	try {
+		mkdirSync(join(dir, "physical-agent"));
+		symlinkSync(join(dir, "physical-agent"), agentDir, "junction");
+		const git = (cwd: string, ...args: readonly string[]) =>
+			execFileSync("git", args, { cwd, stdio: "ignore" });
+		const owner = join(agentDir, "git", "github.com", "acme");
+		const checkout = join(owner, "tool");
+		const legacy = join(checkout, ".pi", "notes");
+		mkdirSync(join(checkout, "src"), { recursive: true });
+		git(checkout, "init", "-q");
+		mkdirSync(join(legacy, "task"), { recursive: true });
+		writeFileSync(join(legacy, "task", "state.md"), "Saved before the move.");
+		const { tools, context } = await setup();
+		const notes = notesIn(tools, context);
+		const moved = join(realpathSync(agentDir), "notes", "github.com", "acme", "tool");
+
+		const listing = toolText(await notes(join(checkout, "src"), { op: "list" }));
+		assert.ok(listing.startsWith(`Notes directory: ${moved}\ntask/state.md  `), listing);
+		await notes(checkout, {
+			op: "append",
+			path: "task/state.md",
+			content: "Appended after.",
+		});
+		assert.equal(
+			readFileSync(join(legacy, "task", "state.md"), "utf8"),
+			"Saved before the move.\nAppended after.\n",
+			"sessions running an earlier Posthorse still reach the notes through the old path",
+		);
+		// pi update resets a git package to its new commit and deletes everything Git does not track.
+		git(checkout, "clean", "-fdx", "-q");
+		assert.equal(existsSync(join(checkout, ".pi")), false);
+		assert.equal(
+			toolText(await notes(checkout, { op: "read", path: "task/state.md" })),
+			`File: ${join(moved, "task", "state.md")}\nSaved before the move.\nAppended after.\n`,
+		);
+
+		// A session still running an older Posthorse writes inside the checkout again after the
+		// update removed the link. Both versions survive, and the link returns.
+		mkdirSync(join(legacy, "task"), { recursive: true });
+		writeFileSync(join(legacy, "task", "state.md"), "Written by an older Posthorse.");
+		const relisted = toolText(await notes(checkout, { op: "list" }));
+		const copy = requireValue(
+			requireValue(/^(from-checkout-\d+)\/task\/state\.md {2}/m.exec(relisted))[1],
+		);
+		assert.equal(
+			readFileSync(join(moved, copy, "task", "state.md"), "utf8"),
+			"Written by an older Posthorse.",
+		);
+		assert.equal(
+			readFileSync(join(legacy, "task", "state.md"), "utf8"),
+			"Saved before the move.\nAppended after.\n",
+		);
+
+		// Pi cleans only the checkouts, so a folder holding several packages keeps its own notes.
+		await notes(realpathSync(owner), {
+			op: "write",
+			path: "fleet.md",
+			content: "Owner folder.",
+		});
+		assert.equal(
+			readFileSync(join(owner, ".pi", "notes", "fleet.md"), "utf8"),
+			"Owner folder.",
+		);
+	} finally {
+		if (previous === undefined) {
+			delete process.env.PI_CODING_AGENT_DIR;
+		} else {
+			process.env.PI_CODING_AGENT_DIR = previous;
+		}
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("generic Git URL prefix packages cannot disclose or overwrite each other's notes", async () => {
+	const project = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-package-prefix-")));
+	try {
+		// Exercise the installed official parser rather than assuming Git-host namespace rules.
+		const imported: unknown = await import(
+			new URL("./utils/git.js", import.meta.resolve("@earendil-works/pi-coding-agent")).href
+		);
+		const parser = record(imported).parseGitUrl;
+		assert.ok(typeof parser === "function");
+		const source = (url: string) => record(Reflect.apply(parser, undefined, [url]));
+		const first = source("https://git.example.com/acme/tool.git");
+		const second = source("https://git.example.com/acme/tool/notes.git");
+		assert.equal(first.host, "git.example.com");
+		assert.equal(first.path, "acme/tool");
+		assert.equal(second.host, first.host);
+		assert.equal(second.path, "acme/tool/notes");
+		const outer = join(project, ".pi", "git", stringValue(first.host), stringValue(first.path));
+		const inner = join(
+			project,
+			".pi",
+			"git",
+			stringValue(second.host),
+			stringValue(second.path),
+		);
+		mkdirSync(inner, { recursive: true });
+		execFileSync("git", ["init", "-q"], { cwd: outer });
+		execFileSync("git", ["init", "-q"], { cwd: inner });
+		const { tools, context } = await setup();
+		const notes = notesIn(tools, context);
+		await notes(outer, { op: "write", path: "outer.md", content: "outer checkpoint" });
+		await notes(inner, {
+			op: "write",
+			path: "inner.md",
+			content: "private inner checkpoint",
+		});
+		assert.doesNotMatch(toolText(await notes(outer, { op: "list" })), /inner\.md/);
+		assert.doesNotMatch(
+			toolText(await notes(outer, { op: "search", query: "checkpoint" })),
+			/private inner/,
+		);
+		assert.doesNotMatch(toolText(await notes(inner, { op: "list" })), /outer\.md/);
+		await notes(outer, {
+			op: "write",
+			path: "notes/inner.md",
+			content: "outer-owned file",
+		});
+		assert.match(
+			toolText(await notes(inner, { op: "read", path: "inner.md" })),
+			/private inner checkpoint$/,
+		);
+		assert.match(
+			toolText(await notes(outer, { op: "read", path: "notes/inner.md" })),
+			/outer-owned file$/,
+		);
+	} finally {
+		rmSync(project, { recursive: true, force: true });
+	}
+});
+
+await test("nested project-package notes do not leak through outer package list or search", async () => {
+	const project = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-nested-package-")));
+	try {
+		const outer = join(join(project, ".pi"), "git", "github.com", "acme", "outer");
+		const inner = join(outer, ".pi", "git", "github.com", "acme", "inner");
+		mkdirSync(inner, { recursive: true });
+		execFileSync("git", ["init", "-q"], { cwd: outer });
+		execFileSync("git", ["init", "-q"], { cwd: inner });
+		const { tools, context } = await setup();
+		const notes = notesIn(tools, context);
+		await notes(outer, { op: "write", path: "outer.md", content: "outer checkpoint" });
+		await notes(inner, { op: "write", path: "inner.md", content: "inner checkpoint" });
+		const outerList = toolText(await notes(outer, { op: "list" }));
+		assert.match(outerList, /outer\.md/);
+		assert.doesNotMatch(outerList, /inner\.md/);
+		assert.doesNotMatch(
+			toolText(await notes(outer, { op: "search", query: "checkpoint" })),
+			/inner checkpoint/,
+		);
+		assert.match(
+			toolText(await notes(inner, { op: "search", query: "checkpoint" })),
+			/inner checkpoint/,
+		);
+		assert.doesNotMatch(toolText(await notes(inner, { op: "list" })), /outer\.md/);
+		// An outer note named like the nested checkout's path remains only an outer note.
+		await notes(outer, {
+			op: "write",
+			path: ".pi/git/github.com/acme/inner/notes/inner.md",
+			content: "not the inner note",
+		});
+		assert.match(
+			toolText(await notes(inner, { op: "read", path: "inner.md" })),
+			/inner checkpoint$/,
+		);
+	} finally {
+		rmSync(project, { recursive: true, force: true });
+	}
+});
+
+await test("notes list and search follow aliases while skipping cycles and missing targets", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-note-cycles-")));
+	try {
+		const notesDir = join(dir, ".pi", "notes");
+		mkdirSync(join(notesDir, "nested"), { recursive: true });
+		writeFileSync(join(notesDir, "nested", "state.md"), "checkpoint");
+		symlinkSync("nested", join(notesDir, "alias"), "dir");
+		symlinkSync("..", join(notesDir, "nested", "back"), "dir");
+		symlinkSync("deleted.md", join(notesDir, "missing.md"));
+		symlinkSync("deleted-directory", join(notesDir, "missing-directory"), "dir");
+		const { tools, context } = await setup();
+		const notes = (params: Readonly<Record<string, unknown>>) =>
+			run(tools, "notes", params, { ...context, cwd: dir });
+
+		assert.equal(
+			toolText(await notes({ op: "list" })).split("\n")[0],
+			`Notes directory: ${notesDir}`,
+		);
+		assert.match(
+			toolText(await notes({ op: "list" }))
+				.split("\n")
+				.slice(1)
+				.join("\n"),
+			/^alias\/state\.md  10B  \S+\nnested\/state\.md  10B  \S+$/,
+		);
+		assert.equal(
+			toolText(await notes({ op: "search", query: "checkpoint" })),
+			"alias/state.md:1: checkpoint\nnested/state.md:1: checkpoint",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+/** Runs `during` while each completed `fs.promises.stat` also reports its path to `observe`. */
+async function withObservedStats<T>(
+	observe: (path: string) => void,
+	during: () => Promise<T>,
+): Promise<T> {
+	const { stat } = fsPromises;
+	const observed = mock.method(
+		fsPromises,
+		"stat",
+		async (path: string, options?: Readonly<StatOptions>) => {
+			const info = await stat(path, options);
+			observe(path);
+			return info;
+		},
+	);
+	syncBuiltinESMExports();
+	try {
+		return await during();
+	} finally {
+		observed.mock.restore();
+		syncBuiltinESMExports();
+	}
+}
+
+await test("notes list and search skip entries removed while an earlier folder is walked", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-notes-cleanup-")));
+	try {
+		const root = join(dir, ".pi", "notes");
+		mkdirSync(join(root, "a-many"), { recursive: true });
+		writeFileSync(join(root, "a-many", "first.md"), "needle in a-many");
+		const { tools, context } = await setup();
+		// Another session's cleanup removes later entries once the walk is inside a-many.
+		const cleanupDuring = async (params: Readonly<Record<string, unknown>>) => {
+			mkdirSync(join(root, "z-doomed"), { recursive: true });
+			writeFileSync(join(root, "z-doomed", "note.md"), "needle in a removed folder");
+			writeFileSync(join(root, "z-doomed.md"), "needle in a removed note");
+			let removed = false;
+			const result = await withObservedStats(
+				(path) => {
+					if (path === join(root, "a-many", "first.md") && !removed) {
+						rmSync(join(root, "z-doomed"), { recursive: true });
+						rmSync(join(root, "z-doomed.md"));
+						removed = true;
+					}
+				},
+				async () => run(tools, "notes", params, { ...context, cwd: dir }),
+			);
+			assert.equal(removed, true, "the cleanup ran during the walk");
+			return toolText(result);
+		};
+		assert.match(
+			await cleanupDuring({ op: "list" }),
+			/^Notes directory: .+\na-many\/first\.md {2}16B {2}\S+$/,
+		);
+		assert.equal(
+			await cleanupDuring({ op: "search", query: "needle" }),
+			"a-many/first.md:1: needle in a-many",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("notes list, folder reads and search let Pi keep running and stop when cancelled mid-walk", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-notes-walk-")));
+	try {
+		const root = join(dir, ".pi", "notes", "project");
+		for (let topic = 0; topic < 20; topic++) {
+			mkdirSync(join(root, `topic-${topic}`), { recursive: true });
+			for (let note = 0; note < 50; note++) {
+				writeFileSync(join(root, `topic-${topic}`, `note-${note}.md`), "checkpoint");
+			}
+		}
+		const { tools, context } = await setup();
+		const notes = requireValue(tools.get("notes"));
+		const execute = (params: Readonly<Record<string, unknown>>, signal: AbortSignal) =>
+			notes.execute(
+				"id",
+				params,
+				signal,
+				() => {
+					// Listings do not stream updates.
+				},
+				{ ...context, cwd: dir },
+			);
+		const exercise = async (params: Readonly<Record<string, unknown>>) => {
+			let turned = false;
+			setImmediate(() => {
+				turned = true;
+			});
+			const result = toolText(await execute(params, new AbortController().signal));
+			assert.equal(turned, true, `${JSON.stringify(params)} let Pi run other work meanwhile`);
+			return result;
+		};
+		const cancelMidWalk = async (params: Readonly<Record<string, unknown>>) => {
+			const controller = new AbortController();
+			await withObservedStats(
+				(path) => {
+					if (path.endsWith("note-0.md")) {
+						controller.abort();
+					}
+				},
+				async () =>
+					assert.rejects(execute(params, controller.signal), { name: "AbortError" }),
+			);
+		};
+		const listed = /^project\/topic-\d+\/note-\d+\.md {2}10B /m;
+		assert.match(await exercise({ op: "list" }), listed);
+		assert.match(await exercise({ op: "read", path: "project" }), listed);
+		assert.match(
+			await exercise({ op: "search", query: "checkpoint" }),
+			/^project\/topic-\d+\/note-\d+\.md:1: checkpoint$/m,
+		);
+
+		// A walk that continues after the abort reaches this loop and fails with ELOOP instead.
+		symlinkSync("zz-loop", join(root, "zz-loop"));
+		await cancelMidWalk({ op: "list" });
+		await cancelMidWalk({ op: "read", path: "project" });
+		await cancelMidWalk({ op: "search", query: "checkpoint" });
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("notes list newest first with sizes, read folders as listings, and search only text notes", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-notes-listing-")));
+	try {
+		const root = join(dir, ".pi", "notes");
+		mkdirSync(join(root, "task"), { recursive: true });
+		const files: Array<[string, string | Buffer, number]> = [
+			["old.md", "needle old", 1_000],
+			[
+				"task/fixture.sqlite",
+				Buffer.concat([
+					Buffer.from("SQLite format 3\0"),
+					Buffer.from("needle inside binary"),
+				]),
+				2_000,
+			],
+			["task/current.md", "needle current", 3_000],
+		];
+		for (const [path, content, time] of files) {
+			writeFileSync(join(root, path), content);
+			utimesSync(join(root, path), new Date(time), new Date(time));
+		}
+		const { tools, context } = await setup();
+		const notes = (params: Readonly<Record<string, unknown>>) =>
+			run(tools, "notes", params, { ...context, cwd: dir });
+		assert.equal(
+			toolText(await notes({ op: "list" })),
+			[
+				`Notes directory: ${root}`,
+				"task/current.md  14B  1970-01-01T00:00Z",
+				"task/fixture.sqlite  36B  1970-01-01T00:00Z",
+				"old.md  10B  1970-01-01T00:00Z",
+			].join("\n"),
+		);
+		const folder = toolText(await notes({ op: "list", path: "task" }));
+		assert.match(
+			folder.split("\n").slice(1).join("\n"),
+			/^task\/current\.md .+\ntask\/fixture\.sqlite .+$/,
+		);
+		assert.equal(
+			toolText(await notes({ op: "read", path: "task" })),
+			folder,
+			"reading a folder lists it instead of failing",
+		);
+		assert.equal(
+			toolText(await notes({ op: "search", query: "needle" })),
+			"task/current.md:1: needle current\nold.md:1: needle old",
+		);
+		await assert.rejects(
+			notes({ op: "read", path: "task/fixture.sqlite" }),
+			/binary file \(36B\); notes read returns text only/,
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+// Evidence trees in .pi/notes once held tens of gigabytes. Search read every file and kept every
+// match before paging, so a broad query exhausted Pi's memory.
+await test("notes search stops reading at the requested page, skips notes over 1 MiB and still pages every match", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-bounded-search-"));
+	const root = join(dir, ".pi", "notes");
+	const oldest = join(root, "oldest.md");
+	try {
+		mkdirSync(root, { recursive: true });
+		const at = (minutes: number) => new Date(Date.UTC(2026, 0, 1) + minutes * 60_000);
+		writeFileSync(join(root, "huge.log"), `needle in a log\n${"l".repeat(1024 * 1024)}`);
+		utimesSync(join(root, "huge.log"), at(1000), at(1000));
+		const rows = Array.from({ length: 300 }, (_, index) => {
+			const name = `note-${String(index).padStart(3, "0")}.md`;
+			const line = `needle ${index} ${"n".repeat(150)}`;
+			writeFileSync(join(root, name), `${line}\n`);
+			utimesSync(join(root, name), at(900 - index), at(900 - index));
+			return `${name}:1: ${line}`;
+		});
+		writeFileSync(oldest, "the needle in the oldest note");
+		utimesSync(oldest, at(0), at(0));
+		const expected = [...rows, "oldest.md:1: the needle in the oldest note"].join("\n");
+		const header = "[Not searched: 1 note over 1 MiB.]\n";
+		const { tools, handlers, context: base } = await setup();
+		const context = { ...base, cwd: dir };
+		const search = (query: string, offset: number) => {
+			requireValue(handlers.get("turn_start"))({}, context);
+			return run(tools, "notes", { op: "search", query, offset }, context);
+		};
+
+		// Root reads mode-000 files, so only an unprivileged run shows that a full scan fails here.
+		if (process.getuid?.() !== 0) {
+			chmodSync(oldest, 0o000);
+			await assert.rejects(
+				search("oldest", 0),
+				/EACCES/,
+				"a full scan reaches the oldest note",
+			);
+		}
+		const first = await search("needle", 0);
+		const display = first.details;
+		assert.ok(display?.kind === "notes-search" && display.page);
+		assert.equal(display.more, true);
+		const { end } = display.page;
+		assert.equal(
+			toolText(first),
+			`${header}${expected.slice(0, end)}\n[chars 0-${end}; more matches follow; continue with offset ${end}]`,
+		);
+		await assert.rejects(search("needle", 1_000_000), /search for something more specific/);
+		chmodSync(oldest, 0o644);
+
+		let offset = 0;
+		let recovered = "";
+		for (let page = 0; page < 100; page++) {
+			// Each page continues from the offset the previous page returned.
+			const result = await search("needle", offset);
+			const text = toolText(result);
+			assert.ok(result.details?.kind === "notes-search" && result.details.page);
+			assert.ok(text.startsWith(header), "every page says which notes were not searched");
+			const { end: pageEnd, total } = result.details.page;
+			recovered += text.slice(header.length, header.length + pageEnd - offset);
+			if (result.details.more !== true && pageEnd === total) {
+				break;
+			}
+			offset = pageEnd;
+		}
+		assert.equal(recovered, expected, "paging recovers every match from every searched note");
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+for (const marker of ["file", "directory symlink"]) {
+	await test(`separate Git directories share notes in the common Git directory (${marker})`, async () => {
+		const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-separate-git-")));
+		try {
+			const main = join(dir, "main");
+			const gitdir = join(dir, "git-storage");
+			const worktree = join(dir, "worktree");
+			const git = (...args: readonly string[]) =>
+				execFileSync("git", args, { stdio: "pipe" });
+			git("init", "--separate-git-dir", gitdir, main);
+			if (marker === "directory symlink") {
+				unlinkSync(join(main, ".git"));
+				symlinkSync(gitdir, join(main, ".git"), "dir");
+			}
+			git(
+				"-C",
+				main,
+				"-c",
+				"user.name=Posthorse test",
+				"-c",
+				"user.email=test@example.invalid",
+				"-c",
+				"commit.gpgSign=false",
+				"commit",
+				"--allow-empty",
+				"-m",
+				"fixture",
+			);
+			git("-C", main, "worktree", "add", "--detach", worktree);
+			const { tools, context } = await setup();
+			const notes = notesIn(tools, context);
+			const header = `File: ${join(gitdir, ".pi", "notes", "shared.md")}\n`;
+			await notes(main, { op: "write", path: "shared.md", content: "original state" });
+			assert.equal(
+				toolText(await notes(worktree, { op: "read", path: "shared.md" })),
+				header + "original state",
+			);
+			const append = toolText(
+				await notes(worktree, {
+					op: "append",
+					path: "shared.md",
+					content: "worktree update",
+				}),
+			);
+			assert.ok(append.includes(join(gitdir, ".pi", "notes", "shared.md")));
+			assert.equal(
+				toolText(await notes(main, { op: "read", path: "shared.md" })),
+				header + "original state\nworktree update\n",
+			);
+			assert.equal(
+				existsSync(join(main, ".pi")),
+				false,
+				"notes live in the common Git directory",
+			);
+			assert.equal(
+				existsSync(join(worktree, ".pi")),
+				false,
+				"writes do not create a worktree-local copy",
+			);
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	});
+}
+
+await test("long notes page fully, empty writes clear, appends stay separated, and search centers on the match", async () => {
+	const dir = realpathSync(mkdtempSync(join(tmpdir(), "pi-posthorse-notes-ops-test-")));
+	try {
+		const { tools, context: base } = await setup();
+		const context = { ...base, cwd: dir };
+		const notes = (params: Readonly<Record<string, unknown>>) =>
+			run(tools, "notes", params, context);
+		const header = `File: ${join(dir, ".pi", "notes", "big.md")}\n`;
+		const pageChars = 40_000 - header.length;
+		const body = `${"a".repeat(40_000)}${"b".repeat(40_000)}${"c".repeat(5_000)}`;
+		await notes({ op: "write", path: "big.md", content: body });
+		const first = toolText(await notes({ op: "read", path: "big.md" }));
+		assert.equal(
+			first,
+			`${header}${body.slice(0, pageChars)}\n[chars 0-${pageChars} of 85000; continue with offset ${pageChars}]`,
+		);
+		const second = toolText(await notes({ op: "read", path: "big.md", offset: pageChars }));
+		assert.equal(
+			second,
+			`${header}${body.slice(pageChars, pageChars * 2)}\n[chars ${pageChars}-${pageChars * 2} of 85000; continue with offset ${pageChars * 2}]`,
+		);
+		const third = toolText(await notes({ op: "read", path: "big.md", offset: pageChars * 2 }));
+		assert.equal(third, header + body.slice(pageChars * 2));
+		await assert.rejects(notes({ op: "read", path: "big.md", offset: 85_000 }), /past the end/);
+
+		await notes({ op: "write", path: "big.md", content: "" });
+		assert.equal(readFileSync(join(dir, ".pi", "notes", "big.md"), "utf8"), "");
+		assert.equal(toolText(await notes({ op: "read", path: "big.md" })), header);
+		await assert.rejects(
+			notes({ op: "write", path: "big.md" }),
+			/"content" is required for op "write"/,
+		);
+
+		await notes({ op: "append", path: "log.md", content: "A" });
+		await notes({ op: "append", path: "log.md", content: "B\n" });
+		assert.equal(readFileSync(join(dir, ".pi", "notes", "log.md"), "utf8"), "A\nB\n");
+		await notes({ op: "write", path: "log.md", content: "X" });
+		await notes({ op: "append", path: "log.md", content: "Y" });
+		assert.equal(readFileSync(join(dir, ".pi", "notes", "log.md"), "utf8"), "X\nY\n");
+		await assert.rejects(
+			notes({ op: "append", path: "log.md", content: "" }),
+			/"content" is required/,
+		);
+
+		await notes({
+			op: "write",
+			path: "search.md",
+			content: `${" ".repeat(100)}${"x".repeat(250)} needle-here ${"y".repeat(100)}\nsecond line`,
+		});
+		const hits = toolText(await notes({ op: "search", query: "NEEDLE-here" }));
+		assert.match(hits, /^search\.md:1: …x{49} needle-here y{100}$/);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("history flattens bashExecution entries and honors excludeFromContext", async () => {
+	const { tools, context: base } = await setup();
+	const branch = [
+		{
+			type: "message",
+			id: "sh",
+			parentId: null,
+			timestamp: "1",
+			message: { role: "bashExecution", command: "ls -la", output: "total 0\nnotes.md" },
+		},
+		{
+			type: "message",
+			id: "hidden",
+			parentId: "sh",
+			timestamp: "2",
+			message: {
+				role: "bashExecution",
+				command: "cat token",
+				output: "TOPSECRET",
+				excludeFromContext: true,
+			},
+		},
+	];
+	const context = {
+		...base,
+		sessionManager: {
+			...sessionIdentity(),
+			getSessionFile: (): string | undefined => undefined,
+			buildSessionProjection: emptyProjection,
+			getBranch: () => branch,
+			getSessionDir: () => join(tmpdir(), "missing"),
+		},
+	};
+	assert.match(
+		toolText(await run(tools, "history", { op: "search", query: "notes.md" }, context)),
+		/\[sh\] \[bashExecution\] \$ ls -la\ntotal 0\nnotes\.md/,
+	);
+	assert.match(
+		toolText(await run(tools, "history", { op: "read", id: "sh" }, context)),
+		/\[bashExecution\] \$ ls -la\ntotal 0\nnotes\.md$/,
+	);
+	assert.match(
+		toolText(await run(tools, "history", { op: "search", query: "TOPSECRET" }, context)),
+		/No history matches/,
+	);
+	assert.match(
+		toolText(await run(tools, "history", { op: "search", query: "cat token" }, context)),
+		/No history matches/,
+	);
+	const hidden = toolText(await run(tools, "history", { op: "read", id: "hidden" }, context));
+	assert.match(hidden, /\[bashExecution\] \(excluded from model context by Pi\)$/);
+	assert.doesNotMatch(hidden, /TOPSECRET|cat token/);
+});
+
+await test("all-session search returns fork copies with their source-qualified references", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-fork-test-"));
+	try {
+		const original = join(dir, "original.jsonl");
+		const fork = join(dir, "fork.jsonl");
+		const grandchild = join(dir, "grandchild.jsonl");
+		const shared = JSON.stringify({
+			type: "message",
+			id: "shared",
+			parentId: null,
+			message: { role: "user", content: "fork needle shared" },
+		});
+		const forkNew = JSON.stringify({
+			type: "message",
+			id: "fork-new",
+			parentId: "shared",
+			message: { role: "user", content: "fork needle newer" },
+		});
+		writeArchive(original, shared);
+		writeArchive(fork, [shared, forkNew].join("\n"));
+		writeArchive(
+			grandchild,
+			[
+				shared,
+				forkNew,
+				JSON.stringify({
+					type: "message",
+					id: "grand-new",
+					parentId: "fork-new",
+					message: { role: "user", content: "fork needle latest" },
+				}),
+			].join("\n"),
+		);
+		utimesSync(original, new Date(1_000), new Date(1_000));
+		utimesSync(fork, new Date(2_000), new Date(2_000));
+		utimesSync(grandchild, new Date(3_000), new Date(3_000));
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const text = toolText(
+			await run(
+				tools,
+				"history",
+				{ op: "search", query: "fork needle", all: true, limit: 10 },
+				context,
+			),
+		);
+		assert.deepEqual(
+			text.split("\n").map((line) => line.match(/\[window initial\] \[([^\]]+)\]/)?.[1]),
+			[
+				archivedId("grand-new", "grandchild.jsonl"),
+				archivedId("fork-new", "grandchild.jsonl"),
+				archivedId("shared", "grandchild.jsonl"),
+				archivedId("fork-new", "fork.jsonl"),
+				archivedId("shared", "fork.jsonl"),
+				archivedId("shared", "original.jsonl"),
+			],
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session history reads the searched entry when independent sessions reuse an entry id", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-id-collision-"));
+	try {
+		for (const [name, content, time] of [
+			["older", "needle approved requirement", 1_000],
+			["newer", "needle unrelated request", 2_000],
+		] as const) {
+			const file = join(dir, `${name}.jsonl`);
+			writeFileSync(
+				file,
+				[
+					{
+						type: "session",
+						version: 3,
+						id: `session-${name}`,
+						timestamp: new Date(time).toISOString(),
+						cwd: process.cwd(),
+					},
+					{
+						type: "message",
+						id: "deadbeef",
+						parentId: null,
+						timestamp: new Date(time).toISOString(),
+						message: { role: "user", content },
+					},
+					{
+						type: "message",
+						id: "feedface",
+						parentId: "deadbeef",
+						timestamp: new Date(3_000).toISOString(),
+						message: {
+							role: "user",
+							content: [
+								{
+									type: "image",
+									mimeType: "image/png",
+									data: Buffer.from(name).toString("base64"),
+								},
+							],
+						},
+					},
+				]
+					.map((entry) => JSON.stringify(entry))
+					.join("\n"),
+			);
+			utimesSync(file, new Date(time), new Date(time));
+		}
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const search = (query: string, cursor?: string) =>
+			run(tools, "history", { op: "search", query, all: true, limit: 1, cursor }, context);
+		const older = toolText(await search("approved"));
+		const id = older.match(/\[window initial\] \[([^\]]+)\]/)?.[1];
+		assert.notEqual(id, undefined);
+		assert.equal(id, archivedId("deadbeef", "older.jsonl"));
+		const read = toolText(await run(tools, "history", { op: "read", id }, context));
+		assert.match(read, /\[user\] needle approved requirement$/);
+
+		const first = toolText(await search("needle"));
+		assert.match(
+			first,
+			new RegExp(
+				`^\\S+ \\[window initial\\] \\[${archivedId("deadbeef", "newer.jsonl")}\\] \\[user\\] needle unrelated request`,
+			),
+		);
+		const cursor = first.match(/\[More results; continue with cursor "([^"]+)"/)?.[1];
+		assert.notEqual(
+			cursor,
+			undefined,
+			"the older session must not be hidden by a colliding id",
+		);
+		const second = toolText(await search("needle", cursor));
+		assert.match(second, /\[user\] needle approved requirement/);
+		assert.ok(second.includes(`[${id}]`), "the paged hit must use the same read reference");
+
+		const images = toolText(
+			await run(tools, "history", { op: "search", query: "image/png", all: true }, context),
+		);
+		assert.ok(images.includes(`[${archivedId("feedface", "newer.jsonl")}]`));
+		assert.ok(images.includes(`[${archivedId("feedface", "older.jsonl")}]`));
+		const olderImage = await run(
+			tools,
+			"history",
+			{ op: "read", id: archivedId("feedface", "older.jsonl") },
+			context,
+		);
+		assert.deepEqual(olderImage.content.slice(1), [
+			{
+				type: "image",
+				mimeType: "image/png",
+				data: Buffer.from("older").toString("base64"),
+			},
+		]);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session history keeps identical entries from unrelated sessions separate", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-independent-sessions-"));
+	try {
+		for (const [name, time] of [
+			["first", 1_000],
+			["second", 2_000],
+		] as const) {
+			const file = join(dir, `${name}.jsonl`);
+			writeFileSync(
+				file,
+				[
+					{
+						type: "session",
+						version: 3,
+						id: `session-${name}`,
+						timestamp: new Date(time).toISOString(),
+						cwd: process.cwd(),
+					},
+					{
+						type: "message",
+						id: "deadbeef",
+						parentId: null,
+						timestamp: new Date(3_000).toISOString(),
+						message: { role: "user", content: "needle repeated request" },
+					},
+				]
+					.map((entry) => JSON.stringify(entry))
+					.join("\n"),
+			);
+			utimesSync(file, new Date(time), new Date(time));
+		}
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const hits = toolText(
+			await run(tools, "history", { op: "search", query: "needle", all: true }, context),
+		);
+		assert.ok(hits.includes(`[${archivedId("deadbeef", "first.jsonl")}]`));
+		assert.ok(hits.includes(`[${archivedId("deadbeef", "second.jsonl")}]`));
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session history keeps new entries in sibling forks separate", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-sibling-forks-"));
+	try {
+		const root = join(dir, "root.jsonl");
+		const rootHeader = {
+			type: "session",
+			version: 3,
+			id: "session-root",
+			timestamp: new Date(0).toISOString(),
+			cwd: process.cwd(),
+		};
+		const ancestor = {
+			type: "message",
+			id: "ancestor",
+			parentId: null,
+			timestamp: new Date(500).toISOString(),
+			message: { role: "user", content: "start" },
+		};
+		const repeated = {
+			type: "message",
+			id: "deadbeef",
+			parentId: "ancestor",
+			timestamp: new Date(3_000).toISOString(),
+			message: { role: "user", content: "needle same request" },
+		};
+		writeFileSync(
+			root,
+			[rootHeader, ancestor].map((entry) => JSON.stringify(entry)).join("\n"),
+		);
+		utimesSync(root, new Date(500), new Date(500));
+		for (const [name, time] of [
+			["first", 1_000],
+			["second", 2_000],
+		] as const) {
+			const file = join(dir, `${name}.jsonl`);
+			writeFileSync(
+				file,
+				[
+					{
+						type: "session",
+						version: 3,
+						id: `session-${name}`,
+						parentSession: root,
+						timestamp: new Date(time).toISOString(),
+						cwd: process.cwd(),
+					},
+					ancestor,
+					repeated,
+				]
+					.map((entry) => JSON.stringify(entry))
+					.join("\n"),
+			);
+			utimesSync(file, new Date(time), new Date(time));
+		}
+		writeFileSync(
+			root,
+			[rootHeader, ancestor, repeated].map((entry) => JSON.stringify(entry)).join("\n"),
+		);
+		utimesSync(root, new Date(4_000), new Date(4_000));
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const hits = toolText(
+			await run(tools, "history", { op: "search", query: "needle", all: true }, context),
+		);
+		assert.ok(hits.includes(`[${archivedId("deadbeef", "first.jsonl")}]`));
+		assert.ok(hits.includes(`[${archivedId("deadbeef", "second.jsonl")}]`));
+		assert.ok(hits.includes(`[${archivedId("deadbeef", "root.jsonl")}]`));
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session history cursors fit the declared limit for nested session files", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-long-source-"));
+	try {
+		const source = join("a".repeat(180), "b".repeat(180), "newest.jsonl");
+		const nested = join(dir, "a".repeat(180), "b".repeat(180));
+		mkdirSync(nested, { recursive: true });
+		for (const [file, id, time] of [
+			[join(nested, "newest.jsonl"), "newest", 2_000],
+			[join(dir, "older.jsonl"), "older", 1_000],
+		] as const) {
+			writeArchive(
+				file,
+				JSON.stringify({
+					type: "message",
+					id,
+					parentId: null,
+					message: { role: "user", content: "needle" },
+				}),
+			);
+			utimesSync(file, new Date(time), new Date(time));
+		}
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const first = toolText(
+			await run(
+				tools,
+				"history",
+				{ op: "search", query: "needle", all: true, limit: 1 },
+				context,
+			),
+		);
+		assert.ok(first.includes(`[${archivedId("newest", source)}]`));
+		const cursor = first.match(/\[More results; continue with cursor "([^"]+)"/)?.[1];
+		assert.notEqual(cursor, undefined);
+		assert.ok(requireValue(cursor).length <= 512);
+		const next = toolText(
+			await run(
+				tools,
+				"history",
+				{ op: "search", query: "needle", all: true, limit: 1, cursor },
+				context,
+			),
+		);
+		assert.ok(next.includes(`[${archivedId("older", "older.jsonl")}]`));
+		assert.ok(first.includes("[subagent]"), "nested session hits are marked as subagent runs");
+		assert.ok(!next.includes("[subagent]"), "top-level session hits carry no subagent marker");
+		const read = toolText(
+			await run(tools, "history", { op: "read", id: archivedId("newest", source) }, context),
+		);
+		assert.ok(read.includes(`[subagent] [window initial] [${archivedId("newest", source)}]`));
+		assert.ok(read.endsWith("[user] needle"));
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("all-session search finds the same entries with or without ripgrep, including text raw JSONL cannot show", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-prefilter-"));
+	try {
+		const archive = (name: string, content: string) =>
+			writeArchive(
+				join(dir, `${name}.jsonl`),
+				JSON.stringify({
+					type: "message",
+					id: name,
+					parentId: null,
+					message: { role: "user", content },
+				}),
+			);
+		archive("quoted", 'say "needle" twice');
+		archive("plain", "a plain needle");
+		archive("other", "nothing here");
+		archive("dotted", "İSTANBUL");
+		archive("lone", "half \ud83d moon");
+		writeArchive(
+			join(dir, "bare.jsonl"),
+			JSON.stringify({ type: "context_window", id: "bare", parentId: null }),
+		);
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: { ...base.sessionManager, getSessionDir: () => dir },
+		};
+		const hits = async (query: string) =>
+			[
+				...toolText(
+					await run(tools, "history", { op: "search", query, all: true }, context),
+				).matchAll(/\[window \S+\] \[([^@\]]+)@/g),
+			]
+				.map((match) => requireValue(match[1]))
+				.sort();
+		// Session JSONL stores quotes and lone surrogates escaped, "No handoff" exists only in the
+		// rendered entry, and İ lowercases to two characters, so a plain raw-text prefilter would
+		// drop these files.
+		const queries = ["needle", '"needle"', "No handoff", "İstanbul", "half \ud83d"];
+		const expected = [["plain", "quoted"], ["quoted"], ["bare"], ["dotted"], ["lone"]];
+		assert.deepEqual(await Promise.all(queries.map(hits)), expected);
+		const { PATH, PI_CODING_AGENT_DIR } = process.env;
+		Object.assign(process.env, { PATH: "", PI_CODING_AGENT_DIR: dir });
+		try {
+			assert.deepEqual(
+				await Promise.all(queries.map(hits)),
+				expected,
+				"without ripgrep every session file is scanned",
+			);
+		} finally {
+			Object.assign(process.env, { PATH });
+			if (PI_CODING_AGENT_DIR === undefined) {
+				delete process.env.PI_CODING_AGENT_DIR;
+			} else {
+				process.env.PI_CODING_AGENT_DIR = PI_CODING_AGENT_DIR;
+			}
+		}
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+function normalizedOnlyQueries(normalized: string, raw: string): readonly string[] {
+	const words = [...normalized.matchAll(/[\p{L}\p{N}_./-]+/gu)];
+	const queries: string[] = [];
+	for (const [first, word] of words.entries()) {
+		for (let last = first; last < Math.min(words.length, first + 3); last++) {
+			const end = requireValue(words[last]);
+			const query = normalized.slice(word.index, end.index + end[0].length);
+			if (!raw.includes(query)) {
+				queries.push(query);
+			}
+		}
+	}
+	return queries;
+}
+
+await test("all-session search still finds text that exists only in normalized entries", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-normalized-only-"));
+	try {
+		const image = (mimeType?: string) => ({
+			type: "image",
+			data: "AA==",
+			...(mimeType === undefined ? {} : { mimeType }),
+		});
+		// One entry per flattenEntry branch, so every label it adds is exercised. Ids, headers, and paths carry
+		// no label words or digits, so a query can only reach an entry's file through the entry itself.
+		const entries = [
+			{
+				type: "message",
+				id: "pix",
+				message: {
+					role: "user",
+					content: [
+						{ type: "text", text: "two shots" },
+						image("image/png"),
+						image("image/jpeg"),
+						image(""),
+						image(),
+					],
+				},
+			},
+			{
+				type: "message",
+				id: "invoke",
+				message: {
+					role: "assistant",
+					content: [
+						{
+							type: "toolCall",
+							id: "toolu_a",
+							name: "record",
+							namespace: "lab",
+							arguments: { target: "a" },
+							executionArguments: { target: "b" },
+						},
+					],
+					stopReason: "error",
+					errorMessage: "quota hit",
+				},
+			},
+			{
+				type: "message",
+				id: "outcome",
+				message: {
+					role: "toolResult",
+					toolName: "record",
+					namespace: "lab",
+					toolCallId: "toolu_a",
+					content: [{ type: "text", text: "done" }, image("image/png")],
+				},
+			},
+			{
+				type: "message",
+				id: "sh",
+				message: { role: "bashExecution", command: "ls", output: "notes.md" },
+			},
+			{
+				type: "message",
+				id: "quiet",
+				message: {
+					role: "bashExecution",
+					command: "cat secret",
+					output: "x",
+					excludeFromContext: true,
+				},
+			},
+			{ type: "compaction", id: "digest", summary: "summarized" },
+			{ type: "branch_summary", id: "fork", summary: "branched" },
+			{
+				type: "custom_message",
+				id: "note",
+				customType: "intercom_message",
+				content: [{ type: "text", text: "ping" }, image("image/png")],
+			},
+			{ type: "context_window", id: "fresh" },
+			{ type: "context_window", id: "handed", handoff: "carry on" },
+			{ type: "custom_message", id: "plain", content: "hush" },
+			{
+				type: "context_edit",
+				id: "trim",
+				targetId: "outcome",
+				replacement: { content: "trimmed" },
+			},
+		];
+		for (const { type, id, ...fields } of entries) {
+			writeFileSync(
+				join(dir, `${id}.jsonl`),
+				[
+					{ type: "session", id: "s", cwd: "/" },
+					// Pi's key order, which lets scans skip lines without parsing them.
+					{ type, id, parentId: null, timestamp: "t", ...fields },
+				]
+					.map((line) => JSON.stringify(line))
+					.join("\n"),
+			);
+		}
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			cwd: "/",
+			sessionManager: { ...base.sessionManager, getSessionDir: () => dir },
+		};
+		const missed: string[] = [];
+		for (const entry of entries) {
+			const id = archivedId(entry.id, `${entry.id}.jsonl`);
+			// Process one archive at a time; its read establishes the queries scanned below.
+			const read = toolText(await run(tools, "history", { op: "read", id }, context));
+			const normalized = read
+				.slice(read.indexOf("] ", read.indexOf("[chars ")) + 2)
+				.toLowerCase();
+			const raw = JSON.stringify(entry).toLowerCase();
+			for (const query of normalizedOnlyQueries(normalized, raw)) {
+				const hits = toolText(
+					// Limit archive scans and their ripgrep children to one query at a time.
+					await run(
+						tools,
+						"history",
+						{ op: "search", query, all: true, limit: 50 },
+						context,
+					),
+				);
+				if (!hits.includes(`[${id}]`)) {
+					missed.push(`${entry.id}: ${JSON.stringify(query)}`);
+				}
+			}
+		}
+		assert.deepEqual(missed, [], "a ripgrep prefilter must never drop a normalized match");
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("session search and archived reads preserve modification-time ordering including ties", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-mtime-test-"));
+	try {
+		for (const [name, mtime] of [
+			["z", 1000],
+			["m", 2000],
+			["a", 2000],
+		] as const) {
+			const file = join(dir, `${name}.jsonl`);
+			writeArchive(
+				file,
+				[
+					{
+						type: "message",
+						id: "shared",
+						message: { role: "user", content: "shared ancestor" },
+					},
+					{
+						type: "message",
+						id: name,
+						parentId: "shared",
+						message: { role: "user", content: "mtime needle" },
+					},
+				]
+					.map((entry) => JSON.stringify(entry))
+					.join("\n"),
+			);
+			utimesSync(file, new Date(mtime), new Date(mtime));
+		}
+		const expected = readdirSync(dir).sort(
+			(a, b) => statSync(join(dir, b)).mtimeMs - statSync(join(dir, a)).mtimeMs,
+		);
+		const { tools, context: base } = await setup();
+		const context = {
+			...base,
+			sessionManager: {
+				...sessionIdentity(),
+				getSessionFile: (): string | undefined => undefined,
+				buildSessionProjection: emptyProjection,
+				getBranch: () => [],
+				getSessionDir: () => dir,
+			},
+		};
+		const search = toolText(
+			await run(
+				tools,
+				"history",
+				{ op: "search", query: "mtime needle", all: true },
+				context,
+			),
+		);
+		assert.deepEqual(
+			search.split("\n").map((line) => line.match(/\[window initial\] \[([^\]]+)\]/)?.[1]),
+			expected.map((file) => archivedId(file.replace(/\.jsonl$/, ""), file)),
+		);
+		const read = toolText(await run(tools, "history", { op: "read", id: "shared" }, context));
+		assert.ok(
+			read.includes(`[${archivedId("shared", requireValue(expected[0]))}]`),
+			"a bare id resolves in the newest session and prints its qualified id",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("appends from concurrent Pi processes never merge records", async () => {
+	const dir = mkdtempSync(join(tmpdir(), "pi-posthorse-concurrent-append-"));
+	try {
+		// Each child loads the real extension and appends 200 records to one shared note as fast as it can.
+		const script = `
+			await import(${JSON.stringify(new URL("./pi-loader.ts", import.meta.url).href)});
+			const { default: posthorse } = await import(${JSON.stringify(new URL("../index.ts", import.meta.url).href)});
+			const { SessionManager } = await import(${JSON.stringify(import.meta.resolve("@earendil-works/pi-coding-agent"))});
+			const sessionManager = SessionManager.inMemory(process.argv[1]);
+			const tools = new Map();
+			posthorse({ on() {}, appendEntry: (type, data) => sessionManager.appendCustomEntry(type, data), registerTool: (tool) => tools.set(tool.name, tool), registerMessageRenderer() {}, sendMessage() {} });
+			const [cwd, letter] = process.argv.slice(1);
+			const context = { cwd, sessionManager, getCompactionSettings: () => ({ enabled: true, reserveTokens: 16_384 }), getContextUsage: () => undefined };
+			for (let i = 0; i < 200; i++) {
+				await tools.get("notes").execute("id", { op: "append", path: "shared.md", content: letter.repeat(300) }, undefined, () => {
+      // These direct executions do not stream updates.
+    }, context);
+			}
+		`;
+		await Promise.all(
+			["A", "B"].map(
+				(letter) =>
+					new Promise<void>((resolve, reject) => {
+						execFile(
+							process.execPath,
+							["--input-type=module", "-e", script, dir, letter],
+							(error, _stdout, stderr) =>
+								error
+									? reject(new Error(stderr !== "" ? stderr : error.message))
+									: resolve(),
+						);
+					}),
+			),
+		);
+		const lines = readFileSync(join(dir, ".pi", "notes", "shared.md"), "utf8").split("\n");
+		assert.equal(lines.pop(), "", "file ends with a newline");
+		// A torn read of an in-flight append may add a blank separator line; records themselves never merge.
+		const records = lines.filter(Boolean);
+		assert.equal(records.length, 400);
+		assert.ok(
+			records.every((line) => line === "A".repeat(300) || line === "B".repeat(300)),
+			"every record is intact",
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+await test("automatic recovery tracks session notes across tools, codemode, context edits, clears, and explicit resets", () => {
+	const entries = [
+		{
+			type: "message",
+			id: "pre-reset-write",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "call-pre",
+						name: "notes",
+						arguments: { op: "write", path: "obsolete.md", content: "old task" },
+					},
+				],
+			},
+		},
+		{
+			type: "compaction",
+			id: "explicit-reset",
+			summary: "Fresh explicit task window.",
+			firstKeptEntryId: null,
+			details: { posthorse: 1, reason: "explicit" },
+		},
+		{
+			type: "message",
+			id: "owner-1",
+			timestamp: "2026-11-01T00:00:00Z",
+			message: { role: "user", content: "Ship the durable recovery fix." },
+		},
+		{
+			type: "message",
+			id: "codemode-res",
+			message: {
+				role: "toolResult",
+				toolName: "codemode",
+				toolCallId: "cm-1",
+				isError: false,
+				content: "read note",
+				nestedCalls: {
+					calls: [
+						{
+							name: "notes",
+							arguments: { op: "read", path: "durable-session-recovery.md" },
+							result: "File: /workspace/.pi/notes/durable-session-recovery.md\nprior context",
+						},
+					],
+				},
+			},
+		},
+		{
+			type: "message",
+			id: "compacted-write-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "nw-1",
+						name: "notes",
+						arguments: {
+							op: "write",
+							path: "pi-durable-pr.md",
+							content: "# Goal\nShip PR",
+						},
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "compacted-write-res",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				toolCallId: "nw-1",
+				isError: false,
+				content: "Wrote /workspace/.pi/notes/pi-durable-pr.md",
+			},
+		},
+		{
+			type: "message",
+			id: "temp-calls",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "nw-temp",
+						name: "notes",
+						arguments: { op: "write", path: "scratch.md", content: "temp" },
+					},
+					{
+						type: "toolCall",
+						id: "nw-clear",
+						name: "notes",
+						arguments: { op: "write", path: "scratch.md", content: "" },
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "temp-write",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				toolCallId: "nw-temp",
+				isError: false,
+				content: "Wrote /workspace/.pi/notes/scratch.md",
+			},
+		},
+		{
+			type: "message",
+			id: "temp-clear",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				toolCallId: "nw-clear",
+				isError: false,
+				content: "Wrote /workspace/.pi/notes/scratch.md",
+			},
+		},
+		{
+			type: "message",
+			id: "omitted-write",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				toolCallId: "nw-omit",
+				isError: false,
+				content: "Wrote /workspace/.pi/notes/redacted.md",
+			},
+		},
+		{
+			type: "context_edit",
+			id: "edit-omit",
+			targetId: "omitted-write",
+			replacement: null,
+		},
+		{
+			type: "message",
+			id: "failed-edit-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "rt-fail",
+						name: "replace_text",
+						arguments: {
+							files: [{ path: "/workspace/.pi/notes/failed-note.md", edits: [] }],
+						},
+					},
+					{
+						type: "toolCall",
+						id: "rt-preview",
+						name: "replace_text",
+						arguments: {
+							preview: true,
+							files: [{ path: "/workspace/.pi/notes/preview-only.md", edits: [] }],
+						},
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "failed-edit-res",
+			message: {
+				role: "toolResult",
+				toolName: "replace_text",
+				toolCallId: "rt-fail",
+				isError: true,
+				content: "Anchor not found",
+			},
+		},
+		{
+			type: "message",
+			id: "retained-partial-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "rt-ok",
+						name: "replace_text",
+						arguments: {
+							files: [{ path: "/workspace/.pi/notes/pi-durable-pr.md", edits: [] }],
+						},
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "retained-partial-res",
+			message: {
+				role: "toolResult",
+				toolName: "replace_text",
+				toolCallId: "rt-ok",
+				isError: false,
+				content: "Updated 1 file",
+			},
+		},
+	];
+	const projected = entries
+		.filter((entry) => entry.type === "message" && entry.id !== "omitted-write")
+		.map((sourceEntry) => ({
+			sourceEntry,
+			messages: sourceEntry.message === undefined ? [] : [sourceEntry.message],
+		}));
+
+	// Case 1: Only a partial edit (replace_text) is in the retained tail; the full write was compacted.
+	const partialRetained = buildAutoHandoff(entries, projected, 20_000, {
+		ownerQuestionRegistered: false,
+		retainedEntryIds: new Set(["retained-partial-call", "retained-partial-res"]),
+	});
+	assert.doesNotMatch(
+		partialRetained,
+		/obsolete\.md|scratch\.md|redacted\.md|failed-note\.md|preview-only\.md/,
+	);
+	assert.match(
+		partialRetained,
+		/Context rolled over after entry retained-partial-res\. Earlier turns before entry retained-partial-call were compacted into session history; entries retained-partial-call through retained-partial-res above are the carried-over recent tail/,
+	);
+	assert.match(
+		partialRetained,
+		/- Active note \(written\): pi-durable-pr\.md \(\/workspace\/\.pi\/notes\/pi-durable-pr\.md\) \[only partial edits are in the retained tail above at entry retained-partial-call — read full note now\]/,
+	);
+	assert.match(
+		partialRetained,
+		/- Referenced note \(read\): durable-session-recovery\.md \(\/workspace\/\.pi\/notes\/durable-session-recovery\.md\) \[compacted before entry retained-partial-call\]/,
+	);
+	assert.match(
+		partialRetained,
+		/Read pi-durable-pr\.md \(notes read or read on its path\) before continuing/,
+	);
+
+	// Case 2: The full write itself is inside the retained tail -> tell the model not to rewrite it unnecessarily.
+	const fullRetained = buildAutoHandoff(entries, projected, 20_000, {
+		ownerQuestionRegistered: false,
+		retainedEntryIds: new Set([
+			"compacted-write-call",
+			"compacted-write-res",
+			"retained-partial-call",
+			"retained-partial-res",
+		]),
+	});
+	assert.match(
+		fullRetained,
+		/- Active note \(written\): pi-durable-pr\.md \(\/workspace\/\.pi\/notes\/pi-durable-pr\.md\) \[latest full write is in the retained tail above at entry compacted-write-call, updated at entry retained-partial-call\]/,
+	);
+	assert.match(
+		fullRetained,
+		/Your latest full write to pi-durable-pr\.md is already visible above at entry compacted-write-call; do not rewrite it unless new findings after entry retained-partial-res require it\./,
+	);
+
+	const replacement: EntryLike[] = [
+		{
+			type: "message",
+			id: "replacement-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "replacement",
+						name: "notes",
+						arguments: { op: "write", path: "pi-durable-pr.md", content: "New state" },
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "replacement-receipt",
+			message: {
+				role: "toolResult",
+				toolName: "notes",
+				toolCallId: "replacement",
+				isError: false,
+				content: "Wrote /workspace/.pi/notes/pi-durable-pr.md",
+			},
+		},
+	];
+	const renderFollowing = (following: readonly EntryLike[]) => {
+		const branch: EntryLike[] = [...entries, ...following];
+		return buildAutoHandoff(
+			branch,
+			branch.flatMap((sourceEntry) =>
+				sourceEntry.message === undefined
+					? []
+					: [{ sourceEntry, messages: [sourceEntry.message] }],
+			),
+			20_000,
+			{
+				ownerQuestionRegistered: false,
+				retainedEntryIds: new Set([
+					"compacted-write-call",
+					"compacted-write-res",
+					"retained-partial-call",
+					"retained-partial-res",
+					...following.map((entry) => entry.id ?? ""),
+				]),
+			},
+		);
+	};
+	const replaced = renderFollowing(replacement);
+	assert.match(
+		replaced,
+		/latest full write is in the retained tail above at entry replacement-call\]/,
+	);
+	assert.doesNotMatch(replaced, /updated at entry retained-partial-call/);
+	const observed: EntryLike = {
+		type: "message",
+		id: "observed-receipt",
+		message: {
+			role: "toolResult",
+			toolName: "codemode",
+			toolCallId: "observed",
+			isError: false,
+			content: "Saved a newer checkpoint.",
+			nestedCalls: {
+				calls: [
+					{
+						name: "notes",
+						arguments: {
+							op: "write",
+							path: "pi-durable-pr.md",
+							content: "Newer state",
+						},
+						result: "Wrote /workspace/.pi/notes/pi-durable-pr.md",
+					},
+				],
+			},
+		},
+	};
+	const effectOnly = renderFollowing([...replacement, observed]);
+	assert.match(
+		effectOnly,
+		/pi-durable-pr\.md.*verified effect at entry observed-receipt.*read this note now/,
+	);
+	assert.doesNotMatch(effectOnly, /latest full write is in the retained tail/);
+	const restored = renderFollowing([observed, ...replacement]);
+	assert.match(
+		restored,
+		/latest full write is in the retained tail above at entry replacement-call\]/,
+	);
+	assert.doesNotMatch(restored, /verified effect at entry observed-receipt/);
+});
+
+await test("note guards associate a move only with the immediately preceding update header", () => {
+	for (const newline of ["\n", "\r\n", "\r"]) {
+		const patch = (headers: readonly string[]) =>
+			["*** Begin Patch", ...headers, "*** End Patch"].join(newline);
+		assert.deepEqual(
+			noteOperations(
+				"apply_patch",
+				patch(["*** Update File: source", "*** Move to: target"]),
+			),
+			[
+				{ path: "source", action: "delete" },
+				{ path: "target", action: "create" },
+			],
+		);
+		for (const { header, action } of [
+			{ header: "*** Add File: source", action: "create" },
+			{ header: "*** Delete File: source", action: "delete" },
+		]) {
+			assert.deepEqual(
+				noteOperations("apply_patch", patch([header, "*** Move to: target"])),
+				[{ path: "source", action }],
+			);
+		}
+		assert.deepEqual(noteOperations("apply_patch", patch(["*** Move to: target"])), []);
+		assert.deepEqual(
+			noteOperations(
+				"apply_patch",
+				patch(["*** Update File: source", "@@", "*** Move to: target"]),
+			),
+			[{ path: "source", action: "edit" }],
+		);
+	}
+});
+
+await test("automatic recovery keeps verified paths from a partially failed editing receipt", () => {
+	const source = "/workspace/.pi/notes/source.md";
+	const destination = "/workspace/.pi/notes/copied.md";
+	const entries = [
+		{
+			type: "message",
+			id: "move-call",
+			message: {
+				role: "assistant",
+				content: [
+					{
+						type: "toolCall",
+						id: "move",
+						name: "apply_patch",
+						arguments: {
+							input: `*** Begin Patch\n*** Update File: ${source}\n*** Move to: ${destination}\n@@\n-old\n+new\n*** Delete File: /workspace/.pi/notes/unattempted.md\n*** End Patch`,
+						},
+					},
+				],
+			},
+		},
+		{
+			type: "message",
+			id: "move-receipt",
+			message: {
+				role: "toolResult",
+				toolName: "apply_patch",
+				toolCallId: "move",
+				isError: true,
+				content: "The destination committed but the move did not finish.",
+				details: {
+					modifiedFiles: [destination],
+					files: [
+						{ path: source, moveTo: destination, operation: "move", status: "failed" },
+						{
+							path: "/workspace/.pi/notes/unattempted.md",
+							operation: "delete",
+							status: "unattempted",
+						},
+						{
+							path: "/workspace/.pi/notes/uncertain.md",
+							operation: "edit",
+							status: "uncertain",
+						},
+					],
+				},
+			},
+		},
+	];
+	const projected = entries.map((sourceEntry) => ({
+		sourceEntry,
+		messages: [sourceEntry.message],
+	}));
+	const handoff = buildAutoHandoff(entries, projected, 20_000, {
+		ownerQuestionRegistered: false,
+	});
+	assert.match(handoff, /Active note \(written\): copied\.md/u);
+	assert.doesNotMatch(
+		handoff,
+		/^- (?:Active|Referenced) note.*(?:source\.md|unattempted\.md|uncertain\.md)/mu,
+	);
+});

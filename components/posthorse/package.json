@@ -1,0 +1,41 @@
+{
+  "name": "@pi-in-go/pigpen-posthorse",
+  "version": "0.1.0",
+  "description": "Go port of pi-posthorse: no-summary context rollover for long tasks (new_context, get_context_remaining, notes, history), one task-note reminder, bounded recovery records, fork-private notes, no network",
+  "keywords": [
+    "pig-package",
+    "context",
+    "compaction",
+    "notes",
+    "history",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/posthorse"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/posthorse#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "port",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/posthorse"
+    ]
+  }
+}

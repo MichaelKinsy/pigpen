@@ -1,0 +1,244 @@
+# Posthorse reference
+
+This page covers rollover behavior, tool details, settings, and storage guarantees.
+For a quick start, see the [README](../README.md).
+
+## Install
+
+Posthorse requires Node.js `>=24.12.0` and Pi `>=1.5.0`. Update an older host before you install Posthorse.
+
+Review the [Pi 1.5.0 release notes](https://github.com/earendil-works/pi/releases/tag/v1.5.0) before upgrading the host. Posthorse does not migrate host settings or other extensions.
+
+```bash
+pi install npm:pi-posthorse                        # from npm
+pi install git:github.com/fitchmultz/pi-posthorse    # from Git
+pi -e npm:pi-posthorse                             # try it for one run without installing
+```
+
+Update Posthorse with `pi update npm:pi-posthorse` or `pi update --extensions`. Uninstall with `pi remove` followed by the source you installed. Removing the package leaves notes and Pi's session history in place.
+
+Restart Pi after installing or updating Posthorse to load the new extension code.
+
+Keep exactly one copy loaded. `pi list` shows every package source; if a second source or a local checkout is listed, `pi remove` it, otherwise two copies register the same tools and compete for the same rollover hook.
+
+## Official Pi and the fork
+
+Both hosts get the same tools, guidance, reminders, notes, history, and recovery records. Automatic rollover is a public compaction entry with a bounded recovery record as its summary and a safe recent-message tail selected using Pi's effective `compaction.keepRecentTokens`; no summary model is called. Explicit `new_context` remains a retain-none clean reset. Automatic rollover handles `session_before_compact`; manual `/compact` stays Pi's own summarization.
+
+`new_context` commits at turn end only after Posthorse's own callback succeeds and every foreground tool succeeds, including nested calls through `codemode` or `ctx.executeTool()`. A caught nested tool failure still prevents the reset. Requests follow native call ancestry to their foreground receipt; bounded nested-call summaries are not authorization. Multiple requests select the first foreground receipt in assistant order, then its first accepted handoff. An accepted request can settle while detached work continues. A later background call cannot request a reset from an already-finished foreground batch. A foreign tool with the same name cannot authorize a rollover.
+
+- **Automatic eligibility on both hosts:** Pi's compaction preparation must succeed before the automatic hook runs. Posthorse's custom compaction result bypasses the default summarizer and its credential lookup. In fresh compaction windows without a subsequent projected turn-start input, Posthorse owns threshold rollover at completed turn end when known usage reaches the enabled, supported threshold; it preserves normal continuation and never requests another response after a final answer. Other threshold spans and overflow/truncated-response recovery stay Pi-owned. Tiny overflow/truncated responses can still miss native recovery, and oversized initial input can reach the provider before recovery.
+- **Policy:** guidance, reminders and budget reports use Pi's live effective settings, including runtime and per-model compaction overrides, defaults and validation; the turn-end threshold fallback uses this same policy reader, while the native automatic hook uses the live settings in its event. Manual settings-file edits take effect when Pi refreshes its live settings, just like Pi's own compaction, not on Posthorse's next evaluation. SDK hosts can inject policy with `createPosthorse(getPolicy)`. Handoffs appear as compaction-summary messages. Background work owned outside the foreground batch is not serialized or stopped by Posthorse.
+- **Idle custom wakeups:** supported official Pi and the maintained fork refresh Posthorse's run-local prompt options and check compaction before delivery, preserving the new custom input separately from the bounded recovery record. Settled forced-prompt options never carry into a later run.
+
+Legacy fork `context_window` entries remain readable for history recovery. New boundaries do not use the retired native-window/async ABI. Opening legacy fork journals in official Pi can reintroduce earlier context because official Pi does not interpret those old markers; do not assume cross-host session migration.
+
+## How it works
+
+1. **Stable guidance.** Each request gets a native system-prompt section stating the best available native context capacity and, when automatic rollover is supported and enabled, its token threshold from the available Pi settings. Fresh windows get the same guidance, refreshed if the model or available settings change during a continuing turn. For virtual models, native limits can come from the routed physical model. These are capacity and policy limits, not remaining space. The guidance distinguishes context capacity from response-token limits and reasoning budgets, and requires a `get_context_remaining` check before reporting remaining tokens or changing plans because of context limits. Unknown usage stays unknown. There is no per-request meter or routine budget check. When an extension forces an opaque full prompt, Posthorse preserves it and supplies guidance as a request-local conversation message, because official Pi applies forced text after system-context hooks. Guidance is regenerated from current state rather than persisted in the transcript.
+2. **One best-effort task-note reminder.** While Pi compaction is enabled, one reminder may arrive at the end of a working turn inside the checkpoint band before Pi's rollover line, never on a turn that ends the run. It cannot wake a finished agent or replace its final answer. The reminder leads with Pi's ownership of automatic rollover and contains no remaining-token countdown. It asks the model to update its current-state note with available file-editing tools if needed, then immediately execute the next prescribed task step. Context rollover is not a task deadline or a reason to reduce scope, skip verification, issue a final progress summary, or wait for user continuation. Already-current notes need no rewrite; `notes write` remains the fallback for creation, substantial restructuring, or unavailable editing tools. `new_context` is not required. A large turn, overflow, restart, or smaller model can reach rollover without the reminder. Reminders are fingerprinted by window, context size, and reserve, so switching to a different context size gets a fresh reminder. Stale reminders and reminders left after disabling compaction are filtered from model input while remaining in history. [Reminder timing](reminder-timing.md) explains the band and its relationship to retention.
+3. **`get_context_remaining`.** Reports the best available native estimate of tokens until Pi's automatic rollover line and until the configured context limit. That configured limit is not a measured provider rejection boundary. Pi's value is an estimate until the active model reports usage. Check before claiming a remaining-token count or changing plans because of context limits. The notes reminder is not a reset deadline; routine budget checks are unnecessary.
+4. **`new_context`.** Optionally requests a deliberate atomic retain-none rollover once the current foreground tool batch succeeds. An optional handoff becomes the first state of the fresh window. Failed sibling writes, aborted turns, or a handoff that no longer fits after queued input prevent commitment. The request card is not proof that the boundary committed. Own successful callback IDs and admitted handoffs are consumed once at settlement; transcript names alone cannot request a reset.
+5. **Automatic rollover without summaries.** When Pi reaches the public automatic hook with a supported budget, Posthorse builds a bounded recovery record and retains a projected recent tail using the native safe cut and effective `compaction.keepRecentTokens`. Zero explicitly retains none. Tool calls and results stay together; orphan or incomplete groups are not retained. Native retention is approximate, so Posthorse measures the projected tail and advances the cut past whole groups until it fits alongside the record. If no safe tail fits, it retains only an invisible boundary sentinel. When a recent tail is retained, Posthorse orders the retained tail before the automatic compaction recovery record in `context` (matching the TUI order, with a leading `custom` user-role anchor when the retained tail begins with an assistant turn) so the model reads the retained pre-rollover tail first and the rollover recovery record at the exact boundary where rollover occurred. Cancellation or recovery construction failure leaves active context intact rather than silently invoking a summarizer. Unsupported small-model budgets retain Pi's native fallback. Manual `/compact` is unchanged. Native eligibility limits are listed above.
+6. **Bounded recovery record.** The automatic handoff quotes the window's first owner request, its latest owner input (a direct user input or `ask_question` outcome), and its latest input of any kind, including visible coordination messages. It also summarizes active task notes written or read in the current automatic rollover chain (across `notes`, file-editing tools on note paths, and nested `codemode` calls), distinguishing notes whose latest full write is already visible in the retained tail from notes compacted before `firstKeptEntryId` or only partially edited in the retained tail. Across consecutive automatic boundaries, a window with no owner inputs carries the same first/latest owner anchors from the nearest earlier owner window, labeled as earlier, possibly already handled, and not current progress. The walk stops at that window or an explicit/native compaction checkpoint; context edits still omit or replace carried inputs, and `ask_question` answers keep the same provenance checks. The newest non-automatic checkpoint reached replaces nested automatic text, with bounded history pointers to skipped automatic record ids. Carried anchors share the existing payload budget; earlier automatic tool evidence is never nested. It adds tool result evidence: tool names and namespaces, call ids, requested and admitted execution arguments when available, result excerpts of up to 1,500 characters, and entry ids to recover the rest. Inputs and tool evidence retained in the recent tail are not duplicated in the record; eligibility and call provenance still use the complete projection. Retained owner inputs also prevent stale owner anchors from being carried unnecessarily. Every other discarded current-window input gets one index line with its label, time, and entry id; owner inputs keep a one-line preview there. Only a successful result positively linked to a projected unnamespaced `ask_question` call **and** an effective registered unnamespaced `ask_question` definition is an owner answer. Providers can omit call namespaces, so call metadata alone is insufficient. Namespaced, unregistered or unresolved-provenance results remain tool evidence, never owner approval. Legacy async results still visible in a projected journal remain eligible even across later complete assistant responses; this is history compatibility, not a new native-async execution path. A result Pi still projects is also eligible when its call was edited out or predates the window, without attributing it to another call. These results may already have been received or handled; they are not proof of current progress. Synchronous results with projected call provenance are kept only from the trailing batch without a later complete response. Pi context edits also apply to these inputs and results: omitted entries stay out, and replacements supersede their original content. A clearly labeled, possibly stale older checkpoint comes last. Older assistant prose is not treated as current state. Newly submitted input stays separate and is saved after the boundary, not copied into the handoff.
+7. **`notes` and `history`.** The notes store is shared across linked worktrees, at the main checkout for conventional Git layouts or inside the common Git directory when metadata is stored separately. Forks have private writable scopes inside that store. History searches normalized transcript text, skips entries whose full text the model already sees in its active context (and says how many), and returns stored images for a requested entry. Edited-away originals and checkpoint reminders stay searchable. Tool calls and results retain names, namespaces, and call ids; admitted execution arguments are labeled separately from requested arguments when present. When a handoff carries edited content, its entry ID points to the replacement; `history read` of that ID returns the replacement's normalized text and supported images. Reading the original entry ID returns the original entry's normalized text and supported images, subject to history's scope and exclusions.
+
+Automatic rollover keeps receipts that fit in its safe recent tail. Discarded receipts have bounded recovery excerpts and history IDs; complete raw or edited receipts remain recoverable from the append-only journal. Explicit retain-none resets remove all prior receipts from active input. Posthorse no longer registers a native receipt-bounding hook. The host owns physical request sizing and output clamping; custom transports and raw payload replacements remain responsible for their request sizes.
+
+Each synchronous safety evaluation lazily reads native usage and settings at most once, sharing them through guidance and page sizing. Requests, sibling tools, and final handoff admission each get a fresh snapshot; snapshots never survive an await. Official Pi still performs one uncached native usage acquisition when an evaluation needs it. Routed limits come only from that native reading, not a guessed virtual-model declaration.
+
+Reminder lookup follows by-id ancestry to the latest Posthorse boundary and the entire native compaction kept range. It reuses certified append-only state, including negative results, and rebuilds on navigation, session changes, or changed entry identity. No history is capped or dropped. Below-band turns and reminder-free input skip that lookup; legacy window markers can identify the window directly. Automatic recovery reuses the branch supplied by Pi's compaction event. Complete history remains available through unchanged paged searches and reads.
+
+Automatic recovery is an emergency input record, not proof of progress. The fresh model is told to restore notes and todo state, inspect history when needed, and verify live state before taking stateful or external action.
+
+### Idle sessions and cache expiry
+
+Posthorse has no idle timer, provider-cache deadline, or cache-expiry setting. The optional
+[pre-expiry scheduler proposed in #99](https://github.com/fitchmultz/pi-posthorse/issues/99) is
+not implemented. Pi's automatic compaction lifecycle remains the scheduling boundary for
+normal no-summary rollover, alongside Posthorse's completed-turn threshold fallback.
+
+An idle session below the ordinary threshold keeps its active context even after a provider cache
+expires. Its next request can therefore resend that large context at cold-input prices.
+Below-threshold cold resumes remain unresolved; this does not mean that earlier context reduction
+cannot save money. A pre-expiry policy would need a safe scheduling boundary and evidence of an
+advantage over a request-time decision: Posthorse's local rollover itself neither calls a model
+nor refreshes the provider cache.
+
+The public `ctx.compact()` entry point is manual compaction, not a non-aborting automatic
+checkpoint. In [official Pi 1.5.0](https://github.com/earendil-works/pi/blob/v1.5.0/packages/coding-agent/src/core/agent-session.ts)
+it aborts the current operation before `session_before_compact`; the
+[maintained fork](https://github.com/fitchmultz/pi/blob/ea5fe4563fd15e7b630fa33c776865a1e30c7acb/packages/coding-agent/src/core/agent-session.ts)
+also cancels and joins native `runInBackground` tools there. Those tools can still be running
+while `isIdle()` is true. Cancelling in the later hook cannot undo that cancellation, and
+Posthorse deliberately leaves manual compaction on Pi's summarization path.
+
+For a deliberate clean context, ask the model to save task state and call `new_context` with a
+handoff. It retains no prior messages and still waits for its foreground batch to succeed.
+Use `/compact` when you want native summarization, with Pi's normal abort behavior; it is not a
+background-preserving substitute. No configuration migration is needed because the proposed
+scheduler was never shipped.
+
+## Settings
+
+For the reserve's capacity, cache-cost, and headroom tradeoffs, see [Rollover frequency and cache cost](rollover-cache-cost.md). The owner's 64k reserve targets rollover before a 272k input-pricing boundary with a custom 335k window. The 32k and 24k examples cross that policy boundary and are counterfactuals, not equivalent cheaper settings or recommendations. The rollover threshold is not a hard request-size cap.
+
+Posthorse follows Pi's effective `compaction` settings, including Pi's decision about whether project settings are trusted. Disabling `compaction.enabled` disables reminders and automatic rollover; `new_context` stays available. `keepRecentTokens` defaults to Pi's 20,000 tokens and supports runtime and per-model overrides. Existing injected policy readers that supply only `enabled` and `reserveTokens` remain compatible and use Pi's default retention on the turn-end fallback; the native hook always uses its resolved event settings.
+
+The model's context window minus `compaction.reserveTokens` must leave at least 10,000 usable tokens. Below that (for example an 8K or 16K model with the default 16,384 reserve) Posthorse reports an unsupported configuration in the guidance and in `get_context_remaining`, turns automatic behavior off for that model, and leaves Pi's own compaction in place. Lower the reserve or use a larger model. The checkpoint reminder band is the last 10% of usable context, capped at 32,000 tokens, so a large reserve cannot trigger a reminder immediately in a fresh window.
+
+Explicit handoffs are capped at 20,000 characters and half the native context limit's fresh operational capacity after prompt/tool overhead and any pending input, whichever is smaller. Automatic recovery records retain the same 20,000-character cap; the record and recent tail together share half the fresh operational capacity after prompt, guidance, active-tool overhead, the safety margin, and pending input visible in the turn-end preview. The record's full allowance is reserved before admitting a tail. The native automatic hook cannot inspect not-yet-drained queued message bodies, so its conservative headroom is not a strict bound on arbitrary later input; Pi preserves that input and owns scheduling and physical request sizing. Oversized explicit handoffs are rejected with an instruction to save fuller state in notes; automatic rollover cancels visibly when a supported configuration has no room for a safe recovery record. Notes and history pages are capped at 40,000 characters and shrink to the remaining budget; when usage is not known yet, they also leave half the fresh operational capacity free. Payload budgets reserve Posthorse's request-local guidance too, because native estimates can omit it.
+
+Only one automatic compaction or rollover policy extension should be enabled at a time. Pi keeps the last non-cancel result from multiple handlers of the same hook, so load order would otherwise decide which policy wins.
+
+The fresh-window threshold fallback builds its recovery record from the boundary preview when its `turn_end` handler runs. Earlier turn-start drafts keep compaction Pi-owned; earlier context-edit drafts defer the fallback until usage can be re-evaluated after commit. Unlike the native automatic hook (which runs after all turn-end handlers), the eager fallback cannot observe later handlers' edits. Later projection-editing handlers must explicitly replace/remove its drafted compaction if they change its source evidence; ordering an editor before Posthorse lets its drafts defer rollover safely. A host post-boundary hook would be needed to include arbitrary later same-phase edits automatically.
+
+## Tools
+
+These examples show model-callable tools:
+
+```js
+notes({
+  op: "write",
+  path: "task.md",
+  content: "Goal: fix sign-in. Next: run the regression test.",
+});
+history({ op: "search", query: "sign-in", all: true });
+```
+
+- `new_context({ handoff? })`
+- `get_context_remaining()`
+- `notes({ op, ... })`: `list`, `read`, and `search` are paged; continue with the returned character `offset`. `list` shows the current writable notes directory, then note names newest first with size and modification time (UTC). It takes an optional folder `path`; `read` of a folder returns its listing. Default lists and searches include completed fork scopes in the same project store. An optional `scope` selector restricts reads, lists, or searches to one scope. Current-file reads show their editable absolute path; foreign reads show a read-only reference instead. Offsets refer to note content or listing rows, excluding path headers. `search` covers text notes, skipping binary files (a NUL byte in the first 8,000 bytes, as Git decides), and its excerpts center on the match. It also skips files over 1 MiB and says how many it skipped. Search stops reading once the requested page is decided, so a broad query reports that more matches follow instead of a total; its pages end before offset 1,000,000. `write` replaces content (empty content clears); `append` adds one newline-terminated record.
+- `history({ op, ... })`: `search` skips entries whose full text is already in the active context, continues with the returned `cursor` and the same `query` and `all` scope, and treats `limit` as the maximum results per page. `read` pages text and stored images; continue with the returned character `offset` and `imageOffset`. An image-only continuation can use an `offset` equal to the text length. If a page needs fresh context, retry with both offsets unchanged. Results keep native entry and window ids.
+
+In the TUI, tools use Pi's native expandable cards. Collapsed cards show the operation and target, a short content preview, and counts or page ranges with the next offset when more remains. Expand with Pi's tool-output shortcut (`Ctrl+O` by default), or click the card's header or body in fullscreen mode. Expanded cards show the complete returned page and its metadata, not content the tool has not fetched yet. Writes and context requests also show the submitted content or handoff.
+
+The `new_context` tool card describes a request, not a completed reset. Pi's native compaction card (`Compacted from … tokens`) shows the committed current boundary and expands to its handoff. Context-window cards are historical fork boundaries only; checkpoint reminders remain compact, expandable cards too.
+
+Notes list/search and history search share the remaining context budget with read pages and returned images. Search/list headers, continuation text, no-match responses, and parallel sibling results count toward that budget; pages already counted by Pi are not counted twice. Before usage is known, pages reserve prompt/tool overhead and leave half the rest free. Unsafe pages are refused with the offset or cursor preserved in the call; call `new_context` and retry. Refusal text uses the same budget, so later failures omit repeated guidance once no more fits.
+
+`history search` puts matching original content before recovery material: handoffs, compaction and branch summaries, checkpoint reminders, and `notes`, `new_context`, and `history` calls/results. Ordinary prose or another tool call in the same assistant entry keeps its priority when that content matches. Every entry remains searchable; `history read` returns the complete normalized entry, including any recovery content omitted from a search excerpt.
+
+Within each group, current-branch matches are newest first. With `all: true`, Posthorse searches session files in the active Pi session directory whose saved working directory matches the current one, along with their nested subagent sessions and the selected current session file when it is in that directory. Files without a valid session header or an attributable working directory are excluded; the active branch remains available. Within that scope, sessions are ordered newest-modified first and entries newest first; this is not a global timestamp sort. All-session hits use a file-qualified ID (`native-id@file-key`, with a 10-character key); pass the complete ID to `history read`. Full-length keys printed by earlier releases still read. Hits from nested subagent runs are tagged `[subagent]`, because their user-role input came from a parent agent. A read that resolves a bare ID in another session file prints that entry's qualified ID, so continuations reopen the same file. When ripgrep is available (Pi's managed copy, then `PATH`), all-session search and bare-ID reads skip session files that cannot contain the query or ID. Files are prefiltered newest first, so older archives are checked only when newer ones do not fill the page. Session files store quotes and backslashes escaped, and normalized entries add label text (brackets, parentheses, braces, colons, `$`, and phrases such as "Call ID" and "No handoff"), so the prefilter looks for the longest part of the query between those characters, plus the raw entries that render a matching label. Image summaries come only from entries with an image block, so image-count and comma queries also search every file that has one. With or without ripgrep, lines that cannot match skip JSON parsing; a query made only of those characters reads every line. Either way, results match a full scan. The per-page result limit applies after priority, so newer echoes cannot displace older original matches. Each included session file contributes its own matches, including fork copies, so unrelated entries sharing a native ID are never hidden. Search cursors advance past the previous entry, including partial headers or excerpts, so appending lookup calls and results does not keep pagination alive forever. Searches are live: external session edits or file reordering can change results; start a new search to include newer sources.
+
+Notes live in `.pi/notes/` at the main checkout for conventional Git layouts, or the current directory outside Git. When Git metadata is stored separately, including in submodules, all checkouts use `.pi/notes/` inside Git's common directory instead; no configuration is needed. If that metadata is unavailable, notes stay local to the checkout. Reads, listings, and writes report the actual storage location.
+
+For conventional Git checkouts, packages managed by Pi use storage outside their cleaned checkout tree:
+
+| Package checkout                  | Notes directory                           |
+| --------------------------------- | ----------------------------------------- |
+| `<agent>/git/<host>/<path>`       | `<agent>/notes/<host>/<path>`             |
+| `<project>/.pi/git/<host>/<path>` | `<project>/.pi/package-notes/<key>/notes` |
+
+`<agent>` is Pi's configured agent directory (normally `~/.pi/agent`, respecting `PI_CODING_AGENT_DIR`). Project package notes are separate from the project's own `.pi/notes/` and from other projects' copies of the same package. `<key>` is the full lowercase hexadecimal SHA-256 digest of the checkout path relative to the selected outermost `.pi/git` directory, including the host and complete package path, with native path separators normalized to `/`. Each digest is one flat directory, so even generic Git URL prefix identities such as `host/acme/tool` and `host/acme/tool/notes` have separate note stores. No package-key database is maintained. Linked worktrees of a package share its relocated notes. If one project package contains another project package, storage is outside the outermost `.pi/git/` tree, keyed by the digest of the full path relative to that tree. All descendants of Pi's global Git install tree retain their existing `<agent>/notes/<full-relative-path>` mapping. Consequently, a project package nested inside a global package still shares the outer package's recursive notes namespace: outer listings/searches can include its notes. That inherited global-layout limitation is not changed by project-local relocation. Plain package-container folders, rather than checkouts, retain their ordinary notes location.
+
+Whole-project symlinks and logical project-package paths through a linked `.pi/git` container or source host/repository segment are supported. If a session instead opens the external physical checkout path, or a linked worktree outside that project, Posthorse cannot infer the undiscoverable project alias: it falls back to the physical checkout's notes location. Such notes can still be deleted by package cleanup. Global detection supports a linked agent directory or whole `git` container, but not a source host/repository segment linked outside that container. These are not universal symlink-protection guarantees. Separately stored Git metadata retains the common-directory storage described above; it is safe from checkout cleanup only when that metadata is outside the cleaned checkout. No filesystem-wide ownership discovery is performed.
+
+This follows the [official Pi 1.5.0 package manager](https://unpkg.com/@earendil-works/pi-coding-agent@1.5.0/dist/core/package-manager.js): `getGitInstallRoot` selects `<agent>/git` or `<cwd>/.pi/git`, `getGitInstallPath` appends the source host/path, and `ensureGitRef` resets changed commits before `cleanAndInstallGitDependencies` runs `git clean -fdx` inside the checkout. An unchanged commit normally repairs missing dependencies without cleaning, except when retrying an interrupted update.
+
+On the next notes operation, an existing checkout-local `.pi/notes/` directory moves to the relocated location. **Access notes with this version before updating a package that still has checkout-local notes**; migration cannot recover notes already deleted by an update. If relocated storage already exists, incoming notes go into `from-checkout-<time>`, with `-1`, `-2`, etc. added when needed, without replacing existing entries or merging same-named notes. Posthorse attempts to link the old `.pi/notes` path to the relocated directory so older sessions can still reach it until the next update removes the link. Notes subsequently recreated inside the checkout are migrated on another notes operation. Notes tracked by the package itself can reappear on update and produce additional migrated copies.
+
+Migration is not coordinated across processes or with `pi update`; avoid running those operations concurrently. This relocation protects against package cleanup, not deletion of the containing project or agent directory. Add both `.pi/notes/` and `.pi/package-notes/` to the containing project's `.gitignore` when notes must not be committed.
+
+### Forks, references, and discovery
+
+A session records its notes root when Posthorse first resolves it. A fork gets a private writable
+scope under that root in the destination project:
+
+```text
+<notes root>/.forks/<session timestamp>_<full session ID>/
+  manifest.json
+  notes/
+    task.md
+```
+
+The timestamp uses the session header's ISO timestamp with colons and dots replaced by hyphens.
+The manifest describes completed copies and their source files. Manifests, temporary snapshots,
+and unrecognized management data are not notes. Lists report unrecognized management data rather
+than silently adopting it.
+
+The initial copy includes notes used on the selected branch, with inherited copy associations
+that remain visible there. It does not copy the whole project store or abandoned branches.
+The bytes come from the immediate parent's current files, not a historical filesystem version.
+Copies preserve the source modification time. A missing source or ambiguous legacy provenance
+reports an incomplete snapshot instead of making the parent writable.
+
+Resume restores the existing scope without copying again. `/tree` keeps the same scope and does
+not roll files back. A CLI fork can contain other source branches. Notes found after navigating
+to one of those branches remain references until the child adopts them.
+
+An unowned note can be read through its recorded source scope. The result is labeled
+`Read-only live reference`, because the source can change. A missing or deleted note already
+owned by the child never falls back to an ancestor. Explicit comparisons use the selector
+returned by a list or search:
+
+```js
+notes({ op: "list" });
+notes({ op: "read", scope: "/repo/.pi/notes", path: "task.md" });
+notes({
+  op: "list",
+  scope: "/repo/.pi/notes/.forks/<session key>/notes",
+});
+```
+
+`scope` is valid only for `read`, `list`, and `search`. Default discovery includes the current
+project's original notes and completed fork scopes. It collapses byte-identical copies of the
+same inherited note before paging and retains selectors for every copy. Changed or uncertain
+copies remain separate. An explicit scope shows all files in that scope without collapsing them.
+Duplicate comparisons use snapshot digests and native file-change identity, reading changed or
+unverified same-lineage candidates rather than hashing every note.
+
+A fork created in another project stores its copies in that destination's notes root. The source
+project does not discover those copies through a global index. Recorded source roots still allow
+reads and adoption when an old worktree disappears but its shared notes store remains available.
+
+Native `read`, `edit`, and `write`, plus `replace_text`, `write_files`, and `apply_patch`, respect
+scope ownership when called directly or through native tool composition. Foreign generic reads
+redirect to a labeled `notes read` comparison. An existing-file edit to an unowned source note
+first copies the current source bytes, then blocks the requested edit. Its receipt identifies the
+private copy and requires a fresh read before retrying there. Creation-only operations do not
+pre-create a destination or change creation semantics. `notes append` adopts and appends within
+one same-file queue admission, preserving the inherited prefix.
+
+If adoption copies a note but cannot verify the copy or save its metadata, the error identifies
+the private destination and asks for a fresh read before retrying. The private copy is recorded
+as owned, so deleting it cannot restore the parent reference. The source is not edited.
+Initial fork snapshots instead discard their unpublished staging directory on verification failure.
+
+These checks apply to original sessions too, so a parent cannot use those tools to edit a child's
+notes or managed metadata. They are not a filesystem sandbox. Shell commands and custom programs
+can still change files outside their scope. Private notes cannot follow aliases outside their
+scope; original project notes retain their existing alias behavior except into managed scopes.
+
+Verified nested note effects have journal records independent of the outer tool's output.
+Automatic recovery associates each effect with its causal call receipt or delivered background
+completion, even when the effect record was appended after `/tree`. A cancelled run's launch
+receipt alone is not evidence of a write. Explicit omission of the causal receipt suppresses
+automatic recovery and fork selection; compaction alone does not. A touch record or compact
+script receipt never counts as retained full note content. Recovery asks for a fresh read.
+
+Keep concise current-state notes, preserving decisions and safety constraints and linking fuller evidence or history. Concurrent agents should use separate per-agent/task files or an explicit single-writer handoff. For an existing note owned by that writer, edit changed sections with an available file-editing tool (`apply_patch`, `replace_text`, or Pi's `edit`) rather than resending the whole file. Use the editable absolute path returned by a current-scope `notes read`. Foreign listing rows contain read-only scope selectors, not editable paths. A worktree's local `.pi/notes/` may not be the storage location. The notes tool's `path` argument remains relative to the selected scope. No Posthorse-specific editor is required, and failed sibling edits still prevent an explicit `new_context` reset.
+
+`write` is a complete-file replacement in the note's directory: a failed write before publication leaves the previous note intact. It follows symlink targets and preserves ordinary permissions and ownership, or fails before publication. Hardlink aliases and already-open handles keep the previous file; ACLs, extended attributes, and power-loss durability are not guaranteed. Within one Pi process, writes and appends to the same note run in order; across processes, full replacements do not merge concurrent appends or other replacements. Do not replace or edit a note while another process appends to it: external file-editing tools can also overwrite concurrent changes through read/modify/write. Atomic publication gives readers the old or new file, not a partly written replacement; it is not a cross-process transaction. `append` retains one `O_APPEND` write per newline-terminated record.
+
+## Data and privacy
+
+- For cached-token cost diagnosis and a safe stock-compaction comparison, see the [cached-token investigation](../ARTIFACTS/investigation-report.md). It does not establish the cause of a production bill or claim a measured cost improvement.
+- Posthorse makes no network requests.
+- Notes are plaintext files under `.pi/notes`, the containing project's `.pi/package-notes` for project-local Git packages, or Pi's agent-directory `notes` for globally installed Git packages and their nested project packages. Relocated notes survive package removal, but not deletion of the containing project or agent directory, and may be committed unless ignored.
+- `history` with `all: true` scans project-matching JSONL files and their nested subagent sessions in the active Pi session directory, not unrelated projects that share that directory. It runs ripgrep locally over those files when available.
+- History can return user text, assistant text and thinking, assistant failure status and error messages, tool arguments and results, handoffs, custom messages, and images. Direct shell entries Pi marked `excludeFromContext` come back as a placeholder only.
+- Returned history content enters the currently selected model and provider context.
+- Removing Posthorse does not remove notes or Pi session history.
+
+## The name
+
+**Fresh context. Same journey.** (POST-horse)
+
+A post-horse was swapped in at relay stations so the courier and the message could continue on fresh legs.
+Posthorse does the same for a model: fresh context, same work, complete recoverable transcript.
+
+Pi owns the persisted boundary. Posthorse owns the policy: stable window guidance, one best-effort
+checkpoint reminder, `new_context`, `get_context_remaining`, durable `notes`, and window-aware
+`history`. A rollover removes the old window from active model context while the JSONL transcript
+stays append-only and complete.

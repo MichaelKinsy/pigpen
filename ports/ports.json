@@ -666,6 +666,26 @@
       "lane": "pig-model-tweaks",
       "status": "porting",
       "credit": "Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292."
+    },
+    {
+      "id": "pi-posthorse",
+      "name": "pi-posthorse (Posthorse)",
+      "kind": "port",
+      "summary": "No-summary context rollover for long Pi tasks: new_context, get_context_remaining, notes and history tools, one task-note reminder, automatic recovery records, fork-private notes, no network.",
+      "upstream": {
+        "name": "pi-posthorse",
+        "url": "https://github.com/fitchmultz/pi-posthorse",
+        "commit": "c8596fff2cec7123ef37486fd9701a24019c934f",
+        "license": "MIT",
+        "author": "Mitch Fultz"
+      },
+      "targetPackage": "components/posthorse",
+      "otherTargets": [
+        "piglets/pig-posthorse"
+      ],
+      "lane": "pigpen-posthorse",
+      "status": "queued",
+      "credit": "Go port of pi-posthorse 0.10.11, https://github.com/fitchmultz/pi-posthorse, by Mitch Fultz (MIT, Copyright (c) 2026 Mitch Fultz), at commit c8596fff2cec7123ef37486fd9701a24019c934f."
     }
   ]
 }

@@ -1,0 +1,103 @@
+# Posthorse
+
+Posthorse starts fresh context windows for long [Pi](https://github.com/earendil-works/pi) tasks without an automatic model-generated summary. Stock Pi already preserves the session journal and retains a recent tail during compaction; Posthorse adds explicit notes and history retrieval, with a handoff or bounded recovery record instead of the automatic summary.
+
+![A Pi conversation rolls into a fresh context window. Task notes and the complete session transcript remain available.](https://raw.githubusercontent.com/fitchmultz/pi-posthorse/main/.github/readme/context-rollover.png)
+
+## Install and start
+
+Check the [Node.js and Pi requirements](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#install) before installing. Posthorse supports official Pi and [fitchmultz/pi](https://github.com/fitchmultz/pi).
+
+Update an older Pi installation before you install Posthorse. Run these commands:
+
+```bash
+pi install npm:pi-posthorse
+pi
+```
+
+Restart Pi after installation or an update. To try Posthorse for one session, run `pi -e npm:pi-posthorse`.
+
+Give Pi your task. For example:
+
+> Save task state in a note. Start a fresh context window with the next steps.
+
+## How rollover works
+
+Posthorse can send a routine task-note reminder before rollover. The reminder tells the model to save current task state if needed, then immediately continue the prescribed work. The context window is not a task deadline. The reminder does not require `new_context` or wake an agent after its final answer. Large turns can reach rollover before the reminder. See [Reminder timing](docs/reminder-timing.md) for the trigger and its relationship to Pi's reserve and retention settings.
+
+Automatic rollover retains a safe recent-message tail using Pi's `compaction.keepRecentTokens`, alongside a bounded recovery record for discarded inputs and tool evidence. It never calls a summarization model. The model must restore notes and check live state before it continues. Optional `new_context` deliberately retains no prior messages; manual `/compact` uses Pi's normal summarization.
+
+Posthorse does not schedule rollover when a provider cache expires. An idle session below the
+rollover threshold keeps its context; use an explicit `new_context` when a deliberate clean reset
+is useful. See [idle sessions and cache expiry](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#idle-sessions-and-cache-expiry).
+
+See the [changelog](https://github.com/fitchmultz/pi-posthorse/blob/main/CHANGELOG.md) for release history. Default-branch documentation may describe changes not yet published.
+
+Recoverable history is not guaranteed model recall. See the [practical guarantees and limits](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/context-recovery.md) for the stock-Pi comparison, search scope, checkpoints, privacy, concurrency and cost, or the [rollover reference](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#how-it-works) for implementation details.
+
+## Tools
+
+These tools are available to the model:
+
+| Tool                        | Use                                                                                                                                                |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `new_context({ handoff? })` | Optionally request a clean reset with no retained messages after every foreground tool succeeds. Aborted turns and failed tools prevent the reset. |
+| `get_context_remaining()`   | Estimate tokens left until rollover and the configured context limit. Usage can be unknown before a model response.                                |
+| `notes({ op, ... })`        | List, read, search, write, or append task notes.                                                                                                   |
+| `history({ op, ... })`      | Search earlier conversation and read entries, including images. `all: true` includes this project's other sessions and nested subagent runs.       |
+
+Expand a tool card with Ctrl+O. In fullscreen mode, click a tool card to expand it. A `new_context` card shows a request. Pi's `Compacted from … tokens` card confirms the rollover.
+
+Forks get private copies of the notes used on their selected branch. The parent and fork can
+update the same note name without overwriting each other. Project-wide lists and searches still
+find both, with scope selectors for read-only comparisons.
+
+See [tool examples and paging details](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#tools)
+and [fork notes](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#forks-references-and-discovery).
+
+## Settings and limits
+
+Posthorse uses Pi's effective `compaction` settings. It has no separate settings.
+
+| Pi setting                    | Effect                                                                                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `compaction.enabled`          | Set to `false` to disable reminders and automatic rollover. `new_context` remains available.                                                                       |
+| `compaction.reserveTokens`    | Automatic Posthorse rollover needs at least 10,000 tokens after this reserve. Smaller budgets use Pi's own compaction. Lower the reserve or choose a larger model. |
+| `compaction.keepRecentTokens` | Approximate recent tail for automatic rollover (Pi's default: 20,000). Zero keeps no messages. Tail size shrinks when safe groups cannot fit the fresh budget.     |
+
+Two Posthorse copies can register the same tools and compete for rollover. Keep one copy loaded. Check installed sources with `pi list`.
+
+Multiple compaction-policy extensions can make rollover depend on load order. Enable only one.
+
+Oversized input and some overflow or truncated responses can reach the provider before automatic recovery. Save task state in notes. Posthorse's automatic and explicit rollovers do not stop background work outside the foreground tool batch. Manual `/compact` follows Pi's abort behavior instead.
+
+See [size limits and extension order](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#settings).
+Check the [legacy-session details](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#official-pi-and-the-fork) before you move old fork sessions to official Pi.
+
+## Update or remove
+
+```bash
+pi update npm:pi-posthorse
+pi remove npm:pi-posthorse
+```
+
+Removal leaves notes and Pi session history in place. See the [installation reference](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#install) for Git sources.
+
+## Data and privacy
+
+Posthorse makes no network requests. Notes are plaintext files under `.pi/notes/`. Linked Git worktrees share that store; forks keep private note files inside its `.forks/` directory. Notes for Pi-managed Git packages live outside their checkouts because `pi update` deletes untracked files there: global packages (including their descendants) use Pi's agent-directory `notes/`, and other project-local packages use the containing project's `.pi/package-notes/`, with project-local stores keyed by a full SHA-256 digest of the host and package path. Access existing checkout-local notes with this version before updating the package so they can migrate. Add `.pi/notes/` and `.pi/package-notes/` to the containing project's `.gitignore` if the notes must stay private.
+
+History can include user messages, assistant thinking, tool arguments, errors, and images. Content you retrieve enters the context of your selected model and provider.
+
+See [storage and privacy details](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/reference.md#data-and-privacy).
+For cost diagnosis, see the [cached-token investigation](https://github.com/fitchmultz/pi-posthorse/blob/main/ARTIFACTS/investigation-report.md).
+It does not establish the cause of a production bill or a measured cost improvement.
+
+## Development
+
+See [development and host qualification](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/development.md) for setup, tests, and releases.
+See [code quality](https://github.com/fitchmultz/pi-posthorse/blob/main/docs/quality.md) for the required checks.
+
+## License
+
+[MIT](LICENSE).

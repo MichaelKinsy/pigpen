@@ -1,0 +1,22 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "pi-posthorse",
+      "authors": [
+        "Mitch Fultz"
+      ],
+      "url": "https://github.com/fitchmultz/pi-posthorse",
+      "revision": "c8596fff2cec7123ef37486fd9701a24019c934f",
+      "path": "port/oracle",
+      "license": "MIT",
+      "licenseFile": "port/oracle/LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

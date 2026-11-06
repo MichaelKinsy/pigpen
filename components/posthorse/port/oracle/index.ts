@@ -1,0 +1,67 @@
+/**
+ * Posthorse — fresh context, same journey.
+ *
+ * Pi owns persisted context boundaries. Posthorse owns recent-tail retention, reminder and
+ * rollover policy, bounded recovery, durable notes, and history retrieval.
+ */
+import {
+	SettingsManager,
+	type ExtensionAPI,
+	type ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
+import { registerPosthorseMessages } from "./ui.ts";
+import { policySnapshot } from "./src/budget.ts";
+import type { CompactionPolicy, PolicyReader } from "./src/contracts.ts";
+import { registerHistory } from "./src/history.ts";
+import { safeJsonStringify } from "./src/message-text.ts";
+import { registerNotes } from "./src/notes.ts";
+import { createNotesStore } from "./src/note-store.ts";
+import { registerNoteGuards } from "./src/note-guards.ts";
+import { PageReservations } from "./src/paging.ts";
+import { registerRollover } from "./src/rollover.ts";
+
+function activeToolTokens(pi: ExtensionAPI): number {
+	const active = new Set(pi.getActiveTools());
+	return pi
+		.getAllTools()
+		.filter((tool) => active.has(tool.name))
+		.reduce(
+			(total, tool) =>
+				total +
+				Math.ceil(
+					safeJsonStringify({
+						name: tool.name,
+						description: tool.description,
+						parameters: tool.parameters,
+					}).length / 4,
+				),
+			0,
+		);
+}
+/** Use Pi's live effective settings by default; SDK hosts can inject a policy reader. */
+export function createPosthorse(getPolicy?: PolicyReader): (pi: ExtensionAPI) => void {
+	return (pi) => {
+		const readPolicy: PolicyReader =
+			getPolicy ??
+			((ctx) => SettingsManager.inMemory(pi.getSettings()).getCompactionSettings(ctx.model));
+		const policy = (ctx: ExtensionContext, livePolicy?: CompactionPolicy) =>
+			policySnapshot(ctx, readPolicy, livePolicy);
+		const toolTokens = () => activeToolTokens(pi);
+		const pages = new PageReservations(toolTokens);
+		registerPosthorseMessages(pi);
+		const notes = createNotesStore(pi);
+		registerRollover(pi, policy, toolTokens, {
+			resetPages: () => {
+				pages.reset();
+			},
+			notes: (ctx) => notes.recovery(ctx),
+		});
+		pi.on("session_start", async (_event, ctx) => {
+			await notes.get(ctx);
+		});
+		registerNoteGuards(pi, notes);
+		registerNotes(pi, policy, pages, notes);
+		registerHistory(pi, policy, pages);
+	};
+}
+export default createPosthorse();
