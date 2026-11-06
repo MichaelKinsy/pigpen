@@ -113,7 +113,11 @@ func footerHot(footer fe.Footer) (slots [footerSlots]hot, statuses []hot) {
 // meter's value, the effort level and whether a segment hides are raw
 // props (see queueFooter), so only a change in the number of extension
 // statuses renders.
-func footerElement(id string, footer fe.Footer, ompRoles bool) tern.Element {
+//
+// A click on the model runs PiG's /model and one on the effort glyph runs
+// /thinking, through run (see runCommand), so their pickers open as when
+// typed.
+func footerElement(id string, footer fe.Footer, ompRoles bool, run func(command string)) tern.Element {
 	slots, statuses := footerHot(footer)
 	wide := &ui.Bounds{W: ui.Ch(12)}
 	common := func(key string, h hot) ui.Common {
@@ -142,9 +146,14 @@ func footerElement(id string, footer fe.Footer, ompRoles bool) tern.Element {
 	}
 	xp := ui.Seg{Common: common("xp", slots[segXP]), Side: ui.SideRight, Text: "xp", Priority: 1}
 	xp.Tone = ui.ToneWarning
+	effort := ui.Effort{Common: common("effort", slots[segEffort]), Level: ui.EffortLevel(slots[segEffort].text)}
+	effort.Title = "Thinking level (/thinking)"
+	effort.OnClick = func(*tern.Action) { run("/thinking") }
 	model := ui.Seg{Common: common("model", slots[segModel]), Side: ui.SideRight, Icon: ui.IconName("model"), Text: slots[segModel].text, Priority: 9,
-		Children: []tern.Element{ui.Effort{Common: common("effort", slots[segEffort]), Level: ui.EffortLevel(slots[segEffort].text)}}}
+		Children: []tern.Element{effort}}
 	model.Min = wide
+	model.Title = "Select model (/model)"
+	model.OnClick = func(*tern.Action) { run("/model") }
 	segs = append(segs,
 		ui.Seg{Common: common("usage", slots[segUsage]), Side: ui.SideRight, Text: slots[segUsage].text, Priority: 6},
 		ui.Seg{Common: common("context", slots[segContext]), Side: ui.SideRight, Text: slots[segContext].text, Priority: 8, Children: []tern.Element{meter}},

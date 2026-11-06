@@ -276,7 +276,8 @@ func TestFooterIsATernStatusStrip(t *testing.T) {
 		"usage":    {"side": "right", "text": "↑1.3k ↓340 R900 W10 CH60.0% $0.013 (sub)", "priority": 6},
 		"context":  {"side": "right", "text": "25.0%/200k (auto)", "priority": 8},
 		"xp":       {"side": "right", "text": "xp", "tone": "warning", "priority": 1, "hidden": true},
-		"model":    {"side": "right", "icon": "model", "text": "(anthropic) claude • high → haiku • low", "priority": 9, "min": map[string]any{"w": "12ch"}},
+		"model": {"side": "right", "icon": "model", "text": "(anthropic) claude • high → haiku • low", "priority": 9, "min": map[string]any{"w": "12ch"},
+			"title": "Select model (/model)", "actions": map[string]any{"click": "click"}},
 	} {
 		want["key"] = id
 		if got := doc["dock.footer."+id]; !reflect.DeepEqual(normalized(t, got), normalized(t, want)) {
@@ -286,7 +287,8 @@ func TestFooterIsATernStatusStrip(t *testing.T) {
 	if meter := node(ops, "dock.footer.context.meter"); meter["k"] != "meter" || doc["dock.footer.context.meter"]["value"] != 0.25 {
 		t.Fatalf("meter = %#v", doc["dock.footer.context.meter"])
 	}
-	if effort := node(ops, "dock.footer.model.effort"); effort["k"] != "effort" || !reflect.DeepEqual(doc["dock.footer.model.effort"], map[string]any{"key": "effort", "level": "high"}) {
+	if effort := node(ops, "dock.footer.model.effort"); effort["k"] != "effort" || !reflect.DeepEqual(doc["dock.footer.model.effort"],
+		map[string]any{"key": "effort", "level": "high", "title": "Thinking level (/thinking)", "actions": map[string]any{"click": "click"}}) {
 		t.Fatalf("effort = %#v", doc["dock.footer.model.effort"])
 	}
 }

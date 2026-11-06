@@ -393,7 +393,7 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 		}
 		return workingElement(e.id, n)
 	case fe.Footer:
-		return footerElement(e.id, n, s.ompRoles)
+		return footerElement(e.id, n, s.ompRoles, s.runCommand)
 	case fe.Selector:
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:
@@ -415,6 +415,19 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 		return ui.Ansi{Common: ui.Common{Key: e.id, Hidden: blank(text)}, Text: text}
 	}
 	return ui.Ansi{Common: ui.Common{Key: e.id, Hidden: true}}
+}
+
+// runCommand runs one of PiG's slash commands from a click, through the
+// path Enter takes (Env.Send), as if typed into an empty editor; the draft
+// stays. It runs only while the editor takes a prompt and PiG is idle: a
+// command sent while PiG works would steer the run as a prompt.
+func (s *session) runCommand(command string) {
+	s.mu.Lock()
+	ok := s.sendable() && !s.progress && !s.closed && !s.fellBack
+	s.mu.Unlock()
+	if ok && s.env.Send != nil {
+		s.env.Send(command)
+	}
 }
 
 // handlers are a node's handlers, made once for its kind.
