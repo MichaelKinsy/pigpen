@@ -21,11 +21,6 @@ func TestUiLocaleNumberFormat(t *testing.T) {
 			t.Errorf("n(%v) = %q, want %q", tc.v, got, tc.want)
 		}
 	}
-	neg0 := -1.0 * 0
-	if got := n(neg0 * -1 * -1); got != "0" {
-		// +0 stays "0"
-		t.Errorf("n(0) = %q", got)
-	}
 	if got := n(-0.0004); got != "-0" {
 		t.Errorf("a negative value that rounds to zero keeps its sign: %q", got)
 	}

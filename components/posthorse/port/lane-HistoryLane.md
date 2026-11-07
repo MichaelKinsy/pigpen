@@ -161,6 +161,33 @@ that benchmark (the archive is streamed to disk by the generator). "v1" is this 
 | LineMatcher `sk` | 209,549 | 4,939 | 0 | 0 | |
 | LineMatcher `éclair 🐴` (anchor + regexp) | 69,946 | 14,797 | 0 | 0 | |
 
+## Mutation check, coverage tests and a real bug
+
+* `port/mutations/HistoryLane.json`: 254 mutants over `history_entries.go`, `history_search.go`, `history_pages.go`, `history.go`,
+  `session_files.go`, `session_json.go` and the aliasing code of `session_lines.go`; `port/mutations/HistoryLane.md` lists the 8 removed
+  equivalent mutants (one line each). Run: `pigeq mutate --go extensions/posthorse --mutations port/mutations/HistoryLane.json
+  --unit-only --sdk-dir $PIG_SDK_DIR --jobs 6` on a frozen copy of the Package (a scratch copy under
+  `~/ph-work/scratch/HistoryLane/`; pigeq copies only the module directory, so `notes_tool_behaviour_test.go`, which reads
+  `../../port/oracle/src/notes.ts`, was pointed at an absolute path in that copy, and the untracked WIP `rollover_mutation_test.go`,
+  which failed on the unmutated tree, was left out).
+* First complete run: 262 mutants, 177 killed, 65 survivors, 20 invalid (unused variables). Rewrote the 20 invalid ones, removed the
+  equivalent ones, added `history_units_test.go` (about 50 unit tests) and re-ran: 247 killed, 9 survivors, 1 invalid; fixed those with
+  7 more tests and 3 more equivalents (8 in all); the last run of the 7 remaining mutants: all killed. Every survivor was a missing test; none
+  needed a production change except the bug below.
+* **Real bug found (RecoveryLane's replay corpus)**: `contextStart` compared `firstKeptEntryId` and `id` with `str()`, which reads a
+  JSON null like an absent member, so a compaction with `firstKeptEntryId: null` matched the first id-less entry. It now compares the
+  raw members like `===` (absent equals absent only, null equals null only): `TestContextStartBoundaries`.
+* C-02 (`TestHistoryAllSearchKeepsInvocationTimeContextVisibility`, native-host.ts:1257): the fixture session is persisted, a fake `rg`
+  blocks the prefilter on named pipes while the test appends a `context_edit`; the search still reports `skipped: 1` and no hit, the
+  next search sees the entry (`skipped: 0`). POSIX only (skips on Windows).
+* C-17 (`history_snapshot_test.go`): native-host.ts:1143, 1225, 1353 and 1382 count JSON.stringify calls and content accessors; the Go
+  twins bound the bytes allocated by a search/read relative to rendering the entries involved once
+  (`allocated(fn)` over `runtime.MemStats.TotalAlloc`): 64 unrelated 64 KB tool-call arguments rendered at most once per page and for a
+  no-match search (23.6 MiB measured, bound 35.9 MiB, two renderings would be 47 MiB); 8 edits of one target rendered a bounded number
+  of times (all=false and all=true); a 4096-entry, 8 KB-per-entry branch searched for a first page extracts about page-size entries
+  (bound far below n entries) and a read of any entry extracts one. They fail when an entry is rendered again or when the scan
+  extracts entries it does not need, unlike the benchmarks.
+
 ## Open questions
 
 None blocking. `registerHistory` reads `getSessionDir`, `getSessionFile` (and `getBranch`/`buildSessionProjection` only when

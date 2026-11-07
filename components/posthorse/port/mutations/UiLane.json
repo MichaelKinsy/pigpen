@@ -1593,7 +1593,7 @@
   "name": "site-context-rollover",
   "file": "context_tools.go",
   "find": "displayContext(usage, rollover, rolloverAt)",
-  "replace": "displayContext(usage, rollover, nil)"
+  "replace": "displayContext(usage, rollover, func() *int { _ = rolloverAt; return nil }())"
  },
  {
   "name": "site-new-context",
