@@ -207,6 +207,46 @@ git switch -c record-piglets && git add releases index.json && git commit -s -m 
 
 Two Piglets with the same version (`herdr/v0.1.0`, `a2a/v0.1.0`) pull and update independently by design (`--tag-prefix`).
 
+## 6b. The `pig-acp` executables
+
+`release-pig-acp.yml` attaches prebuilt `pig-acp` executables (the ACP companion of the `acp` Package) to a GitHub Release named by the
+Package tag, `components/acp/v<version>`: one archive per PiG release platform (linux, darwin and windows on amd64 and arm64, and
+android/arm64), `SHA256SUMS`, `SHA256SUMS.sig` (Ed25519, by the key of section 1, so Piglet users already trust it) and a Sigstore
+provenance bundle per archive. The same tag also starts `release-package.yml`; neither needs the other. It needs sections 2 to 4 and one
+addition: the `release` environment's tag policy must also allow this tag (`*` does not cross `/`, so `*/v*` does not cover it):
+
+```bash
+gh api -X POST "repos/$REPO/environments/release/deployment-branch-policies" -f name='components/acp/v*' -f type=tag
+gh api "repos/$REPO/environments/release/deployment-branch-policies" --jq '.branch_policies[] | {name, type}'   # */v*  and components/acp/v*
+```
+
+Release (the version is the Package's, which main.go and the agent also carry; the commit must be on `main`):
+
+```bash
+git switch main && git pull --ff-only
+v=$(node -p "require('./components/acp/package.json').version")
+git tag -a "components/acp/v$v" -m "pigpen-acp $v" && git push origin "components/acp/v$v"
+sleep 10
+gh run watch --repo "$REPO" "$(gh run list --repo "$REPO" --workflow release-pig-acp.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
+```
+
+The run plans (tag, version, main), builds the seven archives twice each (they must be identical), attests them, runs the five that have a
+native runner on it, then `publish` (environment `release`) signs `SHA256SUMS`, verifies the signature, the checksums, the archive contents
+and every attestation, and only then creates the release. Check it as a user would:
+
+```bash
+d="$(mktemp -d)"; cd "$d"
+gh release download "components/acp/v$v" --repo "$REPO"
+openssl pkeyutl -verify -rawin -pubin -inkey ~/pigpen/release-keys/pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
+sha256sum -c SHA256SUMS
+pig verify --provenance --repo "$REPO" --signer-workflow .github/workflows/release-pig-acp.yml --checksums SHA256SUMS "pig-acp-$v-linux-amd64.tar.gz"
+```
+
+Rehearse without GitHub, on a Linux machine with Go (the version in PiG's `.go-version`), Node and OpenSSL: `npm run rehearse:pig-acp -- <dir>` builds
+every target twice, checks they are identical, signs with a throwaway key and verifies (android/arm64 needs an NDK and PiG's
+`automation/release/android-binary.sh` in `PIG_ANDROID_SCRIPT`). It cannot make the attestations: those need the hosted run.
+A release is immutable like a Piglet's (section 7); fix forward with a new Package version.
+
 ## 7. If a run fails
 
 A release is immutable: `pig piglet publish` refuses an existing release, and the receipt is recorded byte for byte. A run that

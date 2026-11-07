@@ -1,0 +1,231 @@
+# SPDX-License-Identifier: MIT
+# Releases the prebuilt `pig-acp` executables: the ACP companion of the `acp` Package (components/acp). The Package itself needs no
+# build (release-package.yml proves the same tag); this workflow adds what an editor user downloads instead of building Go:
+# one archive per platform of PiG's own release list (linux and darwin on amd64 and arm64, windows on amd64 and arm64,
+# android/arm64), SHA256SUMS, SHA256SUMS.sig and a Sigstore provenance bundle beside every archive. A pushed tag
+# `components/acp/v<version>` (the Package tag: it can never match release.yml's `*/v*`) is the release. The jobs:
+#   plan     the tag is components/acp/v<package.json version>, which main.go and the ACP agent also carry, on a commit of main.
+#            No secrets.
+#   build    one job per target: compiles reproducibly (CGO off, -trimpath, no build id, mtimes at the commit time, a second build
+#            must be byte for byte the same), packs the archive and attests its provenance. No secrets.
+#   smoke    the archives that have a native runner run --version and the initialize handshake on it. No secrets.
+#   publish  the only job with the key: writes SHA256SUMS, signs it with the Pigpen release key (the secret PIGLET_SIGNING_KEY of the
+#            `release` environment, the key that signs Piglet Binaries; its public half is release-keys/pigpen-piglets.pub),
+#            verifies the whole directory and every attestation, then creates the GitHub Release `components/acp/v<version>`.
+# scripts/pig-acp-release.mjs does the work; `node scripts/pig-acp-release.mjs snapshot <dir>` runs all of it locally with a
+# throwaway key. scripts/check-workflows.mjs (npm run quality) enforces where the key may appear: only the env of one step of the
+# publish job, a step that runs openssl and no repository script. Owner setup is in OWNER-ACTIONS.md.
+name: Release pig-acp
+
+on:
+  push:
+    tags: ['components/acp/v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pig-acp-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The PiG release this job reads its Go toolchain (.go-version) and the Android link script from: scripts/pig-requirement.json
+  # (`release`); scripts/check-workflows.mjs keeps it equal.
+  PIG_COMMIT: '526c86df885eba5e214355e7f70205e06d59bfa2' # PiG v0.5.3
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      smoke: ${{ steps.plan.outputs.smoke }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: The tagged commit must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: The tag must be components/acp/v followed by the version the Package and the executable carry
+        id: plan
+        run: node scripts/pig-acp-release.mjs plan
+
+  build:
+    needs: plan
+    name: Build pig-acp ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check out PiG, for its Go toolchain pin and its Android link script
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          sparse-checkout: |
+            .go-version
+            automation/release/android-binary.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache: false
+      - name: Build the archive, then build it again (the two must be identical)
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          ARCHIVE: ${{ matrix.name }}
+          PIG_ANDROID_SCRIPT: ${{ github.workspace }}/.pig-src/automation/release/android-binary.sh
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          node scripts/pig-acp-release.mjs build "$TARGET" dist
+          node scripts/pig-acp-release.mjs build "$TARGET" "$RUNNER_TEMP/again"
+          cmp "dist/$ARCHIVE" "$RUNNER_TEMP/again/$ARCHIVE"
+          ls -l dist
+      - name: Attest build provenance
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/pig-acp-*
+      - name: Ship the Sigstore bundle beside the archive
+        shell: bash
+        env:
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          ARCHIVE: ${{ matrix.name }}
+        run: cp "$BUNDLE" "dist/$ARCHIVE.sigstore.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pig-acp-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/pig-acp-*
+          if-no-files-found: error
+          retention-days: 7
+
+  smoke:
+    needs: [plan, build]
+    name: Smoke pig-acp ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.plan.outputs.smoke) }}
+    steps:
+      - name: Keep checked-out line endings
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pig-acp-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ${{ runner.temp }}/archive
+      - name: The archive's pig-acp runs here, answers --version and the initialize handshake
+        shell: bash
+        env:
+          ARCHIVE: ${{ matrix.name }}
+        run: node scripts/pig-acp-release.mjs smoke "$RUNNER_TEMP/archive/$ARCHIVE"
+
+  publish:
+    needs: [plan, build, smoke]
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: pig-acp-*
+          path: ${{ runner.temp }}/release
+          merge-multiple: true
+      - name: SHA256SUMS over the archives (no secrets)
+        run: node scripts/pig-acp-release.mjs checksums "$RUNNER_TEMP/release"
+      - name: Sign SHA256SUMS with the Pigpen release key
+        shell: bash
+        env:
+          PIGLET_SIGNING_KEY: ${{ secrets.PIGLET_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/piglet-signing.key"
+          trap 'rm -f "$key"' EXIT
+          umask 077
+          printf '%s\n' "$PIGLET_SIGNING_KEY" > "$key"
+          openssl pkeyutl -sign -rawin -inkey "$key" -in "$RUNNER_TEMP/release/SHA256SUMS" -out "$RUNNER_TEMP/release/SHA256SUMS.sig"
+      - name: Verify the signature, the checksums, every archive and every attestation before anything is published
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/pig-acp-release.mjs verify "$RUNNER_TEMP/release" release-keys/pigpen-piglets.pub
+          ls -l "$RUNNER_TEMP/release"
+          for archive in "$RUNNER_TEMP"/release/pig-acp-*.tar.gz "$RUNNER_TEMP"/release/pig-acp-*.zip; do
+            gh attestation verify "$archive" --repo "$GITHUB_REPOSITORY" --bundle "$archive.sigstore.json" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release-pig-acp.yml"
+          done
+      - name: Create the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          # A published release is never replaced; a draft left by a run that failed part-way is removed and redone.
+          if state=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$state" != "true" ]; then
+              echo "$GITHUB_REPOSITORY already has a published release $TAG; a released tag never moves. Bump the version for a new release." >&2
+              exit 1
+            fi
+            gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          cat > "$RUNNER_TEMP/notes.md" <<NOTES
+          Prebuilt \`pig-acp\` $VERSION, the Agent Client Protocol companion of the \`acp\` Package: an editor starts it and it starts \`pig --mode rpc\` for each session (\`pig-acp --pig /path/to/pig\`).
+
+          Archives: \`pig-acp-$VERSION-<os>-<arch>\` for linux, darwin and windows on amd64 and arm64, and android/arm64 (Termux). \`SHA256SUMS\` lists their digests; \`SHA256SUMS.sig\` is its Ed25519 signature by the Pigpen release key (\`release-keys/pigpen-piglets.pub\`, the key that signs Piglet Binaries); every archive has a Sigstore build-provenance bundle, \`<archive>.sigstore.json\`.
+
+          Verify a download:
+
+          \`\`\`sh
+          openssl pkeyutl -verify -rawin -pubin -inkey pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
+          sha256sum -c --ignore-missing SHA256SUMS
+          gh attestation verify <archive> --repo $GITHUB_REPOSITORY --bundle <archive>.sigstore.json --signer-workflow $GITHUB_REPOSITORY/.github/workflows/release-pig-acp.yml
+          \`\`\`
+
+          Built from $GITHUB_SHA by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. The build is reproducible: CGO off, -trimpath, no build id, file times at the commit time.
+          NOTES
+          flags=(--latest=false)
+          case "$VERSION" in *-*) flags=(--prerelease --latest=false) ;; esac
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "pig-acp $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP"/release/*
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false "${flags[@]}"

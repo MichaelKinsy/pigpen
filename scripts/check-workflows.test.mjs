@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, archonReleaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, pigAcpReleaseProblems, archonReleaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -219,6 +219,33 @@ describe('the Archon provider release workflow', () => {
     assert.match(problems(workflow.replace("push:\n    tags: ['components/archon-provider-pig/v*']", "push:\n    tags: ['components/archon-provider-pig/v*']\n  workflow_dispatch: {}")), /only on a pushed tag/);
     assert.match(tagProblems({ [file]: on('components/*/v*') }).join('\n'), /also matches the Package tag components\/herdr\/v0\.1\.0/);
     assert.match(tagProblems({ [file]: on('v*') }).join('\n'), /does not match the Archon plugin tag/);
+  });
+});
+
+describe('the pig-acp release workflow', () => {
+  const file = 'release-pig-acp.yml';
+  const workflow = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.github', 'workflows', file), 'utf8');
+  const problems = (text, name = file) => [...hardeningProblems(name, text), ...pigAcpReleaseProblems(name, text), ...goToolchainProblems(name, text)].join('\n');
+  it('accepts the committed workflow: the key only in the signing step of the publish job', () => {
+    assert.equal(problems(workflow), '');
+    assert.deepEqual(tagProblems({ [file]: parse(workflow) }), []);
+  });
+  it('refuses the key in another workflow, any other secret, and the key outside a step env or the release environment', () => {
+    assert.match(problems(workflow, 'ci.yml'), /uses a secret/);
+    assert.match(problems(workflow.replace('secrets.PIGLET_SIGNING_KEY', 'secrets.OTHER')), /secrets\.OTHER/);
+    assert.match(problems(workflow.replace('    environment: release\n', '')), /outside environment: release/);
+    assert.match(problems(workflow.replace('    timeout-minutes: 30\n    strategy:', '    timeout-minutes: 30\n    env:\n      K: ${{ secrets.PIGLET_SIGNING_KEY }}\n    strategy:')), /only in the env of a step/);
+  });
+  it('refuses a signing step that runs a repository script, and one that does not sign with openssl', () => {
+    assert.match(problems(workflow.replace('set -euo pipefail\n          key=', 'set -euo pipefail\n          node scripts/pig-acp-release.mjs checksums x\n          key=')), /runs a repository script/);
+    assert.match(problems(workflow.replace('openssl pkeyutl -sign ', 'echo ')), /does not sign with openssl/);
+  });
+  it('gives the build jobs only the attestation writes and the publish job only the release write', () => {
+    assert.match(problems(workflow.replace('  smoke:\n    needs: [plan, build]\n', '  smoke:\n    needs: [plan, build]\n    permissions: { contents: write }\n')), /job smoke: contents: write/);
+  });
+  it('runs only on the acp Package tag, never a Piglet tag or another Package tag', () => {
+    assert.match(problems(workflow.replace("tags: ['components/acp/v*']", "tags: ['components/acp/v*']\n  workflow_dispatch: {}")), /only on a pushed tag/);
+    assert.match(tagProblems({ [file]: on('components/*/v*') }).join('\n'), /also matches the Package tag/);
   });
 });
 

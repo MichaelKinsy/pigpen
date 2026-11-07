@@ -24,6 +24,7 @@ const shaPinned = /^[^@\s]+@[0-9a-f]{40}$/;
 
 // The only write permissions a job of release.yml may hold: attestations in the build, the release itself in publish.
 const releaseWrites = { build: ['id-token: write', 'attestations: write'], publish: ['contents: write'] };
+// release-pig-acp.yml has the same two writes, in the same two jobs.
 // npm-publish.yml publishes with npm trusted publishing (OIDC): id-token in its one publish job, nothing else.
 const npmWrites = { publish: ['id-token: write'] };
 
@@ -48,10 +49,10 @@ export function hardeningProblems(name, text) {
   if (workflow.permissions === undefined) problems.push(`${name}: no top-level permissions (the default token may be read-write)`);
   for (const grant of writes(workflow.permissions)) problems.push(`${name}: top-level permissions grant ${grant}`);
   if (workflow.on && typeof workflow.on === 'object' && 'pull_request_target' in workflow.on) problems.push(`${name}: runs on pull_request_target`);
-  if (![RELEASE_WORKFLOW, NOTIFY_WORKFLOW, ARCHON_RELEASE_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
+  if (![RELEASE_WORKFLOW, PIG_ACP_RELEASE_WORKFLOW, NOTIFY_WORKFLOW, ARCHON_RELEASE_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
 
   for (const [id, job] of jobs) {
-    const allowed = name === RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
+    const allowed = name === RELEASE_WORKFLOW || name === PIG_ACP_RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
     for (const grant of writes(job.permissions)) if (!allowed.includes(grant)) problems.push(`${name}: job ${id}: ${grant}`);
     if (job.uses && !job.uses.startsWith('./') && !shaPinned.test(job.uses)) problems.push(`${name}: ${job.uses} is not pinned to a full commit SHA`);
     if (!job.uses && !boundedTimeout(job)) problems.push(`${name}: job ${id} has no timeout-minutes`);
@@ -90,6 +91,7 @@ export function goToolchainProblems(name, text) {
 
 const SIGNING_KEY = 'PIGLET_SIGNING_KEY';
 const RELEASE_WORKFLOW = 'release.yml';
+const PIG_ACP_RELEASE_WORKFLOW = 'release-pig-acp.yml';
 const NOTIFY_WORKFLOW = 'discord-notify.yml';
 const ARCHON_RELEASE_WORKFLOW = 'release-archon-provider.yml';
 const ARCHON_TOKEN = 'ARCHON_PROVIDER_PIG_TOKEN';
@@ -125,6 +127,37 @@ export function releaseProblems(name, text) {
   }
   const planIf = String(workflow.jobs?.plan?.if ?? '');
   if (!planIf.includes("'npm/'")) problems.push(`${name}: the plan job must skip an npm/ tag (if: \${{ !startsWith(github.ref_name, 'npm/') }}): npm-publish.yml owns it`);
+  if (found.filter((secret) => secret === SIGNING_KEY).length !== legitimate) problems.push(`${name}: ${SIGNING_KEY} may appear only in the env of a step (as ${SIGNING_KEY}: \${{ secrets.${SIGNING_KEY} }}), nowhere else`);
+  return problems;
+}
+
+/**
+ * release-pig-acp.yml's own rules, on top of hardeningProblems. It runs only on a pushed Package tag of `acp`. Its one secret is
+ * PIGLET_SIGNING_KEY (the Pigpen release key), read only in the env of one step of a job of the `release` environment, and that step
+ * signs with openssl and runs no repository script or package manager.
+ */
+export function pigAcpReleaseProblems(name, text) {
+  if (name !== PIG_ACP_RELEASE_WORKFLOW) return [];
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  const triggers = Object.keys(workflow.on ?? {});
+  if (triggers.join() !== 'push' || !Array.isArray(workflow.on.push?.tags) || Object.keys(workflow.on.push).join() !== 'tags') {
+    problems.push(`${name}: must run only on a pushed tag (on.push.tags), nothing else`);
+  }
+  const found = [...text.matchAll(secretRef)].map((m) => m[1]);
+  for (const other of new Set(found.filter((secret) => secret !== SIGNING_KEY))) problems.push(`${name}: uses secrets.${other}; the only secret is ${SIGNING_KEY}`);
+  let legitimate = 0;
+  for (const [id, job] of Object.entries(workflow.jobs ?? {})) {
+    for (const step of job.steps ?? []) {
+      if (!/\$\{\{\s*secrets\.PIGLET_SIGNING_KEY\s*\}\}/.test(String(step.env?.[SIGNING_KEY] ?? ''))) continue;
+      legitimate += 1;
+      const environment = typeof job.environment === 'string' ? job.environment : job.environment?.name;
+      if (environment !== 'release') problems.push(`${name}: job ${id} reads ${SIGNING_KEY} outside environment: release`);
+      const run = String(step.run ?? '');
+      if (!/(^|\s)openssl pkeyutl -sign\s/.test(run)) problems.push(`${name}: job ${id}: the step that reads ${SIGNING_KEY} does not sign with openssl pkeyutl -sign`);
+      if (/(^|[\s;&|(])(npm|npx|node|pnpm|yarn|bun)\s|\.\/|scripts\//.test(run)) problems.push(`${name}: job ${id}: the step that reads ${SIGNING_KEY} runs a repository script or package manager`);
+    }
+  }
   if (found.filter((secret) => secret === SIGNING_KEY).length !== legitimate) problems.push(`${name}: ${SIGNING_KEY} may appear only in the env of a step (as ${SIGNING_KEY}: \${{ secrets.${SIGNING_KEY} }}), nowhere else`);
   return problems;
 }
@@ -222,7 +255,7 @@ export function tagProblems(workflows) {
   const problems = [];
   const piglet = 'herdr/v0.1.0';
   const pkg = 'components/herdr/v0.1.0';
-  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'], 'npm-publish.yml': ['npm/v0.1.0', pkg, 'npm publish', 'Package'], [ARCHON_RELEASE_WORKFLOW]: ['components/archon-provider-pig/v0.1.0', pkg, 'Archon plugin', 'Package'] })) {
+  for (const [file, [wants, refuses, kind, other]] of Object.entries({ 'release.yml': [piglet, pkg, 'Piglet', 'Package'], 'release-package.yml': [pkg, piglet, 'Package', 'Piglet'], 'npm-publish.yml': ['npm/v0.1.0', pkg, 'npm publish', 'Package'], [ARCHON_RELEASE_WORKFLOW]: ['components/archon-provider-pig/v0.1.0', pkg, 'Archon plugin', 'Package'], [PIG_ACP_RELEASE_WORKFLOW]: ['components/acp/v0.2.2', pkg, 'pig-acp release', 'Package'] })) {
     const patterns = workflows[file]?.on?.push?.tags;
     if (!patterns) continue;
     const regexes = patterns.map((pattern) => [pattern, tagFilter(pattern)]);
@@ -357,7 +390,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...archonReleaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...pigAcpReleaseProblems(file, text), ...archonReleaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {
