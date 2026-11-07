@@ -1,0 +1,61 @@
+{
+ "name": "real-context-w40",
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {}
+    }
+   ],
+   "chunk": 4000,
+   "prompt_tokens": 1000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 40,
+ "height": 64,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 60
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  }
+ }
+}

@@ -1,0 +1,127 @@
+{
+ "name": "off-note-publication-rejects-directory-symlink-and-traversal",
+ "description": "official-host.ts:2729 'note publication rejects directory-only symlink targets and traversal through a file'. Writes through a link whose target is a missing directory ('missing-directory/') and through a link that traverses a regular file ('blocker/../protected.md') both fail, create/replace nothing, leave both links in place, the new_context sharing the batch does not commit and no .posthorse-* temp file remains. (Session file and tool_execution_end not captured: concurrent note writes append their touch entries in host-timing order.)",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "setup": [
+  [
+   "sh",
+   "-c",
+   "mkdir -p .pi/notes && cd .pi/notes && printf REGULAR_FILE > blocker && printf ORIGINAL_BYTES > protected.md && ln -s missing-directory/ directory-link.md && ln -s blocker/../protected.md file-parent-link.md"
+  ]
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "directory-link.md",
+      "content": "MUST_NOT_CREATE"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "file-parent-link.md",
+      "content": "MUST_NOT_REPLACE"
+     }
+    },
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "MUST_NOT_COMMIT"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Both publication failures reported."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Check malformed note links."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "workspace",
+   "glob": ".pi/notes/**",
+   "modes": true
+  }
+ ]
+}

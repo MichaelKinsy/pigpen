@@ -1,0 +1,119 @@
+{
+ "name": "nat-guidance-idle-wakeup-forced-user-to-custom",
+ "description": "native-host.ts:2130 idle custom wakeup gets current request-local guidance (forced-user-to-custom): after a first run the compaction reserve is raised to 32,000 and an idle custom message triggers a turn; its request carries the current guidance (capacity 100,000, rollover line 68,001), once, in the system prompt or (forced prompt) as a hidden request-local message, and the saved session holds the wakeup message but no guidance entry.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "text": "First run completed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "text": "Custom run completed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "force-first",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-force on"
+   }
+  },
+  {
+   "name": "first",
+   "rpc": {
+    "type": "prompt",
+    "message": "Initial owner request."
+   }
+  },
+  {
+   "name": "force-second",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-force off"
+   }
+  },
+  {
+   "name": "reserve",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-settings {{agent}}/settings.json {\"compaction\":{\"reserveTokens\":32000}}"
+   }
+  },
+  {
+   "name": "wake",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-wake"
+   },
+   "wait": "agent_end"
+  }
+ ],
+ "extensions": [
+  {
+   "name": "controls.ts",
+   "source": "import * as fs from \"node:fs\";\nexport default function (pi: any) {\n  let forced = false;\n  pi.on(\"before_agent_start\", () => (forced ? { systemPrompt: \"OPAQUE_FORCED_POLICY\" } : undefined));\n  pi.registerCommand(\"eq-force\", { description: \"harness: force the system prompt for later runs (on|off)\", handler: async (args: string) => { forced = args.trim() === \"on\"; } });\n  pi.registerCommand(\"eq-wake\", {\n    description: \"harness: an idle custom message that triggers a turn\",\n    handler: async () => { pi.sendMessage({ customType: \"background-completion\", content: \"BACKGROUND_COMPLETION: inspect current state.\", display: true }, { triggerTurn: true }); },\n  });\n  pi.registerCommand(\"eq-settings\", {\n    description: \"harness: merge a JSON object into the agent settings file and reload\",\n    handler: async (args: string, ctx: any) => {\n      const space = args.indexOf(\" \");\n      const file = args.slice(0, space);\n      const patch = JSON.parse(args.slice(space + 1));\n      const current = JSON.parse(fs.readFileSync(file, \"utf8\"));\n      for (const [key, value] of Object.entries(patch)) current[key] = { ...(current[key] ?? {}), ...(value as object) };\n      fs.writeFileSync(file, JSON.stringify(current));\n      await ctx.reload();\n    },\n  });\n  pi.registerCommand(\"eq-tools\", { description: \"harness: set the active tools (comma list)\", handler: async (args: string) => { pi.setActiveTools(args.trim().split(\",\")); } });\n}\n",
+   "position": "before"
+  }
+ ],
+ "args": [
+  "--system-prompt",
+  "CUSTOM_RUN_POLICY"
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  }
+ ]
+}

@@ -1,0 +1,162 @@
+{
+ "name": "nat-history-large-archive-search",
+ "description": "native-host.ts:1353 native loaded history extracts only early page hits and lookahead from a large archive: 4096 archived HIST_NEEDLE messages across two windows are searched ten at a time (newest first, the visible match skipped), the cursor continues, and the oldest entry is still found. (The upstream assertion that at most 11 archived records were extracted counts property reads in the host process: Go layer, see coverage.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "HIST_NEEDLE",
+      "limit": 10
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "First page.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "HIST_NEEDLE",
+      "limit": 10,
+      "cursor": "WyJhcjAwMGZmOCIsMCw4MiwiTERJVG9wZlo4aiJd"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Second page.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "old:0."
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Oldest.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "state",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "session": "data.sessionFile"
+   }
+  },
+  {
+   "name": "write-archive",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-archive"
+   }
+  },
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/archive.jsonl"
+   }
+  },
+  {
+   "name": "page-one",
+   "rpc": {
+    "type": "prompt",
+    "message": "Search the archive."
+   }
+  },
+  {
+   "name": "page-two",
+   "rpc": {
+    "type": "prompt",
+    "message": "Next page."
+   }
+  },
+  {
+   "name": "oldest",
+   "rpc": {
+    "type": "prompt",
+    "message": "Find the oldest entry."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "bigsessions.ts",
+   "source": "import * as fs from \"node:fs\";\nimport * as path from \"node:path\";\nconst entryId = (n: number) => \"ar\" + n.toString(16).padStart(6, \"0\");\nfunction writeSession(ctx: any, name: string, build: (push: (entry: any, parent?: string | null) => string) => void) {\n  const dir = path.dirname(ctx.sessionManager.getSessionFile());\n  const lines: string[] = [JSON.stringify({ type: \"session\", version: 3, id: \"66666666-6666-4666-8666-666666666666\", timestamp: \"2026-11-06T10:00:00.000Z\", cwd: ctx.cwd })];\n  let n = 0;\n  let last: string | null = null;\n  const push = (entry: any, parent: string | null | undefined = last): string => {\n    const id = entryId(++n);\n    lines.push(JSON.stringify({ ...entry, id, parentId: parent, timestamp: \"2026-11-06T10:00:00.000Z\" }));\n    last = id;\n    return id;\n  };\n  build(push);\n  fs.writeFileSync(path.join(dir, name), lines.join(\"\\n\") + \"\\n\");\n}\nconst assistantCall = (call: any) => ({ role: \"assistant\", content: [call], api: \"openai-completions\", provider: \"eq-llm\", model: \"eq-1\",\n  usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: \"toolUse\", timestamp: 1 });\nconst reset = (summary: string) => ({ type: \"compaction\", summary, firstKeptEntryId: null, tokensBefore: 100, details: { posthorse: 1 } });\nexport default function (pi: any) {\n  // native-host.ts countedArchive: 4096 archived user messages, a boundary in the middle, the current window\n  pi.registerCommand(\"eq-archive\", {\n    description: \"harness: write archive.jsonl (4096 archived HIST_NEEDLE messages)\",\n    handler: async (_args: string, ctx: any) => {\n      writeSession(ctx, \"archive.jsonl\", (push) => {\n        for (let i = 0; i < 4096; i++) {\n          if (i === 2048) push(reset(\"Earlier boundary.\"));\n          push({ type: \"message\", message: { role: \"user\", content: \"HIST_NEEDLE old:\" + i + \".\", timestamp: i } });\n        }\n        push(reset(\"Current boundary.\"));\n        push({ type: \"message\", message: { role: \"user\", content: \"HIST_NEEDLE visible.\", timestamp: 5000 } });\n        for (let i = 0; i < 100; i++) push({ type: \"message\", message: { role: \"user\", content: \"Current unrelated.\", timestamp: 5001 + i } });\n      });\n    },\n  });\n  // native-host.ts:1143: five archived needles, a boundary, 64 unrelated 64 KiB tool calls, the visible needle\n  pi.registerCommand(\"eq-projection\", {\n    description: \"harness: write projection.jsonl (64 unrelated 64 KiB tool-call arguments)\",\n    handler: async (_args: string, ctx: any) => {\n      writeSession(ctx, \"projection.jsonl\", (push) => {\n        for (let i = 0; i < 5; i++) push({ type: \"message\", message: { role: \"user\", content: \"PROJECTION_NEEDLE old:\" + i + \".\", timestamp: i } });\n        push(reset(\"Earlier entries archived.\"));\n        for (let i = 0; i < 64; i++) {\n          push({ type: \"message\", message: assistantCall({ type: \"toolCall\", id: \"call-\" + i, name: \"unrelated\", arguments: { historyProjectionProbe: true, index: i, payload: \"x\".repeat(65536) } }) });\n        }\n        push({ type: \"message\", message: { role: \"user\", content: \"PROJECTION_NEEDLE visible.\", timestamp: 100 } });\n      });\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "project": {
+  "skipSystem": true
+ },
+ "normalize": [],
+ "collapseRuns": 64
+}

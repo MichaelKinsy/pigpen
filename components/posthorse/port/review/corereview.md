@@ -1,0 +1,87 @@
+# Review: CoreLane scope (corereview)
+
+Scope: TS `src/contracts.ts records.ts message-text.ts files.ts session-lines.ts budget.ts guidance.ts paging.ts
+reset-requests.ts context-tools.ts index.ts` against Go `contracts.go dyn.go js.go message_text.go files.go files_unix.go
+files_windows.go session_lines.go budget.go guidance.go paging.go reset_requests.go context_tools.go extension.go`.
+Oracle: Node 24.22.1 (ICU 78.3, Unicode 17), Pi 1.5.0, TypeBox 1.3.27 on xd6702. Go 1.27.3 (unicode 17.0.0).
+
+Proof file: `extensions/posthorse/review_corereview_test.go` (test-only). Probe scripts: `port/review/corereview-probes/`
+(`probe.ts`, `resolve.ts`, `schema.ts`, `decoder.ts`, `jsdiff.ts`, `gitdir.ts`). To rerun the TS side: copy
+`port/oracle/src` and `port/oracle/ui.ts` next to the scripts, symlink `node_modules` to the Pi oracle's, add
+`{"type":"module"}` as `package.json`, `node <script>.ts`; the differential tests read `decoder.json`, `jsdiff.json`,
+`gitdir.json` from `/home/kinsy/ph-work/scratch/reviewcore/` and skip when absent (scratch deleted after the review).
+
+## Findings
+
+| ID | severity | TS file:line | Go file:line | what differs | proof | proposed fix |
+|---|---|---|---|---|---|---|
+| R1 | parity-break | files.ts:214-219 (`packageRelativePath`), reached from files.ts:250-261 and 220-240 | files.go:690-699 | `path.relative(x, x)` is `""`, which the TS excludes; Go `filepath.Rel(x, x)` is `"."`, which passes every check. (a) cwd = `<agent>/git` that is itself a Git root: TS `<agent>/git/.pi/notes`; Go returns `<agent>/notes` **and migrates the local notes there, leaving a symlink**. (b) cwd = `<project>/.pi/git` that is a Git root: TS `<project>/.pi/git/.pi/notes`; Go `<project>/.pi/package-notes/<sha256(".")>/notes` (+ migration). | `TestReviewPackageRelativePathSame`, `TestReviewNotesDirInstallsRootStaysLocal` (Go: `.../agent/notes`, local now a symlink), `TestReviewNotesDirProjectContainerRootStaysLocal`; TS probe `probe.ts`: `REL ""`, `A <base>/agent/git/.pi/notes`, `A2 <base>/proj/.pi/git/.pi/notes` | treat Rel's `"."` as Node's `""`: `if path == "." { return "", false }` before the existing checks |
+| R2 | parity-break | files.ts:95,110; session-lines.ts:67,74 (and the 11 other `signal?.throwIfAborted()` sites in note-discovery/note-inventory/note-snapshots/notes/session-files) | files.go:46,52-61 (`abortError`), used at files.go:337,388, session_lines.go:214,223 (and notes.go:79,343,349,464, note_snapshots.go:29 `ctxErr`, session_files.go:531) | Pi aborts a run with `AbortController.abort()` (no reason, pi-agent-core agent.js:222), so `signal.throwIfAborted()` throws the DOMException **"This operation was aborted"**; Node's fs ops with a signal (readFile, createReadStream, FileHandle.writeFile) throw AbortError **"The operation was aborted"**. Go returns "The operation was aborted" everywhere. Pi records the thrown message as the tool result text (pi-agent-core agent-loop.js:595 `createErrorToolResult(error.message)`), so an aborted notes write/read or history entry read persists a different text. | `TestReviewPublishFileAbortMessage`, `TestReviewRangeTextAbortMessage`; TS probe: `B "This operation was aborted"`, `C "This operation was aborted"`; `node -e` of `abort(); throwIfAborted()` → `"This operation was aborted" AbortError` | two constructors: `throwIfAborted` (the `signal.throwIfAborted()` sites) returns an error with text "This operation was aborted"; a separate `fsAborted` (lfChunksFile:431, readText:534/548, publishFile write loop:371) keeps "The operation was aborted". Other lanes' call sites must pick by their TS site. [INFERENCE] the PiG host records the extension's error text as Pi does. |
+| R3 | parity-break | files.ts:170,180,99,109 etc. (any Node fs error) | files.go:90-97 (`errnoCodes`), 115-140 (`nodeFsErrorDest`) | Only 18 errnos are mapped; any other falls through and the raw Go text leaks (`open /p: no such device or address` instead of `ENXIO: no such device or address, open '/p'`). Realistic: EDQUOT on the temp-file write (`write /dir/.posthorse-<uuid>.tmp: disk quota exceeded` vs `EDQUOT: disk quota exceeded, write`), ETXTBSY, EAGAIN, ENXIO (notes read of a socket in the notes dir), EOVERFLOW, ESTALE, ENODEV. | `TestReviewIsBinaryFileSocketMessage`; TS probe `E "ENXIO: no such device or address, open '<base>/sock'"` | carry libuv's full `uv_err_name`/`uv_strerror` table (unix + windows) |
+| R4 | parity-break (low) | files.ts:172 (`file.read`), 180 (`readFile`), 137 (read stream); session-lines.ts:76 (`handle.read`) | files.go:464, 524, 560; session_lines.go:230 | Node's fd-based read errors carry no path (`EISDIR: illegal operation on a directory, read`); Go appends `'<path>'`. Reachable through a race (a note path replaced by a directory between inventory and read) or a session path that is a directory. | `TestReviewReadTextDirectoryMessage`; TS probe `D "EISDIR: illegal operation on a directory, read"` | pass `""` as the path for the `read` syscall errors |
+| R5 | parity-break (low) | files.ts:103-107 (`file.stat()`, `file.chown`, `file.chmod`) | files.go:382; files_unix.go:16-21 | All three failures are reported as `..., fchmod`. Node reports `fstat` / `fchown` / `fchmod` (`EPERM: operation not permitted, fchown` when a group-writable note owned by another uid/gid is replaced by a non-root user). | reasoning chain: `matchOwnerAndMode` returns the raw `*PathError` of `File.Stat`/`File.Chown`/`File.Chmod`; publishFile wraps every one with `nodeFsError(err, "fchmod", "")` → `fsError{Syscall:"fchmod"}`. Not reproducible as a test: the container user (uid 160150820, not root) cannot create a writable file it does not own. | `matchOwnerAndMode` wraps each call itself: `nodeFsError(err, "fstat"/"fchown"/"fchmod", "")`, and publishFile returns it unchanged |
+| R6 | nit (parity) | session-lines.ts:33,40 (`StringDecoder("utf8").write`) | session_lines.go:79-108 (`incompleteTail`, `write`) | Node holds back any lead-shaped tail (`(b&0xE0)==0xC0`, `0xE0`, `(b&0xF8)==0xF0`, incl. invalid continuations such as `F4 9F`, `C2 F4 9F`) until the next write/end; Go only holds a valid prefix and emits U+FFFD at once. Totals per line agree (8000-chunk differential: 0 total mismatches); only the matcher window a U+FFFD lands in differs, i.e. only for lines > 1 MiB with invalid UTF-8 at a read boundary and a needle containing U+FFFD. | `TestReviewUTF8DecoderDifferential` (e.g. `[244 159]`: Node write `[]`, end `[FFFD FFFD]`; Go write `[FFFD FFFD]`, end `[]`) | hold back by Node's lead-byte rule (string_decoder.cc) and decode held+completion separately |
+
+## SDK / host gaps and owner items
+
+* **S1 (SDK, proven)**: `sdk.EstimateTokens` counts a lone surrogate in its WTF-8 form (how the SDK delivers it) as 3 UTF-16
+  units (`compaction_estimate.go utf16Length` ranges runes; each of ED A0 80 is a RuneError); Pi counts 1. Eight lone
+  surrogates: SDK 6 tokens, Pi 2. Not reachable from `guidanceTokens` (ASCII guidance) but `retention.go:68 messageCost`
+  sizes host messages with it. Proof: `TestReviewSDKEstimateTokensLoneSurrogate`. Fix belongs in the SDK.
+* **O1 (perf, owner)**: `liveCompactionPolicy` (extension.go:23-49) makes three host calls per policy evaluation
+  (`GetSettings`, `SettingsManagerInMemory` = a host graph object, `GetCompactionSettings`), on every model request
+  (`context_with_system` guidance) and every budget evaluation. Each creates a host-side SettingsManager whose release runs
+  from a GC cleanup through the already-finished handler `Context` (sdk session_graph.go:53-55). [INFERENCE] if a call on a
+  finished request context is refused, the host keeps one SettingsManager per evaluation until the connection closes.
+  Pi 1.5's `getCompactionSettings` is 15 lines (settings-manager.js:643-684: `compaction.enabled ?? true`, token settings
+  through `modelOverrides["provider/id"]` → ordinary → default, with the three "Invalid compaction..." errors); a local
+  resolution from `ctx.GetSettings()` would drop two round trips and the host object (owner decision; lane note open
+  question). `migrateSettings` of `inMemory` must be checked for compaction keys before doing so.
+* Lane notes #1 (map key order of event data), #2/#3 (`sections` order / `before_agent_start` snapshot), #4 (PiG agent dir),
+  #5 (Windows junctions), #6 (empty text block with images) re-checked: accurate as written.
+
+## Checked and found equal
+
+* **js.go** against V8 (6000 random strings with lone surrogates, astral pairs, Σ/σ/ς in final/non-final contexts,
+  U+0130, U+0345, U+02B0, Lt letters, Kelvin sign, every JS whitespace incl. U+FEFF/U+180E/U+2028; 2000 numbers):
+  `jsToLowerCase`, `jsTrim/TrimStart/TrimEnd`, `u16slice`, `u16substring`, `u16at`, `u16code`, `u16index`,
+  `u16lastIndex`, `jsToLocaleInt` (all but JS `-0`, which no Go int can be), `jsRound` incl. halves and `-0`;
+  `shortKey` (SHA-256 of lone surrogates as U+FFFD), `excerpt`, `excerptAround`, `boundedBlock`: 0 mismatches
+  (`TestReviewJSDifferential`). Go and Node share Unicode 17 case tables (checked U+10D50, A7CB, A7DC, 1C89, A7CD).
+* **files.go**: `gitdirOf` = the `/^gitdir:\s*(.+?)\s*$/m` match over 8000 random texts (CR/LF/U+2028/U+2029/BOM/NBSP/VT):
+  0 mismatches (`TestReviewGitdirDifferential`). `resolveFileTarget` on 19 inputs (relative/absolute/trailing-slash links,
+  `..` after a dir link, cycles, self-loop ELOOP, dangling link, regular file as a directory, `d/f.md/`): results, messages
+  and codes identical (`TestReviewResolveFileTargetLayout`). `nodeDirname`/`nodeBasename` = Node posix code;
+  `lstatSyncMissing` ENOTDIR rule; `migrationTarget`, `notesDir` rename/symlink fallbacks and error texts; `gitRoot`
+  (linked worktree via `commondir`, submodule `gitdir` without commondir, orphaned worktree → local); `existingNote`
+  codes and texts; `publishFile` order, modes (0o666/0o600 + umask, `mode & 0o777`), cleanup on every failure, UTF-8 with
+  lone surrogates as U+FFFD; `lfChunks`/`lfLines` segment and EOF semantics; `isBinaryFile`/`readText` 8,000-byte rule;
+  `randomUUID` v4 bits.
+* **session_lines.go**: head (first 512 bytes, WHATWG decode), latin1/utf8 windows and tails (`slice(-overlap)` incl. the
+  low half of a cut pair), byte ranges, `bytes` only when the line fits one chunk (Go keeps them only for matching lines;
+  others re-read by `pread`, same text), "Session file changed..." condition. StringDecoder totals equal (see R6).
+* **budget.go**: `MIN_USABLE_TOKENS` 10,000; `policySnapshot` caching (settings once, usage once, prompt uncached, a
+  failing reader not cached); `budgetFor`, `unsupportedMessage`, `automaticGuidance`, `buildGuidance` text (all literals
+  verified present verbatim); `guidanceTokens` = Pi's `estimateTokens` system branch (checked in Pi dist
+  compaction.js:201-216); `freshPayloadChars` floor-vs-truncation (both clamp to 0 for negatives), host-call order
+  (usage, settings, tool tokens before fresh chars, prompt, guidance) and `pageCapacity` both branches.
+* **paging.go**: `reconcile`, `size` arithmetic, `refuse` (incl. the empty-text throw), `error`, `notes` footer/offset/
+  maxRows/`count`, `notesRange`; offsets are TypeBox `Integer` so no fractional printing.
+* **reset_requests.go**: start/finish/request/take incl. null `parentToolCallId`, failed roots dropping the handoff.
+* **context_tools.go**: texts, `≈` lines, `Math.round(percent ?? 0)`, handoff trim/limit/order of host calls, registration
+  order (guidance → turn_end → context tools inside registerRollover matches rollover.ts:400-453); tool schemas on the
+  wire byte-identical to TypeBox 1.3.27 (`TestReviewContextToolSchemas`).
+* **guidance.go**: system-message selection (`findLast` with a string `posthorse` section, else first system), forced
+  branch splice at index 1 with the TS custom message, in-place section mutation survives a nil result (sdk
+  context_event.go); remaining difference only the known section-order gap.
+* **extension.go**: handler/tool registration order = index.ts:43-65; `activeToolTokens` (active ∩ all, ceil(len/4) of
+  `{name, description, parameters}`; host `\u003c`-style escapes in `parameters` are rewritten by `MarshalStringify`'s
+  `appendCompactJS`, so lengths match JSON.stringify); Pi validates token settings as safe integers, so `jsToInt` loses nothing.
+* **contracts.go / dyn.go / message_text.go**: constants, `requireValue` text, `isReminderType`, `textResult` (modulo lane
+  note #6), `toolCallOf`/`blockText` (`arguments ?? {}` for null and undefined), `assistantFailure`, `imageSummary`
+  first-seen order, `safeJsonStringify` (`undefined` via `jsUndef`).
+
+## Perf
+
+No per-call regex compile, no quadratic loops in scope; `u16index` falls back to O(n) code-unit arrays only when a lone
+surrogate is present. Host round trips: see O1.

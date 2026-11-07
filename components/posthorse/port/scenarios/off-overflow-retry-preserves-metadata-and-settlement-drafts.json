@@ -1,0 +1,116 @@
+{
+ "name": "off-overflow-retry-preserves-metadata-and-settlement-drafts",
+ "description": "official-host.ts:1756 'eligible overflow retry (keepRecentTokens=1) preserves later metadata and settlement drafts'. A helper before posthorse adds a settlement draft (agent_before_settle), another after it adds turn metadata at every turn_end: the overflow recovery's boundary, the settlement entry and both turn-metadata entries (failed and recovered turn) all persist; no posthorse-overflow-retry entry.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 1
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "settle.ts",
+   "source": "export default function (pi) {\n  pi.on(\"agent_before_settle\", (event) => ({ entries: [...event.entries, { type: \"custom\", customType: \"other-settlement-state\" }] }));\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "after.ts",
+   "source": "export default function (pi) {\n  pi.on(\"turn_end\", (event) => ({ entries: [...event.entries, { type: \"custom\", customType: \"after-turn-metadata\" }] }));\n}\n"
+  }
+ ],
+ "llm": [
+  {
+   "error": {
+    "message": "prompt is too long: 300000 tokens > 100000 maximum"
+   }
+  },
+  {
+   "text": "Recovered with other extensions."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Recover the failed request."
+   },
+   "settleMs": 800
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

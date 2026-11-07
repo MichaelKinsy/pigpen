@@ -1,0 +1,68 @@
+{
+ "name": "real-history",
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "go"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "tool_calls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "nothing-matches"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 64,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 60
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ]
+}

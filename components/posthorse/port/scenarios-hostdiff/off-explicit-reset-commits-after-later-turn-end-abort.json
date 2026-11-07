@@ -1,0 +1,113 @@
+{
+ "name": "off-explicit-reset-commits-after-later-turn-end-abort",
+ "description": "official-host.ts:2263 'explicit reset is cancelled during sibling work but cannot prevent a later-handler abort commit' (second half). A helper turn_end hook AFTER posthorse calls ctx.abort() once the new_context result exists: the host still commits the drafts (one boundary) and no further request is made (1 request).",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "late-abort.ts",
+   "source": "export default function (pi) {\n  pi.on(\"turn_end\", (event, ctx) => {\n    if (event.toolResults.some((entry) => entry.toolName === \"new_context\")) ctx.abort();\n  });\n}\n"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "OFFICIAL_LATE_ABORT_LIMIT"
+     }
+    }
+   ]
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Reset then abort."
+   },
+   "settleMs": 800
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,131 @@
+{
+ "name": "nat-rollover-owner-question-provenance-answer",
+ "description": "native-host.ts:1764 automatic rollover preserves bare owner question provenance (answer): a saved session, then one assistant message calls ask_question and a large local tool; the first rollover record names the answer as owner input (or, for an error, the failure as plain evidence), the next request carries it, and a second chained rollover keeps it as carried from an earlier window.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_c0000000-0000-4000-8000-000000000000.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"c0000000-0000-4000-8000-000000000000\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdsetup1\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"Earlier owner setup\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"sdsetup2\", \"parentId\": \"sdsetup1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Ready.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000002000}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "ask_question",
+     "arguments": {}
+    },
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Done.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_c0000000-0000-4000-8000-000000000000.jsonl"
+   }
+  },
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Ask the owner, then retain the result."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "ask.ts",
+   "source": "export default function (pi: any) {\n  let open: () => void = () => {};\n  (globalThis as any).__eqAskGate = new Promise<void>((resolve) => { open = resolve; });\n  pi.on(\"tool_execution_end\", (event: any) => { if (event.toolName === \"ask_question\") open(); });\n  pi.registerTool({\n    name: \"ask_question\",\n    label: \"Owner question\",\n    description: \"Get direct owner input\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"OWNER_APPROVED_INSPECTION\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"dump\",\n    label: \"Dump\",\n    description: \"Large local result to exercise native automatic rollover\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      await (globalThis as any).__eqAskGate;\n      return { content: [{ type: \"text\", text: \"x\".repeat(600000) }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true,
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  },
+  {
+   "pattern": "(use history read\\): )[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  }
+ ],
+ "collapseRuns": 64
+}

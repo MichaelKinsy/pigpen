@@ -1,0 +1,163 @@
+{
+ "name": "nat-fork-legacy-receipt-aliases",
+ "description": "native-host.ts:203 fork notes canonicalize legacy receipt aliases before resolving their source: a parent session saved without Posthorse state read the notes through a symlinked alias path and the real path; the fork resolves one source and the private copy is read; a parent that also read a second store has an ambiguous source root, which the next fork reports (extension_error).",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_11111111-1111-4111-8111-111111111111.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"11111111-1111-4111-8111-111111111111\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"b0000001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"Read the legacy checkpoint through both paths.\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"b0000002\", \"parentId\": \"b0000001\", \"timestamp\": \"2026-11-06T10:00:02.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"call-1\", \"name\": \"read\", \"arguments\": {\"path\": \"{{cwd}}/.pi/notes/legacy.md\"}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1793000002000}}\n{\"type\": \"message\", \"id\": \"b0000003\", \"parentId\": \"b0000002\", \"timestamp\": \"2026-11-06T10:00:03.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"call-1\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"legacy checkpoint\"}], \"isError\": false, \"timestamp\": 1793000003000}}\n{\"type\": \"message\", \"id\": \"b0000004\", \"parentId\": \"b0000003\", \"timestamp\": \"2026-11-06T10:00:04.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"call-2\", \"name\": \"read\", \"arguments\": {\"path\": \"{{cwd}}/alias/.pi/notes/legacy.md\"}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1793000004000}}\n{\"type\": \"message\", \"id\": \"b0000005\", \"parentId\": \"b0000004\", \"timestamp\": \"2026-11-06T10:00:05.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"call-2\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"legacy checkpoint\"}], \"isError\": false, \"timestamp\": 1793000005000}}\n",
+   "2026-11-06T10-00-00-000Z_22222222-2222-4222-8222-222222222222.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"22222222-2222-4222-8222-222222222222\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"b0000001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"Read the legacy checkpoint through both paths.\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"b0000002\", \"parentId\": \"b0000001\", \"timestamp\": \"2026-11-06T10:00:02.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"call-1\", \"name\": \"read\", \"arguments\": {\"path\": \"{{cwd}}/.pi/notes/legacy.md\"}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1793000002000}}\n{\"type\": \"message\", \"id\": \"b0000003\", \"parentId\": \"b0000002\", \"timestamp\": \"2026-11-06T10:00:03.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"call-1\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"legacy checkpoint\"}], \"isError\": false, \"timestamp\": 1793000003000}}\n{\"type\": \"message\", \"id\": \"b0000004\", \"parentId\": \"b0000003\", \"timestamp\": \"2026-11-06T10:00:04.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"call-2\", \"name\": \"read\", \"arguments\": {\"path\": \"{{cwd}}/alias/.pi/notes/legacy.md\"}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1793000004000}}\n{\"type\": \"message\", \"id\": \"b0000005\", \"parentId\": \"b0000004\", \"timestamp\": \"2026-11-06T10:00:05.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"call-2\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"legacy checkpoint\"}], \"isError\": false, \"timestamp\": 1793000005000}}\n{\"type\": \"message\", \"id\": \"b0000006\", \"parentId\": \"b0000005\", \"timestamp\": \"2026-11-06T10:00:06.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"call-3\", \"name\": \"read\", \"arguments\": {\"path\": \"{{cwd}}/other/.pi/notes/legacy.md\"}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1793000006000}}\n{\"type\": \"message\", \"id\": \"b0000007\", \"parentId\": \"b0000006\", \"timestamp\": \"2026-11-06T10:00:07.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"call-3\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"different store\"}], \"isError\": false, \"timestamp\": 1793000007000}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "legacy.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child read.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "legacy.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Ambiguous child read.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open-parent",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_11111111-1111-4111-8111-111111111111.jsonl"
+   }
+  },
+  {
+   "name": "fork-ok",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork b0000005 at"
+   }
+  },
+  {
+   "name": "child",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read legacy.md in the child."
+   }
+  },
+  {
+   "name": "open-ambiguous-parent",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_22222222-2222-4222-8222-222222222222.jsonl"
+   }
+  },
+  {
+   "name": "fork-ambiguous",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork b0000007 at"
+   }
+  },
+  {
+   "name": "ambiguous-child",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read legacy.md in the ambiguous child."
+   }
+  }
+ ],
+ "files": {
+  ".pi/notes/legacy.md": "legacy checkpoint"
+ },
+ "setup": [
+  [
+   "sh",
+   "-c",
+   "mkdir -p alias/.pi other/.pi/notes && ln -s \"$PWD/.pi/notes\" alias/.pi/notes && printf \"different store\" > other/.pi/notes/legacy.md"
+  ]
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  ".pi/notes/**",
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(\"anchors\":\\[\")[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  },
+  {
+   "pattern": "\"mtimeMs\":\\d+(?:\\.\\d+)?,\"ctimeMs\":\\d+(?:\\.\\d+)?,\"ino\":\\d+,\"dev\":\\d+",
+   "replacement": "\"mtimeMs\":<n>,\"ctimeMs\":<n>,\"ino\":<n>,\"dev\":<n>"
+  },
+  {
+   "pattern": "20(?:2[1-9]|[3-9]\\d)-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z",
+   "replacement": "<time-minute>"
+  }
+ ]
+}

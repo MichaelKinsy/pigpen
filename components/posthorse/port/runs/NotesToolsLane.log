@@ -1,0 +1,21 @@
+NotesToolsLane runs (xd6702, tern-ci:v7, Go 1.27.3, 8 cpus)
+
+GOOS=linux|darwin|windows go vet ./...            ok (all three)
+go test -race -count=3 -run 'TestTwinPosthorseNotes|TestNoteGuards|TestVerified|TestMatchingLines|TestFork|TestHelper' .   ok 23.2s
+go test -race -count=24 -test.run TestTwinPosthorseNotes   (6 busy-loop burners, taskset -c 0-3)                    PASS
+pigeq twins check --ledger port/upstream-tests.json --go extensions/posthorse --files posthorse       63 exact twins, 0 skipped (whole ledger file; this lane: 34 38 43 44 45 46 47 49 59 61)
+
+Red: port/red/NotesToolsLane.log (10/10 twins fail against the stubs in port/red/stubs/NotesToolsLane).
+
+Benchmarks (go test -run '^$' -bench BenchmarkNotes -benchtime=2s):
+BenchmarkNotesList1000-8                 182   12889732 ns/op   3307879 B/op   17605 allocs/op
+BenchmarkNotesSearch1000-8               120   23041660 ns/op   4093052 B/op   23098 allocs/op
+BenchmarkNotesAppendLarge-8           139736      16350 ns/op       816 B/op       9 allocs/op   (8 MiB note)
+BenchmarkNotesMatchingLines/ascii-8      728    3302948 ns/op  277.79 MB/s        61 B/op       4 allocs/op  (1 MiB)
+BenchmarkNotesMatchingLines/unicode-8    147   15570436 ns/op   61.03 MB/s    958528 B/op       5 allocs/op  (1 MiB)
+Before the row-format and per-line ASCII passes: List1000 13224498 ns 3326766 B 18604 allocs; Search1000 24775319 ns
+4087686 B 23096 allocs; MatchingLines/unicode 27564146 ns 9748568 B 32775 allocs.
+Profile (alloc_objects, List+Search): the remainder is discovery/walk syscalls (os.Stat, readdir, ByteSliceFromString),
+noteDiscovery.collapse and readText; the tool's own formatting is one string per row.
+RSS/heap: peak per search batch is 16 note texts of <= 1 MiB (same bound as the TS SEARCH_BATCH); append holds
+one record (no whole-file read).

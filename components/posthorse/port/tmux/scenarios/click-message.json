@@ -1,0 +1,82 @@
+{
+ "replies": [
+  "unused"
+ ],
+ "width": 100,
+ "height": 50,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "/pt message window"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message reminder"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "snap": "closed",
+   "settle": 1.0
+  },
+  {
+   "click": "Checkpoint reminder",
+   "nth": 0
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "clicked-reminder",
+   "settle": 0.5
+  },
+  {
+   "click": "Checkpoint reminder",
+   "nth": 0
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "clicked-reminder-again",
+   "settle": 0.5
+  },
+  {
+   "click": "Context window started",
+   "nth": 0
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "clicked-window",
+   "settle": 0.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "global-expanded",
+   "settle": 0.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "global-collapsed",
+   "settle": 0.5
+  }
+ ],
+ "name": "click-message"
+}

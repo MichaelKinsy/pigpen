@@ -1,0 +1,18 @@
+{
+  "name": "overflow-recovery",
+  "description": "(project.drop removes compaction_end result.estimatedTokensAfter and tokensBefore: Pi 1.5.0 and PiG count the host's own system prompt wording in them (2566 vs 2548, 2436 vs 2418 here); see port/lane-HarnessExt.md Findings.) The provider rejects the request as a context overflow (HTTP 400, the shape src of the real-Pi suite scripts: \"prompt is too long: 300000 tokens > 100000 maximum\"). With keepRecentTokens=1 Pi runs its overflow compaction, posthorse answers session_before_compact with a recovery record (no summarization request), Pi retries once, the second overflow is final (official-host.ts 'eligible overflow recovery (keepRecentTokens=1) retries once without summarization'; src/rollover.ts, src/retention.ts).",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 1000},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 1}, "retry": {"enabled": false}},
+  "session": {},
+  "normalize": [{"pattern": "\\bentry [0-9a-f]{8}\\b", "replacement": "entry <entry-id>"}],
+    "capture": ["response", "extension_ui_request", "extension_error", "agent_start", "agent_end", "turn_start", "turn_end", "tool_execution_start", "tool_execution_end", "message_end", "compaction_start", "compaction_end", "auto_retry_start", "auto_retry_end"],
+  "project": {"messageFields": ["errorMessage", "summary"], "drop": ["**.estimatedTokensAfter", "**.tokensBefore"]},
+  "llm": [
+    {"error": {"message": "prompt is too long: 300000 tokens > 100000 maximum"}},
+    {"error": {"message": "prompt is too long: 300000 tokens > 100000 maximum"}},
+    {"text": "MUST_NOT_RUN"}
+  ],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "Keep this owner request."}, "settleMs": 600}],
+  "captureFiles": [{"root": "sessions", "glob": "**/*.jsonl", "drop": ["**.sections.docs", "**.sections.preamble", "**.tokensBefore"]}]
+}

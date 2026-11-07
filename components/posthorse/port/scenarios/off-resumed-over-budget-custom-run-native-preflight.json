@@ -1,0 +1,121 @@
+{
+ "name": "off-resumed-over-budget-custom-run-native-preflight",
+ "description": "official-host.ts:1842 'resumed over-budget custom run respects native preflight without a summary request'. Same resumed session; the new run is started by a custom message delivered with triggerTurn (a helper command calls pi.sendMessage; the test delivers it from the extension API after an initial run, here the session is resumed already over budget): the compaction completes before the run starts, the one request carries the custom message and < 30,000 chars, and the message is persisted once.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 1
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "seed.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"00000000-0000-4000-8000-000000000001\", \"timestamp\": \"2026-01-01T00:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"5eed0001\", \"parentId\": null, \"timestamp\": \"2026-01-01T00:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"persisted {{repeat:p:700000}}\", \"timestamp\": 1767225601000}}\n{\"type\": \"message\", \"id\": \"5eed0002\", \"parentId\": \"5eed0001\", \"timestamp\": \"2026-01-01T00:00:02.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Prior response.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"official-posthorse\", \"usage\": {\"input\": 150000, \"output\": 10, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 150010, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1767225602000}}\n"
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "bg.ts",
+   "source": "export default function (pi) {\n  pi.registerCommand(\"eq-bg\", {\n    description: \"Deliver a background completion that starts a turn\",\n    handler: async () => {\n      pi.sendMessage({ customType: \"background-completion\", content: \"NEW_CUSTOM_AFTER_PREFLIGHT: background work completed.\", display: true }, { triggerTurn: true });\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "text": "New run completed."
+  },
+  {
+   "text": "MUST_NOT_RUN"
+  }
+ ],
+ "steps": [
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/seed.jsonl"
+   }
+  },
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-bg"
+   },
+   "wait": "agent_end"
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

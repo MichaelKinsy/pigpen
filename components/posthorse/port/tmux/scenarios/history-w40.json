@@ -1,0 +1,100 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "Relay station",
+      "all": true,
+      "fixture": "history-search"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "Relay station",
+      "fixture": "history-search"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "absent",
+      "all": true,
+      "fixture": "history-empty"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "pic",
+      "fixture": "history-read-images"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "Relay",
+      "fixture": "history-legacy"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "x",
+      "fixture": "malformed-details"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 40,
+ "height": 120,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "history-w40"
+}

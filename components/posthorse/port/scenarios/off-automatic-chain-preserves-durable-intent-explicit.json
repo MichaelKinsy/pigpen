@@ -1,0 +1,132 @@
+{
+ "name": "off-automatic-chain-preserves-durable-intent-explicit",
+ "description": "official-host.ts:2555 'automatic chains preserve durable intent (explicit)'. new_context commits an explicit handoff, then fresh-window dumps chain automatic boundaries; the last record (<= 20,000 chars) lists the earlier automatic records as skipped (not nested), carries the approved explicit handoff, and never the older tool evidence.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi) {\n  let dumps = 0;\n  pi.registerTool({\n    name: \"dump\", label: \"Dump\", description: \"Oversized local output\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      const sizes = [350000];\n      const chars = sizes[Math.min(dumps++, sizes.length - 1)];\n      return { content: [{ type: \"text\", text: `DUMP_HEAD ${\"x\".repeat(chars)} DUMP_TAIL` }, ...[]], details: {}, terminate: false };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "EXPLICIT_APPROVED_HANDOFF: continue without bash."
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "text": "Done."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "ORIGINAL_OWNER_INTENT: inspect without bash."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

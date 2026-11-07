@@ -1,0 +1,9 @@
+{
+  "name": "tool-definitions",
+  "description": "The model's first request lists posthorse's four tool definitions (new_context, get_context_remaining, notes, history) next to the host's own, and carries posthorse's guidance as the system-prompt delta (src/guidance.ts context_with_system; index.ts registerTool calls).",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 4096},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "llm": [{"text": "Hello.", "usage": {"input": 1200, "output": 5}}],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "Say hello."}}]
+}

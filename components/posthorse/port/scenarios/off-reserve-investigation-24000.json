@@ -1,0 +1,120 @@
+{
+ "name": "off-reserve-investigation-24000",
+ "description": "official-host.ts:750 'reserve investigation preserves stable request inputs across automatic rollover (24000)'. A resumed session holds ~320k estimated tokens in a 335,000-token window (reserve 24000): Pi's native preflight starts the threshold compaction before the next response, posthorse answers with a recovery record (no summary request, boundary reason 'threshold', record <= 20,000 chars) and the retained tail keeps RECENT_ASSISTANT, RETAINED_OWNER and RETAINED_RECEIPT while ARCHIVED_OWNER appears only in the record. The following prompt runs in the fresh window with the same system prompt and tools.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 335000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 24000,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "seed.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"00000000-0000-4000-8000-000000000001\", \"timestamp\": \"2026-01-01T00:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"5eed0001\", \"parentId\": null, \"timestamp\": \"2026-01-01T00:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"Establish the stable system and tools.\", \"timestamp\": 1767225601000}}\n{\"type\": \"message\", \"id\": \"5eed0002\", \"parentId\": \"5eed0001\", \"timestamp\": \"2026-01-01T00:00:02.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Ready for the synthetic fixture.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"official-posthorse\", \"usage\": {\"input\": 3400, \"output\": 8, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 3408, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1767225602000}}\n{\"type\": \"message\", \"id\": \"5eed0003\", \"parentId\": \"5eed0002\", \"timestamp\": \"2026-01-01T00:00:03.000Z\", \"message\": {\"role\": \"user\", \"content\": \"ARCHIVED_OWNER {{repeat:o:1200000}}\", \"timestamp\": 1767225603000}}\n{\"type\": \"message\", \"id\": \"5eed0004\", \"parentId\": \"5eed0003\", \"timestamp\": \"2026-01-01T00:00:04.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"RECENT_ASSISTANT {{repeat:a:16000}}\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"official-posthorse\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1767225604000}}\n{\"type\": \"message\", \"id\": \"5eed0005\", \"parentId\": \"5eed0004\", \"timestamp\": \"2026-01-01T00:00:05.000Z\", \"message\": {\"role\": \"user\", \"content\": \"RETAINED_OWNER {{repeat:u:20000}}\", \"timestamp\": 1767225605000}}\n{\"type\": \"message\", \"id\": \"5eed0006\", \"parentId\": \"5eed0005\", \"timestamp\": \"2026-01-01T00:00:06.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"toolCall\", \"id\": \"stable-read\", \"name\": \"read\", \"arguments\": {}}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"official-posthorse\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"toolUse\", \"timestamp\": 1767225606000}}\n{\"type\": \"message\", \"id\": \"5eed0007\", \"parentId\": \"5eed0006\", \"timestamp\": \"2026-01-01T00:00:07.000Z\", \"message\": {\"role\": \"toolResult\", \"toolCallId\": \"stable-read\", \"toolName\": \"read\", \"content\": [{\"type\": \"text\", \"text\": \"RETAINED_RECEIPT {{repeat:r:40000}}\"}], \"isError\": false, \"timestamp\": 1767225607000}}\n"
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "llm": [
+  {
+   "text": "Finish the full window."
+  },
+  {
+   "text": "Continue from the retained tail."
+  }
+ ],
+ "steps": [
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/seed.jsonl"
+   }
+  },
+  {
+   "name": "finish",
+   "rpc": {
+    "type": "prompt",
+    "message": "Finish this synthetic window."
+   }
+  },
+  {
+   "name": "continue",
+   "rpc": {
+    "type": "prompt",
+    "message": "Continue after the synthetic automatic boundary."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

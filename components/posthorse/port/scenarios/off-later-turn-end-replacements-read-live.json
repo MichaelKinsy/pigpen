@@ -1,0 +1,129 @@
+{
+ "name": "off-later-turn-end-replacements-read-live",
+ "description": "official-host.ts:2163 'later turn_end replacements are read live by automatic recovery'. A helper turn_end hook AFTER posthorse adds a context_edit of the seeded owner input at the dump's turn: the automatic record still carries APPROVED_LATE_SOURCE and not PRIVATE_LATE_SOURCE.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "seed.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"00000000-0000-4000-8000-000000000001\", \"timestamp\": \"2026-01-01T00:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"5eed0001\", \"parentId\": null, \"timestamp\": \"2026-01-01T00:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"PRIVATE_LATE_SOURCE\", \"timestamp\": 1767225601000}}\n"
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi) {\n  let dumps = 0;\n  pi.registerTool({\n    name: \"dump\", label: \"Dump\", description: \"Oversized local output\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      const sizes = [600000];\n      const chars = sizes[Math.min(dumps++, sizes.length - 1)];\n      return { content: [{ type: \"text\", text: `DUMP_HEAD ${\"x\".repeat(chars)} DUMP_TAIL` }, ...[]], details: {}, terminate: false };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "late-edit.ts",
+   "source": "export default function (pi) {\n  pi.on(\"turn_end\", (event) =>\n    event.toolResults.length > 0\n      ? { entries: [...event.entries, { type: \"context_edit\", targetId: \"5eed0001\", replacement: { content: \"APPROVED_LATE_SOURCE\" } }] }\n      : undefined);\n}\n"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "text": "Done."
+  }
+ ],
+ "steps": [
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/seed.jsonl"
+   }
+  },
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Inspect only."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

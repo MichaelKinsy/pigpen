@@ -1,0 +1,1658 @@
+[
+ {
+  "name": "call-title-notes",
+  "file": "ui_cards.go",
+  "find": "return \"Notes\"",
+  "replace": "return \"Note\""
+ },
+ {
+  "name": "call-title-history",
+  "file": "ui_cards.go",
+  "find": "return \"History\"",
+  "replace": "return \"history\""
+ },
+ {
+  "name": "call-title-context",
+  "file": "ui_cards.go",
+  "find": "return \"Context budget\"",
+  "replace": "return \"Context Budget\""
+ },
+ {
+  "name": "call-title-new",
+  "file": "ui_cards.go",
+  "find": "return \"New context\"",
+  "replace": "return \"New Context\""
+ },
+ {
+  "name": "target-search-quote",
+  "file": "ui_cards.go",
+  "find": "\" · “\" + cardArgument(args[\"query\"], \"query\") + \"”\"",
+  "replace": "\" · \\\"\" + cardArgument(args[\"query\"], \"query\") + \"\\\"\""
+ },
+ {
+  "name": "target-search-skips-op",
+  "file": "ui_cards.go",
+  "find": "if args[\"op\"] == \"search\" {\n\t\treturn \" · “\"",
+  "replace": "if args[\"op\"] == \"searchx\" {\n\t\treturn \" · “\""
+ },
+ {
+  "name": "target-notes-list-path",
+  "file": "ui_cards.go",
+  "find": "(args[\"op\"] != \"list\" || argPresent(args, \"path\"))",
+  "replace": "(args[\"op\"] != \"list\" && argPresent(args, \"path\"))"
+ },
+ {
+  "name": "target-notes-path-invalid",
+  "file": "ui_cards.go",
+  "find": "cardArgument(args[\"path\"], \"path\")",
+  "replace": "cardArgument(args[\"path\"], \"paths\")"
+ },
+ {
+  "name": "target-history-read-id",
+  "file": "ui_cards.go",
+  "find": "name == \"history\" && args[\"op\"] == \"read\"",
+  "replace": "name == \"notes\" && args[\"op\"] == \"read\""
+ },
+ {
+  "name": "status-error",
+  "file": "ui_cards.go",
+  "find": "return \" · error\"",
+  "replace": "return \" · failed\""
+ },
+ {
+  "name": "status-running-preparing-swap",
+  "file": "ui_cards.go",
+  "find": "if state.executionStarted {\n\t\treturn \" · running\"\n\t}\n\treturn \" · preparing\"",
+  "replace": "if state.executionStarted {\n\t\treturn \" · preparing\"\n\t}\n\treturn \" · running\""
+ },
+ {
+  "name": "status-partial-dropped",
+  "file": "ui_cards.go",
+  "find": "if !state.isPartial {\n\t\treturn \"\"\n\t}",
+  "replace": "if state.isPartial {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "details-scope-all",
+  "file": "ui_cards.go",
+  "find": "scope = \"all project sessions\"",
+  "replace": "scope = \"all sessions\""
+ },
+ {
+  "name": "details-scope-default",
+  "file": "ui_cards.go",
+  "find": "scope := \"current branch\"",
+  "replace": "scope := \"this branch\""
+ },
+ {
+  "name": "details-scope-all-test",
+  "file": "ui_cards.go",
+  "find": "if all, _ := args[\"all\"].(bool); all {",
+  "replace": "if all, _ := args[\"all\"].(bool); !all {"
+ },
+ {
+  "name": "details-offset-label",
+  "file": "ui_cards.go",
+  "find": "{\"offset\", \"Offset\"}",
+  "replace": "{\"offset\", \"offset\"}"
+ },
+ {
+  "name": "details-image-offset-label",
+  "file": "ui_cards.go",
+  "find": "{\"imageOffset\", \"Image offset\"}",
+  "replace": "{\"imageOffset\", \"Image Offset\"}"
+ },
+ {
+  "name": "details-limit-key",
+  "file": "ui_cards.go",
+  "find": "{\"limit\", \"Limit\"}",
+  "replace": "{\"limits\", \"Limit\"}"
+ },
+ {
+  "name": "details-number-ungrouped",
+  "file": "ui_cards.go",
+  "find": "parts = append(parts, label[1]+\": \"+n(f))",
+  "replace": "parts = append(parts, label[1]+\": \"+uiIntegerString(f))"
+ },
+ {
+  "name": "details-invalid-text",
+  "file": "ui_cards.go",
+  "find": "label[1]+\": [invalid \"+label[0]+\"]\"",
+  "replace": "label[1]+\": [bad \"+label[0]+\"]\""
+ },
+ {
+  "name": "details-join",
+  "file": "ui_cards.go",
+  "find": "strings.Join(parts, \" · \")",
+  "replace": "strings.Join(parts, \"; \")"
+ },
+ {
+  "name": "call-action-request",
+  "file": "ui_cards.go",
+  "find": "action = \" · request\"",
+  "replace": "action = \" · requested\""
+ },
+ {
+  "name": "call-action-op",
+  "file": "ui_cards.go",
+  "find": "action = \" · \" + cardArgument(args[\"op\"], \"op\")",
+  "replace": "action = \" · \" + cardArgument(args[\"op\"], \"ops\")"
+ },
+ {
+  "name": "call-marker-partial",
+  "file": "ui_cards.go",
+  "find": "marker = \"…\"",
+  "replace": "marker = \"▸\""
+ },
+ {
+  "name": "call-marker-expanded",
+  "file": "ui_cards.go",
+  "find": "} else if state.expanded {\n\t\tmarker = \"▾\"",
+  "replace": "} else if !state.expanded {\n\t\tmarker = \"▾\""
+ },
+ {
+  "name": "call-color-error",
+  "file": "ui_cards.go",
+  "find": "titleColor = colorError",
+  "replace": "titleColor = colorWarning"
+ },
+ {
+  "name": "call-title-token",
+  "file": "ui_cards.go",
+  "find": "titleColor := \"toolTitle\"",
+  "replace": "titleColor := \"toolOutput\""
+ },
+ {
+  "name": "call-bold-dropped",
+  "file": "ui_cards.go",
+  "find": "heading := theme.Fg(titleColor, theme.Bold(label))",
+  "replace": "heading := theme.Fg(titleColor, label)"
+ },
+ {
+  "name": "call-collapsed-spaces",
+  "file": "ui_cards.go",
+  "find": "tui.TruncateToWidth(uiCollapseSpaces(heading), width, tui.DefaultEllipsis, false)",
+  "replace": "tui.TruncateToWidth(heading, width, tui.DefaultEllipsis, false)"
+ },
+ {
+  "name": "call-collapsed-no-truncate",
+  "file": "ui_cards.go",
+  "find": "return []string{tui.TruncateToWidth(uiCollapseSpaces(heading), width, tui.DefaultEllipsis, false)}",
+  "replace": "return []string{uiCollapseSpaces(heading)}"
+ },
+ {
+  "name": "call-expanded-details-dropped",
+  "file": "ui_cards.go",
+  "find": "return append(rows, cardBlock(cardCallDetails(name, args), theme, colorMuted)(width)...)",
+  "replace": "return rows"
+ },
+ {
+  "name": "call-expanded-details-color",
+  "file": "ui_cards.go",
+  "find": "cardBlock(cardCallDetails(name, args), theme, colorMuted)",
+  "replace": "cardBlock(cardCallDetails(name, args), theme, colorDim)"
+ },
+ {
+  "name": "call-expanded-branch",
+  "file": "ui_cards.go",
+  "find": "\tif !state.expanded {\n\t\treturn []string{tui.TruncateToWidth",
+  "replace": "\tif state.expanded {\n\t\treturn []string{tui.TruncateToWidth"
+ },
+ {
+  "name": "submitted-handoff",
+  "file": "ui_cards.go",
+  "find": "\"Handoff supplied:\\n\"",
+  "replace": "\"Handoff:\\n\""
+ },
+ {
+  "name": "submitted-handoff-name",
+  "file": "ui_cards.go",
+  "find": "ok && facts.name == \"new_context\"",
+  "replace": "ok && facts.name == \"notes\""
+ },
+ {
+  "name": "submitted-op-append",
+  "file": "ui_cards.go",
+  "find": "args[\"op\"] == \"write\" || args[\"op\"] == \"append\"",
+  "replace": "args[\"op\"] == \"write\""
+ },
+ {
+  "name": "submitted-empty",
+  "file": "ui_cards.go",
+  "find": "content = \"(empty)\"",
+  "replace": "content = \"(none)\""
+ },
+ {
+  "name": "submitted-label",
+  "file": "ui_cards.go",
+  "find": "\"Submitted content:\\n\"",
+  "replace": "\"Content:\\n\""
+ },
+ {
+  "name": "summary-error-partial",
+  "file": "ui_cards.go",
+  "find": "if facts.isError || facts.isPartial {\n\t\treturn \"\"\n\t}\n\tdisplay := facts.display\n\tsummary",
+  "replace": "if facts.isError {\n\t\treturn \"\"\n\t}\n\tdisplay := facts.display\n\tsummary"
+ },
+ {
+  "name": "summary-page-kinds",
+  "file": "ui_cards.go",
+  "find": "(display.kind == \"notes-list\" || display.kind == \"notes-search\") &&\n\t\tdisplay.page != nil",
+  "replace": "(display.kind == \"notes-list\") &&\n\t\tdisplay.page != nil"
+ },
+ {
+  "name": "summary-page-offset",
+  "file": "ui_cards.go",
+  "find": "(display.page.offset > 0 || display.page.end < display.page.total)",
+  "replace": "(display.page.offset > 0 && display.page.end < display.page.total)"
+ },
+ {
+  "name": "summary-page-more",
+  "file": "ui_cards.go",
+  "find": "more := display.more != nil && *display.more",
+  "replace": "more := false"
+ },
+ {
+  "name": "color-error",
+  "file": "ui_cards.go",
+  "find": "if facts.isError {\n\t\treturn colorError\n\t}\n\tdisplay := facts.display",
+  "replace": "if facts.isError {\n\t\treturn colorWarning\n\t}\n\tdisplay := facts.display"
+ },
+ {
+  "name": "color-warning-token",
+  "file": "ui_cards.go",
+  "find": "\t\treturn colorWarning\n\t}\n\treturn colorToolOutput\n}",
+  "replace": "\t\treturn colorToolOutput\n\t}\n\treturn colorToolOutput\n}"
+ },
+ {
+  "name": "color-unsupported",
+  "file": "ui_cards.go",
+  "find": "display.rollover != \"unsupported\"",
+  "replace": "display.rollover != \"disabled\""
+ },
+ {
+  "name": "color-partial",
+  "file": "ui_cards.go",
+  "find": "if facts.isPartial || display == nil || display.kind != \"context\"",
+  "replace": "if display == nil || display.kind != \"context\""
+ },
+ {
+  "name": "color-tokens-null",
+  "file": "ui_cards.go",
+  "find": "if display.usage && display.usageTokens != nil {",
+  "replace": "if display.usage && display.usageTokens == nil {"
+ },
+ {
+  "name": "body-running",
+  "file": "ui_cards.go",
+  "find": "return \"Running…\"",
+  "replace": "return \"Running...\""
+ },
+ {
+  "name": "body-error",
+  "file": "ui_cards.go",
+  "find": "return \"No error details returned.\"",
+  "replace": "return \"No details.\""
+ },
+ {
+  "name": "body-empty-note",
+  "file": "ui_cards.go",
+  "find": "return \"Empty note\"\n\t}\n\treturn \"No text returned.\"",
+  "replace": "return \"No text returned.\"\n\t}\n\treturn \"No text returned.\""
+ },
+ {
+  "name": "body-no-text",
+  "file": "ui_cards.go",
+  "find": "return \"No text returned.\"\n}",
+  "replace": "return \"Empty.\"\n}"
+ },
+ {
+  "name": "body-trim",
+  "file": "ui_cards.go",
+  "find": "if len(uiTrimBoth(facts.raw)) > 0 {",
+  "replace": "if len(facts.raw) > 0 {"
+ },
+ {
+  "name": "header-error-ignored",
+  "file": "ui_cards.go",
+  "find": "if !facts.isError && display != nil && (display.kind == \"note-read\" || display.kind == \"notes-list\")",
+  "replace": "if display != nil && (display.kind == \"note-read\" || display.kind == \"notes-list\")"
+ },
+ {
+  "name": "header-kinds",
+  "file": "ui_cards.go",
+  "find": "(display.kind == \"note-read\" || display.kind == \"notes-list\") && display.headerLength != nil",
+  "replace": "(display.kind == \"note-read\") && display.headerLength != nil"
+ },
+ {
+  "name": "preview-history-prefix",
+  "file": "ui_cards.go",
+  "find": "if facts.name == \"history\" && !facts.isError {\n\t\treturn cardStripHistoryPrefixes(body)",
+  "replace": "if facts.name == \"history\" {\n\t\treturn cardStripHistoryPrefixes(body)"
+ },
+ {
+  "name": "preview-sections-join",
+  "file": "ui_cards.go",
+  "find": "b.WriteByte('\\n')\n\t\t\t}\n\t\t\tb.WriteString(s.body)",
+  "replace": "b.WriteByte(' ')\n\t\t\t}\n\t\t\tb.WriteString(s.body)"
+ },
+ {
+  "name": "preview-header-slice",
+  "file": "ui_cards.go",
+  "find": "u16sliceF(body, headerLength, math.Inf(1))",
+  "replace": "u16sliceF(body, headerLength*0, math.Inf(1))"
+ },
+ {
+  "name": "attach-image",
+  "file": "ui_cards.go",
+  "find": "\" image\"",
+  "replace": "\" images\""
+ },
+ {
+  "name": "attach-plural",
+  "file": "ui_cards.go",
+  "find": "if facts.imageCount != 1 {",
+  "replace": "if facts.imageCount > 2 {"
+ },
+ {
+  "name": "attach-attached",
+  "file": "ui_cards.go",
+  "find": "s += \" attached\"",
+  "replace": "s += \" included\""
+ },
+ {
+  "name": "attach-hidden",
+  "file": "ui_cards.go",
+  "find": "s += \" (display hidden)\"",
+  "replace": "s += \" (hidden)\""
+ },
+ {
+  "name": "attach-show",
+  "file": "ui_cards.go",
+  "find": "if !facts.showImages {",
+  "replace": "if facts.showImages {"
+ },
+ {
+  "name": "full-sections-sep",
+  "file": "ui_cards.go",
+  "find": "b.WriteString(\"\\n\\n\")",
+  "replace": "b.WriteString(\"\\n\")"
+ },
+ {
+  "name": "full-body-color",
+  "file": "ui_cards.go",
+  "find": "b.WriteString(theme.Fg(colorToolOutput, cleanText(s.body)))",
+  "replace": "b.WriteString(theme.Fg(colorMuted, cleanText(s.body)))"
+ },
+ {
+  "name": "full-header-color",
+  "file": "ui_cards.go",
+  "find": "b.WriteString(theme.Fg(colorDim, cleanText(s.header)))",
+  "replace": "b.WriteString(theme.Fg(colorMuted, cleanText(s.header)))"
+ },
+ {
+  "name": "full-body-clean",
+  "file": "ui_cards.go",
+  "find": "b.WriteString(theme.Fg(colorToolOutput, cleanText(s.body)))",
+  "replace": "b.WriteString(theme.Fg(colorToolOutput, s.body))"
+ },
+ {
+  "name": "full-header-order",
+  "file": "ui_cards.go",
+  "find": "b.WriteString(theme.Fg(colorToolOutput, cleanText(s.body)))\n\t\tb.WriteByte('\\n')\n\t\tb.WriteString(theme.Fg(colorDim, cleanText(s.header)))",
+  "replace": "b.WriteString(theme.Fg(colorDim, cleanText(s.header)))\n\t\tb.WriteByte('\\n')\n\t\tb.WriteString(theme.Fg(colorToolOutput, cleanText(s.body)))"
+ },
+ {
+  "name": "search-previews-count",
+  "file": "ui_cards.go",
+  "find": "sections[:min(3, len(sections))]",
+  "replace": "sections[:min(4, len(sections))]"
+ },
+ {
+  "name": "search-previews-kind",
+  "file": "ui_cards.go",
+  "find": "facts.display.kind != \"history-search\"",
+  "replace": "facts.display.kind != \"history-read\""
+ },
+ {
+  "name": "search-previews-spaces",
+  "file": "ui_cards.go",
+  "find": "theme.Fg(colorToolOutput, uiCollapseSpaces(cleanText(s.body)))",
+  "replace": "theme.Fg(colorToolOutput, cleanText(s.body))"
+ },
+ {
+  "name": "expanded-attachment-dropped",
+  "file": "ui_cards.go",
+  "find": "rows = append(rows, cardBlock(cardAttachmentSummary(facts), theme, colorMuted)(width)...)",
+  "replace": ""
+ },
+ {
+  "name": "expanded-footer-dropped",
+  "file": "ui_cards.go",
+  "find": "rows = append(rows, cardBlock(footer, theme, colorMuted)(width)...)",
+  "replace": "_ = footer"
+ },
+ {
+  "name": "expanded-footer-slice",
+  "file": "ui_cards.go",
+  "find": "footer = u16slice(facts.raw, rawLength-int(*display.footerLength), rawLength)",
+  "replace": "footer = u16slice(facts.raw, rawLength-int(*display.footerLength)+1, rawLength)"
+ },
+ {
+  "name": "expanded-submission-gap",
+  "file": "ui_cards.go",
+  "find": "rows = append(rows, \"\")\n\t\trows = append(rows, cardBlock(submission",
+  "replace": "rows = append(rows, cardBlock(submission"
+ },
+ {
+  "name": "expanded-submission-color",
+  "file": "ui_cards.go",
+  "find": "cardBlock(submission, theme, colorToolOutput)",
+  "replace": "cardBlock(submission, theme, colorMuted)"
+ },
+ {
+  "name": "preview-summaryonly-error",
+  "file": "ui_cards.go",
+  "find": "if summaryOnly(facts.display) && !facts.isError && !facts.isPartial {",
+  "replace": "if summaryOnly(facts.display) && !facts.isError {"
+ },
+ {
+  "name": "preview-rows",
+  "file": "ui_cards.go",
+  "find": "cardLeadingRows(cardPreviewBody(facts, sections), theme, cardResultColor(facts), 3)",
+  "replace": "cardLeadingRows(cardPreviewBody(facts, sections), theme, cardResultColor(facts), 4)"
+ },
+ {
+  "name": "collapsed-summary-cap",
+  "file": "ui_cards.go",
+  "find": "if len(summaryRows) > 5 {\n\t\tsummaryRows = summaryRows[:5]",
+  "replace": "if len(summaryRows) > 6 {\n\t\tsummaryRows = summaryRows[:6]"
+ },
+ {
+  "name": "collapsed-room",
+  "file": "ui_cards.go",
+  "find": "room := 5 - len(summaryRows)",
+  "replace": "room := 6 - len(summaryRows)"
+ },
+ {
+  "name": "collapsed-room-attachment",
+  "file": "ui_cards.go",
+  "find": "if len(attachment) > 0 {\n\t\troom--\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "collapsed-shown-cap",
+  "file": "ui_cards.go",
+  "find": "max(0, min(3, room))",
+  "replace": "max(0, min(4, room))"
+ },
+ {
+  "name": "collapsed-attachment-color",
+  "file": "ui_cards.go",
+  "find": "theme.Fg(colorMuted, attachment)",
+  "replace": "theme.Fg(colorDim, attachment)"
+ },
+ {
+  "name": "collapsed-hint-condition",
+  "file": "ui_cards.go",
+  "find": "if details || len(rows) > len(shown) {",
+  "replace": "if details {"
+ },
+ {
+  "name": "collapsed-hint-rows",
+  "file": "ui_cards.go",
+  "find": "if details || len(rows) > len(shown) {",
+  "replace": "if details && false || len(rows) > len(shown) {"
+ },
+ {
+  "name": "collapsed-details-submitted",
+  "file": "ui_cards.go",
+  "find": "sections != nil || len(cardSubmittedText(facts)) > 0 || cardNoteHeaderLength(facts) > 0",
+  "replace": "sections != nil || cardNoteHeaderLength(facts) > 0"
+ },
+ {
+  "name": "collapsed-details-header",
+  "file": "ui_cards.go",
+  "find": "len(cardSubmittedText(facts)) > 0 || cardNoteHeaderLength(facts) > 0",
+  "replace": "len(cardSubmittedText(facts)) > 0"
+ },
+ {
+  "name": "collapsed-details-summaryonly",
+  "file": "ui_cards.go",
+  "find": "details := summaryOnly(facts.display) ||",
+  "replace": "details := "
+ },
+ {
+  "name": "component-sections-partial",
+  "file": "ui_cards.go",
+  "find": "if !facts.isError && !facts.isPartial {\n\t\tsections = historySections",
+  "replace": "if !facts.isError {\n\t\tsections = historySections"
+ },
+ {
+  "name": "component-expanded-swap",
+  "file": "ui_cards.go",
+  "find": "if facts.expanded {\n\t\treturn cardExpandedView",
+  "replace": "if !facts.expanded {\n\t\treturn cardExpandedView"
+ },
+ {
+  "name": "render-expanded-option",
+  "file": "ui_cards.go",
+  "find": "expanded:   options.Expanded,",
+  "replace": "expanded:   render.Expanded,"
+ },
+ {
+  "name": "render-partial-option",
+  "file": "ui_cards.go",
+  "find": "isPartial:  options.IsPartial,",
+  "replace": "isPartial:  render.IsPartial,"
+ },
+ {
+  "name": "render-iserror",
+  "file": "ui_cards.go",
+  "find": "isError:    render.IsError,",
+  "replace": "isError:    false,"
+ },
+ {
+  "name": "render-showimages",
+  "file": "ui_cards.go",
+  "find": "showImages: render.ShowImages,",
+  "replace": "showImages: true,"
+ },
+ {
+  "name": "render-image-count",
+  "file": "ui_cards.go",
+  "find": "if part[\"type\"] == \"image\" {",
+  "replace": "if part[\"type\"] == \"text\" {"
+ },
+ {
+  "name": "render-key",
+  "file": "ui_cards.go",
+  "find": "expandKey: render.KeyText(\"app.tools.expand\"),",
+  "replace": "expandKey: render.KeyText(\"app.tools.collapse\"),"
+ },
+ {
+  "name": "call-executionstarted",
+  "file": "ui_cards.go",
+  "find": "executionStarted: render.ExecutionStarted,",
+  "replace": "executionStarted: false,"
+ },
+ {
+  "name": "apply-shell",
+  "file": "ui_cards.go",
+  "find": "def.RenderShell = cards.Shell",
+  "replace": "def.RenderShell = sdk.ToolRenderShellSelf"
+ },
+ {
+  "name": "apply-result",
+  "file": "ui_cards.go",
+  "find": "def.RenderResult = cards.Result",
+  "replace": "def.RenderResult = nil"
+ },
+ {
+  "name": "msg-window-type",
+  "file": "ui.go",
+  "find": "window := message[\"customType\"] == \"context-window\"",
+  "replace": "window := message[\"customType\"] == \"posthorse-reminder\""
+ },
+ {
+  "name": "msg-preview-rows",
+  "file": "ui.go",
+  "find": "previewRows := 3",
+  "replace": "previewRows := 4"
+ },
+ {
+  "name": "msg-window-rows",
+  "file": "ui.go",
+  "find": "previewRows = 2",
+  "replace": "previewRows = 3"
+ },
+ {
+  "name": "msg-handoff-label",
+  "file": "ui.go",
+  "find": "at := strings.Index(raw, cardHandoffLabel)",
+  "replace": "at := strings.Index(raw, \"Handoff\")"
+ },
+ {
+  "name": "msg-handoff-skip",
+  "file": "ui.go",
+  "find": "preview = raw[at+len(cardHandoffLabel):]",
+  "replace": "preview = raw[at:]"
+ },
+ {
+  "name": "msg-no-handoff",
+  "file": "ui.go",
+  "find": "\t\t\tpreview = \"\"\n",
+  "replace": "\t\t\tpreview = raw\n"
+ },
+ {
+  "name": "msg-padding",
+  "file": "ui.go",
+  "find": "padding := min(options.OutputPad, max(0, (width-1)/2))",
+  "replace": "padding := options.OutputPad"
+ },
+ {
+  "name": "msg-padding-clamp",
+  "file": "ui.go",
+  "find": "max(0, (width-1)/2)",
+  "replace": "max(0, width/2)"
+ },
+ {
+  "name": "msg-inner",
+  "file": "ui.go",
+  "find": "inner := max(1, width-padding*2)",
+  "replace": "inner := max(1, width-padding)"
+ },
+ {
+  "name": "msg-marker-expanded",
+  "file": "ui.go",
+  "find": "\t\tmarker = \"▾\"\n",
+  "replace": "\t\tmarker = \"▸\"\n"
+ },
+ {
+  "name": "msg-title-reminder",
+  "file": "ui.go",
+  "find": "title := \"Checkpoint reminder\"",
+  "replace": "title := \"Checkpoint Reminder\""
+ },
+ {
+  "name": "msg-title-window",
+  "file": "ui.go",
+  "find": "title = \"Context window started\"",
+  "replace": "title = \"Context window start\""
+ },
+ {
+  "name": "msg-color-reminder",
+  "file": "ui.go",
+  "find": "labelColor := colorWarning",
+  "replace": "labelColor := colorError"
+ },
+ {
+  "name": "msg-color-window",
+  "file": "ui.go",
+  "find": "labelColor = \"customMessageLabel\"",
+  "replace": "labelColor = colorWarning"
+ },
+ {
+  "name": "msg-bold-dropped",
+  "file": "ui.go",
+  "find": "theme.Fg(labelColor, theme.Bold(cleanText(marker+\" \"+title)))",
+  "replace": "theme.Fg(labelColor, cleanText(marker+\" \"+title))"
+ },
+ {
+  "name": "msg-heading-truncate",
+  "file": "ui.go",
+  "find": "tui.TruncateToWidth(theme.Fg(labelColor, theme.Bold(cleanText(marker+\" \"+title))), inner, tui.DefaultEllipsis, false)",
+  "replace": "theme.Fg(labelColor, theme.Bold(cleanText(marker+\" \"+title)))"
+ },
+ {
+  "name": "msg-expanded-color",
+  "file": "ui.go",
+  "find": "cardBlock(raw, theme, colorToolOutput)(inner)",
+  "replace": "cardBlock(raw, theme, colorMuted)(inner)"
+ },
+ {
+  "name": "msg-expanded-width",
+  "file": "ui.go",
+  "find": "cardBlock(raw, theme, colorToolOutput)(inner)",
+  "replace": "cardBlock(raw, theme, colorToolOutput)(width)"
+ },
+ {
+  "name": "msg-history-text",
+  "file": "ui.go",
+  "find": "\"Earlier conversation remains in history.\"",
+  "replace": "\"Earlier conversation is in history.\""
+ },
+ {
+  "name": "msg-history-color",
+  "file": "ui.go",
+  "find": "\"Earlier conversation remains in history.\", theme, colorMuted",
+  "replace": "\"Earlier conversation remains in history.\", theme, colorDim"
+ },
+ {
+  "name": "msg-history-rows",
+  "file": "ui.go",
+  "find": "history[:min(2, len(history))]",
+  "replace": "history[:min(1, len(history))]"
+ },
+ {
+  "name": "msg-preview-color",
+  "file": "ui.go",
+  "find": "cardLeadingRows(preview, theme, colorToolOutput, previewRows)(inner)",
+  "replace": "cardLeadingRows(preview, theme, colorMuted, previewRows)(inner)"
+ },
+ {
+  "name": "msg-hint-dropped",
+  "file": "ui.go",
+  "find": "\t\tbody = append(body, cardHint(theme, inner, expandKey))\n",
+  "replace": "\t\t_ = expandKey\n"
+ },
+ {
+  "name": "msg-hint-key",
+  "file": "ui.go",
+  "find": "options.KeyText(\"app.tools.expand\")",
+  "replace": "options.KeyText(\"app.tools.collapse\")"
+ },
+ {
+  "name": "msg-expanded-swap",
+  "file": "ui.go",
+  "find": "\tif expanded {\n\t\tbody = append(body, cardBlock(raw",
+  "replace": "\tif !expanded {\n\t\tbody = append(body, cardBlock(raw"
+ },
+ {
+  "name": "msg-bg-token",
+  "file": "ui.go",
+  "find": "theme.Bg(\"customMessageBg\", line)",
+  "replace": "theme.Bg(\"toolPendingBg\", line)"
+ },
+ {
+  "name": "msg-box-paddingY",
+  "file": "ui.go",
+  "find": "return piBox(padding, 1, body, width,",
+  "replace": "return piBox(padding, 0, body, width,"
+ },
+ {
+  "name": "box-left-pad",
+  "file": "ui.go",
+  "find": "out = append(out, apply(leftPad+line))",
+  "replace": "out = append(out, apply(line+leftPad[:0]))"
+ },
+ {
+  "name": "box-top-pad",
+  "file": "ui.go",
+  "find": "for range paddingY {\n\t\tout = append(out, apply(\"\"))\n\t}\n\tfor _, line := range rows {",
+  "replace": "for _, line := range rows {"
+ },
+ {
+  "name": "box-bottom-pad",
+  "file": "ui.go",
+  "find": "\t}\n\tfor range paddingY {\n\t\tout = append(out, apply(\"\"))\n\t}\n\treturn out",
+  "replace": "\t}\n\treturn out"
+ },
+ {
+  "name": "box-pad-width",
+  "file": "ui.go",
+  "find": "if pad := width - tui.VisibleWidth(line); pad > 0 {",
+  "replace": "if pad := width - tui.VisibleWidth(line) - 1; pad > 0 {"
+ },
+ {
+  "name": "box-empty",
+  "file": "ui.go",
+  "find": "if len(rows) == 0 {\n\t\treturn []string{}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "reg-types",
+  "file": "ui.go",
+  "find": "[...]string{\"context-window\", \"posthorse-reminder\"}",
+  "replace": "[...]string{\"context-window\"}"
+ },
+ {
+  "name": "reg-types2",
+  "file": "ui.go",
+  "find": "[...]string{\"context-window\", \"posthorse-reminder\"}",
+  "replace": "[...]string{\"posthorse-reminder\"}"
+ },
+ {
+  "name": "text-space-nbsp",
+  "file": "ui_text.go",
+  "find": "0xa0, 0x1680,",
+  "replace": "0x1680,"
+ },
+ {
+  "name": "text-space-bom",
+  "file": "ui_text.go",
+  "find": "0x3000, 0xfeff:",
+  "replace": "0x3000:"
+ },
+ {
+  "name": "text-space-range",
+  "file": "ui_text.go",
+  "find": "return r >= 0x2000 && r <= 0x200a",
+  "replace": "return r >= 0x2000 && r <= 0x2009"
+ },
+ {
+  "name": "collapse-run",
+  "file": "ui_text.go",
+  "find": "if !run {\n\t\t\t\t\tb.WriteByte(' ')\n\t\t\t\t}",
+  "replace": "if !run || true {\n\t\t\t\t\tb.WriteByte(' ')\n\t\t\t\t}"
+ },
+ {
+  "name": "collapse-lone",
+  "file": "ui_text.go",
+  "find": "b.WriteString(s[i : i+size])",
+  "replace": "b.WriteString(\"\\ufffd\")"
+ },
+ {
+  "name": "clean-fast-esc",
+  "file": "ui_text.go",
+  "find": "case c == 0x1b || c == 0xc2:",
+  "replace": "case c == 0xc2:"
+ },
+ {
+  "name": "clean-fast-c1",
+  "file": "ui_text.go",
+  "find": "case c == 0x1b || c == 0xc2:",
+  "replace": "case c == 0x1b:"
+ },
+ {
+  "name": "clean-fast-del",
+  "file": "ui_text.go",
+  "find": "c == 0x7f, c == 0xef:",
+  "replace": "c == 0xef:"
+ },
+ {
+  "name": "clean-fast-ef",
+  "file": "ui_text.go",
+  "find": "c == 0x7f, c == 0xef:",
+  "replace": "c == 0x7f:"
+ },
+ {
+  "name": "clean-fast-c0",
+  "file": "ui_text.go",
+  "find": "case c < 0x20 && c != '\\t' && c != '\\n', c == 0x7f",
+  "replace": "case c < 0x20 && c != '\\t', c == 0x7f"
+ },
+ {
+  "name": "clean-range-c0",
+  "file": "ui_text.go",
+  "find": "r <= 0x08 || (r >= 0x0b && r <= 0x1f)",
+  "replace": "r <= 0x07 || (r >= 0x0b && r <= 0x1f)"
+ },
+ {
+  "name": "clean-range-vt",
+  "file": "ui_text.go",
+  "find": "(r >= 0x0b && r <= 0x1f)",
+  "replace": "(r >= 0x0c && r <= 0x1f)"
+ },
+ {
+  "name": "clean-range-c1",
+  "file": "ui_text.go",
+  "find": "(r >= 0x7f && r <= 0x9f)",
+  "replace": "(r >= 0x7f && r <= 0x9e)"
+ },
+ {
+  "name": "clean-range-ann",
+  "file": "ui_text.go",
+  "find": "(r >= 0xfff9 && r <= 0xfffb)",
+  "replace": "(r >= 0xfff9 && r <= 0xfffa)"
+ },
+ {
+  "name": "clean-strip",
+  "file": "ui_text.go",
+  "find": "value = tui.StripTerminalSequences(value)",
+  "replace": ""
+ },
+ {
+  "name": "args-nil",
+  "file": "ui_text.go",
+  "find": "return map[string]any{}\n}\n\n// cardArgument",
+  "replace": "return nil\n}\n\n// cardArgument"
+ },
+ {
+  "name": "argument-null",
+  "file": "ui_text.go",
+  "find": "case nil:\n\t\treturn \"…\"",
+  "replace": "case nil:\n\t\treturn \"\""
+ },
+ {
+  "name": "argument-invalid",
+  "file": "ui_text.go",
+  "find": "return \"[invalid \" + name + \"]\"",
+  "replace": "return \"[invalid]\""
+ },
+ {
+  "name": "argument-clean",
+  "file": "ui_text.go",
+  "find": "case string:\n\t\treturn cleanText(v)",
+  "replace": "case string:\n\t\treturn v"
+ },
+ {
+  "name": "textof-sep",
+  "file": "ui_text.go",
+  "find": "b.WriteByte('\\n')\n\t\t}\n\t\tfirst = false\n\t\tb.WriteString(text)\n\t}\n\treturn b.String()\n}\n\n// cardTextOfBlocks",
+  "replace": "b.WriteByte(' ')\n\t\t}\n\t\tfirst = false\n\t\tb.WriteString(text)\n\t}\n\treturn b.String()\n}\n\n// cardTextOfBlocks"
+ },
+ {
+  "name": "textof-blocks-type",
+  "file": "ui_text.go",
+  "find": "if part[\"type\"] != \"text\" {",
+  "replace": "if part[\"type\"] == \"text\" {"
+ },
+ {
+  "name": "pitext-tab",
+  "file": "ui_text.go",
+  "find": "strings.ReplaceAll(text, \"\\t\", \"   \")",
+  "replace": "strings.ReplaceAll(text, \"\\t\", \"  \")"
+ },
+ {
+  "name": "pitext-pad",
+  "file": "ui_text.go",
+  "find": "if pad := width - tui.VisibleWidth(line); pad > 0 {\n\t\t\tline += strings.Repeat(\" \", pad)\n\t\t}\n\t\tout[i] = line",
+  "replace": "out[i] = line"
+ },
+ {
+  "name": "pitext-width",
+  "file": "ui_text.go",
+  "find": "tui.WrapTextWithAnsi(normalized, max(1, width))",
+  "replace": "tui.WrapTextWithAnsi(normalized, max(2, width))"
+ },
+ {
+  "name": "pitext-blank",
+  "file": "ui_text.go",
+  "find": "if text == \"\" || uiTrimBoth(text) == \"\" {",
+  "replace": "if text == \"\" {"
+ },
+ {
+  "name": "block-empty",
+  "file": "ui_text.go",
+  "find": "if len(text) > 0 {\n\t\tstyled = theme.Fg(color, cleanText(text))",
+  "replace": "if len(text) >= 0 {\n\t\tstyled = theme.Fg(color, cleanText(text))"
+ },
+ {
+  "name": "leading-lines",
+  "file": "ui_text.go",
+  "find": "if newlines == count {",
+  "replace": "if newlines == count+1 {"
+ },
+ {
+  "name": "leading-limit",
+  "file": "ui_text.go",
+  "find": "limit := (count+1)*width + 1024",
+  "replace": "limit := (count+1)*width + 8"
+ },
+ {
+  "name": "leading-double",
+  "file": "ui_text.go",
+  "find": "limit *= 2",
+  "replace": "limit += 1"
+ },
+ {
+  "name": "leading-stop",
+  "file": "ui_text.go",
+  "find": "if end == len(head) || len(rows) > count {",
+  "replace": "if end == len(head) {"
+ },
+ {
+  "name": "leading-empty",
+  "file": "ui_text.go",
+  "find": "if len(text) == 0 {\n\t\t\t\tprefix = \"\"\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "hint-text",
+  "file": "ui_text.go",
+  "find": "label = \"… \" + key + \" to expand\"",
+  "replace": "label = \"… \" + key + \" to collapse\""
+ },
+ {
+  "name": "hint-empty",
+  "file": "ui_text.go",
+  "find": "label := \"… details hidden\"",
+  "replace": "label := \"… hidden\""
+ },
+ {
+  "name": "hint-dim",
+  "file": "ui_text.go",
+  "find": "theme.Fg(colorDim, label)",
+  "replace": "theme.Fg(colorMuted, label)"
+ },
+ {
+  "name": "hint-truncate",
+  "file": "ui_text.go",
+  "find": "return tui.TruncateToWidth(theme.Fg(colorDim, label), width, tui.DefaultEllipsis, false)",
+  "replace": "return theme.Fg(colorDim, label)"
+ },
+ {
+  "name": "hint-key-empty",
+  "file": "ui_text.go",
+  "find": "if len(key) > 0 {",
+  "replace": "if len(key) > 1 {"
+ },
+ {
+  "name": "sum-empty-note",
+  "file": "ui_display.go",
+  "find": "return \"Empty note\"",
+  "replace": "return \"Empty\""
+ },
+ {
+  "name": "sum-complete",
+  "file": "ui_display.go",
+  "find": "\" chars · complete\"",
+  "replace": "\" chars, complete\""
+ },
+ {
+  "name": "sum-complete-cond",
+  "file": "ui_display.go",
+  "find": "if page.offset == 0 && page.end == page.total {",
+  "replace": "if page.offset == 0 || page.end == page.total {"
+ },
+ {
+  "name": "sum-chars",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"Chars \")",
+  "replace": "b.WriteString(\"chars \")"
+ },
+ {
+  "name": "sum-dash",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"–\")",
+  "replace": "b.WriteString(\"-\")"
+ },
+ {
+  "name": "sum-more-plus",
+  "file": "ui_display.go",
+  "find": "if more {\n\t\tb.WriteByte('+')",
+  "replace": "if !more {\n\t\tb.WriteByte('+')"
+ },
+ {
+  "name": "sum-next-offset",
+  "file": "ui_display.go",
+  "find": "\"\\nNext offset \"",
+  "replace": "\"\\nnext offset \""
+ },
+ {
+  "name": "sum-final",
+  "file": "ui_display.go",
+  "find": "\" · final page\"",
+  "replace": "\" · last page\""
+ },
+ {
+  "name": "sum-final-cond",
+  "file": "ui_display.go",
+  "find": "if page.end < page.total {\n\t\tb.WriteString(\"\\nNext",
+  "replace": "if page.end <= page.total {\n\t\tb.WriteString(\"\\nNext"
+ },
+ {
+  "name": "ctx-unknown",
+  "file": "ui_display.go",
+  "find": "return \"Context usage unknown\"",
+  "replace": "return \"Usage unknown\""
+ },
+ {
+  "name": "ctx-unknown-cond",
+  "file": "ui_display.go",
+  "find": "if !display.usage || display.usageTokens == nil {",
+  "replace": "if !display.usage && display.usageTokens == nil {"
+ },
+ {
+  "name": "ctx-configured",
+  "file": "ui_display.go",
+  "find": "\" tokens to configured context limit\"",
+  "replace": "\" tokens to context limit\""
+ },
+ {
+  "name": "ctx-configured-max",
+  "file": "ui_display.go",
+  "find": "n(math.Max(0, display.usageWindow-tokens))",
+  "replace": "n(display.usageWindow-tokens)"
+ },
+ {
+  "name": "ctx-rollover-tokens",
+  "file": "ui_display.go",
+  "find": "\" tokens to rollover\"",
+  "replace": "\" tokens until rollover\""
+ },
+ {
+  "name": "ctx-rollover-cond",
+  "file": "ui_display.go",
+  "find": "display.rollover == \"enabled\" && display.rolloverAt != nil",
+  "replace": "display.rollover == \"enabled\" || display.rolloverAt != nil"
+ },
+ {
+  "name": "ctx-rollover-max",
+  "file": "ui_display.go",
+  "find": "n(math.Max(0, *display.rolloverAt-tokens))",
+  "replace": "n(*display.rolloverAt-tokens)"
+ },
+ {
+  "name": "ctx-auto",
+  "file": "ui_display.go",
+  "find": "rollover = \"Automatic rollover \" + state",
+  "replace": "rollover = \"Automatic rollover is \" + state"
+ },
+ {
+  "name": "ctx-unknown-state",
+  "file": "ui_display.go",
+  "find": "state = \"unknown\"",
+  "replace": "state = \"n/a\""
+ },
+ {
+  "name": "ctx-used",
+  "file": "ui_display.go",
+  "find": "\" used\"",
+  "replace": "\" tokens used\""
+ },
+ {
+  "name": "ctx-slash",
+  "file": "ui_display.go",
+  "find": "\" / \" + n(display.usageWindow)",
+  "replace": "\" of \" + n(display.usageWindow)"
+ },
+ {
+  "name": "ctx-percent-guard",
+  "file": "ui_display.go",
+  "find": "if display.usagePercent != nil {\n\t\tout +=",
+  "replace": "if display.usagePercent == nil {\n\t\tout +="
+ },
+ {
+  "name": "ctx-percent-fmt",
+  "file": "ui_display.go",
+  "find": "\" (≈\" + uiIntegerString(jsRound(*display.usagePercent)) + \"%)\"",
+  "replace": "\" (≈\" + n(*display.usagePercent) + \"%)\""
+ },
+ {
+  "name": "ctx-order",
+  "file": "ui_display.go",
+  "find": "out := rollover + \"\\n\" + configured + \"\\n≈\"",
+  "replace": "out := configured + \"\\n\" + rollover + \"\\n≈\""
+ },
+ {
+  "name": "hr-images",
+  "file": "ui_display.go",
+  "find": "\"\\nImages \"",
+  "replace": "\"\\nimages \""
+ },
+ {
+  "name": "hr-image-offset",
+  "file": "ui_display.go",
+  "find": "imageOffset := 0.0",
+  "replace": "imageOffset := 1.0"
+ },
+ {
+  "name": "hr-image-cond",
+  "file": "ui_display.go",
+  "find": "display.imageTotal == nil || *display.imageTotal == 0 || display.imageEnd == nil",
+  "replace": "display.imageTotal == nil || display.imageEnd == nil"
+ },
+ {
+  "name": "hr-next",
+  "file": "ui_display.go",
+  "find": "return \"Next offset \" + n(display.end) + \"\\nimageOffset \" + n(*display.imageEnd) + \"\\n\" + summary",
+  "replace": "return \"Next offset \" + n(display.end) + \"\\nimageOffset \" + n(*display.imageEnd) + summary"
+ },
+ {
+  "name": "hr-more-cond",
+  "file": "ui_display.go",
+  "find": "if display.end < display.total || *display.imageEnd < *display.imageTotal {",
+  "replace": "if display.end < display.total && *display.imageEnd < *display.imageTotal {"
+ },
+ {
+  "name": "hr-first-line",
+  "file": "ui_display.go",
+  "find": "if i := strings.IndexByte(first, '\\n'); i >= 0 {",
+  "replace": "if i := strings.IndexByte(first, '\\n'); i < 0 {"
+ },
+ {
+  "name": "hs-matches",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\" matches\")",
+  "replace": "b.WriteString(\" results\")"
+ },
+ {
+  "name": "hs-none",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"No matches\")",
+  "replace": "b.WriteString(\"No results\")"
+ },
+ {
+  "name": "hs-all",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"all sessions\")",
+  "replace": "b.WriteString(\"all projects\")"
+ },
+ {
+  "name": "hs-branch",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"current branch\")",
+  "replace": "b.WriteString(\"this branch\")"
+ },
+ {
+  "name": "hs-skipped",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\" in context skipped\")",
+  "replace": "b.WriteString(\" skipped\")"
+ },
+ {
+  "name": "hs-skipped-cond",
+  "file": "ui_display.go",
+  "find": "if skipped > 0 {",
+  "replace": "if skipped >= 0 {"
+ },
+ {
+  "name": "hs-more",
+  "file": "ui_display.go",
+  "find": "b.WriteString(\"\\nMore results; continue with cursor\")",
+  "replace": "b.WriteString(\"\\nMore results\")"
+ },
+ {
+  "name": "hs-more-default",
+  "file": "ui_display.go",
+  "find": "more = display.footerLength != nil && *display.footerLength > 0",
+  "replace": "more = false"
+ },
+ {
+  "name": "hs-invalid-sections",
+  "file": "ui_display.go",
+  "find": "if len(display.entries) > 0 && !validSections {",
+  "replace": "if len(display.entries) > 0 && validSections {"
+ },
+ {
+  "name": "ds-list-singular",
+  "file": "ui_display.go",
+  "find": "if display.count == 1 {",
+  "replace": "if display.count == 0 {"
+ },
+ {
+  "name": "ds-list-returned",
+  "file": "ui_display.go",
+  "find": "\" returned\"\n\t\t}\n\t\treturn \"No notes yet\"",
+  "replace": "\" found\"\n\t\t}\n\t\treturn \"No notes yet\""
+ },
+ {
+  "name": "ds-none",
+  "file": "ui_display.go",
+  "find": "return \"No notes yet\"",
+  "replace": "return \"No notes\""
+ },
+ {
+  "name": "ds-search",
+  "file": "ui_display.go",
+  "find": "\" matches returned\"",
+  "replace": "\" matches\""
+ },
+ {
+  "name": "ds-search-none",
+  "file": "ui_display.go",
+  "find": "return \"No matches\"\n\tcase \"note-read\"",
+  "replace": "return \"None\"\n\tcase \"note-read\""
+ },
+ {
+  "name": "ds-cleared",
+  "file": "ui_display.go",
+  "find": "return \"Cleared note\"",
+  "replace": "return \"Cleared\""
+ },
+ {
+  "name": "ds-saved",
+  "file": "ui_display.go",
+  "find": "return \"Saved note\"",
+  "replace": "return \"Saved\""
+ },
+ {
+  "name": "ds-write-empty",
+  "file": "ui_display.go",
+  "find": "ok && content == \"\"",
+  "replace": "ok && content != \"\""
+ },
+ {
+  "name": "ds-append",
+  "file": "ui_display.go",
+  "find": "return \"Appended to note\"",
+  "replace": "return \"Appended\""
+ },
+ {
+  "name": "ds-new-context",
+  "file": "ui_display.go",
+  "find": "\"Requested after foreground tools succeed.\\nBackground work continues.\"",
+  "replace": "\"Requested.\\nBackground work continues.\""
+ },
+ {
+  "name": "ds-all",
+  "file": "ui_display.go",
+  "find": "all, _ := args[\"all\"].(bool)\n\t\treturn historySearchSummary",
+  "replace": "all := false\n\t\treturn historySearchSummary"
+ },
+ {
+  "name": "so-note-read",
+  "file": "ui_display.go",
+  "find": "return display.total == 0",
+  "replace": "return display.total != 0"
+ },
+ {
+  "name": "so-notes",
+  "file": "ui_display.go",
+  "find": "return display.count == 0",
+  "replace": "return display.count != 0"
+ },
+ {
+  "name": "so-search",
+  "file": "ui_display.go",
+  "find": "return len(display.entries) == 0",
+  "replace": "return len(display.entries) > 0"
+ },
+ {
+  "name": "so-kinds",
+  "file": "ui_display.go",
+  "find": "case \"context\", \"new-context\", \"note-write\", \"note-append\":\n\t\treturn true",
+  "replace": "case \"context\", \"new-context\", \"note-write\":\n\t\treturn true"
+ },
+ {
+  "name": "sec-footer",
+  "file": "ui_display.go",
+  "find": "if display.kind == \"history-search\" && display.footerLength != nil {",
+  "replace": "if display.kind == \"history-read\" && display.footerLength != nil {"
+ },
+ {
+  "name": "sec-tile",
+  "file": "ui_display.go",
+  "find": "if start != bodyLength+1 {",
+  "replace": "if start > bodyLength+1 {"
+ },
+ {
+  "name": "sec-next",
+  "file": "ui_display.go",
+  "find": "start += l + 1",
+  "replace": "start += l"
+ },
+ {
+  "name": "sec-header-trim",
+  "file": "ui_display.go",
+  "find": "header: uiTrimEnd(raw[headerStart:bodyStart])",
+  "replace": "header: raw[headerStart:bodyStart]"
+ },
+ {
+  "name": "sec-valid-header",
+  "file": "ui_display.go",
+  "find": "span.headerLength >= 0 && span.headerLength <= span.length &&",
+  "replace": "span.headerLength >= 0 &&"
+ },
+ {
+  "name": "sec-valid-body",
+  "file": "ui_display.go",
+  "find": "float64(start)+span.length <= float64(bodyLength)",
+  "replace": "float64(start)+span.length <= float64(bodyLength)+1"
+ },
+ {
+  "name": "sec-valid-int",
+  "file": "ui_display.go",
+  "find": "return isInteger(span.headerLength) && isInteger(span.length) &&",
+  "replace": "return isInteger(span.headerLength) &&"
+ },
+ {
+  "name": "sec-footer-valid",
+  "file": "ui_display.go",
+  "find": "return isInteger(length) && length >= 0 && length <= float64(rawLength)",
+  "replace": "return length >= 0 && length <= float64(rawLength)"
+ },
+ {
+  "name": "sec-read-span",
+  "file": "ui_display.go",
+  "find": "return []historySpan{{headerLength: *display.headerLength, length: float64(rawLength)}}",
+  "replace": "return []historySpan{{headerLength: *display.headerLength, length: float64(rawLength - 1)}}"
+ },
+ {
+  "name": "sec-split",
+  "file": "ui_display.go",
+  "find": "if split1 || split2 || split3 {",
+  "replace": "if split1 || split2 || split3 && false {"
+ },
+ {
+  "name": "n-negzero",
+  "file": "ui_display.go",
+  "find": "neg := math.Signbit(value)",
+  "replace": "neg := value < 0"
+ },
+ {
+  "name": "n-round",
+  "file": "ui_display.go",
+  "find": "roundUp := frac[3] >= '5'",
+  "replace": "roundUp := frac[3] > '5'"
+ },
+ {
+  "name": "n-group",
+  "file": "ui_display.go",
+  "find": "\t\tb.WriteByte(',')\n\t\tb.WriteString(digits[i : i+3])",
+  "replace": "\t\tb.WriteString(digits[i : i+3])"
+ },
+ {
+  "name": "n-frac-trim",
+  "file": "ui_display.go",
+  "find": "frac = strings.TrimRight(frac, \"0\")",
+  "replace": ""
+ },
+ {
+  "name": "n-lead",
+  "file": "ui_display.go",
+  "find": "if lead == 0 {\n\t\tlead = 3\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "int-zero",
+  "file": "ui_display.go",
+  "find": "func uiIntegerString(x float64) string {\n\tif x == 0 {\n\t\treturn \"0\"\n\t}",
+  "replace": "func uiIntegerString(x float64) string {"
+ },
+ {
+  "name": "do-context-rollover",
+  "file": "ui_display.go",
+  "find": "if s != \"enabled\" && s != \"disabled\" && s != \"unsupported\" {",
+  "replace": "if s != \"enabled\" && s != \"disabled\" {"
+ },
+ {
+  "name": "do-context-usage",
+  "file": "ui_display.go",
+  "find": "if !tokensPresent || !percentPresent || !windowOK {",
+  "replace": "if !windowOK || (false && !tokensPresent && !percentPresent) {"
+ },
+ {
+  "name": "do-context-rolloverat",
+  "file": "ui_display.go",
+  "find": "if !optionalNumbers(m, \"rolloverAt\") {",
+  "replace": "if false {"
+ },
+ {
+  "name": "do-notes-count",
+  "file": "ui_display.go",
+  "find": "count, ok := numberOf(m, \"count\")\n\t\tif !ok ||",
+  "replace": "count, ok := numberOf(m, \"count\")\n\t\tif false ||"
+ },
+ {
+  "name": "do-notes-more",
+  "file": "ui_display.go",
+  "find": "more, ok := optBool(m, \"more\")\n\t\tif !ok {\n\t\t\treturn nil\n\t\t}\n\t\td.more = more\n\t\treturn d\n\tcase \"note-read\"",
+  "replace": "more, _ := optBool(m, \"more\")\n\t\td.more = more\n\t\treturn d\n\tcase \"note-read\""
+ },
+ {
+  "name": "do-note-read",
+  "file": "ui_display.go",
+  "find": "p, ok := isPage(m)\n\t\tif !ok || !optionalNumbers(m, \"headerLength\") {",
+  "replace": "p, ok := isPage(m)\n\t\tif !ok {"
+ },
+ {
+  "name": "do-history-read",
+  "file": "ui_display.go",
+  "find": "if !ok || !hok || !optionalNumbers(m, \"imageOffset\", \"imageEnd\", \"imageTotal\") {",
+  "replace": "if !ok || !hok {"
+ },
+ {
+  "name": "do-search-entries",
+  "file": "ui_display.go",
+  "find": "raw, ok := m[\"entries\"].([]any)\n\t\tif !ok ||",
+  "replace": "raw, ok := m[\"entries\"].([]any)\n\t\tif false ||"
+ },
+ {
+  "name": "do-search-span",
+  "file": "ui_display.go",
+  "find": "span, ok := isSpan(item)\n\t\t\tif !ok {\n\t\t\t\treturn nil\n\t\t\t}",
+  "replace": "span, _ := isSpan(item)"
+ },
+ {
+  "name": "do-kinds",
+  "file": "ui_display.go",
+  "find": "case \"note-write\", \"note-append\", \"new-context\":",
+  "replace": "case \"note-write\", \"note-append\":"
+ },
+ {
+  "name": "json-context-order",
+  "file": "ui_display.go",
+  "find": "dst = numberKey(dst, \"contextWindow\", d.usageWindow)",
+  "replace": "dst = numberKey(dst, \"contextWindowX\", d.usageWindow)"
+ },
+ {
+  "name": "json-notes-count-order",
+  "file": "ui_display.go",
+  "find": "dst = optNumberJSON(dst, \"headerLength\", d.headerLength)\n\t\tdst = numberKey(dst, \"count\", d.count)",
+  "replace": "dst = numberKey(dst, \"count\", d.count)\n\t\tdst = optNumberJSON(dst, \"headerLength\", d.headerLength)"
+ },
+ {
+  "name": "json-notes-more",
+  "file": "ui_display.go",
+  "find": "if d.more != nil {\n\t\t\tdst = append(dst, `,\"more\":`...)\n\t\t\tdst = strconv.AppendBool(dst, *d.more)\n\t\t}\n\tcase \"note-read\"",
+  "replace": "case \"note-read\""
+ },
+ {
+  "name": "json-noteread-order",
+  "file": "ui_display.go",
+  "find": "dst = numberKey(dst, \"offset\", d.offset)\n\t\tdst = numberKey(dst, \"end\", d.end)\n\t\tdst = numberKey(dst, \"total\", d.total)\n\tcase \"history-search\"",
+  "replace": "dst = numberKey(dst, \"end\", d.end)\n\t\tdst = numberKey(dst, \"offset\", d.offset)\n\t\tdst = numberKey(dst, \"total\", d.total)\n\tcase \"history-search\""
+ },
+ {
+  "name": "json-search-footer",
+  "file": "ui_display.go",
+  "find": "dst = optNumberJSON(dst, \"footerLength\", d.footerLength)",
+  "replace": "dst = optNumberJSON(dst, \"footer\", d.footerLength)"
+ },
+ {
+  "name": "json-search-skipped",
+  "file": "ui_display.go",
+  "find": "dst = optNumberJSON(dst, \"skipped\", d.skipped)",
+  "replace": ""
+ },
+ {
+  "name": "json-span-key",
+  "file": "ui_display.go",
+  "find": "dst = numberKey(dst, \"length\", e.length)",
+  "replace": "dst = numberKey(dst, \"len\", e.length)"
+ },
+ {
+  "name": "json-read-image",
+  "file": "ui_display.go",
+  "find": "dst = optNumberJSON(dst, \"imageEnd\", d.imageEnd)",
+  "replace": "dst = optNumberJSON(dst, \"imageStop\", d.imageEnd)"
+ },
+ {
+  "name": "json-context-usage-null",
+  "file": "ui_display.go",
+  "find": "dst = append(dst, `,\"percent\":`...)",
+  "replace": "dst = append(dst, `,\"pct\":`...)"
+ },
+ {
+  "name": "json-context-rollover",
+  "file": "ui_display.go",
+  "find": "dst = append(dst, `,\"rollover\":\"`...)",
+  "replace": "dst = append(dst, `,\"state\":\"`...)"
+ },
+ {
+  "name": "ctor-notes-more",
+  "file": "ui_display.go",
+  "find": "if more {\n\t\td.more = &more\n\t}",
+  "replace": "d.more = &more"
+ },
+ {
+  "name": "ctor-noteread-kind",
+  "file": "ui_display.go",
+  "find": "kind:         \"note-read\",",
+  "replace": "kind:         \"note-write\","
+ },
+ {
+  "name": "ctor-history-skipped",
+  "file": "ui_display.go",
+  "find": "skipped:      fl(skipped),",
+  "replace": "skipped:      fl(0),"
+ },
+ {
+  "name": "ctor-history-more",
+  "file": "ui_display.go",
+  "find": "more:         &more,\n\t\tskipped",
+  "replace": "more:         new(bool),\n\t\tskipped"
+ },
+ {
+  "name": "ctor-history-read-offset",
+  "file": "ui_display.go",
+  "find": "imageOffset:  fl(imageOffset),",
+  "replace": "imageOffset:  fl(0),"
+ },
+ {
+  "name": "ctor-context-rolloverat",
+  "file": "ui_display.go",
+  "find": "if rolloverAt != nil {\n\t\td.rolloverAt = fl(*rolloverAt)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ctor-context-percent",
+  "file": "ui_display.go",
+  "find": "d.usagePercent = usage.percent",
+  "replace": "d.usagePercent = nil"
+ },
+ {
+  "name": "site-context-kind",
+  "file": "context_tools.go",
+  "find": "displayKind(\"context\")",
+  "replace": "displayKind(\"new-context\")"
+ },
+ {
+  "name": "site-context-rollover",
+  "file": "context_tools.go",
+  "find": "displayContext(usage, rollover, rolloverAt)",
+  "replace": "displayContext(usage, rollover, nil)"
+ },
+ {
+  "name": "site-new-context",
+  "file": "context_tools.go",
+  "find": "displayKind(\"new-context\")",
+  "replace": "displayKind(\"context\")"
+ },
+ {
+  "name": "site-note-read",
+  "file": "notes.go",
+  "find": "displayNoteRead(headerLength, at, end, total)",
+  "replace": "displayNoteRead(0, at, end, total)"
+ },
+ {
+  "name": "site-note-write",
+  "file": "notes.go",
+  "find": "displayKind(\"note-write\")",
+  "replace": "displayKind(\"note-append\")"
+ },
+ {
+  "name": "site-note-append",
+  "file": "notes.go",
+  "find": "displayKind(\"note-append\")",
+  "replace": "displayKind(\"note-write\")"
+ },
+ {
+  "name": "site-notes-page",
+  "file": "paging.go",
+  "find": "displayNotes(page.kind, headerLength, count, page.offset, end, total, page.more)",
+  "replace": "displayNotes(page.kind, headerLength, count, page.offset, end, total, false)"
+ },
+ {
+  "name": "site-notes-count",
+  "file": "paging.go",
+  "find": "displayNotes(page.kind, headerLength, count, page.offset, end, total, page.more)",
+  "replace": "displayNotes(page.kind, headerLength, count+1, page.offset, end, total, page.more)"
+ },
+ {
+  "name": "site-history-search-footer",
+  "file": "history_pages.go",
+  "find": "displayHistorySearch(page.spans, u16len(tail), page.continuation.more, matches.skipped)",
+  "replace": "displayHistorySearch(page.spans, 0, page.continuation.more, matches.skipped)"
+ },
+ {
+  "name": "site-history-search-skipped",
+  "file": "history_pages.go",
+  "find": "displayHistorySearch(page.spans, u16len(tail), page.continuation.more, matches.skipped)",
+  "replace": "displayHistorySearch(page.spans, u16len(tail), page.continuation.more, 0)"
+ },
+ {
+  "name": "site-history-read-images",
+  "file": "history_pages.go",
+  "find": "displayHistoryRead(u16len(header), offset, end, total, imageOffset, imageEnd, len(item.images))",
+  "replace": "displayHistoryRead(u16len(header), offset, end, total, imageOffset, imageEnd, 0)"
+ },
+ {
+  "name": "site-history-read-header",
+  "file": "history_pages.go",
+  "find": "displayHistoryRead(u16len(header), offset, end, total, imageOffset, imageEnd, len(item.images))",
+  "replace": "displayHistoryRead(0, offset, end, total, imageOffset, imageEnd, len(item.images))"
+ }
+]

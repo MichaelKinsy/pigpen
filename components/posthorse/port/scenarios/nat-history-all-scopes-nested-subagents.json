@@ -1,0 +1,137 @@
+{
+ "name": "nat-history-all-scopes-nested-subagents",
+ "description": "native-host.ts:1507 all-session history scopes project sessions and their nested subagents: top-level archives of this project and of a foreign project, and nested subagent sessions (run-1/run-0) of each whose own cwd is the other project's; an all-session search finds this project's archive and its nested child but neither foreign one, and reading the foreign archive and the foreign-rooted child fails while the own ones read.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-01-00-000Z_a1111111-1111-4111-8111-111111111111.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"a1111111-1111-4111-8111-111111111111\", \"timestamp\": \"2026-11-06T10:01:00.000Z\", \"cwd\": \"{{cwd}}-foreign\"}\n{\"type\": \"message\", \"id\": \"sfuser001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:01:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"SCOPE_NEEDLE foreign\", \"timestamp\": 1793000061000}}\n{\"type\": \"message\", \"id\": \"sfreply01\", \"parentId\": \"sfuser001\", \"timestamp\": \"2026-11-06T10:01:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Archive saved.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000062000}}\n",
+   "2026-11-06T10-02-00-000Z_a2222222-2222-4222-8222-222222222222.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"a2222222-2222-4222-8222-222222222222\", \"timestamp\": \"2026-11-06T10:02:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"souser001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:02:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"SCOPE_NEEDLE own\", \"timestamp\": 1793000121000}}\n{\"type\": \"message\", \"id\": \"soreply01\", \"parentId\": \"souser001\", \"timestamp\": \"2026-11-06T10:02:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Archive saved.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000122000}}\n",
+   "2026-11-06T10-01-00-000Z_a1111111-1111-4111-8111-111111111111/run-1/run-0/2026-11-06T10-03-00-000Z_a3333333-3333-4333-8333-333333333333.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"a3333333-3333-4333-8333-333333333333\", \"timestamp\": \"2026-11-06T10:03:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sguser001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:03:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"SCOPE_NEEDLE foreign child\", \"timestamp\": 1793000181000}}\n{\"type\": \"message\", \"id\": \"sgreply01\", \"parentId\": \"sguser001\", \"timestamp\": \"2026-11-06T10:03:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Archive saved.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000182000}}\n",
+   "2026-11-06T10-02-00-000Z_a2222222-2222-4222-8222-222222222222/run-1/run-0/2026-11-06T10-04-00-000Z_a4444444-4444-4444-8444-444444444444.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"a4444444-4444-4444-8444-444444444444\", \"timestamp\": \"2026-11-06T10:04:00.000Z\", \"cwd\": \"{{cwd}}-foreign\"}\n{\"type\": \"message\", \"id\": \"shuser001\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:04:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"SCOPE_NEEDLE own child\", \"timestamp\": 1793000241000}}\n{\"type\": \"message\", \"id\": \"shreply01\", \"parentId\": \"shuser001\", \"timestamp\": \"2026-11-06T10:04:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Archive saved.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000242000}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "SCOPE_NEEDLE",
+      "all": true
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "sfuser001@kEjKwuz-I5LtKHIxz8V1KaPOQAPr6Oqx3O50BUzcYmA"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "sguser001@aGBsMU9xAReNsZuCFZdg-KlOTfwYcsk-w2GCRGEHCRQ"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "souser001@d-JtmCta21o6eD2oGxu5Ra-g1VRMvawNktZnjB1ef2U"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "shuser001@y71fNQbtd1kmYa70MzMDWkPO7zxrGzq5jh80vNZvMcQ"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "done",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "check",
+   "rpc": {
+    "type": "prompt",
+    "message": "Check archived history."
+   }
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "project": {
+  "skipSystem": true
+ },
+ "normalize": []
+}

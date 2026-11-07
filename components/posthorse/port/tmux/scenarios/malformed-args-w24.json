@@ -1,0 +1,89 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": 3,
+      "path": {},
+      "fixture": "note-short"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": [
+       "bad"
+      ],
+      "id": false,
+      "fixture": "history-empty"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "offset": "x",
+      "limit": null,
+      "fixture": "note-short"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "e1",
+      "offset": 40000,
+      "imageOffset": 2,
+      "limit": 5,
+      "fixture": "history-read-images"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 24,
+ "height": 160,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "malformed-args-w24"
+}

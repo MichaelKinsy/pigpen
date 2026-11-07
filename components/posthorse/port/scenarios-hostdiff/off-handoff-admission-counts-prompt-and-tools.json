@@ -1,0 +1,125 @@
+{
+ "name": "off-handoff-admission-counts-prompt-and-tools",
+ "description": "official-host.ts:484 'explicit handoff admission counts the real prompt and active tool schemas'. A helper hook AFTER posthorse forces the system prompt to a size computed from the model window, the active tool schemas and posthorse's own guidance (the test's arithmetic), so exactly 4,500 chars of handoff fit: a 5,000-char handoff is refused ('too large ... limit 4,500'), a 4,000-char one commits and the fresh window holds only the handoff and the current guidance.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 32768,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": false,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "admit.ts",
+   "source": "export default function (pi) {\n  let promptOptions;\n  let toolTokens;\n  pi.on(\"before_agent_start\", (event) => {\n    promptOptions = event.systemPromptOptions;\n    const active = new Set(pi.getActiveTools());\n    toolTokens = pi.getAllTools().filter((tool) => active.has(tool.name)).reduce(\n      (total, tool) => total + Math.ceil(JSON.stringify({ name: tool.name, description: tool.description, parameters: tool.parameters }).length / 4), 0);\n    return { systemPrompt: \"FORCED_POLICY\" };\n  });\n  pi.on(\"context_with_system\", (event) => {\n    const custom = event.messages.find((message) => message.role === \"custom\" && message.customType === \"posthorse-guidance\");\n    const sectioned = event.messages.find((message) => message.role === \"system\" && typeof message.sections?.posthorse === \"string\");\n    let wrapped;\n    if (custom) {\n      const guidance = typeof custom.content === \"string\" ? custom.content : custom.content.map((p) => p.text ?? \"\").join(\"\\n\");\n      wrapped = `<posthorse>\\n${guidance}\\n</posthorse>`;\n    } else if (sectioned) {\n      wrapped = sectioned.sections.posthorse;\n    } else {\n      throw new Error(\"guidance missing\");\n    }\n    const guidanceTokens = Math.ceil(wrapped.length / 4);\n    const promptTokens = 32768 - 1000 - toolTokens - guidanceTokens - 2250;\n    if (!(promptTokens > 0)) throw new Error(\"no room\");\n    promptOptions.forceSystemPrompt = \"s\".repeat(promptTokens * 4);\n    if (event.messages[0]?.role !== \"system\") throw new Error(\"no system message\");\n    return { messages: [{ ...event.messages[0], content: promptOptions.forceSystemPrompt }, ...event.messages.slice(1)] };\n  });\n}\n"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "{{repeat:x:5000}}"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "{{repeat:y:4000}}"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Fresh."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Admit only a safe handoff."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

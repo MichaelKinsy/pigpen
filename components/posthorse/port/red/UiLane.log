@@ -1,0 +1,19 @@
+UiLane red snapshot (renderers twins, lane E).
+
+Red was recorded against stubs: ui_cards.go/ui.go replaced by renderers that return no rows (a copy of the foundation files
++ ui_display.go + ui_text.go + the twin files in a scratch module; compiles, fails on behaviour). Command:
+  go test -count=1 -run TestTwinRenderersUi  (scratch module, stub renderers)
+
+--- FAIL: TestTwinRenderersUi
+    --- FAIL: all_four_native_cards_identify_pending_calls_and_tolerate_malformed_streamed_arguments
+    --- FAIL: native_cards_cap_actual_wrapped_rows_and_expose_complete_legacy_text_by_click_or_global_expansion
+    --- FAIL: collapsed_previews_show_exactly_the_first_rows_of_the_expanded_text
+    --- FAIL: empty_notes,_no_matches,_actual_errors,_and_submitted_content_stay_distinct
+    --- FAIL: native_rendering_preserves_theme_changes_and_leaves_drag_selection_to_Pi
+    --- FAIL: partial_and_error_results_cannot_inherit_a_success_summary_or_terminal_controls
+    --- FAIL: legacy_history_and_malformed_display_spans_fall_back_to_the_complete_returned_text
+    --- FAIL: owned_reminders_are_compact,_expandable,_and_sanitize_terminal_control_content
+
+TestTwinRenderersUiTools (7 twins that execute the real tools through the Posthorse fixture) could not run in this red: they need
+the other lanes' tools, which did not compile together yet. Note: the renderers were written before their twins were run (the
+twin files were completed after the Go code); the red above is the honest stub-against-twin failure.

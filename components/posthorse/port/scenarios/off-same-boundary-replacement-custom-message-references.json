@@ -1,0 +1,179 @@
+{
+ "name": "off-same-boundary-replacement-custom-message-references",
+ "description": "official-host.ts:1940 'same-boundary replacement and custom-message references recover committed text and images'. A helper turn_end hook (before posthorse) commits, at the boundary of a 600k-char dump, context_edits replacing the seeded owner input and the dump result with text+image content, a visible custom message with text+image, and a 600k-char hidden custom message. The threshold record names the COMMITTED entry ids ('history read id ...', never draft locators or the private original); the model then reads the three entries (ids saved from get_entries while its request is held) and gets each text and image back; the record notes the omitted middle.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000,
+  "input": [
+   "text",
+   "image"
+  ]
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "seed.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"00000000-0000-4000-8000-000000000001\", \"timestamp\": \"2026-01-01T00:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"5eed0001\", \"parentId\": null, \"timestamp\": \"2026-01-01T00:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"PRIVATE_BEFORE_REPLACEMENT\", \"timestamp\": 1767225601000}}\n"
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ],
+  "images": true
+ },
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi) {\n  let dumps = 0;\n  pi.registerTool({\n    name: \"dump\", label: \"Dump\", description: \"Oversized local output\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      const sizes = [600000];\n      const chars = sizes[Math.min(dumps++, sizes.length - 1)];\n      return { content: [{ type: \"text\", text: `DUMP_HEAD ${\"x\".repeat(chars)} DUMP_TAIL` }, ...[]], details: {}, terminate: false };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "repl.ts",
+   "source": "export default function (pi) {\n  const image = { type: \"image\", mimeType: \"image/png\", data: \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\" };\n  const replacement = (kind) => [{ type: \"text\", text: `${kind}_START ${\"r\".repeat(15000)} ${kind}_END` }, image];\n  pi.on(\"turn_end\", (event) => {\n    if (!event.toolResults.some((entry) => entry.toolName === \"dump\")) return;\n    const toolId = event.toolResultEntryIds[0];\n    return {\n      entries: [\n        ...event.entries,\n        { type: \"context_edit\", targetId: \"5eed0001\", replacement: { content: replacement(\"OWNER\") } },\n        { type: \"context_edit\", targetId: toolId, replacement: { content: replacement(\"TOOL\") } },\n        { type: \"custom_message\", customType: \"review-draft\", display: true, content: replacement(\"CUSTOM\") },\n        { type: \"custom_message\", customType: \"context-pressure\", display: false, content: \"p\".repeat(600000) },\n      ],\n    };\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "{{var:e1}}"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "{{var:e2}}"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "{{var:e3}}"
+     }
+    }
+   ],
+   "hold": "h"
+  },
+  {
+   "text": "Recovered replacement evidence."
+  }
+ ],
+ "steps": [
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/seed.jsonl"
+   }
+  },
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Inspect only, then recover the full boundary evidence."
+   },
+   "triggers": [
+    {
+     "when": {
+      "llmRequest": 2
+     },
+     "rpc": {
+      "type": "get_entries"
+     },
+     "quiet": true,
+     "save": {
+      "e1": "data.entries.[targetId=5eed0001].id",
+      "e2": "data.entries.[type=context_edit]!.id",
+      "e3": "data.entries.[customType=review-draft].id"
+     },
+     "release": [
+      "h"
+     ]
+    }
+   ]
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

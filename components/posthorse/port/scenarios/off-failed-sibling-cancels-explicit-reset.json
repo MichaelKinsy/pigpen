@@ -1,0 +1,135 @@
+{
+ "name": "off-failed-sibling-cancels-explicit-reset",
+ "description": "official-host.ts:570 'a failed sibling cancels the explicit reset for the whole batch'. new_context and a failing notes read share one batch: no reset commits and the owner input stays in the next request; a later clean new_context commits (tool_execution_end is not captured: the two tools of one batch complete in a host-timing order that differs between the TS original and the Go port; results are compared as toolResult messages and in the session file).",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "MUST_NOT_COMMIT"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "missing.md"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Handle the failed note first."
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "SUCCESS_AFTER_FAILURE"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Fresh."
+  }
+ ],
+ "steps": [
+  {
+   "name": "batch",
+   "rpc": {
+    "type": "prompt",
+    "message": "BATCH_OWNER_INPUT"
+   }
+  },
+  {
+   "name": "retry",
+   "rpc": {
+    "type": "prompt",
+    "message": "Retry the checkpoint."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

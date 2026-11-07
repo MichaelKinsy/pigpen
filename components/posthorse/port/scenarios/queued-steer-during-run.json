@@ -1,0 +1,16 @@
+{
+  "name": "queued-steer-during-run",
+  "description": "Input queued while the model is still answering: the first response is held, a trigger sends a steer command once the model request has been recorded and then releases the response, and the queued message reaches the model unchanged on the next request (official-host.ts 'queued input arrives unchanged after native automatic rollover', without the rollover). queue_update is captured whole.",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 1000},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "capture": ["response", "extension_ui_request", "extension_error", "agent_start", "agent_end", "turn_start", "turn_end", "tool_execution_start", "tool_execution_end", "message_end", "queue_update"],
+  "llm": [
+    {"toolCalls": [{"name": "get_context_remaining", "arguments": {}}], "hold": "first", "usage": {"input": 1200, "output": 30}},
+    {"text": "Handled the queued input.", "usage": {"input": 1400, "output": 10}}
+  ],
+  "steps": [
+    {"name": "run", "rpc": {"type": "prompt", "message": "Start the run."},
+     "triggers": [{"when": {"llmRequest": 1}, "rpc": {"type": "steer", "message": "QUEUED_OWNER_INPUT: also do this."}, "release": ["first"]}]}
+  ]
+}

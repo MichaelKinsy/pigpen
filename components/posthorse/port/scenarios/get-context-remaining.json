@@ -1,0 +1,14 @@
+{
+  "name": "get-context-remaining",
+  "description": "get_context_remaining with usage known (the first response reported 20,100 tokens) and unknown (the first response after an explicit reset reports no usage, so Pi has no post-compaction measurement) (src/context-tools.ts contextReport).",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 4096},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "llm": [
+    {"toolCalls": [{"name": "get_context_remaining", "arguments": {}}], "usage": {"input": 20000, "output": 100}},
+    {"toolCalls": [{"name": "new_context", "arguments": {"handoff": "Check remaining context in the fresh window."}}], "usage": {"input": 20500, "output": 50}},
+    {"toolCalls": [{"name": "get_context_remaining", "arguments": {}}], "usage": {}},
+    {"text": "Reported.", "usage": {"input": 900, "output": 5}}
+  ],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "How much context is left?"}}]
+}

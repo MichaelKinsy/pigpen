@@ -1,0 +1,47 @@
+NotesStoreLane red run
+======================
+The lane's tests (TestFork_*, TestNote{Scopes,Snapshots,Inventory}_*) run one by one (go test -c; test binary per test)
+against a scratch copy of the package in which the entry points of note_scopes.go, note_snapshots.go,
+note_inventory.go, note_provenance.go, note_evidence.go, note_store.go (notesStore.get/recovery) and
+note_discovery.go (noteDiscovery.list) are replaced by panic("unported: <name>"). The implementation in the worktree
+was written before the tests were run, so this red is a stubbed scratch copy, not a prior commit. Pass = the test
+holds without that code (pure helper tests).
+
+FAIL TestFork_legacyReceiptAliasesCanonicalizeBeforeResolvingTheirSource: extension: recovered from panic in event "session_start": unported: get
+FAIL TestFork_retryInitializationAfterAMissingSourceIsRestored: extension: recovered from panic in event "session_start": unported: get
+FAIL TestFork_retainDeletedWorktreeSourceRootsAcrossProjectsAndInteractiveDescendants: extension: recovered from panic in event "session_start": unported: get
+FAIL TestFork_snapshotTheSelectedBranchWithoutSharingItsWritableCheckpoint: extension: recovered from panic in event "session_start": unported: get
+FAIL TestFork_keepOwnershipAcrossTreeNavigationAdoptionDeletionAndResume: extension: recovered from panic in event "session_start": unported: get
+FAIL TestFork_adoptionReportsAPrivateCopyLeftByFailedSourceVerification: extension: recovered from panic in event "session_start": unported: get
+FAIL TestNoteInventory_listsNewestFirstAndKeepsListingOrderForTies: panic: unported: notesUnder
+FAIL TestNoteInventory_folderFileAndMissingTargets: panic: unported: notesUnder
+FAIL TestNoteInventory_followsAliasesSkipsCyclesAndMissingTargets: panic: unported: notesUnder
+FAIL TestNoteInventory_privateScopesDoNotIndexAliasesOutsideTheScope: panic: unported: notesUnder
+FAIL TestNoteInventory_projectScopeNeverEntersManagedForks: panic: unported: notesUnder
+FAIL TestNoteInventory_skipsEntriesRemovedWhileAnEarlierFolderIsWalked: panic: unported: notesUnder
+FAIL TestNoteInventory_statsEveryEntryOnceInListingOrder: panic: unported: notesUnder
+FAIL TestNoteInventory_stopsWhenCancelledMidWalk: panic: unported: notesUnder
+FAIL TestNoteScopes_parseBindingTable: panic: unported: parseBinding
+FAIL TestNoteScopes_touchRecordsTable: panic: unported: touchRecords
+FAIL TestNoteScopes_bindingsOfFiltersEntries: panic: unported: bindingsOf
+FAIL TestNoteScopes_forkScope: panic: unported: forkScope
+FAIL TestNoteScopes_isoString: panic: unported: noteISOString
+FAIL TestNoteScopes_noteRelative: panic: unported: noteRelative
+FAIL TestNoteScopes_matchNoteDirectory: panic: unported: matchNoteDirectory
+FAIL TestNoteScopes_seedsOfAndOwnedPaths: panic: unported: parseBinding
+FAIL TestNoteScopes_jsonKeyOrder: panic: unported: parseBinding
+FAIL TestNoteScopes_leakedBindingInAddress: panic: unported: parseBinding
+FAIL TestNoteScopes_canonicalPathAndNotePath: panic: unported: canonicalPath
+FAIL TestNoteScopes_addressOf: panic: unported: canonicalPath
+FAIL TestNoteSnapshots_mapBatchBoundsParallelismAndKeepsOrder: panic: unported: mapBatch
+FAIL TestNoteSnapshots_mapBatchSettlesABatchAndStopsAtTheFirstFailure: panic: unported: mapBatch
+FAIL TestNoteSnapshots_snapshotCopiesNotesAndPublishesTheManifest: panic: unported: forkScope
+FAIL TestNoteSnapshots_snapshotPreservesUnexpectedData: panic: unported: forkScope
+FAIL TestNoteSnapshots_snapshotWithoutNotesPublishesNothing: panic: unported: forkScope
+FAIL TestNoteSnapshots_snapshotFailsWhenASourceChangesDuringTheCopy: panic: unported: forkScope
+FAIL TestNoteSnapshots_snapshotFailsForAMissingSource: panic: unported: forkScope
+FAIL TestNoteSnapshots_adoptNoteLeavesAnUnverifiedCopy: panic: unported: forkScope
+FAIL TestNoteSnapshots_ensureManifest: panic: unported: forkScope
+FAIL TestNoteSnapshots_readManifestIgnoresWhatIsNotAManifestOfThatDirectory: panic: unported: forkScope
+PASS TestNoteSnapshots_fileDigest
+PASS TestNoteSnapshots_sameIdentity

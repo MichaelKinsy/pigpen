@@ -1,0 +1,197 @@
+{
+ "name": "nat-fork-retry-missing-source",
+ "description": "native-host.ts:252 fork notes retry initialization after a missing source is restored: the fork's snapshot fails while the source note is gone (extension_error), then the restored source is read through the private copy and a child append never touches it.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "task.md",
+      "content": "parent checkpoint"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent checkpoint saved.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "unlink",
+      "path": ".pi/notes/task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Source removed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "write",
+      "path": ".pi/notes/task.md",
+      "content": "restored checkpoint"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "append",
+      "path": "task.md",
+      "content": "child progress"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child done.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "parent-write",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save the parent checkpoint."
+   }
+  },
+  {
+   "name": "remove-source",
+   "rpc": {
+    "type": "prompt",
+    "message": "Remove the source note."
+   }
+  },
+  {
+   "name": "leaf",
+   "rpc": {
+    "type": "get_entries"
+   },
+   "quiet": true,
+   "save": {
+    "leaf": "data.entries.-1.id"
+   }
+  },
+  {
+   "name": "fork",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork {{var:leaf}} at"
+   }
+  },
+  {
+   "name": "child",
+   "rpc": {
+    "type": "prompt",
+    "message": "Restore the source and continue in the child."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "fsx.ts",
+   "source": "import * as fs from \"node:fs\";\nimport * as path from \"node:path\";\nexport default function (pi: any) {\n  pi.registerTool({\n    name: \"fsx\",\n    label: \"Fsx\",\n    description: \"Harness helper: change the workspace outside the extension under test.\",\n    parameters: {\n      type: \"object\",\n      properties: {\n        op: { type: \"string\" },\n        path: { type: \"string\" },\n        content: { type: \"string\" },\n        target: { type: \"string\" },\n        mtime: { type: \"number\" },\n      },\n      required: [\"op\", \"path\"],\n    },\n    async execute(_id: string, params: any, _signal: any, _update: any, ctx: any) {\n      const p = path.resolve(ctx.cwd, params.path);\n      if (params.op === \"write\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.writeFileSync(p, params.content ?? \"\");\n      } else if (params.op === \"unlink\") {\n        fs.unlinkSync(p);\n      } else if (params.op === \"utimes\") {\n        fs.utimesSync(p, params.mtime, params.mtime);\n      } else if (params.op === \"symlink\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.symlinkSync(path.resolve(ctx.cwd, params.target), p, \"dir\");\n      } else if (params.op === \"find\") {\n        // every regular file named params.content under params.path, with its mtime\n        const found: string[] = [];\n        const walk = (dir: string) => {\n          for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {\n            const full = path.join(dir, entry.name);\n            if (entry.isDirectory()) walk(full);\n            else if (entry.name === params.content) found.push(path.relative(p, full) + \" \" + fs.statSync(full).mtimeMs);\n          }\n        };\n        walk(p);\n        found.sort();\n        return { content: [{ type: \"text\", text: found.join(\"\\n\") || \"none\" }], details: {} };\n      } else if (params.op === \"mkdir\") {\n        fs.mkdirSync(p, { recursive: true });\n      } else {\n        throw new Error(\"fsx: unknown op \" + params.op);\n      }\n      return { content: [{ type: \"text\", text: \"fsx \" + params.op + \" ok\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  ".pi/notes/**"
+ ],
+ "normalize": [
+  {
+   "pattern": "(\"anchors\":\\[\")[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  },
+  {
+   "pattern": "\"mtimeMs\":\\d+(?:\\.\\d+)?,\"ctimeMs\":\\d+(?:\\.\\d+)?,\"ino\":\\d+,\"dev\":\\d+",
+   "replacement": "\"mtimeMs\":<n>,\"ctimeMs\":<n>,\"ino\":<n>,\"dev\":<n>"
+  },
+  {
+   "pattern": "20(?:2[1-9]|[3-9]\\d)-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z",
+   "replacement": "<time-minute>"
+  }
+ ]
+}

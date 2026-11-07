@@ -1,0 +1,21 @@
+NotesToolsLane red snapshot (posthorse C2): twins run against signature stubs
+(port/red/stubs/NotesToolsLane/*.go.txt replacing notes.go, note_guards.go,
+note_tool_effects.go in a scratch copy of the module on xd6702; the real files are the
+implementation). Command:
+  go test -count=1 -run TestTwinPosthorseNotes ./...   (GOWORK = scratch go.work)
+
+--- FAIL: TestTwinPosthorseNotes (0.14s)
+    --- FAIL: notes list and search page every result through the shared budget, including oversized paths
+    --- FAIL: note replacement keeps the existing checkpoint on a real file-size failure
+    --- FAIL: notes list and search follow aliases while skipping cycles and missing targets
+    --- FAIL: notes list and search skip entries removed while an earlier folder is walked
+    --- FAIL: notes list, folder reads and search let Pi keep running and stop when cancelled mid-walk
+    --- FAIL: notes list newest first with sizes, read folders as listings, and search only text notes
+    --- FAIL: notes search stops reading at the requested page, skips notes over 1 MiB and still pages every match
+    --- FAIL: long notes page fully, empty writes clear, appends stay separated, and search centers on the match
+    --- FAIL: appends from concurrent Pi processes never merge records
+    --- FAIL: note guards associate a move only with the immediately preceding update header
+FAIL
+
+All 10 cases fail for behaviour reasons ("unported: src/notes.ts:286" tool errors; empty
+noteOperations results), none for compile errors.

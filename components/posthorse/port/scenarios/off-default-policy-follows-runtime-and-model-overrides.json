@@ -1,0 +1,160 @@
+{
+ "name": "off-default-policy-follows-runtime-and-model-overrides",
+ "description": "official-host.ts:1534 'default policy follows runtime and per-model overrides for guidance, budget and reminders'. The default policy reader follows the host's live settings: after set_auto_compaction(false), get_context_remaining says 'Automatic rollover is disabled'; after set_auto_compaction(true) the per-model reserve override (32,000, global 1,000; the test sets both with applyOverrides) gives rollover line 68,001 in every request's guidance and in get_context_remaining, and the 240,000-char prompt (usage 64,000: reminder band 61,201 to 68,000) earns one routine task-note reminder and no boundary.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 1000,
+   "keepRecentTokens": 20000,
+   "modelOverrides": {
+    "eq-llm/official-posthorse": {
+     "reserveTokens": 32000
+    }
+   }
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 3000,
+    "output": 40
+   }
+  },
+  {
+   "text": "Disabled.",
+   "usage": {
+    "input": 3500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 64000,
+    "output": 40
+   }
+  },
+  {
+   "text": "Checkpoint received.",
+   "usage": {
+    "input": 65000,
+    "output": 40
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "off",
+   "rpc": {
+    "type": "set_auto_compaction",
+    "enabled": false
+   }
+  },
+  {
+   "name": "disabled",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the disabled budget."
+   }
+  },
+  {
+   "name": "on",
+   "rpc": {
+    "type": "set_auto_compaction",
+    "enabled": true
+   }
+  },
+  {
+   "name": "override",
+   "rpc": {
+    "type": "prompt",
+    "message": "{{repeat:p:240000}}"
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

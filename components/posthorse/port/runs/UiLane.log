@@ -1,0 +1,296 @@
+== go vet linux/darwin/windows, race x3, benchmarks, twins check (final.txt)
+vet linux
+vet darwin
+vet windows
+      1     --- PASS: TestTwinRenderersUi/all_four_native_cards_identify_pending_calls_and_tolerate_malformed_streamed_arguments (0.02s)
+      2     --- PASS: TestTwinRenderersUi/all_four_native_cards_identify_pending_calls_and_tolerate_malformed_streamed_arguments (0.03s)
+      1     --- PASS: TestTwinRenderersUi/collapsed_previews_show_exactly_the_first_rows_of_the_expanded_text (1.64s)
+      1     --- PASS: TestTwinRenderersUi/collapsed_previews_show_exactly_the_first_rows_of_the_expanded_text (1.66s)
+      1     --- PASS: TestTwinRenderersUi/collapsed_previews_show_exactly_the_first_rows_of_the_expanded_text (1.69s)
+      2     --- PASS: TestTwinRenderersUi/empty_notes,_no_matches,_actual_errors,_and_submitted_content_stay_distinct (0.01s)
+      1     --- PASS: TestTwinRenderersUi/empty_notes,_no_matches,_actual_errors,_and_submitted_content_stay_distinct (0.02s)
+      1     --- PASS: TestTwinRenderersUi/legacy_history_and_malformed_display_spans_fall_back_to_the_complete_returned_text (0.05s)
+      2     --- PASS: TestTwinRenderersUi/legacy_history_and_malformed_display_spans_fall_back_to_the_complete_returned_text (0.06s)
+      2     --- PASS: TestTwinRenderersUi/native_cards_cap_actual_wrapped_rows_and_expose_complete_legacy_text_by_click_or_global_expansion (0.22s)
+      1     --- PASS: TestTwinRenderersUi/native_cards_cap_actual_wrapped_rows_and_expose_complete_legacy_text_by_click_or_global_expansion (0.23s)
+      3     --- PASS: TestTwinRenderersUi/native_rendering_preserves_theme_changes_and_leaves_drag_selection_to_Pi (0.01s)
+      2     --- PASS: TestTwinRenderersUi/owned_reminders_are_compact,_expandable,_and_sanitize_terminal_control_content (0.01s)
+      1     --- PASS: TestTwinRenderersUi/owned_reminders_are_compact,_expandable,_and_sanitize_terminal_control_content (0.02s)
+      3     --- PASS: TestTwinRenderersUi/partial_and_error_results_cannot_inherit_a_success_summary_or_terminal_controls (0.02s)
+      3     --- PASS: TestTwinRenderersUiTools/context_summaries_preserve_approximation_and_native_disabled,_unsupported,_unknown_states (0.08s)
+      3     --- PASS: TestTwinRenderersUiTools/empty_history_has_one_compact_summary_and_keeps_the_returned_text_on_expansion (0.03s)
+      1     --- PASS: TestTwinRenderersUiTools/history_pages_keep_paging,_metadata,_and_native_image_attachments_without_copied_bodies (0.19s)
+      1     --- PASS: TestTwinRenderersUiTools/history_pages_keep_paging,_metadata,_and_native_image_attachments_without_copied_bodies (0.20s)
+      1     --- PASS: TestTwinRenderersUiTools/history_pages_keep_paging,_metadata,_and_native_image_attachments_without_copied_bodies (0.21s)
+      1     --- PASS: TestTwinRenderersUiTools/history_searches_lead_with_content_and_retain_every_entry_and_recovery_identifier_expanded (0.07s)
+      2     --- PASS: TestTwinRenderersUiTools/history_searches_lead_with_content_and_retain_every_entry_and_recovery_identifier_expanded (0.08s)
+      2     --- PASS: TestTwinRenderersUiTools/new_context_remains_a_conditional_request_and_only_its_committed_message_says_the_window_started (0.04s)
+      1     --- PASS: TestTwinRenderersUiTools/new_context_remains_a_conditional_request_and_only_its_committed_message_says_the_window_started (0.05s)
+      1     --- PASS: TestTwinRenderersUiTools/notes_show_page_range_and_next_offset_even_when_the_preview_fills_the_compact_card (0.23s)
+      2     --- PASS: TestTwinRenderersUiTools/notes_show_page_range_and_next_offset_even_when_the_preview_fills_the_compact_card (0.24s)
+      1     --- PASS: TestTwinRenderersUiTools/paginated_searches_retain_accurate_counts,_spans,_identifiers_and_continuation_in_native_cards (0.30s)
+      2     --- PASS: TestTwinRenderersUiTools/paginated_searches_retain_accurate_counts,_spans,_identifiers_and_continuation_in_native_cards (0.31s)
+      3 --- PASS: TestCleanText (0.00s)
+      3 --- PASS: TestDisplayJSONKeyOrder (0.00s)
+      3 --- PASS: TestDisplayOfRejectsMalformed (0.00s)
+      3 --- PASS: TestHistorySections (0.00s)
+      3 --- PASS: TestLocaleNumber (0.00s)
+      3 --- PASS: TestStripHistoryPrefixes (0.00s)
+      1 --- PASS: TestTwinRenderersUi (2.01s)
+      1 --- PASS: TestTwinRenderersUi (2.03s)
+      1 --- PASS: TestTwinRenderersUi (2.05s)
+      1 --- PASS: TestTwinRenderersUiTools (0.97s)
+      1 --- PASS: TestTwinRenderersUiTools (0.98s)
+      1 --- PASS: TestTwinRenderersUiTools (1.00s)
+BenchmarkCardNotePage40k/collapsed-8         	    1119	   1061897 ns/op	   29360 B/op	     546 allocs/op
+BenchmarkCardNotePage40k/expanded-8          	     168	   7107627 ns/op	 1468683 B/op	   14761 allocs/op
+BenchmarkCardHistoryPage/collapsed-8         	   36702	     32664 ns/op	    4016 B/op	      27 allocs/op
+BenchmarkCardHistoryPage/expanded-8          	     792	   1549026 ns/op	  627122 B/op	    7423 allocs/op
+BenchmarkCardMessage40k/collapsed-8          	    2383	    491441 ns/op	   28312 B/op	     522 allocs/op
+BenchmarkCardMessage40k/expanded-8           	     100	  10466964 ns/op	 2105013 B/op	   22149 allocs/op
+BenchmarkDisplayOf-8                         	 2891745	       438.3 ns/op	     248 B/op	       5 allocs/op
+ok  	github.com/MichaelKinsy/pigpen/posthorse	10.942s
+15 exact twins, 0 skipped
+
+== tmux probe scenarios (compare.py summary)
+== click-card
+clicked-again.txt: same
+clicked.txt: same
+closed.txt: same
+== click-message
+clicked-reminder-again.txt: same
+clicked-reminder.txt: DIFFERS
+  row 11
+    pi : ' ▾ Checkpoint reminder'
+    pig: ' ▸ Checkpoint reminder'
+  row 15
+    pi : ' remember this'
+    pig: ' … ctrl+o to expand'
+  row 16
+    pi : ' remember this'
+    pig: ''
+  row 17
+    pi : ' remember this'
+    pig: ''
+  row 18
+    pi : ' remember this'
+    pig: ''
+  row 19
+    pi : ' LAST LINE'
+    pig: ''
+clicked-window.txt: DIFFERS
+  row 0
+    pi : ' Handoff line 26'
+    pig: ''
+  row 1
+    pi : ' Handoff line 27'
+    pig: ''
+  row 2
+    pi : ' Handoff line 28'
+    pig: ''
+  row 3
+    pi : ' Handoff line 29'
+    pig: ' ▸ Context window started'
+  row 4
+    pi : ' Handoff line 30'
+    pig: ' Earlier conversation remains in history.'
+  row 5
+    pi : ' Handoff line 31'
+    pig: ' Handoff line 1'
+  row 6
+    pi : ' Handoff line 32'
+    pig: ' Handoff line 2'
+  row 7
+    pi : ' Handoff line 33'
+    pig: ' … ctrl+o to expand'
+  ... 42 rows differ
+closed.txt: same
+global-collapsed.txt: same
+global-expanded.txt: same
+== context-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== context-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== context
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== controls-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== controls-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== controls
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== errors-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== errors-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== errors
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== history-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== history-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== history-w60
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== history
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== malformed-args-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== malformed-args-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== malformed-args
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== messages-light
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== messages-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== messages-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== messages
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== new-context-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== new-context-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== new-context
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-pages-light
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-pages-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-pages-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-pages
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-writes-w24
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-writes-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== notes-writes
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== pending-w24
+finished.txt: same
+preparing.txt: same
+running.txt: same
+== pending
+finished-expanded.txt: same
+finished.txt: same
+preparing.txt: same
+running-expanded.txt: same
+running.txt: same
+== resize
+w100-again.txt: same
+w100.txt: same
+w30.txt: same
+w60.txt: same
+== theme-live
+dark-again.txt: same
+dark.txt: same
+light.txt: same
+
+== tmux real scenarios
+== real-context-disabled-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-context-disabled
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-context-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-context
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-history-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-history
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-notes-w40
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-notes
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-reminder
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+== real-rollover
+collapsed-again.txt: same
+collapsed.txt: same
+expanded.txt: same
+
+== after the uireview fixes (U1-U6)
+go vet ./... linux, darwin, windows: clean
+go test -race -count=3 ./... (whole package): ok 366.8s
+TestUiDifferential 656 cases, 0 differ; TestUiSummaries ok (regenerated with run-ts.sh)
+tmux (uireview probes) ur-ctx, ur-notes-w40, ur-history-w8, ur-msgs-w40, ur-big-w40, ur-bigmsg-w100: all screens same (ur-ctx no longer differs)

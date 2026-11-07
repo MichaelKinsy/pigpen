@@ -1,0 +1,119 @@
+{
+ "name": "nat-rollover-namespaced-ask-question-evidence",
+ "description": "native-host.ts:1649 automatic rollover keeps namespaced ask_question as evidence, not owner input (no call namespace): a tool registered with namespace survey is called without a namespace on the call; its output stays tool-result evidence (not an owner answer) in the rollover record and the next request. The variants whose call block carries namespace survey, and the context-edited ones, are not reachable through RPC (see coverage).",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_c9999999-0000-4000-8000-000000000000.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"c9999999-0000-4000-8000-000000000000\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdsetup1\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"Earlier survey setup\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"sdsetup2\", \"parentId\": \"sdsetup1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Ready to inspect only.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000002000}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "ask_question",
+     "arguments": {}
+    },
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "done",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_c9999999-0000-4000-8000-000000000000.jsonl"
+   }
+  },
+  {
+   "name": "survey",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the survey only. Do not deploy."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "ask.ts",
+   "source": "export default function (pi: any) {\n  let open: () => void = () => {};\n  (globalThis as any).__eqAskGate = new Promise<void>((resolve) => { open = resolve; });\n  pi.on(\"tool_execution_end\", (event: any) => { if (event.toolName === \"ask_question\") open(); });\n  pi.registerTool({\n    name: \"ask_question\",\n    namespace: { name: \"survey\" },\n    label: \"Survey\",\n    description: \"Query an external survey\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"SURVEY_OUTPUT: deployment approved\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"dump\",\n    label: \"Dump\",\n    description: \"Large local result to exercise native automatic rollover\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      await (globalThis as any).__eqAskGate;\n      return { content: [{ type: \"text\", text: \"x\".repeat(600000) }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true,
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  },
+  {
+   "pattern": "(use history read\\): )[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  }
+ ],
+ "collapseRuns": 64
+}

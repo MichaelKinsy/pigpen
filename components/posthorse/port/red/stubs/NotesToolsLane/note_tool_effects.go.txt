@@ -1,0 +1,32 @@
+package posthorse
+
+// Red-phase stub of note_tool_effects.go (port of src/note-tool-effects.ts): signatures only.
+type noteAction = string
+
+const (
+	noteActionRead        noteAction = "read"
+	noteActionWrite       noteAction = "write"
+	noteActionClear       noteAction = "clear"
+	noteActionAppend      noteAction = "append"
+	noteActionEdit        noteAction = "edit"
+	noteActionCreate      noteAction = "create"
+	noteActionCreateEmpty noteAction = "create-empty"
+	noteActionDelete      noteAction = "delete"
+)
+
+type noteOperation struct {
+	path     string
+	action   noteAction
+	scope    string
+	hasScope bool
+}
+
+type noteResult struct {
+	isError bool
+	details any
+}
+
+func bareToolName(name string) string                                          { return "" }
+func noteOperations(tool string, input any) []noteOperation                    { return nil }
+func noteOperationKind(action noteAction) string                               { return "" }
+func verifiedNoteOperations(tool string, input any, result noteResult) []noteOperation { return nil }

@@ -1,0 +1,86 @@
+{
+ "name": "nat-settlement-in-reminder-band-followup-stop",
+ "description": "native-host.ts:2439 public answer in the reminder band preserves native settlement (continuation=followUp, stopReason=stop): a final answer reported inside the band (usage 76,000) must not wake a finished agent or get a checkpoint reminder, except where a steered/follow-up/boundary continuation keeps the run going (then the reminder arrives with the routine copy and none of the stop-work copy); a skipped final answer does not consume the reminder, which is still delivered once per window. (The upstream 305,000-character prompt is replaced by the reported usage.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "text": "Final report.",
+   "usage": {
+    "input": 76000,
+    "output": 100
+   }
+  },
+  {
+   "text": "Continued report.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "text": "Checkpoint received.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "work",
+   "rpc": {
+    "type": "prompt",
+    "message": "Start the requested work."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "continue.ts",
+   "source": "export default function (pi: any) {\n  pi.on(\"turn_end\", (event: any) => {\n    const text = (event.message?.content ?? []).map((c: any) => (c.type === \"text\" ? c.text : \"\")).join(\"\");\n    if (text === \"Final report.\") pi.sendUserMessage(\"Continue the requested work.\", { deliverAs: \"followUp\" });\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true
+ },
+ "normalize": []
+}

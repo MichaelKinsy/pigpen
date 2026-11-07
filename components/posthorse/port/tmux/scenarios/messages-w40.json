@@ -1,0 +1,77 @@
+{
+ "replies": [
+  "unused"
+ ],
+ "width": 40,
+ "height": 110,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "/pt message reminder"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message reminder-short"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message window"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message window-wide"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message controls"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "messages-w40"
+}

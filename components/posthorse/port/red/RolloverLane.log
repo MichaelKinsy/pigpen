@@ -1,0 +1,43 @@
+RolloverLane red log.
+Run: tests of this lane against signature-only stubs of retention.go, reminders.go and rollover.go (bodies panic("unported: <ts file:line>")),
+in an in-container copy of the package, other lanes' test files removed. Command per line: go test -run <test> on the container.
+FAIL = fails on behaviour/unported (a panic in the stub or a failed expectation on the unregistered hooks); PASS = tests of SDK functions that
+retention.go calls (they pass on the stub by design: DefaultCompactionSettings, FindCutPoint, budgetFor/ShouldCompact/CalculateCost).
+Note: the production files were written before this log was produced; the stub run is the red state of the tests, kept for the record.
+
+PASS ^TestRetentionDefaultCompactionSettingsMatchPi$
+FAIL ^TestRetentionEstimateTokensMatchesPi$
+    --- FAIL: TestRetentionEstimateTokensMatchesPi (0.01s)
+    panic: unported: retention.ts:56 [recovered, repanicked]
+PASS ^TestRetentionFindCutPointMatchesPi$
+FAIL ^TestAutomaticRecoveryMatchesOracle$
+    --- FAIL: TestAutomaticRecoveryMatchesOracle (0.01s)
+    panic: unported: retention.ts:184 [recovered, repanicked]
+PASS ^TestTwinRolloverCost$
+FAIL ^TestTwinPosthorseRollover$/^budget_policy_sends_one_reminder
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/budget_policy_sends_one_reminder_and_lets_Pi_own_rollover_(window=${contextWindow},_reserve=${reserve}) (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^reminders_respect_live_pending
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/reminders_respect_live_pending_messages_and_tool_calls_even_with_a_stop_reason (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^a_large_reserve_does_not_send
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/a_large_reserve_does_not_send_checkpoint_reminders_in_a_fresh_window (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^reminder_lookups_are_leaf
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/reminder_lookups_are_leaf-certified_and_preserve_the_full_kept_range_(${archived}_archived_entries) (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^disabling_compaction_filters
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/disabling_compaction_filters_persisted_reminders_without_changing_history_or_deduplication (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^reminder-free_context_and_fork
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/reminder-free_context_and_fork_reminder_filtering_never_read_history (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^context_filtering_removes
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/context_filtering_removes_reminders_from_an_older_window_or_a_different_budget (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^a_reminder_before_a_native
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/a_reminder_before_a_native_compaction_does_not_suppress_the_next_reminder (0.00s)
+FAIL ^TestTwinPosthorseRollover$/^new_context_beside_a_failed
+    --- FAIL: TestTwinPosthorseRollover (0.00s)
+        --- FAIL: TestTwinPosthorseRollover/new_context_beside_a_failed_sibling_tool_does_not_suppress_the_reminder (0.00s)

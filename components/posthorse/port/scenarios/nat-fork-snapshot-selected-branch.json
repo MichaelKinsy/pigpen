@@ -1,0 +1,482 @@
+{
+ "name": "nat-fork-snapshot-selected-branch",
+ "description": "native-host.ts:416 fork notes snapshot the selected branch without sharing its writable checkpoint: the child's private copy keeps the parent's mtime and leaves unrelated notes behind, the parent's listing collapses identical copies and lists diverged ones, a labeled live reference shows the parent's newer note, child appends stay private, and a resumed child keeps its copy.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "task.md",
+      "content": "parent checkpoint"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "utimes",
+      "path": ".pi/notes/task.md",
+      "mtime": 1577836800
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "write",
+      "path": ".pi/notes/untouched.md",
+      "content": "not part of the branch"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent ready.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "find",
+      "path": ".pi/notes/.forks",
+      "content": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "find",
+      "path": ".pi/notes/.forks",
+      "content": "untouched.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child looked.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "list"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "task.md",
+      "content": "parent advanced"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent advanced.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md",
+      "scope": "{{cwd}}/.pi/notes"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child compared.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "list"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent listed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "append",
+      "path": "task.md",
+      "content": "child progress"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child progressed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent read.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Resumed child read.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "parent-file",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "parent": "data.sessionFile"
+   }
+  },
+  {
+   "name": "parent-setup",
+   "rpc": {
+    "type": "prompt",
+    "message": "Write the parent checkpoint and add an unrelated note."
+   }
+  },
+  {
+   "name": "leaf",
+   "rpc": {
+    "type": "get_entries"
+   },
+   "quiet": true,
+   "save": {
+    "leaf": "data.entries.-1.id"
+   }
+  },
+  {
+   "name": "fork",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork {{var:leaf}} at"
+   }
+  },
+  {
+   "name": "child-file",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "child": "data.sessionFile"
+   }
+  },
+  {
+   "name": "child-first",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the inherited checkpoint."
+   }
+  },
+  {
+   "name": "to-parent",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "parent-advance",
+   "rpc": {
+    "type": "prompt",
+    "message": "List and advance the parent checkpoint."
+   }
+  },
+  {
+   "name": "to-child",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:child}}"
+   }
+  },
+  {
+   "name": "child-compare",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the snapshot and compare it with the live parent note."
+   }
+  },
+  {
+   "name": "to-parent-again",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "parent-list",
+   "rpc": {
+    "type": "prompt",
+    "message": "List the notes."
+   }
+  },
+  {
+   "name": "to-child-again",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:child}}"
+   }
+  },
+  {
+   "name": "child-append",
+   "rpc": {
+    "type": "prompt",
+    "message": "Append and read."
+   }
+  },
+  {
+   "name": "to-parent-final",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "parent-read",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the parent note."
+   }
+  },
+  {
+   "name": "resume-child",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:child}}"
+   }
+  },
+  {
+   "name": "child-resumed",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read after the resume."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "fsx.ts",
+   "source": "import * as fs from \"node:fs\";\nimport * as path from \"node:path\";\nexport default function (pi: any) {\n  pi.registerTool({\n    name: \"fsx\",\n    label: \"Fsx\",\n    description: \"Harness helper: change the workspace outside the extension under test.\",\n    parameters: {\n      type: \"object\",\n      properties: {\n        op: { type: \"string\" },\n        path: { type: \"string\" },\n        content: { type: \"string\" },\n        target: { type: \"string\" },\n        mtime: { type: \"number\" },\n      },\n      required: [\"op\", \"path\"],\n    },\n    async execute(_id: string, params: any, _signal: any, _update: any, ctx: any) {\n      const p = path.resolve(ctx.cwd, params.path);\n      if (params.op === \"write\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.writeFileSync(p, params.content ?? \"\");\n      } else if (params.op === \"unlink\") {\n        fs.unlinkSync(p);\n      } else if (params.op === \"utimes\") {\n        fs.utimesSync(p, params.mtime, params.mtime);\n      } else if (params.op === \"symlink\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.symlinkSync(path.resolve(ctx.cwd, params.target), p, \"dir\");\n      } else if (params.op === \"find\") {\n        // every regular file named params.content under params.path, with its mtime\n        const found: string[] = [];\n        const walk = (dir: string) => {\n          for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {\n            const full = path.join(dir, entry.name);\n            if (entry.isDirectory()) walk(full);\n            else if (entry.name === params.content) found.push(path.relative(p, full) + \" \" + fs.statSync(full).mtimeMs);\n          }\n        };\n        walk(p);\n        found.sort();\n        return { content: [{ type: \"text\", text: found.join(\"\\n\") || \"none\" }], details: {} };\n      } else if (params.op === \"mkdir\") {\n        fs.mkdirSync(p, { recursive: true });\n      } else {\n        throw new Error(\"fsx: unknown op \" + params.op);\n      }\n      return { content: [{ type: \"text\", text: \"fsx \" + params.op + \" ok\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  ".pi/notes/**"
+ ],
+ "normalize": [
+  {
+   "pattern": "(\"anchors\":\\[\")[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  },
+  {
+   "pattern": "\"mtimeMs\":\\d+(?:\\.\\d+)?,\"ctimeMs\":\\d+(?:\\.\\d+)?,\"ino\":\\d+,\"dev\":\\d+",
+   "replacement": "\"mtimeMs\":<n>,\"ctimeMs\":<n>,\"ino\":<n>,\"dev\":<n>"
+  },
+  {
+   "pattern": "20(?:2[1-9]|[3-9]\\d)-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z",
+   "replacement": "<time-minute>"
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+{
+ "name": "nat-handoff-budget-counts-namespaced-tools",
+ "description": "native-host.ts:2246 namespaced tools count toward the fresh handoff budget: with a 32,768-token window and an active namespaced tool whose description is 52,000 characters, a 20,000-character new_context handoff is refused (Handoff is too large for the active model) and no Posthorse boundary is committed.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 32768,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "{{repeat:h:20000}}"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Done.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "save",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save the handoff."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "catalog.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"catalog\",\n    namespace: { name: \"example\" },\n    label: \"Catalog\",\n    description: \"d\".repeat(52000),\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"unused\" }], details: undefined };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "args": [
+  "--tools",
+  "new_context,catalog"
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "collapseRuns": 64,
+ "normalize": [
+  {
+   "pattern": "characters; limit [0-9,]+\\)",
+   "replacement": "characters; limit <host-dependent>)"
+  }
+ ]
+}

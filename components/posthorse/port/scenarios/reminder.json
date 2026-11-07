@@ -1,0 +1,16 @@
+{
+  "name": "reminder",
+  "description": "A working turn whose usage lands in the reminder band (context 20,000, reserve 4,000: band 14,401 to 16,000) makes posthorse send one routine task-note reminder as a steer message (src/reminders.ts reminderDecision, src/rollover.ts turn_end). A second turn in the band does not repeat it; the final answer ends the run with none.",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 20000, "maxTokens": 1000},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 4000, "keepRecentTokens": 2000}, "retry": {"enabled": false}},
+  "session": {},
+  "project": {"messageFields": ["customType"]},
+  "llm": [
+    {"toolCalls": [{"name": "get_context_remaining", "arguments": {}}], "usage": {"input": 14800, "output": 100}},
+    {"toolCalls": [{"name": "get_context_remaining", "arguments": {}}], "usage": {"input": 15200, "output": 50}},
+    {"text": "Done.", "usage": {"input": 15300, "output": 10}}
+  ],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "Keep working on the task."}}],
+  "captureFiles": [{"root": "sessions", "glob": "**/*.jsonl", "drop": ["**.sections.docs", "**.sections.preamble"]}]
+}

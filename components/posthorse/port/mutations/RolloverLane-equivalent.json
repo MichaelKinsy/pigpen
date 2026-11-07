@@ -1,0 +1,26 @@
+[
+ {
+  "name": "recovery-handoff-limit-exclusive",
+  "file": "retention.go",
+  "find": "if u16len(handoff) > limit {",
+  "replace": "if u16len(handoff) >= limit {"
+ },
+ {
+  "name": "budget-window-from-usage-lost",
+  "file": "reminders.go",
+  "find": "\tb, err := budgetFor(host, &window)",
+  "replace": "\tb, err := budgetFor(host, nil)\n\t_ = window"
+ },
+ {
+  "name": "filter-always-replaces",
+  "file": "rollover.go",
+  "find": "if changed || reordered {",
+  "replace": "if changed || reordered || true {"
+ },
+ {
+  "name": "fresh-boundary-included",
+  "file": "rollover.go",
+  "find": "projected[boundary+1:]",
+  "replace": "projected[boundary:]"
+ }
+]

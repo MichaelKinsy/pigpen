@@ -1,0 +1,75 @@
+{
+ "name": "real-rollover",
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "state.md",
+      "content": "progress"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "tool_calls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Goal: finish the port.\nDecision 0: keep route 0\nDecision 1: keep route 1\nDecision 2: keep route 2\nDecision 3: keep route 3\nDecision 4: keep route 4\nDecision 5: keep route 5\nDecision 6: keep route 6\nDecision 7: keep route 7\nDecision 8: keep route 8\nDecision 9: keep route 9\nDecision 10: keep route 10\nDecision 11: keep route 11\nDecision 12: keep route 12\nDecision 13: keep route 13\nDecision 14: keep route 14\nDecision 15: keep route 15\nDecision 16: keep route 16\nDecision 17: keep route 17\nDecision 18: keep route 18\nDecision 19: keep route 19\nDecision 20: keep route 20\nDecision 21: keep route 21\nDecision 22: keep route 22\nDecision 23: keep route 23\nDecision 24: keep route 24\nDecision 25: keep route 25\nDecision 26: keep route 26\nDecision 27: keep route 27\nDecision 28: keep route 28\nDecision 29: keep route 29"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 80,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 60
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  }
+ }
+}

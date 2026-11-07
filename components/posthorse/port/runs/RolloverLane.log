@@ -1,0 +1,32 @@
+RolloverLane runs (xd6702, tern-ci:v7, Go 1.27.3, Node 24.22.1, Pi 1.5.0, pig 0.7.0+1.5.0)
+
+1. Red (stub copy): see port/red/RolloverLane.log (9 twin groups + 2 differential tests fail on stubs; SDK-only tests pass by design).
+
+2. Acceptance
+   cd components/posthorse/extensions/posthorse
+   GOOS=linux|darwin|windows go vet .                      -> clean (3 runs, package incl. all lanes' tests at run time)
+   go test -race -count=3 -run 'TestRollover|BoundedTail|RetainedTail|Retention|AutomaticRecovery|TwinPosthorseRollover|TwinRolloverCost' .
+                                                           -> ok 103.7s
+   pigeq twins check --ledger port/upstream-tests.json --go extensions/posthorse --files rollover-cost  -> 2 exact twins, 0 skipped
+   pigeq twins check --ledger port/upstream-tests.json --go extensions/posthorse --files posthorse      -> 63 exact twins, 0 skipped
+   pigeq gaps --go extensions/posthorse (with the PiG surface table)                                    -> 4 PARTIAL (extension.go, ui*.go), none in the lane files
+
+3. Real hosts (pigeq lane, scenarios reminder, new-context-explicit, automatic-rollover-threshold, overflow-recovery,
+   queued-steer-during-run, get-context-remaining; port/scenarios copies)
+   pi  lane, oracle TS under Pi 1.5.0               : PASS x6
+   pig lane, oracle TS under PiG 0.7.0+1.5.0        : PASS x6
+   pig lane, Go port under PiG 0.7.0+1.5.0          : PASS x6
+   pig(TS) vs pig(Go) event streams with the `system` member of llm events dropped and 8-hex entry ids normalized
+   (entry ids appear inside the recovery summary text; the harness normalizer does not cover them): IDENTICAL on all six
+   (29, 31, 18, 20, 21, 26 events): the threshold fallback, the explicit reset, the overflow compaction hook, the reminder,
+   the steer queue. `pigeq diff` itself reports a difference on `system` for the Go lane only: the hunks against the baseline
+   prompt are aligned differently (the Go lane shows `<cwd>`/`<docs>`/`<tools>` blocks as moved), the inserted tool lines and
+   the Posthorse guidance text are the same. Not a rollover finding; reported to the lead for CoreLane/HarnessExt.
+
+4. Pi parity of SDK functions: retention_pi_test.go over testdata/retention_pi_cases.json (Pi 1.5.0 answers): ok.
+   Oracle differential of automaticRecovery: retention_recovery_test.go over testdata/retention_recovery_cases.json: ok.
+
+5. Mutation spot checks (container copy, production files restored after each): see lane-RolloverLane.md.
+
+6. Benchmarks: see lane-RolloverLane.md (go test -bench 'ReminderLookup|ContextHook|RetainedTailCut' -benchmem -benchtime=2s;
+   POSTHORSE_WIRE_COSTS=1 go test -run TestRolloverWireCosts -v).

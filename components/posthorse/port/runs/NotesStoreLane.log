@@ -1,0 +1,45 @@
+NotesStoreLane runs (xd6702, tern-ci image, Go 1.27.3; scratch copy of the synced worktree, test files of other lanes excluded where they were mid-edit)
+
+== go vet, whole package incl. other lanes' files (components/posthorse/extensions/posthorse)
+GOOS=linux   clean
+GOOS=darwin  clean
+GOOS=windows clean
+(also clean on the filtered copy: lane tests + fixtures)
+
+== go test -race -count=3 -run 'TestFork_|TestNote' .
+ok  	github.com/MichaelKinsy/pigpen/posthorse	7.416s
+59 test functions of the lane (+75 binding-schema and 28 touch-schema table cases) x 3, race detector on.
+
+== mutation check: 19 edits of the implementation (scratch copy), tests of the lane must fail
+killed    snapshot-no-utimes            TestFork_snapshotTheSelectedBranch..., TestNoteSnapshots_snapshotCopiesNotesAndPublishesTheManifest
+killed    noteRelative-allows-forks     TestNoteScopes_parseBindingTable (managed paths), TestNoteScopes_noteRelative
+killed    collapse-ignores-size         TestNoteDiscovery_collapseUsesSeedDigestsAndCachesComputedOnes
+killed    record-no-own                 TestNoteStore_record..., TestFork_keepOwnership..., TestFork_adoptionReports...
+killed    resolve-ignores-owned         TestFork_deletedOwnedNoteDoesNotFallThroughToAnAncestor
+killed    source-chain-stops            TestNoteProvenance_sourceEntriesFollowsTheParentChain
+killed    edit-null-ignored             TestFork_associateLateCancelledBackgroundEffects...
+killed    batch-1000                    (mapBatch bound) test timeout of the barrier test
+killed    seed-anchors-ignored          TestFork_descendantSnapshotsOnlySeedsVisibleOnItsBranch
+killed    recovery-no-read              TestNoteEvidence_scopeRecoveryTouches
+killed    validFork-no-scope-check      TestNoteScopes_parseBindingTable
+killed    seeds-last-wins               TestNoteScopes_seedsOfAndOwnedPaths
+killed    walk-no-recheck               TestNoteInventory_laterSiblingsAreStattedAfterAFolderIsWalked
+killed    copy-overwrites               TestNoteSnapshots_adoptNoteLeavesAnUnverifiedCopy
+killed    singleflight-off              TestNoteDiscovery_*, TestFork_recoverMetadataOnly...
+killed    manifest-owner-check          TestNoteSnapshots_ensureManifest
+killed    late-effects-any-branch       TestNoteDiscovery_listsUntouched..., TestFork_recoverMetadataOnly..., TestFork_associateLate...
+killed    json-order                    TestNoteScopes_jsonKeyOrder
+(first rounds: resolve-ignores-owned, seed-anchors-ignored, walk-no-recheck and collapse-ignores-size survived; the tests
+TestFork_deletedOwnedNote..., TestFork_descendantSnapshotsOnlySeeds..., TestNoteInventory_laterSiblings... (first stat of
+each name) and the different-size assertion of the collapse test were added for them)
+
+== benchmarks (go test -bench Note -benchmem -benchtime=20x; Intel Xeon Platinum 8468, 8 procs)
+BenchmarkNoteSnapshot300-8             21.26 ms/op   6372426 B/op   59771 allocs/op   (300 notes of ~1 KiB: copy, verify, digest, manifest, rename)
+BenchmarkNotesUnder500-8                5.47 ms/op    661938 B/op    5704 allocs/op   (500 notes in 25 folders)
+BenchmarkNoteCollapse600Cold-8         28.37 ms/op   4065217 B/op   29162 allocs/op   (300 identical pairs, digests computed)
+BenchmarkNoteCollapse600Warm-8         16.93 ms/op   3259585 B/op   25143 allocs/op   (digest cache warm; the cost left is one canonicalPath per revision lookup, as in the original)
+BenchmarkNoteBindingsOf3000-8           3.26 ms/op   1081472 B/op   23008 allocs/op   (1000 fork bindings with a seed, 3000-entry journal)
+BenchmarkNoteTouchRecords3000-8         1.23 ms/op    402704 B/op    3011 allocs/op
+BenchmarkNoteSessionNoteTouches3000-8   6.74 ms/op   3215275 B/op   30097 allocs/op
+max RSS of the whole benchmark process (all seven, 20 iterations each): 18308 KiB
+Not compared against the TypeScript original (no cheap harness for the same inputs; PerfLane owns the Pi-vs-PiG measurement).

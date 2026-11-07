@@ -1,0 +1,128 @@
+{
+ "name": "off-cooperating-boundary-entries-and-continuation",
+ "description": "official-host.ts:1695 'cooperating boundary entries and continuation survive automatic rollover'. A helper turn_end hook (before posthorse) answers a 600,000-char completed response with its own entries (a custom entry, a context_edit replacing the seeded owner input, a continue-request custom message) and continue:true: posthorse's threshold boundary keeps all of them, records REPLACED_OWNER_INPUT (never PRIVATE_BEFORE_EDIT) and the continuation request runs (2 requests).",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "seed.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"00000000-0000-4000-8000-000000000001\", \"timestamp\": \"2026-01-01T00:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"5eed0001\", \"parentId\": null, \"timestamp\": \"2026-01-01T00:00:01.000Z\", \"message\": {\"role\": \"user\", \"content\": \"PRIVATE_BEFORE_EDIT\", \"timestamp\": 1767225601000}}\n"
+  }
+ },
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "coop.ts",
+   "source": "export default function (pi) {\n  pi.on(\"turn_end\", (event) => {\n    const content = event.message.content;\n    const text = typeof content === \"string\" ? content : (content ?? []).map((p) => p.text ?? \"\").join(\"\\n\");\n    if (!text.startsWith(\"LARGE_COMPLETED_RESPONSE\")) return;\n    return {\n      entries: [\n        ...event.entries,\n        { type: \"custom\", customType: \"other-extension-state\", data: { preserved: true } },\n        { type: \"context_edit\", targetId: \"5eed0001\", replacement: { content: \"REPLACED_OWNER_INPUT\" } },\n        { type: \"custom_message\", customType: \"continue-request\", display: true, content: \"Continue the inspection.\" },\n      ],\n      continue: true,\n    };\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "text": "LARGE_COMPLETED_RESPONSE {{repeat:x:600000}}",
+   "usage": {
+    "input": 3000,
+    "output": 150000
+   }
+  },
+  {
+   "text": "Continuation preserved.",
+   "usage": {
+    "input": 4000,
+    "output": 10
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/seed.jsonl"
+   }
+  },
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Continue after the boundary."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

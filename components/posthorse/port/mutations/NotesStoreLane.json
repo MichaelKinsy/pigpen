@@ -1,0 +1,2084 @@
+[
+ {
+  "name": "scopes-sameOwner-or",
+  "file": "note_scopes.go",
+  "find": "return left.id == right.id && left.timestamp == right.timestamp",
+  "replace": "return left.id == right.id || left.timestamp == right.timestamp"
+ },
+ {
+  "name": "scopes-uri-keeps-percent",
+  "file": "note_scopes.go",
+  "find": "c == '-', c == '_', c == '.', c == '!', c == '~', c == '*', c == '\\'', c == '(', c == ')':",
+  "replace": "c == '-', c == '_', c == '.', c == '!', c == '~', c == '*', c == '\\'', c == '(':"
+ },
+ {
+  "name": "scopes-uri-lone-surrogate-accepted",
+  "file": "note_scopes.go",
+  "find": "if c >= 0x80 && isWTF8Surrogate(s, i) {",
+  "replace": "if false && c >= 0x80 && isWTF8Surrogate(s, i) {"
+ },
+ {
+  "name": "scopes-uri-hex-case",
+  "file": "note_scopes.go",
+  "find": "const hex = \"0123456789ABCDEF\"",
+  "replace": "const hex = \"0123456789abcdef\""
+ },
+ {
+  "name": "scopes-date-error-ignored",
+  "file": "note_scopes.go",
+  "find": "if err != nil || !ok {\n\t\treturn 0, false\n\t}\n\treturn ms, true",
+  "replace": "if err != nil {\n\t\treturn 0, false\n\t}\n\t_ = ok\n\treturn ms, true"
+ },
+ {
+  "name": "scopes-iso-floor-trunc",
+  "file": "note_scopes.go",
+  "find": "days := int64(math.Floor(ms / 86400000))",
+  "replace": "days := int64(ms / 86400000)"
+ },
+ {
+  "name": "scopes-iso-neg-era",
+  "file": "note_scopes.go",
+  "find": "era = (z - 146096) / 146097",
+  "replace": "era = z / 146097"
+ },
+ {
+  "name": "scopes-iso-month-wrap",
+  "file": "note_scopes.go",
+  "find": "if month > 12 {\n\t\tmonth -= 12\n\t}",
+  "replace": "if month > 13 {\n\t\tmonth -= 12\n\t}"
+ },
+ {
+  "name": "scopes-iso-jan-feb-year",
+  "file": "note_scopes.go",
+  "find": "if month <= 2 {\n\t\tyear++\n\t}",
+  "replace": "if month < 2 {\n\t\tyear++\n\t}"
+ },
+ {
+  "name": "scopes-iso-year9999",
+  "file": "note_scopes.go",
+  "find": "case year >= 0 && year <= 9999:",
+  "replace": "case year >= 0 && year < 9999:"
+ },
+ {
+  "name": "scopes-iso-negative-sign",
+  "file": "note_scopes.go",
+  "find": "y = \"-\" + pad(-year, 6)",
+  "replace": "y = \"+\" + pad(-year, 6)"
+ },
+ {
+  "name": "scopes-iso-millis",
+  "file": "note_scopes.go",
+  "find": "pad(rest%1000, 3) + \"Z\"",
+  "replace": "pad(rest%100, 3) + \"Z\""
+ },
+ {
+  "name": "scopes-forkScope-colons-kept",
+  "file": "note_scopes.go",
+  "find": "strings.NewReplacer(\":\", \"-\", \".\", \"-\")",
+  "replace": "strings.NewReplacer(\".\", \"-\")"
+ },
+ {
+  "name": "scopes-forkScope-id-unencoded",
+  "file": "note_scopes.go",
+  "find": "return \".forks/\" + iso + \"_\" + id + \"/notes\", nil",
+  "replace": "_ = id\n\treturn \".forks/\" + iso + \"_\" + owner.id + \"/notes\", nil"
+ },
+ {
+  "name": "scopes-forkScope-invalid-date-ok",
+  "file": "note_scopes.go",
+  "find": "if !ok {\n\t\treturn \"\", errors.New(\"Invalid time value\")\n\t}\n\tiso :=",
+  "replace": "if false && ok {\n\t\treturn \"\", errors.New(\"Invalid time value\")\n\t}\n\tiso :="
+ },
+ {
+  "name": "scopes-sameScope-root-only",
+  "file": "note_scopes.go",
+  "find": "return l.root == r.root && l.scope == r.scope",
+  "replace": "return l.root == r.root"
+ },
+ {
+  "name": "scopes-scopeDirectory-no-scope",
+  "file": "note_scopes.go",
+  "find": "return filepath.Join(s.root, s.scope)\n}\n\n// sameScope",
+  "replace": "return s.root\n}\n\n// sameScope"
+ },
+ {
+  "name": "scopes-inside-dotdot",
+  "file": "note_scopes.go",
+  "find": "part != \"..\" && !strings.HasPrefix(part, \"..\"+string(hostStyle.sepByte()))",
+  "replace": "part != \"..\""
+ },
+ {
+  "name": "scopes-inside-empty",
+  "file": "note_scopes.go",
+  "find": "return part == \"\" || (part != \"..\"",
+  "replace": "return part != \"\" && (part != \"..\""
+ },
+ {
+  "name": "scopes-noteRelative-posix-forks",
+  "file": "note_scopes.go",
+  "find": "first == \".forks\" {\n\t\treturn \"\", noteRelativeErr(path, true)\n\t}\n\treturn normalized, nil\n}\n\n// noteRelativeFor",
+  "replace": "first == \".forks\" && false {\n\t\treturn \"\", noteRelativeErr(path, true)\n\t}\n\treturn normalized, nil\n}\n\n// noteRelativeFor"
+ },
+ {
+  "name": "scopes-noteRelative-nul",
+  "file": "note_scopes.go",
+  "find": "|| strings.IndexByte(path, 0) >= 0 {\n\t\treturn \"\", noteRelativeErr(path, false)\n\t}\n\tnormalized := strings.TrimPrefix(filepath.Clean(\"/\"+path), \"/\")",
+  "replace": "|| false {\n\t\treturn \"\", noteRelativeErr(path, false)\n\t}\n\tnormalized := strings.TrimPrefix(filepath.Clean(\"/\"+path), \"/\")"
+ },
+ {
+  "name": "scopes-noteRelative-backslash-dotdot",
+  "file": "note_scopes.go",
+  "find": "strings.FieldsFunc(path, func(r rune) bool { return r == '/' || r == '\\\\' }) {\n\t\tif seg == \"..\" {\n\t\t\tdotdot = true\n\t\t\tbreak\n\t\t}\n\t}\n\tfirst, _, _ := strings.Cut(normalized, \"/\")",
+  "replace": "strings.FieldsFunc(path, func(r rune) bool { return r == '/' }) {\n\t\tif seg == \"..\" {\n\t\t\tdotdot = true\n\t\t\tbreak\n\t\t}\n\t}\n\tfirst, _, _ := strings.Cut(normalized, \"/\")"
+ },
+ {
+  "name": "scopes-noteRelative-empty-ok",
+  "file": "note_scopes.go",
+  "find": "normalized == \"\" || first == \".forks\" {\n\t\treturn \"\", noteRelativeErr(path, true)\n\t}\n\treturn normalized, nil\n}\n\n// noteRelativeFor",
+  "replace": "first == \".forks\" {\n\t\treturn \"\", noteRelativeErr(path, true)\n\t}\n\treturn normalized, nil\n}\n\n// noteRelativeFor"
+ },
+ {
+  "name": "scopes-noteRelativeFor-dotdot",
+  "file": "note_scopes.go",
+  "find": "first, _, _ := strings.Cut(normalized, string(style.sepByte()))\n\tif dotdot ||",
+  "replace": "first, _, _ := strings.Cut(normalized, string(style.sepByte()))\n\tif dotdot && false ||"
+ },
+ {
+  "name": "scopes-canonical-propagate-error",
+  "file": "note_scopes.go",
+  "find": "if !noteMissing(err) {\n\t\treturn \"\", err\n\t}\n\tparent := jsDirname(absolute)",
+  "replace": "if false {\n\t\treturn \"\", err\n\t}\n\tparent := jsDirname(absolute)"
+ },
+ {
+  "name": "scopes-canonical-tail",
+  "file": "note_scopes.go",
+  "find": "return filepath.Join(canon, nodeRelative(parent, absolute)), nil",
+  "replace": "return filepath.Join(canon, filepath.Base(absolute)+\"x\"), nil"
+ },
+ {
+  "name": "scopes-notePath-private-escape",
+  "file": "note_scopes.go",
+  "find": "escapesPrivate = !inside(canonDir, canonical)",
+  "replace": "escapesPrivate = inside(canonDir, canonical)"
+ },
+ {
+  "name": "scopes-notePath-managed",
+  "file": "note_scopes.go",
+  "find": "entersManaged = inside(forks, canonical)",
+  "replace": "entersManaged = false && inside(forks, canonical)"
+ },
+ {
+  "name": "scopes-notePath-private-only-when-private",
+  "file": "note_scopes.go",
+  "find": "if s.scope != \"\" {\n\t\tcanonDir, err",
+  "replace": "if s.scope == \"\" {\n\t\tcanonDir, err"
+ },
+ {
+  "name": "scopes-validScope-absolute",
+  "file": "note_scopes.go",
+  "find": "return nodeIsAbsolute(s.root) && (s.scope == \"\" || privateScope(s.scope))",
+  "replace": "return (s.scope == \"\" || privateScope(s.scope))"
+ },
+ {
+  "name": "scopes-validScope-private",
+  "file": "note_scopes.go",
+  "find": "return nodeIsAbsolute(s.root) && (s.scope == \"\" || privateScope(s.scope))",
+  "replace": "return nodeIsAbsolute(s.root)"
+ },
+ {
+  "name": "scopes-privateScope-slash",
+  "file": "note_scopes.go",
+  "find": "return !strings.ContainsAny(s[len(head):len(s)-len(tail)], \"/\\\\\")",
+  "replace": "return !strings.ContainsAny(s[len(head):len(s)-len(tail)], \"/\")"
+ },
+ {
+  "name": "scopes-privateScope-empty-id",
+  "file": "note_scopes.go",
+  "find": "if len(s) < len(head)+1+len(tail)",
+  "replace": "if len(s) < len(head)+len(tail)"
+ },
+ {
+  "name": "scopes-validNoteName-normalized",
+  "file": "note_scopes.go",
+  "find": "return err == nil && rel == path\n}",
+  "replace": "return err == nil && (rel == path || true)\n}"
+ },
+ {
+  "name": "scopes-validSeed-lineage",
+  "file": "note_scopes.go",
+  "find": "validScope(seed.source) && validScope(seed.lineage) &&\n\t\tvalidNoteName(seed.source.path) && validNoteName(seed.lineage.path)",
+  "replace": "validScope(seed.source) && validScope(seed.lineage) &&\n\t\tvalidNoteName(seed.source.path)"
+ },
+ {
+  "name": "scopes-validFork-scope-match",
+  "file": "note_scopes.go",
+  "find": "if err != nil || b.scope != want {",
+  "replace": "if err != nil || (b.scope != want && false) {"
+ },
+ {
+  "name": "scopes-validFork-absent",
+  "file": "note_scopes.go",
+  "find": "for _, name := range b.absent {\n\t\tif !validNoteName(name) {\n\t\t\treturn false\n\t\t}\n\t}",
+  "replace": "for range b.absent {\n\t}"
+ },
+ {
+  "name": "scopes-validFork-source",
+  "file": "note_scopes.go",
+  "find": "if b.source != nil && !validScope(*b.source) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "scopes-jsFinite-nan",
+  "file": "note_scopes.go",
+  "find": "if math.IsNaN(f) || math.IsInf(f, 0) {",
+  "replace": "if math.IsNaN(f) {"
+ },
+ {
+  "name": "scopes-checkBinding-version",
+  "file": "note_scopes.go",
+  "find": "if version, ok := jsFinite(m[\"version\"]); !ok || version != 1 {\n\t\treturn nil, false\n\t}\n\towner, ok1",
+  "replace": "if _, ok := jsFinite(m[\"version\"]); !ok {\n\t\treturn nil, false\n\t}\n\towner, ok1"
+ },
+ {
+  "name": "scopes-checkTouch-version",
+  "file": "note_scopes.go",
+  "find": "if version, ok := jsFinite(m[\"version\"]); !ok || version != 1 {\n\t\treturn noteTouchRecord{}, false\n\t}",
+  "replace": "if _, ok := jsFinite(m[\"version\"]); !ok {\n\t\treturn noteTouchRecord{}, false\n\t}"
+ },
+ {
+  "name": "scopes-checkBinding-project-scope",
+  "file": "note_scopes.go",
+  "find": "return b, scope == \"\"",
+  "replace": "return b, true"
+ },
+ {
+  "name": "scopes-checkBinding-source-required",
+  "file": "note_scopes.go",
+  "find": "source, present := m[\"source\"]\n\t\tif !present {\n\t\t\treturn nil, false\n\t\t}",
+  "replace": "source := m[\"source\"]"
+ },
+ {
+  "name": "scopes-checkBinding-absent",
+  "file": "note_scopes.go",
+  "find": "return b, okSeeds && okAbsent",
+  "replace": "return b, okSeeds && (okAbsent || true)"
+ },
+ {
+  "name": "scopes-checkSeed-anchors",
+  "file": "note_scopes.go",
+  "find": "return s, ok1 && ok2 && ok3 && ok4 && ok5 && ok6",
+  "replace": "return s, ok1 && ok2 && ok3 && ok4 && ok5 && (ok6 || true)"
+ },
+ {
+  "name": "scopes-checkIdentity-dev",
+  "file": "note_scopes.go",
+  "find": "{\"ino\", &out.ino}, {\"dev\", &out.dev}}",
+  "replace": "{\"ino\", &out.ino}}"
+ },
+ {
+  "name": "scopes-checkScope-leak",
+  "file": "note_scopes.go",
+  "find": "if _, leaked := m[\"kind\"]; leaked {\n\t\ts.leak = m\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "scopes-checkAddress-path",
+  "file": "note_scopes.go",
+  "find": "return noteAddress{noteScope: s, path: path}, ok",
+  "replace": "return noteAddress{noteScope: s, path: path}, true"
+ },
+ {
+  "name": "scopes-parseBinding-empty-id",
+  "file": "note_scopes.go",
+  "find": "|| b.owner.id == \"\" {",
+  "replace": "{"
+ },
+ {
+  "name": "scopes-parseBinding-date",
+  "file": "note_scopes.go",
+  "find": "if _, ok := noteDateMs(b.owner.timestamp); !ok {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "scopes-parseBinding-fork-valid",
+  "file": "note_scopes.go",
+  "find": "if b.kind == \"fork\" && !validFork(b) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "scopes-bindingsOf-customType",
+  "file": "note_scopes.go",
+  "find": "if c, _ := entry[\"customType\"].(string); c != notesBindingType {",
+  "replace": "if c, _ := entry[\"customType\"].(string); c == \"\" {"
+ },
+ {
+  "name": "scopes-bindingsOf-type",
+  "file": "note_scopes.go",
+  "find": "if t, _ := entry[\"type\"].(string); t != \"custom\" {\n\t\t\tcontinue\n\t\t}\n\t\tif c, _ := entry[\"customType\"].(string); c != notesBindingType {",
+  "replace": "if t, _ := entry[\"type\"].(string); t == \"\" {\n\t\t\tcontinue\n\t\t}\n\t\tif c, _ := entry[\"customType\"].(string); c != notesBindingType {"
+ },
+ {
+  "name": "scopes-touchKinds-adopt",
+  "file": "note_scopes.go",
+  "find": "\"clear\": true, \"delete\": true, \"adopt\": true}",
+  "replace": "\"clear\": true, \"delete\": true}"
+ },
+ {
+  "name": "scopes-touchRecords-scope",
+  "file": "note_scopes.go",
+  "find": "if !ok || !validScope(record.scope) {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "scopes-touchRecords-file-name",
+  "file": "note_scopes.go",
+  "find": "validScope(file) && validNoteName(file.path) && (file.seed",
+  "replace": "validScope(file) && (file.seed"
+ },
+ {
+  "name": "scopes-touchRecords-file-seed",
+  "file": "note_scopes.go",
+  "find": "(file.seed == nil || validSeed(*file.seed))",
+  "replace": "true"
+ },
+ {
+  "name": "scopes-touchRecords-type",
+  "file": "note_scopes.go",
+  "find": "if c, _ := entry[\"customType\"].(string); c != notesTouchType {",
+  "replace": "if c, _ := entry[\"customType\"].(string); c == \"\" {"
+ },
+ {
+  "name": "scopes-seedsOf-owner",
+  "file": "note_scopes.go",
+  "find": "\t\tif !sameOwner(record.owner, binding.owner) {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, file := range record.files {\n\t\t\tif file.seed != nil && sameScope(file, binding) {",
+  "replace": "\t\tfor _, file := range record.files {\n\t\t\tif file.seed != nil && sameScope(file, binding) {"
+ },
+ {
+  "name": "scopes-seedsOf-scope",
+  "file": "note_scopes.go",
+  "find": "if file.seed != nil && sameScope(file, binding) {",
+  "replace": "if file.seed != nil {"
+ },
+ {
+  "name": "scopes-seedsOf-replace",
+  "file": "note_scopes.go",
+  "find": "if i, ok := index[key]; ok {\n\t\t\tseeds[i] = seed\n\t\t\treturn\n\t\t}",
+  "replace": "if _, ok := index[key]; ok {\n\t\t\treturn\n\t\t}"
+ },
+ {
+  "name": "scopes-seedsOf-key",
+  "file": "note_scopes.go",
+  "find": "set(file.path, *file.seed)",
+  "replace": "set(file.seed.path, *file.seed)"
+ },
+ {
+  "name": "scopes-ownedPaths-absent",
+  "file": "note_scopes.go",
+  "find": "for _, p := range binding.absent {\n\t\t\tpaths[p] = struct{}{}\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "scopes-ownedPaths-read",
+  "file": "note_scopes.go",
+  "find": "if file.kind != \"read\" && sameScope(binding, file) {",
+  "replace": "if sameScope(binding, file) {"
+ },
+ {
+  "name": "scopes-ownedPaths-seeds",
+  "file": "note_scopes.go",
+  "find": "for _, seed := range binding.seeds {\n\t\t\tpaths[seed.path] = struct{}{}\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "scopes-sortDirs-length",
+  "file": "note_scopes.go",
+  "find": "return lengths[sorted[i]] > lengths[sorted[j]]",
+  "replace": "return lengths[sorted[i]] < lengths[sorted[j]]"
+ },
+ {
+  "name": "scopes-match-sep",
+  "file": "note_scopes.go",
+  "find": "slash := strings.ReplaceAll(path, \"\\\\\", \"/\")\n\tfor _, d := range sorted {",
+  "replace": "slash := path\n\tfor _, d := range sorted {"
+ },
+ {
+  "name": "scopes-match-trim",
+  "file": "note_scopes.go",
+  "find": "normalized := strings.TrimRight(strings.ReplaceAll(d, \"\\\\\", \"/\"), \"/\")",
+  "replace": "normalized := strings.ReplaceAll(d, \"\\\\\", \"/\")"
+ },
+ {
+  "name": "scopes-match-forks",
+  "file": "note_scopes.go",
+  "find": "part != \".forks\" && !strings.HasPrefix(part, \".forks/\")",
+  "replace": "part != \".forks\""
+ },
+ {
+  "name": "scopes-index-managed-guard",
+  "file": "note_scopes.go",
+  "find": "if inside(forks, target) {\n\t\t\t\treturn noteAddress{}, false, nil\n\t\t\t}",
+  "replace": "_ = forks"
+ },
+ {
+  "name": "scopes-index-abs-fallback",
+  "file": "note_scopes.go",
+  "find": "for _, target := range [2]string{canonical, abs} {",
+  "replace": "_ = abs\n\tfor _, target := range [1]string{canonical} {"
+ },
+ {
+  "name": "scopes-index-project-only-forks",
+  "file": "note_scopes.go",
+  "find": "if scope.scope != \"\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tforks, err",
+  "replace": "if scope.scope == \"\" {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tforks, err"
+ },
+ {
+  "name": "scopes-index-first-candidate",
+  "file": "note_scopes.go",
+  "find": "if candidate == dir {\n\t\t\t\t\treturn withPath(idx.scopes[i], rel), true, nil",
+  "replace": "if candidate != dir {\n\t\t\t\t\treturn withPath(idx.scopes[i], rel), true, nil"
+ },
+ {
+  "name": "scopes-json-key-order",
+  "file": "note_scopes.go",
+  "find": "dst = appendKey(dst, \"digest\", false)\n\tdst = appendStr(dst, s.digest)\n\tdst = appendKey(dst, \"identity\", false)",
+  "replace": "dst = appendKey(dst, \"identity\", false)\n\tdst = s.identity.appendJSON(dst)\n\tdst = appendKey(dst, \"digest\", false)\n\tdst = appendStr(dst, s.digest)\n\tdst = appendKey(dst, \"x\", false)"
+ },
+ {
+  "name": "snap-digest-ctx-check",
+  "file": "note_snapshots.go",
+  "find": "if n > 0 {\n\t\t\tif err := ctxErr(ctx); err != nil {\n\t\t\t\treturn \"\", err\n\t\t\t}\n\t\t\thash.Write(buf[:n])",
+  "replace": "if n > 0 {\n\t\t\thash.Write(buf[:n])"
+ },
+ {
+  "name": "snap-digest-read-error",
+  "file": "note_snapshots.go",
+  "find": "return \"\", nodeFsError(err, \"read\", \"\")\n\t\t}\n\t}\n\tvar sum",
+  "replace": "break\n\t\t}\n\t}\n\tvar sum"
+ },
+ {
+  "name": "snap-digest-open-error-text",
+  "file": "note_snapshots.go",
+  "find": "return \"\", nodeFsError(err, \"open\", path)\n\t}\n\tdefer file.Close()\n\thash",
+  "replace": "return \"\", err\n\t}\n\tdefer file.Close()\n\thash"
+ },
+ {
+  "name": "snap-readManifest-missing",
+  "file": "note_snapshots.go",
+  "find": "if noteMissing(err) {\n\t\t\treturn nil, nil\n\t\t}\n\t\treturn nil, nodeFsError(err, \"open\"",
+  "replace": "if false {\n\t\t\treturn nil, nil\n\t\t}\n\t\treturn nil, nodeFsError(err, \"open\""
+ },
+ {
+  "name": "snap-readManifest-utf8",
+  "file": "note_snapshots.go",
+  "find": "sdkjson.Unmarshal([]byte(jsFromBytes(data)), &raw) != nil",
+  "replace": "sdkjson.Unmarshal(data, &raw) != nil"
+ },
+ {
+  "name": "snap-readManifest-dir-check",
+  "file": "note_snapshots.go",
+  "find": "binding.kind == \"fork\" && scopeDirectory(binding) == directory",
+  "replace": "binding.kind == \"fork\""
+ },
+ {
+  "name": "snap-readManifest-kind",
+  "file": "note_snapshots.go",
+  "find": "binding.kind == \"fork\" && scopeDirectory(binding) == directory",
+  "replace": "scopeDirectory(binding) == directory"
+ },
+ {
+  "name": "snap-readManifest-read-error",
+  "file": "note_snapshots.go",
+  "find": "data, err := io.ReadAll(file)\n\tfile.Close()\n\tif err != nil {\n\t\treturn nil, nodeFsError(err, \"read\", \"\")\n\t}",
+  "replace": "data, _ := io.ReadAll(file)\n\tfile.Close()"
+ },
+ {
+  "name": "snap-mapBatch-size",
+  "file": "note_snapshots.go",
+  "find": "const noteIOBatch = 16",
+  "replace": "const noteIOBatch = 17"
+ },
+ {
+  "name": "snap-mapBatch-first-error",
+  "file": "note_snapshots.go",
+  "find": "for _, err := range errs {\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t\tresults",
+  "replace": "for i := len(errs) - 1; i >= 0; i-- {\n\t\t\tif err := errs[i]; err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t\tresults"
+ },
+ {
+  "name": "snap-mapBatch-error-dropped",
+  "file": "note_snapshots.go",
+  "find": "for _, err := range errs {\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t\tresults",
+  "replace": "for range errs {\n\t\t}\n\t\tresults"
+ },
+ {
+  "name": "snap-mapBatch-prepare-once",
+  "file": "note_snapshots.go",
+  "find": "shared, err := prepare()\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\toutputs",
+  "replace": "shared, err := prepare()\n\t\t_ = err\n\t\toutputs"
+ },
+ {
+  "name": "snap-copy-excl",
+  "file": "note_snapshots.go",
+  "find": "os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode.Perm())",
+  "replace": "os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode.Perm())"
+ },
+ {
+  "name": "snap-copy-mode",
+  "file": "note_snapshots.go",
+  "find": "err = out.Chmod(mode)",
+  "replace": "err = out.Chmod(0o600)"
+ },
+ {
+  "name": "snap-copy-cleanup",
+  "file": "note_snapshots.go",
+  "find": "if err != nil {\n\t\tos.Remove(destination)\n\t}\n\treturn err",
+  "replace": "return err"
+ },
+ {
+  "name": "snap-copy-stat-before-mkdir",
+  "file": "note_snapshots.go",
+  "find": "if statErr != nil {\n\t\treturn copyResult{}, nodeFsError(statErr, \"stat\", source)\n\t}\n\tif mkdirErr != nil",
+  "replace": "if statErr != nil {\n\t\treturn copyResult{}, nodeFsError(statErr, \"stat\", source)\n\t}\n\tif false && mkdirErr != nil"
+ },
+ {
+  "name": "snap-copy-hook",
+  "file": "note_snapshots.go",
+  "find": "if noteAfterCopy != nil {\n\t\tnoteAfterCopy(source, destination)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "snap-copy-unverified-as-error",
+  "file": "note_snapshots.go",
+  "find": "return copyResult{err: err}, nil",
+  "replace": "return copyResult{}, err"
+ },
+ {
+  "name": "snap-verify-identity",
+  "file": "note_snapshots.go",
+  "find": "if !sameIdentity(fileIdentity(source, before), fileIdentity(source, after)) {",
+  "replace": "_ = after\n\tif false {"
+ },
+ {
+  "name": "snap-verify-text",
+  "file": "note_snapshots.go",
+  "find": "\". Retry initialization.\"",
+  "replace": "\". Retry initialisation.\""
+ },
+ {
+  "name": "snap-verify-utimes",
+  "file": "note_snapshots.go",
+  "find": "if err := os.Chtimes(destination, accessTime(before), before.ModTime()); err != nil {\n\t\treturn noteSeed{}, nodeFsError(err, \"utime\", destination)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "snap-verify-mtime-now",
+  "file": "note_snapshots.go",
+  "find": "os.Chtimes(destination, accessTime(before), before.ModTime())",
+  "replace": "os.Chtimes(destination, accessTime(before), before.ModTime().AddDate(0, 0, 1))"
+ },
+ {
+  "name": "snap-verify-seed-anchors",
+  "file": "note_snapshots.go",
+  "find": "path: note.path, source: note.source, lineage: note.lineage, anchors: note.anchors,",
+  "replace": "path: note.path, source: note.source, lineage: note.source, anchors: note.anchors,"
+ },
+ {
+  "name": "snap-verify-seed-digest",
+  "file": "note_snapshots.go",
+  "find": "digest: digest, identity: fileIdentity(destination, info),",
+  "replace": "digest: digest, identity: func() noteIdentity { _ = info; return fileIdentity(source, before) }(),"
+ },
+ {
+  "name": "snap-prepare-container",
+  "file": "note_snapshots.go",
+  "find": "return snapshotPreparation{}, errors.New(\"Incomplete notes snapshot: preserving unexpected data at \" + container + \".\")",
+  "replace": "return snapshotPreparation{kind: \"empty\"}, nil"
+ },
+ {
+  "name": "snap-prepare-text",
+  "file": "note_snapshots.go",
+  "find": "\"Incomplete notes snapshot: preserving unexpected data at \"",
+  "replace": "\"Incomplete notes snapshot: preserving unexpected data in \""
+ },
+ {
+  "name": "snap-prepare-lstat-error",
+  "file": "note_snapshots.go",
+  "find": "} else if !errors.Is(err, fs.ErrNotExist) {\n\t\treturn snapshotPreparation{}, nodeFsError(err, \"lstat\", container)\n\t}",
+  "replace": "}"
+ },
+ {
+  "name": "snap-prepare-empty",
+  "file": "note_snapshots.go",
+  "find": "if len(notes) == 0 {\n\t\treturn snapshotPreparation{kind: \"empty\"}, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "snap-prepare-stage-prefix",
+  "file": "note_snapshots.go",
+  "find": "os.MkdirTemp(filepath.Dir(container), \".staging-\")",
+  "replace": "os.MkdirTemp(filepath.Dir(container), \"staging-\")"
+ },
+ {
+  "name": "snap-writeNew-excl",
+  "file": "note_snapshots.go",
+  "find": "file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)",
+  "replace": "file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)"
+ },
+ {
+  "name": "snap-snapshot-existing",
+  "file": "note_snapshots.go",
+  "find": "if preparation.kind == \"existing\" {\n\t\t\treturn preparation.binding, nil\n\t\t}\n\t\treturn binding, nil",
+  "replace": "return binding, nil"
+ },
+ {
+  "name": "snap-snapshot-wrap-text",
+  "file": "note_snapshots.go",
+  "find": "\"Incomplete notes snapshot for \"+scopeDirectory(binding)+\": \"+err.Error()",
+  "replace": "\"Incomplete notes snapshot for \"+scopeDirectory(binding)+\" \"+err.Error()"
+ },
+ {
+  "name": "snap-snapshot-cleanup",
+  "file": "note_snapshots.go",
+  "find": "defer os.RemoveAll(stage)",
+  "replace": ""
+ },
+ {
+  "name": "snap-stage-manifest-last",
+  "file": "note_snapshots.go",
+  "find": "complete := *binding\n\tcomplete.seeds = seeds",
+  "replace": "complete := *binding\n\t_ = seeds"
+ },
+ {
+  "name": "snap-stage-rename",
+  "file": "note_snapshots.go",
+  "find": "if err := os.Rename(stage, container); err != nil {\n\t\treturn nil, nodeFsErrorDest(err, \"rename\", stage, container)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "snap-stage-destination-scope",
+  "file": "note_snapshots.go",
+  "find": "notePath(noteScope{root: stage, scope: \"notes\"}, note.path)",
+  "replace": "notePath(noteScope{root: stage}, note.path)"
+ },
+ {
+  "name": "snap-stage-unverified",
+  "file": "note_snapshots.go",
+  "find": "if !result.verified {\n\t\t\treturn noteSeed{}, result.err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "snap-ensure-fork-only",
+  "file": "note_snapshots.go",
+  "find": "if binding.kind != \"fork\" {\n\t\treturn nil\n\t}\n\tpath := filepath.Join(filepath.Dir(scopeDirectory(binding)), \"manifest.json\")\n\tif err := mkdirNode",
+  "replace": "if binding.kind == \"x\" {\n\t\treturn nil\n\t}\n\tpath := filepath.Join(filepath.Dir(scopeDirectory(binding)), \"manifest.json\")\n\tif err := mkdirNode"
+ },
+ {
+  "name": "snap-ensure-exist-check",
+  "file": "note_snapshots.go",
+  "find": "if !errors.Is(err, fs.ErrExist) {\n\t\treturn err\n\t}",
+  "replace": "if false {\n\t\treturn err\n\t}"
+ },
+ {
+  "name": "snap-ensure-owner",
+  "file": "note_snapshots.go",
+  "find": "if existing == nil || !sameOwner(existing.owner, binding.owner) {\n\t\treturn noteErrorf(err, \"Preserving",
+  "replace": "if existing == nil {\n\t\treturn noteErrorf(err, \"Preserving"
+ },
+ {
+  "name": "snap-ensure-text",
+  "file": "note_snapshots.go",
+  "find": "\"Preserving unexpected notes manifest at \"",
+  "replace": "\"Preserving unexpected notes manifest in \""
+ },
+ {
+  "name": "snap-saveAdoption-fork-only",
+  "file": "note_snapshots.go",
+  "find": "func saveAdoption(binding *noteBinding, seed noteSeed) error {\n\tif binding.kind != \"fork\" {\n\t\treturn nil\n\t}",
+  "replace": "func saveAdoption(binding *noteBinding, seed noteSeed) error {"
+ },
+ {
+  "name": "snap-saveAdoption-filter",
+  "file": "note_snapshots.go",
+  "find": "if item.path != seed.path {\n\t\t\t\tseeds = append(seeds, item)",
+  "replace": "if true {\n\t\t\t\tseeds = append(seeds, item)"
+ },
+ {
+  "name": "snap-saveAdoption-order",
+  "file": "note_snapshots.go",
+  "find": "next.seeds = append(seeds, seed)",
+  "replace": "next.seeds = append([]noteSeed{seed}, seeds...)"
+ },
+ {
+  "name": "snap-saveAdoption-ensure",
+  "file": "note_snapshots.go",
+  "find": "if err := ensureManifest(binding); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tprevious",
+  "replace": "previous"
+ },
+ {
+  "name": "snap-mkdirNode-exists",
+  "file": "note_snapshots.go",
+  "find": "err = &fs.PathError{Op: \"mkdir\", Path: path, Err: syscall.EEXIST}",
+  "replace": "err = &fs.PathError{Op: \"mkdir\", Path: path, Err: syscall.ENOTDIR}"
+ },
+ {
+  "name": "snap-adopt-destination",
+  "file": "note_snapshots.go",
+  "find": "destination, err := notePath(binding, note.path)\n\tif err != nil {\n\t\treturn copyResult{}, err\n\t}\n\treturn copyNote(note, destination)",
+  "replace": "destination, err := notePath(note.source, note.path)\n\tif err != nil {\n\t\treturn copyResult{}, err\n\t}\n\treturn copyNote(note, destination)"
+ },
+ {
+  "name": "store-newSession-source-scope",
+  "file": "note_store.go",
+  "find": "if binding.kind == \"fork\" && binding.source != nil {\n\t\tscopes = append(scopes, *binding.source)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-newSession-project-scope",
+  "file": "note_store.go",
+  "find": "scopes := []noteScope{binding.scopeOf(), {root: binding.root}}",
+  "replace": "scopes := []noteScope{binding.scopeOf()}"
+ },
+ {
+  "name": "store-newSession-bindings",
+  "file": "note_store.go",
+  "find": "for _, b := range bindingsOf(all) {\n\t\tscopes = append(scopes, b.scopeOf())\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-newSession-source-entries",
+  "file": "note_store.go",
+  "find": "all = append(append(all, entries...), source.entries...)\n\tscopes :=",
+  "replace": "all = append(all, entries...)\n\tscopes :="
+ },
+ {
+  "name": "store-revision-canonical",
+  "file": "note_store.go",
+  "find": "canonical, err := canonicalPath(path)\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n\treturn s.revisions[canonical], nil",
+  "replace": "s.mu.Lock()\n\tdefer s.mu.Unlock()\n\treturn s.revisions[path], nil"
+ },
+ {
+  "name": "store-startCall-root",
+  "file": "note_store.go",
+  "find": "if known, ok := s.calls[*parent]; ok {\n\t\t\trootID = known\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-startCall-register",
+  "file": "note_store.go",
+  "find": "s.calls[id] = rootID\n\treturn noteCall",
+  "replace": "return noteCall"
+ },
+ {
+  "name": "store-finishCall",
+  "file": "note_store.go",
+  "find": "delete(s.calls, id)\n}",
+  "replace": "}"
+ },
+ {
+  "name": "store-call-unknown",
+  "file": "note_store.go",
+  "find": "return noteCall{id: id, rootId: id}\n}\n\n// owns",
+  "replace": "return noteCall{id: id, rootId: \"\"}\n}\n\n// owns"
+ },
+ {
+  "name": "store-owns-project",
+  "file": "note_store.go",
+  "find": "if s.binding.kind == \"project\" {\n\t\treturn true, nil",
+  "replace": "if s.binding.kind == \"fork\" {\n\t\treturn true, nil"
+ },
+ {
+  "name": "store-owns-owned-set",
+  "file": "note_store.go",
+  "find": "if owned {\n\t\treturn true, nil\n\t}\n\ttarget, err := notePath(s.binding, path)",
+  "replace": "if false && owned {\n\t\treturn true, nil\n\t}\n\ttarget, err := notePath(s.binding, path)"
+ },
+ {
+  "name": "store-owns-exists",
+  "file": "note_store.go",
+  "find": "_, err = os.Stat(target)\n\treturn err == nil, nil",
+  "replace": "_, err = os.Stat(target)\n\treturn err != nil, nil"
+ },
+ {
+  "name": "store-record-empty",
+  "file": "note_store.go",
+  "find": "if len(files) == 0 {\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-record-read-owns",
+  "file": "note_store.go",
+  "find": "if file.kind != \"read\" && sameScope(file, s.binding) {",
+  "replace": "if sameScope(file, s.binding) {"
+ },
+ {
+  "name": "store-record-scope",
+  "file": "note_store.go",
+  "find": "if file.kind != \"read\" && sameScope(file, s.binding) {",
+  "replace": "if file.kind != \"read\" {"
+ },
+ {
+  "name": "store-record-revision",
+  "file": "note_store.go",
+  "find": "s.revisions[path]++",
+  "replace": "_ = path"
+ },
+ {
+  "name": "store-record-owned",
+  "file": "note_store.go",
+  "find": "s.owned[file.path] = struct{}{}\n\t\t\ts.mu.Unlock()\n\t\t\ttarget, err",
+  "replace": "s.mu.Unlock()\n\t\t\ttarget, err"
+ },
+ {
+  "name": "store-record-append-root",
+  "file": "note_store.go",
+  "find": "rootToolCallId: call.rootId,",
+  "replace": "rootToolCallId: call.id,"
+ },
+ {
+  "name": "store-record-append-scope",
+  "file": "note_store.go",
+  "find": "scope:          noteScope{root: s.binding.root, scope: s.binding.scope},",
+  "replace": "scope:          noteScope{root: s.binding.root},"
+ },
+ {
+  "name": "store-select-known",
+  "file": "note_store.go",
+  "find": "if canonical == directory {\n\t\t\treturn scope, nil\n\t\t}",
+  "replace": "_ = canonical"
+ },
+ {
+  "name": "store-select-manifest-root",
+  "file": "note_store.go",
+  "find": "manifest != nil && manifest.root == s.binding.root && inside(",
+  "replace": "manifest != nil && inside("
+ },
+ {
+  "name": "store-select-text",
+  "file": "note_store.go",
+  "find": "\". Copy a scope selector from notes list/search.\"",
+  "replace": "\". Copy a scope selector from notes list.\""
+ },
+ {
+  "name": "store-reference-source-entries",
+  "file": "note_store.go",
+  "find": "all = append(append(append(all, entries...), s.source.entries...), journal...)",
+  "replace": "all = append(append(all, entries...), s.source.entries...)"
+ },
+ {
+  "name": "store-reference-journal",
+  "file": "note_store.go",
+  "find": "journal, err := sourceEntries(signal, s.source.file)\n\tif err != nil {\n\t\treturn noteAddress{}, false, err\n\t}",
+  "replace": "var journal []rec\n\t_ = signal"
+ },
+ {
+  "name": "store-sharedEntries-once",
+  "file": "note_store.go",
+  "find": "e.once.Do(func() { e.entries, e.err = e.read() })",
+  "replace": "e.entries, e.err = e.read()"
+ },
+ {
+  "name": "store-read-scope-writable",
+  "file": "note_store.go",
+  "find": "writable: sameScope(selected, s.binding)}, nil",
+  "replace": "writable: true}, nil"
+ },
+ {
+  "name": "store-read-owns",
+  "file": "note_store.go",
+  "find": "if !owns {\n\t\tif reference, found, err = s.reference(ctx, entries, relative, true)",
+  "replace": "if owns || true {\n\t\tif reference, found, err = s.reference(ctx, entries, relative, true)"
+ },
+ {
+  "name": "store-read-writable",
+  "file": "note_store.go",
+  "find": "return noteRead{address: address, path: target, writable: !found}, nil",
+  "replace": "return noteRead{address: address, path: target, writable: found}, nil"
+ },
+ {
+  "name": "store-adopt-owned",
+  "file": "note_store.go",
+  "find": "if owns {\n\t\treturn \"owned\", nil\n\t}\n\tsource, found",
+  "replace": "_ = owns\n\tsource, found"
+ },
+ {
+  "name": "store-adopt-unavailable",
+  "file": "note_store.go",
+  "find": "if !found {\n\t\treturn \"unavailable\", nil\n\t}",
+  "replace": "_ = found"
+ },
+ {
+  "name": "store-adopt-kind",
+  "file": "note_store.go",
+  "find": "kind:        \"adopt\",",
+  "replace": "kind:        \"write\","
+ },
+ {
+  "name": "store-adopt-seed",
+  "file": "note_store.go",
+  "find": "if result.verified {\n\t\tseed := result.seed\n\t\tfile.seed = &seed\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-adopt-record-before",
+  "file": "note_store.go",
+  "find": "if err := s.record(ctx, []noteTouchFile{file}, call); err != nil {\n\t\treturn \"\", err\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-adopt-unverified",
+  "file": "note_store.go",
+  "find": "if !result.verified {\n\t\treturn \"\", noteErrorf(",
+  "replace": "if false {\n\t\treturn \"\", noteErrorf("
+ },
+ {
+  "name": "store-adopt-text",
+  "file": "note_store.go",
+  "find": "source not edited, but copy verification failed. Read the private copy before retrying.",
+  "replace": "source not edited, but copy verification failed. Read the private copy before retry."
+ },
+ {
+  "name": "store-adopt-manifest",
+  "file": "note_store.go",
+  "find": "if err := saveAdoption(s.binding, result.seed); err != nil {",
+  "replace": "if err := error(nil); err != nil {"
+ },
+ {
+  "name": "store-adopt-manifest-text",
+  "file": "note_store.go",
+  "find": "source not edited, but its adoption manifest could not be saved.",
+  "replace": "source not edited, but its adoption manifest could not be saved!"
+ },
+ {
+  "name": "store-guard-adopted",
+  "file": "note_store.go",
+  "find": "if copied == \"adopted\" {\n\t\treturn \"Private copy created at \"",
+  "replace": "if copied != \"adopted\" {\n\t\treturn \"Private copy created at \""
+ },
+ {
+  "name": "store-guard-text",
+  "file": "note_store.go",
+  "find": "\"; the source was not edited. Read the private copy, then retry the edit on that path.\"",
+  "replace": "\"; the source was edited. Read the private copy, then retry the edit on that path.\""
+ },
+ {
+  "name": "store-guard-queue",
+  "file": "note_store.go",
+  "find": "copied, err := sdk.WithFileMutationQueue(destination, func() (string, error) { return s.adopt(ctx, path, call) })",
+  "replace": "copied, err := func() (string, error) { return s.adopt(ctx, path, call) }()"
+ },
+ {
+  "name": "store-sessionKey-timestamp",
+  "file": "note_store.go",
+  "find": "return id + \"\\x00\" + timestamp, nil",
+  "replace": "_ = timestamp\n\treturn id, nil"
+ },
+ {
+  "name": "store-sessionKey-header",
+  "file": "note_store.go",
+  "find": "if header == nil {\n\t\treturn \"\", errors.New(\"Pi session header is required for notes.\")",
+  "replace": "if header == nil && false {\n\t\treturn \"\", errors.New(\"Pi session header is required for notes.\")"
+ },
+ {
+  "name": "store-get-forget",
+  "file": "note_store.go",
+  "find": "if state.err != nil {\n\t\tn.mu.Lock()\n\t\tdelete(n.sessions, key)\n\t\tn.mu.Unlock()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-get-wait",
+  "file": "note_store.go",
+  "find": "<-existing.done\n\t\treturn existing.value, existing.err",
+  "replace": "return existing.value, existing.err"
+ },
+ {
+  "name": "store-roots-copy",
+  "file": "note_store.go",
+  "find": "return append([]string(nil), n.rootList...)",
+  "replace": "return n.rootList"
+ },
+ {
+  "name": "store-addRoot-dedupe",
+  "file": "note_store.go",
+  "find": "if _, ok := n.rootSet[root]; !ok {\n\t\tn.rootSet[root] = struct{}{}\n\t\tn.rootList = append(n.rootList, root)\n\t}",
+  "replace": "n.rootList = append(n.rootList, root)"
+ },
+ {
+  "name": "store-init-root-from-binding",
+  "file": "note_store.go",
+  "find": "if header != nil && sameOwner(bindings[i].owner, headerOwner(header)) {",
+  "replace": "if header != nil {"
+ },
+ {
+  "name": "store-init-append-created",
+  "file": "note_store.go",
+  "find": "if created {\n\t\tif err := ctx.AppendEntry(notesBindingType, binding); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t}",
+  "replace": "_ = created"
+ },
+ {
+  "name": "store-init-roots-scopes",
+  "file": "note_store.go",
+  "find": "for _, scope := range session.scopes {\n\t\tn.addRoot(scope.root)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "store-init-roots-bindings",
+  "file": "note_store.go",
+  "find": "for _, binding := range bindings {\n\t\tn.addRoot(binding.root)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-includedType-legacy",
+  "file": "note_provenance.go",
+  "find": "return legacy || !hasType || entryType == \"session\" || entryType == \"custom\"",
+  "replace": "return !hasType || entryType == \"session\" || entryType == \"custom\""
+ },
+ {
+  "name": "prov-includedType-custom",
+  "file": "note_provenance.go",
+  "find": "entryType == \"session\" || entryType == \"custom\"",
+  "replace": "entryType == \"session\""
+ },
+ {
+  "name": "prov-includedType-undefined",
+  "file": "note_provenance.go",
+  "find": "return legacy || !hasType ||",
+  "replace": "return legacy ||"
+ },
+ {
+  "name": "prov-headType-trim",
+  "file": "note_provenance.go",
+  "find": "rest := jsTrimStart(head)",
+  "replace": "rest := head"
+ },
+ {
+  "name": "prov-headType-empty",
+  "file": "note_provenance.go",
+  "find": "if end <= 0 {",
+  "replace": "if end < 0 {"
+ },
+ {
+  "name": "prov-headType-open-brace",
+  "file": "note_provenance.go",
+  "find": "if !skip(\"{\") || !skip(`\"type\"`)",
+  "replace": "if !skip(`\"type\"`)"
+ },
+ {
+  "name": "prov-journal-iter-enoent",
+  "file": "note_provenance.go",
+  "find": "if err != nil {\n\t\t\tif errors.Is(err, fs.ErrNotExist) {\n\t\t\t\treturn entries, nil\n\t\t\t}\n\t\t\treturn nil, err\n\t\t}\n\t\tentryType, hasType",
+  "replace": "if err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tentryType, hasType"
+ },
+ {
+  "name": "prov-journal-second-filter",
+  "file": "note_provenance.go",
+  "find": "t, has := str(entry, \"type\")\n\t\tif includedJournalType(t, has, legacy) {",
+  "replace": "t, has := str(entry, \"type\")\n\t\tif includedJournalType(t, has, true) {"
+ },
+ {
+  "name": "prov-source-cycle",
+  "file": "note_provenance.go",
+  "find": "if _, dup := seen[*current]; dup {\n\t\t\tbreak\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-source-parent",
+  "file": "note_provenance.go",
+  "find": "if parent, ok := str(entry, \"parentSession\"); ok {",
+  "replace": "if parent, ok := str(entry, \"parentSessionX\"); ok {"
+ },
+ {
+  "name": "prov-source-first-session",
+  "file": "note_provenance.go",
+  "find": "current = &parent\n\t\t\t\t}\n\t\t\t\tbreak",
+  "replace": "current = &parent\n\t\t\t\t}"
+ },
+ {
+  "name": "prov-source-ancestor-order",
+  "file": "note_provenance.go",
+  "find": "entries = append(entries, metadata...)\n\t\tcurrent = nil",
+  "replace": "entries = append(metadata, entries...)\n\t\tcurrent = nil"
+ },
+ {
+  "name": "prov-legacy-default-dir",
+  "file": "note_provenance.go",
+  "find": "if evidence.defaultDir != \"\" {\n\t\troots = append(roots, evidence.defaultDir)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-legacy-absolute",
+  "file": "note_provenance.go",
+  "find": "for _, root := range roots {\n\t\tif !nodeIsAbsolute(root) {\n\t\t\treturn noteScope{}, false, nil\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-legacy-dedupe",
+  "file": "note_provenance.go",
+  "find": "if _, dup := seen[c]; !dup {\n\t\t\tseen[c] = struct{}{}\n\t\t\tcanonical = append(canonical, c)\n\t\t}",
+  "replace": "_ = seen\n\t\tcanonical = append(canonical, c)"
+ },
+ {
+  "name": "prov-legacy-ambiguous",
+  "file": "note_provenance.go",
+  "find": "if len(canonical) == 1 {",
+  "replace": "if len(canonical) >= 1 {"
+ },
+ {
+  "name": "prov-legacy-canonical",
+  "file": "note_provenance.go",
+  "find": "c, err := canonicalPath(root)\n\t\tif err != nil {\n\t\t\treturn noteScope{}, false, err\n\t\t}",
+  "replace": "c, err := root, error(nil)\n\t\tif err != nil {\n\t\t\treturn noteScope{}, false, err\n\t\t}"
+ },
+ {
+  "name": "prov-sourceScope-header-owner",
+  "file": "note_provenance.go",
+  "find": "(candidate.owner.id == headerID && candidate.owner.timestamp == headerTimestamp)",
+  "replace": "(candidate.owner.id == headerID && len(headerTimestamp) >= 0)"
+ },
+ {
+  "name": "prov-sourceScope-findLast",
+  "file": "note_provenance.go",
+  "find": "for i := len(bindings) - 1; i >= 0; i-- {\n\t\tcandidate := bindings[i]",
+  "replace": "for i := 0; i < len(bindings); i++ {\n\t\tcandidate := bindings[i]"
+ },
+ {
+  "name": "prov-sourceScope-all",
+  "file": "note_provenance.go",
+  "find": "all = append(append(all, entries...), source.entries...)\n\tbindings := bindingsOf(all)\n\tvar binding *noteBinding",
+  "replace": "all = append(all, entries...)\n\tbindings := bindingsOf(all)\n\tvar binding *noteBinding"
+ },
+ {
+  "name": "prov-sourceScope-legacy-file",
+  "file": "note_provenance.go",
+  "find": "if len(fromFile) > 0 {\n\t\t\tlegacy = fromFile\n\t\t}",
+  "replace": "legacy = fromFile"
+ },
+ {
+  "name": "prov-sourceScope-journal-legacy",
+  "file": "note_provenance.go",
+  "find": "fromFile, err := journalMetadata(nil, *source.file, true)",
+  "replace": "fromFile, err := journalMetadata(nil, *source.file, false)"
+ },
+ {
+  "name": "prov-resolve-cycle",
+  "file": "note_provenance.go",
+  "find": "if _, dup := visited[directory]; dup {",
+  "replace": "if _, dup := visited[directory]; dup && false {"
+ },
+ {
+  "name": "prov-resolve-cycle-text",
+  "file": "note_provenance.go",
+  "find": "\"Cyclic note provenance at \"",
+  "replace": "\"Cyclic provenance at \""
+ },
+ {
+  "name": "prov-resolve-exists",
+  "file": "note_provenance.go",
+  "find": "if _, err := os.Stat(candidate); err == nil {\n\t\t\treturn withPath(current, path), true, nil",
+  "replace": "if _, err := os.Stat(candidate); err != nil {\n\t\t\treturn withPath(current, path), true, nil"
+ },
+ {
+  "name": "prov-resolve-manifest-first",
+  "file": "note_provenance.go",
+  "find": "binding, err := readManifest(directory)\n\t\tif err != nil {\n\t\t\treturn noteAddress{}, false, err\n\t\t}\n\t\tif binding == nil {",
+  "replace": "binding, err := readManifest(directory)\n\t\t_ = err\n\t\tif true {"
+ },
+ {
+  "name": "prov-resolve-journal-fallback",
+  "file": "note_provenance.go",
+  "find": "if sameScope(bindings[i], current) {\n\t\t\t\t\tbinding = bindings[i]\n\t\t\t\t\tbreak",
+  "replace": "if sameScope(bindings[i], current) {\n\t\t\t\t\tbinding = bindings[i]"
+ },
+ {
+  "name": "prov-resolve-owned",
+  "file": "note_provenance.go",
+  "find": "if _, owned := ownedPaths(binding, entries)[path]; owned {",
+  "replace": "if _, owned := ownedPaths(binding, entries)[path]; owned && false {"
+ },
+ {
+  "name": "prov-resolve-next",
+  "file": "note_provenance.go",
+  "find": "source = binding.source\n\t}",
+  "replace": "source = nil\n\t}"
+ },
+ {
+  "name": "prov-ordered-set-position",
+  "file": "note_provenance.go",
+  "find": "if _, ok := m.values[path]; !ok {\n\t\tm.keys = append(m.keys, path)\n\t}",
+  "replace": "m.keys = append(m.keys, path)"
+ },
+ {
+  "name": "prov-touched-default-dir",
+  "file": "note_provenance.go",
+  "find": "if absolute == \"\" && evidence.defaultDir != \"\" {",
+  "replace": "if false {"
+ },
+ {
+  "name": "prov-touched-owner-last",
+  "file": "note_provenance.go",
+  "find": "for i := len(bindings) - 1; i >= 0; i-- {\n\t\t\tif sameScope(bindings[i], address) {\n\t\t\t\towner = bindings[i]",
+  "replace": "for i := 0; i < len(bindings); i++ {\n\t\t\tif sameScope(bindings[i], address) {\n\t\t\t\towner = bindings[i]"
+ },
+ {
+  "name": "prov-touched-lineage",
+  "file": "note_provenance.go",
+  "find": "if seed.path == address.path {\n\t\t\t\t\tlineage = seed.lineage",
+  "replace": "if seed.path == address.path {\n\t\t\t\t\tlineage = address"
+ },
+ {
+  "name": "prov-touched-anchor",
+  "file": "note_provenance.go",
+  "find": "anchor := touch.receiptId\n\t\tif anchor == \"\" {\n\t\t\tanchor = touch.entryId\n\t\t}",
+  "replace": "anchor := touch.entryId"
+ },
+ {
+  "name": "prov-touched-cleared",
+  "file": "note_provenance.go",
+  "find": "cleared:      touch.kind == \"clear\",",
+  "replace": "cleared:      touch.kind == \"read\","
+ },
+ {
+  "name": "prov-seedCand-missing-root",
+  "file": "note_provenance.go",
+  "find": "if scope == nil && len(evidence.touches) > 0 {",
+  "replace": "if scope == nil && len(evidence.touches) > 1 {"
+ },
+ {
+  "name": "prov-seedCand-missing-text",
+  "file": "note_provenance.go",
+  "find": "\"Incomplete notes snapshot: the source notes root is missing or ambiguous.\"",
+  "replace": "\"Incomplete notes snapshot: the source notes root is missing.\""
+ },
+ {
+  "name": "prov-seedCand-scope-appended",
+  "file": "note_provenance.go",
+  "find": "if scope != nil {\n\t\tscopes = append(scopes, *scope)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-seedCand-visible",
+  "file": "note_provenance.go",
+  "find": "if _, visible := evidence.visibleIds[anchor]; visible {",
+  "replace": "if _, visible := evidence.visibleIds[anchor]; !visible {"
+ },
+ {
+  "name": "prov-seedCand-has",
+  "file": "note_provenance.go",
+  "find": "if selected.has(seed.path) {\n\t\t\t\tcontinue\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "prov-fork-resolve-base",
+  "file": "note_provenance.go",
+  "find": "if hasScope {\n\t\t\tbase = scope\n\t\t}\n\t\taddress, ok, err := resolveReference",
+  "replace": "if false {\n\t\t\tbase = scope\n\t\t}\n\t\taddress, ok, err := resolveReference"
+ },
+ {
+  "name": "prov-fork-cleared",
+  "file": "note_provenance.go",
+  "find": "case candidate.cleared:\n\t\t\tabsent = append(absent, candidate.path)",
+  "replace": "case false:\n\t\t\tabsent = append(absent, candidate.path)"
+ },
+ {
+  "name": "prov-fork-unavailable-text",
+  "file": "note_provenance.go",
+  "find": "\"Incomplete notes snapshot: source note \" + candidate.path + \" is unavailable.\"",
+  "replace": "\"Incomplete notes snapshot: source note \" + candidate.path + \" is missing.\""
+ },
+ {
+  "name": "prov-fork-lineage",
+  "file": "note_provenance.go",
+  "find": "lineage: candidate.lineage, anchors: candidate.anchors})",
+  "replace": "lineage: *addresses[i], anchors: candidate.anchors})"
+ },
+ {
+  "name": "prov-fork-source-plain",
+  "file": "note_provenance.go",
+  "find": "next.source = &noteScope{root: scope.root, scope: scope.scope}",
+  "replace": "next.source = &scope"
+ },
+ {
+  "name": "prov-load-header",
+  "file": "note_provenance.go",
+  "find": "return nil, noteSource{}, false, errors.New(\"Pi did not supply the session header for notes ownership.\")",
+  "replace": "return nil, noteSource{}, false, nil"
+ },
+ {
+  "name": "prov-load-header-text",
+  "file": "note_provenance.go",
+  "find": "\"Pi did not supply the session header for notes ownership.\"",
+  "replace": "\"Pi did not supply the session header.\""
+ },
+ {
+  "name": "prov-load-own",
+  "file": "note_provenance.go",
+  "find": "if own != nil {\n\t\treturn own, source, false, nil\n\t}",
+  "replace": "_ = own"
+ },
+ {
+  "name": "prov-load-own-last",
+  "file": "note_provenance.go",
+  "find": "for i := len(bindings) - 1; i >= 0; i-- {\n\t\tif sameOwner(bindings[i].owner, owner) {\n\t\t\town = bindings[i]",
+  "replace": "for i := 0; i < len(bindings); i++ {\n\t\tif sameOwner(bindings[i].owner, owner) {\n\t\t\town = bindings[i]"
+ },
+ {
+  "name": "prov-load-fork-decision",
+  "file": "note_provenance.go",
+  "find": "fork := parent != nil || len(bindingsOf(all)) > 0",
+  "replace": "fork := parent != nil"
+ },
+ {
+  "name": "prov-load-fork-parent",
+  "file": "note_provenance.go",
+  "find": "fork := parent != nil || len(bindingsOf(all)) > 0",
+  "replace": "fork := len(bindingsOf(all)) > 0"
+ },
+ {
+  "name": "prov-load-project-shape",
+  "file": "note_provenance.go",
+  "find": "return &noteBinding{kind: \"project\", owner: owner, root: root}, source, true, nil",
+  "replace": "return &noteBinding{kind: \"project\", owner: owner, root: root}, source, false, nil"
+ },
+ {
+  "name": "prov-load-parent-header",
+  "file": "note_provenance.go",
+  "find": "if p, ok := str(header, \"parentSession\"); ok {",
+  "replace": "if p, ok := str(header, \"parentSessionX\"); ok {"
+ },
+ {
+  "name": "ev-omitted",
+  "file": "note_evidence.go",
+  "find": "if len(p.messages) == 0 {",
+  "replace": "if len(p.messages) != 0 {"
+ },
+ {
+  "name": "ev-edit-null",
+  "file": "note_evidence.go",
+  "find": "(edited && hasReplacement && replacement == nil)",
+  "replace": "(edited && replacement == nil && false)"
+ },
+ {
+  "name": "ev-edit-content",
+  "file": "note_evidence.go",
+  "find": "message[\"content\"] = content",
+  "replace": "message[\"content\"] = []any{content}"
+ },
+ {
+  "name": "ev-edit-id",
+  "file": "note_evidence.go",
+  "find": "if eid, ok := entryID(edit); ok {\n\t\t\t\teditID = eid\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ev-edit-only-message",
+  "file": "note_evidence.go",
+  "find": "if t, _ := str(entry, \"type\"); t == \"message\" {",
+  "replace": "if t, _ := str(entry, \"type\"); t != \"message\" {"
+ },
+ {
+  "name": "ev-retained",
+  "file": "note_evidence.go",
+  "find": "_, retained := evidence.retained[id]",
+  "replace": "retained := false"
+ },
+ {
+  "name": "ev-receipt-toolresult",
+  "file": "note_evidence.go",
+  "find": "if role, _ := str(message, \"role\"); role == \"toolResult\" {",
+  "replace": "if role, _ := str(message, \"role\"); role != \"toolResult\" {"
+ },
+ {
+  "name": "ev-receipt-runid",
+  "file": "note_evidence.go",
+  "find": "return optionalString(details[\"runId\"])",
+  "replace": "return optionalString(details[\"id\"])"
+ },
+ {
+  "name": "ev-receipt-last-wins",
+  "file": "note_evidence.go",
+  "find": "receipts[key] = entry",
+  "replace": "if _, ok := receipts[key]; !ok {\n\t\t\t\treceipts[key] = entry\n\t\t\t}"
+ },
+ {
+  "name": "ev-recorded-dedupe",
+  "file": "note_evidence.go",
+  "find": "if _, dup := seen[key]; item == nil || dup {",
+  "replace": "if item == nil {"
+ },
+ {
+  "name": "ev-recorded-owner-key",
+  "file": "note_evidence.go",
+  "find": "key := [3]string{record.owner.id, record.owner.timestamp, record.toolCallId}",
+  "replace": "key := [3]string{record.owner.id, \"\", record.toolCallId}"
+ },
+ {
+  "name": "ev-recorded-kind-read",
+  "file": "note_evidence.go",
+  "find": "if file.kind == \"read\" {\n\t\t\t\tkind = \"read\"",
+  "replace": "if file.kind == \"write\" {\n\t\t\t\tkind = \"read\""
+ },
+ {
+  "name": "ev-recorded-kind-clear",
+  "file": "note_evidence.go",
+  "find": "} else if file.kind == \"delete\" || file.kind == \"clear\" {",
+  "replace": "} else if file.kind == \"clear\" {"
+ },
+ {
+  "name": "ev-recorded-abs",
+  "file": "note_evidence.go",
+  "find": "absPath:    filepath.Join(scopeDirectory(file), file.path),",
+  "replace": "absPath:    filepath.Join(\"\", file.path),"
+ },
+ {
+  "name": "ev-recorded-receipt-id",
+  "file": "note_evidence.go",
+  "find": "receiptID := item.entryId\n\t\tif id, ok := entryID(item.entry); ok {\n\t\t\treceiptID = id\n\t\t}",
+  "replace": "receiptID := item.entryId"
+ },
+ {
+  "name": "ev-recorded-retained",
+  "file": "note_evidence.go",
+  "find": "inRetained: false,\n\t\t\t\towner:      &owner,",
+  "replace": "inRetained: true,\n\t\t\t\towner:      &owner,"
+ },
+ {
+  "name": "ev-touchKey-receipt",
+  "file": "note_evidence.go",
+  "find": "first := touch.receiptId\n\tif first == \"\" {\n\t\tfirst = touch.entryId\n\t}",
+  "replace": "first := touch.entryId"
+ },
+ {
+  "name": "ev-touchKey-abs",
+  "file": "note_evidence.go",
+  "find": "second := touch.absPath\n\tif second == \"\" {\n\t\tsecond = touch.notePath\n\t}",
+  "replace": "second := touch.notePath"
+ },
+ {
+  "name": "ev-session-dirs",
+  "file": "note_evidence.go",
+  "find": "for _, binding := range bindingsOf(evidence.allEntries) {\n\t\tadd(scopeDirectory(binding))\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ev-session-dirs-extra",
+  "file": "note_evidence.go",
+  "find": "for _, d := range evidence.directories {\n\t\tadd(d)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ev-session-owner-copy",
+  "file": "note_evidence.go",
+  "find": "touch.owner = recordedByReceipt[key].owner",
+  "replace": ""
+ },
+ {
+  "name": "ev-session-covered",
+  "file": "note_evidence.go",
+  "find": "if _, ok := covered[touchKey(touch)]; !ok {",
+  "replace": "if _, ok := covered[touchKey(touch)]; ok {"
+ },
+ {
+  "name": "ev-session-sort",
+  "file": "note_evidence.go",
+  "find": "sort.SliceStable(touches, func(i, j int) bool { return rank(touches[i]) < rank(touches[j]) })",
+  "replace": "sort.SliceStable(touches, func(i, j int) bool { return rank(touches[i]) < 0 })"
+ },
+ {
+  "name": "ev-session-sort-dir",
+  "file": "note_evidence.go",
+  "find": "return rank(touches[i]) < rank(touches[j])",
+  "replace": "return rank(touches[i]) > rank(touches[j])"
+ },
+ {
+  "name": "ev-session-visible-ids",
+  "file": "note_evidence.go",
+  "find": "visibleIds[idOrEmpty(item.entry)] = struct{}{}",
+  "replace": ""
+ },
+ {
+  "name": "ev-session-order-id",
+  "file": "note_evidence.go",
+  "find": "id := t.receiptId\n\t\tif id == \"\" {\n\t\t\tid = t.entryId\n\t\t}\n\t\treturn order[id]",
+  "replace": "return order[t.entryId]"
+ },
+ {
+  "name": "ev-scope-project",
+  "file": "note_evidence.go",
+  "find": "if recovery == nil || recovery.binding.kind == \"project\" {",
+  "replace": "if recovery == nil {"
+ },
+ {
+  "name": "ev-scope-own",
+  "file": "note_evidence.go",
+  "find": "if found && sameScope(address, recovery.binding) {\n\t\t\tout[i] = touch\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ev-scope-owner",
+  "file": "note_evidence.go",
+  "find": "currentOwner := touch.owner != nil && sameOwner(*touch.owner, recovery.binding.owner)",
+  "replace": "currentOwner := touch.owner != nil"
+ },
+ {
+  "name": "ev-scope-owned",
+  "file": "note_evidence.go",
+  "find": "if _, ok := owned[touch.notePath]; ok && !currentOwner {",
+  "replace": "if _, ok := owned[touch.notePath]; ok && currentOwner {"
+ },
+ {
+  "name": "ev-scope-kind",
+  "file": "note_evidence.go",
+  "find": "if touch.kind != \"read\" && touch.kind != \"clear\" {",
+  "replace": "if touch.kind != \"read\" {"
+ },
+ {
+  "name": "ev-scope-retained",
+  "file": "note_evidence.go",
+  "find": "touch.kind = \"observed-write\"\n\t\t\t}\n\t\t\ttouch.inRetained = false",
+  "replace": "touch.kind = \"observed-write\"\n\t\t\t}"
+ },
+ {
+  "name": "ev-scope-no-address",
+  "file": "note_evidence.go",
+  "find": "if !found {\n\t\t\tout[i] = touch\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ev-scope-reference",
+  "file": "note_evidence.go",
+  "find": "touch.referenceScope = scopeDirectory(address)",
+  "replace": "touch.referenceScope = address.root"
+ },
+ {
+  "name": "ev-scope-read",
+  "file": "note_evidence.go",
+  "find": "touch.kind = \"read\"\n\t\ttouch.referenceScope",
+  "replace": "touch.referenceScope"
+ },
+ {
+  "name": "ev-scope-source-scope",
+  "file": "note_evidence.go",
+  "find": "if recovery.binding.source != nil {\n\t\tscopes = append(scopes, *recovery.binding.source)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "inv-stat-hook",
+  "file": "note_inventory.go",
+  "find": "if hook := noteStatHook; hook != nil {\n\t\thook(path)\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "inv-stat-missing",
+  "file": "note_inventory.go",
+  "find": "if noteMissing(err) {\n\t\t\treturn nil, nil\n\t\t}\n\t\treturn nil, nodeFsError(err, \"stat\", path)",
+  "replace": "return nil, nodeFsError(err, \"stat\", path)"
+ },
+ {
+  "name": "inv-stat-error",
+  "file": "note_inventory.go",
+  "find": "return nil, nodeFsError(err, \"stat\", path)\n\t}\n\tif hook",
+  "replace": "return nil, nil\n\t}\n\tif hook"
+ },
+ {
+  "name": "inv-folder-recheck",
+  "file": "note_inventory.go",
+  "find": "if entry.IsDir() || isLinkEntry(entry) {\n\t\t\t\tcount = i + 1",
+  "replace": "if entry.IsDir() || isLinkEntry(entry) {\n\t\t\t\t_ = i\n\t\t\t\tcount = len(batch)"
+ },
+ {
+  "name": "inv-folder-ctx",
+  "file": "note_inventory.go",
+  "find": "for start < len(entries) {\n\t\tif err := ctxErr(ctx); err != nil {\n\t\t\treturn err\n\t\t}",
+  "replace": "for start < len(entries) {"
+ },
+ {
+  "name": "inv-folder-skip-missing",
+  "file": "note_inventory.go",
+  "find": "if info != nil {\n\t\t\t\tpath := filepath.Join(directory, batch[i].Name())",
+  "replace": "if true {\n\t\t\t\tpath := filepath.Join(directory, batch[i].Name())"
+ },
+ {
+  "name": "inv-folder-start",
+  "file": "note_inventory.go",
+  "find": "for i := range count {\n\t\t\tstart++",
+  "replace": "for i := range count {"
+ },
+ {
+  "name": "inv-folder-stat-error",
+  "file": "note_inventory.go",
+  "find": "for _, err := range errs {\n\t\t\tif err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t}\n\t\tfor i := range count",
+  "replace": "for i := range count"
+ },
+ {
+  "name": "inv-allowed-project",
+  "file": "note_inventory.go",
+  "find": "return !inside(forks, path), nil",
+  "replace": "return forks != \"\", nil"
+ },
+ {
+  "name": "inv-allowed-private",
+  "file": "note_inventory.go",
+  "find": "if inside(scopeRoot, path) {\n\t\treturn true, nil\n\t}",
+  "replace": "_ = scopeRoot"
+ },
+ {
+  "name": "inv-allowed-notice",
+  "file": "note_inventory.go",
+  "find": "state.notice(\"Not indexed: alias outside private notes scope (\" + path + \").\")",
+  "replace": ""
+ },
+ {
+  "name": "inv-allowed-notice-text",
+  "file": "note_inventory.go",
+  "find": "\"Not indexed: alias outside private notes scope (\"",
+  "replace": "\"Not indexed: alias outside the private notes scope (\""
+ },
+ {
+  "name": "inv-walk-cycle",
+  "file": "note_inventory.go",
+  "find": "for _, ancestor := range state.ancestors {\n\t\tif ancestor == root {\n\t\t\treturn nil, nil\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "inv-walk-allowed",
+  "file": "note_inventory.go",
+  "find": "if allowed, err := allowedTarget(root, state); err != nil || !allowed {\n\t\treturn nil, err\n\t}\n\tnext",
+  "replace": "next"
+ },
+ {
+  "name": "inv-walk-alias-check",
+  "file": "note_inventory.go",
+  "find": "if e.alias {\n\t\t\tcanonical, err := canonicalPath(e.path)",
+  "replace": "if false {\n\t\t\tcanonical, err := canonicalPath(e.path)"
+ },
+ {
+  "name": "inv-walk-nested-error",
+  "file": "note_inventory.go",
+  "find": "nested, err := walk(ctx, e.path, next)\n\t\t\tfiles = append(files, nested...)\n\t\t\treturn err",
+  "replace": "nested, _ := walk(ctx, e.path, next)\n\t\t\tfiles = append(files, nested...)\n\t\t\treturn nil"
+ },
+ {
+  "name": "inv-notesUnder-root",
+  "file": "note_inventory.go",
+  "find": "if folder == nil || *folder == \"\" || *folder == \".\" {",
+  "replace": "if folder == nil || *folder == \"\" {"
+ },
+ {
+  "name": "inv-notesUnder-folder-notePath",
+  "file": "note_inventory.go",
+  "find": "if target, err = notePath(scope, *folder); err != nil {",
+  "replace": "if target, err = filepath.Join(scopeDirectory(scope), *folder), error(nil); err != nil {"
+ },
+ {
+  "name": "inv-notesUnder-missing",
+  "file": "note_inventory.go",
+  "find": "if info == nil {\n\t\treturn nil, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "inv-notesUnder-file",
+  "file": "note_inventory.go",
+  "find": "files = []noteFile{{noteIdentity: fileIdentity(target, info), path: target}}",
+  "replace": ""
+ },
+ {
+  "name": "inv-notesUnder-sort",
+  "file": "note_inventory.go",
+  "find": "return files[i].mtimeMs > files[j].mtimeMs",
+  "replace": "return files[i].mtimeMs < files[j].mtimeMs"
+ },
+ {
+  "name": "inv-notesUnder-ctx-end",
+  "file": "note_inventory.go",
+  "find": "if err := ctxErr(ctx); err != nil {\n\t\treturn nil, err\n\t}\n\tsort.SliceStable(files",
+  "replace": "sort.SliceStable(files"
+ },
+ {
+  "name": "disc-staging",
+  "file": "note_discovery.go",
+  "find": "if !strings.HasPrefix(entry.Name(), \".staging-\") {",
+  "replace": "if !strings.HasPrefix(entry.Name(), \".stagingx-\") {"
+ },
+ {
+  "name": "disc-project-notfound",
+  "file": "note_discovery.go",
+  "find": "if !errors.Is(err, fs.ErrNotExist) {\n\t\t\treturn nil, err\n\t\t}\n\t\tentries = nil",
+  "replace": "return nil, err"
+ },
+ {
+  "name": "disc-project-notice",
+  "file": "note_discovery.go",
+  "find": "\"Not indexed: unmanaged or incomplete notes data at \"",
+  "replace": "\"Not indexed: unmanaged notes data at \""
+ },
+ {
+  "name": "disc-project-current",
+  "file": "note_discovery.go",
+  "find": "if !present {\n\t\tinv := scopeInventory",
+  "replace": "if false && !present {\n\t\tinv := scopeInventory"
+ },
+ {
+  "name": "disc-project-manifest-fork",
+  "file": "note_discovery.go",
+  "find": "if session.binding.kind == \"fork\" {\n\t\t\tinv.manifest = session.binding\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-scoped-seed",
+  "file": "note_discovery.go",
+  "find": "if seed != nil {\n\t\t\tlineage = seed.lineage\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-scoped-relative",
+  "file": "note_discovery.go",
+  "find": "path := nodeRelative(directory, file.path)",
+  "replace": "path := file.path\n\t\t_ = directory"
+ },
+ {
+  "name": "disc-key-path",
+  "file": "note_discovery.go",
+  "find": "b = appendStr(b, address.path)\n\treturn string(append(b, ']'))",
+  "replace": "return string(append(b, ']'))"
+ },
+ {
+  "name": "disc-label-unlabeled",
+  "file": "note_discovery.go",
+  "find": "if !labeled {\n\t\treturn note.address.path\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-label-mode",
+  "file": "note_discovery.go",
+  "find": "mode := \"read-only\"\n\tif sameScope(note.address, session.binding) {\n\t\tmode = \"current\"\n\t}",
+  "replace": "mode := \"read-only\""
+ },
+ {
+  "name": "disc-label-copies",
+  "file": "note_discovery.go",
+  "find": "copies = \"; identical copies: \" + strings.Join(parts, \", \")",
+  "replace": "copies = \"; identical copies: \" + strings.Join(parts, \",\")"
+ },
+ {
+  "name": "disc-label-wrap",
+  "file": "note_discovery.go",
+  "find": "return note.address.path + \" [\" + mode + \"; read \" + noteReadTarget(note) + copies + \"]\"",
+  "replace": "return note.address.path + \" [\" + mode + \"; read \" + noteReadTarget(note) + copies + \"}\""
+ },
+ {
+  "name": "disc-ref-regular",
+  "file": "note_discovery.go",
+  "find": "if !info.Mode().IsRegular() {\n\t\treturn nil, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-known-revision",
+  "file": "note_discovery.go",
+  "find": "if ok && cached.revision == revision && sameIdentity(cached.identity, note.noteIdentity) {",
+  "replace": "if ok && sameIdentity(cached.identity, note.noteIdentity) {"
+ },
+ {
+  "name": "disc-known-identity",
+  "file": "note_discovery.go",
+  "find": "if ok && cached.revision == revision && sameIdentity(cached.identity, note.noteIdentity) {",
+  "replace": "if ok && cached.revision == revision {"
+ },
+ {
+  "name": "disc-known-seed-identity",
+  "file": "note_discovery.go",
+  "find": "if revision == 0 && note.seed != nil && sameIdentity(note.seed.identity, note.noteIdentity) {",
+  "replace": "if revision == 0 && note.seed != nil {"
+ },
+ {
+  "name": "disc-digest-cache",
+  "file": "note_discovery.go",
+  "find": "d.mu.Lock()\n\t\t\td.digests[note.path] = digestCache{identity: note.noteIdentity, digest: digest, revision: revision}\n\t\t\td.mu.Unlock()",
+  "replace": ""
+ },
+ {
+  "name": "disc-digest-identity",
+  "file": "note_discovery.go",
+  "find": "if !sameIdentity(note.noteIdentity, fileIdentity(note.path, info)) {\n\t\t\t\treturn \"\", false, nil\n\t\t\t}",
+  "replace": "_ = info"
+ },
+ {
+  "name": "disc-digest-notice",
+  "file": "note_discovery.go",
+  "find": "notice(\"Duplicate comparison unavailable for \" + noteReadTarget(&note) + \": \" + err.Error() + \". Copies remain separate.\")",
+  "replace": ""
+ },
+ {
+  "name": "disc-digest-notice-text",
+  "file": "note_discovery.go",
+  "find": "\". Copies remain separate.\"",
+  "replace": "\". Copies stay separate.\""
+ },
+ {
+  "name": "disc-collapse-size",
+  "file": "note_discovery.go",
+  "find": "+ \"\\x00\" + strconv.FormatFloat(file.size, 'f', -1, 64)",
+  "replace": "+ strconv.Itoa(0)"
+ },
+ {
+  "name": "disc-collapse-lineage",
+  "file": "note_discovery.go",
+  "find": "key := noteKey(file.lineage) +",
+  "replace": "key := noteKey(file.address) +"
+ },
+ {
+  "name": "disc-collapse-single",
+  "file": "note_discovery.go",
+  "find": "if len(group) == 1 {\n\t\t\tselected = append(selected, group...)\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-collapse-current-first",
+  "file": "note_discovery.go",
+  "find": "return sameScope(group[i].address, session.binding) && !sameScope(group[j].address, session.binding)",
+  "replace": "return !sameScope(group[i].address, session.binding) && sameScope(group[j].address, session.binding)"
+ },
+ {
+  "name": "disc-collapse-notices",
+  "file": "note_discovery.go",
+  "find": "for _, text := range r.notices {\n\t\t\t\tnotice(text)\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "disc-collapse-copies",
+  "file": "note_discovery.go",
+  "find": "previous.copies = append(append(make([]noteAddress, 0, len(previous.copies)+1), previous.copies...), r.file.address)",
+  "replace": "previous.copies = append(make([]noteAddress, 0, 1), r.file.address)"
+ },
+ {
+  "name": "disc-collapse-order",
+  "file": "note_discovery.go",
+  "find": "for _, mk := range matchKeys {\n\t\t\tselected = append(selected, matches[mk])\n\t\t}",
+  "replace": "for i := len(matchKeys) - 1; i >= 0; i-- {\n\t\t\tselected = append(selected, matches[matchKeys[i]])\n\t\t}"
+ },
+ {
+  "name": "disc-refs-scope",
+  "file": "note_discovery.go",
+  "find": "if session.binding.kind != \"fork\" || options.scope != nil {",
+  "replace": "if session.binding.kind != \"fork\" {"
+ },
+ {
+  "name": "disc-refs-prefix",
+  "file": "note_discovery.go",
+  "find": "strings.HasPrefix(path, *options.path+\"/\")",
+  "replace": "strings.HasPrefix(path, *options.path)"
+ },
+ {
+  "name": "disc-refs-nil",
+  "file": "note_discovery.go",
+  "find": "if file != nil {\n\t\t\tfiles = append(files, *file)\n\t\t}",
+  "replace": "files = append(files, *file)"
+ },
+ {
+  "name": "disc-list-reference-dedupe",
+  "file": "note_discovery.go",
+  "find": "if noteKey(file.address) == key {\n\t\t\t\texists = true\n\t\t\t\tbreak\n\t\t\t}",
+  "replace": "_, _ = file, key"
+ },
+ {
+  "name": "disc-list-sort",
+  "file": "note_discovery.go",
+  "find": "sort.SliceStable(selected, func(i, j int) bool { return selected[i].mtimeMs > selected[j].mtimeMs })",
+  "replace": ""
+ },
+ {
+  "name": "disc-list-labeled-foreign",
+  "file": "note_discovery.go",
+  "find": "if !sameScope(s.scope, session.binding) {\n\t\t\tlabeled = true\n\t\t}",
+  "replace": "_ = s"
+ },
+ {
+  "name": "disc-list-scope-order",
+  "file": "note_discovery.go",
+  "find": "notices = append(notices, r.notices...)\n\t\tfiles = append(files, r.files...)",
+  "replace": "files = append(files, r.files...)"
+ },
+ {
+  "name": "np-norm-dots",
+  "file": "note_nodepath.go",
+  "find": "} else if code == '.' && dots != -1 {",
+  "replace": "} else if code == '.' && dots != 0 {"
+ },
+ {
+  "name": "np-norm-above-root",
+  "file": "note_nodepath.go",
+  "find": "if allowAboveRoot {\n\t\t\t\t\tif len(res) > 0 {",
+  "replace": "if allowAboveRoot && false {\n\t\t\t\t\tif len(res) > 0 {"
+ },
+ {
+  "name": "np-norm-lastslash",
+  "file": "note_nodepath.go",
+  "find": "if lastSlash == i-1 || dots == 1 {",
+  "replace": "if lastSlash == i-1 {"
+ },
+ {
+  "name": "np-posix-resolve-abs",
+  "file": "note_nodepath.go",
+  "find": "absolute = path[0] == '/'\n\t}\n\tresolved = s.normalizeString",
+  "replace": "absolute = false\n\t}\n\tresolved = s.normalizeString"
+ },
+ {
+  "name": "np-posix-resolve-dot",
+  "file": "note_nodepath.go",
+  "find": "if len(resolved) > 0 {\n\t\treturn resolved\n\t}\n\treturn \".\"",
+  "replace": "return resolved"
+ },
+ {
+  "name": "np-posix-relative-eq",
+  "file": "note_nodepath.go",
+  "find": "from = s.resolve(cwd, from)\n\tto = s.resolve(cwd, to)\n\tif from == to {\n\t\treturn \"\"\n\t}\n\tfromStart",
+  "replace": "from = s.resolve(cwd, from)\n\tto = s.resolve(cwd, to)\n\tfromStart"
+ },
+ {
+  "name": "np-posix-relative-up",
+  "file": "note_nodepath.go",
+  "find": "out += \"/..\"",
+  "replace": "out += \"/.\""
+ },
+ {
+  "name": "np-posix-relative-slash",
+  "file": "note_nodepath.go",
+  "find": "if to[toStart+i] == '/' {\n\t\t\t\treturn to[toStart+i+1:]",
+  "replace": "if to[toStart+i] == '/' {\n\t\t\t\treturn to[toStart+i:]"
+ },
+ {
+  "name": "np-posix-dirname-root",
+  "file": "note_nodepath.go",
+  "find": "if hasRoot && end == 1 {\n\t\treturn \"//\"\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "np-posix-dirname-dot",
+  "file": "note_nodepath.go",
+  "find": "if end == -1 {\n\t\tif hasRoot {\n\t\t\treturn \"/\"\n\t\t}\n\t\treturn \".\"\n\t}\n\tif hasRoot",
+  "replace": "if end == -1 {\n\t\treturn \".\"\n\t}\n\tif hasRoot"
+ },
+ {
+  "name": "np-win-device",
+  "file": "note_nodepath.go",
+  "find": "if firstPart == \".\" || firstPart == \"?\" {",
+  "replace": "if firstPart == \".\" {"
+ },
+ {
+  "name": "np-win-isabs",
+  "file": "note_nodepath.go",
+  "find": "(len(p) > 2 && isDeviceRoot(p[0]) && p[1] == ':' && s.isSep(p[2]))",
+  "replace": "(len(p) > 1 && isDeviceRoot(p[0]) && p[1] == ':')"
+ },
+ {
+  "name": "np-win-relative-case",
+  "file": "note_nodepath.go",
+  "find": "from = strings.ToLower(fromOrig)\n\tto = strings.ToLower(toOrig)",
+  "replace": "from = fromOrig\n\tto = toOrig"
+ },
+ {
+  "name": "np-win-resolve-device",
+  "file": "note_nodepath.go",
+  "find": "if strings.ToLower(device) != strings.ToLower(resolvedDevice) {",
+  "replace": "if device != resolvedDevice {"
+ },
+ {
+  "name": "np-win-dirname-unc",
+  "file": "note_nodepath.go",
+  "find": "if j == n {\n\t\t\t\t\t\treturn path\n\t\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "np-realpath-resolve",
+  "file": "note_nodepath.go",
+  "find": "p = s.resolve(cwd, p)\n\tknownHard",
+  "replace": "knownHard"
+ },
+ {
+  "name": "np-realpath-lstat-error",
+  "file": "note_nodepath.go",
+  "find": "info, err := os.Lstat(base)\n\t\tif err != nil {\n\t\t\treturn \"\", nodeFsError(err, \"lstat\", base)\n\t\t}",
+  "replace": "info, err := os.Lstat(base)\n\t\tif err != nil {\n\t\t\treturn \"\", err\n\t\t}"
+ },
+ {
+  "name": "np-realpath-stat",
+  "file": "note_nodepath.go",
+  "find": "if _, err := os.Stat(base); err != nil {\n\t\t\treturn \"\", nodeFsError(err, \"stat\", base)\n\t\t}\n\t\ttarget",
+  "replace": "target"
+ },
+ {
+  "name": "np-realpath-readlink-base",
+  "file": "note_nodepath.go",
+  "find": "resolvedLink := s.resolve(cwd, previous, target)",
+  "replace": "resolvedLink := s.resolve(cwd, base, target)"
+ },
+ {
+  "name": "np-realpath-restart",
+  "file": "note_nodepath.go",
+  "find": "p = s.resolve(cwd, resolvedLink, p[pos:])",
+  "replace": "p = s.resolve(cwd, resolvedLink)"
+ },
+ {
+  "name": "np-realpath-native-loop",
+  "file": "note_nodepath.go",
+  "find": "if strings.Contains(err.Error(), \"too many links\") {",
+  "replace": "if strings.Contains(err.Error(), \"too many linkz\") {"
+ },
+ {
+  "name": "np-realpath-native-syscall",
+  "file": "note_nodepath.go",
+  "find": "return \"\", nodeFsError(err, \"realpath\", p)\n\t}\n\treturn real, nil",
+  "replace": "return \"\", nodeFsError(err, \"stat\", p)\n\t}\n\treturn real, nil"
+ },
+ {
+  "name": "np-cwdfor",
+  "file": "note_nodepath.go",
+  "find": "if len(p) > 0 && p[0] == '/' {\n\t\t\t\treturn \"/\"\n\t\t\t}",
+  "replace": "if len(p) > 0 {\n\t\t\t\treturn \"/\"\n\t\t\t}"
+ },
+ {
+  "name": "rd-unsorted",
+  "file": "note_readdir.go",
+  "find": "entries, err := os.ReadDir(dir)",
+  "replace": "f, openErr := os.Open(dir)\n\tvar entries []fs.DirEntry\n\terr := openErr\n\tif openErr == nil {\n\t\tentries, err = f.ReadDir(-1)\n\t\tf.Close()\n\t}"
+ },
+ {
+  "name": "rd-error",
+  "file": "note_readdir.go",
+  "find": "return nil, nodeFsError(err, \"scandir\", dir)",
+  "replace": "return nil, err"
+ },
+ {
+  "name": "stat-ms",
+  "file": "note_stat.go",
+  "find": "return float64(t.Unix())*1e3 + float64(t.Nanosecond())/1e6",
+  "replace": "return float64(t.UnixMilli())"
+ },
+ {
+  "name": "stat-ctime",
+  "file": "note_stat.go",
+  "find": "ctimeMs: msOf(ctime),",
+  "replace": "ctimeMs: msOf(ctime) + 1,"
+ },
+ {
+  "name": "stat-ino",
+  "file": "note_stat.go",
+  "find": "ino:     ino,",
+  "replace": "ino:     ino + 1,"
+ },
+ {
+  "name": "stat-size",
+  "file": "note_stat.go",
+  "find": "size:    float64(info.Size()),",
+  "replace": "size:    0,"
+ },
+ {
+  "name": "stat-linux-ino",
+  "file": "note_stat_linux.go",
+  "find": "float64(st.Ino), float64(st.Dev)",
+  "replace": "float64(st.Dev), float64(st.Ino)"
+ },
+ {
+  "name": "stat-linux-atime",
+  "file": "note_stat_linux.go",
+  "find": "return time.Unix(int64(st.Atim.Sec), int64(st.Atim.Nsec))",
+  "replace": "return time.Unix(int64(st.Ctim.Sec), int64(st.Ctim.Nsec))"
+ }
+]

@@ -1,0 +1,15 @@
+RecoveryLane red snapshot: tests against a buildAutoHandoff stub returning an empty record (behaviour failures, no compile errors)
+--- FAIL: TestTwinPosthorseRecoveryNotes (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryNotes/automatic_recovery_tracks_session_notes_across_tools,_codemode,_context_edits,_clears,_and_explicit_resets (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryNotes/automatic_recovery_keeps_verified_paths_from_a_partially_failed_editing_receipt (0.00s)
+--- FAIL: TestTwinPosthorseRecoveryRecords (0.01s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/new_context_requests_a_turn-boundary_reset_and_automatic_rollover_builds_a_recovery_record (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/a_minimum-budget_automatic_record_keeps_a_complete_history_pointer_without_nested_evidence (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/automatic_ancestry_stops_at_the_nearest_owner_window_without_resurrecting_superseded_intent (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/automatic_recovery_keeps_owner_anchors_and_visible_coordination_without_stale_transcript_guesses (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/automatic_handoff_carries_trailing_synchronous_results,_with_entry_ids_and_no_base64 (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/retained_edited_async_receipts_are_excluded_by_source_identity_while_discarded_edits_keep_history_pointers (0.00s)
+    --- FAIL: TestTwinPosthorseRecoveryRecords/async_receipt_recovery_shares_the_handoff_header_budget_across_earlier_batches (0.01s)
+FAIL
+FAIL	github.com/MichaelKinsy/pigpen/posthorse	0.015s
+FAIL

@@ -1,0 +1,51 @@
+{
+ "name": "real-saved-messages",
+ "replies": [
+  "unused"
+ ],
+ "width": 100,
+ "height": 80,
+ "session": {
+  "entries": [
+   {
+    "type": "custom_message",
+    "customType": "context-window",
+    "content": "Context window window-2 starts here. Earlier conversation is not available in this window.\n\nHandoff from the previous window:\nHandoff line 1\nHandoff line 2\nHandoff line 3\nHandoff line 4\nHandoff line 5\nHandoff line 6\nHandoff line 7\nHandoff line 8\nHandoff line 9\nHandoff line 10\nHandoff line 11\nHandoff line 12\nHandoff line 13\nHandoff line 14\nHandoff line 15\nHandoff line 16\nHandoff line 17\nHandoff line 18\nHandoff line 19\nHandoff line 20\nHandoff line 21\nHandoff line 22\nHandoff line 23\nHandoff line 24\nHandoff line 25\nHandoff line 26\nHandoff line 27\nHandoff line 28\nHandoff line 29\nHandoff line 30\nHandoff line 31\nHandoff line 32\nHandoff line 33\nHandoff line 34\nHandoff line 35\nHandoff line 36\nHandoff line 37\nHandoff line 38\nHandoff line 39\nHandoff line 40\nHandoff line 41\nHandoff line 42\nHandoff line 43\nHandoff line 44\nHandoff line 45\nHandoff line 46\nHandoff line 47\nHandoff line 48\nHandoff line 49\nHandoff line 50\nHandoff line 51\nHandoff line 52\nHandoff line 53\nHandoff line 54\nHandoff line 55\nHandoff line 56\nHandoff line 57\nHandoff line 58\nHandoff line 59\nHandoff line 60",
+    "display": true,
+    "details": {
+     "windowId": "window-2",
+     "tokensBefore": 1000
+    }
+   },
+   {
+    "type": "custom_message",
+    "customType": "posthorse-reminder",
+    "content": "Checkpoint now: save notes before the window fills.\nremember this\nremember this\nremember this\nremember this\nremember this\nremember this\nLAST LINE",
+    "display": true
+   }
+  ]
+ },
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ]
+}

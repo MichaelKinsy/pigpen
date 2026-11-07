@@ -1,0 +1,97 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "plan.md",
+      "fixture": "note-short"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "ledger.md",
+      "fixture": "note-long"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "empty.md",
+      "fixture": "note-empty"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "list",
+      "fixture": "notes-list"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "search",
+      "query": "needle",
+      "fixture": "notes-search-more"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "list",
+      "path": "sub",
+      "fixture": "notes-none"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 40,
+ "height": 120,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "notes-pages-w40"
+}

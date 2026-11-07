@@ -1,0 +1,59 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "draft\u001b[2J\u001b]52;c;c2VjcmV0\u0007.md",
+      "content": "saved\u001b[2J",
+      "fixture": "controls"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 64,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "controls"
+}

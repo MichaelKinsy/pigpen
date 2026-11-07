@@ -1,0 +1,136 @@
+{
+ "name": "off-default-extension-malformed-disk-settings",
+ "description": "official-host.ts:1497 'default file extension keeps guidance, reminders and explicit reset despite malformed disk settings'. The agent directory's settings.json is not valid JSON; the extension (loaded from its file, default policy reader) still states guidance in every request, sends one routine task-note reminder when the 305,000-char prompt puts usage in the reminder band, and an explicit new_context in the next prompt commits.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "agentFiles": {
+  "settings.json": "{malformed"
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 77000,
+    "output": 40
+   }
+  },
+  {
+   "text": "Checkpoint received.",
+   "usage": {
+    "input": 78000,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Live settings test."
+     }
+    }
+   ],
+   "usage": {
+    "input": 3000,
+    "output": 40
+   }
+  },
+  {
+   "text": "Fresh.",
+   "usage": {
+    "input": 3000,
+    "output": 40
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "band",
+   "rpc": {
+    "type": "prompt",
+    "message": "{{repeat:p:305000}}"
+   }
+  },
+  {
+   "name": "fresh",
+   "rpc": {
+    "type": "prompt",
+    "message": "Start fresh."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

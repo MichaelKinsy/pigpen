@@ -1,0 +1,19 @@
+{
+  "name": "notes-write-read-list-search",
+  "description": "The notes tool end to end under a real session: write, read, list, search and append (src/notes.ts, src/note-store.ts). The final state of .pi/ pins the notes files and any manifest or scope record the store writes.",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 4096},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "session": {},
+  "normalize": [{"pattern": "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z", "replacement": "<time-minute>"}],
+  "llm": [
+    {"toolCalls": [{"name": "notes", "arguments": {"op": "write", "path": "task.md", "content": "# Task\nDURABLE_NEXT_STEP: write the parser\n"}}], "usage": {"input": 1200, "output": 40}},
+    {"toolCalls": [{"name": "notes", "arguments": {"op": "read", "path": "task.md"}}], "usage": {"input": 1300, "output": 30}},
+    {"toolCalls": [{"name": "notes", "arguments": {"op": "list"}}], "usage": {"input": 1400, "output": 20}},
+    {"toolCalls": [{"name": "notes", "arguments": {"op": "search", "query": "durable_next_step"}}], "usage": {"input": 1500, "output": 25}},
+    {"toolCalls": [{"name": "notes", "arguments": {"op": "append", "path": "log.md", "content": "first entry\n"}}], "usage": {"input": 1600, "output": 25}},
+    {"text": "Notes done.", "usage": {"input": 1700, "output": 5}}
+  ],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "Save, read, list, search and append notes."}}],
+  "captureFiles": [".pi/**"]
+}

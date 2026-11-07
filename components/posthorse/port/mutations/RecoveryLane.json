@@ -1,0 +1,1796 @@
+[
+ {
+  "name": "records/ownerAnswer ignores ownerQuestion flag",
+  "file": "recovery_records.go",
+  "find": "\tif !ownerQuestion {\n\t\treturn false",
+  "replace": "\tif ownerQuestion {\n\t\treturn false"
+ },
+ {
+  "name": "records/ownerAnswer accepts non-message entries",
+  "file": "recovery_records.go",
+  "find": "t != \"message\" {\n\t\treturn false\n\t}\n\tmessage, ok := recOf",
+  "replace": "t == \"message\" {\n\t\treturn false\n\t}\n\tmessage, ok := recOf"
+ },
+ {
+  "name": "records/ownerAnswer accepts non-toolResult role",
+  "file": "recovery_records.go",
+  "find": "role != \"toolResult\" {",
+  "replace": "role == \"toolResult\" {"
+ },
+ {
+  "name": "records/ownerAnswer accepts any tool name",
+  "file": "recovery_records.go",
+  "find": "name != \"ask_question\" {",
+  "replace": "name == \"ask_question\" {"
+ },
+ {
+  "name": "records/ownerAnswer ignores namespace",
+  "file": "recovery_records.go",
+  "find": "if _, has := message[\"namespace\"]; has {",
+  "replace": "if _, has := message[\"namespace\"]; !has {"
+ },
+ {
+  "name": "records/ownerAnswer accepts error results",
+  "file": "recovery_records.go",
+  "find": "return message[\"isError\"] != true",
+  "replace": "return message[\"isError\"] == true"
+ },
+ {
+  "name": "records/user role inverted",
+  "file": "recovery_records.go",
+  "find": "role == \"user\" {",
+  "replace": "role != \"user\" {"
+ },
+ {
+  "name": "records/owner input label",
+  "file": "recovery_records.go",
+  "find": "recordSource{\"owner\", \"owner input\", message",
+  "replace": "recordSource{\"owner\", \"owner inputs\", message"
+ },
+ {
+  "name": "records/owner answer label",
+  "file": "recovery_records.go",
+  "find": "recordSource{\"owner\", \"owner answer via ask_question\", message",
+  "replace": "recordSource{\"owner\", \"owner answer\", message"
+ },
+ {
+  "name": "records/hidden custom message shown",
+  "file": "recovery_records.go",
+  "find": "entry[\"display\"] == true &&",
+  "replace": "entry[\"display\"] != true &&"
+ },
+ {
+  "name": "records/reminder custom message shown",
+  "file": "recovery_records.go",
+  "find": "&& !isReminderType(entry[\"customType\"])",
+  "replace": "&& isReminderType(entry[\"customType\"])"
+ },
+ {
+  "name": "records/custom type fallback",
+  "file": "recovery_records.go",
+  "find": "custom := \"custom\"",
+  "replace": "custom := \"customs\""
+ },
+ {
+  "name": "records/custom type slice 81",
+  "file": "recovery_records.go",
+  "find": "u16slice(custom, 0, 80)",
+  "replace": "u16slice(custom, 0, 81)"
+ },
+ {
+  "name": "records/coordination label wording",
+  "file": "recovery_records.go",
+  "find": "\" coordination input (not direct owner input)\"",
+  "replace": "\" coordination input (direct owner input)\""
+ },
+ {
+  "name": "records/id slice 121",
+  "file": "recovery_records.go",
+  "find": "id := sliceID(entry, \"id\", 120, \"unknown\")",
+  "replace": "id := sliceID(entry, \"id\", 121, \"unknown\")"
+ },
+ {
+  "name": "records/id fallback",
+  "file": "recovery_records.go",
+  "find": "id := sliceID(entry, \"id\", 120, \"unknown\")",
+  "replace": "id := sliceID(entry, \"id\", 120, \"unknown!\")"
+ },
+ {
+  "name": "records/answer image summary inverted",
+  "file": "recovery_records.go",
+  "find": "source.label != \"owner answer via ask_question\" {",
+  "replace": "source.label == \"owner answer via ask_question\" {"
+ },
+ {
+  "name": "records/image pointer wording",
+  "file": "recovery_records.go",
+  "find": "extra := summary + \" — recover with history read id \" + id",
+  "replace": "extra := summary + \" — recover with history reads id \" + id"
+ },
+ {
+  "name": "records/body separator",
+  "file": "recovery_records.go",
+  "find": "\t\t\tbody += \"\\n\"",
+  "replace": "\t\t\tbody += \" \""
+ },
+ {
+  "name": "records/non-text placeholder",
+  "file": "recovery_records.go",
+  "find": "\"(non-text content; recover the entry from history)\"",
+  "replace": "\"(text content; recover the entry from history)\""
+ },
+ {
+  "name": "records/timestamp slice 81",
+  "file": "recovery_records.go",
+  "find": "sliceID(entry, \"timestamp\", 80, \"unknown time\")",
+  "replace": "sliceID(entry, \"timestamp\", 81, \"unknown time\")"
+ },
+ {
+  "name": "records/timestamp fallback",
+  "file": "recovery_records.go",
+  "find": "sliceID(entry, \"timestamp\", 80, \"unknown time\")",
+  "replace": "sliceID(entry, \"timestamp\", 80, \"unknown times\")"
+ },
+ {
+  "name": "records/header entry separator",
+  "file": "recovery_records.go",
+  "find": "\" | entry \"",
+  "replace": "\" | entry: \""
+ },
+ {
+  "name": "records/index line owner check inverted",
+  "file": "recovery_records.go",
+  "find": "record.kind != \"owner\" {\n\t\treturn header",
+  "replace": "record.kind == \"owner\" {\n\t\treturn header"
+ },
+ {
+  "name": "records/preview boundary 120",
+  "file": "recovery_records.go",
+  "find": "u16len(preview) > 120",
+  "replace": "u16len(preview) >= 120"
+ },
+ {
+  "name": "records/preview cut 120",
+  "file": "recovery_records.go",
+  "find": "u16slice(preview, 0, 119)",
+  "replace": "u16slice(preview, 0, 120)"
+ },
+ {
+  "name": "records/preview ellipsis",
+  "file": "recovery_records.go",
+  "find": "119) + \"…\"",
+  "replace": "119) + \"...\""
+ },
+ {
+  "name": "records/preview keeps whitespace runs",
+  "file": "recovery_records.go",
+  "find": "ReplaceAllString(record.text, \" \")",
+  "replace": "ReplaceAllString(record.text, \"\")"
+ },
+ {
+  "name": "records/preview ignores nbsp",
+  "file": "recovery_records.go",
+  "find": "\\\\x{a0}",
+  "replace": "\\\\x{a1}"
+ },
+ {
+  "name": "records/slice by bytes",
+  "file": "recovery_records.go",
+  "find": "return u16slice(v, 0, limit)",
+  "replace": "return v[:min(limit, len(v))]"
+ },
+ {
+  "name": "records/text not trimmed",
+  "file": "recovery_records.go",
+  "find": "text := jsTrim(textOf(rec{\"content\": source.content}))",
+  "replace": "text := textOf(rec{\"content\": source.content})"
+ },
+ {
+  "name": "results/idSlice 121",
+  "file": "recovery_results.go",
+  "find": "u16slice(e.id, 0, 120)",
+  "replace": "u16slice(e.id, 0, 121)"
+ },
+ {
+  "name": "results/callsByID id guard",
+  "file": "recovery_results.go",
+  "find": "if block.id != nil {",
+  "replace": "if block.id == nil {"
+ },
+ {
+  "name": "results/callsByID role",
+  "file": "recovery_results.go",
+  "find": "if messageRole(message) != \"assistant\" {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, block",
+  "replace": "if messageRole(message) == \"assistant\" {\n\t\t\tcontinue\n\t\t}\n\t\tfor _, block"
+ },
+ {
+  "name": "results/trailing error stop dropped",
+  "file": "recovery_results.go",
+  "find": "invalid := stop == \"error\" || stop == \"aborted\" || stop == \"length\"",
+  "replace": "invalid := stop == \"aborted\" || stop == \"length\""
+ },
+ {
+  "name": "results/trailing aborted stop dropped",
+  "file": "recovery_results.go",
+  "find": "invalid := stop == \"error\" || stop == \"aborted\" || stop == \"length\"",
+  "replace": "invalid := stop == \"error\" || stop == \"length\""
+ },
+ {
+  "name": "results/trailing length stop dropped",
+  "file": "recovery_results.go",
+  "find": "invalid := stop == \"error\" || stop == \"aborted\" || stop == \"length\"",
+  "replace": "invalid := stop == \"error\" || stop == \"aborted\""
+ },
+ {
+  "name": "results/trailing requires no result",
+  "file": "recovery_results.go",
+  "find": "if !invalid || hasTrailingResult {",
+  "replace": "if !invalid && hasTrailingResult {"
+ },
+ {
+  "name": "results/trailing result flag never set",
+  "file": "recovery_results.go",
+  "find": "\t\t\thasTrailingResult = true",
+  "replace": "\t\t\thasTrailingResult = false"
+ },
+ {
+  "name": "results/empty result text",
+  "file": "recovery_results.go",
+  "find": "\"(empty result)\"",
+  "replace": "\"(no result)\""
+ },
+ {
+  "name": "results/image pointer separator",
+  "file": "recovery_results.go",
+  "find": "\t\t\toutput += \"\\n\"",
+  "replace": "\t\t\toutput += \" \""
+ },
+ {
+  "name": "results/image summary inverted",
+  "file": "recovery_results.go",
+  "find": "\tif images != \"\" {",
+  "replace": "\tif images == \"\" {"
+ },
+ {
+  "name": "results/image pointer wording",
+  "file": "recovery_results.go",
+  "find": "output += images + \" — recover with history read id \" + resultID",
+  "replace": "output += images + \" — recover with history read \" + resultID"
+ },
+ {
+  "name": "results/no matching call text",
+  "file": "recovery_results.go",
+  "find": "\"\\nNo matching projected call\"",
+  "replace": "\"\\nNo matching call\""
+ },
+ {
+  "name": "results/call entry shown when all linked",
+  "file": "recovery_results.go",
+  "find": "\tif !allLinked {\n\t\tentry",
+  "replace": "\tif allLinked {\n\t\tentry"
+ },
+ {
+  "name": "results/call entry label",
+  "file": "recovery_results.go",
+  "find": "\"\\nCall entry: \"",
+  "replace": "\"\\nCall: \""
+ },
+ {
+  "name": "results/call arguments label",
+  "file": "recovery_results.go",
+  "find": "\"\\nCall arguments: \"",
+  "replace": "\"\\nArguments: \""
+ },
+ {
+  "name": "results/null arguments kept",
+  "file": "recovery_results.go",
+  "find": "if arguments == nil {",
+  "replace": "if arguments != nil {"
+ },
+ {
+  "name": "results/tool name fallback dropped",
+  "file": "recovery_results.go",
+  "find": "\t\tname = matching.block.name",
+  "replace": "\t\tname = nil"
+ },
+ {
+  "name": "results/namespace fallback dropped",
+  "file": "recovery_results.go",
+  "find": "\t\tnamespace = matching.block.namespace",
+  "replace": "\t\tnamespace = nil"
+ },
+ {
+  "name": "results/error kind label",
+  "file": "recovery_results.go",
+  "find": "kind = \"error\"",
+  "replace": "kind = \"errors\""
+ },
+ {
+  "name": "results/result kind label",
+  "file": "recovery_results.go",
+  "find": "kind := \"result\"",
+  "replace": "kind := \"results\""
+ },
+ {
+  "name": "results/error flag inverted",
+  "file": "recovery_results.go",
+  "find": "message[\"isError\"] == true {\n\t\tkind",
+  "replace": "message[\"isError\"] != true {\n\t\tkind"
+ },
+ {
+  "name": "results/tool label",
+  "file": "recovery_results.go",
+  "find": "\"\\n\\nTool: \"",
+  "replace": "\"\\n\\nTool \""
+ },
+ {
+  "name": "results/call id label",
+  "file": "recovery_results.go",
+  "find": "\"\\nCall ID: \"",
+  "replace": "\"\\nCall: \""
+ },
+ {
+  "name": "results/retained results included",
+  "file": "recovery_results.go",
+  "find": "|| !hasCallID || entry.retained {",
+  "replace": "|| !hasCallID {"
+ },
+ {
+  "name": "results/orphans dropped",
+  "file": "recovery_results.go",
+  "find": "if index > start || !linked || call.block.async {",
+  "replace": "if index > start || (linked && call.block.async) {"
+ },
+ {
+  "name": "results/async receipts dropped",
+  "file": "recovery_results.go",
+  "find": "if index > start || !linked || call.block.async {",
+  "replace": "if index > start || !linked || (call.block.async && false) {"
+ },
+ {
+  "name": "results/allLinked identity inverted",
+  "file": "recovery_results.go",
+  "find": "call == nil || call.entry != first.entry",
+  "replace": "call == nil || call.entry == first.entry"
+ },
+ {
+  "name": "results/allLinked ignores unlinked",
+  "file": "recovery_results.go",
+  "find": "call == nil || call.entry != first.entry",
+  "replace": "call.entry != first.entry"
+ },
+ {
+  "name": "results/batch call id never set",
+  "file": "recovery_results.go",
+  "find": "\t\tbatch.hasCallID = true",
+  "replace": "\t\tbatch.hasCallID = false"
+ },
+ {
+  "name": "results/batch no results",
+  "file": "recovery_results.go",
+  "find": "if len(results) == 0 {",
+  "replace": "if len(results) < 0 {"
+ },
+ {
+  "name": "notes/max written 5",
+  "file": "recovery_notes.go",
+  "find": "maxWrittenNotes = 4",
+  "replace": "maxWrittenNotes = 5"
+ },
+ {
+  "name": "notes/max read 4",
+  "file": "recovery_notes.go",
+  "find": "maxReadNotes    = 3",
+  "replace": "maxReadNotes    = 4"
+ },
+ {
+  "name": "notes/read keeps earlier abs path inverted",
+  "file": "recovery_notes.go",
+  "find": "\t\tif target.absPath == \"\" {",
+  "replace": "\t\tif target.absPath != \"\" {"
+ },
+ {
+  "name": "notes/read keeps earlier reference scope inverted",
+  "file": "recovery_notes.go",
+  "find": "\t\tif target.referenceScope == \"\" {",
+  "replace": "\t\tif target.referenceScope != \"\" {"
+ },
+ {
+  "name": "notes/read after write keeps read",
+  "file": "recovery_notes.go",
+  "find": "if previous != nil && previous.kind == \"written\" {\n\t\tnext",
+  "replace": "if previous != nil && previous.kind == \"read\" {\n\t\tnext"
+ },
+ {
+  "name": "notes/retained edit after full write",
+  "file": "recovery_notes.go",
+  "find": "previous.proof.kind == \"full\" {",
+  "replace": "previous.proof.kind == \"partial\" {"
+ },
+ {
+  "name": "notes/retained edit updated marker",
+  "file": "recovery_notes.go",
+  "find": "proof.updatedAt = entryId",
+  "replace": "proof.updatedAt = proof.entryId"
+ },
+ {
+  "name": "notes/full write retention inverted",
+  "file": "recovery_notes.go",
+  "find": "\t\tif touch.inRetained {\n\t\t\tproof = contentProof{kind: \"full\"",
+  "replace": "\t\tif !touch.inRetained {\n\t\t\tproof = contentProof{kind: \"full\""
+ },
+ {
+  "name": "notes/partial write retention inverted",
+  "file": "recovery_notes.go",
+  "find": "\t\tif touch.inRetained {\n\t\t\tproof = retainedEdit",
+  "replace": "\t\tif !touch.inRetained {\n\t\t\tproof = retainedEdit"
+ },
+ {
+  "name": "notes/observed write proof",
+  "file": "recovery_notes.go",
+  "find": "proof = contentProof{kind: \"effect-only\"}",
+  "replace": "proof = contentProof{kind: \"compacted\"}"
+ },
+ {
+  "name": "notes/write keeps no earlier abs path",
+  "file": "recovery_notes.go",
+  "find": "if absPath == \"\" && previous != nil {",
+  "replace": "if absPath == \"\" && previous == nil {"
+ },
+ {
+  "name": "notes/label requires both abs differences",
+  "file": "recovery_notes.go",
+  "find": "note.absPath != \"\" && note.absPath != note.notePath",
+  "replace": "note.absPath != \"\" || note.absPath != note.notePath"
+ },
+ {
+  "name": "notes/reference label wording",
+  "file": "recovery_notes.go",
+  "find": "(read-only reference; notes read {",
+  "replace": "(read-only references; notes read {"
+ },
+ {
+  "name": "notes/reference label key order",
+  "file": "recovery_notes.go",
+  "find": "\",\\\"path\\\":\"",
+  "replace": "\",\\\"file\\\":\""
+ },
+ {
+  "name": "notes/effect-only wording",
+  "file": "recovery_notes.go",
+  "find": "[verified effect at entry \"",
+  "replace": "[verified effect at entries \""
+ },
+ {
+  "name": "notes/effect-only check inverted",
+  "file": "recovery_notes.go",
+  "find": "if proof.kind == \"effect-only\" {",
+  "replace": "if proof.kind != \"effect-only\" {"
+ },
+ {
+  "name": "notes/written no span wording",
+  "file": "recovery_notes.go",
+  "find": "[compacted at entry \" + note.entryId + \" — read this note now]\"",
+  "replace": "[compacted entry \" + note.entryId + \" — read this note now]\""
+ },
+ {
+  "name": "notes/written no span check inverted",
+  "file": "recovery_notes.go",
+  "find": "\tif span == nil {\n\t\treturn \"- Active note",
+  "replace": "\tif span != nil {\n\t\treturn \"- Active note"
+ },
+ {
+  "name": "notes/full proof updated check inverted",
+  "file": "recovery_notes.go",
+  "find": "if proof.updatedAt != \"\" {",
+  "replace": "if proof.updatedAt == \"\" {"
+ },
+ {
+  "name": "notes/full proof wording",
+  "file": "recovery_notes.go",
+  "find": "\", updated at entry \"",
+  "replace": "\", updated entry \""
+ },
+ {
+  "name": "notes/partial wording",
+  "file": "recovery_notes.go",
+  "find": "only partial edits are in the retained tail above at entry",
+  "replace": "only partial edits are in the tail above at entry"
+ },
+ {
+  "name": "notes/compacted before wording",
+  "file": "recovery_notes.go",
+  "find": "[compacted before entry \" + span.firstId + \" — read this note now]\"",
+  "replace": "[compacted before entry \" + span.lastId + \" — read this note now]\""
+ },
+ {
+  "name": "notes/read retained inverted",
+  "file": "recovery_notes.go",
+  "find": "span != nil && note.inRetained",
+  "replace": "span != nil || note.inRetained"
+ },
+ {
+  "name": "notes/read retained wording",
+  "file": "recovery_notes.go",
+  "find": "[read in the retained tail above at entry \"",
+  "replace": "[read in the retained tail at entry \""
+ },
+ {
+  "name": "notes/read compacted before wording",
+  "file": "recovery_notes.go",
+  "find": "[compacted before entry \" + span.firstId + \"]\"",
+  "replace": "[compacted before entry \" + span.lastId + \"]\""
+ },
+ {
+  "name": "notes/read compacted at wording",
+  "file": "recovery_notes.go",
+  "find": "[compacted at entry \" + note.entryId + \"]\"",
+  "replace": "[compacted entry \" + note.entryId + \"]\""
+ },
+ {
+  "name": "notes/action without written",
+  "file": "recovery_notes.go",
+  "find": "if primaryWritten == nil {",
+  "replace": "if primaryWritten != nil {"
+ },
+ {
+  "name": "notes/action full proof inverted",
+  "file": "recovery_notes.go",
+  "find": "span != nil && primaryWritten.proof.kind == \"full\"",
+  "replace": "span != nil || primaryWritten.proof.kind == \"full\""
+ },
+ {
+  "name": "notes/action last id",
+  "file": "recovery_notes.go",
+  "find": "new findings after entry \" + span.lastId + \" require it.\"",
+  "replace": "new findings after entry \" + span.firstId + \" require it.\""
+ },
+ {
+  "name": "notes/action read wording",
+  "file": "recovery_notes.go",
+  "find": "(notes read or read on its path)",
+  "replace": "(notes read)"
+ },
+ {
+  "name": "notes/default dir condition",
+  "file": "recovery_notes.go",
+  "find": "if touch.absPath == \"\" && defaultDir != \"\" {",
+  "replace": "if touch.absPath == \"\" && defaultDir == \"\" {"
+ },
+ {
+  "name": "notes/default dir separator",
+  "file": "recovery_notes.go",
+  "find": "defaultDir + \"/\" + touch.notePath",
+  "replace": "defaultDir + touch.notePath"
+ },
+ {
+  "name": "notes/newest first inverted",
+  "file": "recovery_notes.go",
+  "find": "out[i].order > out[j].order",
+  "replace": "out[i].order < out[j].order"
+ },
+ {
+  "name": "notes/clear leaves tracked note",
+  "file": "recovery_notes.go",
+  "find": "\t\t\tdelete(tracked, key)",
+  "replace": "\t\t\t_ = key"
+ },
+ {
+  "name": "notes/recovery entries override inverted",
+  "file": "recovery_notes.go",
+  "find": "if options.notes != nil {\n\t\tall = ",
+  "replace": "if options.notes == nil {\n\t\tall = "
+ },
+ {
+  "name": "notes/no notes returns section",
+  "file": "recovery_notes.go",
+  "find": "if len(notes) == 0 {",
+  "replace": "if len(notes) != 0 {"
+ },
+ {
+  "name": "notes/written cap boundary",
+  "file": "recovery_notes.go",
+  "find": "written < maxWrittenNotes {",
+  "replace": "written <= maxWrittenNotes {"
+ },
+ {
+  "name": "notes/read cap boundary",
+  "file": "recovery_notes.go",
+  "find": "read < maxReadNotes {",
+  "replace": "read <= maxReadNotes {"
+ },
+ {
+  "name": "notes/primary written index",
+  "file": "recovery_notes.go",
+  "find": "if written == 0 {\n\t\t\t\tprimary",
+  "replace": "if written == 1 {\n\t\t\t\tprimary"
+ },
+ {
+  "name": "notes/budget boundary",
+  "file": "recovery_notes.go",
+  "find": "total+1+u16len(line) <= options.maxChars",
+  "replace": "total+1+u16len(line) < options.maxChars"
+ },
+ {
+  "name": "notes/budget in bytes",
+  "file": "recovery_notes.go",
+  "find": "total+1+u16len(line) <= options.maxChars",
+  "replace": "total+1+len(line) <= options.maxChars"
+ },
+ {
+  "name": "notes/empty selection returned",
+  "file": "recovery_notes.go",
+  "find": "if len(selected) == 0 {",
+  "replace": "if len(selected) != 0 {"
+ },
+ {
+  "name": "notes/header wording",
+  "file": "recovery_notes.go",
+  "find": "const header = \"Task notes in this session:\"",
+  "replace": "const header = \"Task note in this session:\""
+ },
+ {
+  "name": "notes/scope error dropped",
+  "file": "recovery_notes.go",
+  "find": "return \"\", false, err",
+  "replace": "return \"\", false, nil"
+ },
+ {
+  "name": "touches/leading dot slashes single",
+  "file": "recovery_note_touches.go",
+  "find": "^(?:\\./)+`",
+  "replace": "^(?:\\./)`"
+ },
+ {
+  "name": "touches/leading slashes single",
+  "file": "recovery_note_touches.go",
+  "find": "leadingSlashes    = regexp.MustCompile(`^/+`)",
+  "replace": "leadingSlashes    = regexp.MustCompile(`^/`)"
+ },
+ {
+  "name": "touches/trailing slashes single",
+  "file": "recovery_note_touches.go",
+  "find": "trailingSlashes   = regexp.MustCompile(`/+$`)",
+  "replace": "trailingSlashes   = regexp.MustCompile(`/$`)"
+ },
+ {
+  "name": "touches/drive letters lowercase only",
+  "file": "recovery_note_touches.go",
+  "find": "`^[A-Za-z]:/`",
+  "replace": "`^[a-z]:/`"
+ },
+ {
+  "name": "touches/package notes digest length",
+  "file": "recovery_note_touches.go",
+  "find": "[0-9a-f]{64}",
+  "replace": "[0-9a-f]{63}"
+ },
+ {
+  "name": "touches/normalize keeps backslashes",
+  "file": "recovery_note_touches.go",
+  "find": "strings.ReplaceAll(jsTrim(raw), \"\\\\\", \"/\")",
+  "replace": "jsTrim(raw)"
+ },
+ {
+  "name": "touches/normalize accepts dot",
+  "file": "recovery_note_touches.go",
+  "find": "cleaned == \"\" || cleaned == \".\" ||",
+  "replace": "cleaned == \"\" ||"
+ },
+ {
+  "name": "touches/normalize accepts dotdot",
+  "file": "recovery_note_touches.go",
+  "find": "cleaned == \"..\" ||",
+  "replace": ""
+ },
+ {
+  "name": "touches/normalize accepts parent prefix",
+  "file": "recovery_note_touches.go",
+  "find": "strings.HasPrefix(cleaned, \"../\") ||",
+  "replace": ""
+ },
+ {
+  "name": "touches/normalize accepts parent middle",
+  "file": "recovery_note_touches.go",
+  "find": "strings.Contains(cleaned, \"/../\") ||",
+  "replace": ""
+ },
+ {
+  "name": "touches/normalize accepts trailing slash",
+  "file": "recovery_note_touches.go",
+  "find": "\t\tstrings.HasSuffix(cleaned, \"/\")\n",
+  "replace": "\t\tfalse\n"
+ },
+ {
+  "name": "touches/marker dot pi notes",
+  "file": "recovery_note_touches.go",
+  "find": "\"/.pi/notes/\", \"/posthorse-notes/\"",
+  "replace": "\"/.pi/note/\", \"/posthorse-notes/\""
+ },
+ {
+  "name": "touches/marker posthorse notes",
+  "file": "recovery_note_touches.go",
+  "find": "\"/.pi/notes/\", \"/posthorse-notes/\"",
+  "replace": "\"/.pi/notes/\", \"/posthorse-note/\""
+ },
+ {
+  "name": "touches/unscoped absolute inverted",
+  "file": "recovery_note_touches.go",
+  "find": "strings.HasPrefix(slash, \"/\") || windowsDrivePath.MatchString(slash)",
+  "replace": "strings.HasPrefix(slash, \"/\") && windowsDrivePath.MatchString(slash)"
+ },
+ {
+  "name": "touches/forks accepted",
+  "file": "recovery_note_touches.go",
+  "find": "if !strings.HasPrefix(matched, \".forks/\") {",
+  "replace": "if strings.HasPrefix(matched, \".forks/\") {"
+ },
+ {
+  "name": "touches/notes tool fallback inverted",
+  "file": "recovery_note_touches.go",
+  "find": "\tif fromNotesTool {\n\t\treturn unscopedNoteTarget",
+  "replace": "\tif !fromNotesTool {\n\t\treturn unscopedNoteTarget"
+ },
+ {
+  "name": "touches/empty rest line accepted",
+  "file": "recovery_note_touches.go",
+  "find": "\t\t\tif end > 0 {",
+  "replace": "\t\t\tif end >= 0 {"
+ },
+ {
+  "name": "touches/line end ignores CR",
+  "file": "recovery_note_touches.go",
+  "find": "strings.IndexAny(rest, \"\\r\\n\")",
+  "replace": "strings.IndexAny(rest, \"\\n\")"
+ },
+ {
+  "name": "touches/line break ignores u2029",
+  "file": "recovery_note_touches.go",
+  "find": "r == 0x2028 || r == 0x2029",
+  "replace": "r == 0x2028"
+ },
+ {
+  "name": "touches/line break ignores u2028",
+  "file": "recovery_note_touches.go",
+  "find": "r == 0x2028 || r == 0x2029",
+  "replace": "r == 0x2029"
+ },
+ {
+  "name": "touches/wrote prefix",
+  "file": "recovery_note_touches.go",
+  "find": "lineAfterPrefix(text, \"Wrote \")",
+  "replace": "lineAfterPrefix(text, \"Write \")"
+ },
+ {
+  "name": "touches/appended prefix",
+  "file": "recovery_note_touches.go",
+  "find": "lineAfterPrefix(text, \"Appended to \")",
+  "replace": "lineAfterPrefix(text, \"Appended \")"
+ },
+ {
+  "name": "touches/file prefix",
+  "file": "recovery_note_touches.go",
+  "find": "lineAfterPrefix(text, \"File: \")",
+  "replace": "lineAfterPrefix(text, \"File \")"
+ },
+ {
+  "name": "touches/wrote kind",
+  "file": "recovery_note_touches.go",
+  "find": "notesResultTarget{\"full-write\", raw}",
+  "replace": "notesResultTarget{\"partial-write\", raw}"
+ },
+ {
+  "name": "touches/appended kind",
+  "file": "recovery_note_touches.go",
+  "find": "notesResultTarget{\"partial-write\", raw}",
+  "replace": "notesResultTarget{\"full-write\", raw}"
+ },
+ {
+  "name": "touches/file kind",
+  "file": "recovery_note_touches.go",
+  "find": "notesResultTarget{\"read\", raw}",
+  "replace": "notesResultTarget{\"full-write\", raw}"
+ },
+ {
+  "name": "touches/result map empty ids accepted",
+  "file": "recovery_note_touches.go",
+  "find": "callID != \"\" {",
+  "replace": "callID == \"\" {"
+ },
+ {
+  "name": "touches/result map error flag",
+  "file": "recovery_note_touches.go",
+  "find": "isError:    msg[\"isError\"] == true,",
+  "replace": "isError:    msg[\"isError\"] != true,"
+ },
+ {
+  "name": "touches/result map overwrite order",
+  "file": "recovery_note_touches.go",
+  "find": "if _, seen := results.byID[callID]; !seen {",
+  "replace": "if _, seen := results.byID[callID]; seen {"
+ },
+ {
+  "name": "touches/infer dir error results",
+  "file": "recovery_note_touches.go",
+  "find": "if res == nil || res.isError {",
+  "replace": "if res == nil && res.isError {"
+ },
+ {
+  "name": "touches/infer dir strict suffix",
+  "file": "recovery_note_touches.go",
+  "find": "len(slash) > len(suffix)",
+  "replace": "len(slash) >= len(suffix)"
+ },
+ {
+  "name": "touches/infer dir suffix",
+  "file": "recovery_note_touches.go",
+  "find": "suffix := \"/\" + callPath",
+  "replace": "suffix := callPath"
+ },
+ {
+  "name": "touches/assistant calls type",
+  "file": "recovery_note_touches.go",
+  "find": "if t, _ := str(entry, \"type\"); t != \"message\" {\n\t\treturn nil",
+  "replace": "if t, _ := str(entry, \"type\"); t == \"message\" {\n\t\treturn nil"
+ },
+ {
+  "name": "touches/assistant calls role",
+  "file": "recovery_note_touches.go",
+  "find": "if !ok || messageRole(message) != \"assistant\" {",
+  "replace": "if !ok || messageRole(message) == \"assistant\" {"
+ },
+ {
+  "name": "touches/ordered set dedupe",
+  "file": "recovery_note_touches.go",
+  "find": "if _, ok := s.seen[v]; ok {",
+  "replace": "if _, ok := s.seen[v]; !ok {"
+ },
+ {
+  "name": "touches/learn dirs error results",
+  "file": "recovery_note_touches.go",
+  "find": "info.isError || info.toolName != \"notes\"",
+  "replace": "info.isError && info.toolName != \"notes\""
+ },
+ {
+  "name": "touches/learn dirs prefix",
+  "file": "recovery_note_touches.go",
+  "find": "\"Notes directory: \"",
+  "replace": "\"Notes dir: \""
+ },
+ {
+  "name": "touches/learn dirs normalisation",
+  "file": "recovery_note_touches.go",
+  "find": "dirs.add(trailingSlashes.ReplaceAllString(strings.ReplaceAll(jsTrim(match), \"\\\\\", \"/\"), \"\"))",
+  "replace": "dirs.add(match)"
+ },
+ {
+  "name": "touches/apply patch kind inverted",
+  "file": "recovery_note_touches.go",
+  "find": "tool == \"apply_patch\" && operation.action != \"delete\"",
+  "replace": "tool == \"apply_patch\" && operation.action == \"delete\""
+ },
+ {
+  "name": "touches/apply patch kind value",
+  "file": "recovery_note_touches.go",
+  "find": "\t\t\tkind = \"partial-write\"\n",
+  "replace": "\t\t\tkind = \"full-write\"\n"
+ },
+ {
+  "name": "touches/notes call write content",
+  "file": "recovery_note_touches.go",
+  "find": "args[\"content\"] == \"\" {\n\t\t\treturn \"clear\"",
+  "replace": "args[\"content\"] != \"\" {\n\t\t\treturn \"clear\""
+ },
+ {
+  "name": "touches/notes call append kind",
+  "file": "recovery_note_touches.go",
+  "find": "\tcase \"append\":\n\t\treturn \"partial-write\"",
+  "replace": "\tcase \"append\":\n\t\treturn \"full-write\""
+ },
+ {
+  "name": "touches/notes call read kind",
+  "file": "recovery_note_touches.go",
+  "find": "\tcase \"read\":\n\t\treturn \"read\"",
+  "replace": "\tcase \"read\":\n\t\treturn \"clear\""
+ },
+ {
+  "name": "touches/notes kind from result inverted",
+  "file": "recovery_note_touches.go",
+  "find": "if kind == \"\" && hasParsed {",
+  "replace": "if kind != \"\" && hasParsed {"
+ },
+ {
+  "name": "touches/notes scope path separator",
+  "file": "recovery_note_touches.go",
+  "find": "scope + \"/\" + path",
+  "replace": "scope + path"
+ },
+ {
+  "name": "touches/notes call target preferred",
+  "file": "recovery_note_touches.go",
+  "find": "\tcase hasCall:\n\t\tmerged.notePath = callTarget.notePath\n\tcase hasRes:\n\t\tmerged.notePath = resTarget.notePath",
+  "replace": "\tcase hasRes:\n\t\tmerged.notePath = resTarget.notePath\n\tcase hasCall:\n\t\tmerged.notePath = callTarget.notePath"
+ },
+ {
+  "name": "touches/notes result abs path preferred",
+  "file": "recovery_note_touches.go",
+  "find": "case hasRes && resTarget.absPath != \"\":",
+  "replace": "case hasRes && resTarget.absPath == \"\":"
+ },
+ {
+  "name": "touches/nested calls key",
+  "file": "recovery_note_touches.go",
+  "find": "arrOf(details[\"calls\"])",
+  "replace": "arrOf(details[\"call\"])"
+ },
+ {
+  "name": "touches/nested details nested calls",
+  "file": "recovery_note_touches.go",
+  "find": "arrOf(nested[\"calls\"]); ok {\n\t\t\treturn calls\n\t\t}\n\t}\n\treturn nil",
+  "replace": "arrOf(nested[\"call\"]); ok {\n\t\t\treturn calls\n\t\t}\n\t}\n\treturn nil"
+ },
+ {
+  "name": "touches/nested args order",
+  "file": "recovery_note_touches.go",
+  "find": "[...]string{\"arguments\", \"args\", \"input\"}",
+  "replace": "[...]string{\"input\", \"args\", \"arguments\"}"
+ },
+ {
+  "name": "touches/nested error flag",
+  "file": "recovery_note_touches.go",
+  "find": "raw[\"isError\"] == true ||",
+  "replace": "raw[\"isError\"] != true ||"
+ },
+ {
+  "name": "touches/nested error status",
+  "file": "recovery_note_touches.go",
+  "find": "raw[\"status\"] == \"error\" ||",
+  "replace": "raw[\"status\"] == \"errors\" ||"
+ },
+ {
+  "name": "touches/nested unfinished status",
+  "file": "recovery_note_touches.go",
+  "find": "raw[\"status\"] == \"unfinished\"",
+  "replace": "raw[\"status\"] == \"unfinish\""
+ },
+ {
+  "name": "touches/nested error text",
+  "file": "recovery_note_touches.go",
+  "find": "e != \"\" {\n\t\t\tcontinue",
+  "replace": "e == \"\" {\n\t\t\tcontinue"
+ },
+ {
+  "name": "touches/nested tool name fallback",
+  "file": "recovery_note_touches.go",
+  "find": "optionalString(raw[\"toolName\"])",
+  "replace": "optionalString(raw[\"tool\"])"
+ },
+ {
+  "name": "touches/nested write becomes observed",
+  "file": "recovery_note_touches.go",
+  "find": "touch.kind != \"read\" && touch.kind != \"clear\"",
+  "replace": "touch.kind == \"read\" || touch.kind == \"clear\""
+ },
+ {
+  "name": "touches/nested never retained",
+  "file": "recovery_note_touches.go",
+  "find": "\t\t\ttouch.inRetained = false",
+  "replace": "\t\t\t_ = touch.inRetained"
+ },
+ {
+  "name": "touches/nested receipt id",
+  "file": "recovery_note_touches.go",
+  "find": "touch.receiptId = context.sourceID",
+  "replace": "touch.receiptId = context.entryID"
+ },
+ {
+  "name": "touches/call error results of notes",
+  "file": "recovery_note_touches.go",
+  "find": "res.isError && bareToolName(callName) == \"notes\"",
+  "replace": "res.isError || bareToolName(callName) == \"notes\""
+ },
+ {
+  "name": "touches/call receipt id",
+  "file": "recovery_note_touches.go",
+  "find": "touches[i].receiptId = res.sourceID",
+  "replace": "touches[i].receiptId = context.entryID"
+ },
+ {
+  "name": "touches/result role",
+  "file": "recovery_note_touches.go",
+  "find": "messageRole(msg) != \"toolResult\" || msg[\"isError\"] == true",
+  "replace": "messageRole(msg) != \"toolResult\" && msg[\"isError\"] == true"
+ },
+ {
+  "name": "touches/result handled inverted",
+  "file": "recovery_note_touches.go",
+  "find": "if _, done := handled[callID]; !done {",
+  "replace": "if _, done := handled[callID]; done {"
+ },
+ {
+  "name": "touches/result notes name",
+  "file": "recovery_note_touches.go",
+  "find": "bareToolName(toolName) == \"notes\" {\n\t\t\tdirect",
+  "replace": "bareToolName(toolName) != \"notes\" {\n\t\t\tdirect"
+ },
+ {
+  "name": "touches/default dir exactly one",
+  "file": "recovery_note_touches.go",
+  "find": "if len(known.items) == 1 {",
+  "replace": "if len(known.items) >= 1 {"
+ },
+ {
+  "name": "touches/handled call ids dropped",
+  "file": "recovery_note_touches.go",
+  "find": "\t\t\t\thandled[id] = struct{}{}",
+  "replace": "\t\t\t\t_ = id"
+ },
+ {
+  "name": "touches/handled flag inverted",
+  "file": "recovery_note_touches.go",
+  "find": "\t\t\tif has {\n\t\t\t\thandled",
+  "replace": "\t\t\tif !has {\n\t\t\t\thandled"
+ },
+ {
+  "name": "touches/tool result entries only messages",
+  "file": "recovery_note_touches.go",
+  "find": "t == \"message\" && hasMsg {\n\t\t\ttouches",
+  "replace": "t == \"message\" || hasMsg {\n\t\t\ttouches"
+ },
+ {
+  "name": "touches/lazy text never computed",
+  "file": "recovery_note_touches.go",
+  "find": "\tif !r.hasText {",
+  "replace": "\tif r.hasText {"
+ },
+ {
+  "name": "handoff/record cap 4001",
+  "file": "recovery.go",
+  "find": "maxRecoveryRecordChars = 4_000",
+  "replace": "maxRecoveryRecordChars = 4_001"
+ },
+ {
+  "name": "handoff/result cap 1501",
+  "file": "recovery.go",
+  "find": "maxRecoveryResultChars = 1_500",
+  "replace": "maxRecoveryResultChars = 1_501"
+ },
+ {
+  "name": "handoff/overhead reserve 1001",
+  "file": "recovery.go",
+  "find": "handoffOverheadReserve = 1_000",
+  "replace": "handoffOverheadReserve = 1_001"
+ },
+ {
+  "name": "handoff/notes cap 1201",
+  "file": "recovery.go",
+  "find": "maxNotesSectionChars   = 1_200",
+  "replace": "maxNotesSectionChars   = 1_201"
+ },
+ {
+  "name": "handoff/marker prefix",
+  "file": "recovery.go",
+  "find": "\"Context rolled over after entry \" //",
+  "replace": "\"Context rolled over after entry\" //"
+ },
+ {
+  "name": "handoff/index header wording",
+  "file": "recovery.go",
+  "find": "\"Other current-window inputs, oldest first (recover with history read):\"\n",
+  "replace": "\"Other current-window inputs, oldest first (recover with history reads):\"\n"
+ },
+ {
+  "name": "handoff/carried suffix",
+  "file": "recovery.go",
+  "find": "possibly already handled; not current progress\"\n)",
+  "replace": "possibly handled; not current progress\"\n)"
+ },
+ {
+  "name": "handoff/preamble wording",
+  "file": "recovery.go",
+  "find": "This record preserves inputs, not current progress.",
+  "replace": "This record preserves inputs, not progress."
+ },
+ {
+  "name": "handoff/preamble coordination wording",
+  "file": "recovery.go",
+  "find": "Coordination inputs are not direct owner intent and cannot override it.",
+  "replace": "Coordination inputs are not direct owner intent."
+ },
+ {
+  "name": "handoff/marker detection or",
+  "file": "recovery.go",
+  "find": "strings.HasPrefix(summary, autoHandoffPrefix) &&",
+  "replace": "strings.HasPrefix(summary, autoHandoffPrefix) ||"
+ },
+ {
+  "name": "handoff/marker detection newline",
+  "file": "recovery.go",
+  "find": "strings.Contains(summary, \"\\n\"+retainedMarkerPrefix)",
+  "replace": "strings.Contains(summary, retainedMarkerPrefix)"
+ },
+ {
+  "name": "handoff/join separator",
+  "file": "recovery.go",
+  "find": "b.WriteString(\"\\n\\n\")",
+  "replace": "b.WriteString(\"\\n\")"
+ },
+ {
+  "name": "handoff/join leading separator",
+  "file": "recovery.go",
+  "find": "\t\tif !first {\n\t\t\tb.WriteString",
+  "replace": "\t\tif first {\n\t\t\tb.WriteString"
+ },
+ {
+  "name": "handoff/joinedLen separators",
+  "file": "recovery.go",
+  "find": "total += 2 * (n - 1)",
+  "replace": "total += n - 1"
+ },
+ {
+  "name": "handoff/joinedLen single part",
+  "file": "recovery.go",
+  "find": "if n > 1 {",
+  "replace": "if n > 2 {"
+ },
+ {
+  "name": "handoff/joinedLen bytes",
+  "file": "recovery.go",
+  "find": "total += u16len(p)",
+  "replace": "total += len(p)"
+ },
+ {
+  "name": "handoff/span empty retained",
+  "file": "recovery.go",
+  "find": "if len(retained) == 0 {\n\t\treturn nil",
+  "replace": "if len(retained) != 0 {\n\t\treturn nil"
+ },
+ {
+  "name": "handoff/span empty id accepted",
+  "file": "recovery.go",
+  "find": "ok && id != \"\" && hasKey(retained, id)",
+  "replace": "ok && hasKey(retained, id)"
+ },
+ {
+  "name": "handoff/span ignores branch summary",
+  "file": "recovery.go",
+  "find": " || t == \"branch_summary\"",
+  "replace": ""
+ },
+ {
+  "name": "handoff/span ignores custom message",
+  "file": "recovery.go",
+  "find": " || t == \"custom_message\"",
+  "replace": ""
+ },
+ {
+  "name": "handoff/span fallback inverted",
+  "file": "recovery.go",
+  "find": "\t\t\tif _, ok := retainedID(e); ok {\n\t\t\t\tif first == nil",
+  "replace": "\t\t\tif _, ok := retainedID(e); !ok {\n\t\t\t\tif first == nil"
+ },
+ {
+  "name": "handoff/span first id 121",
+  "file": "recovery.go",
+  "find": "firstId: u16slice(firstID, 0, 120)",
+  "replace": "firstId: u16slice(firstID, 0, 121)"
+ },
+ {
+  "name": "handoff/span last id 121",
+  "file": "recovery.go",
+  "find": "lastId: u16slice(lastID, 0, 120)",
+  "replace": "lastId: u16slice(lastID, 0, 121)"
+ },
+ {
+  "name": "handoff/span single entry inverted",
+  "file": "recovery.go",
+  "find": "span.firstId == span.lastId",
+  "replace": "span.firstId != span.lastId"
+ },
+ {
+  "name": "handoff/span single wording",
+  "file": "recovery.go",
+  "find": "above is the carried-over recent turn",
+  "replace": "above is the carried-over recent tail"
+ },
+ {
+  "name": "handoff/span range wording",
+  "file": "recovery.go",
+  "find": "above are the carried-over recent tail",
+  "replace": "above are the carried-over recent turn"
+ },
+ {
+  "name": "handoff/span earlier turns wording",
+  "file": "recovery.go",
+  "find": "\". Earlier turns before entry \"",
+  "replace": "\". Earlier turns before entries \""
+ },
+ {
+  "name": "handoff/span closing wording",
+  "file": "recovery.go",
+  "find": "Start the new context window from here.",
+  "replace": "Start the context window from here."
+ },
+ {
+  "name": "handoff/span marker uses first id",
+  "file": "recovery.go",
+  "find": "retainedMarkerPrefix + span.lastId + \". Earlier",
+  "replace": "retainedMarkerPrefix + span.firstId + \". Earlier"
+ },
+ {
+  "name": "handoff/prior checkpoint empty accepted",
+  "file": "recovery.go",
+  "find": "if entry == nil || handoff == \"\" {",
+  "replace": "if entry == nil || handoff != \"\" {"
+ },
+ {
+  "name": "handoff/prior checkpoint header",
+  "file": "recovery.go",
+  "find": "\"[older checkpoint; possibly stale | context-window entry \"",
+  "replace": "\"[older checkpoint; possibly stale; context-window entry \""
+ },
+ {
+  "name": "handoff/prior checkpoint id 121",
+  "file": "recovery.go",
+  "find": "id := sliceID(entry, \"id\", 120, \"unknown\")",
+  "replace": "id := sliceID(entry, \"id\", 121, \"unknown\")"
+ },
+ {
+  "name": "handoff/edit custom message",
+  "file": "recovery.go",
+  "find": "\tcase \"custom_message\":\n\t\tout := copyRec(entry)",
+  "replace": "\tcase \"custom_messages\":\n\t\tout := copyRec(entry)"
+ },
+ {
+  "name": "handoff/edit keeps source id",
+  "file": "recovery.go",
+  "find": "\t\t\tm[\"id\"] = id\n",
+  "replace": "\t\t\t_ = id\n"
+ },
+ {
+  "name": "handoff/edit omitted or retained",
+  "file": "recovery.go",
+  "find": "hasKey(retained, id) || hasKey(omitted, id)",
+  "replace": "hasKey(retained, id) && hasKey(omitted, id)"
+ },
+ {
+  "name": "handoff/edit null replacement",
+  "file": "recovery.go",
+  "find": "if replacement == nil {",
+  "replace": "if replacement != nil {"
+ },
+ {
+  "name": "handoff/edit missing replacement",
+  "file": "recovery.go",
+  "find": "if !hasReplacement {",
+  "replace": "if hasReplacement {"
+ },
+ {
+  "name": "handoff/omitted projection",
+  "file": "recovery.go",
+  "find": "len(projected[i].messages) == 0 {",
+  "replace": "len(projected[i].messages) > 0 {"
+ },
+ {
+  "name": "handoff/ask question namespace",
+  "file": "recovery.go",
+  "find": "call.namespace == nil",
+  "replace": "call.namespace != nil"
+ },
+ {
+  "name": "handoff/ask question name",
+  "file": "recovery.go",
+  "find": "*call.name == \"ask_question\"",
+  "replace": "*call.name != \"ask_question\""
+ },
+ {
+  "name": "handoff/ask question role",
+  "file": "recovery.go",
+  "find": "if messageRole(message) != \"assistant\" {\n\t\t\t\tcontinue",
+  "replace": "if messageRole(message) == \"assistant\" {\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "handoff/ask question idless call",
+  "file": "recovery.go",
+  "find": "\t\t\t\tif call.id == nil {",
+  "replace": "\t\t\t\tif call.id != nil {"
+ },
+ {
+  "name": "handoff/ask question result role",
+  "file": "recovery.go",
+  "find": "messageRole(message) == \"toolResult\" {\n\t\t\t\tif name",
+  "replace": "messageRole(message) != \"toolResult\" {\n\t\t\t\tif name"
+ },
+ {
+  "name": "handoff/ask question result name",
+  "file": "recovery.go",
+  "find": "name == \"ask_question\" {\n\t\t\t\t\tif calls",
+  "replace": "name != \"ask_question\" {\n\t\t\t\t\tif calls"
+ },
+ {
+  "name": "handoff/ask question registered flag",
+  "file": "recovery.go",
+  "find": "\t\tif ownerQuestionRegistered {\n\t\t\t// The call index",
+  "replace": "\t\tif !ownerQuestionRegistered {\n\t\t\t// The call index"
+ },
+ {
+  "name": "handoff/anchor first owner label",
+  "file": "recovery.go",
+  "find": "records[i].label == \"owner input\" {",
+  "replace": "records[i].label != \"owner input\" {"
+ },
+ {
+  "name": "handoff/anchor latest owner kind",
+  "file": "recovery.go",
+  "find": "records[i].kind == \"owner\" {\n\t\t\tlatestOwner",
+  "replace": "records[i].kind != \"owner\" {\n\t\t\tlatestOwner"
+ },
+ {
+  "name": "handoff/anchor latest overall",
+  "file": "recovery.go",
+  "find": "latestOverall := len(records) - 1",
+  "replace": "latestOverall := 0"
+ },
+ {
+  "name": "handoff/anchor drops latest owner",
+  "file": "recovery.go",
+  "find": "i == firstOwner || i == latestOwner || i == latestOverall",
+  "replace": "i == firstOwner || i == latestOverall || latestOwner < -5"
+ },
+ {
+  "name": "handoff/anchor drops first owner",
+  "file": "recovery.go",
+  "find": "i == firstOwner || i == latestOwner || i == latestOverall",
+  "replace": "i == latestOwner || i == latestOverall || firstOwner < -5"
+ },
+ {
+  "name": "handoff/anchor drops latest overall",
+  "file": "recovery.go",
+  "find": "i == firstOwner || i == latestOwner || i == latestOverall",
+  "replace": "i == firstOwner || i == latestOwner || latestOverall < -5"
+ },
+ {
+  "name": "handoff/boundary trim",
+  "file": "recovery.go",
+  "find": "strings.HasPrefix(jsTrim(handoff), autoHandoffPrefix)",
+  "replace": "strings.HasPrefix(handoff, autoHandoffPrefix)"
+ },
+ {
+  "name": "handoff/boundary posthorse marker",
+  "file": "recovery.go",
+  "find": "details[\"posthorse\"] != float64(1)",
+  "replace": "details[\"posthorse\"] == float64(1)"
+ },
+ {
+  "name": "handoff/boundary overflow reason",
+  "file": "recovery.go",
+  "find": "details[\"reason\"] == \"threshold\" || details[\"reason\"] == \"overflow\"",
+  "replace": "details[\"reason\"] == \"threshold\""
+ },
+ {
+  "name": "handoff/boundary threshold reason",
+  "file": "recovery.go",
+  "find": "details[\"reason\"] == \"threshold\" || details[\"reason\"] == \"overflow\"",
+  "replace": "details[\"reason\"] == \"overflow\""
+ },
+ {
+  "name": "handoff/boundary context window type",
+  "file": "recovery.go",
+  "find": "entryType(entry) == \"context_window\" {\n\t\treturn true",
+  "replace": "entryType(entry) != \"context_window\" {\n\t\treturn true"
+ },
+ {
+  "name": "handoff/boundary index compaction",
+  "file": "recovery.go",
+  "find": "t == \"context_window\" || t == \"compaction\"",
+  "replace": "t == \"context_window\""
+ },
+ {
+  "name": "handoff/chain start loop",
+  "file": "recovery.go",
+  "find": "\tstart, boundary := contextStart(prefix)\n\tfor automaticBoundary(boundary) {\n\t\tprefix = prefix[:boundaryIndex(prefix)]",
+  "replace": "\tstart, boundary := contextStart(prefix)\n\tfor automaticBoundary(boundary) && false {\n\t\tprefix = prefix[:boundaryIndex(prefix)]"
+ },
+ {
+  "name": "handoff/ancestry skipped id 121",
+  "file": "recovery.go",
+  "find": "sliceID(boundary, \"id\", 120, \"unknown\")",
+  "replace": "sliceID(boundary, \"id\", 121, \"unknown\")"
+ },
+ {
+  "name": "handoff/ancestry owner kind",
+  "file": "recovery.go",
+  "find": "\t\t\tif record.kind == \"owner\" {\n\t\t\t\towners",
+  "replace": "\t\t\tif record.kind != \"owner\" {\n\t\t\t\towners"
+ },
+ {
+  "name": "handoff/ancestry retained carried",
+  "file": "recovery.go",
+  "find": "if !hasKey(retained, record.id) {",
+  "replace": "if hasKey(retained, record.id) {"
+ },
+ {
+  "name": "handoff/ancestry checkpoint inverted",
+  "file": "recovery.go",
+  "find": "\t\t\tif automaticBoundary(windowBoundary) {\n\t\t\t\tcheckpoint = nil",
+  "replace": "\t\t\tif !automaticBoundary(windowBoundary) {\n\t\t\t\tcheckpoint = nil"
+ },
+ {
+  "name": "handoff/ancestry owner window",
+  "file": "recovery.go",
+  "find": "if len(owners) > 0 {",
+  "replace": "if len(owners) == 0 {"
+ },
+ {
+  "name": "handoff/ancestry restored uses retained",
+  "file": "recovery.go",
+  "find": "restored := projectedCurrent(entries, projected, prefix[start:], true, nil)",
+  "replace": "restored := projectedCurrent(entries, projected, prefix[start:], true, retained)"
+ },
+ {
+  "name": "handoff/skipped boundary",
+  "file": "recovery.go",
+  "find": "namesLen+2+u16len(id) > limit",
+  "replace": "namesLen+2+u16len(id) >= limit"
+ },
+ {
+  "name": "handoff/skipped separator width",
+  "file": "recovery.go",
+  "find": "namesLen += 2 + u16len(id)",
+  "replace": "namesLen += 1 + u16len(id)"
+ },
+ {
+  "name": "handoff/skipped bytes",
+  "file": "recovery.go",
+  "find": "namesLen := u16len(ids[0])",
+  "replace": "namesLen := len(ids[0])"
+ },
+ {
+  "name": "handoff/skipped omitted wording",
+  "file": "recovery.go",
+  "find": "\" earlier record(s) not listed.\"",
+  "replace": "\" earlier records not listed.\""
+ },
+ {
+  "name": "handoff/skipped omitted check",
+  "file": "recovery.go",
+  "find": "omitted > 0 {\n\t\tout +=",
+  "replace": "omitted >= 0 {\n\t\tout +="
+ },
+ {
+  "name": "handoff/skipped wording",
+  "file": "recovery.go",
+  "find": "(not nested; use history read): ",
+  "replace": "(not nested; use history search): "
+ },
+ {
+  "name": "handoff/tool entries role filter",
+  "file": "recovery.go",
+  "find": "role != \"assistant\" && role != \"toolResult\"",
+  "replace": "role == \"assistant\" || role == \"toolResult\""
+ },
+ {
+  "name": "handoff/tool entries retained flag",
+  "file": "recovery.go",
+  "find": "retained: hasKey(retained, sourceID),",
+  "replace": "retained: false,"
+ },
+ {
+  "name": "handoff/tool entries edit id",
+  "file": "recovery.go",
+  "find": "if edit, ok := edits[sourceID]; ok {",
+  "replace": "if edit, ok := edits[sourceID]; !ok {"
+ },
+ {
+  "name": "handoff/batch header call id",
+  "file": "recovery.go",
+  "find": "batch.hasCallID && batch.callID != \"\" {\n\t\tcall =",
+  "replace": "batch.hasCallID || batch.callID != \"\" {\n\t\tcall ="
+ },
+ {
+  "name": "handoff/batch header wording",
+  "file": "recovery.go",
+  "find": "; may already have been received or handled; not current progress).",
+  "replace": "; not current progress)."
+ },
+ {
+  "name": "handoff/batch header call wording",
+  "file": "recovery.go",
+  "find": "\" Tool-call entry \"",
+  "replace": "\" Tool call entry \""
+ },
+ {
+  "name": "handoff/plan header fit boundary",
+  "file": "recovery.go",
+  "find": "\t\tif length > budget {",
+  "replace": "\t\tif length >= budget {"
+ },
+ {
+  "name": "handoff/plan header width",
+  "file": "recovery.go",
+  "find": "u16len(batch.blocks[i].header) + 2",
+  "replace": "u16len(batch.blocks[i].header) + 1"
+ },
+ {
+  "name": "handoff/plan header bytes",
+  "file": "recovery.go",
+  "find": "u16len(batch.blocks[i].header) + 2",
+  "replace": "len(batch.blocks[i].header) + 2"
+ },
+ {
+  "name": "handoff/plan omission check",
+  "file": "recovery.go",
+  "find": "\tif first > 0 {\n\t\tomission",
+  "replace": "\tif first >= 0 {\n\t\tomission"
+ },
+ {
+  "name": "handoff/plan omission wording",
+  "file": "recovery.go",
+  "find": "whose headers could not fit. \"",
+  "replace": "whose headers did not fit. \""
+ },
+ {
+  "name": "handoff/plan recovery with call",
+  "file": "recovery.go",
+  "find": "\"Use history read with tool-call entry \"",
+  "replace": "\"Use history read with entry \""
+ },
+ {
+  "name": "handoff/plan recovery then",
+  "file": "recovery.go",
+  "find": "\", then \"",
+  "replace": "\" then \""
+ },
+ {
+  "name": "handoff/plan recovery tail",
+  "file": "recovery.go",
+  "find": "\"history search/read to recover them.\"",
+  "replace": "\"history search to recover them.\""
+ },
+ {
+  "name": "handoff/plan recovery call check",
+  "file": "recovery.go",
+  "find": "recovery := \"Use \"\n\tif batch.hasCallID && batch.callID != \"\"",
+  "replace": "recovery := \"Use \"\n\tif batch.hasCallID || batch.callID != \"\""
+ },
+ {
+  "name": "handoff/render batch block reserve",
+  "file": "recovery.go",
+  "find": "-handoffOverheadReserve-len(plan.blocks))",
+  "replace": "-handoffOverheadReserve)"
+ },
+ {
+  "name": "handoff/render batch per block cap",
+  "file": "recovery.go",
+  "find": "min(maxRecoveryResultChars, available/n)",
+  "replace": "max(maxRecoveryResultChars, available/n)"
+ },
+ {
+  "name": "handoff/render batch per block share",
+  "file": "recovery.go",
+  "find": "available/n)",
+  "replace": "available/(n+1))"
+ },
+ {
+  "name": "handoff/render batch zero budget",
+  "file": "recovery.go",
+  "find": "if perBlock > 0 {",
+  "replace": "if perBlock >= 0 {"
+ },
+ {
+  "name": "handoff/render batch block separator",
+  "file": "recovery.go",
+  "find": "block.header+\"\\n\"+excerpt",
+  "replace": "block.header+\" \"+excerpt"
+ },
+ {
+  "name": "handoff/index fit boundary",
+  "file": "recovery.go",
+  "find": "u16len(line)+1 > budget",
+  "replace": "u16len(line)+1 >= budget"
+ },
+ {
+  "name": "handoff/index budget step",
+  "file": "recovery.go",
+  "find": "budget -= u16len(line) + 1",
+  "replace": "budget -= u16len(line)"
+ },
+ {
+  "name": "handoff/index unlisted check",
+  "file": "recovery.go",
+  "find": "unlisted > 0 {",
+  "replace": "unlisted >= 0 {"
+ },
+ {
+  "name": "handoff/index unlisted wording",
+  "file": "recovery.go",
+  "find": "\" earlier input(s) not listed; use history search to find them.\"",
+  "replace": "\" earlier inputs not listed; use history search to find them.\""
+ },
+ {
+  "name": "handoff/index order",
+  "file": "recovery.go",
+  "find": "for i := len(lines) - 1; i >= 0; i-- {\n\t\tb.WriteString(\"\\n\")",
+  "replace": "for i := 0; i < len(lines); i++ {\n\t\tb.WriteString(\"\\n\")"
+ },
+ {
+  "name": "handoff/index bytes",
+  "file": "recovery.go",
+  "find": "if u16len(line)+1 > budget",
+  "replace": "if len(line)+1 > budget"
+ },
+ {
+  "name": "handoff/selected carried when no owner",
+  "file": "recovery.go",
+  "find": "if !anyOwner && len(carried) > 0 {",
+  "replace": "if anyOwner && len(carried) > 0 {"
+ },
+ {
+  "name": "handoff/selected carried label",
+  "file": "recovery.go",
+  "find": "record.label += carriedLabelSuffix",
+  "replace": "record.label = carriedLabelSuffix"
+ },
+ {
+  "name": "handoff/selected carried order",
+  "file": "recovery.go",
+  "find": "fixed = append(relabeled, fixed...)",
+  "replace": "fixed = append(fixed, relabeled...)"
+ },
+ {
+  "name": "handoff/selected owner scan",
+  "file": "recovery.go",
+  "find": "allRecords[i].kind == \"owner\" {",
+  "replace": "allRecords[i].kind != \"owner\" {"
+ },
+ {
+  "name": "handoff/selected retained excluded",
+  "file": "recovery.go",
+  "find": "ownerRecords(projectedCurrent(entries, projected, nil, false, retained)",
+  "replace": "ownerRecords(projectedCurrent(entries, projected, nil, false, nil)"
+ },
+ {
+  "name": "handoff/notes reserve",
+  "file": "recovery.go",
+  "find": "max(0, maxChars-reserveLen-handoffOverheadReserve)",
+  "replace": "max(0, maxChars-reserveLen)"
+ },
+ {
+  "name": "handoff/notes chain start",
+  "file": "recovery.go",
+  "find": "entries[automaticChainStart(entries):]",
+  "replace": "entries[start:]"
+ },
+ {
+  "name": "handoff/notes cap",
+  "file": "recovery.go",
+  "find": "min(maxNotesSectionChars, max(0",
+  "replace": "max(maxNotesSectionChars, max(0"
+ },
+ {
+  "name": "handoff/notes options dropped",
+  "file": "recovery.go",
+  "find": "reserveParts, options.notes, maxChars)",
+  "replace": "reserveParts, nil, maxChars)"
+ },
+ {
+  "name": "handoff/notes error dropped",
+  "file": "recovery.go",
+  "find": "\tif err != nil {\n\t\treturn \"\", err\n\t}\n\treturn joinedParts(basePreamble",
+  "replace": "\t_ = err\n\treturn joinedParts(basePreamble"
+ },
+ {
+  "name": "handoff/empty header with retained",
+  "file": "recovery.go",
+  "find": "if len(retained) > 0 {\n\t\temptyInputHeader",
+  "replace": "if len(retained) == 0 {\n\t\temptyInputHeader"
+ },
+ {
+  "name": "handoff/empty header retained wording",
+  "file": "recovery.go",
+  "find": "\"No discarded owner or visible coordination inputs were selected for this recovery record.\"",
+  "replace": "\"No owner or visible coordination inputs were selected for this recovery record.\""
+ },
+ {
+  "name": "handoff/empty header wording",
+  "file": "recovery.go",
+  "find": "\"No selected current-window owner or visible coordination inputs were found.\"",
+  "replace": "\"No current-window owner or visible coordination inputs were found.\""
+ },
+ {
+  "name": "handoff/input header check",
+  "file": "recovery.go",
+  "find": "if len(fixed) > 0 {\n\t\tinputHeader",
+  "replace": "if len(fixed) == 0 {\n\t\tinputHeader"
+ },
+ {
+  "name": "handoff/input header wording",
+  "file": "recovery.go",
+  "find": "\"Selected owner and coordination inputs (chronological):\"",
+  "replace": "\"Selected owner and coordination inputs:\""
+ },
+ {
+  "name": "handoff/batch plan reserve",
+  "file": "recovery.go",
+  "find": "joinedLen(minimum...)-handoffOverheadReserve)",
+  "replace": "joinedLen(minimum...))"
+ },
+ {
+  "name": "handoff/count prior",
+  "file": "recovery.go",
+  "find": "if handoff != \"\" {\n\t\tcount++",
+  "replace": "if handoff == \"\" {\n\t\tcount++"
+ },
+ {
+  "name": "handoff/count skipped",
+  "file": "recovery.go",
+  "find": "\tif len(history.skipped) > 0 {\n\t\tcount++\n\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "handoff/fixed budget parts",
+  "file": "recovery.go",
+  "find": "joinedLen(preamble, inputHeader, plan.bare)",
+  "replace": "joinedLen(preamble, inputHeader)"
+ },
+ {
+  "name": "handoff/fixed budget reserve",
+  "file": "recovery.go",
+  "find": "joinedLen(preamble, inputHeader, plan.bare)-handoffOverheadReserve)",
+  "replace": "joinedLen(preamble, inputHeader, plan.bare))"
+ },
+ {
+  "name": "handoff/fixed limit share",
+  "file": "recovery.go",
+  "find": "fixedBudget/count)",
+  "replace": "fixedBudget/(count+1))"
+ },
+ {
+  "name": "handoff/fixed limit cap",
+  "file": "recovery.go",
+  "find": "fixedLimit = min(maxRecoveryRecordChars, fixedBudget/count)",
+  "replace": "fixedLimit = max(maxRecoveryRecordChars, fixedBudget/count)"
+ },
+ {
+  "name": "handoff/fixed limit no inputs",
+  "file": "recovery.go",
+  "find": "\tif count > 0 {\n\t\tfixedLimit",
+  "replace": "\tif count > 1 {\n\t\tfixedLimit"
+ },
+ {
+  "name": "handoff/index budget header",
+  "file": "recovery.go",
+  "find": "append(lenParts, indexHeaderText, renderedBatch, prior)",
+  "replace": "append(lenParts, renderedBatch, prior)"
+ },
+ {
+  "name": "handoff/index budget reserve",
+  "file": "recovery.go",
+  "find": "joinedLen(lenParts...)-handoffOverheadReserve)\n\tindex",
+  "replace": "joinedLen(lenParts...))\n\tindex"
+ },
+ {
+  "name": "handoff/final order",
+  "file": "recovery.go",
+  "find": "append(final, index, renderedBatch, prior)",
+  "replace": "append(final, renderedBatch, index, prior)"
+ },
+ {
+  "name": "handoff/final order checkpoint first",
+  "file": "recovery.go",
+  "find": "append(final, index, renderedBatch, prior)",
+  "replace": "append(final, prior, index, renderedBatch)"
+ },
+ {
+  "name": "handoff/fixed parts order",
+  "file": "recovery.go",
+  "find": "append(fixedParts, preamble, inputHeader)",
+  "replace": "append(fixedParts, inputHeader, preamble)"
+ },
+ {
+  "name": "handoff/record limit applied",
+  "file": "recovery.go",
+  "find": "fixedParts = append(fixedParts, formatRecord(record, fixedLimit))",
+  "replace": "fixedParts = append(fixedParts, formatRecord(record, 0))"
+ }
+]

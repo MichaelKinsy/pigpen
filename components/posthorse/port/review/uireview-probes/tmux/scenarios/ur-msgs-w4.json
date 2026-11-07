@@ -1,0 +1,85 @@
+{
+ "name": "ur-msgs-w4",
+ "replies": [
+  "unused"
+ ],
+ "width": 4,
+ "height": 200,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "/pt message m-cjk"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message m-rtl"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message m-ansi"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message w-cjk"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message w-rtl"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message w-ansi"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 2.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.5
+  }
+ ]
+}

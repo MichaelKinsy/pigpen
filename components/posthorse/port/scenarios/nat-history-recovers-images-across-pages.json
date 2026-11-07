@@ -1,0 +1,146 @@
+{
+ "name": "nat-history-recovers-images-across-pages",
+ "description": "native-host.ts:1574 history recovers every image across pages and fresh contexts: a saved user message with 13 images (32,000-token window) is read page by page with the printed offset/imageOffset, a new_context after each page; every page returns some but not all of the images and the pages together return all 13.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 32000,
+  "maxTokens": 4096,
+  "input": [
+   "text",
+   "image"
+  ]
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_f2222222-2222-4222-8222-222222222222.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"f2222222-2222-4222-8222-222222222222\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdshots1\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": [{\"type\": \"text\", \"text\": \"Screenshots to recover\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}, {\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}], \"timestamp\": 1793000001000}}\n{\"type\": \"compaction\", \"id\": \"sdreset1\", \"parentId\": \"sdshots1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"summary\": \"Recover the earlier screenshots.\", \"firstKeptEntryId\": null, \"tokensBefore\": 100, \"details\": {\"posthorse\": 1}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "sdshots1",
+      "offset": 0,
+      "imageOffset": 0
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Continue recovering screenshots."
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Page recovered.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "sdshots1",
+      "offset": 52,
+      "imageOffset": 9
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Continue recovering screenshots."
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Page recovered.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_f2222222-2222-4222-8222-222222222222.jsonl"
+   }
+  },
+  {
+   "name": "page-01",
+   "rpc": {
+    "type": "prompt",
+    "message": "Recover the next page, then start a fresh context."
+   }
+  },
+  {
+   "name": "page-02",
+   "rpc": {
+    "type": "prompt",
+    "message": "Recover the next page, then start a fresh context."
+   }
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "project": {
+  "skipSystem": true,
+  "images": true
+ },
+ "normalize": []
+}

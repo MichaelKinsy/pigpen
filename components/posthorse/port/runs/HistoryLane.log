@@ -1,0 +1,10 @@
+HistoryLane runs (xd6702, tern-ci:v7, Go 1.27.3, isolated env; the package copy used only my files, the foundation files and fixtures,
+because other lanes' files were still in flux; the full-tree compile was checked again by the lead's runs)
+
+vet: GOOS=linux, darwin, windows `go vet ./...`  -> clean
+go test -race -count=3 -run 'TestTwinPosthorseHistory|TestTwinArchive|TestPrefilter|TestNeedle|TestFold|TestHistoryToLower|TestParse|TestDecodeCursor|TestSearchAcc|TestAscii|TestRipgrep|TestWindow|TestToolParametersMatchTypeBox'
+  -> ok  github.com/MichaelKinsy/pigpen/posthorse  39.584s
+pigeq twins check --ledger port/upstream-tests.json --go extensions/posthorse --files posthorse,archive
+  -> 65 exact twins, 0 skipped
+Benchmarks and peak RSS: port/lane-HistoryLane.md "Performance".
+Red: port/red/HistoryLane.log

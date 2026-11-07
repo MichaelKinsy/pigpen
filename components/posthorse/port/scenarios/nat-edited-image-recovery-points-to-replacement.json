@@ -1,0 +1,122 @@
+{
+ "name": "nat-edited-image-recovery-points-to-replacement",
+ "description": "native-host.ts:1946 edited image recovery points to the replacement rather than the raw original: a saved user message was context-edited to an image; a large local result triggers automatic rollover whose recovery pointer names the edit entry, and history read of that id returns the one replacement image and never the original text.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_b1111111-1111-4111-8111-111111111111.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"b1111111-1111-4111-8111-111111111111\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdorig01\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"PRIVATE_IMAGE_ORIGINAL\", \"timestamp\": 1793000001000}}\n{\"type\": \"context_edit\", \"id\": \"sdimgedit\", \"parentId\": \"sdorig01\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"targetId\": \"sdorig01\", \"replacement\": {\"content\": [{\"type\": \"image\", \"mimeType\": \"image/png\", \"data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a0ioAAAAASUVORK5CYII=\"}]}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "sdimgedit"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "done",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_b1111111-1111-4111-8111-111111111111.jsonl"
+   }
+  },
+  {
+   "name": "recover",
+   "rpc": {
+    "type": "prompt",
+    "message": "Recover the edited image."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"dump\",\n    label: \"Dump\",\n    description: \"Large local result to exercise native automatic rollover\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"x\".repeat(600000) }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true,
+  "images": true,
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  }
+ ],
+ "collapseRuns": 64
+}

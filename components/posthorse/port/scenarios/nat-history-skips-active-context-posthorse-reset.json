@@ -1,0 +1,105 @@
+{
+ "name": "nat-history-skips-active-context-posthorse-reset",
+ "description": "native-host.ts:2634 public history search skips entries still in the active context (nativeCompact=false): a saved session with a needle before and after the boundary; both the session search and the all-session search report the pre-boundary needle, skip the in-context one and say so. (The two upstream calls share one assistant message; they run one per turn here because parallel tool_execution_end order depends on timing.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_d0000000-0000-4000-8000-000000000000.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"d0000000-0000-4000-8000-000000000000\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdbefore1\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"IN_CONTEXT_NEEDLE before rollover\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"sdbefore2\", \"parentId\": \"sdbefore1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ok\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000002000}}\n{\"type\": \"compaction\", \"id\": \"sdreset01\", \"parentId\": \"sdbefore2\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"summary\": \"carry on\", \"firstKeptEntryId\": null, \"tokensBefore\": 100, \"details\": {\"posthorse\": 1}}\n{\"type\": \"message\", \"id\": \"sdkept001\", \"parentId\": \"sdreset01\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"IN_CONTEXT_NEEDLE after rollover\", \"timestamp\": 1793000003000}}\n{\"type\": \"message\", \"id\": \"sdkept002\", \"parentId\": \"sdkept001\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ok\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000004000}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "in_context_needle"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "in_context_needle",
+      "all": true
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "done",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_d0000000-0000-4000-8000-000000000000.jsonl"
+   }
+  },
+  {
+   "name": "look-back",
+   "rpc": {
+    "type": "prompt",
+    "message": "Look back."
+   }
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "project": {
+  "skipSystem": true
+ },
+ "normalize": [
+  {
+   "pattern": "\\[[0-9a-f]{8}([@\\]])",
+   "replacement": "[<entry-id>${1}"
+  },
+  {
+   "pattern": "continue with cursor \\\"[A-Za-z0-9_-]+\\\"",
+   "replacement": "continue with cursor \\\"<cursor>\\\""
+  }
+ ]
+}

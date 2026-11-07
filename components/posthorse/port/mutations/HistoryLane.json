@@ -1,0 +1,1526 @@
+[
+ {
+  "name": "isWindow-posthorse-flag",
+  "file": "history_entries.go",
+  "find": "return ok && posthorse == 1",
+  "replace": "return ok && posthorse == 0"
+ },
+ {
+  "name": "isWindow-compaction-always",
+  "file": "history_entries.go",
+  "find": "\t\tif !ok {\n\t\t\treturn false\n\t\t}\n\t\tposthorse, ok := num(details, \"posthorse\")",
+  "replace": "\t\tif !ok {\n\t\t\treturn true\n\t\t}\n\t\tposthorse, ok := num(details, \"posthorse\")"
+ },
+ {
+  "name": "windowHandoff-compaction-summary",
+  "file": "history_entries.go",
+  "find": "\t\treturn str(entry, \"summary\")\n\t}\n\treturn str(entry, \"handoff\")",
+  "replace": "\t\treturn str(entry, \"handoff\")\n\t}\n\treturn str(entry, \"handoff\")"
+ },
+ {
+  "name": "contextStart-window-start",
+  "file": "history_entries.go",
+  "find": "\t\tif typ == \"context_window\" {\n\t\t\treturn i + 1, entry",
+  "replace": "\t\tif typ == \"context_window\" {\n\t\t\treturn i, entry"
+ },
+ {
+  "name": "contextStart-compaction-fallback",
+  "file": "history_entries.go",
+  "find": "\t\t\treturn i + 1, entry\n\t\t}\n\t}\n\treturn 0, nil",
+  "replace": "\t\t\treturn i, entry\n\t\t}\n\t}\n\treturn 0, nil"
+ },
+ {
+  "name": "contextStart-kept-match",
+  "file": "history_entries.go",
+  "find": "if has == wantHas && jsStrictEqualScalar(id, want) {",
+  "replace": "if has == wantHas || jsStrictEqualScalar(id, want) {"
+ },
+ {
+  "name": "contextStart-kept-index",
+  "file": "history_entries.go",
+  "find": "\t\t\t\treturn kept, entry",
+  "replace": "\t\t\t\treturn kept + 1, entry"
+ },
+ {
+  "name": "contextEdits-empty-target",
+  "file": "history_entries.go",
+  "find": "ok && target != \"\" {",
+  "replace": "ok {"
+ },
+ {
+  "name": "contextEdits-type",
+  "file": "history_entries.go",
+  "find": "typ != \"context_edit\" {\n\t\t\tcontinue",
+  "replace": "typ == \"context_edit\" {\n\t\t\tcontinue"
+ },
+ {
+  "name": "flattenMessage-excluded-text",
+  "file": "history_entries.go",
+  "find": "\"[bashExecution] (excluded from model context by Pi)\"",
+  "replace": "\"[bashExecution] (excluded from model context by pi)\""
+ },
+ {
+  "name": "flattenMessage-bash-format",
+  "file": "history_entries.go",
+  "find": "\"[bashExecution] $ \" + command + \"\\n\" + output",
+  "replace": "\"[bashExecution] $ \" + command + \" \" + output"
+ },
+ {
+  "name": "flattenMessage-call-id",
+  "file": "history_entries.go",
+  "find": "identity += \"\\nCall ID: \" + id",
+  "replace": "identity += \"\\nCall: \" + id"
+ },
+ {
+  "name": "flattenMessage-tool-identity",
+  "file": "history_entries.go",
+  "find": "identity = \"Tool: \" + toolIdentity(",
+  "replace": "identity = \"Tool \" + toolIdentity("
+ },
+ {
+  "name": "flattenMessage-default-role",
+  "file": "history_entries.go",
+  "find": "\t\trole = \"message\"",
+  "replace": "\t\trole = \"unknown\""
+ },
+ {
+  "name": "flattenMessage-part-order",
+  "file": "history_entries.go",
+  "find": "\t\tassistantFailure(message),\n\t\timageSummary(imagesOf(message[\"content\"])),\n\t\tidentity,",
+  "replace": "\t\timageSummary(imagesOf(message[\"content\"])),\n\t\tassistantFailure(message),\n\t\tidentity,"
+ },
+ {
+  "name": "flattenMessage-separator",
+  "file": "history_entries.go",
+  "find": "\t\t\tb.WriteByte('\\n')\n\t\t}\n\t\tfirst = false\n\t\tb.WriteString(part)",
+  "replace": "\t\t\tb.WriteByte(' ')\n\t\t}\n\t\tfirst = false\n\t\tb.WriteString(part)"
+ },
+ {
+  "name": "flattenEntry-handoff-label",
+  "file": "history_entries.go",
+  "find": "\"[context_window] Handoff: \" + handoff",
+  "replace": "\"[context_window] Handoff \" + handoff"
+ },
+ {
+  "name": "flattenEntry-no-handoff",
+  "file": "history_entries.go",
+  "find": "\"[context_window] No handoff\"",
+  "replace": "\"[context_window] No Handoff\""
+ },
+ {
+  "name": "flattenEntry-custom-unknown",
+  "file": "history_entries.go",
+  "find": "customType = \"unknown\"",
+  "replace": "customType = \"custom\""
+ },
+ {
+  "name": "flattenEntry-context-edit-null",
+  "file": "history_entries.go",
+  "find": "\t\treplacement, ok := recOf(entry[\"replacement\"])\n\t\tif !ok {\n\t\t\treturn \"\", false\n\t\t}\n\t\treturn \"[context_edit] \"",
+  "replace": "\t\treplacement, _ := recOf(entry[\"replacement\"])\n\t\treturn \"[context_edit] \""
+ },
+ {
+  "name": "flattenEntry-summary-type",
+  "file": "history_entries.go",
+  "find": "return \"[\" + typ + \"] \" + summary, true",
+  "replace": "return \"[summary] \" + summary, true"
+ },
+ {
+  "name": "contentText-separator",
+  "file": "history_entries.go",
+  "find": "return text + \"\\n\" + summary",
+  "replace": "return text + \" \" + summary"
+ },
+ {
+  "name": "ownAssistantText-first-prefix",
+  "file": "history_entries.go",
+  "find": "originals[0] = \"[assistant] \" + originals[0]",
+  "replace": "originals[0] = \"[assistant]\" + originals[0]"
+ },
+ {
+  "name": "ownAssistantText-recovery-split",
+  "file": "history_entries.go",
+  "find": "\t\tif isRecoveryCall(part) {\n\t\t\toriginals = append(originals, current)",
+  "replace": "\t\tif !isRecoveryCall(part) {\n\t\t\toriginals = append(originals, current)"
+ },
+ {
+  "name": "ownAssistantText-join",
+  "file": "history_entries.go",
+  "find": "current = current + \"\\n\" + partText",
+  "replace": "current = current + \" \" + partText"
+ },
+ {
+  "name": "echoPriority-window",
+  "file": "history_entries.go",
+  "find": "\tcase \"context_window\", \"compaction\", \"branch_summary\":\n\t\treturn 1",
+  "replace": "\tcase \"context_window\", \"compaction\":\n\t\treturn 1"
+ },
+ {
+  "name": "echoPriority-reminder",
+  "file": "history_entries.go",
+  "find": "if isReminderType(entry[\"customType\"]) {\n\t\t\treturn 1",
+  "replace": "if !isReminderType(entry[\"customType\"]) {\n\t\t\treturn 1"
+ },
+ {
+  "name": "echoPriority-toolresult",
+  "file": "history_entries.go",
+  "find": "role == \"toolResult\" && isRecoveryTool(message[\"toolName\"])",
+  "replace": "role == \"toolResult\""
+ },
+ {
+  "name": "originalMatch-role",
+  "file": "history_entries.go",
+  "find": "typ != \"message\" || role != \"assistant\"",
+  "replace": "typ != \"message\" || role == \"\""
+ },
+ {
+  "name": "originalMatch-prefix",
+  "file": "history_entries.go",
+  "find": "return \"[assistant] \" + part, true, true",
+  "replace": "return part, true, true"
+ },
+ {
+  "name": "originalMatch-first",
+  "file": "history_entries.go",
+  "find": "if part == originals[0] {",
+  "replace": "if part == \"\" {"
+ },
+ {
+  "name": "matchHit-mixed-priority",
+  "file": "history_entries.go",
+  "find": "\t\tif hasText {\n\t\t\tpriority = 0\n\t\t} else {\n\t\t\tpriority = 1\n\t\t}",
+  "replace": "\t\tif hasText {\n\t\t\tpriority = 1\n\t\t} else {\n\t\t\tpriority = 0\n\t\t}"
+ },
+ {
+  "name": "matchHit-empty-id",
+  "file": "history_entries.go",
+  "find": "if id == \"\" || q.index(item.text) < 0 {",
+  "replace": "if q.index(item.text) < 0 {"
+ },
+ {
+  "name": "hit-header-subagent",
+  "file": "history_entries.go",
+  "find": "header := c.timestamp + sourceTag(source) + \" [window \"",
+  "replace": "header := c.timestamp + \" [window \""
+ },
+ {
+  "name": "hit-excerpt-before",
+  "file": "history_entries.go",
+  "find": "excerptAround(c.text, query.index(c.text), 100, 400)",
+  "replace": "excerptAround(c.text, query.index(c.text), 50, 400)"
+ },
+ {
+  "name": "hit-excerpt-length",
+  "file": "history_entries.go",
+  "find": "excerptAround(c.text, query.index(c.text), 100, 400)",
+  "replace": "excerptAround(c.text, query.index(c.text), 100, 300)"
+ },
+ {
+  "name": "hit-header-length",
+  "file": "history_entries.go",
+  "find": "headerLength: u16len(header),",
+  "replace": "headerLength: len(header),"
+ },
+ {
+  "name": "qualifiedID-key",
+  "file": "history_entries.go",
+  "find": "return c.id + \"@\" + key",
+  "replace": "return c.id"
+ },
+ {
+  "name": "hitQuery-ascii-text",
+  "file": "history_entries.go",
+  "find": "if q.pattern != nil && isASCII(text) {",
+  "replace": "if q.pattern != nil {"
+ },
+ {
+  "name": "windowedEntry-id-check",
+  "file": "history_entries.go",
+  "find": "\tid, _ := str(entry, \"id\")\n\tif id == \"\" {\n\t\treturn windowedEntry{}, false\n\t}\n\ttext, ok := flattenEntry(entry)",
+  "replace": "\tid, _ := str(entry, \"id\")\n\ttext, ok := flattenEntry(entry)"
+ },
+ {
+  "name": "windowedEntry-window-id",
+  "file": "history_entries.go",
+  "find": "\tif isWindow(entry) {\n\t\twindowID = id\n\t}\n\treturn windowedEntry{entry: entry, windowId: windowID, text: text}, true",
+  "replace": "\treturn windowedEntry{entry: entry, windowId: windowID, text: text}, true"
+ },
+ {
+  "name": "track-initial-default",
+  "file": "history_entries.go",
+  "find": "\t\tinherited = \"initial\"\n\t}\n\twindowID := inherited",
+  "replace": "\t\tinherited = \"\"\n\t}\n\twindowID := inherited"
+ },
+ {
+  "name": "track-delete-repeated",
+  "file": "history_entries.go",
+  "find": "\t\t} else if len(w.windows) > 0 {\n\t\t\tdelete(w.windows, id) // a repeated id replaces its earlier window\n\t\t}",
+  "replace": "\t\t}"
+ },
+ {
+  "name": "project-window-without-id",
+  "file": "history_entries.go",
+  "find": "return w.track(id, parent, hasID && isWindow(entry))",
+  "replace": "_ = hasID\n\treturn w.track(id, parent, isWindow(entry))"
+ },
+ {
+  "name": "reverseWindowEntries-order",
+  "file": "history_entries.go",
+  "find": "for i := len(entries) - 1; i >= 0; i-- {\n\t\tif item, ok := toWindowedEntry(",
+  "replace": "for i := 0; i < len(entries); i++ {\n\t\tif item, ok := toWindowedEntry("
+ },
+ {
+  "name": "seenText-lowercase",
+  "file": "history_entries.go",
+  "find": "return jsToLowerCase(strings.Join(parts, \"\\n\"))",
+  "replace": "return strings.Join(parts, \"\\n\")"
+ },
+ {
+  "name": "seenText-fields",
+  "file": "history_entries.go",
+  "find": "for _, key := range [3]string{\"summary\", \"command\", \"output\"} {",
+  "replace": "for _, key := range [2]string{\"summary\", \"command\"} {"
+ },
+ {
+  "name": "historyIndex-ascii",
+  "file": "history_entries.go",
+  "find": "\treturn u16index(jsToLowerCase(text), query, 0)",
+  "replace": "\treturn strings.Index(strings.ToLower(text), query)"
+ },
+ {
+  "name": "entryContent-edit",
+  "file": "history_entries.go",
+  "find": "\t\treplacement, _ := recOf(entry[\"replacement\"])\n\t\treturn replacement[\"content\"]\n\tcase \"message\":",
+  "replace": "\t\treturn entry[\"content\"]\n\tcase \"message\":"
+ },
+ {
+  "name": "decodeBase64URL-padding",
+  "file": "history_search.go",
+  "find": "\t\tcase c == '=':\n\t\t\ti = len(encoded)\n\t\t\tcontinue",
+  "replace": "\t\tcase c == '=':\n\t\t\tcontinue"
+ },
+ {
+  "name": "decodeBase64URL-std-alphabet",
+  "file": "history_search.go",
+  "find": "case c == '_' || c == '/':",
+  "replace": "case c == '_':"
+ },
+ {
+  "name": "cursorOffset-negative",
+  "file": "history_search.go",
+  "find": "|| offset < 0 ||",
+  "replace": "||"
+ },
+ {
+  "name": "cursorOffset-safe-integer",
+  "file": "history_search.go",
+  "find": "math.Abs(offset) > maxSafeInteger",
+  "replace": "math.Abs(offset) > 1e300"
+ },
+ {
+  "name": "cursorOffset-key",
+  "file": "history_search.go",
+  "find": "|| !isString || stored != key {",
+  "replace": "|| !isString || stored == \"\" {"
+ },
+ {
+  "name": "decodeCursor-length",
+  "file": "history_search.go",
+  "find": "!isArray || len(parts) != 4",
+  "replace": "!isArray"
+ },
+ {
+  "name": "decodeCursor-priority",
+  "file": "history_search.go",
+  "find": "(priority != 0 && priority != 1)",
+  "replace": "(priority != 0 && priority != 1 && priority != 2)"
+ },
+ {
+  "name": "decodeCursor-empty-id",
+  "file": "history_search.go",
+  "find": "!isString || id == \"\" || !isNumber",
+  "replace": "!isString || !isNumber"
+ },
+ {
+  "name": "entryMessage-edit",
+  "file": "history_search.go",
+  "find": "return rec{\"content\": replacement[\"content\"]}",
+  "replace": "return rec{\"content\": replacement[\"summary\"]}"
+ },
+ {
+  "name": "contextVisibility-reminder",
+  "file": "history_search.go",
+  "find": "typ == \"custom_message\" && isReminderType(entry[\"customType\"]) {\n\t\t\treturn false",
+  "replace": "typ == \"custom_message\" && !isReminderType(entry[\"customType\"]) {\n\t\t\treturn false"
+ },
+ {
+  "name": "contextVisibility-edit-target",
+  "file": "history_search.go",
+  "find": "\t\t\tid, _ = str(entry, \"targetId\")",
+  "replace": "\t\t\tid, _ = str(entry, \"id\")"
+ },
+ {
+  "name": "contextVisibility-contains",
+  "file": "history_search.go",
+  "find": "return strings.Contains(seen.text, seenText(entryMessage(entry))), nil",
+  "replace": "return strings.Contains(seenText(entryMessage(entry)), seen.text), nil"
+ },
+ {
+  "name": "contextVisibility-empty-messages",
+  "file": "history_search.go",
+  "find": "id != \"\" && len(item.messages) > 0",
+  "replace": "id != \"\""
+ },
+ {
+  "name": "accumulator-priority-skip",
+  "file": "history_search.go",
+  "find": "if cursor != nil && hit.priority < cursor.priority {",
+  "replace": "if cursor != nil && hit.priority > cursor.priority {"
+ },
+ {
+  "name": "accumulator-past-entry",
+  "file": "history_search.go",
+  "find": "if cursor.offset > total {",
+  "replace": "if cursor.offset >= total {"
+ },
+ {
+  "name": "accumulator-offset-equal",
+  "file": "history_search.go",
+  "find": "\t\tif cursor.offset == total {\n\t\t\treturn nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "accumulator-limit",
+  "file": "history_search.go",
+  "find": "if len(a.groups[hit.priority]) <= a.limit {",
+  "replace": "if len(a.groups[hit.priority]) < a.limit {"
+ },
+ {
+  "name": "accumulator-enough",
+  "file": "history_search.go",
+  "find": "func (a *searchAccumulator) enough() bool { return len(a.groups[0]) > a.limit }",
+  "replace": "func (a *searchAccumulator) enough() bool { return len(a.groups[0]) >= a.limit }"
+ },
+ {
+  "name": "accumulator-results-seeking",
+  "file": "history_search.go",
+  "find": "\tif a.seekingAnchor {\n\t\treturn nil, a.fail(\"History cursor entry no longer matches",
+  "replace": "\tif false {\n\t\treturn nil, a.fail(\"History cursor entry no longer matches"
+ },
+ {
+  "name": "accumulator-result-order",
+  "file": "history_search.go",
+  "find": "append(append(make([]historyHit, 0, len(a.groups[0])+len(a.groups[1])), a.groups[0]...), a.groups[1]...)",
+  "replace": "append(append(make([]historyHit, 0, len(a.groups[0])+len(a.groups[1])), a.groups[1]...), a.groups[0]...)"
+ },
+ {
+  "name": "collector-anchor-seeking",
+  "file": "history_search.go",
+  "find": "\tif seeking && c.anchorHere {\n\t\treturn\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "collector-window",
+  "file": "history_search.go",
+  "find": "if len(group) > c.acc.limit+2 {",
+  "replace": "if len(group) > c.acc.limit+1 {"
+ },
+ {
+  "name": "collector-finish-reset",
+  "file": "history_search.go",
+  "find": "!c.anchorHere {\n\t\tc.recent[cursor.priority] = nil",
+  "replace": "c.anchorHere {\n\t\tc.recent[cursor.priority] = nil"
+ },
+ {
+  "name": "scanArchive-skipped",
+  "file": "history_search.go",
+  "find": "\t\tif visible {\n\t\t\tskipped++\n\t\t} else {\n\t\t\tcollector.add(hit)\n\t\t}",
+  "replace": "\t\tif visible {\n\t\t\tskipped++\n\t\t\tcollector.add(hit)\n\t\t} else {\n\t\t\tcollector.add(hit)\n\t\t}"
+ },
+ {
+  "name": "archivedMatches-reverse",
+  "file": "history_search.go",
+  "find": "for i := len(group) - 1; i >= 0; i-- {\n\t\t\t\tif err := acc.add(group[i])",
+  "replace": "for i := 0; i < len(group); i++ {\n\t\t\t\tif err := acc.add(group[i])"
+ },
+ {
+  "name": "archivedMatches-current",
+  "file": "history_search.go",
+  "find": "inCurrent := current != \"\" && absPath(file) == current",
+  "replace": "inCurrent := current == \"\" || absPath(file) == current"
+ },
+ {
+  "name": "archivedMatches-break",
+  "file": "history_search.go",
+  "find": "\t\tif acc.enough() {\n\t\t\tbreak\n\t\t}\n\t}\n\treturn skipped, nil",
+  "replace": "\t}\n\treturn skipped, nil"
+ },
+ {
+  "name": "branchMatches-skipped",
+  "file": "history_search.go",
+  "find": "\t\tif visible {\n\t\t\tskipped++\n\t\t\treturn true\n\t\t}",
+  "replace": "\t\tif visible {\n\t\t\tskipped++\n\t\t}"
+ },
+ {
+  "name": "branchMatches-enough",
+  "file": "history_search.go",
+  "find": "return !acc.enough()\n\t})",
+  "replace": "return true\n\t})"
+ },
+ {
+  "name": "historyMatches-lowercase",
+  "file": "history_search.go",
+  "find": "query := jsToLowerCase(queryText)",
+  "replace": "query := queryText"
+ },
+ {
+  "name": "historyMatches-default-limit",
+  "file": "history_search.go",
+  "find": "\tlimit := 10\n",
+  "replace": "\tlimit := 11\n"
+ },
+ {
+  "name": "historyMatches-key-all",
+  "file": "history_search.go",
+  "find": "jsStringify([]any{query, params.all})",
+  "replace": "jsStringify([]any{query})"
+ },
+ {
+  "name": "historyMatches-cursor-fail",
+  "file": "history_search.go",
+  "find": "\tcursor, ok := decodeCursor(params.cursor, key)\n\tif !ok {",
+  "replace": "\tcursor, ok := decodeCursor(params.cursor, key)\n\tif false && !ok {"
+ },
+ {
+  "name": "historyMatches-projection-snapshot",
+  "file": "history_search.go",
+  "find": "\t\tif params.all {\n\t\t\treturn projected, nil\n\t\t}\n\t\treturn source.projection()",
+  "replace": "\t\tif params.all {\n\t\t\treturn projected[:0], nil\n\t\t}\n\t\treturn source.projection()"
+ },
+ {
+  "name": "historyMatches-skipped",
+  "file": "history_search.go",
+  "find": "return historyMatchSet{hits: hits, skipped: skipped,",
+  "replace": "return historyMatchSet{hits: hits, skipped: skipped + 1,"
+ },
+ {
+  "name": "encodeCursor-bytes",
+  "file": "history_search.go",
+  "find": "base64.RawURLEncoding.EncodeToString(jsUTF8Bytes(text))",
+  "replace": "base64.StdEncoding.EncodeToString(jsUTF8Bytes(text))"
+ },
+ {
+  "name": "cursorFor-priority",
+  "file": "history_pages.go",
+  "find": "jsStringify([]any{hit.id, hit.priority, offset, matches.key})",
+  "replace": "jsStringify([]any{hit.id, 0, offset, matches.key})"
+ },
+ {
+  "name": "searchFooter-text",
+  "file": "history_pages.go",
+  "find": "and the same query/scope.]\"",
+  "replace": "and the same query.]\""
+ },
+ {
+  "name": "hitFragment-cursor-id",
+  "file": "history_pages.go",
+  "find": "if cursor != nil && cursor.id == hit.id {",
+  "replace": "if cursor != nil {"
+ },
+ {
+  "name": "hitFragment-first",
+  "file": "history_pages.go",
+  "find": "if !first && total-offset > available {",
+  "replace": "if total-offset > available {"
+ },
+ {
+  "name": "hitFragment-prefix-cond",
+  "file": "history_pages.go",
+  "find": "if offset > 0 || total > available {",
+  "replace": "if offset > 0 {"
+ },
+ {
+  "name": "hitFragment-prefix-text",
+  "file": "history_pages.go",
+  "find": "\"[entry \" + hit.id + \"; from char \"",
+  "replace": "\"[entry \" + hit.id + \"; at char \""
+ },
+ {
+  "name": "hitFragment-prefix-room",
+  "file": "history_pages.go",
+  "find": "if prefixLength >= available {",
+  "replace": "if prefixLength > available {"
+ },
+ {
+  "name": "hitFragment-prefix-u16",
+  "file": "history_pages.go",
+  "find": "prefixLength := u16len(prefix)",
+  "replace": "prefixLength := len(prefix)"
+ },
+ {
+  "name": "hitFragment-end",
+  "file": "history_pages.go",
+  "find": "end := min(total, offset+available-prefixLength)",
+  "replace": "end := min(total, offset+available)"
+ },
+ {
+  "name": "hitFragment-header-length",
+  "file": "history_pages.go",
+  "find": "headerLength: prefixLength + max(0, min(hit.headerLength-offset, end-offset)),",
+  "replace": "headerLength: prefixLength + min(hit.headerLength-offset, end-offset),"
+ },
+ {
+  "name": "searchParts-available",
+  "file": "history_pages.go",
+  "find": "available -= partLength + 1",
+  "replace": "available -= partLength"
+ },
+ {
+  "name": "searchParts-more",
+  "file": "history_pages.go",
+  "find": "if fragment.end < u16len(hit.text) || len(page.parts) < len(matches.hits) {",
+  "replace": "if fragment.end < u16len(hit.text) {"
+ },
+ {
+  "name": "searchParts-limit",
+  "file": "history_pages.go",
+  "find": "if available <= 0 || len(page.parts) >= matches.limit {",
+  "replace": "if available <= 0 {"
+ },
+ {
+  "name": "searchParts-part-u16",
+  "file": "history_pages.go",
+  "find": "partLength := u16len(fragment.part)",
+  "replace": "partLength := len(fragment.part)"
+ },
+ {
+  "name": "searchPage-reserve",
+  "file": "history_pages.go",
+  "find": "if reserve >= chars {",
+  "replace": "if reserve > chars {"
+ },
+ {
+  "name": "searchPage-skipped-cursor",
+  "file": "history_pages.go",
+  "find": "if matches.skipped > 0 && params.cursor == \"\" {",
+  "replace": "if matches.skipped > 0 {"
+ },
+ {
+  "name": "searchPage-plural",
+  "file": "history_pages.go",
+  "find": "if matches.skipped == 1 {\n\t\t\tplural = \"\"",
+  "replace": "if matches.skipped == 0 {\n\t\t\tplural = \"\""
+ },
+ {
+  "name": "searchPage-skipped-text",
+  "file": "history_pages.go",
+  "find": "\" already in your active context.]\"",
+  "replace": "\" already in your context.]\""
+ },
+ {
+  "name": "searchPage-no-matches",
+  "file": "history_pages.go",
+  "find": "\"No history matches \\\"\"",
+  "replace": "\"No history match \\\"\""
+ },
+ {
+  "name": "searchPage-no-matches-excerpt",
+  "file": "history_pages.go",
+  "find": "excerpt(params.query, 200)",
+  "replace": "params.query"
+ },
+ {
+  "name": "searchPage-budget",
+  "file": "history_pages.go",
+  "find": "searchParts(matches, chars-reserve-u16len(skippedNote))",
+  "replace": "searchParts(matches, chars-reserve)"
+ },
+ {
+  "name": "readOffsets-image-default",
+  "file": "history_pages.go",
+  "find": "imageOff = float64(len(item.images))",
+  "replace": "imageOff = 0"
+ },
+ {
+  "name": "readOffsets-image-past",
+  "file": "history_pages.go",
+  "find": "if imageOff > float64(len(item.images)) {",
+  "replace": "if imageOff >= float64(len(item.images)) {"
+ },
+ {
+  "name": "readOffsets-offset-past",
+  "file": "history_pages.go",
+  "find": "if off > float64(total) ||",
+  "replace": "if off >= float64(total) ||"
+ },
+ {
+  "name": "readOffsets-offset-equal",
+  "file": "history_pages.go",
+  "find": "(off == float64(total) && imageOff == float64(len(item.images)))",
+  "replace": "(off == float64(total))"
+ },
+ {
+  "name": "readOffsets-number-text",
+  "file": "history_pages.go",
+  "find": "jsNumberString(off), params.id, total)",
+  "replace": "strconv.Itoa(int(off)), params.id, total)"
+ },
+ {
+  "name": "readOffsets-image-text",
+  "file": "history_pages.go",
+  "find": "jsNumberString(imageOff), params.id, len(item.images))",
+  "replace": "strconv.Itoa(int(imageOff)), params.id, len(item.images))"
+ },
+ {
+  "name": "readOffsets-message",
+  "file": "history_pages.go",
+  "find": "is past the end of history entry \\\"%s\\\" (%d chars).",
+  "replace": "is past the end of the history entry \\\"%s\\\" (%d chars)."
+ },
+ {
+  "name": "shownEntryId-unknown",
+  "file": "history_pages.go",
+  "find": "entryID = \"unknown\"",
+  "replace": "entryID = \"none\""
+ },
+ {
+  "name": "shownEntryId-bare",
+  "file": "history_pages.go",
+  "find": "\tif source == \"\" {\n\t\treturn id\n\t}",
+  "replace": "\tif false {\n\t\treturn id\n\t}"
+ },
+ {
+  "name": "readPage-first-image",
+  "file": "history_pages.go",
+  "find": "if imageOffset < len(item.images) {\n\t\tfirstImage = 1",
+  "replace": "if imageOffset <= len(item.images) {\n\t\tfirstImage = 1"
+ },
+ {
+  "name": "readPage-image-offset-request",
+  "file": "history_pages.go",
+  "find": "\tif len(item.images) > 0 {\n\t\trequest.imageOffset = &imageOffset\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "readPage-image-end",
+  "file": "history_pages.go",
+  "find": "floorDiv(chars-minPageChars, estimatedImageChars)",
+  "replace": "floorDiv(chars, estimatedImageChars)"
+ },
+ {
+  "name": "readPage-end",
+  "file": "history_pages.go",
+  "find": "end := min(total, offset+chars-(len(images)-firstImage)*estimatedImageChars)",
+  "replace": "end := min(total, offset+chars)"
+ },
+ {
+  "name": "readPage-more",
+  "file": "history_pages.go",
+  "find": "if end < total || imageEnd < len(item.images) {",
+  "replace": "if end < total {"
+ },
+ {
+  "name": "readPage-more-text",
+  "file": "history_pages.go",
+  "find": "\"\\nMore remains; call history read with id \\\"\"",
+  "replace": "\"\\nMore remains; call history read with id \""
+ },
+ {
+  "name": "readPage-more-image",
+  "file": "history_pages.go",
+  "find": "\t\tif len(item.images) > 0 {\n\t\t\tmore += \" and imageOffset \"",
+  "replace": "\t\tif imageEnd < len(item.images) {\n\t\t\tmore += \" and imageOffset \""
+ },
+ {
+  "name": "readPage-header",
+  "file": "history_pages.go",
+  "find": "\" [window \" + item.windowId + \"] [\" + shownID + \"] [chars \"",
+  "replace": "\" [window \" + item.windowId + \"] [\" + shownID + \"] [char \""
+ },
+ {
+  "name": "readPage-header-subagent",
+  "file": "history_pages.go",
+  "find": "timestamp + sourceTag(source) + \" [window \" + item.windowId + \"] [\" + shownID",
+  "replace": "timestamp + \" [window \" + item.windowId + \"] [\" + shownID"
+ },
+ {
+  "name": "readPage-text-u16",
+  "file": "history_pages.go",
+  "find": "u16slice(item.text, offset, end) + more",
+  "replace": "item.text[offset:end] + more"
+ },
+ {
+  "name": "floorDiv-negative",
+  "file": "history_pages.go",
+  "find": "if a%b != 0 && a < 0 {",
+  "replace": "if a%b != 0 && a > 0 {"
+ },
+ {
+  "name": "entryReference-separator",
+  "file": "history.go",
+  "find": "separator := strings.Index(id, \"@\")",
+  "replace": "separator := strings.LastIndex(id, \"@\")"
+ },
+ {
+  "name": "branchEntry-first",
+  "file": "history.go",
+  "find": "\t\tif entryID, _ := str(entry, \"id\"); entryID == id {",
+  "replace": "\t\tif entryID, _ := str(entry, \"id\"); entryID != id {"
+ },
+ {
+  "name": "findEntry-key-skips-branch",
+  "file": "history.go",
+  "find": "\tif !hasKey {\n\t\tcurrent, ok, err := branchEntry(source, entryID)",
+  "replace": "\tif true {\n\t\tcurrent, ok, err := branchEntry(source, entryID)"
+ },
+ {
+  "name": "findEntry-needle-regexp",
+  "file": "history.go",
+  "find": "`^[A-Za-z0-9_-]+$`",
+  "replace": "`^[A-Za-z0-9_]+$`"
+ },
+ {
+  "name": "findEntry-needle-text",
+  "file": "history.go",
+  "find": "scope.needles = []string{`\"id\":\"` + entryID + `\"`}",
+  "replace": "scope.needles = []string{entryID}"
+ },
+ {
+  "name": "findEntry-wanted",
+  "file": "history.go",
+  "find": "func(candidate string) bool { return candidate == entryID }",
+  "replace": "func(candidate string) bool { return true }"
+ },
+ {
+  "name": "findEntry-error-text",
+  "file": "history.go",
+  "find": "Pass an id exactly as history search prints it",
+  "replace": "Pass an id as history search prints it"
+ },
+ {
+  "name": "findEntry-source",
+  "file": "history.go",
+  "find": "return locatedEntry{item: item, source: rel}, nil",
+  "replace": "return locatedEntry{item: item, source: rel + \"x\"}, nil"
+ },
+ {
+  "name": "historySource-cwd",
+  "file": "history.go",
+  "find": "cwd: absPath(ctx.Cwd()),",
+  "replace": "cwd: ctx.Cwd(),"
+ },
+ {
+  "name": "historySource-file",
+  "file": "history.go",
+  "find": "\tif file != nil {\n\t\tsource.currentFile = *file\n\t}",
+  "replace": "\tif file != nil {\n\t\tsource.currentFile = \"\"\n\t}"
+ },
+ {
+  "name": "historyParams-all",
+  "file": "history.go",
+  "find": "p.all, _ = boolean(params, \"all\")",
+  "replace": "p.all = false"
+ },
+ {
+  "name": "historyParams-limit",
+  "file": "history.go",
+  "find": "n := jsToInt(v)\n\t\tp.limit = &n",
+  "replace": "n := jsToInt(v) + 1\n\t\tp.limit = &n"
+ },
+ {
+  "name": "registerHistory-description",
+  "file": "history.go",
+  "find": "search skips entries still in your active context",
+  "replace": "search skips entries in your active context"
+ },
+ {
+  "name": "registerHistory-snippet",
+  "file": "history.go",
+  "find": "recover earlier conversation that left the active context window",
+  "replace": "recover earlier conversation"
+ },
+ {
+  "name": "registerHistory-op",
+  "file": "history.go",
+  "find": "if params.op == \"search\" {",
+  "replace": "if params.op != \"read\" {"
+ },
+ {
+  "name": "registerHistory-require-id",
+  "file": "history.go",
+  "find": "requireValue(params.id, params.hasID, \"id\", params.op)",
+  "replace": "params.id, error(nil)"
+ },
+ {
+  "name": "splits-colon",
+  "file": "session_files.go",
+  "find": "case '\"', '\\\\', '[', ']', '(', ')', '{', '}', ':', '$':",
+  "replace": "case '\"', '\\\\', '[', ']', '(', ')', '{', '}', '$':"
+ },
+ {
+  "name": "splits-control",
+  "file": "session_files.go",
+  "find": "return size, unicode.Is(unicode.Cc, r)",
+  "replace": "return size, false"
+ },
+ {
+  "name": "splits-surrogate",
+  "file": "session_files.go",
+  "find": "\tif isWTF8Surrogate(s, i) {\n\t\treturn 3, true\n\t}\n\tr, size := utf8.DecodeRuneInString(s[i:])",
+  "replace": "\tr, size := utf8.DecodeRuneInString(s[i:])"
+ },
+ {
+  "name": "prefilter-longest",
+  "file": "session_files.go",
+  "find": "if n := u16len(part); n > fragmentLen {",
+  "replace": "if n := u16len(part); n >= fragmentLen {"
+ },
+ {
+  "name": "prefilter-trim",
+  "file": "session_files.go",
+  "find": "part = jsTrim(part)",
+  "replace": ""
+ },
+ {
+  "name": "prefilter-u16",
+  "file": "session_files.go",
+  "find": "if n := u16len(part); n > fragmentLen {",
+  "replace": "if n := len(part); n > fragmentLen {"
+ },
+ {
+  "name": "prefilter-image-comma",
+  "file": "session_files.go",
+  "find": "image := strings.Contains(fragment, \",\") ||",
+  "replace": "image :="
+ },
+ {
+  "name": "prefilter-label",
+  "file": "session_files.go",
+  "find": "if strings.Contains(source.label, fragment) {",
+  "replace": "if strings.Contains(fragment, source.label) {"
+ },
+ {
+  "name": "prefilter-dotted",
+  "file": "session_files.go",
+  "find": "if strings.ContainsAny(fragment, \"i\\u0307\") {",
+  "replace": "if strings.ContainsAny(fragment, \"\\u0307\") {"
+ },
+ {
+  "name": "labels-no-handoff",
+  "file": "session_files.go",
+  "find": "{\"no handoff\", []string{`\"type\":\"context_window\"`}},",
+  "replace": "{\"no handoff\", []string{`\"type\":\"context_windows\"`}},"
+ },
+ {
+  "name": "labels-excluded",
+  "file": "session_files.go",
+  "find": "{\"excluded from model context by pi\", []string{`\"excludeFromContext\":true`}},",
+  "replace": "{\"excluded from model context by pi\", []string{`\"excludeFromContext\":false`}},"
+ },
+ {
+  "name": "labels-image-regexp",
+  "file": "session_files.go",
+  "find": "`^[0-9]+ ?i?m?a?g?e?s?$`",
+  "replace": "`^[0-9]+ ?i?m?a?g?e?$`"
+ },
+ {
+  "name": "fold-index-bounds",
+  "file": "session_files.go",
+  "find": "for pos := f.anchor; pos < n-(m-1-f.anchor); {",
+  "replace": "for pos := f.anchor; pos < n-(m-f.anchor); {"
+ },
+ {
+  "name": "fold-index-case",
+  "file": "session_files.go",
+  "find": "\t\t\tf.hi = f.lo - 'a' + 'A'",
+  "replace": "\t\t\tf.hi = f.lo"
+ },
+ {
+  "name": "fold-index-start",
+  "file": "session_files.go",
+  "find": "\t\tstart := at - f.anchor\n",
+  "replace": "\t\tstart := at\n"
+ },
+ {
+  "name": "ascii-test-dotted",
+  "file": "session_files.go",
+  "find": "if a.dotted && strings.Contains(text, dottedI) {",
+  "replace": "if strings.Contains(text, dottedI) {"
+ },
+ {
+  "name": "ascii-test-alternates",
+  "file": "session_files.go",
+  "find": "\tif a.alternates {\n\t\tfor _, seq := range altSequences {",
+  "replace": "\tif false {\n\t\tfor _, seq := range altSequences {"
+ },
+ {
+  "name": "alt-sequences-latin1",
+  "file": "session_files.go",
+  "find": "var altSequences = [...]string{kelvinUTF8, \"\\xc2\\x84\\xaa\", longSUTF8, \"\\xe5\\xbf\"}",
+  "replace": "var altSequences = [...]string{kelvinUTF8, longSUTF8}"
+ },
+ {
+  "name": "matchFolded-k",
+  "file": "session_files.go",
+  "find": "(text[i] == 0xe2 || text[i] == 0xc2) && text[i+1] == 0x84 && text[i+2] == 0xaa",
+  "replace": "text[i] == 0xe2 && text[i+1] == 0x84 && text[i+2] == 0xaa"
+ },
+ {
+  "name": "matchFolded-s",
+  "file": "session_files.go",
+  "find": "(text[i] == 0xc5 || text[i] == 0xe5) && text[i+1] == 0xbf",
+  "replace": "text[i] == 0xc5 && text[i+1] == 0xbf"
+ },
+ {
+  "name": "needleLines-overlap",
+  "file": "session_files.go",
+  "find": "overlap := 4*longest + 4",
+  "replace": "overlap := longest"
+ },
+ {
+  "name": "needleLines-longest",
+  "file": "session_files.go",
+  "find": "longest = max(longest, u16len(needle))",
+  "replace": "longest = max(longest, len(needle)/4)"
+ },
+ {
+  "name": "needleLines-dotted",
+  "file": "session_files.go",
+  "find": "dotted := len(others) < len(needles)",
+  "replace": "dotted := false"
+ },
+ {
+  "name": "needleLines-ascii",
+  "file": "session_files.go",
+  "find": "\t\tif !isASCII(needle) {\n\t\t\tascii = false",
+  "replace": "\t\tif !isASCII(needle) && len(needle) > 1000 {\n\t\t\tascii = false"
+ },
+ {
+  "name": "needleLines-lower",
+  "file": "session_files.go",
+  "find": "lowered := strings.ToLower(needle)",
+  "replace": "lowered := needle"
+ },
+ {
+  "name": "needleLines-ks",
+  "file": "session_files.go",
+  "find": "if strings.ContainsAny(lowered, \"ks\") {",
+  "replace": "if strings.ContainsAny(lowered, \"k\") {"
+ },
+ {
+  "name": "needleLines-regexp-flag",
+  "file": "session_files.go",
+  "find": "regexp.Compile(\"(?i)\" + strings.Join(quoted, \"|\"))",
+  "replace": "regexp.Compile(strings.Join(quoted, \"|\"))"
+ },
+ {
+  "name": "stableAnchor-longest",
+  "file": "session_files.go",
+  "find": "if b.Len() > bestLen {",
+  "replace": "if b.Len() < bestLen {"
+ },
+ {
+  "name": "stableAnchor-lower",
+  "file": "session_files.go",
+  "find": "if r < utf8.RuneSelf && r >= 'A' && r <= 'Z' {",
+  "replace": "if false {"
+ },
+ {
+  "name": "foldStable-ascii",
+  "file": "session_files.go",
+  "find": "if f >= utf8.RuneSelf || r >= utf8.RuneSelf {",
+  "replace": "if f >= utf8.RuneSelf {"
+ },
+ {
+  "name": "commandGroups-limit",
+  "file": "session_files.go",
+  "find": "if len(group) > 0 && chars+n > argumentChars {",
+  "replace": "if len(group) > 0 && chars+n >= argumentChars+100000 {"
+ },
+ {
+  "name": "commandGroups-u16",
+  "file": "session_files.go",
+  "find": "n := u16len(path)\n\t\tif len(group) > 0",
+  "replace": "n := 0\n\t\tif len(group) > 0"
+ },
+ {
+  "name": "cap-buffer",
+  "file": "session_files.go",
+  "find": "if c.buf.Len()+len(p) > c.limit {",
+  "replace": "if c.buf.Len()+len(p) > c.limit*100 {"
+ },
+ {
+  "name": "rg-flags-ignore-case",
+  "file": "session_files.go",
+  "find": "\"--fixed-strings\", \"--ignore-case\", \"--no-messages\")",
+  "replace": "\"--fixed-strings\", \"--no-messages\")"
+ },
+ {
+  "name": "rg-flags-null",
+  "file": "session_files.go",
+  "find": "\"--files-with-matches\", \"--null\",",
+  "replace": "\"--files-with-matches\","
+ },
+ {
+  "name": "rg-flags-separator",
+  "file": "session_files.go",
+  "find": "\tflags = append(flags, \"--\")\n",
+  "replace": ""
+ },
+ {
+  "name": "rg-managed-binary",
+  "file": "session_files.go",
+  "find": "binaries = append(binaries, filepath.Join(agentDir, \"bin\", \"rg\"))",
+  "replace": "binaries = append(binaries, filepath.Join(agentDir, \"rg\"))"
+ },
+ {
+  "name": "rg-exit-one",
+  "file": "session_files.go",
+  "find": "exit.ExitCode() == 1 {",
+  "replace": "exit.ExitCode() == 2 {"
+ },
+ {
+  "name": "rg-enoent-drop",
+  "file": "session_files.go",
+  "find": "\t\t\t\tif candidate != binary {\n\t\t\t\t\tkept = append(kept, candidate)",
+  "replace": "\t\t\t\tif candidate == binary {\n\t\t\t\t\tkept = append(kept, candidate)"
+ },
+ {
+  "name": "rg-abort",
+  "file": "session_files.go",
+  "find": "if aborted := throwIfAborted(ctx); aborted != nil {\n\t\t\t\t\treturn nil, aborted\n\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "rg-nonenoent-all",
+  "file": "session_files.go",
+  "find": "\t\t\t\treturn paths, nil\n\t\t\t}\n\t\t\tmu.Lock()",
+  "replace": "\t\t\t\treturn nil, nil\n\t\t\t}\n\t\t\tmu.Lock()"
+ },
+ {
+  "name": "rg-split",
+  "file": "session_files.go",
+  "find": "strings.Split(stdout, \"\\x00\")",
+  "replace": "strings.Split(stdout, \"\\n\")"
+ },
+ {
+  "name": "rg-filter-relative",
+  "file": "session_files.go",
+  "find": "paths[i], _ = filepath.Rel(dir, file)",
+  "replace": "paths[i] = file"
+ },
+ {
+  "name": "rg-dir",
+  "file": "session_files.go",
+  "find": "stdout, err := execFileText(ctx, binary, args, dir)",
+  "replace": "stdout, err := execFileText(ctx, binary, args, \"\")"
+ },
+ {
+  "name": "rg-kept",
+  "file": "session_files.go",
+  "find": "if _, ok := found[paths[i]]; ok {",
+  "replace": "if _, ok := found[paths[i]]; !ok {"
+ },
+ {
+  "name": "parseEntryHead-null",
+  "file": "session_files.go",
+  "find": "if after, isNull := strings.CutPrefix(rest, \"null\"); isNull {",
+  "replace": "if after, isNull := strings.CutPrefix(rest, \"nul\"); isNull {"
+ },
+ {
+  "name": "parseEntryHead-terminator",
+  "file": "session_files.go",
+  "find": "if rest == \"\" || (rest[0] != ',' && rest[0] != '}') {",
+  "replace": "if rest == \"\" {"
+ },
+ {
+  "name": "parseEntryHead-window",
+  "file": "session_files.go",
+  "find": "if typ == \"compaction\" || typ == \"context_window\" {",
+  "replace": "if typ == \"compaction\" {"
+ },
+ {
+  "name": "parseEntryHead-backslash",
+  "file": "session_files.go",
+  "find": "if i < 0 || s[i] == '\\\\' {",
+  "replace": "if i < 0 {"
+ },
+ {
+  "name": "parseEntryHead-parent",
+  "file": "session_files.go",
+  "find": "if parent, rest, ok = cutPlain(quoted); !ok {",
+  "replace": "if _, rest, ok = cutPlain(quoted); !ok {"
+ },
+ {
+  "name": "windowEntries-head-skip",
+  "file": "session_files.go",
+  "find": "\t\t\tif isHead && (!line.matches || (wanted != nil && !wanted(head.id))) {",
+  "replace": "\t\t\tif isHead && (wanted != nil && !wanted(head.id)) {"
+ },
+ {
+  "name": "windowEntries-track",
+  "file": "session_files.go",
+  "find": "\t\t\t\tproject.track(head.id, head.parentID, false)\n\t\t\t\tcontinue",
+  "replace": "\t\t\t\tcontinue"
+ },
+ {
+  "name": "windowEntries-selected",
+  "file": "session_files.go",
+  "find": "selected = wanted == nil || wanted(id)",
+  "replace": "selected = wanted != nil && wanted(id)"
+ },
+ {
+  "name": "windowEntries-for-read",
+  "file": "session_files.go",
+  "find": "\t\t\tif forRead {\n\t\t\t\tparse = parseSessionLine\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "windowEntries-images",
+  "file": "session_files.go",
+  "find": "\t\t\tif forRead {\n\t\t\t\tbuild = toWindowedEntry\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "windowEntries-exists",
+  "file": "session_files.go",
+  "find": "\t\tif !existsSync(file) {\n\t\t\treturn\n\t\t}\n\t\tproject := windowProjection()",
+  "replace": "\t\tproject := windowProjection()"
+ },
+ {
+  "name": "windowEntries-line-error",
+  "file": "session_files.go",
+  "find": "\t\t\ttext, err := line.text()\n\t\t\tif err != nil {\n\t\t\t\tyield(windowedEntry{}, err)\n\t\t\t\treturn\n\t\t\t}",
+  "replace": "\t\t\ttext, _ := line.text()"
+ },
+ {
+  "name": "sessionFiles-intent",
+  "file": "session_files.go",
+  "find": "&& !strings.Contains(entry.Name(), \".intent.\")",
+  "replace": ""
+ },
+ {
+  "name": "sessionFiles-suffix",
+  "file": "session_files.go",
+  "find": "strings.HasSuffix(entry.Name(), \".jsonl\")",
+  "replace": "strings.HasSuffix(entry.Name(), \".json\")"
+ },
+ {
+  "name": "sessionFiles-regular",
+  "file": "session_files.go",
+  "find": "entry.Type().IsRegular() &&",
+  "replace": "true &&"
+ },
+ {
+  "name": "newestFirst-order",
+  "file": "session_files.go",
+  "find": "return stats[a].mtime > stats[b].mtime",
+  "replace": "return stats[a].mtime < stats[b].mtime"
+ },
+ {
+  "name": "newestFirst-stable",
+  "file": "session_files.go",
+  "find": "sort.SliceStable(stats,",
+  "replace": "sort.Slice(stats,"
+ },
+ {
+  "name": "newestFirst-mtime",
+  "file": "session_files.go",
+  "find": "float64(mod.Unix())*1e3 + float64(mod.Nanosecond())/1e6",
+  "replace": "float64(mod.Unix())*1e3"
+ },
+ {
+  "name": "newestFirst-error",
+  "file": "session_files.go",
+  "find": "errs[i] = nodeFsError(err, \"stat\", file)",
+  "replace": "errs[i] = nil"
+ },
+ {
+  "name": "searchPhases-limit",
+  "file": "session_files.go",
+  "find": "if total >= firstSearchBytes {",
+  "replace": "if total > firstSearchBytes {"
+ },
+ {
+  "name": "sessionHeader-null",
+  "file": "session_files.go",
+  "find": "\t\tif value == nil {\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "sessionHeader-type",
+  "file": "session_files.go",
+  "find": "typ != \"session\" {",
+  "replace": "typ != \"sessions\" {"
+ },
+ {
+  "name": "sessionHeader-id",
+  "file": "session_files.go",
+  "find": "if _, hasID := str(header, \"id\"); !hasID {",
+  "replace": "if false {"
+ },
+ {
+  "name": "sessionHeader-non-record",
+  "file": "session_files.go",
+  "find": "\t\tif !isRec {\n\t\t\treturn \"\", false, false, nil\n\t\t}",
+  "replace": "\t\tif !isRec {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "parentSession-loop",
+  "file": "session_files.go",
+  "find": "for i := len(parts) - 1; i > 0; i-- {",
+  "replace": "for i := len(parts) - 1; i > 1; i-- {"
+ },
+ {
+  "name": "parentSession-suffix",
+  "file": "session_files.go",
+  "find": "parts[:i]...)...) + \".jsonl\"",
+  "replace": "parts[:i]...)...)"
+ },
+ {
+  "name": "membership-current",
+  "file": "session_files.go",
+  "find": "allowed := m.scope.currentFile != \"\" && file == m.scope.currentFile",
+  "replace": "allowed := false"
+ },
+ {
+  "name": "membership-parent",
+  "file": "session_files.go",
+  "find": "} else if allowed, err = m.belongs(parent); err != nil {",
+  "replace": "} else if allowed, err = len(parent) > 0, nil; err != nil {"
+ },
+ {
+  "name": "membership-cwd",
+  "file": "session_files.go",
+  "find": "allowed = absErr == nil && abs == m.scope.cwd",
+  "replace": "allowed = absErr == nil && abs != \"\""
+ },
+ {
+  "name": "membership-empty-cwd",
+  "file": "session_files.go",
+  "find": "if hasCwd && cwd != \"\" {",
+  "replace": "if hasCwd {"
+ },
+ {
+  "name": "scoped-filekey",
+  "file": "session_files.go",
+  "find": "if strings.HasPrefix(*scope.fileKey, shortKey(rel)) {",
+  "replace": "if strings.HasPrefix(shortKey(rel), *scope.fileKey) {"
+ },
+ {
+  "name": "scoped-phase-prefilter",
+  "file": "session_files.go",
+  "find": "\t\t\tif prefilter != nil {\n\t\t\t\tif phase, err = prefilter(phase); err != nil {",
+  "replace": "\t\t\tif false {\n\t\t\t\tif phase, err = prefilter(phase); err != nil {"
+ },
+ {
+  "name": "scoped-belongs",
+  "file": "session_files.go",
+  "find": "if ok && !yield(file, nil) {",
+  "replace": "if !ok && !yield(file, nil) {"
+ },
+ {
+  "name": "json-whitespace",
+  "file": "session_json.go",
+  "find": "case ' ', '\\t', '\\n', '\\r':\n\t\t\tr.i++",
+  "replace": "case ' ', '\\t', '\\n', '\\r', '\\v':\n\t\t\tr.i++"
+ },
+ {
+  "name": "json-special-control",
+  "file": "session_json.go",
+  "find": "control := (x - 0x2020202020202020) & ^x & high",
+  "replace": "control := uint64(0)"
+ },
+ {
+  "name": "json-scan-escape",
+  "file": "session_json.go",
+  "find": "\t\t\tescaped = true\n\t\t\ti += 2",
+  "replace": "\t\t\tescaped = true\n\t\t\ti++"
+ },
+ {
+  "name": "json-scan-control",
+  "file": "session_json.go",
+  "find": "\t\tcase c < 0x20:\n\t\t\treturn 0, false, false",
+  "replace": "\t\tcase c < 0x10:\n\t\t\treturn 0, false, false"
+ },
+ {
+  "name": "json-hex-upper",
+  "file": "session_json.go",
+  "find": "case c >= 'A' && c <= 'F':\n\t\t\tv = v<<4 | rune(c-'A'+10)",
+  "replace": "case c >= 'A' && c <= 'E':\n\t\t\tv = v<<4 | rune(c-'A'+10)"
+ },
+ {
+  "name": "json-escape-slash",
+  "file": "session_json.go",
+  "find": "case '\"', '\\\\', '/':",
+  "replace": "case '\"', '\\\\':"
+ },
+ {
+  "name": "json-escape-b",
+  "file": "session_json.go",
+  "find": "case 'b':\n\t\t\tb = append(b, '\\b')",
+  "replace": "case 'b':\n\t\t\tb = append(b, 'b')"
+ },
+ {
+  "name": "json-surrogate-pair",
+  "file": "session_json.go",
+  "find": "low >= 0xDC00 && low < 0xE000 {",
+  "replace": "low >= 0xDC00 && low < 0xE001 && false {"
+ },
+ {
+  "name": "json-lone-high",
+  "file": "session_json.go",
+  "find": "\t\t\t\tsur := surrogateBytes(r)\n\t\t\t\tb = append(b, sur[:]...)\n\t\t\tcase r >= 0xDC00",
+  "replace": "\t\t\t\tb = utf8.AppendRune(b, 0xFFFD)\n\t\t\tcase r >= 0xDC00"
+ },
+ {
+  "name": "json-lone-low",
+  "file": "session_json.go",
+  "find": "\t\t\tcase r >= 0xDC00 && r < 0xE000:\n\t\t\t\tsur := surrogateBytes(r)\n\t\t\t\tb = append(b, sur[:]...)",
+  "replace": "\t\t\tcase r >= 0xDC00 && r < 0xE000:\n\t\t\t\tb = utf8.AppendRune(b, 0xFFFD)"
+ },
+ {
+  "name": "json-leading-zero",
+  "file": "session_json.go",
+  "find": "\tcase s[i] == '0':\n\t\ti++\n\tcase s[i] >= '1' && s[i] <= '9':",
+  "replace": "\tcase s[i] >= '0' && s[i] <= '9':"
+ },
+ {
+  "name": "json-fraction-digit",
+  "file": "session_json.go",
+  "find": "\t\td := i\n\t\tfor i < n && s[i] >= '0' && s[i] <= '9' {\n\t\t\ti++\n\t\t}\n\t\tif i == d {\n\t\t\treturn 0, false, false\n\t\t}\n\t}\n\tif i < n && (s[i] == 'e'",
+  "replace": "\t\tfor i < n && s[i] >= '0' && s[i] <= '9' {\n\t\t\ti++\n\t\t}\n\t}\n\tif i < n && (s[i] == 'e'"
+ },
+ {
+  "name": "json-negative-zero",
+  "file": "session_json.go",
+  "find": "\t\t\tif v == 0 {\n\t\t\t\treturn negativeZero, true\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "json-int-digits",
+  "file": "session_json.go",
+  "find": "if integer && len(text) <= 15 {",
+  "replace": "if integer && len(text) <= 30 {"
+ },
+ {
+  "name": "json-range",
+  "file": "session_json.go",
+  "find": "if err != nil && !isRangeError(err) {",
+  "replace": "if err != nil {"
+ },
+ {
+  "name": "json-depth",
+  "file": "session_json.go",
+  "find": "if r.i >= len(r.s) || depth > maxJSONDepth {\n\t\treturn nil, false\n\t}\n\tswitch c := r.s[r.i]; {\n\tcase c == '\"':\n\t\ts, ok := r.readString()",
+  "replace": "if r.i >= len(r.s) || depth > 10000 {\n\t\treturn nil, false\n\t}\n\tswitch c := r.s[r.i]; {\n\tcase c == '\"':\n\t\ts, ok := r.readString()"
+ },
+ {
+  "name": "json-trailing",
+  "file": "session_json.go",
+  "find": "\tif r.i != len(text) {\n\t\treturn nil, false\n\t}\n\treturn v, true",
+  "replace": "\treturn v, true"
+ },
+ {
+  "name": "json-array-comma",
+  "file": "session_json.go",
+  "find": "\tcase ',':\n\t\tr.i++\n\t\treturn 2",
+  "replace": "\tcase ',':\n\t\tr.i++\n\t\treturn 1"
+ },
+ {
+  "name": "json-skip-escapes",
+  "file": "session_json.go",
+  "find": "\tif escaped {\n\t\t_, ok = unescapeJSON(r.s[start:end])\n\t}\n\treturn ok",
+  "replace": "\tif escaped && false {\n\t\t_, ok = unescapeJSON(r.s[start:end])\n\t}\n\treturn ok"
+ },
+ {
+  "name": "json-string-member-delete",
+  "file": "session_json.go",
+  "find": "\tdelete(m, key)\n\treturn r.skipValue(0)\n}\n\n// boolMember",
+  "replace": "\treturn r.skipValue(0)\n}\n\n// boolMember"
+ },
+ {
+  "name": "json-bool-member",
+  "file": "session_json.go",
+  "find": "\tif r.s[r.i] == 't' {\n\t\tif !r.literal(\"true\") {",
+  "replace": "\tif r.s[r.i] == 'f' {\n\t\tif !r.literal(\"true\") {"
+ },
+ {
+  "name": "json-message-default",
+  "file": "session_json.go",
+  "find": "\tfor _, key := range [2]string{\"isError\", \"excludeFromContext\"} {\n\t\tif _, present := m[key]; !present {\n\t\t\tm[key] = false\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "json-message-keys",
+  "file": "session_json.go",
+  "find": "case \"role\", \"stopReason\", \"errorMessage\", \"summary\", \"toolName\", \"namespace\", \"toolCallId\", \"command\", \"output\":",
+  "replace": "case \"role\", \"stopReason\", \"errorMessage\", \"summary\", \"toolName\", \"namespace\", \"toolCallId\", \"command\":"
+ },
+ {
+  "name": "json-replacement-null",
+  "file": "session_json.go",
+  "find": "\t\tentry[\"replacement\"] = nil\n\t\treturn true",
+  "replace": "\t\treturn true"
+ },
+ {
+  "name": "json-replacement-content",
+  "file": "session_json.go",
+  "find": "\t\t\tif key != \"content\" {\n\t\t\t\treturn r.skipValue(0)\n\t\t\t}",
+  "replace": "\t\t\tif key != \"contents\" {\n\t\t\t\treturn r.skipValue(0)\n\t\t\t}"
+ },
+ {
+  "name": "json-entry-keys",
+  "file": "session_json.go",
+  "find": "case \"type\", \"id\", \"timestamp\", \"summary\", \"customType\", \"cwd\", \"parentSession\", \"handoff\", \"firstKeptEntryId\", \"targetId\":",
+  "replace": "case \"type\", \"id\", \"timestamp\", \"summary\", \"customType\", \"cwd\", \"parentSession\", \"handoff\", \"firstKeptEntryId\":"
+ },
+ {
+  "name": "json-parentid-null",
+  "file": "session_json.go",
+  "find": "\t\t\t\tentry[key] = nil\n\t\t\t\treturn true",
+  "replace": "\t\t\t\treturn true"
+ },
+ {
+  "name": "json-display-default",
+  "file": "session_json.go",
+  "find": "\tif _, present := entry[\"display\"]; !present {\n\t\tentry[\"display\"] = false\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "json-not-object",
+  "file": "session_json.go",
+  "find": "if r.i >= len(r.s) || r.s[r.i] != '{' {\n\t\treturn nil, false // not an object",
+  "replace": "if r.i >= len(r.s) {\n\t\treturn nil, false // not an object"
+ },
+ {
+  "name": "json-clone",
+  "file": "session_json.go",
+  "find": "return parseSessionLineView(strings.Clone(line))",
+  "replace": "return parseSessionLineView(line)"
+ },
+ {
+  "name": "json-message-nonobject",
+  "file": "session_json.go",
+  "find": "\t\t\tdelete(entry, key)\n\t\t\treturn r.skipValue(0)\n\t\tcase \"replacement\":",
+  "replace": "\t\t\treturn r.skipValue(0)\n\t\tcase \"replacement\":"
+ },
+ {
+  "name": "lines-view-valid",
+  "file": "session_lines.go",
+  "find": "\tif utf8.Valid(p) {\n\t\treturn unsafeString(p)\n\t}\n\treturn jsFromBytes(p)",
+  "replace": "\treturn unsafeString(p)"
+ },
+ {
+  "name": "lines-single-chunk",
+  "file": "session_lines.go",
+  "find": "if matches && position-start == int64(len(bytes)) {",
+  "replace": "if matches && position-start >= 0 {"
+ },
+ {
+  "name": "lines-current",
+  "file": "session_lines.go",
+  "find": "\t\t\tcurrent = line\n",
+  "replace": ""
+ }
+]

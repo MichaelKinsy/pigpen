@@ -1,0 +1,11 @@
+import { pathToFileURL } from "node:url";
+const S = "/home/kinsy/ph-work/scratch/notesstore";
+const s = await import(pathToFileURL(`${S}/oracle/src/note-scopes.ts`).href);
+const root = "/p/.pi/notes", ts = "2026-01-02T03:04:05.678Z", fs_ = ".forks/2026-01-02T03-04-05-678Z_s1/notes";
+const addr = (p) => ({ root, scope: "", path: p });
+const seed = (p) => ({ path: p, source: addr(p), lineage: addr(p), anchors: ["e1"], digest: "abc", identity: { size: 3, mtimeMs: 1, ctimeMs: 1, ino: 1, dev: 1 } });
+const binding = { version: 1, kind: "fork", owner: { id: "s1", timestamp: ts }, root, scope: fs_, source: { root, scope: "" }, seeds: [seed("a.md")], absent: [] };
+const b = s.parseBinding(binding);
+const touch = { version: 1, owner: { id: "s1", timestamp: ts }, scope: { root, scope: fs_ }, rootToolCallId: "r", toolCallId: "c", files: [{ root, scope: fs_, path: "a.md", kind: "adopt", seed: seed("z.md") }] };
+const out = s.seedsOf(b, [{ type: "custom", customType: s.NOTES_TOUCH, data: touch }]);
+console.log(JSON.stringify(out.map((x) => x.path)));

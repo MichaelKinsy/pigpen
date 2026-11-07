@@ -1,0 +1,74 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {
+      "fixture": "context-enabled"
+     }
+    },
+    {
+     "name": "get_context_remaining",
+     "arguments": {
+      "fixture": "context-unsupported"
+     }
+    },
+    {
+     "name": "get_context_remaining",
+     "arguments": {
+      "fixture": "context-disabled"
+     }
+    },
+    {
+     "name": "get_context_remaining",
+     "arguments": {
+      "fixture": "context-unknown"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 64,
+ "theme": "dark",
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 1.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "context"
+}

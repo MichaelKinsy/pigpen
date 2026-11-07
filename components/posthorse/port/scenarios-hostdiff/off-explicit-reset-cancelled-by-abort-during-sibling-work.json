@@ -1,0 +1,130 @@
+{
+ "name": "off-explicit-reset-cancelled-by-abort-during-sibling-work",
+ "description": "official-host.ts:2263 'explicit reset is cancelled during sibling work but cannot prevent a later-handler abort commit' (first half). new_context shares a batch with a sibling tool that is still running when the run is aborted (a trigger sends abort once new_context has finished while the sibling is still waiting; the sibling returns when its signal fires): the reset must not commit.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "receipt-w.ts",
+   "source": "export default function (pi) {\n  pi.registerTool({\n    name: \"write_receipt\", label: \"Write receipt\", description: \"Local receipt\",\n    parameters: { type: \"object\", properties: {} },\n    async execute(_id, _params, signal) {\n      await new Promise((resolve) => { if (signal?.aborted) resolve(undefined); else signal?.addEventListener(\"abort\", () => resolve(undefined), { once: true }); });\n      return { content: [{ type: \"text\", text: \"SIDE_EFFECT_RECEIPT\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "CANCELLED"
+     }
+    },
+    {
+     "name": "write_receipt",
+     "arguments": {}
+    }
+   ]
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Write once."
+   },
+   "settleMs": 800,
+   "triggers": [
+    {
+     "when": {
+      "event": "tool_execution_end",
+      "match": {
+       "toolName": "new_context"
+      }
+     },
+     "rpc": {
+      "type": "abort"
+     }
+    }
+   ]
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

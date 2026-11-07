@@ -1,0 +1,137 @@
+{
+ "name": "off-mixed-direct-and-composed-resets-nested-first-false",
+ "description": "official-host.ts:2102 'mixed direct and composed resets keep foreground source order (nestedFirst=False)'. One batch holds a codemode call (two nested new_context calls) and a direct new_context: the first foreground request in source order wins (DIRECT). tool_execution_end is not captured (completion order of the batch is host timing).",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  },
+  {
+   "pattern": "Wall time [0-9.]+ seconds",
+   "replacement": "Wall time <s> seconds"
+  },
+  {
+   "pattern": "Read \\S*/docs/codemode\\.md first\\.",
+   "replacement": "Read <host-docs>/codemode.md first."
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore",
+   "**.durationMs",
+   "**.sections.docs",
+   "**.sections.preamble",
+   "**.parentToolCallId"
+  ],
+  "full": [
+   "message_end",
+   "tool_execution_end"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "codemode.ts",
+   "source": "import { createCodemodeExtension } from \"@earendil-works/pi-coding-agent\";\nexport default function (pi) {\n  createCodemodeExtension()(pi);\n  pi.on(\"session_start\", () => { pi.setActiveTools([...pi.getActiveTools(), \"codemode\"]); });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "DIRECT"
+     }
+    },
+    {
+     "name": "codemode",
+     "arguments": {
+      "code": "await tools.new_context({handoff:\"NESTED_FIRST\"}); await tools.new_context({handoff:\"NESTED_SECOND\"});"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Finished."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Use the first foreground request."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

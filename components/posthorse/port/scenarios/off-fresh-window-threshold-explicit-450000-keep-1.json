@@ -1,0 +1,124 @@
+{
+ "name": "off-fresh-window-threshold-explicit-450000-keep-1",
+ "description": "official-host.ts:2419 'fresh-window threshold protects the next request (explicit, 450000 chars, keepRecentTokens=1)'. new_context starts the fresh window, the fresh window's own dump (450000 chars, over the rollover line) is followed by posthorse's fresh-window fallback: a second threshold boundary commits (record carries DUMP_HEAD/DUMP_TAIL) and the third request holds one non-system message and no tool result; 3 requests.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 1
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi) {\n  let dumps = 0;\n  pi.registerTool({\n    name: \"dump\", label: \"Dump\", description: \"Oversized local output\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      const sizes = [450000];\n      const chars = sizes[Math.min(dumps++, sizes.length - 1)];\n      return { content: [{ type: \"text\", text: `DUMP_HEAD ${\"x\".repeat(chars)} DUMP_TAIL` }, ...[]], details: {}, terminate: false };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Continue inspecting the next output."
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "text": "Done."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Inspect two outputs."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

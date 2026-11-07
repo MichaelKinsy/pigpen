@@ -1,0 +1,142 @@
+{
+ "name": "off-late-queued-input-defers-explicit-handoff",
+ "description": "official-host.ts:1798 'late queued input defers an explicit handoff that no longer fits'. Window 32,000 / reserve 1,000: new_context (20,000-char handoff) is accepted at its original capacity; a sibling tool waits until a steer message (85,000 chars, sent by a trigger once new_context has finished) is pending and returns; the turn boundary rechecks pending input, defers the reset (no boundary; a posthorse-reset-deferred entry) and the queued input is processed. (tool_execution_end is not captured: the two tools' completion order is host timing.)",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 32000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 1000,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end",
+  "queue_update"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "late.ts",
+   "source": "export default function (pi) {\n  pi.registerTool({\n    name: \"late_input\", label: \"Late input\", description: \"Queue late input\",\n    parameters: { type: \"object\", properties: {} },\n    async execute(_id, _params, _signal, _update, ctx) {\n      while (!ctx.hasPendingMessages()) { await new Promise((resolve) => { setTimeout(resolve, 1); }); }\n      return { content: [{ type: \"text\", text: \"Queued.\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "{{repeat:h:20000}}"
+     }
+    },
+    {
+     "name": "late_input",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 3500,
+    "output": 40
+   }
+  },
+  {
+   "text": "Process queued input first.",
+   "usage": {
+    "input": 5000,
+    "output": 40
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save a handoff."
+   },
+   "triggers": [
+    {
+     "when": {
+      "event": "tool_execution_end",
+      "match": {
+       "toolName": "new_context"
+      }
+     },
+     "rpc": {
+      "type": "steer",
+      "message": "{{repeat:q:85000}}"
+     }
+    }
+   ]
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

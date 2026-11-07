@@ -1,0 +1,65 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "ledger.md",
+      "fixture": "note-long"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 40,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "closed",
+   "settle": 1.0
+  },
+  {
+   "click": "START",
+   "nth": 0
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "clicked",
+   "settle": 0.5
+  },
+  {
+   "click": "START",
+   "nth": 0
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "clicked-again",
+   "settle": 0.5
+  }
+ ],
+ "name": "click-card"
+}

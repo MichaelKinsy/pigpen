@@ -1,0 +1,84 @@
+# Review: lane C2 (notes tool, note guards, note tool effects)
+
+Reviewer: notestools. Scope: `src/notes.ts`, `src/note-tool-effects.ts`, `src/note-guards.ts` against
+`notes.go`, `note_tool_effects.go`, `note_guards.go` and the callees they reach.
+Proof tests: `extensions/posthorse/review_notestools_test.go` (tests only; each failing test has a
+`// DIVERGENCE:` comment). TS values come from Node 24.22.1 (ICU 78.3, Unicode 17) and TypeBox 1.3.27
+(`~/ph-work/pi-oracle/node_modules/typebox`) run on xd6702. The Pi tool_call error text comes from
+`pi-coding-agent/dist/core/agent-session.js`: `Extension failed, blocking execution: ${String(err)}`.
+
+Run: `ph run "cd components/posthorse/extensions/posthorse && go test -count=1 -run TestReviewNotestools ."`
+-> 11 FAIL (the findings below), `TestReviewNotestoolsMatchingLinesNode` PASS.
+`go vet` passes for linux, darwin, windows.
+
+## Findings
+
+| ID | severity | TS file:line | Go file:line | what differs | proof | proposed fix |
+|---|---|---|---|---|---|---|
+| N1 | parity-break (model-visible) | notes.ts:300-340 | notes.go:552-572 | The `notes` tool `parameters` go on the wire as a plain map, so the SDK writes them alphabetically: `{"properties":{"content":…,"offset":{"description":…,"minimum":0,"type":"integer"},"op":{"anyOf":[{"const":"list","type":"string"},…` . TypeBox writes `{"type":"object","required":["op"],"properties":{"op":{"anyOf":[{"type":"string","const":"list"},…],"description":…},"path":…,"scope":…,"content":…,"query":…,"offset":{"type":"integer","description":…,"minimum":0}}}`. The provider/model sees different bytes (key order of root, properties, every member). The description/promptSnippet/descriptions themselves are byte-equal. | `TestReviewNotestoolsSchemaBytes` (expected = TypeBox 1.3.27 output) | Build it as `context_tools.go:75` does: `sdk.Type.Object(sdk.NewOrderedObject("op", sdk.Type.Union([]…Literal…, opts("description",…)), "path", sdk.Type.Optional(sdk.Type.String(…)), "scope", …, "content", …, "query", …, "offset", sdk.Type.Optional(sdk.Type.Integer(NewOrderedObject("description",…,"minimum",0))))).Schema()`. Same defect class in `history.go:152` `historySchema` (HistoryLane). |
+| N2 | parity-break | notes.ts:97-100 | notes.go:166-175 | `statSync(…, {throwIfNoEntry:false})` returns undefined for ENOTDIR (Node probe: `statENOTDIR undefined`), but `statNoThrow` uses `isNoEntry` (`fs.ErrNotExist` only; `syscall.ENOTDIR` is not `ErrNotExist`). `notes read a/b.md` when `a` is a note: TS `No note at a/b.md. Use op "list" to see available notes.`; Go `ENOTDIR: not a directory, stat '<notes>/a/b.md'`. The lane note §10 claims ENOTDIR is handled; the code does not. | `TestReviewNotestoolsReadUnderFileNote` | `if isNoEntry(err) \|\| errors.Is(err, syscall.ENOTDIR) { return nil, nil }` (as `files.go:160 lstatSyncMissing`). |
+| N3 | parity-break | notes.ts:150, 182 | notes.go:284-286, 356-358 | `mkdirSync(dirname(path), {recursive:true})` on an existing *file* throws `EEXIST: file already exists, mkdir '<dir>'` (Node probe); `os.MkdirAll` returns ENOTDIR, so `notes write/append a/b.md` when `a` is a note says `ENOTDIR: not a directory, mkdir '<notes>/a'`. (A deeper non-dir ancestor is ENOTDIR in both.) | `TestReviewNotestoolsWriteUnderFileNote` (write and append) | A `mkdirRecursive(dir)` helper: `os.Stat(dir)`; exists and not a dir -> `&fsError{Code:"EEXIST",Syscall:"mkdir",Path:dir}`; else `os.MkdirAll` + `nodeFsError(err,"mkdir",dir)`. Same pattern at `files.go:813` (CoreLane). |
+| N4 | parity-break | notes.ts:183 | notes.go:304-326 | `notes append folder` where `folder` is a directory: TS `existsSync` true, `readFileSync(dir,"utf8")` throws `EISDIR: illegal operation on a directory, read` (no path, Node probe). Go: `ReadAt` on the dir fd -> `EISDIR: illegal operation on a directory, read '<path>'`; on a filesystem reporting size 0 for a directory (btrfs) Go skips the read and fails later with `…, open '<path>'`. The "last byte" shortcut is otherwise equivalent (see coverage). | `TestReviewNotestoolsAppendToFolder` | In `needsSeparator`, after `file.Stat()`: `if info.IsDir() { return false, &fsError{Code:"EISDIR", Syscall:"read", Err: syscall.EISDIR} }` (empty Path prints no path). |
+| N5 | parity-break | notes.ts:111-114, 256-262 (and paging.ts:87,112) | notes.go:70 | `notesParamsOf` truncates the float64 offset to `int`. JS prints the number: offset 2^60 -> TS `Offset 1152921504606847000 is past the end of x.md (1 chars).`, Go `Offset 1152921504606846976 …`. offset 1e20 (a valid JSON-Schema integer, `minimum: 0`) -> `int(1e20)` is implementation-defined (MinInt64 on amd64): TS search answers `Notes search pages end before offset 1000000; search for something more specific.`, Go passes the check and runs the search with a negative offset (no error). | `TestReviewNotestoolsHugeOffset` | Keep the offset as float64 through the comparisons (`offset >= searchOffsetLimit`, `offset > 0 && offset >= total`) and print it with JS number formatting (the SDK json number writer); only convert to int after the range checks (values > 2^53 never reach slicing). Same for paging.go messages (CoreLane). |
+| N6 | parity-break (persisted session data) | note-guards.ts:153 `{...address, kind}`; notes.ts:127 `{...target.address, kind:"read"}` | note_scopes.go:1009-1019 (called from note_guards.go:249-275, notes.go:238) | When the address comes from the session binding (`scopes[0]` is the binding itself, so every native read/write of the session's own note and every `notes read` with a scope equal to the binding), TS overwrites the binding's `kind` in place: `{"version":1,"kind":"read","owner":…,"root":…,"scope":"","path":"x.md"}`. Go writes the binding's `"kind":"project"` and then appends a second `"kind":"read"`: duplicate key, different order, in every `posthorse-note-touch` entry. | `TestReviewNotestoolsTouchFileKind` | In `noteTouchFile.appendJSON`, when `origin != nil` write the origin's members with `kind` replaced by `f.kind` at its position (and no trailing `kind`). Owner: NotesStoreLane. |
+| N7 | parity-break (model-visible via the tool_call block text) | note-guards.ts:35 | note_guards.go:47-81 | `fileURLToPath` is not WHATWG + `decodeURIComponent`: `file:///a%zz` -> TS `URI malformed`, Go `Invalid URL`; `file:///a%ff` -> TS throws `URI malformed`, Go returns `/a\xff`; `file://LOCALHOST/x` -> TS `/x` (host lower-cased, localhost dropped), Go `File URL host must be "localhost" or empty on linux`; `file:///a\b` -> TS `/a/b`, Go `/a\b`. Pi shows a thrown guard error as `Extension failed, blocking execution: ${String(err)}`. | `TestReviewNotestoolsFileURL` | Pre-normalise as WHATWG does for `file:` (backslash -> slash, host lower-cased, `localhost` -> empty), do not fail on invalid `%` escapes in url.Parse (parse the path manually), and decode with a `decodeURIComponent` equivalent that fails with `URI malformed` on a bad escape or invalid UTF-8. |
+| N8 | parity-break (edge) | note-guards.ts:162-176 | note_guards.go:278-294 | TS evaluates `toolPath(...)` only inside `store.roots().some(...)`; with no known roots it never parses the path and the handler returns undefined. Go calls `toolPath` per operation before looking at the roots, so when `store.get` fails before any root is known, a native call with a bad `file://` path (or an unset HOME for `~`) turns into a thrown tool_call error instead of passing. | `TestReviewNotestoolsGuardNoRootsSkipsToolPath` | Loop roots first: `for _, root := range store.roots() { path, err := toolPath(...); … }` per operation, or return false when `len(store.roots()) == 0`. |
+| N9 | parity-break (file bytes) | notes.ts:188 `appendFileSync(path, string)` | notes.go:627-640 | The SDK decodes a lone surrogate argument (`"a\ud800"`) to WTF-8 (`a ED A0 80`). `write` goes through `publishFile`/`jsUTF8Bytes` and writes `a EF BF BD` like Node; `appendRecord` copies `content` verbatim and writes `a ED A0 80 0A` (invalid UTF-8) where Node writes `a EF BF BD 0A`. | `TestReviewNotestoolsAppendLoneSurrogate` | `record = append(record, jsUTF8Bytes(content)...)` (the `\n` suffix test is unaffected). |
+| N10 | parity-break (edge) | notes.ts:203 | notes.go:414 | `text.toLowerCase().includes(query)` compares UTF-16 units: a lone high-surrogate query (`"\ud83d"`) is found in `x😀` and TS returns `["n:1: x😀"]`. Go's precheck `strings.Contains` compares bytes (WTF-8 vs 4-byte UTF-8) and returns no rows, although the per-line `u16index` would match. | `TestReviewNotestoolsLoneSurrogateQuery` (TS value from Node) | When `hasSurrogateForm(query)`, precheck with `u16index(jsToLowerCase(text), query, 0) >= 0`. |
+| N11 | perf | notes.ts:203-209 (V8 `includes`/`indexOf`) | notes.go:372-400 | `asciiIndexFold` is a naive O(len(hay)·len(needle)) scan, used for the whole-text precheck and every line. 1 MiB note of `a`, query `"a"×4096+"b"`: Go `matchingLines` 3.02 s/op; Go stdlib `strings.Contains(strings.ToLower(text),q)` 4.9 ms/op; Node (TS code) 16 ms/op. Every searched note under 1 MiB pays it; 16 such notes per batch. | `BenchmarkReviewNotestoolsASCIIFoldWorst` (xd6702, Xeon 8468) | Use `strings.Index` on the text when it has no `A-Z` (common case, zero copy), else lower-case once into a reused buffer and `strings.Index`; or a fold-aware Rabin-Karp. |
+| N12 | robustness (race) | notes.ts:183 | notes.go:322-324 | If the note is truncated between `file.Stat()` and `ReadAt(size-1)` (another process `: > note`), `ReadAt` returns `(0, io.EOF)`; `nodeFsError` passes non-fs errors through, so append fails with `EOF`. TS reads whatever is there (`""` -> no separator) and appends. | reasoning: `os.File.ReadAt` returns `io.EOF` for `off >= size`; `nodeFsError` (files.go:110-138) returns it unchanged | Treat `n == 0 && errors.Is(err, io.EOF)` as an empty file (`return false, nil`). |
+| N13 | parity-break (Windows only) | note-guards.ts:26-28, 41; Node `getPathFromURLWin32` | note_guards.go:39-45, 53-57 | (a) `nodeResolve` uses `filepath.IsAbs`, false on Windows for a rooted path without drive (`\foo`, `/foo`): Node `path.win32.resolve("C:\\w","/foo")` = `C:\foo`, Go `C:\w\foo` (both toolPath branches). (b) Windows `fileURLToPath` rejects only `%5c`; Node rejects `%2f` and `%5c` with `File URL path must not include encoded \ or / characters`; Node also requires the drive letter to be `a-z`. | reasoning (Go `filepath.IsAbs` doc: on Windows an absolute path needs a volume; Node lib/internal/url.js getPathFromURLWin32) | (a) Windows `nodeResolve`: a path with `filepath.VolumeName == ""` and a leading separator takes cwd's volume. (b) add the `%2f` check and the letter check. |
+| N14 | robustness | note-guards.ts:33 `homedir()` | note_guards.go:98-101 | `os.UserHomeDir` errors when `$HOME` is empty or unset (`$HOME is not defined`); Node `os.homedir()` returns `""` for an empty HOME (probe) and falls back to the passwd entry when unset. A `~/x` native path then throws from the tool_call handler in Go only. | reasoning + Node probe (`homedirEmptyHOME ""`) | Use `$HOME` verbatim when set (even empty); when unset fall back to `os/user.Current().HomeDir` like libuv. |
+| N15 | parity-break (error text) | note-scopes.ts:111-124 via note-guards.ts:52 | note_scopes.go:302-325 (NotesStoreLane), reached from note_guards.go:134-160 | `canonicalPath` returns Go's raw `EvalSymlinks: too many links` for a symlink loop; TS rethrows Node's `ELOOP: too many symbolic links encountered, stat '<path>'`. Any native read/write/edit of such a path is blocked by the guard in both, with different text. | `TestReviewNotestoolsCanonicalPathLoop` | Wrap non-missing EvalSymlinks errors with `nodeFsError(err, "stat", absolute)` (Node's JS realpathSync reports the failing `stat` of the looping component; for ELOOP that is the input). Owner: NotesStoreLane. |
+| N16 | nit / owner decision | notes.ts:105, 183 | notes.go:207, 304-326 | Node cannot hold a note > 0x1fffffe8 UTF-16 units as a string (`ERR_STRING_TOO_LONG`) nor read a file > 2 GiB (`ERR_FS_FILE_TOO_LARGE`): TS `notes read` and `notes append` fail on such notes; Go reads them (read) and appends after reading one byte (append). | reasoning (V8 max string length on 64-bit = 2^29-24) | Accept as a documented improvement in PORT.md, or reproduce the two Node errors by size check. |
+
+## SDK / host gaps (owner decision)
+
+- **Error class in tool_call block text.** Pi blocks with `Extension failed, blocking execution: ${String(err)}`,
+  so the JS class is visible (`URIError: URI malformed`, `TypeError: Invalid URL`, `TypeError: File URL host must be …`,
+  `Error: ELOOP: …`). A Go handler error has no class; what PiG prints for it was not observed in this review
+  ([INFERENCE] probably `Error: <message>` or the bare message). Needs an SDK way to name the error class, or a
+  documented divergence.
+- **Lone surrogates in paths.** The SDK keeps lone surrogates as WTF-8; every `os.*` call with a note path built from a
+  model-supplied path containing one (e.g. `notes write {path:"\ud800.md"}`) uses the `ED A0 80` bytes, where Node
+  converts the path to UTF-8 with U+FFFD (`EF BF BD`). The file name on disk differs. Cross-cutting (all lanes'
+  fs calls); not given a test here.
+
+## Checked and found equal
+
+- notes.ts: `listNotes` (folder/empty text, header, FORMAT_BATCH yield + abort check only when there are files, row
+  format: label, `formatSize` incl. `toFixed` tie rounding (SDK `tenths`), `toISOString().slice(0,16)` with
+  trunc-toward-zero, negative and >9999 years, `mtimeMs` as float like Node's `msFromTimeSpec`), notices appended,
+  `pages.notes` without `more` (`more === true` only matters); `readNote` (requireValue, scope read, folder ->
+  listNotes with `scopeDirectory(target.address)`, binary check before read, WHATWG maximal-subpart decoding,
+  UTF-16 total/offset/slice, offset error text, writable vs read-only header via ordered JSON, header UTF-16 length,
+  `pages.size`/`pages.error` ordering, `[chars a-b of n; continue with offset b]`, record then result, display);
+  `writeNote` (content-required text, queue, prepareWrite, publishFile, clear vs write kind, `Wrote <path>`);
+  `appendNote` (abort checks, adopt, prepareWrite, `\n?$` -> `\n` equals HasSuffix, separator logic; the
+  last-byte shortcut is equivalent for invalid UTF-8, BOM-only, CRLF, no trailing newline, empty file, dangling or
+  live symlinks (existsSync/Stat both follow; O_CREAT through a dangling link creates the target in both), and
+  EACCES (same `open` error); not for directories (N4) or a concurrent truncate (N12)); `matchingLines`
+  (Node-verified on 24 cases: U+0130 index shift, final sigma incl. case-ignorable `'` and U+0345, ß/ẞ, Kelvin,
+  BOM/U+2028/CR trimming, emoji UTF-16 offsets, Unicode 16/17 letters, empty query; `TestReviewNotestoolsMatchingLinesNode`
+  passes; Go unicode 17.0.0 = Node ICU 78.3 Unicode 17); `noteHits` (16-wide batches, size > 1 MiB skip counted per
+  batch before rows, UTF-16 row length + 1, early stop with `more`, notices only on full scan, abort check per
+  batch); `searchNotes` (query required/empty, SEARCH_OFFSET_LIMIT check, lower-cased query, `offset+MAX_PAGE_CHARS`,
+  `1 note`/`N notes` header, empty text with `excerpt(query,200)`); `registerNotes` (name, label, description,
+  promptSnippet and every property description byte-equal, notesDir migration then store.get then scope-with-write
+  refusal with U+2019, `.` read -> list, op dispatch).
+- note-tool-effects.ts: `bareToolName` (max of `:`/`/`), `patchOperations` (multiline `^`/`$` incl. U+2028/2029
+  line starts, `[^\r\n]+` path, Move-to only right after an Update header with exactly one `\r\n|\r|\n`),
+  `batchOperations`, `notesAction`, `singleOperation`, `noteOperations` (preview, preview_patch, string input),
+  `noteOperationKind`, `committedAction` (`bytesAfter === 0`), `committedOperations`, `verifiedNoteOperations`.
+  Callers in recovery_note_touches.go use `bareToolName` where the TS does; the guards use the raw tool name as the TS does.
+- note-guards.ts: `toolPath` POSIX branches (spaces, single `@`, `~`, relative/absolute literal), `noteAddress`
+  (`.forks/<id>/notes` layout), `existingEdit`, `guardForeign` texts, `guardOperation` (managed metadata text,
+  adopt under the mutation queue, prepareWrite for non-read), `recordedFiles` kinds, tool_call/tool_result/
+  tool_execution_end bookkeeping (startCall with parent, block object, `notes` excluded, finishCall + delete).
+- Concurrency: `calls` map is mutex-guarded; search goroutines are joined per batch (no leak on error or cancel);
+  write/append run inside `sdk.WithFileMutationQueue`; cancellation mid-walk is checked at the same points as the TS.
+- Not reviewed in depth (other lanes): `paging.go`, `note_discovery.go`, `note_store.go` beyond the calls above.
+
+## Cleanup
+
+Scratch `~/ph-work/scratch/review-notestools/` on xd6702 removed; local `/tmp` probes removed.

@@ -1,0 +1,2222 @@
+[
+ {
+  "name": "list-no-yield",
+  "file": "notes.go",
+  "find": "\t\tif err := cooperate(ctx); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tend := min(start+formatBatch",
+  "replace": "\t\tend := min(start+formatBatch"
+ },
+ {
+  "name": "list-row-single-space",
+  "file": "notes.go",
+  "find": "row = append(row[:0], noteLabel(file, session, inventory.labeled)...)\n\t\t\trow = append(row, \"  \"...)",
+  "replace": "row = append(row[:0], noteLabel(file, session, inventory.labeled)...)\n\t\t\trow = append(row, \" \"...)"
+ },
+ {
+  "name": "list-row-lowercase-z",
+  "file": "notes.go",
+  "find": "row = append(row, 'Z')",
+  "replace": "row = append(row, 'z')"
+ },
+ {
+  "name": "list-time-format-space",
+  "file": "notes.go",
+  "find": "return t.AppendFormat(dst, \"2006-01-02T15:04\")",
+  "replace": "return t.AppendFormat(dst, \"2006-01-02 15:04\")"
+ },
+ {
+  "name": "list-year-bound",
+  "file": "notes.go",
+  "find": "year < 0 || year > 9999",
+  "replace": "year < 0 || year > 99999"
+ },
+ {
+  "name": "list-year-sign",
+  "file": "notes.go",
+  "find": "sign := \"+\"",
+  "replace": "sign := \"-\""
+ },
+ {
+  "name": "list-drops-notices",
+  "file": "notes.go",
+  "find": "\trows = append(rows, inventory.notices...)\n\tempty :=",
+  "replace": "\tempty :="
+ },
+ {
+  "name": "list-empty-text",
+  "file": "notes.go",
+  "find": "empty := \"(no notes yet)\"",
+  "replace": "empty := \"(no notes)\""
+ },
+ {
+  "name": "list-empty-folder-text",
+  "file": "notes.go",
+  "find": "empty = \"(no notes in \" + *folder + \")\"",
+  "replace": "empty = \"(no notes in \" + *folder"
+ },
+ {
+  "name": "list-empty-folder-cond",
+  "file": "notes.go",
+  "find": "if folder != nil && *folder != \"\" {",
+  "replace": "if folder != nil {"
+ },
+ {
+  "name": "list-header-no-newline",
+  "file": "notes.go",
+  "find": "header: \"Notes directory: \" + dir + \"\\n\",",
+  "replace": "header: \"Notes directory: \" + dir,"
+ },
+ {
+  "name": "list-offset-ignored",
+  "file": "notes.go",
+  "find": "offset: params.pagedOffset(),",
+  "replace": "offset: 0,"
+ },
+ {
+  "name": "list-scope-dir",
+  "file": "notes.go",
+  "find": "\t\tdir = scopeDirectory(selected)",
+  "replace": "\t\tdir = scopeDirectory(selected) + \"/\""
+ },
+ {
+  "name": "list-select-scope-error-ignored",
+  "file": "notes.go",
+  "find": "selected, err := session.selectScope(ctx, *scope)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}",
+  "replace": "selected, _ := session.selectScope(ctx, *scope)"
+ },
+ {
+  "name": "list-discovery-error-ignored",
+  "file": "notes.go",
+  "find": "inventory, err := access.discovery.list(ctx, session, discoveryOptions{path: folder, scope: scope})\n\tif err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": "inventory, _ := access.discovery.list(ctx, session, discoveryOptions{path: folder, scope: scope})"
+ },
+ {
+  "name": "list-folder-dropped",
+  "file": "notes.go",
+  "find": "discoveryOptions{path: folder, scope: scope})",
+  "replace": "discoveryOptions{scope: scope})"
+ },
+ {
+  "name": "list-format-batch",
+  "file": "notes.go",
+  "find": "formatBatch = 10_000",
+  "replace": "formatBatch = 1"
+ },
+ {
+  "name": "list-size-format",
+  "file": "notes.go",
+  "find": "sdk.FormatSize(int(file.size))",
+  "replace": "sdk.FormatSize(int(file.size)+1)"
+ },
+ {
+  "name": "jsnumber-exponent-threshold",
+  "file": "notes.go",
+  "find": "x >= 1e21 || x <= -1e21",
+  "replace": "x >= 1e22 || x <= -1e22"
+ },
+ {
+  "name": "jsnumber-zero",
+  "file": "notes.go",
+  "find": "\tif x == 0 {\n\t\treturn \"0\"\n\t}",
+  "replace": "\tif x == 1 {\n\t\treturn \"0\"\n\t}"
+ },
+ {
+  "name": "paged-offset-unclamped",
+  "file": "notes.go",
+  "find": "int(min(p.offset, 1<<62))",
+  "replace": "int(p.offset)"
+ },
+ {
+  "name": "stat-enotdir-is-error",
+  "file": "notes.go",
+  "find": "if noteMissing(err) {",
+  "replace": "if os.IsNotExist(err) {"
+ },
+ {
+  "name": "stat-error-not-node-style",
+  "file": "notes.go",
+  "find": "return nil, nodeFsError(err, \"stat\", path)",
+  "replace": "return nil, err"
+ },
+ {
+  "name": "read-no-note-text",
+  "file": "notes.go",
+  "find": "\"No note at \"",
+  "replace": "\"No note found at \""
+ },
+ {
+  "name": "read-folder-scope-dropped",
+  "file": "notes.go",
+  "find": "folder.scope, folder.hasScope = scopeDirectory(target.address), true",
+  "replace": "folder.scope, folder.hasScope = \"\", false"
+ },
+ {
+  "name": "read-folder-condition",
+  "file": "notes.go",
+  "find": "if info.IsDir() {\n\t\tfolder := params",
+  "replace": "if !info.IsDir() {\n\t\tfolder := params"
+ },
+ {
+  "name": "read-binary-cond",
+  "file": "notes.go",
+  "find": "\tif binary {\n\t\treturn nil, errors.New(relative",
+  "replace": "\tif !binary {\n\t\treturn nil, errors.New(relative"
+ },
+ {
+  "name": "read-binary-text",
+  "file": "notes.go",
+  "find": "\"); notes read returns text only.\"",
+  "replace": "\"); notes read returns text.\""
+ },
+ {
+  "name": "read-binary-size",
+  "file": "notes.go",
+  "find": "sdk.FormatSize(int(info.Size()))",
+  "replace": "sdk.FormatSize(int(info.Size())+1)"
+ },
+ {
+  "name": "read-total-bytes",
+  "file": "notes.go",
+  "find": "total := u16len(text)",
+  "replace": "total := len(text)"
+ },
+ {
+  "name": "read-offset-boundary",
+  "file": "notes.go",
+  "find": "if offset > 0 && offset >= float64(total) {",
+  "replace": "if offset > 0 && offset > float64(total) {"
+ },
+ {
+  "name": "read-offset-zero-boundary",
+  "file": "notes.go",
+  "find": "if offset > 0 && offset >= float64(total) {",
+  "replace": "if offset >= float64(total) {"
+ },
+ {
+  "name": "read-offset-text",
+  "file": "notes.go",
+  "find": "\" is past the end of \"",
+  "replace": "\" is past end of \""
+ },
+ {
+  "name": "read-offset-integer-format",
+  "file": "notes.go",
+  "find": "jsNumberString(offset) + \" is past",
+  "replace": "strconv.Itoa(int(offset)) + \" is past"
+ },
+ {
+  "name": "read-header-no-newline",
+  "file": "notes.go",
+  "find": "header = \"File: \" + path + \"\\n\"",
+  "replace": "header = \"File: \" + path"
+ },
+ {
+  "name": "read-readonly-header",
+  "file": "notes.go",
+  "find": "\"Read-only live reference: notes read \"",
+  "replace": "\"Read-only reference: notes read \""
+ },
+ {
+  "name": "read-readonly-scope-first",
+  "file": "notes.go",
+  "find": "jsonObject2(\"scope\", scopeDirectory(target.address), \"path\", target.address.path)",
+  "replace": "jsonObject2(\"path\", target.address.path, \"scope\", scopeDirectory(target.address))"
+ },
+ {
+  "name": "read-header-bytes",
+  "file": "notes.go",
+  "find": "headerLength := u16len(header)",
+  "replace": "headerLength := len(header)"
+ },
+ {
+  "name": "read-size-offset",
+  "file": "notes.go",
+  "find": "pages.size(host, pageRequest{offset: at})",
+  "replace": "pages.size(host, pageRequest{offset: 0})"
+ },
+ {
+  "name": "read-chars-boundary",
+  "file": "notes.go",
+  "find": "\tif chars <= 0 {\n\t\treturn nil, pages.error(host,",
+  "replace": "\tif chars < 0 {\n\t\treturn nil, pages.error(host,"
+ },
+ {
+  "name": "read-too-little-text",
+  "file": "notes.go",
+  "find": "Too little context remains to include the note path.",
+  "replace": "Too little context remains to include the path."
+ },
+ {
+  "name": "read-too-little-offset",
+  "file": "notes.go",
+  "find": "\"+strconv.Itoa(at)+\".\", \"\")",
+  "replace": "\"+strconv.Itoa(0)+\".\", \"\")"
+ },
+ {
+  "name": "read-end-unbounded",
+  "file": "notes.go",
+  "find": "end := min(total, at+chars)",
+  "replace": "end := min(total, at+chars+1)"
+ },
+ {
+  "name": "read-more-boundary",
+  "file": "notes.go",
+  "find": "\tif end < total {\n\t\tmore = ",
+  "replace": "\tif end <= total {\n\t\tmore = "
+ },
+ {
+  "name": "read-more-text",
+  "file": "notes.go",
+  "find": "\"; continue with offset \"",
+  "replace": "\"; continue at offset \""
+ },
+ {
+  "name": "read-more-total",
+  "file": "notes.go",
+  "find": "\" of \" + strconv.Itoa(total) + \"; continue",
+  "replace": "\" of \" + strconv.Itoa(end) + \"; continue"
+ },
+ {
+  "name": "read-record-dropped",
+  "file": "notes.go",
+  "find": "if err := session.record(ctx, []noteTouchFile{{noteAddress: target.address, kind: \"read\"}}, access.call); err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "read-record-kind",
+  "file": "notes.go",
+  "find": "[]noteTouchFile{{noteAddress: target.address, kind: \"read\"}}",
+  "replace": "[]noteTouchFile{{noteAddress: target.address, kind: \"write\"}}"
+ },
+ {
+  "name": "read-record-error-ignored",
+  "file": "notes.go",
+  "find": "if err := session.record(ctx, []noteTouchFile{{noteAddress: target.address, kind: \"read\"}}, access.call); err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": "_ = session.record(ctx, []noteTouchFile{{noteAddress: target.address, kind: \"read\"}}, access.call)"
+ },
+ {
+  "name": "read-display-total",
+  "file": "notes.go",
+  "find": "displayNoteRead(headerLength, at, end, total)",
+  "replace": "displayNoteRead(headerLength, at, end, end)"
+ },
+ {
+  "name": "read-display-header",
+  "file": "notes.go",
+  "find": "displayNoteRead(headerLength, at, end, total)",
+  "replace": "displayNoteRead(0, at, end, total)"
+ },
+ {
+  "name": "read-slice-offset",
+  "file": "notes.go",
+  "find": "u16slice(text, at, end)",
+  "replace": "u16slice(text, 0, end)"
+ },
+ {
+  "name": "read-decode-raw",
+  "file": "notes.go",
+  "find": "text := jsFromBytes(bytes)",
+  "replace": "text := string(bytes)"
+ },
+ {
+  "name": "read-scope-dropped",
+  "file": "notes.go",
+  "find": "session.read(ctx, relative, optionalScope(params))",
+  "replace": "session.read(ctx, relative, nil)"
+ },
+ {
+  "name": "write-empty-is-missing",
+  "file": "notes.go",
+  "find": "\tif !params.hasContent {",
+  "replace": "\tif params.content == \"\" {"
+ },
+ {
+  "name": "write-content-text",
+  "file": "notes.go",
+  "find": "(use \\\"\\\" to clear a note).",
+  "replace": "(use an empty string to clear a note)."
+ },
+ {
+  "name": "write-clear-kind",
+  "file": "notes.go",
+  "find": "\t\tif content == \"\" {\n\t\t\tkind = \"clear\"\n\t\t}",
+  "replace": "\t\tif content == \"\" {\n\t\t\tkind = \"write\"\n\t\t}"
+ },
+ {
+  "name": "write-no-publish",
+  "file": "notes.go",
+  "find": "\t\tif err := publishFile(signalOf(ctx), path, content); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "write-mkdir-plain",
+  "file": "notes.go",
+  "find": "\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := publishFile",
+  "replace": "\t\tdir := filepath.Dir(path)\n\t\tif err := os.MkdirAll(dir, 0o777); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := publishFile"
+ },
+ {
+  "name": "write-no-prepare",
+  "file": "notes.go",
+  "find": "\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := publishFile",
+  "replace": "\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := publishFile"
+ },
+ {
+  "name": "write-no-record",
+  "file": "notes.go",
+  "find": "return struct{}{}, session.record(ctx, sessionTouch(session, relative, kind), access.call)",
+  "replace": "return struct{}{}, nil"
+ },
+ {
+  "name": "write-result-text",
+  "file": "notes.go",
+  "find": "\"Wrote \"+path",
+  "replace": "\"Wrote to \"+path"
+ },
+ {
+  "name": "write-display",
+  "file": "notes.go",
+  "find": "displayKind(\"note-write\")",
+  "replace": "displayKind(\"note-append\")"
+ },
+ {
+  "name": "write-path-error-ignored",
+  "file": "notes.go",
+  "find": "path, err := notePath(session.binding, relative)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\t// TEMPORARY-GATE: TEMPORARY: remove when the host's file-mutation queue grants turns in tool-start order (PiG lane fix/071-host-parity-ph).\n\t_, err = queuedInOrder(access.order, ctx.Done(), path, func() (struct{}, error) {\n\t\tif err := session.prepareWrite()",
+  "replace": "path, _ := notePath(session.binding, relative)\n\t// TEMPORARY-GATE: TEMPORARY: remove when the host's file-mutation queue grants turns in tool-start order (PiG lane fix/071-host-parity-ph).\n\t_, err := queuedInOrder(access.order, ctx.Done(), path, func() (struct{}, error) {\n\t\tif err := session.prepareWrite()"
+ },
+ {
+  "name": "append-content-optional",
+  "file": "notes.go",
+  "find": "content, err := requireValue(params.content, params.hasContent, \"content\", params.op)",
+  "replace": "content, err := params.content, error(nil)"
+ },
+ {
+  "name": "append-no-first-abort-check",
+  "file": "notes.go",
+  "find": "func() (struct{}, error) {\n\t\tif err := throwIfAborted(signalOf(ctx)); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif _, err := session.adopt(",
+  "replace": "func() (struct{}, error) {\n\t\tif _, err := session.adopt("
+ },
+ {
+  "name": "append-no-adopt",
+  "file": "notes.go",
+  "find": "\t\tif _, err := session.adopt(ctx, relative, access.call); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "append-adopt-error-ignored",
+  "file": "notes.go",
+  "find": "\t\tif _, err := session.adopt(ctx, relative, access.call); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n",
+  "replace": "\t\t_, _ = session.adopt(ctx, relative, access.call)\n"
+ },
+ {
+  "name": "append-no-second-abort-check",
+  "file": "notes.go",
+  "find": "\t\tif err := throwIfAborted(signalOf(ctx)); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord",
+  "replace": "\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord"
+ },
+ {
+  "name": "append-no-prepare",
+  "file": "notes.go",
+  "find": "\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord",
+  "replace": "\t\tdir := filepath.Dir(path)\n\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord"
+ },
+ {
+  "name": "append-mkdir-plain",
+  "file": "notes.go",
+  "find": "\t\tif err := mkdirRecursive(dir); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord",
+  "replace": "\t\tif err := os.MkdirAll(dir, 0o777); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}\n\t\tif err := appendRecord"
+ },
+ {
+  "name": "append-no-record",
+  "file": "notes.go",
+  "find": "return struct{}{}, session.record(ctx, sessionTouch(session, relative, \"write\"), access.call)",
+  "replace": "return struct{}{}, nil"
+ },
+ {
+  "name": "append-record-clear",
+  "file": "notes.go",
+  "find": "sessionTouch(session, relative, \"write\"), access.call)",
+  "replace": "sessionTouch(session, relative, \"clear\"), access.call)"
+ },
+ {
+  "name": "append-result-text",
+  "file": "notes.go",
+  "find": "\"Appended to \"+path",
+  "replace": "\"Appended \"+path"
+ },
+ {
+  "name": "append-display",
+  "file": "notes.go",
+  "find": "displayKind(\"note-append\")",
+  "replace": "displayKind(\"note-write\")"
+ },
+ {
+  "name": "append-write-error-ignored",
+  "file": "notes.go",
+  "find": "if err := appendRecord(path, content); err != nil {\n\t\t\treturn struct{}{}, err\n\t\t}",
+  "replace": "_ = appendRecord(path, content)"
+ },
+ {
+  "name": "sep-missing-file-error",
+  "file": "notes.go",
+  "find": "if _, err := os.Stat(path); err != nil {\n\t\treturn false, nil // existsSync",
+  "replace": "if _, err := os.Stat(path); err != nil {\n\t\treturn false, err // existsSync"
+ },
+ {
+  "name": "sep-last-byte",
+  "file": "notes.go",
+  "find": "return last[0] != '\\n', nil",
+  "replace": "return last[0] != '\\r', nil"
+ },
+ {
+  "name": "sep-dir-not-error",
+  "file": "notes.go",
+  "find": "\t\tif info.IsDir() {\n\t\t\t// readFileSync",
+  "replace": "\t\tif false {\n\t\t\t// readFileSync"
+ },
+ {
+  "name": "sep-dir-code",
+  "file": "notes.go",
+  "find": "Code: \"EISDIR\", Syscall: \"read\"",
+  "replace": "Code: \"EISDIR\", Syscall: \"open\""
+ },
+ {
+  "name": "sep-empty-file",
+  "file": "notes.go",
+  "find": "\t\tif size == 0 {\n\t\t\treturn false, nil\n\t\t}",
+  "replace": "\t\tif size == 0 {\n\t\t\treturn true, nil\n\t\t}"
+ },
+ {
+  "name": "sep-open-error-style",
+  "file": "notes.go",
+  "find": "return false, nodeFsError(err, \"open\", path)\n\t}\n\tdefer file.Close()",
+  "replace": "return false, err\n\t}\n\tdefer file.Close()"
+ },
+ {
+  "name": "record-separator-inverted",
+  "file": "notes.go",
+  "find": "\tif separate {\n\t\trecord = append(record, '\\n')\n\t}",
+  "replace": "\tif !separate {\n\t\trecord = append(record, '\\n')\n\t}"
+ },
+ {
+  "name": "record-terminator-inverted",
+  "file": "notes.go",
+  "find": "if !strings.HasSuffix(content, \"\\n\") {",
+  "replace": "if strings.HasSuffix(content, \"\\n\") {"
+ },
+ {
+  "name": "record-no-o-append",
+  "file": "notes.go",
+  "find": "os.O_WRONLY|os.O_APPEND|os.O_CREATE",
+  "replace": "os.O_WRONLY|os.O_CREATE"
+ },
+ {
+  "name": "record-no-o-create",
+  "file": "notes.go",
+  "find": "os.O_WRONLY|os.O_APPEND|os.O_CREATE",
+  "replace": "os.O_WRONLY|os.O_APPEND"
+ },
+ {
+  "name": "record-surrogate-raw",
+  "file": "notes.go",
+  "find": "\tif hasSurrogateForm(content) {\n\t\t// appendFileSync",
+  "replace": "\tif false {\n\t\t// appendFileSync"
+ },
+ {
+  "name": "record-write-error-style",
+  "file": "notes.go",
+  "find": "return nodeFsError(err, \"write\", path)",
+  "replace": "return err"
+ },
+ {
+  "name": "record-open-error-style",
+  "file": "notes.go",
+  "find": "return nodeFsError(err, \"open\", path)\n\t}\n\tif _, err := file.Write",
+  "replace": "return err\n\t}\n\tif _, err := file.Write"
+ },
+ {
+  "name": "record-close-error-ignored",
+  "file": "notes.go",
+  "find": "if err := file.Close(); err != nil {\n\t\treturn nodeFsError(err, \"close\", path)\n\t}\n\treturn nil",
+  "replace": "_ = file.Close()\n\treturn nil"
+ },
+ {
+  "name": "fold-empty-needle",
+  "file": "notes.go",
+  "find": "\tif needle == \"\" {\n\t\treturn 0\n\t}",
+  "replace": "\tif needle == \"\" {\n\t\treturn -1\n\t}"
+ },
+ {
+  "name": "fold-upper-detect",
+  "file": "notes.go",
+  "find": "if c := hay[i]; c >= 'A' && c <= 'Z' {",
+  "replace": "if c := hay[i]; c > 'A' && c <= 'Z' {"
+ },
+ {
+  "name": "fold-upper-detect-high",
+  "file": "notes.go",
+  "find": "if c := hay[i]; c >= 'A' && c <= 'Z' {",
+  "replace": "if c := hay[i]; c >= 'A' && c < 'Z' {"
+ },
+ {
+  "name": "fold-lower-offset",
+  "file": "notes.go",
+  "find": "lowered[i] = c + 'a' - 'A'",
+  "replace": "lowered[i] = c + 'a' - 'B'"
+ },
+ {
+  "name": "fold-lower-range",
+  "file": "notes.go",
+  "find": "\t\tif c >= 'A' && c <= 'Z' {\n\t\t\tlowered[i]",
+  "replace": "\t\tif c >= 'A' && c < 'Z' {\n\t\t\tlowered[i]"
+ },
+ {
+  "name": "match-ascii-text-nonascii-query",
+  "file": "notes.go",
+  "find": "\tif asciiText && !queryASCII {\n\t\treturn nil",
+  "replace": "\tif false {\n\t\treturn nil"
+ },
+ {
+  "name": "match-precheck-boundary",
+  "file": "notes.go",
+  "find": "if foldIndex(text, query) < 0 {",
+  "replace": "if foldIndex(text, query) <= 0 {"
+ },
+ {
+  "name": "match-surrogate-precheck-query-only",
+  "file": "notes.go",
+  "find": "if hasSurrogateForm(query) || hasSurrogateForm(lowered) {",
+  "replace": "if hasSurrogateForm(query) {"
+ },
+ {
+  "name": "match-surrogate-precheck-text-only",
+  "file": "notes.go",
+  "find": "if hasSurrogateForm(query) || hasSurrogateForm(lowered) {",
+  "replace": "if hasSurrogateForm(lowered) {"
+ },
+ {
+  "name": "match-surrogate-precheck-bytes",
+  "file": "notes.go",
+  "find": "if hasSurrogateForm(query) || hasSurrogateForm(lowered) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "match-precheck-unlowered",
+  "file": "notes.go",
+  "find": "} else if !strings.Contains(lowered, query) {",
+  "replace": "} else if !strings.Contains(text, query) {"
+ },
+ {
+  "name": "match-trim-space",
+  "file": "notes.go",
+  "find": "trimmed := jsTrim(line)",
+  "replace": "trimmed := strings.TrimSpace(line)"
+ },
+ {
+  "name": "match-lower-simple",
+  "file": "notes.go",
+  "find": "match = u16index(jsToLowerCase(trimmed), query, 0)",
+  "replace": "match = u16index(strings.ToLower(trimmed), query, 0)"
+ },
+ {
+  "name": "match-index-bytes",
+  "file": "notes.go",
+  "find": "match = u16index(jsToLowerCase(trimmed), query, 0)",
+  "replace": "match = strings.Index(jsToLowerCase(trimmed), query)"
+ },
+ {
+  "name": "match-excerpt-length",
+  "file": "notes.go",
+  "find": "excerptAround(trimmed, match, 50, 200)",
+  "replace": "excerptAround(trimmed, match, 50, 100)"
+ },
+ {
+  "name": "match-excerpt-before",
+  "file": "notes.go",
+  "find": "excerptAround(trimmed, match, 50, 200)",
+  "replace": "excerptAround(trimmed, match, 40, 200)"
+ },
+ {
+  "name": "match-excerpt-lowered",
+  "file": "notes.go",
+  "find": "excerptAround(trimmed, match, 50, 200)",
+  "replace": "excerptAround(jsToLowerCase(trimmed), match, 50, 200)"
+ },
+ {
+  "name": "match-line-number",
+  "file": "notes.go",
+  "find": "strconv.Itoa(index+1)+\": \"+excerptAround",
+  "replace": "strconv.Itoa(index)+\": \"+excerptAround"
+ },
+ {
+  "name": "match-row-separator",
+  "file": "notes.go",
+  "find": "name+\":\"+strconv.Itoa(index+1)",
+  "replace": "name+\" \"+strconv.Itoa(index+1)"
+ },
+ {
+  "name": "match-split-crlf",
+  "file": "notes.go",
+  "find": "strings.Cut(rest, \"\\n\")",
+  "replace": "strings.Cut(rest, \"\\r\\n\")"
+ },
+ {
+  "name": "match-trailing-line",
+  "file": "notes.go",
+  "find": "\t\tif !more {\n\t\t\treturn rows\n\t\t}",
+  "replace": "\t\tif !more && index > 0 {\n\t\t\treturn rows\n\t\t}"
+ },
+ {
+  "name": "hits-size-boundary",
+  "file": "notes.go",
+  "find": "if note.size > searchFileBytes {",
+  "replace": "if note.size >= searchFileBytes {"
+ },
+ {
+  "name": "hits-size-limit",
+  "file": "notes.go",
+  "find": "searchFileBytes = 1024 * 1024",
+  "replace": "searchFileBytes = 1024 * 1000"
+ },
+ {
+  "name": "hits-skipped-not-counted",
+  "file": "notes.go",
+  "find": "\t\t\tif found[i].skipped {\n\t\t\t\tskipped++\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "hits-limit-boundary",
+  "file": "notes.go",
+  "find": "\t\t\t\tif length > limit {",
+  "replace": "\t\t\t\tif length >= limit {"
+ },
+ {
+  "name": "hits-length-bytes",
+  "file": "notes.go",
+  "find": "length += u16len(row) + 1",
+  "replace": "length += len(row) + 1"
+ },
+ {
+  "name": "hits-length-separator",
+  "file": "notes.go",
+  "find": "length += u16len(row) + 1",
+  "replace": "length += u16len(row)"
+ },
+ {
+  "name": "hits-length-start",
+  "file": "notes.go",
+  "find": "\tlength := -1\n",
+  "replace": "\tlength := 0\n"
+ },
+ {
+  "name": "hits-more-flag",
+  "file": "notes.go",
+  "find": "return noteHits{rows: rows, more: true, skipped: skipped}, nil",
+  "replace": "return noteHits{rows: rows, more: false, skipped: skipped}, nil"
+ },
+ {
+  "name": "hits-no-abort-check",
+  "file": "notes.go",
+  "find": "\t\tif err := throwIfAborted(signalOf(ctx)); err != nil {\n\t\t\treturn noteHits{}, err\n\t\t}\n\t\t// Batches keep",
+  "replace": "\t\t// Batches keep"
+ },
+ {
+  "name": "hits-read-error-dropped",
+  "file": "notes.go",
+  "find": "\t\t\tif found[i].err != nil {\n\t\t\t\treturn noteHits{}, found[i].err\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "hits-notices-dropped",
+  "file": "notes.go",
+  "find": "return noteHits{rows: append(rows, inventory.notices...), skipped: skipped}, nil",
+  "replace": "return noteHits{rows: rows, skipped: skipped}, nil"
+ },
+ {
+  "name": "hits-discovery-error-ignored",
+  "file": "notes.go",
+  "find": "inventory, err := access.discovery.list(ctx, session, discoveryOptions{scope: scope})\n\tif err != nil {\n\t\treturn noteHits{}, err\n\t}",
+  "replace": "inventory, _ := access.discovery.list(ctx, session, discoveryOptions{scope: scope})"
+ },
+ {
+  "name": "hits-scope-dropped",
+  "file": "notes.go",
+  "find": "discoveryOptions{scope: scope})\n\tif err != nil {\n\t\treturn noteHits{}, err",
+  "replace": "discoveryOptions{})\n\tif err != nil {\n\t\treturn noteHits{}, err"
+ },
+ {
+  "name": "hits-label-dropped",
+  "file": "notes.go",
+  "find": "name := noteLabel(note, session, inventory.labeled)",
+  "replace": "name := note.address.path"
+ },
+ {
+  "name": "hits-rows-unordered",
+  "file": "notes.go",
+  "find": "\t\tfor i := range found {\n\t\t\tfor _, row := range found[i].rows {",
+  "replace": "\t\tfor i := len(found) - 1; i >= 0; i-- {\n\t\t\tfor _, row := range found[i].rows {"
+ },
+ {
+  "name": "search-query-optional",
+  "file": "notes.go",
+  "find": "query, err := requireValue(params.query, params.hasQuery, \"query\", params.op)",
+  "replace": "query, err := params.query, error(nil)"
+ },
+ {
+  "name": "search-limit-boundary",
+  "file": "notes.go",
+  "find": "if offset >= searchOffsetLimit {",
+  "replace": "if offset > searchOffsetLimit {"
+ },
+ {
+  "name": "search-limit-text",
+  "file": "notes.go",
+  "find": "\"Notes search pages end before offset \"",
+  "replace": "\"Notes search pages end at offset \""
+ },
+ {
+  "name": "search-limit-value",
+  "file": "notes.go",
+  "find": "searchOffsetLimit = 1_000_000",
+  "replace": "searchOffsetLimit = 2_000_000"
+ },
+ {
+  "name": "search-lower-simple",
+  "file": "notes.go",
+  "find": "noteHitsFor(session, jsToLowerCase(query),",
+  "replace": "noteHitsFor(session, strings.ToLower(query),"
+ },
+ {
+  "name": "search-limit-plus",
+  "file": "notes.go",
+  "find": "at+maxPageChars,",
+  "replace": "at+maxPageChars+1,"
+ },
+ {
+  "name": "search-limit-minus",
+  "file": "notes.go",
+  "find": "at+maxPageChars,",
+  "replace": "at+maxPageChars-1,"
+ },
+ {
+  "name": "search-skipped-singular",
+  "file": "notes.go",
+  "find": "\tif hits.skipped == 1 {\n\t\tskipped = \"1 note\"\n\t}",
+  "replace": "\tif hits.skipped == 1 {\n\t\tskipped = \"1 notes\"\n\t}"
+ },
+ {
+  "name": "search-skipped-plural",
+  "file": "notes.go",
+  "find": "skipped := strconv.Itoa(hits.skipped) + \" notes\"",
+  "replace": "skipped := strconv.Itoa(hits.skipped) + \" note\""
+ },
+ {
+  "name": "search-skipped-header-cond",
+  "file": "notes.go",
+  "find": "\tif hits.skipped > 0 {\n\t\theader =",
+  "replace": "\tif hits.skipped > 1 {\n\t\theader ="
+ },
+ {
+  "name": "search-skipped-text",
+  "file": "notes.go",
+  "find": "over 1 MiB.]\\n\"",
+  "replace": "over 1 MB.]\\n\""
+ },
+ {
+  "name": "search-empty-text",
+  "file": "notes.go",
+  "find": "\"No notes match \\\"\"",
+  "replace": "\"No match \\\"\""
+ },
+ {
+  "name": "search-empty-excerpt",
+  "file": "notes.go",
+  "find": "excerpt(query, 200)",
+  "replace": "query"
+ },
+ {
+  "name": "search-more-flag",
+  "file": "notes.go",
+  "find": "\t\tmore:   hits.more,\n",
+  "replace": ""
+ },
+ {
+  "name": "search-offset-passed",
+  "file": "notes.go",
+  "find": "\t\toffset: at,\n\t\tkind:   \"notes-search\",",
+  "replace": "\t\toffset: 0,\n\t\tkind:   \"notes-search\","
+ },
+ {
+  "name": "search-kind",
+  "file": "notes.go",
+  "find": "kind:   \"notes-search\"",
+  "replace": "kind:   \"notes-list\""
+ },
+ {
+  "name": "search-list-kind",
+  "file": "notes.go",
+  "find": "kind:   \"notes-list\"",
+  "replace": "kind:   \"notes-search\""
+ },
+ {
+  "name": "register-name",
+  "file": "notes.go",
+  "find": "Name:          \"notes\",",
+  "replace": "Name:          \"note\","
+ },
+ {
+  "name": "register-label",
+  "file": "notes.go",
+  "find": "Label:         \"Notes\",",
+  "replace": "Label:         \"notes\","
+ },
+ {
+  "name": "register-snippet",
+  "file": "notes.go",
+  "find": "save and recall durable state with private notes for forks\"",
+  "replace": "save and recall durable state with private notes for fork\""
+ },
+ {
+  "name": "register-description",
+  "file": "notes.go",
+  "find": "Keep one concise current-state note and link fuller evidence.",
+  "replace": "Keep one concise current-state note and link fuller evidence"
+ },
+ {
+  "name": "register-description-middle",
+  "file": "notes.go",
+  "find": "Forks own private copies of selected-branch notes.",
+  "replace": "Forks own private copies of selected branch notes."
+ },
+ {
+  "name": "register-schema-op",
+  "file": "notes.go",
+  "find": "sdk.Type.Literal(\"search\"),\n\t\t}, sdk.NewOrderedObject(\"description\", \"Operation to perform\")),",
+  "replace": "sdk.Type.Literal(\"find\"),\n\t\t}, sdk.NewOrderedObject(\"description\", \"Operation to perform\")),"
+ },
+ {
+  "name": "register-schema-minimum",
+  "file": "notes.go",
+  "find": "\"minimum\", 0))),",
+  "replace": "\"minimum\", 1))),"
+ },
+ {
+  "name": "register-schema-order",
+  "file": "notes.go",
+  "find": "\t\t\"query\", sdk.Type.Optional(sdk.Type.String(sdk.NewOrderedObject(\n\t\t\t\"description\", \"Substring to find in notes (search)\"))),\n\t\t\"offset\"",
+  "replace": "\t\t\"offset\""
+ },
+ {
+  "name": "register-no-cards",
+  "file": "notes.go",
+  "find": "\tapplyToolCards(&definition, \"notes\")\n",
+  "replace": ""
+ },
+ {
+  "name": "register-scope-write-refusal",
+  "file": "notes.go",
+  "find": "if params.hasScope && (params.op == \"write\" || params.op == \"append\") {",
+  "replace": "if params.hasScope && params.op == \"write\" {"
+ },
+ {
+  "name": "register-scope-append-refusal",
+  "file": "notes.go",
+  "find": "if params.hasScope && (params.op == \"write\" || params.op == \"append\") {",
+  "replace": "if params.hasScope && params.op == \"append\" {"
+ },
+ {
+  "name": "register-scope-refusal-text",
+  "file": "notes.go",
+  "find": "writes use this session’s notes scope.",
+  "replace": "writes use this session's notes scope."
+ },
+ {
+  "name": "register-dot-lists",
+  "file": "notes.go",
+  "find": "if params.hasPath && params.path == \".\" {",
+  "replace": "if params.hasPath && params.path == \"./\" {"
+ },
+ {
+  "name": "register-notesdir-dropped",
+  "file": "notes.go",
+  "find": "\t\t\tif _, err := notesDir(ctx.Cwd()); err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "register-notesdir-error-ignored",
+  "file": "notes.go",
+  "find": "\t\t\tif _, err := notesDir(ctx.Cwd()); err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n",
+  "replace": "\t\t\t_, _ = notesDir(ctx.Cwd())\n"
+ },
+ {
+  "name": "register-session-error-ignored",
+  "file": "notes.go",
+  "find": "\t\t\tsession, err := store.get(ctx)\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}",
+  "replace": "\t\t\tsession, _ := store.get(ctx)"
+ },
+ {
+  "name": "register-call-id",
+  "file": "notes.go",
+  "find": "call:      session.call(ctx.ToolCallID()),",
+  "replace": "call:      session.call(\"\"),"
+ },
+ {
+  "name": "register-op-swap",
+  "file": "notes.go",
+  "find": "\t\t\tcase \"write\":\n\t\t\t\treturn writeNote(",
+  "replace": "\t\t\tcase \"write\":\n\t\t\t\treturn appendNote("
+ },
+ {
+  "name": "register-unknown-op",
+  "file": "notes.go",
+  "find": "\"Unknown notes op \"",
+  "replace": "\"Unknown op \""
+ },
+ {
+  "name": "register-policy-live",
+  "file": "notes.go",
+  "find": "policy(ctx, nil)",
+  "replace": "policy(ctx, &compactionPolicy{})"
+ },
+ {
+  "name": "params-offset-dropped",
+  "file": "notes.go",
+  "find": "\t\tp.offset = offset\n",
+  "replace": ""
+ },
+ {
+  "name": "params-scope-dropped",
+  "file": "notes.go",
+  "find": "p.scope, p.hasScope = params[\"scope\"].(string)",
+  "replace": ""
+ },
+ {
+  "name": "cooperate-ignores-abort",
+  "file": "notes.go",
+  "find": "return throwIfAborted(signalOf(ctx))\n}",
+  "replace": "return nil\n}"
+ },
+ {
+  "name": "scope-optional",
+  "file": "notes.go",
+  "find": "\tif !params.hasScope {\n\t\treturn nil\n\t}",
+  "replace": "\tif params.scope == \"\" {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "touch-scope",
+  "file": "notes.go",
+  "find": "noteScope{root: session.binding.root, scope: session.binding.scope}",
+  "replace": "noteScope{root: session.binding.root}"
+ },
+ {
+  "name": "json-object-order",
+  "file": "notes.go",
+  "find": "buf = json.AppendStringifyString(buf, k1)\n\tbuf = append(buf, ':')\n\tbuf = json.AppendStringifyString(buf, v1)\n\tbuf = append(buf, ',')",
+  "replace": "buf = json.AppendStringifyString(buf, k1)\n\tbuf = append(buf, ':')\n\tbuf = json.AppendStringifyString(buf, v1)\n\tbuf = append(buf, ';')"
+ },
+ {
+  "name": "leftpad-width",
+  "file": "notes.go",
+  "find": "return strings.Repeat(\"0\", width-len(s)) + s",
+  "replace": "return strings.Repeat(\"0\", width-len(s)-1) + s"
+ },
+ {
+  "name": "guards-space-nbsp",
+  "file": "note_guards.go",
+  "find": "case r == 0x00A0, r >= 0x2000",
+  "replace": "case r >= 0x2000"
+ },
+ {
+  "name": "guards-space-range-low",
+  "file": "note_guards.go",
+  "find": "r >= 0x2000 && r <= 0x200A",
+  "replace": "r > 0x2000 && r <= 0x200A"
+ },
+ {
+  "name": "guards-space-range-high",
+  "file": "note_guards.go",
+  "find": "r >= 0x2000 && r <= 0x200A",
+  "replace": "r >= 0x2000 && r < 0x200A"
+ },
+ {
+  "name": "guards-space-202f",
+  "file": "note_guards.go",
+  "find": "r == 0x202F, r == 0x205F",
+  "replace": "r == 0x205F"
+ },
+ {
+  "name": "guards-space-205f",
+  "file": "note_guards.go",
+  "find": "r == 0x205F, r == 0x3000",
+  "replace": "r == 0x3000"
+ },
+ {
+  "name": "guards-space-3000",
+  "file": "note_guards.go",
+  "find": "r == 0x205F, r == 0x3000:",
+  "replace": "r == 0x205F:"
+ },
+ {
+  "name": "guards-literal-absolute",
+  "file": "note_guards.go",
+  "find": "\t\tif nodeIsAbsolute(path) {\n\t\t\treturn path, nil\n\t\t}\n\t\treturn cwd",
+  "replace": "\t\treturn cwd"
+ },
+ {
+  "name": "guards-literal-join",
+  "file": "note_guards.go",
+  "find": "return cwd + \"/\" + path, nil",
+  "replace": "return cwd + path, nil"
+ },
+ {
+  "name": "guards-native-at-all",
+  "file": "note_guards.go",
+  "find": "strings.TrimPrefix(normalizeToolSpaces(path), \"@\")",
+  "replace": "strings.TrimLeft(normalizeToolSpaces(path), \"@\")"
+ },
+ {
+  "name": "guards-native-no-at",
+  "file": "note_guards.go",
+  "find": "strings.TrimPrefix(normalizeToolSpaces(path), \"@\")",
+  "replace": "normalizeToolSpaces(path)"
+ },
+ {
+  "name": "guards-native-no-spaces",
+  "file": "note_guards.go",
+  "find": "strings.TrimPrefix(normalizeToolSpaces(path), \"@\")",
+  "replace": "strings.TrimPrefix(path, \"@\")"
+ },
+ {
+  "name": "guards-native-tool-set",
+  "file": "note_guards.go",
+  "find": "tool != \"read\" && tool != \"write\" && tool != \"edit\"",
+  "replace": "tool != \"read\" && tool != \"write\""
+ },
+ {
+  "name": "guards-tilde-bare",
+  "file": "note_guards.go",
+  "find": "normalized == \"~\" || strings.HasPrefix(normalized, \"~/\")",
+  "replace": "strings.HasPrefix(normalized, \"~/\")"
+ },
+ {
+  "name": "guards-tilde-slash",
+  "file": "note_guards.go",
+  "find": "normalized == \"~\" || strings.HasPrefix(normalized, \"~/\")",
+  "replace": "normalized == \"~\""
+ },
+ {
+  "name": "guards-tilde-slice",
+  "file": "note_guards.go",
+  "find": "nodeJoin2(home, normalized[1:])",
+  "replace": "nodeJoin2(home, normalized)"
+ },
+ {
+  "name": "guards-home-error",
+  "file": "note_guards.go",
+  "find": "\t\thome, err := nodeHomedir()\n\t\tif err != nil {\n\t\t\treturn \"\", err\n\t\t}",
+  "replace": "\t\thome, _ := nodeHomedir()"
+ },
+ {
+  "name": "guards-fileurl",
+  "file": "note_guards.go",
+  "find": "strings.HasPrefix(normalized, \"file://\")",
+  "replace": "strings.HasPrefix(normalized, \"file:\")"
+ },
+ {
+  "name": "guards-fileurl-error",
+  "file": "note_guards.go",
+  "find": "\t\tconverted, err := fileURLToPathOS(normalized, runtime.GOOS == \"windows\")\n\t\tif err != nil {\n\t\t\treturn \"\", err\n\t\t}",
+  "replace": "\t\tconverted, _ := fileURLToPathOS(normalized, runtime.GOOS == \"windows\")"
+ },
+ {
+  "name": "guards-resolve-cwd",
+  "file": "note_guards.go",
+  "find": "return nodeResolve(cwd, normalized), nil",
+  "replace": "return normalized, nil"
+ },
+ {
+  "name": "guards-forks-prefix",
+  "file": "note_guards.go",
+  "find": "parts[0] != \".forks\"",
+  "replace": "parts[0] != \".fork\""
+ },
+ {
+  "name": "guards-forks-notes",
+  "file": "note_guards.go",
+  "find": "parts[2] != \"notes\"",
+  "replace": "parts[2] != \"note\""
+ },
+ {
+  "name": "guards-forks-length",
+  "file": "note_guards.go",
+  "find": "len(parts) < 4 ||",
+  "replace": "len(parts) < 3 ||"
+ },
+ {
+  "name": "guards-forks-length-up",
+  "file": "note_guards.go",
+  "find": "len(parts) < 4 ||",
+  "replace": "len(parts) < 5 ||"
+ },
+ {
+  "name": "guards-forks-select-dir",
+  "file": "note_guards.go",
+  "find": "filepath.Join(scope.root, \".forks\", parts[1], \"notes\")",
+  "replace": "filepath.Join(scope.root, \".forks\", parts[1])"
+ },
+ {
+  "name": "guards-addressof-error",
+  "file": "note_guards.go",
+  "find": "\tknown, ok, err := addressOf(path, session.scopes)\n\tif err != nil {\n\t\treturn optionalAddress{}, err\n\t}",
+  "replace": "\tknown, ok, _ := addressOf(path, session.scopes)"
+ },
+ {
+  "name": "guards-canonical-error",
+  "file": "note_guards.go",
+  "find": "\tcanonical, err := canonicalPath(path)\n\tif err != nil {\n\t\treturn optionalAddress{}, err\n\t}\n\tfor _, scope := range session.scopes {\n\t\tparts :=",
+  "replace": "\tcanonical, _ := canonicalPath(path)\n\tfor _, scope := range session.scopes {\n\t\tparts :="
+ },
+ {
+  "name": "guards-select-scope-error",
+  "file": "note_guards.go",
+  "find": "\t\tselected, err := session.selectScope(ctx, filepath.Join(scope.root, \".forks\", parts[1], \"notes\"))\n\t\tif err != nil {\n\t\t\treturn optionalAddress{}, err\n\t\t}",
+  "replace": "\t\tselected, _ := session.selectScope(ctx, filepath.Join(scope.root, \".forks\", parts[1], \"notes\"))"
+ },
+ {
+  "name": "guards-existing-delete",
+  "file": "note_guards.go",
+  "find": "operation.action == noteActionEdit ||\n\t\toperation.action == noteActionDelete ||",
+  "replace": "operation.action == noteActionEdit ||"
+ },
+ {
+  "name": "guards-existing-edit",
+  "file": "note_guards.go",
+  "find": "return operation.action == noteActionEdit ||\n\t\toperation.action == noteActionDelete",
+  "replace": "return operation.action == noteActionDelete"
+ },
+ {
+  "name": "guards-existing-write-files",
+  "file": "note_guards.go",
+  "find": "tool == \"write_files\" && (",
+  "replace": "tool != \"\" && ("
+ },
+ {
+  "name": "guards-existing-clear",
+  "file": "note_guards.go",
+  "find": "(operation.action == noteActionWrite || operation.action == noteActionClear)",
+  "replace": "(operation.action == noteActionWrite)"
+ },
+ {
+  "name": "guards-existing-write",
+  "file": "note_guards.go",
+  "find": "(operation.action == noteActionWrite || operation.action == noteActionClear)",
+  "replace": "(operation.action == noteActionClear)"
+ },
+ {
+  "name": "guards-foreign-read-cond",
+  "file": "note_guards.go",
+  "find": "\tif operation.action == noteActionRead {\n\t\treturn \"This is another",
+  "replace": "\tif operation.action != noteActionRead {\n\t\treturn \"This is another"
+ },
+ {
+  "name": "guards-foreign-read-text",
+  "file": "note_guards.go",
+  "find": "for a labeled read-only comparison, or omit scope",
+  "replace": "for a labelled read-only comparison, or omit scope"
+ },
+ {
+  "name": "guards-foreign-read-keys",
+  "file": "note_guards.go",
+  "find": "jsonObject2(\"scope\", scopeDirectory(address), \"path\", address.path) + \" for a labeled",
+  "replace": "jsonObject2(\"path\", address.path, \"scope\", scopeDirectory(address)) + \" for a labeled"
+ },
+ {
+  "name": "guards-foreign-same-scope",
+  "file": "note_guards.go",
+  "find": "if sameScope(scope, address) {\n\t\t\t\treturn session.guardReference",
+  "replace": "if !sameScope(scope, address) {\n\t\t\t\treturn session.guardReference"
+ },
+ {
+  "name": "guards-foreign-guard-existing",
+  "file": "note_guards.go",
+  "find": "\tif existingEdit(tool, operation) {\n\t\tfor _, scope := range session.scopes {",
+  "replace": "\tif true {\n\t\tfor _, scope := range session.scopes {"
+ },
+ {
+  "name": "guards-foreign-text",
+  "file": "note_guards.go",
+  "find": "\"The foreign note was not changed. This session writes \"",
+  "replace": "\"The foreign note was not changed. This session writes to \""
+ },
+ {
+  "name": "guards-foreign-text-tail",
+  "file": "note_guards.go",
+  "find": "Retry explicitly there; creation semantics were not changed.",
+  "replace": "Retry explicitly there; creation semantics were changed."
+ },
+ {
+  "name": "guards-foreign-dest-error",
+  "file": "note_guards.go",
+  "find": "\tdestination, err := notePath(session.binding, address.path)\n\tif err != nil {\n\t\treturn \"\", err\n\t}",
+  "replace": "\tdestination, _ := notePath(session.binding, address.path)"
+ },
+ {
+  "name": "guards-op-toolpath-error",
+  "file": "note_guards.go",
+  "find": "\tpath, err := toolPath(tool, operation.path, cwd)\n\tif err != nil {\n\t\treturn \"\", err\n\t}\n\tfound, err := noteAddressOf",
+  "replace": "\tpath, _ := toolPath(tool, operation.path, cwd)\n\tfound, err := noteAddressOf"
+ },
+ {
+  "name": "guards-op-read-unmanaged",
+  "file": "note_guards.go",
+  "find": "\t\tif operation.action == noteActionRead {\n\t\t\treturn \"\", nil\n\t\t}\n\t\ttarget",
+  "replace": "\t\ttarget"
+ },
+ {
+  "name": "guards-op-managed-cond",
+  "file": "note_guards.go",
+  "find": "\t\t\tif inside(forks, target) {",
+  "replace": "\t\t\tif !inside(forks, target) {"
+ },
+ {
+  "name": "guards-op-managed-text",
+  "file": "note_guards.go",
+  "find": "\"Managed notes metadata is not editable through file tools: \"",
+  "replace": "\"Managed notes metadata is not editable by file tools: \""
+ },
+ {
+  "name": "guards-op-managed-tail",
+  "file": "note_guards.go",
+  "find": "\". Use notes for this session’s checkpoint.\"",
+  "replace": "\". Use notes for this session checkpoint.\""
+ },
+ {
+  "name": "guards-op-managed-forks",
+  "file": "note_guards.go",
+  "find": "filepath.Join(scope.root, \".forks\")",
+  "replace": "filepath.Join(scope.root, \".fork\")"
+ },
+ {
+  "name": "guards-op-foreign-cond",
+  "file": "note_guards.go",
+  "find": "\tif !sameScope(address, session.binding) {\n\t\treturn guardForeign",
+  "replace": "\tif sameScope(address, session.binding) {\n\t\treturn guardForeign"
+ },
+ {
+  "name": "guards-op-owned-cond",
+  "file": "note_guards.go",
+  "find": "\t\tif !owned {\n\t\t\tcopied,",
+  "replace": "\t\tif owned {\n\t\t\tcopied,"
+ },
+ {
+  "name": "guards-op-owns-error",
+  "file": "note_guards.go",
+  "find": "\t\towned, err := session.owns(address.path)\n\t\tif err != nil {\n\t\t\treturn \"\", err\n\t\t}",
+  "replace": "\t\towned, _ := session.owns(address.path)"
+ },
+ {
+  "name": "guards-op-no-queue",
+  "file": "note_guards.go",
+  "find": "copied, err := sdk.WithFileMutationQueue(path, func() (string, error) {\n\t\t\t\treturn session.adopt(ctx, address.path, call)\n\t\t\t})",
+  "replace": "copied, err := session.adopt(ctx, address.path, call)"
+ },
+ {
+  "name": "guards-op-queue-path",
+  "file": "note_guards.go",
+  "find": "sdk.WithFileMutationQueue(path, func() (string, error) {\n\t\t\t\treturn session.adopt",
+  "replace": "sdk.WithFileMutationQueue(path+\"x\", func() (string, error) {\n\t\t\t\treturn session.adopt"
+ },
+ {
+  "name": "guards-op-adopt-error",
+  "file": "note_guards.go",
+  "find": "\t\t\tif err != nil {\n\t\t\t\treturn \"\", err\n\t\t\t}\n\t\t\tif copied == \"adopted\" {",
+  "replace": "\t\t\t_ = err\n\t\t\tif copied == \"adopted\" {"
+ },
+ {
+  "name": "guards-op-adopted-cond",
+  "file": "note_guards.go",
+  "find": "if copied == \"adopted\" {",
+  "replace": "if copied != \"adopted\" {"
+ },
+ {
+  "name": "guards-op-adopted-text",
+  "file": "note_guards.go",
+  "find": "\"Private copy created at \" + path + \"; no requested edit ran. Read this copy, then retry the edit.\"",
+  "replace": "\"Private copy created at \" + path + \"; no requested edit ran. Read this copy then retry the edit.\""
+ },
+ {
+  "name": "guards-op-prepare-cond",
+  "file": "note_guards.go",
+  "find": "\tif operation.action != noteActionRead {\n\t\tif err := session.prepareWrite()",
+  "replace": "\tif operation.action == noteActionRead {\n\t\tif err := session.prepareWrite()"
+ },
+ {
+  "name": "guards-op-no-prepare",
+  "file": "note_guards.go",
+  "find": "\tif operation.action != noteActionRead {\n\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn \"\", err\n\t\t}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "guards-op-prepare-error",
+  "file": "note_guards.go",
+  "find": "\t\tif err := session.prepareWrite(); err != nil {\n\t\t\treturn \"\", err\n\t\t}\n\t}\n\treturn \"\", nil",
+  "replace": "\t\t_ = session.prepareWrite()\n\t}\n\treturn \"\", nil"
+ },
+ {
+  "name": "guards-record-delete",
+  "file": "note_guards.go",
+  "find": "case noteActionRead, noteActionDelete:\n\t\t\tkind = operation.action",
+  "replace": "case noteActionRead:\n\t\t\tkind = operation.action"
+ },
+ {
+  "name": "guards-record-read",
+  "file": "note_guards.go",
+  "find": "case noteActionRead, noteActionDelete:\n\t\t\tkind = operation.action",
+  "replace": "case noteActionDelete:\n\t\t\tkind = operation.action"
+ },
+ {
+  "name": "guards-record-clear",
+  "file": "note_guards.go",
+  "find": "case noteActionClear, noteActionCreateEmpty:",
+  "replace": "case noteActionClear:"
+ },
+ {
+  "name": "guards-record-create-empty",
+  "file": "note_guards.go",
+  "find": "case noteActionClear, noteActionCreateEmpty:",
+  "replace": "case noteActionCreateEmpty:"
+ },
+ {
+  "name": "guards-record-skip-unaddressed",
+  "file": "note_guards.go",
+  "find": "\t\tif !addresses[i].ok {\n\t\t\tcontinue\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-record-default-kind",
+  "file": "note_guards.go",
+  "find": "\t\tkind := \"write\"\n\t\tswitch operation.action {",
+  "replace": "\t\tkind := \"clear\"\n\t\tswitch operation.action {"
+ },
+ {
+  "name": "guards-record-error",
+  "file": "note_guards.go",
+  "find": "\tif err != nil {\n\t\treturn nil, err\n\t}\n\tfiles := make([]noteTouchFile",
+  "replace": "\t_ = err\n\tfiles := make([]noteTouchFile"
+ },
+ {
+  "name": "guards-record-session",
+  "file": "note_guards.go",
+  "find": "return noteAddressOf(ctx, path, captured.session)",
+  "replace": "return optionalAddress{}, nil"
+ },
+ {
+  "name": "guards-inside-no-roots",
+  "file": "note_guards.go",
+  "find": "\t\tif len(roots) == 0 {\n\t\t\tcontinue\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-inside-cond",
+  "file": "note_guards.go",
+  "find": "\t\t\tif inside(root, canonical) {\n\t\t\t\treturn true, nil",
+  "replace": "\t\t\tif !inside(root, canonical) {\n\t\t\t\treturn true, nil"
+ },
+ {
+  "name": "guards-inside-toolpath-error",
+  "file": "note_guards.go",
+  "find": "\t\tpath, err := toolPath(tool, operation.path, cwd)\n\t\tif err != nil {\n\t\t\treturn false, err\n\t\t}\n\t\tcanonical, err := canonicalPath(path)",
+  "replace": "\t\tpath, _ := toolPath(tool, operation.path, cwd)\n\t\tcanonical, err := canonicalPath(path)"
+ },
+ {
+  "name": "guards-inside-canonical-error",
+  "file": "note_guards.go",
+  "find": "\t\tcanonical, err := canonicalPath(path)\n\t\tif err != nil {\n\t\t\treturn false, err\n\t\t}\n\t\tfor _, root",
+  "replace": "\t\tcanonical, _ := canonicalPath(path)\n\t\tfor _, root"
+ },
+ {
+  "name": "guards-event-name",
+  "file": "note_guards.go",
+  "find": "ext.OnEvent(\"tool_call\",",
+  "replace": "ext.OnEvent(\"tool_calls\","
+ },
+ {
+  "name": "guards-get-error-notes",
+  "file": "note_guards.go",
+  "find": "\t\t\tif toolName == \"notes\" {\n\t\t\t\treturn nil, err\n\t\t\t}",
+  "replace": "\t\t\tif toolName == \"note\" {\n\t\t\t\treturn nil, err\n\t\t\t}"
+ },
+ {
+  "name": "guards-get-error-guarded",
+  "file": "note_guards.go",
+  "find": "\t\t\tif guarded {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\treturn nil, nil",
+  "replace": "\t\t\tif !guarded {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\treturn nil, nil"
+ },
+ {
+  "name": "guards-get-error-always",
+  "file": "note_guards.go",
+  "find": "\t\t\tif guarded {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\treturn nil, nil",
+  "replace": "\t\t\t_ = guarded\n\t\t\treturn nil, err"
+ },
+ {
+  "name": "guards-get-error-guard-error",
+  "file": "note_guards.go",
+  "find": "\t\t\tif guardErr != nil {\n\t\t\t\treturn nil, guardErr\n\t\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-parent",
+  "file": "note_guards.go",
+  "find": "if value, ok := eventString(event, \"parentToolCallId\"); ok {",
+  "replace": "if value, ok := eventString(event, \"parentToolCallID\"); ok {"
+ },
+ {
+  "name": "guards-start-call",
+  "file": "note_guards.go",
+  "find": "call := session.startCall(toolCallID, parent)",
+  "replace": "call := session.startCall(toolCallID, nil)"
+ },
+ {
+  "name": "guards-captured-cwd",
+  "file": "note_guards.go",
+  "find": "cwd: ctx.Cwd(), tool: toolName}",
+  "replace": "cwd: \"\", tool: toolName}"
+ },
+ {
+  "name": "guards-store-call",
+  "file": "note_guards.go",
+  "find": "\t\tcalls[toolCallID] = captured\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-notes-skip",
+  "file": "note_guards.go",
+  "find": "\t\tif toolName == \"notes\" || len(operations) == 0 {\n\t\t\treturn nil, nil\n\t\t}",
+  "replace": "\t\tif len(operations) == 0 {\n\t\t\treturn nil, nil\n\t\t}"
+ },
+ {
+  "name": "guards-operations-skip",
+  "file": "note_guards.go",
+  "find": "\t\tif toolName == \"notes\" || len(operations) == 0 {",
+  "replace": "\t\tif toolName == \"notes\" && len(operations) == 0 {"
+ },
+ {
+  "name": "guards-guard-error",
+  "file": "note_guards.go",
+  "find": "\t\t\treason, err := guardOperation(ctx, operation, captured)\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}",
+  "replace": "\t\t\treason, _ := guardOperation(ctx, operation, captured)"
+ },
+ {
+  "name": "guards-block-flag",
+  "file": "note_guards.go",
+  "find": "map[string]any{\"block\": true, \"reason\": reason}",
+  "replace": "map[string]any{\"block\": false, \"reason\": reason}"
+ },
+ {
+  "name": "guards-block-reason",
+  "file": "note_guards.go",
+  "find": "map[string]any{\"block\": true, \"reason\": reason}",
+  "replace": "map[string]any{\"block\": true}"
+ },
+ {
+  "name": "guards-first-only",
+  "file": "note_guards.go",
+  "find": "\t\t\tif reason != \"\" {\n\t\t\t\treturn map[string]any{",
+  "replace": "\t\t\tif reason != \"\" || true {\n\t\t\t\treturn map[string]any{"
+ },
+ {
+  "name": "guards-result-event",
+  "file": "note_guards.go",
+  "find": "ext.OnToolResult(func",
+  "replace": "ext.OnEvent(\"tool_execution_update\", func"
+ },
+ {
+  "name": "guards-result-notes",
+  "file": "note_guards.go",
+  "find": "\t\tif !ok || toolName == \"notes\" {\n\t\t\treturn nil, nil\n\t\t}",
+  "replace": "\t\tif !ok {\n\t\t\treturn nil, nil\n\t\t}"
+ },
+ {
+  "name": "guards-result-captured",
+  "file": "note_guards.go",
+  "find": "\t\tif !ok || toolName == \"notes\" {",
+  "replace": "\t\tif ok || toolName == \"notes\" {"
+ },
+ {
+  "name": "guards-result-iserror",
+  "file": "note_guards.go",
+  "find": "isError, _ := event[\"isError\"].(bool)",
+  "replace": "isError := false"
+ },
+ {
+  "name": "guards-result-details",
+  "file": "note_guards.go",
+  "find": "details: event[\"details\"]}",
+  "replace": "details: nil}"
+ },
+ {
+  "name": "guards-result-input",
+  "file": "note_guards.go",
+  "find": "verifiedNoteOperations(toolName, event[\"input\"], noteResult",
+  "replace": "verifiedNoteOperations(toolName, nil, noteResult"
+ },
+ {
+  "name": "guards-result-files-error",
+  "file": "note_guards.go",
+  "find": "\t\tfiles, err := recordedFiles(ctx, operations, captured)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}",
+  "replace": "\t\tfiles, _ := recordedFiles(ctx, operations, captured)"
+ },
+ {
+  "name": "guards-result-record",
+  "file": "note_guards.go",
+  "find": "return nil, captured.session.record(ctx, files, captured.call)",
+  "replace": "return nil, nil"
+ },
+ {
+  "name": "guards-end-finish",
+  "file": "note_guards.go",
+  "find": "\t\t\tcaptured.session.finishCall(toolCallID)\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-end-delete",
+  "file": "note_guards.go",
+  "find": "\t\tdelete(calls, toolCallID)\n",
+  "replace": ""
+ },
+ {
+  "name": "guards-end-event",
+  "file": "note_guards.go",
+  "find": "ext.OnEvent(\"tool_execution_end\",",
+  "replace": "ext.OnEvent(\"tool_execution_start\","
+ },
+ {
+  "name": "guards-end-id",
+  "file": "note_guards.go",
+  "find": "\t\tcaptured, ok := calls[toolCallID]\n\t\tdelete(calls, toolCallID)",
+  "replace": "\t\tcaptured, ok := calls[toolCallID+\"x\"]\n\t\tdelete(calls, toolCallID)"
+ },
+ {
+  "name": "effects-bare-slash",
+  "file": "note_tool_effects.go",
+  "find": "strings.LastIndexAny(name, \":/\")",
+  "replace": "strings.LastIndexAny(name, \":\")"
+ },
+ {
+  "name": "effects-bare-colon",
+  "file": "note_tool_effects.go",
+  "find": "strings.LastIndexAny(name, \":/\")",
+  "replace": "strings.LastIndexAny(name, \"/\")"
+ },
+ {
+  "name": "effects-bare-first",
+  "file": "note_tool_effects.go",
+  "find": "strings.LastIndexAny(name, \":/\")",
+  "replace": "strings.IndexAny(name, \":/\")"
+ },
+ {
+  "name": "effects-header-stars",
+  "file": "note_tool_effects.go",
+  "find": "strings.HasPrefix(rest, \"*** \")",
+  "replace": "strings.HasPrefix(rest, \"***\")"
+ },
+ {
+  "name": "effects-header-colon",
+  "file": "note_tool_effects.go",
+  "find": "strings.HasPrefix(tail, \": \")",
+  "replace": "strings.HasPrefix(tail, \":\")"
+ },
+ {
+  "name": "effects-header-names",
+  "file": "note_tool_effects.go",
+  "find": "{\"Update File\", \"Add File\", \"Delete File\", \"Move to\"}",
+  "replace": "{\"Update File\", \"Add File\", \"Delete File\"}"
+ },
+ {
+  "name": "effects-header-empty-path",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif stop == 0 {\n\t\t\treturn \"\", \"\", 0, false\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "effects-header-no-newline-path",
+  "file": "note_tool_effects.go",
+  "find": "strings.IndexAny(tail, \"\\r\\n\")",
+  "replace": "strings.IndexAny(tail, \"\\n\")"
+ },
+ {
+  "name": "effects-header-end",
+  "file": "note_tool_effects.go",
+  "find": "len(input) - len(tail) + stop, true",
+  "replace": "len(input) - len(tail) + stop + 1, true"
+ },
+ {
+  "name": "effects-line-cr",
+  "file": "note_tool_effects.go",
+  "find": "\t\tcase '\\n', '\\r':",
+  "replace": "\t\tcase '\\n':"
+ },
+ {
+  "name": "effects-line-lf",
+  "file": "note_tool_effects.go",
+  "find": "\t\tcase '\\n', '\\r':",
+  "replace": "\t\tcase '\\r':"
+ },
+ {
+  "name": "effects-line-2028",
+  "file": "note_tool_effects.go",
+  "find": "(input[i+2] == 0xa8 || input[i+2] == 0xa9)",
+  "replace": "(input[i+2] == 0xa8)"
+ },
+ {
+  "name": "effects-line-2029",
+  "file": "note_tool_effects.go",
+  "find": "(input[i+2] == 0xa8 || input[i+2] == 0xa9)",
+  "replace": "(input[i+2] == 0xa9)"
+ },
+ {
+  "name": "effects-newline-crlf",
+  "file": "note_tool_effects.go",
+  "find": "text == \"\\r\\n\" || text == \"\\r\" || text == \"\\n\"",
+  "replace": "text == \"\\r\" || text == \"\\n\""
+ },
+ {
+  "name": "effects-newline-cr",
+  "file": "note_tool_effects.go",
+  "find": "text == \"\\r\\n\" || text == \"\\r\" || text == \"\\n\"",
+  "replace": "text == \"\\r\\n\" || text == \"\\n\""
+ },
+ {
+  "name": "effects-newline-lf",
+  "file": "note_tool_effects.go",
+  "find": "text == \"\\r\\n\" || text == \"\\r\" || text == \"\\n\"",
+  "replace": "text == \"\\r\\n\" || text == \"\\r\""
+ },
+ {
+  "name": "effects-patch-non-string",
+  "file": "note_tool_effects.go",
+  "find": "\ttext, ok := input.(string)\n\tif !ok {\n\t\treturn []noteOperation{}\n\t}",
+  "replace": "\ttext, _ := input.(string)"
+ },
+ {
+  "name": "effects-move-adjacent",
+  "file": "note_tool_effects.go",
+  "find": "if hasUpdate && isSingleNewline(text[updateEnd:at]) {",
+  "replace": "if hasUpdate {"
+ },
+ {
+  "name": "effects-move-needs-update",
+  "file": "note_tool_effects.go",
+  "find": "if hasUpdate && isSingleNewline(text[updateEnd:at]) {",
+  "replace": "if isSingleNewline(text[updateEnd:at]) {"
+ },
+ {
+  "name": "effects-move-source-action",
+  "file": "note_tool_effects.go",
+  "find": "operations[len(operations)-1] = noteOperation{path: updatePath, action: noteActionDelete}",
+  "replace": "operations[len(operations)-1] = noteOperation{path: updatePath, action: noteActionEdit}"
+ },
+ {
+  "name": "effects-move-target-action",
+  "file": "note_tool_effects.go",
+  "find": "operations = append(operations, noteOperation{path: path, action: noteActionCreate})\n\t\t\t\t}\n\t\t\t\thasUpdate = false",
+  "replace": "operations = append(operations, noteOperation{path: path, action: noteActionWrite})\n\t\t\t\t}\n\t\t\t\thasUpdate = false"
+ },
+ {
+  "name": "effects-move-resets",
+  "file": "note_tool_effects.go",
+  "find": "\t\t\t\thasUpdate = false\n\t\t\t} else {",
+  "replace": "\t\t\t} else {"
+ },
+ {
+  "name": "effects-update-action",
+  "file": "note_tool_effects.go",
+  "find": "case \"Update File\":\n\t\t\t\t\taction = noteActionEdit",
+  "replace": "case \"Update File\":\n\t\t\t\t\taction = noteActionWrite"
+ },
+ {
+  "name": "effects-delete-action",
+  "file": "note_tool_effects.go",
+  "find": "case \"Delete File\":\n\t\t\t\t\taction = noteActionDelete",
+  "replace": "case \"Delete File\":\n\t\t\t\t\taction = noteActionClear"
+ },
+ {
+  "name": "effects-add-action",
+  "file": "note_tool_effects.go",
+  "find": "\t\t\t\taction := noteActionCreate\n\t\t\t\tswitch kind {",
+  "replace": "\t\t\t\taction := noteActionWrite\n\t\t\t\tswitch kind {"
+ },
+ {
+  "name": "effects-update-tracking",
+  "file": "note_tool_effects.go",
+  "find": "hasUpdate = action == noteActionEdit",
+  "replace": "hasUpdate = action != noteActionDelete"
+ },
+ {
+  "name": "effects-update-end",
+  "file": "note_tool_effects.go",
+  "find": "updatePath, updateEnd = path, end",
+  "replace": "updatePath, updateEnd = path, at"
+ },
+ {
+  "name": "effects-batch-replace",
+  "file": "note_tool_effects.go",
+  "find": "if tool == \"replace_text\" {",
+  "replace": "if tool != \"replace_text\" {"
+ },
+ {
+  "name": "effects-batch-path-type",
+  "file": "note_tool_effects.go",
+  "find": "\t\tpath, ok := file[\"path\"].(string)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tpath, _ := file[\"path\"].(string)"
+ },
+ {
+  "name": "effects-batch-record",
+  "file": "note_tool_effects.go",
+  "find": "\t\tfile, ok := recOf(value)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tfile, _ := recOf(value)"
+ },
+ {
+  "name": "effects-batch-create",
+  "file": "note_tool_effects.go",
+  "find": "if file[\"mode\"] == \"create\" {",
+  "replace": "if file[\"mode\"] != \"create\" {"
+ },
+ {
+  "name": "effects-batch-create-empty",
+  "file": "note_tool_effects.go",
+  "find": "action = noteActionCreateEmpty",
+  "replace": "action = noteActionCreate"
+ },
+ {
+  "name": "effects-batch-clear",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif empty {\n\t\t\taction = noteActionClear\n\t\t}\n\t\toperations = append",
+  "replace": "\t\tif !empty {\n\t\t\taction = noteActionClear\n\t\t}\n\t\toperations = append"
+ },
+ {
+  "name": "effects-batch-empty",
+  "file": "note_tool_effects.go",
+  "find": "empty := file[\"content\"] == \"\"",
+  "replace": "empty := file[\"content\"] == nil"
+ },
+ {
+  "name": "effects-notes-clear",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif args[\"content\"] == \"\" {\n\t\t\treturn noteActionClear, true\n\t\t}",
+  "replace": "\t\tif args[\"content\"] == nil {\n\t\t\treturn noteActionClear, true\n\t\t}"
+ },
+ {
+  "name": "effects-notes-append",
+  "file": "note_tool_effects.go",
+  "find": "case \"append\":\n\t\treturn noteActionAppend, true",
+  "replace": "case \"append\":\n\t\treturn noteActionWrite, true"
+ },
+ {
+  "name": "effects-notes-read",
+  "file": "note_tool_effects.go",
+  "find": "case \"read\":\n\t\treturn noteActionRead, true",
+  "replace": "case \"read\":\n\t\treturn noteActionEdit, true"
+ },
+ {
+  "name": "effects-single-path",
+  "file": "note_tool_effects.go",
+  "find": "\tpath, ok := optionalString(args[\"path\"])\n\tif !ok {\n\t\treturn []noteOperation{}\n\t}",
+  "replace": "\tpath, _ := optionalString(args[\"path\"])"
+ },
+ {
+  "name": "effects-single-scope",
+  "file": "note_tool_effects.go",
+  "find": "return []noteOperation{{path: path, action: action, scope: scope, hasScope: hasScope}}",
+  "replace": "return []noteOperation{{path: path, action: action}}"
+ },
+ {
+  "name": "effects-single-has-scope",
+  "file": "note_tool_effects.go",
+  "find": "scope: scope, hasScope: hasScope}}",
+  "replace": "scope: scope, hasScope: true}}"
+ },
+ {
+  "name": "effects-single-notes-unknown",
+  "file": "note_tool_effects.go",
+  "find": "\t\taction, ok := notesAction(args)\n\t\tif !ok {\n\t\t\treturn []noteOperation{}\n\t\t}",
+  "replace": "\t\taction, _ := notesAction(args)"
+ },
+ {
+  "name": "effects-single-read-edit",
+  "file": "note_tool_effects.go",
+  "find": "case \"read\", \"edit\":",
+  "replace": "case \"read\":"
+ },
+ {
+  "name": "effects-single-write-clear",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif args[\"content\"] == \"\" {\n\t\t\taction = noteActionClear\n\t\t}\n\t\treturn []noteOperation{{path: path, action: action}}",
+  "replace": "\t\tif args[\"content\"] == nil {\n\t\t\taction = noteActionClear\n\t\t}\n\t\treturn []noteOperation{{path: path, action: action}}"
+ },
+ {
+  "name": "effects-ops-preview",
+  "file": "note_tool_effects.go",
+  "find": "if args[\"preview\"] == true || tool == \"preview_patch\" {",
+  "replace": "if tool == \"preview_patch\" {"
+ },
+ {
+  "name": "effects-ops-preview-tool",
+  "file": "note_tool_effects.go",
+  "find": "if args[\"preview\"] == true || tool == \"preview_patch\" {",
+  "replace": "if args[\"preview\"] == true {"
+ },
+ {
+  "name": "effects-ops-string-input",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif text, ok := input.(string); ok {\n\t\t\treturn patchOperations(text)\n\t\t}\n\t\treturn patchOperations(args[\"input\"])",
+  "replace": "\t\treturn patchOperations(args[\"input\"])"
+ },
+ {
+  "name": "effects-ops-batch-tools",
+  "file": "note_tool_effects.go",
+  "find": "case \"write_files\", \"replace_text\":",
+  "replace": "case \"write_files\":"
+ },
+ {
+  "name": "effects-kind-write",
+  "file": "note_tool_effects.go",
+  "find": "case noteActionWrite, noteActionCreate:\n\t\treturn \"full-write\"",
+  "replace": "case noteActionWrite:\n\t\treturn \"full-write\""
+ },
+ {
+  "name": "effects-kind-partial",
+  "file": "note_tool_effects.go",
+  "find": "case noteActionEdit, noteActionAppend:\n\t\treturn \"partial-write\"",
+  "replace": "case noteActionEdit:\n\t\treturn \"partial-write\""
+ },
+ {
+  "name": "effects-kind-read",
+  "file": "note_tool_effects.go",
+  "find": "case noteActionRead:\n\t\treturn \"read\"",
+  "replace": "case noteActionRead:\n\t\treturn \"clear\""
+ },
+ {
+  "name": "effects-committed-delete",
+  "file": "note_tool_effects.go",
+  "find": "record[\"operation\"] == \"delete\" || (record[\"operation\"] == \"move\" && record[\"path\"] == path)",
+  "replace": "(record[\"operation\"] == \"move\" && record[\"path\"] == path)"
+ },
+ {
+  "name": "effects-committed-move",
+  "file": "note_tool_effects.go",
+  "find": "record[\"operation\"] == \"delete\" || (record[\"operation\"] == \"move\" && record[\"path\"] == path)",
+  "replace": "record[\"operation\"] == \"delete\" || (record[\"operation\"] == \"move\")"
+ },
+ {
+  "name": "effects-committed-move-op",
+  "file": "note_tool_effects.go",
+  "find": "(record[\"operation\"] == \"move\" && record[\"path\"] == path)",
+  "replace": "(record[\"operation\"] == \"rename\" && record[\"path\"] == path)"
+ },
+ {
+  "name": "effects-committed-bytes",
+  "file": "note_tool_effects.go",
+  "find": "ok && bytesAfter == 0 {",
+  "replace": "ok && bytesAfter <= 0 {"
+ },
+ {
+  "name": "effects-committed-bytes-missing",
+  "file": "note_tool_effects.go",
+  "find": "ok && bytesAfter == 0 {",
+  "replace": "bytesAfter == 0 {"
+ },
+ {
+  "name": "effects-committed-default",
+  "file": "note_tool_effects.go",
+  "find": "\tfallback := noteActionEdit\n",
+  "replace": "\tfallback := noteActionWrite\n"
+ },
+ {
+  "name": "effects-committed-no-operation",
+  "file": "note_tool_effects.go",
+  "find": "\tif operation != nil {\n\t\tfallback = operation.action\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "effects-committed-no-file",
+  "file": "note_tool_effects.go",
+  "find": "\tif !ok {\n\t\treturn fallback\n\t}\n\t// modifiedFiles",
+  "replace": "\tif !ok {\n\t\treturn noteActionWrite\n\t}\n\t// modifiedFiles"
+ },
+ {
+  "name": "effects-modified-missing",
+  "file": "note_tool_effects.go",
+  "find": "\tmodified, ok := arrOf(details[\"modifiedFiles\"])\n\tif !ok {\n\t\treturn nil, false\n\t}",
+  "replace": "\tmodified, _ := arrOf(details[\"modifiedFiles\"])"
+ },
+ {
+  "name": "effects-committed-moveto",
+  "file": "note_tool_effects.go",
+  "find": "ok && (record[\"path\"] == path || record[\"moveTo\"] == path)",
+  "replace": "ok && (record[\"path\"] == path)"
+ },
+ {
+  "name": "effects-committed-path",
+  "file": "note_tool_effects.go",
+  "find": "ok && (record[\"path\"] == path || record[\"moveTo\"] == path)",
+  "replace": "ok && (record[\"moveTo\"] == path)"
+ },
+ {
+  "name": "effects-committed-nonstring",
+  "file": "note_tool_effects.go",
+  "find": "\t\tpath, ok := value.(string)\n\t\tif !ok {\n\t\t\tcontinue\n\t\t}\n\t\tvar file any",
+  "replace": "\t\tpath, _ := value.(string)\n\t\tvar file any"
+ },
+ {
+  "name": "effects-committed-op-match",
+  "file": "note_tool_effects.go",
+  "find": "if operations[i].path == path {",
+  "replace": "if operations[i].path != path {"
+ },
+ {
+  "name": "effects-verified-preview",
+  "file": "note_tool_effects.go",
+  "find": "\tif hasDetails && details[\"preview\"] == true {\n\t\treturn []noteOperation{}\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "effects-verified-tools",
+  "file": "note_tool_effects.go",
+  "find": "tool == \"replace_text\" || tool == \"write_files\" || tool == \"apply_patch\"",
+  "replace": "tool == \"replace_text\" || tool == \"write_files\""
+ },
+ {
+  "name": "effects-verified-committed",
+  "file": "note_tool_effects.go",
+  "find": "\t\tif committed, ok := committedOperations(details, operations); ok {\n\t\t\treturn committed\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "effects-verified-error",
+  "file": "note_tool_effects.go",
+  "find": "\tif result.isError {\n\t\treturn []noteOperation{}\n\t}\n\treturn operations",
+  "replace": "\treturn operations"
+ },
+ {
+  "name": "effects-verified-error-inverted",
+  "file": "note_tool_effects.go",
+  "find": "\tif result.isError {\n\t\treturn []noteOperation{}\n\t}\n\treturn operations",
+  "replace": "\tif !result.isError {\n\t\treturn []noteOperation{}\n\t}\n\treturn operations"
+ },
+ {
+  "name": "effects-verified-details",
+  "file": "note_tool_effects.go",
+  "find": "\tdetails, hasDetails := recOf(result.details)",
+  "replace": "\tdetails, hasDetails := recOf(nil)"
+ },
+ {
+  "name": "paths-normalize-dots",
+  "file": "node_paths.go",
+  "find": "if lastSlash == i-1 || dots == 1 {",
+  "replace": "if lastSlash == i-1 {"
+ },
+ {
+  "name": "paths-normalize-above-root",
+  "file": "node_paths.go",
+  "find": "\t\t\t\tif allowAboveRoot {\n\t\t\t\t\tif len(res) > 0 {",
+  "replace": "\t\t\t\tif false {\n\t\t\t\t\tif len(res) > 0 {"
+ },
+ {
+  "name": "paths-posix-absolute",
+  "file": "node_paths.go",
+  "find": "\t\tabsolute = arg[0] == '/'\n\t\tif absolute {\n\t\t\tbreak\n\t\t}\n\t}\n\tresolved = normalizeString(resolved, !absolute, '/', isPosixSep)",
+  "replace": "\t\tabsolute = arg[0] == '/'\n\t}\n\tresolved = normalizeString(resolved, !absolute, '/', isPosixSep)"
+ },
+ {
+  "name": "paths-posix-empty",
+  "file": "node_paths.go",
+  "find": "\tif resolved == \"\" {\n\t\treturn \".\"\n\t}",
+  "replace": "\tif resolved == \"\" {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "paths-win-rooted",
+  "file": "node_paths.go",
+  "find": "\t\t\t} else {\n\t\t\t\trootEnd = 1\n\t\t\t}\n\t\tcase isWinDeviceRoot",
+  "replace": "\t\t\t} else {\n\t\t\t\trootEnd = 0\n\t\t\t}\n\t\tcase isWinDeviceRoot"
+ },
+ {
+  "name": "paths-win-drive-abs",
+  "file": "node_paths.go",
+  "find": "absolute, rootEnd = true, 3",
+  "replace": "absolute, rootEnd = true, 2"
+ },
+ {
+  "name": "paths-win-device-case",
+  "file": "node_paths.go",
+  "find": "strings.ToLower(device) != strings.ToLower(resolvedDevice)",
+  "replace": "device != resolvedDevice"
+ },
+ {
+  "name": "paths-win-unc-share",
+  "file": "node_paths.go",
+  "find": "device, rootEnd = `\\\\`+firstPart+`\\`+arg[last:j], j",
+  "replace": "device, rootEnd = `\\\\`+firstPart+`\\`+arg[last:], j"
+ },
+ {
+  "name": "paths-win-tail",
+  "file": "node_paths.go",
+  "find": "resolvedTail = arg[rootEnd:] + `\\` + resolvedTail",
+  "replace": "resolvedTail = arg + `\\` + resolvedTail"
+ },
+ {
+  "name": "paths-win-empty",
+  "file": "node_paths.go",
+  "find": "\tif out := resolvedDevice + resolvedTail; out != \"\" {\n\t\treturn out\n\t}\n\treturn \".\"",
+  "replace": "\treturn resolvedDevice + resolvedTail"
+ },
+ {
+  "name": "paths-home-set",
+  "file": "node_paths.go",
+  "find": "if home, ok := os.LookupEnv(key); ok {",
+  "replace": "if home := os.Getenv(key); home != \"\" {"
+ },
+ {
+  "name": "paths-join-empty",
+  "file": "node_paths.go",
+  "find": "\tcase a == \"\":\n\t\ta = b",
+  "replace": "\tcase a == \"\":\n\t\ta = a"
+ },
+ {
+  "name": "paths-join-clean",
+  "file": "node_paths.go",
+  "find": "return filepath.Clean(a) // Clean",
+  "replace": "return a // Clean"
+ },
+ {
+  "name": "paths-decode-short",
+  "file": "node_paths.go",
+  "find": "if k+2 >= len(s) || s[k] != '%' {",
+  "replace": "if k+2 > len(s) || s[k] != '%' {"
+ },
+ {
+  "name": "paths-decode-continuation",
+  "file": "node_paths.go",
+  "find": "if !ok || next&0xC0 != 0x80 {",
+  "replace": "if !ok {"
+ },
+ {
+  "name": "paths-decode-size",
+  "file": "node_paths.go",
+  "find": "r == utf8.RuneError || size != n",
+  "replace": "r == utf8.RuneError"
+ },
+ {
+  "name": "paths-decode-lead",
+  "file": "node_paths.go",
+  "find": "case b&0xF8 == 0xF0:\n\t\t\tn = 4",
+  "replace": "case b&0xF8 == 0xF0:\n\t\t\tn = 3"
+ },
+ {
+  "name": "paths-host-forbidden",
+  "file": "node_paths.go",
+  "find": "strings.IndexByte(\"#/:<>?@[\\\\]^|%\", c) >= 0",
+  "replace": "strings.IndexByte(\"#/<>?@[\\\\]^|%\", c) >= 0"
+ },
+ {
+  "name": "paths-url-scheme",
+  "file": "node_paths.go",
+  "find": "strings.EqualFold(input[:5], \"file:\")",
+  "replace": "input[:5] == \"FILE:\""
+ },
+ {
+  "name": "paths-url-query",
+  "file": "node_paths.go",
+  "find": "\tif end := strings.IndexAny(rest, \"?#\"); end >= 0 {",
+  "replace": "\tif end := strings.IndexAny(rest, \"#\"); end >= 0 {"
+ },
+ {
+  "name": "paths-url-backslash",
+  "file": "node_paths.go",
+  "find": "rest = strings.ReplaceAll(rest, `\\`, \"/\")",
+  "replace": ""
+ },
+ {
+  "name": "paths-url-drive-host",
+  "file": "node_paths.go",
+  "find": "if len(host) == 2 && isWinDeviceRoot(host[0]) && (host[1] == ':' || host[1] == '|') {",
+  "replace": "if false {"
+ },
+ {
+  "name": "paths-url-localhost",
+  "file": "node_paths.go",
+  "find": "\t\tif host == \"localhost\" {\n\t\t\thost = \"\"\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "paths-url-lower",
+  "file": "node_paths.go",
+  "find": "host = strings.ToLower(decoded)",
+  "replace": "host = decoded"
+ },
+ {
+  "name": "paths-url-posix-host",
+  "file": "node_paths.go",
+  "find": "\t\tif host != \"\" {\n\t\t\treturn \"\", errors.New(\"File URL host must be",
+  "replace": "\t\tif host == \"x\" {\n\t\t\treturn \"\", errors.New(\"File URL host must be"
+ },
+ {
+  "name": "paths-url-posix-slash",
+  "file": "node_paths.go",
+  "find": "strings.Contains(strings.ToLower(pathname), \"%2f\")",
+  "replace": "strings.Contains(pathname, \"%2f\")"
+ },
+ {
+  "name": "paths-url-win-backslash",
+  "file": "node_paths.go",
+  "find": "strings.Contains(lower, \"%2f\") || strings.Contains(lower, \"%5c\")",
+  "replace": "strings.Contains(lower, \"%2f\")"
+ },
+ {
+  "name": "paths-url-win-unc",
+  "file": "node_paths.go",
+  "find": "\tif host != \"\" {\n\t\t// UNC path",
+  "replace": "\tif host == \"x\" {\n\t\t// UNC path"
+ },
+ {
+  "name": "paths-url-win-absolute",
+  "file": "node_paths.go",
+  "find": "\tif len(decoded) < 3 || !isWinDeviceRoot(decoded[1]) || decoded[2] != ':' {",
+  "replace": "\tif len(decoded) < 3 || decoded[2] != ':' {"
+ },
+ {
+  "name": "paths-dots-double",
+  "file": "node_paths.go",
+  "find": "case \"..\", \".%2e\", \"%2e.\", \"%2e%2e\":",
+  "replace": "case \"..\":"
+ },
+ {
+  "name": "paths-dots-single",
+  "file": "node_paths.go",
+  "find": "return s == \".\" || strings.EqualFold(s, \"%2e\")",
+  "replace": "return s == \".\""
+ },
+ {
+  "name": "paths-dots-drive-pop",
+  "file": "node_paths.go",
+  "find": "if len(segments) > 0 && !onlyDrive {",
+  "replace": "if len(segments) > 0 {"
+ },
+ {
+  "name": "paths-dots-trailing",
+  "file": "node_paths.go",
+  "find": "\t\t\tif last {\n\t\t\t\tsegments = append(segments, \"\")\n\t\t\t}\n\t\tcase isDot(part):",
+  "replace": "\t\tcase isDot(part):"
+ },
+ {
+  "name": "paths-dots-drive-normalize",
+  "file": "node_paths.go",
+  "find": "part = part[:1] + \":\"",
+  "replace": ""
+ },
+ {
+  "name": "paths-dots-empty",
+  "file": "node_paths.go",
+  "find": "\tif path == \"\" {\n\t\treturn \"/\"\n\t}",
+  "replace": "\tif path == \"\" {\n\t\treturn \"\"\n\t}"
+ }
+]

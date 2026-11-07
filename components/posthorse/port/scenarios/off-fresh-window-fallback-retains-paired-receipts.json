@@ -1,0 +1,196 @@
+{
+ "name": "off-fresh-window-fallback-retains-paired-receipts",
+ "description": "official-host.ts:1052 'fresh-window fallback retains paired receipts with a compatible injected policy reader' (the injected reader returns enabled/16,384, the same values as the live settings, so the default reader is used here). new_context starts a fresh window; the model then reads six 80k-char receipts; once the fresh window crosses (scripted usage grows 20,000 tokens per receipt, as a real prompt does) the rollover line posthorse's fresh-window fallback commits a threshold boundary that keeps the last call/receipt pair and leaves its text out of the record.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "receipt.ts",
+   "source": "export default function (pi) {\n  let receipts = 0;\n  pi.registerTool({\n    name: \"receipt\", label: \"Receipt\", description: \"Read a sizable receipt\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() { return { content: [{ type: \"text\", text: `RECEIPT_${++receipts} ${\"r\".repeat(80000)}` }], details: {} }; },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Keep inspecting receipts."
+     }
+    }
+   ],
+   "usage": {
+    "input": 1500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 2500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 22500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 42500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 62500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 82500,
+    "output": 40
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "receipt",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 25000,
+    "output": 40
+   }
+  },
+  {
+   "text": "Done.",
+   "usage": {
+    "input": 45000,
+    "output": 40
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Inspect receipts."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

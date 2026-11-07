@@ -1,0 +1,155 @@
+{
+ "name": "off-note-publication-symlinks-modes-failure",
+ "description": "official-host.ts:1457 'note publication retains symlinks/modes, serializes write+append, and propagates failure'. Notes written through a symlink keep the link and the target's 0640 mode (write then append on the alias gives 'new\\ntail\\n'), a dangling link creates its target, a 250-char file name works, and a later failing write to a directory fails the batch so the new_context in it does not commit; no *.tmp file remains. (The session file is not captured and tool_execution_end is not captured: the four concurrent note writes complete, and append their posthorse-note-touch entries, in a host-timing order; their results are compared as toolResult messages in call order and the notes files with modes. tool_execution_end is not captured: tools of one batch complete in a host-timing order; results are compared as toolResult messages and the captured files.)",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "setup": [
+  [
+   "sh",
+   "-c",
+   "mkdir -p .pi/notes/directory && cd .pi/notes && printf old > target.md && chmod 640 target.md && ln -s target.md alias.md && ln -s new-target.md dangling.md"
+  ]
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "alias.md",
+      "content": "new"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "append",
+      "path": "alias.md",
+      "content": "tail"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "dangling.md",
+      "content": "created"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "{{repeat:n:250}}",
+      "content": "long filename"
+     }
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "directory",
+      "content": "failure"
+     }
+    },
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "MUST_NOT_COMMIT"
+     }
+    }
+   ]
+  },
+  {
+   "text": "Failed publication reported."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Update notes."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "workspace",
+   "glob": ".pi/notes/**",
+   "modes": true
+  }
+ ]
+}

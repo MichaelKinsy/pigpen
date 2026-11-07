@@ -1,0 +1,58 @@
+{
+  "started": "2026-11-06T23:56:39+0000",
+  "sides": [
+    "ts",
+    "pi"
+  ],
+  "workloads": [
+    "a",
+    "b",
+    "c1",
+    "c100",
+    "c1000",
+    "d50",
+    "d200",
+    "e",
+    "f"
+  ],
+  "samples": 15,
+  "cpus": [
+    186,
+    187,
+    188,
+    189,
+    190,
+    191
+  ],
+  "loadavg_start": [
+    9.2578125,
+    10.75537109375,
+    9.6728515625
+  ],
+  "versions": {
+    "pig": "0.7.0+1.5.0",
+    "pi": "1.5.0",
+    "node": "v24.22.1",
+    "go": "go version go1.27.3 linux/amd64",
+    "kernel": "Linux 6.8.0-124-generic",
+    "cpu": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "settle_s": 0.5,
+  "sessions": 60,
+  "args": [
+    "run",
+    "--out",
+    "/home/kinsy/ph-work/scratch/PerfLane/out/ts-baseline",
+    "--sides",
+    "ts,pi",
+    "--samples",
+    "15"
+  ],
+  "extension_sources_sha256": "9b4ede9cbb592d9c254dd50d225cf136186e3b905d36a2526f21a6e91c7305ca",
+  "finished": "2026-11-07T00:53:07+0000",
+  "loadavg_end": [
+    5.396484375,
+    7.115234375,
+    8.61669921875
+  ]
+}

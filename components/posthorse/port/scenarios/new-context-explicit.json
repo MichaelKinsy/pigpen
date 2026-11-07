@@ -1,0 +1,15 @@
+{
+  "name": "new-context-explicit",
+  "description": "The model calls new_context with a handoff; the reset commits at turn end (src/rollover.ts explicitReset, src/context-tools.ts) and the fresh window's first request carries only the handoff. The final session file shows the explicit compaction entry.",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 4096},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "session": {},
+  "project": {"messageFields": ["summary"]},
+  "llm": [
+    {"toolCalls": [{"name": "new_context", "arguments": {"handoff": "CONTINUE_HERE: finish the report"}}], "usage": {"input": 1500, "output": 40}},
+    {"text": "Recovered.", "usage": {"input": 900, "output": 5}}
+  ],
+  "steps": [{"name": "ask", "rpc": {"type": "prompt", "message": "RAW_ORIGINAL_OWNER: start the report, then reset."}}],
+  "captureFiles": [{"root": "sessions", "glob": "**/*.jsonl", "drop": ["**.sections.docs", "**.sections.preamble"]}]
+}

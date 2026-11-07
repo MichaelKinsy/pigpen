@@ -1,0 +1,143 @@
+{
+ "name": "nat-resume-legacy-window-recoverable",
+ "description": "native-host.ts:1453 official resume keeps legacy saved window data recoverable after a public reset: a saved session with an old `context_window` entry (handoff LEGACY_SAVED_HANDOFF) is resumed, new_context resets publicly, and history search/read recover the owner input and the legacy window record; the reopened file still holds both.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_99999999-9999-4999-8999-999999999999.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"99999999-9999-4999-8999-999999999999\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdowner1\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"LEGACY_OWNER_INPUT\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"sdreply1\", \"parentId\": \"sdowner1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"Saved response.\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000002000}}\n{\"type\": \"context_window\", \"id\": \"legacy-window\", \"parentId\": \"sdreply1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"handoff\": \"LEGACY_SAVED_HANDOFF\"}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Public fresh context"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "LEGACY_OWNER_INPUT"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "read",
+      "id": "legacy-window"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Recovered saved data.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_99999999-9999-4999-8999-999999999999.jsonl"
+   }
+  },
+  {
+   "name": "reset-and-recover",
+   "rpc": {
+    "type": "prompt",
+    "message": "Reset using public compaction, then recover the legacy record."
+   }
+  },
+  {
+   "name": "reopen-away",
+   "rpc": {
+    "type": "new_session"
+   }
+  },
+  {
+   "name": "reopen",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_99999999-9999-4999-8999-999999999999.jsonl"
+   }
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true,
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  }
+ ]
+}

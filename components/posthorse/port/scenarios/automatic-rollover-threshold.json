@@ -1,0 +1,22 @@
+{
+  "name": "automatic-rollover-threshold",
+  "description": "(project.drop removes compaction_end result.estimatedTokensAfter: Pi 1.5.0 and PiG count the host's own system prompt wording in it, 2677 vs 2659 here; see port/lane-HarnessExt.md Findings.) A response reports usage over the rollover line (context 20,000, reserve 4,000: line 16,001). Pi starts its threshold compaction after the run and posthorse answers session_before_compact with a recovery record instead of a model summary (src/rollover.ts prepareAutomatic, src/retention.ts). No summarization request reaches the model; the next prompt starts in the fresh window.",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 20000, "maxTokens": 1000},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 4000, "keepRecentTokens": 1}, "retry": {"enabled": false}},
+  "session": {},
+  "normalize": [{"pattern": "\\bentry [0-9a-f]{8}\\b", "replacement": "entry <entry-id>"}],
+    "capture": ["response", "extension_ui_request", "extension_error", "agent_start", "agent_end", "turn_start", "turn_end", "tool_execution_start", "tool_execution_end", "message_end", "compaction_start", "compaction_end"],
+  "project": {"messageFields": ["summary", "tokensBefore"], "drop": ["**.estimatedTokensAfter"]},
+  "llm": [
+    {"text": "First task done.", "usage": {"input": 3000, "output": 50}},
+    {"text": "Second task done.", "usage": {"input": 16500, "output": 60}},
+    {"text": "Third task done.", "usage": {"input": 1500, "output": 10}}
+  ],
+  "steps": [
+    {"name": "first", "rpc": {"type": "prompt", "message": "RAW_OWNER_ONE: first task."}},
+    {"name": "second", "rpc": {"type": "prompt", "message": "RAW_OWNER_TWO: second task."}, "settleMs": 600},
+    {"name": "third", "rpc": {"type": "prompt", "message": "RAW_OWNER_THREE: continue."}}
+  ],
+  "captureFiles": [{"root": "sessions", "glob": "**/*.jsonl", "drop": ["**.sections.docs", "**.sections.preamble"]}]
+}

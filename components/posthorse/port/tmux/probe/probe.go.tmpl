@@ -1,0 +1,105 @@
+package posthorse
+
+// Card probe for the tmux comparison (the twin of probe.ts): the port's own cards behind four tools whose results are
+// canned by fixtures.json. build_probe.py copies the port's ui*.go next to this file in a scratch module.
+
+import (
+	"encoding/json"
+	"errors"
+	"os"
+	"strings"
+	"time"
+
+	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+)
+
+type probeFixture struct {
+	Text    string `json:"text"`
+	Details any    `json:"details"`
+	Error   string `json:"error"`
+	Images  int    `json:"images"`
+	DelayMs int    `json:"delayMs"`
+	Partial *struct {
+		Text    string `json:"text"`
+		Details any    `json:"details"`
+	} `json:"partial"`
+}
+
+type probeMessage struct {
+	CustomType string `json:"customType"`
+	Content    string `json:"content"`
+	Details    any    `json:"details"`
+}
+
+const probePixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+
+// Extension is the probe factory.
+func Extension() *sdk.Extension {
+	raw, err := os.ReadFile(os.Getenv("POSTHORSE_TMUX_FIXTURES"))
+	if err != nil {
+		panic(err)
+	}
+	var file struct {
+		Tools    map[string]probeFixture `json:"tools"`
+		Messages map[string]probeMessage `json:"messages"`
+	}
+	if err := json.Unmarshal(raw, &file); err != nil {
+		panic(err)
+	}
+	ext := sdk.New("posthorse-probe")
+	for _, name := range []string{"notes", "history", "get_context_remaining", "new_context"} {
+		def := sdk.ToolDefinition{
+			Name: name, Label: name, Description: name + " card probe",
+			Parameters: sdk.Schema{"type": "object", "properties": map[string]any{}, "additionalProperties": true},
+			Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
+				key, _ := params["fixture"].(string)
+				fixture, ok := file.Tools[key]
+				if !ok {
+					return nil, errors.New("unknown fixture")
+				}
+				if fixture.Partial != nil {
+					_ = ctx.OnUpdate(sdk.ToolResult{Content: fixture.Partial.Text, Details: fixture.Partial.Details})
+				}
+				if fixture.DelayMs > 0 {
+					if err := ctx.Sleep(time.Duration(fixture.DelayMs) * time.Millisecond); err != nil {
+						return nil, err
+					}
+				}
+				if fixture.Error != "" {
+					return nil, errors.New(fixture.Error)
+				}
+				images := make([]sdk.ImageContent, fixture.Images)
+				for i := range images {
+					images[i] = sdk.ImageContent{Data: probePixel, MimeType: "image/png"}
+				}
+				return sdk.ToolResult{Content: fixture.Text, Images: images, Details: fixture.Details}, nil
+			},
+		}
+		applyToolCards(&def, name)
+		ext.RegisterTool(def)
+	}
+	registerPosthorseMessages(ext)
+	ext.Command("pt", "card probe: message <name> | theme <name>", func(ctx sdk.Context, args string) error {
+		fields := strings.Fields(args)
+		if len(fields) == 0 {
+			return nil
+		}
+		name := ""
+		if len(fields) > 1 {
+			name = fields[1]
+		}
+		if fields[0] == "theme" {
+			if name == "" {
+				name = "dark"
+			}
+			ctx.SetTheme(name)
+			return nil
+		}
+		message, ok := file.Messages[name]
+		if !ok {
+			return nil
+		}
+		return ctx.SendCustomMessage(sdk.CustomMessage{CustomType: message.CustomType, Content: message.Content, Display: true, Details: message.Details}, sdk.SendMessageOptions{TriggerTurn: new(false)})
+	})
+	return ext
+}

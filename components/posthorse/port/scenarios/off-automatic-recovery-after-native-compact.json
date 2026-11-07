@@ -1,0 +1,147 @@
+{
+ "name": "off-automatic-recovery-after-native-compact",
+ "description": "official-host.ts:1672 'automatic recovery after a native /compact excludes summarized inputs and keeps the native summary'. Two turns, a native compact (two summarization requests), then a prompt whose dump result crosses the line: the automatic record starts at the native kept tail (AFTER_COMPACT_OWNER, the native summary as 'older checkpoint; possibly stale'; ANCIENT_OWNER_REQUEST excluded) and no summary request is made for it.",
+ "systemDiff": "inserted",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 1
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi) {\n  let dumps = 0;\n  pi.registerTool({\n    name: \"dump\", label: \"Dump\", description: \"Oversized local output\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      const sizes = [600000];\n      const chars = sizes[Math.min(dumps++, sizes.length - 1)];\n      return { content: [{ type: \"text\", text: `DUMP_HEAD ${\"x\".repeat(chars)} DUMP_TAIL` }, ...[]], details: {}, terminate: false };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "text": "First response."
+  },
+  {
+   "text": "Second response."
+  },
+  {
+   "text": "NATIVE_MODEL_SUMMARY"
+  },
+  {
+   "text": "NATIVE_PREFIX_SUMMARY"
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "text": "Done."
+  }
+ ],
+ "steps": [
+  {
+   "name": "one",
+   "rpc": {
+    "type": "prompt",
+    "message": "ANCIENT_OWNER_REQUEST"
+   }
+  },
+  {
+   "name": "two",
+   "rpc": {
+    "type": "prompt",
+    "message": "Second owner turn."
+   }
+  },
+  {
+   "name": "compact",
+   "rpc": {
+    "type": "compact"
+   },
+   "quiet": true
+  },
+  {
+   "name": "after",
+   "rpc": {
+    "type": "prompt",
+    "message": "AFTER_COMPACT_OWNER: inspect only."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

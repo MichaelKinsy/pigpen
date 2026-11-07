@@ -1,0 +1,313 @@
+{
+ "name": "nat-fork-recovery-metadata-only-receipts",
+ "description": "native-host.ts:680 fork notes recover metadata-only nested writes through edited receipts and compaction: a codemode call writes a note whose body is over the per-call argument limit, its receipt is context-edited, a large local result triggers automatic rollover whose recovery handoff says the full content is not retained, a fork copies the written note, and once the receipt is explicitly omitted (context_edit null) a fork no longer seeds it. (The edits are appended to the session file by the harness command /eq-ctxedit and the session is reloaded: RPC cannot call SessionManager.appendContextEdit.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 128000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "codemode",
+     "arguments": {
+      "code": "await tools.notes({op:\"write\", path:\"metadata-only.md\", content:\"saved checkpoint \".repeat(1024)}); return \"Saved\";"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Saved.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Recovered.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "metadata-only.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child read.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "list"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Excluded child listed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "parent-file",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "parent": "data.sessionFile"
+   }
+  },
+  {
+   "name": "write",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save the checkpoint through codemode."
+   }
+  },
+  {
+   "name": "edit-receipt",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-ctxedit codemode Edited receipt without note content."
+   }
+  },
+  {
+   "name": "away",
+   "rpc": {
+    "type": "new_session"
+   }
+  },
+  {
+   "name": "reload",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "rollover",
+   "rpc": {
+    "type": "prompt",
+    "message": "Run the large local tool."
+   }
+  },
+  {
+   "name": "source-leaf",
+   "rpc": {
+    "type": "get_entries"
+   },
+   "quiet": true,
+   "save": {
+    "source": "data.entries.-1.id"
+   }
+  },
+  {
+   "name": "fork",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork {{var:source}} at"
+   }
+  },
+  {
+   "name": "child",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the note in the fork."
+   }
+  },
+  {
+   "name": "back",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "omit-receipt",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-ctxedit codemode null"
+   }
+  },
+  {
+   "name": "away2",
+   "rpc": {
+    "type": "new_session"
+   }
+  },
+  {
+   "name": "reload2",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "source2-leaf",
+   "rpc": {
+    "type": "get_entries"
+   },
+   "quiet": true,
+   "save": {
+    "source2": "data.entries.-1.id"
+   }
+  },
+  {
+   "name": "fork2",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-fork {{var:source2}} at"
+   }
+  },
+  {
+   "name": "excluded",
+   "rpc": {
+    "type": "prompt",
+    "message": "List the notes in the second fork."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "codemode.ts",
+   "source": "import { createCodemodeExtension } from \"@earendil-works/pi-coding-agent\";\nexport default createCodemodeExtension();\n",
+   "position": "before"
+  },
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"dump\",\n    label: \"Dump\",\n    description: \"Large local result to exercise native automatic rollover\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"x\".repeat(600000) }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "ctxedit.ts",
+   "source": "import * as fs from \"node:fs\";\nimport { randomBytes } from \"node:crypto\";\nexport default function (pi: any) {\n  pi.registerCommand(\"eq-ctxedit\", {\n    description: \"harness: append a context_edit for the last result of a tool (second word `null` omits it, else the replacement text)\",\n    handler: async (args: string, ctx: any) => {\n      const [tool, ...rest] = args.trim().split(/\\s+/);\n      const replacement = rest.join(\" \");\n      const file = ctx.sessionManager.getSessionFile();\n      const entries = ctx.sessionManager.getEntries();\n      const target = [...entries].reverse().find((e: any) => e.type === \"message\" && e.message?.role === \"toolResult\" && e.message.toolName === tool);\n      if (!target) throw new Error(\"eq-ctxedit: no \" + tool + \" result\");\n      const entry = {\n        type: \"context_edit\",\n        id: randomBytes(4).toString(\"hex\"),\n        parentId: ctx.sessionManager.getLeafId(),\n        timestamp: new Date().toISOString(),\n        targetId: target.id,\n        replacement: replacement === \"null\" ? null : { content: [{ type: \"text\", text: replacement }] },\n      };\n      fs.appendFileSync(file, JSON.stringify(entry) + \"\\n\");\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "args": [
+  "--tools",
+  "+codemode"
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  ".pi/notes/**",
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(\"anchors\":\\[\")[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  },
+  {
+   "pattern": "\"mtimeMs\":\\d+(?:\\.\\d+)?,\"ctimeMs\":\\d+(?:\\.\\d+)?,\"ino\":\\d+,\"dev\":\\d+",
+   "replacement": "\"mtimeMs\":<n>,\"ctimeMs\":<n>,\"ino\":<n>,\"dev\":<n>"
+  },
+  {
+   "pattern": "20(?:2[1-9]|[3-9]\\d)-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z",
+   "replacement": "<time-minute>"
+  },
+  {
+   "pattern": "Read [^ ]*/codemode\\.md first",
+   "replacement": "Read <codemode.md> first"
+  },
+  {
+   "pattern": "Wall time [0-9.]+ seconds",
+   "replacement": "Wall time <s> seconds"
+  },
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  }
+ ],
+ "project": {
+  "full": [
+   "message_end",
+   "tool_execution_end"
+  ],
+  "drop": [
+   "**.durationMs",
+   "**.parentToolCallId",
+   "**.sections.docs",
+   "**.sections.preamble",
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "collapseRuns": 64
+}

@@ -1,0 +1,58 @@
+{
+ "name": "ur-bigmsg-w100",
+ "replies": [
+  "unused"
+ ],
+ "width": 100,
+ "height": 60,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "/pt message m-big"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message w-big"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "send": "/pt message m-zalgo"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "wait": 1.5
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 2.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.5
+  }
+ ]
+}

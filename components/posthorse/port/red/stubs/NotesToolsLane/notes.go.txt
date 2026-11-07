@@ -1,0 +1,22 @@
+package posthorse
+
+import sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+
+// Red-phase stub of notes.go (port of src/notes.ts): the tool exists, every call fails.
+func registerNotes(ext *sdk.Extension, policy snapshotReader, pages pageAccess, store *notesStore) {
+	definition := sdk.ToolDefinition{
+		Name:       "notes",
+		Label:      "Notes",
+		Parameters: sdk.Schema{"type": "object", "properties": map[string]any{"op": map[string]any{"type": "string"}, "path": map[string]any{"type": "string"}, "scope": map[string]any{"type": "string"}, "content": map[string]any{"type": "string"}, "query": map[string]any{"type": "string"}, "offset": map[string]any{"type": "integer"}}, "required": []any{"op"}},
+		Execute: func(ctx sdk.Context, raw map[string]any) (any, error) {
+			return nil, errUnported("src/notes.ts:286")
+		},
+	}
+	applyToolCards(&definition, "notes")
+	ext.RegisterTool(definition)
+}
+
+type unportedError string
+
+func (e unportedError) Error() string { return "unported: " + string(e) }
+func errUnported(where string) error  { return unportedError(where) }

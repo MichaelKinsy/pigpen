@@ -1,0 +1,77 @@
+{
+ "name": "nat-reminder-after-native-compaction-in-window",
+ "description": "native-host.ts:2593 public checkpoint reminder reaches the model after Pi compacts inside a rollover window: a saved session whose latest window was natively compacted (the window marker is gone); a working turn in the reminder band (reported usage 76,000 of 100,000) ends with get_context_remaining and the next request carries the routine task-note reminder and no `Context window ... starts here` marker. (The 305,000-character prompt of the upstream test is replaced by the reported usage.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_e0000000-0000-4000-8000-000000000000.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"e0000000-0000-4000-8000-000000000000\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdfirst01\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"first window\", \"timestamp\": 1793000001000}}\n{\"type\": \"message\", \"id\": \"sdfirst02\", \"parentId\": \"sdfirst01\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ok\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000002000}}\n{\"type\": \"compaction\", \"id\": \"sdreset01\", \"parentId\": \"sdfirst02\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"summary\": \"prior handoff\", \"firstKeptEntryId\": null, \"tokensBefore\": 100, \"details\": {\"posthorse\": 1}}\n{\"type\": \"message\", \"id\": \"sdsecond1\", \"parentId\": \"sdreset01\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"second window, summarized\", \"timestamp\": 1793000003000}}\n{\"type\": \"message\", \"id\": \"sdsecond2\", \"parentId\": \"sdsecond1\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ok\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000004000}}\n{\"type\": \"message\", \"id\": \"sdkept001\", \"parentId\": \"sdsecond2\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"second window, kept\", \"timestamp\": 1793000005000}}\n{\"type\": \"message\", \"id\": \"sdkept002\", \"parentId\": \"sdkept001\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"assistant\", \"content\": [{\"type\": \"text\", \"text\": \"ok\"}], \"api\": \"openai-completions\", \"provider\": \"eq-llm\", \"model\": \"eq-1\", \"usage\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"totalTokens\": 0, \"cost\": {\"input\": 0, \"output\": 0, \"cacheRead\": 0, \"cacheWrite\": 0, \"total\": 0}}, \"stopReason\": \"stop\", \"timestamp\": 1793000006000}}\n{\"type\": \"compaction\", \"id\": \"sdcompact\", \"parentId\": \"sdkept002\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"summary\": \"Pi summary of the window's start\", \"firstKeptEntryId\": \"sdkept001\", \"tokensBefore\": 5000}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "get_context_remaining",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 76000,
+    "output": 100
+   }
+  },
+  {
+   "text": "Checkpoint reminder received",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_e0000000-0000-4000-8000-000000000000.jsonl"
+   }
+  },
+  {
+   "name": "work",
+   "rpc": {
+    "type": "prompt",
+    "message": "Keep working."
+   }
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "project": {
+  "skipSystem": true
+ },
+ "normalize": []
+}

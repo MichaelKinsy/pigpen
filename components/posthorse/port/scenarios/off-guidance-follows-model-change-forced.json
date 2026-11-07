@@ -1,0 +1,141 @@
+{
+ "name": "off-guidance-follows-model-change-forced",
+ "description": "official-host.ts:340 'context guidance follows model/settings changes during continuation and reset (forced=True)'. The model calls a helper tool that switches to a larger model (settings carry a per-model reserve override for it, standing in for the test's applyOverrides of the reserve), then calls new_context; the system guidance of the continuation and of the fresh window must state the new capacity (272,000) and rollover line (208,001) and only once, next to the other extension's OTHER_POLICY. The small model's first request states 100,000 / 83,617.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "models": [
+  {
+   "id": "large",
+   "contextWindow": 272000,
+   "maxTokens": 1000
+  }
+ ],
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000,
+   "modelOverrides": {
+    "eq-llm/large": {
+     "reserveTokens": 64000
+    }
+   }
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "switch.ts",
+   "source": "export default function (pi) {\n  pi.registerTool({\n    name: \"switch_model\", label: \"Switch model\", description: \"Switch the active model and reserve\",\n    parameters: { type: \"object\", properties: {} },\n    async execute(_id, _params, _signal, _update, ctx) {\n      const large = ctx.modelRegistry.find(\"eq-llm\", \"large\");\n      if (!large) throw new Error(\"large model missing\");\n      await pi.setModel(large);\n      return { content: [{ type: \"text\", text: \"Switched.\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "other.ts",
+   "source": "export default function (pi) {\n  pi.on(\"before_agent_start\", (event) => ({ systemPrompt: `${event.systemPrompt}\\n\\nOTHER_POLICY` }));\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "switch_model",
+     "arguments": {}
+    }
+   ]
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "Continue with the larger model."
+     }
+    }
+   ]
+  },
+  {
+   "text": "Fresh."
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "Switch model, then start a fresh context."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  }
+ ]
+}

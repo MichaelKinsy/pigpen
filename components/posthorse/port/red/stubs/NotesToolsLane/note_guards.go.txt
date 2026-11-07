@@ -1,0 +1,6 @@
+package posthorse
+
+import sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+
+// Red-phase stub of note_guards.go (port of src/note-guards.ts): no hook is registered.
+func registerNoteGuards(ext *sdk.Extension, store *notesStore) {}

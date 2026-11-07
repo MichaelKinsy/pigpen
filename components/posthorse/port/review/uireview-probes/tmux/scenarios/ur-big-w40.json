@@ -1,0 +1,65 @@
+{
+ "name": "ur-big-w40",
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "big.md",
+      "fixture": "note-big"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "t.md",
+      "fixture": "note-thai"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 40,
+ "height": 60,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 60
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 2.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.5
+  }
+ ]
+}

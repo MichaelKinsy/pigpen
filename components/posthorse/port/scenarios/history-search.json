@@ -1,0 +1,26 @@
+{
+  "name": "history-search",
+  "description": "After an explicit reset the first window's owner input has left the active context: history search finds it (src/history.ts, src/history-search.ts, src/history-pages.ts) and history read returns the entry by the id the session recorded. An all-sessions search runs ripgrep over the session directory (src/session-files.ts ripgrepFilter).",
+  "systemDiff": "hunks",
+  "model": {"contextWindow": 100000, "maxTokens": 4096},
+  "settings": {"compaction": {"enabled": true, "reserveTokens": 16384, "keepRecentTokens": 20000}, "retry": {"enabled": false}},
+  "session": {},
+  "commands": {"rg": {"mode": "real"}},
+  "normalize": [
+    {"pattern": "\\b[0-9a-f]{8}\\b", "replacement": "<entry-id>"},
+    {"pattern": "@[A-Za-z0-9_-]{10}\\b", "replacement": "@<file-key>"}
+  ],
+  "llm": [
+    {"toolCalls": [{"name": "new_context", "arguments": {"handoff": "Look the first request up in history."}}], "usage": {"input": 1200, "output": 30}},
+    {"text": "Fresh window ready.", "usage": {"input": 900, "output": 5}},
+    {"toolCalls": [{"name": "history", "arguments": {"op": "search", "query": "raw_original_owner"}}], "usage": {"input": 1000, "output": 20}},
+    {"toolCalls": [{"name": "history", "arguments": {"op": "read", "id": "{{var:owner}}"}}], "usage": {"input": 1200, "output": 20}},
+    {"toolCalls": [{"name": "history", "arguments": {"op": "search", "query": "raw_original_owner", "all": true}}], "usage": {"input": 1400, "output": 20}},
+    {"text": "History checked.", "usage": {"input": 1600, "output": 5}}
+  ],
+  "steps": [
+    {"name": "first-window", "rpc": {"type": "prompt", "message": "RAW_ORIGINAL_OWNER: remember the code word ZEBRA, then reset."}},
+    {"name": "entries", "rpc": {"type": "get_entries"}, "quiet": true, "save": {"owner": "data.entries.[message.role=user].id"}},
+    {"name": "search-and-read", "rpc": {"type": "prompt", "message": "Find the first request again."}}
+  ]
+}

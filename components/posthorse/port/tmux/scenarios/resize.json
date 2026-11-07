@@ -1,0 +1,99 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "plan.md",
+      "fixture": "note-short"
+     }
+    },
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "ledger.md",
+      "fixture": "note-long"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "Relay station",
+      "all": true,
+      "fixture": "history-search"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 100,
+ "height": 64,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "w100",
+   "settle": 1.0
+  },
+  {
+   "resize": [
+    60,
+    64
+   ]
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "w60",
+   "settle": 1.0
+  },
+  {
+   "resize": [
+    30,
+    64
+   ]
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "w30",
+   "settle": 1.0
+  },
+  {
+   "resize": [
+    100,
+    64
+   ]
+  },
+  {
+   "wait": 1.0
+  },
+  {
+   "snap": "w100-again",
+   "settle": 1.0
+  }
+ ],
+ "name": "resize"
+}

@@ -1,0 +1,261 @@
+{
+ "tools": {
+  "note-short": {
+   "text": "File: /work/.pi/notes/plan.md\nA readable note\nsecond line",
+   "details": {
+    "kind": "note-read",
+    "headerLength": 30,
+    "offset": 0,
+    "end": 27,
+    "total": 27
+   }
+  },
+  "note-long": {
+   "text": "File: /work/.pi/notes/ledger.md\nSTART 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é  END",
+   "details": {
+    "kind": "note-read",
+    "headerLength": 32,
+    "offset": 0,
+    "end": 490,
+    "total": 490
+   }
+  },
+  "note-empty": {
+   "text": "",
+   "details": {
+    "kind": "note-read",
+    "headerLength": 0,
+    "offset": 0,
+    "end": 0,
+    "total": 0
+   }
+  },
+  "note-write": {
+   "text": "Wrote .pi/notes/draft.md",
+   "details": {
+    "kind": "note-write"
+   }
+  },
+  "note-append": {
+   "text": "Appended to .pi/notes/draft.md",
+   "details": {
+    "kind": "note-append"
+   }
+  },
+  "notes-list": {
+   "text": "Notes directory: /work/.pi/notes\na.md  12B  2026-09-06T17:43Z\nb.md  40B  2026-09-06T17:40Z\nc.md  7B  2026-09-06T17:30Z",
+   "details": {
+    "kind": "notes-list",
+    "headerLength": 33,
+    "count": 3,
+    "page": {
+     "offset": 0,
+     "end": 100,
+     "total": 100
+    }
+   }
+  },
+  "notes-search-more": {
+   "text": "a.md:1: needle 1\nb.md:2: needle 2\n[chars 0-34; more matches follow; continue with offset 34]",
+   "details": {
+    "kind": "notes-search",
+    "headerLength": 0,
+    "count": 2,
+    "page": {
+     "offset": 0,
+     "end": 34,
+     "total": 400
+    },
+    "more": true
+   }
+  },
+  "notes-none": {
+   "text": "(no notes yet)",
+   "details": {
+    "kind": "notes-list",
+    "headerLength": 0,
+    "count": 0,
+    "page": {
+     "offset": 0,
+     "end": 14,
+     "total": 14
+    }
+   }
+  },
+  "plain-long": {
+   "text": "line 0 word word word word word word word word word word word word \nline 1 word word word word word word word word word word word word \nline 2 word word word word word word word word word word word word \nline 3 word word word word word word word word word word word word \nline 4 word word word word word word word word word word word word \nline 5 word word word word word word word word word word word word \nline 6 word word word word word word word word word word word word \nline 7 word word word word word word word word word word word word \nline 8 word word word word word word word word word word word word \nline 9 word word word word word word word word word word word word \nline 10 word word word word word word word word word word word word \nline 11 word word word word word word word word word word word word \nline 12 word word word word word word word word word word word word \nline 13 word word word word word word word word word word word word \nline 14 word word word word word word word word word word word word \nline 15 word word word word word word word word word word word word \nline 16 word word word word word word word word word word word word \nline 17 word word word word word word word word word word word word \nline 18 word word word word word word word word word word word word \nline 19 word word word word word word word word word word word word \nline 20 word word word word word word word word word word word word \nline 21 word word word word word word word word word word word word \nline 22 word word word word word word word word word word word word \nline 23 word word word word word word word word word word word word \nline 24 word word word word word word word word word word word word \nline 25 word word word word word word word word word word word word \nline 26 word word word word word word word word word word word word \nline 27 word word word word word word word word word word word word \nline 28 word word word word word word word word word word word word \nline 29 word word word word word word word word word word word word "
+  },
+  "error-missing": {
+   "error": "No note at missing.md. Use list."
+  },
+  "history-search": {
+   "text": "2026-09-06T17:43:46Z [window w1] [entry-0] [user] Relay station 0: route details Relay station 0: route details Relay station 0: route details \n2026-09-06T17:43:46Z [window w1] [entry-1] [user] Relay station 1: route details Relay station 1: route details Relay station 1: route details \n2026-09-06T17:43:46Z [window w1] [entry-2] [user] Relay station 2: route details Relay station 2: route details Relay station 2: route details \n2026-09-06T17:43:46Z [window w1] [entry-3] [user] Relay station 3: route details Relay station 3: route details Relay station 3: route details \n2026-09-06T17:43:46Z [window w1] [entry-4] [user] Relay station 4: route details Relay station 4: route details Relay station 4: route details \n2026-09-06T17:43:46Z [window w1] [entry-5] [user] Relay station 5: route details Relay station 5: route details Relay station 5: route details \n[More results; continue with cursor \"abc123\"]",
+   "details": {
+    "kind": "history-search",
+    "entries": [
+     {
+      "headerLength": 50,
+      "length": 143
+     },
+     {
+      "headerLength": 50,
+      "length": 143
+     },
+     {
+      "headerLength": 50,
+      "length": 143
+     },
+     {
+      "headerLength": 50,
+      "length": 143
+     },
+     {
+      "headerLength": 50,
+      "length": 143
+     },
+     {
+      "headerLength": 50,
+      "length": 143
+     }
+    ],
+    "footerLength": 46,
+    "more": true,
+    "skipped": 2
+   }
+  },
+  "history-empty": {
+   "text": "No history matches \"absent\".",
+   "details": {
+    "kind": "history-search",
+    "entries": [],
+    "footerLength": 0,
+    "more": false,
+    "skipped": 0
+   }
+  },
+  "history-read-images": {
+   "text": "2026-09-06T17:43:46Z [window w1] [pic] [chars 0-40 of 9000] route route route route route route \nMore remains; call history read with id \"pic\" and offset 40 and imageOffset 1.",
+   "images": 2,
+   "details": {
+    "kind": "history-read",
+    "headerLength": 60,
+    "offset": 0,
+    "end": 40,
+    "total": 9000,
+    "imageOffset": 0,
+    "imageEnd": 1,
+    "imageTotal": 2
+   }
+  },
+  "history-legacy": {
+   "text": "archive.jsonl 2026-09-06T17:43:46Z [window old] [owner-1] [user] Relay station is ready.\nSECOND LINE"
+  },
+  "context-enabled": {
+   "text": "≈90,000 tokens until automatic rollover (line at 91,000); ≈99,000 tokens until the configured context limit (1,000/100,000 used, 1%). Best available native estimate.",
+   "details": {
+    "kind": "context",
+    "usage": {
+     "tokens": 1000,
+     "contextWindow": 100000,
+     "percent": 1
+    },
+    "rollover": "enabled",
+    "rolloverAt": 91000
+   }
+  },
+  "context-unsupported": {
+   "text": "Automatic rollover is unsupported for this window. ≈7,000 tokens until the configured context limit (1,192/8,192 used, 15%). Best available native estimate.",
+   "details": {
+    "kind": "context",
+    "usage": {
+     "tokens": 1192,
+     "contextWindow": 8192,
+     "percent": 14.55
+    },
+    "rollover": "unsupported"
+   }
+  },
+  "context-disabled": {
+   "text": "Automatic rollover is disabled in the available settings (Pi compaction.enabled=false). ≈99,000 tokens until the configured context limit (1,000/100,000 used, 1%). Best available native estimate.",
+   "details": {
+    "kind": "context",
+    "usage": {
+     "tokens": 1000,
+     "contextWindow": 100000,
+     "percent": 1
+    },
+    "rollover": "disabled"
+   }
+  },
+  "context-unknown": {
+   "text": "Context usage is not known until the next model response.",
+   "details": {
+    "kind": "context"
+   }
+  },
+  "new-context": {
+   "text": "Requested after foreground tools succeed.\nBackground work continues.",
+   "details": {
+    "kind": "new-context"
+   }
+  },
+  "running": {
+   "delayMs": 5000,
+   "partial": {
+    "text": "still working on it",
+    "details": {
+     "kind": "note-write"
+    }
+   },
+   "text": "Wrote .pi/notes/late.md",
+   "details": {
+    "kind": "note-write"
+   }
+  },
+  "controls": {
+   "text": "safe head \u001b[2J\u001b]52;c;c2VjcmV0\u0007\u001b_hidden\u001b\\ safe tail\u0000\r",
+   "details": {
+    "kind": "note-write"
+   }
+  },
+  "malformed-details": {
+   "text": "text kept",
+   "details": {
+    "kind": "history-search",
+    "entries": [
+     null
+    ]
+   }
+  }
+ },
+ "messages": {
+  "reminder": {
+   "customType": "posthorse-reminder",
+   "content": "Checkpoint now: save notes before the window fills.\nremember this\nremember this\nremember this\nremember this\nremember this\nremember this\nLAST LINE"
+  },
+  "reminder-short": {
+   "customType": "posthorse-reminder",
+   "content": "one\ntwo\nthree"
+  },
+  "window": {
+   "customType": "context-window",
+   "content": "Context window window-2 starts here. Earlier conversation is not available in this window.\n\nHandoff from the previous window:\nHandoff line 1\nHandoff line 2\nHandoff line 3\nHandoff line 4\nHandoff line 5\nHandoff line 6\nHandoff line 7\nHandoff line 8\nHandoff line 9\nHandoff line 10\nHandoff line 11\nHandoff line 12\nHandoff line 13\nHandoff line 14\nHandoff line 15\nHandoff line 16\nHandoff line 17\nHandoff line 18\nHandoff line 19\nHandoff line 20\nHandoff line 21\nHandoff line 22\nHandoff line 23\nHandoff line 24\nHandoff line 25\nHandoff line 26\nHandoff line 27\nHandoff line 28\nHandoff line 29\nHandoff line 30\nHandoff line 31\nHandoff line 32\nHandoff line 33\nHandoff line 34\nHandoff line 35\nHandoff line 36\nHandoff line 37\nHandoff line 38\nHandoff line 39\nHandoff line 40\nHandoff line 41\nHandoff line 42\nHandoff line 43\nHandoff line 44\nHandoff line 45\nHandoff line 46\nHandoff line 47\nHandoff line 48\nHandoff line 49\nHandoff line 50\nHandoff line 51\nHandoff line 52\nHandoff line 53\nHandoff line 54\nHandoff line 55\nHandoff line 56\nHandoff line 57\nHandoff line 58\nHandoff line 59\nHandoff line 60",
+   "details": {
+    "windowId": "window-2",
+    "tokensBefore": 1000
+   }
+  },
+  "window-wide": {
+   "customType": "context-window",
+   "content": "Context window window-3 starts here.\n\nHandoff from the previous window:\n界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é 界 👩🏽‍💻 é ",
+   "details": {
+    "windowId": "window-3",
+    "tokensBefore": 2000
+   }
+  },
+  "controls": {
+   "customType": "posthorse-reminder",
+   "content": "Checkpoint now\nremember\nremember\nremember\nremember\nremember\nremember\nremember\nremember\nLAST\u001b[2J\u001b]52;c;c2VjcmV0\u0007\u0000"
+  }
+ }
+}

@@ -1,0 +1,200 @@
+{
+ "name": "off-explicit-reset-preserves-state",
+ "description": "official-host.ts:245 'official explicit reset preserves system/tools and raw transcript; notes/history work after reset and resume'. Turn 1 writes a note and calls new_context in one batch; a helper turn_end hook BEFORE posthorse appends a draft entry that the explicit reset must preserve; the fresh window carries only the handoff, then notes read and history search recover state (tool_execution_end is not captured: the notes write and new_context of one batch complete in a host-timing order, which differs between the TS original and the Go port; their results are compared through the toolResult messages and the session file); the session is resumed (switch_session of its own file) and history search finds the raw owner input again. The session file shows the raw transcript, the explicit boundary and the preserved draft.",
+ "systemDiff": "hunks",
+ "collapseRuns": 512,
+ "model": {
+  "id": "official-posthorse",
+  "contextWindow": 100000,
+  "maxTokens": 1000
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "normalize": [
+  {
+   "pattern": "^[0-9a-f]{8}$",
+   "replacement": "<entry-id>"
+  },
+  {
+   "pattern": "\"id\":\"[0-9a-f]{8}\"",
+   "replacement": "\"id\":\"<entry-id>\""
+  },
+  {
+   "pattern": "\\b(entry|entries|id|window|through|and) [0-9a-f]{8}\\b",
+   "replacement": "$1 <entry-id>"
+  },
+  {
+   "pattern": "\\bid \"[0-9a-f]{8}\"",
+   "replacement": "id \"<entry-id>\""
+  },
+  {
+   "pattern": "(use history read\\): |, )[0-9a-f]{8}\\b",
+   "replacement": "$1<entry-id>"
+  },
+  {
+   "pattern": "\\[[0-9a-f]{8}\\]",
+   "replacement": "[<entry-id>]"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "message_end",
+  "compaction_start",
+  "compaction_end",
+  "auto_retry_start",
+  "auto_retry_end"
+ ],
+ "project": {
+  "messageFields": [
+   "errorMessage",
+   "summary"
+  ],
+  "drop": [
+   "**.estimatedTokensAfter",
+   "**.tokensBefore"
+  ]
+ },
+ "extensions": [
+  {
+   "name": "prior.ts",
+   "source": "export default function (pi) {\n  pi.on(\"turn_end\", (event) =>\n    event.toolResults.some((result) => result.toolName === \"new_context\")\n      ? { entries: [...event.entries, { type: \"custom\", customType: \"prior-reset-state\", data: { preserved: true } }] }\n      : undefined);\n}\n",
+   "position": "before"
+  }
+ ],
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "task.md",
+      "content": "DURABLE_NEXT_STEP"
+     }
+    },
+    {
+     "name": "new_context",
+     "arguments": {
+      "handoff": "CONTINUE_HERE"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1500,
+    "output": 60
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "task.md"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "RAW_ORIGINAL_OWNER"
+     }
+    }
+   ],
+   "usage": {
+    "input": 900,
+    "output": 40
+   }
+  },
+  {
+   "text": "Recovered.",
+   "usage": {
+    "input": 1200,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "RAW_ORIGINAL_OWNER"
+     }
+    }
+   ],
+   "usage": {
+    "input": 900,
+    "output": 40
+   }
+  },
+  {
+   "text": "Recovered after resume.",
+   "usage": {
+    "input": 1200,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "ask",
+   "rpc": {
+    "type": "prompt",
+    "message": "RAW_ORIGINAL_OWNER: save state and reset."
+   }
+  },
+  {
+   "name": "state",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "file": "data.sessionFile"
+   }
+  },
+  {
+   "name": "resume",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:file}}"
+   }
+  },
+  {
+   "name": "after-resume",
+   "rpc": {
+    "type": "prompt",
+    "message": "Look the original request up again."
+   }
+  }
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.tokensBefore"
+   ]
+  },
+  ".pi/**"
+ ]
+}

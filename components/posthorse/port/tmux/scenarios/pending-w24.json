@@ -1,0 +1,61 @@
+{
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "late.md",
+      "content": "hello",
+      "fixture": "running"
+     }
+    }
+   ],
+   "chunk": 14,
+   "delay": 0.5
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 24,
+ "height": 40,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "Notes \u00b7",
+   "timeout": 30
+  },
+  {
+   "snap": "preparing",
+   "settle": 0.2
+  },
+  {
+   "until": "still",
+   "timeout": 30
+  },
+  {
+   "snap": "running",
+   "settle": 0.5
+  },
+  {
+   "until": "all done",
+   "timeout": 40
+  },
+  {
+   "snap": "finished",
+   "settle": 1.0
+  }
+ ],
+ "name": "pending-w24"
+}

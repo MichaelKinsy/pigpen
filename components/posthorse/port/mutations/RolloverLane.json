@@ -1,0 +1,1364 @@
+[
+ {
+  "name": "cut-role-assistant-dropped",
+  "file": "retention.go",
+  "find": "case \"user\", \"assistant\", \"bashExecution\", \"custom\", \"branchSummary\", \"compactionSummary\":",
+  "replace": "case \"user\", \"bashExecution\", \"custom\", \"branchSummary\", \"compactionSummary\":"
+ },
+ {
+  "name": "cut-role-custom-dropped",
+  "file": "retention.go",
+  "find": "case \"user\", \"assistant\", \"bashExecution\", \"custom\", \"branchSummary\", \"compactionSummary\":",
+  "replace": "case \"user\", \"assistant\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":"
+ },
+ {
+  "name": "safe-start-compaction-allowed",
+  "file": "retention.go",
+  "find": "\tif entryType(entry.sourceEntry) == \"compaction\" {\n\t\treturn false\n\t}\n\tfor _, message := range entry.messages {\n\t\trole, _ := str(message, \"role\")",
+  "replace": "\tfor _, message := range entry.messages {\n\t\trole, _ := str(message, \"role\")"
+ },
+ {
+  "name": "safe-start-system-allowed",
+  "file": "retention.go",
+  "find": "if role != \"system\" && isCutRole(role) {",
+  "replace": "if role == \"system\" || isCutRole(role) {"
+ },
+ {
+  "name": "message-cost-off-by-one",
+  "file": "retention.go",
+  "find": "func messageCost(message rec) int { return sdk.EstimateTokens(message) }",
+  "replace": "func messageCost(message rec) int { return sdk.EstimateTokens(message) + 1 }"
+ },
+ {
+  "name": "projected-cut-compaction-materialized",
+  "file": "retention.go",
+  "find": "if len(entry.messages) == 0 || entryType(entry.sourceEntry) == \"compaction\" {",
+  "replace": "if len(entry.messages) == 0 {"
+ },
+ {
+  "name": "projected-cut-empty-materialized",
+  "file": "retention.go",
+  "find": "if len(entry.messages) == 0 || entryType(entry.sourceEntry) == \"compaction\" {",
+  "replace": "if entryType(entry.sourceEntry) == \"compaction\" {"
+ },
+ {
+  "name": "projected-cut-system-kept",
+  "file": "retention.go",
+  "find": "\t\t\tmessage = emptyUserMessage",
+  "replace": "\t\t\t_ = emptyUserMessage"
+ },
+ {
+  "name": "projected-cut-owner-index-lost",
+  "file": "retention.go",
+  "find": "return owner[cut.FirstKeptEntryIndex]",
+  "replace": "return cut.FirstKeptEntryIndex"
+ },
+ {
+  "name": "projected-cut-keep-doubled",
+  "file": "retention.go",
+  "find": "sdk.FindCutPoint(materialized, 0, len(materialized), keep)",
+  "replace": "sdk.FindCutPoint(materialized, 0, len(materialized), keep*4)"
+ },
+ {
+  "name": "paired-calls-not-recorded",
+  "file": "retention.go",
+  "find": "\t\t\t\t\tcalls[id] = struct{}{}",
+  "replace": "\t\t\t\t\t_ = id"
+ },
+ {
+  "name": "paired-orphan-allowed",
+  "file": "retention.go",
+  "find": "if _, ok := calls[id]; !ok {",
+  "replace": "if _, ok := calls[id]; !ok && false {"
+ },
+ {
+  "name": "paired-open-call-allowed",
+  "file": "retention.go",
+  "find": "return len(calls) == 0",
+  "replace": "return true"
+ },
+ {
+  "name": "bounded-compaction-cost-counted",
+  "file": "retention.go",
+  "find": "\t\tif entryType(entry.sourceEntry) == \"compaction\" {\n\t\t\tcontinue\n\t\t}",
+  "replace": "\t\tif false {\n\t\t\tcontinue\n\t\t}"
+ },
+ {
+  "name": "bounded-system-cost-counted",
+  "file": "retention.go",
+  "find": "if role, _ := str(message, \"role\"); role != \"system\" {\n\t\t\t\tcosts[offset]",
+  "replace": "if role, _ := str(message, \"role\"); role == \"system\" || true {\n\t\t\t\tcosts[offset]"
+ },
+ {
+  "name": "bounded-zero-tokens-allowed",
+  "file": "retention.go",
+  "find": "if tokens > 0 && tokens <= maxTokens && safeStart(entry) {",
+  "replace": "if tokens >= 0 && tokens <= maxTokens && safeStart(entry) {"
+ },
+ {
+  "name": "bounded-budget-exclusive",
+  "file": "retention.go",
+  "find": "if tokens > 0 && tokens <= maxTokens && safeStart(entry) {",
+  "replace": "if tokens > 0 && tokens < maxTokens && safeStart(entry) {"
+ },
+ {
+  "name": "bounded-safe-start-ignored",
+  "file": "retention.go",
+  "find": "if tokens > 0 && tokens <= maxTokens && safeStart(entry) {",
+  "replace": "if tokens > 0 && tokens <= maxTokens {"
+ },
+ {
+  "name": "bounded-pairing-ignored",
+  "file": "retention.go",
+  "find": "\t\t\tif pairedTail(tail) {",
+  "replace": "\t\t\tif len(tail) > 0 {"
+ },
+ {
+  "name": "bounded-ids-not-collected",
+  "file": "retention.go",
+  "find": "\t\t\t\t\tids[id] = struct{}{}",
+  "replace": "\t\t\t\t\t_ = id"
+ },
+ {
+  "name": "bounded-first-kept-flag-lost",
+  "file": "retention.go",
+  "find": "return retainedTail{firstKeptEntryID: id, hasFirstKept: ok, ids: ids}",
+  "replace": "return retainedTail{firstKeptEntryID: id, hasFirstKept: ok && false, ids: ids}"
+ },
+ {
+  "name": "bounded-first-kept-id-lost",
+  "file": "retention.go",
+  "find": "return retainedTail{firstKeptEntryID: id, hasFirstKept: ok, ids: ids}",
+  "replace": "return retainedTail{firstKeptEntryID: id + \"x\", hasFirstKept: ok, ids: ids}"
+ },
+ {
+  "name": "bounded-tokens-added-back",
+  "file": "retention.go",
+  "find": "\t\ttokens -= cost",
+  "replace": "\t\ttokens += cost"
+ },
+ {
+  "name": "bounded-tokens-never-reduced",
+  "file": "retention.go",
+  "find": "\t\ttokens -= cost",
+  "replace": "\t\ttokens -= cost * 0"
+ },
+ {
+  "name": "retained-default-keep-zero",
+  "file": "retention.go",
+  "find": "keep := sdk.DefaultCompactionSettings.KeepRecentTokens",
+  "replace": "keep := 0"
+ },
+ {
+  "name": "retained-settings-keep-ignored",
+  "file": "retention.go",
+  "find": "\t\tkeep = *settings.keepRecentTokens",
+  "replace": "\t\tkeep = keep + 0"
+ },
+ {
+  "name": "retained-keep-zero-allowed",
+  "file": "retention.go",
+  "find": "if keep <= 0 || maxTokens <= 0 {",
+  "replace": "if keep < 0 || maxTokens <= 0 {"
+ },
+ {
+  "name": "retained-boundary-needs-no-messages",
+  "file": "retention.go",
+  "find": "if entryType(entry.sourceEntry) == \"compaction\" && len(entry.messages) > 0 {",
+  "replace": "if entryType(entry.sourceEntry) == \"compaction\" {"
+ },
+ {
+  "name": "retained-boundary-itself-included",
+  "file": "retention.go",
+  "find": "entries := projected[boundary+1:]",
+  "replace": "entries := projected[max(boundary, 0):]"
+ },
+ {
+  "name": "retained-empty-guard-off-by-one",
+  "file": "retention.go",
+  "find": "if len(entries) == 0 {",
+  "replace": "if len(entries) <= 1 {"
+ },
+ {
+  "name": "retained-prepared-first-ignored",
+  "file": "retention.go",
+  "find": "\tstart := prepared\n\tif start < 0 {",
+  "replace": "\tstart := prepared\n\tif start <= 0 {"
+ },
+ {
+  "name": "source-id-absent-want",
+  "file": "retention.go",
+  "find": "\tif !wantPresent {\n\t\treturn !present",
+  "replace": "\tif !wantPresent {\n\t\treturn present"
+ },
+ {
+  "name": "source-id-match-any",
+  "file": "retention.go",
+  "find": "return ok && s == want",
+  "replace": "return ok && (s == want || true)"
+ },
+ {
+  "name": "recovery-limit-max",
+  "file": "retention.go",
+  "find": "limit := min(maxHandoffChars, payload)",
+  "replace": "limit := max(maxHandoffChars, payload)"
+ },
+ {
+  "name": "recovery-min-page-doubled",
+  "file": "retention.go",
+  "find": "if limit < minPageChars {",
+  "replace": "if limit < minPageChars*2 {"
+ },
+ {
+  "name": "recovery-payload-cap-handoff",
+  "file": "retention.go",
+  "find": "freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxSafeInteger)",
+  "replace": "freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxHandoffChars)"
+ },
+ {
+  "name": "recovery-pending-ignored",
+  "file": "retention.go",
+  "find": "freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxSafeInteger)",
+  "replace": "freshPayloadChars(capacity.host, capacity.toolTokens, nil, maxSafeInteger)"
+ },
+ {
+  "name": "recovery-tool-tokens-ignored",
+  "file": "retention.go",
+  "find": "freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxSafeInteger)",
+  "replace": "freshPayloadChars(capacity.host, 0, capacity.pendingMessages, maxSafeInteger)"
+ },
+ {
+  "name": "recovery-tail-share-half",
+  "file": "retention.go",
+  "find": "int(math.Floor(float64(payload-limit)/4))",
+  "replace": "int(math.Floor(float64(payload-limit)/2))"
+ },
+ {
+  "name": "recovery-tail-share-all",
+  "file": "retention.go",
+  "find": "int(math.Floor(float64(payload-limit)/4))",
+  "replace": "int(math.Floor(float64(payload)/4))"
+ },
+ {
+  "name": "recovery-retained-ids-dropped",
+  "file": "retention.go",
+  "find": "retainedEntryIds:        retained.ids,",
+  "replace": "retainedEntryIds:        nil,"
+ },
+ {
+  "name": "recovery-notes-dropped",
+  "file": "retention.go",
+  "find": "notes:                   capacity.notes,",
+  "replace": "notes:                   nil,"
+ },
+ {
+  "name": "recovery-owner-flag-dropped",
+  "file": "retention.go",
+  "find": "ownerQuestionRegistered: ownerQuestionRegistered,",
+  "replace": "ownerQuestionRegistered: false,"
+ },
+ {
+  "name": "recovery-first-kept-flag-lost",
+  "file": "retention.go",
+  "find": "hasFirstKept: retained.hasFirstKept}",
+  "replace": "hasFirstKept: false}"
+ },
+ {
+  "name": "recovery-payload-error-swallowed",
+  "file": "retention.go",
+  "find": "\tpayload, err := freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxSafeInteger)\n\tif err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": "\tpayload, _ := freshPayloadChars(capacity.host, capacity.toolTokens, capacity.pendingMessages, maxSafeInteger)"
+ },
+ {
+  "name": "recovery-handoff-error-swallowed",
+  "file": "retention.go",
+  "find": "\tif err != nil {\n\t\treturn nil, err\n\t}\n\tif u16len(handoff) > limit {",
+  "replace": "\tif u16len(handoff) > limit {"
+ },
+ {
+  "name": "retained-settings-error-swallowed",
+  "file": "retention.go",
+  "find": "\tsettings, err := capacity.host.getCompactionSettings()\n\tif err != nil {\n\t\treturn retainedTail{}, err\n\t}",
+  "replace": "\tsettings, _ := capacity.host.getCompactionSettings()"
+ },
+ {
+  "name": "matches-window-ignored",
+  "file": "reminders.go",
+  "find": "if !ok || window != fingerprint.windowId {",
+  "replace": "if !ok || (window != fingerprint.windowId && false) {"
+ },
+ {
+  "name": "matches-context-window-ignored",
+  "file": "reminders.go",
+  "find": "\treturn strictIntMember(record, \"contextWindow\", fingerprint.contextWindow) &&\n\t\tstrictIntMember(record, \"reserveTokens\", fingerprint.reserveTokens)",
+  "replace": "\treturn strictIntMember(record, \"reserveTokens\", fingerprint.reserveTokens)"
+ },
+ {
+  "name": "matches-reserve-ignored",
+  "file": "reminders.go",
+  "find": "\treturn strictIntMember(record, \"contextWindow\", fingerprint.contextWindow) &&\n\t\tstrictIntMember(record, \"reserveTokens\", fingerprint.reserveTokens)",
+  "replace": "\treturn strictIntMember(record, \"contextWindow\", fingerprint.contextWindow)"
+ },
+ {
+  "name": "matches-non-record-ok",
+  "file": "reminders.go",
+  "find": "\trecord, ok := details.(rec)\n\tif !ok {\n\t\treturn false\n\t}",
+  "replace": "\trecord, ok := details.(rec)\n\tif !ok {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "strict-absent-matches-null",
+  "file": "reminders.go",
+  "find": "\tif want == nil {\n\t\treturn !present",
+  "replace": "\tif want == nil {\n\t\treturn !present || value == nil"
+ },
+ {
+  "name": "strict-number-compare-loose",
+  "file": "reminders.go",
+  "find": "return ok && number == float64(*want)",
+  "replace": "return ok && (number == float64(*want) || true)"
+ },
+ {
+  "name": "has-reminder-type-ignored",
+  "file": "reminders.go",
+  "find": "return entryType(entry) == \"custom_message\" && isReminderType(entry[\"customType\"]) &&",
+  "replace": "return isReminderType(entry[\"customType\"]) &&"
+ },
+ {
+  "name": "has-reminder-details-ignored",
+  "file": "reminders.go",
+  "find": "\t\t\treminderMatches(entry[\"details\"], fingerprint)\n\t})",
+  "replace": "\t\t\ttrue\n\t})"
+ },
+ {
+  "name": "buffer-constant-changed",
+  "file": "reminders.go",
+  "find": "const reminderBufferTokens = 32_000",
+  "replace": "const reminderBufferTokens = 16_000"
+ },
+ {
+  "name": "buffer-fraction-changed",
+  "file": "reminders.go",
+  "find": "float64(b.usable)*0.1",
+  "replace": "float64(b.usable)*0.2"
+ },
+ {
+  "name": "band-lower-inclusive-off",
+  "file": "reminders.go",
+  "find": "if *usage.tokens < b.rolloverAt-buffer ||",
+  "replace": "if *usage.tokens <= b.rolloverAt-buffer ||"
+ },
+ {
+  "name": "band-upper-inclusive",
+  "file": "reminders.go",
+  "find": "*usage.tokens >= b.rolloverAt {",
+  "replace": "*usage.tokens > b.rolloverAt {"
+ },
+ {
+  "name": "budget-supported-ignored",
+  "file": "reminders.go",
+  "find": "if b == nil || !b.enabled || !b.supported {",
+  "replace": "if b == nil || !b.enabled {"
+ },
+ {
+  "name": "budget-enabled-ignored",
+  "file": "reminders.go",
+  "find": "if b == nil || !b.enabled || !b.supported {",
+  "replace": "if b == nil || !b.supported {"
+ },
+ {
+  "name": "usage-null-tokens-ok",
+  "file": "reminders.go",
+  "find": "if usage == nil || usage.tokens == nil || usage.contextWindow <= 0 {",
+  "replace": "if usage == nil || usage.contextWindow <= 0 {"
+ },
+ {
+  "name": "ends-run-role-ignored",
+  "file": "reminders.go",
+  "find": "if role, _ := str(message, \"role\"); role != \"assistant\" {\n\t\treturn false, nil\n\t}",
+  "replace": "if role, _ := str(message, \"role\"); role == \"user\" {\n\t\treturn false, nil\n\t}"
+ },
+ {
+  "name": "ends-run-tool-call-ignored",
+  "file": "reminders.go",
+  "find": "\t\treturn kind == \"toolCall\"",
+  "replace": "\t\treturn kind == \"toolCallx\""
+ },
+ {
+  "name": "ends-run-continue-ignored",
+  "file": "reminders.go",
+  "find": "if cont, _ := event[\"continue\"].(bool); cont {",
+  "replace": "if cont, _ := event[\"continue\"].(bool); cont && false {"
+ },
+ {
+  "name": "ends-run-pending-event-ignored",
+  "file": "reminders.go",
+  "find": "if pending := pendingMessagesOf(event); len(pending) != 0 {",
+  "replace": "if pending := pendingMessagesOf(event); len(pending) < 0 {"
+ },
+ {
+  "name": "ends-run-pending-host-inverted",
+  "file": "reminders.go",
+  "find": "return !pending, nil",
+  "replace": "return pending, nil"
+ },
+ {
+  "name": "decision-run-ended-ignored",
+  "file": "reminders.go",
+  "find": "\tif ended {\n\t\treturn reminderDecisionResult{kind: \"skip\", reason: \"run-ended\"}, nil",
+  "replace": "\tif ended && false {\n\t\treturn reminderDecisionResult{kind: \"skip\", reason: \"run-ended\"}, nil"
+ },
+ {
+  "name": "decision-window-id-fixed",
+  "file": "reminders.go",
+  "find": "fingerprint := reminderFingerprint{windowId: state.windowId, contextWindow",
+  "replace": "fingerprint := reminderFingerprint{windowId: \"initial\", contextWindow"
+ },
+ {
+  "name": "decision-fingerprint-reserve-dropped",
+  "file": "reminders.go",
+  "find": "contextWindow: &b.contextWindow, reserveTokens: &b.reserveTokens}\n\tif hasReminder",
+  "replace": "contextWindow: &b.contextWindow, reserveTokens: nil}\n\tif hasReminder"
+ },
+ {
+  "name": "decision-history-reminders-ignored",
+  "file": "reminders.go",
+  "find": "if hasReminder(state.reminders, fingerprint) || slices.ContainsFunc",
+  "replace": "if slices.ContainsFunc"
+ },
+ {
+  "name": "decision-pending-reminders-ignored",
+  "file": "reminders.go",
+  "find": "if hasReminder(state.reminders, fingerprint) || slices.ContainsFunc(pendingMessagesOf(event), func(item any) bool {\n\t\tmessage, _ := recOf(item)\n\t\trole, _ := str(message, \"role\")\n\t\treturn role == \"custom\" && isReminderType(message[\"customType\"]) && reminderMatches(message[\"details\"], fingerprint)\n\t}) {",
+  "replace": "if hasReminder(state.reminders, fingerprint) {"
+ },
+ {
+  "name": "decision-pending-fingerprint-ignored",
+  "file": "reminders.go",
+  "find": "return role == \"custom\" && isReminderType(message[\"customType\"]) && reminderMatches(message[\"details\"], fingerprint)\n\t}) {",
+  "replace": "return role == \"custom\" && isReminderType(message[\"customType\"])\n\t}) {"
+ },
+ {
+  "name": "decision-already-present-as-send",
+  "file": "reminders.go",
+  "find": "\t\treturn reminderDecisionResult{kind: \"already-present\"}, nil",
+  "replace": "\t\treturn reminderDecisionResult{kind: \"send\", fingerprint: fingerprint}, nil"
+ },
+ {
+  "name": "same-entry-nil-equal",
+  "file": "reminders.go",
+  "find": "\tif a == nil || b == nil {\n\t\treturn false\n\t}",
+  "replace": "\tif a == nil || b == nil {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "same-entry-id-only",
+  "file": "reminders.go",
+  "find": "\treturn reflect.DeepEqual(a, b)",
+  "replace": "\treturn reflect.DeepEqual(a, b) || true"
+ },
+ {
+  "name": "walk-certify-never",
+  "file": "reminders.go",
+  "find": "if a.boundary == nil && previous != nil && sameEntry(previous.leaf, entry) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "walk-reminder-type-ignored",
+  "file": "reminders.go",
+  "find": "if entryType(entry) == \"custom_message\" && isReminderType(entry[\"customType\"]) {\n\t\ta.found",
+  "replace": "if isReminderType(entry[\"customType\"]) {\n\t\ta.found"
+ },
+ {
+  "name": "walk-boundary-compaction-only",
+  "file": "reminders.go",
+  "find": "if t := entryType(entry); t == \"compaction\" || t == \"context_window\" {",
+  "replace": "if t := entryType(entry); t == \"compaction\" {"
+ },
+ {
+  "name": "walk-boundary-window-only",
+  "file": "reminders.go",
+  "find": "if t := entryType(entry); t == \"compaction\" || t == \"context_window\" {",
+  "replace": "if t := entryType(entry); t == \"context_window\" {"
+ },
+ {
+  "name": "walk-kept-want-ignored",
+  "file": "reminders.go",
+  "find": "\t\t\tif t == \"compaction\" {\n\t\t\t\ta.keptWant, a.keptWantPresent = entry[\"firstKeptEntryId\"]\n\t\t\t}",
+  "replace": "\t\t\tif t == \"compaction\" {\n\t\t\t\ta.keptWant, a.keptWantPresent = entry[\"id\"], true\n\t\t\t}"
+ },
+ {
+  "name": "walk-context-window-kept-lost",
+  "file": "reminders.go",
+  "find": "\t\tif entryType(a.boundary) == \"context_window\" {\n\t\t\ta.kept = true",
+  "replace": "\t\tif entryType(a.boundary) == \"context_window\" {\n\t\t\ta.kept = false"
+ },
+ {
+  "name": "walk-stops-without-kept",
+  "file": "reminders.go",
+  "find": "return a.window != nil && a.kept, false",
+  "replace": "return a.window != nil, false"
+ },
+ {
+  "name": "result-initial-window-renamed",
+  "file": "reminders.go",
+  "find": "\twindowID := \"initial\"",
+  "replace": "\twindowID := \"root\""
+ },
+ {
+  "name": "result-kept-start-ignored",
+  "file": "reminders.go",
+  "find": "\tstartWalk := a.keptIndex",
+  "replace": "\tstartWalk := a.boundaryIndex - 1"
+ },
+ {
+  "name": "result-reminder-order-reversed",
+  "file": "reminders.go",
+  "find": "\tfor i := len(a.found) - 1; i >= 0; i-- {\n\t\tif a.boundary == nil",
+  "replace": "\tfor i := 0; i < len(a.found); i++ {\n\t\tif a.boundary == nil"
+ },
+ {
+  "name": "scan-get-entry-error-swallowed",
+  "file": "reminders.go",
+  "find": "\t\tif entry, err = session.GetEntry(next); err != nil {\n\t\t\treturn \"\", nil, err\n\t\t}",
+  "replace": "\t\tentry, err = session.GetEntry(next)\n\t\t_ = err"
+ },
+ {
+  "name": "scan-certified-reminders-dropped",
+  "file": "reminders.go",
+  "find": "return previous.windowId, slices.Concat(previous.reminders, added), nil",
+  "replace": "return previous.windowId, previous.reminders, nil"
+ },
+ {
+  "name": "hybrid-default-on",
+  "file": "reminders.go",
+  "find": "const reminderBranchAfter = 0",
+  "replace": "const reminderBranchAfter = 2"
+ },
+ {
+  "name": "hybrid-off-by-one",
+  "file": "reminders.go",
+  "find": "if branchAfter > 0 && steps >= branchAfter {",
+  "replace": "if branchAfter > 0 && steps > branchAfter {"
+ },
+ {
+  "name": "lookup-reset-keeps-state",
+  "file": "reminders.go",
+  "find": "func (l *reminderLookup) reset() {\n\tl.mu.Lock()\n\tl.state = nil",
+  "replace": "func (l *reminderLookup) reset() {\n\tl.mu.Lock()"
+ },
+ {
+  "name": "lookup-reset-generation-lost",
+  "file": "reminders.go",
+  "find": "\tl.state = nil\n\tl.gen++",
+  "replace": "\tl.state = nil"
+ },
+ {
+  "name": "lookup-gen-check-dropped",
+  "file": "reminders.go",
+  "find": "\tif l.gen == gen {\n\t\tl.state = state\n\t}",
+  "replace": "\tif l.gen == gen || true {\n\t\tl.state = state\n\t}"
+ },
+ {
+  "name": "lookup-nil-leaf-always-certified",
+  "file": "reminders.go",
+  "find": "if previous != nil && (sameEntry(previous.leaf, leaf) || (previous.leaf == nil && leaf == nil)) {",
+  "replace": "if previous != nil {"
+ },
+ {
+  "name": "lookup-leaf-never-certified",
+  "file": "reminders.go",
+  "find": "if previous != nil && (sameEntry(previous.leaf, leaf) || (previous.leaf == nil && leaf == nil)) {",
+  "replace": "if false {"
+ },
+ {
+  "name": "lookup-previous-not-used",
+  "file": "reminders.go",
+  "find": "windowID, reminders, err := scanAncestry(session, leaf, previous, reminderBranchAfter)",
+  "replace": "windowID, reminders, err := scanAncestry(session, leaf, nil, reminderBranchAfter)"
+ },
+ {
+  "name": "lookup-state-not-stored",
+  "file": "reminders.go",
+  "find": "\t\tl.state = state\n\t}",
+  "replace": "\t}"
+ },
+ {
+  "name": "lookup-leaf-error-swallowed",
+  "file": "reminders.go",
+  "find": "\tleaf, err := session.GetLeafEntry()\n\tif err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": "\tleaf, _ := session.GetLeafEntry()"
+ },
+ {
+  "name": "retained-projection-compaction-check",
+  "file": "reminders.go",
+  "find": "if len(projected) < 2 || entryType(projected[0].SourceEntry) != \"compaction\" {",
+  "replace": "if len(projected) < 2 {"
+ },
+ {
+  "name": "retained-projection-end-lost",
+  "file": "reminders.go",
+  "find": "if parent, ok := str(projected[i].SourceEntry, \"parentId\"); ok && parent == compactionID {",
+  "replace": "if parent, ok := str(projected[i].SourceEntry, \"parentId\"); ok && parent == compactionID+\"x\" {"
+ },
+ {
+  "name": "retained-projection-includes-child",
+  "file": "reminders.go",
+  "find": "\t\t\tend = i\n\t\t\tbreak",
+  "replace": "\t\t\tend = i + 1\n\t\t\tbreak"
+ },
+ {
+  "name": "retained-count-system-counted",
+  "file": "reminders.go",
+  "find": "if role, _ := str(message, \"role\"); role != \"system\" && (stale == nil || !stale(message)) {",
+  "replace": "if role, _ := str(message, \"role\"); (role != \"system\" || role == \"system\") && (stale == nil || !stale(message)) {"
+ },
+ {
+  "name": "retained-count-stale-counted",
+  "file": "reminders.go",
+  "find": "if role, _ := str(message, \"role\"); role != \"system\" && (stale == nil || !stale(message)) {",
+  "replace": "if role, _ := str(message, \"role\"); role != \"system\" {"
+ },
+ {
+  "name": "abort-run-signal-ignored",
+  "file": "rollover.go",
+  "find": "return signal != nil && signal.Err() != nil",
+  "replace": "return signal != nil && signal.Err() != nil && false"
+ },
+ {
+  "name": "explicit-aborted-ignored",
+  "file": "rollover.go",
+  "find": "outcome == \"aborted\" || runAborted(ctx)",
+  "replace": "outcome == \"\" && false || runAborted(ctx)"
+ },
+ {
+  "name": "explicit-run-abort-ignored",
+  "file": "rollover.go",
+  "find": "outcome == \"aborted\" || runAborted(ctx)",
+  "replace": "outcome == \"aborted\""
+ },
+ {
+  "name": "explicit-limit-exclusive",
+  "file": "rollover.go",
+  "find": "if u16len(summary) > max {",
+  "replace": "if u16len(summary) >= max {"
+ },
+ {
+  "name": "explicit-limit-error-swallowed",
+  "file": "rollover.go",
+  "find": "\tmax, err := limit()\n\tif err != nil {\n\t\treturn nil, err\n\t}",
+  "replace": "\tmax, _ := limit()"
+ },
+ {
+  "name": "explicit-deferred-text",
+  "file": "rollover.go",
+  "find": "The current context is unchanged; process those messages, then request a shorter handoff.",
+  "replace": "The current context is unchanged; process those messages, then request a shorter handoff"
+ },
+ {
+  "name": "explicit-deferred-hidden",
+  "file": "rollover.go",
+  "find": "\t\t\t\"display\":    true,\n\t\t\t\"content\":    \"Posthorse reset deferred",
+  "replace": "\t\t\t\"display\":    false,\n\t\t\t\"content\":    \"Posthorse reset deferred"
+ },
+ {
+  "name": "explicit-entries-dropped",
+  "file": "rollover.go",
+  "find": "\t\t\"entries\": append(slices.Clone(entries), rec{\n\t\t\t\"type\":             \"compaction\",",
+  "replace": "\t\t\"entries\": append([]any{}, rec{\n\t\t\t\"type\":             \"compaction\","
+ },
+ {
+  "name": "explicit-deferred-entries-dropped",
+  "file": "rollover.go",
+  "find": "return rec{\"entries\": append(slices.Clone(entries), rec{\n\t\t\t\"type\":       \"custom_message\",",
+  "replace": "return rec{\"entries\": append([]any{}, rec{\n\t\t\t\"type\":       \"custom_message\","
+ },
+ {
+  "name": "explicit-continue-dropped",
+  "file": "rollover.go",
+  "find": "\t\t\"continue\": true,\n\t}, nil",
+  "replace": "\t}, nil"
+ },
+ {
+  "name": "explicit-first-kept-not-null",
+  "file": "rollover.go",
+  "find": "\t\t\t\"firstKeptEntryId\": nil,\n\t\t\t\"details\":          rec{\"posthorse\": 1, \"reason\": \"explicit\"},",
+  "replace": "\t\t\t\"firstKeptEntryId\": \"x\",\n\t\t\t\"details\":          rec{\"posthorse\": 1, \"reason\": \"explicit\"},"
+ },
+ {
+  "name": "explicit-reason-changed",
+  "file": "rollover.go",
+  "find": "rec{\"posthorse\": 1, \"reason\": \"explicit\"}",
+  "replace": "rec{\"posthorse\": 1, \"reason\": \"threshold\"}"
+ },
+ {
+  "name": "scan-marker-type-changed",
+  "file": "rollover.go",
+  "find": "message[\"customType\"] == \"context-window\"",
+  "replace": "message[\"customType\"] == \"context_window\""
+ },
+ {
+  "name": "stale-marker-window-ignored",
+  "file": "rollover.go",
+  "find": "\t\tdetails, _ := recOf(marker[\"details\"])\n\t\twindowID = details[\"windowId\"]",
+  "replace": "\t\twindowID = \"initial\""
+ },
+ {
+  "name": "stale-marker-ignored",
+  "file": "rollover.go",
+  "find": "\tif marker != nil {\n\t\tdetails",
+  "replace": "\tif marker != nil && false {\n\t\tdetails"
+ },
+ {
+  "name": "stale-lookup-window-ignored",
+  "file": "rollover.go",
+  "find": "\t\twindowID = state.windowId",
+  "replace": "\t\twindowID = \"initial\"\n\t\t_ = state"
+ },
+ {
+  "name": "stale-window-type-ignored",
+  "file": "rollover.go",
+  "find": "\tif !ok {\n\t\treturn nil, nil\n\t}\n\thost := policy(ctx, nil)",
+  "replace": "\tif !ok {\n\t\twindow = \"\"\n\t}\n\thost := policy(ctx, nil)"
+ },
+ {
+  "name": "stale-fingerprint-window-dropped",
+  "file": "rollover.go",
+  "find": "fingerprint.contextWindow, fingerprint.reserveTokens = &b.contextWindow, &b.reserveTokens",
+  "replace": "fingerprint.reserveTokens = &b.reserveTokens"
+ },
+ {
+  "name": "stale-fingerprint-reserve-dropped",
+  "file": "rollover.go",
+  "find": "fingerprint.contextWindow, fingerprint.reserveTokens = &b.contextWindow, &b.reserveTokens",
+  "replace": "fingerprint.contextWindow = &b.contextWindow"
+ },
+ {
+  "name": "stale-disabled-keeps-reminders",
+  "file": "rollover.go",
+  "find": "(!enabled || !reminderMatches(message[\"details\"], fingerprint))",
+  "replace": "(enabled && false || !reminderMatches(message[\"details\"], fingerprint))"
+ },
+ {
+  "name": "stale-disabled-only",
+  "file": "rollover.go",
+  "find": "(!enabled || !reminderMatches(message[\"details\"], fingerprint))",
+  "replace": "(!enabled)"
+ },
+ {
+  "name": "stale-mismatch-ignored",
+  "file": "rollover.go",
+  "find": "(!enabled || !reminderMatches(message[\"details\"], fingerprint))",
+  "replace": "(!enabled || false)"
+ },
+ {
+  "name": "stale-role-ignored",
+  "file": "rollover.go",
+  "find": "return role == \"custom\" && isReminderType(message[\"customType\"]) &&\n\t\t\t(!enabled",
+  "replace": "return (role == \"custom\" || true) && isReminderType(message[\"customType\"]) &&\n\t\t\t(!enabled"
+ },
+ {
+  "name": "tail-summary-role-ignored",
+  "file": "rollover.go",
+  "find": "if role, _ := str(first, \"role\"); role != \"compactionSummary\" {",
+  "replace": "if role, _ := str(first, \"role\"); role == \"user\" {"
+ },
+ {
+  "name": "tail-marker-ignored",
+  "file": "rollover.go",
+  "find": "if summary, _ := str(first, \"summary\"); !hasRetainedRolloverMarker(summary) {",
+  "replace": "if summary, _ := str(first, \"summary\"); false && !hasRetainedRolloverMarker(summary) {"
+ },
+ {
+  "name": "tail-count-zero-reorders",
+  "file": "rollover.go",
+  "find": "if count <= 0 || 1+count > len(messages) {",
+  "replace": "if count < 0 || 1+count > len(messages) {"
+ },
+ {
+  "name": "tail-count-bound-off-by-one",
+  "file": "rollover.go",
+  "find": "if count <= 0 || 1+count > len(messages) {",
+  "replace": "if count <= 0 || 1+count >= len(messages) {"
+ },
+ {
+  "name": "tail-slice-off-by-one",
+  "file": "rollover.go",
+  "find": "retained, after := messages[1:1+count], messages[1+count:]",
+  "replace": "retained, after := messages[1:count], messages[count:]"
+ },
+ {
+  "name": "tail-sentinel-for-all",
+  "file": "rollover.go",
+  "find": "if role, _ := str(head, \"role\"); role == \"assistant\" {",
+  "replace": "if role, _ := str(head, \"role\"); role != \"\" {"
+ },
+ {
+  "name": "tail-sentinel-content",
+  "file": "rollover.go",
+  "find": "const retainedTailContent = \"[Retained pre-rollover tail]\"",
+  "replace": "const retainedTailContent = \"[Retained tail]\""
+ },
+ {
+  "name": "tail-sentinel-visible",
+  "file": "rollover.go",
+  "find": "\t\t\t\"content\":    retainedTailContent,\n\t\t\t\"display\":    false,",
+  "replace": "\t\t\t\"content\":    retainedTailContent,\n\t\t\t\"display\":    true,"
+ },
+ {
+  "name": "tail-sentinel-timestamp-dropped",
+  "file": "rollover.go",
+  "find": "\t\tif timestamp, ok := first[\"timestamp\"]; ok {\n\t\t\tsentinel[\"timestamp\"] = timestamp\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "tail-order-record-first",
+  "file": "rollover.go",
+  "find": "\tordered = append(ordered, retained...)\n\tordered = append(ordered, first)",
+  "replace": "\tordered = append(ordered, first)\n\tordered = append(ordered, retained...)"
+ },
+ {
+  "name": "tail-changed-flag-lost",
+  "file": "rollover.go",
+  "find": "\treturn ordered, true, nil",
+  "replace": "\treturn ordered, false, nil"
+ },
+ {
+  "name": "drop-stale-nil-guard",
+  "file": "rollover.go",
+  "find": "if stale == nil || !slices.ContainsFunc(",
+  "replace": "if !slices.ContainsFunc("
+ },
+ {
+  "name": "drop-stale-keeps-stale",
+  "file": "rollover.go",
+  "find": "if message, _ := recOf(item); !stale(message) {\n\t\t\tfiltered = append(filtered, item)",
+  "replace": "if message, _ := recOf(item); stale(message) {\n\t\t\tfiltered = append(filtered, item)"
+ },
+ {
+  "name": "drop-stale-changed-lost",
+  "file": "rollover.go",
+  "find": "\treturn filtered, true\n}",
+  "replace": "\treturn filtered, false\n}"
+ },
+ {
+  "name": "draft-sentinel-dropped",
+  "file": "rollover.go",
+  "find": "\t\tif err := ctx.AppendEntry(\"posthorse-boundary\", rec{}); err != nil {\n\t\t\treturn nil, err\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "draft-sentinel-type",
+  "file": "rollover.go",
+  "find": "ctx.AppendEntry(\"posthorse-boundary\", rec{})",
+  "replace": "ctx.AppendEntry(\"posthorse-bound\", rec{})"
+ },
+ {
+  "name": "draft-leaf-ignored",
+  "file": "rollover.go",
+  "find": "\t\tif leaf != nil {\n\t\t\tfirstKept, hasFirstKept = *leaf, true\n\t\t}",
+  "replace": "\t\t_ = leaf"
+ },
+ {
+  "name": "draft-empty-leaf-accepted",
+  "file": "rollover.go",
+  "find": "if !hasFirstKept || firstKept == \"\" {",
+  "replace": "if !hasFirstKept {"
+ },
+ {
+  "name": "draft-error-text",
+  "file": "rollover.go",
+  "find": "errors.New(\"Pi did not persist the context boundary.\")",
+  "replace": "errors.New(\"Pi did not persist the context boundary\")"
+ },
+ {
+  "name": "draft-details-reason",
+  "file": "rollover.go",
+  "find": "\"details\":          rec{\"posthorse\": 1, \"reason\": recovery.reason},",
+  "replace": "\"details\":          rec{\"posthorse\": 1, \"reason\": \"threshold\"},"
+ },
+ {
+  "name": "draft-tokens-before-dropped",
+  "file": "rollover.go",
+  "find": "\tif recovery.hasTokensBefore {\n\t\tcompaction[\"tokensBefore\"] = recovery.tokensBefore\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "draft-tokens-before-always",
+  "file": "rollover.go",
+  "find": "\tif recovery.hasTokensBefore {\n\t\tcompaction[\"tokensBefore\"] = recovery.tokensBefore\n\t}",
+  "replace": "\tcompaction[\"tokensBefore\"] = recovery.tokensBefore"
+ },
+ {
+  "name": "report-text-changed",
+  "file": "rollover.go",
+  "find": "\"Posthorse automatic rollover cancelled: \" + err.Error()",
+  "replace": "\"Posthorse rollover cancelled: \" + err.Error()"
+ },
+ {
+  "name": "report-ui-inverted",
+  "file": "rollover.go",
+  "find": "\tif ctx.HasUI() {\n\t\tctx.Notify",
+  "replace": "\tif !ctx.HasUI() {\n\t\tctx.Notify"
+ },
+ {
+  "name": "report-stderr-dropped",
+  "file": "rollover.go",
+  "find": "\t\tfmt.Fprintln(os.Stderr, message)",
+  "replace": "\t\tfmt.Fprintln(os.Stderr, \"\")"
+ },
+ {
+  "name": "report-notify-dropped",
+  "file": "rollover.go",
+  "find": "\t\tctx.Notify(message, \"error\")",
+  "replace": "\t\t_ = message"
+ },
+ {
+  "name": "fresh-no-boundary-ok",
+  "file": "rollover.go",
+  "find": "\tif boundary < 0 {\n\t\treturn false\n\t}",
+  "replace": "\tif boundary < 0 {\n\t\treturn true\n\t}"
+ },
+ {
+  "name": "fresh-compaction-counts",
+  "file": "rollover.go",
+  "find": "\t\tif entryType(entry.sourceEntry) == \"compaction\" {\n\t\t\treturn false\n\t\t}\n\t\treturn slices.ContainsFunc(entry.messages",
+  "replace": "\t\treturn slices.ContainsFunc(entry.messages"
+ },
+ {
+  "name": "fresh-user-ignored",
+  "file": "rollover.go",
+  "find": "case \"user\", \"custom\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true",
+  "replace": "case \"custom\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true"
+ },
+ {
+  "name": "fresh-custom-ignored",
+  "file": "rollover.go",
+  "find": "case \"user\", \"custom\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true",
+  "replace": "case \"user\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true"
+ },
+ {
+  "name": "fresh-bash-ignored",
+  "file": "rollover.go",
+  "find": "case \"user\", \"custom\", \"bashExecution\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true",
+  "replace": "case \"user\", \"custom\", \"branchSummary\", \"compactionSummary\":\n\t\t\t\treturn true"
+ },
+ {
+  "name": "threshold-exclusive",
+  "file": "rollover.go",
+  "find": "*usage.tokens >= b.rolloverAt, nil",
+  "replace": "*usage.tokens > b.rolloverAt, nil"
+ },
+ {
+  "name": "threshold-supported-ignored",
+  "file": "rollover.go",
+  "find": "b != nil && b.supported && b.enabled &&",
+  "replace": "b != nil && b.enabled &&"
+ },
+ {
+  "name": "threshold-enabled-ignored",
+  "file": "rollover.go",
+  "find": "b != nil && b.supported && b.enabled &&",
+  "replace": "b != nil && b.supported &&"
+ },
+ {
+  "name": "eligible-outcome-ignored",
+  "file": "rollover.go",
+  "find": "if outcome, _ := str(event, \"outcome\"); outcome != \"completed\" {",
+  "replace": "if outcome, _ := str(event, \"outcome\"); outcome == \"aborted\" {"
+ },
+ {
+  "name": "eligible-length-stop-ignored",
+  "file": "rollover.go",
+  "find": "if stop, _ := str(message, \"stopReason\"); stop == \"length\" {",
+  "replace": "if stop, _ := str(message, \"stopReason\"); stop == \"lengthx\" {"
+ },
+ {
+  "name": "eligible-run-abort-ignored",
+  "file": "rollover.go",
+  "find": "\tif runAborted(ctx) {\n\t\treturn false\n\t}\n\tentries, _ := arrOf(event[\"entries\"])",
+  "replace": "\tentries, _ := arrOf(event[\"entries\"])"
+ },
+ {
+  "name": "eligible-compaction-draft-ignored",
+  "file": "rollover.go",
+  "find": "return kind == \"compaction\" || kind == \"context_edit\"",
+  "replace": "return kind == \"context_edit\""
+ },
+ {
+  "name": "eligible-edit-draft-ignored",
+  "file": "rollover.go",
+  "find": "return kind == \"compaction\" || kind == \"context_edit\"",
+  "replace": "return kind == \"compaction\""
+ },
+ {
+  "name": "ask-name-changed",
+  "file": "rollover.go",
+  "find": "tool.Name == \"ask_question\" && tool.Namespace == nil",
+  "replace": "tool.Name == \"ask_questions\" && tool.Namespace == nil"
+ },
+ {
+  "name": "ask-namespace-ignored",
+  "file": "rollover.go",
+  "find": "tool.Name == \"ask_question\" && tool.Namespace == nil",
+  "replace": "tool.Name == \"ask_question\""
+ },
+ {
+  "name": "fallback-eligibility-ignored",
+  "file": "rollover.go",
+  "find": "\tif !fallbackTurnEligible(event, ctx) {\n\t\treturn nil, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fallback-fresh-window-ignored",
+  "file": "rollover.go",
+  "find": "\tif !freshWindowWithoutInput(projected) {\n\t\treturn nil, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fallback-projected-from-pending",
+  "file": "rollover.go",
+  "find": "projected := projectedOf(eventContext[\"contextEntries\"])",
+  "replace": "projected := projectedOf(eventContext[\"pendingMessages\"])"
+ },
+ {
+  "name": "fallback-pending-ignored",
+  "file": "rollover.go",
+  "find": "\t\tpendingMessages: recsOf(eventContext[\"pendingMessages\"]),\n\t\tnotes:           recovered,",
+  "replace": "\t\tnotes:           recovered,"
+ },
+ {
+  "name": "fallback-notes-ignored",
+  "file": "rollover.go",
+  "find": "\t\tpendingMessages: recsOf(eventContext[\"pendingMessages\"]),\n\t\tnotes:           recovered,",
+  "replace": "\t\tpendingMessages: recsOf(eventContext[\"pendingMessages\"]),\n\t\tnotes:           func() *notesRecovery { _ = recovered; return nil }(),"
+ },
+ {
+  "name": "fallback-owner-ignored",
+  "file": "rollover.go",
+  "find": "\t}, owner)\n\tif err != nil || recovery == nil {",
+  "replace": "\t}, owner && false)\n\tif err != nil || recovery == nil {"
+ },
+ {
+  "name": "fallback-recovery-error-swallowed",
+  "file": "rollover.go",
+  "find": "\tif err != nil || recovery == nil {\n\t\treturn nil, err\n\t}",
+  "replace": "\tif recovery == nil {\n\t\treturn nil, nil\n\t}"
+ },
+ {
+  "name": "fallback-first-kept-lost",
+  "file": "rollover.go",
+  "find": "\tif recovery.hasFirstKept {\n\t\tfirstKept = recovery.firstKeptEntryID\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "fallback-reason-changed",
+  "file": "rollover.go",
+  "find": "\"details\":          rec{\"posthorse\": 1, \"reason\": \"threshold\"},",
+  "replace": "\"details\":          rec{\"posthorse\": 1, \"reason\": \"explicit\"},"
+ },
+ {
+  "name": "fallback-entries-dropped",
+  "file": "rollover.go",
+  "find": "\tresult := rec{\"entries\": append(slices.Clone(entries), rec{\n\t\t\"type\":             \"compaction\",\n\t\t\"summary\":          recovery.handoff,",
+  "replace": "\tresult := rec{\"entries\": append(slices.Clone(entries[:0]), rec{\n\t\t\"type\":             \"compaction\",\n\t\t\"summary\":          recovery.handoff,"
+ },
+ {
+  "name": "fallback-continue-dropped",
+  "file": "rollover.go",
+  "find": "\tif cont, ok := event[\"continue\"]; ok {\n\t\tresult[\"continue\"] = cont\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "cancelled-request-ignored",
+  "file": "rollover.go",
+  "find": "return ctx.Err() != nil || runAborted(ctx)",
+  "replace": "return runAborted(ctx)"
+ },
+ {
+  "name": "cancelled-run-ignored",
+  "file": "rollover.go",
+  "find": "return ctx.Err() != nil || runAborted(ctx)",
+  "replace": "return ctx.Err() != nil"
+ },
+ {
+  "name": "policy-enabled-ignored",
+  "file": "rollover.go",
+  "find": "\tpolicy.enabled, _ = boolean(settings, \"enabled\")",
+  "replace": ""
+ },
+ {
+  "name": "policy-reserve-ignored",
+  "file": "rollover.go",
+  "find": "\t\tpolicy.reserveTokens = jsToInt(reserve)",
+  "replace": "\t\t_ = reserve"
+ },
+ {
+  "name": "policy-keep-ignored",
+  "file": "rollover.go",
+  "find": "\t\tn := jsToInt(keep)\n\t\tpolicy.keepRecentTokens = &n",
+  "replace": "\t\t_ = keep"
+ },
+ {
+  "name": "prepare-manual-not-delegated",
+  "file": "rollover.go",
+  "find": "\tif reason == \"manual\" {\n\t\treturn nil, false, nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "prepare-cancel-after-ignored",
+  "file": "rollover.go",
+  "find": "\tif compactionCancelled(ctx) {\n\t\treturn nil, true, nil\n\t}\n\ttokensBefore",
+  "replace": "\ttokensBefore"
+ },
+ {
+  "name": "prepare-no-preparation-ok",
+  "file": "rollover.go",
+  "find": "\tif !ok {\n\t\treturn nil, false, errors.New(\"Cannot read properties of undefined (reading 'settings')\")\n\t}",
+  "replace": "\t_ = ok"
+ },
+ {
+  "name": "prepare-live-settings-ignored",
+  "file": "rollover.go",
+  "find": "host := policy(ctx, policyFromSettings(preparation[\"settings\"]))",
+  "replace": "host := policy(ctx, nil)"
+ },
+ {
+  "name": "prepare-unsupported-proceeds",
+  "file": "rollover.go",
+  "find": "\tif b == nil || !b.supported {\n\t\treturn nil, false, nil\n\t}",
+  "replace": "\t_ = b"
+ },
+ {
+  "name": "prepare-branch-entries-ignored",
+  "file": "rollover.go",
+  "find": "automaticRecovery(recsOf(event[\"branchEntries\"]), projectedFromSDK",
+  "replace": "automaticRecovery(nil, projectedFromSDK"
+ },
+ {
+  "name": "prepare-projection-ignored",
+  "file": "rollover.go",
+  "find": "projectedFromSDK(projection.Entries), recoveryCapacity{\n\t\thost:             host,",
+  "replace": "projectedFromSDK(projection.Entries[:0]), recoveryCapacity{\n\t\thost:             host,"
+ },
+ {
+  "name": "prepare-recovery-error-swallowed",
+  "file": "rollover.go",
+  "find": "\tif err != nil {\n\t\treturn nil, false, err\n\t}\n\tif recovery == nil {",
+  "replace": "\tif recovery == nil {"
+ },
+ {
+  "name": "prepare-no-room-delegates",
+  "file": "rollover.go",
+  "find": "\t\treturn nil, false, errors.New(\"Too little fresh context capacity for an automatic recovery record.\")",
+  "replace": "\t\treturn nil, false, nil"
+ },
+ {
+  "name": "prepare-tokens-before-lost",
+  "file": "rollover.go",
+  "find": "\ttokensBefore, hasTokensBefore := preparation[\"tokensBefore\"]",
+  "replace": "\ttokensBefore, hasTokensBefore := any(nil), false"
+ },
+ {
+  "name": "prepare-reason-lost",
+  "file": "rollover.go",
+  "find": "\t\treason:           reason,\n\t\tfirstKeptEntryID: recovery.firstKeptEntryID,",
+  "replace": "\t\treason:           \"threshold\",\n\t\tfirstKeptEntryID: recovery.firstKeptEntryID,"
+ },
+ {
+  "name": "hook-draft-dropped",
+  "file": "rollover.go",
+  "find": "\t\tif err == nil && draft != nil {",
+  "replace": "\t\tif err == nil && draft != nil && false {"
+ },
+ {
+  "name": "hook-error-not-cancelled",
+  "file": "rollover.go",
+  "find": "\t\t\treturn rec{\"cancel\": true}, nil\n\t\t}\n\t\tif cancel {",
+  "replace": "\t\t\treturn nil, nil\n\t\t}\n\t\tif cancel {"
+ },
+ {
+  "name": "hook-error-reported-when-cancelled",
+  "file": "rollover.go",
+  "find": "\t\t\tif !compactionCancelled(ctx) {\n\t\t\t\treportAutomaticFailure(ctx, err)\n\t\t\t}",
+  "replace": "\t\t\treportAutomaticFailure(ctx, err)"
+ },
+ {
+  "name": "hook-error-never-reported",
+  "file": "rollover.go",
+  "find": "\t\t\tif !compactionCancelled(ctx) {\n\t\t\t\treportAutomaticFailure(ctx, err)\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "hook-cancel-ignored",
+  "file": "rollover.go",
+  "find": "\t\tif cancel {\n\t\t\treturn rec{\"cancel\": true}, nil\n\t\t}",
+  "replace": "\t\t_ = cancel"
+ },
+ {
+  "name": "hook-draft-error-propagates",
+  "file": "rollover.go",
+  "find": "\t\t\tif result, err = automaticDraft(ctx, *draft); err == nil {\n\t\t\t\treturn result, nil\n\t\t\t}",
+  "replace": "\t\t\tresult, err = automaticDraft(ctx, *draft)\n\t\t\treturn result, err"
+ },
+ {
+  "name": "register-turn-start-reset-dropped",
+  "file": "rollover.go",
+  "find": "\text.OnEvent(sdk.EventTurnStart, func(sdk.Context, map[string]any) (any, error) {\n\t\tresetTurn()\n\t\treturn nil, nil\n\t})",
+  "replace": ""
+ },
+ {
+  "name": "register-session-start-reset-dropped",
+  "file": "rollover.go",
+  "find": "\t\tresetTurn()\n\t\treminders.reset()\n\t\treturn nil, nil",
+  "replace": "\t\treminders.reset()\n\t\treturn nil, nil"
+ },
+ {
+  "name": "register-session-tree-dropped",
+  "file": "rollover.go",
+  "find": "\text.OnEvent(sdk.EventSessionTree, func(sdk.Context, map[string]any) (any, error) {\n\t\treminders.reset()\n\t\treturn nil, nil\n\t})",
+  "replace": ""
+ },
+ {
+  "name": "register-reset-requests-not-cleared",
+  "file": "rollover.go",
+  "find": "\t\tresetRequests.clear()\n\t\tresources.resetPages()",
+  "replace": "\t\tresources.resetPages()"
+ },
+ {
+  "name": "register-pages-not-reset",
+  "file": "rollover.go",
+  "find": "\t\tresetRequests.clear()\n\t\tresources.resetPages()",
+  "replace": "\t\tresetRequests.clear()"
+ },
+ {
+  "name": "register-guidance-dropped",
+  "file": "rollover.go",
+  "find": "\tregisterGuidance(ext, policy)\n",
+  "replace": ""
+ },
+ {
+  "name": "register-filter-dropped",
+  "file": "rollover.go",
+  "find": "\tregisterReminderFilter(ext, policy, reminders)\n",
+  "replace": ""
+ },
+ {
+  "name": "register-automatic-dropped",
+  "file": "rollover.go",
+  "find": "\tregisterAutomaticRollover(ext, policy, toolTokens, resources.notes)\n",
+  "replace": ""
+ },
+ {
+  "name": "register-context-tools-dropped",
+  "file": "rollover.go",
+  "find": "\tregisterContextTools(ext, policy, toolTokens, func(id, handoff string) error {\n\t\treturn resetRequests.request(id, handoff)\n\t})",
+  "replace": ""
+ },
+ {
+  "name": "register-reset-request-error-dropped",
+  "file": "rollover.go",
+  "find": "\t\treturn resetRequests.request(id, handoff)",
+  "replace": "\t\t_ = resetRequests.request(id, handoff)\n\t\treturn nil"
+ },
+ {
+  "name": "turn-end-take-dropped",
+  "file": "rollover.go",
+  "find": "\t\tsummary, hasSummary := resetRequests.take(results)",
+  "replace": "\t\tsummary, hasSummary := \"\", false\n\t\t_ = results"
+ },
+ {
+  "name": "turn-end-error-stop-ignored",
+  "file": "rollover.go",
+  "find": "if stop, _ := str(message, \"stopReason\"); stop == \"error\" || stop == \"aborted\" {",
+  "replace": "if stop, _ := str(message, \"stopReason\"); stop == \"aborted\" {"
+ },
+ {
+  "name": "turn-end-aborted-stop-ignored",
+  "file": "rollover.go",
+  "find": "if stop, _ := str(message, \"stopReason\"); stop == \"error\" || stop == \"aborted\" {",
+  "replace": "if stop, _ := str(message, \"stopReason\"); stop == \"error\" {"
+ },
+ {
+  "name": "turn-end-explicit-skipped",
+  "file": "rollover.go",
+  "find": "\t\tif hasSummary {\n\t\t\tresult, err := explicitReset",
+  "replace": "\t\tif hasSummary && false {\n\t\t\tresult, err := explicitReset"
+ },
+ {
+  "name": "turn-end-explicit-falls-through",
+  "file": "rollover.go",
+  "find": "\t\t\tif result == nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\treturn result, err",
+  "replace": "\t\t\tif result == nil && err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\tif result != nil {\n\t\t\t\treturn result, err\n\t\t\t}"
+ },
+ {
+  "name": "turn-end-limit-tool-tokens-ignored",
+  "file": "rollover.go",
+  "find": "\t\t\t\ttokens, err := toolTokens(ctx)\n\t\t\t\tif err != nil {\n\t\t\t\t\treturn 0, err\n\t\t\t\t}\n\t\t\t\treturn freshPayloadChars(host, tokens,",
+  "replace": "\t\t\t\ttokens := 0\n\t\t\t\treturn freshPayloadChars(host, tokens,"
+ },
+ {
+  "name": "turn-end-fallback-dropped",
+  "file": "rollover.go",
+  "find": "\t\tfallback, err := thresholdFallback(event, ctx, host, toolTokens, resources.notes)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tif fallback != nil {\n\t\t\treturn fallback, nil\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "turn-end-send-always",
+  "file": "rollover.go",
+  "find": "\t\tif decision.kind == \"send\" {",
+  "replace": "\t\tif decision.kind != \"skip\" {"
+ },
+ {
+  "name": "turn-end-send-never",
+  "file": "rollover.go",
+  "find": "\t\tif decision.kind == \"send\" {",
+  "replace": "\t\tif decision.kind == \"sendx\" {"
+ },
+ {
+  "name": "reminder-type-changed",
+  "file": "rollover.go",
+  "find": "\t\t\t\tCustomType: reminderType,",
+  "replace": "\t\t\t\tCustomType: \"posthorse-note\","
+ },
+ {
+  "name": "reminder-content-prefix",
+  "file": "rollover.go",
+  "find": "\"[posthorse] Routine task-note update.\\n\" + checkpointGuidance",
+  "replace": "\"[posthorse] Routine task-note update. \" + checkpointGuidance"
+ },
+ {
+  "name": "reminder-guidance-dropped",
+  "file": "rollover.go",
+  "find": "\"[posthorse] Routine task-note update.\\n\" + checkpointGuidance",
+  "replace": "\"[posthorse] Routine task-note update.\\n\""
+ },
+ {
+  "name": "reminder-window-lost",
+  "file": "rollover.go",
+  "find": "WindowID:      decision.fingerprint.windowId,",
+  "replace": "WindowID:      \"initial\","
+ },
+ {
+  "name": "reminder-context-window-lost",
+  "file": "rollover.go",
+  "find": "ContextWindow: decision.fingerprint.contextWindow,",
+  "replace": "ContextWindow: nil,"
+ },
+ {
+  "name": "reminder-reserve-lost",
+  "file": "rollover.go",
+  "find": "ReserveTokens: decision.fingerprint.reserveTokens,",
+  "replace": "ReserveTokens: nil,"
+ },
+ {
+  "name": "reminder-deliver-as",
+  "file": "rollover.go",
+  "find": "sdk.SendMessageOptions{DeliverAs: \"steer\"}",
+  "replace": "sdk.SendMessageOptions{DeliverAs: \"followUp\"}"
+ },
+ {
+  "name": "reminder-send-error-swallowed",
+  "file": "rollover.go",
+  "find": "\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t\treturn nil, nil",
+  "replace": "\t\t}\n\t\treturn nil, nil"
+ }
+]

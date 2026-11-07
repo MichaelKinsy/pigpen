@@ -1,0 +1,76 @@
+{
+ "name": "ur-history-w2",
+ "replies": [
+  {
+   "tool_calls": [
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "q\tz",
+      "all": true,
+      "fixture": "hs-cjk"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "q\tz",
+      "all": true,
+      "fixture": "hs-rtl"
+     }
+    },
+    {
+     "name": "history",
+     "arguments": {
+      "op": "search",
+      "query": "q\tz",
+      "all": true,
+      "fixture": "hs-ansi"
+     }
+    }
+   ],
+   "chunk": 4000
+  },
+  {
+   "text": "all done",
+   "chunk": 4000
+  }
+ ],
+ "width": 2,
+ "height": 200,
+ "steps": [
+  {
+   "wait": 2.5
+  },
+  {
+   "send": "go"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "until": "(?s)a\\s*l\\s*l\\s*d\\s*o\\s*n\\s*e",
+   "timeout": 60
+  },
+  {
+   "snap": "collapsed",
+   "settle": 1.5
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "expanded",
+   "settle": 2.0
+  },
+  {
+   "key": "C-o"
+  },
+  {
+   "snap": "collapsed-again",
+   "settle": 1.5
+  }
+ ]
+}

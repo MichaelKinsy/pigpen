@@ -1,0 +1,612 @@
+{
+ "name": "nat-fork-ownership-tree-adoption-resume",
+ "description": "native-host.ts:464 fork notes keep ownership across tree navigation, adoption, deletion, and resume: a forked copy whose leaf sits on an earlier entry keeps only its own private notes, a later branch's notes are read-only live references that adopt on edit, native read/edit/write of the live source and of managed metadata are guarded, parallel codemode appends keep the inherited prefix, and a deleted private copy stays deleted across a resume.",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 100000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {},
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "selected.md",
+      "content": "selected checkpoint"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Selected saved.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "reference.md",
+      "content": "original reference"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "write",
+      "path": "append.md",
+      "content": "inherited prefix"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Rest saved.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "forkfile",
+     "arguments": {
+      "name": "child.jsonl",
+      "id": "33333333-3333-4333-8333-333333333333",
+      "upto": "Selected saved."
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child file written.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "selected.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child selected.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "selected.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child on the other branch.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "write",
+      "path": ".pi/notes/reference.md",
+      "content": "current reference"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "read",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "edit",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/reference.md",
+      "oldText": "original reference",
+      "newText": "private edit"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "edit",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/.forks/2026-11-06T10-00-00-000Z_33333333-3333-4333-8333-333333333333/notes/reference.md",
+      "oldText": "current reference",
+      "newText": "private edit"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "codemode",
+     "arguments": {
+      "code": "await Promise.all([\"first\", \"second\"].map(content => tools.notes({op:\"append\", path:\"append.md\", content}))); return \"appended\";"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child edited.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "append.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "edit",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/.forks/2026-11-06T10-00-00-000Z_33333333-3333-4333-8333-333333333333/notes/reference.md",
+      "oldText": "private edit",
+      "newText": "parent overwrite"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "write",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/.forks/2026-11-06T10-00-00-000Z_33333333-3333-4333-8333-333333333333/notes/../manifest.json",
+      "content": "corrupt"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "write",
+     "arguments": {
+      "path": "{{cwd}}/.pi/notes/.forks",
+      "content": "corrupt"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Parent probed.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "fsx",
+     "arguments": {
+      "op": "unlink",
+      "path": ".pi/notes/.forks/2026-11-06T10-00-00-000Z_33333333-3333-4333-8333-333333333333/notes/reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Child deleted.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  },
+  {
+   "toolCalls": [
+    {
+     "name": "notes",
+     "arguments": {
+      "op": "read",
+      "path": "reference.md"
+     }
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "Resumed child.",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "parent-file",
+   "rpc": {
+    "type": "get_state"
+   },
+   "quiet": true,
+   "save": {
+    "parent": "data.sessionFile"
+   }
+  },
+  {
+   "name": "parent-selected",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save the selected checkpoint."
+   }
+  },
+  {
+   "name": "parent-rest",
+   "rpc": {
+    "type": "prompt",
+    "message": "Save the reference and the append note."
+   }
+  },
+  {
+   "name": "other-branch",
+   "rpc": {
+    "type": "get_entries"
+   },
+   "quiet": true,
+   "save": {
+    "other": "data.entries.-1.id"
+   }
+  },
+  {
+   "name": "make-child",
+   "rpc": {
+    "type": "prompt",
+    "message": "Write the child session file."
+   }
+  },
+  {
+   "name": "open-child",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/child.jsonl"
+   }
+  },
+  {
+   "name": "child-selected",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the selected note."
+   }
+  },
+  {
+   "name": "tree-other",
+   "rpc": {
+    "type": "prompt",
+    "message": "/eq-tree {{var:other}}"
+   }
+  },
+  {
+   "name": "child-other",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the notes again on the other branch."
+   }
+  },
+  {
+   "name": "child-edits",
+   "rpc": {
+    "type": "prompt",
+    "message": "Work through the guarded edits."
+   }
+  },
+  {
+   "name": "to-parent",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "parent-probe",
+   "rpc": {
+    "type": "prompt",
+    "message": "Probe the child's notes."
+   }
+  },
+  {
+   "name": "to-child",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/child.jsonl"
+   }
+  },
+  {
+   "name": "child-delete",
+   "rpc": {
+    "type": "prompt",
+    "message": "Delete the private copy."
+   }
+  },
+  {
+   "name": "away",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{var:parent}}"
+   }
+  },
+  {
+   "name": "resume-child",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/child.jsonl"
+   }
+  },
+  {
+   "name": "child-resumed",
+   "rpc": {
+    "type": "prompt",
+    "message": "Read the deleted note."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "fsx.ts",
+   "source": "import * as fs from \"node:fs\";\nimport * as path from \"node:path\";\nexport default function (pi: any) {\n  pi.registerTool({\n    name: \"fsx\",\n    label: \"Fsx\",\n    description: \"Harness helper: change the workspace outside the extension under test.\",\n    parameters: {\n      type: \"object\",\n      properties: {\n        op: { type: \"string\" },\n        path: { type: \"string\" },\n        content: { type: \"string\" },\n        target: { type: \"string\" },\n        mtime: { type: \"number\" },\n      },\n      required: [\"op\", \"path\"],\n    },\n    async execute(_id: string, params: any, _signal: any, _update: any, ctx: any) {\n      const p = path.resolve(ctx.cwd, params.path);\n      if (params.op === \"write\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.writeFileSync(p, params.content ?? \"\");\n      } else if (params.op === \"unlink\") {\n        fs.unlinkSync(p);\n      } else if (params.op === \"utimes\") {\n        fs.utimesSync(p, params.mtime, params.mtime);\n      } else if (params.op === \"symlink\") {\n        fs.mkdirSync(path.dirname(p), { recursive: true });\n        fs.symlinkSync(path.resolve(ctx.cwd, params.target), p, \"dir\");\n      } else if (params.op === \"find\") {\n        // every regular file named params.content under params.path, with its mtime\n        const found: string[] = [];\n        const walk = (dir: string) => {\n          for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {\n            const full = path.join(dir, entry.name);\n            if (entry.isDirectory()) walk(full);\n            else if (entry.name === params.content) found.push(path.relative(p, full) + \" \" + fs.statSync(full).mtimeMs);\n          }\n        };\n        walk(p);\n        found.sort();\n        return { content: [{ type: \"text\", text: found.join(\"\\n\") || \"none\" }], details: {} };\n      } else if (params.op === \"mkdir\") {\n        fs.mkdirSync(p, { recursive: true });\n      } else {\n        throw new Error(\"fsx: unknown op \" + params.op);\n      }\n      return { content: [{ type: \"text\", text: \"fsx \" + params.op + \" ok\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "forkfile.ts",
+   "source": "import * as fs from \"node:fs\";\nimport * as path from \"node:path\";\nexport default function (pi: any) {\n  pi.registerTool({\n    name: \"forkfile\",\n    label: \"Forkfile\",\n    description: \"Harness helper: write the forked copy of the current session file, with its leaf on the entry after which the assistant said `upto`.\",\n    parameters: {\n      type: \"object\",\n      properties: { name: { type: \"string\" }, id: { type: \"string\" }, upto: { type: \"string\" } },\n      required: [\"name\", \"id\"],\n    },\n    async execute(_id: string, params: any, _signal: any, _update: any, ctx: any) {\n      const source = ctx.sessionManager.getSessionFile();\n      const lines = fs.readFileSync(source, \"utf8\").split(\"\\n\").filter((line: string) => line !== \"\");\n      const entries = lines.map((line: string) => JSON.parse(line)).filter((entry: any) => entry.type !== \"session\");\n      const byId = new Map(entries.map((entry: any) => [entry.id, entry]));\n      const leafEntry = params.upto === undefined ? undefined : entries.find((e: any) => e.type === \"message\" && e.message?.role === \"assistant\" && Array.isArray(e.message.content) && e.message.content.some((c: any) => c.type === \"text\" && c.text === params.upto));\n      const onPath = new Set<string>();\n      for (let id: string | null | undefined = leafEntry?.id; id; id = (byId.get(id) as any)?.parentId) onPath.add(id);\n      // entries after the selected leaf first, the path to it last: the file's last entry is the leaf\n      const ordered = leafEntry ? [...entries.filter((e: any) => !onPath.has(e.id)), ...entries.filter((e: any) => onPath.has(e.id))] : entries;\n      const header = { type: \"session\", version: 3, id: params.id, timestamp: \"2026-11-06T10:00:00.000Z\", cwd: ctx.cwd, parentSession: source };\n      fs.writeFileSync(path.join(path.dirname(source), params.name), [header, ...ordered].map((entry) => JSON.stringify(entry)).join(\"\\n\") + \"\\n\");\n      return { content: [{ type: \"text\", text: \"forkfile \" + params.name + \" ok\" }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  },
+  {
+   "name": "codemode.ts",
+   "source": "import { createCodemodeExtension } from \"@earendil-works/pi-coding-agent\";\nexport default createCodemodeExtension();\n",
+   "position": "before"
+  }
+ ],
+ "args": [
+  "--tools",
+  "+codemode"
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end"
+ ],
+ "captureFiles": [
+  ".pi/notes/**",
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "normalize": [
+  {
+   "pattern": "(\"anchors\":\\[\")[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  },
+  {
+   "pattern": "\"mtimeMs\":\\d+(?:\\.\\d+)?,\"ctimeMs\":\\d+(?:\\.\\d+)?,\"ino\":\\d+,\"dev\":\\d+",
+   "replacement": "\"mtimeMs\":<n>,\"ctimeMs\":<n>,\"ino\":<n>,\"dev\":<n>"
+  },
+  {
+   "pattern": "20(?:2[1-9]|[3-9]\\d)-\\d{2}-\\d{2}T\\d{2}:\\d{2}Z",
+   "replacement": "<time-minute>"
+  },
+  {
+   "pattern": "Read [^ ]*/codemode\\.md first",
+   "replacement": "Read <codemode.md> first"
+  },
+  {
+   "pattern": "Wall time [0-9.]+ seconds",
+   "replacement": "Wall time <s> seconds"
+  }
+ ],
+ "project": {
+  "full": [
+   "tool_execution_end",
+   "message_end"
+  ],
+  "drop": [
+   "**.durationMs",
+   "**.parentToolCallId",
+   "**.sections.docs",
+   "**.sections.preamble"
+  ]
+ }
+}

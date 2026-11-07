@@ -1,0 +1,674 @@
+[
+{
+"name": "u16len-counts-runes",
+"file": "js.go",
+"find": "n += units",
+"replace": "n += min(units, 1)"
+},
+{
+"name": "clampRelative-negative-sign",
+"file": "js.go",
+"find": "i += length",
+"replace": "i -= length"
+},
+{
+"name": "localeInt-group-2",
+"file": "js.go",
+"find": "lead := len(digits) % 3",
+"replace": "lead := len(digits) % 2"
+},
+{
+"name": "jsRound-half-strict",
+"file": "js.go",
+"find": "if x-r >= 0.5 {",
+"replace": "if x-r > 0.5 {"
+},
+{
+"name": "jsTrim-drops-FEFF",
+"file": "js.go",
+"find": "0x3000, 0xFEFF:",
+"replace": "0x3000:"
+},
+{
+"name": "jsFromBytes-ED-range",
+"file": "js.go",
+"find": "need, hi = 2, 0x9F",
+"replace": "need, hi = 2, 0xBF"
+},
+{
+"name": "lower-U0130",
+"file": "js.go",
+"find": "case r == 0x130:",
+"replace": "case r == 0x131:"
+},
+{
+"name": "lower-final-sigma-inverted",
+"file": "js.go",
+"find": "case r == 0x3A3 && jsFinalSigma(text, i):",
+"replace": "case r == 0x3A3 && !jsFinalSigma(text, i):"
+},
+{
+"name": "utf8bytes-pair-join",
+"file": "js.go",
+"find": "if hi < 0xDC00 && isWTF8Surrogate(s, i+3) {",
+"replace": "if isWTF8Surrogate(s, i+3) {"
+},
+{
+"name": "surrogateBytes-lead",
+"file": "js.go",
+"find": "return [3]byte{0xE0 | byte(unit>>12)",
+"replace": "return [3]byte{0xF0 | byte(unit>>12)"
+},
+{
+"name": "u16index-empty-needle",
+"file": "js.go",
+"find": "return min(from, u16len(s))",
+"replace": "return from"
+},
+{
+"name": "special-lower-C4",
+"file": "js.go",
+"find": "case 0xC4:",
+"replace": "case 0xC5:"
+},
+{
+"name": "u16lastIndex-end",
+"file": "js.go",
+"find": "end = min(len(s), from+len(sub))",
+"replace": "end = min(len(s), from)"
+},
+{
+"name": "decodeUnit-astral-one-unit",
+"file": "js.go",
+"find": "return size, 2",
+"replace": "return size, 1"
+},
+{
+"name": "substring-no-swap",
+"file": "js.go",
+"find": "from, to = to, from",
+"replace": "from, to = from, to"
+},
+{
+"name": "imageSummary-plural",
+"file": "message_text.go",
+"find": "if len(images) == 1 {",
+"replace": "if len(images) == 2 {"
+},
+{
+"name": "toolIdentity-default",
+"file": "message_text.go",
+"find": "identity := \"tool\"",
+"replace": "identity := \"Tool\""
+},
+{
+"name": "execargs-label",
+"file": "message_text.go",
+"find": "\"\\nExecution arguments: \"",
+"replace": "\"\\nExecution Arguments: \""
+},
+{
+"name": "call-id-label",
+"file": "message_text.go",
+"find": "\"\\nCall ID: \"",
+"replace": "\"\\nCall Id: \""
+},
+{
+"name": "assistantFailure-aborted",
+"file": "message_text.go",
+"find": "stopReason != \"aborted\"",
+"replace": "stopReason != \"abort\""
+},
+{
+"name": "recovery-tool-name",
+"file": "message_text.go",
+"find": "s == \"new_context\"",
+"replace": "s == \"new-context\""
+},
+{
+"name": "shortKey-length",
+"file": "message_text.go",
+"find": "return string(encoded[:10])",
+"replace": "return string(encoded[:11])"
+},
+{
+"name": "sourceTag-text",
+"file": "message_text.go",
+"find": "\" [subagent]\"",
+"replace": "\" [sub-agent]\""
+},
+{
+"name": "excerpt-head",
+"file": "message_text.go",
+"find": "head := (limit - excerptMarkerLength) / 2",
+"replace": "head := (limit - excerptMarkerLength + 1) / 2"
+},
+{
+"name": "excerptAround-lead-ellipsis",
+"file": "message_text.go",
+"find": "if start > 0 {",
+"replace": "if start >= 0 {"
+},
+{
+"name": "boundedBlock-bytes-not-units",
+"file": "message_text.go",
+"find": "limit-u16len(header)-1",
+"replace": "limit-len(header)-1"
+},
+{
+"name": "textOf-separator",
+"file": "message_text.go",
+"find": "b.WriteByte('\\n')",
+"replace": "b.WriteByte(' ')"
+},
+{
+"name": "safeJson-text",
+"file": "message_text.go",
+"find": "return \"[unserializable]\"",
+"replace": "return \"[unserialisable]\""
+},
+{
+"name": "minUsable-factor",
+"file": "budget.go",
+"find": "const minUsableTokens = (maxHandoffChars + 3) / 4 * 2",
+"replace": "const minUsableTokens = (maxHandoffChars + 3) / 4 * 3"
+},
+{
+"name": "supported-boundary",
+"file": "budget.go",
+"find": "usable >= minUsableTokens",
+"replace": "usable > minUsableTokens"
+},
+{
+"name": "rolloverAt-offset",
+"file": "budget.go",
+"find": "rolloverAt:    usable + 1,",
+"replace": "rolloverAt:    usable,"
+},
+{
+"name": "automaticGuidance-supported",
+"file": "budget.go",
+"find": "if b != nil && !b.supported {",
+"replace": "if b != nil && b.supported {"
+},
+{
+"name": "fresh-prompt-tokens",
+"file": "budget.go",
+"find": "promptTokens := ceilQuarter(u16len(system)) + guidance",
+"replace": "promptTokens := ceilQuarter(u16len(system)) + guidance*0"
+},
+{
+"name": "fresh-tool-tokens",
+"file": "budget.go",
+"find": "-promptTokens-toolTokens-pendingTokens",
+"replace": "-promptTokens-pendingTokens"
+},
+{
+"name": "fresh-image-estimate",
+"file": "budget.go",
+"find": "*(estimatedImageChars/4)",
+"replace": "*(estimatedImageChars/8)"
+},
+{
+"name": "capacity-margin",
+"file": "budget.go",
+"find": "return chars/4 + pageMarginTokens, nil",
+"replace": "return chars/4, nil"
+},
+{
+"name": "capacity-guidance",
+"file": "budget.go",
+"find": "return line - *usage.tokens - guidance, nil",
+"replace": "return line - *usage.tokens - guidance*0, nil"
+},
+{
+"name": "snapshot-usage-not-cached",
+"file": "budget.go",
+"find": "if !p.usageRead {",
+"replace": "if true {"
+},
+{
+"name": "snapshot-settings-not-cached",
+"file": "budget.go",
+"find": "if p.settings == nil {",
+"replace": "if true {"
+},
+{
+"name": "budgetFor-zero-window",
+"file": "budget.go",
+"find": "if contextWindow == nil || *contextWindow <= 0 {",
+"replace": "if contextWindow == nil || *contextWindow < 0 {"
+},
+{
+"name": "unsupported-text",
+"file": "budget.go",
+"find": "minus Pi's compaction.reserveTokens",
+"replace": "minuss Pi's compaction.reserveTokens"
+},
+{
+"name": "guidance-tag",
+"file": "budget.go",
+"find": "+ \"\\n</posthorse>\",",
+"replace": "+ \"</posthorse>\","
+},
+{
+"name": "reconcile-negative",
+"file": "paging.go",
+"find": "counted = max(0, *usage-*accounting.usage)",
+"replace": "counted = *usage - *accounting.usage"
+},
+{
+"name": "size-factor",
+"file": "paging.go",
+"find": "max(0, remaining-pageMarginTokens)*4-",
+"replace": "max(0, remaining-pageMarginTokens)*3-"
+},
+{
+"name": "refuse-boundary",
+"file": "paging.go",
+"find": "if chars < minPageChars {",
+"replace": "if chars <= minPageChars {"
+},
+{
+"name": "refusal-fit",
+"file": "paging.go",
+"find": "if ceilQuarter(u16len(message)) <= remaining {",
+"replace": "if ceilQuarter(u16len(message)) < remaining {"
+},
+{
+"name": "refuse-no-reserve",
+"file": "paging.go",
+"find": "p.reserve(text, 0)",
+"replace": "_ = text"
+},
+{
+"name": "error-no-reserve",
+"file": "paging.go",
+"find": "p.reserve(message, 0)",
+"replace": "_ = message"
+},
+{
+"name": "notes-footer-boundary",
+"file": "paging.go",
+"find": "if chars <= footerLength {",
+"replace": "if chars < footerLength {"
+},
+{
+"name": "notes-empty-offset",
+"file": "paging.go",
+"find": "if page.offset > 0 && page.offset >= total {",
+"replace": "if page.offset >= total {"
+},
+{
+"name": "notes-search-rows",
+"file": "paging.go",
+"find": "maxRows = 20",
+"replace": "maxRows = 21"
+},
+{
+"name": "notes-end-footer",
+"file": "paging.go",
+"find": "end = min(end0, page.offset+chars-footerLength)",
+"replace": "end = end0"
+},
+{
+"name": "notesRange-start",
+"file": "paging.go",
+"find": "if start >= end {",
+"replace": "if start > end {"
+},
+{
+"name": "notesRange-limit",
+"file": "paging.go",
+"find": "if len(starts) == maxRows {",
+"replace": "if len(starts) > maxRows {"
+},
+{
+"name": "reserve-images",
+"file": "paging.go",
+"find": "+ imageCount*(estimatedImageChars/4)",
+"replace": "+ 0"
+},
+{
+"name": "refuse-imageOffset-text",
+"file": "paging.go",
+"find": "\" and imageOffset \"",
+"replace": "\" imageOffset \""
+},
+{
+"name": "finish-pending-only",
+"file": "reset_requests.go",
+"find": "root.kind != requestPending",
+"replace": "root.kind == requestPending"
+},
+{
+"name": "failed-keeps-handoff",
+"file": "reset_requests.go",
+"find": "root.kind, root.handoff, root.hasHandoff = requestFailed, \"\", false",
+"replace": "root.kind = requestFailed"
+},
+{
+"name": "first-handoff-wins",
+"file": "reset_requests.go",
+"find": "if root.kind == requestPending && !root.hasHandoff {",
+"replace": "if root.kind == requestPending {"
+},
+{
+"name": "request-error-text",
+"file": "reset_requests.go",
+"find": "Request new_context from the current foreground tool batch.",
+"replace": "Request new_context from the current foreground tool batch"
+},
+{
+"name": "take-needs-handoff",
+"file": "reset_requests.go",
+"find": "s.known && s.kind == requestSettled && s.hasHandoff",
+"replace": "s.known && s.kind == requestSettled"
+},
+{
+"name": "start-root-active",
+"file": "reset_requests.go",
+"find": "if hasParent && r.active[root.id] == nil {",
+"replace": "if r.active[root.id] == nil {"
+},
+{
+"name": "finish-hook-dropped",
+"file": "reset_requests.go",
+"find": "r.finish(data)",
+"replace": "_ = data"
+},
+{
+"name": "guidance-splice-index",
+"file": "guidance.go",
+"find": "at := min(1, len(messages))",
+"replace": "at := 0"
+},
+{
+"name": "guidance-custom-type",
+"file": "guidance.go",
+"find": "\"customType\": \"posthorse-guidance\",",
+"replace": "\"customType\": \"posthorse-guide\","
+},
+{
+"name": "guidance-section-wrapper",
+"file": "guidance.go",
+"find": "\"<posthorse>\\n\"+guidance+\"\\n</posthorse>\"",
+"replace": "\"<posthorse>\\n\"+guidance+\"</posthorse>\""
+},
+{
+"name": "guidance-findlast",
+"file": "guidance.go",
+"find": "for i := len(messages) - 1; i >= 0; i-- {",
+"replace": "for i := 0; i < len(messages); i++ {"
+},
+{
+"name": "guidance-settled-reset",
+"file": "guidance.go",
+"find": "state.set(false, nil)",
+"replace": "_ = state"
+},
+{
+"name": "schema-description",
+"file": "context_tools.go",
+"find": "as readable prose\"",
+"replace": "as readable proze\""
+},
+{
+"name": "schema-maxLength",
+"file": "context_tools.go",
+"find": "\"maxLength\", maxHandoffChars,",
+"replace": "\"maxLength\", maxHandoffChars+1,"
+},
+{
+"name": "handoff-limit-boundary",
+"file": "context_tools.go",
+"find": "trimmed != \"\" && size > limit",
+"replace": "trimmed != \"\" && size >= limit"
+},
+{
+"name": "empty-handoff-default",
+"file": "context_tools.go",
+"find": "handoff = emptyHandoff",
+"replace": "handoff = \"\""
+},
+{
+"name": "request-reset-dropped",
+"file": "context_tools.go",
+"find": "if err := requestReset(ctx.ToolCallID(), handoff); err != nil {",
+"replace": "if err := error(nil); err != nil {"
+},
+{
+"name": "rollover-status-inverted",
+"file": "context_tools.go",
+"find": "\tif b.supported {\n\t\treturn \"enabled\"",
+"replace": "\tif !b.supported {\n\t\treturn \"enabled\""
+},
+{
+"name": "remaining-sign",
+"file": "context_tools.go",
+"find": "usage.contextWindow-tokens",
+"replace": "usage.contextWindow+tokens"
+},
+{
+"name": "percent-not-rounded",
+"file": "context_tools.go",
+"find": "jsIntegerString(jsRound(percent))",
+"replace": "jsIntegerString(percent)"
+},
+{
+"name": "rollover-until-no-clamp",
+"file": "context_tools.go",
+"find": "n(max(0, b.rolloverAt-tokens))",
+"replace": "n(b.rolloverAt-tokens)"
+},
+{
+"name": "tool-label",
+"file": "context_tools.go",
+"find": "Label: \"New Context\",",
+"replace": "Label: \"New context\","
+},
+{
+"name": "tool-snippet",
+"file": "context_tools.go",
+"find": "with an optional handoff\"",
+"replace": "with an optional handoff.\""
+},
+{
+"name": "session-start-event",
+"file": "extension.go",
+"find": "e.OnEvent(sdk.EventSessionStart,",
+"replace": "e.OnEvent(sdk.EventTurnStart,"
+},
+{
+"name": "tool-tokens-zero",
+"file": "extension.go",
+"find": "ceilQuarter(u16len(safeJsonStringify(sdk.NewOrderedObject(pairs...))))",
+"replace": "ceilQuarter(0)"
+},
+{
+"name": "live-policy-provider",
+"file": "extension.go",
+"find": "\"provider\": ctx.ModelProvider()",
+"replace": "\"provider\": \"\""
+},
+{
+"name": "relative-same-path",
+"file": "files.go",
+"find": "path != \"\" && path != \".\" && path != \"..\"",
+"replace": "path != \"\" && path != \"..\""
+},
+{
+"name": "abort-text",
+"file": "files.go",
+"find": "text: \"This operation was aborted\"}",
+"replace": "text: \"The operation was aborted\"}"
+},
+{
+"name": "unknown-errno-name",
+"file": "files.go",
+"find": "return \"UNKNOWN\"",
+"replace": "return \"EUNKNOWN\""
+},
+{
+"name": "dirname-double-slash",
+"file": "files.go",
+"find": "return \"//\"",
+"replace": "return \"/\""
+},
+{
+"name": "resolve-cycle-inverted",
+"file": "files.go",
+"find": "if _, seen := links[target]; seen {",
+"replace": "if _, seen := links[target]; !seen {"
+},
+{
+"name": "existing-note-dir-code",
+"file": "files.go",
+"find": "code = \"EISDIR\"",
+"replace": "code = \"ENOTDIR\""
+},
+{
+"name": "publish-existing-mode",
+"file": "files.go",
+"find": "mode = 0o600",
+"replace": "mode = 0o666"
+},
+{
+"name": "publish-lone-surrogate",
+"file": "files.go",
+"find": "data := jsUTF8Bytes(content)",
+"replace": "data := []byte(content)"
+},
+{
+"name": "resolve-symlink-test",
+"file": "files.go",
+"find": "if linkInfo.Mode()&fs.ModeSymlink == 0 {",
+"replace": "if linkInfo.Mode()&fs.ModeSymlink != 0 {"
+},
+{
+"name": "lfChunks-no-reuse-flag",
+"file": "files.go",
+"find": "if buf == nil || !reuse {",
+"replace": "if buf == nil {"
+},
+{
+"name": "lfChunks-eof-line",
+"file": "files.go",
+"find": "if openLine {",
+"replace": "if !openLine {"
+},
+{
+"name": "binary-sniff-span",
+"file": "files.go",
+"find": "const binarySniff = 8_000",
+"replace": "const binarySniff = 8_001"
+},
+{
+"name": "readText-sniff-min",
+"file": "files.go",
+"find": "indexNUL(data[:min(len(data), binarySniff)]) >= 0",
+"replace": "indexNUL(data) >= 0"
+},
+{
+"name": "gitdir-line-start",
+"file": "files.go",
+"find": "if p > 0 && !isLineTerminator(runes[p-1]) {",
+"replace": "if p > 0 && runes[p-1] != '\\n' {"
+},
+{
+"name": "commondir-trim",
+"file": "files.go",
+"find": "jsTrim(jsFromBytes(raw))",
+"replace": "jsFromBytes(raw)"
+},
+{
+"name": "orphan-worktree-local",
+"file": "files.go",
+"find": "return dir // Orphaned worktrees retain local notes.",
+"replace": "return cwd // Orphaned worktrees retain local notes."
+},
+{
+"name": "migration-suffix",
+"file": "files.go",
+"find": "strconv.Itoa(suffix)",
+"replace": "strconv.Itoa(suffix+1)"
+},
+{
+"name": "junction-args",
+"file": "files.go",
+"find": "symlinkJunction(moved, local)",
+"replace": "symlinkJunction(local, moved)"
+},
+{
+"name": "lstat-enotdir",
+"file": "files.go",
+"find": "isMissing(err) || errors.Is(err, syscall.ENOTDIR)",
+"replace": "isMissing(err)"
+},
+{
+"name": "mkdir-file-eexist",
+"file": "files.go",
+"find": "if info, err := os.Stat(dir); err == nil && !info.IsDir() {",
+"replace": "if info, err := os.Stat(dir); err == nil && info.IsDir() {"
+},
+{
+"name": "uuid-version",
+"file": "files.go",
+"find": "b[6] = b[6]&0x0f | 0x40",
+"replace": "b[6] = b[6]&0x0f | 0x50"
+},
+{
+"name": "head-512",
+"file": "session_lines.go",
+"find": "512-len(head)",
+"replace": "511-len(head)"
+},
+{
+"name": "bytes-retention",
+"file": "session_lines.go",
+"find": "position-start == int64(len(bytes))",
+"replace": "position-start != int64(len(bytes))"
+},
+{
+"name": "position-newline",
+"file": "session_lines.go",
+"find": "position++",
+"replace": "position += 2"
+},
+{
+"name": "utf8Tail-zero-overlap",
+"file": "session_lines.go",
+"find": "if overlap <= 0 {",
+"replace": "if overlap < 0 {"
+},
+{
+"name": "latin1-tail-short",
+"file": "session_lines.go",
+"find": "window[max(0, len(window)-matcher.overlap):]",
+"replace": "window[max(0, len(window)-matcher.overlap+1):]"
+},
+{
+"name": "decoder-completion-branch",
+"file": "session_lines.go",
+"find": "if p[i]&0xC0 != 0x80 {",
+"replace": "if p[i]&0xC0 == 0x80 {"
+},
+{
+"name": "decoder-4byte-lead",
+"file": "session_lines.go",
+"find": "case p[i]&0xF8 == 0xF0:",
+"replace": "case p[i]&0xF8 == 0xF8:"
+},
+{
+"name": "changed-file-text",
+"file": "session_lines.go",
+"find": "Session file changed while reading a history entry.",
+"replace": "Session file changed while reading a history entry"
+},
+{
+"name": "utf8Tail-split-pair",
+"file": "session_lines.go",
+"find": "if units+n > overlap {",
+"replace": "if units+n >= overlap {"
+}
+]

@@ -1,0 +1,35 @@
+HistoryLane red snapshot
+========================
+Run: twins of posthorse 14-22, 28, 29, 36, 37, 50-58 and archive 0, 1 (twin_posthorse_history_test.go,
+twin_archive_test.go) on the fixture host, with the history tool's Execute stubbed to
+`return nil, errors.New("unported: history.ts:82-148")` (history_entries.go, history_search.go,
+history_pages.go and session_files.go were ported before the fixtures existed; the stub is applied to a
+scratch copy only). Every case fails on behaviour, none on compilation.
+
+--- FAIL: TestTwinArchive
+    --- FAIL: TestTwinArchive/archive_search_and_later_reads_pass_a_nonmatching_image_beyond_V8's_string_limit
+    --- FAIL: TestTwinArchive/archive_prefilter_keeps_boundary-spanning_text_and_Unicode_folds
+--- FAIL: TestTwinPosthorseHistory
+    --- FAIL: history_reads_current_entries_without_opening_every_archived_session
+    --- FAIL: all-session_history_recurses_and_returns_newest_matching_entries_first
+    --- FAIL: history_keeps_the_selected_session_after_a_cwd_override_but_excludes_foreign_and_unidentified_archives
+    --- FAIL: history_searches_normalized_text_and_reports_native_window_ids
+    --- FAIL: history_search_skips_entries_already_in_the_active_context_and_says_how_many
+    --- FAIL: history_ranks_matching_original_content_before_recovery_and_lookup_echoes_without_hiding_either
+    --- FAIL: archived_history_preserves_Unicode_separators_across_chunks_and_an_unterminated_final_record
+    --- FAIL: history_preserves_assistant_failures_and_ranks_them_ahead_of_recovery_echoes
+    --- FAIL: all-session_ranking_keeps_older_originals_ahead_of_newer_echoes_before_applying_the_result_limit
+    --- FAIL: history_returns_stored_images_for_a_requested_entry_and_summarizes_them_elsewhere
+    --- FAIL: history_image_continuations_preserve_order,_text,_and_retry_offsets
+    --- FAIL: history_cursors_finish_partial_headers_and_progress_past_growing_lookup_echoes
+    --- FAIL: all-session_cursors_retain_ranking_and_per-file_entries_across_pages
+    --- FAIL: history_flattens_bashExecution_entries_and_honors_excludeFromContext
+    --- FAIL: all-session_search_returns_fork_copies_with_their_source-qualified_references
+    --- FAIL: all-session_history_reads_the_searched_entry_when_independent_sessions_reuse_an_entry_id
+    --- FAIL: all-session_history_keeps_identical_entries_from_unrelated_sessions_separate
+    --- FAIL: all-session_history_keeps_new_entries_in_sibling_forks_separate
+    --- FAIL: all-session_history_cursors_fit_the_declared_limit_for_nested_session_files
+    --- FAIL: all-session_search_finds_the_same_entries_with_or_without_ripgrep,_including_text_raw_JSONL_cannot_show
+    --- FAIL: all-session_search_still_finds_text_that_exists_only_in_normalized_entries
+    --- FAIL: session_search_and_archived_reads_preserve_modification-time_ordering_including_ties
+FAIL

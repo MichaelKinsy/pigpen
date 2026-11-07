@@ -1,0 +1,2 @@
+HarnessExt: pigeq lane pi vs pig, 10 scenarios: IDENTICAL x10 (see lane-HarnessExt.md Findings 1-2 for the masked host differences).
+go vet (linux, windows, darwin) clean; go test -race ./eq ok.

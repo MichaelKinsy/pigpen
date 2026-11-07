@@ -1,0 +1,110 @@
+{
+ "name": "nat-rollover-respects-context-edits",
+ "description": "native-host.ts:1865 automatic rollover respects context edits in its recovery handoff: a saved session holds an omitted owner message (PRIVATE_EDIT_MARKER) and a revised one (OBSOLETE_EDIT_MARKER replaced by APPROVED_EDIT_MARKER); after a large local tool result the rollover record and the following request carry the approved text and neither private nor obsolete marker. (The upstream case also context-edits the dump result from a turn_end hook with SessionManager.appendContextEdit; the host's extension context has no such call under PiG, see coverage.)",
+ "systemDiff": "hunks",
+ "model": {
+  "contextWindow": 128000,
+  "maxTokens": 4096
+ },
+ "settings": {
+  "compaction": {
+   "enabled": true,
+   "reserveTokens": 16384,
+   "keepRecentTokens": 20000
+  },
+  "retry": {
+   "enabled": false
+  }
+ },
+ "session": {
+  "files": {
+   "2026-11-06T10-00-00-000Z_f1111111-1111-4111-8111-111111111111.jsonl": "{\"type\": \"session\", \"version\": 3, \"id\": \"f1111111-1111-4111-8111-111111111111\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"cwd\": \"{{cwd}}\"}\n{\"type\": \"message\", \"id\": \"sdpriv01\", \"parentId\": null, \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"PRIVATE_EDIT_MARKER\", \"timestamp\": 1793000001000}}\n{\"type\": \"context_edit\", \"id\": \"sdprived\", \"parentId\": \"sdpriv01\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"targetId\": \"sdpriv01\", \"replacement\": null}\n{\"type\": \"message\", \"id\": \"sdobs001\", \"parentId\": \"sdprived\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"message\": {\"role\": \"user\", \"content\": \"OBSOLETE_EDIT_MARKER\", \"timestamp\": 1793000002000}}\n{\"type\": \"context_edit\", \"id\": \"sdobsed1\", \"parentId\": \"sdobs001\", \"timestamp\": \"2026-11-06T10:00:00.000Z\", \"targetId\": \"sdobs001\", \"replacement\": {\"content\": \"APPROVED_EDIT_MARKER\"}}\n"
+  }
+ },
+ "llm": [
+  {
+   "toolCalls": [
+    {
+     "name": "dump",
+     "arguments": {}
+    }
+   ],
+   "usage": {
+    "input": 1200,
+    "output": 30
+   }
+  },
+  {
+   "text": "done",
+   "usage": {
+    "input": 1300,
+    "output": 5
+   }
+  }
+ ],
+ "steps": [
+  {
+   "name": "open",
+   "rpc": {
+    "type": "switch_session",
+    "sessionPath": "{{sessions}}/2026-11-06T10-00-00-000Z_f1111111-1111-4111-8111-111111111111.jsonl"
+   }
+  },
+  {
+   "name": "run",
+   "rpc": {
+    "type": "prompt",
+    "message": "Run the local dump tool."
+   }
+  }
+ ],
+ "extensions": [
+  {
+   "name": "dump.ts",
+   "source": "export default function (pi: any) {\n  pi.registerTool({\n    name: \"dump\",\n    label: \"Dump\",\n    description: \"Large local result to exercise native automatic rollover\",\n    parameters: { type: \"object\", properties: {} },\n    async execute() {\n      return { content: [{ type: \"text\", text: \"PRIVATE_TOOL_MARKER \" + \"x\".repeat(600000) }], details: {} };\n    },\n  });\n}\n",
+   "position": "before"
+  }
+ ],
+ "capture": [
+  "response",
+  "extension_ui_request",
+  "extension_error",
+  "agent_start",
+  "agent_end",
+  "turn_start",
+  "turn_end",
+  "tool_execution_start",
+  "tool_execution_end",
+  "message_end",
+  "compaction_start",
+  "compaction_end"
+ ],
+ "captureFiles": [
+  {
+   "root": "sessions",
+   "glob": "**/*.jsonl",
+   "drop": [
+    "**.sections.docs",
+    "**.sections.preamble",
+    "**.identity"
+   ]
+  }
+ ],
+ "project": {
+  "skipSystem": true,
+  "drop": [
+   "**.estimatedTokensAfter"
+  ]
+ },
+ "normalize": [
+  {
+   "pattern": "\\bentry [0-9a-f]{8}\\b",
+   "replacement": "entry <entry-id>"
+  },
+  {
+   "pattern": "(use history read\\): )[0-9a-f]{8}",
+   "replacement": "${1}<entry-id>"
+  }
+ ],
+ "collapseRuns": 64
+}

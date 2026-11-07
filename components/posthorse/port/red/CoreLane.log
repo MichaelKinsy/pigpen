@@ -1,0 +1,38 @@
+CoreLane red evidence
+=====================
+The foundation files (contracts.go, dyn.go, js.go, message_text.go, budget.go, paging.go, files.go, ...) had to land
+as real code first (every other lane compiles against them), so the lane's own twins were first run against an EMPTY
+extension: the original stub `newPosthorse(policyReader) *sdk.Extension { return sdk.New("posthorse") }` registering
+nothing, with every other lane's production code unchanged (container copy only; the shared tree was not touched).
+`go test -run TestCoreTwins -v`, behaviour failures only (no compile errors):
+
+    twin_posthorse_core_test.go:104: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:168: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:195: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:214: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:279: fixture: tool "new_context" is not registered (have [])
+    twin_posthorse_core_test.go:290: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:336: context_with_system left the system message unchanged
+    twin_posthorse_core_test.go:377: fixture: tool "history" is not registered (have [])
+    twin_posthorse_core_test.go:438: fixture: tool "notes" is not registered (have [])
+    twin_posthorse_core_test.go:494: fixture: tool "notes" is not registered (have [])
+    twin_posthorse_core_test.go:537: fixture: tool "notes" is not registered (have [])
+    twin_posthorse_core_test.go:555: fixture: tool "notes" is not registered (have [])
+    twin_posthorse_core_test.go:583: fixture: tool "notes" is not registered (have [])
+    --- FAIL: TestCoreTwins (0.12s)
+        --- FAIL: each safety evaluation reads native usage and policy once, including unknown pages and final handoff validation
+        --- FAIL: guidance uses request-local sections and preserves custom or forced prompts
+        --- FAIL: disabled Pi compaction disables automatic Posthorse behavior but not new_context
+        --- FAIL: small-context configurations are unsupported; larger ones derive honest budgets
+        --- FAIL: fresh payload budgets count the system prompt and cancel unsafe automatic recovery
+        --- FAIL: read pages shrink to the remaining budget and refuse unsafe pages while preserving the offset
+        --- FAIL: note and history pages share a batch budget without double-counting consumed pages
+        --- FAIL: mixed search/list/read outputs and no-match refusals share one reservation
+        --- FAIL: notes resolve the repository root from nested directories, worktrees, and plain folders
+        --- FAIL: notes for Pi package checkouts move to the agent directory and survive pi update
+        --- FAIL: generic Git URL prefix packages cannot disclose or overwrite each other's notes
+        --- FAIL: nested project-package notes do not leak through outer package list or search
+        --- FAIL: separate Git directories share notes in the common Git directory (${marker})
+
+TestPackageNotesTwins drives notesDir directly (files.go is core foundation code that landed with the first batch), so it
+has no red run against a stub.
