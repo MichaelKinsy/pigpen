@@ -131,6 +131,16 @@ export function buildPackageTree(dir, outRoot, { directory = root, repository = 
   return target;
 }
 
+/**
+ * Whether a packed file lies in the directory of `rel` or below it. A go.mod or go.sum that is not packed is a defect in a
+ * directory the Package ships (the build of an extension needs both), and a choice in a directory it does not ship at all
+ * (a harness or proof tree the Package's `files` leave out because it is not part of what a user installs).
+ */
+function sharesPackedDirectory(rel, packed) {
+  const directory = rel.slice(0, rel.lastIndexOf('/') + 1);
+  return packed.some((file) => file.startsWith(directory));
+}
+
 /** What a packed list lacks that a Go extension or the docs need: go.mod and go.sum anywhere, the root documents, every Resource file. */
 export function packedProblems(tree, packed) {
   const have = new Set(packed);
@@ -141,7 +151,7 @@ export function packedProblems(tree, packed) {
       const full = join(path, entry.name);
       const rel = relative(tree, full).split(sep).join('/');
       if (entry.isDirectory()) walk(full);
-      else if (/(^|\/)(go\.mod|go\.sum)$/.test(rel) && !have.has(rel)) problems.push(`${rel} is not packed`);
+      else if (/(^|\/)(go\.mod|go\.sum)$/.test(rel) && !have.has(rel) && sharesPackedDirectory(rel, packed)) problems.push(`${rel} is not packed`);
     }
   };
   walk(tree);

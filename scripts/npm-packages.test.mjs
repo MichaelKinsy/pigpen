@@ -116,4 +116,12 @@ describe('buildPackageTree', () => {
     assert.ok(packed.some((f) => f.endsWith('third_party/agent-host-protocol-go/go.mod')));
     assert.deepEqual(packedProblems(tree, packed.filter((f) => !f.endsWith('go.sum'))).length > 0, true, 'a missing go.sum is reported');
   });
+  it('does not ask for the go.mod of a tree the Package does not ship, and still asks for the one of a tree it does', () => {
+    const tree = buildPackageTree('kagent', out);
+    const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
+    assert.ok(existsSync(join(tree, 'harness/adapter/go.mod')), 'the harness module is in the component directory');
+    assert.equal(packed.some((f) => f.startsWith('harness/')), false, 'and npm does not pack it');
+    assert.deepEqual(packedProblems(tree, packed), []);
+    assert.ok(packedProblems(tree, packed.filter((f) => !f.endsWith('kagent-policy/go.mod'))).includes('extensions/kagent-policy/go.mod is not packed'));
+  });
 });
