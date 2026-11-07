@@ -189,7 +189,8 @@ jobs:
       # The kagent adapter's Windows process-group code (job object, suspended start) runs nowhere else. It comes before the Piglet builds so that a failed build does not skip it.
       - name: Test the kagent adapter's process groups
         if: ${{ runner.os == 'Windows' }}
-        run: go -C components/kagent/harness/adapter test -count=1 ./internal/fsutil
+        # Only the process-group tests: the package's file tests assert unix modes and directory sync, which Windows does not have.
+        run: go -C components/kagent/harness/adapter test -count=1 -v -run 'TestKill' ./internal/fsutil
       - name: Build all Piglets for ${{ matrix.target }} and smoke every Binary
         env:
           PIG_HOME: ${{ runner.temp }}/pig-home

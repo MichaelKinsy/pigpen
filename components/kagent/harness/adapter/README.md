@@ -97,7 +97,7 @@ they are `${KAGENT_PIG_HDR_n}` / `${PROVIDER_KEY}` references, because PiG runs 
 - A pending record that cannot be decoded or validated is moved to `pig-pending.json.corrupt` and reported once as `ErrSessionAbandoned`; the Actor
   takes new work afterwards.
 - The adapter runs in Linux Actors. It also compiles for Windows and macOS so every Pigpen Go module builds for every target a Piglet can be built
-  for. The Windows process code has been compile-checked (`GOOS=windows go vet`) and is run only by the `go test ./internal/fsutil` step of
+  for. The Windows process code has been compile-checked (`GOOS=windows go vet`) and is run only by the `go test -run TestKill ./internal/fsutil` step of
   the windows-2025 Platform job (main, merge groups, and pull requests labelled `full-ci`); the adapter's driver tests are unix-only.
   On Windows the child pig is started suspended inside a job object (kill-on-close) in its own process group. Closing pig's stdin is the
   graceful stop, as on unix. The middle step is not graceful: CTRL_BREAK reaches pig as SIGINT, which pig v0.7.0 in RPC mode does not
