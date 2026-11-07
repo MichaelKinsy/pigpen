@@ -95,24 +95,33 @@ function pigletEntry({ manifest, metadata, raw, path }, receipts, { repository, 
       source: { type: 'git', spec: 'git:https://github.com/' + repository + '.git',
         url: `https://github.com/${repository}/tree/${config.ref}/piglets/${manifest.name}` },
       manifestSha256: createHash('sha256').update(raw).digest('hex'),
-      releases, notes: [newest ? availableNote(newest) : PLANNED_NOTE, ...(licenseNote(license) ? [licenseNote(license)] : []), ...metadata.notes],
+      releases, notes: [newest ? availableNote(newest) : PLANNED_NOTE, ...(licenseNote(license, 'piglet') ? [licenseNote(license, 'piglet')] : []), ...metadata.notes],
   };
 }
 
 const availableNote = (release) => `Signed Piglet Binaries for ${release.platforms.join(', ')} from release ${release.version}, signed with ${release.verificationKey.id}. Pull one with the command above, after checking that key against ${release.verificationKey.publicKeyUrl}. pig pins the signer on the first pull.`;
 
+/** The generated files of `directory` as {file: text}: index.json and README.md with its licence block. */
+export function generatedFiles(directory = root) {
+  return {
+    'index.json': JSON.stringify(generateIndex(directory), null, 2) + '\n',
+    'README.md': withLicensesBlock(readFileSync(join(directory, 'README.md'), 'utf8'), directory),
+  };
+}
+
+/** The generated files whose committed text differs from what the sources generate. */
+export function staleFiles(directory = root) {
+  return Object.entries(generatedFiles(directory)).filter(([file, text]) => readFileSync(join(directory, file), 'utf8') !== text).map(([file]) => file);
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const text = JSON.stringify(generateIndex(), null, 2) + '\n';
-  const target = join(root, 'index.json');
-  const readme = join(root, 'README.md');
-  const readmeText = withLicensesBlock(readFileSync(readme, 'utf8'), root);
   if (process.argv.includes('--check')) {
-    if (readFileSync(target, 'utf8') !== text) throw new Error('index.json is stale; run npm run generate');
-    if (readFileSync(readme, 'utf8') !== readmeText) throw new Error('The licence list in README.md is stale; run npm run generate');
+    const stale = staleFiles();
+    if (stale.includes('index.json')) throw new Error('index.json is stale; run npm run generate');
+    if (stale.includes('README.md')) throw new Error('The licence list in README.md is stale; run npm run generate');
     console.log('Piglets index matches the manifests');
   } else {
-    writeFileSync(target, text);
-    writeFileSync(readme, readmeText);
+    for (const [file, text] of Object.entries(generatedFiles())) writeFileSync(join(root, file), text);
     console.log('Generated index.json from Piglet manifests');
   }
 }

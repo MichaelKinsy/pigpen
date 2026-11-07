@@ -153,25 +153,6 @@ a port or move whose Package `provenance.json` does not record the row's upstrea
   `move` brings existing code in from another repository, `original` is new work (it may credit an upstream asset).
   MCP is built into PiG and has no row.
 
-## Ports under a licence other than MIT
-
-A port keeps the upstream's licence (the porting steps above), so a port of a GPL, AGPL, LGPL or MPL project is
-GPL, AGPL, LGPL or MPL too. Pigpen accepts such a port as a **standalone, opt-in Package**, never as part of an MIT Piglet:
-
-- **Declare the licence** as an SPDX expression in the Package's `package.json` `license` (for example
-  `GPL-3.0-or-later`) and in `provenance.json`, keep the upstream licence text in the Package, and state the licence in the
-  Package's README. `index.json` and the root README list the licence of every Package that is not MIT, from that field.
-- **Never bundle it into an MIT Piglet** or any Binary whose licence is not compatible. `npm run quality`, `npm run stage`
-  (so `npm run validate`, `npm run build:piglet` and the release builds) and the release plan run
-  `scripts/license-guard.mjs`, which refuses to fuse a component into a Piglet when the SPDX compatibility table in
-  `scripts/licenses.mjs` says no, and when a licence is missing, malformed or not in the table. GPL-3.0-or-later into
-  an MIT Piglet is refused; GPL into the same GPL, and MIT into a GPL Piglet, is allowed. A Piglet's licence is the
-  `license` in its `provenance.json`. Do not work around a refusal; ask the owner, who decides whether a Piglet is
-  relicensed or the Package stays on its own.
-- **Credit the upstream** author and licence in `CREDITS.md` and in the ports row, as for any port.
-- The Package is installed on its own (`pig install`); it appears in no Piglet's `packages:` list.
-
-
 The YAML parser rejects duplicate keys; PiG validates each
 manifest and its selected resources. Validation may compile or load extension
 code, so run untrusted contributions in an isolated environment without secrets.
@@ -247,3 +228,24 @@ Cryptographic signatures are welcome but separate from this sign-off.
 Include the checks you ran, any limits or known failures, and the relevant
 Piglet/core issue links in your pull request. Maintainers review before merging;
 a green validation run is not authorization to publish a release.
+
+## Ports under a licence other than MIT
+
+A port keeps the upstream's licence (the porting steps above), so a port of a GPL, AGPL, LGPL or MPL project is
+GPL, AGPL, LGPL or MPL too. Pigpen accepts such a port as a **standalone, opt-in Package**, never as part of an MIT Piglet:
+
+- **Declare the licence** as an SPDX expression in the Package's `package.json` `license` (for example
+  `GPL-3.0-or-later`) and in `provenance.json`, keep the upstream licence text in the Package, and state the licence in the
+  Package's README. `index.json` and the root README list the licence of every Package that is not MIT, from that field.
+- **Never bundle it into an MIT Piglet** or any Binary whose licence is not compatible. `npm run quality`, `npm run stage`
+  (so `npm run validate`, `npm run build:piglet` and the release builds) and the release plan run
+  `scripts/license-guard.mjs`, which refuses to fuse a component into a Piglet when the SPDX compatibility table in
+  `scripts/licenses.mjs` says no, and when a licence is missing, malformed or not in the table. GPL-3.0-or-later into
+  an MIT Piglet is refused; GPL into the same GPL, and MIT into a GPL Piglet, is allowed. Several Packages are checked together,
+  against one alternative of an `OR` licence, and a Piglet that `extends` another is checked through the base's Packages. A Piglet's licence is the
+  `license` in its `provenance.json`. Do not work around a refusal; ask the owner, who decides whether a Piglet is
+  relicensed or the Package stays on its own.
+- **Credit the upstream** author and licence in `CREDITS.md` and in the ports row, as for any port.
+- A copyleft Package is installed on its own (`pig install`). It is selected only by a Piglet under the same or a compatible
+  licence (GPL-3.0-or-later into a GPL-3.0-or-later Piglet is allowed); no MIT Piglet selects it, directly, through `extends`
+  or through an extension or skill origin, and the guard checks all three.
