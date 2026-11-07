@@ -1,12 +1,17 @@
 # Owner actions: the first release
 
+> **Status on 2026-11-06: the first release was made, so this is now the reference runbook for the owner's release steps, not a to-do list.**
+> Piglet Binaries (14 Piglets), Package tags and npm packages are published (see [README.md](README.md), "What is published").
+> One step is still open: no verified Piglet receipt is committed under `releases/` (`npm run record -- piglet <name> <version>`), so
+> `index.json` lists every Piglet as `planned`. The statements below that something was "not run" describe the state when this file was written.
+
 Everything the repository can do for you is committed: the release workflows, the tag scheme, the checks and the index
 generator. What is left needs your GitHub login, a signing key and your decision to push a tag. Run the commands in order,
 from a clean checkout of `main` (`git switch main && git pull --ff-only`), with the Node and Go that CI uses. `gh` is the
 GitHub CLI logged in as the repository owner. `OWNER=MichaelKinsy REPO=MichaelKinsy/pigpen` below. Run `npm ci --ignore-scripts`
 once first: the `node -p "require('yaml')..."` lines and `npm run record`/`generate` need it.
 
-The GitHub-side commands (`gh api`, `gh secret`) were not run: this lane has no access to the repository. Each one is
+When this file was written, the GitHub-side commands (`gh api`, `gh secret`) had not been run: the lane had no access to the repository. Each one is
 followed by a read that shows the result, so you can check it. Everything that runs locally was run against throwaway keys and
 a local bare repository (`npm run rehearse:release`, `npm run test:packages`).
 
@@ -216,7 +221,7 @@ native `build` and `publish` (a Binary altered after signing, a second publish o
 manifest version are all refused; the key file is gone after each step and the key is in no log); a receipt written by pig
 verifies in `scripts/receipts.mjs`; every Package installs from their tags with the production command.
 
-Not proven until the first hosted run: GitHub environments and secrets, attestations, artifact upload and download, and the
+Not proven when this was written, before the first hosted run (which has since succeeded, see the status at the top): GitHub environments and secrets, attestations, artifact upload and download, and the
 four other targets (linux/arm64, darwin/arm64, darwin/amd64, windows/amd64 have never run: a Binary starting and finishing a
 faux turn there is the first evidence, via the platform matrix in `ci.yml` on `workflow_dispatch`). Run that matrix once
 before the first tag.

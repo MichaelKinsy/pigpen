@@ -239,8 +239,9 @@ machine it runs on, so a local Binary build names that machine:
 `npm run build:piglet -- <piglet-name>` does this for you, and a direct
 `pig piglet build ... --format binary` needs `--targets <os>/<arch>`. CI builds all eleven Piglets on one
 native runner per target and smokes every Binary (see "Platform build matrix" below); the release build
-uses the same runners (`npm run build-matrix`). Until a hosted run has passed, only `linux/amd64`
-Binaries have been built and run; see `RELEASE-NOTES.md` for what is and is not verified.
+uses the same runners (`npm run build-matrix`). The release workflow has built and smoked every target
+on its native runner on GitHub (the `Release a Piglet` run of 2026-10-23 succeeded for darwin, windows and linux/arm64 as well); the local
+runs in `RELEASE-NOTES.md` are linux/amd64 only, and that file says what is and is not verified.
 
 Edit source, then stage again and restart the selected Piglet. Restaging replaces
 `dist/staged/`, removing stale files. A failed preflight leaves the previous stage
@@ -377,7 +378,7 @@ Go extension module (both need a Go toolchain and PiG's SDK; `test:go-ports` run
 `PIG_BIN=pig npm run test:pig` additionally drives a real `pig` in tmux against a fake herdr, once for the `herdr` Piglet and once for `pig-with-batteries`;
 with `PIG_SOURCE_ROOT` set it also builds each into a Binary and runs that
 (needs tmux and Go; stages first; not run in CI).
-`PIG_BIN=pig npm run test:pig-snake` (or `PIG_SNAKE_BINARY=<a Piglet Binary>`) plays Pig Snake in a real terminal the same way: title, play, pause, crash, resize, quit, an agent stream under the open game (needs tmux; not run in CI).
+`PIG_BIN=pig PIG_SOURCE_ROOT=<PiG checkout> npm run test:pig-snake` (it builds the `pig-with-batteries` Binary first, because that Piglet strips the Go SDK and cannot run from its manifest; or `PIG_SNAKE_BINARY=<a Piglet Binary>`) plays Pig Snake in a real terminal the same way: title, play, pause, crash, resize, quit, an agent stream under the open game (needs tmux; not run in CI).
 `PIG_BIN=pig npm run test:pig-music` drives the pig-music hello overlay (`/music hello`) in a real terminal (fullscreen and regular TUI: size, keys, timer, resize, close; needs tmux and Go; not run in CI). `PIG_BIN=pig npm run test:pig-music-player` drives the player itself with real mpv (`--ao=null`) and yt-dlp over the network (also needs tmux; not run in CI). `PIG_BIN=pig npm run test:pig-music-batteries` builds the `pig-with-batteries` Binary and checks pig-music in it: nothing starts until `/music`, the startup comparison (set `PIG_BATTERIES_BASELINE` to a Binary built without it) and, with `PIG_MUSIC_SMOKE=1`, a real play, hide, `/reload` and `/quit`.
 `PIG_BIN=pig npm run test:tool-scope` checks that a Piglet entry's `tools: []` keeps pig-doctor's `pig_doctor` tool from the model (RPC, print and JSON mode all pass on PiG 0.4.0; they failed on 0.3.x; needs Go).
 
@@ -389,8 +390,8 @@ restaging, and path safety. It does not measure an LLM's ability to follow the S
 
 The scenario also checks that an explicit `tools: []` reaches the provider with
 no tools; it passes on PiG 0.7.0 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
-`test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. No hosted CI pass is
-claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages`, `test:npm-packages`,
+`test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. Hosted CI (`Validate Pigpen`) has passed on `main` on GitHub (latest push run 2026-11-02, on the previous pin); the PiG 0.7.0 steps here were
+run locally with the 0.7.0 pig, and no hosted run on this pin is claimed until the branch is merged. CI also runs `test:packages`, `test:npm-packages`,
 `test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute
 timeout). CI does not sign Piglet Binaries or publish releases (`release.yml` does, on a Piglet tag); it uploads the
 Binaries it builds as short-lived artifacts for inspection.

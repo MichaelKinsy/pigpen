@@ -1,6 +1,13 @@
 # Pigpen release blockers
 
-**Nothing is published yet; the release path is built and rehearsed, and waits for the owner.**
+**Historical record: the body of this file is what blocked the first release, written before it.**
+
+**Status on 2026-11-06 (checked against GitHub Releases, the Git tags, the Actions runs and the npm registry):** the first release has
+happened. Signed Piglet Binaries for 14 Piglets are GitHub Releases `<name>/v<version>` (the first eleven, as 0.1.0, on 2026-10-05; see
+the README for the list and latest versions), built and published by the `Release a Piglet` workflow on GitHub (a successful hosted run on
+2026-10-23); Package tags `components/<name>/v0.1.0` exist (`releases/packages/`); every Package and Piglet source is on npm, and the
+`Publish to npm` workflow runs on merges to `main`. What is still not done: `releases/` records no verified Piglet receipt, so
+`index.json` lists every Piglet as `planned`. The sections below are the record of the blockers as of the PiG 0.4.1 candidate; they were not re-evaluated after the releases, so read each item as of that date, not as a current claim.
 Pigpen CI **validates and smoke-tests**: it checks the generated index, source quality gates, unit tests, and validates every
 Package and staged manifest, runs the porter, tool-scope, moved-extension, Go module and Package-install tests and a
 rehearsal of the release workflow, all with a pig built from PiG `v0.4.1`. A platform matrix builds all eleven Piglets natively on
@@ -11,7 +18,7 @@ Releases are two workflows (see [OWNER-ACTIONS.md](OWNER-ACTIONS.md)). A Package
 `release-package.yml` (no secret): it validates the Package and installs it from the pushed tag. A Piglet tag
 `<name>/v<release.version>` runs `release.yml`: it builds every target on its native runner, signs, attests and publishes one
 GitHub Release, with `PIGLET_SIGNING_KEY` readable only by steps that run the pinned pig, in the `release` environment.
-`npm run quality` enforces those rules. No hosted run is claimed: the workflow's own steps were run locally against a bare
+`npm run quality` enforces those rules. At the time of writing no hosted run was claimed: the workflow's own steps were run locally against a bare
 repository, a stub `gh` and a throwaway key (`npm run rehearse:release`). No release gate has been waived.
 
 This file says what still stands between the repository and a first release, and who has to act.
@@ -120,8 +127,8 @@ release. Run the platform matrix once on a branch (`workflow_dispatch`) before t
 An npm scope is not needed: Packages install from Git tags. PiG maintainers: items 6 and 7, a `pig piglet sign`, keyless
 (GitHub OIDC) signing and an android build target are inputs for PiG; none blocks the first release.
 
-Until these are done, do not claim live binaries or verified publication support for Pigpen compositions. Local source
-validation and a working core publisher alone do not establish an installable Pigpen release.
+When this was written, no live binaries or verified publication support could be claimed. Since then the owner has made the first
+releases (status at the top); the Piglet receipts are still not recorded in `releases/`.
 
 ## ACP (`piglets/acp`, `components/acp`)
 

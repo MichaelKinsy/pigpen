@@ -1,5 +1,10 @@
 # First npm publish (owner)
 
+> **Status on 2026-11-06: done.** Every Package and Piglet source is on npm under `@pi-in-go` (checked against the registry; the first
+> versions appeared on 2026-10-06), and the `Publish to npm` workflow runs on merges to `main` (successful runs on GitHub, the latest
+> 2026-11-02). This file stays as the runbook for a Package or Piglet that is new to npm (section 1) and for the Trusted Publisher
+> settings (section 2). The version numbers and the "proven / not proven" list below are as of the first publish.
+
 Pigpen's Packages and Piglet sources are published to npm under the `@pi-in-go` scope with the keywords `pig-package` and
 `pig-piglet`; pi-in-go.dev lists them by keyword. The first publish has to be you: a Trusted Publisher can only be added to a
 package that exists. After that, CI publishes every release with no token.
@@ -61,7 +66,7 @@ with `scripts/first-npm-publish.sh` (section 1), add its Trusted Publisher (sect
 Binary is a separate release (`<name>/v<version>`, `release.yml`, [OWNER-ACTIONS.md](OWNER-ACTIONS.md)).
 If you use the tag ruleset from OWNER-ACTIONS.md, add `refs/tags/npm/v*` to it.
 
-## What was proven, and what was not
+## What was proven before the first publish, and what was not
 
 Proven here with PiG 0.4.1, against a local registry that serves the packed tarballs: `pig install npm:@pi-in-go/pigpen-<dir>`
 for all 29 Packages (validate, Go extensions build and register, remove), `pig piglet add npm:...` and `pig piglet validate`

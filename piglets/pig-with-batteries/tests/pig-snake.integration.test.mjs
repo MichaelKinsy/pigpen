@@ -2,8 +2,12 @@
 // the real TUI overlay, with PiG's hermetic test-faux provider and a temporary HOME, PIG_HOME and
 // PIG_CODING_AGENT_DIR (nothing under ~/.pig is read or written).
 //
-//   PIG_BIN=/path/to/pig npm run test:pig-snake                     the staged pig-with-batteries manifest, from source
-//   PIG_SNAKE_BINARY=/path/to/piglet-binary npm run test:pig-snake  a built Piglet Binary instead (PIG_BIN not needed)
+//   PIG_BIN=/path/to/pig PIG_SOURCE_ROOT=/path/to/PiG npm run test:pig-snake   builds the staged pig-with-batteries Piglet into a Binary, then plays it
+//   PIG_SNAKE_BINARY=/path/to/piglet-binary npm run test:pig-snake             a built Piglet Binary instead (PIG_BIN and PIG_SOURCE_ROOT not needed)
+//
+// pig-with-batteries strips the Go extension SDK (strip.features: extension-sdk-go), so `pig --piglet <staged manifest>`
+// cannot build the Go Packages it selects at run time: only a Binary with them fused in runs it. The test therefore always
+// plays a Binary, built from the staged manifest unless PIG_SNAKE_BINARY names one.
 //
 // Needs tmux (every extension of the composition is Go, so no Node.js; the herdr reporter stays
 // idle outside a herdr pane). It stages first; it is not run in CI.
@@ -15,14 +19,26 @@ import { dirname, join, resolve } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { goCaches } from '../../../scripts/go-modules.mjs';
+import { hostTarget } from '../../../scripts/host-target.mjs';
 import { requirePig } from '../../../scripts/pig-bin.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const binary = process.env.PIG_SNAKE_BINARY;
-// A Piglet Binary carries its own pig; the staged manifest runs PIG_BIN, which must be the pig Pigpen targets.
-const pig = binary ? undefined : requirePig();
-if (!binary) execFileSync(process.execPath, [join(root, 'scripts/stage-piglets.mjs')], { stdio: 'pipe' });
 const manifest = join(root, 'dist/staged/piglets/pig-with-batteries/piglet.yaml');
+let binary = process.env.PIG_SNAKE_BINARY;
+let builtDir;
+if (!binary) {
+  // A Piglet Binary carries its own pig; the build runs PIG_BIN, which must be the pig Pigpen targets, on PiG's source.
+  const pig = requirePig();
+  if (!process.env.PIG_SOURCE_ROOT) throw new Error('PIG_SOURCE_ROOT is not set: a Piglet Binary builds from a git checkout of the PiG source (or set PIG_SNAKE_BINARY to a built Binary)');
+  execFileSync(process.execPath, [join(root, 'scripts/stage-piglets.mjs')], { stdio: 'pipe' });
+  builtDir = mkdtempSync(join(tmpdir(), 'pig-snake-binary-'));
+  binary = join(builtDir, 'pig-with-batteries');
+  // The manifest lists every release platform; pig builds only the machine it runs on.
+  execFileSync(pig, ['piglet', 'build', manifest, '--format', 'binary', '--out', binary, '--targets', hostTarget().target], {
+    stdio: 'pipe', env: { ...process.env, ...goCaches(), GIT_TERMINAL_PROMPT: '0' },
+  });
+  process.on('exit', () => rmSync(builtDir, { recursive: true, force: true }));
+}
 
 let session = '';
 let dir = '';
@@ -55,9 +71,7 @@ function start(width, height) {
     ...goCaches(),
   };
   const exports = Object.entries(env).map(([name, value]) => `${name}='${value}'`).join(' ');
-  const command = binary
-    ? `env ${exports} '${binary}' --model test-faux/faux-1`
-    : `env ${exports} '${pig}' --model test-faux/faux-1 --piglet '${manifest}'`;
+  const command = `env ${exports} '${binary}' --model test-faux/faux-1`;
   tmux('new-session', '-d', '-s', session, '-x', String(width), '-y', String(height), '-c', join(dir, 'work'), command);
 }
 function stop() {
@@ -65,7 +79,7 @@ function stop() {
   rmSync(dir, { recursive: true, force: true });
 }
 
-describe(`real terminal: ${binary ? 'Piglet Binary' : 'pig with the staged manifest'}`, () => {
+describe(`real terminal: Piglet Binary`, () => {
   before(async () => {
     start(100, 30);
     await until('the editor', has('faux-1'), 60_000);
@@ -147,7 +161,7 @@ describe(`real terminal: ${binary ? 'Piglet Binary' : 'pig with the staged manif
 });
 
 for (const [width, height] of [[80, 24], [140, 40]]) {
-  describe(`real terminal ${width}x${height}: ${binary ? 'Piglet Binary' : 'staged manifest'}`, () => {
+  describe(`real terminal ${width}x${height}: Piglet Binary`, () => {
     before(async () => {
       start(width, height);
       await until('the editor', has('faux-1'), 60_000);
