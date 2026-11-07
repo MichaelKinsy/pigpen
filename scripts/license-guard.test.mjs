@@ -115,13 +115,50 @@ describe('extends', () => {
     const dir = repository({ components: { gpl: 'GPL-3.0-or-later', mit: 'MIT' }, piglets: { base: base('GPL-3.0-or-later', 'gpl'), child: { ...piglet('GPL-3.0-or-later', 'mit'), extending: 'extends:\n  source: local:../base/piglet.yaml\n' } } });
     assert.deepEqual(fusionProblems(dir), []);
   });
-  it('lets a child replace an inherited Package alias or remove it', () => {
-    const components = { gpl: 'GPL-3.0-or-later', mit: 'MIT' };
-    const replaced = repository({ components, piglets: { base: base('MIT', 'gpl'), child: { license: 'MIT', extending: 'extends:\n  source: local:../base/piglet.yaml\n', packages: { gpl: 'local:../../components/mit' }, body: '' } } });
-    assert.deepEqual(fusionProblems(replaced, ['child']), []);
-    assert.equal(fusionProblems(replaced, ['base']).length, 1);
-    const removed = repository({ components, piglets: { base: base('MIT', 'gpl'), child: child('MIT', 'local:../base/piglet.yaml', '  remove:\n    packages: [gpl]\n') } });
-    assert.deepEqual(fusionProblems(removed, ['child']), []);
+  it('still checks a base Package that the child removes or replaces: the base\'s staged directory is linked either way', () => {
+    // The jev/typesafe shape: a dual-licensed base whose extension links a GPL library Package; an MIT child removes or replaces it.
+    const components = { typesafe: 'GPL-3.0-or-later', mit: 'MIT' };
+    const dual = piglet('MIT OR GPL-3.0-or-later', 'typesafe');
+    const kept = repository({ components, piglets: { base: dual, child: child('MIT') } });
+    const removed = repository({ components, piglets: { base: dual, child: child('MIT', 'local:../base/piglet.yaml', '  remove:\n    packages: [typesafe]\n') } });
+    const replaced = repository({ components, piglets: { base: dual, child: { license: 'MIT', extending: 'extends:\n  source: local:../base/piglet.yaml\n', packages: { typesafe: 'local:../../components/mit' }, body: '' } } });
+    assert.deepEqual(fusionProblems(kept, ['base']), [], 'the dual-licensed base alone may carry it');
+    for (const dir of [kept, removed, replaced]) {
+      const problems = fusionProblems(dir, ['child']);
+      assert.ok(problems.some((p) => /^refused: Package "typesafe" \(GPL-3\.0-or-later\) cannot be fused into the Piglet "child" \(MIT\)/.test(p)), problems.join('\n'));
+    }
+  });
+  it('lets a child remove or replace an inherited Package that is fine anyway', () => {
+    const components = { fine: 'MIT', other: 'Apache-2.0' };
+    const dir = repository({ components, piglets: { base: base('MIT', 'fine'), child: { license: 'MIT', extending: 'extends:\n  source: local:../base/piglet.yaml\n  remove:\n    packages: [fine]\n', packages: { fine: 'local:../../components/other' }, body: '' } } });
+    assert.deepEqual(fusionProblems(dir, ['child']), []);
+  });
+  it('resolves an inherited Package from the base\'s own directory, wherever the base sits', () => {
+    const dir = repository({ components: { gpl: 'GPL-3.0-or-later' }, piglets: { child: child('MIT', 'local:./nested/deeper/piglet.yaml') } });
+    const nested = join(dir, 'piglets/child/nested/deeper');
+    mkdirSync(nested, { recursive: true });
+    writeFileSync(join(nested, 'piglet.yaml'), 'name: nested\ndescription: fixture\nrelease:\n  version: 0.1.0\npackages:\n  gpl: local:../../../../components/gpl\nextensions: []\n');
+    writeFileSync(join(nested, 'provenance.json'), JSON.stringify({ origin: 'original', authors: ['x'], license: 'GPL-3.0-or-later', licenseFile: 'x', upstreams: [] }));
+    const problems = fusionProblems(dir, ['child']);
+    assert.ok(problems.some((p) => /^refused: Package "gpl" \(GPL-3\.0-or-later\) cannot be fused into the Piglet "child" \(MIT\)/.test(p)), problems.join('\n'));
+    assert.ok(!problems.some((p) => /cannot be read here/.test(p)), problems.join('\n'));
+  });
+  it('refuses a chain longer than PiG\'s extends limit, but not one at the limit', () => {
+    const chain = (length) => {
+      const piglets = {};
+      for (let i = 0; i < length; i++) piglets[`p${i}`] = i === length - 1 ? { license: 'MIT', body: '' } : { license: 'MIT', extending: `extends:\n  source: local:../p${i + 1}/piglet.yaml\n`, body: '' };
+      return repository({ components: {}, piglets });
+    };
+    assert.deepEqual(fusionProblems(chain(9), ['p0']), [], 'nine Piglets: depth 8, PiG allows it');
+    const problems = fusionProblems(chain(10), ['p0']);
+    assert.equal(problems.length, 1, problems.join('\n'));
+    assert.match(problems[0], /which is deeper than PiG's extends limit of 8/);
+  });
+  it('refuses a base that is a directory with its own message, not a crash', () => {
+    const dir = repository({ components: {}, piglets: { base: piglet('MIT'), child: child('MIT', 'local:../base') } });
+    const problems = fusionProblems(dir, ['child']);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /^refused: Piglet "child" extends "local:\.\.\/base", which is a directory; extends needs a Piglet YAML file/);
   });
   it('refuses a base it cannot read here instead of passing it', () => {
     const wanted = { 'npm:piglet-someone@1.0.0': 'a local: Piglet whose manifest', 'git:https://example.com/x.git': 'a local: Piglet whose manifest', 'local:../missing/piglet.yaml': 'a manifest inside this repository', 'local:../../../outside.yaml': 'a manifest inside this repository' };
@@ -168,6 +205,35 @@ describe('extension and skill origins', () => {
     const problems = fusionProblems(dir);
     assert.equal(problems.length, 1, problems.join('\n'));
     assert.match(problems[0], /^refused: Package "gpl" \(GPL-3\.0-or-later\) cannot be fused into the Piglet "direct" \(MIT\)/);
+  });
+  it('accepts a catalogue npm name only plain, with an exact version or latest', () => {
+    const name = npmName('gpl');
+    for (const spec of [`npm:${name}`, `npm:${name}@0.1.0`, `npm:${name}@latest`, `npm:${name}@1.2.3-rc.1`]) {
+      const dir = repository({ components: { gpl: 'GPL-3.0-or-later' }, piglets: { p: withOrigins('MIT', `extensions:\n  - name: g\n    origins: ["${spec}"]\n`) } });
+      assert.match(fusionProblems(dir)[0], /^refused: Package "gpl" \(GPL-3\.0-or-later\) cannot be fused into the Piglet "p" \(MIT\)/, spec);
+      const clean = repository({ components: { gpl: 'MIT' }, piglets: { p: withOrigins('MIT', `extensions:\n  - name: g\n    origins: ["${spec}"]\n`) } });
+      assert.deepEqual(fusionProblems(clean), [], spec);
+    }
+  });
+  it('refuses a catalogue npm name with an alias, query, range, tag or other suffix, because npm installs other code then', () => {
+    const name = npmName('herdr');
+    const specs = [`npm:${name}@npm:ffmpeg-static@5.2.0`, `npm:${name}@0.1.1?registry=https://registry.invalid`, `npm:${name}?registry=https://registry.invalid`,
+      `npm:${name}@^0.1.0`, `npm:${name}@0.1`, `npm:${name}@beta`, `npm:${name}@0.1.0@extra`, `npm:${name}@https://example.com/x.tgz`, `npm:${name}@0.1.0#x`];
+    for (const spec of specs) {
+      const origin = repository({ components: { herdr: 'MIT' }, piglets: { p: withOrigins('MIT', `extensions:\n  - name: h\n    origins: ["${spec}"]\n`) } });
+      const asPackage = repository({ components: { herdr: 'MIT' }, piglets: { p: { license: 'MIT', packages: { h: spec } } } });
+      for (const dir of [origin, asPackage]) {
+        const problems = fusionProblems(dir);
+        assert.equal(problems.length, 1, `${spec}: ${problems.join('\n')}`);
+        assert.match(problems[0], /whose licence cannot be read here \(an npm: source of a catalogue Package may only be the plain name, optionally followed by @<exact version> or @latest; an alias \(@npm:\.\.\.\), a \?query such as registry=/, spec);
+      }
+    }
+  });
+  it('does not map an npm name under another scope onto a component', () => {
+    const dir = repository({ components: { gpl: 'GPL-3.0-or-later', mit: 'MIT' }, piglets: { p: withOrigins('MIT', 'extensions:\n  - name: g\n    origins: ["npm:@anyone/pigpen-mit@1.0.0"]\n') } });
+    const problems = fusionProblems(dir);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /not a Package of the Pigpen catalogue/);
   });
   it('refuses an origin whose Package is not in the catalogue, and asks for a Package entry', () => {
     for (const origin of ['npm:@someone/else@1.0.0', 'git:https://example.com/x.git', 'https://example.com/x.tgz']) {

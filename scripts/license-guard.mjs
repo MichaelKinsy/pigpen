@@ -10,7 +10,7 @@
 //
 // Wired into: npm run quality (CI), npm run stage (so npm run validate, build:piglet and the release builds), the
 // validation and release `plan` (scripts/build-matrix.mjs) and validate-manifests.
-import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
@@ -23,18 +23,20 @@ const MAX_EXTENDS_DEPTH = 8; // PiG's own limit (coding/piglet/extends.go)
 const inside = (parent, child) => { const rel = slash(relative(parent, child)); return rel === '' || (rel !== '..' && !rel.startsWith('../') && !/^[A-Za-z]:/.test(rel)); };
 
 /**
- * A Piglet's effective selection, the way PiG's mergePiglets builds it: the base's Packages, extensions and skills (minus
- * extends.remove), then the Piglet's own, which replace an inherited entry of the same alias or name. Every entry remembers
- * the directory of the manifest that wrote it, because a relative source is read from there. `problems` collects what
- * cannot be followed (a remote or missing base, a cycle). `bases` are the Piglets inherited from, nearest first: their own
- * resources are part of this Piglet's Binary under their licence.
+ * A Piglet's effective selection, the way PiG's mergePiglets builds it: the base's extensions and skills (minus extends.remove),
+ * then the Piglet's own, which replace an inherited entry of the same name. Every entry remembers the directory of the manifest
+ * that wrote it, because a relative source is read from there. `staged` is every Package entry of the whole chain, NOT the
+ * merged map: stage puts each base's Packages in the base's own staged directory and an inherited extension links them from
+ * there, so extends.remove or an alias replacement does not take a library out of the Binary. `problems` collects what cannot be
+ * followed (a remote, missing or directory base, a cycle, too deep a chain). `bases` are the Piglets inherited from, nearest
+ * first: their own resources are part of this Piglet's Binary under their licence.
  */
 function effective(path, directory, trail = []) {
   const owner = dirname(path);
   const document = parseDocument(readFileSync(path, 'utf8'), { uniqueKeys: true });
   if (document.errors.length) throw document.errors[0];
   const manifest = document.toJS();
-  const state = { name: manifest.name, owner, packages: new Map(), extensions: new Map(), skills: new Map(), bases: [], problems: [] };
+  const state = { name: manifest.name, owner, extensions: new Map(), skills: new Map(), bases: [], staged: [], problems: [] };
   const extending = manifest.extends;
   if (extending !== undefined && extending !== null) {
     const source = typeof extending === 'object' ? extending.source : undefined;
@@ -43,28 +45,41 @@ function effective(path, directory, trail = []) {
     else {
       const basePath = resolve(owner, source.slice('local:'.length));
       if (!existsSync(basePath) || !inside(directory, basePath)) bad('which is not a manifest inside this repository');
+      else if (!statSync(basePath).isFile()) bad('which is a directory; extends needs a Piglet YAML file');
       else if (trail.includes(realpathSync(basePath))) bad('which closes an extends cycle');
       else if (trail.length >= MAX_EXTENDS_DEPTH) bad(`which is deeper than PiG's extends limit of ${MAX_EXTENDS_DEPTH}`);
       else {
         const base = effective(basePath, directory, [...trail, realpathSync(path)]);
         state.problems.push(...base.problems);
+        // Every Package of every base stays in the base's staged directory and is linked from there (a go.work `use`), whether or
+        // not extends.remove or an alias replacement hides it from the effective set: it counts for the licence either way.
+        state.staged.push(...base.staged);
         state.bases.push({ name: base.name, license: pigletLicense(dirname(basePath)) }, ...base.bases);
-        for (const key of ['packages', 'extensions', 'skills']) for (const [id, entry] of base[key]) state[key].set(id, entry);
-        for (const key of ['packages', 'extensions', 'skills']) for (const id of extending.remove?.[key] ?? []) state[key].delete(id);
+        for (const key of ['extensions', 'skills']) for (const [id, entry] of base[key]) state[key].set(id, entry);
+        for (const key of ['extensions', 'skills']) for (const id of extending.remove?.[key] ?? []) state[key].delete(id);
       }
     }
   }
-  for (const [alias, source] of Object.entries(manifest.packages ?? {})) state.packages.set(alias, { source, owner, piglet: manifest.name });
+  for (const [alias, source] of Object.entries(manifest.packages ?? {})) {
+    const entry = { alias, source, owner, piglet: manifest.name };
+    state.staged.push(entry);
+  }
   for (const key of ['extensions', 'skills']) for (const entry of manifest[key] ?? []) state[key].set(entry.name, { origins: entry.origins ?? [], owner, piglet: manifest.name });
   return state;
 }
 
-/** The licence of a Package named by an npm: source of the Pigpen catalogue (@pi-in-go/pigpen-<name>), from its component here. */
+// What PiG installs for `npm:<name>@<version>?registry=...` is whatever npm resolves: an alias (`@npm:other@1`), a range, a tag, a
+// URL or another registry all install other code under the catalogue name. Only the plain name, an exact version or `latest` is
+// the catalogue's own Package.
+const PLAIN_NPM = /^npm:(@[a-z0-9~][a-z0-9._~-]*\/[a-z0-9~][a-z0-9._~-]*)(?:@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?|latest))?$/;
+
+/** For an npm: source: {component} when it names a Pigpen catalogue Package plainly, {suffix} when it names one with more than that, else {}. */
 function catalogueComponent(source, directory) {
-  const named = /^npm:(@[^/@]+\/[^@]+)(?:@.+)?$/.exec(source)?.[1];
   const base = join(directory, 'components');
+  const named = /^npm:(@[^/@?]+\/[^@?]+)/.exec(source)?.[1];
   const found = named && existsSync(base) && readdirSync(base, { withFileTypes: true }).find((entry) => entry.isDirectory() && npmName(entry.name) === named);
-  return found?.name;
+  if (!found) return {};
+  return PLAIN_NPM.test(source) ? { component: found.name } : { suffix: true };
 }
 
 /**
@@ -82,7 +97,8 @@ function locate(source, definedIn, directory, what) {
     return unreadable('not inside the Piglet or a components/<name> directory of this repository');
   }
   const catalogue = catalogueComponent(source, directory);
-  if (catalogue) return { component: catalogue };
+  if (catalogue.component) return { component: catalogue.component };
+  if (catalogue.suffix) return unreadable('an npm: source of a catalogue Package may only be the plain name, optionally followed by @<exact version> or @latest; an alias (@npm:...), a ?query such as registry=, a range, a tag or any other suffix can install other code under that name');
   return unreadable('not a Package of the Pigpen catalogue');
 }
 
@@ -104,7 +120,7 @@ export function fusionProblems(directory = root, only) {
       parts.push({ kind: 'Package', name: component, license: componentLicense(join(directory, 'components', component)) });
     };
     for (const base of state.bases) parts.push({ kind: 'Piglet', name: base.name, license: base.license });
-    for (const [alias, { source, owner: definedIn, piglet }] of state.packages) {
+    for (const { alias, source, owner: definedIn, piglet } of state.staged) {
       const where = locate(source, definedIn, directory, `Piglet "${manifest.name}" selects Package "${alias}" (written in "${piglet}") from`);
       if (where.problem) problems.push(where.problem);
       else if (where.component) addComponent(where.component);
