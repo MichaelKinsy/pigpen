@@ -34,7 +34,7 @@ COL=$!
 trap 'kill -INT $COL 2>/dev/null || true' EXIT
 sleep 5   # idle baseline before the first request
 
-"${BASKET:-$HERE/basket}" -url "$URL" -agent "$AGENT" -repeat "$REPEAT" -warmup "$WARMUP" -concurrency "$CONCURRENCY" \
+"${BASKET:-$HERE/basket/basket}" -url "$URL" -agent "$AGENT" -repeat "$REPEAT" -warmup "$WARMUP" -concurrency "$CONCURRENCY" \
   -idle-wait "$IDLE_WAIT" -hold "$HOLD" ${BASKET_ARGS:-} -out "$OUT/basket.json" || echo "basket reported failures" >&2
 
 kill -INT $COL; wait $COL || true; trap - EXIT

@@ -214,6 +214,12 @@ func (s *server) handleModel(api string, parse func(map[string]any) *conv, rende
 		entry["tools"] = c.toolNames()
 		entry["step"] = rep.Step
 		entry["usage"] = map[string]int{"in": in, "out": out}
+		if res, cut := c.loggedResults(); res != "" {
+			entry["results"] = res
+			if cut {
+				entry["results_truncated"] = true
+			}
+		}
 		if rep.Call != nil {
 			entry["call"] = rep.Call.Name
 		} else {

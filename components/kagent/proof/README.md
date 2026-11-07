@@ -3,7 +3,7 @@
 This directory holds everything needed to repeat the measurements and the demo recording behind the claims in
 [`../harness/README.md`](../harness/README.md): a hermetic mock model server, an A2A client that runs a fixed task through kagent's gateway,
 a cgroup and log collector for per-Actor memory and lifecycle timing, the scripts that run an interleaved schedule, and the recording script. The results of the
-run published with this repository are in [`RESULTS.md`](RESULTS.md).
+run published with this repository are in [`RESULTS.md`](RESULTS.md). Reported times include the mock's fixed per-call cost (about 0.11 s) and it is not subtracted; pi-go makes 2 model calls for the `[basket]` task where the others make 3.
 
 **Scope.** No real model is involved anywhere. All agents (PiG, Claude Code, Codex, pi-go) are pointed at the same deterministic mock server
 (`mockllm/`), so the numbers show what the harness and the platform add around a model, not how a model performs. The proof environment is a local Kind cluster
@@ -17,6 +17,7 @@ respective owners and are not affiliated with this repository.
 | `mockllm/` | Go mock server (standard library only, about 3 MB static binary): OpenAI Chat Completions, OpenAI Responses and Anthropic Messages (streaming and not) and a Streamable HTTP MCP server with the tools `kagent_probe` and `echo`. `Dockerfile` (`FROM scratch`), `mock.yaml` (Deployment and Service), unit tests. |
 | `basket/` | Go A2A client. `-mode bench` (default) runs the task and records timings; `-mode send` / `-mode approve` send one message or one approval and print the events live (used by the demo); `-serve-fake` serves a fake gateway for self-tests. |
 | `collect.py`, `test_collect.py` | cgroup v2 sampler for pods and Substrate Actor cgroups, extractor for Substrate log records, report. Standard library only. |
+| `reject.sh`, `restart.sh`, `series.py` | The rejection series and the worker-pod-replacement series, and the record/summary logic behind them (`test_series.py`). |
 | `perf.sh` | One harness: collector plus basket plus report. |
 | `baseline.sh` | The interleaved schedule over several agents with a host-noise gate; streams the Substrate logs. |
 | `analyze.py` | Joins the basket runs, the memory samples and the Substrate records per session and writes the tables. |
@@ -78,12 +79,12 @@ Python 3, `jq`, `bc`, `crane` (for `images.sh`), and either Go 1.22 or newer or 
    `claude-basket`, `claude-approve`, `codex-basket` and `codex-approve` use kagent's built-in harness images. `pigo-basket` needs a pi-go image you build yourself (see the comment
    in `baselines.yaml`); skip it if you only want PiG against Claude Code and Codex.
 
-4. **The client.** `docker run --rm -v "$PWD":/src -w /src -e CGO_ENABLED=0 golang:1.26-bookworm go build -trimpath -ldflags='-s -w' -o basket .` in `basket/`, then copy
-   or link the binary next to the scripts (`ln -s basket/basket basket`). Tests: `go test ./...` in `basket/`. Forward the gateway and try one session:
+4. **The client.** `docker run --rm -v "$PWD":/src -w /src -e CGO_ENABLED=0 golang:1.26-bookworm go build -trimpath -ldflags='-s -w' -o basket .` in `basket/`, then use it in place (the scripts default to `basket/basket`; set `BASKET` to use another path).
+   Tests: `go test ./...` in `basket/`. Forward the gateway and try one session:
 
    ```sh
    kubectl -n kagent port-forward svc/kagent-controller 8083:8083 &
-   ./basket -mode send -live -agent kagent/pig-basket -header 'x-user-id: admin@kagent.dev' -text '[basket] hello'
+   basket/basket -mode send -live -agent kagent/pig-basket -header 'x-user-id: admin@kagent.dev' -text '[basket] hello'
    ```
 
    With kagent's default insecure authentication the user is a header; set `BASKET_TOKEN` for a bearer token instead.
@@ -99,11 +100,25 @@ Python 3, `jq`, `bc`, `crane` (for `images.sh`), and either Go 1.22 or newer or 
      --coldstart results/baseline-<date>/coldstart.json --out-json results/baseline-<date>/analysis.json --out-md results/baseline-<date>/analysis.md
    ```
 
-   `baseline.sh` refuses to start a session while the host's CPU pressure is above `MAX_PSI` (default 35 percent) and waits up to `GATE_WAIT` seconds. Kind runs the Substrate namespace as
+   `baseline.sh` waits, before each session, until the host's CPU pressure is at most `MAX_PSI` (default 35 percent), for up to `GATE_WAIT` seconds. After that it runs the session anyway and records it
+   (`gate.log`, `pressure.tsv`; `analyze.py` lists such sessions) unless `GATE_MODE=refuse`, which stops the schedule with exit status 3. The namespace, worker pool, mock and controller selectors, A2A namespace and
+   user header are variables (`AGENT_NS`, `POOL`, `MOCK_SEL`, `CONTROLLER_SEL`, `AGENT_GROUP`, `USER_HEADER`; see the header of the script); the defaults are the proof cluster's. Kind runs the Substrate namespace as
    `ate-system` by default; set `SUBSTRATE_NS` if yours differs. The collector finds each pod's cgroup by its UID, so it works with the systemd and cgroupfs drivers.
+   The raw 0.25 s samples are `mem.jsonl` in the results directory; add `--raw-out data/<run>-mem.jsonl.gz` to `analyze.py` to ship them gzip-compressed (budget `--raw-budget`, default 2.8 MB, falling back to the first
+   activation of every measured run, noted in the file). `analyze.py --mem <file>[.gz]` re-derives the tables from it. CPU per activation is the sum over the cgroup leaves of each leaf's maximum `cpu_usec` in the activation.
    Run one harness at a time with `perf.sh` (see its header). The cgroup tests need no cluster: `python3 test_collect.py`.
 
-6. **Record the demo.** Download the asciinema 3.x static Linux binary into `demo/bin/asciinema` (nothing is installed), pull the images `ghcr.io/asciinema/agg` and
+6. **Two series for the claims that need one** (they need the gateway and kubectl, not cgroup access):
+
+   ```sh
+   AGENT=pig-approve N=10 ./reject.sh                                   # reject with a reason; checks the reason reaches the mock's log and the answer sha is the rejected path's
+   AGENT=pig-basket APPROVE_AGENT=pig-approve N=10 ./restart.sh          # DELETES the worker pod 2 x N times; first-attempt result, retries and time to success
+   ```
+
+   Both write `runs.jsonl` (one record per run), `summary.json` and `summary.md`; the restart summary reports first-attempt success separately from eventual success. `test_series_scripts.sh` runs both against the
+   fake gateway (`basket -serve-fake`, with `-fake-faults` to inject gateway errors) and a stub `kubectl`.
+
+7. **Record the demo.** Download the asciinema 3.x static Linux binary into `demo/bin/asciinema` (nothing is installed), pull the images `ghcr.io/asciinema/agg` and
    `jrottenberg/ffmpeg:7-alpine`, then `./record.sh final` (it runs `demo.sh` against the cluster, including one deletion of the worker pod while an approval is pending, renders a 1280x720
    H.264 file and reports its size). `demo.sh` needs the `analysis.json` from step 5 for its last screen. Delete the two images afterwards.
 

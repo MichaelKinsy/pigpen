@@ -2,6 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -198,5 +202,68 @@ func TestApprovalGatedProbeSelection(t *testing.T) {
 	c = mustConv(t, "anthropic", `{"model":"m","messages":[{"role":"user","content":"[basket] [approve] go"},{"role":"user","content":[{"type":"tool_result","tool_use_id":"1","content":"ok"}]}],`+claude+`}`)
 	if r := plan(c); r.Call == nil || r.Call.Name != "mcp__mock-mcp-approval__kagent_probe" {
 		t.Errorf("basket+approve: %+v", r)
+	}
+}
+
+// A rejected approval reaches the model as a tool result; the request log must carry that text so a run can show the
+// reason arrived, and the logged text must reproduce the answer sha.
+func TestLoggedResultsShowRejectionAndReproduceSha(t *testing.T) {
+	tl := `"tools":[{"name":"mcp__kagent__kagent_probe","input_schema":{}}]`
+	const rej = "Tool call was rejected by user. Reason: rejected by basket"
+	c := mustConv(t, "anthropic", `{"model":"m","messages":[{"role":"user","content":"[run-1] [approve] go"},{"role":"assistant","content":[{"type":"tool_use","id":"1","name":"mcp__kagent__kagent_probe","input":{}}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"1","content":"`+rej+`"}]}],`+tl+`}`)
+	res, cut := c.loggedResults()
+	if cut || !strings.Contains(res, "Reason: rejected by basket") {
+		t.Fatalf("logged results %q cut=%v", res, cut)
+	}
+	if got, want := plan(c).Text, "APPROVE-DONE "+shaHex(res); got != want {
+		t.Fatalf("answer %q, sha of logged results gives %q", got, want)
+	}
+	// before any tool result nothing is logged
+	c = mustConv(t, "anthropic", `{"model":"m","messages":[{"role":"user","content":"[approve] go"}],`+tl+`}`)
+	if res, _ := c.loggedResults(); res != "" {
+		t.Fatalf("results %q", res)
+	}
+	// oversized results are cut and flagged
+	big := strings.Repeat("x", maxLoggedResults+10)
+	c = mustConv(t, "anthropic", `{"model":"m","messages":[{"role":"user","content":"[approve] go"},{"role":"user","content":[{"type":"tool_result","tool_use_id":"1","content":"`+big+`"}]}],`+tl+`}`)
+	if res, cut := c.loggedResults(); !cut || len(res) != maxLoggedResults {
+		t.Fatalf("len %d cut %v", len(res), cut)
+	}
+}
+
+// End to end through the HTTP handler: the request log line of the step that answers a rejection carries the rejection text.
+func TestRequestLogCarriesToolResults(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+	srv := httptest.NewServer((&server{cfg: config{ChunkChars: 64}}).mux())
+	body := `{"model":"m","messages":[{"role":"user","content":"[approve] go"},{"role":"assistant","content":[{"type":"tool_use","id":"1","name":"mcp__kagent__kagent_probe","input":{}}]},{"role":"user","content":[{"type":"tool_result","tool_use_id":"1","content":"Tool call was rejected by user. Reason: because"}]}],"tools":[{"name":"mcp__kagent__kagent_probe","input_schema":{}}]}`
+	resp, err := http.Post(srv.URL+"/v1/messages", "application/json", strings.NewReader(body))
+	if err == nil {
+		io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}
+	srv.Close()
+	os.Stdout = old
+	w.Close()
+	logged, _ := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found bool
+	for _, ln := range strings.Split(string(logged), "\n") {
+		var e map[string]any
+		if json.Unmarshal([]byte(ln), &e) == nil && e["step"] == "final" {
+			found = true
+			if !strings.Contains(e["results"].(string), "Reason: because") || !strings.HasPrefix(e["text"].(string), "APPROVE-DONE ") {
+				t.Fatalf("log line %v", e)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("no final log line in %q", logged)
 	}
 }

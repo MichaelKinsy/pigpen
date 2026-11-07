@@ -12,7 +12,7 @@ Per session the actor is named session-<contextId> (kagent), its UID comes from 
 memory is every cgroup leaf named <uid>-* below the worker pod (the sentry lives in <uid>-_sandbox, and in <uid>-_ckpt while
 a checkpoint runs, so the sum follows it).
 """
-import argparse, glob, json, os, re, sys
+import argparse, glob, gzip, io, json, os, re, sys
 
 MIB = 1 << 20
 
@@ -51,9 +51,31 @@ def load_runs(d):
     return runs
 
 
+def _open_text(path, mode="rt"):
+    return gzip.open(path, mode) if path.endswith(".gz") else open(path, mode)
+
+
+def load_pressure(d):
+    """baseline.sh's pressure.tsv: (tag, agent) -> {psi, waited_s, over}. Empty when the file is absent (older runs)."""
+    out = {}
+    path = os.path.join(d, "pressure.tsv")
+    if os.path.exists(path):
+        for line in open(path):
+            f = line.rstrip("\n").split("\t")
+            if len(f) >= 5:
+                out[(f[0], f[1])] = {"psi": float(f[2]), "waited_s": int(f[3]), "over": f[4] == "1"}
+    return out
+
+
+def over_gate_sessions(rows):
+    """Measured sessions that were started although host CPU pressure stayed above the gate after GATE_WAIT."""
+    return [{"agent": r["agent"], "round": r["round"], **r["pressure"]} for r in rows if not r["warm"] and (r.get("pressure") or {}).get("over")]
+
+
 def load_mem(path):
+    """Read a collector sample file (plain or gzip). Returns (meta, samples)."""
     meta, samples = None, []
-    with open(path) as f:
+    with _open_text(path) as f:
         for line in f:
             d = json.loads(line)
             if "meta" in d:
@@ -63,26 +85,81 @@ def load_mem(path):
     return meta, samples
 
 
+def _gz_bytes(meta, samples):
+    lines = [json.dumps({"meta": meta}, separators=(",", ":"))] + [json.dumps(s, separators=(",", ":")) for s in samples]
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb", mtime=0, compresslevel=9) as g:
+        g.write(("\n".join(lines) + "\n").encode())
+    return buf.getvalue()
+
+
+def ship_raw(meta, samples, rows, out, budget):
+    """Write the collector's raw samples gzip-compressed to `out` and return a description of what was shipped.
+
+    The full file when it fits `budget` bytes. Otherwise only the samples inside the first activation of every measured run
+    (warmup runs dropped); if that still does not fit, also only the series of that actor's leaves. The meta record says which
+    kind was shipped, so analyze.py can be re-run on the bundle either way (the per-activation CPU and memory of the shipped
+    activations are identical to the full run's)."""
+    meta = dict(meta or {})
+    kinds = [("full", samples)]
+    wins = [(r["activations"][0]["t0"], r["activations"][0]["t1"], r["uid"]) for r in rows if not r["warm"] and r.get("activations")]
+    sub = []
+    for s in samples:
+        for t0, t1, uid in wins:
+            if t0 <= s["t"] <= t1:
+                sub.append(s)
+                break
+    kinds.append(("first-activations", sub))
+    slim = []
+    for s in sub:
+        uids = [u for t0, t1, u in wins if t0 <= s["t"] <= t1]
+        keep = {k: v for k, v in s["series"].items() if any(k.split("|", 2)[2].startswith("sub:" + u + "-") for u in uids)}
+        slim.append({**s, "series": keep})
+    kinds.append(("first-activations-actor-leaves-only", slim))
+    for kind, smp in kinds:
+        m = {**meta, "shipped": kind, "shipped_samples": len(smp), "total_samples": len(samples)}
+        data = _gz_bytes(m, smp)
+        if len(data) <= budget or kind == kinds[-1][0]:
+            with open(out, "wb") as f:
+                f.write(data)
+            return {"kind": kind, "bytes": len(data), "samples": len(smp), "total_samples": len(samples), "within_budget": len(data) <= budget}
+
+
 def actor_series(samples, uid):
-    """[(t, ws_total, ws_sandbox, cpu_usec_total, peak_sandbox)] over the samples where the actor has any leaf."""
+    """[(t, ws_total, ws_sandbox, {leaf scope: cpu_usec}, peak_sandbox)] over the samples where the actor has any leaf.
+
+    The working set is the sum over the leaves present in that sample. cpu_usec is cumulative per leaf and a leaf can be
+    gone from the later samples of an activation, so the per-leaf values are kept and combined by activation_cpu_usec."""
     out = []
     for s in samples:
-        ws = cpu = 0
+        ws = 0
+        cpu = {}
         sb = pk = None
-        seen = False
         for key, v in s["series"].items():
             target, pod, scope = key.split("|", 2)
             if not scope.startswith("sub:" + uid + "-"):
                 continue
-            seen = True
             ws += v.get("working_set", 0)
-            cpu += v.get("cpu_usec", 0)
+            cpu[key] = v.get("cpu_usec", 0)
             if scope.endswith("-_sandbox"):
                 sb = v.get("working_set", 0)
                 pk = v.get("peak")
-        if seen:
+        if cpu:
             out.append((s["t"], ws, sb if sb is not None else 0, cpu, pk or 0))
     return out
+
+
+def activation_cpu_usec(act):
+    """CPU of one activation: the sum over its leaves of each leaf's maximum cpu_usec seen in the activation.
+
+    Not the leaves present at the last sample: a leaf (for example the sandbox once the checkpoint leaf takes over) can be
+    gone by then and would take its CPU with it."""
+    best = {}
+    for row in act:
+        for k, v in row[3].items():
+            if v > best.get(k, 0):
+                best[k] = v
+    return sum(best.values())
 
 
 def activations(series, gap=1.5):
@@ -116,7 +193,19 @@ def server_timeline(states, name):
     return ev, resumes, suspends
 
 
-def per_run(runs, states, timing_raw, samples):
+def summarize_activation(a):
+    """One activation (list of actor_series rows) as the record stored per run.
+
+    Memory: the leaf working sets are summed per sample, then the maximum over the samples is taken. CPU: activation_cpu_usec."""
+    ws = [x[1] for x in a]
+    return {"t0": a[0][0], "t1": a[-1][0], "n": len(a), "ws_start_mib": round(ws[0] / MIB, 1),
+            "ws_median_mib": round(sorted(ws)[len(ws) // 2] / MIB, 1), "ws_max_mib": round(max(ws) / MIB, 1),
+            "sandbox_ws_max_mib": round(max(x[2] for x in a) / MIB, 1),
+            "peak_mib": round(max(x[4] for x in a) / MIB, 1),
+            "cpu_ms": round(activation_cpu_usec(a) / 1000, 1)}
+
+
+def per_run(runs, states, timing_raw, samples, pressure=None):
     uid_of = {}
     for s in states:
         uid_of[s["name"]] = s["uid"]
@@ -124,6 +213,7 @@ def per_run(runs, states, timing_raw, samples):
     for r in runs:
         row = {"agent": r["_agent"], "warm": r["_warm"], "round": r["_round"], "ok": r["OK"] if "OK" in r else r.get("ok"),
                "error": r.get("error"), "checks": r.get("checks", {}), "approval": r.get("approval"), "timings": r.get("timings_ms", {})}
+        row["pressure"] = (pressure or {}).get((("w" if r["_warm"] else "r") + str(r["_round"]), r["_agent"]))
         tools = [t["name"] for t in (r.get("turns") or [{}])[0].get("tools", []) or []]
         for t in r.get("turns", []):
             tools += [x["name"] for x in t.get("tools", []) or []]
@@ -149,12 +239,7 @@ def per_run(runs, states, timing_raw, samples):
             acts = activations(actor_series(samples, row["uid"]))
             row["activations"] = []
             for a in acts:
-                ws = [x[1] for x in a]
-                row["activations"].append({"t0": a[0][0], "t1": a[-1][0], "n": len(a), "ws_start_mib": round(ws[0] / MIB, 1),
-                                           "ws_median_mib": round(sorted(ws)[len(ws) // 2] / MIB, 1), "ws_max_mib": round(max(ws) / MIB, 1),
-                                           "sandbox_ws_max_mib": round(max(x[2] for x in a) / MIB, 1),
-                                           "peak_mib": round(max(x[4] for x in a) / MIB, 1),
-                                           "cpu_ms": round((a[-1][3] - 0) / 1000, 1)})
+                row["activations"].append(summarize_activation(a))
         rows.append(row)
     return rows
 
@@ -317,23 +402,35 @@ def main():
     ap.add_argument("--notes")
     ap.add_argument("--out-json", required=True)
     ap.add_argument("--out-md", required=True)
+    ap.add_argument("--mem", help="collector sample file, plain or .gz (default: <dir>/mem.jsonl)")
+    ap.add_argument("--raw-out", help="also write the raw 0.25 s samples gzip-compressed here (the data bundle copy, see ship_raw)")
+    ap.add_argument("--raw-budget", type=int, default=2_800_000, help="byte budget of --raw-out; a first-activation subset is shipped when the full file exceeds it")
     a = ap.parse_args()
     runs = load_runs(a.dir)
-    meta, samples = load_mem(os.path.join(a.dir, "mem.jsonl"))
+    meta, samples = load_mem(a.mem or os.path.join(a.dir, "mem.jsonl"))
     logs = json.load(open(os.path.join(a.dir, "logs.json")))
     agents = [x for x in a.agents.split(",") if x] or sorted({r["_agent"] for r in runs})
     states = list({(s["name"], s["state"], s["t"]): s for s in logs["states"]}.values())
     timing_raw = list({(t["uid"], t["op"], t["t"]): t for t in logs["timing_raw"]}.values())
-    rows = per_run(runs, states, timing_raw, samples)
+    pressure = load_pressure(a.dir)
+    rows = per_run(runs, states, timing_raw, samples, pressure)
+    over = over_gate_sessions(rows)
     res = aggregate(rows, agents)
     images = json.load(open(a.images)) if a.images else None
     cold = json.load(open(a.coldstart)) if a.coldstart else None
     notes = open(a.notes).read() if a.notes else ""
     wb = worker_baseline(samples)
+    if a.raw_out:
+        shipped = ship_raw(meta, samples, rows, a.raw_out, a.raw_budget)
+        print("analyze: raw samples shipped: " + json.dumps(shipped), file=sys.stderr)
+        meta = {**(meta or {}), "raw_shipped": shipped}
     notes += (f"\n## Worker pod (shared by all actors)\n\nWorking set of the `kagent-default` worker pod: idle (no actor cgroup) median {wb['idle']['median']} MiB "
               f"(n={wb['idle']['n']} samples), with an actor running median {wb['with_actor']['median']} MiB (n={wb['with_actor']['n']}). "
               "Actor memory in the tables above is the actor's own sandbox cgroup, not this pod number.\n" if wb["idle"] and wb["with_actor"] else "")
-    json.dump({"meta": meta, "aggregate": res, "runs": rows, "images": images, "coldstart": cold, "worker": wb}, open(a.out_json, "w"), indent=1)
+    if pressure:
+        notes += (f"\n## Host pressure gate\n\n{len(pressure)} sessions were gated on host CPU pressure; {len(over)} measured session(s) started although pressure stayed above the gate "
+                  "after the wait ran out" + (":\n\n" + "\n".join(f"- {o['agent']} round {o['round']}: PSI {o['psi']}, waited {o['waited_s']} s" for o in over) if over else " (none).") + "\n")
+    json.dump({"meta": meta, "pressure_over_gate": over, "aggregate": res, "runs": rows, "images": images, "coldstart": cold, "worker": wb}, open(a.out_json, "w"), indent=1)
     open(a.out_md, "w").write(to_md(res, agents, meta or {}, images, cold, notes) + "\n")
     print(f"analyze: {len(rows)} runs, {len(res)} agents", file=sys.stderr)
 

@@ -263,6 +263,35 @@ func shaHex(s string) string {
 	return hex.EncodeToString(h[:])
 }
 
+// resultsAfter returns the tool results that follow message pi, in order.
+func (c *conv) resultsAfter(pi int) []string {
+	var results []string
+	for _, m := range c.Msgs[pi+1:] {
+		if m.ToolResult {
+			results = append(results, m.Results...)
+		}
+	}
+	return results
+}
+
+// maxLoggedResults bounds the tool result text the request log carries.
+const maxLoggedResults = 4096
+
+// loggedResults returns the tool results the current scenario step is answering, joined exactly as plan joins them for
+// the answer sha (so a reader can recompute the sha), and whether the text was cut to maxLoggedResults. Tool results in
+// the proof are the mock's own probe output or a harness's rejection text, never credentials.
+func (c *conv) loggedResults() (string, bool) {
+	pi := c.lastPrompt()
+	if pi < 0 {
+		return "", false
+	}
+	j := strings.Join(c.resultsAfter(pi), "")
+	if len(j) > maxLoggedResults {
+		return j[:maxLoggedResults], true
+	}
+	return j, false
+}
+
 // plan maps conversation state to the scenario reply. It never looks at the model name.
 func plan(c *conv) reply {
 	pi := c.lastPrompt()
@@ -274,12 +303,7 @@ func plan(c *conv) reply {
 	approve := strings.Contains(prompt, "[approve]")
 	recall := strings.Contains(prompt, "[recall]")
 
-	var results []string
-	for _, m := range c.Msgs[pi+1:] {
-		if m.ToolResult {
-			results = append(results, m.Results...)
-		}
-	}
+	results := c.resultsAfter(pi)
 	n := len(results)
 
 	switch {

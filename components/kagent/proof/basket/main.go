@@ -57,6 +57,7 @@ type config struct {
 	Timeout     time.Duration
 	Prompt      string
 	Scenario    string
+	NoSendRetry bool // sendStream does not retry a gateway-rejected send itself (restart series record the first attempt)
 }
 
 type phase struct {
@@ -170,7 +171,7 @@ func (c *client) sendStream(ctx context.Context, name string, msg map[string]any
 		raw, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 		resp.Body.Close()
 		// a rejected send with no dispatch may be retried with the same message (a2a-gateway.md)
-		if (strings.Contains(string(raw), "KAGENT_SEND_NOT_ACCEPTED") || strings.Contains(string(raw), "input was not accepted")) && attempt < 100 {
+		if (strings.Contains(string(raw), "KAGENT_SEND_NOT_ACCEPTED") || strings.Contains(string(raw), "input was not accepted")) && attempt < 100 && !c.cfg.NoSendRetry {
 			tr.SendRetries++
 			if tr.SendRetries == 1 {
 				livef(ms(time.Since(t0)), "retry", "gateway: session not available yet, retrying the same message")
@@ -406,12 +407,15 @@ func userMessage(text, contextID, taskID string) map[string]any {
 	return m
 }
 
+// rejectReason is the reason sent with a rejection (-reject-reason).
+var rejectReason = "rejected by basket"
+
 func approvalMessage(ar *approvalRequest, approve bool, contextID, taskID string) map[string]any {
 	var items []any
 	for _, t := range ar.Tools {
 		a := map[string]any{"id": t.ID, "approved": approve}
 		if !approve {
-			a["rejection_reason"] = "rejected by basket"
+			a["rejection_reason"] = rejectReason
 		}
 		items = append(items, a)
 	}
@@ -644,17 +648,24 @@ func main() {
 	flag.StringVar(&cfg.Prompt, "prompt", "run the perf basket", "free text after the marker")
 	flag.StringVar(&cfg.Scenario, "scenario", "basket", "mock scenario marker: basket|approve|echo")
 	flag.StringVar(&out, "out", "", "write JSON result here (default stdout)")
+	fakeFaults := flag.String("fake-faults", "", "with -serve-fake: comma list of faults for the next follow-up requests: rpc:<code>, sse:<code>, http:<status>, empty, hang")
 	fake := flag.String("serve-fake", "", "serve a fake A2A gateway on this address (self-test of basket, perf.sh and the collector) and exit when killed")
-	mode := flag.String("mode", "bench", "bench (default), send (one message, live events), approve (answer the pending approval in -state)")
+	mode := flag.String("mode", "bench", "bench (default), send (one message, live events), approve (answer the pending approval in -state), recall (retry series for one message on -context), resume (retry series for the approval in -state)")
 	text := flag.String("text", "", "message text for -mode send")
 	ctxFlag := flag.String("context", "", "contextId (session) to continue, for -mode send")
 	stateFile := flag.String("state", "", "JSON file written by -mode send/approve with context, task and pending approval")
 	liveFlag := flag.Bool("live", false, "print A2A events as they arrive")
+	expect := flag.String("expect", "", "for -mode recall|resume: text the answer must contain to count as success")
+	attemptTimeout := flag.Duration("attempt-timeout", 30*time.Second, "for -mode recall|resume: timeout of one attempt")
+	retryMax := flag.Duration("retry-max", 3*time.Minute, "for -mode recall|resume: stop retrying after this long since the first attempt")
+	backoffInit := flag.Duration("backoff", 500*time.Millisecond, "for -mode recall|resume: first retry delay (doubles)")
+	backoffMax := flag.Duration("backoff-max", 5*time.Second, "for -mode recall|resume: longest retry delay")
+	flag.StringVar(&rejectReason, "reject-reason", rejectReason, "reason text sent with a rejection (-approve reject, -mode approve -reject)")
 	reject := flag.Bool("reject", false, "with -mode approve: reject instead of approve")
 	flag.Parse()
 	if *fake != "" {
 		fmt.Fprintln(os.Stderr, "basket: fake gateway on", *fake)
-		fmt.Fprintln(os.Stderr, http.ListenAndServe(*fake, newFakeGateway()))
+		fmt.Fprintln(os.Stderr, http.ListenAndServe(*fake, newFakeGatewayFaults(*fakeFaults)))
 		os.Exit(1)
 	}
 	cfg.Headers = headers
@@ -678,6 +689,9 @@ func main() {
 		os.Exit(demoSend(c, *text, *ctxFlag, "", *stateFile))
 	case "approve":
 		os.Exit(demoApprove(c, *stateFile, !*reject))
+	case "recall", "resume":
+		os.Exit(seriesMain(c, *mode, *text, *ctxFlag, *stateFile, *expect, out, retryOpts{AttemptTimeout: *attemptTimeout, MaxTotal: *retryMax,
+			BackoffInitial: *backoffInit, BackoffMax: *backoffMax}))
 	}
 	ctx := context.Background()
 	started := now()

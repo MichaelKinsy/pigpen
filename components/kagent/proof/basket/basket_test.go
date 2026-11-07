@@ -10,7 +10,7 @@ import (
 )
 
 func TestIterationAgainstFakeGateway(t *testing.T) {
-	fg := &fakeGateway{markers: map[string]string{}}
+	fg := newFakeGateway()
 	srv := httptest.NewServer(fg)
 	defer srv.Close()
 	cfg := config{BaseURL: srv.URL, Agent: "kagent/bench", Headers: []string{"X-User-Id: bench"}, Approve: "auto",
