@@ -77,6 +77,26 @@ func TestDiscoverModelsEnrichesFromModelsDev(t *testing.T) {
 	}
 }
 
+func TestDiscoverModelsThinkingMapUsesFirstEffortOption(t *testing.T) {
+	client := &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if strings.Contains(req.URL.String(), "models.dev") {
+			return jsonResponse(200, `{"opencode":{"models":{"x-preview-f-free":{"reasoning":true,"reasoning_options":[{"type":"effort","values":["low"]},{"type":"effort","values":["high"]}]}}}}`), nil
+		}
+		return jsonResponse(200, `{"data":[{"id":"x-preview-f-free"}]}`), nil
+	})}
+	out := discoverModels(discoverOptions{Fetch: client})
+	if len(out) != 1 {
+		t.Fatalf("models = %#v", out)
+	}
+	m := out[0].ThinkingLevelMap
+	if m["low"] == nil || *m["low"] != "low" {
+		t.Errorf("low should map from the first effort option: %#v", m)
+	}
+	if m["high"] != nil {
+		t.Errorf("high comes from a later effort option and must stay hidden: %#v", m["high"])
+	}
+}
+
 func TestDiscoverModelsDefaultsWhenModelsDevUnreachable(t *testing.T) {
 	client := &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 		if strings.Contains(req.URL.String(), "models.dev") {

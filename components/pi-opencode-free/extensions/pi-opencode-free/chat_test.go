@@ -309,6 +309,33 @@ func TestChatForbiddenAuthorizationHeaderIsRemovable(t *testing.T) {
 	}
 }
 
+func TestChatNeverSendsAuthorizationFromHostHeaders(t *testing.T) {
+	var headers http.Header
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		headers = r.Header.Clone()
+		w.Header().Set("Content-Type", "text/event-stream")
+		io.WriteString(w, "data: [DONE]\n\n")
+	}))
+	defer server.Close()
+	c := &client{baseURL: server.URL, http: server.Client(), newID: func() string { return "call_test" }}
+	stream, err := c.stream(freeModel("hy3-free"), userTranscript("hi"), sdk.ProviderStreamOptions{
+		Values: map[string]any{"headers": map[string]any{
+			"Authorization": "Bearer none",
+			"x-extra":       "1",
+		}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	collect(t, stream)
+	if _, ok := headers["Authorization"]; ok {
+		t.Errorf("Authorization = %q, want none", headers.Get("Authorization"))
+	}
+	if headers.Get("x-extra") != "1" {
+		t.Errorf("headers = %#v", headers)
+	}
+}
+
 func TestChatRequestUsesModelBaseURL(t *testing.T) {
 	var path string
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

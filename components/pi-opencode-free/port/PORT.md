@@ -30,15 +30,15 @@ the OpenCode client headers and omits `Authorization` for the keyless free tier.
 | --- | --- | --- | --- | --- | --- |
 | D1 | `src/discovery.ts` `FREE_REGEX` | Keep ids ending `-free` or named `big-pickle` | `freeModelID` | `discovery_test.go` | mapped |
 | D2 | `src/discovery.ts` `filterFreeModels` | Defaults: no reasoning, 128k context, 16,384 output | `filterFreeModels` | `TestFilterFreeModelsUsesConservativeDefaults` | mapped |
-| D3 | `src/discovery.ts` `buildThinkingLevelMap` | Effort levels become a Pi thinking map; off is hidden unless offered or toggled | `buildThinkingLevelMap` | `TestDiscoverModelsEnrichesFromModelsDev` | mapped |
+| D3 | `src/discovery.ts` `buildThinkingLevelMap` | Effort levels become a Pi thinking map; off is hidden unless offered or toggled | `buildThinkingLevelMap` | `TestDiscoverModelsEnrichesFromModelsDev`, `TestDiscoverModelsThinkingMapUsesFirstEffortOption` | mapped (first effort option only, like `options.find`) |
 | D4 | `src/discovery.ts` `discoverModels` | Zen + models.dev fetched in parallel with a boot budget; any failure is an empty list | `discoverModels` | discovery tests | mapped |
-| D5 | `src/discovery.ts` models.dev routing | `@ai-sdk/openai` means the Responses API | `modelInfo.API` | `TestDiscoverModelsEnrichesFromModelsDev` | mapped |
+| D5 | `src/discovery.ts` models.dev routing | `@ai-sdk/openai` means the Responses API | `modelInfo.API` | `TestDiscoverModelsEnrichesFromModelsDev`, `TestDiscoverModelsThinkingMapUsesFirstEffortOption` | mapped (first effort option only, like `options.find`) |
 | R1 | `src/index.ts` provider registration | provider id, name, base URL, empty catalog, keyless auth | `newProvider` | `TestProviderStartsWithEmptyCatalog`, `TestProviderAuthIsKeylessAndCarriesHeaders` | mapped |
 | R2 | `src/index.ts` `refreshModels` cache path | Restore stored models, strip provider/baseUrl, ignore foreign APIs | `restore` | `TestCacheOnlyRefreshRestoresSnapshot`, `TestRestoreDropsForeignAndBrokenModels` | mapped |
 | R3 | `src/index.ts` `refreshModels` network path | Discover, convert, persist `{models, checkedAt}`, publish update | `RefreshModels` | `TestNetworkRefreshDiscoversAndPersistsSnapshot` | mapped |
 | R4 | `src/index.ts` empty discovery | Never wipe a good snapshot | `RefreshModels` early return | `TestNetworkRefreshNeverWipesGoodSnapshot` | mapped |
 | R5 | `src/index.ts` aborted refresh | Return no models without fetching | `RefreshModels` signal check | `TestNetworkRefreshRespectsAbortBeforeFetching` | mapped |
-| R6 | `src/index.ts` headers | `x-opencode-client: cli`, `x-opencode-project: global`, `User-Agent: opencode/0.0.0-dev`, no Authorization | `providerHeaders`, `do` | chat/response request tests | mapped |
+| R6 | `src/index.ts` headers | `x-opencode-client: cli`, `x-opencode-project: global`, `User-Agent: opencode/0.0.0-dev`, no Authorization; deleted after caller headers are merged (`index.ts:104`) | `providerHeaders`, `do` | chat/response request tests, `TestChatNeverSendsAuthorizationFromHostHeaders` | mapped |
 | S1 | Pi's native `openai-completions` engine | Messages, tools, `max_tokens`, reasoning effort, SSE text/reasoning/tool calls/usage | `chat.go` | `chat_test.go` | mapped (own stream client) |
 | S2 | Pi's native `openai-responses` engine | Input items, tools, reasoning, function calls, usage | `responses.go` | `responses_test.go` | mapped (own stream client) |
 | S3 | Pi's `onPayload` hook | Replace the request body | `invokePayload` | `TestChatPayloadHookCanReplaceBody` | mapped |

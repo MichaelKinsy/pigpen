@@ -267,10 +267,14 @@ func buildThinkingLevelMap(meta modelMeta) map[string]*string {
 		return nil
 	}
 	var effort []string
+	seenEffort := false
 	hasToggle := false
 	for _, option := range meta.ReasoningOptions {
-		if option.Type == "effort" {
+		// Only the first effort option counts, like the original's
+		// `options.find(o => o.type === "effort")` (port/oracle/src/discovery.ts:59).
+		if option.Type == "effort" && !seenEffort {
 			effort = option.Values
+			seenEffort = true
 		}
 		if option.Type == "toggle" {
 			hasToggle = true

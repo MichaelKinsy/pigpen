@@ -320,6 +320,9 @@ func (c *client) do(ctx context.Context, endpoint string, body []byte, opts sdk.
 		req.Header.Set(key, value)
 	}
 	applyHeaders(req.Header, opts.Values)
+	// The original forces `Authorization: null` after spreading the caller's
+	// headers (port/oracle/src/index.ts:104): no Bearer ever reaches Zen.
+	req.Header.Del("Authorization")
 
 	var timedOut atomic.Bool
 	var timer *time.Timer

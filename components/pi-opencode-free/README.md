@@ -11,6 +11,11 @@ them from [models.dev](https://models.dev). It sends the OpenCode client headers
 (`x-opencode-client`, `x-opencode-project`, `User-Agent`) on every request, so
 the free tier accepts a keyless call. It never sends a bearer token.
 
+**License: GPL-3.0-or-later.** This is a standalone, opt-in Package: install it
+yourself, under those terms. It is never bundled or fused into a Piglet
+(`pig-with-batteries` and the other Piglets are MIT) or into any Binary that is
+not GPL-compatible.
+
 **It does nothing until you use it.** It is not part of any Piglet and makes no
 network call at start-up.
 
@@ -61,8 +66,9 @@ refresh keeps the previous snapshot instead of wiping it.
   on assistant messages that have none.
 - **Responses** models (the ones models.dev routes through `@ai-sdk/openai`)
   use `/responses` with reasoning, output text and function calls.
-- **Headers** are the OpenCode client identity only. `Authorization` is not sent
-  at all; a caller-provided `Authorization: null` is accepted and removes it.
+- **Headers** are the OpenCode client identity only. `Authorization` is never
+  sent: like the original, it is removed after the caller's headers are merged,
+  so even a caller-provided `Authorization: Bearer ...` does not reach Zen.
 - **Errors** include Zen's HTTP status and response body, a timeout, or the SSE
   error object. Cancelling a turn cancels the HTTP request.
 
@@ -94,6 +100,6 @@ network. The tests are in the Go module and use the PiG public SDK.
 
 ## License
 
-GPL-3.0-or-later. The original and its license are retained in
+GPL-3.0-or-later, standalone and opt-in (see the notice near the top). The original and its license are retained in
 [`port/oracle/`](port/oracle); the Go implementation and tests are in this
 Package. See [CREDITS.md](CREDITS.md) and [`port/PORT.md`](port/PORT.md).
