@@ -1,0 +1,45 @@
+{{- if .Values.harness.create }}
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata:
+  name: {{ include "pig.harnessName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pig.labels" . | nindent 4 }}
+spec:
+  byo: {}
+  workload:
+    image: {{ required "image (digest-pinned) is required" .Values.image | quote }}
+    command:
+      {{- toYaml .Values.command | nindent 6 }}
+    {{- with .Values.args }}
+    args:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- /* Runtime settings first; a user env entry with the same name is a mistake, not an override. */}}
+  {{- $env := list }}
+  {{- with .Values.runtime.logLevel }}{{ $env = append $env (dict "name" "KAGENT_PIG_LOG_LEVEL" "value" .) }}{{ end }}
+  {{- with .Values.runtime.tools }}{{ $env = append $env (dict "name" "KAGENT_PIG_TOOLS" "value" (join "," .)) }}{{ end }}
+  {{- with .Values.runtime.bin }}{{ $env = append $env (dict "name" "KAGENT_PIG_BIN" "value" .) }}{{ end }}
+  {{- with .Values.runtime.contextWindow }}{{ $env = append $env (dict "name" "KAGENT_PIG_CONTEXT_WINDOW" "value" (. | int64 | toString)) }}{{ end }}
+  {{- with .Values.runtime.maxTokens }}{{ $env = append $env (dict "name" "KAGENT_PIG_MAX_TOKENS" "value" (. | int64 | toString)) }}{{ end }}
+  {{- with .Values.runtime.passEnv }}{{ $env = append $env (dict "name" "KAGENT_PIG_PASS_ENV" "value" (join "," .)) }}{{ end }}
+  {{- range $k, $v := .Values.env }}{{ $env = append $env (dict "name" $k "value" $v) }}{{ end }}
+  {{- if $env }}
+  env:
+    {{- range $env }}
+    - name: {{ .name | quote }}
+      value: {{ .value | quote }}
+    {{- end }}
+  {{- end }}
+  substrate:
+    workerPoolRef:
+      name: {{ required "substrate.workerPoolRef is required" .Values.substrate.workerPoolRef | quote }}
+    snapshotPolicy:
+      location: {{ required "substrate.snapshotLocation is required" .Values.substrate.snapshotLocation | quote }}
+{{- else }}
+{{- /* The Harness is someone else's; settings that only a Harness carries would be dropped silently. */}}
+{{- if or .Values.env .Values.args .Values.runtime.logLevel .Values.runtime.tools .Values.runtime.bin .Values.runtime.contextWindow .Values.runtime.maxTokens .Values.runtime.passEnv }}
+{{- fail "env, args and runtime.* configure the Harness and have no effect when harness.create is false; set them on the Harness that harness.name names" }}
+{{- end }}
+{{- end }}
