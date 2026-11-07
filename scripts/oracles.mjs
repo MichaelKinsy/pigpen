@@ -214,6 +214,8 @@ export function lockProblems(directory = root) {
   const tracked = trackedFiles(directory);
   for (const entry of lock.oracles ?? []) {
     const where = `${LOCK_FILE}: ${entry.id}`;
+    // A tree without the component's provenance (a copy of ports/ for a test) has nothing to check the entry against; the ports list gate checks that every done port has its Package.
+    if (!existsSync(join(directory, 'components', entry.component, 'provenance.json'))) continue;
     if (!entry.id || ids.has(entry.id)) problems.push(`${where}: the id is missing or repeated`);
     ids.add(entry.id);
     if (!['fetched', 'vendored'].includes(entry.source)) problems.push(`${where}: source must be fetched or vendored`);
