@@ -3,11 +3,12 @@
 ## Scope and current status
 
 Pigpen holds Piglet compositions, reusable components, and generated catalog
-metadata. The extension porter is source-only and batteries (currently the herdr reporter plus a build fixture) remain source only.
-No Piglet Binary release is published.
-There is no supported binary-version range or release signing key to advertise
-at this stage. This policy does not claim a security audit or guaranteed response
-time.
+metadata. Signed Piglet Binaries are published as GitHub Releases `<name>/v<version>`
+(see the README, "What is published"). Each Binary carries an Ed25519 signature;
+the public key is pinned in [`release-keys/pigpen-piglets.pub`](release-keys/pigpen-piglets.pub).
+Check that key before you trust a Binary: a signature alone does not prove who holds
+the key. No supported binary-version range is advertised. This policy does not claim
+a security audit or guaranteed response time.
 
 Report problems with Pigpen's manifests, selected resources, generated metadata,
 or future release integrity here. Problems in the core PiG runtime, CLI,

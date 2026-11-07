@@ -295,13 +295,13 @@ components/a2a/                     directly installable Go Package: A2A (Agent2
                                     a2a-go v2.6.0, listener off unless configured (evidence in port/)
 piglets/
   a2a/                              Go Piglet selecting components/a2a (also selected by pig-with-batteries)
-  pig-extension-porter/             source-only, Go-only focused porter Piglet
-  pig-porter/                       source-only umbrella; extends pig-extension-porter
-  pig-games/                        source-only: PiG Runner and Angry Pigs
-  pig-music/                        source-only, Go-only: PiG with the /music player (nothing starts until you type it)
+  pig-extension-porter/             Go-only focused porter Piglet (signed Binary `pig-extension-porter/v0.1.1`)
+  pig-porter/                       umbrella; extends pig-extension-porter (signed Binary `pig-porter/v0.1.1`)
+  pig-games/                        PiG Runner and Angry Pigs (signed Binary `pig-games/v0.1.1`)
+  pig-music/                        Go-only: PiG with the /music player, nothing starts until you type it (signed Binary `pig-music/v0.1.1`)
   jev/                              Go Piglet selecting components/jev (also selected by pig-with-batteries)
-  pig-warden/                       source-only, Go-only: PiG with the opt-in warden guardrails
-  pig-typesafe/                     source-only, Go-only: PiG with the opt-in typesafe_evaluate tool and /typesafe
+  pig-warden/                       Go-only: PiG with the opt-in warden guardrails (signed Binary `pig-warden/v0.1.1`)
+  pig-typesafe/                     Go-only: PiG with the opt-in typesafe_evaluate tool and /typesafe (signed Binary `pig-typesafe/v0.1.1`)
   pig-with-batteries/
     piglet.yaml                     authored composition, input to staging
     catalog.json                    presentation metadata, not a PiG manifest
@@ -313,7 +313,7 @@ piglets/
   acp/                              PiG for ACP editors (selects components/acp; signed Binary `acp/v0.1.1`)
   herdr/                            PiG plus the herdr agent-state reporter
     piglet.yaml, catalog.json, README.md, tests/   (tests/ runs real pig: npm run test:pig)
-  pig-tern/                         coming soon: PiG as Tern's agent (not in this repository yet)
+  pig-tern/                         PiG as Tern's agent, drawn natively in Tern (signed Binary `pig-tern/v0.1.0`)
 scripts/stage-piglets.mjs            materializes local shared Packages
 dist/staged/                        GENERATED, gitignored local Piglet trees
 scripts/generate-index.mjs           derives catalog data from authored compositions

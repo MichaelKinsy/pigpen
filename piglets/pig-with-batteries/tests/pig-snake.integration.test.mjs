@@ -36,15 +36,13 @@ if (!binary) {
   process.on('exit', () => rmSync(builtDir, { recursive: true, force: true }));
   binary = join(builtDir, 'pig-with-batteries');
   // `pig piglet build` keeps receipts, artifacts and an agent directory under PIG_HOME and the agent directory variables:
-  // point all of them at the scratch directory (the Go caches stay where goCaches() says, not under this HOME), so a run
-  // never touches the real ~/.pig.
-  const home = join(builtDir, 'home');
+  // point those at the scratch directory, so a run never touches the real ~/.pig. HOME stays the developer's, so their Go
+  // and git settings still apply, as for `npm run build:piglet` and the pig-music test.
   const buildEnv = {
     ...process.env, ...goCaches(), GIT_TERMINAL_PROMPT: '0',
-    HOME: home, USERPROFILE: home, PIG_HOME: join(builtDir, 'pighome'),
-    PIG_CODING_AGENT_DIR: join(builtDir, 'agent'), PI_CODING_AGENT_DIR: join(builtDir, 'agent'),
+    PIG_HOME: join(builtDir, 'pighome'), PIG_CODING_AGENT_DIR: join(builtDir, 'agent'), PI_CODING_AGENT_DIR: join(builtDir, 'agent'),
   };
-  for (const name of ['home', 'pighome', 'agent']) mkdirSync(join(builtDir, name));
+  for (const name of ['pighome', 'agent']) mkdirSync(join(builtDir, name));
   // The manifest lists every release platform; pig builds only the machine it runs on.
   execFileSync(pig, ['piglet', 'build', manifest, '--format', 'binary', '--out', binary, '--targets', hostTarget().target], {
     stdio: 'pipe', env: buildEnv,
