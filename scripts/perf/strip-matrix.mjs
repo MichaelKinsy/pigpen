@@ -4,7 +4,7 @@
 //   PIG_BIN=/path/to/pig-0.5 PIG_SOURCE_ROOT=/path/to/pig-git-checkout node scripts/perf/strip-matrix.mjs [--piglet herdr] [--out dir]
 //
 // Needs a PiG that has `strip` (0.5 and later); pig 0.4.1 rejects the field. A Piglet with an extension must also build with that
-// PiG's SDK (see docs/plan/progress/piglets-pigpen.md: several modules need the 0.5 `ConfigHome` signature first). Startup and idle
+// PiG's SDK (several modules need the 0.5 `ConfigHome` signature first). Startup and idle
 // of the Binaries come from `node scripts/perf/measure.mjs startup|idle name=path ...`. Output: a Markdown table and
 // <out>/strip-matrix.json. Build seconds are what the host's Go build cache gave: the first build of a tag set pays the compile.
 import { spawnSync } from 'node:child_process';

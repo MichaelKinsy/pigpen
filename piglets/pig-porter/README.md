@@ -18,7 +18,7 @@ Checked against a PiG 0.3.0 pre-release build (`63c6ba456`):
   (`pig piglet build ... --format binary`, "Preparing fused Go members —
   extension-equivalence").
 - The derived Piglet must repeat `release` and `build`; PiG does not inherit them.
-- Limits, recorded in [RELEASE-BLOCKERS.md](../../RELEASE-BLOCKERS.md): `pig piglet add`
+- Limits, recorded in [RELEASE-BLOCKERS.md](../../docs/maintainers/RELEASE-BLOCKERS.md): `pig piglet add`
   cannot copy an `extends` closure, `extends` with `agentEnv` is not implemented, and a
   remote add of an authored manifest cannot select shared `components/` by sibling path.
 

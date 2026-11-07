@@ -14,7 +14,7 @@ name: Release the Archon provider
 # release-package.yml also runs on this tag: it verifies the component and publishes nothing.
 #
 # The token is a fine-grained personal access token for that one repository, held as the secret ARCHON_PROVIDER_PIG_TOKEN of
-# the `archon-provider-release` environment, whose tag policy is the owner's (OWNER-ACTIONS.md). A workflow cannot write to
+# the `archon-provider-release` environment, whose tag policy is the owner's (docs/maintainers/OWNER-ACTIONS.md). A workflow cannot write to
 # another repository with its own token. scripts/check-workflows.mjs enforces where the token may appear.
 on:
   push:
@@ -160,7 +160,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "$ARCHON_PROVIDER_PIG_TOKEN" ]; then
-            echo "ARCHON_PROVIDER_PIG_TOKEN is not set in the archon-provider-release environment (OWNER-ACTIONS.md)." >&2
+            echo "ARCHON_PROVIDER_PIG_TOKEN is not set in the archon-provider-release environment (docs/maintainers/OWNER-ACTIONS.md)." >&2
             exit 1
           fi
           # git reads the token from the environment, never from argv or the clone's config.

@@ -10,7 +10,7 @@ name: Discord notifications
 # requests a maintainer does not author. The push always runs in this repository and always carries the secret.
 #
 # A webhook URL is a write credential for one channel, so it is read from the `notifications` environment, whose secret
-# policy and deployment branch policy are the owner's (OWNER-ACTIONS.md), and never from a repository secret. This
+# policy and deployment branch policy are the owner's (docs/maintainers/OWNER-ACTIONS.md), and never from a repository secret. This
 # workflow runs on nothing but a push to main and a published release; scripts/check-workflows.mjs enforces both rules.
 on:
   push:

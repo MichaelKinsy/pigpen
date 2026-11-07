@@ -1,4 +1,4 @@
-// Record a finished release so the index can list it (OWNER-ACTIONS.md):
+// Record a finished release so the index can list it (docs/maintainers/OWNER-ACTIONS.md):
 //   npm run record -- package <name> <version>                 the tag components/<name>/v<version> must exist in this clone
 //   npm run record -- piglet <name> <version> [--file <path>]  the signed piglet-release.json of release <name>/v<version>
 //                                                              (default: downloaded with `gh release download`)
@@ -23,7 +23,7 @@ export function recordPackageRelease(name, version, { directory = root } = {}) {
 
 export function recordPigletReceipt(name, version, text, { directory = root, repository = config.repository } = {}) {
   const keys = readPinnedKeys(directory);
-  if (!keys.size) throw new Error('release-keys/ holds no public key: commit the signing key\'s .pub first (OWNER-ACTIONS.md)');
+  if (!keys.size) throw new Error('release-keys/ holds no public key: commit the signing key\'s .pub first (docs/maintainers/OWNER-ACTIONS.md)');
   verifyReceipt(text, { keys, repository, name, version });
   const file = receiptPath(directory, name, version);
   if (existsSync(file) && readFileSync(file, 'utf8') !== text) throw new Error(`${relative(directory, file)} is already recorded with different bytes; a release is immutable`);

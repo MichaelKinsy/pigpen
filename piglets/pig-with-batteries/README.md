@@ -19,7 +19,7 @@ off until you run `/jev on`; the [a2a Package](../../components/a2a/README.md), 
 `a2a.json`, `PIG_A2A_LISTEN` or `--a2a-listen` configures one (it then refuses to start without
 authentication tokens); and the [`websearch`](../../components/websearch/README.md) first slice
 (`web_search`, `fetch_content`, `get_search_content`, `source_check`, `web_enable`); and [`pig-music`](../../components/pig-music/README.md), a full-screen YouTube Music player that does nothing until you type `/music`. The owner approved the
-[roadmap](../../docs/plan/pigpen-roadmap.md); the rest of its capability ports are not in this composition yet.
+[roadmap](../../docs/maintainers/plans/pigpen-roadmap.md); the rest of its capability ports are not in this composition yet.
 
 - `piglet.yaml`: authored composition input. Its name, description, release
   version, Resource selections, and build targets feed staging and the catalog.
@@ -74,7 +74,7 @@ dist/staged/piglets/pig-with-batteries/piglet.yaml --format binary --out <path>`
 builds a Binary with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of
 it). `seed-check` is no longer what lets the build succeed; it is kept only so the
 composition still has a second, empty Go member until the owner decides to drop it.
-The root [release blockers](../../RELEASE-BLOCKERS.md) record what blocked the first release.
+The root [release blockers](../../docs/maintainers/RELEASE-BLOCKERS.md) record what blocked the first release.
 
 Pig Snake fuses like the others: its Package is pure Go and the composition builds a Piglet Binary
 with PiG 0.4.0 (evidence in

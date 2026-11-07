@@ -13,5 +13,5 @@
 //	policy/cedar    a Decider on Cedar policies (a nested module)
 //	resourceserver  JWT access-token verification against a configured JWKS
 //
-// See README.md for the contract of each flag and docs/plan/enterprise-profile.md in the repository for the plan.
+// See README.md for the contract of each flag and docs/maintainers/plans/enterprise-profile.md in the repository for the plan.
 package hardening

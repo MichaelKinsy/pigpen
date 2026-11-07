@@ -10,7 +10,6 @@ tool declarations as the other arms. A strip is opt-in in Pigpen, and this manif
 It has no TypeScript, Go, Rust or Python extension runtime, so `pig -e <file>` fails with a message that names `bench-lean` and the
 strip entry; remove the entry from `strip` and rebuild to keep a runtime. Other Pigpen Piglets are not affected.
 
-Sizes of each opt-in entry: [docs/plan/progress/piglets-pigpen.md](../../docs/plan/progress/piglets-pigpen.md).
 
 Build: `npm run stage`, then `npm run build:piglet -- bench-lean` with `PIG_BIN` and `PIG_SOURCE_ROOT` set as the root README says.
 Pin by Pigpen commit until PiG 0.5.0 ships.

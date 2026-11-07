@@ -99,7 +99,7 @@ inferred from a wire score, `Mode` without a UI).
   resized while running (`Game.Resize` refuses), `TogglePause` on a waiting game (no-op), drawing the herd tail-first
   (pigs never overlap).
 - **Piglet Binary**: `pig-with-batteries` cannot build a Binary on this branch because it selects the Node herdr
-  reporter (`lock extension "extension": selected origin is unavailable`, the existing blocker in RELEASE-BLOCKERS.md).
+  reporter (`lock extension "extension": selected origin is unavailable`, the existing blocker in docs/maintainers/RELEASE-BLOCKERS.md).
   A copy of the staged composition **without the herdr member** builds: "Preparing fused Go members (pig-snake,
   seed-check)", 57,737,479 bytes, `Built ... in 28s`. That Binary passes `test:pig-snake` (9 tests) in a real terminal.
   `pig install components/pig-snake/extensions/pig-snake --validate-only` and `pig package validate components/pig-snake` pass (`--validate-only` takes the extension directory, not the Package root).
@@ -182,7 +182,7 @@ frame is still one cell (`termgame.Viewport` subtracts 2). Built-in MCP has no e
 The golden traces were recorded again from the port itself (`--self`, a regression baseline), with PiG 0.4.1 content (`5f948f86a`, `pig --version`
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). An event-by-event diff against the previous traces shows no other
-difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+difference, and `pigeq check` passes on the Go port.
 
 ## Owner decisions (2026-10-20)
 

@@ -89,7 +89,7 @@ Run with a temporary HOME, PIG_HOME and agent directory, `PIG_BIN` the `0.4.1+1.
    and requires the Piglet, version, repository, tag prefix `<name>/` and Binary URLs to equal the tag; a receipt written by
    pig 0.4.0 is a test fixture (written by that release). `generate-index.mjs` lists a Piglet `available` only for a verified committed receipt
    (`npm run record -- piglet <name> <version>`) and a Package `available` for a recorded tag; `index.schema.json` requires a
-   release for an available Piglet. The matching pi-in-go.dev change is a patch in `docs/site-change/` (not applied; the owner
+   release for an available Piglet. The matching pi-in-go.dev change is a patch in `docs/maintainers/site-change/` (not applied; the owner
    applies it to the site repository). Still needs a real release for a real receipt.
 4. **herdr `herdr:blocked`.** The SDK bridge exists; the reporter does not listen yet and two named tests stay skipped
    (`components/herdr/extensions/herdr/extension_test.go`). Not a release blocker; a Pigpen follow-up (the herdr fake host needs the
@@ -115,7 +115,7 @@ Run with a temporary HOME, PIG_HOME and agent directory, `PIG_BIN` the `0.4.1+1.
 10. **Targets without a native host here.** CI now builds and smokes every Piglet on native runners for all five targets
     (`platform-matrix` in `ci.yml`, and `build` in `release.yml`), but nothing has run on darwin, windows or linux/arm64 yet: the first hosted run
     (`workflow_dispatch`) is the first evidence. The smoke proves a Binary starts and completes a faux turn there, not that the
-    games render or the terminal integrations work (see "What still has to be run" in `RELEASE-NOTES.md`). `android/arm64` is a
+    games render or the terminal integrations work (see "Not verified at the release candidate" in `CHANGELOG.md`). `android/arm64` is a
     compile and vet check only: PiG's native builder cannot build a fused android Binary from another OS.
 
 ### Owner actions (who must act)

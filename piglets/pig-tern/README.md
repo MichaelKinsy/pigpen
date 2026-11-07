@@ -13,7 +13,7 @@ PIG_SOURCE_ROOT=/path/to/pig-git-checkout \
   pig piglet build dist/staged/piglets/pig-tern/piglet.yaml --format binary --out ./pig-tern
 ```
 
-Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` v0.1.0 and its `golang.org/x` requirements. See the root [release blockers](../../RELEASE-BLOCKERS.md).
+Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` v0.1.0 and its `golang.org/x` requirements. See the root [release blockers](../../docs/maintainers/RELEASE-BLOCKERS.md).
 
 ## When it draws natively
 

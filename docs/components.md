@@ -72,6 +72,18 @@ An agent can play them too, opt-in and off by default. `/runner mcp on` or `/ang
 - [`jev`](../components/jev/README.md) (off until `/jev on`);
 - the [`websearch`](../components/websearch/README.md) first slice;
 - the [a2a Package](../components/a2a/README.md) (A2A tools; no listener until configured);
+- [`pig-music`](../components/pig-music/README.md), the `/music` player (nothing starts until you type it);
 - an empty build-pipeline fixture (`seed-check`) that adds no tools, commands, or hooks.
 
-The separate [`herdr` Piglet](../piglets/herdr/README.md) selects the same Package on its own. The herdr reporter is a Go extension, so batteries and the `herdr` Piglet both build a Binary locally with the reviewed PiG (see [RELEASE-BLOCKERS.md](../RELEASE-BLOCKERS.md)). The owner approved the [roadmap](plan/pigpen-roadmap.md), but the capability ports and the rest of the battery composition are not complete.
+The separate [`herdr` Piglet](../piglets/herdr/README.md) selects the same Package on its own. The herdr reporter is a Go extension, so batteries and the `herdr` Piglet both build a Binary locally with the reviewed PiG (see [RELEASE-BLOCKERS.md](maintainers/RELEASE-BLOCKERS.md)). The owner approved the [roadmap](maintainers/plans/pigpen-roadmap.md), but the capability ports and the rest of the battery composition are not complete.
+
+## Licences and credits
+
+Every Package is MIT, except where its own `package.json` and `LICENSE` say otherwise (the root README lists those). Whose copyright the `LICENSE` names depends on where the code came from.
+
+- **Pigpen code, including the Packages moved from PiG** (the repository `LICENSE`, and the `LICENSE` of `a2a`, `angry-pigs`, `context-info`, `extension-equivalence`, `extension-port`, `herdr`, `pig-doctor`, `pig-play`, `pig-runner`, `pig-snake` and `session-ingest`): Copyright (c) 2026 Michael Kinsy. PiG is credited in each moved Package's `CREDITS.md` and `provenance.json`.
+- **Ports of third-party upstreams** (`acp`, `ahp`, `dirty-repo-guard`, `jev`, `typesafe`, `warden`, `websearch`, `pi-typesafe`, `pi-typesafe-api` and `dev-skills`): the `LICENSE` lists the upstream copyright lines verbatim and then "Copyright (c) 2026 Michael Kinsy (the Go port)". The upstream's own `LICENSE` is kept unchanged next to the original source, and the credit is in each Package's `CREDITS.md`.
+
+Apache-2.0 upstreams (a2a-go, the ACP typescript-sdk, agent-stuff and WorkflowEvals) keep their licence files, and none has a NOTICE file at its pin. The upstream, pinned commit, licence and author of every port and move are in [ports/README.md](../ports/README.md), generated from `ports/ports.json`.
+
+Data-flow notes that the Packages state themselves: `pi-typesafe` and `warden` send content to `api.typesafe.ai` unless the own-model backend (the model PiG is configured with) is selected, or for `warden` its offline judge. `jev` defaults to the own-model backend and sends to `api.typesafe.ai` only when its TypeSafe backend is chosen. All three are off until enabled and show what leaves the machine before anything does. `websearch` sends a search to the keyless Exa MCP (`mcp.exa.ai`) when no provider is configured, as the original does, once the model has called `web_enable` and then `web_search`, and `fetch_content` fetches the URL it is given. `a2a` sends to the A2A agents you configure and opens a listener only when configured.

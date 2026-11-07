@@ -90,7 +90,7 @@ PiG's agent directory); a missing one is named, with how to install it, before a
 runs mpv without sound output (it is also the place for an audio device: pig-music's mpv loads no `mpv.conf`, so that an
 `ytdl-raw-options=cookies-from-browser=...` line there cannot reach playback). These commands never use browser cookies; only
 the library does, see below. Every yt-dlp run (searches, the doctor, `-U` and mpv's hook) passes `--ignore-config`, so cookie, proxy or format options in your own yt-dlp config do not apply to pig-music. Checked against mpv 0.37.0 and yt-dlp 2026.08.19: no JavaScript
-runtime is needed today (yt-dlp warns that one will be), see `docs/plan/progress/pig-music.md`. mpv's warnings and
+runtime is needed today (yt-dlp warns that one will be). mpv's warnings and
 errors (a track that failed to resolve, for example) go to `mpv.log` beside the socket. A songs search lists titles only; the
 player fills in artist and length for every row (the command line does not).
 
@@ -105,7 +105,7 @@ Real-program checks: `PIG_MUSIC_SMOKE=1 go test ./mpv -run RealMpvSmoke -v` (mpv
 
 Opens a full-terminal component that shows the terminal size, echoes every key it receives (decoded name and raw
 bytes), redraws once a second from a timer and closes on `q`, Esc or ctrl+c. It exists to prove, in the Go SDK, the
-overlay, input and timer paths the player will stand on (see `docs/plan/progress/pig-music.md` for the findings).
+overlay, input and timer paths the player will stand on.
 Closing it and running `/music` again shows the same key log: the state lives in the extension, not in the overlay.
 
 Layout rules the player inherits: the component returns one line per terminal row, each exactly the render width; the
@@ -204,8 +204,7 @@ the lyrics or the queue, switched by `L` or a click on the `Lyrics` / `Up Next` 
 tracks are listed under the track (a click jumps to one). Under 80 the track sits over the panel, with its
 cover from 50 columns, and names the next track. In the last 10 seconds of a track a card names the
 next one, in the place of the queue count and modes. Volume, seek, shuffle and repeat are confirmed on the status line. In a
-terminal only a few rows high the player is a strip with the track and its bar. Stills of the screen (80x24, 120x40, 200x60, the strip, the card, the queue, NO_COLOR) are in
-`docs/plan/progress/pig-music-stills/`.
+terminal only a few rows high the player is a strip with the track and its bar.
 
 ## The Search screen's home
 
@@ -293,7 +292,6 @@ from this checkout (`cd components/pig-music/extensions/pig-music/cmd/pigmusic &
 later) and put it on PATH, or set `PIG_MUSIC_SERVE` or `nativePath` to an absolute path (a relative path is refused: it would
 resolve against the working directory). `/music doctor` says so when it cannot find one (`pigmusic check` does too). A test keeps the engine out of the extension's dependencies.
 The audio device (oto) is part of that program only: oto's purego would make the PiG Binary that the extension is fused into (pig-with-batteries) a dynamically linked executable that needs glibc to start.
-See `docs/plan/progress/pig-music-native.md`.
 
 ## Cover art and the disc (milestone 7a)
 

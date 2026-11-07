@@ -12,11 +12,11 @@ This was checked against GitHub Releases, the Git tags and the npm registry on 2
 
 What is not done: the batteries-included composition is not complete, and `releases/` holds no verified Piglet receipt, so `index.json` still lists every Piglet as `planned`.
 
-The release path (workflows, tag scheme and the checks below) was rehearsed locally with throwaway keys. OWNER-ACTIONS.md, FIRST-NPM-PUBLISH.md and [RELEASE-BLOCKERS.md](../RELEASE-BLOCKERS.md) were written before the first release and describe the steps and what remained open then.
+The release path (workflows, tag scheme and the checks below) was rehearsed locally with throwaway keys. [OWNER-ACTIONS.md](maintainers/OWNER-ACTIONS.md), [FIRST-NPM-PUBLISH.md](maintainers/FIRST-NPM-PUBLISH.md) and [RELEASE-BLOCKERS.md](maintainers/RELEASE-BLOCKERS.md) were written before the first release and describe the steps and what remained open then.
 
 ## Install forms
 
-Pigpen is published to npm under the `@pi-in-go` scope, the way Pi publishes its packages. Packages carry the keyword `pig-package`, Piglet sources carry `pig-piglet`, and pi-in-go.dev lists them by keyword. These commands resolve today. The first publish is described in [FIRST-NPM-PUBLISH.md](../FIRST-NPM-PUBLISH.md).
+Pigpen is published to npm under the `@pi-in-go` scope, the way Pi publishes its packages. Packages carry the keyword `pig-package`, Piglet sources carry `pig-piglet`, and pi-in-go.dev lists them by keyword. These commands resolve today. The first publish is described in [FIRST-NPM-PUBLISH.md](maintainers/FIRST-NPM-PUBLISH.md).
 
 ```bash
 pig install npm:@pi-in-go/pigpen-<name>                       # a Package: components/<name>, for example pigpen-herdr
@@ -43,7 +43,7 @@ Two more channels stay available: the Git-tag channel for Packages and the signe
 |---|---|---|---|
 | Package (`components/<name>`) | `components/<name>/v<version>` | `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'` | `release-package.yml`: validates and installs from the tag; no secret |
 | Piglet (`piglets/<name>`) | `<name>/v<release.version>` | `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'` | `release.yml`: builds every target natively, signs, publishes one GitHub Release |
-| Archon plugin (`components/archon-provider-pig`) | `components/archon-provider-pig/v<version>`, released as plain `v<version>` in the generated repository | `archon plugin add MichaelKinsy/archon-provider-pig` | `release-archon-provider.yml`: generates the standalone repository, builds six `bun build --compile` binaries and `checksums.txt`, publishes the release there with `ARCHON_PROVIDER_PIG_TOKEN` (OWNER-ACTIONS.md, section 9) |
+| Archon plugin (`components/archon-provider-pig`) | `components/archon-provider-pig/v<version>`, released as plain `v<version>` in the generated repository | `archon plugin add MichaelKinsy/archon-provider-pig` | `release-archon-provider.yml`: generates the standalone repository, builds six `bun build --compile` binaries and `checksums.txt`, publishes the release there with `ARCHON_PROVIDER_PIG_TOKEN` (maintainers/OWNER-ACTIONS.md, section 9) |
 | npm (all of the above) | a merge to `main` (or `npm/v<x>`) | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
 
 The Piglet, Package and npm tag shapes cannot start each other's workflow. An Archon plugin tag has the Package shape, so it also runs `release-package.yml`, which only verifies it.

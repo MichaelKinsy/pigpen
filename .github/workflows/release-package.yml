@@ -5,7 +5,7 @@
 #   - the Package passes `pig package validate`;
 #   - the exact command the index shows, `pig install 'git:https://github.com/<repo>.git@<tag>#subdirectory=components%2F<name>'`,
 #     installs it from GitHub, its Go extensions build and register under the pinned pig, and it removes cleanly.
-# Afterwards a maintainer records the release (`npm run record -- package <name> <version>`, OWNER-ACTIONS.md) and the
+# Afterwards a maintainer records the release (`npm run record -- package <name> <version>`, docs/maintainers/OWNER-ACTIONS.md) and the
 # generated index lists the Package as available. A Piglet tag (`<name>/v<version>`) never starts this workflow.
 name: Release a Package
 

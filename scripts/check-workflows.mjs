@@ -99,7 +99,7 @@ const secretRef = new RegExp(`\\$\\{\\{\\s*secrets\\.([A-Za-z0-9_]+)`, 'g');
 /**
  * release.yml's own rules, on top of hardeningProblems. It runs only on a pushed tag. The one secret is PIGLET_SIGNING_KEY,
  * read only in the env of a step in a job of the `release` environment (whose secret and tag rules are the owner's, see
- * OWNER-ACTIONS.md), and that step must run the pinned pig and no repository script or package manager.
+ * docs/maintainers/OWNER-ACTIONS.md), and that step must run the pinned pig and no repository script or package manager.
  */
 export function releaseProblems(name, text) {
   if (name !== RELEASE_WORKFLOW) return [];
@@ -132,7 +132,7 @@ export function releaseProblems(name, text) {
 /**
  * release-archon-provider.yml's own rules, on top of hardeningProblems. It publishes components/archon-provider-pig to its own repository,
  * which a workflow's own token cannot write, so it holds one personal access token, ARCHON_PROVIDER_PIG_TOKEN: read only in the env of a
- * step in a job of the `archon-provider-release` environment (whose secret and tag policy are the owner's, see OWNER-ACTIONS.md), by a
+ * step in a job of the `archon-provider-release` environment (whose secret and tag policy are the owner's, see docs/maintainers/OWNER-ACTIONS.md), by a
  * step that runs no repository script and no package manager. It runs only on a pushed tag, and the tag filter must start it for the
  * Archon plugin's tag and no other.
  */
@@ -306,7 +306,7 @@ export function listingsProblems(workflow) {
  * discord-notify.yml's own rules, on top of hardeningProblems. It announces merged pull requests and published releases
  * in Discord. A webhook URL is a write credential for one channel, so every secret it reads must be named
  * DISCORD_WEBHOOK_*, must appear only as the value of a step env, and that step must be in a job of the `notifications`
- * environment (its secret and branch policy are the owner's, see OWNER-ACTIONS.md), whose step posts with curl. It runs on
+ * environment (its secret and branch policy are the owner's, see docs/maintainers/OWNER-ACTIONS.md), whose step posts with curl. It runs on
  * nothing but a pushed merge into main and a published release, so a pull request, a fork and a workflow_run never reach it.
  */
 export function notifyProblems(name, text) {

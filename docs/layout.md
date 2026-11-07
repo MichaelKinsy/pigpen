@@ -77,7 +77,7 @@ scripts/record-release.mjs          npm run record: writes releases/ after a rel
 scripts/rehearse-release.mjs        runs the release workflow's steps against a local repository
 releases/                           committed release records (Package tags, verified Piglet receipts)
 release-keys/                       the public signing key (never a private key)
-OWNER-ACTIONS.md                    the owner's first-release commands
+docs/maintainers/OWNER-ACTIONS.md   the owner's release runbook
 scripts/ports.mjs                    validates ports/ports.json, renders ports/README.md, and reads and
                                     updates rows (show, list, set-status, provenance, verify-pins)
 index.json                          GENERATED; never hand-edit
@@ -87,8 +87,9 @@ index.schema.json                   machine-readable catalog format
 .github/workflows/release-package.yml a Package tag: validate and install from the tag
 .github/workflows/release-archon-provider.yml an Archon plugin tag: generate its repository, build, release it there
 scripts/archon-provider-repo.mjs     the standalone repository's layout, release tag, asset names, checksums and descriptor check
-RELEASE-BLOCKERS.md                  exact core PiG work needed for releases
+docs/maintainers/RELEASE-BLOCKERS.md  what blocked the first release, and the open items
 CONTRIBUTING.md                     changes, checks, sign-off and issue routing
-docs/                               this documentation: components.md, development.md, releases.md, layout.md; plan/ holds the roadmap and progress records
+CHANGELOG.md                        what each release contained
+docs/                               this documentation: components.md, development.md, releases.md, layout.md; maintainers/ holds the owner's runbooks, open plans and the pending site patch
 SECURITY.md                         private security reporting guidance
 ```

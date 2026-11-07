@@ -4,7 +4,7 @@
 // Needs a Go toolchain (pig-doctor builds from source on first use). Temporary HOME, PIG_HOME and agent
 // directory; a local scripted provider records the tools each request offers.
 //
-// PiG 0.3.0 (63c6ba456) honoured the scope in interactive and RPC mode only (RELEASE-BLOCKERS.md, PiG core
+// PiG 0.3.0 (63c6ba456) honoured the scope in interactive and RPC mode only (docs/maintainers/RELEASE-BLOCKERS.md, PiG core
 // item 9); the PiG 0.4.1 content (5f948f86a) honours it in print and JSON mode too, so every mode is required.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';

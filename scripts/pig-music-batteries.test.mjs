@@ -38,14 +38,14 @@ describe('pig-music in pig-with-batteries', () => {
     assert.match(JSON.stringify(entry), /pig-music/);
   });
 
-  it('is documented in the Piglet README (what it adds, dependencies, cookies consent) and the release notes', () => {
+  it('is documented in the Piglet README (what it adds, dependencies, cookies consent) and in docs/components.md', () => {
     const readme = read('piglets/pig-with-batteries/README.md');
     assert.match(readme, /\| `pig-music` \| `package:pig-music`/);
     assert.match(readme, /mpv/);
     assert.match(readme, /yt-dlp/);
     assert.match(readme, /cookie/i);
     assert.match(readme, /until you (type|run) `\/music`/);
-    assert.match(read('RELEASE-NOTES.md'), /pig-with-batteries[^\n]*pig-music/);
+    assert.match(read('docs/components.md'), /## pig-with-batteries[\s\S]*`pig-music`/);
   });
 
   // Review of M9: inside PiG, /music and its quick commands drive mpv whatever `engine` says (the engine choice is wired into

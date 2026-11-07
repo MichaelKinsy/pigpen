@@ -76,7 +76,7 @@ export function recordPackage(name, version, { directory = root } = {}) {
   component(name, directory);
   const tag = packageTag(name, version);
   const commit = tagCommit(directory, tag);
-  if (!commit) throw new Error(`The clone has no tag ${tag}. Create it and fetch it first (OWNER-ACTIONS.md).`);
+  if (!commit) throw new Error(`The clone has no tag ${tag}. Create it and fetch it first (docs/maintainers/OWNER-ACTIONS.md).`);
   const found = manifestAt(directory, commit, name).version;
   if (found !== version) throw new Error(`Tag ${tag} points at a tree whose manifest has version ${found}, not ${version}`);
   return { tag, commit, date: git(directory, 'log', '-1', '--format=%cs', commit) };

@@ -58,4 +58,4 @@ SDK gap check (`pigeq gaps`): none. The original uses `pi.on`, `pi.exec`, `ctx.h
 The golden traces were recorded again from the original under Pi 1.0.1 (host check: identical under PiG's Node runtime), with PiG 0.4.1 content (`5f948f86a`, `pig --version`
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). Finding 3: PiG 0.4's Go SDK has `withSession` (`sdk.WithSessionFunc`); this port does not need it. An event-by-event diff against the previous traces shows no other
-difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+difference, and `pigeq check` passes on the Go port.

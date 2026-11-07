@@ -45,7 +45,7 @@ body:
     attributes:
       label: Before submitting
       options:
-        - label: I checked the planned status and RELEASE-BLOCKERS.md, and this report concerns Pigpen rather than a core PiG feature.
+        - label: I checked the planned status and docs/maintainers/RELEASE-BLOCKERS.md, and this report concerns Pigpen rather than a core PiG feature.
           required: true
         - label: I removed credentials, private paths, signing keys, and private session data.
           required: true

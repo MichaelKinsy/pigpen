@@ -15,7 +15,7 @@
 # (npm run quality) enforces that: PIGLET_SIGNING_KEY only in a step env, only a step that runs "$PIG_BIN" and no
 # repository script or package manager, only in a job of the `release` environment.
 #
-# Owner setup is in OWNER-ACTIONS.md: the `release` environment holding the secret PIGLET_SIGNING_KEY (an environment
+# Owner setup is in docs/maintainers/OWNER-ACTIONS.md: the `release` environment holding the secret PIGLET_SIGNING_KEY (an environment
 # secret only, never a repository or organization secret; deployments limited to tags `*/v*`), a tag ruleset for `*/v*`,
 # and Actions allowed to create releases and attestations.
 name: Release a Piglet

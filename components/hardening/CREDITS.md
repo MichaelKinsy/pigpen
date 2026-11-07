@@ -35,7 +35,7 @@ texts must travel with it.
 
 ## Design inputs
 
-The Package implements the library section of the enterprise-profile plan (`docs/plan/enterprise-profile.md` at commit
+The Package implements the library section of the enterprise-profile plan (`docs/maintainers/plans/enterprise-profile.md` at commit
 `335e637c`, merged as #12, of this repository). No code was taken from any project the plan names as prior
 art: Amazon Bedrock AgentCore Policy (the default-deny, forbid-overrides-permit use of Cedar for agent tool calls) and the
 Microsoft Agent Governance Toolkit (the split between a policy contract and the engine behind it).

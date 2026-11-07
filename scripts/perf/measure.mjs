@@ -1,4 +1,4 @@
-// Startup and idle measurements for Piglet Binaries and plain pig (docs/plan/progress/pigpen-perf.md).
+// Startup and idle measurements for Piglet Binaries and plain pig.
 //
 //   node scripts/perf/measure.mjs startup  [--n 20] [--cpus 0-3] [--mode print|tmux|trace] name=path ...
 //

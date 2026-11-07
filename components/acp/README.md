@@ -18,7 +18,7 @@ The Package has two parts:
 An extension cannot speak ACP itself: a fused extension must not write protocol bytes to the host's stdout. So
 **installing this Package, or building the `acp` Piglet, does not make the Piglet Binary an ACP server.** The editor
 runs `pig-acp`, and `pig-acp --pig <your pig or Piglet Binary>` runs the agent. There is no one-command Binary yet
-(see [RELEASE-BLOCKERS.md](../../RELEASE-BLOCKERS.md)).
+(see [RELEASE-BLOCKERS.md](../../docs/maintainers/RELEASE-BLOCKERS.md)).
 
 ## Use
 

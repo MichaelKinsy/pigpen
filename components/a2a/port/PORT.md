@@ -151,4 +151,4 @@ port/a2a-1 added 57 mutants for the task store, the parts, the refusals and the 
 The golden traces were recorded again from the port itself (`--self`, a regression baseline), with PiG 0.4.1 content (`5f948f86a`, `pig --version`
 `0.3.1+1.0.1`) and normalizer v3, because Pi 1.0.x changed the trace format: a `prompt` response now carries
 `data.disposition` (Pi 0.99.0, #9098). An event-by-event diff against the previous traces shows no other
-difference, and `pigeq check` passes on the Go port. Details: `docs/plan/progress/porter-verify.md`.
+difference, and `pigeq check` passes on the Go port.

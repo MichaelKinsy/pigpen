@@ -7,7 +7,7 @@
 #
 # Authentication is npm trusted publishing (OIDC): no token and no secret exist here, `id-token: write` lets the job prove
 # who it is and npm checks that against the Trusted Publisher the owner added to each package on npmjs.com (organization
-# MichaelKinsy, repository pigpen, workflow npm-publish.yml, no environment; FIRST-NPM-PUBLISH.md). A package must exist on
+# MichaelKinsy, repository pigpen, workflow npm-publish.yml, no environment; docs/maintainers/FIRST-NPM-PUBLISH.md). A package must exist on
 # npm before a Trusted Publisher can be added, which is why the first publish is the owner's one command
 # (scripts/first-npm-publish.sh); this workflow does every release after it. Provenance is attached to each version.
 # Needs npm >= 11.5.1; the job fails first if the runner's npm is older. scripts/check-workflows.mjs enforces: OIDC only, no

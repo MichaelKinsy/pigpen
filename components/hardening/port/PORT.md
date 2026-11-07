@@ -15,7 +15,7 @@ is the hostile test suite and the mutation check below. It is a library Package:
 
 ## Plan rule to test
 
-The rules are those of the plan's library section (`docs/plan/enterprise-profile.md` as merged in #12, commit `335e637c`). Each rule has a test
+The rules are those of the plan's library section (`docs/maintainers/plans/enterprise-profile.md` as merged in #12, commit `335e637c`). Each rule has a test
 derived from the plan's wording, not from the code. The mutation check is what shows each test bites: a first run left
 survivors, and each became a new or a stronger test (for example the exact-cap file and JWKS sizes, a valid signature on an
 oversize token, a key without a `kid` against a malformed `kid`) before the final run.

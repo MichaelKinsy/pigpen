@@ -16,30 +16,30 @@ fake-herdr scenario as a Binary (see RELEASE-BLOCKERS.md). Nothing has been publ
 
 Owner rule, 2026-09-29: every Piglet Pigpen ships is Go only, and each extension it
 ports is published as its own installable PiG Package (discovery keyword `pig-package`).
-The focused [`pig-extension-porter`](../../piglets/pig-extension-porter/README.md) Piglet
-implements the porting workflow; [`pig-porter`](../../piglets/pig-porter/README.md)
+The focused [`pig-extension-porter`](../../../piglets/pig-extension-porter/README.md) Piglet
+implements the porting workflow; [`pig-porter`](../../../piglets/pig-porter/README.md)
 extends it. `dirty-repo-guard` (from Pi's examples) is the first port made with it.
 See [Extension porter Piglet](#extension-porter-piglet).
 
 ### The ports list
 
-Approved 2026-09-30. [`ports/ports.json`](../../ports/README.md) is the dispatch list for every Pigpen port
+Approved 2026-09-30. [`ports/ports.json`](../../../ports/README.md) is the dispatch list for every Pigpen port
 and move (25 rows at creation: the ports and moves that exist, the games, the pig-stuff moves, the three Jev
 lanes with the shared TypeScript SDK client, and the queued ports from
 the pigpen-top-installs research). Each row pins its upstream to a commit and
 carries license, author, target Package, lane, status and credit text; the table in `ports/README.md` is generated
 from it. `npm run check` validates the list against the tree. The porting Skill takes a row as its input
 (`port row <id>`) and moves it `porting` then `review`. The roadmap table below keeps the reasons and estimates;
-the list is the source for status and pins. See [CONTRIBUTING.md](../../CONTRIBUTING.md#the-ports-list).
+the list is the source for status and pins. See [CONTRIBUTING.md](../../../CONTRIBUTING.md#the-ports-list).
 
 Warden (pi-warden by DevMortimer, MIT, pinned `a12b2703`) is ported as
-[`components/warden`](../../components/warden/README.md) on the shared Go TypeSafe client
-[`components/typesafe`](../../components/typesafe/README.md); the
-[`pig-warden`](../../piglets/pig-warden/README.md) Piglet selects it. Done: the four guards (irreversible, off-task,
+[`components/warden`](../../../components/warden/README.md) on the shared Go TypeSafe client
+[`components/typesafe`](../../../components/typesafe/README.md); the
+[`pig-warden`](../../../piglets/pig-warden/README.md) Piglet selects it. Done: the four guards (irreversible, off-task,
 stuck, done claims), consent-first opt-in, TypeSafe and own-model backends, a 2,552-command differential against the
 original, 19 live equivalence scenarios against the original under Pi, and a fused Binary proven against a real
 host. Open: the SDK tool-call arguments finding, and the owner's choice of which deferred pi-warden
-guards to port next ([`port/PORT.md`](../../components/warden/port/PORT.md), RELEASE-BLOCKERS.md).
+guards to port next ([`port/PORT.md`](../../../components/warden/port/PORT.md), RELEASE-BLOCKERS.md).
 
 Row 15, `ahp`, is ported as the standalone Package `components/ahp` (Go, on the public SDK;
 see its `proof/PORT.md`): all 430 pi-ahp test cases have a Go twin or a named skipped twin
@@ -53,7 +53,7 @@ under Pi, and an interop run with Microsoft's AHP Go client.
 ### Local staging: approved and implemented
 
 The owner approved generated staging instead of a new PiG workspace-reference
-contract. [`npm run stage`](../development.md#run-locally) materializes selected
+contract. [`npm run stage`](../../development.md#run-locally) materializes selected
 local Packages beneath each generated Piglet in `dist/staged/`. It rewrites the
 Package source but preserves Resource names, scopes, defaults, and discovery.
 Authored Resources retain one owner. Generated copies are not committed.
@@ -383,9 +383,9 @@ downloads, checked 2026-09-29.
 
 | Owner's code | Decision | Evidence |
 |---|---|---|
-| `session-ingest` (`read_session`) | **Moved**: [`components/session-ingest`](../../components/session-ingest/README.md). The advertised `turn`, `tools`, `stats` modes were implemented. | Nearest public tools do other jobs: `@moyai/pi-session-hoarder` (39,431, archives sessions), `@astrosheep/pi-context` (8,116, reset windows and history tools). |
-| `context-info` (`/context`, `/tools`, `/cost`, `/prompts`, footer) | **Moved**: [`components/context-info`](../../components/context-info/README.md), footer opt-in. `/prompt-edit` and the subagent cost section left behind. | No popular equivalent: `@narumitw/pi-usage` (69,610) reports account rate limits, `pi-powerline-footer` (77,173) is a footer; the context viewers are small (`@astrosheep/pi-context` 8,116, `@mrclrchtr/supi-context` 3,475, `pi-context` 3,174, `pi-context-inspector` 953). |
-| `skills/` | **Partly moved**: [`components/dev-skills`](../../components/dev-skills/README.md), eight general Skills with credit. The rest tie into the author's private workflow or wrap third-party CLIs. | Most are adaptations of `mattpocock/skills` (MIT) and `mitsuhiko/agent-stuff` (Apache-2.0). |
+| `session-ingest` (`read_session`) | **Moved**: [`components/session-ingest`](../../../components/session-ingest/README.md). The advertised `turn`, `tools`, `stats` modes were implemented. | Nearest public tools do other jobs: `@moyai/pi-session-hoarder` (39,431, archives sessions), `@astrosheep/pi-context` (8,116, reset windows and history tools). |
+| `context-info` (`/context`, `/tools`, `/cost`, `/prompts`, footer) | **Moved**: [`components/context-info`](../../../components/context-info/README.md), footer opt-in. `/prompt-edit` and the subagent cost section left behind. | No popular equivalent: `@narumitw/pi-usage` (69,610) reports account rate limits, `pi-powerline-footer` (77,173) is a footer; the context viewers are small (`@astrosheep/pi-context` 8,116, `@mrclrchtr/supi-context` 3,475, `pi-context` 3,174, `pi-context-inspector` 953). |
+| `skills/` | **Partly moved**: [`components/dev-skills`](../../../components/dev-skills/README.md), eight general Skills with credit. The rest tie into the author's private workflow or wrap third-party CLIs. | Most are adaptations of `mattpocock/skills` (MIT) and `mitsuhiko/agent-stuff` (Apache-2.0). |
 | `ask` | **Not shipped.** Go base for the `@juicesharp/rpiv-ask-user-question` port (274,750). | Builds and passes its tests on the public SDK with only the import renamed. The port is separate work. |
 | `subagent` | **Not shipped.** Go base for the `pi-subagents` port (536,567). | Builds on the public SDK except five call sites. The target has no top-level chain or parallel input, only a JavaScript `workflowScript`, so the workflow-runtime decision comes first. |
 | `web-search` | **Skipped**: `pigpen-websearch` ports `pi-web-access`. | |
@@ -407,11 +407,11 @@ and Noul, which return structured values and probabilities.
 ### pi-typesafe port (owner approved)
 
 [DevMortimer/pi-typesafe](https://github.com/DevMortimer/pi-typesafe) (Ryan Gapac, MIT, pinned `ed439f8`) is ported to Go as two Packages:
-[`pi-typesafe`](../../components/pi-typesafe/README.md) (the batched `typesafe_evaluate` tool, `/typesafe` command and renderers) and
-[`pi-typesafe-api`](../../components/pi-typesafe-api/README.md) (the typed API for extension authors), over the shared client
-[`typesafe`](../../components/typesafe/README.md). The Piglet [`pig-typesafe`](../../piglets/pig-typesafe/README.md) selects it. It is
+[`pi-typesafe`](../../../components/pi-typesafe/README.md) (the batched `typesafe_evaluate` tool, `/typesafe` command and renderers) and
+[`pi-typesafe-api`](../../../components/pi-typesafe-api/README.md) (the typed API for extension authors), over the shared client
+[`typesafe`](../../../components/typesafe/README.md). The Piglet [`pig-typesafe`](../../../piglets/pig-typesafe/README.md) selects it. It is
 **off by default**, and content goes to `api.typesafe.ai` unless the own-model backend (the model PiG is configured with) is selected.
-Record and differences: [`components/pi-typesafe/port/PORT.md`](../../components/pi-typesafe/port/PORT.md).
+Record and differences: [`components/pi-typesafe/port/PORT.md`](../../../components/pi-typesafe/port/PORT.md).
 
 ### Code, issues, and review follow-up: 2026-09-28
 
@@ -551,10 +551,10 @@ use “porter” in their names remains an owner decision.
 ### Required process for `pigpen-pi-extension-port`
 
 The canonical procedure and completion checklist live in
-[`pigpen-pi-extension-port`](../../components/extension-port/skills/pigpen-pi-extension-port/SKILL.md).
+[`pigpen-pi-extension-port`](../../../components/extension-port/skills/pigpen-pi-extension-port/SKILL.md).
 Its Package installs independently or through the staged
-[`pig-extension-porter`](../../piglets/pig-extension-porter/README.md) composition.
-[CONTRIBUTING.md](../../CONTRIBUTING.md) owns contributor obligations, while scripts
+[`pig-extension-porter`](../../../piglets/pig-extension-porter/README.md) composition.
+[CONTRIBUTING.md](../../../CONTRIBUTING.md) owns contributor obligations, while scripts
 and CI enforce the mechanical checks. Do not maintain a second procedure here.
 
 The Skill covers source/license pinning, complete API inventory, SDK mapping,
@@ -619,11 +619,11 @@ starts the selected PiG agent in RPC mode. Package it with an explicit executabl
 closure. Prove that handoff before promising a one-command Binary. Fused
 extensions must not write protocol bytes directly to the host's stdout.
 
-**Status (2026-09-30):** ported as [`components/acp`](../../components/acp/README.md) (companion `pig-acp` plus a `/acp` extension)
-and selected by [`piglets/acp`](../../piglets/acp/README.md). The handoff is proven: the built Piglet Binary works as the
+**Status (2026-09-30):** ported as [`components/acp`](../../../components/acp/README.md) (companion `pig-acp` plus a `/acp` extension)
+and selected by [`piglets/acp`](../../../piglets/acp/README.md). The handoff is proven: the built Piglet Binary works as the
 `--pig` target, driven by the ACP reference client with every message checked against schema 0.26.0, and by 11 end-to-end
 scenarios. Zed and JetBrains are not yet verified; the one-command Binary is not possible on PiG 0.3.0 or 0.4.0
-([RELEASE-BLOCKERS.md](../../RELEASE-BLOCKERS.md#acp-pigletsacp-componentsacp)).
+([RELEASE-BLOCKERS.md](../RELEASE-BLOCKERS.md#acp-pigletsacp-componentsacp)).
 
 ### AHP: client ↔ persistent session host
 
@@ -660,8 +660,8 @@ identity, stream resubscription, and cancellation in both directions.
 
 #### Status: implemented as `components/a2a` (2026-09-29, local, unpublished)
 
-Row 16 is built as the Go Package [`components/a2a`](../../components/a2a/README.md) and the source-only Piglet
-[`piglets/a2a`](../../piglets/a2a/README.md). It is an **original adapter with no Pi oracle**, so the porting Skill's equivalence
+Row 16 is built as the Go Package [`components/a2a`](../../../components/a2a/README.md) and the source-only Piglet
+[`piglets/a2a`](../../../piglets/a2a/README.md). It is an **original adapter with no Pi oracle**, so the porting Skill's equivalence
 steps are replaced by the evidence listed in `components/a2a/port/PORT.md`. Decisions recorded there:
 
 - The SDK is `a2a-go/v2` **v2.6.0** (the version kagent's checkout pins today; the row above still says v2.5.0). A2A protocol **1.0**
@@ -755,10 +755,10 @@ against the runtime selected for game integration.
 PiG pig and every apple adds another pig head, so a herd forms behind the leader. It follows the
 Angry Pigs and PiG Runner conventions (explicit command, full-terminal overlay, HUD, pause, strict
 high-score file, narrow-terminal handling) and adapts their code and art with credit from PiG
-`d86eb93` ([CREDITS](../../components/pig-snake/CREDITS.md)). Pig art is read through one small
+`d86eb93` ([CREDITS](../../../components/pig-snake/CREDITS.md)). Pig art is read through one small
 interface (`sprites.Source`) so the shared package can replace it. Full mode only: mini mode and the
 background-work proof belong to the shared game shell described above. Evidence:
-[`port/PORT.md`](../../components/pig-snake/port/PORT.md). `pig-with-batteries` selects it
+[`port/PORT.md`](../../../components/pig-snake/port/PORT.md). `pig-with-batteries` selects it
 (bundling registers two commands and nothing else).
 
 ### One shared foundation
@@ -946,16 +946,16 @@ pig piglet add 'git:https://github.com/MichaelKinsy/pigpen.git@<full-commit-sha>
 The [current Piglet docs][pig-piglets] describe monorepo add, prefixed publish,
 and namespace-aware update. Pigpen's CI pins PiG v0.4.0
 (`76022638c15e2f68f1cee9c6b8984eee1baba620`), which has them, and its release guard remains
-closed. [RELEASE-BLOCKERS.md](../../RELEASE-BLOCKERS.md) records the 2026-09-29 re-check
+closed. [RELEASE-BLOCKERS.md](../RELEASE-BLOCKERS.md) records the 2026-09-29 re-check
 of that implementation against a 0.3.0 pre-release build and what still blocks publication.
 Review the two-Piglet release/update proof against a real release before changing the
 pin or lifting the guard.
 
 ## Quality gates implemented in Phase 1
 
-Implementation: [`scripts/quality-gates.mjs`](../../scripts/quality-gates.mjs).
+Implementation: [`scripts/quality-gates.mjs`](../../../scripts/quality-gates.mjs).
 It runs locally through `npm run quality`, and as part of `check` and `validate`.
-CI also runs its single [CLI scenario](../../scripts/quality-gates.test.mjs).
+CI also runs its single [CLI scenario](../../../scripts/quality-gates.test.mjs).
 No write permissions, publishing steps, or signing secrets were added.
 
 | Gate | Enforced now | Limits / later release review |
