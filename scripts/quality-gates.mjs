@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import { isMap, parseDocument } from 'yaml';
 import { listOwners } from './layout.mjs';
+import { isFetchedPath } from './oracles.mjs';
 
 const root = realpathSync(resolve(process.argv[2] || fileURLToPath(new URL('../', import.meta.url))));
 // .upstream is the untracked symlink every lane worktree carries to its upstream sources; a checkout has none.
@@ -72,7 +73,8 @@ function checkProvenance(owner) {
   for (const source of [...data.upstreams, ...(data.dependencies ?? [])]) {
     const url = new URL(source.url);
     if (url.protocol !== 'https:' || url.username || url.password) throw new Error(`${relative(root, path)}: upstream url must be HTTPS without credentials`);
-    if (source.path !== undefined) localPath(owner, source.path, owner);
+    // A fetched oracle (ports/oracles.lock.json) is not in the tree until `npm run oracles:fetch`; a path into one is checked once it is.
+    if (source.path !== undefined && !(isFetchedPath(root, resolve(owner, source.path)) && !existsSync(resolve(owner, source.path)))) localPath(owner, source.path, owner);
     nonemptyFile(owner, source.licenseFile);
     const credit = nonemptyFile(owner, source.attributionFile);
     for (const value of [source.name, source.url, ...source.authors]) {

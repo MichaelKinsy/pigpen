@@ -17,6 +17,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { LOCK_FILE, lockProblems, oracleDirectories, readLock, withIgnoreBlock } from './oracles.mjs';
 
 const defaultRoot = fileURLToPath(new URL('../', import.meta.url));
 export const STATUSES = ['queued', 'porting', 'review', 'done'];
@@ -180,6 +181,8 @@ export function checkPorts(root = defaultRoot) {
   const readme = join(root, 'ports/README.md');
   if (!existsSync(readme)) errors.push('ports/README.md is missing: run npm run generate');
   else if (readFileSync(readme, 'utf8') !== renderReadme(data)) errors.push('ports/README.md is stale: run npm run generate');
+  // The originals the ports were measured against are fetched, not vendored: the lock must agree with the tree and the pins.
+  if (existsSync(join(root, LOCK_FILE)) || oracleDirectories(root).length) errors.push(...lockProblems(root));
   return { errors, data };
 }
 
@@ -245,7 +248,11 @@ function main(argv) {
       case 'generate': {
         const data = load(root);
         writeFileSync(join(root, 'ports/README.md'), renderReadme(data));
-        console.log(`Wrote ports/README.md (${data.ports.length} ports)`);
+        if (existsSync(join(root, LOCK_FILE))) {
+          const ignore = join(root, '.gitignore');
+          writeFileSync(ignore, withIgnoreBlock(existsSync(ignore) ? readFileSync(ignore, 'utf8') : '', readLock(root)));
+        }
+        console.log(`Wrote ports/README.md (${data.ports.length} ports) and the oracle block of .gitignore`);
         return 0;
       }
       case 'show': {

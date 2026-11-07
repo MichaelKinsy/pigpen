@@ -8,6 +8,8 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { checkPorts, pinFetchArgs, provenanceSkeleton, renderReadme, setStatus, validatePorts } from './ports.mjs';
+// The oracle fetch belongs to the ports list: its tests run with these (npm test lists this file).
+import './oracles.test.mjs';
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHA = 'a'.repeat(40);

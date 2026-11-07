@@ -8,6 +8,7 @@ Pigpen releases Packages and Piglets one by one. A Package release is the Git ta
 - The first release notes were folded into this file. The licence split they described is now in [docs/components.md](docs/components.md#licences-and-credits).
 - The generated index and its schemas moved from the repository root into `catalog/` (`catalog/index.json`, `catalog/index.schema.json`, `catalog/listing.schema.json`, `catalog/catalog.config.json`). A reader that fetches the index by URL now uses `.../main/catalog/index.json`. The site's loader patch in `docs/maintainers/site-change/` was updated to match.
 - The benchmark Piglets (`bench-*`) and the components only they select (`aot-runtime`, `bun-runtime`, `bench-ext10`, `bench-ext10-ts`) moved under `bench/`. Their npm package names and versions are unchanged, and they are still released and published, but `catalog/index.json` no longer lists them. The Go-only exception list is gone with them.
+- The originals the ports were measured against are no longer vendored. `ports/oracles.lock.json` pins each at its commit with the SHA-256 digest of the tree, `npm run oracles:fetch` downloads and verifies them (CI caches them keyed on the lock), and licence texts stay tracked. A copy is kept only where the upstream is unreachable, with the reason in the lock.
 
 ## 0.1.x: the first releases
 

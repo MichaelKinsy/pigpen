@@ -43,6 +43,7 @@ npm run check
 PIG_BIN=pig npm run validate
 PIG_BIN=pig npm run test:porter
 PIG_BIN=pig npm run test:go-ports -- -race     # go vet and go test for every Go extension module
+npm run oracles:fetch                         # the originals of the ports (ports/oracles.lock.json): fetched at their pinned commits, digest-checked
 PIG_BIN=pig npm run test:port                  # ports vs recorded Pi traces (PI_BIN=pi re-runs Pi)
 KAGENT_GO_DIR=<kagent>/go PIG_BIN=pig node scripts/interop-kagent.mjs   # a2a against kagent's A2A server package
 ```

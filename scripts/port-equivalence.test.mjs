@@ -13,8 +13,11 @@ import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { goWorkEnv, root, scratchDir, sdkDir } from './go-modules.mjs';
+import { requireOracles } from './oracles.mjs';
 import { requirePig } from './pig-bin.mjs';
 
+// The originals are fetched, not vendored: `npm run oracles:fetch` puts them in place and checks them against ports/oracles.lock.json.
+requireOracles();
 const pig = requirePig();
 const pi = process.env.PI_BIN;
 const harness = join(root, 'components/extension-equivalence/extensions/extension-equivalence');

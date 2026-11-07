@@ -1,0 +1,923 @@
+{
+  "schemaVersion": 1,
+  "oracles": [
+    {
+      "id": "acp-pi-acp",
+      "component": "acp",
+      "path": "port/oracle/pi-acp",
+      "repository": "https://github.com/svkozak/pi-acp",
+      "commit": "b0581c9c1d675e634234674484247008b03d69b4",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "package.json",
+        "src/",
+        "test/"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 58,
+      "bytes": 290397,
+      "sha256": "a19db37b0ef032067acf50f28fe56f916a7ef1c9281413a80aed0794a6b9e38e"
+    },
+    {
+      "id": "ahp",
+      "component": "ahp",
+      "path": "proof/oracle",
+      "repository": "https://github.com/Qusic/pi-ahp",
+      "commit": "4065e98309b03c1d2d916300856c3c21a9c10674",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "package.json",
+        "src/",
+        "test/",
+        "tsconfig.json"
+      ],
+      "kept": [
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 131,
+      "bytes": 1700039,
+      "sha256": "f8160d8a1439b7e81ca808df3dfa82943ae3c04106a088373754115ba7e97b4c"
+    },
+    {
+      "id": "ask-user-question",
+      "component": "ask-user-question",
+      "path": "port/oracle",
+      "repository": "https://github.com/juicesharp/rpiv-mono",
+      "commit": "61904e69e1a50e12585bdf15f0310e633a62ba36",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages/rpiv-ask-user-question",
+          "to": ""
+        }
+      ],
+      "include": [
+        "CHANGELOG.md",
+        "README.md",
+        "ask-user-question.execute.test.ts",
+        "ask-user-question.guidance.test.ts",
+        "ask-user-question.listener.test.ts",
+        "ask-user-question.normalize.test.ts",
+        "ask-user-question.session-load.test.ts",
+        "ask-user-question.test.ts",
+        "ask-user-question.ts",
+        "banned-flags.test.ts",
+        "config.test.ts",
+        "config.ts",
+        "docs/configuration.md",
+        "docs/hosts.md",
+        "docs/keyboard.md",
+        "docs/localization.md",
+        "docs/tool-schema.md",
+        "events.ts",
+        "factory.test.ts",
+        "index.ts",
+        "locales.test.ts",
+        "locales/",
+        "package.json",
+        "reconcile.test.ts",
+        "reconcile.ts",
+        "rpc-fallback.test.ts",
+        "rpc-fallback.ts",
+        "ship-manifest.test.ts",
+        "state/",
+        "test-fixtures.ts",
+        "tool/",
+        "view/"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md",
+        "package-lock.json"
+      ],
+      "files": 97,
+      "bytes": 707456,
+      "sha256": "6bf5f7d69ad1cac7f886f312cb5b840d5ae7868b3ca301cea2f8bb652d199d86"
+    },
+    {
+      "id": "dirty-repo-guard-dirty-repo-guard.ts",
+      "component": "dirty-repo-guard",
+      "path": "port/oracle/dirty-repo-guard.ts",
+      "repository": "https://github.com/earendil-works/pi",
+      "commit": "f07218c4d4bbc12bef056a7058c3dd49dfe41abe",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages/coding-agent/examples/extensions/dirty-repo-guard.ts",
+          "to": ""
+        }
+      ],
+      "isFile": true,
+      "kept": [],
+      "files": 1,
+      "bytes": 1479,
+      "sha256": "f5f7f4d2501935c4322cab199725b843ed52bc51408150077558bead84b4cd46"
+    },
+    {
+      "id": "goal",
+      "component": "goal",
+      "path": "port/oracle",
+      "repository": "https://github.com/tmonk/pi-goal-x",
+      "commit": "64c5ace87f3400c0b55ef87f2d2912167f53dbaa",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".github/",
+        ".gitignore",
+        ".npmignore",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "README.md",
+        "assets/",
+        "docs/",
+        "eslint.config.mjs",
+        "experiments/",
+        "extensions/",
+        "package-lock.json",
+        "package.json",
+        "scripts/",
+        "specs/",
+        "tests/",
+        "tsconfig.json"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 555,
+      "bytes": 4564709,
+      "sha256": "a9ccef40a38e01b3a3ee64a8a67fa460fcf46bdb31e29377d59479a894e65111"
+    },
+    {
+      "id": "herdr-herdr-agent-state.ts",
+      "component": "herdr",
+      "path": "port/oracle/herdr-agent-state.ts",
+      "repository": "https://github.com/Hai-Fai-Solutions/herdr-pig",
+      "commit": "3ec680471e8282e0a8a64545781069f822c0c212",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "extensions/herdr-agent-state.ts",
+          "to": ""
+        }
+      ],
+      "isFile": true,
+      "kept": [],
+      "files": 1,
+      "bytes": 7967,
+      "sha256": "0d66a2bc99c600ee78f0ea1136cb1acbad86ddf789554b9aac0adaa75e5bbecf"
+    },
+    {
+      "id": "jev-src",
+      "component": "jev",
+      "path": "port/oracle/src",
+      "repository": "https://github.com/y0usaf/pi-jev",
+      "commit": "88e5fb3888948e7065110d47cdf6ac57abb71ba4",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "src",
+          "to": ""
+        }
+      ],
+      "include": [
+        "client.ts",
+        "config.ts",
+        "gate.ts",
+        "index.ts",
+        "output.ts"
+      ],
+      "kept": [],
+      "files": 5,
+      "bytes": 56780,
+      "sha256": "6440a3119c8a27803575b424814ad62b4dd91a51d0083b9b71d9a70525401904"
+    },
+    {
+      "id": "permissions-packages-pi-permission-system",
+      "component": "permissions",
+      "path": "port/oracle/packages/pi-permission-system",
+      "repository": "https://github.com/gotgenes/pi-packages",
+      "commit": "c5bc74712cd2fe808d70246d93d26a092f736676",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages/pi-permission-system",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".pi/",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "README.md",
+        "config/",
+        "docs/",
+        "package.json",
+        "rollup.dts.config.mjs",
+        "schemas/",
+        "scripts/",
+        "src/",
+        "test/",
+        "tsconfig.json",
+        "vitest.config.ts"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 1010,
+      "bytes": 14199136,
+      "sha256": "6717d83fa49c8fcb2e665d663ae53732ca88163db27cce436f60cdcd674c6941"
+    },
+    {
+      "id": "pi-typesafe",
+      "component": "pi-typesafe",
+      "path": "port/oracle",
+      "repository": "https://github.com/DevMortimer/pi-typesafe",
+      "commit": "ed439f834665ad6fc652787f5ba7c23852566d49",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".env.example",
+        ".gitignore",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "docs/api.md",
+        "docs/ci-cd.md",
+        "examples/",
+        "extensions/",
+        "package.json",
+        "scripts/",
+        "src/",
+        "tests/",
+        "tsconfig.build.json",
+        "tsconfig.json"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 42,
+      "bytes": 267999,
+      "sha256": "cf42a28f47721db2597ff03dabceeb41c9ab5ea5bb0c3da6985b45ef3b6c626c"
+    },
+    {
+      "id": "pig-model-tweaks",
+      "component": "pig-model-tweaks",
+      "path": "port/oracle",
+      "repository": "https://github.com/liyu1981/pi-tweaks",
+      "commit": "65e6ccfbb77956aa15ce34e7ca9735e1d476c292",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "extensions/",
+        "package.json",
+        "src/",
+        "tsconfig.json"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 11,
+      "bytes": 49721,
+      "sha256": "23308eb0231f03362ea37ef991356fcbeac2d01985ecd68196a90c8974a1e392"
+    },
+    {
+      "id": "pitui-pi",
+      "component": "pitui",
+      "path": "port/oracle/pi",
+      "repository": "https://github.com/earendil-works/pi",
+      "commit": "1402973a9dbe8c627341e04c9744c54953e285ca",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages",
+          "to": ""
+        }
+      ],
+      "include": [
+        "tui/src/"
+      ],
+      "kept": [
+        "coding-agent/dynamic-border.ts"
+      ],
+      "files": 47,
+      "bytes": 631186,
+      "sha256": "e32b3dad86311d4042e378c95fd3280fb1ed0e10dfad6ebd9dbd212736cdd253"
+    },
+    {
+      "id": "ponytail",
+      "component": "ponytail",
+      "path": "port/oracle",
+      "repository": "https://github.com/DietrichGebert/ponytail",
+      "commit": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "hooks/",
+        "package.json",
+        "pi-extension/",
+        "skills/"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 25,
+      "bytes": 102286,
+      "sha256": "877e4ce9f3798f7034e63726b5ada807a256a37cbfb89028bd9d5642a065cd0f"
+    },
+    {
+      "id": "powerline",
+      "component": "powerline",
+      "path": "port/oracle",
+      "repository": "https://github.com/nicobailon/pi-powerline-footer",
+      "commit": "859dee671b633fb533b07ceba3e6c1ab1c43360a",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".github/",
+        ".gitignore",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "auto-follow-up.ts",
+        "bash-mode/",
+        "cd-command.ts",
+        "colors.ts",
+        "context-usage.ts",
+        "currency-rates.ts",
+        "editor-composition.ts",
+        "editor-performance.ts",
+        "git-status.ts",
+        "icons.ts",
+        "index.ts",
+        "lifecycle.ts",
+        "package-lock.json",
+        "package.json",
+        "paths.ts",
+        "powerline-config.ts",
+        "presets.ts",
+        "queue/",
+        "quote-reply.ts",
+        "render-scheduler.ts",
+        "segments.ts",
+        "separators.ts",
+        "shortcuts.ts",
+        "tests/",
+        "theme.example.json",
+        "theme.ts",
+        "thinking-level.ts",
+        "token-stats.ts",
+        "tsconfig.json",
+        "types.ts",
+        "welcome.ts",
+        "working-vibes.ts"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 71,
+      "bytes": 864868,
+      "sha256": "42bab06682947e1770a7aff46d0e52e105f55bd4c6e9b27294a72d6f4c346d4a"
+    },
+    {
+      "id": "rpiv-web-tools",
+      "component": "rpiv-web-tools",
+      "path": "port/oracle",
+      "repository": "https://github.com/juicesharp/rpiv-mono",
+      "commit": "7c9bc924c5bfd148f36d7ebc9f7bd0a9469d633f",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages/rpiv-web-tools",
+          "to": ""
+        }
+      ],
+      "include": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/configuration.md",
+        "docs/github-interceptor.md",
+        "docs/providers.md",
+        "docs/self-hosted.md",
+        "docs/tools.md",
+        "index.test.ts",
+        "index.ts",
+        "package.json",
+        "providers/",
+        "ship-manifest.test.ts",
+        "web-tools.guidance.test.ts",
+        "web-tools.render.test.ts",
+        "web-tools.ts"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md",
+        "package-lock.json"
+      ],
+      "files": 39,
+      "bytes": 331302,
+      "sha256": "5e78b8051a78753acc544a24531b85166884591b6d5fcf51fa157e6342137587"
+    },
+    {
+      "id": "subagents",
+      "component": "subagents",
+      "path": "port/oracle",
+      "repository": "https://github.com/nicobailon/pi-subagents",
+      "commit": "8a403efba6975988cc0488ec8bb941db5ef1a19e",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".github/",
+        ".gitignore",
+        ".greptile/",
+        ".npmrc",
+        ".oxlintrc.json",
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "README.md",
+        "VISION.md",
+        "agents/",
+        "async-retention-discovery-worker.mjs",
+        "docs/",
+        "examples/",
+        "index.ts",
+        "inspector-runner.mjs",
+        "install.mjs",
+        "package-lock.json",
+        "package.json",
+        "prompts/",
+        "runner-peer-loader.mjs",
+        "runner-peer-preload.mjs",
+        "scripts/",
+        "skills/",
+        "src/",
+        "test/",
+        "tools/",
+        "tsconfig.build.json",
+        "tsconfig.json"
+      ],
+      "kept": [
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 912,
+      "bytes": 12561766,
+      "sha256": "4c93fc0e5eceecac05763fbfe7d3292dd8059cdcc01ef8474c427e795732d17d"
+    },
+    {
+      "id": "superpowers",
+      "component": "superpowers",
+      "path": "port/oracle",
+      "repository": "https://github.com/obra/superpowers",
+      "commit": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        ".pi/",
+        "skills/",
+        "tests/pi/"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 77,
+      "bytes": 446004,
+      "sha256": "49548ae8f95aa3166725fb76855a1fafdead10e083cfb8703aa185f721bc080e"
+    },
+    {
+      "id": "tintinweb-subagents",
+      "component": "tintinweb-subagents",
+      "path": "port/oracle",
+      "repository": "https://github.com/tintinweb/pi-subagents",
+      "commit": "4f572eaa04c09d3dbc16e4a5f13a16b295e84e14",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "CHANGELOG.md",
+        "README.md",
+        "package.json",
+        "src/",
+        "test/"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 205,
+      "bytes": 2787762,
+      "sha256": "057d1e95105be4c5e7e563616f30b800ac95e76929a23fd9c87285f3abfb6de6"
+    },
+    {
+      "id": "tintinweb-tasks",
+      "component": "tintinweb-tasks",
+      "path": "port/oracle",
+      "repository": "https://github.com/tintinweb/pi-tasks",
+      "commit": "00ecbd8110f1a4e267791f9cecb2612144c78f6e",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "AGENTS.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "CUSTOMIZING.md",
+        "README.md",
+        "SECURITY.md",
+        "biome.json",
+        "package-lock.json",
+        "package.json",
+        "src/",
+        "test/",
+        "tsconfig.json",
+        "vitest.config.ts"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 48,
+      "bytes": 569046,
+      "sha256": "ea9df72a851ba1c0a8861ed489068644552baecb947dfa42646e66860b3f0b36"
+    },
+    {
+      "id": "todo",
+      "component": "todo",
+      "path": "port/oracle",
+      "repository": "https://github.com/juicesharp/rpiv-mono",
+      "commit": "61904e69e1a50e12585bdf15f0310e633a62ba36",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "packages/rpiv-todo",
+          "to": ""
+        }
+      ],
+      "include": [
+        "CHANGELOG.md",
+        "README.md",
+        "config.test.ts",
+        "config.ts",
+        "docs/configuration.md",
+        "docs/overlay.md",
+        "docs/tool-schema.md",
+        "index.ts",
+        "lazy-overlay.regression.test.ts",
+        "locales/",
+        "package.json",
+        "ship-manifest.test.ts",
+        "state/",
+        "todo-overlay.lifecycle.test.ts",
+        "todo-overlay.render.test.ts",
+        "todo-overlay.shortcut.test.ts",
+        "todo-overlay.ts",
+        "todo.command.test.ts",
+        "todo.guidance.test.ts",
+        "todo.invalidation.test.ts",
+        "todo.register.test.ts",
+        "todo.session-isolation.test.ts",
+        "todo.ts",
+        "tool/",
+        "view/"
+      ],
+      "kept": [
+        ".npmrc",
+        "LICENSE",
+        "UPSTREAM.md",
+        "package-lock.json"
+      ],
+      "files": 55,
+      "bytes": 245736,
+      "sha256": "f1a0c3034616450adc675f9cf3dbccb18f52d043dd631976b60019c29cf3887c"
+    },
+    {
+      "id": "typesafe-system-one-adapter-python",
+      "component": "typesafe",
+      "path": "port/oracle/system-one-adapter-python",
+      "repository": "https://github.com/typesafe-ai/system-one-adapter-python",
+      "commit": "e1d4cc938204b22fc5a3c3aca7044072fe3f712d",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "docs/",
+        "pyproject.toml",
+        "src/",
+        "tests/__init__.py",
+        "tests/conftest.py",
+        "tests/http.py",
+        "tests/test_client_with_fake_model.py",
+        "tests/test_client_with_live_apis.py",
+        "tests/test_gemini_transports.py",
+        "tests/test_openai_transports.py",
+        "tests/test_provider_lifecycle.py",
+        "tests/test_provider_nonanswers.py",
+        "tests/test_provider_requests.py",
+        "tests/test_provider_retries.py",
+        "tests/test_schema.py",
+        "tests/utils/"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 35,
+      "bytes": 212399,
+      "sha256": "d1f2249895afe731fc2db59691a6ff80f5f3d84e1c94b60a76b09ba5339cd164"
+    },
+    {
+      "id": "typesafe-typesafe-sdk-js",
+      "component": "typesafe",
+      "path": "port/oracle/typesafe-sdk-js",
+      "repository": "https://github.com/typesafe-ai/typesafe-sdk-js",
+      "commit": "66880ccded6cb642dc1809620c2b108c33730214",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "README.md",
+        "docs/changelog.md",
+        "package.json",
+        "src/",
+        "test/api-promise.test.ts",
+        "test/client.test.ts",
+        "test/errors.test.ts",
+        "test/helpers.ts",
+        "test/integration/",
+        "test/logging.test.ts",
+        "test/native-transport.test.ts",
+        "test/release-regressions.test.ts",
+        "test/reliability.test.ts",
+        "test/retry.test.ts",
+        "test/runtime.test.ts",
+        "test/types.test-d.ts",
+        "tsconfig.json",
+        "vitest.config.ts"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 30,
+      "bytes": 145269,
+      "sha256": "9c037b33e910639963e9f8f3543e2e26dd541723c87ed1ab6f7160d1e108d1b6"
+    },
+    {
+      "id": "typesafe-WorkflowEvals",
+      "component": "typesafe",
+      "path": "port/oracle/WorkflowEvals",
+      "repository": "https://github.com/typesafe-ai/WorkflowEvals",
+      "commit": "0ac3b8ad845429f0d8e064ecfb2430a47c5a25cb",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 1,
+      "bytes": 11358,
+      "sha256": "9c8875e07aad0e445ce220ffc4a3fd9a50a4b7647d7de1b5ae0d9e6f3c4c9fc4"
+    },
+    {
+      "id": "warden",
+      "component": "warden",
+      "path": "port/oracle",
+      "repository": "https://github.com/DevMortimer/pi-warden",
+      "commit": "a12b2703b2c7ac32401fe13f4ce037d673a5f113",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "extensions/",
+        "package-lock.json",
+        "package.json",
+        "src/",
+        "tests/",
+        "tsconfig.build.json",
+        "tsconfig.json"
+      ],
+      "kept": [
+        ".gitignore",
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 137,
+      "bytes": 2599668,
+      "sha256": "7cb6654b660b21aa347ae0262a596545b44e0c5879efc31dab9b25a6bc4864a9"
+    },
+    {
+      "id": "warden-pi-typesafe",
+      "component": "warden",
+      "path": "port/oracle-pi-typesafe",
+      "repository": "https://github.com/DevMortimer/pi-typesafe",
+      "commit": "ed439f834665ad6fc652787f5ba7c23852566d49",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [],
+      "kept": [
+        "LICENSE",
+        "UPSTREAM.md"
+      ],
+      "files": 2,
+      "bytes": 1357,
+      "sha256": "649c0171b307424720ae9d006ed741aa349172a8ee6020938f3751fe0caa8979"
+    },
+    {
+      "id": "websearch",
+      "component": "websearch",
+      "path": "port/oracle",
+      "repository": "https://github.com/nicobailon/pi-web-access",
+      "commit": "9a734ed195da2f4cccc2fb5e7128f6774a380f47",
+      "source": "fetched",
+      "map": [
+        {
+          "from": "",
+          "to": ""
+        }
+      ],
+      "include": [
+        "CHANGELOG.md",
+        "README.md",
+        "SECURITY.md",
+        "abortable.ts",
+        "activity.ts",
+        "anysearch.ts",
+        "auth-fetch.ts",
+        "baizhi.ts",
+        "bocha.ts",
+        "brave.ts",
+        "brightdata-unlocker.ts",
+        "brightdata.ts",
+        "chrome-cookies.ts",
+        "content-find.ts",
+        "crawl4ai.ts",
+        "credential-source.ts",
+        "curator-page.ts",
+        "curator-run.ts",
+        "curator-server.ts",
+        "data-uri-sanitize.ts",
+        "datalab-pdf-extract.ts",
+        "declared-web-links.ts",
+        "domain-filter-normalization.ts",
+        "duckduckgo.ts",
+        "exa.ts",
+        "extract.ts",
+        "feature-config.ts",
+        "fetch-params.ts",
+        "firecrawl.ts",
+        "gemini-adc.ts",
+        "gemini-api.ts",
+        "gemini-pdf-extract.ts",
+        "gemini-search.ts",
+        "gemini-url-context.ts",
+        "gemini-web-config.ts",
+        "gemini-web.ts",
+        "github-api.ts",
+        "github-extract.ts",
+        "github-issue-pr.ts",
+        "index.ts",
+        "jina-search.ts",
+        "kagi.ts",
+        "kimi-search.ts",
+        "mistral-search.ts",
+        "ollama.ts",
+        "openai-search.ts",
+        "opencode-session-headers.ts",
+        "package-lock.json",
+        "package.json",
+        "page-query.ts",
+        "parallel-mcp.ts",
+        "parallel.ts",
+        "pdf-extract.ts",
+        "perplexity.ts",
+        "promise-try.d.ts",
+        "querit.ts",
+        "query-rewrite.ts",
+        "render-search-error.ts",
+        "rsc-extract.ts",
+        "scripts/",
+        "search-answer-formatting.ts",
+        "search-result-count-normalization.ts",
+        "search1api.ts",
+        "searchinfinity.ts",
+        "searxng.ts",
+        "serpapi.ts",
+        "serpbase.ts",
+        "serpdive.ts",
+        "serper.ts",
+        "serply.ts",
+        "source-check.ts",
+        "ssrf-protection.ts",
+        "storage.ts",
+        "summary-model-scope.ts",
+        "summary-review.ts",
+        "tavily.ts",
+        "test/",
+        "tinyfish.ts",
+        "tool-activation.ts",
+        "tsconfig.json",
+        "utils.ts",
+        "valyu.ts",
+        "video-extract.ts",
+        "xai-search.ts",
+        "xcrawl.ts",
+        "you.ts",
+        "youtube-extract.ts"
+      ],
+      "kept": [
+        "LICENSE"
+      ],
+      "files": 190,
+      "bytes": 2731940,
+      "sha256": "3afee2551a274a31cd0390293326521bfe0c5e15c70eb5562f30e4ebf0ecd1dd"
+    }
+  ]
+}

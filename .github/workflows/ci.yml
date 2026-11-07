@@ -58,6 +58,14 @@ jobs:
         with:
           bun-version: '1.4.3'
       - run: npm ci --ignore-scripts
+      # The originals the ports were measured against are fetched at the commits ports/oracles.lock.json pins and checked against its digests.
+      - name: Restore the cached oracles
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pigpen-oracles
+          key: oracles-${{ hashFiles('ports/oracles.lock.json') }}
+      - name: Fetch the oracles
+        run: npm run oracles:fetch
       - run: npm test
       - run: npm run check
       - name: Validate target metadata

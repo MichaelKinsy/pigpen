@@ -4,6 +4,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
+import { LOCK_FILE, missingOracles } from './oracles.mjs';
 
 export async function run({ root, upstream = {} }) {
   const results = [];
@@ -11,6 +12,10 @@ export async function run({ root, upstream = {} }) {
   for (const name of readdirSync(base).sort()) {
     const module = join(base, name, 'port', 'skills-drift.mjs');
     if (!existsSync(module)) continue;
+    // The original a drift check reads is fetched (ports/oracles.lock.json). Without it the check cannot run, and every skill would look
+    // drifted, so it is skipped with a note; CI fetches the oracles first, so a pull request is checked.
+    const missing = existsSync(join(root, LOCK_FILE)) ? missingOracles(root, name) : [];
+    if (missing.length) { console.log(`skills drift: ${name} skipped, its original is not fetched (npm run oracles:fetch)`); continue; }
     const { check } = await import(pathToFileURL(module).href);
     results.push({ name, problems: check({ root, upstream: upstream[name] }) });
   }
