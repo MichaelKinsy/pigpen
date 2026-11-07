@@ -1,0 +1,29 @@
+{
+  "name": "sampling-out-of-range",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:38605",
+  "console": [],
+  "errors": [
+    {
+      "op": 0,
+      "name": "client",
+      "error": "Error: LANGSMITH_TRACING_SAMPLING_RATE must be between 0 and 1 if set. Got: 2"
+    },
+    {
+      "op": 1,
+      "name": "runTree",
+      "error": "Error: op refers to unknown client \"c\""
+    },
+    {
+      "op": 2,
+      "name": "postRun",
+      "error": "Error: op refers to unknown run \"root\""
+    },
+    {
+      "op": 3,
+      "name": "awaitPendingTraceBatches",
+      "error": "Error: op refers to unknown client \"c\""
+    }
+  ],
+  "filesAfter": {}
+}

@@ -1,0 +1,137 @@
+{
+  "name": "wire-429-retry",
+  "description": "429 with Retry-After on the multipart endpoint: the caller waits and retries the same body.",
+  "commands": {
+    "git": {}
+  },
+  "servers": {
+    "ls": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "status": 429,
+          "times": 1,
+          "headers": {
+            "Retry-After": "1"
+          },
+          "body": "slow down"
+        },
+        {
+          "method": "GET",
+          "path": "/info",
+          "json": {
+            "version": "mock",
+            "license_expiration_time": null,
+            "batch_ingest_config": {
+              "use_multipart_endpoint": true,
+              "scale_up_qsize_trigger": 1000,
+              "scale_up_nthreads_limit": 16,
+              "scale_down_nempty_trigger": 4,
+              "size_limit": 100,
+              "size_limit_bytes": 20971520
+            },
+            "instance_flags": {
+              "gzip_body_enabled": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs/batch",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs",
+          "json": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/runs/*",
+          "json": {}
+        }
+      ],
+      "recordHeaders": [
+        "x-api-key",
+        "x-tenant-id",
+        "authorization",
+        "content-encoding"
+      ]
+    }
+  },
+  "env": {
+    "TRACE_TO_LANGSMITH": "true",
+    "LANGSMITH_PI_ENDPOINT": "{{server:ls}}",
+    "LANGSMITH_PI_API_KEY": "ls-test-key"
+  },
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "settleMs": 700,
+  "tailMs": 4000,
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "normalize": [
+    {
+      "pattern": "----LangSmithFormBoundary[0-9a-z]+",
+      "replacement": "<boundary>"
+    },
+    {
+      "pattern": "[0-9]{8}T[0-9]{12}Z",
+      "replacement": "<ts>"
+    },
+    {
+      "pattern": "\"(start_time|end_time|timestamp|durationMs)\":[0-9]+",
+      "replacement": "\"$1\":<ts:num>"
+    },
+    {
+      "pattern": "\"role\":\"system\",\"content\":\"(?:[^\"\\\\]|\\\\.)*\"",
+      "replacement": "\"role\":\"system\",\"content\":\"<host-prompt>\""
+    },
+    {
+      "pattern": "\"sections\":\\{.*?\\},\"timestamp\"",
+      "replacement": "\"sections\":\"<host-prompt>\",\"timestamp\""
+    },
+    {
+      "pattern": "\"local_username\":\"[^\"]*\"",
+      "replacement": "\"local_username\":\"<user>\""
+    },
+    {
+      "pattern": "\"runtime\":\"(node|go)\"",
+      "replacement": "\"runtime\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk\":\"[^\"]*\"",
+      "replacement": "\"sdk\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk_version\":\"[^\"]*\"",
+      "replacement": "\"sdk_version\":\"<d1>\""
+    },
+    {
+      "pattern": "length=[0-9]+",
+      "replacement": "length=<n>"
+    }
+  ]
+}

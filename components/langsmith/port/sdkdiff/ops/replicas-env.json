@@ -1,0 +1,53 @@
+{
+  "name": "replicas-env",
+  "description": "LANGSMITH_RUNS_ENDPOINTS read by the RunTree (object form url -> key).",
+  "env": {
+    "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"{{endpoint}}\",\"api_key\":\"k-a\",\"project_name\":\"proj-a\"}]"
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "main",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

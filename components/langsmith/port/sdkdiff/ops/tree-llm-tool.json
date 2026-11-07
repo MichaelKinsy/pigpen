@@ -1,0 +1,218 @@
+{
+  "name": "tree-llm-tool",
+  "description": "Root, turn, llm and tool children with metadata, tags, an event and an error end.",
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        },
+        "metadata": {
+          "ls_agent_type": "root",
+          "turn_number": 1
+        },
+        "tags": [
+          "pi",
+          "coding-agent"
+        ]
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "createChild",
+      "parent": "root",
+      "as": "turn",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "start_time": 1790000000020,
+        "name": "Pi turn 0",
+        "run_type": "chain",
+        "inputs": {
+          "turnIndex": 0
+        },
+        "metadata": {
+          "ls_provider": "openai",
+          "ls_model_name": "gpt-x",
+          "timestamp": 1790000000020,
+          "pi_loop_index": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "turn"
+    },
+    {
+      "op": "createChild",
+      "parent": "turn",
+      "as": "llm",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000003",
+        "start_time": 1790000000030,
+        "name": "openai",
+        "run_type": "llm",
+        "inputs": {
+          "messages": [
+            {
+              "role": "user",
+              "content": "hi"
+            }
+          ],
+          "model": "gpt-x",
+          "stream": true
+        },
+        "metadata": {
+          "ls_provider": "openai"
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "llm"
+    },
+    {
+      "op": "end",
+      "run": "llm",
+      "outputs": {
+        "messages": [
+          {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "hello"
+              }
+            ]
+          }
+        ]
+      },
+      "endTime": 1790000005000,
+      "metadata": {
+        "stop_reason": "stop",
+        "usage_metadata": {
+          "input_tokens": 3,
+          "output_tokens": 2,
+          "total_tokens": 5,
+          "input_token_details": {
+            "cache_read": 0
+          }
+        }
+      }
+    },
+    {
+      "op": "patchRun",
+      "run": "llm"
+    },
+    {
+      "op": "createChild",
+      "parent": "turn",
+      "as": "tool",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000004",
+        "start_time": 1790000000040,
+        "name": "read",
+        "run_type": "tool",
+        "inputs": {
+          "toolCallId": "call_1",
+          "args": {
+            "path": "a.txt"
+          }
+        },
+        "metadata": {
+          "toolName": "read",
+          "toolCallId": "call_1"
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "tool"
+    },
+    {
+      "op": "addEvent",
+      "run": "tool",
+      "event": {
+        "name": "tool_update",
+        "kwargs": {
+          "partialResult": {
+            "content": [
+              {
+                "type": "text",
+                "text": "par"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "op": "end",
+      "run": "tool",
+      "endTime": 1790000005000,
+      "error": "Tool execution failed"
+    },
+    {
+      "op": "patchRun",
+      "run": "tool"
+    },
+    {
+      "op": "end",
+      "run": "turn",
+      "outputs": {
+        "messages": [
+          {
+            "role": "assistant",
+            "content": "hello"
+          }
+        ],
+        "toolResults": []
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "turn"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "messages": [],
+        "context_usage": {
+          "tokens": 10,
+          "contextWindow": 100,
+          "percent": 10
+        }
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

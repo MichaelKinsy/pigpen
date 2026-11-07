@@ -1,0 +1,49 @@
+{
+  "name": "create-update-run-direct",
+  "description": "Client.createRun / updateRun called directly with prepared run objects.",
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "createRun",
+      "client": "c",
+      "run": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "trace_id": "0198a000-0000-7000-8000-000000000001",
+        "dotted_order": "20261010T000000000000Z0198a000-0000-7000-8000-000000000001",
+        "name": "direct",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "inputs": {
+          "a": 1
+        },
+        "session_name": "proj"
+      }
+    },
+    {
+      "op": "updateRun",
+      "client": "c",
+      "id": "0198a000-0000-7000-8000-000000000001",
+      "run": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "trace_id": "0198a000-0000-7000-8000-000000000001",
+        "dotted_order": "20261010T000000000000Z0198a000-0000-7000-8000-000000000001",
+        "end_time": 1790000000001,
+        "outputs": {
+          "b": 2
+        },
+        "session_name": "proj"
+      }
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

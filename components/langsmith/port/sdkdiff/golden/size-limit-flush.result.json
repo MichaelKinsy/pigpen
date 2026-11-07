@@ -1,0 +1,8 @@
+{
+  "name": "size-limit-flush",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:43415",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

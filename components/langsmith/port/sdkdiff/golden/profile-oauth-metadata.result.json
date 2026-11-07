@@ -1,0 +1,10 @@
+{
+  "name": "profile-oauth-metadata",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:44765",
+  "console": [],
+  "errors": [],
+  "filesAfter": {
+    "profile.json": "{\n  \"current_profile\": \"dev\",\n  \"profiles\": {\n    \"dev\": {\n      \"api_url\": \"http://127.0.0.1:44765\",\n      \"oauth\": {\n        \"refresh_token\": \"ref-1\",\n        \"access_token\": \"tok-meta\",\n        \"expires_at\": \"2026-11-06T23:22:57.784Z\"\n      }\n    }\n  }\n}\n"
+  }
+}

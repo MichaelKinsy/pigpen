@@ -1,0 +1,13 @@
+{
+  "name": "multipart-422-buffered",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:40369",
+  "console": [
+    {
+      "level": "warn",
+      "text": "Failed to Failed to send multipart request. Received status [422]: Unprocessable Entity. Message: chunked unsupported\n\nContext: trace=0198a000-0000-7000-8000-000000000001,id=0198a000-0000-7000-8000-000000000001"
+    }
+  ],
+  "errors": [],
+  "filesAfter": {}
+}

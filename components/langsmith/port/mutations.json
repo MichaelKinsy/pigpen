@@ -1,0 +1,1682 @@
+[
+ {
+  "name": "ext-status-key",
+  "file": "extension.go",
+  "find": "const statusKey = \"langsmith\"",
+  "replace": "const statusKey = \"langsmith-pi\""
+ },
+ {
+  "name": "ext-status-session-tracing",
+  "file": "extension.go",
+  "find": "ctx.SetStatus(statusKey, \"LangSmith: tracing\")",
+  "replace": "ctx.SetStatus(statusKey, \"LangSmith: on\")"
+ },
+ {
+  "name": "ext-status-session-disabled",
+  "file": "extension.go",
+  "find": "\"LangSmith: disabled\"",
+  "replace": "\"LangSmith: off\""
+ },
+ {
+  "name": "ext-status-session-swapped",
+  "file": "extension.go",
+  "find": "if enabled {\n\t\t\tctx.SetStatus(statusKey, \"LangSmith: tracing\")",
+  "replace": "if !enabled {\n\t\t\tctx.SetStatus(statusKey, \"LangSmith: tracing\")"
+ },
+ {
+  "name": "ext-status-tracing-run",
+  "file": "extension.go",
+  "find": "\"LangSmith: tracing run\"",
+  "replace": "\"LangSmith: running\""
+ },
+ {
+  "name": "ext-status-traced-agent-end",
+  "file": "extension.go",
+  "find": "\tt.active = nil\n\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// agentSettled",
+  "replace": "\tt.active = nil\n\tctx.SetStatus(statusKey, \"LangSmith: done\")\n\treturn nil\n}\n\n// agentSettled"
+ },
+ {
+  "name": "ext-status-traced-agent-settled",
+  "file": "extension.go",
+  "find": "\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// sessionShutdown",
+  "replace": "\tctx.SetStatus(statusKey, \"LangSmith: done\")\n\treturn nil\n}\n\n// sessionShutdown"
+ },
+ {
+  "name": "ext-status-traced-agent-end-dropped",
+  "file": "extension.go",
+  "find": "\tt.active = nil\n\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// agentSettled",
+  "replace": "\tt.active = nil\n\treturn nil\n}\n\n// agentSettled"
+ },
+ {
+  "name": "ext-status-traced-agent-settled-dropped",
+  "file": "extension.go",
+  "find": "\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// sessionShutdown",
+  "replace": "\treturn nil\n}\n\n// sessionShutdown"
+ },
+ {
+  "name": "ext-status-tracing-run-dropped",
+  "file": "extension.go",
+  "find": "\tctx.SetStatus(statusKey, \"LangSmith: tracing run\")\n",
+  "replace": "\t_ = ctx\n"
+ },
+ {
+  "name": "ext-status-cleared-on-shutdown",
+  "file": "extension.go",
+  "find": "\tctx.ClearStatus(statusKey)\n",
+  "replace": "\t_ = statusKey\n"
+ },
+ {
+  "name": "ext-command-name",
+  "file": "extension.go",
+  "find": "ext.RegisterCommand(\"langsmith-tracing\"",
+  "replace": "ext.RegisterCommand(\"langsmith-trace\""
+ },
+ {
+  "name": "ext-command-description",
+  "file": "extension.go",
+  "find": "Description: \"Show LangSmith tracing status for this Pi session\"",
+  "replace": "Description: \"Show LangSmith tracing status\""
+ },
+ {
+  "name": "ext-notify-enabled-text",
+  "file": "extension.go",
+  "find": "message = \"LangSmith tracing is enabled\"",
+  "replace": "message = \"LangSmith tracing is on\""
+ },
+ {
+  "name": "ext-notify-active-prefix",
+  "file": "extension.go",
+  "find": "message += \" (active trace \" + id + \")\"",
+  "replace": "message += \" (trace \" + id + \")\""
+ },
+ {
+  "name": "ext-notify-active-inverted",
+  "file": "extension.go",
+  "find": "\t\t\t\tif active != nil {\n\t\t\t\t\tmessage +=",
+  "replace": "\t\t\t\tif active == nil {\n\t\t\t\t\tmessage +="
+ },
+ {
+  "name": "ext-notify-period",
+  "file": "extension.go",
+  "find": "message += \".\"",
+  "replace": "message += \"!\""
+ },
+ {
+  "name": "ext-notify-enabled-level",
+  "file": "extension.go",
+  "find": "ctx.Notify(message, \"info\")",
+  "replace": "ctx.Notify(message, \"warning\")"
+ },
+ {
+  "name": "ext-notify-disabled-level",
+  "file": "extension.go",
+  "find": "ctx.Notify(message, \"warning\")",
+  "replace": "ctx.Notify(message, \"info\")"
+ },
+ {
+  "name": "ext-notify-disabled-text",
+  "file": "extension.go",
+  "find": "Set TRACE_TO_LANGSMITH=true and configure",
+  "replace": "Set TRACE_TO_LANGSMITH=1 and configure"
+ },
+ {
+  "name": "ext-notify-disabled-key-name",
+  "file": "extension.go",
+  "find": "configure LANGSMITH_PI_API_KEY (or",
+  "replace": "configure LANGSMITH_API_KEY (or"
+ },
+ {
+  "name": "ext-notify-disabled-endpoint-name",
+  "file": "extension.go",
+  "find": "(or LANGSMITH_PI_ENDPOINT for self-hosted)",
+  "replace": "(or LANGSMITH_ENDPOINT for self-hosted)"
+ },
+ {
+  "name": "ext-hooks-skipped-when-enabled",
+  "file": "extension.go",
+  "find": "if !enabled || cl == nil {\n\t\treturn ext",
+  "replace": "if enabled || cl == nil {\n\t\treturn ext"
+ },
+ {
+  "name": "ext-command-enabled-inverted",
+  "file": "extension.go",
+  "find": "\t\t\tif enabled {\n\t\t\t\tt.mu.Lock()",
+  "replace": "\t\t\tif !enabled {\n\t\t\t\tt.mu.Lock()"
+ },
+ {
+  "name": "ext-hook-dropped-beforeAgentStart",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventBeforeAgentStart, t.beforeAgentStart)\n",
+  "replace": "\t_ = t.beforeAgentStart\n"
+ },
+ {
+  "name": "ext-hook-dropped-sessionCompact",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventSessionCompact, t.sessionCompact)\n",
+  "replace": "\t_ = t.sessionCompact\n"
+ },
+ {
+  "name": "ext-hook-dropped-turnStart",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventTurnStart, t.turnStart)\n",
+  "replace": "\t_ = t.turnStart\n"
+ },
+ {
+  "name": "ext-hook-dropped-beforeProviderRequest",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventBeforeProviderRequest, t.beforeProviderRequest)\n",
+  "replace": "\t_ = t.beforeProviderRequest\n"
+ },
+ {
+  "name": "ext-hook-dropped-messageEnd",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventMessageEnd, t.messageEnd)\n",
+  "replace": "\t_ = t.messageEnd\n"
+ },
+ {
+  "name": "ext-hook-dropped-toolExecutionStart",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventToolExecutionStart, t.toolExecutionStart)\n",
+  "replace": "\t_ = t.toolExecutionStart\n"
+ },
+ {
+  "name": "ext-hook-dropped-toolExecutionUpdate",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventToolExecutionUpdate, t.toolExecutionUpdate)\n",
+  "replace": "\t_ = t.toolExecutionUpdate\n"
+ },
+ {
+  "name": "ext-hook-dropped-toolExecutionEnd",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventToolExecutionEnd, t.toolExecutionEnd)\n",
+  "replace": "\t_ = t.toolExecutionEnd\n"
+ },
+ {
+  "name": "ext-hook-dropped-turnEnd",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventTurnEnd, t.turnEnd)\n",
+  "replace": "\t_ = t.turnEnd\n"
+ },
+ {
+  "name": "ext-hook-dropped-agentEnd",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventAgentEnd, t.agentEnd)\n",
+  "replace": "\t_ = t.agentEnd\n"
+ },
+ {
+  "name": "ext-hook-dropped-agentSettled",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventAgentSettled, t.agentSettled)\n",
+  "replace": "\t_ = t.agentSettled\n"
+ },
+ {
+  "name": "ext-hook-dropped-sessionShutdown",
+  "file": "extension.go",
+  "find": "\thook(sdk.EventSessionShutdown, t.sessionShutdown)\n",
+  "replace": "\t_ = t.sessionShutdown\n"
+ },
+ {
+  "name": "ext-settled-major-gt1",
+  "file": "extension.go",
+  "find": "return major > 0 || minor > 80",
+  "replace": "return major > 1 || minor > 80"
+ },
+ {
+  "name": "ext-settled-minor-ge80",
+  "file": "extension.go",
+  "find": "minor > 80 ||",
+  "replace": "minor >= 80 ||"
+ },
+ {
+  "name": "ext-settled-minor-gt81",
+  "file": "extension.go",
+  "find": "minor > 80 ||",
+  "replace": "minor > 81 ||"
+ },
+ {
+  "name": "ext-settled-patch-gt4",
+  "file": "extension.go",
+  "find": "patch >= 4)",
+  "replace": "patch > 4)"
+ },
+ {
+  "name": "ext-settled-patch-ge3",
+  "file": "extension.go",
+  "find": "patch >= 4)",
+  "replace": "patch >= 3)"
+ },
+ {
+  "name": "ext-settled-minor-eq81",
+  "file": "extension.go",
+  "find": "(minor == 80 && patch",
+  "replace": "(minor == 81 && patch"
+ },
+ {
+  "name": "ext-settled-empty-digits-ok",
+  "file": "extension.go",
+  "find": "\t\tif pos == start {\n\t\t\treturn false\n\t\t}",
+  "replace": "\t\tif false {\n\t\t\treturn false\n\t\t}"
+ },
+ {
+  "name": "ext-settled-dot-not-required",
+  "file": "extension.go",
+  "find": "\t\t\tif pos >= len(version) || version[pos] != '.' {\n\t\t\t\treturn false\n\t\t\t}",
+  "replace": "\t\t\tif pos >= len(version) {\n\t\t\t\treturn false\n\t\t\t}"
+ },
+ {
+  "name": "ext-settled-two-components",
+  "file": "extension.go",
+  "find": "var nums [3]float64\n\tpos := 0\n\tfor i := range nums {",
+  "replace": "var nums [3]float64\n\tpos := 0\n\tfor i := range nums[:2] {"
+ },
+ {
+  "name": "ext-settled-version-unset-true",
+  "file": "extension.go",
+  "find": "if piVersion != nil {\n\t\tt.emitsSettled = piEmitsAgentSettled(*piVersion)\n\t}",
+  "replace": "t.emitsSettled = piVersion == nil || piEmitsAgentSettled(*piVersion)"
+ },
+ {
+  "name": "ext-settled-inverted",
+  "file": "extension.go",
+  "find": "t.emitsSettled = piEmitsAgentSettled(*piVersion)",
+  "replace": "t.emitsSettled = !piEmitsAgentSettled(*piVersion)"
+ },
+ {
+  "name": "ext-agent-end-ignores-settled",
+  "file": "extension.go",
+  "find": "\tif t.emitsSettled {\n\t\treturn nil\n\t}",
+  "replace": "\tif !t.emitsSettled {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "ext-turn-counter-start-2",
+  "file": "extension.go",
+  "find": "next := t.userTurnByThread[key] + 1",
+  "replace": "next := t.userTurnByThread[key] + 2"
+ },
+ {
+  "name": "ext-turn-counter-not-stored",
+  "file": "extension.go",
+  "find": "\tt.userTurnByThread[key] = next\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-turn-counter-global",
+  "file": "extension.go",
+  "find": "key := \"\"\n\tif threadID != nil {\n\t\tkey = *threadID\n\t}",
+  "replace": "key := \"\""
+ },
+ {
+  "name": "ext-thread-id-dropped",
+  "file": "extension.go",
+  "find": "AgentType: \"root\", ThreadID: threadID,",
+  "replace": "AgentType: \"root\", ThreadID: nil,"
+ },
+ {
+  "name": "ext-cwd-not-passed",
+  "file": "extension.go",
+  "find": "ctx.Cwd(), threadID, t.nextUserTurn(threadID))",
+  "replace": "\"\", threadID, t.nextUserTurn(threadID))"
+ },
+ {
+  "name": "ext-model-nameless-pointer",
+  "file": "extension.go",
+  "find": "if info.Name != \"\" {",
+  "replace": "if info.Name == \"\" {"
+ },
+ {
+  "name": "ext-model-info-nil",
+  "file": "extension.go",
+  "find": "if err != nil || info == nil {\n\t\treturn nil, nil, err\n\t}",
+  "replace": "if err != nil {\n\t\treturn nil, nil, err\n\t}"
+ },
+ {
+  "name": "ext-model-error-swallowed",
+  "file": "extension.go",
+  "find": "if err != nil || info == nil {\n\t\treturn nil, nil, err",
+  "replace": "if err != nil || info == nil {\n\t\treturn nil, nil, nil"
+ },
+ {
+  "name": "ext-llm-current-not-set",
+  "file": "extension.go",
+  "find": "\ta.currentLlm = llm\n\tllm.postRun(hc)",
+  "replace": "\tllm.postRun(hc)"
+ },
+ {
+  "name": "ext-llm-post-dropped",
+  "file": "extension.go",
+  "find": "\ta.currentLlm = llm\n\tllm.postRun(hc)",
+  "replace": "\ta.currentLlm = llm"
+ },
+ {
+  "name": "ext-safeend-patch-error-swallowed",
+  "file": "extension.go",
+  "find": "\trun.end(outputs, errMsg, metadata)\n\treturn run.patchRun(hc)",
+  "replace": "\trun.end(outputs, errMsg, metadata)\n\t_ = run.patchRun(hc)\n\treturn nil"
+ },
+ {
+  "name": "ext-safeend-no-patch",
+  "file": "extension.go",
+  "find": "\trun.end(outputs, errMsg, metadata)\n\treturn run.patchRun(hc)",
+  "replace": "\trun.end(outputs, errMsg, metadata)\n\treturn nil"
+ },
+ {
+  "name": "ext-safeend-metadata-dropped",
+  "file": "extension.go",
+  "find": "\trun.end(outputs, errMsg, metadata)\n",
+  "replace": "\trun.end(outputs, errMsg, nil)\n"
+ },
+ {
+  "name": "ext-root-project-default",
+  "file": "extension.go",
+  "find": "ProjectName: t.config.Project",
+  "replace": "ProjectName: defaultProject"
+ },
+ {
+  "name": "ext-root-inputs-order",
+  "file": "extension.go",
+  "find": "obj(\"prompt\", prompt, \"imageCount\", imageCount)",
+  "replace": "obj(\"imageCount\", imageCount, \"prompt\", prompt)"
+ },
+ {
+  "name": "ext-root-config-metadata-first",
+  "file": "extension.go",
+  "find": "\tmetadata.spread(t.config.Metadata)\n",
+  "replace": "\tmetadata = obj().spread(t.config.Metadata).spread(metadata)\n"
+ },
+ {
+  "name": "ext-root-replica-updates-dropped",
+  "file": "extension.go",
+  "find": "\t\t\trc.Updates = r.Updates\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-start-stale-not-counted",
+  "file": "extension.go",
+  "find": "\t\tt.staleSettles++\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-start-stale-double",
+  "file": "extension.go",
+  "find": "\t\tt.staleSettles++\n",
+  "replace": "\t\tt.staleSettles += 2\n"
+ },
+ {
+  "name": "ext-start-loopresult-inverted",
+  "file": "extension.go",
+  "find": "if previous != nil && previous.loopResult != nil {",
+  "replace": "if previous != nil && previous.loopResult == nil {"
+ },
+ {
+  "name": "ext-start-loopresult-err-dropped",
+  "file": "extension.go",
+  "find": "safeEnd(hc, previous.root, previous.loopResult.outputs, previous.loopResult.err, nil)",
+  "replace": "safeEnd(hc, previous.root, previous.loopResult.outputs, nil, nil)"
+ },
+ {
+  "name": "ext-start-loopresult-outputs-dropped",
+  "file": "extension.go",
+  "find": "safeEnd(hc, previous.root, previous.loopResult.outputs, previous.loopResult.err, nil)",
+  "replace": "safeEnd(hc, previous.root, undef, previous.loopResult.err, nil)"
+ },
+ {
+  "name": "ext-start-interrupted-key",
+  "file": "extension.go",
+  "find": "obj(\"interruptedByNextRun\", true)",
+  "replace": "obj(\"interrupted\", true)"
+ },
+ {
+  "name": "ext-start-interrupted-error-text",
+  "file": "extension.go",
+  "find": "new(\"Trace replaced by a new Pi run\")",
+  "replace": "new(\"Trace replaced\")"
+ },
+ {
+  "name": "ext-start-interrupted-no-error",
+  "file": "extension.go",
+  "find": "obj(\"interruptedByNextRun\", true), new(\"Trace replaced by a new Pi run\"), nil)",
+  "replace": "obj(\"interruptedByNextRun\", true), nil, nil)"
+ },
+ {
+  "name": "ext-start-active-kept",
+  "file": "extension.go",
+  "find": "previous := t.active\n\tt.active = nil",
+  "replace": "previous := t.active"
+ },
+ {
+  "name": "ext-start-image-count-plus",
+  "file": "extension.go",
+  "find": "imageCount = n\n",
+  "replace": "imageCount = n + 1\n"
+ },
+ {
+  "name": "ext-start-prompt-key",
+  "file": "extension.go",
+  "find": "recGet(data, \"prompt\"), imageCount",
+  "replace": "recGet(data, \"text\"), imageCount"
+ },
+ {
+  "name": "ext-start-defer-initially-true",
+  "file": "extension.go",
+  "find": "t.active = &traceContext{root: root, turns: newRunMap(), tools: newRunMap()}",
+  "replace": "t.active = &traceContext{root: root, turns: newRunMap(), tools: newRunMap(), deferNextLlmToNextTurn: true}"
+ },
+ {
+  "name": "ext-start-session-id-error-swallowed",
+  "file": "extension.go",
+  "find": "id, err := ctx.GetSessionID()\n\tif err != nil {\n\t\treturn err\n\t}",
+  "replace": "id, _ := ctx.GetSessionID()"
+ },
+ {
+  "name": "ext-compact-guard",
+  "file": "extension.go",
+  "find": "func (t *tracer) sessionCompact(_ sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a == nil {",
+  "replace": "func (t *tracer) sessionCompact(_ sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a != nil {"
+ },
+ {
+  "name": "ext-compact-name",
+  "file": "extension.go",
+  "find": "\"Context Compaction (\"",
+  "replace": "\"Compaction (\""
+ },
+ {
+  "name": "ext-compact-run-type",
+  "file": "extension.go",
+  "find": "RunType:  \"chain\",\n\t\tInputs:   obj(\"reason\"",
+  "replace": "RunType:  \"tool\",\n\t\tInputs:   obj(\"reason\""
+ },
+ {
+  "name": "ext-compact-inputs-will-retry",
+  "file": "extension.go",
+  "find": "obj(\"reason\", reason, \"willRetry\", recGet(data, \"willRetry\"))",
+  "replace": "obj(\"reason\", reason)"
+ },
+ {
+  "name": "ext-compact-entry-error",
+  "file": "extension.go",
+  "find": "(reading 'summary')",
+  "replace": "(reading 'text')"
+ },
+ {
+  "name": "ext-turn-start-guard",
+  "file": "extension.go",
+  "find": "func (t *tracer) turnStart(ctx sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a == nil {",
+  "replace": "func (t *tracer) turnStart(ctx sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a != nil {"
+ },
+ {
+  "name": "ext-turn-start-name",
+  "file": "extension.go",
+  "find": "\"Pi turn \"",
+  "replace": "\"Turn \""
+ },
+ {
+  "name": "ext-turn-start-inputs",
+  "file": "extension.go",
+  "find": "Inputs:  obj(\"turnIndex\", turnIndex),",
+  "replace": "Inputs:  obj(\"index\", turnIndex),"
+ },
+ {
+  "name": "ext-turn-start-loop-index",
+  "file": "extension.go",
+  "find": "\t\t\t\"pi_loop_index\", turnIndex,\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-turn-start-loop-index-key",
+  "file": "extension.go",
+  "find": "\"pi_loop_index\", turnIndex",
+  "replace": "\"turn_number\", turnIndex"
+ },
+ {
+  "name": "ext-turn-start-turns-not-set",
+  "file": "extension.go",
+  "find": "\ta.turns.set(mapKey(turnIndex), turn)\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-turn-start-current-not-set",
+  "file": "extension.go",
+  "find": "\ta.currentTurn = turn\n\ta.deferNextLlmToNextTurn = false",
+  "replace": "\ta.deferNextLlmToNextTurn = false"
+ },
+ {
+  "name": "ext-turn-start-defer-kept",
+  "file": "extension.go",
+  "find": "\ta.deferNextLlmToNextTurn = false\n\tturn.postRun(hc)",
+  "replace": "\tturn.postRun(hc)"
+ },
+ {
+  "name": "ext-turn-start-defer-set",
+  "file": "extension.go",
+  "find": "\ta.deferNextLlmToNextTurn = false\n\tturn.postRun(hc)",
+  "replace": "\ta.deferNextLlmToNextTurn = true\n\tturn.postRun(hc)"
+ },
+ {
+  "name": "ext-turn-start-pending-kept",
+  "file": "extension.go",
+  "find": "\t\ta.pendingLlm = nil\n\t\treturn t.startLlmRun(hc, a, turn, pending)",
+  "replace": "\t\treturn t.startLlmRun(hc, a, turn, pending)"
+ },
+ {
+  "name": "ext-turn-start-pending-ignored",
+  "file": "extension.go",
+  "find": "\tif a.pendingLlm != nil {\n\t\tpending := a.pendingLlm\n\t\ta.pendingLlm = nil\n\t\treturn t.startLlmRun(hc, a, turn, pending)\n\t}\n\treturn nil",
+  "replace": "\treturn nil"
+ },
+ {
+  "name": "ext-turn-start-pending-under-root",
+  "file": "extension.go",
+  "find": "return t.startLlmRun(hc, a, turn, pending)",
+  "replace": "return t.startLlmRun(hc, a, a.root, pending)"
+ },
+ {
+  "name": "ext-provider-name-precedence",
+  "file": "extension.go",
+  "find": "switch {\n\tcase provider != nil:\n\t\tname = *provider\n\tcase lowerName != nil:\n\t\tname = *lowerName\n\t}",
+  "replace": "switch {\n\tcase lowerName != nil:\n\t\tname = *lowerName\n\tcase provider != nil:\n\t\tname = *provider\n\t}"
+ },
+ {
+  "name": "ext-provider-defer-inverted",
+  "file": "extension.go",
+  "find": "if a.deferNextLlmToNextTurn {\n\t\ta.pendingLlm = pending",
+  "replace": "if !a.deferNextLlmToNextTurn {\n\t\ta.pendingLlm = pending"
+ },
+ {
+  "name": "ext-provider-defer-ignored",
+  "file": "extension.go",
+  "find": "if a.deferNextLlmToNextTurn {\n\t\ta.pendingLlm = pending\n\t\treturn nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-provider-pending-not-stored",
+  "file": "extension.go",
+  "find": "\t\ta.pendingLlm = pending\n\t\treturn nil\n\t}\n\tparent := a.currentTurn",
+  "replace": "\t\treturn nil\n\t}\n\tparent := a.currentTurn"
+ },
+ {
+  "name": "ext-provider-parent-root-always",
+  "file": "extension.go",
+  "find": "\tparent := a.currentTurn\n\tif parent == nil {\n\t\tparent = a.root\n\t}\n\treturn t.startLlmRun(hc, a, parent, pending)",
+  "replace": "\tparent := a.root\n\treturn t.startLlmRun(hc, a, parent, pending)"
+ },
+ {
+  "name": "ext-message-end-role",
+  "file": "extension.go",
+  "find": "recGet(message, \"role\") != \"assistant\" || a.currentLlm == nil",
+  "replace": "recGet(message, \"role\") != \"user\" || a.currentLlm == nil"
+ },
+ {
+  "name": "ext-message-end-any-role",
+  "file": "extension.go",
+  "find": "recGet(message, \"role\") != \"assistant\" || a.currentLlm == nil",
+  "replace": "a.currentLlm == nil"
+ },
+ {
+  "name": "ext-message-end-no-llm-check",
+  "file": "extension.go",
+  "find": "recGet(message, \"role\") != \"assistant\" || a.currentLlm == nil",
+  "replace": "recGet(message, \"role\") != \"assistant\""
+ },
+ {
+  "name": "ext-message-end-llm-and",
+  "file": "extension.go",
+  "find": "recGet(message, \"role\") != \"assistant\" || a.currentLlm == nil",
+  "replace": "recGet(message, \"role\") != \"assistant\" && a.currentLlm == nil"
+ },
+ {
+  "name": "ext-message-end-stop-reason-dropped",
+  "file": "extension.go",
+  "find": "\t\t\"stop_reason\", recGet(message, \"stopReason\"),\n\t\t\"usage_metadata\", usage,",
+  "replace": "\t\t\"usage_metadata\", usage,"
+ },
+ {
+  "name": "ext-message-end-defer-not-set",
+  "file": "extension.go",
+  "find": "\ta.currentLlm = nil\n\ta.deferNextLlmToNextTurn = true\n\treturn nil",
+  "replace": "\ta.currentLlm = nil\n\treturn nil"
+ },
+ {
+  "name": "ext-tool-start-name",
+  "file": "extension.go",
+  "find": "Name:     jsToString(toolName),",
+  "replace": "Name:     \"tool\","
+ },
+ {
+  "name": "ext-tool-start-run-type",
+  "file": "extension.go",
+  "find": "RunType:  \"tool\",",
+  "replace": "RunType:  \"chain\","
+ },
+ {
+  "name": "ext-tool-start-metadata-key",
+  "file": "extension.go",
+  "find": "obj(\"toolName\", toolName, \"toolCallId\", toolCallID)",
+  "replace": "obj(\"tool\", toolName, \"toolCallId\", toolCallID)"
+ },
+ {
+  "name": "ext-tool-start-not-tracked",
+  "file": "extension.go",
+  "find": "\ta.tools.set(mapKey(toolCallID), tool)\n\ttool.postRun(hc)",
+  "replace": "\ttool.postRun(hc)"
+ },
+ {
+  "name": "ext-tool-update-guard",
+  "file": "extension.go",
+  "find": "func (t *tracer) toolExecutionUpdate(_ sdk.Context, _ context.Context, data map[string]any) error {\n\ta := t.active\n\tif a == nil {",
+  "replace": "func (t *tracer) toolExecutionUpdate(_ sdk.Context, _ context.Context, data map[string]any) error {\n\ta := t.active\n\tif a != nil {"
+ },
+ {
+  "name": "ext-tool-update-event-name",
+  "file": "extension.go",
+  "find": "tool.addEvent(\"tool_update\",",
+  "replace": "tool.addEvent(\"tool_updated\","
+ },
+ {
+  "name": "ext-tool-update-dropped",
+  "file": "extension.go",
+  "find": "\ttool.addEvent(\"tool_update\", obj(\"partialResult\", recGet(data, \"partialResult\")))\n",
+  "replace": "\t_ = tool\n"
+ },
+ {
+  "name": "ext-tool-end-not-deleted",
+  "file": "extension.go",
+  "find": "\ta.tools.delete(key)\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-tool-end-error-text",
+  "file": "extension.go",
+  "find": "new(\"Tool execution failed\")",
+  "replace": "new(\"Tool failed\")"
+ },
+ {
+  "name": "ext-turn-end-lookup-key",
+  "file": "extension.go",
+  "find": "a.turns.get(mapKey(recGet(data, \"turnIndex\")))",
+  "replace": "a.turns.get(mapKey(recGet(data, \"index\")))"
+ },
+ {
+  "name": "ext-turn-end-no-current-fallback",
+  "file": "extension.go",
+  "find": "\tif turn == nil {\n\t\tturn = a.currentTurn\n\t}\n\tmessage := recGet(data, \"message\")",
+  "replace": "\tmessage := recGet(data, \"message\")"
+ },
+ {
+  "name": "ext-turn-end-llm-kept",
+  "file": "extension.go",
+  "find": "\ta.currentLlm = nil\n\n\tif err := safeEnd(hc, turn",
+  "replace": "\n\tif err := safeEnd(hc, turn"
+ },
+ {
+  "name": "ext-turn-end-toolresults-dropped",
+  "file": "extension.go",
+  "find": "obj(\"messages\", messages, \"toolResults\", recGet(data, \"toolResults\"))",
+  "replace": "obj(\"messages\", messages)"
+ },
+ {
+  "name": "ext-turn-end-outputs-order",
+  "file": "extension.go",
+  "find": "obj(\"messages\", messages, \"toolResults\", recGet(data, \"toolResults\"))",
+  "replace": "obj(\"toolResults\", recGet(data, \"toolResults\"), \"messages\", messages)"
+ },
+ {
+  "name": "ext-turn-end-current-turn-kept",
+  "file": "extension.go",
+  "find": "if turn == a.currentTurn {\n\t\ta.currentTurn = nil\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-turn-end-current-turn-inverted",
+  "file": "extension.go",
+  "find": "if turn == a.currentTurn {\n\t\ta.currentTurn = nil\n\t}",
+  "replace": "if turn != a.currentTurn {\n\t\ta.currentTurn = nil\n\t}"
+ },
+ {
+  "name": "ext-factory-config-error-plain",
+  "file": "extension.go",
+  "find": "panic(factoryError(err))\n\t}\n\tvar cl *client",
+  "replace": "panic(err)\n\t}\n\tvar cl *client"
+ },
+ {
+  "name": "ext-factory-client-error-plain",
+  "file": "extension.go",
+  "find": "panic(factoryError(err))\n\t\t}\n\t}\n\tvar piVersion",
+  "replace": "panic(err)\n\t\t}\n\t}\n\tvar piVersion"
+ },
+ {
+  "name": "ext-factory-invalid-text",
+  "file": "extension.go",
+  "find": "invalid configuration: %s",
+  "replace": "bad configuration: %s"
+ },
+ {
+  "name": "ext-factory-summary-empty-path",
+  "file": "extension.go",
+  "find": "if len(parts) > 0 {\n\t\t\tsummary =",
+  "replace": "if len(parts) > 1 {\n\t\t\tsummary ="
+ },
+ {
+  "name": "ext-factory-summary-first-issue",
+  "file": "extension.go",
+  "find": "first := ze.Issues[0]",
+  "replace": "first := ze.Issues[len(ze.Issues)-1]"
+ },
+ {
+  "name": "ext-factory-full-text",
+  "file": "extension.go",
+  "find": "summary, ze.Error())",
+  "replace": "summary, \"\")"
+ },
+ {
+  "name": "ext-agent-end-guard",
+  "file": "extension.go",
+  "find": "func (t *tracer) agentEnd(ctx sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a == nil {",
+  "replace": "func (t *tracer) agentEnd(ctx sdk.Context, hc context.Context, data map[string]any) error {\n\ta := t.active\n\tif a != nil {"
+ },
+ {
+  "name": "ext-agent-end-tool-error-text",
+  "file": "extension.go",
+  "find": "\"Pi run ended before tool_execution_end\"",
+  "replace": "\"Pi run ended before tool end\""
+ },
+ {
+  "name": "ext-agent-end-tool-outputs",
+  "file": "extension.go",
+  "find": "safeEnd(hc, tool, undef, new(\"Pi run ended before tool_execution_end\"), nil)",
+  "replace": "safeEnd(hc, tool, obj(\"incomplete\", true), new(\"Pi run ended before tool_execution_end\"), nil)"
+ },
+ {
+  "name": "ext-agent-end-tools-not-cleared",
+  "file": "extension.go",
+  "find": "\ta.tools.clear()\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-agent-end-pending-ignored",
+  "file": "extension.go",
+  "find": "\n\tif a.pendingLlm != nil {\n\t\tpending := a.pendingLlm\n\t\ta.pendingLlm = nil\n\t\tparent := a.currentTurn",
+  "replace": "\n\tif false {\n\t\tpending := a.pendingLlm\n\t\ta.pendingLlm = nil\n\t\tparent := a.currentTurn"
+ },
+ {
+  "name": "ext-agent-end-pending-kept",
+  "file": "extension.go",
+  "find": "\n\tif a.pendingLlm != nil {\n\t\tpending := a.pendingLlm\n\t\ta.pendingLlm = nil\n\t\tparent := a.currentTurn",
+  "replace": "\n\tif a.pendingLlm != nil {\n\t\tpending := a.pendingLlm\n\t\tparent := a.currentTurn"
+ },
+ {
+  "name": "ext-agent-end-pending-parent-root",
+  "file": "extension.go",
+  "find": "\t\tparent := a.currentTurn\n\t\tif parent == nil {\n\t\t\tparent = a.root\n\t\t}\n\t\tif err := t.startLlmRun(hc, a, parent, pending); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\tif err := safeEnd(hc, a.currentLlm, undef, new(\"Pi run ended",
+  "replace": "\t\tparent := a.root\n\t\tif err := t.startLlmRun(hc, a, parent, pending); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\tif err := safeEnd(hc, a.currentLlm, undef, new(\"Pi run ended"
+ },
+ {
+  "name": "ext-agent-end-llm-error-text",
+  "file": "extension.go",
+  "find": "\"Pi run ended before LLM message finalized\"",
+  "replace": "\"Pi run ended before LLM finalized\""
+ },
+ {
+  "name": "ext-agent-end-turn-incomplete-key",
+  "file": "extension.go",
+  "find": "safeEnd(hc, turn, obj(\"incomplete\", true), nil, nil)",
+  "replace": "safeEnd(hc, turn, obj(\"interrupted\", true), nil, nil)"
+ },
+ {
+  "name": "ext-agent-end-current-turn-kept",
+  "file": "extension.go",
+  "find": "\ta.currentLlm = nil\n\ta.currentTurn = nil\n\ta.turns.clear()",
+  "replace": "\ta.currentLlm = nil\n\ta.turns.clear()"
+ },
+ {
+  "name": "ext-agent-end-order-turns-before-llm",
+  "file": "extension.go",
+  "find": "\tif err := safeEnd(hc, a.currentLlm, undef, new(\"Pi run ended before LLM message finalized\"), nil); err != nil {\n\t\treturn err\n\t}\n\tfor _, turn := range a.turns.values() {\n\t\tif err := safeEnd(hc, turn, obj(\"incomplete\", true), nil, nil); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n",
+  "replace": "\tfor _, turn := range a.turns.values() {\n\t\tif err := safeEnd(hc, turn, obj(\"incomplete\", true), nil, nil); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\tif err := safeEnd(hc, a.currentLlm, undef, new(\"Pi run ended before LLM message finalized\"), nil); err != nil {\n\t\treturn err\n\t}\n"
+ },
+ {
+  "name": "ext-agent-end-empty-messages",
+  "file": "extension.go",
+  "find": "if len(messages) > 0 {\n\t\tlast := messages",
+  "replace": "if len(messages) > 1 {\n\t\tlast := messages"
+ },
+ {
+  "name": "ext-agent-end-stop-error",
+  "file": "extension.go",
+  "find": "case \"error\":\n\t\t\t\terrMsg",
+  "replace": "case \"length\":\n\t\t\t\terrMsg"
+ },
+ {
+  "name": "ext-agent-end-aborted",
+  "file": "extension.go",
+  "find": "case \"aborted\":",
+  "replace": "case \"abort\":"
+ },
+ {
+  "name": "ext-agent-end-aborted-text",
+  "file": "extension.go",
+  "find": "\"Assistant message was aborted\"",
+  "replace": "\"Assistant message aborted\""
+ },
+ {
+  "name": "ext-agent-end-context-usage-nil",
+  "file": "extension.go",
+  "find": "\tvar contextUsage any = undef\n\tif usage != nil {",
+  "replace": "\tvar contextUsage any = undef\n\tif usage == nil {"
+ },
+ {
+  "name": "ext-agent-end-context-usage-window",
+  "file": "extension.go",
+  "find": "obj(\"tokens\", tokens, \"contextWindow\", usage.ContextWindow, \"percent\", percent)",
+  "replace": "obj(\"tokens\", tokens, \"percent\", percent)"
+ },
+ {
+  "name": "ext-agent-end-context-usage-order",
+  "file": "extension.go",
+  "find": "obj(\"tokens\", tokens, \"contextWindow\", usage.ContextWindow, \"percent\", percent)",
+  "replace": "obj(\"tokens\", tokens, \"percent\", percent, \"contextWindow\", usage.ContextWindow)"
+ },
+ {
+  "name": "ext-agent-end-context-usage-tokens-nil",
+  "file": "extension.go",
+  "find": "if usage.Tokens != nil {\n\t\t\ttokens = *usage.Tokens\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-agent-end-context-usage-percent-nil",
+  "file": "extension.go",
+  "find": "if usage.Percent != nil {\n\t\t\tpercent = *usage.Percent\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-agent-end-context-usage-tokens-undef",
+  "file": "extension.go",
+  "find": "var tokens, percent any\n",
+  "replace": "var tokens, percent any = undef, undef\n"
+ },
+ {
+  "name": "ext-agent-end-loop-result-not-stored",
+  "file": "extension.go",
+  "find": "\ta.loopResult = &loopResult{outputs: obj(\"messages\", converted, \"context_usage\", contextUsage), err: errMsg}\n",
+  "replace": "\t_ = loopResult{outputs: obj(\"messages\", converted, \"context_usage\", contextUsage), err: errMsg}\n"
+ },
+ {
+  "name": "ext-agent-end-root-error-dropped",
+  "file": "extension.go",
+  "find": "safeEnd(hc, a.root, a.loopResult.outputs, a.loopResult.err, nil); err != nil {\n\t\treturn err\n\t}\n\tt.active = nil",
+  "replace": "safeEnd(hc, a.root, a.loopResult.outputs, nil, nil); err != nil {\n\t\treturn err\n\t}\n\tt.active = nil"
+ },
+ {
+  "name": "ext-agent-end-root-active-kept",
+  "file": "extension.go",
+  "find": "\tt.active = nil\n\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// agentSettled",
+  "replace": "\tctx.SetStatus(statusKey, \"LangSmith: traced\")\n\treturn nil\n}\n\n// agentSettled"
+ },
+ {
+  "name": "ext-settled-stale-ge0",
+  "file": "extension.go",
+  "find": "if t.staleSettles > 0 {",
+  "replace": "if t.staleSettles >= 0 {"
+ },
+ {
+  "name": "ext-settled-stale-not-decremented",
+  "file": "extension.go",
+  "find": "\t\tt.staleSettles--\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-settled-guard",
+  "file": "extension.go",
+  "find": "settled := t.active\n\tif settled == nil {",
+  "replace": "settled := t.active\n\tif settled != nil {"
+ },
+ {
+  "name": "ext-settled-active-kept",
+  "file": "extension.go",
+  "find": "\tt.active = nil\n\tif settled.loopResult != nil {",
+  "replace": "\tif settled.loopResult != nil {"
+ },
+ {
+  "name": "ext-settled-loopresult-inverted",
+  "file": "extension.go",
+  "find": "if settled.loopResult != nil {\n\t\tif err := safeEnd(hc, settled.root, settled.loopResult",
+  "replace": "if settled.loopResult == nil {\n\t\tif err := safeEnd(hc, settled.root, settled.loopResult"
+ },
+ {
+  "name": "ext-settled-loopresult-error-dropped",
+  "file": "extension.go",
+  "find": "safeEnd(hc, settled.root, settled.loopResult.outputs, settled.loopResult.err, nil)",
+  "replace": "safeEnd(hc, settled.root, settled.loopResult.outputs, nil, nil)"
+ },
+ {
+  "name": "ext-settled-incomplete-key",
+  "file": "extension.go",
+  "find": "safeEnd(hc, settled.root, obj(\"incomplete\", true), nil, nil)",
+  "replace": "safeEnd(hc, settled.root, obj(\"interrupted\", true), nil, nil)"
+ },
+ {
+  "name": "ext-shutdown-pending-ignored",
+  "file": "extension.go",
+  "find": "\t\tif a.pendingLlm != nil {\n\t\t\tpending := a.pendingLlm\n\t\t\ta.pendingLlm = nil",
+  "replace": "\t\tif false {\n\t\t\tpending := a.pendingLlm\n\t\t\ta.pendingLlm = nil"
+ },
+ {
+  "name": "ext-shutdown-pending-parent-root",
+  "file": "extension.go",
+  "find": "\t\t\tparent := a.currentTurn\n\t\t\tif parent == nil {\n\t\t\t\tparent = a.root\n\t\t\t}\n\t\t\tif err := t.startLlmRun(hc, a, parent, pending)",
+  "replace": "\t\t\tparent := a.root\n\t\t\tif err := t.startLlmRun(hc, a, parent, pending)"
+ },
+ {
+  "name": "ext-shutdown-llm-error-text",
+  "file": "extension.go",
+  "find": "\"Pi session shut down before LLM message finalized\"",
+  "replace": "\"Pi session shut down before LLM finalized\""
+ },
+ {
+  "name": "ext-shutdown-llm-not-ended",
+  "file": "extension.go",
+  "find": "\t\tif err := safeEnd(hc, a.currentLlm, undef, new(\"Pi session shut down before LLM message finalized\"), nil); err != nil {\n\t\t\treturn err\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-shutdown-loopresult-inverted",
+  "file": "extension.go",
+  "find": "\t\tif a.loopResult != nil {\n\t\t\tif err := safeEnd(hc, a.root, a.loopResult.outputs",
+  "replace": "\t\tif a.loopResult == nil {\n\t\t\tif err := safeEnd(hc, a.root, a.loopResult.outputs"
+ },
+ {
+  "name": "ext-shutdown-loopresult-error-dropped",
+  "file": "extension.go",
+  "find": "safeEnd(hc, a.root, a.loopResult.outputs, a.loopResult.err, nil); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t} else {\n\t\t\tif err := safeEnd(hc, a.root, obj(\"shutdown\"",
+  "replace": "safeEnd(hc, a.root, a.loopResult.outputs, nil, nil); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t} else {\n\t\t\tif err := safeEnd(hc, a.root, obj(\"shutdown\""
+ },
+ {
+  "name": "ext-shutdown-key",
+  "file": "extension.go",
+  "find": "obj(\"shutdown\", true)",
+  "replace": "obj(\"shutdown\", false)"
+ },
+ {
+  "name": "ext-shutdown-root-error-text",
+  "file": "extension.go",
+  "find": "\"Pi session shut down before run completed\"",
+  "replace": "\"Pi session shut down\""
+ },
+ {
+  "name": "conv-safeadd-null-counts",
+  "file": "convert.go",
+  "find": "\t\tif isNullish(v) {\n\t\t\tcontinue\n\t\t}\n\t\tf := numOrZero(v)",
+  "replace": "\t\tif isUndef(v) {\n\t\t\tcontinue\n\t\t}\n\t\tf := numOrZero(v)"
+ },
+ {
+  "name": "conv-usage-nullish-error",
+  "file": "convert.go",
+  "find": "Cannot read properties of %s (reading 'role')\", jsToString(message))",
+  "replace": "Cannot read properties of %s (reading 'usage')\", jsToString(message))"
+ },
+ {
+  "name": "conv-usage-cost-unknown-gt",
+  "file": "convert.go",
+  "find": "costUnknown := numOrZero(totalTokens) > 0 &&",
+  "replace": "costUnknown := numOrZero(totalTokens) >= 0 &&"
+ },
+ {
+  "name": "conv-usage-input-tokens-no-cache-read",
+  "file": "convert.go",
+  "find": "\"input_tokens\", safeAdd(recGet(usage, \"input\"), recGet(usage, \"cacheRead\"), recGet(usage, \"cacheWrite\"))",
+  "replace": "\"input_tokens\", safeAdd(recGet(usage, \"input\"), recGet(usage, \"cacheWrite\"))"
+ },
+ {
+  "name": "conv-usage-input-tokens-only-input",
+  "file": "convert.go",
+  "find": "\"input_tokens\", safeAdd(recGet(usage, \"input\"), recGet(usage, \"cacheRead\"), recGet(usage, \"cacheWrite\"))",
+  "replace": "\"input_tokens\", recGet(usage, \"input\")"
+ },
+ {
+  "name": "conv-usage-total-tokens",
+  "file": "convert.go",
+  "find": "\"total_tokens\", totalTokens",
+  "replace": "\"total_tokens\", recGet(usage, \"output\")"
+ },
+ {
+  "name": "conv-usage-detail-key",
+  "file": "convert.go",
+  "find": "\"cache_creation\", recGet(usage, \"cacheWrite\")),\n\t)",
+  "replace": "\"cache_write\", recGet(usage, \"cacheWrite\")),\n\t)"
+ },
+ {
+  "name": "conv-usage-input-cost-no-cache-write",
+  "file": "convert.go",
+  "find": "safeAdd(recGet(cost, \"input\"), recGet(cost, \"cacheRead\"), recGet(cost, \"cacheWrite\"))",
+  "replace": "safeAdd(recGet(cost, \"input\"), recGet(cost, \"cacheRead\"))"
+ },
+ {
+  "name": "conv-usage-output-cost",
+  "file": "convert.go",
+  "find": "metadata.set(\"output_cost\", recGet(cost, \"output\"))",
+  "replace": "metadata.set(\"output_cost\", recGet(cost, \"input\"))"
+ },
+ {
+  "name": "conv-usage-total-cost",
+  "file": "convert.go",
+  "find": "metadata.set(\"total_cost\", totalCost)",
+  "replace": "metadata.set(\"total_cost\", recGet(cost, \"output\"))"
+ },
+ {
+  "name": "conv-usage-cost-details-swapped",
+  "file": "convert.go",
+  "find": "obj(\"cache_read\", recGet(cost, \"cacheRead\"), \"cache_creation\", recGet(cost, \"cacheWrite\"))",
+  "replace": "obj(\"cache_read\", recGet(cost, \"cacheWrite\"), \"cache_creation\", recGet(cost, \"cacheRead\"))"
+ },
+ {
+  "name": "conv-usage-cost-details-key",
+  "file": "convert.go",
+  "find": "metadata.set(\"input_cost_details\"",
+  "replace": "metadata.set(\"cost_details\""
+ },
+ {
+  "name": "conv-usage-key-order",
+  "file": "convert.go",
+  "find": "\"input_tokens\", safeAdd(recGet(usage, \"input\"), recGet(usage, \"cacheRead\"), recGet(usage, \"cacheWrite\")),\n\t\t\"output_tokens\", recGet(usage, \"output\"),",
+  "replace": "\"output_tokens\", recGet(usage, \"output\"),\n\t\t\"input_tokens\", safeAdd(recGet(usage, \"input\"), recGet(usage, \"cacheRead\"), recGet(usage, \"cacheWrite\")),"
+ },
+ {
+  "name": "conv-image-type",
+  "file": "convert.go",
+  "find": "rec.val(\"type\").(string); !isStr || t != \"image\"",
+  "replace": "rec.val(\"type\").(string); !isStr || t != \"images\""
+ },
+ {
+  "name": "conv-image-keeps-original-keys",
+  "file": "convert.go",
+  "find": "out := restOf(rec, \"mimeType\", \"data\")",
+  "replace": "out := restOf(rec, \"mimeType\")"
+ },
+ {
+  "name": "conv-image-keeps-original-keys-2",
+  "file": "convert.go",
+  "find": "out := restOf(rec, \"mimeType\", \"data\")",
+  "replace": "out := restOf(rec, \"data\")"
+ },
+ {
+  "name": "conv-image-missing-fields-tolerated",
+  "file": "convert.go",
+  "find": "if !ok1 || !ok2 {",
+  "replace": "if !ok1 && !ok2 {"
+ },
+ {
+  "name": "conv-normalize-content-no-parts",
+  "file": "convert.go",
+  "find": "out[i] = convertContentPart(p)",
+  "replace": "out[i] = normalizeContentPart(p)"
+ },
+ {
+  "name": "conv-part-tool-call-type",
+  "file": "convert.go",
+  "find": "out := obj(\"type\", \"tool_call\", \"args\", rec.val(\"arguments\"))",
+  "replace": "out := obj(\"type\", \"toolCall\", \"args\", rec.val(\"arguments\"))"
+ },
+ {
+  "name": "conv-part-tool-call-args",
+  "file": "convert.go",
+  "find": "rec.val(\"arguments\"))\n\t\treturn out.spread",
+  "replace": "rec.val(\"args\"))\n\t\treturn out.spread"
+ },
+ {
+  "name": "conv-part-tool-call-match",
+  "file": "convert.go",
+  "find": "rec.val(\"type\") == \"toolCall\" {",
+  "replace": "rec.val(\"type\") == \"tool_call\" {"
+ },
+ {
+  "name": "conv-part-tool-call-rest-type",
+  "file": "convert.go",
+  "find": "out.spread(restOf(rec, \"arguments\", \"type\"))",
+  "replace": "out.spread(restOf(rec, \"arguments\"))"
+ },
+ {
+  "name": "conv-part-tool-call-no-normalize",
+  "file": "convert.go",
+  "find": "return normalizeContentPart(part)\n}\n\nvar errNotRecord",
+  "replace": "return part\n}\n\nvar errNotRecord"
+ },
+ {
+  "name": "conv-messages-role-map",
+  "file": "convert.go",
+  "find": "if role == \"toolResult\" {\n\t\t\trole = \"tool\"",
+  "replace": "if role == \"toolResult\" {\n\t\t\trole = \"tool_result\""
+ },
+ {
+  "name": "conv-messages-role-user",
+  "file": "convert.go",
+  "find": "if role == \"toolResult\" {\n\t\t\trole = \"tool\"",
+  "replace": "if role == \"user\" {\n\t\t\trole = \"tool\""
+ },
+ {
+  "name": "conv-messages-rest-role",
+  "file": "convert.go",
+  "find": "o.spread(restOf(rec, \"role\", \"content\"))",
+  "replace": "o.spread(restOf(rec, \"content\"))"
+ },
+ {
+  "name": "conv-messages-rest-dropped",
+  "file": "convert.go",
+  "find": "out[i] = o.spread(restOf(rec, \"role\", \"content\"))",
+  "replace": "out[i] = o"
+ },
+ {
+  "name": "conv-gemini-role-user",
+  "file": "convert.go",
+  "find": "\tcase \"user\":\n\t\treturn \"user\"",
+  "replace": "\tcase \"user\":\n\t\treturn \"human\""
+ },
+ {
+  "name": "conv-gemini-role-model",
+  "file": "convert.go",
+  "find": "return \"assistant\"\n\tcase \"__proto__\"",
+  "replace": "return \"model\"\n\tcase \"__proto__\""
+ },
+ {
+  "name": "conv-gemini-role-proto",
+  "file": "convert.go",
+  "find": "case \"__proto__\":\n\t\treturn newOmap()",
+  "replace": "case \"__proto__\":\n\t\treturn undef"
+ },
+ {
+  "name": "conv-gemini-role-proto-fn",
+  "file": "convert.go",
+  "find": "\"constructor\", \"__defineGetter__\"",
+  "replace": "\"__defineGetter__\""
+ },
+ {
+  "name": "conv-gemini-role-fn-value",
+  "file": "convert.go",
+  "find": "\"toLocaleString\":\n\t\treturn undef",
+  "replace": "\"toLocaleString\":\n\t\treturn \"x\""
+ },
+ {
+  "name": "conv-gemini-messages-precedence",
+  "file": "convert.go",
+  "find": "p.val(\"contents\").([]any); isArr && isNullish(p.val(\"messages\"))",
+  "replace": "p.val(\"contents\").([]any); isArr"
+ },
+ {
+  "name": "conv-gemini-result-order",
+  "file": "convert.go",
+  "find": "obj(\"role\", geminiRole(role), \"content\", content).spread(restOf(rec, \"role\", \"parts\"))",
+  "replace": "obj(\"content\", content, \"role\", geminiRole(role)).spread(restOf(rec, \"role\", \"parts\"))"
+ },
+ {
+  "name": "conv-gemini-result-rest",
+  "file": "convert.go",
+  "find": "spread(restOf(rec, \"role\", \"parts\"))",
+  "replace": "spread(restOf(rec, \"role\"))"
+ },
+ {
+  "name": "conv-gemini-result-rest-2",
+  "file": "convert.go",
+  "find": "spread(restOf(rec, \"role\", \"parts\"))",
+  "replace": "spread(restOf(rec, \"parts\"))"
+ },
+ {
+  "name": "conv-gemini-outer-key",
+  "file": "convert.go",
+  "find": "return obj(\"messages\", msgs).spread(restOf(p, \"contents\")), nil",
+  "replace": "return obj(\"messages\", msgs).spread(restOf(p, \"messages\")), nil"
+ },
+ {
+  "name": "conv-gemini-outer-rest",
+  "file": "convert.go",
+  "find": "return obj(\"messages\", msgs).spread(restOf(p, \"contents\")), nil",
+  "replace": "return obj(\"messages\", msgs), nil"
+ },
+ {
+  "name": "conv-gemini-outer-name",
+  "file": "convert.go",
+  "find": "return obj(\"messages\", msgs).spread(restOf(p, \"contents\")), nil",
+  "replace": "return obj(\"contents\", msgs).spread(restOf(p, \"contents\")), nil"
+ },
+ {
+  "name": "conv-gemini-part-text",
+  "file": "convert.go",
+  "find": "if text, isStr := rec.val(\"text\").(string); isStr {\n\t\treturn obj(\"type\", \"text\", \"text\", text)",
+  "replace": "if text, isStr := rec.val(\"text\").(string); isStr {\n\t\treturn obj(\"type\", \"text\", \"content\", text)"
+ },
+ {
+  "name": "conv-gemini-part-text-type",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"text\", \"text\", text).spread(restOf(rec, \"text\"))",
+  "replace": "obj(\"type\", \"input_text\", \"text\", text).spread(restOf(rec, \"text\"))"
+ },
+ {
+  "name": "conv-gemini-part-text-not-string",
+  "file": "convert.go",
+  "find": "if text, isStr := rec.val(\"text\").(string); isStr {",
+  "replace": "if text := rec.val(\"text\"); !isNullish(text) {\n\t\ttext, _ := text.(string)"
+ },
+ {
+  "name": "conv-gemini-part-fc-rest",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"function_call\", \"function_call\", call).spread(restOf(rec, \"functionCall\"))",
+  "replace": "obj(\"type\", \"function_call\", \"function_call\", call).spread(rec)"
+ },
+ {
+  "name": "conv-gemini-part-fr-type",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"function_response\", \"function_response\", fr)",
+  "replace": "obj(\"type\", \"tool_result\", \"function_response\", fr)"
+ },
+ {
+  "name": "conv-gemini-part-fr-rest",
+  "file": "convert.go",
+  "find": "spread(restOf(rec, \"functionResponse\"))",
+  "replace": "spread(rec)"
+ },
+ {
+  "name": "conv-gemini-part-iu-type",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"image_url\", \"image_url\", iu)",
+  "replace": "obj(\"type\", \"image\", \"image_url\", iu)"
+ },
+ {
+  "name": "conv-gemini-part-iu-key",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"image_url\", \"image_url\", iu)",
+  "replace": "obj(\"type\", \"image_url\", \"url\", iu)"
+ },
+ {
+  "name": "conv-responses-messages-precedence",
+  "file": "convert.go",
+  "find": "p.val(\"input\").([]any); isArr && isNullish(p.val(\"messages\"))",
+  "replace": "p.val(\"input\").([]any); isArr"
+ },
+ {
+  "name": "conv-responses-input-text",
+  "file": "convert.go",
+  "find": "pr.val(\"type\") == \"input_text\" {",
+  "replace": "pr.val(\"type\") == \"text\" {"
+ },
+ {
+  "name": "conv-responses-input-text-type",
+  "file": "convert.go",
+  "find": "parts[i] = obj(\"type\", \"text\").spread(restOf(pr, \"type\"))",
+  "replace": "parts[i] = obj(\"type\", \"input_text\").spread(restOf(pr, \"type\"))"
+ },
+ {
+  "name": "conv-responses-input-text-rest",
+  "file": "convert.go",
+  "find": "parts[i] = obj(\"type\", \"text\").spread(restOf(pr, \"type\"))",
+  "replace": "parts[i] = obj(\"type\", \"text\").spread(pr)"
+ },
+ {
+  "name": "conv-responses-input-text-no-rest",
+  "file": "convert.go",
+  "find": "parts[i] = obj(\"type\", \"text\").spread(restOf(pr, \"type\"))",
+  "replace": "parts[i] = obj(\"type\", \"text\")"
+ },
+ {
+  "name": "conv-responses-outer-rest",
+  "file": "convert.go",
+  "find": "return obj(\"messages\", msgs).spread(restOf(p, \"input\")), nil",
+  "replace": "return obj(\"messages\", msgs), nil"
+ },
+ {
+  "name": "conv-anthropic-role-user",
+  "file": "convert.go",
+  "find": "isContent && rec.val(\"role\") == \"user\" && everyToolResult(content)",
+  "replace": "isContent && rec.val(\"role\") == \"assistant\" && everyToolResult(content)"
+ },
+ {
+  "name": "conv-anthropic-every-dropped",
+  "file": "convert.go",
+  "find": "isContent && rec.val(\"role\") == \"user\" && everyToolResult(content)",
+  "replace": "isContent && rec.val(\"role\") == \"user\""
+ },
+ {
+  "name": "conv-anthropic-role-tool",
+  "file": "convert.go",
+  "find": "msgs = append(msgs, obj(\"role\", \"tool\").spread(rest).spread(restOf(pr, \"type\")))",
+  "replace": "msgs = append(msgs, obj(\"role\", \"user\").spread(rest).spread(restOf(pr, \"type\")))"
+ },
+ {
+  "name": "conv-anthropic-system-key",
+  "file": "convert.go",
+  "find": "if system := p.val(\"system\"); !isNullish(system) {",
+  "replace": "if system := p.val(\"systemPrompt\"); !isNullish(system) {"
+ },
+ {
+  "name": "conv-anthropic-system-null-msg",
+  "file": "convert.go",
+  "find": "\t\t\t\tif msg == nil {\n\t\t\t\t\treturn nil, errNullRole\n\t\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "conv-anthropic-system-role",
+  "file": "convert.go",
+  "find": "r == \"system\" || r == \"developer\"",
+  "replace": "r == \"system\""
+ },
+ {
+  "name": "conv-anthropic-system-single-block",
+  "file": "convert.go",
+  "find": "isSys && len(arr) == 1 {",
+  "replace": "isSys && len(arr) >= 1 {"
+ },
+ {
+  "name": "conv-anthropic-system-text-type",
+  "file": "convert.go",
+  "find": "isRec && rec.val(\"type\") == \"text\" {\n\t\t\t\t\t\tif text",
+  "replace": "isRec && rec.val(\"type\") == \"input_text\" {\n\t\t\t\t\t\tif text"
+ },
+ {
+  "name": "conv-anthropic-system-text-field",
+  "file": "convert.go",
+  "find": "text, isText := rec.val(\"text\").(string); isText {",
+  "replace": "text, isText := rec.val(\"content\").(string); isText {"
+ },
+ {
+  "name": "conv-anthropic-system-role-value",
+  "file": "convert.go",
+  "find": "obj(\"role\", \"system\", \"content\", content, \"_raw\", system)",
+  "replace": "obj(\"role\", \"developer\", \"content\", content, \"_raw\", system)"
+ },
+ {
+  "name": "conv-anthropic-outer-rest",
+  "file": "convert.go",
+  "find": "return obj(\"messages\", msgs).spread(restOf(p, \"messages\", \"system\")), nil",
+  "replace": "return obj(\"messages\", msgs).spread(restOf(p, \"messages\")), nil"
+ },
+ {
+  "name": "conv-payload-non-record",
+  "file": "convert.go",
+  "find": "return obj(\"payload\", payload), nil",
+  "replace": "return payload, nil"
+ },
+ {
+  "name": "conv-payload-unknown-shape",
+  "file": "convert.go",
+  "find": "\treturn payload, nil\n}\n\n// everyToolResult",
+  "replace": "\treturn obj(\"payload\", payload), nil\n}\n\n// everyToolResult"
+ },
+ {
+  "name": "cfg-bool-yes",
+  "file": "config.go",
+  "find": "case \"1\", \"true\", \"yes\", \"on\":",
+  "replace": "case \"1\", \"true\", \"on\":"
+ },
+ {
+  "name": "cfg-bool-on",
+  "file": "config.go",
+  "find": "case \"1\", \"true\", \"yes\", \"on\":",
+  "replace": "case \"1\", \"true\", \"yes\":"
+ },
+ {
+  "name": "cfg-bool-one",
+  "file": "config.go",
+  "find": "case \"1\", \"true\", \"yes\", \"on\":",
+  "replace": "case \"true\", \"yes\", \"on\":"
+ },
+ {
+  "name": "cfg-bool-true",
+  "file": "config.go",
+  "find": "case \"1\", \"true\", \"yes\", \"on\":",
+  "replace": "case \"1\", \"yes\", \"on\":"
+ },
+ {
+  "name": "cfg-bool-off",
+  "file": "config.go",
+  "find": "case \"0\", \"false\", \"no\", \"off\":",
+  "replace": "case \"0\", \"false\", \"no\":"
+ },
+ {
+  "name": "cfg-bool-no",
+  "file": "config.go",
+  "find": "case \"0\", \"false\", \"no\", \"off\":",
+  "replace": "case \"0\", \"false\", \"off\":"
+ },
+ {
+  "name": "cfg-bool-zero",
+  "file": "config.go",
+  "find": "case \"0\", \"false\", \"no\", \"off\":",
+  "replace": "case \"false\", \"no\", \"off\":"
+ },
+ {
+  "name": "cfg-bool-false",
+  "file": "config.go",
+  "find": "case \"0\", \"false\", \"no\", \"off\":",
+  "replace": "case \"0\", \"no\", \"off\":"
+ },
+ {
+  "name": "cfg-bool-case",
+  "file": "config.go",
+  "find": "switch jsToLowerCase(jsTrim(x)) {",
+  "replace": "switch jsTrim(x) {"
+ },
+ {
+  "name": "cfg-bool-trim",
+  "file": "config.go",
+  "find": "switch jsToLowerCase(jsTrim(x)) {",
+  "replace": "switch jsToLowerCase(x) {"
+ },
+ {
+  "name": "cfg-bool-unknown-false",
+  "file": "config.go",
+  "find": "\t\t\treturn &f\n\t\t}\n\t}\n\treturn nil\n}",
+  "replace": "\t\t\treturn &f\n\t\t}\n\t\tf := false\n\t\treturn &f\n\t}\n\treturn nil\n}"
+ },
+ {
+  "name": "cfg-bool-native-inverted",
+  "file": "config.go",
+  "find": "\tcase bool:\n\t\treturn &x\n\tcase string:",
+  "replace": "\tcase bool:\n\t\tx = !x\n\t\treturn &x\n\tcase string:"
+ },
+ {
+  "name": "cfg-json-syntax-error-raises",
+  "file": "config.go",
+  "find": "\tif !ok {\n\t\treturn undef\n\t}\n\treturn v\n}",
+  "replace": "\tif !ok {\n\t\treturn nil\n\t}\n\treturn v\n}"
+ },
+ {
+  "name": "cfg-env-api-url-suffix",
+  "file": "config.go",
+  "find": "{\"api_url\", \"ENDPOINT\"}",
+  "replace": "{\"api_url\", \"API_URL\"}"
+ },
+ {
+  "name": "cfg-env-metadata-suffix",
+  "file": "config.go",
+  "find": "{\"metadata\", \"METADATA\"}",
+  "replace": "{\"metadata\", \"META\"}"
+ },
+ {
+  "name": "cfg-zod-parsed-nan",
+  "file": "config.go",
+  "find": "case math.IsNaN(x):\n\t\t\treturn \"nan\"",
+  "replace": "case math.IsNaN(x):\n\t\t\treturn \"number\""
+ },
+ {
+  "name": "cfg-validate-replicas-type",
+  "file": "config.go",
+  "find": "invalidType(\"array\", v, []any{\"replicas\"})",
+  "replace": "invalidType(\"object\", v, []any{\"replicas\"})"
+ },
+ {
+  "name": "cfg-validate-replicas-has",
+  "file": "config.go",
+  "find": "pc.Replicas, pc.HasReplicas = reps, true",
+  "replace": "pc.Replicas, pc.HasReplicas = reps, len(reps) > 0"
+ },
+ {
+  "name": "cfg-replica-not-object",
+  "file": "config.go",
+  "find": "return replicaCfg{}, []zodIssue{invalidType(\"object\", v, path)}",
+  "replace": "return replicaCfg{}, nil"
+ },
+ {
+  "name": "cfg-replica-alias-url",
+  "file": "config.go",
+  "find": "pick(\"api_url\", \"apiUrl\")",
+  "replace": "pick(\"api_url\", \"url\")"
+ },
+ {
+  "name": "cfg-replica-alias-key",
+  "file": "config.go",
+  "find": "pick(\"api_key\", \"apiKey\")",
+  "replace": "pick(\"api_key\", \"key\")"
+ },
+ {
+  "name": "cfg-replica-alias-project",
+  "file": "config.go",
+  "find": "pick(\"project\", \"projectName\")",
+  "replace": "pick(\"project\", \"project_name\")"
+ },
+ {
+  "name": "cfg-replica-alias-precedence",
+  "file": "config.go",
+  "find": "if x := rec.val(a); x != nil && !isUndef(x) {\n\t\t\treturn x\n\t\t}\n\t\treturn rec.val(b)",
+  "replace": "if x := rec.val(b); x != nil && !isUndef(x) {\n\t\t\treturn x\n\t\t}\n\t\treturn rec.val(a)"
+ },
+ {
+  "name": "cfg-replica-alias-null-wins",
+  "file": "config.go",
+  "find": "if x := rec.val(a); x != nil && !isUndef(x) {",
+  "replace": "if x := rec.val(a); !isUndef(x) {"
+ },
+ {
+  "name": "cfg-replica-updates-accepted",
+  "file": "config.go",
+  "find": "\t\t} else {\n\t\t\tissues = append(issues, invalidType(\"record\", u, sub(\"updates\")))\n\t\t}",
+  "replace": "\t\t}"
+ },
+ {
+  "name": "cfg-replica-updates-proto",
+  "file": "config.go",
+  "find": "if !m.has(\"__proto__\") {\n\t\treturn m\n\t}",
+  "replace": "if true {\n\t\treturn m\n\t}"
+ },
+ {
+  "name": "cfg-replica-key-path",
+  "file": "config.go",
+  "find": "[]any(nil), path...), k) }",
+  "replace": "[]any(nil), path...)) }"
+ },
+ {
+  "name": "cfg-home-env-first",
+  "file": "config.go",
+  "find": "if h, ok := os.LookupEnv(\"HOME\"); ok {\n\t\treturn h\n\t}",
+  "replace": "if h, ok := os.LookupEnv(\"USERPROFILE\"); ok {\n\t\treturn h\n\t}"
+ },
+ {
+  "name": "cfg-global-path",
+  "file": "config.go",
+  "find": "filepath.Join(home, \".pi\", \"langsmith.json\")",
+  "replace": "filepath.Join(home, \".pi\", \"config.json\")"
+ },
+ {
+  "name": "cfg-local-path",
+  "file": "config.go",
+  "find": "filepath.Join(cwd, \".pi\", \"langsmith.json\")",
+  "replace": "filepath.Join(cwd, \".pig\", \"langsmith.json\")"
+ },
+ {
+  "name": "cfg-global-dir",
+  "file": "config.go",
+  "find": "filepath.Join(home, \".pi\", \"langsmith.json\")",
+  "replace": "filepath.Join(home, \".config\", \"langsmith.json\")"
+ },
+ {
+  "name": "cfg-precedence-env-first",
+  "file": "config.go",
+  "find": "for _, pc := range [...]*partialConfig{globalConfig, localConfig, envConfig} {",
+  "replace": "for _, pc := range [...]*partialConfig{envConfig, globalConfig, localConfig} {"
+ },
+ {
+  "name": "cfg-precedence-local-first",
+  "file": "config.go",
+  "find": "for _, pc := range [...]*partialConfig{globalConfig, localConfig, envConfig} {",
+  "replace": "for _, pc := range [...]*partialConfig{localConfig, globalConfig, envConfig} {"
+ },
+ {
+  "name": "cfg-precedence-global-last",
+  "file": "config.go",
+  "find": "for _, pc := range [...]*partialConfig{globalConfig, localConfig, envConfig} {",
+  "replace": "for _, pc := range [...]*partialConfig{localConfig, envConfig, globalConfig} {"
+ },
+ {
+  "name": "cfg-merge-enabled",
+  "file": "config.go",
+  "find": "\t\tif pc.Enabled != nil {\n\t\t\tcfg.Enabled = *pc.Enabled\n\t\t}",
+  "replace": "\t\tif pc.Enabled != nil && !cfg.Enabled {\n\t\t\tcfg.Enabled = *pc.Enabled\n\t\t}"
+ },
+ {
+  "name": "cfg-merge-project",
+  "file": "config.go",
+  "find": "\t\tif pc.Project != nil {\n\t\t\tcfg.Project = *pc.Project\n\t\t}",
+  "replace": "\t\tif pc.Project != nil && cfg.Project == defaultProject {\n\t\t\tcfg.Project = *pc.Project\n\t\t}"
+ },
+ {
+  "name": "cfg-merge-metadata-dropped",
+  "file": "config.go",
+  "find": "\t\tif pc.Metadata != nil {\n\t\t\tcfg.Metadata = pc.Metadata\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cfg-merge-replicas-append",
+  "file": "config.go",
+  "find": "\t\t\tcfg.Replicas = pc.Replicas\n",
+  "replace": "\t\t\tcfg.Replicas = append(cfg.Replicas, pc.Replicas...)\n"
+ },
+ {
+  "name": "cfg-options-lookup-ignored",
+  "file": "config.go",
+  "find": "\t\tif options.Lookup != nil {\n\t\t\tlookup = options.Lookup\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "meta-purpose",
+  "file": "metadata.go",
+  "find": "lsAgentPurpose       = \"coding\"",
+  "replace": "lsAgentPurpose       = \"code\""
+ },
+ {
+  "name": "meta-runtime",
+  "file": "metadata.go",
+  "find": "lsAgentRuntime       = \"Pi\"",
+  "replace": "lsAgentRuntime       = \"pi\""
+ },
+ {
+  "name": "meta-git-cache-write",
+  "file": "metadata.go",
+  "find": "\tif ctx.Err() == nil {\n\t\tgitInfoMu.Lock()\n\t\tgitInfoCache[cwd] = info",
+  "replace": "\tif ctx.Err() != nil {\n\t\tgitInfoMu.Lock()\n\t\tgitInfoCache[cwd] = info"
+ },
+ {
+  "name": "meta-git-branch-sha-swapped",
+  "file": "metadata.go",
+  "find": "info := &gitInfo{GitBranch: branch, GitCommitSHA: sha}",
+  "replace": "info := &gitInfo{GitBranch: sha, GitCommitSHA: branch}"
+ },
+ {
+  "name": "meta-remote-name-leading-slash-one",
+  "file": "metadata.go",
+  "find": "name = strings.TrimLeft(repoPath, \"/\")",
+  "replace": "name = strings.TrimPrefix(repoPath, \"/\")"
+ },
+ {
+  "name": "meta-remote-name-git-suffix",
+  "file": "metadata.go",
+  "find": "name = strings.TrimSuffix(name, \".git\")",
+  "replace": ""
+ },
+ {
+  "name": "meta-remote-name-empty",
+  "file": "metadata.go",
+  "find": "\tif name == \"\" {\n\t\treturn \"\", \"\", \"\", false\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ext-root-replica-key-empty-kept",
+  "file": "extension.go",
+  "find": "if r.APIKey != nil && *r.APIKey != \"\" {",
+  "replace": "if r.APIKey != nil {"
+ }
+]

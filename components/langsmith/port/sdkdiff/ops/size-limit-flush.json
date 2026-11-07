@@ -1,0 +1,120 @@
+{
+  "name": "size-limit-flush",
+  "description": "batch_ingest_config.size_limit=2: the queue drains as soon as it is over the limit into three concurrent batches; which reaches the wire first is scheduler order, so the replay compares them as a multiset (unorderedDrain).",
+  "unorderedDrain": true,
+  "mockls": {
+    "info": {
+      "version": "mock",
+      "license_expiration_time": null,
+      "batch_ingest_config": {
+        "use_multipart_endpoint": true,
+        "scale_up_qsize_trigger": 1000,
+        "scale_up_nthreads_limit": 16,
+        "scale_down_nempty_trigger": 4,
+        "size_limit": 2,
+        "size_limit_bytes": 20971520
+      },
+      "instance_flags": {
+        "gzip_body_enabled": false
+      }
+    }
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "createChild",
+      "parent": "root",
+      "as": "a",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "start_time": 1790000000020,
+        "name": "a"
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "a"
+    },
+    {
+      "op": "createChild",
+      "parent": "root",
+      "as": "b",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000003",
+        "start_time": 1790000000030,
+        "name": "b"
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "b"
+    },
+    {
+      "op": "end",
+      "run": "b",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "b"
+    },
+    {
+      "op": "end",
+      "run": "a",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "a"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

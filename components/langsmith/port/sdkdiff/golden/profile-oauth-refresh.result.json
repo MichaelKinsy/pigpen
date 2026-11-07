@@ -1,0 +1,10 @@
+{
+  "name": "profile-oauth-refresh",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:40665",
+  "console": [],
+  "errors": [],
+  "filesAfter": {
+    "profile.json": "{\n  \"current_profile\": \"dev\",\n  \"profiles\": {\n    \"dev\": {\n      \"api_url\": \"http://127.0.0.1:40665\",\n      \"oauth\": {\n        \"access_token\": \"tok-new\",\n        \"refresh_token\": \"ref-2\",\n        \"expires_at\": \"2026-11-07T00:21:58.332Z\"\n      }\n    }\n  }\n}\n"
+  }
+}

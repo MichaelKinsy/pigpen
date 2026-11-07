@@ -1,0 +1,37 @@
+{
+ "contract": [
+  "emits the coding-agent-v1 contract on every run type",
+  "increments turn_number per user prompt within a thread"
+ ],
+ "host-options": [
+  "enables tracing from an options-provided config",
+  "nests agent runs under a host-provided parent run tree",
+  "nests agent runs under the current traceable run"
+ ],
+ "late-settle": [
+  "ignores a late agent_settled from the previous prompt"
+ ],
+ "legacy-runtime": [
+  "still ends the trace at agent_end on Pi without agent_settled"
+ ],
+ "normalize": [
+  "converts a pi image part to the LangChain v1 shape",
+  "passes text parts through unchanged",
+  "leaves malformed/partial image parts untouched",
+  "normalizes image parts in user message content",
+  "maps toolResult to role 'tool' and normalizes image content (the `read` tool path)",
+  "leaves string user content untouched",
+  "still converts assistant tool calls and never sees images there",
+  "normalizes image parts in tool result content",
+  "passes through non-record results"
+ ],
+ "trace": [
+  "openai responses",
+  "anthropic",
+  "gemini",
+  "overflow compaction stays in the prompt's trace"
+ ],
+ "usage": [
+  "omits cost fields when tokens \u003e 0 but pi reports zero cost, so LangSmith prices it"
+ ]
+}

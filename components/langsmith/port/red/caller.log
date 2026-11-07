@@ -1,0 +1,11 @@
+lane LsCaller, red run: caller_test.go + caller_golden_test.go (+ testdata/caller_golden.json from the real langsmith 0.10.5)
+against the contract stub caller.go (every function `panic("unported: ...")`):
+
+  go test ./...   (xd6702, isolated module with the stub)
+  ./caller_golden_test.go:211:38: se.ErrorName undefined (type *statusError has no field or method ErrorName)
+  ./caller_golden_test.go:255:5: undefined: isLangSmithConflictError
+  ./caller_golden_test.go:268:19: undefined: retryDelay
+  ./caller_test.go:69:4: c.sleep undefined (type *asyncCaller has no field or method sleep)
+  ./caller_test.go:69:13: c.jitter undefined (type *asyncCaller has no field or method jitter)
+  ./caller_test.go:106:4: c.mu undefined (type *asyncCaller has no field or method mu)
+  FAIL (build failed: the stub has no clock seams, no retryDelay, no ErrorName, no queue state)

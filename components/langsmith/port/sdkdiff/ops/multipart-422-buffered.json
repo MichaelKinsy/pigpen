@@ -1,0 +1,98 @@
+{
+  "name": "multipart-422-buffered",
+  "description": "A 422 on the streamed multipart upload: console.warn, then a buffered (content-length) retry; later requests stay buffered.",
+  "mockls": {
+    "faults": [
+      {
+        "route": "multipart",
+        "calls": [
+          1
+        ],
+        "status": 422,
+        "body": "chunked unsupported"
+      }
+    ]
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "ok": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "sleep",
+      "ms": 600
+    },
+    {
+      "op": "runTree",
+      "as": "r2",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "r2"
+    },
+    {
+      "op": "end",
+      "run": "r2",
+      "outputs": {
+        "ok": 2
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "r2"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

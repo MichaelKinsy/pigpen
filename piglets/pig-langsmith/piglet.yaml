@@ -1,0 +1,21 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with langsmith: trace your sessions to LangSmith. Opt-in: off until TRACE_TO_LANGSMITH is set.
+name: pig-langsmith
+description: "PiG with langsmith: traces each agent run, turn, LLM call and tool call of a session to LangSmith, with token usage, git and repository attribution, replicas, sampling and redaction, in the runs and batches the official Pi extension sends. Off until TRACE_TO_LANGSMITH=true and an API key are set. No Node."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  langsmith: local:../../components/langsmith
+extensions:
+  # /langsmith-tracing and the tracing hooks. Registers no tool. Sends nothing until enabled (LangChain, @langchain/langsmith-pi-extension 0.2.1, MIT).
+  - name: langsmith
+    origins: [package:langsmith]
+    tools: []
+skills: []
+# The tracing extension adds no tool or skill, so the user's own extensions and skills stay available beside it.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

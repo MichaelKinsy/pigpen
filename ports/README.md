@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 1 · review: 11 · done: 19
+Status: queued: 2 · porting: 2 · review: 11 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -43,6 +43,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 | `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`bb92a7774141`](https://github.com/obra/superpowers/commit/bb92a77741419a4ab5f06e711a283343f1ada0c3) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v7.0.0, commit bb92a77741419a4ab5f06e711a283343f1ada0c3. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 | `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
+| `langsmith-pi-extension` | [langsmith-pi-extension](https://github.com/langchain-ai/langsmith-pi-extension)<br>[langsmith-sdk (JavaScript, langsmith 0.10.5)](https://github.com/langchain-ai/langsmith-sdk) | [`b0d83c3c3bc9`](https://github.com/langchain-ai/langsmith-pi-extension/commit/b0d83c3c3bc994fc7570f2bfc7b12561b8282bef)<br>[`ad399f1da7a7`](https://github.com/langchain-ai/langsmith-sdk/commit/ad399f1da7a775119eda41e2644be1c050153445) | MIT<br>MIT | LangChain<br>LangChain | `components/langsmith`<br>`piglets/pig-langsmith` | `pigpen-langsmith` | porting | Go port of @langchain/langsmith-pi-extension 0.2.1, https://github.com/langchain-ai/langsmith-pi-extension, by LangChain (MIT, Copyright 2026 LangChain), at commit b0d83c3c3bc994fc7570f2bfc7b12561b8282bef. It re-implements the parts of langsmith-sdk (JavaScript, langsmith 0.10.5) (https://github.com/langchain-ai/langsmith-sdk, by LangChain, MIT, commit ad399f1da7a775119eda41e2644be1c050153445) that the extension reaches. |
 
 ## How to read it
 
@@ -242,3 +243,8 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.
 - Upstream path: `extensions` in pi-tweaks
+
+### `langsmith-pi-extension`: langsmith-pi-extension (LangSmith tracing)
+
+- Kind: port. Official LangChain extension: traces Pi sessions to LangSmith (agent runs, turns, LLM calls, tool calls, usage, replicas, redaction, sampling) through a Go re-implementation of the langsmith JS SDK run tree and batching client, wire-compatible with the original.
+- Upstream path: `js` in langsmith-sdk (JavaScript, langsmith 0.10.5)

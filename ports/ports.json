@@ -695,7 +695,7 @@
       ],
       "lane": "pigpen-langsmith",
       "status": "porting",
-      "credit": "Go port of @langchain/langsmith-pi-extension 0.2.1, https://github.com/langchain-ai/langsmith-pi-extension, by LangChain (MIT, Copyright 2026 LangChain), at commit b0d83c3c3bc994fc7570f2bfc7b12561b8282bef. It re-implements the parts of the LangSmith JavaScript SDK (langsmith 0.10.5, https://github.com/langchain-ai/langsmith-sdk, by LangChain, MIT, commit ad399f1da7a775119eda41e2644be1c050153445) that the extension reaches."
+      "credit": "Go port of @langchain/langsmith-pi-extension 0.2.1, https://github.com/langchain-ai/langsmith-pi-extension, by LangChain (MIT, Copyright 2026 LangChain), at commit b0d83c3c3bc994fc7570f2bfc7b12561b8282bef. It re-implements the parts of langsmith-sdk (JavaScript, langsmith 0.10.5) (https://github.com/langchain-ai/langsmith-sdk, by LangChain, MIT, commit ad399f1da7a775119eda41e2644be1c050153445) that the extension reaches."
     }
   ]
 }

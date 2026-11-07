@@ -1,0 +1,26 @@
+Large-payload profile of the Go LangSmith extension (workload e of port/perf), for the SDK frame-decode lane.
+
+Build profiled: pig 0.7.0+1.5.0 ($PIGEQ_PIG = /home/kinsy/ls-work/bin/pig, sha256 0e48ecf5ba57a153...), PiG source checkout /home/kinsy/ls-work/pig-src at 0382a61c16943486f2d12baf67a7df7598a179f9,
+SDK dir /home/kinsy/ls-work/scratch/root/pighome/state/pigsdk/sdk-5ee25f8133d42249 (github.com/MichaelKinsy/PiG/extensions/sdk v0.7.0), Go go1.27.3 linux/amd64, extension = components/langsmith/extensions/langsmith of branch feat/langsmith-pi.
+
+Command (Mac worktree ~/work/pigpen-langsmith, runs on xd6702 in tern-ci, LS_CPUS=3):
+  components/langsmith/port/perf/run.sh go --samples 1 --workloads e,d100 --keep-going --profile /home/kinsy/ls-work/scratch/LsPerf/prof
+Profiles of the extension process (CPU from process start, allocs with MemProfileRate 4096) land in <prof>/e-0 and <prof>/d100-0 (copies here).
+Read: go tool pprof -top -cum -nodecount=45 e-0/*.cpu.pprof ; go tool pprof -sample_index=alloc_space -top e-0/*.allocs.pprof
+
+Workload e (perf.py large_turns): one prompt, 100 scripted model requests (99 tool turns + final text) -> 200-message conversation; six `read` of a 48 KB text file,
+three `read` of 180x180 noise PNGs (97 KB), two 100 KB assistant texts; the provider payload grows to about 1 MB (43 MB of before_provider_request payloads in total);
+tracing on with mockls. The extension subscribes to before_agent_start, turn_start, before_provider_request, message_end, tool_execution_*, turn_end, agent_end, agent_settled, session_*.
+
+Result (n=1, profiled run, so overhead included): extension CPU 5.41 s of which
+  sdk.(*Extension).handleArmedRequest 44% -> sdk/json.Unmarshal 41%; sdk.(*conn).readLoop -> json.UnmarshalFrame 35% = checkValid 33% (a full validation scan: stateInString/skip) + unmarshal;
+  decodeState.objectInterface/unquote/literalInterface (the any-tree) ~25%.
+  port code (serializeForTracing/buildMultipart/appendValue): ~5% CPU.
+Allocation 1.05 GB total (alloc_space): sdk/json.appendString 21% (port serialisation path), jsontext.Value.UnmarshalJSON 19% (frame copy), conn.readFrame 19% (frame buffer),
+  json.unquote 19% + unquoteBytes 9% + objectInterface 8% (the any-tree) => the SDK decode path is ~56% of allocations.
+Unprofiled, same machine, interleaved with TS-in-pig (smoke n=1): work_ms 5344 (go) vs 3252 (ts) vs 1900 (pi); ext CPU 4730 vs 3050 ms.
+Proposal: do not run checkValid on a frame the host framed itself; avoid the second copy of the frame (readFrame then jsontext.Value); consider exposing raw JSON for event payloads.
+
+d1000-0 (workload d1000: 100 prompts x 10 tool calls, 1100 model requests, 480 MiB of provider payloads through the extension; profiled run 155 s, 150.6 s CPU):
+  handleArmedRequest 55.8%, sdk/json.Unmarshal 53.7% (objectInterface 41.6%, unquote 15%), UnmarshalFrame 25.5% of which checkValid 24.4% (22.6 s flat), mallocgc 24.8%;
+  port code (langsmith.*) is not in the top 22. Unprofiled interleaved basket (n=15, data/<name>/summary.md): d1000 work 89 s Go vs 57 s ts vs ~25 s pi; ext CPU 88 s vs 49 s.

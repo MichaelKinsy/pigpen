@@ -1,0 +1,101 @@
+{
+  "name": "replicas-projects",
+  "description": "Replicas with another project (ids remapped), the primary project (ids kept) and updates applied to PATCH only.",
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "main",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        },
+        "replicas": [
+          {
+            "apiUrl": "{{endpoint}}",
+            "apiKey": "k-main",
+            "projectName": "main"
+          },
+          {
+            "apiUrl": "{{endpoint}}",
+            "apiKey": "k-other",
+            "projectName": "other",
+            "updates": {
+              "metadata": {
+                "replica": "other"
+              },
+              "tags": [
+                "r"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "createChild",
+      "parent": "root",
+      "as": "k",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "start_time": 1790000000020,
+        "name": "k",
+        "run_type": "tool",
+        "inputs": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "k"
+    },
+    {
+      "op": "end",
+      "run": "k",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "k"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ],
+  "unorderedDrain": true
+}

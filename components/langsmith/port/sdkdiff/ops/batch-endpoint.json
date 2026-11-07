@@ -1,0 +1,97 @@
+{
+  "name": "batch-endpoint",
+  "description": "/info says use_multipart_endpoint=false: runs go to /runs/batch as JSON.",
+  "mockls": {
+    "info": {
+      "version": "mock",
+      "license_expiration_time": null,
+      "batch_ingest_config": {
+        "use_multipart_endpoint": false,
+        "scale_up_qsize_trigger": 1000,
+        "scale_up_nthreads_limit": 16,
+        "scale_down_nempty_trigger": 4,
+        "size_limit": 100,
+        "size_limit_bytes": 20971520
+      },
+      "instance_flags": {
+        "gzip_body_enabled": false
+      }
+    }
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "createChild",
+      "parent": "root",
+      "as": "k",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000002",
+        "start_time": 1790000000020,
+        "name": "k",
+        "run_type": "tool",
+        "inputs": {
+          "a": 1
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "k"
+    },
+    {
+      "op": "end",
+      "run": "k",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "k"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "ok": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

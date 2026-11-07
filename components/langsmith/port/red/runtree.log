@@ -1,0 +1,8 @@
+LsRunTree red state: the golden vectors (testdata/runtree_golden.json, 103 scenarios, 313 client calls) were generated from
+the real JS RunTree (port/tools/gen/runtree-golden.mjs) before runtree.go was written; against the contract stubs
+(runTree/newRunTree panic with "unported: runtree.go ...") every scenario would panic, no stub run was recorded.
+First run of the finished port (scratch module, others' client stubbed): 2 failures, both fixed:
+  TestRunTreeGolden/root_defaults  name "" was sent where the scenario had no name (an absent name is not expressible
+                                   in runTreeConfig; scenario now names the run "")
+  TestRunTreeGeneratedIDs          test expectation typo (0x018bcfe5687b written as ...6d7b)
+Second run: ok (103 golden scenarios + unit tests); go test -race -count=3 ok; go vet linux/darwin/windows clean.

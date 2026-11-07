@@ -1,0 +1,10 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-07",
+  "languages": ["go"],
+  "notes": [
+    "Go only. langsmith, a Go port of LangChain's @langchain/langsmith-pi-extension 0.2.1 (MIT) with the parts of the LangSmith JavaScript SDK it sends through: each agent run, turn, LLM call and tool call of a session traced to LangSmith. Run npm run stage before using its generated manifest under dist/staged.",
+    "Opt-in: it sends nothing until TRACE_TO_LANGSMITH=true and an API key are set; /langsmith-tracing shows the state. The langsmith Package also installs on its own with pig install.",
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only the Go extension on linux/amd64 has been run; the other targets are compile-checked only and are not a support claim."
+  ]
+}

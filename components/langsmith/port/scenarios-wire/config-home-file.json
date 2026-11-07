@@ -1,0 +1,133 @@
+{
+  "name": "config-home-file",
+  "description": "User-level $HOME/.pi/langsmith.json, overridden by the workspace file for the keys both set. The file is written by a setup command under the lane's HOME (pigeq's homeFiles would put it in PIG_HOME on a pig lane, where the original, which reads process.env.HOME, cannot see it): every lane sees it at the same path.",
+  "setup": [
+    [
+      "sh",
+      "-c",
+      "mkdir -p \"$HOME/.pi\" && printf '%s' '{\"enabled\":true,\"api_url\":\"{{server:ls}}\",\"api_key\":\"home-key\",\"project\":\"home-proj\",\"metadata\":{\"a\":\"home\",\"b\":\"home\"}}' > \"$HOME/.pi/langsmith.json\""
+    ]
+  ],
+  "commands": {
+    "git": {}
+  },
+  "files": {
+    ".pi/langsmith.json": "{\"project\":\"ws-proj\",\"metadata\":{\"b\":\"ws\"}}"
+  },
+  "servers": {
+    "ls": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/info",
+          "json": {
+            "version": "mock",
+            "license_expiration_time": null,
+            "batch_ingest_config": {
+              "use_multipart_endpoint": true,
+              "scale_up_qsize_trigger": 1000,
+              "scale_up_nthreads_limit": 16,
+              "scale_down_nempty_trigger": 4,
+              "size_limit": 100,
+              "size_limit_bytes": 20971520
+            },
+            "instance_flags": {
+              "gzip_body_enabled": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs/batch",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs",
+          "json": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/runs/*",
+          "json": {}
+        }
+      ],
+      "recordHeaders": [
+        "x-api-key",
+        "x-tenant-id",
+        "authorization",
+        "content-encoding"
+      ]
+    }
+  },
+  "env": {},
+  "llm": [
+    {
+      "text": "ok"
+    }
+  ],
+  "steps": [
+    {
+      "rpc": {
+        "type": "prompt",
+        "message": "hello"
+      }
+    }
+  ],
+  "settleMs": 700,
+  "tailMs": 1500,
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "normalize": [
+    {
+      "pattern": "----LangSmithFormBoundary[0-9a-z]+",
+      "replacement": "<boundary>"
+    },
+    {
+      "pattern": "[0-9]{8}T[0-9]{12}Z",
+      "replacement": "<ts>"
+    },
+    {
+      "pattern": "\"(start_time|end_time|timestamp|durationMs)\":[0-9]+",
+      "replacement": "\"$1\":<ts:num>"
+    },
+    {
+      "pattern": "\"role\":\"system\",\"content\":\"(?:[^\"\\\\]|\\\\.)*\"",
+      "replacement": "\"role\":\"system\",\"content\":\"<host-prompt>\""
+    },
+    {
+      "pattern": "\"sections\":\\{.*?\\},\"timestamp\"",
+      "replacement": "\"sections\":\"<host-prompt>\",\"timestamp\""
+    },
+    {
+      "pattern": "\"local_username\":\"[^\"]*\"",
+      "replacement": "\"local_username\":\"<user>\""
+    },
+    {
+      "pattern": "\"runtime\":\"(node|go)\"",
+      "replacement": "\"runtime\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk\":\"[^\"]*\"",
+      "replacement": "\"sdk\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk_version\":\"[^\"]*\"",
+      "replacement": "\"sdk_version\":\"<d1>\""
+    },
+    {
+      "pattern": "length=[0-9]+",
+      "replacement": "length=<n>"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "name": "multipart-400-no-retry",
+  "description": "A 400 is not retried: console.warn with the failure and the context line.",
+  "mockls": {
+    "faults": [
+      {
+        "route": "multipart",
+        "status": 400,
+        "body": "bad request"
+      }
+    ]
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {
+        "apiUrl": "{{endpoint}}",
+        "apiKey": "ls-key"
+      }
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "ok": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

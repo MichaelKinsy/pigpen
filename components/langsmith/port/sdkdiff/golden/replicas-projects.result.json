@@ -1,0 +1,8 @@
+{
+  "name": "replicas-projects",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:44831",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

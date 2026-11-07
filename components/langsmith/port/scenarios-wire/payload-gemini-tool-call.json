@@ -1,0 +1,155 @@
+{
+  "name": "payload-gemini-tool-call",
+  "description": "Gemini provider payload (contents/parts: text, functionCall, functionResponse -> messages) through a tool call and a final answer.",
+  "commands": {
+    "git": {}
+  },
+  "files": {
+    "notes.txt": "alpha\nbeta\ngamma\n"
+  },
+  "agentFiles": {
+    "models.json": "{\"providers\":{\"gem\":{\"baseUrl\":\"{{server:model}}\",\"api\":\"google-generative-ai\",\"apiKey\":\"eq-key\",\"models\":[{\"id\":\"gem-1\",\"name\":\"gem-1\",\"reasoning\":false,\"input\":[\"text\"],\"contextWindow\":100000,\"maxTokens\":4096,\"cost\":{\"input\":0,\"output\":0,\"cacheRead\":0,\"cacheWrite\":0}}]}}}"
+  },
+  "args": [
+    "--provider",
+    "gem",
+    "--model",
+    "gem-1"
+  ],
+  "servers": {
+    "ls": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/info",
+          "json": {
+            "version": "mock",
+            "license_expiration_time": null,
+            "batch_ingest_config": {
+              "use_multipart_endpoint": true,
+              "scale_up_qsize_trigger": 1000,
+              "scale_up_nthreads_limit": 16,
+              "scale_down_nempty_trigger": 4,
+              "size_limit": 100,
+              "size_limit_bytes": 20971520
+            },
+            "instance_flags": {
+              "gzip_body_enabled": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs/batch",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs",
+          "json": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/runs/*",
+          "json": {}
+        }
+      ],
+      "recordHeaders": [
+        "x-api-key",
+        "x-tenant-id",
+        "authorization",
+        "content-encoding"
+      ]
+    },
+    "model": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/*",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "times": 1,
+          "body": "data: {\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"functionCall\":{\"name\":\"read\",\"args\":{\"path\":\"notes.txt\"}}}]},\"finishReason\":\"STOP\",\"index\":0}],\"usageMetadata\":{\"promptTokenCount\":5,\"candidatesTokenCount\":3,\"totalTokenCount\":8},\"modelVersion\":\"m-1\"}\r\n\r\n"
+        },
+        {
+          "method": "POST",
+          "path": "/*",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "data: {\"candidates\":[{\"content\":{\"role\":\"model\",\"parts\":[{\"text\":\"The file has three lines.\"}]},\"finishReason\":\"STOP\",\"index\":0}],\"usageMetadata\":{\"promptTokenCount\":5,\"candidatesTokenCount\":3,\"totalTokenCount\":8},\"modelVersion\":\"m-1\"}\r\n\r\n"
+        }
+      ]
+    }
+  },
+  "env": {
+    "TRACE_TO_LANGSMITH": "true",
+    "LANGSMITH_PI_ENDPOINT": "{{server:ls}}",
+    "LANGSMITH_PI_API_KEY": "ls-test-key"
+  },
+  "steps": [
+    {
+      "rpc": {
+        "type": "prompt",
+        "message": "What is in notes.txt?"
+      }
+    }
+  ],
+  "settleMs": 700,
+  "tailMs": 1500,
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "normalize": [
+    {
+      "pattern": "----LangSmithFormBoundary[0-9a-z]+",
+      "replacement": "<boundary>"
+    },
+    {
+      "pattern": "[0-9]{8}T[0-9]{12}Z",
+      "replacement": "<ts>"
+    },
+    {
+      "pattern": "\"(start_time|end_time|timestamp|durationMs)\":[0-9]+",
+      "replacement": "\"$1\":<ts:num>"
+    },
+    {
+      "pattern": "\"role\":\"system\",\"content\":\"(?:[^\"\\\\]|\\\\.)*\"",
+      "replacement": "\"role\":\"system\",\"content\":\"<host-prompt>\""
+    },
+    {
+      "pattern": "\"sections\":\\{.*?\\},\"timestamp\"",
+      "replacement": "\"sections\":\"<host-prompt>\",\"timestamp\""
+    },
+    {
+      "pattern": "\"local_username\":\"[^\"]*\"",
+      "replacement": "\"local_username\":\"<user>\""
+    },
+    {
+      "pattern": "\"runtime\":\"(node|go)\"",
+      "replacement": "\"runtime\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk\":\"[^\"]*\"",
+      "replacement": "\"sdk\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk_version\":\"[^\"]*\"",
+      "replacement": "\"sdk_version\":\"<d1>\""
+    },
+    {
+      "pattern": "length=[0-9]+",
+      "replacement": "length=<n>"
+    }
+  ]
+}

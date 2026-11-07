@@ -1,0 +1,86 @@
+[
+ {
+  "name": "ext-settled-stale-reset",
+  "file": "extension.go",
+  "find": "\t\tt.staleSettles--\n",
+  "replace": "\t\tt.staleSettles = 0\n"
+ },
+ {
+  "name": "ext-settled-incomplete-error",
+  "file": "extension.go",
+  "find": "safeEnd(hc, settled.root, obj(\"incomplete\", true), nil, nil)",
+  "replace": "safeEnd(hc, settled.root, obj(\"incomplete\", true), new(\"incomplete\"), nil)"
+ },
+ {
+  "name": "ext-shutdown-active-kept",
+  "file": "extension.go",
+  "find": "\t\tt.active = nil\n\t}\n\tt.staleSettles = 0",
+  "replace": "\t}\n\tt.staleSettles = 0"
+ },
+ {
+  "name": "ext-shutdown-stale-kept",
+  "file": "extension.go",
+  "find": "\tt.staleSettles = 0\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-shutdown-no-await",
+  "file": "extension.go",
+  "find": "err := t.client.awaitPendingTraceBatches(hc)",
+  "replace": "var err error"
+ },
+ {
+  "name": "conv-usage-cost-unknown-ge",
+  "file": "convert.go",
+  "find": "numOrZero(totalCost) == 0\n",
+  "replace": "numOrZero(totalCost) <= 0\n"
+ },
+ {
+  "name": "conv-gemini-part-text-rest",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"text\", \"text\", text).spread(restOf(rec, \"text\"))",
+  "replace": "obj(\"type\", \"text\", \"text\", text).spread(rec)"
+ },
+ {
+  "name": "conv-responses-content-string",
+  "file": "convert.go",
+  "find": "rec.val(\"content\").([]any); isContent && rec.val(\"role\") == \"user\" {\n\t\t\t\tparts",
+  "replace": "rec.val(\"content\").([]any); isContent && rec.val(\"role\") == \"user\" && len(content) > 0 {\n\t\t\t\tparts"
+ },
+ {
+  "name": "conv-payload-order-gemini-first",
+  "file": "convert.go",
+  "find": "\t// OpenAI Responses input (index.ts:186-214).\n\tif input, isArr",
+  "replace": "\tif false {\n\t\treturn nil, nil\n\t}\n\t// OpenAI Responses input (index.ts:186-214).\n\tif input, isArr"
+ },
+ {
+  "name": "cfg-json-blank",
+  "file": "config.go",
+  "find": "jsTrim(value) == \"\" {\n\t\treturn undef",
+  "replace": "value == \"\" {\n\t\treturn undef"
+ },
+ {
+  "name": "cfg-validate-enabled-type",
+  "file": "config.go",
+  "find": "issues = append(issues, invalidType(\"boolean\", v, []any{\"enabled\"}))",
+  "replace": "issues = append(issues, invalidType(\"string\", v, []any{\"enabled\"}))"
+ },
+ {
+  "name": "cfg-validate-enabled-non-bool-accepted",
+  "file": "config.go",
+  "find": "\t\t} else {\n\t\t\tissues = append(issues, invalidType(\"boolean\", v, []any{\"enabled\"}))\n\t\t}",
+  "replace": "\t\t}"
+ },
+ {
+  "name": "meta-git-remote-args",
+  "file": "metadata.go",
+  "find": "runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")",
+  "replace": "runGit(ctx, cwd, \"remote\", \"get-url\", \"origin\")"
+ },
+ {
+  "name": "meta-git-order",
+  "file": "metadata.go",
+  "find": "\tremote := runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")\n\tbranch := runGit(ctx, cwd, \"rev-parse\", \"--abbrev-ref\", \"HEAD\")\n\tsha := runGit(ctx, cwd, \"rev-parse\", \"HEAD\")",
+  "replace": "\tsha := runGit(ctx, cwd, \"rev-parse\", \"HEAD\")\n\tbranch := runGit(ctx, cwd, \"rev-parse\", \"--abbrev-ref\", \"HEAD\")\n\tremote := runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")"
+ }
+]

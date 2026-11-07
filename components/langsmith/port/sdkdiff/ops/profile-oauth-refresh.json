@@ -1,0 +1,75 @@
+{
+  "name": "profile-oauth-refresh",
+  "description": "Expired OAuth token: discovery (metadata 404 -> /oauth/token), form POST, Bearer on the retry, profile file rewritten.",
+  "env": {
+    "LANGSMITH_CONFIG_FILE": "profile.json"
+  },
+  "files": {
+    "profile.json": {
+      "current_profile": "dev",
+      "profiles": {
+        "dev": {
+          "api_url": "{{endpoint}}",
+          "oauth": {
+            "access_token": "tok-old",
+            "refresh_token": "ref-1",
+            "expires_at": "2000-01-01T00:00:00.000Z"
+          }
+        }
+      }
+    }
+  },
+  "readFiles": [
+    "profile.json"
+  ],
+  "mockls": {
+    "token": {
+      "access_token": "tok-new",
+      "refresh_token": "ref-2",
+      "expires_in": 3600
+    }
+  },
+  "ops": [
+    {
+      "op": "client",
+      "as": "c",
+      "config": {}
+    },
+    {
+      "op": "runTree",
+      "as": "root",
+      "client": "c",
+      "config": {
+        "id": "0198a000-0000-7000-8000-000000000001",
+        "name": "Pi agent run",
+        "run_type": "chain",
+        "start_time": 1790000000000,
+        "project_name": "proj",
+        "inputs": {
+          "prompt": "hi",
+          "imageCount": 0
+        }
+      }
+    },
+    {
+      "op": "postRun",
+      "run": "root"
+    },
+    {
+      "op": "end",
+      "run": "root",
+      "outputs": {
+        "r": 1
+      },
+      "endTime": 1790000005000
+    },
+    {
+      "op": "patchRun",
+      "run": "root"
+    },
+    {
+      "op": "awaitPendingTraceBatches",
+      "client": "c"
+    }
+  ]
+}

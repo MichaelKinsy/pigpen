@@ -1,0 +1,155 @@
+{
+  "name": "payload-anthropic-tool-call",
+  "description": "Anthropic payload (system blocks, tool_use, a tool_result user message relabelled as a tool message) through a tool call and a final answer.",
+  "commands": {
+    "git": {}
+  },
+  "files": {
+    "notes.txt": "alpha\nbeta\ngamma\n"
+  },
+  "agentFiles": {
+    "models.json": "{\"providers\":{\"ant\":{\"baseUrl\":\"{{server:model}}\",\"api\":\"anthropic-messages\",\"apiKey\":\"eq-key\",\"models\":[{\"id\":\"claude-x\",\"name\":\"claude-x\",\"reasoning\":false,\"input\":[\"text\"],\"contextWindow\":100000,\"maxTokens\":4096,\"cost\":{\"input\":0,\"output\":0,\"cacheRead\":0,\"cacheWrite\":0}}]}}}"
+  },
+  "args": [
+    "--provider",
+    "ant",
+    "--model",
+    "claude-x"
+  ],
+  "servers": {
+    "ls": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/info",
+          "json": {
+            "version": "mock",
+            "license_expiration_time": null,
+            "batch_ingest_config": {
+              "use_multipart_endpoint": true,
+              "scale_up_qsize_trigger": 1000,
+              "scale_up_nthreads_limit": 16,
+              "scale_down_nempty_trigger": 4,
+              "size_limit": 100,
+              "size_limit_bytes": 20971520
+            },
+            "instance_flags": {
+              "gzip_body_enabled": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs/batch",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs",
+          "json": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/runs/*",
+          "json": {}
+        }
+      ],
+      "recordHeaders": [
+        "x-api-key",
+        "x-tenant-id",
+        "authorization",
+        "content-encoding"
+      ]
+    },
+    "model": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/*",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "times": 1,
+          "body": "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"m-1\",\"content\":[],\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":11,\"output_tokens\":1,\"cache_read_input_tokens\":0,\"cache_creation_input_tokens\":0}}}\n\nevent: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"read\",\"input\":{}}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"path\\\":\\\"notes.txt\\\"}\"}}\n\nevent: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\nevent: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"tool_use\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":7}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+        },
+        {
+          "method": "POST",
+          "path": "/*",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"m-1\",\"content\":[],\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":11,\"output_tokens\":1,\"cache_read_input_tokens\":0,\"cache_creation_input_tokens\":0}}}\n\nevent: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\nevent: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"The file has three lines.\"}}\n\nevent: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\nevent: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":5}}\n\nevent: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+        }
+      ]
+    }
+  },
+  "env": {
+    "TRACE_TO_LANGSMITH": "true",
+    "LANGSMITH_PI_ENDPOINT": "{{server:ls}}",
+    "LANGSMITH_PI_API_KEY": "ls-test-key"
+  },
+  "steps": [
+    {
+      "rpc": {
+        "type": "prompt",
+        "message": "What is in notes.txt?"
+      }
+    }
+  ],
+  "settleMs": 700,
+  "tailMs": 1500,
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "normalize": [
+    {
+      "pattern": "----LangSmithFormBoundary[0-9a-z]+",
+      "replacement": "<boundary>"
+    },
+    {
+      "pattern": "[0-9]{8}T[0-9]{12}Z",
+      "replacement": "<ts>"
+    },
+    {
+      "pattern": "\"(start_time|end_time|timestamp|durationMs)\":[0-9]+",
+      "replacement": "\"$1\":<ts:num>"
+    },
+    {
+      "pattern": "\"role\":\"system\",\"content\":\"(?:[^\"\\\\]|\\\\.)*\"",
+      "replacement": "\"role\":\"system\",\"content\":\"<host-prompt>\""
+    },
+    {
+      "pattern": "\"sections\":\\{.*?\\},\"timestamp\"",
+      "replacement": "\"sections\":\"<host-prompt>\",\"timestamp\""
+    },
+    {
+      "pattern": "\"local_username\":\"[^\"]*\"",
+      "replacement": "\"local_username\":\"<user>\""
+    },
+    {
+      "pattern": "\"runtime\":\"(node|go)\"",
+      "replacement": "\"runtime\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk\":\"[^\"]*\"",
+      "replacement": "\"sdk\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk_version\":\"[^\"]*\"",
+      "replacement": "\"sdk_version\":\"<d1>\""
+    },
+    {
+      "pattern": "length=[0-9]+",
+      "replacement": "length=<n>"
+    }
+  ]
+}

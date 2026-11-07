@@ -1,0 +1,8 @@
+{
+  "name": "sampling-zero",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:43613",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

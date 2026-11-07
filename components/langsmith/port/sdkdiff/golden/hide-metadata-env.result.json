@@ -1,0 +1,8 @@
+{
+  "name": "hide-metadata-env",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:40623",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

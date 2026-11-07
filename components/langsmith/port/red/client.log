@@ -1,0 +1,9 @@
+lane LsClient — first TestClientDifferential run (53 JS scenarios, real langsmith 0.10.5 as the oracle), before the harness canonicalisations and the fixes below
+FAIL multipart-merge, gzip*, multipart-*, replica-destinations ...: Content-Type length=N compared after the sdk/runtime values were canonicalised (goldens differ by the D1 value length) -> length is now verified per part on both sides and replaced by the canonical text length
+FAIL limit-count-from-info, limit-bytes-from-info, limit-count-option, info-recovers: concurrent batches arrive in a different order -> scenarios marked unordered (the JS order is a race too)
+FAIL limit-count-option (race): the /info answer arrived between two pushes of a burst the original queues in one event-loop turn -> the mock delays /info by 40 ms
+FAIL failed-traces-dir, failed-traces-over-budget: the temp dir appears in run metadata (LANGSMITH_FAILED_TRACES_DIR) -> {tmp}/{base} canonicalised in part texts
+FAIL sampling-env-zero, sampling-env-nan, sampling-env-range, concurrency-error, update-invalid-uuid: requests null vs [] (replay harness)
+FAIL queue-size-drop: 513 vs 509 bytes = the D1 runtime values (+4 bytes per queued run) -> the size in the log line is normalised by that delta
+-race: data race on the timer variable read by the AfterFunc callback before the lock (client_queue.go afterLimits) -> timerHolder read under client.mu
+after: go test -race -count=3 (client tests) ok; go vet linux/darwin/windows ok

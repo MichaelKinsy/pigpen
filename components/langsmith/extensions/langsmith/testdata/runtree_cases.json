@@ -1,0 +1,4691 @@
+[
+ {
+  "name": "root basic",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi"
+     },
+     "metadata": {
+      "k": "v"
+     },
+     "tags": [
+      "pi"
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "root defaults",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": ""
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "root defaults without id",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "name": "gen"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "a": 1
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project LANGSMITH_PROJECT",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_PROJECT": "from-ls",
+   "LANGCHAIN_PROJECT": "from-lc",
+   "LANGCHAIN_SESSION": "sess"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project LANGCHAIN_PROJECT",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_PROJECT": "from-lc",
+   "LANGCHAIN_SESSION": "sess"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project LANGCHAIN_SESSION",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_SESSION": "sess"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project empty LANGSMITH_PROJECT",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_PROJECT": "",
+   "LANGCHAIN_SESSION": "sess"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project empty LANGCHAIN_PROJECT",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_PROJECT": "",
+   "LANGCHAIN_SESSION": "sess"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "default project none",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "explicit empty project",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_PROJECT": "x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "name": "p",
+     "project_name": ""
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "inputs null",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": null
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   }
+  ]
+ },
+ {
+  "name": "extra runtime library kept",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "runtime": {
+       "library": "mine",
+       "sdk": "x"
+      },
+      "other": 1
+     },
+     "metadata": {
+      "m": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "extra runtime merged by falsy keys",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "runtime": {
+       "runtime": "node",
+       "sdk": "keep",
+       "extra_key": 0,
+       "library": "langsmith",
+       "sdk_version": "0.10.5"
+      }
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "extra runtime null",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "runtime": null
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "extra runtime false",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "runtime": false
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "extra runtime array",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "runtime": [
+       1
+      ]
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "metadata dedupe",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "metadata": {
+      "1": "y",
+      "2": "x",
+      "a": 1,
+      "b": 2
+     },
+     "extra": {
+      "metadata": {
+       "b": 3,
+       "c": 4
+      },
+      "k": "kv"
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "extra only",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "extra": {
+      "first": 1,
+      "metadata": {
+       "m": 1
+      },
+      "last": 2
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "tags empty",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "tags": []
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "children tree",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010300
+   },
+   {
+    "op": "end",
+    "run": "c2",
+    "outputs": {
+     "done": "c2"
+    },
+    "endTime": 1700000020003
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "children generated ids",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "name": "root",
+     "project_name": "proj",
+     "metadata": {
+      "a": 1
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "name": "c1"
+    }
+   },
+   {
+    "op": "now",
+    "ms": 1700000000005
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "name": "g1",
+     "run_type": "tool"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "name": "c2"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010300
+   },
+   {
+    "op": "end",
+    "run": "c2",
+    "outputs": {
+     "done": "c2"
+    },
+    "endTime": 1700000020003
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "metadata inheritance",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "metadata": {
+      "p1": "root",
+      "shared": "root",
+      "n": {
+       "deep": 1
+      }
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1",
+     "metadata": {
+      "shared": "child",
+      "own": 1
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "name": "g1",
+     "metadata": {
+      "own": "g"
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "name": "c2"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c3",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000005",
+     "name": "c3",
+     "extra": {
+      "metadata": {
+       "fromExtra": 1
+      },
+      "k": 1
+     },
+     "metadata": {
+      "shared": "meta"
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "post",
+    "run": "c3"
+   }
+  ]
+ },
+ {
+  "name": "metadata inheritance empty parent",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1",
+     "metadata": {
+      "own": 1
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "name": "g1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   }
+  ]
+ },
+ {
+  "name": "execution order propagation",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000000001,
+     "name": "c1"
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000000002,
+     "name": "g1"
+    }
+   },
+   {
+    "op": "child",
+    "of": "g1",
+    "as": "h1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000000003,
+     "name": "h1"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000005",
+     "start_time": 1700000000004,
+     "name": "c2"
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000006",
+     "start_time": 1700000000005,
+     "name": "g2"
+    }
+   },
+   {
+    "op": "post",
+    "run": "h1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "post",
+    "run": "g2"
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "execution order three digits",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000000005,
+     "name": "many",
+     "count": 1001
+    }
+   },
+   {
+    "op": "post",
+    "run": "c"
+   },
+   {
+    "op": "patch",
+    "run": "c"
+   }
+  ]
+ },
+ {
+  "name": "end first wins",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "first": 1
+    },
+    "error": "boom",
+    "endTime": 1700000000100,
+    "metadata": {
+     "m": 1
+    }
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "second": 2
+    },
+    "error": "later",
+    "endTime": 1700000000200,
+    "metadata": {
+     "m": 2,
+     "n": 3
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "end null outputs replaced",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": null,
+    "endTime": 1700000000001
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "late": true
+    },
+    "error": "e"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "end no values",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000000777
+   },
+   {
+    "op": "end",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "end empty error string",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "error": "",
+    "outputs": {}
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "error": "real",
+    "outputs": {
+     "z": 1
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "end empty metadata ignored",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "a": 1
+    },
+    "metadata": {}
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "end metadata after child inheritance",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "metadata": {
+      "a": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {},
+    "metadata": {
+     "late": true
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "c"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "events",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "t",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "tool",
+     "run_type": "tool",
+     "inputs": {
+      "args": {}
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "t"
+   },
+   {
+    "op": "now",
+    "ms": 1700000000111
+   },
+   {
+    "op": "event",
+    "run": "t",
+    "name": "tool_update",
+    "kwargs": {
+     "partialResult": {
+      "text": "a"
+     }
+    }
+   },
+   {
+    "op": "now",
+    "ms": 1700000000222
+   },
+   {
+    "op": "event",
+    "run": "t",
+    "message": "plain string event"
+   },
+   {
+    "op": "end",
+    "run": "t",
+    "outputs": {
+     "ok": true
+    },
+    "endTime": 1700000000300
+   },
+   {
+    "op": "patch",
+    "run": "t"
+   }
+  ]
+ },
+ {
+  "name": "events before post",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "now",
+    "ms": 1700000000005
+   },
+   {
+    "op": "event",
+    "run": "r",
+    "name": "early",
+    "kwargs": {
+     "a": 1
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env unset",
+  "now": 1700000000000,
+  "env": {},
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env false",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "false"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env true",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "true"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env TRUE",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "TRUE"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env one",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "1"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env zero",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "0"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env yes",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "yes"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env ls empty only",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": ""
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env lc empty only",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_EXCLUDE_INPUTS_ON_PATCH": ""
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env ls empty lc false",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "",
+   "LANGCHAIN_EXCLUDE_INPUTS_ON_PATCH": "false"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env ls empty lc true",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "",
+   "LANGCHAIN_EXCLUDE_INPUTS_ON_PATCH": "true"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env lc one",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_EXCLUDE_INPUTS_ON_PATCH": "1"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch excludeInputs env with replicas",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_EXCLUDE_INPUTS_ON_PATCH": "false"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "q": 1
+     },
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      },
+      {
+       "apiUrl": "https://b.example",
+       "apiKey": "kb",
+       "projectName": "proj-b",
+       "workspaceId": "ws-b",
+       "updates": {
+        "tags": [
+         "replica-b"
+        ],
+        "extra": {
+         "x": 1
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": true
+   }
+  ]
+ },
+ {
+  "name": "patch without post",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "patch without post replicas",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replica same project",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "proj",
+       "updates": {
+        "tags": [
+         "t"
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010300
+   },
+   {
+    "op": "end",
+    "run": "c2",
+    "outputs": {
+     "done": "c2"
+    },
+    "endTime": 1700000020003
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "replica no project",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://x.example",
+       "apiKey": "kx"
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replica other project",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010300
+   },
+   {
+    "op": "end",
+    "run": "c2",
+    "outputs": {
+     "done": "c2"
+    },
+    "endTime": 1700000020003
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "replicas multiple",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ],
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      },
+      {
+       "apiUrl": "https://b.example",
+       "apiKey": "kb",
+       "projectName": "proj-b",
+       "workspaceId": "ws-b",
+       "updates": {
+        "tags": [
+         "replica-b"
+        ],
+        "extra": {
+         "x": 1
+        }
+       }
+      },
+      {
+       "projectName": "proj"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010300
+   },
+   {
+    "op": "end",
+    "run": "c2",
+    "outputs": {
+     "done": "c2"
+    },
+    "endTime": 1700000020003
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   }
+  ]
+ },
+ {
+  "name": "replica updates override",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "p2",
+       "updates": {
+        "name": "renamed",
+        "outputs": {
+         "forced": 1
+        },
+        "inputs": {
+         "upd": 1
+        },
+        "session_name": "zz",
+        "extra": {
+         "u": 1
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "o": 1
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r",
+    "excludeInputs": false
+   }
+  ]
+ },
+ {
+  "name": "replica primary true",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ],
+     "replicas": [
+      {
+       "projectName": "proj-p",
+       "primary": true,
+       "apiKey": "kp"
+      },
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010200
+   },
+   {
+    "op": "end",
+    "run": "g1",
+    "outputs": {
+     "done": "g1"
+    },
+    "endTime": 1700000020002
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   }
+  ]
+ },
+ {
+  "name": "replica primary false same project",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "proj",
+       "primary": false
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replica primary true same project",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "proj",
+       "primary": true
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replica tuple",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      [
+       "tuple-proj",
+       {
+        "tags": [
+         "x"
+        ]
+       }
+      ],
+      [
+       "tuple2"
+      ]
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replicas explicit empty beats env",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"https://e\",\"api_key\":\"k\"}]"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": []
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "replica client",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "pa",
+       "client": "alt"
+      },
+      {
+       "projectName": "pb"
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "child explicit replicas",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1",
+     "replicas": [
+      {
+       "apiUrl": "https://b.example",
+       "apiKey": "kb",
+       "projectName": "proj-b",
+       "workspaceId": "ws-b",
+       "updates": {
+        "tags": [
+         "replica-b"
+        ],
+        "extra": {
+         "x": 1
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "name": "c2",
+     "replicas": []
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c3",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "name": "c3"
+    }
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "post",
+    "run": "c3"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "patch",
+    "run": "c2"
+   },
+   {
+    "op": "patch",
+    "run": "c3"
+   }
+  ]
+ },
+ {
+  "name": "child inherits replicas strips reroot",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true,
+       "apiKey": "k"
+      },
+      {
+       "projectName": "plain"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "dotted order given",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "name": "hdr",
+     "project_name": "proj",
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "trace_id": "0194ab00-0000-7abc-8abc-000000000009",
+     "dotted_order": "20231114T221320000001Z0194ab00-0000-7abc-8abc-000000000009.20231114T221321000001Z0194ab00-0000-7abc-8abc-000000000001",
+     "parent_run_id": "0194ab00-0000-7abc-8abc-000000000009"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c"
+   },
+   {
+    "op": "patch",
+    "run": "c"
+   }
+  ]
+ },
+ {
+  "name": "dotted order given generated id",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "name": "hdr",
+     "project_name": "proj",
+     "dotted_order": "20231114T221320000001Z0194ab00-0000-7abc-8abc-000000000009",
+     "start_time": 1700000000005
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "trace id given",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "trace_id": "0194ab00-0000-7abc-8abc-000000000077"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "c"
+   }
+  ]
+ },
+ {
+  "name": "reroot child replica",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "c1",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true,
+       "apiKey": "k"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "g1",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "apiKey": "k"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "g1",
+    "as": "h1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "h1",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "apiKey": "k"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000005",
+     "start_time": 1700000005000,
+     "name": "c2",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "apiKey": "k"
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "post",
+    "run": "h1"
+   },
+   {
+    "op": "post",
+    "run": "c2"
+   },
+   {
+    "op": "patch",
+    "run": "h1"
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   }
+  ]
+ },
+ {
+  "name": "reroot after children exist",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1"
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "name": "g1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "reroot with distributed parent",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "c1",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "g1",
+     "replicas": [
+      {
+       "projectName": "rr"
+      }
+     ]
+    }
+   },
+   {
+    "op": "set",
+    "run": "c1",
+    "distributedParentId": "0194ab00-0000-7abc-8abc-000000000001"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   }
+  ]
+ },
+ {
+  "name": "reroot with distributed parent self",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "c1",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true
+      }
+     ]
+    }
+   },
+   {
+    "op": "set",
+    "run": "c1",
+    "distributedParentId": "0194ab00-0000-7abc-8abc-000000000002"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   }
+  ]
+ },
+ {
+  "name": "reroot shared context vars",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true
+      },
+      {
+       "projectName": "other"
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "name": "g1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "g1"
+   },
+   {
+    "op": "patch",
+    "run": "g1"
+   }
+  ]
+ },
+ {
+  "name": "reroot primary",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "rr",
+       "reroot": true,
+       "primary": true
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c1"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   }
+  ]
+ },
+ {
+  "name": "env replicas array",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"https://e1.example/\",\"api_key\":\"k1\",\"project_name\":\"p1\"},{\"api_url\":\"https://e2.example\",\"api_key\":\"k2\",\"project_name\":null},{\"api_url\":\"https://e3.example//\",\"api_key\":\"k3\",\"primary\":true},{\"api_url\":\"https://e4.example\",\"api_key\":\"k4\",\"primary\":false,\"project_name\":\"proj\"}]"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010000
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "done": "r"
+    },
+    "endTime": 1700000020000
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c1"
+   },
+   {
+    "op": "now",
+    "ms": 1700000010100
+   },
+   {
+    "op": "end",
+    "run": "c1",
+    "outputs": {
+     "done": "c1"
+    },
+    "endTime": 1700000020001
+   },
+   {
+    "op": "patch",
+    "run": "c1"
+   }
+  ]
+ },
+ {
+  "name": "env replicas array invalid items",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[1,\"s\",null,true,[],{},{\"api_url\":1,\"api_key\":\"k\"},{\"api_url\":\"u\"},{\"api_url\":\"u\",\"api_key\":5},{\"api_url\":\"u\",\"api_key\":\"k\",\"project_name\":5},{\"api_url\":\"u\",\"api_key\":\"k\",\"primary\":\"yes\"},{\"api_url\":\"u\",\"api_key\":\"k\",\"primary\":null},{\"api_url\":\"https://ok\",\"api_key\":\"k\",\"project_name\":\"\",\"extra\":1}]"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas object",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"https://b.example/\":\"kb\",\"https://a.example\":\"ka\",\"https://bad.example\":5,\"https://n.example\":null,\"https://o.example\":{},\"https://arr.example\":[],\"https://t.example\":true}"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas object index keys duplicates",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"zeta\":\"kz\",\"10\":\"k10\",\"2\":\"k2\",\"alpha\":\"ka\",\"zeta\":\"kz2\"}"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas object conflicting endpoint LANGSMITH",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"https://a\":\"k\"}",
+   "LANGSMITH_ENDPOINT": "https://x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "root",
+    "as": "r2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "run 2",
+     "project_name": "proj",
+     "replicas": []
+    }
+   },
+   {
+    "op": "post",
+    "run": "r2"
+   }
+  ]
+ },
+ {
+  "name": "env replicas object conflicting endpoint LANGCHAIN",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"https://a\":\"k\"}",
+   "LANGCHAIN_ENDPOINT": "https://x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas object endpoint empty",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"https://a\":\"k\"}",
+   "LANGSMITH_ENDPOINT": ""
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas empty object with endpoint",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{}",
+   "LANGSMITH_ENDPOINT": "https://x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas array with endpoint",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"https://a\",\"api_key\":\"k\"}]",
+   "LANGSMITH_ENDPOINT": "https://x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas conflicting but explicit replicas",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{\"https://a\":\"k\"}",
+   "LANGSMITH_ENDPOINT": "https://x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": []
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas invalid json",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "{not json"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas trailing garbage",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[] x"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas scalar string",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "\"abc\""
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas scalar number",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "12"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas scalar bool",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "true"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas null",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "null"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "env replicas empty",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": ""
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas LANGCHAIN name ignored",
+  "now": 1700000000000,
+  "env": {
+   "LANGCHAIN_RUNS_ENDPOINTS": "{\"https://a\":\"k\"}"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "env replicas inherited by children",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"https://a\",\"api_key\":\"k\",\"project_name\":\"pa\"}]"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "c"
+   },
+   {
+    "op": "patch",
+    "run": "c"
+   }
+  ]
+ },
+ {
+  "name": "two primaries explicit",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "a",
+       "primary": true
+      },
+      {
+       "projectName": "b",
+       "primary": true
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "two primaries env",
+  "now": 1700000000000,
+  "env": {
+   "LANGSMITH_RUNS_ENDPOINTS": "[{\"api_url\":\"a\",\"api_key\":\"k\",\"primary\":true},{\"api_url\":\"b\",\"api_key\":\"k\",\"primary\":true}]"
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   }
+  ]
+ },
+ {
+  "name": "two primaries child",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c",
+     "replicas": [
+      {
+       "primary": true
+      },
+      {
+       "primary": true
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "one primary one false",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "a",
+       "primary": true
+      },
+      {
+       "projectName": "b",
+       "primary": false
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "postRun failure",
+  "now": 1700000000000,
+  "client": {
+   "failCreate": true
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "patchRun failure",
+  "now": 1700000000000,
+  "client": {
+   "failUpdate": true
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "postRun failure replicas",
+  "now": 1700000000000,
+  "client": {
+   "failCreate": true
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      },
+      {
+       "apiUrl": "https://b.example",
+       "apiKey": "kb",
+       "projectName": "proj-b",
+       "workspaceId": "ws-b",
+       "updates": {
+        "tags": [
+         "replica-b"
+        ],
+        "extra": {
+         "x": 1
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "patchRun failure replicas",
+  "now": 1700000000000,
+  "client": {
+   "failUpdate": true
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      },
+      {
+       "apiUrl": "https://b.example",
+       "apiKey": "kb",
+       "projectName": "proj-b",
+       "workspaceId": "ws-b",
+       "updates": {
+        "tags": [
+         "replica-b"
+        ],
+        "extra": {
+         "x": 1
+        }
+       }
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "name": "c"
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "postRun replica client failure",
+  "now": 1700000000000,
+  "client": {
+   "failCreate": false,
+   "failAlt": true
+  },
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "replicas": [
+      {
+       "projectName": "pa",
+       "client": "alt"
+      },
+      {
+       "projectName": "pb"
+      }
+     ]
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "postRun excludeChildRuns false",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r",
+    "excludeChildRuns": false
+   },
+   {
+    "op": "post",
+    "run": "r",
+    "excludeChildRuns": false
+   }
+  ]
+ },
+ {
+  "name": "postRun excludeChildRuns false replicas",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ],
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r",
+    "excludeChildRuns": false
+   }
+  ]
+ },
+ {
+  "name": "toJSON",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ],
+     "replicas": [
+      {
+       "apiUrl": "https://a.example",
+       "apiKey": "ka",
+       "projectName": "proj-a"
+      }
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "toJSON",
+    "run": "r"
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "toJSON",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "post clears children",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "run 1",
+     "project_name": "proj",
+     "inputs": {
+      "prompt": "hi",
+      "imageCount": 0
+     },
+     "metadata": {
+      "a": 1,
+      "b": "two"
+     },
+     "tags": [
+      "pi",
+      "coding-agent"
+     ]
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000002",
+     "start_time": 1700000002000,
+     "name": "child 1",
+     "run_type": "llm",
+     "inputs": {
+      "x": 1
+     },
+     "metadata": {
+      "b": "child",
+      "c": 3
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "c1",
+    "as": "g1",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000003",
+     "start_time": 1700000003000,
+     "name": "grandchild",
+     "run_type": "tool",
+     "inputs": {
+      "y": 2
+     }
+    }
+   },
+   {
+    "op": "child",
+    "of": "r",
+    "as": "c2",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000004",
+     "start_time": 1700000004000,
+     "name": "child 2",
+     "run_type": "tool",
+     "inputs": {
+      "z": 3
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "toJSON",
+    "run": "r"
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ },
+ {
+  "name": "unicode and escapes",
+  "now": 1700000000000,
+  "steps": [
+   {
+    "op": "root",
+    "as": "r",
+    "config": {
+     "id": "0194ab00-0000-7abc-8abc-000000000001",
+     "start_time": 1700000001000,
+     "name": "日本語   😀 \"q\"",
+     "project_name": "proj",
+     "inputs": {
+      "s": "a\nb\u0007",
+      "n": [
+       1,
+       2.5,
+       0,
+       1e+21
+      ]
+     },
+     "metadata": {
+      "k\"1": "ü"
+     }
+    }
+   },
+   {
+    "op": "post",
+    "run": "r"
+   },
+   {
+    "op": "end",
+    "run": "r",
+    "outputs": {
+     "e": "😀"
+    }
+   },
+   {
+    "op": "patch",
+    "run": "r"
+   }
+  ]
+ }
+]

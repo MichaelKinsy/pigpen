@@ -1,0 +1,4217 @@
+{
+ "sdk": "langsmith 0.10.5",
+ "retry": [
+  {
+   "name": "ok first try",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": "b2s="
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "created",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 201,
+     "reason": "Created",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 201,
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "no content",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 204,
+     "reason": "No Content",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 204,
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "retryable 408 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 408,
+     "reason": "Request Timeout",
+     "body": "ZTQwOA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 425 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 425,
+     "reason": "Too Early",
+     "body": "ZTQyNQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 429 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 429,
+     "reason": "Too Many Requests",
+     "body": "ZTQyOQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 500 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "ZTUwMA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 502 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 502,
+     "reason": "Bad Gateway",
+     "body": "ZTUwMg=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 503 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 503,
+     "reason": "Service Unavailable",
+     "body": "ZTUwMw=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "retryable 504 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 504,
+     "reason": "Gateway Timeout",
+     "body": "ZTUwNA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "terminal 400",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 400,
+     "reason": "Bad Request",
+     "body": "ZTQwMA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 400,
+    "message": "Failed to fetch /x. Received status [400]: Bad Request. Message: e400",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 401",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 401,
+     "reason": "Unauthorized",
+     "body": "ZTQwMQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 401,
+    "message": "Failed to fetch /x. Received status [401]: Unauthorized. Message: e401",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 403",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 403,
+     "reason": "Forbidden",
+     "body": "ZTQwMw=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: e403",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 404",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 404,
+     "reason": "Not Found",
+     "body": "ZTQwNA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "LangSmithNotFoundError",
+    "status": 404,
+    "message": "Failed to fetch /x. Received status [404]: Not Found. Message: e404",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 409",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 409,
+     "reason": "Conflict",
+     "body": "ZTQwOQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "LangSmithConflictError",
+    "status": 409,
+    "message": "Failed to fetch /x. Received status [409]: Conflict. Message: e409",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 422",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 422,
+     "reason": "Unprocessable Entity",
+     "body": "ZTQyMg=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 422,
+    "message": "Failed to fetch /x. Received status [422]: Unprocessable Entity. Message: e422",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 501",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 501,
+     "reason": "Not Implemented",
+     "body": "ZTUwMQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 501,
+    "message": "Failed to fetch /x. Received status [501]: Not Implemented. Message: e501",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 505",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 505,
+     "reason": "HTTP Version Not Supported",
+     "body": "ZTUwNQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 505,
+    "message": "Failed to fetch /x. Received status [505]: HTTP Version Not Supported. Message: e505",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 302",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 302,
+     "reason": "Found",
+     "body": "ZTMwMg=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 302,
+    "message": "Failed to fetch /x. Received status [302]: Found. Message: e302",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 418",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 418,
+     "reason": "I'm a Teapot",
+     "body": "ZTQxOA=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 418,
+    "message": "Failed to fetch /x. Received status [418]: I'm a Teapot. Message: e418",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "terminal 451",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 451,
+     "reason": "Unavailable For Legal Reasons",
+     "body": "ZTQ1MQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 451,
+    "message": "Failed to fetch /x. Received status [451]: Unavailable For Legal Reasons. Message: e451",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "500 forever (4 retries)",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "Ym9vbQ=="
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: boom",
+    "attempts": 5,
+    "delaysMs": [
+     1000,
+     2500,
+     6000,
+     15992
+    ]
+   }
+  },
+  {
+   "name": "503 forever, jitter 0",
+   "maxRetries": 4,
+   "jitter": [
+    0
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 503,
+     "reason": "Service Unavailable",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 503,
+    "message": "Failed to fetch /x. Received status [503]: Service Unavailable. Message: ",
+    "attempts": 5,
+    "delaysMs": [
+     1000,
+     2000,
+     4000,
+     8000
+    ]
+   }
+  },
+  {
+   "name": "503 forever, jitter near 1",
+   "maxRetries": 4,
+   "jitter": [
+    0.9999999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 503,
+     "reason": "Service Unavailable",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 503,
+    "message": "Failed to fetch /x. Received status [503]: Service Unavailable. Message: ",
+    "attempts": 5,
+    "delaysMs": [
+     2000,
+     4000,
+     8000,
+     16000
+    ]
+   }
+  },
+  {
+   "name": "500 forever, maxRetries 0",
+   "maxRetries": 0,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "Ym9vbQ=="
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: boom",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "500 forever, maxRetries 1",
+   "maxRetries": 1,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "Ym9vbQ=="
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: boom",
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "500 forever, default retries (6)",
+   "maxRetries": null,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "Ym9vbQ=="
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: boom",
+    "attempts": 7,
+    "delaysMs": [
+     1000,
+     2500,
+     6000,
+     15992,
+     16000,
+     40000
+    ]
+   }
+  },
+  {
+   "name": "429 429 ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 429,
+     "reason": "Too Many Requests",
+     "body": ""
+    },
+    {
+     "kind": "status",
+     "status": 429,
+     "reason": "Too Many Requests",
+     "body": ""
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 3,
+    "delaysMs": [
+     1000,
+     2500
+    ]
+   }
+  },
+  {
+   "name": "500 then 400 stops",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": ""
+    },
+    {
+     "kind": "status",
+     "status": 400,
+     "reason": "Bad Request",
+     "body": "YmFk"
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 400,
+    "message": "Failed to fetch /x. Received status [400]: Bad Request. Message: bad",
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "404 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 404,
+     "reason": "Not Found",
+     "body": "bm9wZQ=="
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "LangSmithNotFoundError",
+    "status": 404,
+    "message": "Failed to fetch /x. Received status [404]: Not Found. Message: nope",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "409 then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 409,
+     "reason": "Conflict",
+     "body": "ZHVw"
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "LangSmithConflictError",
+    "status": 409,
+    "message": "Failed to fetch /x. Received status [409]: Conflict. Message: dup",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "reset then ok",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "reset"
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 2,
+    "delaysMs": [
+     1000
+    ]
+   }
+  },
+  {
+   "name": "reset forever",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "reset"
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "network",
+    "name": "TypeError",
+    "status": null,
+    "message": "",
+    "attempts": 5,
+    "delaysMs": [
+     1000,
+     2500,
+     6000,
+     15992
+    ]
+   }
+  },
+  {
+   "name": "reset, 500, 200",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "reset"
+    },
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": ""
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "ok",
+    "status": 200,
+    "attempts": 3,
+    "delaysMs": [
+     1000,
+     2500
+    ]
+   }
+  },
+  {
+   "name": "hang times out (no retry)",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 150,
+   "steps": [
+    {
+     "kind": "hang"
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "timeout",
+    "name": "TimeoutError",
+    "status": null,
+    "message": "",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "403 org scoped",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 403,
+     "reason": "Forbidden",
+     "body": "eyJlcnJvciI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSJ9"
+    },
+    {
+     "kind": "status",
+     "status": 200,
+     "reason": "OK",
+     "body": ""
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: This API key is org-scoped and requires workspace specification. Please provide 'workspaceId' parameter, or set LANGSMITH_WORKSPACE_ID environment variable.",
+    "attempts": 1,
+    "delaysMs": []
+   }
+  },
+  {
+   "name": "500 unicode body",
+   "maxRetries": 4,
+   "jitter": [
+    0,
+    0.25,
+    0.5,
+    0.999
+   ],
+   "timeoutMs": 5000,
+   "steps": [
+    {
+     "kind": "status",
+     "status": 500,
+     "reason": "Internal Server Error",
+     "body": "Y2Fmw6kg8J+YgA=="
+    }
+   ],
+   "expect": {
+    "outcome": "error",
+    "kind": "status",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: café 😀",
+    "attempts": 5,
+    "delaysMs": [
+     1000,
+     2500,
+     6000,
+     15992
+    ]
+   }
+  }
+ ],
+ "raise": [
+  {
+   "name": "200 not consumed",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 200,
+    "reason": "OK",
+    "body": "ZmluZQ=="
+   },
+   "expect": {
+    "outcome": "ok"
+   }
+  },
+  {
+   "name": "200 consumed",
+   "op": "fetch /x",
+   "consume": true,
+   "step": {
+    "kind": "status",
+    "status": 200,
+    "reason": "OK",
+    "body": "ZmluZQ=="
+   },
+   "expect": {
+    "outcome": "ok"
+   }
+  },
+  {
+   "name": "204 consumed",
+   "op": "fetch /x",
+   "consume": true,
+   "step": {
+    "kind": "status",
+    "status": 204,
+    "reason": "No Content",
+    "body": ""
+   },
+   "expect": {
+    "outcome": "ok"
+   }
+  },
+  {
+   "name": "status 400",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 400,
+    "reason": "Bad Request",
+    "body": "Ym9keSA0MDA="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 400,
+    "message": "Failed to fetch /x. Received status [400]: Bad Request. Message: body 400"
+   }
+  },
+  {
+   "name": "status 401",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 401,
+    "reason": "Unauthorized",
+    "body": "Ym9keSA0MDE="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 401,
+    "message": "Failed to fetch /x. Received status [401]: Unauthorized. Message: body 401"
+   }
+  },
+  {
+   "name": "status 402",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 402,
+    "reason": "Payment Required",
+    "body": "Ym9keSA0MDI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 402,
+    "message": "Failed to fetch /x. Received status [402]: Payment Required. Message: body 402"
+   }
+  },
+  {
+   "name": "status 404",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 404,
+    "reason": "Not Found",
+    "body": "Ym9keSA0MDQ="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "LangSmithNotFoundError",
+    "status": 404,
+    "message": "Failed to fetch /x. Received status [404]: Not Found. Message: body 404"
+   }
+  },
+  {
+   "name": "status 409",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 409,
+    "reason": "Conflict",
+    "body": "Ym9keSA0MDk="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "LangSmithConflictError",
+    "status": 409,
+    "message": "Failed to fetch /x. Received status [409]: Conflict. Message: body 409"
+   }
+  },
+  {
+   "name": "status 410",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 410,
+    "reason": "Gone",
+    "body": "Ym9keSA0MTA="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 410,
+    "message": "Failed to fetch /x. Received status [410]: Gone. Message: body 410"
+   }
+  },
+  {
+   "name": "status 422",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 422,
+    "reason": "Unprocessable Entity",
+    "body": "Ym9keSA0MjI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 422,
+    "message": "Failed to fetch /x. Received status [422]: Unprocessable Entity. Message: body 422"
+   }
+  },
+  {
+   "name": "status 429",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 429,
+    "reason": "Too Many Requests",
+    "body": "Ym9keSA0Mjk="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 429,
+    "message": "Failed to fetch /x. Received status [429]: Too Many Requests. Message: body 429"
+   }
+  },
+  {
+   "name": "status 500",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "Ym9keSA1MDA="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: body 500"
+   }
+  },
+  {
+   "name": "status 502",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 502,
+    "reason": "Bad Gateway",
+    "body": "Ym9keSA1MDI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 502,
+    "message": "Failed to fetch /x. Received status [502]: Bad Gateway. Message: body 502"
+   }
+  },
+  {
+   "name": "status 503",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 503,
+    "reason": "Service Unavailable",
+    "body": "Ym9keSA1MDM="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 503,
+    "message": "Failed to fetch /x. Received status [503]: Service Unavailable. Message: body 503"
+   }
+  },
+  {
+   "name": "418 reason",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 418,
+    "reason": "I'm a teapot",
+    "body": "dGVh"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 418,
+    "message": "Failed to fetch /x. Received status [418]: I'm a teapot. Message: tea"
+   }
+  },
+  {
+   "name": "500 empty body",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": ""
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: "
+   }
+  },
+  {
+   "name": "500 custom reason",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Totally Broken",
+    "body": "eA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Totally Broken. Message: x"
+   }
+  },
+  {
+   "name": "403 org scoped",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJlcnJvciI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSJ9"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: This API key is org-scoped and requires workspace specification. Please provide 'workspaceId' parameter, or set LANGSMITH_WORKSPACE_ID environment variable."
+   }
+  },
+  {
+   "name": "403 org scoped with spaces",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "IHsgImVycm9yIiA6ICJvcmdfc2NvcGVkX2tleV9yZXF1aXJlc193b3Jrc3BhY2UiICwgIngiOiAxIH0g"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: This API key is org-scoped and requires workspace specification. Please provide 'workspaceId' parameter, or set LANGSMITH_WORKSPACE_ID environment variable."
+   }
+  },
+  {
+   "name": "403 org scoped escaped",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJlcnJvciI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX1x1MDA3N29ya3NwYWNlIn0="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: This API key is org-scoped and requires workspace specification. Please provide 'workspaceId' parameter, or set LANGSMITH_WORKSPACE_ID environment variable."
+   }
+  },
+  {
+   "name": "403 org scoped uppercase key",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJFUlJPUiI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSJ9"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: {\"ERROR\":\"org_scoped_key_requires_workspace\"}"
+   }
+  },
+  {
+   "name": "403 other error",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJlcnJvciI6ImZvcmJpZGRlbiJ9"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: {\"error\":\"forbidden\"}"
+   }
+  },
+  {
+   "name": "403 error not string",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJlcnJvciI6NX0="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: {\"error\":5}"
+   }
+  },
+  {
+   "name": "403 non json",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "PGh0bWw+ZGVuaWVkPC9odG1sPg=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: <html>denied</html>"
+   }
+  },
+  {
+   "name": "403 array",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "W10="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: []"
+   }
+  },
+  {
+   "name": "403 null",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "bnVsbA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: null"
+   }
+  },
+  {
+   "name": "403 string",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: \"org_scoped_key_requires_workspace\""
+   }
+  },
+  {
+   "name": "403 empty",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": ""
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: "
+   }
+  },
+  {
+   "name": "403 duplicate key",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 403,
+    "reason": "Forbidden",
+    "body": "eyJlcnJvciI6IngiLCJlcnJvciI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSJ9"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 403,
+    "message": "Failed to fetch /x. Received status [403]: Forbidden. Message: This API key is org-scoped and requires workspace specification. Please provide 'workspaceId' parameter, or set LANGSMITH_WORKSPACE_ID environment variable."
+   }
+  },
+  {
+   "name": "404 org scoped is not rewritten",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 404,
+    "reason": "Not Found",
+    "body": "eyJlcnJvciI6Im9yZ19zY29wZWRfa2V5X3JlcXVpcmVzX3dvcmtzcGFjZSJ9"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "LangSmithNotFoundError",
+    "status": 404,
+    "message": "Failed to fetch /x. Received status [404]: Not Found. Message: {\"error\":\"org_scoped_key_requires_workspace\"}"
+   }
+  },
+  {
+   "name": "op with status text",
+   "op": "Failed to send multipart request",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "eA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to Failed to send multipart request. Received status [500]: Internal Server Error. Message: x"
+   }
+  },
+  {
+   "name": "utf8 bom",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/aGVsbG8="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: hello"
+   }
+  },
+  {
+   "name": "utf8 bom only",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: "
+   }
+  },
+  {
+   "name": "utf8 double bom",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/77u/eA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: x"
+   }
+  },
+  {
+   "name": "utf8 triple bom",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/77u/77u/eA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: ﻿x"
+   }
+  },
+  {
+   "name": "utf8 two boms only",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/77u/"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: "
+   }
+  },
+  {
+   "name": "utf8 bom text bom",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77u/Ye+7vw=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a﻿"
+   }
+  },
+  {
+   "name": "utf8 truncated bom",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "77s="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: �"
+   }
+  },
+  {
+   "name": "utf8 lone continuation",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YYBi"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�b"
+   }
+  },
+  {
+   "name": "utf8 invalid lead ff",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "Yf9i"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�b"
+   }
+  },
+  {
+   "name": "utf8 overlong c0 80",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YcCAYg=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a��b"
+   }
+  },
+  {
+   "name": "utf8 truncated 2-byte at end",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YcM="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�"
+   }
+  },
+  {
+   "name": "utf8 truncated 3-byte at end",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YeKC"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�"
+   }
+  },
+  {
+   "name": "utf8 truncated 4-byte at end",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YfCfmA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�"
+   }
+  },
+  {
+   "name": "utf8 truncated 3-byte then ascii",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YeKCeg=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a�z"
+   }
+  },
+  {
+   "name": "utf8 surrogate ed a0 80",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "Ye2ggGI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a���b"
+   }
+  },
+  {
+   "name": "utf8 e0 80 overlong",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YeCAgGI="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a���b"
+   }
+  },
+  {
+   "name": "utf8 f0 80 overlong",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YfCAgIBi"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a����b"
+   }
+  },
+  {
+   "name": "utf8 f4 90 above max",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YfSQgIBi"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a����b"
+   }
+  },
+  {
+   "name": "utf8 f5 invalid",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "YfWAgIBi"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: a����b"
+   }
+  },
+  {
+   "name": "utf8 bad continuation then valid",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "4iih"
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: �(�"
+   }
+  },
+  {
+   "name": "utf8 valid emoji",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "8J+YgA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: 😀"
+   }
+  },
+  {
+   "name": "utf8 two truncated in a row",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "4oLigg=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: ��"
+   }
+  },
+  {
+   "name": "utf8 f1 then 2 ok then bad",
+   "op": "fetch /x",
+   "consume": false,
+   "step": {
+    "kind": "status",
+    "status": 500,
+    "reason": "Internal Server Error",
+    "body": "8YCAKA=="
+   },
+   "expect": {
+    "outcome": "error",
+    "name": "Error",
+    "status": 500,
+    "message": "Failed to fetch /x. Received status [500]: Internal Server Error. Message: �("
+   }
+  }
+ ],
+ "delay": [
+  {
+   "retriesConsumed": 0,
+   "jitter": 0,
+   "ms": 1000
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.0005,
+   "ms": 1001
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.0004999,
+   "ms": 1000
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.5,
+   "ms": 1500
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.25,
+   "ms": 1250
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.75,
+   "ms": 1750
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.999,
+   "ms": 1999
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.9999999,
+   "ms": 2000
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.1234567,
+   "ms": 1123
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 1e-9,
+   "ms": 1000
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0,
+   "ms": 2000
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.0005,
+   "ms": 2001
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.0004999,
+   "ms": 2001
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.5,
+   "ms": 3000
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.25,
+   "ms": 2500
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.75,
+   "ms": 3500
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.999,
+   "ms": 3998
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.9999999,
+   "ms": 4000
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.1234567,
+   "ms": 2247
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 1e-9,
+   "ms": 2000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0,
+   "ms": 4000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.0005,
+   "ms": 4002
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.0004999,
+   "ms": 4002
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.5,
+   "ms": 6000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.25,
+   "ms": 5000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.75,
+   "ms": 7000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.999,
+   "ms": 7996
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.9999999,
+   "ms": 8000
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.1234567,
+   "ms": 4494
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 1e-9,
+   "ms": 4000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0,
+   "ms": 8000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.0005,
+   "ms": 8004
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.0004999,
+   "ms": 8004
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.5,
+   "ms": 12000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.25,
+   "ms": 10000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.75,
+   "ms": 14000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.999,
+   "ms": 15992
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.9999999,
+   "ms": 16000
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.1234567,
+   "ms": 8988
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 1e-9,
+   "ms": 8000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0,
+   "ms": 16000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.0005,
+   "ms": 16008
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.0004999,
+   "ms": 16008
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.5,
+   "ms": 24000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.25,
+   "ms": 20000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.75,
+   "ms": 28000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.999,
+   "ms": 31984
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.9999999,
+   "ms": 32000
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.1234567,
+   "ms": 17975
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 1e-9,
+   "ms": 16000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0,
+   "ms": 32000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.0005,
+   "ms": 32016
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.0004999,
+   "ms": 32016
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.5,
+   "ms": 48000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.25,
+   "ms": 40000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.75,
+   "ms": 56000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.999,
+   "ms": 63968
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.9999999,
+   "ms": 64000
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.1234567,
+   "ms": 35951
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 1e-9,
+   "ms": 32000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0,
+   "ms": 64000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.0005,
+   "ms": 64032
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.0004999,
+   "ms": 64032
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.5,
+   "ms": 96000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.25,
+   "ms": 80000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.75,
+   "ms": 112000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.999,
+   "ms": 127936
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.9999999,
+   "ms": 128000
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.1234567,
+   "ms": 71901
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 1e-9,
+   "ms": 64000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0,
+   "ms": 128000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.0005,
+   "ms": 128064
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.0004999,
+   "ms": 128064
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.5,
+   "ms": 192000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.25,
+   "ms": 160000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.75,
+   "ms": 224000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.999,
+   "ms": 255872
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.9999999,
+   "ms": 256000
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.1234567,
+   "ms": 143802
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 1e-9,
+   "ms": 128000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0,
+   "ms": 256000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.0005,
+   "ms": 256128
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.0004999,
+   "ms": 256128
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.5,
+   "ms": 384000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.25,
+   "ms": 320000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.75,
+   "ms": 448000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.999,
+   "ms": 511744
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.9999999,
+   "ms": 512000
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.1234567,
+   "ms": 287605
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 1e-9,
+   "ms": 256000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0,
+   "ms": 512000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.0005,
+   "ms": 512256
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.0004999,
+   "ms": 512256
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.5,
+   "ms": 768000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.25,
+   "ms": 640000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.75,
+   "ms": 896000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.999,
+   "ms": 1023488
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.9999999,
+   "ms": 1024000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.1234567,
+   "ms": 575210
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 1e-9,
+   "ms": 512000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0,
+   "ms": 1024000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.0005,
+   "ms": 1024512
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.0004999,
+   "ms": 1024512
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.5,
+   "ms": 1536000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.25,
+   "ms": 1280000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.75,
+   "ms": 1792000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.999,
+   "ms": 2046976
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.9999999,
+   "ms": 2048000
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.1234567,
+   "ms": 1150420
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 1e-9,
+   "ms": 1024000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0,
+   "ms": 2048000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.0005,
+   "ms": 2049024
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.0004999,
+   "ms": 2049024
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.5,
+   "ms": 3072000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.25,
+   "ms": 2560000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.75,
+   "ms": 3584000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.999,
+   "ms": 4093952
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.9999999,
+   "ms": 4096000
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.1234567,
+   "ms": 2300839
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 1e-9,
+   "ms": 2048000
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.30481433868408203,
+   "ms": 668065
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.9958810806274414,
+   "ms": 510946
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.6731233596801758,
+   "ms": 856639
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.8831720650196075,
+   "ms": 7533
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.827534556388855,
+   "ms": 935698
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.3377417325973511,
+   "ms": 1369848
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.19221007823944092,
+   "ms": 2441646
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.23376202583312988,
+   "ms": 315843
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.787573516368866,
+   "ms": 7150
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.8439874649047852,
+   "ms": 7552973
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.4703874886035919,
+   "ms": 2941
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.36601340770721436,
+   "ms": 1398798
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.36825549602508545,
+   "ms": 10946
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.8707646131515503,
+   "ms": 7662652
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.4286555051803589,
+   "ms": 45717
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.17272651195526123,
+   "ms": 2401744
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.31787043809890747,
+   "ms": 5271
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.5044973492622375,
+   "ms": 48144
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.46753454208374023,
+   "ms": 12022043
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.22530126571655273,
+   "ms": 1254708
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.8734368085861206,
+   "ms": 119900
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.3078688383102417,
+   "ms": 2678515
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.8465718030929565,
+   "ms": 236361
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.11106669902801514,
+   "ms": 568866
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.09212517738342285,
+   "ms": 279584
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.3995910882949829,
+   "ms": 716591
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.2541414499282837,
+   "ms": 642120
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.4003864526748657,
+   "ms": 44812
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.944100022315979,
+   "ms": 62211
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.022794365882873535,
+   "ms": 65459
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.13290369510650635,
+   "ms": 9063
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.0054931640625,
+   "ms": 514813
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.28057193756103516,
+   "ms": 20489
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.21800708770751953,
+   "ms": 38976
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.4793742895126343,
+   "ms": 3029759
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.8480523824691772,
+   "ms": 236551
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.699388861656189,
+   "ms": 435044
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.5540746711194515,
+   "ms": 1554
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.5108655691146851,
+   "ms": 96695
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.2918437719345093,
+   "ms": 661424
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.9542230367660522,
+   "ms": 125070
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.5191825926303864,
+   "ms": 6077
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.6095554828643799,
+   "ms": 6592739
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.6398194096982479,
+   "ms": 1640
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.39901185035705566,
+   "ms": 716294
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.6855700016021729,
+   "ms": 3452047
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.7927305698394775,
+   "ms": 14342
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.4928324222564697,
+   "ms": 12229283
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.5689566433429718,
+   "ms": 6276
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.862381100654602,
+   "ms": 953539
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.6930400133132935,
+   "ms": 433418
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.9341985285282135,
+   "ms": 3868
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.24323561787605286,
+   "ms": 2486
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.8043496012687683,
+   "ms": 115478
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.8608474731445312,
+   "ms": 29774
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.8046531975269318,
+   "ms": 14437
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.43022143840789795,
+   "ms": 45767
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.3225010894238949,
+   "ms": 1323
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.8262547254562378,
+   "ms": 935042
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.9973047971725464,
+   "ms": 4090480
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.8598580360412598,
+   "ms": 476124
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.005693912506103516,
+   "ms": 16091
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.5284571647644043,
+   "ms": 12228
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.6856532096862793,
+   "ms": 863054
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.4881129264831543,
+   "ms": 761914
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.9182581901550293,
+   "ms": 982148
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.1303858757019043,
+   "ms": 578758
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.21298491954803467,
+   "ms": 155262
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.44246411323547363,
+   "ms": 738542
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.6850693225860596,
+   "ms": 26961
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.376389741897583,
+   "ms": 22022
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.33124470710754395,
+   "ms": 10650
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.5431645214557648,
+   "ms": 3086
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.7005950212478638,
+   "ms": 13931274
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.8261071443557739,
+   "ms": 233742
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.31982147693634033,
+   "ms": 2702994
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.478674054145813,
+   "ms": 94635
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.8871985971927643,
+   "ms": 3774
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.0079498291015625,
+   "ms": 16127
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.39008426666259766,
+   "ms": 355862
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.13086417317390442,
+   "ms": 2262
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.12351199984550476,
+   "ms": 2247
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.7103899717330933,
+   "ms": 1751439
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.3544548749923706,
+   "ms": 693481
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.4710158407688141,
+   "ms": 11768
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.313521146774292,
+   "ms": 5380183
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.8860481083393097,
+   "ms": 3772
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.9834009408950806,
+   "ms": 31734
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.24953654408454895,
+   "ms": 9996
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.9740275144577026,
+   "ms": 505351
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.732149600982666,
+   "ms": 13857
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.8189644813537598,
+   "ms": 29103
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.5243706703186035,
+   "ms": 24390
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.5256142616271973,
+   "ms": 1562229
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.683535099029541,
+   "ms": 861970
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.13631677627563477,
+   "ms": 9091
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.030553698539733887,
+   "ms": 1055287
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.4937289357185364,
+   "ms": 2987
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.3654155731201172,
+   "ms": 87387
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.6270771026611328,
+   "ms": 833063
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.34567832946777344,
+   "ms": 344494
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.43357276916503906,
+   "ms": 91749
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.3128795623779297,
+   "ms": 336097
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.9311084747314453,
+   "ms": 15819641
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.40178489685058594,
+   "ms": 358857
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.27007484436035156,
+   "ms": 5202227
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.4034099876880646,
+   "ms": 1403
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.9373797178268433,
+   "ms": 61996
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.032128334045410156,
+   "ms": 8455195
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.3781207799911499,
+   "ms": 44100
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.8980745375156403,
+   "ms": 7592
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.95424485206604,
+   "ms": 31268
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.9908945560455322,
+   "ms": 2038676
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.4670431613922119,
+   "ms": 1502252
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.8952639102935791,
+   "ms": 970375
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.7832472324371338,
+   "ms": 28532
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.625988245010376,
+   "ms": 416253
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.08547425270080566,
+   "ms": 138941
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.7451893091201782,
+   "ms": 7148295
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.6562124751508236,
+   "ms": 1656
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.8223711252212524,
+   "ms": 29158
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.9512211084365845,
+   "ms": 1998050
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.8872076272964478,
+   "ms": 241563
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.12331166863441467,
+   "ms": 4493
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.9086850583553314,
+   "ms": 15269
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.2693448066711426,
+   "ms": 2599618
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.8582501411437988,
+   "ms": 29732
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.6972165107727051,
+   "ms": 1737950
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.19884157180786133,
+   "ms": 613807
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.823196291923523,
+   "ms": 3733906
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.2254856824874878,
+   "ms": 1254897
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.08512240648269653,
+   "ms": 4340
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.34487271308898926,
+   "ms": 10759
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.4946129322052002,
+   "ms": 95655
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.325734406709671,
+   "ms": 1326
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.90558922290802,
+   "ms": 487831
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.041904598474502563,
+   "ms": 4168
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.7811086773872375,
+   "ms": 14249
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.6367239952087402,
+   "ms": 104750
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.11519384384155273,
+   "ms": 142745
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.4371575117111206,
+   "ms": 2943299
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.6235426664352417,
+   "ms": 415627
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.11732375621795654,
+   "ms": 17877
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.5523388385772705,
+   "ms": 397399
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.42308735847473145,
+   "ms": 1457241
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.9913304150104523,
+   "ms": 1991
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.7994697093963623,
+   "ms": 3685314
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.1967799961566925,
+   "ms": 9574
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.9288287162780762,
+   "ms": 987560
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.47271299362182617,
+   "ms": 47127
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.6743121147155762,
+   "ms": 13715965
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.6859698295593262,
+   "ms": 107902
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.5037798881530762,
+   "ms": 192484
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.7175860404968262,
+   "ms": 879404
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.26098203659057617,
+   "ms": 20176
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.16131165623664856,
+   "ms": 1161
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.4945700168609619,
+   "ms": 3060879
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.0043337345123291016,
+   "ms": 16069
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.980731263756752,
+   "ms": 3961
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.5864410400390625,
+   "ms": 3249031
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.7927589416503906,
+   "ms": 14686281
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.8330917358398438,
+   "ms": 1877086
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.6481132507324219,
+   "ms": 13501344
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.133575439453125,
+   "ms": 580391
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.3557504415512085,
+   "ms": 2776577
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.4959663152694702,
+   "ms": 765935
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.4642385244369507,
+   "ms": 5997521
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.6713947355747223,
+   "ms": 1671
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.1533539593219757,
+   "ms": 2307
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.4035186767578125,
+   "ms": 11497625
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.054660797119140625,
+   "ms": 67498
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.4388536214828491,
+   "ms": 5893544
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.9815658330917358,
+   "ms": 507281
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.7768468856811523,
+   "ms": 3638982
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.22043132781982422,
+   "ms": 39054
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.057161688804626465,
+   "ms": 1082534
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.8434761129319668,
+   "ms": 1843
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.861423134803772,
+   "ms": 59566
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.26310789585113525,
+   "ms": 646711
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.08502736687660217,
+   "ms": 4340
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.5685207843780518,
+   "ms": 401541
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.0792229175567627,
+   "ms": 552562
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.2611624002456665,
+   "ms": 10089
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.18153157830238342,
+   "ms": 2363
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.28349432349205017,
+   "ms": 2567
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.10478639602661133,
+   "ms": 2262603
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.916152834892273,
+   "ms": 122634
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.7046727240085602,
+   "ms": 1705
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.41145873069763184,
+   "ms": 722667
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.135803010314703,
+   "ms": 1136
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.6972606480121613,
+   "ms": 6789
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.6538816690444946,
+   "ms": 3387150
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.48150792717933655,
+   "ms": 11852
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.7739548981189728,
+   "ms": 14192
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.2696441672742367,
+   "ms": 1270
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.38247907161712646,
+   "ms": 22120
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.42698419094085693,
+   "ms": 45663
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.04484596848487854,
+   "ms": 2090
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.08177375793457031,
+   "ms": 4430945
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.9370816946029663,
+   "ms": 247946
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.18906819820404053,
+   "ms": 2435212
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.22588616609573364,
+   "ms": 1226
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.7830264568328857,
+   "ms": 7303276
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.961449384689331,
+   "ms": 31383
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.09136462211608887,
+   "ms": 17462
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.6481019258499146,
+   "ms": 52739
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.45153915882110596,
+   "ms": 92899
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.6469212770462036,
+   "ms": 105403
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.03167259693145752,
+   "ms": 132054
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.878913402557373,
+   "ms": 240501
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.870276927947998,
+   "ms": 1915164
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.47907209396362305,
+   "ms": 47330
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.5431895554065704,
+   "ms": 6173
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.4714120626449585,
+   "ms": 23543
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.4841865301132202,
+   "ms": 3039614
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.8211110830307007,
+   "ms": 58276
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.4867633581161499,
+   "ms": 12179565
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.43054521083831787,
+   "ms": 45777
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.5584014654159546,
+   "ms": 3191606
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.9632886648178101,
+   "ms": 8041630
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.12439382076263428,
+   "ms": 9211034
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.7124202251434326,
+   "ms": 438380
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.46771693229675293,
+   "ms": 23483
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.8412540256977081,
+   "ms": 3683
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.0681082010269165,
+   "ms": 8545
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.8294077515602112,
+   "ms": 3659
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.007077008485794067,
+   "ms": 4028
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.29851436614990234,
+   "ms": 1329679
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.21426677703857422,
+   "ms": 4973637
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.37863385677337646,
+   "ms": 11293769
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.4294866621494293,
+   "ms": 11436
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.394119530916214,
+   "ms": 5576
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.47616398334503174,
+   "ms": 1511592
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.6666098833084106,
+   "ms": 1706609
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.9275895357131958,
+   "ms": 986926
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.3172694444656372,
+   "ms": 1348884
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.09938251972198486,
+   "ms": 1125768
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.25945138931274414,
+   "ms": 322420
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.03135538101196289,
+   "ms": 66007
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.511560320854187,
+   "ms": 12382702
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.8171852827072144,
+   "ms": 3721595
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.7413023710250854,
+   "ms": 111443
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.04068648815155029,
+   "ms": 266416
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.15776944160461426,
+   "ms": 9484447
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.37671154364943504,
+   "ms": 1377
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.10913896560668945,
+   "ms": 35492
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.4688757658004761,
+   "ms": 47004
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.7894085645675659,
+   "ms": 458089
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.005411028861999512,
+   "ms": 128693
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.018224596977233887,
+   "ms": 2085324
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.02575862407684326,
+   "ms": 262594
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.33831584453582764,
+   "ms": 42826
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.13628092408180237,
+   "ms": 1136
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.976633608341217,
+   "ms": 31626
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.8854696750640869,
+   "ms": 482680
+  },
+  {
+   "retriesConsumed": 5,
+   "jitter": 0.8769228458404541,
+   "ms": 60062
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.7793104946613312,
+   "ms": 3559
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.4397698640823364,
+   "ms": 92145
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.7934695482254028,
+   "ms": 28696
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.3132840394973755,
+   "ms": 5379211
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.1853095293045044,
+   "ms": 303439
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.4932131767272949,
+   "ms": 382263
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.026050090789794922,
+   "ms": 131334
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.31282854080200195,
+   "ms": 21005
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.2267765998840332,
+   "ms": 2512438
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.5669211745262146,
+   "ms": 6268
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.8338167667388916,
+   "ms": 3755657
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.8391096591949463,
+   "ms": 470812
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.8118555843830109,
+   "ms": 7247
+  },
+  {
+   "retriesConsumed": 1,
+   "jitter": 0.664621502161026,
+   "ms": 3329
+  },
+  {
+   "retriesConsumed": 11,
+   "jitter": 0.13296031951904297,
+   "ms": 2320303
+  },
+  {
+   "retriesConsumed": 7,
+   "jitter": 0.4156745672225952,
+   "ms": 181206
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.6117299795150757,
+   "ms": 6601646
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.8611225187778473,
+   "ms": 14889
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.9028961658477783,
+   "ms": 15223
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.8536770343780518,
+   "ms": 949083
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.020629167556762695,
+   "ms": 1045124
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.9979040622711182,
+   "ms": 8183415
+  },
+  {
+   "retriesConsumed": 10,
+   "jitter": 0.29581475257873535,
+   "ms": 1326914
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.15749195218086243,
+   "ms": 4630
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.3492383658885956,
+   "ms": 5397
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.3541632890701294,
+   "ms": 5546653
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.22616589069366455,
+   "ms": 627797
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.6293225288391113,
+   "ms": 13035
+  },
+  {
+   "retriesConsumed": 8,
+   "jitter": 0.4176297187805176,
+   "ms": 362913
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.41254091262817383,
+   "ms": 90403
+  },
+  {
+   "retriesConsumed": 3,
+   "jitter": 0.2571225166320801,
+   "ms": 10057
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.7233471870422363,
+   "ms": 14117660
+  },
+  {
+   "retriesConsumed": 4,
+   "jitter": 0.11834383010864258,
+   "ms": 17894
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.8279646635055542,
+   "ms": 935918
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.714445948600769,
+   "ms": 109725
+  },
+  {
+   "retriesConsumed": 0,
+   "jitter": 0.3081645034253597,
+   "ms": 1308
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.9903467893600464,
+   "ms": 127382
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.8167672157287598,
+   "ms": 7441479
+  },
+  {
+   "retriesConsumed": 2,
+   "jitter": 0.6686578094959259,
+   "ms": 6675
+  },
+  {
+   "retriesConsumed": 6,
+   "jitter": 0.4810279607772827,
+   "ms": 94786
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.9660239219665527,
+   "ms": 16105668
+  },
+  {
+   "retriesConsumed": 12,
+   "jitter": 0.011998653411865234,
+   "ms": 4145146
+  },
+  {
+   "retriesConsumed": 13,
+   "jitter": 0.12356042861938477,
+   "ms": 9204207
+  },
+  {
+   "retriesConsumed": 9,
+   "jitter": 0.7848871946334839,
+   "ms": 913862
+  }
+ ]
+}

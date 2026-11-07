@@ -1,0 +1,155 @@
+{
+  "name": "payload-openai-responses-tool-call",
+  "description": "OpenAI Responses payload (`input` items, function_call / function_call_output -> messages) through a tool call and a final answer.",
+  "commands": {
+    "git": {}
+  },
+  "files": {
+    "notes.txt": "alpha\nbeta\ngamma\n"
+  },
+  "agentFiles": {
+    "models.json": "{\"providers\":{\"oair\":{\"baseUrl\":\"{{server:model}}/v1\",\"api\":\"openai-responses\",\"apiKey\":\"eq-key\",\"models\":[{\"id\":\"resp-1\",\"name\":\"resp-1\",\"reasoning\":false,\"input\":[\"text\"],\"contextWindow\":100000,\"maxTokens\":4096,\"cost\":{\"input\":0,\"output\":0,\"cacheRead\":0,\"cacheWrite\":0}}]}}}"
+  },
+  "args": [
+    "--provider",
+    "oair",
+    "--model",
+    "resp-1"
+  ],
+  "servers": {
+    "ls": {
+      "routes": [
+        {
+          "method": "GET",
+          "path": "/info",
+          "json": {
+            "version": "mock",
+            "license_expiration_time": null,
+            "batch_ingest_config": {
+              "use_multipart_endpoint": true,
+              "scale_up_qsize_trigger": 1000,
+              "scale_up_nthreads_limit": 16,
+              "scale_down_nempty_trigger": 4,
+              "size_limit": 100,
+              "size_limit_bytes": 20971520
+            },
+            "instance_flags": {
+              "gzip_body_enabled": false
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/runs/multipart",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs/batch",
+          "json": {}
+        },
+        {
+          "method": "POST",
+          "path": "/runs",
+          "json": {}
+        },
+        {
+          "method": "PATCH",
+          "path": "/runs/*",
+          "json": {}
+        }
+      ],
+      "recordHeaders": [
+        "x-api-key",
+        "x-tenant-id",
+        "authorization",
+        "content-encoding"
+      ]
+    },
+    "model": {
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/responses",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "times": 1,
+          "body": "event: response.created\ndata: {\"type\":\"response.created\",\"response\":{\"id\":\"resp_1\",\"object\":\"response\",\"status\":\"in_progress\",\"model\":\"m-1\",\"output\":[]}}\n\nevent: response.output_item.added\ndata: {\"type\":\"response.output_item.added\",\"output_index\":0,\"item\":{\"type\":\"function_call\",\"id\":\"fc_1\",\"call_id\":\"call_1\",\"name\":\"read\",\"arguments\":\"\",\"status\":\"in_progress\"}}\n\nevent: response.function_call_arguments.delta\ndata: {\"type\":\"response.function_call_arguments.delta\",\"item_id\":\"fc_1\",\"output_index\":0,\"delta\":\"{\\\"path\\\":\\\"notes.txt\\\"}\"}\n\nevent: response.function_call_arguments.done\ndata: {\"type\":\"response.function_call_arguments.done\",\"item_id\":\"fc_1\",\"output_index\":0,\"arguments\":\"{\\\"path\\\":\\\"notes.txt\\\"}\"}\n\nevent: response.output_item.done\ndata: {\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{\"type\":\"function_call\",\"id\":\"fc_1\",\"call_id\":\"call_1\",\"name\":\"read\",\"arguments\":\"{\\\"path\\\":\\\"notes.txt\\\"}\",\"status\":\"completed\"}}\n\nevent: response.completed\ndata: {\"type\":\"response.completed\",\"response\":{\"id\":\"resp_1\",\"object\":\"response\",\"status\":\"completed\",\"model\":\"m-1\",\"output\":[{\"type\":\"function_call\",\"id\":\"fc_1\",\"call_id\":\"call_1\",\"name\":\"read\",\"arguments\":\"{\\\"path\\\":\\\"notes.txt\\\"}\",\"status\":\"completed\"}],\"usage\":{\"input_tokens\":9,\"output_tokens\":4,\"total_tokens\":13,\"input_tokens_details\":{\"cached_tokens\":2},\"output_tokens_details\":{\"reasoning_tokens\":0}}}}\n\n"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/responses",
+          "headers": {
+            "Content-Type": "text/event-stream"
+          },
+          "body": "event: response.created\ndata: {\"type\":\"response.created\",\"response\":{\"id\":\"resp_1\",\"object\":\"response\",\"status\":\"in_progress\",\"model\":\"m-1\",\"output\":[]}}\n\nevent: response.output_item.added\ndata: {\"type\":\"response.output_item.added\",\"output_index\":0,\"item\":{\"type\":\"message\",\"id\":\"msg_1\",\"status\":\"in_progress\",\"role\":\"assistant\",\"content\":[]}}\n\nevent: response.content_part.added\ndata: {\"type\":\"response.content_part.added\",\"item_id\":\"msg_1\",\"output_index\":0,\"content_index\":0,\"part\":{\"type\":\"output_text\",\"text\":\"\",\"annotations\":[]}}\n\nevent: response.output_text.delta\ndata: {\"type\":\"response.output_text.delta\",\"item_id\":\"msg_1\",\"output_index\":0,\"content_index\":0,\"delta\":\"The file has three lines.\"}\n\nevent: response.output_text.done\ndata: {\"type\":\"response.output_text.done\",\"item_id\":\"msg_1\",\"output_index\":0,\"content_index\":0,\"text\":\"The file has three lines.\"}\n\nevent: response.content_part.done\ndata: {\"type\":\"response.content_part.done\",\"item_id\":\"msg_1\",\"output_index\":0,\"content_index\":0,\"part\":{\"type\":\"output_text\",\"text\":\"The file has three lines.\",\"annotations\":[]}}\n\nevent: response.output_item.done\ndata: {\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{\"type\":\"message\",\"id\":\"msg_1\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"The file has three lines.\",\"annotations\":[]}]}}\n\nevent: response.completed\ndata: {\"type\":\"response.completed\",\"response\":{\"id\":\"resp_1\",\"object\":\"response\",\"status\":\"completed\",\"model\":\"m-1\",\"output\":[{\"type\":\"message\",\"id\":\"msg_1\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"The file has three lines.\",\"annotations\":[]}]}],\"usage\":{\"input_tokens\":9,\"output_tokens\":4,\"total_tokens\":13,\"input_tokens_details\":{\"cached_tokens\":2},\"output_tokens_details\":{\"reasoning_tokens\":0}}}}\n\n"
+        }
+      ]
+    }
+  },
+  "env": {
+    "TRACE_TO_LANGSMITH": "true",
+    "LANGSMITH_PI_ENDPOINT": "{{server:ls}}",
+    "LANGSMITH_PI_API_KEY": "ls-test-key"
+  },
+  "steps": [
+    {
+      "rpc": {
+        "type": "prompt",
+        "message": "What is in notes.txt?"
+      }
+    }
+  ],
+  "settleMs": 700,
+  "tailMs": 1500,
+  "capture": [
+    "response",
+    "extension_ui_request",
+    "extension_error",
+    "tool_execution_start",
+    "tool_execution_end"
+  ],
+  "normalize": [
+    {
+      "pattern": "----LangSmithFormBoundary[0-9a-z]+",
+      "replacement": "<boundary>"
+    },
+    {
+      "pattern": "[0-9]{8}T[0-9]{12}Z",
+      "replacement": "<ts>"
+    },
+    {
+      "pattern": "\"(start_time|end_time|timestamp|durationMs)\":[0-9]+",
+      "replacement": "\"$1\":<ts:num>"
+    },
+    {
+      "pattern": "\"role\":\"system\",\"content\":\"(?:[^\"\\\\]|\\\\.)*\"",
+      "replacement": "\"role\":\"system\",\"content\":\"<host-prompt>\""
+    },
+    {
+      "pattern": "\"sections\":\\{.*?\\},\"timestamp\"",
+      "replacement": "\"sections\":\"<host-prompt>\",\"timestamp\""
+    },
+    {
+      "pattern": "\"local_username\":\"[^\"]*\"",
+      "replacement": "\"local_username\":\"<user>\""
+    },
+    {
+      "pattern": "\"runtime\":\"(node|go)\"",
+      "replacement": "\"runtime\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk\":\"[^\"]*\"",
+      "replacement": "\"sdk\":\"<d1>\""
+    },
+    {
+      "pattern": "\"sdk_version\":\"[^\"]*\"",
+      "replacement": "\"sdk_version\":\"<d1>\""
+    },
+    {
+      "pattern": "length=[0-9]+",
+      "replacement": "length=<n>"
+    }
+  ]
+}

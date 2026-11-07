@@ -1,0 +1,8 @@
+{
+  "name": "multipart-500-retries",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:45403",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

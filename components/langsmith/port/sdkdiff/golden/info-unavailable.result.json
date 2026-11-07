@@ -1,0 +1,21 @@
+{
+  "name": "info-unavailable",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:38579",
+  "console": [
+    {
+      "level": "warn",
+      "text": "[LANGSMITH]: Failed to fetch info on supported operations. Falling back to batch operations and default limits. Info: 500 Failed to get server info. Received status [500]: Internal Server Error. Message: boom"
+    },
+    {
+      "level": "warn",
+      "text": "[LANGSMITH]: Failed to fetch info on supported operations. Falling back to batch operations and default limits. Info: 500 Failed to get server info. Received status [500]: Internal Server Error. Message: boom"
+    },
+    {
+      "level": "warn",
+      "text": "[LANGSMITH]: Failed to fetch info on supported operations. Falling back to batch operations and default limits. Info: 500 Failed to get server info. Received status [500]: Internal Server Error. Message: boom"
+    }
+  ],
+  "errors": [],
+  "filesAfter": {}
+}

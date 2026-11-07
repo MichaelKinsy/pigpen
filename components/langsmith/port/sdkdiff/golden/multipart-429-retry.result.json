@@ -1,0 +1,8 @@
+{
+  "name": "multipart-429-retry",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:42433",
+  "console": [],
+  "errors": [],
+  "filesAfter": {}
+}

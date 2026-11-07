@@ -10,7 +10,9 @@ package langsmith
 // The original's order is that of the JSON text Pi sent; the Go SDK does not expose it (port/PORT.md, finding F1).
 
 import (
+	"cmp"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"unicode/utf16"
@@ -231,30 +233,52 @@ func sortedKeys(m map[string]any) []string {
 	for k := range m {
 		keys = append(keys, k)
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		a, b := keys[i], keys[j]
-		ai, bi := isArrayIndex(a), isArrayIndex(b)
-		switch {
-		case ai && bi:
-			x, _ := strconv.ParseUint(a, 10, 32)
-			y, _ := strconv.ParseUint(b, 10, 32)
-			return x < y
-		case ai != bi:
-			return ai
-		}
-		return lessUTF16(a, b)
-	})
+	slices.SortFunc(keys, cmpJSKey)
 	return keys
 }
 
-func lessUTF16(a, b string) bool {
+// cmpJSKey orders property keys as JavaScript does: array-index keys first, ascending by value, then the others by
+// UTF-16 code unit.
+func cmpJSKey(a, b string) int {
+	ai, bi := isArrayIndex(a), isArrayIndex(b)
+	switch {
+	case ai && bi:
+		x, _ := strconv.ParseUint(a, 10, 32)
+		y, _ := strconv.ParseUint(b, 10, 32)
+		return cmp.Compare(x, y)
+	case ai:
+		return -1
+	case bi:
+		return 1
+	}
+	return cmpUTF16(a, b)
+}
+
+// cmpUTF16 compares two strings by UTF-16 code unit. UTF-8 byte order equals code point order, which equals UTF-16
+// order except between U+E000..U+FFFF and the supplementary planes (and lone surrogates, which are WTF-8 here); the
+// byte comparison is exact whenever the first differing byte is below 0xED, which is every ASCII and most real keys.
+func cmpUTF16(a, b string) int {
+	n := min(len(a), len(b))
+	for i := 0; i < n; i++ {
+		if a[i] == b[i] {
+			continue
+		}
+		if a[i] < 0xED && b[i] < 0xED {
+			return cmp.Compare(a[i], b[i])
+		}
+		return cmpUTF16Slow(a, b)
+	}
+	return cmp.Compare(len(a), len(b))
+}
+
+func cmpUTF16Slow(a, b string) int {
 	ua, ub := utf16.Encode([]rune(a)), utf16.Encode([]rune(b))
 	for i := 0; i < len(ua) && i < len(ub); i++ {
 		if ua[i] != ub[i] {
-			return ua[i] < ub[i]
+			return cmp.Compare(ua[i], ub[i])
 		}
 	}
-	return len(ua) < len(ub)
+	return cmp.Compare(len(ua), len(ub))
 }
 
 // MarshalJSON lets the SDK codec nest an omap inside a Go value.
@@ -339,10 +363,32 @@ func appendValue(dst []byte, v any) ([]byte, error) {
 		if x == nil {
 			return append(dst, "null"...), nil
 		}
-		m, _ := toOmap(x)
-		return appendObject(dst, m)
+		return appendMap(dst, x)
 	}
 	return json.AppendStringify(dst, v) // float64, json.Number and anything the SDK codec writes as JSON.stringify does
+}
+
+// appendMap writes a decoded JSON object with its keys in JavaScript order, without building an omap.
+func appendMap(dst []byte, m map[string]any) ([]byte, error) {
+	dst = append(dst, '{')
+	first := true
+	for _, k := range sortedKeys(m) {
+		val := m[k]
+		if isUndef(val) {
+			continue
+		}
+		if !first {
+			dst = append(dst, ',')
+		}
+		first = false
+		dst = json.AppendStringifyString(dst, k)
+		dst = append(dst, ':')
+		var err error
+		if dst, err = appendValue(dst, val); err != nil {
+			return dst, err
+		}
+	}
+	return append(dst, '}'), nil
 }
 
 func appendObject(dst []byte, m *omap) ([]byte, error) {

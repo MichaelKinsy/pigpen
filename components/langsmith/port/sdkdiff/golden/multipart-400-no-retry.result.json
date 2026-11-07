@@ -1,0 +1,13 @@
+{
+  "name": "multipart-400-no-retry",
+  "sdkVersion": "0.10.5",
+  "endpoint": "http://127.0.0.1:45417",
+  "console": [
+    {
+      "level": "warn",
+      "text": "Failed to Failed to send multipart request. Received status [400]: Bad Request. Message: bad request\n\nContext: trace=0198a000-0000-7000-8000-000000000001,id=0198a000-0000-7000-8000-000000000001"
+    }
+  ],
+  "errors": [],
+  "filesAfter": {}
+}

@@ -1,0 +1,7 @@
+LsWire red state: the contract stubs at git HEAD (timefmt.go uuid.go xxh3.go sampling.go runtime_env.go) panic with
+"unported: <file> <func>" on every entry point, and the lane tests also reference helpers the stubs lack
+(samplingBucket, shasFrom, runtimeEnvFrom, langSmithEnvFrom, langSmithEnvVarsMetadataFrom, assertUUIDFor, maskSecret,
+jsUTF8Lower, jsValidUTF8, wireWarnWriter), so against the stubs the package test build fails (undefined symbols) and each
+vector test would panic. The vectors (testdata/wire-*.json) were generated from the real JS before the implementation
+was written. A separate scratch run of the stub overlay was attempted and not completed (shared-tree sync collision);
+no stub test output is recorded here.
