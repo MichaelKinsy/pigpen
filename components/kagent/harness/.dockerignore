@@ -1,0 +1,10 @@
+# The build context is this directory. Only what the Dockerfile copies goes in, so a doc or chart edit does not rebuild an image layer.
+*
+!LICENSE
+!NOTICE
+!adapter/
+!piglet/
+!policy/
+**/*_test.go
+**/testdata
+**/.git

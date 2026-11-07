@@ -1,0 +1,21 @@
+# Grype policy for the kagent harness image gate (.github/workflows/kagent-harness-image.yml).
+# The gate stays strict: `--only-fixed --fail-on high`, with nothing ignored except the one entry below.
+#
+# reviewed: 2026-11-07
+# expires: 2026-12-15
+#
+# GO-2026-6860 (High, golang.org/x/net/html, quadratic text-node coalescing, fixed in x/net v0.62.0) is in the upstream GitHub CLI
+# binary gh 2.103.3 (golang.org/x/net v0.60.0), which the image installs from the official release archive pinned by sha256.
+# gh 2.103.3 is the newest gh release (git ls-remote of cli/cli, 2026-11-07). Evidence that gh does not reach the vulnerable code:
+# `govulncheck -show=traces ./...` (govulncheck v1.9.0, Go 1.27.3) on the gh source at tag v2.103.3 (commit
+# 63837fb778d6a39f02be0ce76ff89f2bc8d74bdc) reports "Your code is affected by 0 vulnerabilities"; the symbols are linked in
+# (govulncheck -mode=binary lists html.Parse) but no call path from gh reaches them. The matched package is exactly x/net v0.60.0,
+# so the same vulnerability in the adapter or in pig (x/net v0.62.0) is not ignored.
+# Not rebuilding gh from source: it would replace a checksum-pinned upstream binary with our own build to silence an unreachable
+# finding. Remove this entry when a gh release carries x/net >= 0.62.0; the release workflow refuses to run after the date above.
+ignore:
+  - vulnerability: GO-2026-6860
+    package:
+      name: golang.org/x/net
+      version: v0.60.0
+      type: go-module

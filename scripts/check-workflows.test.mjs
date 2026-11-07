@@ -6,7 +6,8 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { hardeningProblems, pinProblems, targetProblems, releaseProblems, archonReleaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems } from './check-workflows.mjs';
+import { hardeningProblems, pinProblems, targetProblems, releaseProblems, archonReleaseProblems, notifyProblems, tagProblems, npmPublishProblems, cacheProblems, goToolchainProblems, vulnerabilityProblems, listingsProblems, kagentImageProblems, grypeIgnoreProblems } from './check-workflows.mjs';
+import { runners as nativeRunners } from './runners.mjs';
 
 const sha = 'a'.repeat(40);
 const good = `
@@ -496,5 +497,70 @@ jobs:
   it('leaves the blanket rule in place for every other workflow', () => {
     assert.match(hardeningProblems('ci.yml', good.replace('echo ok', 'echo ${{ secrets.DISCORD_WEBHOOK_URL }}')).join('\n'), /uses a secret/);
     assert.deepEqual(notifyProblems('ci.yml', notify), []);
+  });
+});
+
+describe('the kagent harness image workflow', () => {
+  const file = 'kagent-harness-image.yml';
+  const workflow = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.github', 'workflows', file), 'utf8');
+  const problems = (text, name = file) => [...hardeningProblems(name, text), ...kagentImageProblems(name, text, nativeRunners)].join('\n');
+  it('accepts the committed workflow: signing and attesting only in publish, the one job with id-token', () => {
+    assert.equal(problems(workflow), '');
+    assert.deepEqual(tagProblems({ [file]: parse(workflow) }), []);
+  });
+  it('keeps the signing, the attestations and the id-token out of every other workflow and job', () => {
+    assert.match(problems(workflow, 'ci.yml'), /job publish: id-token: write/);
+    assert.match(problems(workflow.replace('    permissions:\n      contents: read\n      packages: write\n    timeout-minutes: 60', '    permissions:\n      contents: read\n      packages: write\n      id-token: write\n    timeout-minutes: 60')), /job build: id-token: write/);
+    const leaked = workflow.replace('      - name: Create the GitHub Release\n', '      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2\n        with:\n          subject-path: x\n      - name: Create the GitHub Release\n');
+    assert.match(problems(leaked), /job release: signing and attesting belong in the publish job only/);
+  });
+  it('refuses any secret and any registry login that is not the job token', () => {
+    assert.match(problems(workflow.replace('password: ${{ github.token }}', 'password: ${{ secrets.GHCR_TOKEN }}')), /uses a secret/);
+    assert.match(problems(workflow.replace('password: ${{ github.token }}', 'password: ${{ secrets.GHCR_TOKEN }}')), /registry login must use/);
+  });
+  it('refuses an image pushed by tag from a build job, and a publish that does not wait for the build', () => {
+    assert.match(problems(workflow.replace('push-by-digest=true,', '')), /pushed by digest only/);
+    assert.match(problems(workflow.replace('needs: [plan, build]', 'needs: [plan]')), /publish must need build/);
+  });
+  it('requires the protected environment on publish and release', () => {
+    assert.match(problems(workflow.replace('    environment: release-image\n    permissions:\n      contents: read\n      packages: write\n      id-token', '    permissions:\n      contents: read\n      packages: write\n      id-token')), /job publish must run in environment: release-image/);
+    assert.match(problems(workflow.replaceAll('environment: release-image', 'environment: release')), /job release must run in environment: release-image/);
+  });
+  it('builds each architecture on its native runner', () => {
+    assert.match(problems(workflow.replace('runner: ubuntu-24.04-arm', 'runner: ubuntu-24.04')), /arm64 builds on ubuntu-24\.04, not the native ubuntu-24\.04-arm/);
+    assert.match(problems(workflow.replace('          - { arch: arm64, runner: ubuntu-24.04-arm }\n', '')), /no arm64 entry/);
+  });
+  it('runs only on a pushed harness tag, which no other workflow filter may match', () => {
+    assert.match(problems(workflow.replace("    tags: ['components/kagent/harness/v*']", "    tags: ['components/kagent/harness/v*']\n  workflow_dispatch: {}")), /only on a pushed components\/kagent\/harness\/v\* tag/);
+    assert.match(tagProblems({ [file]: on('*/v*') }).join('\n'), /also matches (herdr\/v0\.1\.0|components\/herdr)/);
+    assert.match(tagProblems({ [file]: on('v*') }).join('\n'), /does not match the kagent harness image tag/);
+    assert.match(tagProblems({ 'release.yml': on('**/v*'), [file]: parse(workflow) }).join('\n'), /release\.yml: tag filter \*\*\/v\* also matches the kagent harness image tag/);
+    assert.deepEqual(tagProblems({ 'release.yml': on('*/v*'), 'release-package.yml': on('components/*/v*'), 'npm-publish.yml': on('npm/v*'), [file]: parse(workflow) }), []);
+  });
+});
+
+describe('the kagent harness image grype policy', () => {
+  const config = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'components', 'kagent', 'release', '.grype.yaml'), 'utf8');
+  const workflow = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.github', 'workflows', 'kagent-harness-image.yml'), 'utf8');
+  it('accepts the committed exception: one vulnerability, one exact package, dated', () => {
+    assert.deepEqual(grypeIgnoreProblems(config), []);
+  });
+  it('refuses an exception that widens the gate', () => {
+    assert.match(grypeIgnoreProblems(config.replace('      version: v0.60.0\n', '')).join('\n'), /exact name, an exact version and a type/);
+    assert.match(grypeIgnoreProblems(config.replace('version: v0.60.0', 'version: v0.*')).join('\n'), /no wildcard/);
+    assert.match(grypeIgnoreProblems(config.replace('    package:', '    fix-state: unknown\n    package:')).join('\n'), /fix-state widens the exception/);
+    assert.match(grypeIgnoreProblems(`${config}\nonly-fixed: false\n`).join('\n'), /only an ignore list is allowed/);
+  });
+  it('refuses an undated exception or one that runs past 120 days of its review', () => {
+    assert.match(grypeIgnoreProblems(config.replace('# expires: 2026-12-15\n', '')).join('\n'), /needs a "# reviewed/);
+    assert.match(grypeIgnoreProblems(config.replace('2026-12-15', '2027-06-01')).join('\n'), /within 120 days/);
+    assert.deepEqual(grypeIgnoreProblems('# no exception\nignore: []\n'), []);
+  });
+  it('keeps the workflow gate strict and reading that one file', () => {
+    const problems = (text) => kagentImageProblems('kagent-harness-image.yml', text, {}).join('\n');
+    assert.equal(problems(workflow), '');
+    assert.match(problems(workflow.replace('only-fixed: true', 'only-fixed: false')), /must keep only-fixed: true/);
+    assert.match(problems(workflow.replace('severity-cutoff: high', 'severity-cutoff: critical')), /must keep only-fixed: true/);
+    assert.match(problems(workflow.replace('config: components/kagent/release/.grype.yaml', 'config: .grype.yaml')), /must read components\/kagent\/release\/\.grype\.yaml/);
   });
 });
