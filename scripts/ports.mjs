@@ -169,7 +169,7 @@ export function provenanceSkeleton(row) {
   return { origin: upstreams.length ? 'ported' : 'original', authors: ['Michael Kinsy'], license: 'MIT', licenseFile: 'LICENSE', upstreams };
 }
 
-export function checkPorts(root = defaultRoot) {
+export function checkPorts(root = defaultRoot, { oracles = true } = {}) {
   const file = join(root, 'ports/ports.json');
   const schemaFile = join(root, 'ports/ports.schema.json');
   if (!existsSync(file)) return { errors: ['ports/ports.json is missing'] };
@@ -182,12 +182,13 @@ export function checkPorts(root = defaultRoot) {
   if (!existsSync(readme)) errors.push('ports/README.md is missing: run npm run generate');
   else if (readFileSync(readme, 'utf8') !== renderReadme(data)) errors.push('ports/README.md is stale: run npm run generate');
   // The originals the ports were measured against are fetched, not vendored: the lock must agree with the tree and the pins.
-  if (existsSync(join(root, LOCK_FILE)) || oracleDirectories(root).length) errors.push(...lockProblems(root));
+  if (oracles && (existsSync(join(root, LOCK_FILE)) || oracleDirectories(root).length)) errors.push(...lockProblems(root));
   return { errors, data };
 }
 
 function load(root) {
-  const { errors, data } = checkPorts(root);
+  // Updating a row does not depend on the oracle lock, and a copy of ports/ has no components to check it against.
+  const { errors, data } = checkPorts(root, { oracles: false });
   if (errors.some((e) => !/README\.md is (stale|missing)/.test(e))) throw new Error(errors.join('\n'));
   return data;
 }
