@@ -17,6 +17,7 @@ import { parseDocument } from 'yaml';
 import { readManifests, root } from './generate-index.mjs';
 import { npmName } from './npm-packages.mjs';
 import { canFuse, componentLicense, isCopyleft, licenseIds, parseSpdx, pigletLicense, refusal, spdxIds } from './licenses.mjs';
+import { COMPONENT_REL, ownerRel } from './layout.mjs';
 
 const slash = (path) => path.split('\\').join('/');
 const MAX_EXTENDS_DEPTH = 8; // PiG's own limit (coding/piglet/extends.go)
@@ -93,7 +94,7 @@ function locate(source, definedIn, directory, what) {
     const target = resolve(definedIn, source.slice('local:'.length));
     if (inside(definedIn, target)) return { owned: true };
     const shared = slash(relative(directory, target));
-    if (/^components\/[a-z0-9][a-z0-9.-]*$/.test(shared) && existsSync(target)) return { component: shared.slice('components/'.length) };
+    if (COMPONENT_REL.test(shared) && existsSync(target)) return { component: shared.split('/').pop() };
     return unreadable('not inside the Piglet or a components/<name> directory of this repository');
   }
   const catalogue = catalogueComponent(source, directory);
@@ -117,7 +118,7 @@ export function fusionProblems(directory = root, only) {
     const addComponent = (component) => {
       if (seen.has(component)) return;
       seen.add(component);
-      parts.push({ kind: 'Package', name: component, license: componentLicense(join(directory, 'components', component)) });
+      parts.push({ kind: 'Package', name: component, license: componentLicense(join(directory, ownerRel(directory, 'components', component) ?? `components/${component}`)) });
     };
     for (const base of state.bases) parts.push({ kind: 'Piglet', name: base.name, license: base.license });
     for (const { alias, source, owner: definedIn, piglet } of state.staged) {
