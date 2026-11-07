@@ -9,9 +9,9 @@ build:
   targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
   extensionRealization: fused
 packages:
-  pig-play: local:../../components/pig-play
-  pig-runner: local:../../components/pig-runner
-  angry-pigs: local:../../components/angry-pigs
+  pig-play: local:../../../components/pig-play
+  pig-runner: local:../../../components/pig-runner
+  angry-pigs: local:../../../components/angry-pigs
   bun-runtime: local:../../components/bun-runtime
 extensions:
   - name: pigrunner

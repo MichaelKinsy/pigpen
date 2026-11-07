@@ -7,6 +7,7 @@ const relative = (from, to) => nativeRelative(from, to).split(sep).join('/');
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import { isMap, parseDocument } from 'yaml';
+import { listOwners } from './layout.mjs';
 
 const root = realpathSync(resolve(process.argv[2] || fileURLToPath(new URL('../', import.meta.url))));
 // .upstream is the untracked symlink every lane worktree carries to its upstream sources; a checkout has none.
@@ -138,11 +139,8 @@ try {
     });
   }
 
-  const owners = ['piglets', 'components'].flatMap(kind => {
-    const directory = join(root, kind);
-    if (!existsSync(directory)) return [];
-    return readdirSync(directory, { withFileTypes: true }).filter(entry => entry.isDirectory()).map(entry => join(directory, entry.name));
-  });
+  // piglets/, components/ and the benchmark pieces under bench/ are all held to the same provenance, licence and naming rules.
+  const owners = ['piglets', 'components'].flatMap(kind => listOwners(root, kind).filter(entry => entry.isDirectory).map(entry => entry.path));
   for (const owner of owners) checkProvenance(owner);
   const names = new Map();
   const hashes = new Map();

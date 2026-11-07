@@ -2,6 +2,7 @@ import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { isMap, parseDocument } from 'yaml';
 import { readManifests, root } from './generate-index.mjs';
+import { COMPONENT_REL } from './layout.mjs';
 
 // Stage local source only. PiG remains responsible for validating and running the resulting manifests.
 const excluded = new Set(['.git', 'node_modules', 'dist']);
@@ -68,8 +69,8 @@ try {
         continue;
       }
       const shared = relative(directory, packageRoot).split('\\').join('/');
-      if (!/^components\/[a-z0-9][a-z0-9.-]*$/.test(shared)) {
-        throw new Error(`${path}: shared Package ${alias} must select exactly components/<name> inside the repository`);
+      if (!COMPONENT_REL.test(shared)) {
+        throw new Error(`${path}: shared Package ${alias} must select exactly components/<name> (or bench/components/<name>) inside the repository`);
       }
       if (realpathSync(packageRoot) !== packageRoot) throw new Error(`${packageRoot}: shared Package path must not traverse symlinks`);
       if (!lstatSync(packageRoot).isDirectory()) throw new Error(`${packageRoot}: shared Package must be a directory`);

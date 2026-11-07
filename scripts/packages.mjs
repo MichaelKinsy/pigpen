@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { listOwners } from './layout.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 const NAME = /^[a-z0-9][a-z0-9.-]*$/;
@@ -37,14 +38,13 @@ export function packageSpec(repository, name, version) {
 
 export const packageInstallCommand = (repository, name, version) => `pig install '${packageSpec(repository, name, version)}'`;
 
-/** Every component with a package.json: [{dir, path, manifest}] sorted by directory. */
+/** Every component with a package.json, in components/ and bench/components/: [{dir, rel, path, manifest}] sorted by directory. */
 export function readPackages(directory = root) {
-  return readdirSync(join(directory, 'components'), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && existsSync(join(directory, 'components', entry.name, 'package.json')))
-    .sort((a, b) => a.name.localeCompare(b.name, 'en'))
-    .map(({ name }) => {
-      const path = join(directory, 'components', name, 'package.json');
-      return { dir: name, path, manifest: JSON.parse(readFileSync(path, 'utf8')) };
+  return listOwners(directory, 'components')
+    .filter((entry) => entry.isDirectory && existsSync(join(entry.path, 'package.json')))
+    .map(({ name, rel }) => {
+      const path = join(directory, rel, 'package.json');
+      return { dir: name, rel, path, manifest: JSON.parse(readFileSync(path, 'utf8')) };
     });
 }
 

@@ -5,6 +5,9 @@ This is the tree from the repository root. Paths marked GENERATED are never edit
 ```text
 catalog/                            index.json (GENERATED; never hand-edit), index.schema.json (the catalog format),
                                     listing.schema.json (a third-party listing), catalog.config.json (MichaelKinsy/pigpen, branch main)
+bench/                              the benchmark Piglets pi-arena pins (bench/piglets/bench-*), the components only they select
+                                    (bench/components: aot-runtime, bun-runtime, bench-ext10, bench-ext10-ts) and pins.json; released and
+                                    published to npm like the rest, never listed in catalog/index.json
 components/extension-port/          directly installable shared Skill Package (the porting
                                     workflow, TS-to-Go pattern catalog, fake-host template)
 components/extension-equivalence/   directly installable Go extension Package: the

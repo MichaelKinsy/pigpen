@@ -1,12 +1,13 @@
 // Deterministic, generated view of authored Piglet manifests. Never hand-edit catalog/index.json.
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, writeFileSync, lstatSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, lstatSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { packageEntry, readPackageRecords, readPackages } from './packages.mjs';
 import { readArchonPlugins } from './archon-plugins.mjs';
 import { catalogPath } from './catalog-paths.mjs';
+import { listOwners } from './layout.mjs';
 import { npmName } from './npm-packages.mjs';
 import { listingEntry, listingProblems, readListings } from './listings.mjs';
 import { readPinnedKeys, readReceipts, releaseFromReceipt } from './receipts.mjs';
@@ -31,10 +32,11 @@ const validMetadata = ajv.compile({ type: 'object', additionalProperties: false,
 // that nothing is published: it says what the index does not know and where to look.
 const PLANNED_NOTE = 'Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.';
 
-export function readManifests(directory = root) {
-  return readdirSync(join(directory, 'piglets'), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, 'en')).map(dir => {
-    if (!dir.isDirectory() || !/^[a-z0-9][a-z0-9.-]*$/.test(dir.name)) throw new Error('Invalid Piglet directory: ' + dir.name);
-    const path = join(directory, 'piglets', dir.name, 'piglet.yaml');
+/** The authored Piglet manifests of piglets/ and, unless `bench` is false, bench/piglets/. The catalogue passes false: bench Piglets are never listed. */
+export function readManifests(directory = root, { bench = true } = {}) {
+  return listOwners(directory, 'piglets', { bench }).map(dir => {
+    if (!dir.isDirectory || !/^[a-z0-9][a-z0-9.-]*$/.test(dir.name)) throw new Error('Invalid Piglet directory: ' + dir.name);
+    const path = join(dir.path, 'piglet.yaml');
     if (lstatSync(path).isSymbolicLink()) throw new Error('Piglet manifests must not be symlinks');
     const raw = readFileSync(path, 'utf8');
     const document = parseDocument(raw, { uniqueKeys: true });
@@ -42,7 +44,7 @@ export function readManifests(directory = root) {
     const manifest = document.toJS();
     if (manifest.name !== dir.name) throw new Error('Directory must match manifest.name');
     if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(manifest.release?.version)) throw new Error('Manifest must have release.version');
-    const metadata = JSON.parse(readFileSync(join(directory, 'piglets', dir.name, 'catalog.json')));
+    const metadata = JSON.parse(readFileSync(join(dir.path, 'catalog.json')));
     if (!validMetadata(metadata)) throw new Error(ajv.errorsText(validMetadata.errors));
     return { path, raw, manifest, metadata };
   });
@@ -62,7 +64,7 @@ export function validateIndex(index) {
 
 export function generateIndex(directory = root, repository = config.repository) {
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) throw new Error('Invalid repository');
-  const manifests = readManifests(directory);
+  const manifests = readManifests(directory, { bench: false });
   // A Package is listed once its release record is committed, and then only as `available`: the record is checked
   // against the git tag it names and the entry is built from the tagged tree (packages.mjs).
   // A Piglet is `available` exactly when a committed receipt verifies: signed by a key pinned in release-keys/, for this
@@ -75,7 +77,7 @@ export function generateIndex(directory = root, repository = config.repository) 
     entries: [...manifests.map(({ manifest, metadata, raw }) => pigletEntry({ manifest, metadata, raw }, receipts.get(manifest.name) ?? [], { repository, keys })), ...released.map(({ entry }) => entry)] };
   // Third-party listings (listings/<id>.json): official: false, the real maintainer, pinned to a full commit.
   const found = readListings(join(directory, 'listings'));
-  const problems = listingProblems(found, { reserved: reservedNames(directory, manifests), repository });
+  const problems = listingProblems(found, { reserved: reservedNames(directory), repository });
   if (problems.length) throw new Error(`Invalid third-party listings:\n${problems.join('\n')}`);
   const listed = found.map(({ listing }) => listing);
   index.entries.push(...listed.map(listingEntry));

@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, after } from 'node:test';
 import { parse } from 'yaml';
-import { readManifests } from './generate-index.mjs';
+import { readManifests, root } from './generate-index.mjs';
+import { ownerRel } from './layout.mjs';
 import { buildPigletTree, npmPigletSource, pigletNpmName, pigletPackageJson } from './npm-piglets.mjs';
 import { readPackages } from './packages.mjs';
 
@@ -68,7 +69,7 @@ describe('the npm package of a Piglet', () => {
       assert.equal(pkg.keywords.includes('pig-package'), false, 'a Piglet is classified by the most specific keyword; it carries only its own');
       assert.deepEqual(pkg.pig, { piglet: 'piglet.yaml' });
       assert.deepEqual(pkg.publishConfig, { access: 'public' });
-      assert.equal(pkg.repository.directory, `piglets/${name}`);
+      assert.equal(pkg.repository.directory, ownerRel(root, 'piglets', name), 'the directory is where the Piglet lives, piglets/ or bench/piglets/');
       assert.ok(pkg.files.includes('piglet.yaml'));
       assert.equal('private' in pkg, false);
     }

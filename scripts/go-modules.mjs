@@ -7,6 +7,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, w
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { listOwners } from './layout.mjs';
 import { requirePig } from './pig-bin.mjs';
 
 const scratchDirs = new Set();
@@ -55,26 +56,25 @@ export function frontendMember(piglet) {
 
 /**
  * Every Go module: a component's own root go.mod (a shared library Package), each components/<name>/extensions/<dir>
- * and piglets/<name>/extensions/<dir>, and a Piglet's frontend member (piglet.yaml slots.frontend.member).
+ * and piglets/<name>/extensions/<dir> (and the same under bench/), and a Piglet's frontend member (piglet.yaml slots.frontend.member).
  */
 export function goModules(directory = root) {
   const found = [];
   for (const kind of ['components', 'piglets']) {
-    const base = join(directory, kind);
-    if (!existsSync(base)) continue;
-    for (const owner of readdirSync(base, { withFileTypes: true })) {
-      if (!owner.isDirectory()) continue;
+    for (const owner of listOwners(directory, kind)) {
+      if (!owner.isDirectory) continue;
+      const ownerPath = owner.path;
       // A component may be a shared Go library module rooted at its Package directory (libraries/*, assets),
       // with nested modules below it (hardening/policy/cedar keeps cedar-go out of the module graph of its users).
-      if (existsSync(join(base, owner.name, 'go.mod'))) {
-        found.push(join(base, owner.name));
-        found.push(...nestedModules(join(base, owner.name)));
+      if (existsSync(join(ownerPath, 'go.mod'))) {
+        found.push(ownerPath);
+        found.push(...nestedModules(ownerPath));
       }
       if (kind === 'piglets') {
-        const frontend = frontendMember(join(base, owner.name));
+        const frontend = frontendMember(ownerPath);
         if (frontend) found.push(frontend);
       }
-      const extensions = join(base, owner.name, 'extensions');
+      const extensions = join(ownerPath, 'extensions');
       if (!existsSync(extensions)) continue;
       for (const entry of readdirSync(extensions, { withFileTypes: true })) {
         const dir = join(extensions, entry.name);

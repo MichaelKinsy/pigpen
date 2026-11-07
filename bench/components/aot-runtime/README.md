@@ -8,3 +8,5 @@ It is the member of the [`bench-aot`](../../piglets/bench-aot/piglet.yaml) Pigle
 pi-in-go.dev version after PiG 0.5.0). The source is PiG's `piglets/aot`; see [CREDITS.md](CREDITS.md).
 
 [MIT](LICENSE), original work by Michael Kinsy.
+
+The real home of this runtime is PiG (`piglets/pig-bolt`, extension `boltruntime`); this copy only serves the bench Piglets.

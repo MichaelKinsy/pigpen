@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { parse } from 'yaml';
 import { root } from './go-modules.mjs';
+import { ownerRel } from './layout.mjs';
 
 const pins = JSON.parse(readFileSync(join(root, 'bench/pins.json'), 'utf8'));
 const spec = JSON.parse(readFileSync(join(root, 'bench/sync-spec.json'), 'utf8'));
@@ -20,7 +21,7 @@ describe('bench/pins.json', () => {
       assert.equal(manifest.name, name);
       assert.match(manifest.release.version, /^\d+\.\d+\.\d+$/, 'a floating or pre-release version is not pinnable');
       assert.deepEqual((manifest.extensions ?? []).map((e) => e.name), pin.slots);
-      for (const source of Object.values(manifest.packages ?? {})) assert.match(source, /^local:\.\.\/\.\.\/components\//, `${name}: a package outside Pigpen cannot be pinned by commit`);
+      for (const source of Object.values(manifest.packages ?? {})) assert.match(source, /^local:(\.\.\/){2,3}components\//, `${name}: a package outside Pigpen cannot be pinned by commit`);
     });
   }
 });
@@ -40,7 +41,7 @@ describe('bench Piglet dependency pins', () => {
     const names = new Set(Object.keys(spec.components));
     for (const pin of Object.values(pins.piglets)) {
       const manifest = parse(readFileSync(join(root, pin.manifest), 'utf8'));
-      for (const source of Object.values(manifest.packages ?? {})) names.add(source.replace(/^local:\.\.\/\.\.\/components\//, ''));
+      for (const source of Object.values(manifest.packages ?? {})) names.add(source.replace(/^local:(\.\.\/)+components\//, ''));
     }
     return [...names].sort();
   };
@@ -49,7 +50,7 @@ describe('bench Piglet dependency pins', () => {
   it('every go.mod requires exact versions and every external requirement has its go.sum hashes', () => {
     let modules = 0;
     for (const name of benchComponents()) {
-      for (const file of walk(join(root, 'components', name)).filter((f) => f.endsWith('/go.mod'))) {
+      for (const file of walk(join(root, ownerRel(root, 'components', name))).filter((f) => f.endsWith('/go.mod'))) {
         modules += 1;
         const text = readFileSync(file, 'utf8');
         const sums = existsSync(join(dirname(file), 'go.sum')) ? readFileSync(join(dirname(file), 'go.sum'), 'utf8') : '';
@@ -67,7 +68,7 @@ describe('bench Piglet dependency pins', () => {
 
   it('no bench component declares an npm dependency', () => {
     for (const name of benchComponents()) {
-      const manifest = JSON.parse(readFileSync(join(root, 'components', name, 'package.json'), 'utf8'));
+      const manifest = JSON.parse(readFileSync(join(root, ownerRel(root, 'components', name), 'package.json'), 'utf8'));
       for (const key of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'bundledDependencies']) {
         assert.equal(manifest[key], undefined, `${name}: ${key} would resolve a range at install time`);
       }
@@ -80,7 +81,7 @@ describe('bench Piglet dependency pins', () => {
       'aot-runtime': { dir: 'extensions/aot-runtime', version: /toolchainVersion\s*=\s*"(\d+\.\d+\.\d+)"/ },
     };
     for (const [name, { dir, version }] of Object.entries(pinned)) {
-      const source = walk(join(root, 'components', name, dir)).filter((f) => f.endsWith('.go') && !f.endsWith('_test.go')).map((f) => readFileSync(f, 'utf8')).join('\n');
+      const source = walk(join(root, ownerRel(root, 'components', name), dir)).filter((f) => f.endsWith('.go') && !f.endsWith('_test.go')).map((f) => readFileSync(f, 'utf8')).join('\n');
       assert.match(source, version, `${name}: no exact version pin`);
       assert.ok((source.match(/"[0-9a-f]{64}"/g) ?? []).length >= 2, `${name}: its archives are not pinned by SHA-256`);
     }

@@ -1,9 +1,9 @@
 // Real Piglet schema/resource validation belongs to the chosen PiG binary.
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { readManifests, generateIndex, root } from './generate-index.mjs';
 import { componentKind, validatePlugin } from './archon-plugins.mjs';
+import { listOwners } from './layout.mjs';
 import { goModules, isLibraryModule, registersNativeProvider } from './go-modules.mjs';
 import { requirePig } from './pig-bin.mjs';
 import { loadsInPig } from './platform-smoke.mjs';
@@ -20,9 +20,9 @@ function loadInPig(module) {
   console.log('loaded extension: ' + module);
 }
 generateIndex();
-for (const component of readdirSync(join(root, 'components'), { withFileTypes: true })) {
-  if (!component.isDirectory()) continue;
-  const path = join(root, 'components', component.name);
+for (const component of listOwners(root, 'components')) {
+  if (!component.isDirectory) continue;
+  const path = component.path;
   // A PiG Package goes to PiG's validator; an Archon plugin is not a Package and has its own rules (archon-plugins.mjs).
   if (componentKind(path) === 'package') run(['package', 'validate', path]);
   else validatePlugin(path);

@@ -4,8 +4,7 @@
 //   local:<path>            a directory holding go.mod
 //   package:<alias>         the Package's pi.extensions members, each a directory holding go.mod
 // A Piglet that extends another is checked through its base, whose own manifest is checked too.
-// go-only-exceptions.json lists the Piglets that still select a non-Go extension, with the reason.
-// An exception that is no longer needed is an error, so the list only shrinks.
+// There are no exceptions. The benchmark Piglets under bench/ are not checked: two of them exist to run TypeScript extensions.
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,24 +58,13 @@ export function nonGoExtensions(directory) {
 }
 
 export function checkGoOnly(directory) {
-  const exceptionsPath = join(directory, 'go-only-exceptions.json');
-  const exceptions = existsSync(exceptionsPath) ? JSON.parse(readFileSync(exceptionsPath, 'utf8')) : {};
-  const violations = nonGoExtensions(directory);
-  const errors = [];
-  for (const v of violations) {
-    if (!exceptions[v.piglet]) errors.push(`${v.piglet}: extension ${v.extension} (${v.source}) is not a Go extension; Piglets must be Go only`);
-  }
-  const offenders = new Set(violations.map((v) => v.piglet));
-  for (const piglet of Object.keys(exceptions)) {
-    if (!offenders.has(piglet)) errors.push(`go-only-exceptions.json: ${piglet} no longer selects a non-Go extension; remove the exception`);
-  }
-  return { errors, excepted: violations.filter((v) => exceptions[v.piglet]) };
+  const errors = nonGoExtensions(directory).map((v) => `${v.piglet}: extension ${v.extension} (${v.source}) is not a Go extension; Piglets must be Go only`);
+  return { errors };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const directory = resolve(process.argv[2] || fileURLToPath(new URL('../', import.meta.url)));
-  const { errors, excepted } = checkGoOnly(directory);
-  for (const v of excepted) console.log(`excepted: ${v.piglet} selects ${v.extension} (${v.source})`);
+  const { errors } = checkGoOnly(directory);
   if (errors.length) {
     console.error(errors.join('\n'));
     process.exitCode = 1;

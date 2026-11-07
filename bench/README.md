@@ -1,6 +1,6 @@
 # Bench Piglets
 
-Pinnable Piglets for pi-arena. Each is a Pigpen composition input under `piglets/` with a fixed `release.version`; `pins.json` lists them.
+Pinnable Piglets for pi-arena. Each is a Pigpen composition input under `bench/piglets/` with a fixed `release.version`, and the components only they select are under `bench/components/`; `pins.json` lists them. They are released and published to npm like any Piglet, but the catalogue (`catalog/index.json`) never lists them.
 
 | Piglet | Members | PiG source |
 |---|---|---|
@@ -29,3 +29,7 @@ The two TypeScript Piglets (`bench-ext10-aot`, `bench-ext10-split`) need a PiG t
 ## bench-lean strip proof
 
 `npm run strip-inventory -- bench-lean` builds the Piglet stock (no `strip`) and stripped and drives both through the same probes. The keep-mode list expands to every probed feature (node-extensions, extension-sdk-go/rust/python, self-update, docs, piglet-builder); the result on 2026-10-12 (pig from PiG commit `d92513e779` (single-file lock; not in the 0.5.0 candidate `8ba802d544`), linux/amd64): the probes differ for exactly those seven and nowhere else, and the Binary shrinks from 66.3 MiB to 38.5 MiB.
+
+## Where the runtime copies belong
+
+`bench/components/aot-runtime` and `bench/components/bun-runtime` are copies of PiG's own sources (`piglets/aot` and PiG Standard's `bunruntime`), kept here only because the bench Piglets select them as Packages and pi-arena pins them by Pigpen commit. Their home is PiG: PiG's pig-bolt work (the renamed successor of `piglets/aot`, extension `boltruntime`, on a newer Pi-Bolt pin than the copy here) supersedes the aot copy. Once PiG ships pig-bolt, these two are candidates to be dropped from Pigpen together with the bench Piglets that need them; the move was not made here because it changes the PiG repository.

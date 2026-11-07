@@ -8,3 +8,5 @@ Piglets, which pi-arena pins by Pigpen commit (and by pi-in-go.dev version after
 `bunruntime`; see [CREDITS.md](CREDITS.md). `PIG_BIN=/path/to/pig npm run test:go` runs its tests.
 
 [MIT](LICENSE), original work by Michael Kinsy.
+
+The real home of this runtime is PiG Standard (`bunruntime`); this copy only serves the bench Piglets.

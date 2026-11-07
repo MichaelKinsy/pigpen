@@ -2,6 +2,6 @@
   "origin": "original",
   "authors": ["Michael Kinsy"],
   "license": "MIT",
-  "licenseFile": "../../LICENSE",
+  "licenseFile": "../../../LICENSE",
   "upstreams": []
 }

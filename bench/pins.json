@@ -3,7 +3,7 @@
   "pigRevision": "a220c94a53",
   "piglets": {
     "bench-standard": {
-      "manifest": "piglets/bench-standard/piglet.yaml",
+      "manifest": "bench/piglets/bench-standard/piglet.yaml",
       "slots": [
         "pigrunner",
         "angrypigs",
@@ -12,27 +12,27 @@
       "version": null
     },
     "bench-bun": {
-      "manifest": "piglets/bench-bun/piglet.yaml",
+      "manifest": "bench/piglets/bench-bun/piglet.yaml",
       "slots": [
         "bunruntime"
       ],
       "version": null
     },
     "bench-lean": {
-      "manifest": "piglets/bench-lean/piglet.yaml",
+      "manifest": "bench/piglets/bench-lean/piglet.yaml",
       "slots": [],
       "strip": "keep mode, no built-in kept",
       "version": null
     },
     "bench-aot": {
-      "manifest": "piglets/bench-aot/piglet.yaml",
+      "manifest": "bench/piglets/bench-aot/piglet.yaml",
       "slots": [
         "aot-runtime"
       ],
       "version": null
     },
     "bench-ext10": {
-      "manifest": "piglets/bench-ext10/piglet.yaml",
+      "manifest": "bench/piglets/bench-ext10/piglet.yaml",
       "slots": [
         "bench-ext-01",
         "bench-ext-02",
@@ -49,7 +49,7 @@
       "pigRevision": "4270b7d68b"
     },
     "bench-ext10-aot": {
-      "manifest": "piglets/bench-ext10-aot/piglet.yaml",
+      "manifest": "bench/piglets/bench-ext10-aot/piglet.yaml",
       "slots": [
         "aot-runtime",
         "bunruntime",
@@ -68,7 +68,7 @@
       "requires": "a PiG that locks a single-file extension (PiG commit d92513e779, 'pigletbuild: lock a single-file extension'); earlier PiG stops at 'Locking build inputs'"
     },
     "bench-ext10-split": {
-      "manifest": "piglets/bench-ext10-split/piglet.yaml",
+      "manifest": "bench/piglets/bench-ext10-split/piglet.yaml",
       "slots": [
         "aot-runtime",
         "bunruntime",

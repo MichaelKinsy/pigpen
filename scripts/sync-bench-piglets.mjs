@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Copies the bench Piglets' Go extensions from a PiG checkout at the pinned revision into Pigpen components, so no copy is made by
+// Copies the bench Piglets' Go extensions from a PiG checkout at the pinned revision into Pigpen's bench components, so no copy is made by
 // hand and none drifts. The spec is bench/sync-spec.json; the revision it pins is what pi-arena's manifests build against.
 //
 //   node scripts/sync-bench-piglets.mjs --pig <PiG checkout> [--check]
 //
-// Without --check it rewrites components/<name>/extensions/<dir> from `git show <revision>:<from>` (files only, no go.mod, go.sum or
+// Without --check it rewrites bench/components/<name>/extensions/<dir> from `git show <revision>:<from>` (files only, no go.mod, go.sum or
 // go.work: those are Pigpen's own). With --check it writes nothing and fails when a copied file differs from the pinned revision.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
@@ -42,12 +42,12 @@ export function sync(pig, spec, { check = false } = {}) {
   const drift = [];
   for (const [name, component] of Object.entries(spec.components)) {
     const revision = component.revision ?? spec.pig.revision;
-    const target = join(root, 'components', name, 'extensions', component.extensionDir);
+    const target = join(root, 'bench/components', name, 'extensions', component.extensionDir);
     const files = filesAt(pig, revision, component.from).filter(([relative]) => !(component.exclude ?? []).some((prefix) => relative.startsWith(prefix)));
     if (!files.length) throw new Error(`${component.from} has no files at ${revision}`);
     for (const rootFile of component.rootFiles ?? []) {
       const bytes = git(pig, ['show', `${revision}:${rootFile.from}`]);
-      const path = join(root, 'components', name, rootFile.to);
+      const path = join(root, 'bench/components', name, rootFile.to);
       if (existsSync(path) && Buffer.compare(readFileSync(path), bytes) === 0) continue;
       drift.push(`${name}: ${rootFile.to}`);
       if (!check) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, bytes); }

@@ -14,9 +14,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MichaelKinsy/pigpen.git",
-    "directory": "components/bench-ext10-ts"
+    "directory": "bench/components/bench-ext10-ts"
   },
-  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/bench-ext10-ts#readme",
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/bench/components/bench-ext10-ts#readme",
   "bugs": {
     "url": "https://github.com/MichaelKinsy/pigpen/issues"
   },

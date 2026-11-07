@@ -42,19 +42,6 @@ test('go-only gate', async (t) => {
     assert.equal(errors.length, 2);
     assert.match(errors[0], /a: extension n .* not a Go extension/);
   });
-  await t.test('an exception excuses a Piglet and a stale exception is an error', () => {
-    const build = (exceptions) => (root) => {
-      put(root, 'components/n/package.json', JSON.stringify({ pi: { extensions: ['extensions/n'] } }));
-      put(root, 'components/n/extensions/n/extension.ts', '');
-      put(root, 'piglets/a/piglet.yaml', 'name: a\npackages:\n  n: local:../../components/n\nextensions:\n  - name: n\n    origins: [package:n]\n');
-      put(root, 'piglets/g/piglet.yaml', 'name: g\nextensions: []\n');
-      put(root, 'go-only-exceptions.json', JSON.stringify(exceptions));
-    };
-    assert.deepEqual(fixture(build({ a: 'temporary' })).errors, []);
-    const stale = fixture(build({ a: 'temporary', g: 'old' })).errors;
-    assert.equal(stale.length, 1);
-    assert.match(stale[0], /g no longer selects a non-Go extension/);
-  });
   await t.test('remote origins cannot be verified and fail', () => {
     const { errors } = fixture((root) => put(root, 'piglets/a/piglet.yaml', 'name: a\nextensions:\n  - name: r\n    origins: [npm:some-extension]\n'));
     assert.match(errors[0], /not verifiable/);

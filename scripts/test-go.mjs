@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { root } from './generate-index.mjs';
 import { goModules, goWorkText, sdkBuildTags } from './go-modules.mjs';
+import { listOwners } from './layout.mjs';
 import { requirePig } from './pig-bin.mjs';
 
 function sdkDirectory(scratch) {
@@ -28,10 +29,9 @@ function sdkDirectory(scratch) {
 
 function goExtensions() {
   const found = [];
-  const components = join(root, 'components');
-  for (const component of readdirSync(components, { withFileTypes: true })) {
-    const extensions = join(components, component.name, 'extensions');
-    if (!component.isDirectory() || !existsSync(extensions)) continue;
+  for (const component of listOwners(root, 'components')) {
+    const extensions = join(component.path, 'extensions');
+    if (!component.isDirectory || !existsSync(extensions)) continue;
     for (const entry of readdirSync(extensions, { withFileTypes: true })) {
       const dir = join(extensions, entry.name);
       if (entry.isDirectory() && existsSync(join(dir, 'go.mod'))) found.push(dir);

@@ -1,10 +1,10 @@
 {
-  "name": "@pi-in-go/pigpen-aot-runtime",
+  "name": "@pi-in-go/pigpen-bun-runtime",
   "version": "0.1.1",
-  "description": "The aot TypeScript runtime slot for PiG (Go): compiles a session's TypeScript extensions into one executable in the background and runs it from the next start.",
+  "description": "The Bun TypeScript runtime slot for PiG (Go): installs a pinned, signature-checked Bun and runs TypeScript and JavaScript extensions on it instead of Node.",
   "keywords": [
     "pig-package",
-    "aot",
+    "bun",
     "runtime",
     "extension",
     "pigpen"
@@ -14,9 +14,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MichaelKinsy/pigpen.git",
-    "directory": "components/aot-runtime"
+    "directory": "bench/components/bun-runtime"
   },
-  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/aot-runtime#readme",
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/bench/components/bun-runtime#readme",
   "bugs": {
     "url": "https://github.com/MichaelKinsy/pigpen/issues"
   },
@@ -28,12 +28,11 @@
     "README.md",
     "LICENSE",
     "CREDITS.md",
-    "THIRD_PARTY_NOTICES.md",
     "provenance.json"
   ],
   "pi": {
     "extensions": [
-      "extensions/aot-runtime"
+      "extensions/bunruntime"
     ]
   }
 }

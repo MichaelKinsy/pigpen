@@ -11,6 +11,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, write
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { catalogPath } from './catalog-paths.mjs';
+import { ownerRel } from './layout.mjs';
 import { packageResources, readPackages, root } from './packages.mjs';
 
 export const SCOPE = '@pi-in-go';
@@ -19,8 +20,11 @@ const TYPE_WORDS = { extension: 'extension', skill: 'skill', prompt: 'prompt', t
 const ORDER = ['name', 'version', 'description', 'keywords', 'license', 'author', 'repository', 'homepage', 'bugs', 'publishConfig', 'files'];
 const ROOT_FILES = /^(go\.mod|go\.sum|LICENSE.*|NOTICE.*|CREDITS.*|CONTRACT.*|README.*|provenance\.json)$/;
 
+/** components/<dir> or bench/components/<dir>: where the component lives in the repository. */
+const relOf = (dir, directory) => ownerRel(directory, 'components', dir) ?? `components/${dir}`;
+
 const rootEntries = (dir, directory) => {
-  const path = join(directory, 'components', dir);
+  const path = join(directory, relOf(dir, directory));
   return existsSync(path) ? readdirSync(path, { withFileTypes: true }).filter((e) => e.isFile() && ROOT_FILES.test(e.name)).map((e) => e.name).sort() : [];
 };
 
@@ -34,8 +38,8 @@ export function publishManifest(dir, manifest, { repository, directory = root })
   for (const name of rootEntries(dir, directory)) if (!files.includes(name)) files.push(name);
   const out = {
     ...rest, name: npmName(dir), keywords, files,
-    repository: { type: 'git', url: `git+https://github.com/${repository}.git`, directory: `components/${dir}` },
-    homepage: `https://github.com/${repository}/tree/main/components/${dir}#readme`,
+    repository: { type: 'git', url: `git+https://github.com/${repository}.git`, directory: relOf(dir, directory) },
+    homepage: `https://github.com/${repository}/tree/main/${relOf(dir, directory)}#readme`,
     bugs: { url: `https://github.com/${repository}/issues` },
     publishConfig: { access: 'public' },
   };
@@ -62,7 +66,7 @@ export function manifestProblems(dir, manifest, { repository, directory = root }
 
 /** Shared library Packages a component's go.work files `use` from outside the Package, sorted. */
 export function libraryDeps(dir, directory = root) {
-  const base = join(directory, 'components', dir);
+  const base = join(directory, relOf(dir, directory));
   const libs = new Set();
   const walk = (path) => {
     for (const entry of readdirSync(path, { withFileTypes: true })) {
@@ -100,7 +104,7 @@ function useEntries(text) {
  * and go.work reaches it as `../../../pigpen-<lib>`, the same way the repository's `../../../<lib>` reaches components/<lib>.
  */
 export function buildPackageTree(dir, outRoot, { directory = root, repository = JSON.parse(readFileSync(catalogPath(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
-  const source = join(directory, 'components', dir);
+  const source = join(directory, relOf(dir, directory));
   const target = join(outRoot, dir);
   rmSync(target, { recursive: true, force: true });
   mkdirSync(dirname(target), { recursive: true });

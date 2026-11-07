@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, renameSync } from 'node:fs';
+import { existsSync, renameSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import { root } from './go-modules.mjs';
+import { listOwners } from './layout.mjs';
 import { targetOf } from './host-target.mjs';
 import { requirePig } from './pig-bin.mjs';
 
@@ -15,7 +16,7 @@ import { requirePig } from './pig-bin.mjs';
 // PiG says `escapes the Piglet anchor`. `npm run stage` copies the shared Packages next to the
 // manifest; this script stages and builds that staged copy.
 
-const names = () => readdirSync(join(root, 'piglets')).filter((name) => existsSync(join(root, 'piglets', name, 'piglet.yaml'))).sort();
+const names = () => listOwners(root, 'piglets').filter(({ path }) => existsSync(join(path, 'piglet.yaml'))).map(({ name }) => name);
 
 function fail(message) {
   console.error(`build-piglet: ${message}`);
