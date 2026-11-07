@@ -1,6 +1,14 @@
-# Pigpen: first release notes (release candidate, not published)
+# Pigpen: first release notes (written for the release candidate; since published)
 
-Status of this file: the notes for the first Pigpen release candidate. Nothing here is published, signed or tagged. It states
+Status of this file: the notes for the first Pigpen release candidate, written before anything was published. Pigpen has since been
+published: signed Piglet Binaries for 14 Piglets are GitHub Releases (`a2a`, `acp`, `herdr`, `jev`, `pig-essentials`,
+`pig-extension-porter`, `pig-games`, `pig-music`, `pig-popular`, `pig-porter`, `pig-typesafe`, `pig-warden`, `pig-with-batteries` and
+`pig-tern`; eleven were first released as 0.1.0 on 2026-10-05, including `pig-extension-porter/v0.1.0` and `pig-porter/v0.1.0`;
+the latest are 0.1.1 for twelve of them (`pig-extension-porter/v0.1.1` and `pig-porter/v0.1.1` among them),
+`pig-with-batteries/v0.1.2` and `pig-tern/v0.1.0`), and all 40 Packages and 21 Piglet sources are on npm
+(`@pi-in-go/pigpen-<name>`, `@pi-in-go/pigpen-piglet-<name>`; checked against the registry on 2026-11-06). The sections below are
+unchanged records of what was run for the candidate: they predate those releases and the move to PiG 0.7.0, so read their "not
+published" and "Not verified" statements as of that run. This file states
 only what was run (the final run is on **PiG 0.4.1**, listed below) and what the Packages' own READMEs and `provenance.json`
 files say. Anything not run is listed under "Not verified".
 
@@ -22,14 +30,14 @@ pig piglet add npm:@pi-in-go/pigpen-piglet-<name>            # a Piglet's source
 pig piglet pull 'github:MichaelKinsy/pigpen/<name>@0.1.0'    # its signed Binary, once released (OWNER-ACTIONS.md)
 ```
 
-All of these resolve only after the first publish and the first Binary release; before that, nothing is on npm. What was
-run for the npm form: `npm run test:npm-packages` (29 Packages, `pig install npm:...` against a local registry),
+At the candidate these resolved only after the first publish and the first Binary release; both have happened since (see the status
+above). What was run for the npm form then: `npm run test:npm-packages` (29 Packages, `pig install npm:...` against a local registry),
 `npm run test:npm-piglets` (11 Piglet sources, `pig piglet add npm:...` and `pig piglet validate`, and a fused `pig-games`
 Binary from the registered source) and `npm publish --dry-run` for all 40. A real publish, trusted publishing and provenance
 are not run yet.
 
-Until then there is no published index entry, release Binary or remote install command
-([RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md)). From a local checkout and PiG 0.4.1 (`pig --version` prints `0.4.1+1.0.3`;
+At the candidate there was no published index entry, release Binary or remote install command
+([RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md)); `index.json` still lists the Piglets as `planned`, because no verified Piglet receipt is recorded in `releases/`. From a local checkout and PiG 0.4.1 (`pig --version` prints `0.4.1+1.0.3`;
 `go install github.com/MichaelKinsy/PiG/cmd/pig@v0.4.1` installs it).
 
 ```sh
@@ -219,7 +227,8 @@ If any of them fails, the target is not shipped until it does not.
 
 ## Not verified
 
-- Anything published: no release Binary, signature, tag, catalog or remote install command exists.
+- Anything published: at the candidate no release Binary, signature, tag, catalog or remote install command existed. They do now (see the status
+  at the top); no run in these notes covers them.
 - Anything on macOS, Windows or Linux arm64 beyond `go vet` (see Build targets; the 0.3.0 candidate also compiled them).
 - The recorded traces of the 5 ports without a TypeScript original, and every trace that was recorded rather than re-run: only the
   8 re-runs above compare against Pi or the upstream Go extension now.

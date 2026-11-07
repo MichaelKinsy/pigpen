@@ -27,7 +27,7 @@ pig install ./components/dirty-repo-guard
 The extension builds from source on first use (Go toolchain required), or fuses into
 a Piglet Binary. It is a Package: `pig package validate ./components/dirty-repo-guard`.
 Package discovery uses the `pig-package` keyword in `package.json`. The Package is
-`private` until the owner publishes it.
+published on npm as `@pi-in-go/pigpen-dirty-repo-guard`.
 
 ## Proof that it behaves like the original
 

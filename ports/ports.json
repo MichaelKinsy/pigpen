@@ -44,7 +44,7 @@
       "lane": "pigpen-extension-porter",
       "status": "done",
       "credit": "Go port of the dirty-repo-guard.ts example of Pi, https://github.com/earendil-works/pi, by Mario Zechner (MIT, v0.87.1, commit f07218c4d4bbc12bef056a7058c3dd49dfe41abe).",
-      "notes": "11/11 scenarios identical to Pi, 17/17 mutations killed."
+      "notes": "11/11 scenarios identical to Pi, 26/26 mutations killed."
     },
     {
       "id": "herdr",

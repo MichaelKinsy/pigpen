@@ -71,7 +71,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Pi example extension that refuses a session switch or fork while the git tree is dirty. The first port made with the porter.
 - Upstream path: `packages/coding-agent/examples/extensions/dirty-repo-guard.ts` in Pi
-- Notes: 11/11 scenarios identical to Pi, 17/17 mutations killed.
+- Notes: 11/11 scenarios identical to Pi, 26/26 mutations killed.
 
 ### `herdr`: herdr agent-state reporter
 
