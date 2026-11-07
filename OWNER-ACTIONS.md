@@ -1,7 +1,7 @@
 # Owner actions: the first release
 
 > **Status on 2026-11-06: the first release was made, so this is now the reference runbook for the owner's release steps, not a to-do list.**
-> Piglet Binaries (14 Piglets), Package tags and npm packages are published (see [README.md](README.md), "What is published").
+> Piglet Binaries (14 Piglets), Package tags and npm packages are published (see [docs/releases.md](docs/releases.md), "What is published").
 > One step is still open: no verified Piglet receipt is committed under `releases/` (`npm run record -- piglet <name> <version>`), so
 > `index.json` lists every Piglet as `planned`. The statements below that something was "not run" describe the state when this file was written.
 

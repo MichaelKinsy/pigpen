@@ -4,7 +4,7 @@
 
 Pigpen holds Piglet compositions, reusable components, and generated catalog
 metadata. Signed Piglet Binaries are published as GitHub Releases `<name>/v<version>`
-(see the README, "What is published"). Each Binary carries an Ed25519 signature;
+(see [docs/releases.md](docs/releases.md), "What is published"). Each Binary carries an Ed25519 signature;
 the public key is pinned in [`release-keys/pigpen-piglets.pub`](release-keys/pigpen-piglets.pub).
 Check that key before you trust a Binary: a signature alone does not prove who holds
 the key. No supported binary-version range is advertised. This policy does not claim

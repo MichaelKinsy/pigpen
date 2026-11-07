@@ -53,7 +53,7 @@ under Pi, and an interop run with Microsoft's AHP Go client.
 ### Local staging: approved and implemented
 
 The owner approved generated staging instead of a new PiG workspace-reference
-contract. [`npm run stage`](../../README.md#run-locally) materializes selected
+contract. [`npm run stage`](../development.md#run-locally) materializes selected
 local Packages beneath each generated Piglet in `dist/staged/`. It rewrites the
 Package source but preserves Resource names, scopes, defaults, and discovery.
 Authored Resources retain one owner. Generated copies are not committed.

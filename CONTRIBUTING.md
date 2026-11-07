@@ -42,6 +42,18 @@ and PiG version are involved and whether the issue reproduces without the Piglet
    release path; a change to a workflow also has to pass `npm run quality`, which enforces where the signing key and the
    Discord webhook may appear.
 
+## Pins and the PiG target
+
+Pigpen targets PiG 0.7.0 (Pi 1.5.0; `pig --version` prints `0.7.0+1.5.0`). The pin is the published release `v0.7.0` (commit `beb56447c476`). It lives in `scripts/pig-requirement.json` and as `PIG_COMMIT` in the workflows. Re-pin with `node scripts/pin-pig-release.mjs 0.7.0`.
+
+- `scripts/pig-requirement.json` makes every script and test refuse a pig of another minor version.
+- Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3).
+- Every Go module requires `github.com/MichaelKinsy/PiG/extensions/sdk v0.7.0`, the version PiG's own `go.mod` pins. A Piglet build refuses a member that requires a newer one. Builds use the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests).
+- The SDK has tool renderers (`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an SDK that has them).
+- `npm run govulncheck` scans every Go module for vulnerabilities its code can reach. CI runs it on every run.
+
+See [docs/development.md](docs/development.md) for running, testing and the CI matrix, [docs/releases.md](docs/releases.md) for install forms and the release process, [docs/components.md](docs/components.md) for what each component does, and [docs/layout.md](docs/layout.md) for the repository tree.
+
 ## Port and composition process
 
 1. Pin the upstream source, Pi oracle, target PiG runtime, and applicable licenses.

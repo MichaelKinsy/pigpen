@@ -1,466 +1,83 @@
 <p align="center"><img src="docs/assets/pigpen-banner.jpg" alt="Pigpen banner: a pixel-art police lineup of PiG pigs holding name placards (pig-with-batteries, pig-warden, pig-games, pig-music, a2a / acp, herdr, jev, pig-porter, pig-tern) guarded by the Go gopher. The usual suspects: Piglets and Packages for PiG."></p>
 
-# Pigpen
+<h1 align="center">Pigpen</h1>
 
-[Pigpen](https://github.com/MichaelKinsy/pigpen) is a monorepo of
-[PiG](https://github.com/MichaelKinsy/PiG) Piglets and reusable components. Piglets compose named agents. Component Packages can also be
-installed independently. Every Package and every Piglet source is published on npm under `@pi-in-go`, and 14 Piglets have signed
-Binaries on [GitHub Releases](https://github.com/MichaelKinsy/pigpen/releases) (see [Install](#install)). `index.json` lists a Piglet
-as `planned` until its signed receipt is recorded in `releases/`; that is a catalog status, not a statement that nothing is released.
-The [herdr reporter](components/herdr/README.md) is a standalone extension Package
-that reports PiG's state to herdr. It works on its own with `pig install`; the
-[`herdr` Piglet](piglets/herdr/README.md) that selects it is optional. Its herdr plugin
-and `herdr:blocked` listener are ported from
-[herdr-pig](https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and
-Hai-Fai Solutions (Apache-2.0; [credits](piglets/herdr/README.md#credits)).
+<p align="center">
+Official Piglets and Packages for <a href="https://pi-in-go.dev">PiG</a>, Pi in one Go binary.
+<br>
+<a href="https://pi-in-go.dev/piglets/catalog/"><b>Browse Piglets</b></a> ·
+<a href="https://pi-in-go.dev/packages/"><b>Browse Packages</b></a> ·
+<a href="https://pi-in-go.dev/piglets/build/"><b>Build a Piglet</b></a> ·
+<a href="https://pi-in-go.dev/docs/latest/piglets">Docs</a>
+</p>
 
-## Current status
+---
 
-**Every Piglet here is Go only** (extensions on PiG's Go SDK, so they fuse into a
-Piglet Binary), and each extension we port is its own installable
-[PiG Package](https://pi-in-go.dev) with the `pig-package` keyword. `npm run check` enforces the rule from
-the manifests; `go-only-exceptions.json` is empty now that the herdr reporter is a Go extension.
+**Piglet**: a named agent, such as PiG plus a set of tools, prompts and extensions, that you can run by name or build into one signed binary.
+**Package**: one extension, skill or tool you install into any PiG.
 
-The [shared porting Skill](components/extension-port/README.md) supports direct
-Package installation. The focused
-[`pig-extension-porter`](piglets/pig-extension-porter/README.md) Piglet selects it together
-with the [equivalence harness](components/extension-equivalence/README.md) (a fused Go
-extension) from a generated local stage, and [`pig-porter`](piglets/pig-porter/README.md)
-extends it. `npm run stage` removes the sibling-path blocker without changing PiG's path
-rules. The first port made with the workflow is
-[`dirty-repo-guard`](components/dirty-repo-guard/README.md), from Pi's examples: 11
-scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
-under PiG 0.4, and 26 of 26 mutations are caught. It is published as the Package `dirty-repo-guard` (npm `@pi-in-go/pigpen-dirty-repo-guard`, 0.1.1).
-
-**Target: PiG 0.7.0** (Pi 1.5.0; `pig --version` prints `0.7.0+1.5.0`). The pin is the published release `v0.7.0`
-(commit `beb56447c476`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
-`node scripts/pin-pig-release.mjs 0.7.0`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
-minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3). Every Go module requires
-`github.com/MichaelKinsy/PiG/extensions/sdk v0.7.0`, the version PiG's own go.mod pins (a Piglet build refuses a member that
-requires a newer one), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
-renderers (`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an
-SDK that has them). `npm run govulncheck` scans every Go module for vulnerabilities its code can reach (CI runs it on every run).
-Where a note names PiG 0.7 behavior, it is the target; a note that names an earlier PiG says so.
-
-**Every port has a row in the [ports list](ports/README.md)** (`ports/ports.json`, schema
-`ports/ports.schema.json`): upstream repository, the commit it is pinned to, license, upstream
-author, target Package, port lane, status (`queued`, `porting`, `review`, `done`) and credit text.
-`npm run check` validates it, including that an existing Package's `provenance.json` carries the
-same pin and license (and, for a port or move, records the row's upstream); `npm run generate` rewrites `ports/README.md`. The porting Skill takes one
-row as its input (`port row <id>`; see [CONTRIBUTING.md](CONTRIBUTING.md#the-ports-list)).
-
-[`pig-doctor`](components/pig-doctor/README.md) is a Go Package (a `/doctor` command, a read-only
-`pig_doctor` tool and a `pig-doctor` command line) that finds and safely fixes cruft in a PiG setup:
-duplicate or broken extensions, unpruned caches, orphaned agent directories, legacy files. Fixes
-are backed up and restorable; `pig-with-batteries` selects it as a command only.
-
-[`warden`](components/warden/README.md) is a Go port of DevMortimer's pi-warden: guardrails that steer instead
-of interrupt (irreversible calls held before they run, off-task calls flagged, stuck loops and unverified done
-claims called out). It is opt-in, shows what leaves the machine before anything does, and judges with TypeSafe Jev
-(through the shared Go client in [`components/typesafe`](components/typesafe/README.md)), with the session's own
-model, or offline. The [`pig-warden`](piglets/pig-warden/README.md) Piglet selects it. It is proven against the original
-under Pi by 19 live equivalence scenarios (see [`port/PORT.md`](components/warden/port/PORT.md)).
-
-[`websearch`](components/websearch/README.md) is the first slice of a Go port of nicobailon's pi-web-access: the
-`web_search`, `fetch_content`, `get_search_content`, `source_check` and `web_enable` tools, with an SSRF guard on fetches and
-retained sources for bounded read-back. The rest of pi-web-access is deferred and named in its
-[`port/PORT.md`](components/websearch/port/PORT.md).
-
-[`ahp`](components/ahp/README.md) is a Go port of Qusic's pi-ahp: it serves the running session to remote clients over
-Microsoft's Agent Host Protocol (WebSocket host, reconnect with replay, token authentication, origin check). It opens no
-listener unless asked and gives no remote filesystem or terminal unless you opt in. It is a standalone Package: no Piglet
-selects it. Its README has a Visual Studio Code section: the listener prints the `ws://<host>:<port>?tkn=<token>` address that
-VS Code's "Agents: Add Remote Agent Host..." takes. It is not yet verified with a live VS Code.
-
-[`pi-typesafe`](components/pi-typesafe/README.md) is a Go port of DevMortimer's pi-typesafe: the
-`typesafe_evaluate` tool (batched typed questions to TypeSafe Jev), a `/typesafe` playground and result
-renderers. It is off by default and discloses what leaves the machine. Its library half,
-[`pi-typesafe-api`](components/pi-typesafe-api/README.md), is the typed Go API for other extension authors, and the
-[`pig-typesafe`](piglets/pig-typesafe/README.md) Piglet selects the extension. Both sit on the shared client in
-[`components/typesafe`](components/typesafe/README.md).
-
-The full local integration scenario, including explicit empty tool scopes in RPC, print and JSON mode, passes on
-PiG 0.4.1 (`npm run test:porter`, `npm run test:tool-scope`). PiG 0.3.x still has that defect. See the
-[verification record](docs/plan/pigpen-roadmap.md#resolved-print-and-json-tool-scoping).
-
-Three Packages come from the author's own PiG configuration rather than from a port,
-each an independent `pig install`:
-[`session-ingest`](components/session-ingest/README.md) (the `read_session` tool for
-querying session transcripts), [`context-info`](components/context-info/README.md)
-(`/context`, `/tools`, `/cost`, `/prompts`, and an opt-in status footer) and
-[`dev-skills`](components/dev-skills/README.md) (eight general development Skills
-adapted from public sources, with credit). They are Go on the public SDK, like the ports.
-
-The pig games are Go Packages moved from PiG Standard (Michael Kinsy, MIT):
-[`pig-runner`](components/pig-runner/README.md) (`/runner`),
-[`angry-pigs`](components/angry-pigs/README.md) (`/angry-pigs`) and their shared library
-[`pig-play`](components/pig-play/README.md) (the pig sprite, pixel rasterizer, arcade scenery,
-terminal plumbing). Each installs on its own from npm (the tarball carries `pig-play`) or from a Pigpen checkout, where `pig-play` sits beside
-it; the
-[`pig-games`](piglets/pig-games/README.md) Piglet selects both games, and a Binary of it builds
-locally. A game starts only when you type its command. The games draw the pig you chose with PiG's
-built-in `/sprite` (the sprite login is part of PiG itself since 0.4.0, so Pigpen no longer ships its own).
-An agent can play them too, opt-in and off by default: `/runner mcp on` or `/angry-pigs mcp on` (or `PIG_GAMES_MCP=1`) serves
-the game as an MCP server on `127.0.0.1` behind a random token, and [`demo/jev-plays.js`](demo/README.md) is a codemode
-script in which Jev plays both, about 10 seconds each, then stops them.
-
-The [`acp` Package](components/acp/README.md), a Go port of pi-acp, lets an ACP editor such as Zed drive a PiG agent
-through the companion executable `pig-acp` (124 upstream twins, 11 end-to-end scenarios against a real `pig` and the built
-[`acp` Piglet Binary](piglets/acp/README.md), the ACP reference client with a schema-checked wire, 104 of 105 mutants killed and
-one documented equivalent). The `acp` Package (npm 0.2.1) and the `acp` Piglet (signed Binary, release `acp/v0.1.1`) are published, and the Piglet Binary does not speak ACP by itself.
-
-**[`jev`](components/jev/README.md)** is a Go port of y0usaf's pi-jev: a typed judge for tool calls
-and tool output that is off until you run `/jev on` (which shows what leaves the machine), fails open, and
-judges with the model PiG is configured with or the TypeSafe API through the shared client
-[`components/typesafe`](components/typesafe/README.md). The [`jev` Piglet](piglets/jev/README.md) builds a Piglet
-Binary; `pig-with-batteries` selects the Package too (off by default). Evidence and the ten corrections to the
-original are in [its port record](components/jev/port/PORT.md).
-
-The [`a2a` Package](components/a2a/README.md) serves PiG tasks to A2A agents and calls remote ones, on the upstream Go SDK
-a2a-go (Apache-2.0), pinned to A2A protocol 1.0 and checked against kagent's own A2A server code. It is an original
-adapter, so there is no Pi oracle: its proof is a fake-host test suite, an end-to-end run with a real `pig` and a local fake
-model, 109 mutations, host scenarios recorded from the port itself, and the kagent interop test. The listener stays off until
-configured and refuses to start without authentication. The [`a2a` Piglet](piglets/a2a/README.md) selects it on its own, and `pig-with-batteries` selects it too
-(its tools appear, its listener stays off).
-
-**`pig-with-batteries` is published (signed Binaries up to release `pig-with-batteries/v0.1.2`), but the composition is not complete.** It
-selects the [herdr reporter](components/herdr/README.md), which reports PiG's state to
-herdr and does nothing outside a herdr pane, PiG Runner and Angry Pigs
-(commands only: bundling is not activating), `session-ingest` and `context-info`
-(explicit: a tool the model calls on demand and slash commands that answer when typed), the [Pig Snake game](components/pig-snake/README.md)
-(a snake whose every apple adds another pig head to the line; it starts only when you type
-`/pig-snake`), the `/doctor` command of [`pig-doctor`](components/pig-doctor/README.md) (nothing runs
-automatically), [`jev`](components/jev/README.md) (off until `/jev on`), the [`websearch`](components/websearch/README.md) first slice, the [a2a Package](components/a2a/README.md) (A2A tools; no listener until
-configured), plus an empty build-pipeline fixture
-(`seed-check`) that adds no tools, commands, or hooks. The separate
-[`herdr` Piglet](piglets/herdr/README.md) selects the same Package on its own.
-The herdr reporter is a Go extension, so batteries and the `herdr` Piglet both build a
-Binary locally with the reviewed PiG (see [RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md)).
-The owner approved the [roadmap](docs/plan/pigpen-roadmap.md), but the capability
-ports and the rest of the battery composition are not complete.
-
-**What is published** (checked against GitHub Releases, the Git tags and the npm registry on 2026-11-06): the public signing key is
-pinned in `release-keys/`; signed Piglet Binaries for linux/amd64, linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64
-are GitHub Releases `<name>/v<version>`: `a2a`, `acp`, `herdr`, `jev`, `pig-essentials`, `pig-extension-porter`, `pig-games`,
-`pig-music`, `pig-popular`, `pig-porter`, `pig-typesafe` and `pig-warden` at 0.1.1, `pig-with-batteries` at 0.1.2 and `pig-tern`
-at 0.1.0 (eleven of them were first released as 0.1.0 on 2026-10-05). All 41 Packages (at the version in the repository) and all 21 Piglet
-sources are on npm; Package Git tags exist for the 29 Packages recorded in `releases/packages/`. The bench
-Piglets are not released as Binaries. What is not done: the batteries-included composition is not complete, and `releases/` holds
-no verified Piglet receipt, so `index.json` still lists every Piglet as `planned`. The release path (workflows, tag scheme and the
-checks below) was rehearsed locally with throwaway keys; OWNER-ACTIONS.md, FIRST-NPM-PUBLISH.md and
-[RELEASE-BLOCKERS.md](RELEASE-BLOCKERS.md) were written before the first release and describe the steps and what remained open then.
+Everything here is Go on PiG's SDK, so a Piglet fuses into a single executable with no Node.
 
 ## Install
 
-Pigpen is published to npm under the `@pi-in-go` scope, the way Pi publishes its packages: Packages carry the keyword
-`pig-package`, Piglet sources `pig-piglet`, and pi-in-go.dev lists them by keyword. These commands resolve today (the
-first publish is described in [FIRST-NPM-PUBLISH.md](FIRST-NPM-PUBLISH.md)).
-
-```bash
-pig install npm:@pi-in-go/pigpen-<name>                       # a Package: components/<name>, for example pigpen-herdr
-pig piglet add npm:@pi-in-go/pigpen-piglet-<name>             # a Piglet's source: piglets/<name>
-pig piglet pull 'github:MichaelKinsy/pigpen/<name>@0.1.0'     # the same Piglet as a signed Binary
-```
-
-The Binary is the signed per-platform build from the GitHub release `<name>/v<version>` (below); the npm package is its
-editable source and installs its Packages from npm. Check the signing key (`release-keys/pigpen-piglets.pub`) before you
-trust a Binary; a signature alone does not prove who holds the key.
-
-How the npm form differs from this tree (generated, never hand-edited):
-
-- Each `components/<dir>/package.json` is the published manifest (`npm run check` enforces it). A Go extension that reaches
-  `pig-play`, `typesafe` or `pi-typesafe-api` through a sibling directory depends on that library's own Package
-  (`dependencies`) and its `go.work` names the installed sibling `node_modules/@pi-in-go/pigpen-<lib>`, so two Packages that
-  share a library share one directory of it (PiG's native builder fuses a Go module from one directory only);
-  `scripts/npm-packages.mjs` generates that into `dist/npm/packages/<dir>`.
-- A Piglet source (`scripts/npm-piglets.mjs`, `dist/npm/piglets/<name>`) names its Packages as
-  `npm:@pi-in-go/pigpen-<dir>@^<version>`, flattens `extends` (`pig-porter`) and drops the local `seed-check` build fixture,
-  because a remote Piglet source takes no local Resource.
-- `npm run test:npm-packages` and `npm run test:npm-piglets` pack everything, serve it from a local registry and run
-  `pig install npm:...`, `pig piglet add npm:...` and `pig piglet validate` with the real pig (the second also builds a
-  fused `pig-games` Binary from the registered source). `npm run publish:npm -- --dry-run` shows what would be published.
-- `.github/workflows/npm-publish.yml` publishes every Package or Piglet whose version is not on npm yet when a merge to
-  `main` bumps it (a tag `npm/v<x>` or a manual run retries), with npm trusted publishing and provenance, no token.
-
-## Releases
-
-Two more channels stay available. The Git-tag channel for Packages and the signed Binaries for Piglets:
-
-| | Tag | Install | Workflow |
-|---|---|---|---|
-| Package (`components/<name>`) | `components/<name>/v<version>` | `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'` | `release-package.yml`: validates and installs from the tag; no secret |
-| Piglet (`piglets/<name>`) | `<name>/v<release.version>` | `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'` | `release.yml`: builds every target natively, signs, publishes one GitHub Release |
-| Archon plugin (`components/archon-provider-pig`) | `components/archon-provider-pig/v<version>`, released as plain `v<version>` in the generated repository | `archon plugin add MichaelKinsy/archon-provider-pig` | `release-archon-provider.yml`: generates the standalone repository, builds six `bun build --compile` binaries and `checksums.txt`, publishes the release there with `ARCHON_PROVIDER_PIG_TOKEN` (OWNER-ACTIONS.md, section 9) |
-| npm (all of the above) | a merge to `main` (or `npm/v<x>`) | `pig install npm:...`, `pig piglet add npm:...` | `npm-publish.yml`: Packages, then Piglet sources; OIDC, provenance |
-
-The Piglet, Package and npm tag shapes cannot start each other's workflow. An Archon plugin tag has the Package shape, so it also runs `release-package.yml`, which only verifies it. `index.json` lists a Package as `available` once its Git tag is
-recorded (`npm run record -- package <name> <version>`) and a Piglet as `available` once its signed receipt verifies
-against the key in `release-keys/` (`npm run record -- piglet <name> <version>`); until then a Piglet is `planned` and a
-Package is not listed. `npm run test:packages` installs every Package from its Git tag with the real pig;
-`npm run rehearse:release` runs the Piglet workflow's own steps against a throwaway local repository.
-
-## Run locally
-
-From the checkout root:
+These commands are checked against PiG 0.7.0.
 
 ```sh
-npm ci --ignore-scripts
-npm run stage
-pig piglet validate dist/staged/piglets/pig-porter/piglet.yaml
-pig --piglet dist/staged/piglets/pig-porter/piglet.yaml
+pig piglet pull github:MichaelKinsy/pigpen/pig-with-batteries@0.1.2   # a Piglet, as a signed Binary
+
+pig install npm:@pi-in-go/pigpen-websearch                           # a Package, into your PiG
 ```
 
-Each authored Resource has one owner under `components/` or a Piglet's private
-Resource directories. An authored composition may reference a shared Package:
+The pull prints where it put the Binary, under `~/.pig/artifacts/piglets/`. Run that file the way you run `pig`. `pig piglet pull` needs the full `github:MichaelKinsy/pigpen/<name>@<version>` form, and the Release column below gives the version for each Piglet.
 
-```yaml
-packages:
-  extension-port: local:../../components/extension-port
-skills:
-  - name: pigpen-pi-extension-port
-    origins: [package:extension-port]
-```
+The full list, with what each one does, is on **[pi-in-go.dev/piglets](https://pi-in-go.dev/piglets/catalog/)**.
 
-PiG does not accept that sibling path directly. Staging materializes the selected
-Package inside `dist/staged/piglets/<name>/packages/<alias>/` and rewrites only its
-Package source. The output is an ordinary PiG manifest with no sibling paths.
-The original manifest and Package remain unchanged. Multiple Piglets can select
-the same authored Package without maintaining copied source.
+## Piglets
 
-Staging copies local source, licenses, and executable permissions. It excludes
-`.git`, `node_modules`, and `dist` trees. Shared references must name a direct
-`components/<name>/` directory. Staging rejects escaping references, symlinks,
-missing local Packages, invalid YAML, and generated-destination collisions.
-PiG still validates the resulting manifests and selected members.
+| Piglet | Release | What you get |
+|---|---|---|
+| [pig-with-batteries](piglets/pig-with-batteries) | 0.1.2 | Default PiG with curated extras: herdr state, `/context` `/tools` `/cost`, web search, games |
+| [pig-essentials](piglets/pig-essentials) | 0.1.1 | Web search, sub-agents, tasks, structured questions. One binary, no Node |
+| [pig-warden](piglets/pig-warden) | 0.1.1 | Guardrails that steer instead of interrupt |
+| [pig-porter](piglets/pig-porter) | 0.1.1 | Port a Pi TypeScript extension to Go, with parity proof |
+| [pig-tern](piglets/pig-tern) | 0.1.0 | PiG drawn natively in [Tern](https://docs.stencil.so/tern/) |
+| [herdr](piglets/herdr) | 0.1.1 | Idle / working / blocked state in [herdr](https://herdr.dev) |
+| [acp](piglets/acp) | 0.1.1 | Let Zed and other ACP editors drive PiG, through the `pig-acp` companion |
+| [a2a](piglets/a2a) | 0.1.1 | Talk A2A to other agents, and serve PiG tasks to them |
+| [pig-games](piglets/pig-games) | 0.1.1 | Two pixel games, `/runner` and `/angry-pigs` |
+| [pig-music](piglets/pig-music) | 0.1.1 | A music player, `/music`, because why not 🐷 |
 
-Every Piglet manifest lists five build targets: `linux/amd64`, `linux/arm64`,
-`darwin/arm64`, `darwin/amd64` and `windows/amd64`. `pig piglet build` builds only the
-machine it runs on, so a local Binary build names that machine:
-`npm run build:piglet -- <piglet-name>` does this for you, and a direct
-`pig piglet build ... --format binary` needs `--targets <os>/<arch>`. CI builds all eleven Piglets on one
-native runner per target and smokes every Binary (see "Platform build matrix" below); the release build
-uses the same runners (`npm run build-matrix`). The release workflow has built and smoked every target
-on its native runner on GitHub (the `Release a Piglet` run of 2026-10-23 succeeded for darwin, windows and linux/arm64 as well); the local
-runs in `RELEASE-NOTES.md` are linux/amd64 only, and that file says what is and is not verified.
+[All Piglets →](https://pi-in-go.dev/piglets/catalog/)
 
-Edit source, then stage again and restart the selected Piglet. Restaging replaces
-`dist/staged/`, removing stale files. A failed preflight leaves the previous stage
-intact, so never treat an old stage as verification of a failed edit. Do not edit
-or commit generated copies. This is a local development process, not a publisher.
+## Port a Pi extension
 
-## Layout
-
-```text
-catalog.config.json                 MichaelKinsy/pigpen, branch main
-components/extension-port/          directly installable shared Skill Package (the porting
-                                    workflow, TS-to-Go pattern catalog, fake-host template)
-components/extension-equivalence/   directly installable Go extension Package: the
-                                    differential harness (pigeq) and SDK gap scanner
-demo/                               codemode demo scripts (jev-plays.js: Jev plays both pig games over MCP)
-ports/                              the ports list: ports.json (the dispatch list), ports.schema.json,
-                                    README.md (GENERATED table; npm run generate)
-components/dirty-repo-guard/        a Go port (Pi's dirty-repo-guard example) as a Package,
-                                    with its evidence in port/
-components/typesafe/                shared Go client for the TypeSafe API, plus an own-model
-                                    backend (libraries only, no extension)
-components/hardening/               shared Go library of the opt-in enterprise profile (profile, credential file,
-                                    egress, audit, headless, policy, resource server; libraries only, no extension)
-components/warden/                  a Go port of pi-warden as a Package, with its evidence in port/
-components/websearch/                a Go port (first slice) of pi-web-access as a Package, with its evidence in port/
-components/ahp/                     a Go port of pi-ahp as a Package (Agent Host Protocol host), with its evidence in proof/
-components/pi-typesafe/             a Go port of pi-typesafe as a Package (typesafe_evaluate, /typesafe), with its evidence in port/
-components/pi-typesafe-api/         the typed Go API half of the pi-typesafe port (library, no extension)
-components/pig-doctor/              /doctor, the read-only pig_doctor tool and the pig-doctor command line: find and fix cruft
-components/herdr/                   directly installable herdr reporter Package
-                                    (Go extension and its tests, and the pigpen-herdr-desktop Skill)
-components/ollama-native/            directly installable Ollama provider Package (native /api/chat;
-                                    started by Peder Munksgaard, see its CREDITS.md)
-components/pig-play/                Go library Package: pig sprite, pixel, arcade, termgame, gamemcp (no extension)
-components/pig-runner/              PiG Runner, /runner (Go, from PiG Standard)
-components/angry-pigs/              Angry Pigs, /angry-pigs (Go, from PiG Standard)
-components/pig-snake/               directly installable Go game Package: a snake whose head is
-                                    the PiG pig and whose every apple adds another pig to the
-                                    herd (explicit /pig-snake command; evidence in port/)
-components/pig-music/               Pig Music, /music: a full-screen music player for PiG (Go, SDK v0.4.0;
-                                    milestone 6: the player screen, library, footer status, shuffle and repeat, /music setup and the doctor, plus the pigmusic CLI; selected by the pig-music Piglet and pig-with-batteries)
-components/acp/                     Agent Client Protocol for PiG: the pig-acp companion and
-                                    the /acp extension, a Go port of pi-acp with its evidence in port/
-components/jev/                     a Go port of pi-jev as a Package (typed judge, off until /jev on),
-                                    with its evidence in port/
-components/session-ingest/          directly installable Go extension Package: read_session
-components/context-info/            directly installable Go extension Package: context and
-                                    cost inspection commands, opt-in footer
-components/dev-skills/              directly installable Skill Package (adapted, credited)
-components/a2a/                     directly installable Go Package: A2A (Agent2Agent) server and client on
-                                    a2a-go v2.6.0, listener off unless configured (evidence in port/)
-piglets/
-  a2a/                              Go Piglet selecting components/a2a (also selected by pig-with-batteries)
-  pig-extension-porter/             Go-only focused porter Piglet (signed Binary `pig-extension-porter/v0.1.1`)
-  pig-porter/                       umbrella; extends pig-extension-porter (signed Binary `pig-porter/v0.1.1`)
-  pig-games/                        PiG Runner and Angry Pigs (signed Binary `pig-games/v0.1.1`)
-  pig-music/                        Go-only: PiG with the /music player, nothing starts until you type it (signed Binary `pig-music/v0.1.1`)
-  jev/                              Go Piglet selecting components/jev (also selected by pig-with-batteries)
-  pig-warden/                       Go-only: PiG with the opt-in warden guardrails (signed Binary `pig-warden/v0.1.1`)
-  pig-typesafe/                     Go-only: PiG with the opt-in typesafe_evaluate tool and /typesafe (signed Binary `pig-typesafe/v0.1.1`)
-  pig-with-batteries/
-    piglet.yaml                     authored composition, input to staging
-    catalog.json                    presentation metadata, not a PiG manifest
-                                    (selects herdr, the games, Pig Snake, session-ingest, context-info, pig-doctor, jev, a2a, websearch, plus the fixture)
-    extensions/                     empty build fixture, not curated capability
-    skills/                         owned source, initially empty
-    prompts/                        owned source, initially empty
-    README.md
-  acp/                              PiG for ACP editors (selects components/acp; signed Binary `acp/v0.1.1`)
-  herdr/                            PiG plus the herdr agent-state reporter
-    piglet.yaml, catalog.json, README.md, tests/   (tests/ runs real pig: npm run test:pig)
-  pig-tern/                         PiG as Tern's agent, drawn natively in Tern (signed Binary `pig-tern/v0.1.0`)
-scripts/stage-piglets.mjs            materializes local shared Packages
-dist/staged/                        GENERATED, gitignored local Piglet trees
-scripts/generate-index.mjs           derives catalog data from authored compositions
-scripts/validate-manifests.mjs       validates Packages and staged manifests with PiG
-scripts/build-matrix.mjs             release tag -> Piglet and native runners; target metadata
-scripts/packages.mjs                Package tags, install command, release records, index entries
-scripts/receipts.mjs                verifies a signed piglet-release.json against the pinned key
-scripts/record-release.mjs          npm run record: writes releases/ after a release
-scripts/rehearse-release.mjs        runs the release workflow's steps against a local repository
-releases/                           committed release records (Package tags, verified Piglet receipts)
-release-keys/                       the public signing key (never a private key)
-OWNER-ACTIONS.md                    the owner's first-release commands
-scripts/ports.mjs                    validates ports/ports.json, renders ports/README.md, and reads and
-                                    updates rows (show, list, set-status, provenance, verify-pins)
-index.json                          GENERATED; never hand-edit
-index.schema.json                   machine-readable catalog format
-.github/workflows/ci.yml             validation, platform build matrix and smoke; no publishing or signing
-.github/workflows/release.yml        a Piglet tag: native builds, signing, one GitHub Release
-.github/workflows/release-package.yml a Package tag: validate and install from the tag
-.github/workflows/release-archon-provider.yml an Archon plugin tag: generate its repository, build, release it there
-scripts/archon-provider-repo.mjs     the standalone repository's layout, release tag, asset names, checksums and descriptor check
-RELEASE-BLOCKERS.md                  exact core PiG work needed for releases
-CONTRIBUTING.md                     changes, checks, sign-off and issue routing
-SECURITY.md                         private security reporting guidance
-```
-
-## Maintain and validate
-
-Use Node.js 24 and PiG 0.7.0 (CI builds the pig from the pinned PiG commit). PiG is the
-authority for the closed Piglet manifest and resource contract.
+PiG loads Pi TypeScript extensions as they are, in a Node process. To make one native Go, run **pig-porter**. It checks the SDK for gaps, writes the tests first, proves the port against the original, mutation-tests it, and builds the Package.
 
 ```sh
-npm ci --ignore-scripts
-npm test
-npm run generate
-npm run check
-PIG_BIN=pig npm run validate
-PIG_BIN=pig npm run test:porter
-PIG_BIN=pig npm run test:go-ports -- -race     # go vet and go test for every Go extension module
-PIG_BIN=pig npm run test:port                  # ports vs recorded Pi traces (PI_BIN=pi re-runs Pi)
-KAGENT_GO_DIR=<kagent>/go PIG_BIN=pig node scripts/interop-kagent.mjs   # a2a against kagent's A2A server package
+pig piglet pull github:MichaelKinsy/pigpen/pig-porter@0.1.1
 ```
 
-`pig install --validate-only` takes an extension directory (`components/<name>/extensions/<dir>`); a Package root is checked by `pig package validate`.
+Run the Binary it prints. Every port is listed in [ports/README.md](ports/README.md), with its upstream, pinned commit, licence and credit. Want one ported? [Open an issue](https://github.com/MichaelKinsy/pigpen/issues/new/choose).
 
-`PIG_BIN` is required by every script and test that runs a real pig, and it must be the pig Pigpen targets
-(`scripts/pig-requirement.json`: the same `major.minor`, at least that patch). Pigpen never falls back to whatever `pig`
-is on `PATH`; an older or newer pig stops with a message that names it and says how to build the right one
-(`go build -o /path/to/pig ./cmd/pig` in the PiG checkout). `PIG_BIN=pig` therefore works only when the `pig` on `PATH` is that build.
+## More
 
-The generator checks duplicate YAML keys and presentation metadata. Names and
-descriptions come from the manifests, and the index records their SHA-256
-identities. `index.json` is committed alongside source changes for predictable
-static-site consumption. A manifest's intended targets never become binary
-availability claims. The generator permits only planned entries until verified
-publisher receipts can supply real release metadata.
-
-`npm test` runs the quality-gate cases, the Go-only gate, the ports-list cases, and the fake-host template and
-port-layout checks. `npm run check` also runs the Go-only gate and the ports-list check. `PIG_BIN=pig npm run test:go` runs the herdr
-reporter's Go tests, and `PIG_BIN=pig npm run test:go-ports` runs `go vet` and `go test` for every
-Go extension module (both need a Go toolchain and PiG's SDK; `test:go-ports` runs in CI, `test:go` does not).
-`PIG_BIN=pig npm run test:pig` additionally drives a real `pig` in tmux against a fake herdr, once for the `herdr` Piglet and once for `pig-with-batteries`;
-with `PIG_SOURCE_ROOT` set it also builds each into a Binary and runs that
-(needs tmux and Go; stages first; not run in CI).
-`PIG_BIN=pig PIG_SOURCE_ROOT=<PiG checkout> npm run test:pig-snake` (it builds the `pig-with-batteries` Binary first, because that Piglet strips the Go SDK and cannot run from its manifest; or `PIG_SNAKE_BINARY=<a Piglet Binary>`) plays Pig Snake in a real terminal the same way: title, play, pause, crash, resize, quit, an agent stream under the open game (needs tmux; not run in CI).
-`PIG_BIN=pig npm run test:pig-music` drives the pig-music hello overlay (`/music hello`) in a real terminal (fullscreen and regular TUI: size, keys, timer, resize, close; needs tmux and Go; not run in CI). `PIG_BIN=pig npm run test:pig-music-player` drives the player itself with real mpv (`--ao=null`) and yt-dlp over the network (also needs tmux; not run in CI). `PIG_BIN=pig npm run test:pig-music-batteries` builds the `pig-with-batteries` Binary and checks pig-music in it: nothing starts until `/music`, the startup comparison (set `PIG_BATTERIES_BASELINE` to a Binary built without it) and, with `PIG_MUSIC_SMOKE=1`, a real play, hide, `/reload` and `/quit`.
-`PIG_BIN=pig npm run test:tool-scope` checks that a Piglet entry's `tools: []` keeps pig-doctor's `pig_doctor` tool from the model (RPC, print and JSON mode all pass on PiG 0.4.0; they failed on 0.3.x; needs Go).
-
-CI checks source quality, generated catalog data, component Packages, and staged
-manifests. `npm run validate` stages before invoking PiG. The porter scenario
-exercises independent Package installation and two staged Piglets against a local
-fixture provider. It checks exact Skill delivery, selection, source preservation,
-restaging, and path safety. It does not measure an LLM's ability to follow the Skill.
-
-The scenario also checks that an explicit `tools: []` reaches the provider with
-no tools; it passes on PiG 0.7.0 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
-`test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. Hosted CI (`Validate Pigpen`) has passed on `main` on GitHub (latest push run 2026-11-02, on the previous pin); the PiG 0.7.0 steps here were
-run locally with the 0.7.0 pig, and no hosted run on this pin is claimed until the branch is merged. CI also runs `test:packages`, `test:npm-packages`,
-`test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute
-timeout). CI does not sign Piglet Binaries or publish releases (`release.yml` does, on a Piglet tag); it uploads the
-Binaries it builds as short-lived artifacts for inspection.
-
-### Platform build matrix
-
-`.github/workflows/ci.yml` has tiers, so a pull request stays quick and every platform is still covered:
-
-| Tier | Runs on | What it does |
-| --- | --- | --- |
-| `validate` | every run | tests, checks, the PiG validator over every manifest, and **one** linux/amd64 build and smoke of `pig-with-batteries` |
-| `slow-checks` | every run, in parallel with `validate` | one job each for `test:packages`, `test:npm-packages`, `test:npm-piglets` and the release rehearsal, each with its own timeout |
-| `platform-matrix` | push to `main`, merge group, manual run, the weekly schedule, and a pull request labelled `full-ci` | one job per OS on a native runner: `linux/amd64` (`ubuntu-24.04`), `linux/arm64` (`ubuntu-24.04-arm`), `darwin/arm64` (`macos-15`), `darwin/amd64` (`macos-15-intel`), `windows/amd64` (`windows-2025`). Each downloads the pinned PiG release for its OS, checks its SHA-256, builds **every Piglet** for its own target and smokes each Binary; the Linux jobs also drive each Binary in a terminal (below). Binaries are kept as artifacts for three days |
-| `android-cross` | with `platform-matrix` | `go build` and `go vet` of every module for `android/arm64` (Termux) with `CGO_ENABLED=0`. A compile check, not a Binary: pig's builder builds only the machine it runs on |
-| `ci-result` | always | the one required check: green when `validate` and every `slow-checks` job passed and the other tiers passed or were skipped |
-
-The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `--version` must match the
-pinned pig, and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no
-`Failed to load extension`. That proves a Binary starts on the platform, loads every fused extension and completes a turn; what each
-extension does is the Go tests' job. Run it yourself with `npm run platform-smoke` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`
-for one Piglet) and the android check with `npm run cross-check` (set `PIG_SDK_DIR` or `PIG_BIN`).
-
-**Each Binary in a real terminal.** `npm run test:piglet-e2e` (tmux; POSIX only) starts every Piglet Binary in its own tmux server with a
-PATH of a few linked system tools and nothing else (no Node, no Go: a Go-only Binary must run alone; `bench-ext10-aot` and
-`bench-ext10-split`, which carry TypeScript extensions, also get the Node that runs the test), under a throwaway home and
-runtime directory, and drives the features its Piglet is for through the keyboard: `/a2a` and `/acp` status, the Jev and warden consent
-dialogs, `/tasks` and `/agents`, `/todos` and `/goal-list`, `/typesafe`, the porter Skill (found in the command list, then run), the two games
-and Pig Snake played and quit, the music player opened (with stand-ins for mpv and yt-dlp: nothing is played), the herdr reporter's
-idle/working/release requests to a fake herdr socket, and `/cost`, `/tools` and the rest for `pig-with-batteries`. The benchmark Piglets
-are driven too: `/aot-runtime` and `/bun-runtime` status in a home with nothing installed, the ten `bench-01` to `bench-10` commands
-each listed once, the games of `bench-standard`, and for `bench-lean` the core's own commands present and the stripped `/mcp` absent.
-Each run also answers a faux turn, must print no `Failed to load extension` and must exit 0 on `/quit`. A Piglet without a scenario in
-`scripts/e2e/piglets.mjs` fails the suite. Use `PIGLET_E2E_BIN_DIR=dir` for Binaries you already built and
-`PIGLET_E2E_ONLY=a2a,pig-games` for a few.
-
-The numbers for every Piglet, the 0.5 readiness list and the stripped-vs-stock measurements are in [`docs/plan/progress/piglets-pigpen.md`](docs/plan/progress/piglets-pigpen.md); `node scripts/perf/strip-matrix.mjs` regenerates the sizes (needs PiG 0.7).
-
-**Targets this machine cannot run.** PiG's native builder builds only its own OS and architecture, but the fused extensions link into one
-`go build`, so `npm run cross-link-check` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`, `--targets <os/arch,...>`) builds every
-Piglet with `GOOS`/`GOARCH` set to each other release target and counts a Binary that links but cannot run here as `linked`. It proves
-the Piglets compile and link for darwin and windows from Linux. It does not prove they run there: the native runners above do.
-
-The pin lives in `scripts/pig-requirement.json` (`release`: tag, source commit, and each archive's SHA-256); `npm run fetch:pig`
-downloads and verifies it. Add the `full-ci` label to a pull request to run the whole matrix before merging. `darwin/amd64` ran on
-`macos-13` until GitHub retired it; `macos-15-intel` replaces it.
-
-## Where to report issues
-
-- Piglet manifests, selected resources, defaults, Pigpen documentation or index:
-  [Pigpen issues](https://github.com/MichaelKinsy/pigpen/issues).
-- Core PiG runtime, CLI, extension host, or monorepo publish/pull/update support:
-  [PiG issues](https://github.com/MichaelKinsy/PiG/issues).
-- Suspected vulnerabilities: follow [SECURITY.md](SECURITY.md), not a public bug
-  report. Never post credentials, private keys or unredacted session files.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change.
-
-## Site consumption
-
-The site at [pi-in-go.dev](https://pi-in-go.dev/packages) reads this repository's
-generated index over HTTPS at build time, validates it, and retains a checked-in
-fallback for outages. It never writes back into Pigpen. Verified upstream Pi
-packages remain platform-owned data; community Piglet discovery is deferred.
+- [CONTRIBUTING.md](CONTRIBUTING.md): changes, checks, the PiG pin and sign-off. Pigpen targets the current PiG release, and every port keeps the original's licence and credits its author.
+- [docs/components.md](docs/components.md): what each component does and how it was proven.
+- [docs/development.md](docs/development.md): running Pigpen locally, tests and CI.
+- [docs/releases.md](docs/releases.md): install forms, what is published, the release process and how the site reads the index.
+- [docs/layout.md](docs/layout.md): the repository tree.
+- [SECURITY.md](SECURITY.md): private vulnerability reports.
 
 ## License
 
-Original code and documentation: [MIT](LICENSE), Copyright (c) 2026 Michael Kinsy.
-Every Package has its own `LICENSE`: ports of third-party projects list the upstream
-copyright first and keep the upstream's license file. Curated third-party resources
-must retain their own licenses and provenance; inclusion does not grant new
-redistribution rights.
-See [RELEASE-NOTES.md](RELEASE-NOTES.md) for the split.
+MIT, except ports, which keep their original licence (noted on each Package page and in [ports/README.md](ports/README.md)). See [RELEASE-NOTES.md](RELEASE-NOTES.md) for the split.
+
+<!-- licenses:begin (generated by npm run generate; do not edit) -->
+
+Packages whose licence is not plain MIT (read from each `package.json`; every other component is MIT):
+
+| Package | Licence | Use |
+|---|---|---|
+| [`components/herdr`](components/herdr) | MIT AND Apache-2.0 | permissive; may be bundled |
+
+<!-- licenses:end -->

@@ -173,7 +173,7 @@ Owner addition before PR #1 merges (`components/ahp`). VS Code's Agents window c
 
 ## Platform build matrix
 
-Owner addition before PR #1 merges. `.github/workflows/ci.yml` is now tiered (README, "Platform build matrix"):
+Owner addition before PR #1 merges. `.github/workflows/ci.yml` is now tiered ([docs/development.md](../../development.md#platform-build-matrix), "Platform build matrix"):
 
 - `validate` (every run) keeps today's checks and adds ONE linux/amd64 build and smoke of `pig-with-batteries`.
 - `platform-matrix` (push to main, merge group, manual, weekly schedule, or a PR labelled `full-ci`) is one job per OS on a native
