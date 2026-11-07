@@ -1,5 +1,282 @@
 # Lane P (perf): end-to-end basket, Go port vs TS original
 
+# Round 2: Go extension with the retained-count cache (tip 8c8cd837) on pig@979bf718 and on pig built from PiG 25652299 (sdkframe)
+
+Data: `port/perf/data/sf/` (`samples.jsonl` 1,400 samples, 0 invalid; `meta.json`; `summary.md` with all four ratchet pairs;
+`summary-full.md`; `profiles/` raw pprof files and `go-sf-e-cpu-report.txt`). Round 1 (below) stays as recorded, tip 8a4d39f5.
+
+**Setup.** Second pig: PiG commit 25652299a7b6805043337f5017ae72df2bdc6048 ("docs: bug ledger entry for the SDK frame decode"; the branch
+`fix/071-sdkframe` has moved on to fe1fa18d, I built the commit you named) from a private shallow checkout under the scratch tree
+(never `~/ph-work/PiG`), same build as the reference pig (`go build -trimpath`, cgo default, symbols kept) in the tern-ci:v7 container,
+`pig reload --sdk-path` in an isolated PIG_HOME gave its SDK `sdk-946f155a549f8be9`; the Go extension on that side is built by that pig
+against that SDK (reference pig: `sdk-5ee25f8133d42249`). Reproduce: `ph run "components/posthorse/port/perf/build-pig.sh <commit> sdkframe"`
+then `port/perf/run.sh sf --samples 25 --workloads e,c1,c100,a,b`. Four sides interleaved sample by sample in one session
+(sides `go`, `ts` = pig@979bf718; `go-sf`, `ts-sf` = pig@25652299; the TS original is identical on both pigs), 25 samples per cell and side,
+workloads e, c1, c100, a, b (warm; a and b also cold), host quiet (load average 4.7/5.0/4.9 at start, 7.3/7.5/6.2 at end, other users
+present), six pinned CPUs 186-191, `nice -n 10`. Run 2026-11-07 09:33-11:38 UTC. Parity: model requests and session records identical on
+all four sides (e: 200 requests, 3 compactions, 3 reminders). Process count 1 on every pig side. Go binary (pig's `runner`): 7,811,232 B
+on pig@979bf718, 7,823,520 B on sdkframe (7,808,264 / 7,820,552 B after `strip -s`).
+
+## Verdict per metric: Go <= TS (median, same pig)
+
+| Pair | Ratchet rows | Median misses |
+|---|---:|---|
+| Go vs TS on pig@979bf718 (old SDK, new extension) | 161 (`data/sf/summary.md`) | 6: c1 `turn_ms` (845 vs 786 ms) and e `turn_ms` (21.6 vs 16.4 s), `cpu_ext_workload_ms` (15.5 vs 9.5 s), `ext_cpu_ms_end`, `cpu_total_workload_ms` (26.1 vs 18.8 s), `cpu_total_ms_end` |
+| **Go vs TS on pig@sdkframe (new SDK, new extension)** | 161 | **1: e `cpu_total_workload_ms` 16.57 s vs 16.11 s (+2.9%, p90 17.26 vs 17.12 s)** |
+
+On sdkframe every other metric is Go <= TS: startup, first turn, first tool, per-tool-call latency (all ops), RSS, PSS, Anonymous, peak RSS,
+tree RSS/PSS, heap used/in use, Go Sys vs Node RSS in e, c1, c100, a, b, warm and cold; **e `turn_ms` 13.15 s vs 13.63 s (-3.6%), e extension CPU
+8.68 s vs 9.36 s (-7%), c1 `turn_ms` 654 vs 722 ms, c1 total CPU 770 vs 950 ms, c100 `turn_ms` 802 vs 994 ms**. Only e total CPU stays above TS because
+the host spends more CPU serving a Go extension than a Node one (host CPU over the workload, derived: e 7.86 vs 6.83 s, c1 410 vs 350 ms, c100
+490 vs 410 ms; not a ratchet metric, but it is the whole e gap: extension 8.68 vs 9.36 s is -0.68 s, host +1.03 s). The e miss is of the size of the spread (p90-p50: Go-sf 4%, TS-sf 6%); it is a near tie, and the extension itself is faster, so it is
+for the owner to decide whether a host-side cost of +1 s per 200 turns blocks the ratchet.
+
+Effect of the two fixes on Go (round 1 -> now, pig@979bf718 -> sdkframe, e): `turn_ms` 26.4 s -> 21.6 s (cache alone) -> 13.1 s (cache + SDK frame fix); extension
+CPU 18.1 -> 15.5 -> 8.7 s; host CPU 13.3 -> 10.6 -> 7.9 s; mallocs 12.2 M -> 7.3 M and 2.0 -> 1.4 GiB allocated per run (`num_gc` 1006 -> 768).
+The cache removed the host `handleSessionRead` cost (2.42 s -> 0.27 s per run).
+
+## Fresh CPU profile of the Go extension, workload e on pig@sdkframe (2 runs merged, 15.57 s sampled; `data/sf/profiles/go-sf-e-cpu-report.txt`)
+
+Top 15 by cumulative time (function: cum, %):
+
+| # | Function | cum | % |
+|---|---|---:|---:|
+| 1 | sdk `(*Extension).loop.func1` / `sync.(*WaitGroup).Go.func1` (one handler goroutine per inbound request) | 7.62 s | 48.9 |
+| 2 | sdk `(*Extension).handleArmedRequest` | 7.61 s | 48.9 |
+| 3 | `runtime.systemstack` | 4.01 s | 25.8 |
+| 4 | sdk/json `(*decodeState).unmarshal` | 3.87 s | 24.9 |
+| 5 | sdk/json `(*decodeState).object` | 3.86 s | 24.8 |
+| 6 | sdk/json `(*decodeState).value` | 3.86 s | 24.8 |
+| 7 | sdk `unmarshalFrameMember` (the new single decode of the event payload) | 3.24 s | 20.8 |
+| 8 | sdk/json `UnmarshalTrusted` | 3.24 s | 20.8 |
+| 9 | sdk/json `arrayInterface` | 3.17 s | 20.4 |
+| 10 | sdk/json `objectInterface` | 3.16 s | 20.3 |
+| 11 | sdk/json `valueInterface` | 3.15 s | 20.2 |
+| 12 | sdk/json `MarshalJS` (all outbound encoding) | 3.07 s | 19.7 |
+| 13 | `runtime.gcBgMarkWorker` | 3.07 s | 19.7 |
+| 14 | sdk/json `(*encodeState).marshal` | 2.86 s | 18.4 |
+| 15 | sdk `(*conn).respond` / `encodeResponse` | 2.68 s / 2.59 s | 17.2 / 16.6 |
+
+Exclusive split (each sample counted once, priority posthorse > SDK > GC/allocator): **posthorse code 8.6%** (1.34 s, including the SDK calls
+its own code makes, e.g. host reads), **Go SDK 49.5%** (7.71 s: event decode 20.8%, response encode 16.6%, call-envelope encode 10.5%, rest
+request plumbing), **GC and allocator 21.9%** (3.41 s, background mark workers 19.7%), other runtime (syscalls, scheduler, frame reads) about 20%.
+Before the fix the same split was posthorse 10%, SDK 85% (of which `checkValid` 24%): the second validation pass is gone (`UnmarshalTrusted`), the
+projection read is gone (cache), and the extension is no longer CPU-bound on validation.
+
+Host side (pig profile, `PH_PERF_HOSTPROF=1`, go-sf vs ts-sf, e, one run diff): the Go-only host cost is `AgentMessage.UnmarshalJSON`/`keepSource` +0.98 s
+(15% of the host profile, via `inproc.coerceResult`): the host decodes the full message list the Go extension returns from `context_with_system`.
+Cause (guidance.go:57-83): every turn the handler writes `system["sections"]` in place, so the SDK cannot report the list unchanged; it re-decodes the
+pristine copy to compare and re-encodes all messages (the `encodeResponse` 16.6% above), and the host decodes the reply again. [INFERENCE] The Node extension's reply does not pay the host-side `keepSource` decode (the diff shows it as Go-only); I did not profile the Node side's reply path. Remaining host `handleSessionRead` is 0.27 s per run (was 2.42 s). Fix options (not mine to apply):
+(SDK) a `context_with_system` reply form that carries only the changed system message/sections, or a host-side skip of `AgentMessage` decode for messages the host
+already holds; (posthorse) none that keeps the byte-exact behaviour, since the TS also mutates the system message per turn.
+
+## Tables: Go vs TS on both pigs (median / p90; spread = (p90-p50)/p50 of Go-sf and TS-sf)
+
+`host_cpu_workload_ms` is derived (host CPU at the end minus at ready, 10 ms ticks) and is information, not a ratchet metric. `Go<=TS` compares medians.
+`sys_asis_end` is Go `Sys` against Node RSS. Allocation rows are Go-only (V8 has no allocation counter; `num_gc_workload` of TS = V8 GC events).
+
+#### e / warm (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 113.5 / 128.2 | 813.1 / 887.1 | <= | 116.1 / 135.6 | 870.8 / 884.3 | <= | 17% / 2% |
+| to_first_tool_ms | 21.4 / 23.9 | 36.6 / 40.5 | <= | 19.6 / 23.0 | 36.0 / 38.8 | <= | 17% / 8% |
+| turn_ms | 21590.2 / 21962.6 | 16413.8 / 16877.1 | **WORSE** | 13147.6 / 13603.5 | 13632.6 / 14213.6 | <= | 3% / 4% |
+| cpu_ext_workload_ms | 15530.0 / 15900.0 | 9480.0 / 9950.0 | **WORSE** | 8680.0 / 9100.0 | 9360.0 / 10060.0 | <= | 5% / 7% |
+| host_cpu_workload_ms | 10580.0 / 10900.0 | 9230.0 / 9420.0 | **WORSE** | 7860.0 / 8200.0 | 6830.0 / 7070.0 | **WORSE** | 4% / 4% |
+| cpu_total_workload_ms | 26080.0 / 26820.0 | 18760.0 / 19370.0 | **WORSE** | 16570.0 / 17260.0 | 16110.0 / 17120.0 | **WORSE** | 4% / 6% |
+| ext_cpu_ms_end | 15530 / 15910 | 10450 / 10820 | **WORSE** | 8690 / 9110 | 10310 / 11060 | <= | 5% / 7% |
+| cpu_total_ms_end | 26170 / 26920 | 19880 / 20410 | **WORSE** | 16640 / 17360 | 17250 / 18320 | <= | 4% / 6% |
+| ext_rss_end | 15.56 MiB / 22.21 MiB | 484.84 MiB / 514.46 MiB | <= | 19.70 MiB / 24.93 MiB | 454.79 MiB / 495.83 MiB | <= | 27% / 9% |
+| ext_pss_end | 15.56 MiB / 22.21 MiB | 480.96 MiB / 510.55 MiB | <= | 19.69 MiB / 24.93 MiB | 450.86 MiB / 491.91 MiB | <= | 27% / 9% |
+| ext_anon_end | 8.39 MiB / 15.04 MiB | 424.49 MiB / 454.18 MiB | <= | 12.56 MiB / 17.80 MiB | 394.29 MiB / 435.34 MiB | <= | 42% / 10% |
+| ext_peak_rss_end | 21.43 MiB / 24.06 MiB | 534.12 MiB / 546.41 MiB | <= | 20.24 MiB / 24.93 MiB | 516.20 MiB / 539.96 MiB | <= | 23% / 5% |
+| tree_rss_end | 130.51 MiB / 135.41 MiB | 615.47 MiB / 640.92 MiB | <= | 132.29 MiB / 139.77 MiB | 590.32 MiB / 628.05 MiB | <= | 6% / 6% |
+| tree_pss_end | 129.15 MiB / 134.00 MiB | 610.23 MiB / 635.60 MiB | <= | 130.89 MiB / 138.40 MiB | 585.01 MiB / 622.76 MiB | <= | 6% / 6% |
+| heap_used_gc_end | 0.71 MiB / 0.72 MiB | 35.94 MiB / 36.81 MiB | <= | 0.71 MiB / 0.72 MiB | 35.94 MiB / 36.86 MiB | <= | 1% / 3% |
+| heap_inuse_gc_end | 2.41 MiB / 2.68 MiB | 169.09 MiB / 169.84 MiB | <= | 2.46 MiB / 2.77 MiB | 169.09 MiB / 169.59 MiB | <= | 13% / 0% |
+| sys_asis_end (Go Sys vs Node RSS) | 25.94 MiB / 26.26 MiB | 470.60 MiB / 492.88 MiB | <= | 25.94 MiB / 26.19 MiB | 423.32 MiB / 522.68 MiB | <= | 1% / 23% |
+| tool_ms:get_context_remaining | 5.5 / 6.9 | 7.5 / 9.4 | <= | 5.1 / 6.8 | 5.9 / 9.1 | <= | 33% / 56% |
+| tool_ms:notes.append | 6.9 / 8.4 | 9.8 / 12.3 | <= | 6.6 / 8.1 | 8.7 / 11.8 | <= | 23% / 36% |
+| tool_ms:notes.write | 7.3 / 9.0 | 12.1 / 15.3 | <= | 7.0 / 8.6 | 11.2 / 14.6 | <= | 23% / 31% |
+| tool_ms:read | 11.1 / 13.1 | 12.4 / 14.3 | <= | 7.7 / 9.2 | 11.3 / 13.8 | <= | 19% / 22% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 2009.56 MiB | - | | 1425.69 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 12183835 | - | | 7319241 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 1006 | 29 | | 768 | 44 | | |
+
+#### c1 / warm (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 116.5 / 126.8 | 801.3 / 884.8 | <= | 116.0 / 125.0 | 823.0 / 881.1 | <= | 8% / 7% |
+| to_first_tool_ms | 20.5 / 22.3 | 34.3 / 37.3 | <= | 18.2 / 20.4 | 34.5 / 37.7 | <= | 12% / 9% |
+| turn_ms | 844.8 / 867.8 | 785.9 / 847.6 | **WORSE** | 653.9 / 726.3 | 721.7 / 818.7 | <= | 11% / 13% |
+| cpu_ext_workload_ms | 530.0 / 550.0 | 620.0 / 670.0 | <= | 360.0 / 420.0 | 590.0 / 670.0 | <= | 17% / 14% |
+| host_cpu_workload_ms | 480.0 / 500.0 | 380.0 / 420.0 | **WORSE** | 410.0 / 470.0 | 350.0 / 410.0 | **WORSE** | 15% / 17% |
+| cpu_total_workload_ms | 1010.0 / 1050.0 | 1030.0 / 1090.0 | <= | 770.0 / 900.0 | 950.0 / 1070.0 | <= | 17% / 13% |
+| ext_cpu_ms_end | 540 / 560 | 1510 / 1670 | <= | 370 / 430 | 1500 / 1680 | <= | 16% / 12% |
+| cpu_total_ms_end | 1110 / 1130 | 2070 / 2270 | <= | 850 / 990 | 2030 / 2280 | <= | 16% / 12% |
+| ext_rss_end | 14.42 MiB / 14.64 MiB | 208.82 MiB / 210.01 MiB | <= | 14.24 MiB / 14.39 MiB | 209.09 MiB / 210.13 MiB | <= | 1% / 1% |
+| ext_pss_end | 14.42 MiB / 14.64 MiB | 205.03 MiB / 206.10 MiB | <= | 14.23 MiB / 14.39 MiB | 205.18 MiB / 206.22 MiB | <= | 1% / 1% |
+| ext_anon_end | 7.31 MiB / 7.47 MiB | 148.70 MiB / 149.79 MiB | <= | 7.13 MiB / 7.27 MiB | 148.77 MiB / 149.91 MiB | <= | 2% / 1% |
+| ext_peak_rss_end | 14.42 MiB / 14.64 MiB | 208.82 MiB / 210.01 MiB | <= | 14.24 MiB / 14.39 MiB | 209.09 MiB / 210.13 MiB | <= | 1% / 1% |
+| tree_rss_end | 85.35 MiB / 86.51 MiB | 319.34 MiB / 323.37 MiB | <= | 86.04 MiB / 87.70 MiB | 321.11 MiB / 323.86 MiB | <= | 2% / 1% |
+| tree_pss_end | 83.92 MiB / 85.08 MiB | 314.12 MiB / 318.11 MiB | <= | 84.61 MiB / 86.30 MiB | 315.85 MiB / 318.60 MiB | <= | 2% / 1% |
+| heap_used_gc_end | 0.57 MiB / 0.57 MiB | 35.89 MiB / 35.89 MiB | <= | 0.57 MiB / 0.58 MiB | 35.89 MiB / 35.90 MiB | <= | 2% / 0% |
+| heap_inuse_gc_end | 1.71 MiB / 1.83 MiB | 102.59 MiB / 103.09 MiB | <= | 1.70 MiB / 1.79 MiB | 102.59 MiB / 103.09 MiB | <= | 6% / 0% |
+| sys_asis_end (Go Sys vs Node RSS) | 17.69 MiB / 17.94 MiB | 188.50 MiB / 198.81 MiB | <= | 17.69 MiB / 17.94 MiB | 187.50 MiB / 197.18 MiB | <= | 1% / 5% |
+| tool_ms:notes.append | 5.8 / 7.6 | 7.8 / 11.3 | <= | 5.0 / 6.9 | 7.4 / 11.2 | <= | 39% / 53% |
+| tool_ms:notes.list | 5.8 / 7.5 | 9.0 / 14.8 | <= | 4.9 / 7.4 | 8.8 / 15.0 | <= | 51% / 70% |
+| tool_ms:notes.read | 5.4 / 7.5 | 7.9 / 12.1 | <= | 4.2 / 6.4 | 8.0 / 12.0 | <= | 54% / 49% |
+| tool_ms:notes.search | 5.5 / 7.5 | 8.9 / 12.4 | <= | 4.7 / 7.0 | 8.7 / 12.2 | <= | 50% / 40% |
+| tool_ms:notes.write | 6.1 / 7.8 | 10.1 / 14.0 | <= | 5.1 / 6.6 | 9.7 / 13.9 | <= | 30% / 44% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 57.29 MiB | - | | 47.73 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 835118 | - | | 496264 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 32 | 4 | | 28 | 4 | | |
+
+#### c100 / warm (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 116.6 / 123.3 | 831.3 / 886.3 | <= | 116.5 / 129.1 | 825.3 / 877.7 | <= | 11% / 6% |
+| to_first_tool_ms | 20.3 / 23.1 | 34.3 / 38.0 | <= | 18.6 / 20.9 | 34.5 / 36.5 | <= | 12% / 6% |
+| turn_ms | 1054.1 / 1132.0 | 1058.9 / 1206.3 | <= | 801.7 / 859.9 | 994.3 / 1130.1 | <= | 7% / 14% |
+| cpu_ext_workload_ms | 730.0 / 800.0 | 850.0 / 1000.0 | <= | 510.0 / 560.0 | 830.0 / 980.0 | <= | 10% / 18% |
+| host_cpu_workload_ms | 540.0 / 590.0 | 430.0 / 490.0 | **WORSE** | 490.0 / 520.0 | 410.0 / 440.0 | **WORSE** | 6% / 7% |
+| cpu_total_workload_ms | 1260.0 / 1390.0 | 1280.0 / 1490.0 | <= | 1000.0 / 1070.0 | 1240.0 / 1420.0 | <= | 7% / 15% |
+| ext_cpu_ms_end | 740 / 800 | 1810 / 2040 | <= | 510 / 570 | 1830 / 1980 | <= | 12% / 8% |
+| cpu_total_ms_end | 1350 / 1470 | 2420 / 2710 | <= | 1080 / 1170 | 2440 / 2610 | <= | 8% / 7% |
+| ext_rss_end | 14.88 MiB / 15.16 MiB | 223.55 MiB / 226.24 MiB | <= | 14.61 MiB / 15.01 MiB | 224.95 MiB / 226.31 MiB | <= | 3% / 1% |
+| ext_pss_end | 14.88 MiB / 15.15 MiB | 219.67 MiB / 222.36 MiB | <= | 14.61 MiB / 15.01 MiB | 221.08 MiB / 222.47 MiB | <= | 3% / 1% |
+| ext_anon_end | 7.70 MiB / 7.98 MiB | 163.34 MiB / 166.02 MiB | <= | 7.48 MiB / 7.88 MiB | 164.78 MiB / 166.06 MiB | <= | 5% / 1% |
+| ext_peak_rss_end | 14.91 MiB / 15.16 MiB | 223.55 MiB / 226.24 MiB | <= | 14.61 MiB / 15.01 MiB | 224.95 MiB / 226.31 MiB | <= | 3% / 1% |
+| tree_rss_end | 87.14 MiB / 88.12 MiB | 332.32 MiB / 338.35 MiB | <= | 87.70 MiB / 88.73 MiB | 333.23 MiB / 339.05 MiB | <= | 1% / 2% |
+| tree_pss_end | 85.80 MiB / 86.77 MiB | 327.10 MiB / 333.11 MiB | <= | 86.29 MiB / 87.37 MiB | 327.94 MiB / 333.79 MiB | <= | 1% / 2% |
+| heap_used_gc_end | 0.62 MiB / 0.64 MiB | 36.07 MiB / 36.09 MiB | <= | 0.62 MiB / 0.64 MiB | 36.08 MiB / 36.10 MiB | <= | 3% / 0% |
+| heap_inuse_gc_end | 1.77 MiB / 1.88 MiB | 103.59 MiB / 104.34 MiB | <= | 1.77 MiB / 1.85 MiB | 103.59 MiB / 104.34 MiB | <= | 4% / 1% |
+| sys_asis_end (Go Sys vs Node RSS) | 17.69 MiB / 17.94 MiB | 206.28 MiB / 218.06 MiB | <= | 17.76 MiB / 17.94 MiB | 205.31 MiB / 217.72 MiB | <= | 1% / 6% |
+| tool_ms:notes.append | 5.9 / 7.6 | 7.7 / 11.2 | <= | 5.5 / 7.2 | 7.5 / 11.1 | <= | 30% / 48% |
+| tool_ms:notes.list | 10.4 / 13.2 | 21.0 / 30.6 | <= | 9.1 / 11.9 | 20.6 / 29.1 | <= | 31% / 41% |
+| tool_ms:notes.read | 5.9 / 7.7 | 7.9 / 11.2 | <= | 5.0 / 6.9 | 7.8 / 11.7 | <= | 37% / 50% |
+| tool_ms:notes.search | 11.0 / 13.4 | 31.0 / 41.5 | <= | 9.9 / 13.0 | 29.2 / 39.1 | <= | 31% / 34% |
+| tool_ms:notes.write | 6.3 / 8.2 | 9.7 / 14.1 | <= | 5.7 / 7.0 | 9.5 / 13.5 | <= | 23% / 43% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 84.39 MiB | - | | 67.16 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 915027 | - | | 578618 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 48 | 6 | | 41 | 6 | | |
+
+#### a / warm (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 117.1 / 126.5 | 855.7 / 885.6 | <= | 116.0 / 127.4 | 849.6 / 880.7 | <= | 10% / 4% |
+| cpu_ext_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| host_cpu_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| cpu_total_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| ext_cpu_ms_end | 10 / 10 | 1000 / 1020 | <= | 10 / 10 | 970 / 1020 | <= | 0% / 5% |
+| cpu_total_ms_end | 90 / 100 | 1180 / 1220 | <= | 90 / 100 | 1160 / 1210 | <= | 11% / 4% |
+| ext_rss_end | 9.40 MiB / 9.59 MiB | 161.08 MiB / 161.93 MiB | <= | 9.36 MiB / 9.58 MiB | 160.73 MiB / 161.91 MiB | <= | 2% / 1% |
+| ext_pss_end | 9.40 MiB / 9.59 MiB | 157.22 MiB / 158.02 MiB | <= | 9.36 MiB / 9.58 MiB | 156.81 MiB / 158.04 MiB | <= | 2% / 1% |
+| ext_anon_end | 2.48 MiB / 2.67 MiB | 105.54 MiB / 106.34 MiB | <= | 2.50 MiB / 2.71 MiB | 104.99 MiB / 106.43 MiB | <= | 9% / 1% |
+| ext_peak_rss_end | 9.40 MiB / 9.59 MiB | 161.08 MiB / 161.93 MiB | <= | 9.36 MiB / 9.58 MiB | 160.73 MiB / 161.91 MiB | <= | 2% / 1% |
+| tree_rss_end | 70.00 MiB / 70.67 MiB | 245.41 MiB / 246.10 MiB | <= | 70.17 MiB / 71.06 MiB | 245.02 MiB / 246.19 MiB | <= | 1% / 0% |
+| tree_pss_end | 68.55 MiB / 69.34 MiB | 240.09 MiB / 240.77 MiB | <= | 68.82 MiB / 69.63 MiB | 239.67 MiB / 240.93 MiB | <= | 1% / 1% |
+| heap_used_gc_end | 0.51 MiB / 0.51 MiB | 34.94 MiB / 34.94 MiB | <= | 0.51 MiB / 0.51 MiB | 34.95 MiB / 34.95 MiB | <= | 0% / 0% |
+| heap_inuse_gc_end | 1.48 MiB / 1.60 MiB | 69.84 MiB / 101.59 MiB | <= | 1.53 MiB / 1.57 MiB | 69.84 MiB / 101.09 MiB | <= | 3% / 45% |
+| sys_asis_end (Go Sys vs Node RSS) | 13.40 MiB / 13.66 MiB | 149.09 MiB / 154.30 MiB | <= | 13.41 MiB / 13.66 MiB | 149.61 MiB / 152.32 MiB | <= | 2% / 2% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 0.04 MiB | - | | 0.04 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 187 | - | | 183 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 2 | 1 | | 2 | 1 | | |
+
+#### a / cold (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 736.5 / 762.1 | 2293.2 / 2485.4 | <= | 739.3 / 794.9 | 2324.2 / 2526.1 | <= | 8% / 9% |
+| cpu_ext_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| host_cpu_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| cpu_total_workload_ms | 0.0 / 0.0 | 0.0 / 0.0 | <= | 0.0 / 0.0 | 0.0 / 0.0 | <= | - / - |
+| ext_cpu_ms_end | 10 / 10 | 3090 / 3420 | <= | 10 / 10 | 3150 / 3490 | <= | 0% / 11% |
+| cpu_total_ms_end | 1140 / 1190 | 3740 / 4070 | <= | 1130 / 1200 | 3810 / 4170 | <= | 6% / 9% |
+| ext_rss_end | 9.34 MiB / 9.59 MiB | 311.43 MiB / 314.92 MiB | <= | 9.37 MiB / 9.58 MiB | 311.56 MiB / 314.60 MiB | <= | 2% / 1% |
+| ext_pss_end | 9.33 MiB / 9.59 MiB | 307.50 MiB / 311.01 MiB | <= | 9.36 MiB / 9.58 MiB | 307.60 MiB / 310.63 MiB | <= | 2% / 1% |
+| ext_anon_end | 2.42 MiB / 2.61 MiB | 255.71 MiB / 259.29 MiB | <= | 2.45 MiB / 2.71 MiB | 255.86 MiB / 258.83 MiB | <= | 11% / 1% |
+| ext_peak_rss_end | 9.34 MiB / 9.59 MiB | 311.43 MiB / 314.92 MiB | <= | 9.37 MiB / 9.58 MiB | 311.56 MiB / 314.60 MiB | <= | 2% / 1% |
+| tree_rss_end | 82.64 MiB / 85.45 MiB | 463.91 MiB / 473.21 MiB | <= | 83.06 MiB / 86.72 MiB | 460.76 MiB / 473.34 MiB | <= | 4% / 3% |
+| tree_pss_end | 81.28 MiB / 84.00 MiB | 458.49 MiB / 467.87 MiB | <= | 81.67 MiB / 85.31 MiB | 455.43 MiB / 468.04 MiB | <= | 4% / 3% |
+| heap_used_gc_end | 0.51 MiB / 0.51 MiB | 47.18 MiB / 47.19 MiB | <= | 0.51 MiB / 0.51 MiB | 47.19 MiB / 47.19 MiB | <= | 1% / 0% |
+| heap_inuse_gc_end | 1.55 MiB / 1.59 MiB | 181.25 MiB / 182.00 MiB | <= | 1.51 MiB / 1.60 MiB | 181.25 MiB / 182.00 MiB | <= | 6% / 0% |
+| sys_asis_end (Go Sys vs Node RSS) | 13.41 MiB / 13.60 MiB | 301.98 MiB / 304.50 MiB | <= | 13.40 MiB / 13.66 MiB | 302.02 MiB / 304.50 MiB | <= | 2% / 1% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 0.04 MiB | - | | 0.04 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 188 | - | | 187 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 2 | 1 | | 2 | 1 | | |
+
+#### b / warm (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 116.2 / 126.3 | 876.4 / 893.9 | <= | 116.7 / 135.8 | 861.2 / 878.5 | <= | 16% / 2% |
+| first_turn_ms | 42.8 / 48.8 | 69.4 / 74.3 | <= | 40.7 / 43.6 | 68.5 / 72.6 | <= | 7% / 6% |
+| to_first_tool_ms | 19.9 / 21.9 | 35.3 / 37.3 | <= | 19.0 / 21.2 | 34.9 / 37.9 | <= | 12% / 9% |
+| turn_ms | 42.8 / 48.8 | 69.4 / 74.3 | <= | 40.7 / 43.6 | 68.5 / 72.6 | <= | 7% / 6% |
+| cpu_ext_workload_ms | 20.0 / 30.0 | 60.0 / 80.0 | <= | 20.0 / 30.0 | 70.0 / 80.0 | <= | 50% / 14% |
+| host_cpu_workload_ms | 30.0 / 40.0 | 30.0 / 40.0 | <= | 30.0 / 40.0 | 30.0 / 40.0 | <= | 33% / 33% |
+| cpu_total_workload_ms | 40.0 / 60.0 | 90.0 / 120.0 | <= | 50.0 / 60.0 | 100.0 / 110.0 | <= | 20% / 10% |
+| ext_cpu_ms_end | 30 / 40 | 1070 / 1090 | <= | 20 / 30 | 1060 / 1100 | <= | 50% / 4% |
+| cpu_total_ms_end | 140 / 160 | 1300 / 1320 | <= | 140 / 150 | 1280 / 1320 | <= | 7% / 3% |
+| ext_rss_end | 10.99 MiB / 12.04 MiB | 167.53 MiB / 169.23 MiB | <= | 10.71 MiB / 11.95 MiB | 167.82 MiB / 169.37 MiB | <= | 12% / 1% |
+| ext_pss_end | 10.98 MiB / 12.04 MiB | 163.66 MiB / 165.44 MiB | <= | 10.70 MiB / 11.95 MiB | 163.97 MiB / 165.58 MiB | <= | 12% / 1% |
+| ext_anon_end | 4.01 MiB / 5.00 MiB | 107.22 MiB / 109.08 MiB | <= | 3.78 MiB / 4.96 MiB | 107.57 MiB / 109.24 MiB | <= | 31% / 2% |
+| ext_peak_rss_end | 10.99 MiB / 12.04 MiB | 167.53 MiB / 169.23 MiB | <= | 10.71 MiB / 11.95 MiB | 167.82 MiB / 169.37 MiB | <= | 12% / 1% |
+| tree_rss_end | 73.94 MiB / 74.91 MiB | 257.04 MiB / 258.77 MiB | <= | 73.59 MiB / 74.59 MiB | 257.28 MiB / 259.01 MiB | <= | 1% / 1% |
+| tree_pss_end | 72.57 MiB / 73.55 MiB | 251.77 MiB / 253.46 MiB | <= | 72.22 MiB / 73.16 MiB | 251.98 MiB / 253.75 MiB | <= | 1% / 1% |
+| heap_used_gc_end | 0.54 MiB / 0.54 MiB | 35.17 MiB / 35.17 MiB | <= | 0.54 MiB / 0.55 MiB | 35.18 MiB / 35.18 MiB | <= | 1% / 0% |
+| heap_inuse_gc_end | 1.66 MiB / 1.75 MiB | 70.34 MiB / 101.59 MiB | <= | 1.63 MiB / 1.72 MiB | 70.09 MiB / 101.59 MiB | <= | 5% / 45% |
+| sys_asis_end (Go Sys vs Node RSS) | 13.66 MiB / 13.91 MiB | 158.67 MiB / 162.00 MiB | <= | 13.41 MiB / 13.92 MiB | 156.00 MiB / 160.07 MiB | <= | 4% / 3% |
+| tool_ms:get_context_remaining | 4.8 / 6.6 | 12.9 / 14.4 | <= | 4.6 / 6.5 | 12.1 / 14.8 | <= | 42% / 22% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 1.32 MiB | - | | 1.12 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 13881 | - | | 9599 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 2 | 1 | | 2 | 1 | | |
+
+#### b / cold (n=25 per side; median / p90)
+
+| Metric | Go @979bf718 | TS @979bf718 | Go<=TS | Go @sdkframe | TS @sdkframe | Go<=TS | spread Go-sf / TS-sf |
+|---|---:|---:|:--:|---:|---:|:--:|---:|
+| startup_ms | 753.7 / 790.7 | 2382.2 / 2548.0 | <= | 774.1 / 787.1 | 2351.1 / 2542.0 | <= | 2% / 8% |
+| first_turn_ms | 47.0 / 50.6 | 65.8 / 71.6 | <= | 40.7 / 46.3 | 62.2 / 71.3 | <= | 14% / 15% |
+| to_first_tool_ms | 20.8 / 25.0 | 34.4 / 37.3 | <= | 19.8 / 22.3 | 33.5 / 36.7 | <= | 13% / 10% |
+| turn_ms | 47.0 / 50.6 | 65.8 / 71.6 | <= | 40.7 / 46.3 | 62.2 / 71.3 | <= | 14% / 15% |
+| cpu_ext_workload_ms | 20.0 / 30.0 | 60.0 / 80.0 | <= | 20.0 / 20.0 | 70.0 / 80.0 | <= | 0% / 14% |
+| host_cpu_workload_ms | 30.0 / 40.0 | 30.0 / 40.0 | <= | 30.0 / 40.0 | 30.0 / 40.0 | <= | 33% / 33% |
+| cpu_total_workload_ms | 50.0 / 60.0 | 90.0 / 110.0 | <= | 40.0 / 60.0 | 90.0 / 110.0 | <= | 50% / 22% |
+| ext_cpu_ms_end | 30 / 40 | 3280 / 3560 | <= | 20 / 30 | 3240 / 3550 | <= | 50% / 10% |
+| cpu_total_ms_end | 1210 / 1250 | 3980 / 4270 | <= | 1230 / 1250 | 3920 / 4260 | <= | 2% / 9% |
+| ext_rss_end | 11.06 MiB / 12.18 MiB | 316.81 MiB / 319.59 MiB | <= | 10.71 MiB / 10.89 MiB | 316.57 MiB / 319.12 MiB | <= | 2% / 1% |
+| ext_pss_end | 11.05 MiB / 12.18 MiB | 312.89 MiB / 315.62 MiB | <= | 10.71 MiB / 10.89 MiB | 312.64 MiB / 315.20 MiB | <= | 2% / 1% |
+| ext_anon_end | 4.08 MiB / 5.13 MiB | 256.34 MiB / 259.21 MiB | <= | 3.78 MiB / 3.96 MiB | 256.14 MiB / 258.83 MiB | <= | 5% / 1% |
+| ext_peak_rss_end | 11.06 MiB / 12.18 MiB | 316.81 MiB / 319.59 MiB | <= | 10.71 MiB / 10.89 MiB | 316.57 MiB / 319.12 MiB | <= | 2% / 1% |
+| tree_rss_end | 85.83 MiB / 87.69 MiB | 473.58 MiB / 483.43 MiB | <= | 84.25 MiB / 87.10 MiB | 480.62 MiB / 484.38 MiB | <= | 3% / 1% |
+| tree_pss_end | 84.43 MiB / 86.28 MiB | 468.35 MiB / 478.04 MiB | <= | 82.92 MiB / 85.69 MiB | 475.35 MiB / 479.08 MiB | <= | 3% / 1% |
+| heap_used_gc_end | 0.54 MiB / 0.54 MiB | 47.42 MiB / 47.43 MiB | <= | 0.54 MiB / 0.54 MiB | 47.43 MiB / 47.44 MiB | <= | 0% / 0% |
+| heap_inuse_gc_end | 1.61 MiB / 1.71 MiB | 181.25 MiB / 181.50 MiB | <= | 1.63 MiB / 1.76 MiB | 181.50 MiB / 182.00 MiB | <= | 8% / 0% |
+| sys_asis_end (Go Sys vs Node RSS) | 13.41 MiB / 17.40 MiB | 307.50 MiB / 309.00 MiB | <= | 13.42 MiB / 17.41 MiB | 307.12 MiB / 310.00 MiB | <= | 30% / 1% |
+| tool_ms:get_context_remaining | 4.9 / 6.5 | 10.9 / 14.2 | <= | 4.6 / 6.0 | 10.4 / 13.9 | <= | 30% / 34% |
+| total_alloc_workload (Go only; TS = V8 GC events for num_gc) | 1.31 MiB | - | | 1.12 MiB | - | | |
+| mallocs_workload (Go only; TS = V8 GC events for num_gc) | 13866 | - | | 9617 | - | | |
+| num_gc_workload (Go only; TS = V8 GC events for num_gc) | 2 | 1 | | 2 | 1 | | |
+
+
+## Notes for round 2
+
+* Spreads: CPU and latency spreads above 5% remain (10 ms ticks, ms-scale latencies, shared host); the memory rows with medians above 20 MiB are within
+  5% except the TS e rows (9-10%); Go e RSS/Anonymous (15-20 MiB, 12 MiB) spread 23-42%. Round 1's explanation applies unchanged.
+* Tooling added: `build-pig.sh`, `run.sh sf`, sides `go-sf`/`ts-sf` (`PH_PERF_PIG_SF`, `PH_PERF_SDK_SF`), `PAIRS` in the summary (Go vs TS per pig, plus
+  go-sf vs go as information), per-side Go binary sizes in `meta.json`.
+* Scratch (`~/ph-work/scratch/PerfLane`: the pig checkout, the sdkframe pig, SDK home, profiles, outputs) removed; `build-pig.sh` recreates it.
+
+---
+
+# Round 1 (tip 8a4d39f5, pig@979bf718 only)
+
 Tip measured: 8a4d39f5 (Go extension from `components/posthorse/extensions/posthorse`). Tooling and method: `port/perf/README.md`.
 Data: `port/perf/data/both/` (authoritative: go, ts and pi interleaved sample by sample in one session), `data/go/` and
 `data/ts-baseline/` (the same rows split by side; `ts-baseline` = TS under pig plus Pi 1.5.0 reference, this session, replacing

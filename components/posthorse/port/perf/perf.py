@@ -19,7 +19,18 @@ SCRATCH = pathlib.Path(os.environ.get("PH_PERF_SCRATCH", "/home/kinsy/ph-work/sc
 WS = SCRATCH / "ws"                        # fixed workspace path: archive headers carry this cwd
 SETTLE_S = 0.5                             # idle time after "ready" before the idle snapshot
 TICK_MS = 1000 // os.sysconf("SC_CLK_TCK")
-SIDES = {"go": ("pig", "go"), "ts": ("pig", "ts"), "pi": ("pi", "ts")}   # side -> (host, extension language)
+SIDES = {"go": ("pig", "go"), "ts": ("pig", "ts"), "pi": ("pi", "ts"),     # side -> (host, extension language)
+         "go-sf": ("pig-sf", "go"), "ts-sf": ("pig-sf", "ts")}              # second pig (PH_PERF_PIG_SF) with its own SDK (PH_PERF_SDK_SF)
+PAIRS = [("go", "ts"), ("go-sf", "ts-sf")]                                  # ratchet pairs: Go against TS on the same pig
+
+
+def host_binary(host_kind):
+    return {"pig": os.environ.get("PIGEQ_PIG"), "pi": os.environ.get("PIGEQ_PI"), "pig-sf": os.environ.get("PH_PERF_PIG_SF")}[host_kind]
+
+
+def host_sdk(host_kind):
+    """The SDK directory the Go extension is built against: the one staged by the pig that runs it."""
+    return os.environ.get("PH_PERF_SDK_SF") if host_kind == "pig-sf" else os.environ.get("PIG_SDK_DIR")
 WORKLOADS = ["a", "b", "c1", "c100", "c1000", "d50", "d200", "e", "f"]
 COLD_WORKLOADS = {"a", "b"}
 
@@ -157,15 +168,17 @@ class Host:
 
 # ---------------------------------------------------------------- environment, snapshot, model
 
-def host_env(root, mem_dir=None):
+def host_env(root, mem_dir=None, sdk=None):
     e = {"PATH": os.environ["PATH"], "HOME": str(root / "home"), "TMPDIR": str(root / "tmp"), "LANG": "C.UTF-8", "TERM": "dumb",
          "NO_COLOR": "1", "PIG_HOME": str(root / "pighome"), "PIG_CODING_AGENT_DIR": str(root / "agent"),
          "PI_CODING_AGENT_DIR": str(root / "agent"), "PI_SKIP_VERSION_CHECK": "1", "PI_OFFLINE": "1", "PI_TELEMETRY": "0",
          "PIG_OFFLINE": "1", "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_NOSYSTEM": "1", "GIT_AUTHOR_NAME": "perf",
          "GIT_AUTHOR_EMAIL": "perf@example.invalid", "GIT_COMMITTER_NAME": "perf", "GIT_COMMITTER_EMAIL": "perf@example.invalid"}
-    for k in ("GOROOT", "GOCACHE", "GOMODCACHE", "GOPROXY", "GOFLAGS", "PIG_SDK_DIR"):
+    for k in ("GOROOT", "GOCACHE", "GOMODCACHE", "GOPROXY", "GOFLAGS"):
         if k in os.environ:
             e[k] = os.environ[k]
+    if sdk or os.environ.get("PIG_SDK_DIR"):
+        e["PIG_SDK_DIR"] = sdk or os.environ["PIG_SDK_DIR"]
     if os.environ.get("PH_PERF_HOSTPROF"):               # diagnosis only: the host's own CPU profile (PIG_PROFILE=cpu)
         e["PIG_PROFILE"], e["PIG_PROFILE_DIR"] = "cpu", str(root / "hostprof")
         (root / "hostprof").mkdir(parents=True, exist_ok=True)
@@ -366,7 +379,7 @@ def settle_pids(host, host_kind):
 
 def run_one(cfg, side, variant, workload, cache, idx, snap, llmbin, warm_root):
     host_kind, lang = SIDES[side]
-    binary = os.environ["PIGEQ_PIG"] if host_kind == "pig" else os.environ["PIGEQ_PI"]
+    binary = host_binary(host_kind)
     cold = cache == "cold"
     root = (SCRATCH / "cold" / f"{side}-{variant}-{workload}-{idx}") if cold else warm_root
     if cold:
@@ -408,7 +421,7 @@ def run_one(cfg, side, variant, workload, cache, idx, snap, llmbin, warm_root):
     args += ["-e", str(ext_path(snap, lang, variant))]
     row = {"side": side, "variant": variant, "workload": workload, "cache": cache, "run": idx, "ok": False,
            "load1": os.getloadavg()[0]}
-    host = Host([binary] + args, work, host_env(root, mem_dir))
+    host = Host([binary] + args, work, host_env(root, mem_dir, host_sdk(host_kind)))
     try:
         sent = host.send({"id": "ready", "type": "get_state"})
         i, t, ev = host.wait(lambda e: e.get("id") == "ready", timeout=120)
@@ -418,7 +431,7 @@ def run_one(cfg, side, variant, workload, cache, idx, snap, llmbin, warm_root):
         time.sleep(SETTLE_S)
         pids = settle_pids(host, host_kind)
         row["ext_count"] = len(pids)
-        if host_kind == "pig" and not pids:
+        if host_kind != "pi" and not pids:
             raise RuntimeError("no extension process under the pig host (the extension did not load?) stderr: " + host.stderr[-800:].decode("utf8", "replace"))
         row["ready"] = snapshot(host, pids, variant, mem_dir, "ready")
         cursor = len(host.events)
@@ -560,7 +573,7 @@ def drive_prompt(host, prompt, cursor, workload):
 
 def run_sessions(cfg, side, idx, snap, count, warm_root):
     host_kind, lang = SIDES[side]
-    binary = os.environ["PIGEQ_PIG"] if host_kind == "pig" else os.environ["PIGEQ_PI"]
+    binary = host_binary(host_kind)
     root = warm_root
     for d in ("home", "agent", "tmp", "pighome"):
         (root / d).mkdir(parents=True, exist_ok=True)
@@ -573,7 +586,7 @@ def run_sessions(cfg, side, idx, snap, count, warm_root):
             work.mkdir(parents=True, exist_ok=True)
             args = ["--mode", "rpc", "--no-session", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--no-extensions", "--offline",
                     "-e", str(ext_path(snap, lang, "plain"))]
-            h = Host([binary] + args, work, host_env(root))
+            h = Host([binary] + args, work, host_env(root, None, host_sdk(host_kind)))
             hosts.append(h)
             h.send({"id": "ready", "type": "get_state"})
             h.wait(lambda e: e.get("id") == "ready", timeout=180)
@@ -585,7 +598,7 @@ def run_sessions(cfg, side, idx, snap, count, warm_root):
             counts.append(len(pids))
             host_rows.append(proc_mem(h.p.pid))
             ext_rows += [proc_mem(p) for p in pids]
-        if host_kind == "pig" and min(counts) < 1:
+        if host_kind != "pi" and min(counts) < 1:
             raise RuntimeError("a session has no extension process")
         row["end"] = {"host": sum_mem(host_rows), "ext": sum_mem(ext_rows), "ext_count": sum(counts)}
         row["end"]["ext"]["ext_avg_rss"] = row["end"]["ext"]["rss"] / count
@@ -631,20 +644,21 @@ def versions():
         except Exception as exc:
             return f"unavailable: {exc}"
     (SCRATCH / "versions" / "home").mkdir(parents=True, exist_ok=True)
-    return {"pig": run([os.environ["PIGEQ_PIG"], "--version"]), "pi": run([os.environ["PIGEQ_PI"], "--version"]),
+    extra = {"pig_sf": run([os.environ["PH_PERF_PIG_SF"], "--version"]), "pig_sf_sdk": os.environ.get("PH_PERF_SDK_SF")} if os.environ.get("PH_PERF_PIG_SF") else {}
+    return {**extra, "pig": run([os.environ["PIGEQ_PIG"], "--version"]), "pi": run([os.environ["PIGEQ_PI"], "--version"]), "pig_sdk": os.environ.get("PIG_SDK_DIR"),
             "node": run(["node", "--version"]), "go": run(["go", "version"]),
             "kernel": run(["uname", "-sr"]), "cpu": next((l.split(":", 1)[1].strip() for l in open("/proc/cpuinfo") if l.startswith("model name")), "?")}
 
 
-def go_binary_report(snap_root):
-    """Size of the extension binary pig built for the Go side, with and without symbols."""
-    cells = sorted((SCRATCH / "sizeprobe" / "pighome" / "cache" / "cells" / "go").glob("*/runner"), key=lambda p: p.stat().st_mtime)
+def go_binary_report(side):
+    """Size of the extension binary pig built for a Go side, with and without symbols."""
+    cells = sorted((SCRATCH / "sizeprobe" / side / "pighome" / "cache" / "cells" / "go").glob("*/runner"), key=lambda p: p.stat().st_mtime)
     if not cells:
         return {}
     binary = cells[-1]
     info = {"runner_bytes": binary.stat().st_size, "sha256": hashlib.sha256(binary.read_bytes()).hexdigest()}
     if shutil.which("strip"):
-        copy = SCRATCH / "sizeprobe" / "runner.stripped"
+        copy = SCRATCH / "sizeprobe" / side / "runner.stripped"
         shutil.copy(binary, copy)
         subprocess.run(["strip", "-s", str(copy)], check=False)
         info["stripped_bytes"] = copy.stat().st_size
@@ -675,11 +689,14 @@ def cmd_run(a):
                 seed = run_one(a, side, variant, a.seed, "warm", f"seed{k}", snap, llmbin, warm[(side, variant)])
                 if not seed["ok"]:
                     raise SystemExit(f"warm seed failed without retry: {json.dumps(seed)[:1500]}")
-    if "go" in sides:   # keep the cell binary pig built for the Go extension, for the size row
-        probe = SCRATCH / "sizeprobe"
-        shutil.rmtree(probe, ignore_errors=True)
-        shutil.copytree(warm[("go", "plain")] / "pighome", probe / "pighome", symlinks=True)
-        meta["go_binary"] = go_binary_report(snap)
+    shutil.rmtree(SCRATCH / "sizeprobe", ignore_errors=True)
+    for side in sides:   # keep the cell binary each pig built for a Go extension, for the size row
+        if SIDES[side][1] == "go":
+            probe = SCRATCH / "sizeprobe" / side
+            shutil.copytree(warm[(side, "plain")] / "pighome", probe / "pighome", symlinks=True)
+            meta.setdefault("go_binaries", {})[side] = go_binary_report(side)
+    if "go" in meta.get("go_binaries", {}):
+        meta["go_binary"] = meta["go_binaries"]["go"]
     for workload in workloads:
         caches = ("warm", "cold") if workload in COLD_WORKLOADS else ("warm",)
         if workload == "f":
@@ -882,7 +899,7 @@ def cmd_summarize(a):
     other = load_rows(a.vs) if a.vs else []
     c = cells(rows + other)
     keys = sorted({(w, ca) for (w, ca, _, _) in c}, key=lambda k: (WORKLOADS.index(k[0]), k[1]))
-    sides = [s for s in ("go", "ts", "pi") if any(k[2] == s for k in c)]
+    sides = [s for s in ("go", "ts", "go-sf", "ts-sf", "pi") if any(k[2] == s for k in c)]
     all_metrics = sorted({m for cell in c.values() for m in cell if m != "_runs"})
     ordered = [m for m in RATCHET if m in all_metrics] + [m for m in all_metrics if m not in RATCHET]
     headline = [m for m in ordered if m in RATCHET or m.startswith(("tool_ms:", "total_alloc_workload", "mallocs_workload", "num_gc_workload", "ext_count", "llm_requests", "session_"))]
@@ -892,31 +909,36 @@ def cmd_summarize(a):
     lines += table(c, sides, keys, headline)
     mismatches = parity(c, keys, sides)
     lines += (["## Behaviour parity of the workloads (model requests, session records)", ""] + (mismatches or ["identical across sides."]) + [""])
-    verdict = []
-    if "go" in sides and "ts" in sides:
-        verdict += ["## Ratchet: go <= ts (pig host, Node extension runtime) on every metric", "", "| Workload | Metric | go median | ts median | go p90 | ts p90 | verdict |", "|---|---|---:|---:|---:|---:|---|"]
+    verdict, misses = [], 0
+    for lhs, rhs, gate in [(g, t, True) for g, t in PAIRS] + [("go-sf", "go", False)]:
+        if lhs not in sides or rhs not in sides:
+            continue
+        what = "Go <= TS on the same pig" if gate else "information: new pig and SDK against old (go-sf <= go)"
+        verdict += [f"## Ratchet: {lhs} <= {rhs} ({what}), every metric", "", f"| Workload | Metric | {lhs} median | {rhs} median | {lhs} p90 | {rhs} p90 | verdict |", "|---|---|---:|---:|---:|---:|---|"]
         fails = 0
         for wl, cache in keys:
             for metric in ordered:
                 if metric not in RATCHET and not metric.startswith("tool_ms:"):
                     continue
                 variant = "mem" if metric.startswith(("heap", "sys")) else "plain"
-                g = c.get((wl, cache, "go", variant), {}).get(metric)
-                t = c.get((wl, cache, "ts", variant), {}).get(metric)
+                g = c.get((wl, cache, lhs, variant), {}).get(metric)
+                t = c.get((wl, cache, rhs, variant), {}).get(metric)
                 if not g or not t:
                     continue
                 gm, tm, g9, t9 = statistics.median(g), statistics.median(t), q(g, .9), q(t, .9)
                 bad = gm > tm
                 warn = g9 > t9
                 fails += bad
-                verdict.append(f"| {wl}/{cache} | {metric} | {fmt(metric, gm)} | {fmt(metric, tm)} | {fmt(metric, g9)} | {fmt(metric, t9)} | {'FAIL (median)' if bad else ('pass, p90 worse' if warn else 'pass')} |")
-        verdict += ["", f"Median misses: {fails}."]
+                verdict.append(f"| {wl}/{cache} | {metric} | {fmt(metric, gm)} | {fmt(metric, tm)} | {fmt(metric, g9)} | {fmt(metric, t9)} | {('FAIL (median)' if gate else 'worse') if bad else (('pass, p90 worse' if gate else 'not worse, p90 worse') if warn else ('pass' if gate else 'not worse'))} |")
+        verdict += ["", f"Median misses ({lhs} vs {rhs}): {fails}." if gate else f"Metrics where {lhs} is worse than {rhs}: {fails}.", ""]
+        if gate:
+            misses += fails
     noisy = spread(c, keys, sides, ordered)
     spreadlines = ["", "## Relative spread (p90-p50)/p50 above 5% (go and ts sides, ratchet metrics)", ""] + (noisy or ["none: every ratchet metric of every cell is within 5%."]) + [""]
     text = "\n".join(lines + verdict + spreadlines) + "\n"
     (pathlib.Path(a.dir) / "summary.md").write_text(text)
     print(text)
-    return 1 if mismatches or (verdict and "Median misses: 0." not in verdict[-1]) else 0
+    return 1 if mismatches or misses else 0
 
 
 def main():

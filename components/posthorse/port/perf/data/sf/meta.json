@@ -1,0 +1,78 @@
+{
+  "started": "2026-11-07T09:33:39+0000",
+  "sides": [
+    "go",
+    "go-sf",
+    "ts",
+    "ts-sf"
+  ],
+  "workloads": [
+    "e",
+    "c1",
+    "c100",
+    "a",
+    "b"
+  ],
+  "samples": 25,
+  "cpus": [
+    186,
+    187,
+    188,
+    189,
+    190,
+    191
+  ],
+  "loadavg_start": [
+    4.740234375,
+    4.970703125,
+    4.85595703125
+  ],
+  "versions": {
+    "pig_sf": "0.7.0+1.5.0",
+    "pig_sf_sdk": "/home/kinsy/ph-work/scratch/PerfLane/sdkhome-sdkframe/state/pigsdk/sdk-946f155a549f8be9",
+    "pig": "0.7.0+1.5.0",
+    "pi": "1.5.0",
+    "pig_sdk": "/home/kinsy/ph-work/scratch/root/pighome/state/pigsdk/sdk-5ee25f8133d42249",
+    "node": "v24.22.1",
+    "go": "go version go1.27.3 linux/amd64",
+    "kernel": "Linux 6.8.0-124-generic",
+    "cpu": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "settle_s": 0.5,
+  "sessions": 60,
+  "args": [
+    "run",
+    "--out",
+    "/home/kinsy/ph-work/scratch/PerfLane/out/sf",
+    "--sides",
+    "go,go-sf,ts,ts-sf",
+    "--samples",
+    "25",
+    "--workloads",
+    "e,c1,c100,a,b"
+  ],
+  "extension_sources_sha256": "c8d86a589c0c0bfcf0ef7dc1096bbac748418749d1504054f049ad5ad1659ed0",
+  "go_binaries": {
+    "go": {
+      "runner_bytes": 7811232,
+      "sha256": "b125831012d578461cd450ced335b2a9c02c2f89a3b18864a6491df41a327923",
+      "stripped_bytes": 7808264
+    },
+    "go-sf": {
+      "runner_bytes": 7823520,
+      "sha256": "059481e2883caf3efab6609d44bc87ccf94d84a2f7269eb1df58bb299d3956f0",
+      "stripped_bytes": 7820552
+    }
+  },
+  "go_binary": {
+    "runner_bytes": 7811232,
+    "sha256": "b125831012d578461cd450ced335b2a9c02c2f89a3b18864a6491df41a327923",
+    "stripped_bytes": 7808264
+  },
+  "finished": "2026-11-07T11:38:56+0000",
+  "loadavg_end": [
+    7.31103515625,
+    7.46337890625,
+    6.22998046875
+  ]
+}

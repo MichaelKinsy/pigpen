@@ -12,6 +12,8 @@ a fresh `HOME`/`PIG_HOME`/agent directory per run, a scripted model on loopback,
 port/perf/run.sh both            # go, ts and pi interleaved sample by sample: the authoritative ratchet comparison
 port/perf/run.sh go              # the Go port only (compare with data/ts-baseline, which is an earlier session)
 port/perf/run.sh ts              # the TS original under pig (side "ts") and under Pi 1.5.0 (side "pi")
+ph run "components/posthorse/port/perf/build-pig.sh <PiG commit> sdkframe"   # build a second pig + stage its SDK (scratch tree)
+port/perf/run.sh sf              # go, go-sf, ts, ts-sf: Go and TS on the reference pig and on the second pig, interleaved
 port/perf/run.sh both --samples 15 --workloads a,b,e     # any `perf.py run` flag follows the mode
 ```
 

@@ -70,7 +70,16 @@ function goldenHeader(dir) {
 // `extension` hash (pigeq hashes a file original's bytes). A package original may be recorded from its source entry
 // (pi-typesafe: oracle/src/extension.ts) or from an entry that re-exports it (warden: eq-entry.ts), which Pi compiles
 // itself, so the live re-run needs no build of the package, only its dependencies.
-function recordedOriginal(dir, hash) {
+// A header that says `extensionFiles: "closure"` hashed the entry's local import closure and the package.json beside it
+// (pigeq record --ts-closure), so no single file has that sha256: the entry is the extension the package names.
+function recordedOriginal(dir, hash, extensionFiles) {
+  if (extensionFiles === 'closure') {
+    const oracle = 'port/oracle';
+    const names = JSON.parse(readFileSync(join(dir, oracle, 'package.json'), 'utf8')).pi?.extensions ?? [];
+    const entry = names.map((name) => `${oracle}/${name.replace(/^\.\//, '')}`).find((path) => existsSync(join(dir, path)));
+    assert.ok(entry, `${dir}: the golden header hashes an import closure, but ${oracle}/package.json names no extension file`);
+    return entry;
+  }
   const walk = (rel) => readdirSync(join(dir, rel), { withFileTypes: true }).flatMap((e) => {
     const path = `${rel}/${e.name}`;
     if (e.isDirectory()) return e.name === 'node_modules' || e.name === 'dist' ? [] : walk(path);
@@ -99,7 +108,7 @@ for (const port of ports) {
   const relocation = existsSync(join(dir, 'port/relocation.json')) ? JSON.parse(readFileSync(join(dir, 'port/relocation.json'), 'utf8')) : null;
   // A third-party original that must be built (npm install && npm run build in port/oracle; gitignored) cannot be re-run until it is.
   const oraclePackage = original === 'port/oracle' ? JSON.parse(readFileSync(join(dir, 'port/oracle/package.json'), 'utf8')) : null;
-  const recorded = lane === 'pi-ts' ? recordedOriginal(dir, header.extension) : null;
+  const recorded = lane === 'pi-ts' ? recordedOriginal(dir, header.extension, header.extensionFiles) : null;
   const oracleUnbuilt = recorded
     ? (oraclePackage?.dependencies && Object.keys(oraclePackage.dependencies).length && !existsSync(join(dir, 'port/oracle/node_modules'))
       ? `install the original's dependencies first: ${existsSync(join(dir, 'port/oracle/package-lock.json')) ? 'npm ci --ignore-scripts' : 'npm install --ignore-scripts --no-package-lock'} in port/oracle` : false)

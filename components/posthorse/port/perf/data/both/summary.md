@@ -361,7 +361,7 @@ Medians and p90 over fresh-process samples; n in parentheses. Metric definitions
 
 identical across sides.
 
-## Ratchet: go <= ts (pig host, Node extension runtime) on every metric
+## Ratchet: go <= ts (Go <= TS on the same pig), every metric
 
 | Workload | Metric | go median | ts median | go p90 | ts p90 | verdict |
 |---|---|---:|---:|---:|---:|---|
@@ -612,7 +612,8 @@ identical across sides.
 | f/warm | ext_avg_pss_end | 2.55 MiB | 80.23 MiB | 2.57 MiB | 80.87 MiB | pass |
 | f/warm | all_ready_ms | 6695.5 | 47176.5 | 6868.4 | 48278.1 | pass |
 
-Median misses: 8.
+Median misses (go vs ts): 8.
+
 
 ## Relative spread (p90-p50)/p50 above 5% (go and ts sides, ratchet metrics)
 

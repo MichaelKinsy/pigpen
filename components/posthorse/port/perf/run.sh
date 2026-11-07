@@ -3,6 +3,7 @@
 #   ts    pig 0.7.0+1.5.0 running the TS original in its Node extension runtime (side "ts"), and Pi 1.5.0 as the reference (side "pi")
 #   go    pig running the Go port (side "go")
 #   both  go, ts and pi interleaved sample by sample: the authoritative comparison for the ratchet
+#   sf    go, go-sf, ts, ts-sf (second pig: `ph run "components/posthorse/port/perf/build-pig.sh <commit>"` first)
 #   collect <name>  wait for a remote run whose local run.sh was interrupted (the remote job keeps running), fetch and summarize it
 # Runs on xd6702 in the tern-ci container through ~/work/ph-tools/ph (rsync of the worktree, nice 10, 8 CPUs), then copies the
 # raw data back to port/perf/data/<name>/ and prints the summary. Needs the Mac worktree; never touches real ~/.pig or ~/.pi.
@@ -20,6 +21,9 @@ case "$mode" in
   ts) sides=ts,pi; name=${PH_PERF_NAME:-ts-baseline} ;;
   go) sides=go; name=${PH_PERF_NAME:-go} ;;
   both) sides=go,ts,pi; name=${PH_PERF_NAME:-both} ;;
+  sf) # four sides interleaved: go and ts on the reference pig, go-sf and ts-sf on the second pig built by build-pig.sh (run it first)
+    sides=go,go-sf,ts,ts-sf; name=${PH_PERF_NAME:-sf}
+    sfenv='S=/home/kinsy/ph-work/scratch/PerfLane; export PH_PERF_PIG_SF=$S/bin/pig-${PH_PERF_PIG_NAME:-sdkframe}; export PH_PERF_SDK_SF=$(ls -d $S/sdkhome-${PH_PERF_PIG_NAME:-sdkframe}/state/pigsdk/sdk-* | head -1);' ;;
   *) echo "usage: run.sh go|ts|both [perf.py run flags]" >&2; exit 2 ;;
 esac
 here=$(cd "$(dirname "$0")" && pwd)
@@ -27,7 +31,7 @@ wt=${PH_WT:-$(cd "$here/../../../.." && pwd)}
 remote_out=/home/kinsy/ph-work/scratch/PerfLane/out/$name
 data="$here/data/$name"
 # The remote copy lives under the scratch tree: `ph sync` rsyncs --delete into components/posthorse and would erase data kept there.
-PH_WT=$wt ~/work/ph-tools/ph run "mkdir -p $remote_out && ${PH_PERF_KEEP:+:} ${PH_PERF_KEEP:-rm -f $remote_out/samples.jsonl} && python3 components/posthorse/port/perf/perf.py run --out $remote_out --sides $sides $*; rc=\$?; python3 components/posthorse/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
+PH_WT=$wt ~/work/ph-tools/ph run "mkdir -p $remote_out && ${PH_PERF_KEEP:+:} ${PH_PERF_KEEP:-rm -f $remote_out/samples.jsonl} && ${sfenv:-true;} python3 components/posthorse/port/perf/perf.py run --out $remote_out --sides $sides $*; rc=\$?; python3 components/posthorse/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
 mkdir -p "$data"
 rsync -a xd6702:ph-work/scratch/PerfLane/out/$name/ "$data/"
 python3 "$here/perf.py" summarize "$data" > /dev/null || true   # re-summarize locally: the remote summary ran the code as synced

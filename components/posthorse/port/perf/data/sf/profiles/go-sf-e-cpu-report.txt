@@ -1,0 +1,29 @@
+# Go extension CPU profile, workload e on pig-sdkframe (go-sf, 2 runs merged), top 15 by cum
+Type: cpu
+Time: 2026-11-07 11:40:13 UTC
+Duration: 42.94s, Total samples = 15.57s (36.26%)
+Showing nodes accounting for 0.16s, 1.03% of 15.57s total
+Dropped 602 nodes (cum <= 0.08s)
+Showing top 15 nodes out of 305
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      7.62s 48.94%  github.com/MichaelKinsy/PiG/extensions/sdk.(*Extension).loop.func1
+         0     0%     0%      7.62s 48.94%  sync.(*WaitGroup).Go.func1
+         0     0%     0%      7.61s 48.88%  github.com/MichaelKinsy/PiG/extensions/sdk.(*Extension).handleArmedRequest
+     0.02s  0.13%  0.13%      4.01s 25.75%  runtime.systemstack
+         0     0%  0.13%      3.87s 24.86%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).unmarshal
+     0.04s  0.26%  0.39%      3.86s 24.79%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).object
+         0     0%  0.39%      3.86s 24.79%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).value
+         0     0%  0.39%      3.24s 20.81%  github.com/MichaelKinsy/PiG/extensions/sdk.unmarshalFrameMember (inline)
+         0     0%  0.39%      3.24s 20.81%  github.com/MichaelKinsy/PiG/extensions/sdk/json.UnmarshalTrusted
+     0.01s 0.064%  0.45%      3.17s 20.36%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).arrayInterface
+     0.07s  0.45%   0.9%      3.16s 20.30%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).objectInterface
+     0.02s  0.13%  1.03%      3.15s 20.23%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*decodeState).valueInterface
+         0     0%  1.03%      3.07s 19.72%  github.com/MichaelKinsy/PiG/extensions/sdk/json.MarshalJS
+         0     0%  1.03%      3.07s 19.72%  runtime.gcBgMarkWorker
+         0     0%  1.03%      2.86s 18.37%  github.com/MichaelKinsy/PiG/extensions/sdk/json.(*encodeState).marshal
+
+# exclusive split (a sample counts once: posthorse stack > SDK stack > GC/allocator > other)
+total: Duration: 42.94s, Total samples = 15.57s (36.26%)
+posthorse (any frame in pigpen/posthorse, includes SDK calls it makes): Showing nodes accounting for 1.34s, 8.61% of 15.57s total
+SDK (frames in extensions/sdk, none in posthorse): Showing nodes accounting for 7.71s, 49.52% of 15.57s total
+GC and allocator (runtime gc/malloc, none in sdk or posthorse): Showing nodes accounting for 3.41s, 21.90% of 15.57s total

@@ -684,8 +684,9 @@
         "piglets/pig-posthorse"
       ],
       "lane": "pigpen-posthorse",
-      "status": "queued",
-      "credit": "Go port of pi-posthorse 0.10.11, https://github.com/fitchmultz/pi-posthorse, by Mitch Fultz (MIT, Copyright (c) 2026 Mitch Fultz), at commit c8596fff2cec7123ef37486fd9701a24019c934f."
+      "status": "porting",
+      "credit": "Go port of pi-posthorse 0.10.11, https://github.com/fitchmultz/pi-posthorse, by Mitch Fultz (MIT, Copyright (c) 2026 Mitch Fultz), at commit c8596fff2cec7123ef37486fd9701a24019c934f.",
+      "notes": "Go port green: 93 exact twins and 59 named skips of 152 cases, 117 scenarios recorded from the original under Pi and passed by the port, about 1,860 mutants killed, six adversarial reviews fixed. porting (not review) because workload e total CPU is 16.57 s vs 16.11 s for the TS original on pig fix/071-sdkframe (+2.9 percent, inside the spread; the SDK frame fix is not merged) and clicking message cards is unported (PiG renderer-click lane)."
     }
   ]
 }

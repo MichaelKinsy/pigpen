@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 1 · review: 11 · done: 19
+Status: queued: 2 · porting: 2 · review: 11 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -43,6 +43,7 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 | `tintinweb-subagents` | [pi-subagents](https://github.com/tintinweb/pi-subagents) | [`4f572eaa04c0`](https://github.com/tintinweb/pi-subagents/commit/4f572eaa04c09d3dbc16e4a5f13a16b295e84e14) | MIT | tintinweb | `components/tintinweb-subagents` | `pig-essentials` | review | Go port of @tintinweb/pi-subagents 0.19.0, https://github.com/tintinweb/pi-subagents, by tintinweb (MIT, Copyright (c) 2026 tintinweb), at commit 4f572eaa04c09d3dbc16e4a5f13a16b295e84e14. |
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`bb92a7774141`](https://github.com/obra/superpowers/commit/bb92a77741419a4ab5f06e711a283343f1ada0c3) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v7.0.0, commit bb92a77741419a4ab5f06e711a283343f1ada0c3. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 | `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
+| `pi-posthorse` | [pi-posthorse](https://github.com/fitchmultz/pi-posthorse) | [`c8596fff2cec`](https://github.com/fitchmultz/pi-posthorse/commit/c8596fff2cec7123ef37486fd9701a24019c934f) | MIT | Mitch Fultz | `components/posthorse`<br>`piglets/pig-posthorse` | `pigpen-posthorse` | porting | Go port of pi-posthorse 0.10.11, https://github.com/fitchmultz/pi-posthorse, by Mitch Fultz (MIT, Copyright (c) 2026 Mitch Fultz), at commit c8596fff2cec7123ef37486fd9701a24019c934f. |
 
 ## How to read it
 
@@ -242,3 +243,8 @@ Status: queued: 2 · porting: 1 · review: 11 · done: 19
 
 - Kind: port. Model-selection tweaks: remember the picked model across sessions, pin an OpenRouter model to one upstream provider, and guard prompts against a model outside the allow-list.
 - Upstream path: `extensions` in pi-tweaks
+
+### `pi-posthorse`: pi-posthorse (Posthorse)
+
+- Kind: port. No-summary context rollover for long Pi tasks: new_context, get_context_remaining, notes and history tools, one task-note reminder, automatic recovery records, fork-private notes, no network.
+- Notes: Go port green: 93 exact twins and 59 named skips of 152 cases, 117 scenarios recorded from the original under Pi and passed by the port, about 1,860 mutants killed, six adversarial reviews fixed. porting (not review) because workload e total CPU is 16.57 s vs 16.11 s for the TS original on pig fix/071-sdkframe (+2.9 percent, inside the spread; the SDK frame fix is not merged) and clicking message cards is unported (PiG renderer-click lane).
