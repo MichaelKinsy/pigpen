@@ -177,7 +177,7 @@ is untouched afterwards; run it from the repository root):
 # Optional Sigstore provenance check of a downloaded Binary (uses your gh login, contacts GitHub):
 d="$(mktemp -d)"
 gh release download herdr/v0.1.0 --repo MichaelKinsy/pigpen --pattern 'pig-herdr-linux-amd64' --dir "$d"
-pig verify --provenance --repo MichaelKinsy/pigpen --signer-workflow .github/workflows/release.yml "$d/pig-herdr-linux-amd64"
+pig verify --provenance --repo MichaelKinsy/pigpen --signer-workflow "$REPO/.github/workflows/release.yml" "$d/pig-herdr-linux-amd64"
 ```
 
 Record the receipt (downloaded with `gh`, verified against `release-keys/`, written byte for byte), regenerate, commit:
@@ -237,14 +237,19 @@ and every attestation, and only then creates the release. Check it as a user wou
 ```bash
 d="$(mktemp -d)"; cd "$d"
 gh release download "components/acp/v$v" --repo "$REPO"
+# OpenSSL 3.0 or later (macOS: Homebrew openssl@3; the system LibreSSL has no `pkeyutl -rawin`)
 openssl pkeyutl -verify -rawin -pubin -inkey ~/pigpen/release-keys/pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
 sha256sum -c SHA256SUMS
-pig verify --provenance --repo "$REPO" --signer-workflow .github/workflows/release-pig-acp.yml --checksums SHA256SUMS "pig-acp-$v-linux-amd64.tar.gz"
+pig verify --provenance --repo "$REPO" --signer-workflow "$REPO/.github/workflows/release-pig-acp.yml" --checksums SHA256SUMS "pig-acp-$v-linux-amd64.tar.gz"
 ```
 
-Rehearse without GitHub, on a Linux machine with Go (the version in PiG's `.go-version`), Node and OpenSSL: `npm run rehearse:pig-acp -- <dir>` builds
-every target twice, checks they are identical, signs with a throwaway key and verifies (android/arm64 needs an NDK and PiG's
-`automation/release/android-binary.sh` in `PIG_ANDROID_SCRIPT`). It cannot make the attestations: those need the hosted run.
+Rehearse without GitHub, on a Linux machine with Go (the version in PiG's `.go-version`), Node 22+ and OpenSSL 3.0 or later:
+`npm run rehearse:pig-acp -- <dir> [--targets linux/amd64,windows/arm64]` builds every target (or the listed ones) twice, fails if
+the two builds differ, signs `SHA256SUMS` with a throwaway key, checks the signature with `openssl` and with the script's own verifier,
+and, for the target that matches the machine it runs on, runs the archive's executable (`--version` and the initialize handshake; the
+other platforms are smoke-tested only by the workflow's native runners). android/arm64 needs an Android NDK
+(`ANDROID_NDK_LATEST_HOME`) and PiG's `automation/release/android-binary.sh` in `PIG_ANDROID_SCRIPT`; without them the run stops at that
+target, so list the others with `--targets`. It cannot make the attestations: those need the hosted run.
 A release is immutable like a Piglet's (section 7); fix forward with a new Package version.
 
 ## 7. If a run fails
@@ -273,7 +278,7 @@ Follow-ups for PiG (none blocks a release):
 - **Keyless signing.** PiG could accept a GitHub OIDC identity instead of a stored key: the workflow's Fulcio certificate
   (repository, workflow, ref) as the signer, with the Rekor entry as proof. The workflow already attaches a Sigstore build
   provenance attestation (`actions/attest-build-provenance`), and `pig verify --provenance --repo MichaelKinsy/pigpen
-  --signer-workflow .github/workflows/release.yml <binary>` checks it with `gh`, online and optional. What PiG would need:
+  --signer-workflow MichaelKinsy/pigpen/.github/workflows/release.yml <binary>` checks it with `gh`, online and optional. What PiG would need:
   a Binary signature block that can carry a certificate chain and a Rekor inclusion proof, a trust store keyed by
   identity (repository and workflow) as well as by key id, and pull and update pinning by identity. Offline startup
   verification would then rest on the certificate chain, not on a key you must keep. That removes the secret, the

@@ -100,7 +100,7 @@ const authMessage = "Configure an API key or log in with an OAuth provider."
 // noAuthMessage is the error for a client that can run no sign-in flow: ACP's -32000 "authentication required" is
 // only meaningful with an advertised method (the remedy), so this client gets an ordinary internal error that says
 // what to do outside the editor.
-const noAuthMessage = "pig has no model or API key configured. Run pig in a terminal and sign in (`/login`) or set a provider API key, then try again."
+const noAuthMessage = "pig has no usable model or API key: none is configured, or the one configured was rejected. Run pig in a terminal and sign in (`/login`) or fix the provider API key, then try again."
 
 // AuthRequiredError is the error for missing credentials, shaped to what the client can do about it: -32000 with the
 // advertised methods, or, when none was advertised, an internal error that names the remedy.

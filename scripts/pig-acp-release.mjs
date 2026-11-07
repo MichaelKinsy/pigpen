@@ -8,13 +8,15 @@
 // release.yml does for Piglet Binaries).
 //
 //   plan                                      the tag is components/acp/v<version>; writes the build matrix (GitHub Actions outputs)
-//   build <os/arch> <out-dir> [--go-env K=V]  one archive, built reproducibly: CGO off, -trimpath, -buildvcs=false, no build id,
+//   build <os/arch> <out-dir>                 one archive, built reproducibly: CGO off (android/arm64: the NDK links it, cgo on), -trimpath, -buildvcs=false, no build id,
 //                                             the version in -X main.version, mtimes at SOURCE_DATE_EPOCH, sorted entries
 //   checksums <dir>                           SHA256SUMS over the archives (sorted, `<sha256>  <name>`)
 //   verify <dir> <public-key.pub>             SHA256SUMS matches every asset, its signature verifies, every archive holds what it
 //                                             should; exit 1 and say what is wrong otherwise
 //   smoke <archive>                           extract a native archive, run --version and the initialize handshake
-//   snapshot <out-dir> [--go-version V]       everything above for every target with a throwaway key, the way the workflow does it
+//   snapshot <out-dir> [--targets a,b]        everything above for every target (or those listed) with a throwaway key, the way the workflow does it;
+//                                             also runs `smoke` on the target that matches this machine. android/arm64 needs an NDK and
+//                                             PIG_ANDROID_SCRIPT (PiG's automation/release/android-binary.sh): without them the run stops there
 //
 // The signature is `openssl pkeyutl -sign -rawin` over SHA256SUMS (PKCS#8 Ed25519 key, the format `pig piglet keygen` writes), made
 // by the workflow's publish job and by `snapshot` with the same command (SIGN_ARGS), and checked by `verify` with node's crypto.
@@ -419,6 +421,9 @@ export function snapshot(outDir, { targets = TARGETS.map((t) => t.target), env =
     const problems = verifyProblems(assets, pub, { version }).filter((p) => complete || !/^missing archive/.test(p));
     if (problems.length) fail(`verify found:\n  ${problems.join('\n  ')}`);
     log(`verify: ${targets.length} archive(s), ${SUMS} and its signature are sound`);
+    const host = TARGETS.find((t) => t.goos === ({ win32: 'windows' }[process.platform] ?? process.platform) && t.goarch === ({ x64: 'amd64' }[process.arch] ?? process.arch));
+    if (host && targets.includes(host.target)) log(`smoke ${host.target}: ${JSON.stringify(smoke(join(assets, archiveName(version, host)), { version }))}`);
+    else log('smoke: no archive matches this machine; the workflow runs it natively');
   } finally {
     rmSync(keyDir, { recursive: true, force: true });
   }

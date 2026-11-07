@@ -4,7 +4,7 @@
 //
 // usage: node scripts/pin-pig-release.mjs <version>     e.g. node scripts/pin-pig-release.mjs 0.5.0
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { runners } from './runners.mjs';
 
@@ -52,11 +52,16 @@ requirement.release = { ...pinned, tag, commit, assets };
 const body = JSON.stringify(requirement, null, 2).replace(/\{\n\s+"file": ("[^"]+"),\n\s+"sha256": ("[^"]+")\n\s+\}/g, '{ "file": $1, "sha256": $2 }');
 writeFileSync(requirementFile, `${body}\n`);
 
-for (const workflow of ['ci.yml', 'gocache.yml', 'release-package.yml', 'release.yml']) {
+// Every workflow that carries a PIG_COMMIT pin, found rather than listed: a new one (release-pig-acp.yml was added after the list)
+// is re-pinned too, and scripts/check-workflows.mjs refuses any pin that differs from scripts/pig-requirement.json.
+const pinLine = /PIG_COMMIT: '[0-9a-f]{40}' # PiG .*$/m;
+const pinned_ = [];
+for (const workflow of readdirSync(`${root}.github/workflows`).filter((file) => /\.ya?ml$/.test(file)).sort()) {
   const path = `${root}.github/workflows/${workflow}`;
   const text = readFileSync(path, 'utf8');
-  const next = text.replace(/PIG_COMMIT: '[0-9a-f]{40}' # PiG .*$/m, `PIG_COMMIT: '${commit}' # PiG ${tag}`);
-  if (next === text && !text.includes(`PIG_COMMIT: '${commit}'`)) throw new Error(`${workflow}: no PIG_COMMIT line to update`);
-  writeFileSync(path, next);
+  if (!pinLine.test(text)) continue;
+  writeFileSync(path, text.replace(pinLine, `PIG_COMMIT: '${commit}' # PiG ${tag}`));
+  pinned_.push(workflow);
 }
-console.log(`pinned PiG ${tag} (${commit}) in scripts/pig-requirement.json and 4 workflows`);
+if (!pinned_.length) throw new Error('no workflow has a PIG_COMMIT line to update');
+console.log(`pinned PiG ${tag} (${commit}) in scripts/pig-requirement.json and ${pinned_.length} workflows: ${pinned_.join(', ')}`);

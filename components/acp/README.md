@@ -46,6 +46,7 @@ Prebuilt executables are attached to the GitHub Release `components/acp/v<versio
 
 ```sh
 gh release download components/acp/v0.2.2 --repo MichaelKinsy/pigpen -p 'pig-acp-0.2.2-linux-amd64.tar.gz*' -p SHA256SUMS -p SHA256SUMS.sig
+# needs OpenSSL 3.0 or later (macOS: Homebrew openssl@3; the system LibreSSL has no `pkeyutl -rawin`)
 openssl pkeyutl -verify -rawin -pubin -inkey release-keys/pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
 sha256sum -c --ignore-missing SHA256SUMS
 gh attestation verify pig-acp-0.2.2-linux-amd64.tar.gz --repo MichaelKinsy/pigpen --bundle pig-acp-0.2.2-linux-amd64.tar.gz.sigstore.json \
