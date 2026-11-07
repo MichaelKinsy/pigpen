@@ -6,9 +6,9 @@ Nothing was pushed.
 
 It adds two sources to `/packages`, **Pigpen Packages** and **Pigpen Piglets**, shown first once they have entries:
 
-- `scripts/build-pigpen-catalog.mjs` (runs in `pnpm generate` after the npm catalog) reads Pigpen's generated `index.json`
+- `scripts/build-pigpen-catalog.mjs` (runs in `pnpm generate` after the npm catalog) reads Pigpen's generated `catalog/index.json`
   from the repository and ref in `catalog.config.json`, validates it against `data/pigpen-index.schema.json` (a copy of this
-  repository's `index.schema.json`), lists only `available` entries and re-derives every command and URL from the entry's own
+  repository's `catalog/index.schema.json`), lists only `available` entries and re-derives every command and URL from the entry's own
   name, version and repository, refusing the entry when the index says otherwise. A failed fetch or invalid index keeps the
   committed `data/pigpen-index.snapshot.json`.
 - Package cards show `pig install 'git:https://github.com/MichaelKinsy/pigpen.git@components/<name>/v<version>#subdirectory=components%2F<name>'`.
@@ -20,3 +20,5 @@ It adds two sources to `/packages`, **Pigpen Packages** and **Pigpen Piglets**, 
 Tests: `node --test test/pigpen-catalog.test.mjs` (8 pass). The rest of `test/*.test.mjs` is unchanged (93 pass; 3 need a PiG
 checkout and fail here the same way without the patch). `app/` type-checks apart from the generated data files that need
 `pnpm generate`. Not run: `next build` and a visual check of the new cards.
+
+The patch was written when the index sat at the repository root. Pigpen now publishes it at `catalog/index.json` (with `catalog/index.schema.json`), and the patch's raw URL and its test were changed to match. A site that applied the earlier version of the patch has to read `catalog/index.json`; until it does, it keeps its committed snapshot.

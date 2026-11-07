@@ -1,4 +1,4 @@
-// Third-party listings: PiG Packages and Piglets that Pigpen does not own, listed in index.json from listings/<id>.json.
+// Third-party listings: PiG Packages and Piglets that Pigpen does not own, listed in catalog/index.json from listings/<id>.json.
 // Nothing here reads the network. A listing is a pin (a full commit of a public GitHub repository), the license and
 // the maintainer the owner of that repository claims, and the PiG it was verified with. This module validates the
 // files and turns each into an index entry with official: false and the real maintainer. What the pin actually
@@ -8,9 +8,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { catalogPath } from './catalog-paths.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
-export const LISTING_SCHEMA = JSON.parse(readFileSync(join(root, 'listing.schema.json'), 'utf8'));
+export const LISTING_SCHEMA = JSON.parse(readFileSync(catalogPath(root, 'listing.schema.json'), 'utf8'));
 
 const ajv = new Ajv({ allErrors: true, strictRequired: false });
 addFormats(ajv);

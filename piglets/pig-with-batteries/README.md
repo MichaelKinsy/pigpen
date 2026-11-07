@@ -27,7 +27,7 @@ authentication tokens); and the [`websearch`](../../components/websearch/README.
   manifest schema (status, featured flag, review date, languages, caveats).
 - `extensions/`, `skills/`, `prompts/`: owned resource source directories.
 
-`release.version` is the version released as `pig-with-batteries/v0.1.2`. `index.json` lists the Piglet as
+`release.version` is the version released as `pig-with-batteries/v0.1.2`. `catalog/index.json` lists the Piglet as
 `planned` until its signed receipt is recorded in `releases/`. The index generator deliberately does not
 turn build targets into supported binary platforms.
 

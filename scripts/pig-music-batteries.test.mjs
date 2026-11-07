@@ -9,7 +9,7 @@ import { root } from './go-modules.mjs';
 
 const read = (path) => readFileSync(join(root, path), 'utf8');
 const piglet = parse(read('piglets/pig-with-batteries/piglet.yaml'));
-const index = JSON.parse(read('index.json'));
+const index = JSON.parse(read('catalog/index.json'));
 const catalog = JSON.parse(read('piglets/pig-with-batteries/catalog.json'));
 const entry = index.entries.find((p) => p.name === 'pig-with-batteries');
 
@@ -34,7 +34,7 @@ describe('pig-music in pig-with-batteries', () => {
     const notes = catalog.notes.join('\n');
     assert.match(notes, /pig-music/);
     assert.match(notes, /nothing (starts|runs)[^.]*until you (type|run) `?\/music/i);
-    assert.ok(entry, 'pig-with-batteries is not in index.json');
+    assert.ok(entry, 'pig-with-batteries is not in catalog/index.json');
     assert.match(JSON.stringify(entry), /pig-music/);
   });
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "../../../listing.schema.json",
+  "$schema": "../../../catalog/listing.schema.json",
   "id": "example-hello",
   "kind": "package",
   "name": "Example hello",

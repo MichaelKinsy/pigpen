@@ -1,4 +1,4 @@
-// Deterministic, generated view of authored Piglet manifests. Never hand-edit index.json.
+// Deterministic, generated view of authored Piglet manifests. Never hand-edit catalog/index.json.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync, lstatSync } from 'node:fs';
 import { resolve, join } from 'node:path';
@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { packageEntry, readPackageRecords, readPackages } from './packages.mjs';
 import { readArchonPlugins } from './archon-plugins.mjs';
+import { catalogPath } from './catalog-paths.mjs';
 import { npmName } from './npm-packages.mjs';
 import { listingEntry, listingProblems, readListings } from './listings.mjs';
 import { readPinnedKeys, readReceipts, releaseFromReceipt } from './receipts.mjs';
@@ -13,10 +14,10 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
-const config = JSON.parse(readFileSync(join(root, 'catalog.config.json')));
+const config = JSON.parse(readFileSync(catalogPath(root, 'catalog.config.json')));
 const ajv = new Ajv({ allErrors: true, strictRequired: false });
 addFormats(ajv);
-const validIndex = ajv.compile(JSON.parse(readFileSync(join(root, 'index.schema.json'))));
+const validIndex = ajv.compile(JSON.parse(readFileSync(catalogPath(root, 'index.schema.json'))));
 const validMetadata = ajv.compile({ type: 'object', additionalProperties: false,
   required: ['featured', 'updatedAt', 'languages', 'notes'], properties: {
     // No status here: a Piglet is `available` exactly when a verified release receipt is committed, else `planned`.
@@ -104,12 +105,12 @@ const availableNote = (release) => `Signed Piglet Binaries for ${release.platfor
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const text = JSON.stringify(generateIndex(), null, 2) + '\n';
-  const target = join(root, 'index.json');
+  const target = catalogPath(root, 'index.json');
   if (process.argv.includes('--check')) {
-    if (readFileSync(target, 'utf8') !== text) throw new Error('index.json is stale; run npm run generate');
+    if (readFileSync(target, 'utf8') !== text) throw new Error('catalog/index.json is stale; run npm run generate');
     console.log('Piglets index matches the manifests');
   } else {
     writeFileSync(target, text);
-    console.log('Generated index.json from Piglet manifests');
+    console.log('Generated catalog/index.json from Piglet manifests');
   }
 }

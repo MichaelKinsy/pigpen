@@ -35,7 +35,7 @@ and PiG version are involved and whether the issue reproduces without the Piglet
 5. A Piglet is **planned** until a release receipt is recorded; the index sets that, not you. `seed-check` is an empty
    build-pipeline fixture, not a curated battery. Do not invent download URLs,
    supported platforms, verification keys, passing checks or release claims.
-6. Generate and review `index.json`; never edit generated entries by hand.
+6. Generate and review `catalog/index.json`; never edit generated entries by hand.
 7. Releases are the owner's ([docs/maintainers/OWNER-ACTIONS.md](docs/maintainers/OWNER-ACTIONS.md)). A Package version is its `package.json` `version`; bump it in the change that
    needs a new release, and the tag `components/<name>/v<version>` is pushed by the owner. A Piglet's version is
    `release.version` in its `piglet.yaml`. `npm run test:packages` (real pig) and `npm run rehearse:release` check the
@@ -176,7 +176,7 @@ Do not add a workaround publisher to this repository or the site.
 
 Pigpen can list a PiG Package or Piglet it does not own. A listing is one file, `listings/<id>.json`, that pins a
 public GitHub repository to a **full commit** and names its license and maintainer. `npm run generate` turns it into
-an `index.json` entry with `official: false` and the maintainer you name, never Pigpen's owner. A listing is not an
+an `catalog/index.json` entry with `official: false` and the maintainer you name, never Pigpen's owner. A listing is not an
 endorsement and not a security review: Pigpen checks that the pinned source installs, builds and loads, nothing more.
 The entry says so in its notes.
 
@@ -186,10 +186,10 @@ extension. Listing an existing PiG or Go version is the answer when one builds a
 exists or it does not build. Record what you searched in the pull request. An id that is a Pigpen Piglet or component, or
 another listing, is refused.
 
-To propose a listing, open a pull request that adds the file, and nothing else but the regenerated `index.json`:
+To propose a listing, open a pull request that adds the file, and nothing else but the regenerated `catalog/index.json`:
 
 1. Copy [`scripts/fixtures/listings/example-hello.json`](scripts/fixtures/listings/example-hello.json) to
-   `listings/<id>.json`. [`listing.schema.json`](listing.schema.json) names every field. A **Package** lists its
+   `listings/<id>.json`. [`catalog/listing.schema.json`](catalog/listing.schema.json) names every field. A **Package** lists its
    `version` and `resources` as its `package.json` declares them at the pin; a **Piglet** lists neither. Set
    `subdirectory` when the Package or Piglet is not at the repository root.
 2. **Pin `commit`** to the full 40-character hash you reviewed. A branch, `HEAD`, a tag or an abbreviated hash is not a

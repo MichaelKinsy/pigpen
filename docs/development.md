@@ -51,7 +51,7 @@ KAGENT_GO_DIR=<kagent>/go PIG_BIN=pig node scripts/interop-kagent.mjs   # a2a ag
 
 `PIG_BIN` is required by every script and test that runs a real pig, and it must be the pig Pigpen targets (`scripts/pig-requirement.json`: the same `major.minor`, at least that patch). Pigpen never falls back to whatever `pig` is on `PATH`. An older or newer pig stops with a message that names it and says how to build the right one (`go build -o /path/to/pig ./cmd/pig` in the PiG checkout). `PIG_BIN=pig` therefore works only when the `pig` on `PATH` is that build.
 
-The generator checks duplicate YAML keys and presentation metadata. Names and descriptions come from the manifests, and the index records their SHA-256 identities. `index.json` is committed alongside source changes for predictable static-site consumption. A manifest's intended targets never become binary availability claims. The generator permits only planned entries until verified publisher receipts can supply real release metadata.
+The generator checks duplicate YAML keys and presentation metadata. Names and descriptions come from the manifests, and the index records their SHA-256 identities. `catalog/index.json` is committed alongside source changes for predictable static-site consumption. A manifest's intended targets never become binary availability claims. The generator permits only planned entries until verified publisher receipts can supply real release metadata.
 
 ### What each test command covers
 

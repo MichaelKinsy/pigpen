@@ -4,7 +4,7 @@ PiG drawn natively in [Tern](https://stencil.so/tern). Run directly in a Tern pa
 
 **Needs PiG 0.7.0 or later (the member requires SDK v0.7.0).** The Piglet fills the frontend slot (`slots.frontend`, PiG D91) and the member uses PiG's component kit and extension mouse delivery (D103), all in PiG's SDK since 0.5.0. Pigpen builds and tests it on PiG 0.7.0, its pinned release. PiG 0.4.1 rejects `slots.frontend`.
 
-**Signed Binaries are published** as GitHub Release `pig-tern/v0.1.0` (the latest): `pig piglet pull 'github:MichaelKinsy/pigpen/pig-tern@0.1.0'` after checking `release-keys/pigpen-piglets.pub`. `index.json` still lists the Piglet as `planned` until its signed receipt is recorded in `releases/`. A frontend member is fused into a Piglet Binary, so build one with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it):
+**Signed Binaries are published** as GitHub Release `pig-tern/v0.1.0` (the latest): `pig piglet pull 'github:MichaelKinsy/pigpen/pig-tern@0.1.0'` after checking `release-keys/pigpen-piglets.pub`. `catalog/index.json` still lists the Piglet as `planned` until its signed receipt is recorded in `releases/`. A frontend member is fused into a Piglet Binary, so build one with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of it):
 
 ```sh
 npm run stage

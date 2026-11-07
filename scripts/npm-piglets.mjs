@@ -11,6 +11,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMap, parseDocument, stringify } from 'yaml';
+import { catalogPath } from './catalog-paths.mjs';
 import { readManifests, root } from './generate-index.mjs';
 import { npmName } from './npm-packages.mjs';
 import { readPackages } from './packages.mjs';
@@ -73,7 +74,7 @@ export function pigletPackageJson(name, { directory = root, repository } = {}) {
 const binaryNote = (name, version, repository) => `\n## Signed Binary\n\nThis npm package is the Piglet's **source**: \`pig piglet add npm:${pigletNpmName(name)}\` registers it, and its Packages install from npm. The signed per-platform **Binary** is published separately on GitHub Releases (release \`${name}/v${version}\`):\n\n\`\`\`\npig piglet pull 'github:${repository}/${name}@${version}'\n\`\`\`\n`;
 
 /** Generate dist/npm/piglets/<name>; returns the directory. */
-export function buildPigletTree(name, outRoot, { directory = root, repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
+export function buildPigletTree(name, outRoot, { directory = root, repository = JSON.parse(readFileSync(catalogPath(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
   const { data, notes } = npmPigletSource(name, { directory });
   const target = join(outRoot, name);
   rmSync(target, { recursive: true, force: true });
@@ -90,7 +91,7 @@ export function buildPigletTree(name, outRoot, { directory = root, repository = 
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-  const config = JSON.parse(readFileSync(join(root, 'catalog.config.json'), 'utf8'));
+  const config = JSON.parse(readFileSync(catalogPath(root, 'catalog.config.json'), 'utf8'));
   const out = join(root, 'dist/npm/piglets');
   for (const { manifest } of readManifests()) console.log(buildPigletTree(manifest.name, out, { repository: config.repository }));
 }

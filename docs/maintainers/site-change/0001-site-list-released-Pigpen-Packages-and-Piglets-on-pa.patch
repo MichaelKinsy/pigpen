@@ -998,7 +998,7 @@ index 0000000..163aa66
 +
 +/** The raw index URL for the configured repository and ref. */
 +export function indexUrl(config) {
-+  return `https://raw.githubusercontent.com/${config.repository}/${config.ref}/index.json`;
++  return `https://raw.githubusercontent.com/${config.repository}/${config.ref}/catalog/index.json`;
 +}
 +
 +/** Validate one index and keep only what it may show. Throws on anything the schema or the re-derivation refuses. */
@@ -1201,7 +1201,7 @@ index 0000000..ecb9f04
 +});
 +
 +test('the index is read from the raw URL of the configured repository and ref only', () => {
-+  assert.equal(indexUrl(config), `https://raw.githubusercontent.com/${repo}/${config.ref}/index.json`);
++  assert.equal(indexUrl(config), `https://raw.githubusercontent.com/${repo}/${config.ref}/catalog/index.json`);
 +});
 -- 
 2.43.0

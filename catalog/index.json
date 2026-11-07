@@ -20,7 +20,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/a2a"
       },
-      "manifestSha256": "8bc90d7b18117d25b956d9d36802ec051bdcdbfa007ae8f0c8d39cb4c612c673",
+      "manifestSha256": "9d48cd41bbecdd6a7bc94c9f502f4d9f5fc3f4082385672ffa0e6f40209b9244",
       "releases": [],
       "notes": [
         "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
@@ -503,7 +503,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-typesafe"
       },
-      "manifestSha256": "ec7b30d84d4a3c39a52334e4ec5218297d639040626729d2584bee584a40ab09",
+      "manifestSha256": "296402b17d84787a4fc68b32a200c1b88b119971267859996872c783ae9ba968",
       "releases": [],
       "notes": [
         "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
@@ -557,7 +557,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "2ee89391a7dcbf5e5974faa319714708727d01f330e38af04fe30c4af1fd1947",
+      "manifestSha256": "cc5a015b70e8ba997fae64d3f05b0b086224ec642269207305ed7f4adb957790",
       "releases": [],
       "notes": [
         "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",

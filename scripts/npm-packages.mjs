@@ -10,6 +10,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { catalogPath } from './catalog-paths.mjs';
 import { packageResources, readPackages, root } from './packages.mjs';
 
 export const SCOPE = '@pi-in-go';
@@ -98,7 +99,7 @@ function useEntries(text) {
  * from npm, the library Package is one directory beside every Package that depends on it (node_modules/@pi-in-go/pigpen-<lib>),
  * and go.work reaches it as `../../../pigpen-<lib>`, the same way the repository's `../../../<lib>` reaches components/<lib>.
  */
-export function buildPackageTree(dir, outRoot, { directory = root, repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
+export function buildPackageTree(dir, outRoot, { directory = root, repository = JSON.parse(readFileSync(catalogPath(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
   const source = join(directory, 'components', dir);
   const target = join(outRoot, dir);
   rmSync(target, { recursive: true, force: true });
@@ -161,7 +162,7 @@ export function packedProblems(tree, packed) {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-  const config = JSON.parse(readFileSync(join(root, 'catalog.config.json'), 'utf8'));
+  const config = JSON.parse(readFileSync(catalogPath(root, 'catalog.config.json'), 'utf8'));
   if (process.argv.includes('--write')) {
     for (const { dir, path, manifest } of readPackages()) writeFileSync(path, JSON.stringify(publishManifest(dir, manifest, { repository: config.repository }), null, 2) + '\n');
     console.log('Wrote the published manifest of every component');

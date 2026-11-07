@@ -39,7 +39,7 @@ test('porter stages one shared Package for two Piglets without changing authored
     });
   });
 
-  const index = JSON.parse(readFileSync(join(root, 'index.json')));
+  const index = JSON.parse(readFileSync(join(root, 'catalog', 'index.json')));
   assert.ok(index.entries.every(entry => entry.official === false), 'catalog must not claim official status');
   const source = join(scratch, 'source');
   const component = join(source, 'components/extension-port');

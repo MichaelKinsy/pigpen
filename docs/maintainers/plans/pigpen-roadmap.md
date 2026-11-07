@@ -1022,7 +1022,7 @@ Draft README opening:
 
 The local README, contribution/security guidance, scaffold wording, and generated
 catalog no longer claim official status. `official: false` retains the schema's
-required Boolean field. `index.json` was regenerated from the authored source.
+required Boolean field. `catalog/index.json` was regenerated from the authored source.
 The GitHub description and deployed site have not been changed.
 
 ## Remaining decisions and integration work

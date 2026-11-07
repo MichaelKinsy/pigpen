@@ -6,6 +6,7 @@ Pigpen releases Packages and Piglets one by one. A Package release is the Git ta
 
 - The README is a short front page. The internals moved to `docs/`, the owner's runbooks and open plans to `docs/maintainers/`, and finished process notes were deleted (they remain in the Git history).
 - The first release notes were folded into this file. The licence split they described is now in [docs/components.md](docs/components.md#licences-and-credits).
+- The generated index and its schemas moved from the repository root into `catalog/` (`catalog/index.json`, `catalog/index.schema.json`, `catalog/listing.schema.json`, `catalog/catalog.config.json`). A reader that fetches the index by URL now uses `.../main/catalog/index.json`. The site's loader patch in `docs/maintainers/site-change/` was updated to match.
 
 ## 0.1.x: the first releases
 

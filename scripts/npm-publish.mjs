@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { catalogPath } from './catalog-paths.mjs';
 import { readManifests, root } from './generate-index.mjs';
 import { buildPackageTree, libraryDeps, npmName } from './npm-packages.mjs';
 import { buildPigletTree, npmPigletSource, pigletNpmName } from './npm-piglets.mjs';
@@ -19,7 +20,7 @@ import { readPackages } from './packages.mjs';
  * `skipBuild` only computes names and directories.
  */
 export function publishPlan(outRoot, { skipBuild = false, directory = root } = {}) {
-  const repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository;
+  const repository = JSON.parse(readFileSync(catalogPath(directory, 'catalog.config.json'), 'utf8')).repository;
   const versions = new Map(readPackages(directory).map(({ dir, manifest }) => [dir, manifest.version]));
   const packages = readPackages(directory).map(({ dir, manifest }) => {
     const tree = skipBuild ? join(outRoot, 'packages', dir) : buildPackageTree(dir, join(outRoot, 'packages'), { directory, repository });
@@ -107,7 +108,7 @@ export function npmPublish(entry, { provenance, dryRun }) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const args = process.argv.slice(2);
   if (args.includes('--trusted-publishers')) {
-    console.log(trustedPublisherInstructions(publishPlan(resolve(root, 'dist/npm'), { skipBuild: true }), { repository: JSON.parse(readFileSync(join(root, 'catalog.config.json'), 'utf8')).repository }));
+    console.log(trustedPublisherInstructions(publishPlan(resolve(root, 'dist/npm'), { skipBuild: true }), { repository: JSON.parse(readFileSync(catalogPath(root, 'catalog.config.json'), 'utf8')).repository }));
     process.exit(0);
   }
   if (args.includes('--pending')) {

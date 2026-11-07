@@ -3,7 +3,7 @@
 > **Status on 2026-11-06: the first release was made, so this is now the reference runbook for the owner's release steps, not a to-do list.**
 > Piglet Binaries (14 Piglets), Package tags and npm packages are published (see [docs/releases.md](../releases.md), "What is published").
 > One step is still open: no verified Piglet receipt is committed under `releases/` (`npm run record -- piglet <name> <version>`), so
-> `index.json` lists every Piglet as `planned`. The statements below that something was "not run" describe the state when this file was written.
+> `catalog/index.json` lists every Piglet as `planned`. The statements below that something was "not run" describe the state when this file was written.
 
 Everything the repository can do for you is committed: the release workflows, the tag scheme, the checks and the index
 generator. What is left needs your GitHub login, a signing key and your decision to push a tag. Run the commands in order,
@@ -27,7 +27,7 @@ a local bare repository (`npm run rehearse:release`, `npm run test:packages`).
 | Piglets | Signed per-platform Binaries only (no remote source add: RELEASE-BLOCKERS.md item 1). Tag: `<name>/v<release.version>`. `pig piglet pull 'github:MichaelKinsy/pigpen/<name>@<version>'`. |
 | Build | GitHub Actions only, each target on a native runner: linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64. No local build is part of a release. |
 | Signing | One Ed25519 key for all Piglets, held only as the secret `PIGLET_SIGNING_KEY` of the `release` environment. |
-| Index | `index.json` is generated. A Package is `available` once its tag is recorded; a Piglet is `available` once its signed receipt, verified against the key committed in `release-keys/`, is recorded. Nothing else changes a status. |
+| Index | `catalog/index.json` is generated. A Package is `available` once its tag is recorded; a Piglet is `available` once its signed receipt, verified against the key committed in `release-keys/`, is recorded. Nothing else changes a status. |
 
 Two limits of PiG 0.4.x shape the workflow (details at the end):
 
@@ -143,8 +143,8 @@ for n in $(ls components); do
   [ -f "components/$n/package.json" ] || continue
   npm run record -- package "$n" "$(node -p "require('./components/$n/package.json').version")"
 done
-npm run generate && npm run check            # index.json now lists each Package as available
-git switch -c record-packages && git add releases index.json && git commit -s -m "releases: the first Package tags"
+npm run generate && npm run check            # catalog/index.json now lists each Package as available
+git switch -c record-packages && git add releases catalog/index.json && git commit -s -m "releases: the first Package tags"
 ```
 
 Merge that. The site (pi-in-go.dev) lists them at its next daily build once the site change in `docs/maintainers/site-change/` is applied.
@@ -185,7 +185,7 @@ Record the receipt (downloaded with `gh`, verified against `release-keys/`, writ
 ```bash
 npm run record -- piglet herdr 0.1.0
 npm run generate && npm run check
-git switch -c record-herdr && git add releases index.json && git commit -s -m "releases: herdr 0.1.0"
+git switch -c record-herdr && git add releases catalog/index.json && git commit -s -m "releases: herdr 0.1.0"
 ```
 
 Merge `record-herdr` first. All eleven, one at a time (`pig-with-batteries` last: it selects the most Packages; a Piglet whose tag already exists,
@@ -202,7 +202,7 @@ for n in $(ls piglets | grep -v '^pig-with-batteries$') pig-with-batteries; do
   npm run record -- piglet "$n" "$v" || break
 done
 npm run generate && npm run check
-git switch -c record-piglets && git add releases index.json && git commit -s -m "releases: the first Piglets"
+git switch -c record-piglets && git add releases catalog/index.json && git commit -s -m "releases: the first Piglets"
 ```
 
 Two Piglets with the same version (`herdr/v0.1.0`, `a2a/v0.1.0`) pull and update independently by design (`--tag-prefix`).

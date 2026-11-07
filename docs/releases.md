@@ -10,7 +10,7 @@ This was checked against GitHub Releases, the Git tags and the npm registry on 2
 - Package Git tags exist for the 29 Packages recorded in `releases/packages/`.
 - The bench Piglets are not released as Binaries.
 
-What is not done: the batteries-included composition is not complete, and `releases/` holds no verified Piglet receipt, so `index.json` still lists every Piglet as `planned`.
+What is not done: the batteries-included composition is not complete, and `releases/` holds no verified Piglet receipt, so `catalog/index.json` still lists every Piglet as `planned`.
 
 The release path (workflows, tag scheme and the checks below) was rehearsed locally with throwaway keys. [OWNER-ACTIONS.md](maintainers/OWNER-ACTIONS.md), [FIRST-NPM-PUBLISH.md](maintainers/FIRST-NPM-PUBLISH.md) and [RELEASE-BLOCKERS.md](maintainers/RELEASE-BLOCKERS.md) were written before the first release and describe the steps and what remained open then.
 
@@ -48,7 +48,7 @@ Two more channels stay available: the Git-tag channel for Packages and the signe
 
 The Piglet, Package and npm tag shapes cannot start each other's workflow. An Archon plugin tag has the Package shape, so it also runs `release-package.yml`, which only verifies it.
 
-`index.json` lists a Package as `available` once its Git tag is recorded (`npm run record -- package <name> <version>`). It lists a Piglet as `available` once its signed receipt verifies against the key in `release-keys/` (`npm run record -- piglet <name> <version>`). Until then a Piglet is `planned` and a Package is not listed. `npm run test:packages` installs every Package from its Git tag with the real pig. `npm run rehearse:release` runs the Piglet workflow's own steps against a throwaway local repository.
+`catalog/index.json` lists a Package as `available` once its Git tag is recorded (`npm run record -- package <name> <version>`). It lists a Piglet as `available` once its signed receipt verifies against the key in `release-keys/` (`npm run record -- piglet <name> <version>`). Until then a Piglet is `planned` and a Package is not listed. `npm run test:packages` installs every Package from its Git tag with the real pig. `npm run rehearse:release` runs the Piglet workflow's own steps against a throwaway local repository.
 
 ## Site consumption
 

@@ -262,7 +262,7 @@ jobs:
         run: node scripts/govulncheck.mjs
 
   # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
-  # pig this run builds (PiG v0.7.0), before index.json may claim it. The fixture test runs first so a broken check cannot pass
+  # pig this run builds (PiG v0.7.0), before catalog/index.json may claim it. The fixture test runs first so a broken check cannot pass
   # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
   listings:
     name: Third-party listings (verify:listings)

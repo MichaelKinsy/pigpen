@@ -7,7 +7,7 @@ happened. Signed Piglet Binaries for 14 Piglets are GitHub Releases `<name>/v<ve
 the README for the list and latest versions), built and published by the `Release a Piglet` workflow on GitHub (a successful hosted run on
 2026-10-23); Package tags `components/<name>/v0.1.0` exist (`releases/packages/`); every Package and Piglet source is on npm, and the
 `Publish to npm` workflow runs on merges to `main`. What is still not done: `releases/` records no verified Piglet receipt, so
-`index.json` lists every Piglet as `planned`. The sections below are the record of the blockers as of the PiG 0.4.1 candidate; they were not re-evaluated after the releases, so read each item as of that date, not as a current claim.
+`catalog/index.json` lists every Piglet as `planned`. The sections below are the record of the blockers as of the PiG 0.4.1 candidate; they were not re-evaluated after the releases, so read each item as of that date, not as a current claim.
 Pigpen CI **validates and smoke-tests**: it checks the generated index, source quality gates, unit tests, and validates every
 Package and staged manifest, runs the porter, tool-scope, moved-extension, Go module and Package-install tests and a
 rehearsal of the release workflow, all with a pig built from PiG `v0.4.1`. A platform matrix builds all eleven Piglets natively on
@@ -88,7 +88,7 @@ Run with a temporary HOME, PIG_HOME and agent directory, `PIG_BIN` the `0.4.1+1.
    `application/vnd.pig.piglet-release+json`) with the Ed25519 key pinned in `release-keys/`, never the key in the payload,
    and requires the Piglet, version, repository, tag prefix `<name>/` and Binary URLs to equal the tag; a receipt written by
    pig 0.4.0 is a test fixture (written by that release). `generate-index.mjs` lists a Piglet `available` only for a verified committed receipt
-   (`npm run record -- piglet <name> <version>`) and a Package `available` for a recorded tag; `index.schema.json` requires a
+   (`npm run record -- piglet <name> <version>`) and a Package `available` for a recorded tag; `catalog/index.schema.json` requires a
    release for an available Piglet. The matching pi-in-go.dev change is a patch in `docs/maintainers/site-change/` (not applied; the owner
    applies it to the site repository). Still needs a real release for a real receipt.
 4. **herdr `herdr:blocked`.** The SDK bridge exists; the reporter does not listen yet and two named tests stay skipped

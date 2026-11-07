@@ -1,6 +1,6 @@
 # Components and Piglets
 
-Pigpen is a monorepo of [PiG](https://github.com/MichaelKinsy/PiG) Piglets and reusable components. Piglets compose named agents. Component Packages can also be installed on their own. Every Package and every Piglet source is published on npm under `@pi-in-go`, and 14 Piglets have signed Binaries on [GitHub Releases](https://github.com/MichaelKinsy/pigpen/releases) (see [Releases](releases.md)). `index.json` lists a Piglet as `planned` until its signed receipt is recorded in `releases/`. That is a catalog status, not a statement that nothing is released.
+Pigpen is a monorepo of [PiG](https://github.com/MichaelKinsy/PiG) Piglets and reusable components. Piglets compose named agents. Component Packages can also be installed on their own. Every Package and every Piglet source is published on npm under `@pi-in-go`, and 14 Piglets have signed Binaries on [GitHub Releases](https://github.com/MichaelKinsy/pigpen/releases) (see [Releases](releases.md)). `catalog/index.json` lists a Piglet as `planned` until its signed receipt is recorded in `releases/`. That is a catalog status, not a statement that nothing is released.
 
 This page describes what each component does and how it was proven. The directory tree is in [layout.md](layout.md).
 
