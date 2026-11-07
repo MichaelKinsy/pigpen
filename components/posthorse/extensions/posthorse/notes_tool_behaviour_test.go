@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	sdkjson "github.com/MichaelKinsy/PiG/extensions/sdk/json"
 )
 
 // notesTouchEntries is the `data` of every posthorse-note-touch entry the extension appended.
@@ -291,7 +293,7 @@ func TestNotesReadRefusesWhenOnlyTheHeaderFits(t *testing.T) {
 	notesMust(t, os.MkdirAll(dir, 0o755))
 	header := "File: " + filepath.Join(dir, ".pi", "notes", "x.md") + "\n"
 	f := newFixture(t).With(withCwd(dir))
-	f.Run("notes", rec{"op": "write", "path": "x.md", "content": "x"})
+	f.Run("notes", rec{"op": "write", "path": "x.md", "content": "xy"})
 	view := func(tokens int) *fixture {
 		return f.With(withUsage(100_000, tokens), withReserve(16_384), withEnabled(false), withCwd(dir)).PageContext()
 	}
@@ -301,17 +303,17 @@ func TestNotesReadRefusesWhenOnlyTheHeaderFits(t *testing.T) {
 	for tokens := 98_900; tokens > 96_000 && after < 8; tokens-- {
 		v := view(tokens)
 		v.Fire("turn_start", rec{})
-		res, message := v.RunErr("notes", rec{"op": "read", "path": "x.md"})
+		res, message := v.RunErr("notes", rec{"op": "read", "path": "x.md", "offset": 1.0})
 		switch {
-		case message != "":
-			if !strings.Contains(message, "Too little context remains") {
-				t.Fatalf("tokens %d: %q", tokens, message)
-			}
+		case message == "Too little context remains to read a page safely. Call new_context first, then retry with offset 1.",
+			message == "Too little context remains to include the note path. Call new_context first, then retry with offset 1.":
 			refused++
-		case res.Text() == header+"x":
+		case message != "":
+			t.Fatalf("tokens %d: %q", tokens, message)
+		case res.Text() == header+"y":
 			full++
 		default:
-			t.Fatalf("tokens %d: neither a refusal nor the whole note: %q", tokens, res.Text())
+			t.Fatalf("tokens %d: neither a refusal nor the rest of the note: %q", tokens, res.Text())
 		}
 		if full > 0 {
 			after++
@@ -528,5 +530,117 @@ func TestNotesReadSymlinkLoopIsNodeStyle(t *testing.T) {
 	_, message := f.RunErr("notes", rec{"op": "read", "path": "loop.md"})
 	if want := "ELOOP: too many symbolic links encountered, stat '" + filepath.Join(root, "loop.md") + "'"; message != want {
 		t.Errorf("read of a symlink loop: %q, want %q", message, want)
+	}
+}
+
+// A note that is not valid UTF-8 reads as Node decodes it: one U+FFFD per maximal invalid subpart.
+func TestNotesReadDecodesInvalidUTF8(t *testing.T) {
+	dir := notesRealDir(t)
+	f := newFixture(t).With(withCwd(dir))
+	path := filepath.Join(dir, ".pi", "notes", "bad.md")
+	notesWrite(t, path, "a\xffb\xe2\x82c\xf0\x9f")
+	got := f.Run("notes", rec{"op": "read", "path": "bad.md"})
+	if want := "File: " + path + "\na\ufffdb\ufffdc\ufffd"; got.Text() != want {
+		t.Errorf("read %q, want %q", got.Text(), want)
+	}
+	if got.Details["total"] != 6.0 {
+		t.Errorf("total %v, want 6 units", got.Details["total"])
+	}
+}
+
+// A touch that cannot be recorded fails the operation after its effect, for read, write and append.
+func TestNotesToolReportsAFailedTouchRecord(t *testing.T) {
+	dir := notesRealDir(t)
+	f := newFixture(t).With(withCwd(dir))
+	f.Run("notes", rec{"op": "write", "path": "a.md", "content": "x"})
+	failing := f.With(withHostError("appendEntry", "append refused"))
+	for _, params := range []rec{
+		{"op": "read", "path": "a.md"},
+		{"op": "write", "path": "a.md", "content": "y"},
+		{"op": "append", "path": "a.md", "content": "z"},
+	} {
+		if _, message := failing.RunErr("notes", params); !strings.Contains(message, "append refused") {
+			t.Errorf("%v with a refused append: %q", params, message)
+		}
+	}
+}
+
+// The notes tool reports a session it cannot open, and an op the schema does not know.
+func TestNotesToolReportsASessionFailureAndAnUnknownOp(t *testing.T) {
+	dir := notesRealDir(t)
+	f := newFixture(t).With(withCwd(dir))
+	if _, message := f.With(withHostError("sessionRead.getHeader", "no header")).RunErr("notes", rec{"op": "list"}); !strings.Contains(message, "no header") {
+		t.Errorf("session failure: %q", message)
+	}
+	// The fake host does not validate arguments: the extension must still refuse an op it does not know.
+	if _, failure := f.H().Tool("notes", rec{"op": "find"}); failure != `Unknown notes op "find"` {
+		t.Errorf("unknown op: %q", failure)
+	}
+	// An empty scope selector is a selector (that names no scope), not an absent one.
+	if _, message := f.RunErr("notes", rec{"op": "list", "scope": ""}); !strings.HasPrefix(message, "Unknown notes scope ") {
+		t.Errorf("empty scope: %q", message)
+	}
+	if _, message := f.RunErr("notes", rec{"op": "search", "query": "x", "scope": ""}); !strings.HasPrefix(message, "Unknown notes scope ") {
+		t.Errorf("empty scope in a search: %q", message)
+	}
+}
+
+// An append to an empty note adds no separator; one to an unreadable or unwritable note fails with
+// the error of the call that failed.
+func TestNotesAppendEdgeCases(t *testing.T) {
+	dir := notesRealDir(t)
+	f := newFixture(t).With(withCwd(dir))
+	notes := filepath.Join(dir, ".pi", "notes")
+	notesWrite(t, filepath.Join(notes, "empty.md"), "")
+	f.Run("notes", rec{"op": "append", "path": "empty.md", "content": "A"})
+	if got, _ := os.ReadFile(filepath.Join(notes, "empty.md")); string(got) != "A\n" {
+		t.Errorf("append to an empty note: %q", got)
+	}
+	if os.Getuid() == 0 {
+		return
+	}
+	writeOnly := filepath.Join(notes, "write-only.md")
+	notesWrite(t, writeOnly, "x")
+	notesMust(t, os.Chmod(writeOnly, 0o200))
+	if _, message := f.RunErr("notes", rec{"op": "append", "path": "write-only.md", "content": "y"}); message != "EACCES: permission denied, open '"+writeOnly+"'" {
+		t.Errorf("append to an unreadable note: %q", message)
+	}
+	readOnly := filepath.Join(notes, "read-only.md")
+	notesWrite(t, readOnly, "x\n")
+	notesMust(t, os.Chmod(readOnly, 0o400))
+	if _, message := f.RunErr("notes", rec{"op": "append", "path": "read-only.md", "content": "y"}); message != "EACCES: permission denied, open '"+readOnly+"'" {
+		t.Errorf("append to a read-only note: %q", message)
+	}
+}
+
+// The ASCII shortcuts see every capital letter, and the UTF-16 comparison sees a surrogate pair
+// written as two lone surrogates.
+func TestMatchingLinesCapitalsAndSurrogatePairs(t *testing.T) {
+	for _, c := range []struct{ text, query string }{{"A line", "a line"}, {"Z line", "z line"}, {"mAz", "maz"}} {
+		if rows := matchingLines("n", c.text, c.query); len(rows) != 1 {
+			t.Errorf("matchingLines(%q, %q) = %v", c.text, c.query, rows)
+		}
+	}
+	var pair string
+	if err := sdkjson.Unmarshal([]byte(`"x\ud83d\ude00y"`), &pair); err != nil {
+		t.Fatal(err)
+	}
+	if rows := matchingLines("n", pair, "😀"); len(rows) != 1 {
+		t.Errorf("a pair of lone surrogates must match its astral character: %v", rows)
+	}
+}
+
+// A path that stays outside its scope is refused before anything is written.
+func TestNotesWriteAndAppendRefuseAPathOutsideTheScope(t *testing.T) {
+	dir := notesRealDir(t)
+	f := newFixture(t).With(withCwd(dir))
+	for _, op := range []string{"write", "append"} {
+		_, message := f.RunErr("notes", rec{"op": op, "path": "../escape.md", "content": "x"})
+		if !strings.HasPrefix(message, `Invalid note path "../escape.md"`) {
+			t.Errorf("%s of ../escape.md: %q", op, message)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".pi", "escape.md")); err == nil {
+		t.Error("a note was written outside the notes directory")
 	}
 }

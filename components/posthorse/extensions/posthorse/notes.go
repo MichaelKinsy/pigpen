@@ -343,7 +343,7 @@ func needsSeparator(path string) (bool, error) {
 	for range 8 {
 		info, err := file.Stat()
 		if err != nil {
-			return false, nodeFsError(err, "fstat", path)
+			return false, nodeFsError(err, "fstat", "")
 		}
 		if info.IsDir() {
 			// readFileSync(dir, "utf8") throws EISDIR with no path (notes.ts:183).
@@ -359,7 +359,7 @@ func needsSeparator(path string) (bool, error) {
 			return last[0] != '\n', nil
 		}
 		if !errors.Is(err, io.EOF) {
-			return false, nodeFsError(err, "read", path)
+			return false, nodeFsError(err, "read", "")
 		}
 	}
 	return false, nil
@@ -710,12 +710,13 @@ func appendRecord(path, content string) error {
 	if err != nil {
 		return nodeFsError(err, "open", path)
 	}
+	// Errors of the open descriptor (write, close) carry no path in Node, only open does.
 	if _, err := file.Write(record); err != nil {
 		_ = file.Close()
-		return nodeFsError(err, "write", path)
+		return nodeFsError(err, "write", "")
 	}
 	if err := file.Close(); err != nil {
-		return nodeFsError(err, "close", path)
+		return nodeFsError(err, "close", "")
 	}
 	return nil
 }
