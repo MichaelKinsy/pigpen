@@ -15,6 +15,8 @@ components/extension-equivalence/   directly installable Go extension Package: t
 demo/                               codemode demo scripts (jev-plays.js: Jev plays both pig games over MCP)
 ports/                              the ports list: ports.json (the dispatch list), ports.schema.json,
                                     README.md (GENERATED table; npm run generate)
+                                    oracles.lock.json (the commit, repository and tree digest of every port's original, fetched by
+                                    npm run oracles:fetch and not vendored; scripts/oracles.mjs)
 components/dirty-repo-guard/        a Go port (Pi's dirty-repo-guard example) as a Package,
                                     with its evidence in port/
 components/typesafe/                shared Go client for the TypeSafe API, plus an own-model
@@ -85,6 +87,8 @@ docs/maintainers/OWNER-ACTIONS.md   the owner's release runbook
 scripts/ports.mjs                    validates ports/ports.json, renders ports/README.md, and reads and
                                     updates rows (show, list, set-status, provenance, verify-pins)
 scripts/catalog-paths.mjs           where the catalog/ files are
+scripts/layout.mjs                  where Piglets and components live (piglets/, components/, bench/piglets, bench/components)
+scripts/layout-guard.mjs            the allowed top-level entries and file kinds in components/<name>/; npm run quality fails a stray one with the place it belongs in
 .github/workflows/ci.yml             validation, platform build matrix and smoke; no publishing or signing
 .github/workflows/release.yml        a Piglet tag: native builds, signing, one GitHub Release
 .github/workflows/release-package.yml a Package tag: validate and install from the tag
