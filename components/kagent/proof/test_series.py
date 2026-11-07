@@ -73,7 +73,7 @@ class RejectCheck(unittest.TestCase):
 
 
 def run(variant, first_ok, outcome="jsonrpc_error", code=-32004, attempts=3, ms=900.0, ready=12.0):
-    fa = {"outcome": outcome if not first_ok else "success", "n": 1}
+    fa = {"outcome": outcome if not first_ok else "success", "n": 1, "duration_ms": 11000.0 if not first_ok else 300.0}
     if code is not None and not first_ok:
         fa["rpc_code"] = code
     return {"variant": variant, "pod_ready_s": ready, "recall_ok": True,
@@ -92,6 +92,7 @@ class RestartSummary(unittest.TestCase):
         self.assertEqual(i["eventual_success_rate"], 0.75)
         self.assertEqual(i["first_attempt_outcomes"], {"jsonrpc_error -32004": 2, "success": 1, "timeout": 1})
         self.assertEqual(i["attempts_to_success"]["max"], 3)
+        self.assertEqual(i["first_attempt_ms"]["max"], 11000)
         self.assertEqual(s["variants"]["approval"]["recall_after_resume_ok"], 1)
         md = series.to_md(s)
         self.assertIn("1/4 (25%)", md)

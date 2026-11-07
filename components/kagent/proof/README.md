@@ -24,7 +24,7 @@ respective owners and are not affiliated with this repository.
 | `images.sh`, `coldstart.sh` | Image sizes and registry pull time; Agent apply to Ready time. |
 | `demo.sh`, `record.sh`, `mem_table.py` | The terminal walk-through, its headless recording (asciinema, agg, ffmpeg) and the last screen. |
 | `manifests/` | The baseline agents (Claude Code, Codex, pi-go and approval-only variants) and the Helm values for the two PiG agents. |
-| `RESULTS.md`, `data/` | Published results with method and caveats; per-session data of that run (compressed JSON). |
+| `RESULTS.md`, `data/` | Published results with method and caveats; per-session data, the raw 0.25 s samples and the per-run records of the two series (gzip). |
 
 ## The task the mock scripts
 
@@ -93,7 +93,7 @@ Python 3, `jq`, `bc`, `crane` (for `images.sh`), and either Go 1.22 or newer or 
 
    ```sh
    AGENTS='claude-basket:basket codex-basket:basket pigo-basket:basket pig-basket:basket claude-approve:approve codex-approve:approve pig-approve:approve' \
-   ROUNDS=10 WARM=2 ./baseline.sh                      # results/baseline-<date>/ (about 20 minutes)
+   ROUNDS=20 WARM=2 ./baseline.sh                      # results/baseline-<date>/ (about 25 minutes)
    ./images.sh results/baseline-<date>/images.json
    ./coldstart.sh results/baseline-<date>/coldstart.json 5
    python3 analyze.py --dir results/baseline-<date> --images results/baseline-<date>/images.json \

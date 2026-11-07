@@ -2,7 +2,7 @@
 # Interleaved baseline schedule against kagent agents through the A2A gateway, with node-side memory and Substrate logs.
 #
 #   AGENTS='claude-basket:basket codex-basket:basket pigo-basket:basket pig-basket:basket claude-approve:approve codex-approve:approve pig-approve:approve' \
-#   ROUNDS=10 WARM=2 ./baseline.sh
+#   ROUNDS=20 WARM=2 ./baseline.sh
 #
 # Runs ON the Kubernetes node that hosts the worker pod (the cgroup files are read directly), with kubectl pointed at the cluster
 # (KUBECONFIG) and the gateway reachable at $URL (kubectl -n kagent port-forward svc/kagent-controller 8083:8083). One basket session per
@@ -37,7 +37,7 @@ GATE_MODE=${GATE_MODE:-proceed}
 case "$GATE_MODE" in proceed|refuse) ;; *) echo "GATE_MODE must be proceed or refuse" >&2; exit 2;; esac
 HERE=$(cd "$(dirname "$0")" && pwd)
 : "${AGENTS:?AGENTS=name:scenario ...}"
-ROUNDS=${ROUNDS:-10}; WARM=${WARM:-2}; IDLE_WAIT=${IDLE_WAIT:-4s}; MAX_PSI=${MAX_PSI:-35}; GATE_WAIT=${GATE_WAIT:-180}
+ROUNDS=${ROUNDS:-20}; WARM=${WARM:-2}; IDLE_WAIT=${IDLE_WAIT:-4s}; MAX_PSI=${MAX_PSI:-35}; GATE_WAIT=${GATE_WAIT:-180}
 URL=${URL:-http://localhost:8083}; INTERVAL=${INTERVAL:-0.25}
 OUT=${OUT:-$HERE/results/baseline-$(date -u +%Y%m%d)}
 mkdir -p "$OUT/runs"

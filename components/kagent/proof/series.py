@@ -117,6 +117,7 @@ def summarize_restart(recs):
             "runs": n, "first_attempt_success": first_ok, "first_attempt_success_rate": round(first_ok / n, 3) if n else None,
             "eventual_success": eventual, "eventual_success_rate": round(eventual / n, 3) if n else None,
             "first_attempt_outcomes": dict(sorted(breakdown.items())),
+            "first_attempt_ms": stat([s["first_attempt"].get("duration_ms") for s in ser]),
             "attempts_to_success": stat([s["attempts_to_success"] for s in ok]),
             "ms_to_success": stat([s["ms_to_success"] for s in ok]),
             "pod_ready_s": stat([r.get("pod_ready_s") for r in rs], 1),
@@ -139,13 +140,13 @@ def to_md(sm):
             L.append(f"- failed run {f['run']}: {f['first_attempt']} {f['error'] or ''}")
         return "\n".join(L) + "\n"
     L += ["Worker pod replacement series. The first attempt after the new pod is Ready is reported separately from eventual success (retries with backoff).", "",
-          "| variant | runs | first attempt ok | eventual ok | first-attempt outcomes | attempts to success (median / max) | ms to success (median / p90 / max) | pod ready, s (median) |",
-          "|---|---:|---:|---:|---|---|---|---:|"]
+          "| variant | runs | first attempt ok | eventual ok | first-attempt outcomes | first attempt took, ms (median / max) | attempts to success (median / max) | ms to success (median / p90 / max) | pod ready, s (median) |",
+          "|---|---:|---:|---:|---|---|---|---|---:|"]
     for v, x in sm["variants"].items():
-        at, ms = x["attempts_to_success"], x["ms_to_success"]
+        at, ms, fa = x["attempts_to_success"], x["ms_to_success"], x["first_attempt_ms"]
         L.append(f"| {v} | {x['runs']} | {x['first_attempt_success']}/{x['runs']} ({x['first_attempt_success_rate']:.0%}) | {x['eventual_success']}/{x['runs']} ({x['eventual_success_rate']:.0%}) | "
                  f"{', '.join(f'{k}: {c}' for k, c in x['first_attempt_outcomes'].items())} | "
-                 f"{'%s / %s' % (at['median'], at['max']) if at else 'n/a'} | {'%s / %s / %s' % (ms['median'], ms['p90'], ms['max']) if ms else 'n/a'} | "
+                 f"{'%s / %s' % (fa['median'], fa['max']) if fa else 'n/a'} | {'%s / %s' % (at['median'], at['max']) if at else 'n/a'} | {'%s / %s / %s' % (ms['median'], ms['p90'], ms['max']) if ms else 'n/a'} | "
                  f"{x['pod_ready_s']['median'] if x['pod_ready_s'] else 'n/a'} |")
     return "\n".join(L) + "\n"
 

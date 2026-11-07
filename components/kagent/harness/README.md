@@ -118,34 +118,41 @@ After the install, the walk-through in [docs/kind.md](docs/kind.md) shows how to
 
 ### Verified on a cluster
 
-Run on a single-node Kind cluster (`kindest/node` v1.35.0) with kagent `v1.0.0-rc3` and Agent Substrate `v1.0.0` (gVisor Actors), image built from this
-directory, in November 2026. **No real model provider was used**: every agent in every row below talked to the same hermetic, deterministic mock model server
+Run on a single-node Kind cluster (`kindest/node` v1.35.0) with kagent `v1.0.0-rc3` and Agent Substrate `v1.0.0` (gVisor Actors), with the image built from the
+Pigpen commit `8be0f394ddbfdfbd9904d9641f1c56af5481c13a` (image digest `sha256:ffbf14d786ed2bd238cac19299d88ce820eca006cd4e4ebac30a20ea97123e07` in the cluster's own
+registry), in November 2026. **No real model provider was used**: every agent in every row below talked to the same hermetic, deterministic mock model server
 (OpenAI Chat Completions, OpenAI Responses and Anthropic Messages, plus a small MCP server), so model quality and model latency are not measured.
 
 | Check | Result |
 | --- | --- |
-| Task through the kagent A2A gateway: a shell tool call, an MCP tool call, then the answer | completed, 10 of 10 sessions |
-| Approval round trip: `input-required` with a kagent HITL tool approval request, approve, task completes | 10 of 10 sessions |
-| Rejection with a reason: the model sees `Tool call was rejected by user.` and the reason | observed |
-| Session survives restart: kagent suspends the Actor after every turn and restores it into a new process; a later turn recalls the first message | 10 of 10 sessions, and after deleting the worker pod |
-| A parked approval resumed after the Actor was suspended and restored (the `RestorePending` path), also with the worker pod deleted while parked | completed |
-| MCP wiring: a `RemoteMCPServer` bound to the Agent, called by name | 10 of 10 sessions |
-| `requireApproval` on that binding becomes the approval gate | 10 of 10 sessions |
+| Task through the kagent A2A gateway: a shell tool call, an MCP tool call, then the answer | completed, 20 of 20 sessions |
+| Approval round trip: `input-required` with a kagent HITL tool approval request, approve, task completes | 20 of 20 sessions |
+| Rejection with a reason: the mock model's request log contains the rejection text and the reason, and the answer matches it | 10 of 10 runs (a separate series) |
+| Session survives suspend and restore: kagent suspends the Actor after every turn and restores it into a new process; a later turn recalls the first message | 20 of 20 sessions |
+| Session survives deleting the worker pod, idle: the first message after the delete | 0 of 10 first attempts; every one was refused with JSON-RPC `-32004` after about 11 s, and the retry succeeded 10 of 10 (median 12.5 s from the first send to success) |
+| A parked approval, then the worker pod deleted, then approve and a later recall | first attempt 0 of 10 (the same `-32004` window); eventually 10 of 10, and the later recall named the first marker 10 of 10 |
+| MCP wiring: a `RemoteMCPServer` bound to the Agent, called by name | 20 of 20 sessions |
+| `requireApproval` on that binding becomes the approval gate | 20 of 20 sessions |
 
-Per-turn cost, same task and same mock model on the same cluster, medians of 10 sessions (the Claude Code and Codex rows are kagent's own harness images from the rc3
+After a worker pod is replaced, kagent and Substrate refuse the first message to an existing session with `-32004 input was not accepted; retry after the session becomes available`
+for about 11 seconds; clients must retry. The same behaviour appeared with the Claude Code harness (0 of 5 first attempts, 5 of 5 after the retry). Ordinary suspend and restore does not show it.
+
+Per-turn cost, same task and same mock model on the same cluster, medians of 20 sessions, first-activation values (the Claude Code and Codex rows are kagent's own harness images from the rc3
 catalog; pi-go is the community harness [dimetron/pi-go](https://github.com/dimetron/pi-go) v0.3.10, rebuilt for amd64 because its published amd64 manifest holds an arm64 binary):
 
 | | PiG | Claude Code | Codex | pi-go |
 | --- | ---: | ---: | ---: | ---: |
-| Actor memory per turn, working set max (MiB) | 51 | 142 | 58 | 31 |
-| CPU time per turn (ms) | 528 | 2413 | 1414 | 357 |
-| `[basket]` send to done through the gateway (ms) | 1031 | 2708 | 1863 | 798 |
-| MCP tool called / approval round trip | 10/10, 10/10 | 10/10, 10/10 | 10/10, 10/10 | 0/10 (no MCP tools reach it on rc3), none |
+| Actor memory, working set max (MiB) | 51 | 142 | 59 | 32 |
+| CPU time per activation (ms) | 809 | 3001 | 1934 | 625 |
+| First event after send (ms) | 551 | 486 | 452 | 565 |
+| `[basket]` send to done through the gateway (ms) | 1268 | 3347 | 2375 | 1010 |
+| MCP tool called / approval round trip | 20/20, 20/20 | 20/20, 20/20 | 20/20, 20/20 | 0/20 (no MCP tools reach it on rc3), none |
 
 Read the table with its limits: memory is the working set of the Actor's gVisor sandbox cgroup, so it includes the sandbox's own overhead; every turn includes starting the
-harness process because kagent restores the Actor into a new process; pi-go does less work per turn on rc3; differences under about 15 percent are within run-to-run spread; and
-with a real model the model's latency would dominate every turn. The measurements used a mock model for every harness. Method, raw data, caveats and the scripts to repeat them are in the
-[proof directory of the Pigpen repository](https://github.com/MichaelKinsy/pigpen/tree/main/components/kagent/proof).
+harness process because kagent restores the Actor into a new process; pi-go makes two model calls per turn to the others' three, so it does less work, and the mock's 0.11 s per call is
+not subtracted from any time; PiG's first event and restore times are slower than Claude Code's and Codex's here, so do not read the table as faster on every axis; differences under about 15 percent
+are within run-to-run spread; and with a real model the model's latency would dominate every turn. The measurements used a mock model for every harness. Method, raw data, caveats and the scripts to repeat
+them are in the [proof directory of the Pigpen repository](https://github.com/MichaelKinsy/pigpen/tree/main/components/kagent/proof).
 
 CI checks only that the image builds.
 
