@@ -154,7 +154,7 @@ func (d *Driver) park(ctx context.Context, p *proc, sp spec, tr *translator, pay
 	rec.TaskID, rec.ContextID, rec.Origin, rec.SessionID = sp.taskID, sp.contextID, sp.origin, sp.sessionID
 	rec.AssistantEntryID, rec.Calls = tail.ID, tail.Calls
 	// Siblings were announced before the gate ran and never executed (see injectedResults); the gated call stays
-	// open for the approval UI and is closed by the continuation (or by Cancel).
+	// open for the approval UI and is closed by the continuation (Resume) only; Cancel emits nothing.
 	if err := tr.declineOpen(payload.ToolCallID, session.NotExecutedText(rec.Kind)); err != nil {
 		return runtime.Outcome{}, err
 	}

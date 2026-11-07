@@ -50,7 +50,7 @@ type pending struct {
 	d      *Driver
 	record journal.Record
 	// gatedClosed is set once the A2A tool artifact of the gated call has its result (the continuation's, or the
-	// close that Resume or Cancel emitted). Only this handle's own emissions are tracked: a handle built by
+	// close that Resume emitted when it was cancelled or abandoned). Only this handle's own emissions are tracked: a handle built by
 	// RestorePending or repark starts open, as the task's artifact does.
 	gatedClosed bool
 }
@@ -150,6 +150,10 @@ func (p *pending) Resume(ctx context.Context, response runtime.InputResponse, si
 		target := outcome.Pending
 		if target == nil {
 			target = p
+		}
+		// Cancel itself never emits (see below); this is the live Resume sink, so the gated call's artifact is closed here.
+		if tp, ok := target.(*pending); ok {
+			tp.closeGatedAtCancel(sink)
 		}
 		if err := target.Cancel(context.WithoutCancel(ctx), sink); err != nil {
 			outcome = runtime.Outcome{}
@@ -367,30 +371,37 @@ func (p *pending) abandon(cause error) error {
 	return errors.Join(runtime.ErrSessionAbandoned, cause)
 }
 
-// closeGated gives the gated call's tool artifact a result when this handle has not already. The executor hands
-// Cancel its event sink behind the ModelCallSink type; a sink that cannot carry tool results is skipped.
-func (p *pending) closeGated(sink any, res runtime.ToolResult) {
-	events, ok := sink.(runtime.EventSink)
-	if !ok || p.gatedClosed {
+// closeGated gives the gated call's tool artifact a result when this handle has not already. It takes the live
+// sink of a Run or Resume only; PendingTurn.Cancel must never call it (see Cancel).
+func (p *pending) closeGated(sink runtime.EventSink, res runtime.ToolResult) {
+	if p.gatedClosed {
 		return
 	}
 	p.gatedClosed = true
 	res.ID, res.Name = p.record.CallID, callName(&p.record)
-	_ = events.ToolResult(res)
+	_ = sink.ToolResult(res)
+}
+
+// closeGatedAtCancel closes the gated call when Resume is cancelled: with its recorded result when the call
+// already ran, otherwise as unfinished.
+func (p *pending) closeGatedAtCancel(sink runtime.EventSink) {
+	res := unfinishedResult()
+	if r, err := p.current(); err == nil && r.Phase == journal.Result && r.Result != nil {
+		res = runtime.ToolResult{Result: r.Result.Content, IsError: r.Result.IsError, Status: declined(r)}
+	}
+	p.closeGated(sink, res)
 }
 
 // Cancel tombstones the record. No process is alive while parked, so there is
-// no native process to reap and no usage to emit. The gated call's artifact is
-// closed: with its recorded result when the call already ran, otherwise as unfinished.
-func (p *pending) Cancel(_ context.Context, sink runtime.ModelCallSink) error {
+// no native process to reap and no usage to emit. It emits nothing at all, not even
+// through a sink that happens to be an EventSink: kagent cancels a parked task with a
+// bare sink that has no request context, and a tool result sent to it panics. A task
+// cancelled while parked therefore relies on the executor's own task state; the gated
+// call's artifact is closed by Run and Resume only, which hold the live sink.
+func (p *pending) Cancel(_ context.Context, _ runtime.ModelCallSink) error {
 	r, err := p.current()
 	if err != nil {
 		return err
-	}
-	if r.Phase == journal.Result && r.Result != nil {
-		p.closeGated(sink, runtime.ToolResult{Result: r.Result.Content, IsError: r.Result.IsError, Status: declined(r)})
-	} else if r.Phase != journal.Complete && r.Phase != journal.Canceled {
-		p.closeGated(sink, unfinishedResult())
 	}
 	switch r.Phase {
 	case journal.Abandoned:

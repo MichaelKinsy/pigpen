@@ -8,8 +8,13 @@ import (
 	"testing"
 	"time"
 
+	a2atype "github.com/a2aproject/a2a-go/v2/a2a"
+	"github.com/a2aproject/a2a-go/v2/a2asrv"
+
 	"github.com/MichaelKinsy/pigpen/components/kagent/harness/adapter/internal/journal"
 	"github.com/kagent-dev/kagent/go/harness/runtime"
+	runtimea2a "github.com/kagent-dev/kagent/go/harness/runtime/a2a"
+	"github.com/kagent-dev/kagent/go/pkg/tracing"
 )
 
 // openCalls returns the IDs of tool calls the sink saw announced but never given a result.
@@ -143,25 +148,30 @@ func TestAProcessCrashMidToolAlsoClosesTheOpenCall(t *testing.T) {
 	}
 }
 
-func TestCancelWhileParkedClosesTheGatedCallAsUnfinished(t *testing.T) {
-	h := newHarness(t, "approve-batch-started")
-	pending, _ := park(t, h, "approve-batch-started")
-	sink := &recorder{}
-	if err := pending.Cancel(t.Context(), sink); err != nil {
-		t.Fatal(err)
+// wantNothingEmitted checks that Cancel left the sink untouched.
+func wantNothingEmitted(t *testing.T, sink *recorder) {
+	t.Helper()
+	sink.mu.Lock()
+	defer sink.mu.Unlock()
+	if len(sink.events) != 0 {
+		t.Fatalf("PendingTurn.Cancel emitted %q; kagent hands it a bare sink where a tool result panics", sink.events)
 	}
-	res := wantOneResult(t, sink, "c2", runtime.ToolUnfinished, true)
-	if res.Name != h.approvalRequest(runtime.Outcome{Pending: pending}).Name {
-		t.Fatalf("name = %q", res.Name)
-	}
-	// a second Cancel on the same handle must not close it twice
-	if err := pending.Cancel(t.Context(), sink); err != nil {
-		t.Fatal(err)
-	}
-	wantOneResult(t, sink, "c2", runtime.ToolUnfinished, true)
 }
 
-func TestCancelAfterTheResultWasRecordedClosesTheGatedCallWithThatResult(t *testing.T) {
+func TestCancelWhileParkedEmitsNothing(t *testing.T) {
+	h := newHarness(t, "approve-batch-started")
+	pending, _ := park(t, h, "approve-batch-started")
+	sink := &recorder{} // implements EventSink and ToolExecutionSink: the assertion Cancel used to make would succeed
+	if err := pending.Cancel(t.Context(), sink); err != nil {
+		t.Fatal(err)
+	}
+	wantNothingEmitted(t, sink)
+	if r := record(t, h); r.Phase != journal.Canceled {
+		t.Fatalf("phase = %s; the record is still tombstoned", r.Phase)
+	}
+}
+
+func TestCancelAfterTheResultWasRecordedEmitsNothingButStillInjectsTheResult(t *testing.T) {
 	h := newHarness(t, "approve")
 	pending, _ := park(t, h, "approve")
 	request := h.approvalRequest(runtime.Outcome{Pending: pending})
@@ -175,7 +185,10 @@ func TestCancelAfterTheResultWasRecordedClosesTheGatedCallWithThatResult(t *test
 	if err := restored.Cancel(t.Context(), sink); err != nil {
 		t.Fatal(err)
 	}
-	wantOneResult(t, sink, fakeCallProbe, runtime.ToolRan, false)
+	wantNothingEmitted(t, sink)
+	if results := toolResults(h); len(results) != 1 || resultText(results[0]) != "probe:basket" {
+		t.Fatalf("session results = %v", results)
+	}
 }
 
 func TestCancelMidResumeNeverClosesTheGatedCallTwice(t *testing.T) {
@@ -248,9 +261,7 @@ func TestAPromptPigRefusesStillClosesTheGatedCall(t *testing.T) {
 	wantOneResult(t, sink, fakeCallProbe, runtime.ToolRan, false)
 }
 
-func TestARestoredAbandonedSessionHasNoSinkToClose(t *testing.T) {
-	// RestorePending reports ErrSessionAbandoned without an event sink, so there is nothing it could emit; the
-	// executor fails the task instead. A handle that is still in hand (Resume, Cancel) does close the call.
+func TestCancelOfAnAbandonedHandleEmitsNothing(t *testing.T) {
 	h := newHarness(t, "approve")
 	pending, _ := park(t, h, "approve")
 	r := record(t, h)
@@ -265,7 +276,55 @@ func TestARestoredAbandonedSessionHasNoSinkToClose(t *testing.T) {
 	if err := pending.Cancel(t.Context(), sink); !errors.Is(err, runtime.ErrSessionAbandoned) {
 		t.Fatalf("Cancel = %v", err)
 	}
-	wantOneResult(t, sink, fakeCallProbe, runtime.ToolUnfinished, true)
+	wantNothingEmitted(t, sink)
+}
+
+// TestExecutorCancelsARestoredParkedHandle is kagent's TestCancelParkedTurn with the adapter's own handle: the
+// executor cancels a parked task with a bare sink that has no request context, so a handle that emits a tool result
+// there panics on a nil ExecutorContext.
+func TestExecutorCancelsARestoredParkedHandle(t *testing.T) {
+	phases := map[string]func(t *testing.T, h *harness, pending runtime.PendingTurn, request *runtime.ApprovalRequest){
+		"waiting": func(*testing.T, *harness, runtime.PendingTurn, *runtime.ApprovalRequest) {},
+		"result": func(t *testing.T, h *harness, pending runtime.PendingTurn, request *runtime.ApprovalRequest) {
+			h.setMode("resume")
+			crashAt(h, "result", func() { pending.Resume(t.Context(), approve(request), &recorder{}) })
+		},
+		"abandoned": func(t *testing.T, h *harness, _ runtime.PendingTurn, _ *runtime.ApprovalRequest) {
+			r := record(t, h)
+			r.Phase = journal.Abandoned
+			if err := h.d.journal.Save(r); err != nil {
+				t.Fatal(err)
+			}
+		},
+	}
+	for phase, prepare := range phases {
+		t.Run(phase, func(t *testing.T) {
+			h := newHarness(t, "approve")
+			pending, _ := park(t, h, "approve")
+			prepare(t, h, pending, h.approvalRequest(runtime.Outcome{Pending: pending}))
+			// Substrate restores /data into a new process: a new driver and executor find the parked task.
+			executor, err := runtimea2a.New(h.restart("resume"), &memoryContinuation{}, tracing.RuntimeTelemetry{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			message := a2atype.NewMessage(a2atype.MessageRoleUser, a2atype.NewTextPart("cancel"))
+			message.TaskID, message.ContextID = "task-1", "ctx-1"
+			events, errs := collectEvents(executor.Cancel(t.Context(), &a2asrv.ExecutorContext{TaskID: "task-1", ContextID: "ctx-1", Message: message}))
+			if phase == "abandoned" {
+				// RestorePending reports the session as abandoned and there is no handle to cancel.
+				if len(errs) != 1 || !errors.Is(errs[0], runtime.ErrSessionAbandoned) {
+					t.Fatalf("events = %v errs = %v", events, errs)
+				}
+				return
+			}
+			if len(errs) != 0 || finalState(events) != a2atype.TaskStateCanceled {
+				t.Fatalf("events = %v errs = %v, want a canceled task", events, errs)
+			}
+			if r := record(t, h); r.Phase != journal.Canceled {
+				t.Fatalf("phase = %s", r.Phase)
+			}
+		})
+	}
 }
 
 func TestUsageThatArrivesAfterTheCancelGraceIsStillReported(t *testing.T) {

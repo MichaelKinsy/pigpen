@@ -22,10 +22,13 @@ projects; this program is not affiliated with or endorsed by either.
 4. `Resume` runs the approved MCP `tools/call` itself (or builds `Tool call was rejected by user.` followed by ` Reason: <trimmed reason>`
    when the reason is not blank, or formats the answers), appends one `toolResult` per call of the interrupted assistant message to the
    session file (siblings are reported "Not executed"), and starts a fresh pig with the prompt `Continue.`.
-5. Tool artifacts are always closed: at the park the announced siblings of the gated call get `ToolDeclined`; the gated call gets its
-   result from the continuation (`ToolDeclined` when rejected); a call that never got a result because of a cancel, a crash or an
-   abandon is closed with `ToolUnfinished` (`IsError` set). Usage that pig writes after the cancel grace, while it is shut down, is
-   still reported as a `ModelCall`. A restore that reports `ErrSessionAbandoned` has no event sink, so it cannot close anything.
+5. Tool artifacts are closed by `Run` and `Resume`, which hold the live event sink: at the park the announced siblings of the
+   gated call get `ToolDeclined`; the gated call gets its result from the continuation (`ToolDeclined` when rejected); a call that
+   never got a result because of a cancel, a crash or an abandon during a `Run` or `Resume` is closed with `ToolUnfinished`
+   (`IsError` set). `PendingTurn.Cancel` emits nothing: kagent cancels a parked task with a bare sink that has no request
+   context (a tool result sent to it panics), so a task cancelled while parked relies on the executor's own task state, and an
+   `ErrSessionAbandoned` from a restore has no sink either. Usage that pig writes after the cancel grace, while it is shut down,
+   is still reported as a `ModelCall`.
 
 ## Environment
 
