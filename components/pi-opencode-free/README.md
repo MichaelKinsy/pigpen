@@ -74,9 +74,14 @@ refresh keeps the previous snapshot instead of wiping it.
 
 ## Configuration
 
-No key or environment variable is required. Provider headers can be overridden
-through the normal request `headers` option; a `null` value removes a default
-header. `PI_OFFLINE=1` (or `--offline`) keeps PiG from refreshing catalogs on its
+No key or environment variable is required. Requests wait up to 10 minutes for
+response headers (host `timeoutMs` overrides), retry up to 2 times (host
+`maxRetries` overrides, `0` disables), and a stream that sends no data for 5
+minutes ends with an error, like the OpenAI SDK the original uses.
+
+Provider headers can be overridden through the normal request `headers` option;
+a `null` value removes a default header (`Authorization` is always removed).
+`PI_OFFLINE=1` (or `--offline`) keeps PiG from refreshing catalogs on its
 own.
 
 ## Limits

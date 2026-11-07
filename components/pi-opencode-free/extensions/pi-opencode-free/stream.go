@@ -19,6 +19,16 @@ import (
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
 
+// Defaults for requests that carry no host options, from the OpenAI SDK the
+// original runs through (openai-node src/client.ts: `timeout` 10 minutes,
+// `maxRetries` 2) and the Node fetch (undici) body-inactivity timeout of five
+// minutes that the same file documents next to `timeout`.
+const (
+	defaultRequestTimeout = 10 * time.Minute
+	defaultStreamIdle     = 5 * time.Minute
+	defaultMaxRetries     = 2
+)
+
 // stream dispatches one model turn to Zen's Chat Completions or Responses
 // endpoint, depending on the model's api. It returns at once; the work runs on
 // its own goroutine and every failure becomes an error event on the stream.
@@ -263,11 +273,13 @@ func sseData(r io.Reader, fn func(data string) error) error {
 // send posts body and returns the first response that is final: a success, an
 // error retrying cannot fix, or the last one once maxRetries is used up. It
 // retries connection failures, timeouts and 408/409/429/5xx, honoring
-// Retry-After and maxRetryDelayMs. timeoutMs bounds the wait for response
-// headers only; the body then streams for as long as it takes.
+// Retry-After and maxRetryDelayMs. maxRetries defaults to 2 and timeoutMs to
+// 10 minutes, like the OpenAI SDK; timeoutMs bounds the wait for response
+// headers of each attempt, then the body streams for as long as data keeps
+// arriving (see idleBody).
 func (c *client) send(ctx context.Context, endpoint string, body []byte, opts sdk.ProviderStreamOptions) (resp *http.Response, cancel context.CancelFunc, note string, err error) {
-	retries := 0
-	if n, ok := number(opts.Values["maxRetries"]); ok && n > 0 {
+	retries := defaultMaxRetries
+	if n, ok := number(opts.Values["maxRetries"]); ok && n >= 0 {
 		retries = int(n)
 	}
 	maxDelay := 60 * time.Second
@@ -325,24 +337,25 @@ func (c *client) do(ctx context.Context, endpoint string, body []byte, opts sdk.
 	req.Header.Del("Authorization")
 
 	var timedOut atomic.Bool
-	var timer *time.Timer
-	timeout, hasTimeout := number(opts.Values["timeoutMs"])
-	if hasTimeout && timeout > 0 {
-		timer = time.AfterFunc(time.Duration(timeout)*time.Millisecond, func() { timedOut.Store(true); cancel() })
+	timeout := c.requestTimeout
+	if timeout <= 0 {
+		timeout = defaultRequestTimeout
 	}
+	if n, ok := number(opts.Values["timeoutMs"]); ok && n > 0 {
+		timeout = time.Duration(n * float64(time.Millisecond))
+	}
+	timer := time.AfterFunc(timeout, func() { timedOut.Store(true); cancel() })
 	httpClient := c.http
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 	resp, err := httpClient.Do(req)
-	if timer != nil {
-		timer.Stop()
-	}
+	timer.Stop()
 	if err != nil {
 		cancel()
 		switch {
 		case timedOut.Load():
-			return nil, nil, fmt.Errorf("request to OpenCode Zen timed out after %d ms", int(timeout))
+			return nil, nil, fmt.Errorf("request to OpenCode Zen timed out after %d ms", timeout.Milliseconds())
 		case isDialFailure(err):
 			return nil, nil, fmt.Errorf("OpenCode Zen is not reachable at %s: %w", endpoint, err)
 		case ctx.Err() == nil:
@@ -350,7 +363,45 @@ func (c *client) do(ctx context.Context, endpoint string, body []byte, opts sdk.
 		}
 		return nil, nil, err
 	}
+	idle := c.streamIdle
+	if idle <= 0 {
+		idle = defaultStreamIdle
+	}
+	resp.Body = newIdleBody(resp.Body, idle, cancel)
 	return resp, cancel, nil
+}
+
+// idleBody ends a response body that goes quiet. If no bytes arrive for the
+// idle duration it cancels the request, so a Read blocked on a stalled Zen
+// connection returns an error instead of hanging the turn until the user
+// aborts. The wait restarts on every Read that returns data.
+type idleBody struct {
+	io.ReadCloser
+	idle  time.Duration
+	timer *time.Timer
+	fired atomic.Bool
+}
+
+func newIdleBody(body io.ReadCloser, idle time.Duration, cancel context.CancelFunc) *idleBody {
+	b := &idleBody{ReadCloser: body, idle: idle}
+	b.timer = time.AfterFunc(idle, func() { b.fired.Store(true); cancel() })
+	return b
+}
+
+func (b *idleBody) Read(p []byte) (int, error) {
+	n, err := b.ReadCloser.Read(p)
+	if err == nil || n > 0 {
+		b.timer.Reset(b.idle)
+	}
+	if err != nil && err != io.EOF && b.fired.Load() {
+		return n, fmt.Errorf("the response stream from OpenCode Zen stalled: no data for %d ms", b.idle.Milliseconds())
+	}
+	return n, err
+}
+
+func (b *idleBody) Close() error {
+	b.timer.Stop()
+	return b.ReadCloser.Close()
 }
 
 func retryable(status int) bool {

@@ -59,6 +59,17 @@ the OpenCode client headers and omits `Authorization` for the keyless free tier.
 - Provider-level headers are also returned in the auth result, because the PiG
   host's native-provider carrier does not otherwise forward the declaration's
   headers to requests.
+- **Timeouts and retries.** The original runs through the OpenAI SDK, whose
+  defaults are a 10 minute request `timeout` and `maxRetries` 2 (openai-node
+  `src/client.ts`: `DEFAULT_TIMEOUT` and the `maxRetries=2`/`timeout=10 minutes`
+  option docs), and Node's fetch drops a response body that is silent for five
+  minutes (the same file's note on `bodyTimeout`). This port applies the same
+  defaults when the host passes no `timeoutMs`/`maxRetries`: a 10 minute wait for
+  response headers per attempt, 2 retries (`maxRetries: 0` still disables them),
+  and a 5 minute stream idle timeout that ends a stalled body with an error.
+  Tests: `timeouts_test.go`. [INFERENCE] Pi's native OpenAI engine passes no
+  override of these defaults to the SDK; that was not checked against Pi's
+  source.
 - The original's compatibility shims for `pi-cache-optimizer` are not relevant
   here; the request is built in this extension, so it never contains
   `prompt_cache_retention` and it never renames `max_tokens`.

@@ -46,6 +46,11 @@ type client struct {
 	http     *http.Client
 	discover func(context.Context) []modelInfo
 	newID    func() string
+
+	// requestTimeout and streamIdle override the defaults in stream.go; zero
+	// means the default. Tests shorten them.
+	requestTimeout time.Duration
+	streamIdle     time.Duration
 }
 
 func productionClient() *client {
