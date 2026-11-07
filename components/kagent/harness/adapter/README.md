@@ -96,6 +96,13 @@ they are `${KAGENT_PIG_HDR_n}` / `${PROVIDER_KEY}` references, because PiG runs 
   have run, so the next restore reports `runtime.ErrSessionAbandoned`. Cancelling after the result was recorded appends that result to the session first.
 - A pending record that cannot be decoded or validated is moved to `pig-pending.json.corrupt` and reported once as `ErrSessionAbandoned`; the Actor
   takes new work afterwards.
+- The adapter runs in Linux Actors. It also compiles for Windows and macOS so every Pigpen Go module builds for every target a Piglet can be built
+  for. On Windows the child pig is started suspended inside a job object (kill-on-close) in its own process group, `taskkill /T` and the
+  job end its tree, and there is no uid, so the "owned by root or by this user" rule for the pig binary is not checked there (the PATH and
+  data-directory rules are).
+- kagent's own packages link `github.com/ollama/ollama/api` (for kagent's Ollama model client), so the binary carries that module although the adapter
+  starts no Ollama server. `govulncheck` reports the init of those packages against eight Ollama server advisories that have no fixed version;
+  Pigpen records them in `scripts/govulncheck-accepted.json` with the version they were found at.
 
 ## Checks
 

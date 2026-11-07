@@ -16,7 +16,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	a2atype "github.com/a2aproject/a2a-go/v2/a2a"
@@ -220,15 +219,8 @@ func resolvePig(override, dataDir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0 {
-		return "", fmt.Errorf("%q is not an executable regular file", resolved)
-	}
-	stat, ok := info.Sys().(*syscall.Stat_t)
-	if !ok {
-		return "", fmt.Errorf("cannot read the owner of %q", resolved)
-	}
-	if stat.Uid != 0 && int(stat.Uid) != os.Getuid() {
-		return "", fmt.Errorf("%q is owned by uid %d, want root or uid %d", resolved, stat.Uid, os.Getuid())
+	if err := checkPigFile(info, resolved); err != nil {
+		return "", err
 	}
 	return resolved, nil
 }

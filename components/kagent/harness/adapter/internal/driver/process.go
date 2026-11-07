@@ -291,6 +291,10 @@ func (d *Driver) start(sessionID string) (*proc, error) {
 	if err := command.Start(); err != nil {
 		return nil, fmt.Errorf("start %q: %w", d.cfg.Executable, err)
 	}
+	if err := fsutil.AttachProcessGroup(command.Process); err != nil {
+		_ = command.Wait()
+		return nil, fmt.Errorf("start %q: %w", d.cfg.Executable, err)
+	}
 	p := &proc{cmd: command, exited: make(chan error, 1), stderr: stderr, d: d}
 	p.rpc = newRPCClient(stdin, stdout, MaxFrameBytes)
 	go func() {
