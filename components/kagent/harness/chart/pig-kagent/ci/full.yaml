@@ -4,7 +4,7 @@ args: []
 runtime:
   logLevel: debug
   tools: [read, bash, edit, write, grep, find, ls]
-  bin: pig
+  bin: /usr/local/bin/pig
   contextWindow: 200000
   maxTokens: 16384
   passEnv: [GOFLAGS, GOPROXY]

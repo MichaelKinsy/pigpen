@@ -16,7 +16,7 @@
       "properties": {
         "logLevel": {"enum": ["", "debug", "info", "warn", "error"]},
         "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}},
-        "bin": {"type": "string", "pattern": "^[^\\s]*$"},
+        "bin": {"type": "string", "pattern": "^(/[^\\s]*)?$"},
         "contextWindow": {"type": "integer", "minimum": 0},
         "maxTokens": {"type": "integer", "minimum": 0},
         "passEnv": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$", "not": {"pattern": "^KAGENT_"}}}

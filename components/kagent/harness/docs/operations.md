@@ -111,6 +111,18 @@ image they started with; Sessions created afterwards use the new one. The PiG se
 surface: the adapter accepts only session header version 3, and the harness image pins the PiG version it was built and
 tested with. Roll an image back by installing the previous digest; new Sessions then use it.
 
+## After a worker pod is replaced: retry on `-32004`
+
+After a worker pod is deleted or replaced (we measured `kubectl delete pod` on a worker), the first message to an
+existing session can be refused with the JSON-RPC error
+`-32004 input was not accepted; retry after the session becomes available` (A2A error reason
+`KAGENT_SEND_NOT_ACCEPTED`, `retryAfterMs: 100`). In our measurements the refusal arrived after about 11 seconds, while
+the controller marked the old worker draining and registered the new one, and the immediate retry succeeded in one to
+three seconds with the session's stored state (the agent still recalled what it had been told). The behaviour is the
+platform's, not the harness's: kagent's built-in Claude harness showed the same refusal. A normal suspend and restore
+between turns does not show it. A client that can meet a worker replacement retries the call on `-32004`; the harness
+cannot do that for it.
+
 ## Failure modes and `ErrSessionAbandoned`
 
 | Situation | Result |

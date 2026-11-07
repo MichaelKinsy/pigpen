@@ -19,6 +19,7 @@ CTX=""
 TIMEOUT=300
 SKIP_PREFLIGHT=0
 DRY=0
+FORCE=0
 VALARGS=""
 fails=0
 warns=0
@@ -36,7 +37,8 @@ usage: pig-kagent.sh <check|render|install|uninstall> [options]
   check       read-only preflight: kagent, Substrate, WorkerPool, labels, Secrets, grants
   render      print the manifests (helm template); needs no cluster
   install     preflight, helm upgrade --install, then wait for the Agent Ready condition
-  uninstall   helm uninstall (removes only what the release created)
+  uninstall   helm uninstall (removes only what the release created); prints the context first and
+              refuses when other Agents use a Harness this release owns, unless --force
 
 options:
   -n, --namespace NS         namespace of the Harness, Agent and ModelConfig (default kagent)
@@ -50,6 +52,7 @@ options:
       --substrate-namespace NS   skip the discovery of the Substrate namespace
       --dry-run              install: helm --dry-run=server, nothing is changed
       --skip-preflight       install without the checks (not recommended)
+      --force                uninstall: remove a Harness that other Agents still reference
       --timeout SECONDS      wait for Agent Ready (default 300)
   -h, --help                 this text
 U
@@ -75,11 +78,15 @@ while [ $# -gt 0 ]; do
     --timeout) TIMEOUT=$2; shift 2;;
     --dry-run) DRY=1; shift;;
     --skip-preflight) SKIP_PREFLIGHT=1; shift;;
+    --force) FORCE=1; shift;;
     -h|--help) usage; exit 0;;
     *) die "unknown option $1";;
   esac
 done
 case $TIMEOUT in ''|*[!0-9]*) die "--timeout takes whole seconds";; esac
+# Shell arithmetic reads a leading zero as octal ("08" is an error): drop the zeros.
+while case $TIMEOUT in 0?*) true;; *) false;; esac; do TIMEOUT=${TIMEOUT#0}; done
+[ "$FORCE" -eq 0 ] || [ "$cmd" = uninstall ] || die "--force only applies to uninstall"
 
 need() { command -v "$1" >/dev/null 2>&1 || die "$1 is required"; }
 need helm
@@ -88,20 +95,36 @@ need helm
 k() { if [ -n "$CTX" ]; then kubectl --context "$CTX" "$@"; else kubectl "$@"; fi; }
 h() { if [ -n "$CTX" ]; then helm --kube-context "$CTX" "$@"; else helm "$@"; fi; }
 
-# The chart is rendered once per question; every check reads what the chart will create, so the
-# checks and the install cannot drift apart. Values are newline separated, so paths may hold spaces.
+# The chart is rendered once per question and the templates are cut out of the one output; every check reads what the
+# chart will create, so the checks and the install cannot drift apart. Values are newline separated, so paths may hold spaces.
 rendered() {
   (
     IFS=$NL
     set -f
     # shellcheck disable=SC2086
-    h template "$REL" "$CHART" -n "$NS" $VALARGS "$@"
+    h template "$REL" "$CHART" -n "$NS" $VALARGS
   )
 }
 # field TEMPLATE JSONPATH: a value from one rendered template (needs the kagent CRDs for kubectl to map the kind).
+# Empty output means the chart does not render that template. A chart that does not render, or a
+# kubectl that cannot read it, is an error (status 2, message on stderr): callers stop with "|| exit 2",
+# so a check can never be skipped silently.
 field() {
-  rendered --show-only "templates/$1" 2>/dev/null |
-    k create --dry-run=client --validate=false -f - -o jsonpath="$2" 2>/dev/null || true
+  if ! all=$(rendered 2>/dev/null); then
+    err=$(rendered 2>&1 >/dev/null || true)
+    printf 'pig-kagent.sh: cannot render the chart to read %s: %s\n' "$1" "$err" >&2
+    return 2
+  fi
+  doc=$(printf '%s\n' "$all" | awk -v t="/templates/$1" '
+    /^# Source: / { on = (length($0) >= length(t) && substr($0, length($0) - length(t) + 1) == t); next }
+    on { print }')
+  [ -n "$doc" ] || return 0
+  if ! val=$(printf '%s\n' "$doc" | k create --dry-run=client --validate=false -f - -o jsonpath="$2" 2>/dev/null); then
+    err=$(printf '%s\n' "$doc" | k create --dry-run=client --validate=false -f - -o jsonpath="$2" 2>&1 >/dev/null || true)
+    printf 'pig-kagent.sh: cannot read %s from the rendered %s: %s\n' "$2" "$1" "$err" >&2
+    return 2
+  fi
+  printf '%s' "$val"
 }
 
 check_crd() { # group plural version remedy
@@ -123,9 +146,10 @@ secret_has_key() { # namespace name key; prints nothing, reads key names only
 
 # Secrets a rendered release refers to, as "name/key" words.
 release_secrets() {
-  field modelconfig.yaml '{.spec.apiKeySecret}/{.spec.apiKeySecretKey}{"\n"}'
-  field remotemcpserver.yaml '{range .spec.headersFrom[?(@.valueFrom.type=="Secret")]}{.valueFrom.name}/{.valueFrom.key}{"\n"}{end}'
-  field egresspolicy.yaml '{range .spec.destinations[*]}{.authentication.secretKeyRef.name}/{.authentication.secretKeyRef.key}{"\n"}{end}'
+  a=$(field modelconfig.yaml '{.spec.apiKeySecret}/{.spec.apiKeySecretKey}{"\n"}') || return 2
+  b=$(field remotemcpserver.yaml '{range .spec.headersFrom[?(@.valueFrom.type=="Secret")]}{.valueFrom.name}/{.valueFrom.key}{"\n"}{end}') || return 2
+  c=$(field egresspolicy.yaml '{range .spec.destinations[*]}{.authentication.secretKeyRef.name}/{.authentication.secretKeyRef.key}{"\n"}{end}') || return 2
+  printf '%s\n%s\n%s\n' "$a" "$b" "$c"
 }
 
 # credential_grant NS: succeeds when the Substrate credential provider lets atespace NS read Secrets in NS.
@@ -161,7 +185,7 @@ check_owned() {
 
 # check_shared_harness: harness.create is false, so the Agent runs on a Harness somebody else manages.
 check_shared_harness() {
-  hn=$(field agent.yaml '{.spec.harnessRef.name}')
+  hn=$(field agent.yaml '{.spec.harnessRef.name}') || exit 2
   [ -n "$hn" ] || return 0
   if ! k get harnesses.api.kagent.dev "$hn" -n "$NS" >/dev/null 2>&1; then
     fail "Harness $NS/$hn not found (harness.create is false; create it first, for example with another release)"
@@ -174,7 +198,7 @@ check_shared_harness() {
     return 0
   fi
   have=$(k get harnesses.api.kagent.dev "$hn" -n "$NS" -o jsonpath='{.spec.workload.image}' 2>/dev/null || true)
-  want=$(field agenttemplate.yaml '{.metadata.annotations.pig\.dev/harness-image}')
+  want=$(field agenttemplate.yaml '{.metadata.annotations.pig\.dev/harness-image}') || exit 2
   if [ "$have" = "$want" ]; then
     ok "Harness $NS/$hn runs image $have"
   else
@@ -238,7 +262,7 @@ preflight() {
     done
   fi
 
-  wp=$(field harness.yaml '{.spec.substrate.workerPoolRef.name}')
+  wp=$(field harness.yaml '{.spec.substrate.workerPoolRef.name}') || exit 2
   if [ -n "$wp" ]; then
     if k get workerpool.ate.dev "$wp" -n "$NS" >/dev/null 2>&1; then
       ok "WorkerPool $NS/$wp exists"
@@ -247,7 +271,7 @@ preflight() {
       fail "WorkerPool $NS/$wp not found; pools in $NS: ${pools:-none} (set substrate.workerPoolRef, or install kagent with substrateWorkerPool.create=true)"
     fi
   fi
-  loc=$(field harness.yaml '{.spec.substrate.snapshotPolicy.location}')
+  loc=$(field harness.yaml '{.spec.substrate.snapshotPolicy.location}') || exit 2
   if [ -n "$loc" ]; then
     used=$(k get harnesses.api.kagent.dev -A -o jsonpath='{range .items[*]}{.spec.substrate.snapshotPolicy.location}{"\n"}{end}' 2>/dev/null | sort -u | tr '\n' ' ' || true)
     if [ -n "$used" ]; then
@@ -260,17 +284,17 @@ preflight() {
     fi
   fi
 
-  mc=$(field agenttemplate.yaml '{.spec.modelConfig.name}')
+  mc=$(field agenttemplate.yaml '{.spec.modelConfig.name}') || exit 2
   if [ -n "$mc" ] && ! rendered 2>/dev/null | grep -q '^kind: ModelConfig'; then
     if k get modelconfig.api.kagent.dev "$mc" -n "$NS" >/dev/null 2>&1; then
       ok "ModelConfig $NS/$mc exists"
     else
       fail "ModelConfig $NS/$mc not found (create it, or set modelConfig.create=true)"
     fi
-    url=$(k get modelconfig.api.kagent.dev "$mc" -n "$NS" -o jsonpath='{.spec.openAI.baseUrl}{.spec.anthropic.baseUrl}{.spec.ollama.host}' 2>/dev/null || true)
-    sec=$(k get modelconfig.api.kagent.dev "$mc" -n "$NS" -o jsonpath='{.spec.apiKeySecret}/{.spec.apiKeySecretKey}' 2>/dev/null || true)
+    url=$(k get modelconfig.api.kagent.dev "$mc" -n "$NS" -o jsonpath='{.spec.openAI.baseUrl}{.spec.anthropic.baseUrl}{.spec.ollama.host}' 2>/dev/null) || die "cannot read ModelConfig $NS/$mc"
+    sec=$(k get modelconfig.api.kagent.dev "$mc" -n "$NS" -o jsonpath='{.spec.apiKeySecret}/{.spec.apiKeySecretKey}' 2>/dev/null) || die "cannot read ModelConfig $NS/$mc"
   else
-    url=$(field modelconfig.yaml '{.spec.openAI.baseUrl}{.spec.anthropic.baseUrl}{.spec.ollama.host}')
+    url=$(field modelconfig.yaml '{.spec.openAI.baseUrl}{.spec.anthropic.baseUrl}{.spec.ollama.host}') || exit 2
     sec=""
   fi
   if [ -n "${url:-}" ]; then
@@ -280,7 +304,8 @@ preflight() {
     esac
   fi
 
-  secrets=$( { printf '%s\n' "${sec:-}"; release_secrets; } | grep -v '^/*$' | sort -u | tr '\n' ' ' || true)
+  rs=$(release_secrets) || exit 2
+  secrets=$( { printf '%s\n' "${sec:-}"; printf '%s\n' "$rs"; } | grep -v '^/*$' | sort -u | tr '\n' ' ' || true)
   if [ -n "$secrets" ]; then
     for s in $secrets; do
       if secret_has_key "$NS" "${s%%/*}" "${s#*/}"; then
@@ -292,17 +317,19 @@ preflight() {
     [ -z "$SUBNS" ] || credential_grant
   fi
 
-  hname=$(field harness.yaml '{.metadata.name}')
+  hname=$(field harness.yaml '{.metadata.name}') || exit 2
   if [ -n "$hname" ]; then
     check_owned harness.api.kagent.dev "$hname"
   else
     check_shared_harness
   fi
-  check_owned agenttemplate.api.kagent.dev "$(field agenttemplate.yaml '{.metadata.name}')"
-  agname=$(field agent.yaml '{.metadata.name}')
+  atname=$(field agenttemplate.yaml '{.metadata.name}') || exit 2
+  check_owned agenttemplate.api.kagent.dev "$atname"
+  agname=$(field agent.yaml '{.metadata.name}') || exit 2
   [ -z "$agname" ] || check_owned agent.api.kagent.dev "$agname"
 
-  n=$(field egresspolicy.yaml '{range .spec.destinations[*]}{.origin}{"\n"}{end}' | grep -c . || true)
+  eg=$(field egresspolicy.yaml '{range .spec.destinations[*]}{.origin}{"\n"}{end}') || exit 2
+  n=$(printf '%s\n' "$eg" | grep -c . || true)
   note "egress: model, MCP and telemetry origins are inferred by kagent; this release adds ${n:-0} origin(s). Tools such as git and package managers need origins of their own."
   note "egress: origins are DNS names (a leading *. covers one label); IP addresses are rejected."
 }
@@ -315,9 +342,11 @@ report() {
 wait_ready() { # name
   name=$1
   # The image the Agent has to run: this release's, or what an existing Harness names when it owns the Harness.
-  want=$(field agenttemplate.yaml '{.metadata.annotations.pig\.dev/harness-image}')
-  if [ -z "$(field harness.yaml '{.metadata.name}')" ]; then
-    want=$(k get harnesses.api.kagent.dev "$(field agent.yaml '{.spec.harnessRef.name}')" -n "$NS" -o jsonpath='{.spec.workload.image}' 2>/dev/null || true)
+  want=$(field agenttemplate.yaml '{.metadata.annotations.pig\.dev/harness-image}') || exit 2
+  own=$(field harness.yaml '{.metadata.name}') || exit 2
+  if [ -z "$own" ]; then
+    ref=$(field agent.yaml '{.spec.harnessRef.name}') || exit 2
+    want=$(k get harnesses.api.kagent.dev "$ref" -n "$NS" -o jsonpath='{.spec.workload.image}' 2>/dev/null || true)
   fi
   deadline=$(( $(date +%s) + TIMEOUT ))
   while :; do
@@ -342,6 +371,50 @@ wait_ready() { # name
   die "Agent $name is not Ready after ${TIMEOUT}s (the Harness has no status; conditions live on the Agent)"
 }
 
+# uninstall_guard: refuses, unless --force, when an Agent of another release (or a hand-made Agent) references a
+# Harness that this release owns; removing the Harness would leave those Agents without one.
+uninstall_guard() {
+  bad=""
+  harnesses=$(k get harnesses.api.kagent.dev -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.metadata.annotations.meta\.helm\.sh/release-name}{"\n"}{end}' 2>&1) || bad=$harnesses
+  if [ -z "$bad" ]; then
+    agents=$(k get agents.api.kagent.dev -n "$NS" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.spec.harnessRef.name}{"|"}{.metadata.annotations.meta\.helm\.sh/release-name}{"\n"}{end}' 2>&1) || bad=$agents
+  fi
+  if [ -n "$bad" ]; then
+    if [ "$FORCE" -eq 1 ]; then
+      warn "cannot tell whether other Agents use a Harness of release $REL ($bad); continuing because of --force"
+      return 0
+    fi
+    die "cannot tell whether other Agents use a Harness of release $REL: $bad; fix that, or pass --force"
+  fi
+  mine=""
+  while IFS='|' read -r hname hrel; do
+    if [ -n "$hname" ] && [ "$hrel" = "$REL" ]; then mine="$mine $hname"; fi
+  done <<EOF
+$harnesses
+EOF
+  if [ -z "$mine" ]; then
+    note "release $REL owns no Harness"
+    return 0
+  fi
+  users=""
+  while IFS='|' read -r aname aharness arel; do
+    [ -n "$aname" ] || continue
+    [ "$arel" != "$REL" ] || continue
+    case "$mine " in *" $aharness "*) users="$users $aname(Harness $aharness)";; esac
+  done <<EOF
+$agents
+EOF
+  if [ -z "$users" ]; then
+    note "release $REL owns Harness$mine; no other Agent in $NS references it"
+    return 0
+  fi
+  if [ "$FORCE" -eq 1 ]; then
+    warn "removing Harness$mine of release $REL although other Agents use it:$users; they stop working"
+    return 0
+  fi
+  die "release $REL owns Harness$mine, which other Agents in $NS use:$users. Uninstalling would break them. Keep this release, move the Agents first, or pass --force"
+}
+
 case $cmd in
   check)
     preflight
@@ -362,14 +435,19 @@ case $cmd in
       h upgrade --install "$REL" "$CHART" -n "$NS" $VALARGS $mode
     )
     [ "$DRY" -eq 0 ] || exit 0
-    ag=$(field agent.yaml '{.metadata.name}')
+    ag=$(field agent.yaml '{.metadata.name}') || exit 2
     [ -z "$ag" ] || wait_ready "$ag";;
   uninstall)
-    if h status "$REL" -n "$NS" >/dev/null 2>&1; then
-      h uninstall "$REL" -n "$NS"
-    else
-      note "release $REL is not installed in $NS; nothing to do"
-    fi;;
+    ctx=${CTX:-$(k config current-context 2>/dev/null || true)}
+    note "context ${ctx:-unknown}, namespace $NS, release $REL"
+    if ! st=$(h status "$REL" -n "$NS" 2>&1); then
+      case $st in
+        *"release: not found"*) note "release $REL is not installed in $NS; nothing to do"; exit 0;;
+        *) die "cannot read release $REL in $NS (context ${ctx:-unknown}): $st";;
+      esac
+    fi
+    uninstall_guard
+    h uninstall "$REL" -n "$NS";;
   *)
     usage
     exit 2;;

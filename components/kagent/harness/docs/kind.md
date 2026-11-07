@@ -16,8 +16,10 @@ kagent and Agent Substrate are separate Apache-2.0 projects and are not affiliat
 - A model: an OpenAI-compatible endpoint, or an API key for a supported provider. Substrate's egress allows DNS
   names only, so the endpoint of an in-cluster model is a Service DNS name, never an IP address.
 
-Substrate's Actors run in gVisor. The worker pods need `SYS_ADMIN` and `NET_ADMIN`, and the node needs
-outbound access to `storage.googleapis.com` the first time, where Substrate downloads the gVisor runtime. A
+Substrate's Actors run in gVisor. Substrate's worker pods run as UID 0 without `privileged` and keep the `SYS_ADMIN`
+and `NET_ADMIN` capabilities (for mounts and networking), so the nodes have to be trusted (Substrate v1.0.0,
+`docs/reference/api-guide.md`, section "Worker security"). The node also
+needs outbound access to `storage.googleapis.com` the first time, where Substrate downloads the gVisor runtime. A
 Linux host is the tested place; Docker Desktop is not covered here.
 
 ## 1. Create the cluster
@@ -148,6 +150,16 @@ cd components/kagent/harness
 The Agent is `Ready` once Substrate has built the golden snapshot of the harness image. A failure prints the
 Agent's conditions; [deploy.md](deploy.md#troubleshooting-by-condition) explains each.
 
+The Harness the chart creates sets `substrate.snapshotPolicy.location` to the chart default `gs://ate-snapshots/kagent/`.
+kagent hands that value to Substrate as the base location for the snapshots of this Harness's Actors (the
+ActorTemplate's `snapshotConfig.storageLocation`, which `kagent install` allows by enabling Substrate's
+`PerTemplateSnapshotLocation` gate); Substrate writes below it, under `atespaces/<atespace>/actors/<uid>/...`. It is a
+base prefix, not a separate store: Substrate's chart keeps snapshots in an in-cluster RustFS bucket called `ate-snapshots`
+by default and addresses it with `gs://` URIs, which is why the default works unchanged on a Kind cluster set up with
+`kagent install`.
+Change `substrate.snapshotLocation` only when your Substrate uses another object store; the value has to name a location
+that store serves.
+
 To use a model of your own instead of `default-model-config`, create the key Secret and let the chart create the
 ModelConfig (the endpoint is a DNS name; here a Service in the cluster):
 
@@ -191,6 +203,12 @@ curl -s -H 'X-User-Id: admin@kagent.dev' -H 'A2A-Version: 1.0' -H 'Content-Type:
 The response is a task with a `contextId` (the session). Send later messages with that `contextId`. The first call
 restores the Actor from its golden snapshot. `SendStreamingMessage` streams the
 reply. In the UI, open `http://localhost:8080`, pick the `pig` agent in `kagent` and chat.
+
+After a worker pod is deleted or replaced, the first message to an existing session can be refused with
+`-32004 input was not accepted; retry after the session becomes available` (A2A error reason
+`KAGENT_SEND_NOT_ACCEPTED`). In our measurements the refusal came after about 11 seconds and the immediate retry
+succeeded, with the stored state intact. It is platform behaviour, seen with kagent's Claude harness as well as this
+one, so a client retries that call. A normal suspend and restore between turns does not show it.
 
 ## 7. An approval round trip
 

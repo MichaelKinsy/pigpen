@@ -18,7 +18,8 @@ runtime:
   # PiG built-in tools the model may use, for example [read, bash, edit, write, grep, find, ls].
   # Becomes KAGENT_PIG_TOOLS (comma list, names [A-Za-z0-9_-]+).
   tools: []
-  # Path or PATH name of the pig binary inside the image. Becomes KAGENT_PIG_BIN.
+  # Absolute path of the pig binary inside the image (not under /data; there is no PATH lookup). Empty uses
+  # /usr/local/bin/pig. Becomes KAGENT_PIG_BIN.
   bin: ""
   # Model limits, because kagent compiles none. 0 means the adapter default (128000 and 8192).
   # PiG compacts the session by the context window. Become KAGENT_PIG_CONTEXT_WINDOW and KAGENT_PIG_MAX_TOKENS.

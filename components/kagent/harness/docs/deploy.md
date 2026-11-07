@@ -37,7 +37,8 @@ The versions are recorded in `chart/pig-kagent/Chart.yaml` annotations (`pig.dev
    `substrateWorkerPool.create=true`, which is also what `kagent install` sets up, and that is the chart's
    default `substrate.workerPoolRef`.
 4. A snapshot location Substrate serves. The default, `gs://ate-snapshots/kagent/`, is the one kagent's own
-   harness documentation uses; set `substrate.snapshotLocation` to match your Substrate object store.
+   harness documentation uses. kagent passes it to Substrate as the base prefix for this Harness's snapshots, so it has
+   to name a location your Substrate object store serves; set `substrate.snapshotLocation` to match it.
 5. A model: an existing `ModelConfig` (the chart default is `default-model-config`, which `kagent install`
    creates), or one created by this chart.
 6. The image reference of the PiG harness, pinned by digest (`registry/name@sha256:<64 hex>`). The Harness
@@ -58,7 +59,8 @@ cd components/kagent/harness      # or the exported harnesses/pig directory in b
 Options: `-n/--namespace`, `-r/--release` (default `pig`), `-f/--values FILE` (repeatable),
 `--set KEY=VALUE` (repeatable), `--chart` (a directory or an OCI reference such as
 `oci://REGISTRY/PATH/pig-kagent@sha256:<digest>`), `--context`, `--substrate-namespace`, `--timeout`
-seconds, `--dry-run` (server-side dry run, changes nothing), `--skip-preflight`.
+seconds (decimal, so `08` is eight), `--dry-run` (server-side dry run, changes nothing), `--skip-preflight`, `--force`
+(`uninstall` only).
 
 Subcommands:
 
@@ -67,7 +69,7 @@ Subcommands:
 | `check` | Read-only preflight. Prints `ok`, `note`, `WARN` or `FAIL` lines and exits 1 on any `FAIL`. |
 | `render` | `helm template` with the same values. Needs no cluster. |
 | `install` | Preflight, `helm upgrade --install`, then waits for Agent `Ready`. On timeout it prints each condition and the Agent warnings. Safe to run again. |
-| `uninstall` | `helm uninstall`. A release that is not installed is reported and is not an error. |
+| `uninstall` | `helm uninstall`. It first prints the kube context, namespace and release it is about to act on. When the release owns the Harness (`harness.create: true`) and Agents of other releases (or hand-made Agents) in the namespace reference it, it refuses and lists them; `--force` removes the Harness anyway and warns. It also refuses when it cannot list the Agents, unless `--force`. A release that is not installed is reported and is not an error; any other `helm status` failure stops with its message. |
 
 What `check` verifies:
 
@@ -80,7 +82,8 @@ What `check` verifies:
 - the snapshot location is compared with the locations of existing Harnesses (a difference is a warning);
 - the ModelConfig exists, and its endpoint is a DNS name and not an IP address or `localhost`;
 - every Secret the release refers to exists and has the named key. Only key names are read; a Secret value is
-  never read into the output;
+  never read into the output. If the chart cannot be rendered, or `kubectl` cannot read a rendered object, `check`
+  and `install` stop with exit status 2 and a message naming the template; they never skip the Secret checks;
 - the Substrate credential provider's `namespacePolicies` lets the atespace (the namespace) read Secrets in
   that namespace;
 - no Harness, AgentTemplate or Agent of the same name exists that another release or a hand-made manifest owns;
@@ -109,7 +112,7 @@ environment variable kagent owns is an error at `helm template` time.
 | `args` | `[]` | Passed through to `workload.args`. |
 | `runtime.logLevel` | empty | `debug`, `info`, `warn` or `error`; becomes `KAGENT_PIG_LOG_LEVEL`. Empty keeps the level of the compiled configuration. |
 | `runtime.tools` | empty | PiG tools the model may use, as a list; becomes `KAGENT_PIG_TOOLS` (comma list). Empty uses `read,bash,edit,write,grep,find,ls`; `ask_user` is always added. |
-| `runtime.bin` | empty | Path or `PATH` name of the PiG binary (the fused Piglet Binary); becomes `KAGENT_PIG_BIN`. Empty uses `pig` from `PATH`. |
+| `runtime.bin` | empty | Absolute path of the PiG binary (the fused Piglet Binary), not under `/data`; becomes `KAGENT_PIG_BIN`. There is no `PATH` lookup. Empty uses `/usr/local/bin/pig`. A relative name is rejected by the chart schema. |
 | `runtime.contextWindow` | `0` | Model context window in tokens; becomes `KAGENT_PIG_CONTEXT_WINDOW`. kagent compiles no model limits, so `0` leaves the adapter default (128000). PiG compacts its session by this window. A positive integer. |
 | `runtime.maxTokens` | `0` | Maximum output tokens; becomes `KAGENT_PIG_MAX_TOKENS`. `0` leaves the adapter default (8192). A positive integer. |
 | `runtime.passEnv` | `[]` | Names of extra environment variables that `pig` and its tools may inherit; becomes `KAGENT_PIG_PASS_ENV` (comma list). Names must not start with `KAGENT_`. The values come from `env`. `pig` otherwise gets an allowlist of the environment only. |
@@ -150,7 +153,9 @@ With `harness.create: false` the release renders no Harness; its Agent's `harnes
 then). `env`, `args` and `runtime.*` configure the Harness and are refused in such a release, and `command` and
 `substrate.*` are ignored. `image` is still required: `check` reads that Harness in the namespace and fails when it is
 missing or not a `byo` Harness, and warns when its image is not the `image` of the release. The Agent runs what the
-Harness names. Uninstalling the release that created the Harness removes it, so uninstall the Agents' releases first.
+Harness names. Uninstalling the release that created the Harness removes it, so uninstall the Agents' releases first;
+`pig-kagent.sh uninstall` refuses to remove such a release while another Agent still references its Harness, unless you
+pass `--force`.
 Each Agent has its own AgentTemplate and EgressPolicy (`<name>-egress`), so egress grants differ per Agent.
 
 ## Model credentials
@@ -257,6 +262,12 @@ egress:
         secretKeyRef: {name: github-token, key: token}
 ```
 
+The gateway adds the token to any request to `api.github.com` that carries the placeholder header (see the rules below),
+whichever command in the Actor sends it, so the model can use the token's full authority. Give it the least privilege
+the task needs: a fine-grained personal access token limited to the repositories the agent works on, with read-only
+repository permissions (for example Contents: read) and an expiry, rather than a classic token with broad scopes. Add
+write permissions only for an agent that has to push or comment.
+
 Rules, from kagent's egress documentation:
 
 - An origin is a scheme, a DNS name and an optional port (443 for HTTPS, 80 for HTTP). Every path of that origin
@@ -313,6 +324,9 @@ caps `env` at 16.
 
 Removes exactly what the release created. It never touches Secrets, WorkerPools, Substrate, or ModelConfigs and
 Agents that you created yourself. Existing Sessions of the deleted Agent follow kagent's session lifecycle.
+
+The installer prints the kube context, namespace and release before it acts, so a wrong current context is visible; pass
+`--context` to be explicit. See [Several Agents on one Harness](#several-agents-on-one-harness) for the `--force` guard.
 
 ## Troubleshooting by condition
 
