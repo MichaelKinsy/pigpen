@@ -1,0 +1,27 @@
+{
+  "runtime": {
+    "control_plane_url": "http://kagent-controller.kagent:8083",
+    "log_level": "info",
+    "name": "pig-demo",
+    "namespace": "kagent"
+  },
+  "agent": {
+    "name": "pig_demo",
+    "description": "PiG demo agent",
+    "instruction": "You are a careful operations assistant.",
+    "model": {
+      "model": "mock-model",
+      "openai": {"base_url": "http://kagent-mock.kagent:8080/v1"}
+    },
+    "http_tools": [
+      {
+        "params": {
+          "url": "http://kagent-mock.kagent:8081/mcp",
+          "headers": {"Authorization": "Bearer kagent-credential-injected"}
+        },
+        "tools": ["kagent_probe"],
+        "require_approval": true
+      }
+    ]
+  }
+}
