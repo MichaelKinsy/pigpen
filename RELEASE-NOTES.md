@@ -5,7 +5,7 @@ published: signed Piglet Binaries for 14 Piglets are GitHub Releases (`a2a`, `ac
 `pig-extension-porter`, `pig-games`, `pig-music`, `pig-popular`, `pig-porter`, `pig-typesafe`, `pig-warden`, `pig-with-batteries` and
 `pig-tern`; eleven were first released as 0.1.0 on 2026-10-05, including `pig-extension-porter/v0.1.0` and `pig-porter/v0.1.0`;
 the latest are 0.1.1 for twelve of them (`pig-extension-porter/v0.1.1` and `pig-porter/v0.1.1` among them),
-`pig-with-batteries/v0.1.2` and `pig-tern/v0.1.0`), and all 40 Packages and 21 Piglet sources are on npm
+`pig-with-batteries/v0.1.2` and `pig-tern/v0.1.0`), and all 41 Packages and 21 Piglet sources are on npm
 (`@pi-in-go/pigpen-<name>`, `@pi-in-go/pigpen-piglet-<name>`; checked against the registry on 2026-11-06). The sections below are
 unchanged records of what was run for the candidate: they predate those releases and the move to PiG 0.7.0, so read their "not
 published" and "Not verified" statements as of that run. This file states

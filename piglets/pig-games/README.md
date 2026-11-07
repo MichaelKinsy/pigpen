@@ -44,7 +44,7 @@ PIG_SOURCE_ROOT=/path/to/pig-git-checkout \
 ```
 
 The Binary fuses both extensions (`extensionRealization: fused`). Linux/amd64 is the
-development default; no release is published and no support is claimed.
+development default for the local runs; signed Binaries are published as GitHub Release `pig-games/v0.1.1` (the latest), and no support is claimed.
 
 ## Credits
 

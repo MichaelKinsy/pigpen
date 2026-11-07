@@ -33,5 +33,5 @@ PIG_SOURCE_ROOT=/path/to/pig-git-checkout \
   pig piglet build dist/staged/piglets/pig-music/piglet.yaml --format binary --targets <os>/<arch> --out ./pig-music
 ```
 
-The Binary fuses the extension (`extensionRealization: fused`). Linux/amd64 is the development default; no release is
-published and no support is claimed.
+The Binary fuses the extension (`extensionRealization: fused`). Linux/amd64 is the development default for the local runs; signed Binaries are
+published as GitHub Release `pig-music/v0.1.1` (the latest), and no support is claimed.

@@ -25,7 +25,10 @@ const validMetadata = ajv.compile({ type: 'object', additionalProperties: false,
     notes: { type: 'array', items: { type: 'string', minLength: 1 } },
   } });
 
-const PLANNED_NOTE = 'Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.';
+// `planned` means only that no verified release receipt is committed under releases/piglets/ for this Piglet. A signed Binary can
+// already be on GitHub Releases without one (receipts are recorded by the owner, `npm run record`), so the note must not say
+// that nothing is published: it says what the index does not know and where to look.
+const PLANNED_NOTE = 'Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.';
 
 export function readManifests(directory = root) {
   return readdirSync(join(directory, 'piglets'), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name, 'en')).map(dir => {

@@ -76,9 +76,8 @@ PiG; nothing is mocked.
 
 ## Status
 
-Source only. No Piglet Binary release and no supported platform. The manifest lists
-`linux/amd64`, `linux/arm64`, `darwin/arm64`, `darwin/amd64` and `windows/amd64`, but only
-`linux/amd64` has been built and run; the other four are compile-checked only. The version
-is a development default. Original composition:
+Signed Binaries are published as GitHub Release `pig-extension-porter/v0.1.1` (the latest); no platform is a support claim. The manifest lists
+`linux/amd64`, `linux/arm64`, `darwin/arm64`, `darwin/amd64` and `windows/amd64`; the release workflow builds each natively,
+and the local runs in this repository are `linux/amd64` only. Original composition:
 [MIT](../../LICENSE); the Skill's provenance is in its
 [Package](../../components/extension-port/CREDITS.md).

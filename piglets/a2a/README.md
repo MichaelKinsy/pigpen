@@ -8,7 +8,7 @@ tasks to A2A agents such as [kagent](https://github.com/kagent-dev/kagent). Ever
 refuses to start without authentication tokens (or `insecureNoAuth` on a loopback address). Configuration, authentication, tenant
 boundaries and cancellation are documented in the [Package README](../../components/a2a/README.md).
 
-**Source only, not a published release.** Try it from the checkout:
+**Signed Binaries are published** as GitHub Release `a2a/v0.1.1` (the latest): `pig piglet pull 'github:MichaelKinsy/pigpen/a2a@0.1.1'` after checking `release-keys/pigpen-piglets.pub`. `index.json` still lists the Piglet as `planned` until its signed receipt is recorded in `releases/`. To build it from source, try it from the checkout:
 
 ```sh
 npm run stage

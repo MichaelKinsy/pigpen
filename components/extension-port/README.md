@@ -42,8 +42,8 @@ Piglet selects this Skill together with the equivalence extension, from a genera
 (`npm run stage`); that does not install the Package into user settings.
 
 The Skill guides an agent. It does not certify a port or run an automatic translator. The
-package keyword `pig-package` lets pi-in-go.dev's Package catalog discover it once published;
-it is `private` until the owner publishes it. No public package or Piglet Binary has been released.
+package keyword `pig-package` lets pi-in-go.dev's Package catalog discover it;
+it is published on npm as `@pi-in-go/pigpen-extension-port`, and the `pig-extension-porter` and `pig-porter` Piglets that select it have signed Binaries on GitHub Releases.
 
 ## License and credits
 

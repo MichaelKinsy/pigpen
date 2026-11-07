@@ -13,7 +13,7 @@ command; the tools do nothing until a remote is configured.
 pig install ./components/a2a          # builds from source on first use (Go toolchain), or fuses into a Piglet Binary
 ```
 
-Original work (MIT) on a dependency (Apache-2.0). Go only, public PiG SDK, no Node. Not a published release.
+Original work (MIT) on a dependency (Apache-2.0). Go only, public PiG SDK, no Node. Published as the Package `a2a` (npm `@pi-in-go/pigpen-a2a`) and in the `a2a` Piglet, whose signed Binary is GitHub Release `a2a/v0.1.1`.
 
 ## Serve PiG tasks
 

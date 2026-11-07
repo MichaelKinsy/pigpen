@@ -1,7 +1,7 @@
 # pig-with-batteries
 
 The batteries-included composition combines default PiG with curated extensions.
-**Source only, not a finished composition or published release.** Today it selects
+**Not a finished composition.** Signed Binaries of what it selects today are published (GitHub Release `pig-with-batteries/v0.1.2`, the latest; `pig piglet pull 'github:MichaelKinsy/pigpen/pig-with-batteries@0.1.2'` after checking `release-keys/pigpen-piglets.pub`). Today it selects
 these batteries, all explicit (nothing starts or sends anything by itself):
 the [herdr reporter](../../components/herdr/README.md), which reports PiG's `idle`,
 `working` and `blocked` state to herdr and does nothing outside a herdr pane; two pig
@@ -27,9 +27,8 @@ authentication tokens); and the [`websearch`](../../components/websearch/README.
   manifest schema (status, featured flag, review date, languages, caveats).
 - `extensions/`, `skills/`, `prompts/`: owned resource source directories.
 
-Keep `status: planned` until curation, validation, source distribution and signed
-releases work. `release.version: 0.1.1` reserves a development version; it does
-not assert that a release exists. The index generator deliberately does not
+`release.version` is the version released as `pig-with-batteries/v0.1.2`. `index.json` lists the Piglet as
+`planned` until its signed receipt is recorded in `releases/`. The index generator deliberately does not
 turn build targets into supported binary platforms.
 
 Local inspection after building a compatible PiG:
@@ -75,7 +74,7 @@ dist/staged/piglets/pig-with-batteries/piglet.yaml --format binary --out <path>`
 builds a Binary with the reviewed PiG (set `PIG_SOURCE_ROOT` to a git checkout of
 it). `seed-check` is no longer what lets the build succeed; it is kept only so the
 composition still has a second, empty Go member until the owner decides to drop it.
-See the root [release blockers](../../RELEASE-BLOCKERS.md) before publication.
+The root [release blockers](../../RELEASE-BLOCKERS.md) record what blocked the first release.
 
 Pig Snake fuses like the others: its Package is pure Go and the composition builds a Piglet Binary
 with PiG 0.4.0 (evidence in

@@ -2,7 +2,7 @@
 
 PiG as an agent for editors that speak the [Agent Client Protocol](https://agentclientprotocol.com) (ACP), such as [Zed](https://zed.dev). A Go port of [pi-acp](https://github.com/svkozak/pi-acp) by Sergii Kozak (MIT). See the Package [`components/acp`](../../components/acp/README.md) for the protocol coverage, the limits and the evidence.
 
-**Source only, not a published release.** No Piglet Binary is published and no remote install command exists yet.
+**Signed Binaries are published** as GitHub Release `acp/v0.1.1` (the latest): `pig piglet pull 'github:MichaelKinsy/pigpen/acp@0.1.1'` after checking `release-keys/pigpen-piglets.pub`. `index.json` still lists the Piglet as `planned` until its signed receipt is recorded in `releases/`.
 
 This Piglet selects the Go extension of the Package: `/acp` prints how to point an editor at the running agent. The ACP entrypoint itself is the companion executable `pig-acp`. ACP is JSON-RPC on stdio, and a fused extension must not write protocol bytes to the host's stdout, so the editor starts `pig-acp`, which starts this agent in RPC mode. There is no one-command Binary yet: see [`RELEASE-BLOCKERS.md`](../../RELEASE-BLOCKERS.md).
 

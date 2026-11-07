@@ -23,11 +23,11 @@
       "manifestSha256": "8bc90d7b18117d25b956d9d36802ec051bdcdbfa007ae8f0c8d39cb4c612c673",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "The A2A listener is off unless a2a.json, PIG_A2A_LISTEN or --a2a-listen configures it, and it refuses to start without authentication tokens.",
         "The extension is Go and fuses into the Piglet Binary; it depends on the upstream a2a-go v2.6.0 (Apache-2.0).",
         "Also selected by pig-with-batteries; the listener is off there too until configured.",
-        "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+        "Signed Binaries for the five manifest targets are published as GitHub Release a2a/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/a2a@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -51,11 +51,11 @@
       "manifestSha256": "0669e53488cccbdedc0ca69a833b028b6d1a8d5687c24b9e9b95ebd3ce1239f4",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. Lets an editor that speaks the Agent Client Protocol (Zed and others) drive a PiG agent: the Package components/acp is a Go port of pi-acp (Sergii Kozak, MIT).",
         "The Piglet Binary does not speak ACP by itself. ACP is JSON-RPC on stdio and a fused extension must not write protocol bytes to the host's stdout, so the entrypoint is the companion executable pig-acp, started by the editor with --pig pointing at this agent. Proven with a built Piglet Binary as the --pig target of pig-acp (11 end-to-end scenarios and the ACP reference client); there is no one-command Binary yet.",
         "Advertised and implemented: initialize, session/new, session/load, session/list, session/delete, session/prompt with streaming text, thoughts, tool calls, diffs and terminal output, session/cancel, model and thinking-level selection, context usage, permission requests for extension select and confirm dialogs. Not supported, by design: file system and terminal delegation, MCP servers passed by the editor, extension slash commands, input and editor dialogs.",
-        "No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+        "Signed Binaries for the five manifest targets are published as GitHub Release acp/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/acp@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -79,7 +79,7 @@
       "manifestSha256": "f8bb26937e3b8e35441580e46153de0a40da6ee7fa1de3fc7b234f50258a8b0e",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena: the aot runtime slot is the only member (the pig-pi-bolt arm without its TypeScript ext10 sources, which are not in Pigpen yet). Go only. Experimental: it downloads a pinned Pi-Bolt compiler on first use and checks its signature. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
       ]
     },
@@ -104,7 +104,7 @@
       "manifestSha256": "5625b7a5b21f6c8d602c7228d86dd2bf19bfbba03aab900a85481f7bf81b8b76",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena: the Bun runtime slot is the only member. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check). A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
       ]
     },
@@ -129,7 +129,7 @@
       "manifestSha256": "33c0e7a817071e5b3ee18cf0b2e04a8963ab78e80691cfd52f581bd871538cc0",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena: the ten bench-ext extensions as Go factories fused into one Binary. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG's ext-matrix branch at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check)."
       ]
     },
@@ -155,7 +155,7 @@
       "manifestSha256": "a6abada3ed44265ff8a973da4ba816906b083f08ca5b5ba7f026e50beae24128",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena (the aot arm): the ten bench-ext TypeScript extensions are embedded in the Binary and the aot runtime (Go, fused) compiles them into a slot image at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked) and runs the image from the next start. Run with PIG_TS_RUNTIME=aot. The image is not part of the Binary. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
       ]
     },
@@ -181,7 +181,7 @@
       "manifestSha256": "896376c791f17742c731dcecb583a17b4cb74a76756ac6962b901439c95ba2d1",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena (the split arm): bench-ext-01..05 are Go factories fused into the Binary, bench-ext-06..10 are the TypeScript originals embedded in it and compiled by the aot runtime at first start (Pi-Bolt 0.7.4, downloaded on first use and signature-checked). Run with PIG_TS_RUNTIME=aot. Experimental. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version."
       ]
     },
@@ -204,7 +204,7 @@
       "manifestSha256": "6d64deaf8dbac6ad2480f01c9dd0dcbcb7c06bfe0340dfd6d3527d21f70e356a",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Measurement Piglet for pi-arena: the footprint of a PiG that keeps no built-in extension, extra model API or feature (strip keep mode with empty lists; the tools and slash commands stay). Derived from pi-arena's fixtures/piglets/pig-min.yaml, same owner, MIT. It cannot load extensions; see the README.",
         "Pin it by Pigpen commit (the manifest has a fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
       ]
@@ -230,7 +230,7 @@
       "manifestSha256": "8aad76fad58bfe1e293f8d40c72c963abd53accde33aafc8a7ed8abb93811aec",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Bench Piglet for pi-arena: the two pig games and the Bun runtime slot, the members of PiG Standard that are not built into the core since 0.4.0. Go only. Pin it by Pigpen commit (fixed release.version) until PiG 0.5.0 ships, then by its pi-in-go.dev version. Its Go sources are copied from PiG at the revision in bench/sync-spec.json (node scripts/sync-bench-piglets.mjs --check). A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a PiG checkout; only linux/amd64 has been built and run."
       ]
     },
@@ -255,12 +255,12 @@
       "manifestSha256": "c25d9e1883a3cbd5d4e6646f3a6a18245d11b42adea9bcb7dcc10af2a56f8334",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Optional: the reporter is the standalone extension Package components/herdr, which works on its own in plain PiG without this Piglet.",
         "The extension does nothing unless PiG runs inside a herdr pane (HERDR_ENV=1 with HERDR_PANE_ID and HERDR_SOCKET_PATH set), as herdr-pig's does. It talks to herdr's socket as herdr-pig does (source pig); the herdr binary need not be on PATH.",
         "With herdr 0.9.2 or later it also reports the resume command `pig --session <session file>` (or the session id), so herdr restores the pig session in its pane after a server restart. The restore runs plain `pig` (no Piglet or launch flags). Older herdr keeps the state reports and the release; it ignores the resume command.",
         "It is a Go extension on PiG's public SDK: building the Piglet needs a Go toolchain, not Node.js. It also honors the herdr:blocked event on pi.events, through the Go SDK's bridge, as herdr-pig does. Setting PIGPEN_HERDR_UI_PROMPTS=1 also reports `blocked` while a PiG dialog is open (off by default: Pi has no such event and herdr-pig never reports one).",
-        "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim.",
+        "A local Piglet Binary builds with the reviewed PiG and reports to a fake herdr. Signed Binaries for the five manifest targets are published as GitHub Release herdr/v0.1.1 (the manifest is at 0.2.0, not yet released as a Binary; built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/herdr@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim.",
         "Ported from herdr-pig (https://github.com/Hai-Fai-Solutions/herdr-pig) by Christian Polzer and Hai-Fai Solutions, Apache-2.0: the reporter's behavior, proven against the unmodified original (components/herdr/port/PORT.md), and the herdr plugin in herdr-plugin/ (herdr plugin install MichaelKinsy/pigpen/piglets/herdr/herdr-plugin). Their LICENSE and NOTICE ship beside that code.",
         "In Herdr Desktop (the Herdr app with herdr-core) PiG reports its status itself (OSC 7501) and the reporter stays inactive; the Package's pigpen-herdr-desktop Skill teaches PiG to drive Herdr Desktop with hc and herdr-app."
       ]
@@ -286,12 +286,12 @@
       "manifestSha256": "8094bf7f3617eda47e2479b504dea39450ab445cb3965f4f72ce813110513747",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Optional: the judge is the standalone extension Package components/jev, which works on its own in plain PiG without this Piglet.",
         "Off by default. Nothing is judged and nothing is sent until you run /jev on (which shows what leaves the machine and where) or set \"enabled\": true in your own pi-jev.json. A key in the environment or a file in a repository never turns it on.",
         "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
         "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
-        "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+        "Signed Binaries for the five manifest targets are published as GitHub Release jev/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/jev@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -315,9 +315,9 @@
       "manifestSha256": "6abbd5539e0262b98512f893b010ff458cd2bf0ddead3b22669a5c8991a8c3dd",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only, no Node. Members: the rpiv-web-tools search and fetch tools (juicesharp, MIT), @tintinweb/pi-subagents (tintinweb, MIT, partial: see its PORT.md), @tintinweb/pi-tasks (tintinweb, MIT), rpiv-ask-user-question (juicesharp, MIT, partial), ponytail (Dietrich Gebert, MIT) and the fifteen Superpowers skills (Jesse Vincent, MIT). Each port keeps the original, the recorded Pi traces and its mutation list under components/<name>/port. Run npm run stage before using its generated manifest under dist/staged.",
-        "No release is published; version 0.1.0 is a development default. Nothing starts at start-up: no network call, no process."
+        "Signed Binaries are published as GitHub Release pig-essentials/v0.1.1. Nothing starts at start-up: no network call, no process."
       ]
     },
     {
@@ -341,10 +341,10 @@
       "manifestSha256": "76a821ea6d256b6b7d87a06e759ee2d55b17ffbb0d1dc40f2fdd336a6abec4f0",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. The focused porter for Pi TypeScript extensions: the strict porting Skill plus the equivalence harness as a fused Go extension. Run npm run stage before using its generated manifest under dist/staged.",
         "Most users who port extensions want this Piglet rather than pig-porter, which extends it. Its Packages (extension-port, extension-equivalence) also install on their own with pig install.",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-extension-porter/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-extension-porter@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -368,10 +368,10 @@
       "manifestSha256": "353acded82bc767038d885064eaca7ad2636d032d69ac243332b280be97dc933",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. Two pixel-art games, PiG Runner (/runner, /pig-runner) and Angry Pigs (/angry-pigs), moved from PiG Standard (Michael Kinsy, MIT). They draw the pig chosen with PiG's built-in /sprite (PiG 0.4.0 and later), so the Piglet bundles no login of its own. Run npm run stage before using its generated manifest under dist/staged.",
         "Nothing starts by itself. The games register only their commands and no event handler (PIG_GAMES_MCP=1 adds a session_start handler for the opt-in agent server; /runner mcp on and /angry-pigs mcp on serve a game to an agent on 127.0.0.1 behind a random token, off by default). Both Packages (pig-runner, angry-pigs) also install on their own from a Pigpen checkout; each needs the pig-play sprite library beside it (../pig-play).",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-games/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-games@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -395,10 +395,10 @@
       "manifestSha256": "7ead662354086703c895b9f1513667a2f70ea57ae1685680f30f17fc8f42145d",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. A full-screen music player: /music (or alt+m) opens YouTube Music search, library, queue and transport over mpv, with yt-dlp resolving tracks; the music keeps playing while the player is hidden and survives /reload. The extension is the Package components/pig-music. Run npm run stage before using its generated manifest under dist/staged.",
         "Nothing starts by itself. The extension registers the /music command and the alt+m shortcut and no tool: no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer before you type /music. The library reads your browser's cookies only after you say yes, once per browser. mpv and yt-dlp are not bundled: /music setup and /music doctor check the machine.",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; none is a support claim.",
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-music/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-music@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim.",
         "Also selected by pig-with-batteries."
       ]
     },
@@ -423,9 +423,9 @@
       "manifestSha256": "b16cb71e65a098dea45f67edf4cf7fdda337757f68e84a7fe7bde3f86046d25a",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. Go ports of popular Pi extensions, made with the extension porting Skill: today rpiv-todo and rpiv-ask-user-question (juicesharp, MIT), powerline-footer (Nico Bailon, MIT as declared in its package.json), pi-goal-x (tmonk, \"Copyright (c) 2026 Lucas\", MIT), pi-permission-system (MasuRii and Christopher D. Lasher, MIT) and pi-subagents (Nico Bailon, MIT); rpiv-ask-user-question, powerline-footer, pi-goal-x, pi-permission-system and pi-subagents are partial ports (see each PORT.md). Each port keeps the original, the recorded Pi traces and its mutation list under components/<name>/port. Run npm run stage before using its generated manifest under dist/staged.",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default; only linux/amd64 has been built and run, and the other targets are listed in the manifest and not compile-checked."
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-popular/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-popular@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -449,10 +449,10 @@
       "manifestSha256": "e578f2b5c538845234b9fdc21281e0f8305fafa8c61872337b18385c2ef90015",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. The umbrella porter: it extends pig-extension-porter (PiG's extends), so it carries the same porting Skill and Go equivalence extension without a copy. Run npm run stage before using its generated manifest under dist/staged.",
-        "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. No public release or Piglet Binary is available.",
-        "pig piglet add cannot copy an extends closure, so it is not installable remotely today. See RELEASE-BLOCKERS.md."
+        "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. Signed Binaries are published as GitHub Release pig-porter/v0.1.1 (the latest).",
+        "pig piglet add cannot copy an extends closure, so its source is not addable remotely; pull the signed Binary instead (pig piglet pull github:MichaelKinsy/pigpen/pig-porter@0.1.1). See RELEASE-BLOCKERS.md."
       ]
     },
     {
@@ -476,13 +476,13 @@
       "manifestSha256": "890556634f1072cd34d91ff671893116a217645532e63d41322eb614bf24177d",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Needs a PiG with Piglet frontend members (D91) and the component kit (D103), which first ship in PiG 0.5.0. Pigpen builds it on PiG 0.7.0, and the member requires SDK v0.7.0. PiG 0.4.1 rejects slots.frontend.",
         "The frontend member draws only when PiG runs directly in a Tern pane (TERM_PROGRAM=tern) with no multiplexer between them (TMUX, STY, ZELLIJ and HERDR_ENV unset). Anywhere else, with PIG_TUI_NATIVE=0 or TERN_TSP=0, or when Tern does not answer the surface protocol hello within a second, PiG draws with its own ANSI renderer.",
         "Native today: user and assistant messages as Markdown, thinking, tool cards (with cancelled status and edit diffs), the working indicator as a Tern spinner, the footer as a Tern status strip, selectors such as /model and /resume as picker sheets, /settings as a prefs sheet, overlays as cards, and the input editor, which takes Tern's edit, undo and send events, so Tern agent blocks and Carly can prompt it. It reports working and idle to Tern with OSC 9;4 terminal progress and names the session file in a hidden pig.session node. Extension components drawn with PiG's component kit (D103), such as pig-music's, become Tern elements, and clicks on them reach the extension as PiG's terminal clicks with the view path, list item and click count. A view's theme overrides are corrected for contrast on Tern's light and dark surfaces. PiG's theme goes to Tern as the program palette and follows Tern's appearance; PiG's mark draws in the settings brand tile; the fullscreen easter eggs play on a Tern screen surface; the footer folder opens in Tern's Files pane; an external editor gets the pane and the surface comes back after. Widgets drawn as raw lines and other extension output still appear as plain lines inside the native surface.",
         "The member uses PiG's component kit and extension mouse delivery (D103), which are in PiG's SDK from 0.5.0 on. A frontend member is fused into a Piglet Binary, so a build needs PiG's source (PIG_SOURCE_ROOT) as for any Piglet with a frontend slot.",
         "It is a Go frontend member on PiG's public SDK and Stencil's Go SDK for Tern (github.com/stencil-hq/tern-sdk/go/tern v0.1.0, MIT): building the Piglet needs a Go toolchain, not Node.js, and network access to the Go module proxy or a warm Go module cache for tern-sdk.",
-        "A local Piglet Binary builds and runs in Tern on darwin/arm64, but none is signed or published. The other targets are listed in the manifest and compile-checked only, so no platform is a support claim."
+        "A local Piglet Binary builds and runs in Tern on darwin/arm64. Signed Binaries for the manifest targets are published as GitHub Release pig-tern/v0.1.0 (pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-tern@0.1.0); no platform is a support claim."
       ]
     },
     {
@@ -506,10 +506,10 @@
       "manifestSha256": "ec7b30d84d4a3c39a52334e4ec5218297d639040626729d2584bee584a40ab09",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. Selects the pi-typesafe Package: the typesafe_evaluate tool and the /typesafe command, off until the operator enables them. Run npm run stage before using its generated manifest under dist/staged.",
         "Content submitted goes to api.typesafe.ai unless the own-model backend is selected, which sends it to the provider of the model PiG is configured with. The Piglet says which in its consent dialog.",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-typesafe/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-typesafe@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -533,10 +533,10 @@
       "manifestSha256": "8c58945526bb7d7101b53d686a5164d822c89e28f959c3e957d0f4b4e2f66777",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Go only. Warden, a Go port of DevMortimer's pi-warden (Ryan Gapac, MIT): irreversible tool calls held before they run, off-task calls flagged, stuck loops and unverified done claims called out. Run npm run stage before using its generated manifest under dist/staged.",
         "Opt-in: it does nothing until /warden enable, which shows what would leave the machine and asks which judge to use: TypeSafe Jev, your own session model, or offline patterns only. The warden Package also installs on its own with pig install and shares the typesafe client library Package.",
-        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+        "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-warden/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-warden@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
       ]
     },
     {
@@ -557,17 +557,17 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-with-batteries"
       },
-      "manifestSha256": "240ccbdbeaa10f7bdb3de97f19f886ce229dfc17a80d514e0a0e4b9e2f67845b",
+      "manifestSha256": "2ee89391a7dcbf5e5974faa319714708727d01f330e38af04fe30c4af1fd1947",
       "releases": [],
       "notes": [
-        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Planned in this index: no verified signed release receipt is recorded in releases/ for this Piglet yet, so no install command is listed here. A signed Binary may already be published on GitHub Releases without being recorded; see the repository README (What is published), and check the signing key in release-keys/ before using one. The source composition is in this repository.",
         "Not the finished batteries-included composition. It selects the herdr agent-state reporter (Package components/herdr, Go), PiG Runner and Angry Pigs (Packages pig-runner, angry-pigs, Go, moved from PiG Standard; they draw the pig chosen with PiG's built-in /sprite), the Pig Snake game (Package components/pig-snake, Go, starts only on /pig-snake), the read_session tool (Package components/session-ingest, Go), the /context, /tools, /cost and /prompts commands (Package components/context-info, Go; its footer is opt-in), the pig-doctor /doctor command (Package components/pig-doctor, Go; command only, nothing runs automatically), the a2a Package (Package components/a2a, Go: A2A tools, listener off until configured), the websearch first slice (Package components/websearch, Go: web_search, fetch_content, get_search_content, source_check, web_enable; the rest of pi-web-access is deferred and named in its PORT.md), the pig-music player (Package components/pig-music, Go: /music, alt+m), plus an empty build-pipeline fixture (seed-check, Go). The roadmap is approved; capability ports are pending implementation.",
         "The games start only on their command (/runner, /pig-runner, /angry-pigs, /pig-snake). Bundling is not activating. The sprite login and /sprite are PiG's own (built in since 0.4.0); this Piglet no longer bundles one.",
         "It also selects Jev (components/jev), a typed judge for tool calls and output. Selectable and off by default: nothing is judged or sent until you run /jev on, which shows what leaves the machine and where. It fails open. The standalone jev Piglet and this one both build a Binary locally.",
         "pig-music is a full-screen YouTube Music player. Nothing starts or runs until you type `/music` (or a /music subcommand or alt+m): no mpv or yt-dlp process, no network, no cookie access, no footer or widget and no timer; at startup it only reads its settings and looks for its own mpv socket, and follows an mpv from an earlier session that is already playing (footer only). It needs mpv and yt-dlp with a JS runtime on the machine: /music always plays through mpv (the native engine is used only by the separate pigmusic command). The first /music checks the machine and /music setup offers a consent-gated download of yt-dlp and Deno; the library tab reads a browser's cookies only after a one-time consent per browser.",
         "The herdr reporter does nothing unless PiG runs inside a herdr pane. Every extension in this Piglet is Go, so it needs no Node.js.",
-        "A local Piglet Binary builds with the reviewed PiG, but none is signed or published. The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; the targets and the 0.1.1 version are not a support or release claim.",
-        "Newer PiG builds support subdirectory source add and per-Piglet release tags, but this composition is not published and no installation command is offered yet. See RELEASE-BLOCKERS.md."
+        "A local Piglet Binary builds with the reviewed PiG. Signed Binaries for the five manifest targets are published as GitHub Release pig-with-batteries/v0.1.2 (the latest; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-with-batteries@0.1.2); the local runs in this repository are linux/amd64 only, and the targets are not a support claim.",
+        "Per-Piglet release tags and signed Binary pulls are in use for this composition (pig piglet pull github:MichaelKinsy/pigpen/pig-with-batteries@0.1.2); remote source add is not offered. See RELEASE-BLOCKERS.md, a record of what blocked the first release."
       ]
     },
     {

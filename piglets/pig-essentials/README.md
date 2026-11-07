@@ -16,10 +16,10 @@ needs nothing else to start. **Everything stays quiet until used**: no network c
 
 ## Install
 
-On Linux, macOS and Windows, the signed Binary for the platform (once the release `pig-essentials/v0.1.0` is published):
+On Linux, macOS and Windows, the signed Binary for the platform (GitHub Release `pig-essentials/v0.1.1`, the latest):
 
 ```sh
-pig piglet pull 'github:MichaelKinsy/pigpen/pig-essentials@0.1.0'
+pig piglet pull 'github:MichaelKinsy/pigpen/pig-essentials@0.1.1'
 ```
 
 **Termux (Android).** There is no android Binary yet, so `pig piglet pull` has nothing to install there. Build it on

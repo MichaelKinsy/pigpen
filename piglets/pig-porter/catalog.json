@@ -6,7 +6,7 @@
   ],
   "notes": [
     "Go only. The umbrella porter: it extends pig-extension-porter (PiG's extends), so it carries the same porting Skill and Go equivalence extension without a copy. Run npm run stage before using its generated manifest under dist/staged.",
-    "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. No public release or Piglet Binary is available.",
-    "pig piglet add cannot copy an extends closure, so it is not installable remotely today. See RELEASE-BLOCKERS.md."
+    "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. Signed Binaries are published as GitHub Release pig-porter/v0.1.1 (the latest).",
+    "pig piglet add cannot copy an extends closure, so its source is not addable remotely; pull the signed Binary instead (pig piglet pull github:MichaelKinsy/pigpen/pig-porter@0.1.1). See RELEASE-BLOCKERS.md."
   ]
 }

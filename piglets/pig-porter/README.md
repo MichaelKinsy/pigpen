@@ -38,4 +38,4 @@ commit `dist/`.
 
 ## Status
 
-Source only, no published release. Original composition: [MIT](../../LICENSE).
+Signed Binaries are published as GitHub Release `pig-porter/v0.1.1` (the latest). Original composition: [MIT](../../LICENSE).

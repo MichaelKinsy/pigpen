@@ -143,7 +143,7 @@ ports and the rest of the battery composition are not complete.
 pinned in `release-keys/`; signed Piglet Binaries for linux/amd64, linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64
 are GitHub Releases `<name>/v<version>`: `a2a`, `acp`, `herdr`, `jev`, `pig-essentials`, `pig-extension-porter`, `pig-games`,
 `pig-music`, `pig-popular`, `pig-porter`, `pig-typesafe` and `pig-warden` at 0.1.1, `pig-with-batteries` at 0.1.2 and `pig-tern`
-at 0.1.0 (eleven of them were first released as 0.1.0 on 2026-10-05). All 40 Packages (at the version in the repository) and all 21 Piglet
+at 0.1.0 (eleven of them were first released as 0.1.0 on 2026-10-05). All 41 Packages (at the version in the repository) and all 21 Piglet
 sources are on npm; Package Git tags exist for the 29 Packages recorded in `releases/packages/`. The bench
 Piglets are not released as Binaries. What is not done: the batteries-included composition is not complete, and `releases/` holds
 no verified Piglet receipt, so `index.json` still lists every Piglet as `planned`. The release path (workflows, tag scheme and the
@@ -310,7 +310,7 @@ piglets/
     skills/                         owned source, initially empty
     prompts/                        owned source, initially empty
     README.md
-  acp/                              PiG for ACP editors (selects components/acp; source only)
+  acp/                              PiG for ACP editors (selects components/acp; signed Binary `acp/v0.1.1`)
   herdr/                            PiG plus the herdr agent-state reporter
     piglet.yaml, catalog.json, README.md, tests/   (tests/ runs real pig: npm run test:pig)
   pig-tern/                         coming soon: PiG as Tern's agent (not in this repository yet)

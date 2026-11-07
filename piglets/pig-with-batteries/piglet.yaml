@@ -1,5 +1,5 @@
 # Pigpen composition input. Run npm run stage before selecting it in PiG.
-# Not a published batteries-included composition yet. Batteries stay explicit: a reporter that is
+# Not the finished batteries-included composition (signed Binaries of the current composition are published). Batteries stay explicit: a reporter that is
 # silent outside herdr, a tool the model calls on demand, slash commands that answer only when typed,
 # games and a snake that start only on their command, the pig-doctor command, jev, an A2A Package whose
 # listener is off until configured, the websearch first slice, and the /music player (nothing until /music). Add further resources only after owner review.

@@ -5,6 +5,6 @@
   "notes": [
     "Go only. Selects the pi-typesafe Package: the typesafe_evaluate tool and the /typesafe command, off until the operator enables them. Run npm run stage before using its generated manifest under dist/staged.",
     "Content submitted goes to api.typesafe.ai unless the own-model backend is selected, which sends it to the provider of the model PiG is configured with. The Piglet says which in its consent dialog.",
-    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. No release is published; version 0.1.0 is a development default and only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only; neither is a support claim."
+    "A Piglet Binary builds locally from the staged manifest with PIG_SOURCE_ROOT set to a git checkout of the PiG source. Signed Binaries for the five manifest targets are published as GitHub Release pig-typesafe/v0.1.1 (built natively by the release workflow; pull one with pig piglet pull github:MichaelKinsy/pigpen/pig-typesafe@0.1.1); the local runs in this repository are linux/amd64 only, and no platform is a support claim."
   ]
 }
