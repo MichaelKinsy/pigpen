@@ -1,0 +1,8 @@
+{
+  "id": "pig-provider",
+  "name": "PiG",
+  "description": "Adds PiG, a faithful Go implementation of Pi, to Paseo as a coding agent provider through pig-acp.",
+  "requirements": {
+    "paseo": ">=0.11.0"
+  }
+}
