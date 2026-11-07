@@ -40,6 +40,18 @@ Zed, `settings.json` (`/acp` prints this with your paths filled in):
 }
 ```
 
+Prebuilt executables are attached to the GitHub Release `components/acp/v<version>` of this repository (`pig-acp-<version>-<os>-<arch>.tar.gz`,
+`.zip` on Windows; linux, darwin and windows on amd64 and arm64, and android/arm64 for Termux), with `SHA256SUMS`, its Ed25519 signature
+`SHA256SUMS.sig` by the Pigpen release key (`release-keys/pigpen-piglets.pub`) and a Sigstore provenance bundle per archive:
+
+```sh
+gh release download components/acp/v0.2.2 --repo MichaelKinsy/pigpen -p 'pig-acp-0.2.2-linux-amd64.tar.gz*' -p SHA256SUMS -p SHA256SUMS.sig
+openssl pkeyutl -verify -rawin -pubin -inkey release-keys/pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
+sha256sum -c --ignore-missing SHA256SUMS
+gh attestation verify pig-acp-0.2.2-linux-amd64.tar.gz --repo MichaelKinsy/pigpen --bundle pig-acp-0.2.2-linux-amd64.tar.gz.sigstore.json \
+  --signer-workflow MichaelKinsy/pigpen/.github/workflows/release-pig-acp.yml
+```
+
 Other ACP clients run `pig-acp --pig <pig>` and speak newline-delimited JSON-RPC on stdio. `--pig` also takes a built Piglet
 Binary (`--pig ./acp`). A relative `--pig` with a path separator resolves against the directory of the `pig-acp` executable, not
 the project directory the agent runs in; an absolute path is used as is, and a bare name is looked up on `PATH`. `--piglet <name-or-file>` starts pig with `--piglet ...`, and `--pig-arg <arg>` (repeatable) passes any
@@ -47,7 +59,9 @@ other argument. Without `--pig`, `PIG_ACP_PIG_COMMAND` (or `PI_ACP_PI_COMMAND`) 
 both needs no `--pig`.
 
 Signing in: if pig has no model or key, `session/new` fails with the ACP "authentication required" error (-32000) and one
-terminal auth method, `pig-acp --terminal-login`, which starts pig interactively in the editor's terminal.
+terminal auth method, `pig-acp --terminal-login`, which starts pig interactively in the editor's terminal. The method is advertised
+only to a client that can run it (`clientCapabilities.auth.terminal`, or Zed's older `_meta["terminal-auth"]`); a client that
+advertised neither sees no auth method, and gets an ordinary error telling it to sign in with pig itself (`/login`).
 
 | Flag or variable | Meaning |
 |---|---|
