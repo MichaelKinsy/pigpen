@@ -141,10 +141,15 @@ function sharesPackedDirectory(rel, packed) {
   return packed.some((file) => file.startsWith(directory));
 }
 
-/** What a packed list lacks that a Go extension or the docs need: go.mod and go.sum anywhere, the root documents, every Resource file. */
+/**
+ * What a packed list lacks that a Go extension or the docs need: go.mod and go.sum in every directory the Package ships, and in
+ * every directory a packed go.work `use`s inside the Package (a module the Package builds with is shipped even when `files` names
+ * none of its other files), the root documents, every Resource file.
+ */
 export function packedProblems(tree, packed) {
   const have = new Set(packed);
   const problems = [];
+  const used = [];
   const walk = (path) => {
     for (const entry of readdirSync(path, { withFileTypes: true })) {
       if (['node_modules', '.git', 'port'].includes(entry.name)) continue;
@@ -152,9 +157,18 @@ export function packedProblems(tree, packed) {
       const rel = relative(tree, full).split(sep).join('/');
       if (entry.isDirectory()) walk(full);
       else if (/(^|\/)(go\.mod|go\.sum)$/.test(rel) && !have.has(rel) && sharesPackedDirectory(rel, packed)) problems.push(`${rel} is not packed`);
+      else if (entry.name === 'go.work' && have.has(rel)) for (const dir of useEntries(readFileSync(full, 'utf8'))) used.push(relative(tree, resolve(path, dir)).split(sep).join('/'));
     }
   };
   walk(tree);
+  // A module outside the Package (a shared library, `../../../pigpen-<lib>`) is that Package's to ship.
+  for (const dir of used) {
+    if (dir === '..' || dir.startsWith('../')) continue;
+    for (const name of ['go.mod', 'go.sum']) {
+      const rel = dir ? `${dir}/${name}` : name;
+      if (existsSync(join(tree, rel)) && !have.has(rel)) problems.push(`${rel} is not packed`);
+    }
+  }
   for (const name of readdirSync(tree)) if (ROOT_FILES.test(name) && !have.has(name)) problems.push(`${name} is not packed`);
   const manifest = JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8'));
   for (const entries of [manifest.pi, manifest.pig]) for (const list of Object.values(entries ?? {})) {
@@ -167,7 +181,7 @@ export function packedProblems(tree, packed) {
       for (const file of files) { const rel = relative(tree, file).split(sep).join('/'); if (!have.has(rel)) problems.push(`${rel} is not packed`); }
     }
   }
-  return problems;
+  return [...new Set(problems)];
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
