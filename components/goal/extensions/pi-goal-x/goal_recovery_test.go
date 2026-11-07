@@ -93,6 +93,10 @@ func TestGoalRecovery(t *testing.T) {
 		ctx := recoveryTempCtx(t)
 		recoveryWriteGoal(ctx)
 		recoveryWriteStaleLock(ctx, "g1.lock")
+		// The repair makes the backup directory inside the goals directory, which changes its mtime, and the snapshot is
+		// served again while that mtime is the one it recorded. Record an old one, so the repair's mkdir always differs from
+		// it: with the current time the kernel's timestamp tick (a few ms) can be longer than this whole test.
+		must(0, os.Chtimes(filepath.Join(ctx.cwd, goalsDir), time.Now().Add(-time.Minute), time.Now().Add(-time.Minute)))
 		// Orphaned snapshot entry.
 		ctx.readActiveGoalPool() // cold read writes the pool snapshot
 		snapshotPath := filepath.Join(ctx.cwd, ".pi", ".goals-pool-snapshot.json")
