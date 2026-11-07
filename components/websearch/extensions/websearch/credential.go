@@ -15,6 +15,7 @@ import (
 
 const (
 	credentialCommandTimeout = 5 * time.Second
+	credentialWaitDelay      = 500 * time.Millisecond
 	maxCredentialBytes       = 16384
 )
 
@@ -246,7 +247,15 @@ func defaultRunCommand(ctx context.Context, command string, o CredentialCommandO
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &limitWriter{buf: &out, limit: o.MaxOutputBytes + 1}
 	cmd.Stderr = &stderr
+	// Without these a command that leaves a child holding its stdout (a pipeline, a background
+	// agent such as gpg-agent) blocks Run past the deadline for as long as that child lives:
+	// the deadline kills only the shell. The original's exec returns at its timeout.
+	killWithChildren(cmd)
+	cmd.WaitDelay = credentialWaitDelay
 	err := cmd.Run()
+	if errors.Is(err, exec.ErrWaitDelay) {
+		err = nil // the command succeeded; only a leftover child kept the pipe open
+	}
 	if out.Len() > o.MaxOutputBytes {
 		return "", &CommandError{Code: "ERR_CHILD_PROCESS_STDIO_MAXBUFFER", Message: "stdout maxBuffer length exceeded"}
 	}

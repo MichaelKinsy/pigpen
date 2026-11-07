@@ -51,6 +51,10 @@ schema.go, render.go, command.go, extension.go - `tool-activation.ts` tool_enabl
   not byte-identical (named gap in the fetch twins). RSC and Defuddle fallbacks return nothing.
 - **Provider timeouts** are classified as network errors, so `searchRouting` can fall through; the original treats
   them as aborts. Caller cancellation is still an abort and never falls through.
+- **Credential commands** (`!command` sources) run under the original's 5 s timeout, and the port also kills the command's whole
+  process group (Unix) and stops waiting for its output pipe half a second after the shell exits or is killed. A child the
+  command leaves running (a pipeline, `gpg-agent`) used to block the search until that child ended, with no timeout; Node's `exec`
+  returns at its timeout. A command that succeeds and leaves a background child is accepted, which `exec` does only at its timeout.
 - **SSRF hardening beyond the original**: the address is checked again when the connection is made (a name that changes
   between validation and connect cannot reach an internal address); IPv6 multicast, NAT64 and 6to4-embedded IPv4 are blocked.
 - **Config directory** is PiG-first (`PIG_CODING_AGENT_DIR`, then `PI_CODING_AGENT_DIR`, XDG `pig`, `$PIG_HOME/agent`), with Pi's
