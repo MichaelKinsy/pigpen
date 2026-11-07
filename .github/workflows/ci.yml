@@ -191,6 +191,10 @@ jobs:
           PIG_HOME: ${{ runner.temp }}/pig-home
           PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
         run: node scripts/platform-smoke.mjs --out dist/bin
+      # The kagent adapter's Windows process-group code (job object, suspended start) runs nowhere else.
+      - name: Test the kagent adapter's process groups
+        if: ${{ runner.os == 'Windows' }}
+        run: go -C components/kagent/harness/adapter test -count=1 ./internal/fsutil
       # Each Binary in a real terminal (tmux), with only system tools on PATH: its main features, a faux turn and a clean /quit.
       - name: Drive every Binary in a terminal
         if: ${{ runner.os == 'Linux' }}

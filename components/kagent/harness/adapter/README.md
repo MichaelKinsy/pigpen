@@ -97,9 +97,13 @@ they are `${KAGENT_PIG_HDR_n}` / `${PROVIDER_KEY}` references, because PiG runs 
 - A pending record that cannot be decoded or validated is moved to `pig-pending.json.corrupt` and reported once as `ErrSessionAbandoned`; the Actor
   takes new work afterwards.
 - The adapter runs in Linux Actors. It also compiles for Windows and macOS so every Pigpen Go module builds for every target a Piglet can be built
-  for. On Windows the child pig is started suspended inside a job object (kill-on-close) in its own process group, `taskkill /T` and the
-  job end its tree, and there is no uid, so the "owned by root or by this user" rule for the pig binary is not checked there (the PATH and
-  data-directory rules are).
+  for. The Windows process code has been compile-checked (`GOOS=windows go vet`) and is run only by the `go test ./internal/fsutil` step of
+  the windows-2025 Platform job (main, merge groups, and pull requests labelled `full-ci`); the adapter's driver tests are unix-only.
+  On Windows the child pig is started suspended inside a job object (kill-on-close) in its own process group. Closing pig's stdin is the
+  graceful stop, as on unix. The middle step is not graceful: CTRL_BREAK reaches pig as SIGINT, which pig v0.7.0 in RPC mode does not
+  handle on Windows, so it ends pig without its shutdown hook, and without a console it does nothing. The forced step terminates the job and
+  waits until it is empty; `taskkill /T` runs only for a child that has no job and has not been waited for, because Windows reuses pids.
+  There is no uid, so the "owned by root or by this user" rule for the pig binary is not checked there (the PATH and data-directory rules are).
 - kagent's own packages link `github.com/ollama/ollama/api` (for kagent's Ollama model client), so the binary carries that module although the adapter
   starts no Ollama server. `govulncheck` reports the init of those packages against eight Ollama server advisories that have no fixed version;
   Pigpen records them in `scripts/govulncheck-accepted.json` with the version they were found at.

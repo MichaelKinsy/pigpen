@@ -54,23 +54,32 @@ func AttachProcessGroup(process *os.Process) error {
 	return nil
 }
 
-// TerminateProcessGroup asks the child's process group to stop with a
-// CTRL_BREAK event, which Go reports as an interrupt. Windows has no SIGTERM:
-// the event reaches the group only when this process and the child share a
-// console, and otherwise the error is returned and KillProcessGroup ends the
-// group.
+// TerminateProcessGroup sends a CTRL_BREAK event to the child's process group.
+// It is not a graceful stop of pig. Go reports the event as SIGINT, and pig
+// v0.7.0 in RPC mode handles only SIGTERM on Windows, so the default action
+// ends pig at once and skips its session_shutdown hook. The event also reaches
+// the group only when this process and the child share a console; otherwise
+// the call fails and the caller goes on to KillProcessGroup. The graceful stop,
+// on every platform, is closing pig's stdin, which the driver does first.
 func TerminateProcessGroup(process *os.Process) error {
 	return windows.GenerateConsoleCtrlEvent(windows.CTRL_BREAK_EVENT, uint32(process.Pid))
 }
 
-// KillProcessGroup ends the child and every process of its job, and returns once
-// the job has no member left. taskkill /T runs first for a child that has no
-// job. A child that already exited is not an error. The job handle is released:
-// a second call falls back to taskkill alone.
+// KillProcessGroup ends the child and every process of its job and returns once
+// the job has no member left. The job is the guarantee: every descendant joins
+// it and none can break away. taskkill /T runs only when the child has no job
+// and has not been waited for, because Wait closes the process handle and
+// Windows reuses PIDs, so a taskkill on a reaped pid could end an unrelated
+// tree (see killPlan). A child that already exited is not an error. The job
+// handle is released: a second call has no job and, once the child was waited
+// for, does nothing.
 func KillProcessGroup(process *os.Process) error {
-	runTaskkill(process.Pid)
-	value, ok := jobs.LoadAndDelete(process.Pid)
-	if !ok {
+	value, hasJob := jobs.LoadAndDelete(process.Pid)
+	useJob, useTaskkill := killPlan(hasJob, reaped(process))
+	if useTaskkill {
+		runTaskkill(process.Pid)
+	}
+	if !useJob {
 		return nil
 	}
 	job := value.(windows.Handle)
@@ -79,6 +88,14 @@ func KillProcessGroup(process *os.Process) error {
 		return err
 	}
 	return waitJobEmpty(job)
+}
+
+// reaped reports whether Wait has already released the process. Go returns
+// ErrProcessDone once the process has exited and EINVAL once the handle is
+// released; a live process answers EWINDOWS to a signal other than Kill.
+func reaped(process *os.Process) bool {
+	err := process.Signal(syscall.Signal(0))
+	return errors.Is(err, os.ErrProcessDone) || errors.Is(err, syscall.EINVAL)
 }
 
 // runTaskkill ends the tree the parent links still show, through the System32
