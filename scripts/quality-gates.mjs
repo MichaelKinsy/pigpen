@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import { isMap, parseDocument } from 'yaml';
 import { listOwners } from './layout.mjs';
+import { layoutProblems } from './layout-guard.mjs';
 import { isFetchedPath } from './oracles.mjs';
 
 const root = realpathSync(resolve(process.argv[2] || fileURLToPath(new URL('../', import.meta.url))));
@@ -141,6 +142,11 @@ try {
     });
   }
 
+  // The shape of the repository itself (a root given on the command line is a fixture, which has no such shape).
+  if (!process.argv[2]) {
+    const stray = layoutProblems(root);
+    if (stray.length) throw new Error(`Layout guard: ${stray.length} stray entries\n${stray.join('\n')}`);
+  }
   // piglets/, components/ and the benchmark pieces under bench/ are all held to the same provenance, licence and naming rules.
   const owners = ['piglets', 'components'].flatMap(kind => listOwners(root, kind).filter(entry => entry.isDirectory).map(entry => entry.path));
   for (const owner of owners) checkProvenance(owner);

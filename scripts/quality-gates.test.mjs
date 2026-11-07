@@ -4,6 +4,8 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writ
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// The layout guard runs inside the quality gates; its tests run with these (npm test lists this file).
+import './layout-guard.test.mjs';
 import test from 'node:test';
 
 const validator = fileURLToPath(new URL('./quality-gates.mjs', import.meta.url));
