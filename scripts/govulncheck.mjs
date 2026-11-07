@@ -175,6 +175,32 @@ export function judge(directory, result, accepted = []) {
   return { directory, status: reachable.length ? 'called' : 'ok', ...verdict, called: reachable, excused };
 }
 
+/**
+ * The records the runs do not bear out, as messages (empty when every record id was excused by some scan). `results` are the
+ * judged scans of every target. A scan that failed to run says nothing. An id that was reported but not excused (the version,
+ * the module or the frames no longer match the record) is told apart from one that was not reported at all.
+ */
+export function staleRecords(accepted, results, base = root) {
+  const excused = new Set(), reported = new Set();
+  for (const result of results) {
+    if (result.status === 'failed') continue;
+    const name = relative(base, result.directory).split(/[\\/]/).join('/');
+    for (const v of result.excused) excused.add(`${name} ${v.id}`);
+    for (const v of result.called) reported.add(`${name} ${v.id}`);
+  }
+  const problems = [];
+  for (const record of accepted) {
+    for (const id of record.ids) {
+      const key = `${record.directory} ${id}`;
+      if (excused.has(key)) continue;
+      problems.push(reported.has(key)
+        ? `${id} in ${record.directory} is reported but not excused by its record (the module, version or frames differ from it); correct or remove the record`
+        : `${id} in ${record.directory} was not reported by this run; remove it from the record`);
+    }
+  }
+  return problems;
+}
+
 /** The modules go.work must hold: every go.mod, and a mismatch with the listed ones is itself a failure. */
 export function moduleProblems(all, listed) {
   const problems = [];
@@ -202,7 +228,7 @@ async function main(targets) {
   console.log(`${goVersion}; govulncheck ${GOVULNCHECK_VERSION}; ${modules.length} modules`);
   if (!targets.length) targets.push(...Object.keys(runners));
   let failed = false;
-  const used = new Set();
+  const everything = [];
   for (const target of targets) {
     const [GOOS, GOARCH] = target.split('/');
     const env = { ...base, GOOS, GOARCH, CGO_ENABLED: '0' };
@@ -213,9 +239,9 @@ async function main(targets) {
     };
     await Promise.all(Array.from({ length: Math.max(1, Math.min(8, availableParallelism() >> 1)) }, worker));
     results.sort((a, b) => a.directory.localeCompare(b.directory));
+    everything.push(...results);
     for (const result of results) {
       const name = relative(root, result.directory);
-      if (result.status !== 'failed') for (const v of result.excused) used.add(`${v.record.directory} ${v.id}`);
       if (result.status === 'ok') {
         console.log(`ok     ${target} ${name}: 0 vulnerabilities affect the code${result.imported.length ? ` (imported, not called: ${result.imported.join(', ')})` : ''}`);
         if (result.excused.length) console.log(`         accepted (scripts/govulncheck-accepted.json): ${result.excused.map((v) => v.id).join(', ')} in ${result.excused[0].modules[0]}, reported only as the init of a package that is linked in; no function of it is called`);
@@ -234,12 +260,9 @@ async function main(targets) {
     }
     console.log(`${results.every((r) => r.status === 'ok') ? 'ok  ' : 'FAIL'} ${target}: ${results.filter((r) => r.status === 'ok').length} of ${modules.length} modules have no reachable vulnerability`);
   }
-  for (const record of accepted) {
-    for (const id of record.ids) {
-      if (used.has(`${record.directory} ${id}`)) continue;
-      failed = true;
-      console.log(`FAIL   govulncheck-accepted.json: ${id} in ${record.directory} is accepted but was not reported by this run; remove it from the record`);
-    }
+  for (const message of staleRecords(accepted, everything)) {
+    failed = true;
+    console.log(`FAIL   govulncheck-accepted.json: ${message}`);
   }
   return failed ? 1 : 0;
 }
