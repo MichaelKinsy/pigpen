@@ -103,7 +103,13 @@ func (u *upstreams) expand(s string) string {
 func (u *upstreams) expandTurns(turns []Turn) []Turn {
 	out := make([]Turn, len(turns))
 	for i, t := range turns {
-		out[i] = Turn{Text: u.expand(t.Text)}
+		out[i] = t
+		out[i].Text, out[i].Thinking, out[i].ToolCalls = u.expand(t.Text), u.expand(t.Thinking), nil
+		if t.Error != nil {
+			e := *t.Error
+			e.Message, e.Body = u.expand(e.Message), u.expand(e.Body)
+			out[i].Error = &e
+		}
 		for _, c := range t.ToolCalls {
 			args, _ := u.expandValue(c.Arguments).(map[string]any)
 			out[i].ToolCalls = append(out[i].ToolCalls, ToolCall{Name: c.Name, Arguments: args})
@@ -252,7 +258,15 @@ func (s *upstream) describe(r *http.Request, body []byte, matched bool) map[stri
 // writeFilesUnder writes files (relative paths, {{server:NAME}} expanded) under dir. A path that is
 // absolute or leaves dir is refused, so a lane's scenario cannot place a file outside the root it names.
 func writeFilesUnder(dir string, files map[string]string, ups *upstreams) error {
-	for rel, content := range files {
+	return writeFilesUnderExpanded(dir, files, ups, func(s string) string { return s })
+}
+
+// writeFilesUnderExpanded is writeFilesUnder with one more expansion (the lane's {{cwd}}/{{agent}}/{{sessions}}).
+// Files are written in path order and given modification times one second apart from a fixed instant, so a
+// host that orders files by mtime (all-session history) sees the same order in every lane and every run.
+func writeFilesUnderExpanded(dir string, files map[string]string, ups *upstreams, extra func(string) string) error {
+	base := time.Date(2026, 11, 6, 12, 0, 0, 0, time.UTC)
+	for i, rel := range slices.Sorted(maps.Keys(files)) {
 		if err := confinedPath(rel); err != nil {
 			return err
 		}
@@ -260,7 +274,11 @@ func writeFilesUnder(dir string, files map[string]string, ups *upstreams) error 
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			return err
 		}
-		if err := os.WriteFile(p, []byte(ups.expand(content)), 0o600); err != nil {
+		if err := os.WriteFile(p, []byte(extra(ups.expand(files[rel]))), 0o600); err != nil {
+			return err
+		}
+		mtime := base.Add(time.Duration(i) * time.Second)
+		if err := os.Chtimes(p, mtime, mtime); err != nil {
 			return err
 		}
 	}

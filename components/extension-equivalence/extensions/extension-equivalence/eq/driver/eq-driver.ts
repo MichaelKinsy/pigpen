@@ -15,15 +15,36 @@ export default function (pi: any) {
 		},
 	});
 	pi.registerCommand("eq-fork", {
-		description: "harness: fork from the first user message",
-		handler: async (_args: string, ctx: any) => {
-			const entry = ctx.sessionManager.getEntries().find((e: any) => e.type === "message" && e.message?.role === "user");
+		description: "harness: fork from the first user message, or from an entry id (second word `at` forks after it)",
+		handler: async (args: string, ctx: any) => {
+			const [id, position] = args.trim().split(/\s+/).filter(Boolean);
+			const entry = id
+				? ctx.sessionManager.getEntries().find((e: any) => e.id === id)
+				: ctx.sessionManager.getEntries().find((e: any) => e.type === "message" && e.message?.role === "user");
 			if (!entry) {
-				ctx.ui.notify("eq-driver fork no-user-message", "error");
+				ctx.ui.notify(id ? "eq-driver fork no-such-entry" : "eq-driver fork no-user-message", "error");
 				return;
 			}
-			const result = await ctx.fork(entry.id);
+			const result = await ctx.fork(entry.id, position === "at" ? { position: "at" } : undefined);
 			if (result.cancelled) ctx.ui.notify("eq-driver fork cancelled", "info");
+		},
+	});
+	pi.registerCommand("eq-tree", {
+		description: "harness: navigate the session tree to an entry id (no summary)",
+		handler: async (args: string, ctx: any) => {
+			const id = args.trim();
+			if (!id) {
+				ctx.ui.notify("eq-driver tree needs an entry id", "error");
+				return;
+			}
+			const result = await ctx.navigateTree(id, { summarize: false });
+			if (result.cancelled) ctx.ui.notify("eq-driver tree cancelled", "info");
+		},
+	});
+	pi.registerCommand("eq-reload", {
+		description: "harness: reload extensions, skills, prompts and themes",
+		handler: async (_args: string, ctx: any) => {
+			await ctx.reload();
 		},
 	});
 }

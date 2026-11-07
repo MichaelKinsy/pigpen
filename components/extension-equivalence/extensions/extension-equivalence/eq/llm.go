@@ -1,6 +1,9 @@
 package eq
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // fakeLLM is a scripted OpenAI-compatible chat-completions server. Both Pi and
@@ -21,9 +25,18 @@ type fakeLLM struct {
 	// system maps the (normalized) system text of a request to the value
 	// recorded for it, or reports false to record nothing. See systemDelta.
 	system func(text string) (any, bool)
+	// onRequest, when set, is called with the request's number (from 1) once the request has been recorded
+	// and before it is answered: the driver's llmRequest triggers.
+	onRequest func(n int)
+	// recordModel adds the request's model id to the recorded entry (a scenario with several models).
+	recordModel bool
+	// vars expands {{var:NAME}} in the turn being served (nil: none).
+	vars *laneVars
 
-	mu   sync.Mutex
-	next int
+	mu    sync.Mutex
+	next  int
+	holds map[string]chan struct{}
+	done  chan struct{}
 }
 
 func newFakeLLM(turns []Turn, record func(ch string, data any)) (*fakeLLM, error) {
@@ -31,7 +44,7 @@ func newFakeLLM(turns []Turn, record func(ch string, data any)) (*fakeLLM, error
 	if err != nil {
 		return nil, err
 	}
-	f := &fakeLLM{ln: ln, turns: turns, record: record}
+	f := &fakeLLM{ln: ln, turns: turns, record: record, holds: map[string]chan struct{}{}, done: make(chan struct{})}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/chat/completions", f.handle)
 	f.srv = &http.Server{Handler: mux}
@@ -40,9 +53,43 @@ func newFakeLLM(turns []Turn, record func(ch string, data any)) (*fakeLLM, error
 }
 
 func (f *fakeLLM) baseURL() string { return "http://" + f.ln.Addr().String() + "/v1" }
-func (f *fakeLLM) close()          { _ = f.srv.Close() }
+func (f *fakeLLM) close() {
+	f.mu.Lock()
+	select {
+	case <-f.done:
+	default:
+		close(f.done)
+	}
+	f.mu.Unlock()
+	_ = f.srv.Close()
+}
+
+// hold returns the channel a held turn waits on; release closes it. Either side may come first.
+func (f *fakeLLM) hold(name string) chan struct{} {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	ch, ok := f.holds[name]
+	if !ok {
+		ch = make(chan struct{})
+		f.holds[name] = ch
+	}
+	return ch
+}
+
+// release lets the turns held under name answer (now and later).
+func (f *fakeLLM) release(name string) {
+	ch := f.hold(name)
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	select {
+	case <-ch:
+	default:
+		close(ch)
+	}
+}
 
 type chatRequest struct {
+	Model    string `json:"model"`
 	Messages []struct {
 		Role      string          `json:"role"`
 		Content   json.RawMessage `json:"content"`
@@ -83,6 +130,58 @@ func contentText(raw json.RawMessage) string {
 	return ""
 }
 
+// contentImages describes the image parts of a message: the media type, the decoded byte count and the
+// first 16 hex digits of the decoded bytes' SHA-256 (a data URL's base64 payload). A message without
+// image parts reports nothing, so a trace without images is what it always was.
+func contentImages(raw json.RawMessage) []any {
+	var blocks []struct {
+		Type     string `json:"type"`
+		ImageURL struct {
+			URL string `json:"url"`
+		} `json:"image_url"`
+	}
+	if len(raw) == 0 || raw[0] != '[' || json.Unmarshal(raw, &blocks) != nil {
+		return nil
+	}
+	var out []any
+	for _, b := range blocks {
+		if b.Type != "image_url" {
+			continue
+		}
+		url := b.ImageURL.URL
+		desc := map[string]any{}
+		if rest, ok := strings.CutPrefix(url, "data:"); ok {
+			meta, payload, _ := strings.Cut(rest, ",")
+			mime, _, _ := strings.Cut(meta, ";")
+			desc["mimeType"] = mime
+			if data, err := base64.StdEncoding.DecodeString(payload); err == nil {
+				sum := sha256.Sum256(data)
+				desc["bytes"] = len(data)
+				desc["sha256"] = hex.EncodeToString(sum[:])[:16]
+			} else {
+				desc["url"] = url
+			}
+		} else {
+			desc["url"] = url
+		}
+		out = append(out, desc)
+	}
+	return out
+}
+
+// wait blocks for d (when positive) or until the request is cancelled or the server stops; false means stop.
+func (f *fakeLLM) wait(r *http.Request, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return true
+	case <-r.Context().Done():
+	case <-f.done:
+	}
+	return false
+}
+
 func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 	var req chatRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,6 +209,9 @@ func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 		if calls != nil {
 			entry["toolCalls"] = calls
 		}
+		if images := contentImages(m.Content); images != nil {
+			entry["images"] = images
+		}
 		msgs = append(msgs, entry)
 	}
 	tools := []any{}
@@ -128,6 +230,9 @@ func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 		tools = append(tools, def)
 	}
 	entry := map[string]any{"messages": msgs, "tools": tools}
+	if f.recordModel {
+		entry["model"] = req.Model
+	}
 	if f.system != nil {
 		if v, ok := f.system(strings.Join(system, "\n")); ok {
 			entry["system"] = v
@@ -138,13 +243,56 @@ func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	i := f.next
 	f.next++
+	hook := f.onRequest
 	f.mu.Unlock()
+	if hook != nil {
+		hook(i + 1)
+	}
 	if i >= len(f.turns) {
 		f.record(ChError, map[string]any{"message": fmt.Sprintf("llm script exhausted: request %d but %d turns", i+1, len(f.turns))})
 		http.Error(w, "llm script exhausted", http.StatusInternalServerError)
 		return
 	}
 	turn := f.turns[i]
+
+	// A delayed or held turn answers late or never: the host may cancel the request meanwhile (abort), which
+	// ends the handler without a response.
+	if turn.DelayMs > 0 && !f.wait(r, time.Duration(turn.DelayMs)*time.Millisecond) {
+		return
+	}
+	if turn.Hold != "" {
+		select {
+		case <-f.hold(turn.Hold):
+		case <-r.Context().Done():
+			return
+		case <-f.done:
+			return
+		}
+	}
+	// Variables are expanded once the turn may answer: a trigger that saves a value and then releases the turn
+	// (the entry id of a result the held request has just produced) is seen by it.
+	f.mu.Lock()
+	vars := f.vars
+	f.mu.Unlock()
+	if vars != nil && turnHasVars(turn) {
+		expanded, err := expandTurnVars(turn, vars)
+		if err != nil {
+			f.record(ChError, map[string]any{"message": fmt.Sprintf("llm turn %d: %v", i+1, err)})
+			http.Error(w, "llm turn variable", http.StatusInternalServerError)
+			return
+		}
+		turn = expanded
+	}
+
+	if e := turn.Error; e != nil {
+		w.Header().Set("Content-Type", "application/json")
+		for k, v := range e.Headers {
+			w.Header().Set(k, v)
+		}
+		w.WriteHeader(e.status())
+		_, _ = io.WriteString(w, e.body())
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	flusher, _ := w.(http.Flusher)
@@ -160,6 +308,9 @@ func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	send(map[string]any{"role": "assistant", "content": ""}, nil)
+	if turn.Thinking != "" {
+		send(map[string]any{"reasoning_content": turn.Thinking}, nil)
+	}
 	if turn.Text != "" {
 		send(map[string]any{"content": turn.Text}, nil)
 	}
@@ -172,15 +323,32 @@ func (f *fakeLLM) handle(w http.ResponseWriter, r *http.Request) {
 		}}}, nil)
 		finish = "tool_calls"
 	}
+	if turn.FinishReason != "" {
+		finish = turn.FinishReason
+	}
 	send(map[string]any{}, finish)
 	usage, _ := json.Marshal(map[string]any{
 		"id": fmt.Sprintf("eq-%d", i), "object": "chat.completion.chunk", "created": 1, "model": "eq-1", "choices": []any{},
-		"usage": map[string]any{"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+		"usage": turn.Usage.chunk(),
 	})
 	fmt.Fprintf(w, "data: %s\n\ndata: [DONE]\n\n", usage)
 	if flusher != nil {
 		flusher.Flush()
 	}
+}
+
+// chunk is the usage object of the final stream chunk. A turn without usage reports one prompt and one
+// completion token, as every scenario did before Usage existed.
+func (u *Usage) chunk() map[string]any {
+	if u == nil {
+		return map[string]any{"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}
+	}
+	prompt := u.Input + u.CacheRead + u.CacheWrite
+	out := map[string]any{"prompt_tokens": prompt, "completion_tokens": u.Output, "total_tokens": prompt + u.Output}
+	if u.CacheRead > 0 || u.CacheWrite > 0 {
+		out["prompt_tokens_details"] = map[string]any{"cached_tokens": u.CacheRead, "cache_write_tokens": u.CacheWrite}
+	}
+	return out
 }
 
 // systemDelta describes how the system text of a request differs from the
@@ -227,4 +395,19 @@ func ServeLLM(turns []Turn, log io.Writer) (string, func(), error) {
 		return "", nil, err
 	}
 	return f.baseURL(), f.close, nil
+}
+
+// setOnRequest installs the hook the driver's llmRequest triggers use.
+func (f *fakeLLM) setOnRequest(hook func(n int)) {
+	f.mu.Lock()
+	f.onRequest = hook
+	f.mu.Unlock()
+}
+
+// setVars gives the server the lane's variables: {{var:NAME}} in a turn's text and tool-call arguments is
+// expanded when the turn is served, because a variable is saved from a response that comes after the scenario starts.
+func (f *fakeLLM) setVars(v *laneVars) {
+	f.mu.Lock()
+	f.vars = v
+	f.mu.Unlock()
 }

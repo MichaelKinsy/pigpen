@@ -90,8 +90,90 @@ configuration). The scenario is data (see [scenarios](extensions/extension-equiv
 - `normalize`: extra normalization rules for values the extension invents on every run (rule N7 below): `"normalize": [{"pattern": "[a-z0-9]{8,12}-[a-z0-9]{6}", "replacement": "<response-id>"}]`. `pattern` is a Go (RE2) regular expression, validated when the scenario loads (an empty or non-compiling pattern is a load error that names the rule); `replacement` may use `$1` and `${name}` for capture groups and `$$` for a dollar sign. Rules run in list order on every string (object keys included) of every event of both lanes, after the built-in N1 to N3. A rule that matches nothing is not an error. The rules belong to the scenario, so the golden trace was normalized by exactly the rules the port is checked with; a scenario edit that changes a rule needs `record` again.
 - `env` alone (no servers) switches an opt-in extension on: `"env": {"PIGPEN_WARDEN_ENABLED": "1"}` reaches the host process of every lane, the original under Pi and the port under PiG alike, on top of the hermetic environment (the harness's own variables and the test process's environment do not leak in). `PATH`, `HOME`, `TMPDIR`, `LANG`, `TERM`, `NO_COLOR`, the Go toolchain variables (`GOROOT`, `GOCACHE`, `GOMODCACHE`, `GOPATH`, `GOFLAGS`, `GOPROXY`, `GONOSUMDB`, `GONOSUMCHECK`, `GOSUMDB`, `GOTOOLCHAIN`), `GOWORK`, `GOENV` and every `EQ_*`, `PIG_*`, `PI_*` and `GIT_*` name are the harness's and are rejected. Tested with a fake host that records its environment (`TestScenarioEnvReachesEveryLaneAndKeepsTheHostHermetic`).
 - `steps`: RPC commands, and the answers to the dialogs they raise. Session operations
-  that only an extension command context can start (`new session`, `fork`) go through a
-  small driver extension loaded in every lane (`/eq-new`, `/eq-fork`).
+  that only an extension command context can start go through a small driver extension loaded in every lane:
+  `/eq-new`, `/eq-fork [ENTRY_ID [at]]` (default: the first user message), `/eq-tree ENTRY_ID` (navigate the session
+  tree without a summary) and `/eq-reload`. Every other session operation is a plain RPC command (`compact`,
+  `abort`, `steer`, `follow_up`, `new_session`, `switch_session`, `fork`, `clone`, `get_entries`, `get_tree`, ...).
+
+### Reproducing a session suite (real-Pi test files)
+
+The fields below exist so a scenario can drive the same host behavior a `createAgentSession` + `fauxProvider` test
+drives: model limits and usage, overflow errors, queued input, abort, resume and compaction, real session files, and the
+files an extension leaves behind. Every one is opt-in; a scenario without them runs and records exactly as before. They
+are covered by `eq/features_test.go` and `eq/features_host_test.go` (a fake host that speaks just enough RPC).
+
+- `model`: `{"id", "contextWindow", "maxTokens", "reasoning", "input": ["text","image"]}` for the scripted model
+  (default `eq-1`, 100000, 4096, text). `models`: further models of the same provider (`set_model`, per-model
+  settings); the llm trace then records each request's model id. Needs an `llm` script.
+- `llm` turn fields: `usage` (`input`, `output`, `cacheRead`, `cacheWrite`, optional `totalTokens`, which must equal their
+  sum because the host derives it) is what the OpenAI-compatible usage chunk reports (`prompt_tokens` = input + cacheRead
+  + cacheWrite, `completion_tokens` = output, `prompt_tokens_details.cached_tokens` / `cache_write_tokens`); a turn with
+  `"usage": {}` reports zero (Pi then treats usage after a compaction as unknown) and a turn without the field reports
+  1 and 1 as before. `finishReason` (`length`, ...) replaces the last chunk's `finish_reason`; `thinking` streams
+  `reasoning_content`; `error` answers with an HTTP error instead of a stream: `{"status": 400, "message": "prompt is too
+  long: 300000 tokens > 100000 maximum"}` (body `{"error":{"message":...,"type":"invalid_request_error"}}`, which Pi
+  classifies as a context overflow and words as `400: {...}`) or `{"status": 529, "body": "<raw>", "headers": {...}}`;
+  `delayMs` waits before answering; `hold` keeps the turn unanswered until a trigger releases that name or the host
+  cancels the request (an abort). `{{var:NAME}}` in a turn's text or tool-call arguments is expanded when the turn is
+  served. Images in a tool result appear in the llm trace as `images: [{mimeType, bytes, sha256}]` on the message (only
+  when a request has any), with the first 16 hex digits of the SHA-256 of the decoded bytes.
+- `settings`: the lane's agent-directory `settings.json` (`{"compaction": {"enabled": true, "reserveTokens": 16384,
+  "keepRecentTokens": 20000}, "retry": {"enabled": false}}`); do not also write it through `agentFiles`.
+- `session`: `{}` runs the host with `--session-dir <run>/sessions` instead of `--no-session`; `session.files` seeds
+  session files there. `{{sessions}}`, `{{cwd}}` and `{{agent}}` in a step's rpc strings are the lane's directories.
+  Rule N9 (only with `session`): a session file name's timestamp (`2026-11-06T10-20-30-123Z`) becomes `<time>`.
+- `extensions`: helper extensions written into the run and loaded with `-e` in every lane, next to the extension under
+  test (a tool that returns a huge result, a `turn_end` hook): `[{"name": "dump.ts", "source": "export default
+  function (pi) {...}", "position": "before"}]` (`before` or the default `after` the extension under test).
+- `steps[].save`: `{"owner": "data.entries.[message.role=user].id"}` stores values of the command's response for
+  later steps (`{{var:owner}}` in any rpc string, and in llm turns). A path is dotted keys; an integer indexes an array
+  (negative from the end); `[key=value]` selects the first array element whose (dotted) key equals the value,
+  `[key=value]!` the last. `steps[].quiet` keeps that response out of the trace (use it for `get_entries`, whose entries
+  carry the host's system messages); a failed response still fails the step.
+- `steps[].triggers`: act while the step runs, once each, and must fire by the end of the step:
+  `{"when": {"event": "agent_start", "match": {"toolName": "dump"}, "nth": 2}` or `{"when": {"llmRequest": 2}}`,
+  `"rpc": {"type": "steer", "message": "..."}`, `"release": ["name"]}`. The command's response is awaited before
+  the held turns are released, so queued input reaches the host before the model's answer does.
+  `llmRequest` fires after the nth model request of the run has been recorded.
+  A trigger's command can `save` values of its response like a step (`"save": {"toolId": "data.entries.[message.toolName=dump].id"}`,
+  `"quiet": true` keeps the response out of the trace): the saved value is set before the `release`, and a turn is
+  expanded (`{{var:toolId}}` in its text or tool-call arguments) only after its hold ends, so a held turn can quote the
+  id of an entry the run itself has just created.
+- Host events: any name in `capture` is recorded. The session events (`compaction_start`, `compaction_end`,
+  `auto_retry_start`, `auto_retry_end`, `queue_update`, `session_info_changed`, `agent_settled`, `entry_appended`,
+  `thinking_level_changed`, `summarization_retry_*`) are recorded whole (all keys but `timestamp`, `sessionId`,
+  `sessionFile`, `sessionPath`; session entry ids become `<id:N>` in order of first appearance); `project.full` adds
+  event types to record whole. `project.messageFields` keeps further keys of a `message_end`/`message_start` message
+  (`errorMessage`, `summary`, `usage`, ...); `project.images` records an image block's `mimeType`, `bytes` and
+  `sha256`; `project.drop` removes key paths from whole events (`**.estimatedTokensAfter`: a host-computed value); `project.skipSystem` leaves out the `message_start`/`message_end` events of system messages (the host decides when it records its own prompt snapshot: Pi appends one when a tree navigation lands on a branch that has none, PiG does not; the extension's part of the prompt is still compared in each request's system delta).
+  The responses of `get_entries`, `get_tree` and `get_fork_messages` have their entry ids relabeled the same way.
+  Compaction summaries, custom messages and the retained-tail sentinel are visible to the model as `user` messages in the
+  llm trace (Pi converts them), so they are compared as text.
+- `systemDiff`: `"hunks"` reports the extension's part of the system prompt as each changed run of lines (an extension
+  that lists its tools in the host's tools section and appends guidance at the end otherwise drags the host's own wording
+  between the two changes into the comparison, which differs between Pi and PiG by design); the default `"span"` is the
+  original single delta; `"inserted"` is `"hunks"` reduced to the inserted lines (a request whose base text is host-owned and
+  worded differently by Pi and PiG, such as the host's own summarization request, differs only in the removed host wording).
+- `captureFiles` (scenario: after the host has exited, recorded under step `99-files`; step: after that step has
+  settled): `[".pi/notes/**", "agent:settings.json", {"root": "sessions", "glob": "**/*.jsonl", "modes": true,
+  "exclude": ["**/skip.jsonl"], "drop": ["**.sections.docs"]}]`. A string is `[root:]glob`, root one of `workspace`
+  (default), `agent`, `sessions`, `home` (the host's own home); `**` crosses directories; `.git` and `node_modules`
+  are skipped unless the glob names them. One `files` event per entry lists the matching regular files and symlinks
+  in path order as `{"path", "text"}`, `{"path", "jsonl": [...]}` for `*.jsonl` (one decoded object per line, sorted
+  keys), `{"path", "symlink"}`, or `{"path", "size", "sha256"}` for binary and over-4-MiB files; `modes` adds
+  `"mode": "0600"`. Rule N8: paths and strings get N1 to N3 and N7 plus the session-name timestamp; in a `*.jsonl`
+  file a numeric `timestamp` or `durationMs` key is dropped, `drop` removes more key paths (dotted names from the
+  line's root, `*`, leading `**`; for host wording that differs by design, never for what the extension writes), and
+  session entry ids become `<id:N>`.
+- Large inputs: `{{repeat:C:N}}` anywhere in a scenario file (expanded when the file is loaded, before JSON decoding; C is one
+  letter, digit, space, `_`, `.`, `-` or `#`, N at most 16,000,000) writes C N times, so a 1.2 MB seed or prompt does not
+  live in the repository. `"collapseRuns": 512` (at least 64) records every run of that many identical characters in a trace
+  string (llm messages, events, captured files) as `<run C xN>`, keeping the character and the exact length, so goldens stay
+  small without hiding a single character of extension text.
+- `{{cwd}}`, `{{agent}}` and `{{sessions}}` are also expanded in `session.files`, workspace `files` and `setup` arguments (a seeded
+  session file's header names the lane's workspace).
+- `commands`: `rg` and `git` need nothing special: declare `{"rg": {"mode": "real"}}` and the shim records each call
+  (arguments with the run's paths normalized) while running the real binary, which must be on the harness's PATH.
 
 Recorded per step, in arrival order (a request to the model or to a fake upstream server is recorded after the host
 output that precedes it: the harness holds the request and round-trips `get_state` on the host's stdout first, so a fast
@@ -113,6 +195,14 @@ It is a reviewed hole in the comparison, so write the narrowest pattern that mat
 value (an id's exact shape, not `.*`), keep the extension's own text out of it, and read the recorded
 trace once to see the placeholder where the value was. N7 changes no trace of a scenario without the
 field, so it does not change the normalizer version.
+
+Two more rules apply only to the scenario fields that need them, so no trace recorded before they existed changes
+and the normalizer version stays `v3`: N8 (captured files, above) and N9 (a scenario with `session`: the timestamp in
+session file names, wherever it appears in a trace, becomes `<time>`). The session entry ids that a trace carries
+(`<id:N>`) are the one run-dependent value of the session channels that the harness relabels itself, in the keys
+`id`, `parentId`, `firstKeptEntryId`, `targetId`, `leafId`, `entryId`, `fromId` and `since` when the value has the shape of
+an entry id (eight lowercase hex digits). An id an extension quotes inside its own text (a recovery record that
+names an entry) is the scenario's N7 rule to normalize.
 
 ## Limits
 

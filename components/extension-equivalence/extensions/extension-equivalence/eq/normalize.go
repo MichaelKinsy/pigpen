@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // NormalizerVersion names the reviewed rule set below and the trace
@@ -47,6 +48,14 @@ const NormalizerVersion = "v3"
 //	    becomes "<seconds>": Pi 1.0's bash tool measures the command's wall
 //	    time (rounded to 0.1 s, pi-coding-agent 1.0.1 dist/core/tools/bash.js
 //	    lines 284-294). Every other structured key is compared.
+//	N7  see Scenario.Normalize.
+//	N8  captured files only (files.go): path/content strings and *.jsonl lines; no other trace is touched.
+//	N9  a scenario with a session directory only: the timestamp in session file names becomes <time>.
+//	    The session entry ids of whole events and of get_entries/get_tree/get_fork_messages responses become
+//	    <id:N> (project.go); those keys appear only when the scenario captures such events or runs such commands.
+//
+// N7 to N9 and the opt-in projections (Projection, systemDiff) change no trace of a scenario that does not use
+// their fields, so NormalizerVersion stays v3.
 var volatileKeys = []string{
 	"timestamp", "usage", "responseId", "sessionId", "sessionFile",
 	"toolCallId", "api", "provider", "model", "durationMs", "sessionPath",
@@ -64,6 +73,18 @@ type Replacement struct{ From, To string }
 type Normalizer struct {
 	Replace []Replacement
 	rules   []compiledRule
+
+	// proj is the scenario's opt-in projection (nil: the original one).
+	proj *Projection
+	// dropPats are proj.Drop, split.
+	dropPats [][]string
+	// ids relabels the session entry ids a trace carries (random per run) in order of first appearance.
+	idMu sync.Mutex
+	ids  map[string]string
+	// sessionTimes (a scenario with a real session directory) also normalizes the timestamp in session file names (N9).
+	sessionTimes bool
+	// collapse (Scenario.CollapseRuns, 0 = off) records runs of identical characters as <run C xN>.
+	collapse int
 }
 
 type compiledRule struct {
@@ -127,11 +148,17 @@ func (n *Normalizer) AddReplacement(from, to string) {
 }
 
 func (n *Normalizer) str(s string) string {
+	if n.collapse > 0 {
+		s = collapseRuns(s, n.collapse)
+	}
 	for _, r := range n.Replace {
 		s = strings.ReplaceAll(s, r.From, r.To)
 	}
 	s = uuidRE.ReplaceAllString(s, "<uuid>")
 	s = timeRE.ReplaceAllString(s, "<time>")
+	if n.sessionTimes {
+		s = sessionTimeRE.ReplaceAllString(s, "<time>")
+	}
 	for _, r := range n.rules {
 		s = r.re.ReplaceAllString(s, r.repl)
 	}
@@ -179,6 +206,14 @@ func (n *Normalizer) Data(v any) json.RawMessage { return canonical(n.Value(v)) 
 // an extension can influence and drops host bookkeeping (N4, N5).
 func (n *Normalizer) ProjectHost(rec map[string]any, capture []string) (ch string, data json.RawMessage, ok bool) {
 	typ, _ := rec["type"].(string)
+	if n.proj != nil && n.proj.SkipSystem && (typ == "message_end" || typ == "message_start") {
+		if msg, _ := rec["message"].(map[string]any); msg["role"] == "system" {
+			return "", nil, false
+		}
+	}
+	if n.recordsWhole(typ) && slices.Contains(capture, typ) {
+		return ChHost, n.Data(n.wholeEvent(rec)), true
+	}
 	if !slices.Contains(capture, typ) {
 		return "", nil, false
 	}
@@ -189,7 +224,7 @@ func (n *Normalizer) ProjectHost(rec map[string]any, capture []string) (ch strin
 			out["error"] = e
 		}
 		if d, ok := rec["data"]; ok {
-			out["data"] = dropVolatile(d)
+			out["data"] = n.relabelResponse(rec["command"], dropVolatile(d))
 		}
 		return ChResponse, n.Data(out), true
 	case "extension_ui_request":
@@ -206,9 +241,9 @@ func (n *Normalizer) ProjectHost(rec map[string]any, capture []string) (ch strin
 		return ChHost, n.Data(map[string]any{"type": typ, "toolName": rec["toolName"], "args": rec["args"]}), true
 	case "tool_execution_end":
 		return ChHost, n.Data(map[string]any{"type": typ, "toolName": rec["toolName"], "isError": rec["isError"], "result": withoutWallTime(rec["result"])}), true
-	case "message_end":
+	case "message_end", "message_start":
 		msg, _ := rec["message"].(map[string]any)
-		return ChHost, n.Data(map[string]any{"type": typ, "message": projectMessage(msg)}), true
+		return ChHost, n.Data(map[string]any{"type": typ, "message": projectMessageWith(msg, n.proj)}), true
 	default: // agent_start, agent_end, turn_start, turn_end and any other lifecycle marker
 		return ChHost, n.Data(map[string]any{"type": typ}), true
 	}
@@ -216,11 +251,22 @@ func (n *Normalizer) ProjectHost(rec map[string]any, capture []string) (ch strin
 
 // projectMessage keeps a message's role and content, the parts extensions read
 // and write. Streaming bookkeeping such as usage and model ids is dropped.
-func projectMessage(msg map[string]any) map[string]any {
+func projectMessage(msg map[string]any) map[string]any { return projectMessageWith(msg, nil) }
+
+// projectMessageWith is projectMessage plus a scenario's opt-in Projection: further message keys and
+// the detail of image blocks. With a nil Projection it is exactly the original projection.
+func projectMessageWith(msg map[string]any, proj *Projection) map[string]any {
 	out := map[string]any{}
 	for _, k := range []string{"role", "customType", "toolName", "isError", "display", "details", "stopReason"} {
 		if v, ok := msg[k]; ok {
 			out[k] = v
+		}
+	}
+	if proj != nil {
+		for _, k := range proj.MessageFields {
+			if v, ok := msg[k]; ok {
+				out[k] = v
+			}
 		}
 	}
 	switch c := msg["content"].(type) {
@@ -235,6 +281,12 @@ func projectMessage(msg map[string]any) map[string]any {
 				blocks = append(blocks, map[string]any{"type": "text", "text": m["text"]})
 			case "toolCall":
 				blocks = append(blocks, map[string]any{"type": "toolCall", "name": m["name"], "arguments": m["arguments"]})
+			case "image":
+				if proj != nil && proj.Images {
+					blocks = append(blocks, imageBlock(m))
+					continue
+				}
+				blocks = append(blocks, map[string]any{"type": m["type"]})
 			default:
 				blocks = append(blocks, map[string]any{"type": m["type"]})
 			}

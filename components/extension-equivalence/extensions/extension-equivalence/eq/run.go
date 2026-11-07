@@ -335,6 +335,11 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if err := rec.norm.AddRules(sc.Normalize); err != nil {
 		return nil, err
 	}
+	rec.norm.SetProjection(sc.Project)
+	rec.norm.sessionTimes = sc.Session != nil
+	rec.norm.collapse = sc.CollapseRuns
+	sessionsPath := filepath.Join(root, "sessions")
+	builtin := func(v string) string { return expandBuiltins(v, cwd, agent, sessionsPath) }
 
 	if err := writeFilesUnder(agent, sc.AgentFiles, ups); err != nil {
 		return nil, err
@@ -342,8 +347,11 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if err := writeFilesUnder(laneHome(lane.Host, root), sc.HomeFiles, ups); err != nil {
 		return nil, err
 	}
+	if err := writeSettings(agent, sc.Settings); err != nil {
+		return nil, err
+	}
 	for rel, content := range sc.Files {
-		content = ups.expand(content)
+		content = builtin(ups.expand(content))
 		p := filepath.Join(cwd, rel)
 		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
 			return nil, err
@@ -356,6 +364,10 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	for _, argv := range sc.Setup {
 		if len(argv) == 0 {
 			return nil, errors.New("empty setup command")
+		}
+		argv = slices.Clone(argv)
+		for i := range argv {
+			argv[i] = builtin(argv[i])
 		}
 		cmd := exec.Command(argv[0], argv[1:]...)
 		cmd.Dir, cmd.Env = cwd, baseEnv
@@ -377,13 +389,28 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	}
 	defer shims.close()
 
-	args := []string{"--mode", "rpc", "--no-session", "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--offline"}
+	sessionArgs := []string{"--no-session"}
+	sessionsDir := filepath.Join(root, "sessions")
+	if sc.Session != nil {
+		if err := os.MkdirAll(sessionsDir, 0o755); err != nil {
+			return nil, err
+		}
+		if err := writeFilesUnderExpanded(sessionsDir, sc.Session.Files, ups, builtin); err != nil {
+			return nil, err
+		}
+		sessionArgs = []string{"--session-dir", sessionsDir}
+	}
+	args := append([]string{"--mode", "rpc"}, sessionArgs...)
+	args = append(args, "--no-extensions", "--no-skills", "--no-prompt-templates", "--no-themes", "--no-context-files", "--offline")
+	var llmSrv *fakeLLM
 	if len(sc.LLM) > 0 {
 		llm, err := newFakeLLM(ups.expandTurns(sc.LLM), rec.addAfterHost)
 		if err != nil {
 			return nil, err
 		}
 		defer llm.close()
+		llmSrv = llm
+		llm.recordModel = sc.recordsModel()
 		// The model server's port differs per lane and reaches the trace wherever the host echoes the model's
 		// base URL (a set_model response), so its address is normalized like a fake server's.
 		rec.norm.AddReplacement("http://"+llm.ln.Addr().String(), "<llm>")
@@ -394,24 +421,26 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 				return nil, false
 			}
 		} else {
-			llm.system = func(text string) (any, bool) { return systemDelta(baseSystem, rec.norm.str(text)) }
+			llm.system = func(text string) (any, bool) { return systemDeltaMode(sc.SystemDiff, baseSystem, rec.norm.str(text)) }
 		}
-		models := map[string]any{"providers": map[string]any{"eq-llm": map[string]any{
-			"baseUrl": llm.baseURL(), "api": "openai-completions", "apiKey": "eq-key",
-			"models": []any{map[string]any{
-				"id": "eq-1", "name": "eq-1", "reasoning": false, "input": []string{"text"},
-				"contextWindow": 100000, "maxTokens": 4096,
-				"cost": map[string]any{"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
-			}},
-		}}}
-		b, _ := json.Marshal(models)
+		b, _ := json.Marshal(scenarioModels(sc, llm.baseURL()))
 		if err := os.WriteFile(filepath.Join(agent, "models.json"), b, 0o600); err != nil {
 			return nil, err
 		}
-		args = append(args, "--provider", "eq-llm", "--model", "eq-1")
+		args = append(args, "--provider", "eq-llm", "--model", sc.primary().ID)
+	}
+	helpersBefore, helpersAfter, err := writeHelperExtensions(filepath.Join(root, "helpers"), sc.Extensions)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range helpersBefore {
+		args = append(args, "-e", p)
 	}
 	if extAbs != "" {
 		args = append(args, "-e", extAbs)
+	}
+	for _, p := range helpersAfter {
+		args = append(args, "-e", p)
 	}
 	if sc.usesDriver() {
 		driverPath := filepath.Join(root, "eq-driver.ts")
@@ -480,7 +509,15 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 		return nil, fmt.Errorf("start %s: %w", lane.Bin, err)
 	}
 	readerDone := make(chan struct{})
-	d := &driver{timer: opt.timer, sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture(), readerDone: readerDone, syncing: map[string]chan struct{}{}}
+	d := &driver{timer: opt.timer, sc: sc, rec: rec, stdin: stdin, events: make(chan map[string]any, 1<<16), silent: map[string]bool{}, capture: sc.capture(), readerDone: readerDone, syncing: map[string]chan struct{}{},
+		awaiting: map[string]chan struct{}{}, want: map[string]bool{}, resp: map[string]map[string]any{}, stepTimeout: opt.step(),
+		vars:  &laneVars{builtin: map[string]string{"sessions": sessionsDir, "cwd": cwd, "agent": agent}},
+		roots: map[string]string{"workspace": cwd, "agent": agent, "sessions": sessionsDir, "home": laneHome(lane.Host, root)}}
+	if llmSrv != nil {
+		llmSrv.setOnRequest(d.onLLMRequest)
+		llmSrv.setVars(d.vars)
+		d.release = llmSrv.release
+	}
 	go d.read(stdout, readerDone)
 	// The host's exit is read by the driver's waits and by the shutdown below, so it is a closed channel
 	// plus the stored error, not a value one reader can take from the other (a lane used to hang forever).
@@ -519,6 +556,13 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	}
 	// The host is gone, which releases every request still waiting for its output to be ordered before it.
 	rec.held.Wait()
+	// The final state of the files, after the host's shutdown handlers have run.
+	if len(sc.CaptureFiles) > 0 {
+		rec.setStep("99-files")
+		if err := d.captureFiles(sc.CaptureFiles); err != nil {
+			fail(err.Error())
+		}
+	}
 	rec.mu.Lock()
 	defer rec.mu.Unlock()
 	return &Trace{
@@ -602,6 +646,18 @@ type driver struct {
 	silent  map[string]bool // barrier response ids, kept out of the trace
 	nextID  int
 	syncing map[string]chan struct{} // syncHost round trips by response id, closed by the reader
+	// awaiting maps the id of a trigger's command to a channel the reader closes when its response arrives.
+	awaiting map[string]chan struct{}
+	// want holds the ids of commands whose response a step saves values from; resp keeps those responses.
+	want map[string]bool
+	resp map[string]map[string]any
+
+	vars        *laneVars
+	trig        triggerSet
+	release     func(name string) // releases held model turns (nil without a scripted model)
+	stepTimeout time.Duration
+	// roots are the directories file captures name (FileRoots).
+	roots map[string]string
 }
 
 func (d *driver) send(m map[string]any) error {
@@ -684,12 +740,18 @@ func (d *driver) read(r io.Reader, done chan<- struct{}) {
 			continue // not an RPC record (for example a stray log line)
 		}
 		id, _ := rec["id"].(string)
-		if typ, _ := rec["type"].(string); typ == "response" && d.isSilent(id) {
+		typ, _ := rec["type"].(string)
+		if typ == "response" && d.isSilent(id) {
 			// barrier response: forwarded, not recorded. Every line before it has been recorded, which is what a
 			// syncHost round trip waits for.
 			d.releaseSync(id)
 		} else if ch, data, ok := d.rec.norm.ProjectHost(rec, d.capture); ok {
 			d.rec.addRaw(ch, data)
+		}
+		if typ == "response" {
+			d.noteResponse(id, rec)
+		} else {
+			d.onHostEvent(rec)
 		}
 		d.events <- rec
 	}
@@ -710,15 +772,26 @@ func (d *driver) run(opt Options, exited *hostExit, stderr *tailBuffer) error {
 	for i, st := range d.sc.Steps {
 		d.rec.setStep(st.label(i))
 		answers := slices.Clone(st.UI)
-		id := d.newID(false)
-		cmd := map[string]any{"id": id}
-		for k, v := range st.RPC {
-			cmd[k] = v
+		id := d.newID(st.Quiet)
+		v, err := d.vars.expand(st.RPC)
+		if err != nil {
+			return fmt.Errorf("step %s: %w", st.label(i), err)
 		}
+		cmd := v.(map[string]any)
+		cmd["id"] = id
+		if len(st.Save) > 0 || st.Quiet {
+			d.mu.Lock()
+			d.want[id] = true
+			d.mu.Unlock()
+		}
+		d.arm(st.Triggers)
 		if err := d.send(cmd); err != nil {
 			return fmt.Errorf("step %s: send: %w", st.label(i), err)
 		}
 		if err := d.await(id, st.wait() == "agent_end", st.wait() == "ui", opt.step(), exited, stderr, &answers); err != nil {
+			return fmt.Errorf("step %s: %w", st.label(i), err)
+		}
+		if err := d.finishTriggers(opt.step()); err != nil {
 			return fmt.Errorf("step %s: %w", st.label(i), err)
 		}
 		if err := d.barrier(opt.step(), exited, stderr, &answers); err != nil {
@@ -727,6 +800,12 @@ func (d *driver) run(opt Options, exited *hostExit, stderr *tailBuffer) error {
 		time.Sleep(time.Duration(d.sc.stepSettle(st)) * time.Millisecond)
 		if len(answers) > 0 {
 			return fmt.Errorf("step %s: %d scripted dialog answer(s) were never requested", st.label(i), len(answers))
+		}
+		if err := d.saveVars(id, st.Save); err != nil {
+			return fmt.Errorf("step %s: %w", st.label(i), err)
+		}
+		if err := d.captureFiles(st.CaptureFiles); err != nil {
+			return fmt.Errorf("step %s: %w", st.label(i), err)
 		}
 	}
 	// Final quiet period: effects the extension started without awaiting and
