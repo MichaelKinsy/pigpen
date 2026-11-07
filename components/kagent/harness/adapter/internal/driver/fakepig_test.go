@@ -185,6 +185,10 @@ func fakePig(mode string) int {
 	}()
 	onEOF := func() int {
 		f.logf("stdin_eof", map[string]any{})
+		if mode == "late-usage" {
+			// usage that arrives only once stdin closes, i.e. after the cancel grace
+			f.emit(map[string]any{"type": "message_end", "message": f.assistant([]any{}, "aborted", usage(9, 1, 0))})
+		}
 		return 0
 	}
 	for command := range commands {
@@ -203,7 +207,7 @@ func fakePig(mode string) int {
 				"data": map[string]any{"model": map[string]any{"id": model, "provider": argValue(args, "--provider")}, "sessionId": session}})
 		case "abort":
 			f.emit(map[string]any{"id": command["id"], "type": "response", "command": "abort", "success": true})
-			if mode == "hang" {
+			if mode == "hang" || mode == "hang-tool" {
 				message := f.assistant([]any{}, "aborted", usage(7, 1, 0))
 				f.emit(map[string]any{"type": "message_end", "message": message})
 				f.emit(map[string]any{"type": "agent_settled", "aborted": true})
@@ -221,6 +225,10 @@ func mustPgid() int { id, _ := syscall.Getpgid(0); return id }
 
 // onPrompt scripts one prompt. done=true ends the process with code.
 func (f *fakePigState) onPrompt(mode string, command map[string]any) (int, bool) {
+	if mode == "crash-before-accept" {
+		fmt.Fprintln(os.Stderr, "boom: died before answering the prompt")
+		return 5, true
+	}
 	if mode == "reject" {
 		f.emit(map[string]any{"id": command["id"], "type": "response", "command": "prompt", "success": false, "error": "SECRET-REASON"})
 		return 0, false
@@ -278,6 +286,24 @@ func (f *fakePigState) onPrompt(mode string, command map[string]any) (int, bool)
 			map[string]any{"id": "c3", "name": "bash", "arguments": map[string]any{"command": "echo 3"}})
 		f.confirm("approval", "c2", fakeProbeName, map[string]any{"note": "basket"})
 		return f.waitForEOF(mode)
+	case "approve-batch-started":
+		// PiG announces each call before its hooks run: c1 and the gated c2 are announced, c3 never is.
+		f.callMessage(map[string]any{"id": "c1", "name": "bash", "arguments": map[string]any{"command": "echo"}},
+			map[string]any{"id": "c2", "name": fakeProbeName, "arguments": map[string]any{"note": "basket"}},
+			map[string]any{"id": "c3", "name": "bash", "arguments": map[string]any{"command": "echo 3"}})
+		f.emit(map[string]any{"type": "tool_execution_start", "toolCallId": "c1", "toolName": "bash", "args": map[string]any{"command": "echo"}})
+		f.emit(map[string]any{"type": "tool_execution_start", "toolCallId": "c2", "toolName": fakeProbeName, "args": map[string]any{"note": "basket"}})
+		f.confirm("approval", "c2", fakeProbeName, map[string]any{"note": "basket"})
+		return f.waitForEOF(mode)
+	case "hang-tool":
+		f.callMessage(map[string]any{"id": "call_bash", "name": "bash", "arguments": map[string]any{"command": "sleep 99"}})
+		f.emit(map[string]any{"type": "tool_execution_start", "toolCallId": "call_bash", "toolName": "bash", "args": map[string]any{"command": "sleep 99"}})
+		f.logf("hanging", map[string]any{})
+		return 0, false
+	case "late-usage":
+		f.emit(map[string]any{"type": "message_start", "message": map[string]any{"role": "assistant", "content": []any{}}})
+		f.logf("hanging", map[string]any{})
+		return 0, false
 	case "ask":
 		f.callMessage(map[string]any{"id": "call_ask", "name": "ask_user", "arguments": map[string]any{}})
 		f.emit(map[string]any{"type": "tool_execution_start", "toolCallId": "call_ask", "toolName": "ask_user", "args": map[string]any{}})

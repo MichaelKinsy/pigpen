@@ -129,7 +129,7 @@ func (d *Driver) park(ctx context.Context, p *proc, sp spec, tr *translator, pay
 	if err := ctx.Err(); err != nil {
 		return runtime.Outcome{}, err // cancelled while pausing: do not park
 	}
-	if err := p.stop(); err != nil {
+	if err := p.stop(nil); err != nil {
 		return runtime.Outcome{}, &runtime.CancellationError{Err: err}
 	}
 	if err := ctx.Err(); err != nil {
@@ -153,6 +153,11 @@ func (d *Driver) park(ctx context.Context, p *proc, sp spec, tr *translator, pay
 	rec.Version, rec.Phase = journal.Version, journal.Waiting
 	rec.TaskID, rec.ContextID, rec.Origin, rec.SessionID = sp.taskID, sp.contextID, sp.origin, sp.sessionID
 	rec.AssistantEntryID, rec.Calls = tail.ID, tail.Calls
+	// Siblings were announced before the gate ran and never executed (see injectedResults); the gated call stays
+	// open for the approval UI and is closed by the continuation (or by Cancel).
+	if err := tr.declineOpen(payload.ToolCallID, session.NotExecutedText(rec.Kind)); err != nil {
+		return runtime.Outcome{}, err
+	}
 	if err := d.journal.Save(&rec); err != nil {
 		return runtime.Outcome{}, err
 	}

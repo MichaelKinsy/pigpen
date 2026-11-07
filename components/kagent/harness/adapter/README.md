@@ -19,16 +19,20 @@ projects; this program is not affiliated with or endorsed by either.
 3. The policy extension (fused into the Piglet Binary) turns a gated call or an `ask_user` question into an
    `extension_ui_request{confirm}`. The adapter closes pig's stdin, waits for exit (nothing of the batch has run), writes
    `<DurableDir>/adapter/pig-pending.json`, and returns `Outcome{Pending}`. No process is held while parked.
-4. `Resume` runs the approved MCP `tools/call` itself (or builds `Tool call was rejected by user.` plus `Reason: ...`, or formats
-   the answers), appends one `toolResult` per call of the interrupted assistant message to the session file (siblings are
-   reported "Not executed"), and starts a fresh pig with the prompt `Continue.`.
+4. `Resume` runs the approved MCP `tools/call` itself (or builds `Tool call was rejected by user.` followed by ` Reason: <trimmed reason>`
+   when the reason is not blank, or formats the answers), appends one `toolResult` per call of the interrupted assistant message to the
+   session file (siblings are reported "Not executed"), and starts a fresh pig with the prompt `Continue.`.
+5. Tool artifacts are always closed: at the park the announced siblings of the gated call get `ToolDeclined`; the gated call gets its
+   result from the continuation (`ToolDeclined` when rejected); a call that never got a result because of a cancel, a crash or an
+   abandon is closed with `ToolUnfinished` (`IsError` set). Usage that pig writes after the cancel grace, while it is shut down, is
+   still reported as a `ModelCall`. A restore that reports `ErrSessionAbandoned` has no event sink, so it cannot close anything.
 
 ## Environment
 
 | Variable | Meaning |
 |---|---|
 | `KAGENT_BOOTSTRAP_JSON` | Controller descriptor (read by kagent's bootstrap package, never passed to pig) |
-| `KAGENT_PIG_BIN` | pig binary, a fused Piglet Binary; default `pig` on `PATH` |
+| `KAGENT_PIG_BIN` | pig binary, a fused Piglet Binary. An absolute path to an existing executable regular file owned by root or by the process user and not under `/data`; default `/usr/local/bin/pig`. There is no `PATH` lookup, because the model's tools can write to `/data` and a planted `pig` there would sit between the adapter and PiG. `-check` verifies this |
 | `KAGENT_PIG_TOOLS` | built-in `--tools` allowlist, `name(,name)*`; default `read,bash,edit,write,grep,find,ls`. `ask_user` and one `mcp__<server>__*` pattern per bound MCP server are always added, because a non-empty `--tools` hides every MCP tool that is not named |
 | `KAGENT_PIG_LOG_LEVEL` | `debug`, `info`, `warn`, `error`; overrides the compiled level |
 | `KAGENT_PIG_CONTEXT_WINDOW`, `KAGENT_PIG_MAX_TOKENS` | model limits (kagent compiles none); defaults 128000 and 8192. PiG compacts by the context window |
@@ -39,6 +43,8 @@ projects; this program is not affiliated with or endorsed by either.
 pig gets an allowlist only: `PATH HOME TZ LANG LC_* TMPDIR USER`, the egress trust-bundle variables (`SSL_CERT_*`,
 `REQUESTS_CA_BUNDLE`, `AWS_CA_BUNDLE`, `NODE_EXTRA_CA_CERTS`, `CURL_CA_BUNDLE`, `GIT_SSL_CAINFO`), proxy variables, plus
 `PIG_HOME`, `PIG_OFFLINE=1`, `PI_SKIP_VERSION_CHECK=1`, `KAGENT_PIG_POLICY` and the generated `KAGENT_PIG_HDR_n` header values.
+`PATH` is rebuilt, not copied: `/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin` first, then the other inherited
+absolute entries, and the entries under `/data` last, so a file the model writes into `/data/.local/bin` never shadows a system binary.
 kagent projects only the egress CA, and several tools treat the CA variable as the whole trust store, so the adapter writes
 `PIG_HOME/ca-bundle.pem` (system roots plus the egress bundle) and points the CA variables of pig and its tools at it.
 
@@ -90,8 +96,6 @@ they are `${KAGENT_PIG_HDR_n}` / `${PROVIDER_KEY}` references, because PiG runs 
 
 ## Checks
 
-`kagent-pig -check` validates the bootstrap configuration and runs `pig version`, then exits without touching `/data`.
-`go vet ./... && go test -race ./...` runs everything except the opt-in real-pig scenarios; to run those, set
-`KAGENT_PIG_E2E_BIN` (the fused Piglet Binary) and `KAGENT_PIG_E2E_MOCK` (the mock model base URL, MCP assumed on port+1 or
-`KAGENT_PIG_E2E_MOCK_MCP`) and run `go test -run E2E ./internal/driver`.
-Session fixtures in `internal/session/testdata` were recorded with the PiG v0.7.0 release binary (see its README.txt).
+`kagent-pig -check` validates the bootstrap configuration and the pig binary (path rules above, then `pig version`), then exits
+without touching `/data`. The Go tests, the PiG v0.7.0 session fixtures and the opt-in real-pig scenarios live in the Pigpen
+repository (`components/kagent/harness/adapter`) and are not part of this exported tree.

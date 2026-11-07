@@ -213,3 +213,87 @@ func TestPigHomeOrder(t *testing.T) {
 		os.RemoveAll(got)
 	})
 }
+
+// plantedPig is a `pig` that records that it ran.
+func plantedPig(t *testing.T, dir, marker string) string {
+	t.Helper()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "pig")
+	script := "#!/bin/sh\necho ran >> " + marker + "\nif [ \"$1\" = version ]; then echo '0.7.0+1.5.0'; fi\nexit 0\n"
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestPigIsNeverResolvedThroughPATH(t *testing.T) {
+	root := t.TempDir()
+	marker := filepath.Join(root, "ran")
+	data := filepath.Join(root, "data")
+	local, gobin := filepath.Join(data, ".local", "bin"), filepath.Join(data, "go", "bin")
+	planted := plantedPig(t, local, marker)
+	plantedPig(t, gobin, marker)
+	t.Setenv("PATH", local+string(os.PathListSeparator)+gobin+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	env := func(bin string) map[string]string {
+		e := map[string]string{"OPENAI_API_KEY": "x"}
+		if bin != "" {
+			e["KAGENT_PIG_BIN"] = bin
+		}
+		return e
+	}
+	check := func(bin string) error {
+		d := testDeps(t, fixture(t, "config.json"), env(bin))
+		d.dataDir = data
+		return run(t.Context(), true, d)
+	}
+	ran := func() bool { _, err := os.Stat(marker); return err == nil }
+
+	// No override: only the fixed absolute default is tried. Whether it exists here or not, the planted ones never run.
+	if err := check(""); err != nil && !strings.Contains(err.Error(), defaultPig) {
+		t.Fatalf("default: %v", err)
+	}
+	if ran() {
+		t.Fatal("a pig planted in the data directory ran for the default path")
+	}
+	// A bare name is not looked up on PATH.
+	if err := check("pig"); err == nil || !strings.Contains(err.Error(), "absolute") {
+		t.Fatalf("bare name: err = %v, want a refusal that names the absolute-path rule", err)
+	}
+	// An override under the data directory is refused, as given and through a symlink.
+	if err := check(planted); err == nil || !strings.Contains(err.Error(), "durable data directory") {
+		t.Fatalf("override under data: err = %v", err)
+	}
+	link := filepath.Join(t.TempDir(), "pig")
+	if err := os.Symlink(planted, link); err != nil {
+		t.Fatal(err)
+	}
+	if err := check(link); err == nil || !strings.Contains(err.Error(), "durable data directory") {
+		t.Fatalf("symlink into data: err = %v", err)
+	}
+	if ran() {
+		t.Fatal("a pig under the data directory ran")
+	}
+	// A good absolute override outside the data directory still works with the planted ones first on PATH.
+	if err := check(fakePigBinary(t)); err != nil {
+		t.Fatalf("good override: %v", err)
+	}
+	if ran() {
+		t.Fatal("a planted pig ran next to a good override")
+	}
+}
+
+func TestResolvePigRejectsWhatIsNotAnExecutableFile(t *testing.T) {
+	dir := t.TempDir()
+	plain := filepath.Join(dir, "plain")
+	if err := os.WriteFile(plain, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for name, path := range map[string]string{"directory": dir, "not executable": plain, "missing": filepath.Join(dir, "none")} {
+		if _, err := resolvePig(path, filepath.Join(t.TempDir(), "data")); err == nil {
+			t.Errorf("%s: accepted", name)
+		}
+	}
+}

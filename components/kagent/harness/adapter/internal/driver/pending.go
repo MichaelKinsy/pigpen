@@ -14,14 +14,22 @@ import (
 	"github.com/kagent-dev/kagent/go/pkg/logging"
 )
 
-// RejectionText is what the model sees for a rejected call (kagent's wording).
+// RejectionText is what the model sees for a rejected call: kagent's ADK wording, which appends a space and the
+// trimmed reason only when that reason is not blank.
 func RejectionText(reason string) string {
 	text := "Tool call was rejected by user."
-	if reason != "" {
-		text += "\nReason: " + reason
+	if reason = strings.TrimSpace(reason); reason != "" {
+		text += " Reason: " + reason
 	}
 	return text
 }
+
+// validationError marks a Resume the adapter refuses because the response itself is wrong (not the turn): it
+// leaves the record as it was, so a corrected response can still be applied.
+type validationError struct{ err error }
+
+func (e *validationError) Error() string { return e.err.Error() }
+func (e *validationError) Unwrap() error { return e.err }
 
 // AnswerText formats ask_user answers as the tool result of that call.
 func AnswerText(questions []runtime.AskUserQuestion, answers [][]string) string {
@@ -41,6 +49,10 @@ func AnswerText(questions []runtime.AskUserQuestion, answers [][]string) string 
 type pending struct {
 	d      *Driver
 	record journal.Record
+	// gatedClosed is set once the A2A tool artifact of the gated call has its result (the continuation's, or the
+	// close that Resume or Cancel emitted). Only this handle's own emissions are tracked: a handle built by
+	// RestorePending or repark starts open, as the task's artifact does.
+	gatedClosed bool
 }
 
 var _ runtime.PendingTurn = (*pending)(nil)
@@ -127,6 +139,7 @@ func (p *pending) Resume(ctx context.Context, response runtime.InputResponse, si
 			// pig could not be confirmed gone: the continuation may still be writing, so this is not a clean
 			// cancellation and the record must not read as one.
 			outcome = runtime.Outcome{}
+			p.closeGated(sink, unfinishedResult())
 			if err := p.markAbandoned(); err != nil {
 				returnErr = errors.Join(returnErr, err)
 			}
@@ -151,7 +164,9 @@ func (p *pending) Resume(ctx context.Context, response runtime.InputResponse, si
 		outcome, returnErr = runtime.Outcome{}, context.Canceled
 	}()
 	defer func() {
-		if returnErr != nil && ctx.Err() == nil {
+		var invalid *validationError
+		if returnErr != nil && ctx.Err() == nil && !errors.As(returnErr, &invalid) {
+			p.closeGated(sink, unfinishedResult())
 			returnErr = p.abandon(returnErr)
 		}
 	}()
@@ -160,7 +175,7 @@ func (p *pending) Resume(ctx context.Context, response runtime.InputResponse, si
 		return runtime.Outcome{}, err
 	}
 	if err := validateResponse(r.Request(), response); err != nil {
-		return runtime.Outcome{}, err
+		return runtime.Outcome{}, &validationError{err}
 	}
 	switch r.Phase {
 	case journal.Executing, journal.Continuing:
@@ -171,10 +186,10 @@ func (p *pending) Resume(ctx context.Context, response runtime.InputResponse, si
 	}
 	if r.Phase == journal.Result {
 		if decision, ok := response.(*runtime.ApprovalDecision); ok && !reflect.DeepEqual(r.Decision, decision) {
-			return runtime.Outcome{}, errors.New("the approval decision changed after execution")
+			return runtime.Outcome{}, &validationError{errors.New("the approval decision changed after execution")}
 		}
 		if answer, ok := response.(*runtime.AskUserResponse); ok && !reflect.DeepEqual(r.Answer, answer) {
-			return runtime.Outcome{}, errors.New("the answer changed after resolution")
+			return runtime.Outcome{}, &validationError{errors.New("the answer changed after resolution")}
 		}
 	} else {
 		reparked, outcome, err := p.resolve(ctx, r, response, sink)
@@ -269,6 +284,7 @@ func (p *pending) continueTurn(ctx context.Context, r *journal.Record, sink runt
 	sp := spec{
 		taskID: r.TaskID, contextID: r.ContextID, origin: r.Origin, sessionID: r.SessionID, prompt: ContinuationPrompt,
 		afterAccept: func() error {
+			p.gatedClosed = true
 			return sink.ToolResult(runtime.ToolResult{ID: r.CallID, Name: name, Result: r.Result.Content, IsError: r.Result.IsError, Status: declined(r)})
 		},
 	}
@@ -280,6 +296,9 @@ func (p *pending) continueTurn(ctx context.Context, r *journal.Record, sink runt
 	if err != nil || outcome.Pending != nil {
 		return outcome, err // a nested park has already replaced the record
 	}
+	// A failed prompt (PiG refused it) ends the turn without afterAccept having run; the result is in the session
+	// all the same, so the gated call's artifact gets it here.
+	p.closeGated(sink, runtime.ToolResult{Result: r.Result.Content, IsError: r.Result.IsError, Status: declined(r)})
 	r.Phase = journal.Complete
 	if err := p.d.journal.Save(r); err != nil {
 		return runtime.Outcome{}, err
@@ -348,12 +367,30 @@ func (p *pending) abandon(cause error) error {
 	return errors.Join(runtime.ErrSessionAbandoned, cause)
 }
 
+// closeGated gives the gated call's tool artifact a result when this handle has not already. The executor hands
+// Cancel its event sink behind the ModelCallSink type; a sink that cannot carry tool results is skipped.
+func (p *pending) closeGated(sink any, res runtime.ToolResult) {
+	events, ok := sink.(runtime.EventSink)
+	if !ok || p.gatedClosed {
+		return
+	}
+	p.gatedClosed = true
+	res.ID, res.Name = p.record.CallID, callName(&p.record)
+	_ = events.ToolResult(res)
+}
+
 // Cancel tombstones the record. No process is alive while parked, so there is
-// no native process to reap and no usage to emit.
-func (p *pending) Cancel(_ context.Context, _ runtime.ModelCallSink) error {
+// no native process to reap and no usage to emit. The gated call's artifact is
+// closed: with its recorded result when the call already ran, otherwise as unfinished.
+func (p *pending) Cancel(_ context.Context, sink runtime.ModelCallSink) error {
 	r, err := p.current()
 	if err != nil {
 		return err
+	}
+	if r.Phase == journal.Result && r.Result != nil {
+		p.closeGated(sink, runtime.ToolResult{Result: r.Result.Content, IsError: r.Result.IsError, Status: declined(r)})
+	} else if r.Phase != journal.Complete && r.Phase != journal.Canceled {
+		p.closeGated(sink, unfinishedResult())
 	}
 	switch r.Phase {
 	case journal.Abandoned:
@@ -390,6 +427,11 @@ func (p *pending) Cancel(_ context.Context, _ runtime.ModelCallSink) error {
 // injectedResults has one entry per call of the interrupted assistant message:
 // the resolved call gets its result, every sibling is reported as not executed
 // (the batch's hooks all ran before any call, so none of them executed).
+//
+// Caveat: that invariant holds for a parallel batch only. PiG v0.7.0 runs a batch sequentially, one call at a time,
+// if any tool declares execution_mode sequential (agent/tool_execution.go), and then a sibling ahead of the gated
+// call may have executed before the park. No tool in the shipped image declares it (only extension tools can), so
+// the adapter does not handle it; a sequential tool would need the siblings' recorded results instead.
 func injectedResults(r *journal.Record) []session.Result {
 	results := make([]session.Result, 0, len(r.Calls))
 	for _, call := range r.Calls {

@@ -2,6 +2,7 @@ package driver
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"time"
 
@@ -33,6 +34,7 @@ type translator struct {
 	canceling  bool
 	toolNames  map[string]string
 	called     map[string]bool
+	open       []string // announced tool calls that have no result yet, in announcement order
 	settled    bool
 	piError    bool
 	modelCalls int
@@ -193,6 +195,7 @@ func (t *translator) toolCall(id, name string, args json.RawMessage) error {
 	}
 	t.called[id] = true
 	t.toolNames[id] = name
+	t.open = append(t.open, id)
 	call := runtime.ToolCall{ID: id, Name: name, Arguments: decodeArgs(args)}
 	if server, _, ok := t.mcpParts(name); ok {
 		call.MCPServer, call.MCPTool = server, RawToolName(t.servers, server, name)
@@ -204,6 +207,7 @@ func (t *translator) toolResult(rec toolRecord) error {
 	if rec.ToolCallID == "" {
 		return nil
 	}
+	t.open = slices.DeleteFunc(t.open, func(id string) bool { return id == rec.ToolCallID })
 	name := t.toolNames[rec.ToolCallID]
 	if name == "" {
 		name = rec.ToolName
@@ -215,6 +219,40 @@ func (t *translator) toolResult(rec toolRecord) error {
 		}
 	}
 	return t.sink.ToolResult(runtime.ToolResult{ID: rec.ToolCallID, Name: name, Result: result, IsError: rec.IsError})
+}
+
+// declineOpen closes every announced call that has no result, except the gated one, with ToolDeclined: PiG announces
+// a call before its hooks run, so the siblings of a parked call are announced although none of them executed.
+// The A2A artifact would otherwise show them running forever.
+func (t *translator) declineOpen(gatedID, text string) error {
+	for _, id := range slices.Clone(t.open) {
+		if id == gatedID {
+			continue
+		}
+		if err := t.closeCall(id, runtime.ToolResult{Result: text, IsError: true, Status: runtime.ToolDeclined}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// abandonOpen closes every announced call that has no result with ToolUnfinished, the contract's status for a result
+// that never arrived (cancel, a crashed or stopped pig). Delivery errors are dropped: the stream may already be gone.
+func (t *translator) abandonOpen() {
+	for _, id := range slices.Clone(t.open) {
+		_ = t.closeCall(id, unfinishedResult())
+	}
+}
+
+func (t *translator) closeCall(id string, res runtime.ToolResult) error {
+	t.open = slices.DeleteFunc(t.open, func(open string) bool { return open == id })
+	res.ID, res.Name = id, t.toolNames[id]
+	return t.sink.ToolResult(res)
+}
+
+// unfinishedResult is the placeholder for a call whose result never arrived.
+func unfinishedResult() runtime.ToolResult {
+	return runtime.ToolResult{Result: map[string]any{"error": "the turn ended before the tool call finished"}, IsError: true, Status: runtime.ToolUnfinished}
 }
 
 func decodeArgs(raw json.RawMessage) map[string]any {

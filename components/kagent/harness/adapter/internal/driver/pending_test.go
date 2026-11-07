@@ -187,7 +187,7 @@ func TestResumeRejectedNeverCallsMCPAndTellsTheModelWhy(t *testing.T) {
 		t.Fatal("a rejected call reached the MCP server")
 	}
 	results := toolResults(h)
-	if len(results) != 1 || resultText(results[0]) != "Tool call was rejected by user.\nReason: too risky" || results[0]["message"].(map[string]any)["isError"] != true {
+	if len(results) != 1 || resultText(results[0]) != "Tool call was rejected by user. Reason: too risky" || results[0]["message"].(map[string]any)["isError"] != true {
 		t.Fatalf("tool results = %v", results)
 	}
 	if len(sink.results) != 1 || sink.results[0].Status != runtime.ToolDeclined || !sink.results[0].IsError {
@@ -438,8 +438,9 @@ func TestResultPhaseRequiresTheSameDecisionAfterARestart(t *testing.T) {
 	if len(toolResults(h)) != 0 || h.mcp.callCount() != 1 {
 		t.Fatal("a changed decision had effects")
 	}
-	if _, _, p, err := h.d.RestorePending(); p != nil || !errors.Is(err, runtime.ErrSessionAbandoned) {
-		t.Fatalf("a changed decision must abandon the session, got %v %v", p, err)
+	// the conflict is a validation error: the record stays resumable (see TestAConflictingDecisionIsAValidationError...)
+	if _, _, p, err := h.d.RestorePending(); p == nil || err != nil {
+		t.Fatalf("a changed decision must leave the session pending, got %v %v", p, err)
 	}
 }
 

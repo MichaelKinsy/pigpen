@@ -159,6 +159,8 @@ func (d *Driver) pigEnv() []string {
 			env = append(env, name+"="+value)
 		}
 	}
+	env = slices.DeleteFunc(env, func(entry string) bool { return strings.HasPrefix(entry, "PATH=") })
+	env = append(env, "PATH="+systemFirstPath(have["PATH"], filepath.Dir(d.cfg.AdapterDir)))
 	if d.cfg.CABundle != "" {
 		env = slices.DeleteFunc(env, func(entry string) bool {
 			name, _, _ := strings.Cut(entry, "=")
@@ -175,6 +177,39 @@ func (d *Driver) pigEnv() []string {
 		}
 	}
 	return env
+}
+
+// systemDirs lead the PATH of pig and its tools.
+var systemDirs = []string{"/usr/local/bin", "/usr/bin", "/bin", "/usr/local/sbin", "/usr/sbin", "/sbin"}
+
+// systemFirstPath orders PATH explicitly: the system directories first, then the rest of the inherited entries,
+// and the entries under the durable data directory last. The model's bash tool can write into the data directory,
+// so a file it plants there must never shadow a system binary. Empty and relative entries (which mean the working
+// directory, the workspace) are dropped.
+func systemFirstPath(inherited, dataDir string) string {
+	var system, data []string
+	seen := map[string]bool{}
+	add := func(dir string) {
+		dir = filepath.Clean(dir)
+		if seen[dir] {
+			return
+		}
+		seen[dir] = true
+		if dir == dataDir || strings.HasPrefix(dir, dataDir+string(filepath.Separator)) {
+			data = append(data, dir)
+		} else {
+			system = append(system, dir)
+		}
+	}
+	for _, dir := range systemDirs {
+		add(dir)
+	}
+	for _, dir := range filepath.SplitList(inherited) {
+		if filepath.IsAbs(dir) {
+			add(dir)
+		}
+	}
+	return strings.Join(append(system, data...), string(filepath.ListSeparator))
 }
 
 // headerValues returns the KAGENT_PIG_HDR_n values for the adapter's own MCP calls.
@@ -233,6 +268,10 @@ type proc struct {
 
 	stopOnce sync.Once
 	stopErr  error
+
+	// drainMu serialises the frame callback of stop with the caller: once stop returns, the callback never runs again.
+	drainMu sync.Mutex
+	drained bool
 }
 
 func (d *Driver) start(sessionID string) (*proc, error) {
@@ -264,12 +303,23 @@ func (d *Driver) start(sessionID string) (*proc, error) {
 
 // stop closes stdin and waits for exit, escalating to SIGTERM and SIGKILL of the
 // process group. It returns an error only when the process could not be reaped,
-// which is the one case where cancellation cleanup is unsafe.
-func (p *proc) stop() error {
+// which is the one case where cancellation cleanup is unsafe. Frames pig writes
+// while it shuts down are handed to onFrame (when set), which is how usage that
+// arrives after the cancel grace still reaches the sink; stop waits for them
+// (bounded by ReapTimeout once the process is gone), and onFrame never runs after
+// stop returns. Only the first call's onFrame is used.
+func (p *proc) stop(onFrame func(frame)) error {
 	p.stopOnce.Do(func() {
 		p.rpc.closeStdin()
+		drainDone := make(chan struct{})
 		go func() {
-			for range p.rpc.frames { // keep the reader unblocked so Wait can finish
+			defer close(drainDone)
+			for f := range p.rpc.frames { // keep the reader unblocked so Wait can finish
+				p.drainMu.Lock()
+				if onFrame != nil && !p.drained && f.err == nil {
+					onFrame(f)
+				}
+				p.drainMu.Unlock()
 			}
 		}()
 		grace := p.d.cfg.Grace
@@ -292,6 +342,13 @@ func (p *proc) stop() error {
 		}
 		// A tool pig started can outlive it.
 		_ = fsutil.KillProcessGroup(p.cmd.Process)
+		select {
+		case <-drainDone:
+		case <-time.After(p.d.cfg.ReapTimeout):
+		}
+		p.drainMu.Lock()
+		p.drained = true
+		p.drainMu.Unlock()
 	})
 	return p.stopErr
 }
@@ -352,7 +409,7 @@ func (d *Driver) run(ctx context.Context, sp spec, sink runtime.EventSink) (outc
 		return runtime.Outcome{}, err
 	}
 	defer func() {
-		if err := p.stop(); err != nil && returnErr == nil {
+		if err := p.stop(nil); err != nil && returnErr == nil {
 			returnErr = &runtime.CancellationError{Err: err}
 		}
 	}()
@@ -368,6 +425,13 @@ func (d *Driver) run(ctx context.Context, sp spec, sink runtime.EventSink) (outc
 		return runtime.Outcome{}, err
 	}
 	tr := newTranslator(sink, d.cfg.Compiled.Policy.MCPServers, d.cfg.Now)
+	defer func() {
+		if outcome.Pending == nil {
+			// Whatever ended the turn (cancel, a crash, a protocol error), a call announced without a result is
+			// closed so the A2A tool artifact does not show it running forever.
+			tr.abandonOpen()
+		}
+	}()
 	return d.consume(ctx, p, sp, tr, sink)
 }
 
@@ -464,7 +528,7 @@ func (d *Driver) consume(ctx context.Context, p *proc, sp spec, tr *translator, 
 					if !accepted {
 						return runtime.Outcome{}, errors.New("PiG settled before accepting the prompt")
 					}
-					if err := p.stop(); err != nil {
+					if err := p.stop(nil); err != nil {
 						return runtime.Outcome{}, &runtime.CancellationError{Err: err}
 					}
 					return tr.outcome(), nil
@@ -500,7 +564,9 @@ wait:
 			}
 		}
 	}
-	if err := p.stop(); err != nil {
+	// Usage pig writes after the grace (while stdin closes, or from the kill's last breath) is still reported: the
+	// contract wants every ModelCall the harness emitted. Text and tool events stay suppressed while canceling.
+	if err := p.stop(func(f frame) { _, _ = tr.handle(f.kind, f.raw) }); err != nil {
 		return runtime.Outcome{}, &runtime.CancellationError{Err: err}
 	}
 	return runtime.Outcome{}, ctx.Err()

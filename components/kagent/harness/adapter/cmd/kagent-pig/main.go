@@ -14,9 +14,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	a2atype "github.com/a2aproject/a2a-go/v2/a2a"
@@ -116,7 +116,7 @@ func run(ctx context.Context, check bool, d deps) error {
 		return fmt.Errorf("invalid runtime telemetry: %w", err)
 	}
 
-	executable, err := exec.LookPath(cmp.Or(d.getenv(config.EnvBin), "pig"))
+	executable, err := resolvePig(d.getenv(config.EnvBin), d.dataDir)
 	if err != nil {
 		return fmt.Errorf("find the pig binary (%s): %w", config.EnvBin, err)
 	}
@@ -186,6 +186,56 @@ func run(ctx context.Context, check bool, d deps) error {
 		return fmt.Errorf("construct private A2A app: %w", err)
 	}
 	return application.Run()
+}
+
+// defaultPig is where the image installs pig. It is never looked up on PATH.
+const defaultPig = "/usr/local/bin/pig"
+
+// resolvePig returns the pig binary to run: override (KAGENT_PIG_BIN) or defaultPig. There is no PATH lookup,
+// because the durable data directory is writable by the model's tools and a planted `pig` there would sit between
+// the adapter and the real one, able to rewrite the policy file and forge the event stream. The path must be
+// absolute and, after symlinks are resolved, name an executable regular file owned by root or by this process's user
+// that does not live under dataDir (neither as given nor as resolved).
+func resolvePig(override, dataDir string) (string, error) {
+	path := cmp.Or(override, defaultPig)
+	if !filepath.IsAbs(path) {
+		return "", fmt.Errorf("%q is not an absolute path", path)
+	}
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", err
+	}
+	dirs := []string{filepath.Clean(dataDir)}
+	if real, err := filepath.EvalSymlinks(dataDir); err == nil {
+		dirs = append(dirs, real)
+	}
+	for _, p := range []string{filepath.Clean(path), resolved} {
+		for _, dir := range dirs {
+			if underDir(p, dir) {
+				return "", fmt.Errorf("%q is under the durable data directory %s, which the model can write to", p, dir)
+			}
+		}
+	}
+	info, err := os.Stat(resolved)
+	if err != nil {
+		return "", err
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0 {
+		return "", fmt.Errorf("%q is not an executable regular file", resolved)
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return "", fmt.Errorf("cannot read the owner of %q", resolved)
+	}
+	if stat.Uid != 0 && int(stat.Uid) != os.Getuid() {
+		return "", fmt.Errorf("%q is owned by uid %d, want root or uid %d", resolved, stat.Uid, os.Getuid())
+	}
+	return resolved, nil
+}
+
+// underDir reports whether path is dir or inside it.
+func underDir(path, dir string) bool {
+	return path == dir || strings.HasPrefix(path, dir+string(filepath.Separator))
 }
 
 // pigHomeChoice names where the ephemeral PIG_HOME may live, in order of preference.
