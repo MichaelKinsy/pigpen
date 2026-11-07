@@ -160,6 +160,18 @@ describe('extends', () => {
     assert.equal(problems.length, 1);
     assert.match(problems[0], /^refused: Piglet "child" extends "local:\.\.\/base", which is a directory; extends needs a Piglet YAML file/);
   });
+  it('checks the origin a child redefines for an inherited extension or skill, not the base\'s', () => {
+    const components = { mit: 'MIT' };
+    for (const kind of ['extensions', 'skills']) {
+      const baseBody = `${kind}:\n  - name: e\n    origins: [package:mit]\n`;
+      const redefined = `${kind}:\n  - name: e\n    origins: [npm:ffmpeg-static]\n`;
+      const dir = repository({ components, piglets: { base: { ...piglet('MIT', 'mit'), body: baseBody }, child: { license: 'MIT', extending: 'extends:\n  source: local:../base/piglet.yaml\n', body: redefined } } });
+      assert.deepEqual(fusionProblems(dir, ['base']), [], 'the base on its own is clean');
+      const problems = fusionProblems(dir, ['child']);
+      assert.equal(problems.length, 1, `${kind}: ${problems.join('\n')}`);
+      assert.match(problems[0], new RegExp(`^refused: Piglet "child" takes ${kind === 'skills' ? 'skill' : 'extension'} "e" \\(written in "child"\\) from the origin "npm:ffmpeg-static", whose licence cannot be read here`));
+    }
+  });
   it('refuses a base it cannot read here instead of passing it', () => {
     const wanted = { 'npm:piglet-someone@1.0.0': 'a local: Piglet whose manifest', 'git:https://example.com/x.git': 'a local: Piglet whose manifest', 'local:../missing/piglet.yaml': 'a manifest inside this repository', 'local:../../../outside.yaml': 'a manifest inside this repository' };
     for (const source of Object.keys(wanted)) {
