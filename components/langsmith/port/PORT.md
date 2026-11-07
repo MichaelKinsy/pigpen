@@ -56,8 +56,11 @@ still compared); T1/T2 transport headers and gzip decoded.
 * **D1 sender identity.** `extra.runtime.{runtime,sdk,sdk_version}` and `User-Agent` say `go`, `pigpen-langsmith-go`, `0.1.0` (keys are the SDK's). Flipping them is two constants in `runtime_env.go`.
 * **F1 key order in host-delivered objects.** The SDK hands event data to Go as `map[string]any`, so message, payload and tool-argument keys are written sorted.
   Objects the extension builds keep the original's order. Recommendation: the SDK exposes the ordered raw JSON of an event payload (a lane, `SdkKeyOrder`, is looking at it).
-* **D3 batch timing.** The SDK's 250 ms timer is cleared before two awaits (`client.js:1601`), so under overlapping operations timers leak and the original sends
-  more, smaller batches (33 vs 15 requests in one workload, same bytes). The port debounces as documented. Payloads identical.
+* **D3 batch timing (upstream bug, owner decision: keep the debounce).** The SDK's 250 ms timer is cleared before two awaits (`client.js:1601-1605`), so under
+  overlapping operations timers leak and the original flushes every 250 ms under sustained activity: more, smaller batches (33 vs 15 requests in one workload,
+  1089 vs 153 in 1000 tool calls, same bytes). The port debounces as the SDK documents. Payloads identical. Upstream issue text (not filed):
+  `~/PiG-launch-newer/handoffs/0.7.1/porter-quality/langsmith-upstream-issue.md`.
+* **D1 decision (owner, 2026-11-07): keep the honest sender identity** (`runtime: go`, own `sdk`, own User-Agent); never claim `langsmith-js`.
 * **D2/D4 smaller:** `console.log/warn/error` go to stderr (and `console.error(err)` prints `Name: message`, no stack); the HTTP client honours `HTTP(S)_PROXY`
   (Pi installs undici's EnvHttpProxyAgent too) and speaks HTTP/1.1; response bodies of the OAuth flow are capped at 8 MiB; the `file:` and UTS #46 limits of the URL parser
   (`profile_url.go`, `urlparse.go`); `jsISOString` panics beyond +-8.64e15 ms; one mutex serialises the hooks (the original interleaves at awaits only); `GetModelInfo`
@@ -91,3 +94,16 @@ makes the extension fail to load (F-H1). Details with line references: `port/lan
 3. SDK replicates only model id and provider: `name`, session id and context usage cost host round trips (SdkReplica).
 4. A Go handler awaiting in `agent_settled` blocks the host's `get_state` (SettleBlock).
 5. Event data key order is lost (SdkKeyOrder). 6. `pig` does not surface the Go extension's stderr to the harness in the f500 workload (0 bytes against 1138 for TS): to be checked.
+
+## Updates (2026-11-07)
+
+* **Mutation proof complete for the selected set:** 605 mutants run (selected by branch family out of 1212 written): 585 killed, 20 argued equivalent (reasons in
+  `mutations.md`), 0 survivors, 0 invalid; 86 kills needed new tests (`mutants_*_test.go`). `pigeq mutate --unit-only` judges (see `mutations.md` for why the scenario layer cannot).
+  The 607 second-variant mutants were not run.
+* **`tracing-background-false` (host finding 4):** with a pig built from `fix/071-settle-block` (a58ad93c4b) the Go lane passes (15 events, 2 of 2); on the unfixed pig it timed out.
+* **f500 stderr (finding 6):** the port prints exactly what the original prints (`Failed to Failed to send multipart request. Received status [500]...` + `Context: trace=...`, same 5 requests).
+  The pig host dropped non-Node extension stderr (D56); on `fix/071-host-parity-ph` (88dc6a80de) stderr is 1138 bytes on go, ts and pi.
+* **d1000 re-measurement:** 20 samples per side; the spread stays 16-31 % on the shared host (CPU inflates up to 30 % under load); on the quiet-machine subset it is 4-5 %: Go 74.6 s vs TS 46.7 s wall (1.60x),
+  extension CPU 1.81x. Unchanged conclusion; waits for the SDK frame-decode fix (`port/perf/README.md`, `data/d1000q`).
+* **Decisions recorded:** keep `runtime: go` (D1); keep the debounce and document the original's leaking timer as an upstream bug (D3, issue text not filed).
+* **Pending (row stays `porting`):** rerun `pigeq check` on `fix/071-sdk-keyorder` (key order, F1) and perf e/d100/d1000 after SdkFrameDecode lands.

@@ -6,11 +6,12 @@
 #   collect <name>  wait for a remote run whose local run.sh was interrupted (the remote job keeps running), fetch and summarize it
 # Runs on xd6702 in the tern-ci container through ~/work/ls-tools/ls (rsync of the worktree, nice 10, LS_CPUS=3), then copies
 # the raw data back to port/perf/data/<name>/ and prints the summary. The no-extension baselines (nopig, nopi) run in workloads a and c.
+# LS_PERF_PIG=<path on xd6702> runs the go/ts sides against another pig binary (a branch build); default $PIGEQ_PIG.
 # Needs the Mac worktree; never touches real ~/.pig or ~/.pi. LS_PERF_NAME renames the data directory.
 set -euo pipefail
 mode=${1:-}; shift || true
 here=$(cd "$(dirname "$0")" && pwd)
-remote_scratch=/home/kinsy/ls-work/scratch/LsPerf
+remote_scratch=${LS_PERF_SCRATCH:-/home/kinsy/ls-work/scratch/LsPerf}   # a second run at the same time needs its own scratch tree
 case "$mode" in
   collect)
     name=${1:?usage: run.sh collect <name>}
@@ -28,9 +29,9 @@ wt=${LS_WT:-$(cd "$here/../../../.." && pwd)}
 remote_out=$remote_scratch/out/$name
 data="$here/data/$name"
 # The remote copy lives under the scratch tree: `ls sync` rsyncs --delete into components/langsmith and would erase data kept there.
-LS_WT=$wt LS_CPUS=${LS_CPUS:-3} ~/work/ls-tools/ls run "mkdir -p $remote_out && rm -f $remote_out/samples.jsonl && python3 components/langsmith/port/perf/perf.py run --out $remote_out --sides $sides --baselines $*; rc=\$?; python3 components/langsmith/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
+LS_WT=$wt LS_CPUS=${LS_CPUS:-3} ~/work/ls-tools/ls run "mkdir -p $remote_out && rm -f $remote_out/samples.jsonl && LS_PERF_SCRATCH=$remote_scratch ${LS_PERF_PIG:+PIGEQ_PIG=$LS_PERF_PIG }python3 components/langsmith/port/perf/perf.py run --out $remote_out --sides $sides --baselines $*; rc=\$?; python3 components/langsmith/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
 mkdir -p "$data"
-rsync -a xd6702:ls-work/scratch/LsPerf/out/$name/ "$data/"
+rsync -a xd6702:${remote_scratch#/home/kinsy/}/out/$name/ "$data/"
 python3 "$here/perf.py" summarize "$data" > /dev/null || true   # re-summarize locally: the remote summary ran the code as synced
 echo "data: $data"
 head -c 30000 "$data/summary.md"

@@ -384,6 +384,12 @@
   "replace": "\tmetadata = obj().spread(t.config.Metadata).spread(metadata)\n"
  },
  {
+  "name": "ext-root-replica-key-empty-kept",
+  "file": "extension.go",
+  "find": "if r.APIKey != nil && *r.APIKey != \"\" {",
+  "replace": "if r.APIKey != nil {"
+ },
+ {
   "name": "ext-root-replica-updates-dropped",
   "file": "extension.go",
   "find": "\t\t\trc.Updates = r.Updates\n",
@@ -924,6 +930,12 @@
   "replace": ""
  },
  {
+  "name": "ext-settled-stale-reset",
+  "file": "extension.go",
+  "find": "\t\tt.staleSettles--\n",
+  "replace": "\t\tt.staleSettles = 0\n"
+ },
+ {
   "name": "ext-settled-guard",
   "file": "extension.go",
   "find": "settled := t.active\n\tif settled == nil {",
@@ -952,6 +964,12 @@
   "file": "extension.go",
   "find": "safeEnd(hc, settled.root, obj(\"incomplete\", true), nil, nil)",
   "replace": "safeEnd(hc, settled.root, obj(\"interrupted\", true), nil, nil)"
+ },
+ {
+  "name": "ext-settled-incomplete-error",
+  "file": "extension.go",
+  "find": "safeEnd(hc, settled.root, obj(\"incomplete\", true), nil, nil)",
+  "replace": "safeEnd(hc, settled.root, obj(\"incomplete\", true), new(\"incomplete\"), nil)"
  },
  {
   "name": "ext-shutdown-pending-ignored",
@@ -1002,6 +1020,24 @@
   "replace": "\"Pi session shut down\""
  },
  {
+  "name": "ext-shutdown-active-kept",
+  "file": "extension.go",
+  "find": "\t\tt.active = nil\n\t}\n\tt.staleSettles = 0",
+  "replace": "\t}\n\tt.staleSettles = 0"
+ },
+ {
+  "name": "ext-shutdown-stale-kept",
+  "file": "extension.go",
+  "find": "\tt.staleSettles = 0\n",
+  "replace": ""
+ },
+ {
+  "name": "ext-shutdown-no-await",
+  "file": "extension.go",
+  "find": "err := t.client.awaitPendingTraceBatches(hc)",
+  "replace": "var err error"
+ },
+ {
   "name": "conv-safeadd-null-counts",
   "file": "convert.go",
   "find": "\t\tif isNullish(v) {\n\t\t\tcontinue\n\t\t}\n\t\tf := numOrZero(v)",
@@ -1018,6 +1054,24 @@
   "file": "convert.go",
   "find": "costUnknown := numOrZero(totalTokens) > 0 &&",
   "replace": "costUnknown := numOrZero(totalTokens) >= 0 &&"
+ },
+ {
+  "name": "conv-usage-cost-unknown-ge",
+  "file": "convert.go",
+  "find": "numOrZero(totalCost) == 0\n",
+  "replace": "numOrZero(totalCost) <= 0\n"
+ },
+ {
+  "name": "conv-usage-cost-always",
+  "file": "convert.go",
+  "find": "costUnknown := numOrZero(totalTokens) > 0 && numOrZero(totalCost) == 0",
+  "replace": "costUnknown := false"
+ },
+ {
+  "name": "conv-usage-cost-never",
+  "file": "convert.go",
+  "find": "costUnknown := numOrZero(totalTokens) > 0 && numOrZero(totalCost) == 0",
+  "replace": "costUnknown := true"
  },
  {
   "name": "conv-usage-input-tokens-no-cache-read",
@@ -1200,6 +1254,12 @@
   "replace": "p.val(\"contents\").([]any); isArr"
  },
  {
+  "name": "conv-gemini-parts-required",
+  "file": "convert.go",
+  "find": "if !isStr || !isParts {",
+  "replace": "if !isStr || (isParts && false) {"
+ },
+ {
   "name": "conv-gemini-result-order",
   "file": "convert.go",
   "find": "obj(\"role\", geminiRole(role), \"content\", content).spread(restOf(rec, \"role\", \"parts\"))",
@@ -1284,10 +1344,22 @@
   "replace": "obj(\"type\", \"image_url\", \"url\", iu)"
  },
  {
+  "name": "conv-gemini-part-order-text-last",
+  "file": "convert.go",
+  "find": "if text, isStr := rec.val(\"text\").(string); isStr {\n\t\treturn obj(\"type\", \"text\", \"text\", text).spread(restOf(rec, \"text\"))\n\t}\n\tif fc := rec.val(\"functionCall\"); isRecord(fc) {",
+  "replace": "if fc := rec.val(\"functionCall\"); isRecord(fc) {\n\t\tid := recGet(fc, \"id\")\n\t\tif isNullish(id) {\n\t\t\tid = nil\n\t\t}\n\t\tcall := obj(\"id\", id, \"name\", recGet(fc, \"name\"), \"arguments\", recGet(fc, \"args\"))\n\t\treturn obj(\"type\", \"function_call\", \"function_call\", call).spread(restOf(rec, \"functionCall\"))\n\t}\n\tif text, isStr := rec.val(\"text\").(string); isStr {\n\t\treturn obj(\"type\", \"text\", \"text\", text).spread(restOf(rec, \"text\"))\n\t}\n\tif fc := rec.val(\"functionCall\"); false && isRecord(fc) {"
+ },
+ {
   "name": "conv-responses-messages-precedence",
   "file": "convert.go",
   "find": "p.val(\"input\").([]any); isArr && isNullish(p.val(\"messages\"))",
   "replace": "p.val(\"input\").([]any); isArr"
+ },
+ {
+  "name": "conv-responses-content-string",
+  "file": "convert.go",
+  "find": "rec.val(\"content\").([]any); isContent && rec.val(\"role\") == \"user\" {\n\t\t\t\tparts",
+  "replace": "rec.val(\"content\").([]any); isContent && rec.val(\"role\") == \"user\" && len(content) > 0 {\n\t\t\t\tparts"
  },
  {
   "name": "conv-responses-input-text",
@@ -1372,6 +1444,12 @@
   "file": "convert.go",
   "find": "text, isText := rec.val(\"text\").(string); isText {",
   "replace": "text, isText := rec.val(\"content\").(string); isText {"
+ },
+ {
+  "name": "conv-anthropic-system-flatten-dropped",
+  "file": "convert.go",
+  "find": "\t\t\t\t\t\t\tcontent = text\n",
+  "replace": "\t\t\t\t\t\t\t_ = text\n"
  },
  {
   "name": "conv-anthropic-system-role-value",
@@ -1494,6 +1572,12 @@
   "replace": "case math.IsNaN(x):\n\t\t\treturn \"number\""
  },
  {
+  "name": "cfg-validate-enabled-non-bool-accepted",
+  "file": "config.go",
+  "find": "\t\t} else {\n\t\t\tissues = append(issues, invalidType(\"boolean\", v, []any{\"enabled\"}))\n\t\t}",
+  "replace": "\t\t}"
+ },
+ {
   "name": "cfg-validate-replicas-type",
   "file": "config.go",
   "find": "invalidType(\"array\", v, []any{\"replicas\"})",
@@ -1602,6 +1686,18 @@
   "replace": "for _, pc := range [...]*partialConfig{localConfig, envConfig, globalConfig} {"
  },
  {
+  "name": "cfg-precedence-no-global",
+  "file": "config.go",
+  "find": "globalConfig := readConfigFile(filepath.Join(home, \".pi\", \"langsmith.json\"))",
+  "replace": "globalConfig := (*partialConfig)(nil)\n\t_ = readConfigFile(filepath.Join(home, \".pi\", \"langsmith.json\"))"
+ },
+ {
+  "name": "cfg-precedence-no-local",
+  "file": "config.go",
+  "find": "localConfig := readConfigFile(filepath.Join(cwd, \".pi\", \"langsmith.json\"))",
+  "replace": "localConfig := (*partialConfig)(nil)\n\t_ = readConfigFile(filepath.Join(cwd, \".pi\", \"langsmith.json\"))"
+ },
+ {
   "name": "cfg-merge-enabled",
   "file": "config.go",
   "find": "\t\tif pc.Enabled != nil {\n\t\t\tcfg.Enabled = *pc.Enabled\n\t\t}",
@@ -1644,10 +1740,28 @@
   "replace": "lsAgentRuntime       = \"pi\""
  },
  {
+  "name": "meta-git-remote-args",
+  "file": "metadata.go",
+  "find": "runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")",
+  "replace": "runGit(ctx, cwd, \"remote\", \"get-url\", \"origin\")"
+ },
+ {
+  "name": "meta-git-order",
+  "file": "metadata.go",
+  "find": "\tremote := runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")\n\tbranch := runGit(ctx, cwd, \"rev-parse\", \"--abbrev-ref\", \"HEAD\")\n\tsha := runGit(ctx, cwd, \"rev-parse\", \"HEAD\")",
+  "replace": "\tsha := runGit(ctx, cwd, \"rev-parse\", \"HEAD\")\n\tbranch := runGit(ctx, cwd, \"rev-parse\", \"--abbrev-ref\", \"HEAD\")\n\tremote := runGit(ctx, cwd, \"config\", \"--get\", \"remote.origin.url\")"
+ },
+ {
   "name": "meta-git-cache-write",
   "file": "metadata.go",
   "find": "\tif ctx.Err() == nil {\n\t\tgitInfoMu.Lock()\n\t\tgitInfoCache[cwd] = info",
   "replace": "\tif ctx.Err() != nil {\n\t\tgitInfoMu.Lock()\n\t\tgitInfoCache[cwd] = info"
+ },
+ {
+  "name": "meta-git-parse-fields",
+  "file": "metadata.go",
+  "find": "info.RepositoryURL, info.RepositoryProvider, info.RepositoryName = &u, &p, &n",
+  "replace": "info.RepositoryURL, info.RepositoryProvider, info.RepositoryName = remote, &p, &n\n\t\t\t_ = u"
  },
  {
   "name": "meta-git-branch-sha-swapped",
@@ -1674,9 +1788,1725 @@
   "replace": ""
  },
  {
-  "name": "ext-root-replica-key-empty-kept",
+  "name": "meta-remote-gitlab",
+  "file": "metadata.go",
+  "find": "case strings.Contains(host, \"gitlab\"):\n\t\tprovider = \"gitlab\"",
+  "replace": "case host == \"gitlab.com\":\n\t\tprovider = \"gitlab\""
+ },
+ {
+  "name": "meta-remote-bitbucket-name",
+  "file": "metadata.go",
+  "find": "provider = \"bitbucket\"",
+  "replace": "provider = \"bitbucket-cloud\""
+ },
+ {
+  "name": "meta-remote-other",
+  "file": "metadata.go",
+  "find": "provider = \"other\"",
+  "replace": "provider = \"unknown\""
+ },
+ {
+  "name": "meta-remote-order-gitlab-first",
+  "file": "metadata.go",
+  "find": "\tcase strings.Contains(host, \"github\"):\n\t\tprovider = \"github\"\n\tcase strings.Contains(host, \"gitlab\"):\n\t\tprovider = \"gitlab\"",
+  "replace": "\tcase strings.Contains(host, \"gitlab\"):\n\t\tprovider = \"gitlab\"\n\tcase strings.Contains(host, \"github\"):\n\t\tprovider = \"github\""
+ },
+ {
+  "name": "meta-remote-https-url",
+  "file": "metadata.go",
+  "find": "return \"https://\" + host + \"/\" + name, provider, name, true",
+  "replace": "return \"http://\" + host + \"/\" + name, provider, name, true"
+ },
+ {
+  "name": "meta-remote-scp-first",
+  "file": "metadata.go",
+  "find": "\tif h, p, isScp := matchScp(remote); isScp {\n\t\thost, repoPath = h, p\n\t} else {",
+  "replace": "\tif h, p, isScp := matchScp(remote); isScp && false {\n\t\thost, repoPath = h, p\n\t} else {"
+ },
+ {
+  "name": "meta-scp-at-first",
+  "file": "metadata.go",
+  "find": "at := strings.IndexAny(s, \"/@\")\n\tif at <= 0 || s[at] != '@' {",
+  "replace": "at := strings.IndexByte(s, '@')\n\tif at <= 0 {"
+ },
+ {
+  "name": "meta-scp-path-empty",
+  "file": "metadata.go",
+  "find": "if path == \"\" || strings.ContainsAny(path, \"\\n\\r\\u2028\\u2029\") {",
+  "replace": "if strings.ContainsAny(path, \"\\n\\r\\u2028\\u2029\") {"
+ },
+ {
+  "name": "meta-scp-path-split",
+  "file": "metadata.go",
+  "find": "host, path = rest[:end], rest[end+1:]",
+  "replace": "host, path = rest[:end], rest[end:]"
+ },
+ {
+  "name": "meta-input-agent-type",
+  "file": "metadata.go",
+  "find": "\"ls_agent_type\", in.AgentType,",
+  "replace": "\"ls_agent_type\", \"root\","
+ },
+ {
+  "name": "meta-input-repo-provider",
+  "file": "metadata.go",
+  "find": "\"repository_provider\", opt(git.RepositoryProvider),",
+  "replace": "\"repository_provider\", undef,"
+ },
+ {
+  "name": "meta-input-repo-name",
+  "file": "metadata.go",
+  "find": "\"repository_name\", opt(git.RepositoryName),",
+  "replace": "\"repository_name\", undef,"
+ },
+ {
+  "name": "meta-input-sha",
+  "file": "metadata.go",
+  "find": "\"git_commit_sha\", opt(git.GitCommitSHA),",
+  "replace": "\"git_commit_sha\", undef,"
+ },
+ {
+  "name": "meta-input-cwd",
+  "file": "metadata.go",
+  "find": "\"cwd\", in.Cwd,",
+  "replace": "\"cwd\", undef,"
+ },
+ {
+  "name": "rt-metadata-order",
+  "file": "runtree.go",
+  "find": "deduped := newOmap().spread(cfg.Metadata).spread(recGet(cfg.Extra, \"metadata\"))",
+  "replace": "deduped := newOmap().spread(recGet(cfg.Extra, \"metadata\")).spread(cfg.Metadata)"
+ },
+ {
+  "name": "rt-child-project-own",
+  "file": "runtree.go",
+  "find": "\t\tr.projectName = parent.projectName\n",
+  "replace": ""
+ },
+ {
+  "name": "rt-child-client-own",
+  "file": "runtree.go",
+  "find": "\t\tr.client = parent.client\n",
+  "replace": ""
+ },
+ {
+  "name": "rt-child-child-exec-order",
+  "file": "runtree.go",
+  "find": "\t\tr.childExecutionOrder = executionOrder\n\t} else {",
+  "replace": "\t\tr.childExecutionOrder = executionOrder + 1\n\t} else {"
+ },
+ {
+  "name": "rt-root-exec-order",
+  "file": "runtree.go",
+  "find": "\t\tr.executionOrder = 1\n\t\tr.childExecutionOrder = 1",
+  "replace": "\t\tr.executionOrder = 0\n\t\tr.childExecutionOrder = 1"
+ },
+ {
+  "name": "rt-root-child-exec-order",
+  "file": "runtree.go",
+  "find": "\t\tr.executionOrder = 1\n\t\tr.childExecutionOrder = 1",
+  "replace": "\t\tr.executionOrder = 1\n\t\tr.childExecutionOrder = 0"
+ },
+ {
+  "name": "rt-trace-id-parent",
+  "file": "runtree.go",
+  "find": "if parent != nil && parent.traceID != \"\" {\n\t\t\tr.traceID = parent.traceID",
+  "replace": "if parent != nil && parent.traceID != \"\" {\n\t\t\tr.traceID = parent.ID"
+ },
+ {
+  "name": "rt-trace-id-root",
+  "file": "runtree.go",
+  "find": "\t\t} else {\n\t\t\tr.traceID = r.ID\n\t\t}",
+  "replace": "\t\t} else {\n\t\t\tr.traceID = \"\"\n\t\t}"
+ },
+ {
+  "name": "rt-dotted-order-no-parent",
+  "file": "runtree.go",
+  "find": "r.dottedOrder = parent.dottedOrder + \".\" + dotted",
+  "replace": "r.dottedOrder = dotted"
+ },
+ {
+  "name": "rt-child-exec-order-next",
+  "file": "runtree.go",
+  "find": "childExecutionOrder := r.childExecutionOrder + 1",
+  "replace": "childExecutionOrder := r.childExecutionOrder + 2"
+ },
+ {
+  "name": "rt-child-meta-inherit",
+  "file": "runtree.go",
+  "find": "if parentMeta, _ := r.extra.val(\"metadata\").(*omap); parentMeta.size() > 0 {",
+  "replace": "if parentMeta, _ := r.extra.val(\"metadata\").(*omap); parentMeta.size() > 100 {"
+ },
+ {
+  "name": "rt-child-exec-propagate",
+  "file": "runtree.go",
+  "find": "if childExecutionOrder > current.childExecutionOrder {",
+  "replace": "if childExecutionOrder < current.childExecutionOrder {"
+ },
+ {
+  "name": "rt-child-exec-propagate-parent",
+  "file": "runtree.go",
+  "find": "current = current.parentRun {",
+  "replace": "current = nil {"
+ },
+ {
+  "name": "rt-end-outputs-first-wins",
+  "file": "runtree.go",
+  "find": "if jsNullish(r.outputs) {\n\t\tr.outputs = outputs",
+  "replace": "if true {\n\t\tr.outputs = outputs"
+ },
+ {
+  "name": "rt-end-error-first-wins",
+  "file": "runtree.go",
+  "find": "if jsNullish(r.err) {\n\t\tif errMsg != nil {",
+  "replace": "if true {\n\t\tif errMsg != nil {"
+ },
+ {
+  "name": "rt-end-time-first-wins",
+  "file": "runtree.go",
+  "find": "if r.endTime == nil {\n\t\tvar t int64",
+  "replace": "if true {\n\t\tvar t int64"
+ },
+ {
+  "name": "rt-end-metadata-empty-merge",
+  "file": "runtree.go",
+  "find": "if metadata != nil && metadata.size() > 0 {",
+  "replace": "if metadata != nil && metadata.size() > 5 {"
+ },
+ {
+  "name": "rt-event-kwargs-nil",
+  "file": "runtree.go",
+  "find": "\tvar kw any = undef\n\tif kwargs != nil {\n\t\tkw = kwargs\n\t}",
+  "replace": "\tvar kw any = kwargs"
+ },
+ {
+  "name": "rt-event-message-name",
+  "file": "runtree.go",
+  "find": "obj(\"name\", \"event\", \"time\", jsISOString(rtNow()), \"message\", message)",
+  "replace": "obj(\"name\", \"message\", \"time\", jsISOString(rtNow()), \"message\", message)"
+ },
+ {
+  "name": "rt-create-runtime-library",
+  "file": "runtree.go",
+  "find": "if runtime == nil || isUndef(runtime.val(\"library\")) {",
+  "replace": "if runtime == nil {"
+ },
+ {
+  "name": "rt-create-runtime-env-nil",
+  "file": "runtree.go",
+  "find": "if runtime != nil && runtimeEnv != nil {",
+  "replace": "if runtime != nil && runtimeEnv != nil && false {"
+ },
+ {
+  "name": "rt-create-parent-id-config",
+  "file": "runtree.go",
+  "find": "\t\tparentRunID = run.parentRun.ID\n\t} else if run.parentRunID != \"\" {\n\t\tparentRunID = run.parentRunID\n\t}\n\tvar childRuns any = emptyArray",
+  "replace": "\t\tparentRunID = run.parentRun.traceID\n\t} else if run.parentRunID != \"\" {\n\t\tparentRunID = run.parentRunID\n\t}\n\tvar childRuns any = emptyArray"
+ },
+ {
+  "name": "rt-create-child-runs-excluded",
+  "file": "runtree.go",
+  "find": "var childRuns any = emptyArray\n\tif !excludeChildRuns {",
+  "replace": "var childRuns any = emptyArray\n\tif excludeChildRuns {"
+ },
+ {
+  "name": "rt-create-end-time",
+  "file": "runtree.go",
+  "find": "if run.endTime != nil {\n\t\tendTime = *run.endTime\n\t}\n\tvar tags any",
+  "replace": "if run.endTime != nil {\n\t\tendTime = *run.endTime + 1\n\t}\n\tvar tags any"
+ },
+ {
+  "name": "rt-create-tags",
+  "file": "runtree.go",
+  "find": "if run.tags != nil {\n\t\ttags = run.tags\n\t}\n\tvar events any",
+  "replace": "if run.tags != nil {\n\t\ttags = undef\n\t}\n\tvar events any"
+ },
+ {
+  "name": "rt-create-key-order",
+  "file": "runtree.go",
+  "find": "\"id\", run.ID,\n\t\t\"name\", run.name,\n\t\t\"start_time\", startTime,",
+  "replace": "\"name\", run.name,\n\t\t\"id\", run.ID,\n\t\t\"start_time\", startTime,"
+ },
+ {
+  "name": "rt-create-session",
+  "file": "runtree.go",
+  "find": "\"session_name\", run.projectName,\n\t\t\"child_runs\"",
+  "replace": "\"session_name\", run.name,\n\t\t\"child_runs\""
+ },
+ {
+  "name": "rt-create-trace-id",
+  "file": "runtree.go",
+  "find": "\"trace_id\", run.traceID,\n\t\t\"dotted_order\", run.dottedOrder,\n\t\t\"tags\"",
+  "replace": "\"trace_id\", run.ID,\n\t\t\"dotted_order\", run.dottedOrder,\n\t\t\"tags\""
+ },
+ {
+  "name": "rt-create-serialized",
+  "file": "runtree.go",
+  "find": "\"serialized\", emptySerialized,",
+  "replace": "\"serialized\", undef,"
+ },
+ {
+  "name": "rt-replica-trace-root-descendants",
+  "file": "runtree.go",
+  "find": "\t\tchild.setReplicaTraceRoot(replicaKey, traceRootID)\n",
+  "replace": "\t\t_ = child\n"
+ },
+ {
+  "name": "rt-replica-trace-root-merge",
+  "file": "runtree.go",
+  "find": "\tif roots == nil {\n\t\troots = map[string]string{}\n\t}\n\troots[replicaKey] = traceRootID",
+  "replace": "\troots = map[string]string{}\n\troots[replicaKey] = traceRootID"
+ },
+ {
+  "name": "rt-replica-key-separator",
+  "file": "runtree.go",
+  "find": "b.WriteString(\"|projectName:\")",
+  "replace": "b.WriteString(\",projectName:\")"
+ },
+ {
+  "name": "rt-uuid5-version",
+  "file": "runtree.go",
+  "find": "sum[6] = (sum[6] & 0x0f) | 0x50",
+  "replace": "sum[6] = (sum[6] & 0x0f) | 0x40"
+ },
+ {
+  "name": "rt-remap-reroot-distributed",
+  "file": "runtree.go",
+  "find": "if p.distributedParentID != \"\" {\n\t\t\t// If we have",
+  "replace": "if p.distributedParentID == \"\" {\n\t\t\t// If we have"
+ },
+ {
+  "name": "rt-remap-reroot-parent",
+  "file": "runtree.go",
+  "find": "\t\t\tbaseRun.set(\"parent_run_id\", undef)\n\t\t\tif dotted := strVal(baseRun, \"dotted_order\"); dotted != \"\" {",
+  "replace": "\t\t\tif dotted := strVal(baseRun, \"dotted_order\"); dotted != \"\" {"
+ },
+ {
+  "name": "rt-remap-reroot-trace-id",
+  "file": "runtree.go",
+  "find": "\t\t\t\tbaseRun.set(\"trace_id\", baseRun.val(\"id\"))\n\t\t\t}\n\t\t}\n\t\t// Store",
+  "replace": "\t\t\t}\n\t\t}\n\t\t// Store"
+ },
+ {
+  "name": "rt-remap-ancestor-condition",
+  "file": "runtree.go",
+  "find": "\tif !p.reroot {\n\t\tvar roots map[string]string",
+  "replace": "\tif p.reroot {\n\t\tvar roots map[string]string"
+ },
+ {
+  "name": "rt-remap-primary-session",
+  "file": "runtree.go",
+  "find": "if p.primary != nil && *p.primary {\n\t\treturn baseRun.set(\"session_name\", p.projectName)",
+  "replace": "if p.primary != nil && !*p.primary {\n\t\treturn baseRun.set(\"session_name\", p.projectName)"
+ },
+ {
+  "name": "rt-replica-dest-key",
+  "file": "runtree.go",
+  "find": "return &destOptions{APIKey: rep.APIKey, APIURL: rep.APIURL, WorkspaceID: rep.WorkspaceID}",
+  "replace": "return &destOptions{APIURL: rep.APIURL, WorkspaceID: rep.WorkspaceID}"
+ },
+ {
+  "name": "rt-replica-dest-workspace",
+  "file": "runtree.go",
+  "find": "return &destOptions{APIKey: rep.APIKey, APIURL: rep.APIURL, WorkspaceID: rep.WorkspaceID}",
+  "replace": "return &destOptions{APIKey: rep.APIKey, APIURL: rep.APIURL}"
+ },
+ {
+  "name": "rt-post-error-text",
+  "file": "runtree.go",
+  "find": "\"Error in postRun for run \"",
+  "replace": "\"Error postRun for run \""
+ },
+ {
+  "name": "rt-post-replicas-exclude",
+  "file": "runtree.go",
+  "find": "\t\t\t\tprimary:             rep.Primary,\n\t\t\t\truntimeEnv:          runtimeEnv,\n\t\t\t\texcludeChildRuns:    true,",
+  "replace": "\t\t\t\tprimary:             rep.Primary,\n\t\t\t\truntimeEnv:          runtimeEnv,\n\t\t\t\texcludeChildRuns:    false,"
+ },
+ {
+  "name": "rt-post-replica-runtime-env",
+  "file": "runtree.go",
+  "find": "runtimeEnv:          runtimeEnv,",
+  "replace": "runtimeEnv:          nil,"
+ },
+ {
+  "name": "rt-exclude-env-default",
+  "file": "runtree.go",
+  "find": "return !ok || strings.EqualFold(v, \"true\") || v == \"1\"",
+  "replace": "return ok && (strings.EqualFold(v, \"true\") || v == \"1\")"
+ },
+ {
+  "name": "rt-exclude-env-one",
+  "file": "runtree.go",
+  "find": "return !ok || strings.EqualFold(v, \"true\") || v == \"1\"",
+  "replace": "return !ok || strings.EqualFold(v, \"true\")"
+ },
+ {
+  "name": "rt-exclude-env-case",
+  "file": "runtree.go",
+  "find": "strings.EqualFold(v, \"true\")",
+  "replace": "v == \"true\""
+ },
+ {
+  "name": "rt-patch-replica-updates",
+  "file": "runtree.go",
+  "find": ").spread(rep.Updates)\n\t\t\t// Important",
+  "replace": ")\n\t\t\t// Important"
+ },
+ {
+  "name": "rt-patch-replica-session",
+  "file": "runtree.go",
+  "find": "\"session_name\", runData.val(\"session_name\"),",
+  "replace": "\"session_name\", undef,"
+ },
+ {
+  "name": "rt-patch-replica-parent",
+  "file": "runtree.go",
+  "find": "\"parent_run_id\", runData.val(\"parent_run_id\"),",
+  "replace": "\"parent_run_id\", undef,"
+ },
+ {
+  "name": "rt-patch-replica-end-time",
+  "file": "runtree.go",
+  "find": "\"end_time\", runData.val(\"end_time\"),",
+  "replace": "\"end_time\", undef,"
+ },
+ {
+  "name": "rt-patch-replica-id-from-run",
+  "file": "runtree.go",
+  "find": "r.replicaClient(rep).updateRun(ctx, strVal(runData, \"id\"), updatePayload",
+  "replace": "r.replicaClient(rep).updateRun(ctx, r.ID, updatePayload"
+ },
+ {
+  "name": "rt-patch-error-text",
+  "file": "runtree.go",
+  "find": "\"Error in patchRun for run \"",
+  "replace": "\"Error patchRun for run \""
+ },
+ {
+  "name": "rt-patch-children-cleared",
+  "file": "runtree.go",
+  "find": "\tr.childRuns = nil\n\treturn nil\n}\n\n// nonReplicaUpdate",
+  "replace": "\treturn nil\n}\n\n// nonReplicaUpdate"
+ },
+ {
+  "name": "rt-nonreplica-key-order",
+  "file": "runtree.go",
+  "find": "\"name\", r.name,\n\t\t\"run_type\", r.runType,\n\t\t\"start_time\", startTime,\n\t\t\"end_time\", endTime,\n\t\t\"error\", r.err,\n\t\t\"outputs\", r.outputs,",
+  "replace": "\"name\", r.name,\n\t\t\"run_type\", r.runType,\n\t\t\"start_time\", startTime,\n\t\t\"end_time\", endTime,\n\t\t\"outputs\", r.outputs,\n\t\t\"error\", r.err,"
+ },
+ {
+  "name": "rt-nonreplica-parent",
+  "file": "runtree.go",
+  "find": "\t\tparentRunID = r.parentRun.ID\n\t} else if r.parentRunID != \"\" {\n\t\tparentRunID = r.parentRunID\n\t}\n\tvar tags any = undef\n\tif r.tags != nil {",
+  "replace": "\t\tparentRunID = r.parentRun.ID\n\t}\n\tvar tags any = undef\n\tif r.tags != nil {"
+ },
+ {
+  "name": "rt-nonreplica-extra",
+  "file": "runtree.go",
+  "find": "\"extra\", r.extra,\n\t\t\"events\", events,",
+  "replace": "\"extra\", undef,\n\t\t\"events\", events,"
+ },
+ {
+  "name": "rt-ensure-primaries-error",
+  "file": "runtree.go",
+  "find": "\"Only one replica can be marked as primary.\"",
+  "replace": "\"Only one primary.\""
+ },
+ {
+  "name": "rt-ensure-env-fallback",
+  "file": "runtree.go",
+  "find": "\tif replicas == nil {\n\t\tvar err error\n\t\tif ensured, err = getWriteReplicasFromEnv(); err != nil {",
+  "replace": "\tif len(replicas) == 0 {\n\t\tvar err error\n\t\tif ensured, err = getWriteReplicasFromEnv(); err != nil {"
+ },
+ {
+  "name": "rt-env-conflict-text",
+  "file": "runtree.go",
+  "find": "cannot provide both LANGSMITH_ENDPOINT / LANGCHAIN_ENDPOINT and LANGSMITH_RUNS_ENDPOINTS",
+  "replace": "cannot provide both LANGSMITH_ENDPOINT and LANGSMITH_RUNS_ENDPOINTS"
+ },
+ {
+  "name": "rt-env-array-item-text",
+  "file": "runtree.go",
+  "find": "\"Invalid item type in LANGSMITH_RUNS_ENDPOINTS: expected object, got \"",
+  "replace": "\"Invalid item in LANGSMITH_RUNS_ENDPOINTS: expected object, got \""
+ },
+ {
+  "name": "rt-env-array-url-text",
+  "file": "runtree.go",
+  "find": "\"Invalid api_url type in LANGSMITH_RUNS_ENDPOINTS: expected string, got \"",
+  "replace": "\"Invalid api_url in LANGSMITH_RUNS_ENDPOINTS: expected string, got \""
+ },
+ {
+  "name": "rt-env-array-key-text",
+  "file": "runtree.go",
+  "find": "\"Invalid api_key type in LANGSMITH_RUNS_ENDPOINTS: expected string, got \"",
+  "replace": "\"Invalid api_key in LANGSMITH_RUNS_ENDPOINTS: expected string, got \""
+ },
+ {
+  "name": "rt-env-array-project-text",
+  "file": "runtree.go",
+  "find": "\"Invalid project_name type in LANGSMITH_RUNS_ENDPOINTS: expected string, got \"",
+  "replace": "\"Invalid project_name in LANGSMITH_RUNS_ENDPOINTS: expected string, got \""
+ },
+ {
+  "name": "rt-env-array-primary-text",
+  "file": "runtree.go",
+  "find": "\"Invalid primary type in LANGSMITH_RUNS_ENDPOINTS: expected boolean, got \"",
+  "replace": "\"Invalid primary in LANGSMITH_RUNS_ENDPOINTS: expected boolean, got \""
+ },
+ {
+  "name": "rt-env-array-trailing-slash",
+  "file": "runtree.go",
+  "find": "url := strings.TrimSuffix(apiURL, \"/\")\n\t\t\treplicas = append(replicas, replicaConfig{APIURL: &url, APIKey: &apiKey, ProjectName: projectName, Primary: primary})",
+  "replace": "url := apiURL\n\t\t\treplicas = append(replicas, replicaConfig{APIURL: &url, APIKey: &apiKey, ProjectName: projectName, Primary: primary})"
+ },
+ {
+  "name": "rt-env-object-value-text",
+  "file": "runtree.go",
+  "find": "\"Invalid value type in LANGSMITH_RUNS_ENDPOINTS for URL \"",
+  "replace": "\"Invalid value in LANGSMITH_RUNS_ENDPOINTS for URL \""
+ },
+ {
+  "name": "rt-env-fallthrough-text",
+  "file": "runtree.go",
+  "find": "\"properties, or object mapping url->apiKey, got \"",
+  "replace": "\"properties, or object mapping url->apiKey but got \""
+ },
+ {
+  "name": "rt-env-parse-error-text",
+  "file": "runtree.go",
+  "find": "\t\trtWarn(runsEndpointsHint)\n\t\treturn []replicaConfig{}, nil",
+  "replace": "\t\treturn []replicaConfig{}, nil"
+ },
+ {
+  "name": "rt-typeof-number",
+  "file": "runtree.go",
+  "find": "case float64, int, int64:\n\t\treturn \"number\"",
+  "replace": "case float64, int, int64:\n\t\treturn \"string\""
+ },
+ {
+  "name": "rt-json-number-leading-zero",
+  "file": "runtree.go",
+  "find": "if p.s[p.i] == '0' {",
+  "replace": "if p.s[p.i] == '0' && false {"
+ },
+ {
+  "name": "rt-json-hex-escape",
+  "file": "runtree.go",
+  "find": "if p.i+4 >= len(p.s) {",
+  "replace": "if p.i+3 >= len(p.s) {"
+ },
+ {
+  "name": "rt-default-project-langchain",
+  "file": "runtree.go",
+  "find": "getEnvironmentVariable(\"LANGCHAIN_SESSION\")",
+  "replace": "getEnvironmentVariable(\"LANGCHAIN_PROJECT\")"
+ },
+ {
+  "name": "rt-default-project-default",
+  "file": "runtree.go",
+  "find": "\treturn \"default\"\n}",
+  "replace": "\treturn \"pi\"\n}"
+ },
+ {
+  "name": "time-iso-month",
+  "file": "timefmt.go",
+  "find": "dst = appendPad(dst, int(t.Month()), 2)",
+  "replace": "dst = appendPad(dst, int(t.Month())-1, 2)"
+ },
+ {
+  "name": "time-iso-year-negative",
+  "file": "timefmt.go",
+  "find": "\t\tdst = append(dst, '-')\n\t\tdst = appendPad(dst, -y, 6)",
+  "replace": "\t\tdst = appendPad(dst, -y, 6)"
+ },
+ {
+  "name": "time-iso-range-error",
+  "file": "timefmt.go",
+  "find": "if epochMs > jsMaxTimeMs || epochMs < -jsMaxTimeMs {",
+  "replace": "if epochMs > jsMaxTimeMs || epochMs < -jsMaxTimeMs-1 {"
+ },
+ {
+  "name": "time-exec-order-pad",
+  "file": "timefmt.go",
+  "find": "for i := len(s); i < 3; i++ {\n\t\tdst = append(dst, '0')\n\t}\n\tdst = append(dst, s...)",
+  "replace": "for i := len(s); i < 3; i++ {\n\t\tdst = append(dst, ' ')\n\t}\n\tdst = append(dst, s...)"
+ },
+ {
+  "name": "time-datestring-slice",
+  "file": "timefmt.go",
+  "find": "dst = dst[:len(dst)-1] // .slice(0, -1)",
+  "replace": "dst = dst[:len(dst)-2]"
+ },
+ {
+  "name": "time-dotted-strip-dash",
+  "file": "timefmt.go",
+  "find": "if c != '-' && c != ':' && c != '.' {",
+  "replace": "if c != ':' && c != '.' {"
+ },
+ {
+  "name": "cl-batch-size-limit",
+  "file": "client.go",
+  "find": "defaultBatchSizeLimit                  = 100 ",
+  "replace": "defaultBatchSizeLimit                  = 99 "
+ },
+ {
+  "name": "cl-info-timeout",
+  "file": "client.go",
+  "find": "serverInfoRequestTimeout               = 10 * time.Second ",
+  "replace": "serverInfoRequestTimeout               = 5 * time.Second "
+ },
+ {
+  "name": "cl-request-timeout",
+  "file": "client.go",
+  "find": "defaultRequestTimeout                  = 90 * time.Second ",
+  "replace": "defaultRequestTimeout                  = 60 * time.Second "
+ },
+ {
+  "name": "cl-failed-traces-max",
+  "file": "client.go",
+  "find": "defaultFailedTracesMaxBytes            = 100 * 1024 * 1024",
+  "replace": "defaultFailedTracesMaxBytes            = 10 * 1024 * 1024"
+ },
+ {
+  "name": "cl-user-agent",
+  "file": "client.go",
+  "find": "userAgent = \"pigpen-langsmith-go/\" + portVersion",
+  "replace": "userAgent = \"langsmith-js/\" + portVersion"
+ },
+ {
+  "name": "cl-url-source-text",
+  "file": "client.go",
+  "find": "\"LANGSMITH_ENDPOINT / LANGCHAIN_ENDPOINT environment variable\"",
+  "replace": "\"LANGSMITH_ENDPOINT environment variable\""
+ },
+ {
+  "name": "cl-url-source-profile-text",
+  "file": "client.go",
+  "find": "\"profile config\"",
+  "replace": "\"profile\""
+ },
+ {
+  "name": "cl-url-source-default-text",
+  "file": "client.go",
+  "find": "\"built-in default\"",
+  "replace": "\"default\""
+ },
+ {
+  "name": "cl-new-url-quotes",
+  "file": "client.go",
+  "find": "c.apiURL = strings.TrimSuffix(trimQuotes(apiURL), \"/\")",
+  "replace": "c.apiURL = strings.TrimSuffix(apiURL, \"/\")"
+ },
+ {
+  "name": "cl-new-url-option",
+  "file": "client.go",
+  "find": "\tif o.APIURL != nil {\n\t\tapiURL = *o.APIURL\n\t}\n\tc.apiURL",
+  "replace": "\tc.apiURL"
+ },
+ {
+  "name": "cl-new-profile-auth",
+  "file": "client.go",
+  "find": "\tif c.apiKey == nil {\n\t\tc.profileAuth = cfg.profileAuth\n\t}",
+  "replace": "\tc.profileAuth = cfg.profileAuth"
+ },
+ {
+  "name": "cl-new-background-false",
+  "file": "client.go",
+  "find": "ok && bg == \"false\" {\n\t\tc.blockOnRootRunFinalization = true",
+  "replace": "ok && bg != \"true\" {\n\t\tc.blockOnRootRunFinalization = true"
+ },
+ {
+  "name": "cl-new-background-block",
+  "file": "client.go",
+  "find": "ok && bg == \"false\" {\n\t\tc.blockOnRootRunFinalization = true",
+  "replace": "ok && bg == \"false\" {\n\t\tc.blockOnRootRunFinalization = false"
+ },
+ {
+  "name": "cl-new-concurrency-text",
+  "file": "client.go",
+  "find": "\"Trace batch concurrency must be positive.\"",
+  "replace": "\"Trace batch concurrency must be positive\""
+ },
+ {
+  "name": "cl-new-debug-env",
+  "file": "client.go",
+  "find": "ok && dbg == \"true\" {\n\t\tc.debug = true",
+  "replace": "ok && dbg != \"\" {\n\t\tc.debug = true"
+ },
+ {
+  "name": "cl-new-debug-text",
+  "file": "client.go",
+  "find": "\"LangSmith API URL \" + c.apiURL + \" resolved from \" + source",
+  "replace": "\"LangSmith API URL \" + c.apiURL + \" from \" + source"
+ },
+ {
+  "name": "cl-new-debug-source-option",
+  "file": "client.go",
+  "find": "\t\tif o.APIURL != nil {\n\t\t\tsource = \"apiUrl option\"\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cl-new-debug-option-text",
+  "file": "client.go",
+  "find": "source = \"apiUrl option\"",
+  "replace": "source = \"option\""
+ },
+ {
+  "name": "cl-new-failed-dir-env",
+  "file": "client.go",
+  "find": "getLangSmithEnvironmentVariable(\"FAILED_TRACES_DIR\")",
+  "replace": "getEnvironmentVariable(\"FAILED_TRACES_DIR\")"
+ },
+ {
+  "name": "cl-new-failed-max-mb",
+  "file": "client.go",
+  "find": "c.failedTracesMaxBytes = int64(n * 1024 * 1024)",
+  "replace": "c.failedTracesMaxBytes = int64(n * 1000 * 1000)"
+ },
+ {
+  "name": "cl-new-caller-retries",
+  "file": "client.go",
+  "find": "newAsyncCaller(callerParams{MaxRetries: 4, MaxQueueSizeBytes: -1, Debug: c.debug})",
+  "replace": "newAsyncCaller(callerParams{MaxRetries: 3, MaxQueueSizeBytes: -1, Debug: c.debug})"
+ },
+ {
+  "name": "cl-new-batch-caller-retries",
+  "file": "client.go",
+  "find": "MaxRetries: 4, MaxConcurrency: c.traceBatchConcurrency",
+  "replace": "MaxRetries: 5, MaxConcurrency: c.traceBatchConcurrency"
+ },
+ {
+  "name": "cl-new-autobatch-default",
+  "file": "client.go",
+  "find": "c.autoBatchTracing = true\n\tif o.AutoBatchTracing != nil {",
+  "replace": "c.autoBatchTracing = false\n\tif o.AutoBatchTracing != nil {"
+ },
+ {
+  "name": "cl-new-autobatch-delay",
+  "file": "client.go",
+  "find": "c.autoBatchDelay = defaultAutoBatchDelay\n\tif o.AutoBatchAggregationDelay != nil {",
+  "replace": "c.autoBatchDelay = defaultAutoBatchDelay\n\tif false {"
+ },
+ {
+  "name": "cl-new-batch-bytes-limit",
+  "file": "client.go",
+  "find": "f := float64(*o.BatchSizeBytesLimit)\n\t\tc.batchSizeBytesLimit = &f",
+  "replace": "f := float64(*o.BatchSizeBytesLimit)\n\t\t_ = f"
+ },
+ {
+  "name": "cl-new-batch-limit",
+  "file": "client.go",
+  "find": "f := float64(*o.BatchSizeLimit)\n\t\tc.batchSizeLimit = &f",
+  "replace": "f := float64(*o.BatchSizeLimit)\n\t\t_ = f"
+ },
+ {
+  "name": "cl-new-otel-text",
+  "file": "client.go",
+  "find": "\"OTEL tracing mode is not supported by the Go port of langsmith-pi-extension \"",
+  "replace": "\"OTEL tracing is not supported \""
+ },
+ {
+  "name": "cl-429-status",
+  "file": "client.go",
+  "find": "if resp != nil && resp.StatusCode == 429 {",
+  "replace": "if resp != nil && resp.StatusCode == 503 {"
+ },
+ {
+  "name": "cl-429-header",
+  "file": "client.go",
+  "find": "resp.Header.Get(\"retry-after\")",
+  "replace": "resp.Header.Get(\"x-retry-after\")"
+ },
+ {
+  "name": "cl-explicit-auth-profile-managed",
+  "file": "client.go",
+  "find": "return !c.isProfileManagedAuthorization(authorization, profileManaged)",
+  "replace": "return true"
+ },
+ {
+  "name": "cl-fetch-debug-log",
+  "file": "client.go",
+  "find": "logReq := !c.fetchImplementation && (c.debug || envIsTrue(\"DEBUG\"))",
+  "replace": "logReq := !c.fetchImplementation && c.debug"
+ },
+ {
+  "name": "cl-fetch-debug-text",
+  "file": "client.go",
+  "find": "writeStderrLine(\"\u2192 \" + method + \" \" + url)",
+  "replace": "writeStderrLine(\"-> \" + method + \" \" + url)"
+ },
+ {
+  "name": "cl-fetch-error-timeout",
+  "file": "client.go",
+  "find": "\tcase errors.Is(tctx.Err(), context.DeadlineExceeded):\n\t\treturn &jsNamedError{name: \"TimeoutError\", msg: \"The operation was aborted due to timeout\", cause: err}",
+  "replace": "\tcase errors.Is(tctx.Err(), context.DeadlineExceeded):\n\t\treturn &jsNamedError{name: \"TimeoutError\", msg: \"timeout\", cause: err}"
+ },
+ {
+  "name": "cl-fetch-error-failed",
+  "file": "client.go",
+  "find": "&fetchTypeError{Message: \"fetch failed\", Cause: err}",
+  "replace": "&fetchTypeError{Message: \"network error\", Cause: err}"
+ },
+ {
+  "name": "cl-fetch-parse-url",
+  "file": "client.go",
+  "find": "\"Failed to parse URL from \" + url",
+  "replace": "\"Invalid URL \" + url"
+ },
+ {
+  "name": "cl-create-start-time",
+  "file": "client.go",
+  "find": "runCreate.set(\"start_time\", nowMs())",
+  "replace": "runCreate.set(\"start_time\", int64(0))"
+ },
+ {
+  "name": "cl-create-batch-action",
+  "file": "client.go",
+  "find": "c.processRunOperation(actionCreate, runCreate, opts)",
+  "replace": "c.processRunOperation(actionUpdate, runCreate, opts)"
+ },
+ {
+  "name": "cl-create-op",
+  "file": "client.go",
+  "find": "\"create run\")",
+  "replace": "\"create runs\")"
+ },
+ {
+  "name": "cl-post-dest-url",
+  "file": "client.go",
+  "find": "\t\tif opts.APIURL != nil {\n\t\t\turl = *opts.APIURL\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cl-update-uuid",
+  "file": "client.go",
+  "find": "\tif err := assertUUID(runID); err != nil {\n\t\treturn err\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "cl-update-inputs",
+  "file": "client.go",
+  "find": "run.set(\"inputs\", c.processInputs(v))\n\t}\n\tif v := run.val(\"outputs\"); jsTruthy(v) {\n\t\trun.set(\"outputs\", c.processOutputs(v))",
+  "replace": "run.set(\"inputs\", c.processInputs(v))\n\t}\n\tif v := run.val(\"outputs\"); jsTruthy(v) {\n\t\trun.set(\"outputs\", v)"
+ },
+ {
+  "name": "cl-update-events",
+  "file": "client.go",
+  "find": "run.set(\"events\", filterNewTokenEvents(v))\n\t}\n\tif !c.shouldSample(run, runID) {",
+  "replace": "run.set(\"events\", v)\n\t}\n\tif !c.shouldSample(run, runID) {"
+ },
+ {
+  "name": "cl-update-block-end-time",
+  "file": "client.go",
+  "find": "block := isDefined(run.val(\"end_time\")) && isUndef(run.val(\"parent_run_id\")) &&",
+  "replace": "block := isUndef(run.val(\"parent_run_id\")) &&"
+ },
+ {
+  "name": "cl-update-block-root",
+  "file": "client.go",
+  "find": "block := isDefined(run.val(\"end_time\")) && isUndef(run.val(\"parent_run_id\")) &&",
+  "replace": "block := isDefined(run.val(\"end_time\")) &&"
+ },
+ {
+  "name": "cl-update-direct-op",
+  "file": "client.go",
+  "find": "\"update run\")",
+  "replace": "\"update runs\")"
+ },
+ {
+  "name": "clp-hide-outputs",
+  "file": "client_prepare.go",
+  "find": "if c.hideOutputs {\n\t\treturn newOmap()\n\t}\n\treturn outputs",
+  "replace": "if c.hideOutputs {\n\t\treturn nil\n\t}\n\treturn outputs"
+ },
+ {
+  "name": "clp-prepare-outputs",
+  "file": "client_prepare.go",
+  "find": "if v := run.val(\"outputs\"); !isUndef(v) {\n\t\trun.set(\"outputs\", c.processOutputs(v))",
+  "replace": "if v := run.val(\"outputs\"); !isUndef(v) && false {\n\t\trun.set(\"outputs\", c.processOutputs(v))"
+ },
+ {
+  "name": "clp-prepare-events",
+  "file": "client_prepare.go",
+  "find": "run.set(\"events\", filterNewTokenEvents(v))\n\t}\n\treturn run",
+  "replace": "run.set(\"events\", v)\n\t}\n\treturn run"
+ },
+ {
+  "name": "clp-mask-nullish",
+  "file": "client_prepare.go",
+  "find": "if md := extra.val(\"metadata\"); md == nil || isUndef(md) {",
+  "replace": "if md := extra.val(\"metadata\"); isUndef(md) {"
+ },
+ {
+  "name": "clp-merge-omit",
+  "file": "client_prepare.go",
+  "find": "\tif omitTracedRuntimeInfo {\n\t\treturn run\n\t}\n\truntimeEnv",
+  "replace": "\truntimeEnv"
+ },
+ {
+  "name": "clp-merge-runtime-order",
+  "file": "client_prepare.go",
+  "find": "runtime := newOmapCap(runtimeEnv.size() + 2).spread(runtimeEnv).spread(runtimeOver)",
+  "replace": "runtime := newOmapCap(runtimeEnv.size() + 2).spread(runtimeOver).spread(runtimeEnv)"
+ },
+ {
+  "name": "clp-merge-metadata-order",
+  "file": "client_prepare.go",
+  "find": "md.spread(metadata)\n\tif tracingSampleRate != nil {",
+  "replace": "md = newOmapCap(8).spread(metadata).spread(md)\n\tif tracingSampleRate != nil {"
+ },
+ {
+  "name": "clp-merge-env-cache",
+  "file": "client_prepare.go",
+  "find": "\tif envVars == nil {\n\t\tenvVars = getLangSmithEnvVarsMetadata()\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clp-merge-extra-keys",
+  "file": "client_prepare.go",
+  "find": "newExtra := newOmapCap(extraRec.size() + 2).spread(extraRec)\n\tnewExtra.set(\"runtime\", runtime).set(\"metadata\", md)",
+  "replace": "newExtra := newOmapCap(2)\n\tnewExtra.set(\"runtime\", runtime).set(\"metadata\", md)"
+ },
+ {
+  "name": "clp-merge-extra-order",
+  "file": "client_prepare.go",
+  "find": "newExtra.set(\"runtime\", runtime).set(\"metadata\", md)",
+  "replace": "newExtra.set(\"metadata\", md).set(\"runtime\", runtime)"
+ },
+ {
+  "name": "ext-agent-end-context-usage-percent-wrong",
   "file": "extension.go",
-  "find": "if r.APIKey != nil && *r.APIKey != \"\" {",
-  "replace": "if r.APIKey != nil {"
+  "find": "percent = *usage.Percent\n",
+  "replace": "percent = *usage.Percent + 1\n"
+ },
+ {
+  "name": "clp-sample-id-trace",
+  "file": "client_prepare.go",
+  "find": "if s, isStr := run.val(\"trace_id\").(string); isStr {\n\t\treturn s, true\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clp-sample-id-z-rest",
+  "file": "client_prepare.go",
+  "find": "\t\t\tif j := strings.IndexByte(rest, 'Z'); j >= 0 {\n\t\t\t\trest = rest[:j]\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "clp-size-string",
+  "file": "client_prepare.go",
+  "find": "return jsUTF8Len(x) + 2",
+  "replace": "return jsUTF8Len(x)"
+ },
+ {
+  "name": "clp-size-object-comma",
+  "file": "client_prepare.go",
+  "find": "\t\t\tif emitted > 0 {\n\t\t\t\tsize++\n\t\t\t}\n\t\t\tsize += jsUTF8Len(k) + 3 + estimateValue(val)\n\t\t\temitted++\n\t\t}\n\t\treturn size\n\tcase map[string]any:",
+  "replace": "\t\t\tsize += jsUTF8Len(k) + 3 + estimateValue(val)\n\t\t\temitted++\n\t\t}\n\t\treturn size\n\tcase map[string]any:"
+ },
+ {
+  "name": "clp-size-number-int",
+  "file": "client_prepare.go",
+  "find": "return estimateInt(int64(f))\n\t}\n\treturn len(jsNumberString(f))",
+  "replace": "return 16\n\t}\n\treturn len(jsNumberString(f))"
+ },
+ {
+  "name": "clp-size-int-negative",
+  "file": "client_prepare.go",
+  "find": "\t\tl = 2\n\t\tn = -n",
+  "replace": "\t\tl = 1\n\t\tn = -n"
+ },
+ {
+  "name": "clq-queue-push-limit",
+  "file": "client_queue.go",
+  "find": "if q.sizeBytes+it.size > q.maxSizeBytes && q.len() > 0 {",
+  "replace": "if q.sizeBytes+it.size >= q.maxSizeBytes && q.len() > 0 {"
+ },
+ {
+  "name": "clq-queue-push-empty",
+  "file": "client_queue.go",
+  "find": "if q.sizeBytes+it.size > q.maxSizeBytes && q.len() > 0 {",
+  "replace": "if q.sizeBytes+it.size > q.maxSizeBytes {"
+ },
+ {
+  "name": "clq-queue-pop-check",
+  "file": "client_queue.go",
+  "find": "if upToSizeBytes < 1 {",
+  "replace": "if upToSizeBytes < 0 {"
+ },
+ {
+  "name": "clq-queue-pop-text",
+  "file": "client_queue.go",
+  "find": "\"Number of bytes to pop off may not be less than 1.\"",
+  "replace": "\"Number of bytes to pop off may not be less than one.\""
+ },
+ {
+  "name": "clq-queue-peek",
+  "file": "client_queue.go",
+  "find": "return float64(q.items[q.head].size)",
+  "replace": "return 0"
+ },
+ {
+  "name": "clq-drain-split-key",
+  "file": "client_queue.go",
+  "find": "isDefault := eqPtr(it.dest.APIKey, c.apiKey) && eqPtr(it.dest.APIURL, &c.apiURL) && eqPtr(it.dest.WorkspaceID, c.workspaceID)",
+  "replace": "isDefault := true"
+ },
+ {
+  "name": "clq-drain-key-sep",
+  "file": "client_queue.go",
+  "find": "key = apiURL + \"|\" + apiKey + \"|\" + ws",
+  "replace": "key = apiURL + \"|\" + apiKey + \"|\" + ws[:0]"
+ },
+ {
+  "name": "clq-drain-tracked",
+  "file": "client_queue.go",
+  "find": "\tif track && ds.remaining > 0 {\n\t\tc.pendingDrains++\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-job-done-pending",
+  "file": "client_queue.go",
+  "find": "\t\tif bs.drain.remaining == 0 && bs.drain.tracked {\n\t\t\tc.pendingDrains--\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-process-drop-warn",
+  "file": "client_queue.go",
+  "find": "AutoBatchQueue size limit (%d bytes) exceeded. Dropping run with id: %s. Current queue size: %d bytes, attempted addition: %d bytes.",
+  "replace": "AutoBatchQueue size limit (%d bytes) exceeded. Dropping run with id: %s. Queue size: %d bytes, attempted addition: %d bytes."
+ },
+ {
+  "name": "clq-process-drop-item",
+  "file": "client_queue.go",
+  "find": "\t\tit = nil\n\t}\n\tif c.manualFlushMode {",
+  "replace": "\t}\n\tif c.manualFlushMode {"
+ },
+ {
+  "name": "clq-process-merge-runtime",
+  "file": "client_queue.go",
+  "find": "payload = mergeRuntimeEnvIntoRun(payload, c.cachedEnvVars, c.omitTracedRuntimeInfo, c.tracingSampleRate)\n\tit :=",
+  "replace": "it :="
+ },
+ {
+  "name": "clq-limit-bytes-option",
+  "file": "client_queue.go",
+  "find": "if c.batchSizeBytesLimit != nil {\n\t\treturn *c.batchSizeBytesLimit\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-limit-bytes-server",
+  "file": "client_queue.go",
+  "find": "if si.sizeLimitBytes != nil {\n\t\treturn *si.sizeLimitBytes\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-limit-count-option",
+  "file": "client_queue.go",
+  "find": "if c.batchSizeLimit != nil {\n\t\treturn *c.batchSizeLimit\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-limit-count-server",
+  "file": "client_queue.go",
+  "find": "if si.sizeLimit != nil {\n\t\treturn *si.sizeLimit\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "clq-after-closed",
+  "file": "client_queue.go",
+  "find": "func (c *client) afterLimits(bytesLimit, limit float64) {\n\tc.mu.Lock()\n\tif c.closed {\n\t\tc.mu.Unlock()\n\t\treturn\n\t}",
+  "replace": "func (c *client) afterLimits(bytesLimit, limit float64) {\n\tc.mu.Lock()"
+ },
+ {
+  "name": "clq-after-bytes-limit",
+  "file": "client_queue.go",
+  "find": "if float64(c.queue.sizeBytes) > bytesLimit || float64(c.queue.len()) > limit {",
+  "replace": "if float64(c.queue.len()) > limit {"
+ },
+ {
+  "name": "clq-after-count-ge",
+  "file": "client_queue.go",
+  "find": "float64(c.queue.len()) > limit {",
+  "replace": "float64(c.queue.len()) >= limit {"
+ },
+ {
+  "name": "clq-after-timer",
+  "file": "client_queue.go",
+  "find": "if err == nil && c.queue.len() > 0 {\n\t\th := &timerHolder{}",
+  "replace": "if err == nil && c.queue.len() > 1000000 {\n\t\th := &timerHolder{}"
+ },
+ {
+  "name": "clq-after-timer-delay",
+  "file": "client_queue.go",
+  "find": "time.AfterFunc(c.autoBatchDelay,",
+  "replace": "time.AfterFunc(c.autoBatchDelay*2,"
+ },
+ {
+  "name": "clq-after-timer-store",
+  "file": "client_queue.go",
+  "find": "\t\tc.timer = h.t\n\t\tc.timers[h.t] = struct{}{}",
+  "replace": "\t\tc.timers[h.t] = struct{}{}"
+ },
+ {
+  "name": "clq-info-flags-key",
+  "file": "client_queue.go",
+  "find": "root[\"instance_flags\"]",
+  "replace": "root[\"flags\"]"
+ },
+ {
+  "name": "clq-probe-warn-text",
+  "file": "client_queue.go",
+  "find": "Failed to fetch info on supported operations. Falling back to batch operations and default limits. Info: %s %s",
+  "replace": "Failed to fetch info. Falling back to batch operations and default limits. Info: %s %s"
+ },
+ {
+  "name": "clq-probe-warn-status",
+  "file": "client_queue.go",
+  "find": "status := \"Unspecified status code\"",
+  "replace": "status := \"unknown\""
+ },
+ {
+  "name": "clq-probe-store",
+  "file": "client_queue.go",
+  "find": "\tif err == nil {\n\t\tc.serverInfo = si\n\t}",
+  "replace": "\tif err == nil {\n\t\t_ = si\n\t}"
+ },
+ {
+  "name": "clq-info-path",
+  "file": "client_queue.go",
+  "find": "c.apiURL+\"/info\", h.Clone(), nil, 0, \"get server info\", false,",
+  "replace": "c.apiURL+\"/infos\", h.Clone(), nil, 0, \"get server info\", false,"
+ },
+ {
+  "name": "clq-info-accept",
+  "file": "client_queue.go",
+  "find": "h.Set(\"Accept\", \"application/json\")\n\tvar body []byte",
+  "replace": "var body []byte"
+ },
+ {
+  "name": "clq-info-debug",
+  "file": "client_queue.go",
+  "find": "=== LangSmith Server Configuration ===",
+  "replace": "=== LangSmith Server Config ==="
+ },
+ {
+  "name": "clq-await-manual-text",
+  "file": "client_queue.go",
+  "find": "[WARNING]: When tracing in manual flush mode, you must call `await client.flush()` manually to submit trace batches.",
+  "replace": "[WARNING]: Manual flush mode requires `await client.flush()`."
+ },
+ {
+  "name": "clq-await-manual",
+  "file": "client_queue.go",
+  "find": "\tif c.manualFlushMode {\n\t\twarnf(",
+  "replace": "\tif false {\n\t\twarnf("
+ },
+ {
+  "name": "clq-await-pending",
+  "file": "client_queue.go",
+  "find": "for _, it := range pending {\n\t\t\tif !it.resolved {\n\t\t\t\treturn false\n\t\t\t}\n\t\t}\n\t\treturn true",
+  "replace": "_ = pending\n\t\treturn true"
+ },
+ {
+  "name": "cli-serialize-undefined",
+  "file": "client_ingest.go",
+  "find": "return append(dst, \"undefined\"...)",
+  "replace": "return append(dst, \"null\"...)"
+ },
+ {
+  "name": "cli-serialize-warning",
+  "file": "client_ingest.go",
+  "find": "[WARNING]: LangSmith received unserializable value.\\nContext: %s",
+  "replace": "[WARNING]: LangSmith received an unserializable value.\\nContext: %s"
+ },
+ {
+  "name": "cli-process-ctx",
+  "file": "client_ingest.go",
+  "find": "if err != nil && c.ctx.Err() == nil {\n\t\terrorf(\"Error exporting",
+  "replace": "if err != nil {\n\t\terrorf(\"Error exporting"
+ },
+ {
+  "name": "cli-process-size",
+  "file": "client_ingest.go",
+  "find": "\t\tbatchSizeBytes += it.size\n",
+  "replace": ""
+ },
+ {
+  "name": "cli-merge-no-id",
+  "file": "client_ingest.go",
+  "find": "\t\tif !jsTruthy(id) {\n\t\t\tcontinue\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cli-merge-spread",
+  "file": "client_ingest.go",
+  "find": "cr.spread(u)\n\t\t\t\tcontinue",
+  "replace": "_ = cr\n\t\t\t\tcontinue"
+ },
+ {
+  "name": "cli-multipart-boundary",
+  "file": "client_ingest.go",
+  "find": "\"----LangSmithFormBoundary\" + randomBase36()",
+  "replace": "\"----FormBoundary\" + randomBase36()"
+ },
+ {
+  "name": "cli-multipart-field-keys-order",
+  "file": "client_ingest.go",
+  "find": "var multipartFieldKeys = [...]string{\"inputs\", \"outputs\", \"events\", \"extra\", \"error\", \"serialized\"}",
+  "replace": "var multipartFieldKeys = [...]string{\"inputs\", \"outputs\", \"events\", \"error\", \"extra\", \"serialized\"}"
+ },
+ {
+  "name": "cli-multipart-main-undef",
+  "file": "client_ingest.go",
+  "find": "\t\tif isUndef(val) {\n\t\t\tcontinue\n\t\t}\n\t\tif !first {",
+  "replace": "\t\tif !first {"
+ },
+ {
+  "name": "cli-multipart-part-key-dot",
+  "file": "client_ingest.go",
+  "find": "\tif key != \"\" {\n\t\tb = append(b, '.')\n\t\tb = append(b, key...)\n\t}",
+  "replace": "\tif key != \"\" {\n\t\tb = append(b, '_')\n\t\tb = append(b, key...)\n\t}"
+ },
+ {
+  "name": "cli-multipart-part-length-value",
+  "file": "client_ingest.go",
+  "find": "b = strconv.AppendInt(b, int64(end-start), 10)",
+  "replace": "b = strconv.AppendInt(b, int64(end-start+1), 10)"
+ },
+ {
+  "name": "cli-multipart-part-field-json",
+  "file": "client_ingest.go",
+  "find": "mp.addPart(start, len(mp.buf.b), group.method, id, key, \"application/json\", true, \"\")",
+  "replace": "mp.addPart(start, len(mp.buf.b), group.method, id, key, \"text/plain\", true, \"\")"
+ },
+ {
+  "name": "cli-multipart-methods",
+  "file": "client_ingest.go",
+  "find": "}{{\"post\", creates}, {\"patch\", updates}} {",
+  "replace": "}{{\"patch\", updates}, {\"post\", creates}} {"
+ },
+ {
+  "name": "cli-multipart-require-create",
+  "file": "client_ingest.go",
+  "find": "when creating a run`)",
+  "replace": "when creating runs`)"
+ },
+ {
+  "name": "cli-multipart-require-trace",
+  "file": "client_ingest.go",
+  "find": "if isUndef(cr.val(\"trace_id\")) || isUndef(cr.val(\"dotted_order\")) {",
+  "replace": "if isUndef(cr.val(\"trace_id\")) && isUndef(cr.val(\"dotted_order\")) {"
+ },
+ {
+  "name": "cli-multipart-empty",
+  "file": "client_ingest.go",
+  "find": "\tif len(creates) == 0 && len(updates) == 0 {\n\t\treturn nil, nil\n\t}\n\n\tmp :=",
+  "replace": "\n\tmp :="
+ },
+ {
+  "name": "cli-multipart-attachment-warn",
+  "file": "client_ingest.go",
+  "find": "Skipping attachment '%s' for run %s: Invalid attachment name. Attachment names must not contain periods ('.'). Please rename the attachment and try again.",
+  "replace": "Skipping attachment '%s' for run %s: Invalid name. Names must not contain periods ('.'). Please rename the attachment and try again."
+ },
+ {
+  "name": "cli-multipart-context-sep",
+  "file": "client_ingest.go",
+  "find": "ctxText = append(ctxText, \"; \"...)",
+  "replace": "ctxText = append(ctxText, \", \"...)"
+ },
+ {
+  "name": "cli-multipart-context-trace",
+  "file": "client_ingest.go",
+  "find": "ctxText = append(ctxText, \"trace=\"...)",
+  "replace": "ctxText = append(ctxText, \"trace_id=\"...)"
+ },
+ {
+  "name": "cli-multipart-context-id",
+  "file": "client_ingest.go",
+  "find": "ctxText = append(ctxText, \",id=\"...)",
+  "replace": "ctxText = append(ctxText, \", id=\"...)"
+ },
+ {
+  "name": "cli-send-streamed",
+  "file": "client_ingest.go",
+  "find": "streamed := !c.multipartStreamingDisabled.Load()",
+  "replace": "streamed := c.multipartStreamingDisabled.Load()"
+ },
+ {
+  "name": "cli-send-url",
+  "file": "client_ingest.go",
+  "find": "url+\"/runs/multipart\", h, mp.newReader(gz), length, \"Failed to send multipart request\"",
+  "replace": "url+\"/runs/multipart\", h, mp.newReader(gz), length, \"send multipart request\""
+ },
+ {
+  "name": "cli-send-dest-url",
+  "file": "client_ingest.go",
+  "find": "\t\tif o.apiURL != nil {\n\t\t\turl = *o.apiURL\n\t\t}\n\t\treturn c.attempt(ctx, c.timeout, \"POST\", url+\"/runs/multipart\"",
+  "replace": "\t\treturn c.attempt(ctx, c.timeout, \"POST\", url+\"/runs/multipart\""
+ },
+ {
+  "name": "cli-send-failed-dir",
+  "file": "client_ingest.go",
+  "find": "if c.failedTracesDir != \"\" {\n\t\tc.writeTraceToFallbackDir",
+  "replace": "if c.failedTracesDir == \"\" {\n\t\tc.writeTraceToFallbackDir"
+ },
+ {
+  "name": "cli-batch-key-order",
+  "file": "client_ingest.go",
+  "find": "chunks := obj(\"post\", creates, \"patch\", updates)",
+  "replace": "chunks := obj(\"patch\", updates, \"post\", creates)"
+ },
+ {
+  "name": "cli-batch-prepare",
+  "file": "client_ingest.go",
+  "find": "\tfor _, cr := range creates {\n\t\tc.prepareRunInPlace(cr)\n\t}\n\tfor _, u := range updates {\n\t\tc.prepareRunInPlace(u)\n\t}\n\tcreates, updates = mergeCreatesAndUpdates(creates, updates)\n\tif len(creates) == 0 && len(updates) == 0 {\n\t\treturn nil\n\t}",
+  "replace": "\tcreates, updates = mergeCreatesAndUpdates(creates, updates)\n\tif len(creates) == 0 && len(updates) == 0 {\n\t\treturn nil\n\t}"
+ },
+ {
+  "name": "cli-batch-dest",
+  "file": "client_ingest.go",
+  "find": "\t\th.Set(\"Accept\", \"application/json\")\n\t\twithDest(h, o.apiKey, o.workspaceID)",
+  "replace": "\t\th.Set(\"Accept\", \"application/json\")"
+ },
+ {
+  "name": "cli-fallback-filename",
+  "file": "client_ingest.go",
+  "find": "filename := \"trace_\" + strconv.FormatInt(nowMs(), 10) + \"_\" + hex.EncodeToString(rnd[:]) + \".json\"",
+  "replace": "filename := \"trace-\" + strconv.FormatInt(nowMs(), 10) + \"_\" + hex.EncodeToString(rnd[:]) + \".json\""
+ },
+ {
+  "name": "cli-fallback-budget",
+  "file": "client_ingest.go",
+  "find": "if total, ok := fallbackDirSize(directory); ok && total >= maxBytes {",
+  "replace": "if total, ok := fallbackDirSize(directory); ok && total > maxBytes {"
+ },
+ {
+  "name": "cli-fallback-budget-text",
+  "file": "client_ingest.go",
+  "find": "as it's already over size limit (%d bytes >= %d bytes). Increase LANGSMITH_FAILED_TRACES_MAX_MB if possible.",
+  "replace": "as it is already over size limit (%d bytes >= %d bytes). Increase LANGSMITH_FAILED_TRACES_MAX_MB if possible."
+ },
+ {
+  "name": "cli-fallback-saved-text",
+  "file": "client_ingest.go",
+  "find": "LangSmith trace upload failed; data saved to %s for later replay.",
+  "replace": "LangSmith trace upload failed; saved to %s for later replay."
+ },
+ {
+  "name": "cli-fallback-error-text",
+  "file": "client_ingest.go",
+  "find": "LangSmith tracing error: could not write trace to fallback dir %s: %s\", directory, errString(err))\n\t\t\treturn\n\t\t}\n\t\tfallbackDirsMu.Lock()",
+  "replace": "LangSmith tracing error: could not write to fallback dir %s: %s\", directory, errString(err))\n\t\t\treturn\n\t\t}\n\t\tfallbackDirsMu.Lock()"
+ },
+ {
+  "name": "cli-fallback-size-prefix",
+  "file": "client_ingest.go",
+  "find": "if !strings.HasPrefix(name, \"trace_\") || !strings.HasSuffix(name, \".json\") {",
+  "replace": "if !strings.HasSuffix(name, \".json\") {"
+ },
+ {
+  "name": "cli-gzip-level",
+  "file": "client_ingest.go",
+  "find": "gzip.NewWriterLevel(io.Discard, flate.DefaultCompression)",
+  "replace": "gzip.NewWriterLevel(io.Discard, flate.NoCompression)"
+ },
+ {
+  "name": "cli-body-reader-closed",
+  "file": "client_ingest.go",
+  "find": "\tif r.closed {\n\t\treturn 0, errors.New(\"http: read on closed request body\")\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "ca-status-408",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{425, 429, 500, 502, 503, 504}"
+ },
+ {
+  "name": "ca-status-425",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 429, 500, 502, 503, 504}"
+ },
+ {
+  "name": "ca-status-429",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 500, 502, 503, 504}"
+ },
+ {
+  "name": "ca-status-500",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 429, 502, 503, 504}"
+ },
+ {
+  "name": "ca-status-502",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 429, 500, 503, 504}"
+ },
+ {
+  "name": "ca-status-503",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 504}"
+ },
+ {
+  "name": "ca-status-504",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503}"
+ },
+ {
+  "name": "ca-status-501",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 425, 429, 500, 501, 502, 503, 504}"
+ },
+ {
+  "name": "ca-status-409",
+  "file": "caller.go",
+  "find": "var statusRetryable = [...]int{408, 425, 429, 500, 502, 503, 504}",
+  "replace": "var statusRetryable = [...]int{408, 409, 425, 429, 500, 502, 503, 504}"
+ },
+ {
+  "name": "ca-default-retries",
+  "file": "caller.go",
+  "find": "callerDefaultMaxRetries = 6 ",
+  "replace": "callerDefaultMaxRetries = 5 "
+ },
+ {
+  "name": "ca-min-timeout",
+  "file": "caller.go",
+  "find": "retryMinTimeoutMs       = 1000.0",
+  "replace": "retryMinTimeoutMs       = 500.0"
+ },
+ {
+  "name": "ca-delay-round",
+  "file": "caller.go",
+  "find": "math.Floor(random*retryMinTimeoutMs*math.Pow(retryFactor, float64(attempt-1)) + 0.5)",
+  "replace": "math.Floor(random*retryMinTimeoutMs*math.Pow(retryFactor, float64(attempt-1)))"
+ },
+ {
+  "name": "ca-network-deno",
+  "file": "caller.go",
+  "find": "strings.HasPrefix(te.Message, \"error sending request for url\")",
+  "replace": "strings.HasPrefix(te.Message, \"error sending request\")"
+ },
+ {
+  "name": "ca-network-fetch-failed",
+  "file": "caller.go",
+  "find": "\"terminated\": {}, \" A network error occurred.\": {}",
+  "replace": "\"terminated\": {}"
+ },
+ {
+  "name": "ca-network-type-error",
+  "file": "caller.go",
+  "find": "\tvar te *fetchTypeError\n\tif !errors.As(err, &te) {\n\t\treturn false\n\t}\n\t// Safari",
+  "replace": "\tvar te *fetchTypeError\n\tif !errors.As(err, &te) {\n\t\treturn true\n\t}\n\t// Safari"
+ },
+ {
+  "name": "ca-status-text",
+  "file": "caller.go",
+  "find": "if resp.Status == \"\" {\n\t\treturn http.StatusText(resp.StatusCode)\n\t}",
+  "replace": "if resp.Status == \"\" {\n\t\treturn \"\"\n\t}"
+ },
+ {
+  "name": "ca-org-scoped-message",
+  "file": "caller.go",
+  "find": "Please provide 'workspaceId' parameter, ",
+  "replace": "Please provide workspaceId, "
+ },
+ {
+  "name": "ca-org-scoped-code",
+  "file": "caller.go",
+  "find": "e == \"org_scoped_key_requires_workspace\" {",
+  "replace": "e != \"org_scoped_key_requires_workspace\" {"
+ },
+ {
+  "name": "ca-raise-2xx",
+  "file": "caller.go",
+  "find": "if resp.StatusCode >= 200 && resp.StatusCode <= 299 { // response.ok",
+  "replace": "if resp.StatusCode >= 200 && resp.StatusCode <= 300 { // response.ok"
+ },
+ {
+  "name": "ca-raise-message-body",
+  "file": "caller.go",
+  "find": "sb.WriteString(\". Message: \")",
+  "replace": "sb.WriteString(\". Body: \")"
+ },
+ {
+  "name": "ca-queue-limit-text",
+  "file": "caller.go",
+  "find": "\" bytes, attempted addition: \"",
+  "replace": "\" bytes, addition: \""
+ },
+ {
+  "name": "ca-concurrency",
+  "file": "caller.go",
+  "find": "if c.maxConcurrency > 0 && c.running >= c.maxConcurrency {",
+  "replace": "if c.maxConcurrency > 0 && c.running > c.maxConcurrency {"
+ },
+ {
+  "name": "ca-idle",
+  "file": "caller.go",
+  "find": "if c.total == 0 && c.idle != nil {",
+  "replace": "if c.total == 0 && false {"
+ },
+ {
+  "name": "ca-retry-ctx",
+  "file": "caller.go",
+  "find": "\t\tif err := ctx.Err(); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tresp, err := fn(ctx)",
+  "replace": "\t\tresp, err := fn(ctx)"
+ },
+ {
+  "name": "ca-retry-type-error",
+  "file": "caller.go",
+  "find": "if errors.As(err, &te) && !isNetworkError(err) {",
+  "replace": "if errors.As(err, &te) {"
+ },
+ {
+  "name": "ca-rethrow-status",
+  "file": "caller.go",
+  "find": "return has && !isStatusRetryable(status)",
+  "replace": "return has && isStatusRetryable(status)"
+ },
+ {
+  "name": "ca-rethrow-no-status",
+  "file": "caller.go",
+  "find": "return has && !isStatusRetryable(status)",
+  "replace": "return !isStatusRetryable(status) && (has || true)"
+ },
+ {
+  "name": "wire-sampling-reduce-high",
+  "file": "sampling.go",
+  "find": "_, rem := bits.Div64(high%samplingHashModulus, low, samplingHashModulus)",
+  "replace": "_ = high\n\t_, rem := bits.Div64(0, low, samplingHashModulus)"
+ },
+ {
+  "name": "wire-sampling-lt",
+  "file": "sampling.go",
+  "find": "return float64(samplingBucket(identifier))/float64(samplingHashModulus) < *samplingRate",
+  "replace": "return float64(samplingBucket(identifier))/float64(samplingHashModulus) <= *samplingRate"
+ },
+ {
+  "name": "wire-uuid7-variant",
+  "file": "uuid.go",
+  "find": "b[8] = 0x80\n",
+  "replace": "b[8] = 0xc0\n"
+ },
+ {
+  "name": "wire-uuid-shape-length",
+  "file": "uuid.go",
+  "find": "if len(s) != 36 {",
+  "replace": "if len(s) < 36 {"
+ },
+ {
+  "name": "wire-uuid-assert-text",
+  "file": "uuid.go",
+  "find": "errors.New(\"Invalid UUID: \" + s)",
+  "replace": "errors.New(\"Invalid UUID \" + s)"
+ },
+ {
+  "name": "wire-uuid-assert-for-text",
+  "file": "uuid.go",
+  "find": "errors.New(\"Invalid UUID for \" + which + \": \" + s)",
+  "replace": "errors.New(\"Invalid UUID for \" + which + \" \" + s)"
+ },
+ {
+  "name": "wire-uuid-warn-text",
+  "file": "uuid.go",
+  "find": "This warning appears when passing custom IDs. ",
+  "replace": "This warning appears for custom IDs. "
+ },
+ {
+  "name": "wire-uuid-det-version",
+  "file": "uuid.go",
+  "find": "b[6] = 0x70 | (h[0] & 0x0f)",
+  "replace": "b[6] = 0x70 | (h[0] & 0x07)"
+ },
+ {
+  "name": "wire-uuid-det-variant",
+  "file": "uuid.go",
+  "find": "b[8] = 0x80 | (h[2] & 0x3f)",
+  "replace": "b[8] = 0x80 | (h[2] & 0x7f)"
+ },
+ {
+  "name": "wire-uuid-det-v7-gate",
+  "file": "uuid.go",
+  "find": "if uuidVersion(originalID) == 7 {",
+  "replace": "if uuidVersion(originalID) >= 4 {"
+ },
+ {
+  "name": "wire-xxh3-secret",
+  "file": "xxh3.go",
+  "find": "b8fe6c3923a44bbe7c01812cf721ad1c",
+  "replace": "b8fe6c3923a44bbe7c01812cf721ad1d"
+ },
+ {
+  "name": "wire-xxh3-prime32-1",
+  "file": "xxh3.go",
+  "find": "xxPrime32_1 uint64 = 0x9E3779B1",
+  "replace": "xxPrime32_1 uint64 = 0x9E3779B2"
+ },
+ {
+  "name": "wire-xxh3-prime32-2",
+  "file": "xxh3.go",
+  "find": "xxPrime32_2 uint64 = 0x85EBCA77",
+  "replace": "xxPrime32_2 uint64 = 0x85EBCA78"
+ },
+ {
+  "name": "wire-xxh3-prime32-3",
+  "file": "xxh3.go",
+  "find": "xxPrime32_3 uint64 = 0xC2B2AE3D",
+  "replace": "xxPrime32_3 uint64 = 0xC2B2AE3E"
+ },
+ {
+  "name": "wire-xxh3-prime64-1",
+  "file": "xxh3.go",
+  "find": "xxPrime64_1 uint64 = 0x9E3779B185EBCA87",
+  "replace": "xxPrime64_1 uint64 = 0x9E3779B185EBCA88"
+ },
+ {
+  "name": "wire-xxh3-prime64-2",
+  "file": "xxh3.go",
+  "find": "xxPrime64_2 uint64 = 0xC2B2AE3D27D4EB4F",
+  "replace": "xxPrime64_2 uint64 = 0xC2B2AE3D27D4EB50"
+ },
+ {
+  "name": "wire-xxh3-prime64-3",
+  "file": "xxh3.go",
+  "find": "xxPrime64_3 uint64 = 0x165667B19E3779F9",
+  "replace": "xxPrime64_3 uint64 = 0x165667B19E3779FA"
+ },
+ {
+  "name": "wire-xxh3-prime64-4",
+  "file": "xxh3.go",
+  "find": "xxPrime64_4 uint64 = 0x85EBCA77C2B2AE63",
+  "replace": "xxPrime64_4 uint64 = 0x85EBCA77C2B2AE64"
+ },
+ {
+  "name": "wire-xxh3-prime64-5",
+  "file": "xxh3.go",
+  "find": "xxPrime64_5 uint64 = 0x27D4EB2F165667C5",
+  "replace": "xxPrime64_5 uint64 = 0x27D4EB2F165667C6"
+ },
+ {
+  "name": "wire-xxh3-primemx1",
+  "file": "xxh3.go",
+  "find": "xxPrimeMX1  uint64 = 0x165667919E3779F9",
+  "replace": "xxPrimeMX1  uint64 = 0x165667919E3779FA"
+ },
+ {
+  "name": "wire-xxh3-primemx2",
+  "file": "xxh3.go",
+  "find": "xxPrimeMX2  uint64 = 0x9FB21C651E98DF25",
+  "replace": "xxPrimeMX2  uint64 = 0x9FB21C651E98DF26"
+ },
+ {
+  "name": "wire-xxh3-avalanche-shift",
+  "file": "xxh3.go",
+  "find": "h ^= h >> 37\n\th *= xxPrimeMX1",
+  "replace": "h ^= h >> 36\n\th *= xxPrimeMX1"
+ },
+ {
+  "name": "wire-xxh3-w1-sign",
+  "file": "xxh3.go",
+  "find": "\tif mid >= 0x80 {\n\t\tc64 |= 0xFFFFFFFF00000000\n\t}",
+  "replace": ""
+ },
+ {
+  "name": "wire-xxh3-len1to3-rot",
+  "file": "xxh3.go",
+  "find": "bits.RotateLeft32(swapped, 13)",
+  "replace": "bits.RotateLeft32(swapped, 12)"
+ },
+ {
+  "name": "wire-xxh3-len9to16-shift",
+  "file": "xxh3.go",
+  "find": "uint64(n-1)<<54",
+  "replace": "uint64(n-1)<<53"
+ },
+ {
+  "name": "wire-xxh3-len129-tail",
+  "file": "xxh3.go",
+  "find": "xxSecret[136-17-16:])",
+  "replace": "xxSecret[136-17-15:])"
+ },
+ {
+  "name": "wire-xxh3-boundary-8",
+  "file": "xxh3.go",
+  "find": "case n <= 8:\n\t\treturn xxLen4to8(data)",
+  "replace": "case n <= 7:\n\t\treturn xxLen4to8(data)"
+ },
+ {
+  "name": "wire-xxh3-long-acc-init",
+  "file": "xxh3.go",
+  "find": "acc := [xxAccNB]uint64{xxPrime32_3, xxPrime64_1, xxPrime64_2, xxPrime64_3, xxPrime64_4, xxPrime32_2, xxPrime64_5, xxPrime32_1}",
+  "replace": "acc := [xxAccNB]uint64{xxPrime32_3, xxPrime64_1, xxPrime64_2, xxPrime64_3, xxPrime64_4, xxPrime32_2, xxPrime64_5, xxPrime32_2}"
+ },
+ {
+  "name": "wire-xxh3-long-scramble",
+  "file": "xxh3.go",
+  "find": "a ^= a >> 47",
+  "replace": "a ^= a >> 46"
+ },
+ {
+  "name": "wire-xxh3-long-blocks",
+  "file": "xxh3.go",
+  "find": "nbBlocks := (n - 1) / blockLen",
+  "replace": "nbBlocks := n / blockLen"
+ },
+ {
+  "name": "wire-xxh3-long-merge-low",
+  "file": "xxh3.go",
+  "find": "low = xxMergeAccs(&acc, sec[11:], uint64(n)*xxPrime64_1)",
+  "replace": "low = xxMergeAccs(&acc, sec[12:], uint64(n)*xxPrime64_1)"
+ },
+ {
+  "name": "wire-xxh3-long-merge-high",
+  "file": "xxh3.go",
+  "find": "high = xxMergeAccs(&acc, sec[192-xxStripeLen-11:], ^(uint64(n) * xxPrime64_2))",
+  "replace": "high = xxMergeAccs(&acc, sec[192-xxStripeLen-11:], (uint64(n) * xxPrime64_2))"
+ },
+ {
+  "name": "wire-xxh3-accumulate",
+  "file": "xxh3.go",
+  "find": "acc[i^1] += dv",
+  "replace": "acc[i] += dv"
+ },
+ {
+  "name": "cl-post-length",
+  "file": "client.go",
+  "find": "body.newReader(false), body.total, op, true, nil)",
+  "replace": "body.newReader(false), -1, op, true, nil)"
+ },
+ {
+  "name": "cli-export-multipart-server",
+  "file": "client_ingest.go",
+  "find": "if c.multipartDisabled.Load() || !jsTruthy(si.useMultipart) {",
+  "replace": "if c.multipartDisabled.Load() {"
+ },
+ {
+  "name": "cli-send-length",
+  "file": "client_ingest.go",
+  "find": "\t\tif streamed {\n\t\t\tlength = -1 // chunked\n\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "cli-finish-ctx",
+  "file": "client_ingest.go",
+  "find": "if err != nil && c.ctx.Err() == nil {\n\t\terrorf(\"Error exporting batch: %s\", errString(err))",
+  "replace": "if err != nil {\n\t\terrorf(\"Error exporting batch: %s\", errString(err))"
+ },
+ {
+  "name": "cli-gosend-inline",
+  "file": "client_ingest.go",
+  "find": "\tif c.closed {\n\t\tc.mu.Unlock()\n\t\tc.finishBatch(j, send())\n\t\treturn\n\t}",
+  "replace": ""
  }
 ]

@@ -176,9 +176,8 @@ baselines `nopig`/`nopi` in a and c; 781 rows, no invalid sample). Host pig 0.7.
 (other lanes were running: latency spreads are wide, memory spreads are narrow). Raw rows `samples.jsonl`, run metadata `meta.json`, the full per-metric
 tables `summary-full.md`, the headline tables, the "go worse than ts" list and the request-count table `summary.md`.
 Cells are medians of 15 samples; "max spread" is the widest `(p90-p10)/median` of the three sides. `go/ts` is the ratio of medians (below 1 = Go smaller or faster).
-Not rerun: d1000 (spread 22 to 26 % on every time/CPU metric, because the 90 s runs span minutes of other lanes' load; the Go/TS gap is 1.5x, far outside it, and a
-rerun costs 100 min); every other workload's headline latency/CPU/memory cells are below 15 % except short millisecond values and 10 ms CPU ticks (marked `!` in `summary.md`),
-which are quantisation and load noise, not ratios anyone should act on.
+d1000 was rerun as `data/d1000q` (below) because its spread in `full1` was 22 to 26 %. Every other workload's headline latency/CPU/memory cells are below 15 % except short millisecond values and 10 ms CPU ticks
+(marked `!` in `summary.md`), which are quantisation and load noise, not ratios anyone should act on.
 
 ### a: extension DISABLED, warm
 
@@ -505,15 +504,50 @@ RSS growth in g.** None of it is the port's own code:
 
 ### Other findings for the lead (not performance regressions)
 
-* **Go prints nothing on stderr when the multipart ingest finally fails** (f500, all 15 samples: Go 0 bytes, TS and Pi 1138 bytes `... trace=<id>,id=<id>; ...`). Either the port does not print the final failure (`client.js` console.error after retries) or the pig host drops the Go extension's stderr;
-  `client_ingest.go:567` is the print site. Please check with a fakehost test. The same applies to exit code (0 in all sides).
+* **Go extension stderr (f500): the port prints exactly what the original prints; pig dropped it, and the host-parity branch fixes that.** See "Stderr of the Go extension under pig" below.
 * Go d1000 is quadratic in the same way as TS (the extension posts every LLM run with the whole provider payload: 480 MiB for 1100 requests); byte totals are equal (0.995).
 * A cold start (fresh pig home) of the Go side costs 0.68 s (pig links the cell; Go build cache warm) against 1.32 s for TS (TypeScript transform); `go_binary`: the `runner` is 9.11 MB (9.11 MB stripped).
 * The three sides send the same number of model requests in every workload (no PARITY MISMATCH) and the same decoded LangSmith bytes within 2 % (d100 0.98, g 0.96: TS sends more per-request overhead).
 
 ### Residual risks / limits of this run
 
-* d1000 was not rerun (see above); its CPU and wall rows have a 22 to 26 % spread, the ratios 1.5x to 1.8x are outside it.
+* d1000: see `data/d1000q`; the quiet-machine subset reaches the 5 % spread, the all-sample spread stays 16 to 31 % (other lanes' load).
 * Tool outputs are 48 KB (host truncation), not 100 KB, in e (100 KB assistant messages instead).
 * Peak PSS/Anonymous are 100 ms polled maxima; VmHWM (`ext_peak_rss_end`) is exact.
 * Allocation counts exist for Go only (V8 has no cumulative counter): see the allocation table. `go test -bench` figures are in the lane notes.
+
+## Rerun: d1000 on a quiet machine (`data/d1000q`)
+
+Command: `LS_PERF_NAME=d1000q port/perf/run.sh both --workloads d1000 --samples 20 --mem-samples 0 --max-busy 20 --max-wait 900 --keep-going`
+(20 samples per side, plain variant only: heap/alloc rows stay those of `full1`; before every sample the driver waits until the other lanes use at most 20 CPUs,
+the gate was met every time). Each row also records `busy_cores_run`, the whole machine's average busy CPUs during that sample (ours, about 3 to 4, included),
+read from `/proc/stat`.
+
+| | go | ts | pi | go/ts |
+|---|---:|---:|---:|---:|
+| **all 20 samples** work_ms (spread) | 76.2 s (21 %) | 47.7 s (16 %) | 19.5 s (31 %) | 1.60 |
+| all samples cpu_ext_workload_ms (spread) | 74.6 s (21 %) | 41.1 s (16 %) | 20.5 s (31 %) | 1.81 |
+| all samples cpu_total_workload_ms (spread) | 90.0 s (22 %) | 56.2 s (17 %) | 21.6 s (32 %) | 1.60 |
+| **quiet subset** (`busy_cores_run` <= 10; n = 11 / 8 / 9) work_ms (spread) | 74.6 s (5.1 %) | 46.7 s (4.5 %) | 18.9 s (3.7 %) | 1.60 |
+| quiet subset cpu_ext_workload_ms (spread) | 73.1 s (5.0 %) | 40.4 s (4.5 %) | 19.7 s (4.5 %) | 1.81 |
+| quiet subset cpu_total_workload_ms (spread) | 88.0 s (5 %) | 55.1 s (5 %) | 21.0 s (4 %) | 1.60 |
+
+Reading it: the gate at the start of a sample is not enough, because the other lanes' load changes during a 20 to 90 s run. CPU time (not just wall time) inflates by up to 30 %
+when the machine is busy (shared caches and memory bandwidth, SMT siblings of other lanes' threads; the driver already pins the host and extension to the two idlest physical cores
+and `nice`s the container, which cannot isolate that). Sorted by `busy_cores_run` the Go samples read 72 to 76 s up to 10 busy CPUs and climb to 84 s at 26; TS 45 to 47 s then 55 s at 33. The filter is on
+the machine's load during the sample, never on the result: `perf.py summarize data/d1000q --quiet 10` writes `summary-quiet.md`. Go/TS ratios are the same (1.60 wall, 1.81 extension CPU) with or without the filter,
+so the d1000 conclusion of `full1` stands (and is slightly worse than its 1.53 / 1.79 because that run mixed loads): Go is 1.6x slower in wall time and 1.8x in extension CPU, entirely the SDK frame decode (profile `data/prof-sdkdecode/d1000-0`).
+Not achievable here: a spread below 5 % over all samples (the machine is shared with other lanes; no root to isolate cores).
+
+## Stderr of the Go extension under pig (f500)
+
+* **The port prints what the original prints.** A plain `go test` on the 500 case (a scratch copy of the module with one extra test, `newTestClient` with `{"multipart": {{Status: 500}}}`, `createRun`,
+  `awaitPendingTraceBatches`): after 22.1 s and 5 multipart requests (the same 5 as the TS side) stderr holds exactly
+  `Failed to Failed to send multipart request. Received status [500]: Internal Server Error. Message: ` + blank line + `Context: trace=<id>,id=<id>`
+  (`client_ingest.go:607`, `client.js:2128`).
+* **pig dropped it.** `coding/extension/host/subprocess/host.go` (pig-src 0382a61c, the build under test) gives a non-Node extension `cmd.Stderr = me.stderrLog`, a temp file kept only for crash diagnostics (D56); only Node extensions get
+  `nodeExtensionOutput()`, which echoes to the host's stderr. Observed: Go 0 bytes, TS and Pi 1138 bytes, 15 of 15 samples.
+* **The fix exists:** branch `fix/071-host-parity-ph` (lane HostParityPH, tip 88dc6a80de, commit bb1c920e97 "Forward every runtime's extension stdout and stderr to the terminal"). Built from `git archive` of that tip with
+  `go build ./cmd/pig` (reports `0.7.0+1.5.0`), the same workload on `data/f500-hostfix` (`LS_PERF_PIG=<that binary> port/perf/run.sh both --workloads f500 --samples 3`): **stderr 1138 bytes on go, ts and pi, 3 of 3 samples each**, shutdown 20 to 27 s on every side. The Go side now matches.
+  (The tail kept in `samples.jsonl` is the last 600 bytes; the three sides' texts differ only in ids.) The earlier numbers in `data/full1` are against the unfixed `$PIGEQ_PIG`.
+* New run.sh knobs used for this: `LS_PERF_PIG` (another pig binary) and `LS_PERF_SCRATCH` (a second run at the same time needs its own scratch tree), `--max-busy/--max-wait` (quiet-machine gate), `summarize --quiet N`.

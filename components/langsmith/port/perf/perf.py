@@ -30,6 +30,7 @@ COLD_WORKLOADS = {"a", "b"}
 BASELINE_WORKLOADS = {"a", "c"}
 NO_MEM_WORKLOADS = {"f0", "f200", "f500"}
 TAGS = ("ready", "post", "end")
+GATE = {"busy": None, "met": None}         # the last quiet-machine gate reading (--max-busy), copied into every row
 
 
 # ---------------------------------------------------------------- /proc helpers
@@ -87,6 +88,34 @@ def proc_mem(pid):
 def sum_mem(rows):
     keys = ("rss", "pss", "anonymous", "hwm", "threads", "cpu_ms", "cchild_ms", "fds")
     return {k: sum(r.get(k, 0) for r in rows) for k in keys}
+
+
+def cpu_clock():
+    """(busy jiffies, total jiffies, cpus) of the whole machine from /proc/stat (busy = everything but idle and iowait)."""
+    with open("/proc/stat") as f:
+        first = f.readline().split()
+        n = sum(1 for line in f if line.startswith("cpu") and line[3].isdigit())
+    vals = list(map(int, first[1:]))
+    return sum(vals) - vals[3] - vals[4], sum(vals), n
+
+
+def busy_cores(a, b):
+    """Average number of busy CPUs of the machine between two cpu_clock() readings."""
+    return (b[0] - a[0]) / max(1, b[1] - a[1]) * b[2]
+
+
+def wait_quiet_machine(max_busy, max_wait_s):
+    """Between samples: wait until the other lanes use at most max_busy CPUs (nothing of ours is running), at most max_wait_s.
+    Returns the last reading (busy CPUs) and whether the gate was met."""
+    deadline, last = time.monotonic() + max_wait_s, None
+    while True:
+        a = cpu_clock()
+        time.sleep(3.0)
+        last = busy_cores(a, cpu_clock())
+        if last <= max_busy:
+            return last, True
+        if time.monotonic() > deadline:
+            return last, False
 
 
 class Peaks(threading.Thread):
@@ -595,7 +624,8 @@ def run_one(cfg, side, variant, workload, cache, idx, snap, bins, warm_root, cpu
     work.mkdir(parents=True)
     shutil.copytree(make_fixtures(), work / "fixtures")
     llm = mock = host = closed = None
-    row = {"side": side, "variant": variant, "workload": workload, "cache": cache, "run": idx, "ok": False, "load1": os.getloadavg()[0]}
+    row = {"side": side, "variant": variant, "workload": workload, "cache": cache, "run": idx, "ok": False, "load1": os.getloadavg()[0], "gate_busy": GATE["busy"], "gate_met": GATE["met"]}
+    clock0 = cpu_clock()
     try:
         llm = start_llm(bins["fakellm"], spec["turns"], root, cpus["helper"]) if spec["turns"] else None
         mock = start_mock(bins["mockls"], root, spec["mock"], cpus["helper"]) if tracing else None
@@ -680,6 +710,7 @@ def run_one(cfg, side, variant, workload, cache, idx, snap, bins, warm_root, cpu
             if host.stderr and (not row["ok"] or workload == "f500"):
                 row["stderr_tail"] = host.stderr[-600:].decode("utf8", "replace")
             row["wall_ms"] = (time.perf_counter_ns() - host.t0) / 1e6
+            row["busy_cores_run"] = busy_cores(clock0, cpu_clock())   # whole machine during the sample, ours (about 3) included
         if mock:
             try:
                 row["ls"] = ls_row(mock.stats("/__mockls/stats"))
@@ -821,6 +852,8 @@ def cmd_run(a):
             for i in range(a.samples):
                 order = wsides[i % len(wsides):] + wsides[:i % len(wsides)]
                 for side in order:
+                    if a.max_busy:
+                        GATE["busy"], GATE["met"] = wait_quiet_machine(a.max_busy, a.max_wait)
                     if SIDES[side][1] is None or workload in NO_MEM_WORKLOADS or i >= mem_samples:
                         variants = ("plain",)
                     else:
@@ -1046,13 +1079,16 @@ def cmd_summarize(a):
         over = load_rows(a.override)
         replaced = {r["workload"] for r in over}
         rows = [r for r in rows if r["workload"] not in replaced] + over
+    if a.quiet:
+        rows = [r for r in rows if r.get("busy_cores_run") is not None and r["busy_cores_run"] <= a.quiet]
+    suffix = "-quiet" if a.quiet else ""
     c = cells(rows)
     keys = sorted({(w, ca) for (w, ca, _, _) in c}, key=lambda k: (WORKLOADS.index(k[0]), k[1]))
     sides = [s for s in ("go", "ts", "pi", "nopig", "nopi") if any(k[2] == s for k in c)]
     all_metrics = sorted({m for cell in c.values() for m in cell if m != "_runs"})
     headline = [m for m in RATCHET + INFO if m in all_metrics] + sorted(m for m in all_metrics if m.startswith("tool_ms:"))
     full = ["# LangSmith perf summary (every metric)", ""] + table(c, sides, keys, all_metrics)
-    (pathlib.Path(a.dir) / "summary-full.md").write_text("\n".join(full) + "\n")
+    (pathlib.Path(a.dir) / f"summary-full{suffix}.md").write_text("\n".join(full) + "\n")
     lines = ["# LangSmith perf summary", "",
              "Cells are `median ±spread%` over fresh-process samples (spread = (p90-p10)/median; `!` marks more than 15 %). Ratios are of medians "
              "(below 1.00: Go is smaller or faster). `nopig`/`nopi` are the same host with no extension. Metric definitions: README.md. Every metric: summary-full.md.", ""]
@@ -1095,7 +1131,7 @@ def cmd_summarize(a):
                     worse.append(f"| {wl}/{cache} | {metric} | {fmt(metric, gm)} | {fmt(metric, tm)} | {gm / tm if tm else float('inf'):.2f} | {sep} |")
         worse += ["", f"Metrics worse: {n}."]
     text = "\n".join(lines + worse) + "\n"
-    (pathlib.Path(a.dir) / "summary.md").write_text(text)
+    (pathlib.Path(a.dir) / f"summary{suffix}.md").write_text(text)
     print(text)
     return 1 if any("MISMATCH" in m for m in mism) else 0
 
@@ -1112,10 +1148,13 @@ def main():
     r.add_argument("--baselines", action="store_true", help="also run the same host with no extension (nopig, nopi) in workloads a and c")
     r.add_argument("--cpus", default=os.environ.get("LS_PERF_CPUS", ""), help="helper,tree1,tree2 (default: the three idlest physical cores)")
     r.add_argument("--keep-going", action="store_true")
+    r.add_argument("--max-busy", type=float, default=0, help="before every sample wait until the other lanes use at most this many CPUs (0: no gate)")
+    r.add_argument("--max-wait", type=float, default=900, help="longest wait of the --max-busy gate in seconds; the row records gate_met=false when it ran out")
     r.add_argument("--profile", default="", help="directory: the mem variant of side go also writes CPU and allocation pprof files there")
     r.add_argument("--seed", default="c", help="workload of the three unmeasured warm-up launches")
     s = sub.add_parser("summarize")
     s.add_argument("dir")
+    s.add_argument("--quiet", type=float, default=0, help="keep only samples taken while the whole machine used at most this many CPUs (busy_cores_run, ours included); writes summary-quiet.md")
     s.add_argument("--override", help="a second run dir: its workloads replace those of the first (a rerun of a noisy workload)")
     a = ap.parse_args()
     if a.cmd == "run":

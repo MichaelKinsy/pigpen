@@ -1,0 +1,122 @@
+[
+ {
+  "name": "ext-notify-active-id",
+  "file": "extension.go",
+  "find": "id = active.root.ID",
+  "replace": "id = active.root.traceID"
+ },
+ {
+  "name": "conv-payload-order-gemini-first",
+  "file": "convert.go",
+  "find": "\t// OpenAI Responses input (index.ts:186-214).\n\tif input, isArr",
+  "replace": "\tif false {\n\t\treturn nil, nil\n\t}\n\t// OpenAI Responses input (index.ts:186-214).\n\tif input, isArr"
+ },
+ {
+  "name": "cfg-json-blank",
+  "file": "config.go",
+  "find": "jsTrim(value) == \"\" {\n\t\treturn undef",
+  "replace": "value == \"\" {\n\t\treturn undef"
+ },
+ {
+  "name": "cfg-validate-enabled-type",
+  "file": "config.go",
+  "find": "issues = append(issues, invalidType(\"boolean\", v, []any{\"enabled\"}))",
+  "replace": "issues = append(issues, invalidType(\"string\", v, []any{\"enabled\"}))"
+ },
+ {
+  "name": "conv-gemini-part-text-rest",
+  "file": "convert.go",
+  "find": "obj(\"type\", \"text\", \"text\", text).spread(restOf(rec, \"text\"))",
+  "replace": "obj(\"type\", \"text\", \"text\", text).spread(rec)"
+ },
+ {
+  "name": "meta-remote-path-empty",
+  "file": "metadata.go",
+  "find": "if host == \"\" || repoPath == \"\" {",
+  "replace": "if host == \"\" {"
+ },
+ {
+  "name": "cl-headers-api-key",
+  "file": "client.go",
+  "find": "h.Set(\"x-api-key\", *c.apiKey)\n\t} else if c.profileAuth != nil {",
+  "replace": "h.Set(\"Authorization\", *c.apiKey)\n\t} else if c.profileAuth != nil {"
+ },
+ {
+  "name": "cl-fetch-api-key-header",
+  "file": "client.go",
+  "find": "ah = &authHeader{Name: \"x-api-key\", Value: *c.apiKey}",
+  "replace": "ah = &authHeader{Name: \"Authorization\", Value: *c.apiKey}"
+ },
+ {
+  "name": "clp-sample-rate-one",
+  "file": "client_prepare.go",
+  "find": "if r == nil || *r >= 1 {\n\t\treturn true\n\t}\n\tid, ok",
+  "replace": "if r == nil || *r > 1 {\n\t\treturn true\n\t}\n\tid, ok"
+ },
+ {
+  "name": "wire-sampling-rate-one",
+  "file": "sampling.go",
+  "find": "if samplingRate == nil || *samplingRate >= 1 {",
+  "replace": "if samplingRate == nil || *samplingRate > 1 {"
+ },
+ {
+  "name": "clq-enqueue-workers",
+  "file": "client_queue.go",
+  "find": "if c.workers < c.traceBatchConcurrency {",
+  "replace": "if c.workers < 1 {"
+ },
+ {
+  "name": "clq-timer-fired-clear",
+  "file": "client_queue.go",
+  "find": "\tc.timer = nil // client.js:1620: unconditional, as in the original\n",
+  "replace": ""
+ },
+ {
+  "name": "clq-timer-fired-closed",
+  "file": "client_queue.go",
+  "find": "\tif c.closed {\n\t\tc.mu.Unlock()\n\t\treturn\n\t}\n\t_, jobs, err := c.drainLocked(bytesLimit, limit, true)",
+  "replace": "\t_, jobs, err := c.drainLocked(bytesLimit, limit, true)"
+ },
+ {
+  "name": "clq-flush-drain",
+  "file": "client_queue.go",
+  "find": "ds, jobs, err := c.drainLocked(bytesLimit, c.sizeLimit(si), false)",
+  "replace": "ds, jobs, err := c.drainLocked(bytesLimit, c.sizeLimit(si), true)"
+ },
+ {
+  "name": "clq-await-delay",
+  "file": "client_queue.go",
+  "find": "t := time.NewTimer(time.Millisecond)",
+  "replace": "t := time.NewTimer(0)"
+ },
+ {
+  "name": "clq-await-idle",
+  "file": "client_queue.go",
+  "find": "return c.batchCaller.onIdle(ctx)",
+  "replace": "return nil"
+ },
+ {
+  "name": "cli-cursor-chunk",
+  "file": "client_ingest.go",
+  "find": "piece := r.cur.next(32 << 10)\n\t\tif piece == nil {\n\t\t\tr.zw.Close()",
+  "replace": "piece := r.cur.next(1)\n\t\tif piece == nil {\n\t\t\tr.zw.Close()"
+ },
+ {
+  "name": "wire-uuid7-rand-tail",
+  "file": "uuid.go",
+  "find": "copy(b[11:], rnds[11:])",
+  "replace": "copy(b[11:], rnds[10:15])"
+ },
+ {
+  "name": "cli-export-error-returned",
+  "file": "client_ingest.go",
+  "find": "\t\t\treturn c.batchIngestRuns(ctx, creates, updates, o)\n\t\t}\n\t\treturn err\n\t})",
+  "replace": "\t\t\treturn c.batchIngestRuns(ctx, creates, updates, o)\n\t\t}\n\t\treturn nil\n\t})"
+ },
+ {
+  "name": "cli-process-nothing-to-send",
+  "file": "client_ingest.go",
+  "find": "\t\tif raw == nil {\n\t\t\tc.finishBatch(j, nil)\n\t\t\treturn\n\t\t}",
+  "replace": "\t\tif raw == nil {\n\t\t\treturn\n\t\t}"
+ }
+]

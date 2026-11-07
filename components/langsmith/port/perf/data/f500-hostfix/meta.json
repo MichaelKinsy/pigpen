@@ -1,0 +1,69 @@
+{
+  "started": "2026-11-07T04:18:59+0000",
+  "sides": [
+    "go",
+    "ts",
+    "pi"
+  ],
+  "workloads": [
+    "f500"
+  ],
+  "samples": 3,
+  "mem_samples": 3,
+  "baselines": true,
+  "cpus": {
+    "helper": [
+      2
+    ],
+    "tree": [
+      7,
+      20
+    ],
+    "all": [
+      2,
+      7,
+      20
+    ]
+  },
+  "loadavg_start": [
+    15.255859375,
+    15.11767578125,
+    17.05126953125
+  ],
+  "versions": {
+    "pig": "0.7.0+1.5.0",
+    "pi": "1.5.0",
+    "node": "v24.22.1",
+    "go": "go version go1.27.3 linux/amd64",
+    "langsmith_sdk": "0.10.5",
+    "kernel": "Linux 6.8.0-124-generic",
+    "cpu": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "settle_s": 0.5,
+  "args": [
+    "run",
+    "--out",
+    "/home/kinsy/ls-work/scratch/LsPerf2/run/out/f500-hostfix",
+    "--sides",
+    "go,ts,pi",
+    "--baselines",
+    "--workloads",
+    "f500",
+    "--samples",
+    "3",
+    "--keep-going"
+  ],
+  "extension_sources_sha256": "8530ebb7b041c54f14ab528078bd61a75d85bb1129f525015289eb55c47bdca9",
+  "oracle_index_sha256": "f778ae70794128f7cf7feff9da00192ecdc580384b38fb6ab2cb9408bb9f6ff0",
+  "go_binary": {
+    "runner_bytes": 9109664,
+    "sha256": "01ddd62a92694effd2994e6238b916ed8459c3ea6472e0e8c254d1cf27e9337b",
+    "stripped_bytes": 9107304
+  },
+  "finished": "2026-11-07T04:23:14+0000",
+  "loadavg_end": [
+    14.11328125,
+    14.54931640625,
+    16.25927734375
+  ]
+}
