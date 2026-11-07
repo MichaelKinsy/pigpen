@@ -27,13 +27,19 @@ const (
 	maxURLLength   = 2048
 	// maxTimeoutSeconds is the largest per-request timeout a server may ask for.
 	maxTimeoutSeconds = 3600
+	// maxServerNameLength bounds a server name; see serverNamePattern.
+	maxServerNameLength = 40
 )
 
 var (
 	// serverNamePattern bounds a server name at 40 characters. PiG cuts a tool name longer than 64 characters to 55 and
 	// a hash suffix, and with a server name of 49 or more characters the cut removes the end of the `mcp__<server>__`
 	// prefix the gate and the default deny match on.
-	serverNamePattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,40}$`)
+	//
+	// A name is alphanumeric words joined by single `-` or `_`: no `__` and no leading or trailing separator. PiG writes
+	// the tool name as `mcp__<server>__<tool>` with `-` as `_`, so such a name never contains `__` and the prefix of one
+	// policy server is never the start of another policy server's prefix (`a` against `a__b` or `a_`).
+	serverNamePattern = regexp.MustCompile(`^[A-Za-z0-9]+([_-][A-Za-z0-9]+)*$`)
 	headerNamePattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,128}$`)
 	// headerValuePattern is the only header value the extension accepts: a reference to one environment variable.
 	// PiG expands `$VAR` anywhere in a header value and runs a value that starts with `!` as a shell command, so a
@@ -121,8 +127,8 @@ func ParsePolicy(data []byte, lookupEnv func(string) (string, bool)) (Policy, er
 
 func validateServer(where string, rs rawServer, lookupEnv func(string) (string, bool)) (Server, error) {
 	var s Server
-	if rs.Name == nil || !serverNamePattern.MatchString(*rs.Name) {
-		return s, fmt.Errorf("policy: %s.name is required and must match %s", where, serverNamePattern)
+	if rs.Name == nil || len(*rs.Name) > maxServerNameLength || !serverNamePattern.MatchString(*rs.Name) {
+		return s, fmt.Errorf("policy: %s.name is required, 1 to %d characters of words made of letters and digits joined by single - or _", where, maxServerNameLength)
 	}
 	s.Name = *rs.Name
 	where = fmt.Sprintf("%s (%s)", where, s.Name)
@@ -237,9 +243,40 @@ func validateToolName(name string) error {
 // checkJSONShape rejects what encoding/json would accept silently: a second document after the first, a
 // duplicate object key (the last would win) and a null (a null decodes to the zero value, so
 // "require_approval": null would turn the gate off).
+// schema lists the keys an object of the policy may have. A nil schema means the object's keys are data (header names).
+type schema struct {
+	fields map[string]*schema
+	// elem is the schema of the elements of an array.
+	elem *schema
+}
+
+var policySchema = &schema{fields: map[string]*schema{
+	"ask_user": {},
+	"mcp_servers": {elem: &schema{fields: map[string]*schema{
+		"name": {}, "url": {}, "headers": nil, "timeout_seconds": {}, "tools": {}, "require_approval": {},
+	}}},
+}}
+
+// checkKey rejects a key that is not exactly one of the schema's keys. encoding/json matches field names without
+// regard to case, so a later "REQUIRE_APPROVAL" would silently override "require_approval" if it got that far.
+func (sc *schema) checkKey(path, key string) error {
+	if sc == nil || sc.fields == nil {
+		return nil
+	}
+	if _, ok := sc.fields[key]; ok {
+		return nil
+	}
+	for k := range sc.fields {
+		if strings.EqualFold(k, key) {
+			return fmt.Errorf("%s has the key %q, which differs from %q only in case; keys are case-sensitive", path, key, k)
+		}
+	}
+	return nil
+}
+
 func checkJSONShape(data []byte) error {
 	dec := json.NewDecoder(bytes.NewReader(data))
-	if err := walkValue(dec, "policy"); err != nil {
+	if err := walkValue(dec, "policy", policySchema); err != nil {
 		return err
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
@@ -248,7 +285,7 @@ func checkJSONShape(data []byte) error {
 	return nil
 }
 
-func walkValue(dec *json.Decoder, path string) error {
+func walkValue(dec *json.Decoder, path string, sc *schema) error {
 	tok, err := dec.Token()
 	if err != nil {
 		return fmt.Errorf("policy: %w", err)
@@ -270,13 +307,24 @@ func walkValue(dec *json.Decoder, path string) error {
 					return fmt.Errorf("%s has the key %q twice", path, key)
 				}
 				seen[key] = true
-				if err := walkValue(dec, path+"."+key); err != nil {
+				if err := sc.checkKey(path, key); err != nil {
+					return err
+				}
+				var child *schema
+				if sc != nil {
+					child = sc.fields[key]
+				}
+				if err := walkValue(dec, path+"."+key, child); err != nil {
 					return err
 				}
 			}
 		case '[':
 			for i := 0; dec.More(); i++ {
-				if err := walkValue(dec, fmt.Sprintf("%s[%d]", path, i)); err != nil {
+				var elem *schema
+				if sc != nil {
+					elem = sc.elem
+				}
+				if err := walkValue(dec, fmt.Sprintf("%s[%d]", path, i), elem); err != nil {
 					return err
 				}
 			}

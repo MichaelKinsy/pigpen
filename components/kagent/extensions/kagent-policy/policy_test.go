@@ -64,6 +64,14 @@ func TestParsePolicyRejects(t *testing.T) {
 		{"unknown server key", server(`,"require_aproval":true`), "unknown field"},
 		{"duplicate top-level key", `{"ask_user":false,"ask_user":true}`, `"ask_user" twice`},
 		{"duplicate server key", server(`,"require_approval":false,"require_approval":true`), `"require_approval" twice`},
+		{"case-variant top-level key", `{"ask_user":false,"ASK_USER":true}`, `"ASK_USER", which differs from "ask_user" only in case`},
+		{"case-variant list key", `{"Mcp_Servers":[]}`, `"Mcp_Servers"`},
+		{"case-variant server key", server(`,"require_approval":true,"REQUIRE_APPROVAL":false`), `"REQUIRE_APPROVAL", which differs from "require_approval" only in case`},
+		{"case-variant server name key", `{"mcp_servers":[{"Name":"a","url":"https://a.example/mcp"}]}`, `"Name"`},
+		{"double underscore name", `{"mcp_servers":[{"name":"a__b","url":"https://a.example/mcp"}]}`, "name is required"},
+		{"trailing underscore name", `{"mcp_servers":[{"name":"a_","url":"https://a.example/mcp"}]}`, "name is required"},
+		{"leading hyphen name", `{"mcp_servers":[{"name":"-a","url":"https://a.example/mcp"}]}`, "name is required"},
+		{"mixed double separator name", `{"mcp_servers":[{"name":"a_-b","url":"https://a.example/mcp"}]}`, "name is required"},
 		{"null approval", server(`,"require_approval":null`), "must not be null"},
 		{"null ask_user", `{"ask_user":null}`, "must not be null"},
 		{"null servers", `{"mcp_servers":null}`, "must not be null"},
@@ -137,5 +145,20 @@ func TestParsePolicyErrorsDoNotEchoHeaderValues(t *testing.T) {
 	}
 	if strings.Contains(err.Error(), "hunter2") {
 		t.Fatalf("error repeats the header value: %v", err)
+	}
+}
+
+func TestParsePolicyHeaderNamesAreData(t *testing.T) {
+	p, err := parse(`{"mcp_servers":[{"name":"a","url":"https://a.example/mcp","headers":{"Require_Approval":"${KAGENT_PIG_HDR_1}","NAME":"${KAGENT_PIG_HDR_1}"}}]}`)
+	if err != nil || len(p.Servers[0].Headers) != 2 {
+		t.Fatalf("header names that look like schema keys: %+v %v", p, err)
+	}
+}
+
+func TestParsePolicyAcceptsSingleSeparatorNames(t *testing.T) {
+	for _, name := range []string{"a", "a-b", "a_b", "a1", "kagent-tools"} {
+		if _, err := parse(`{"mcp_servers":[{"name":"` + name + `","url":"https://a.example/mcp"}]}`); err != nil {
+			t.Fatalf("name %q rejected: %v", name, err)
+		}
 	}
 }

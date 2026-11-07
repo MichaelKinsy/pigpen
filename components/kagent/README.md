@@ -28,7 +28,7 @@ The [`kagent` Piglet](../../piglets/kagent/README.md) fuses it into one Binary (
 ## Policy file
 
 `$KAGENT_PIG_POLICY` names a JSON file. It is validated strictly, because it is compiled from a Kubernetes spec: an unknown
-key, a duplicate key, a `null`, a wrong type or an out-of-range value is an error that names the field.
+key (keys are case-sensitive: `REQUIRE_APPROVAL` is unknown, not an override), a duplicate key, a `null`, a wrong type or an out-of-range value is an error that names the field.
 
 ```json
 {"mcp_servers":[{"name":"kagent-tools","url":"https://tools.kagent.svc.cluster.local/mcp",
@@ -39,7 +39,7 @@ key, a duplicate key, a `null`, a wrong type or an out-of-range value is an erro
 
 | Field | Rule |
 |---|---|
-| `mcp_servers[].name` | `[A-Za-z0-9_-]{1,40}`; at most 64 servers; names that differ only in `-` against `_` collide (PiG reads them as one). PiG cuts a tool name longer than 64 characters to 55 and a hash suffix, which would remove the end of the `mcp__<server>__` prefix of a name of 49 or more characters, so the limit is 40 |
+| `mcp_servers[].name` | 1 to 40 characters: letters and digits in words joined by single `-` or `_` (no `__`, no leading or trailing separator, so no policy server's `mcp__<server>__` prefix is the start of another's); at most 64 servers; names that differ only in `-` against `_` collide (PiG reads them as one). PiG cuts a tool name longer than 64 characters to 55 and a hash suffix, which would remove the end of the `mcp__<server>__` prefix of a name of 49 or more characters, so the limit is 40 |
 | `url` | absolute `http` or `https`, a host, no credentials, no whitespace, **no `$`** (PiG expands environment variables in an MCP url) |
 | `headers` | each value is exactly one `${VAR}` reference and `VAR` must be set in pig's environment. PiG expands `$VAR` anywhere in a header value and runs a value that starts with `!` as a shell command, so a literal from the policy is refused; the variable's content is delivered as it is. Values are never echoed in errors |
 | `timeout_seconds` | greater than 0, at most 3600; default PiG's 60 |
