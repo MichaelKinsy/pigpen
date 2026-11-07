@@ -1,0 +1,199 @@
+# PiG as a kagent harness: proof results and method
+
+What this is: measurements of PiG running as a native kagent harness inside Agent Substrate (gVisor Actors), next to kagent's Claude Code and Codex
+harnesses and the community pi-go harness, on a local Kind cluster. Date of the run: 2026-11-07.
+
+**Scope, stated plainly.** Every agent talked to the same hermetic, deterministic **mock model server** (`mockllm/`), not to a real model. The mock
+scripts a fixed task (a shell tool call, an MCP tool call, a final answer) and answers in a fixed time, so these numbers isolate what the harness and
+the platform add around a model: process start, tool plumbing, approval handling, memory and CPU. With a real model, model latency would dominate every turn.
+Nothing here is a vendor benchmark, and it measures one cluster, one host and one task.
+
+kagent and Agent Substrate are separate Apache-2.0 projects, Claude Code and Codex are their vendors' products, and pi-go is a community project; none of them is
+affiliated with this repository or endorses it.
+
+## Summary (medians; n = 10 sessions per cell unless stated)
+
+| | PiG | Claude Code | Codex | pi-go |
+|---|---:|---:|---:|---:|
+| Task `[basket]` (shell tool, MCP tool, answer) completed | 10/10 | 10/10 | 10/10 | 10/10 (shell only) |
+| MCP tool call made | 10/10 | 10/10 | 10/10 | 0/10 (no MCP tools on rc3) |
+| Approval round trip (input-required, approve, resume) | 10/10 | 10/10 | 10/10 | not possible (no approval path) |
+| Restart resume: `[recall]` after suspend and restore answers with the first marker | 10/10 | 10/10 | 10/10 | 10/10 |
+| Actor memory per turn, working set max (MiB) | **51** | 142 | 58 | 31 |
+| Actor memory per turn, `memory.peak` (MiB) | 52 | 146 | 62 | 32 |
+| CPU time per turn, sandbox (ms) | 528 | 2413 | 1414 | 357 |
+| Agent apply to Ready (s, n = 5, resolution about 0.6 s) | 1.6 | 1.6 | 1.6 | 1.6 |
+| Substrate restore on first message, create to running (s) | 0.35 | 0.32 | 0.28 | 0.32 |
+| Substrate restore on later messages (s) | 0.29 | 0.28 | 0.23 | 0.29 |
+| First event after send (ms) | 424 | 412 | 376 | 454 |
+| `[basket]` turn 1, send to done (ms) | 1031 | 2708 | 1863 | 798 |
+| `[recall]` turn 2 after restore, send to done (ms) | 768 | 2085 | 1341 | 731 |
+| `[approve]`: send to input-required (ms) | 778 | 2112 | 1500 | n/a |
+| `[approve]`: approval to done (ms) | 1072 | 2427 | 1788 | n/a |
+| Image, compressed (MiB) and layers | 198 / 9 | 144 / 4 | 200 / 4 | 310 / 7 |
+
+How to read it, with the honest limits:
+- PiG uses about 0.36 times the memory of Claude Code and about 0.88 times that of Codex per turn, and about 1.6 times that of pi-go; its turns
+  complete in about 0.4 times (Claude Code) and 0.55 times (Codex) the time and use about a fifth to a third of the CPU. These ratios hold for this mock-driven task on this
+  cluster only.
+- pi-go is not like-for-like: on kagent rc3 it gets no MCP tools, so its turn does less work (one shell call, no MCP call), and it has no approval path.
+- The memory figure includes the gVisor sentry overhead that every Actor pays, so ratios between harnesses understate the difference in the harness process itself.
+- Differences below roughly 15 percent (for example first event 376 to 454 ms, restore times) are within the run-to-run spread and should not be read as an ordering.
+- Per-turn numbers include harness process start, because kagent suspends the Actor after every turn and restores it into a new process each time.
+
+## Method
+
+**The task.** One session per measurement, through kagent's public A2A gateway (`POST /agents/{namespace}/{name}`, JSON-RPC `SendStreamingMessage`, header
+`A2A-Version: 1.0`; approvals use the `https://kagent.dev/extensions/hitl/v1` extension). Turn 1 sends `[run-<id>] [basket] ...`: the mock answers with a shell tool call
+(`echo basket-ok > /tmp/basket.txt && cat /tmp/basket.txt`), then, after the tool result, a call to the MCP tool whose name ends in `kagent_probe`, then
+`BASKET-DONE <sha256 of the concatenated tool results>`. The `[approve]` variant targets an approval-gated MCP binding and parks in `input-required`; the client approves it. After
+the Actor was suspended, turn 2 sends `[recall]` and the mock answers `RECALL <first marker of the history>`, which proves the session survived the restore.
+The mock chooses the shell tool from the tools the client offers (`bash`, `Bash`, `exec_command`, `shell_command`, `shell`) and builds arguments from that tool's schema, so one
+scenario drives all harnesses. It speaks OpenAI Chat Completions, OpenAI Responses and Anthropic Messages, streaming and not, plus a Streamable HTTP MCP server, with
+deterministic token usage and a fixed 50 ms first-token latency and 5 ms per chunk. One measured model call costs about 0.11 s, identical for every harness.
+The final `BASKET-DONE <sha>` differs per harness because each formats tool results differently, so correctness is checked by pattern, not across harnesses.
+
+**Schedule and statistics.** 7 agents (basket and approve variants), 2 warmup rounds (excluded) and 10 measured rounds, one session per invocation (a fresh Actor), the order of
+agents rotated each round so none always goes first. Medians with p90, min and max; with n = 10 no confidence interval is claimed. A host gate refuses to start a session while the
+host's CPU pressure (PSI some avg10) is above 35 percent; every session is logged with its pressure reading.
+
+**Memory.** Memory is read from cgroup v2 files on the node, sampled every 0.25 s: for each Actor activation the working set (`memory.current - inactive_file`, the quantity the
+kubelet, cAdvisor and Substrate itself use) of the cgroups `<actorUID>-*` that Substrate creates under the worker container scope. The gVisor sentry and gofer live in
+`<actorUID>-_sandbox`; the other leaf is empty. The leaf's `memory.peak` high-water mark is read before the leaf disappears. Alternatives considered and why they lost: process RSS
+overstates (it counts mapped binary pages charged elsewhere; PiG idle in a plain container read 48 MiB RSS against a 14 MiB cgroup working set); PSS depends on neighbours (the same idle
+process read 31 and then 52 MiB with nothing changed); numbers from inside the sandbox are approximations, per gVisor's own resource-model documentation; `kubectl top` and
+Prometheus working-set series are the same quantity but coarser and not always installed; Substrate's per-actor usage log records exist but are sampled once a minute, which
+is longer than an activation, so they are used only as a cross-check. gVisor accounts application memory as shmem, not anon, so the breakdown is kept in the raw samples.
+
+**Time.** Client times come from the `basket` client, from the moment of sending a message. Server-side times come from Substrate's own records for the same sessions: the
+`Actor state changed` log records of the API server (create, resuming, running, suspending, suspended) and the node agent's `Restore timing breakdown` and
+`Checkpoint timing breakdown` records, joined by actor name and UID. Cold start is the time from applying a cloned Harness and Agent to the Agent's `Ready` condition. Image size is the sum
+of the linux/amd64 layer sizes in the manifest, and "registry pull" is `crane pull` from the host.
+
+**Lifecycle facts that shape the numbers.** kagent suspends the Actor right after each turn (volumes-only snapshots) and restores it into a new process for the next message, so
+there is no warm idle state to measure and every turn includes harness start-up. Server records show 2 restores per `[basket]` session and 3 per `[approve]` session for every agent
+(10 of 10 sessions), so the `[recall]` turn is a true restore.
+
+## Full tables from the run
+
+### Capability and correctness (n = measured sessions per agent)
+
+| agent | sessions | ok | `[basket]`/`[approve]` done | MCP probe called | approval round trip | recall after suspend | tool names seen |
+|---|---:|---:|---:|---:|---:|---:|---|
+| claude-basket | 10 | 10 | 10 | 10 | 0 | 10 | Bash, mcp__mock-mcp__kagent_probe |
+| codex-basket | 10 | 10 | 10 | 10 | 0 | 10 | command_execution, mock-mcp.kagent_probe |
+| pigo-basket | 10 | 10 | 10 | 0 | 0 | 10 |  |
+| pig-basket | 10 | 10 | 10 | 10 | 0 | 10 | bash, mcp__kagent_mock__kagent_probe |
+| claude-approve | 10 | 10 | 10 | 10 | 10 | 10 | mcp__mock-mcp-approval__kagent_probe |
+| codex-approve | 10 | 10 | 10 | 10 | 10 | 10 | mock-mcp-approval.kagent_probe |
+| pig-approve | 10 | 10 | 10 | 10 | 10 | 10 | mcp__kagent_mock__kagent_probe |
+
+### Client latency through the A2A gateway (ms, median / p90 / min / max)
+
+| agent | n | turn1_first_event | turn1_first_text | turn1_end_to_end | turn1_input_required | approval_to_done | turn2_first_event | turn2_first_text | turn2_total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| claude-basket | 10 | 412 / 498 / 365 / 498 | 2529 / 2912 / 2472 / 3394 | 2708 / 3190 / 2657 / 3644 | n/a | n/a | 389 / 521 / 293 / 556 | 1917 / 2246 / 1802 / 2248 | 2085 / 2420 / 1975 / 2442 |
+| codex-basket | 10 | 376 / 425 / 321 / 430 | 1720 / 2026 / 1616 / 2163 | 1863 / 2252 / 1752 / 2376 | n/a | n/a | 296 / 486 / 259 / 488 | 1224 / 1523 / 1132 / 1539 | 1341 / 1692 / 1238 / 1693 |
+| pigo-basket | 10 | 454 / 568 / 365 / 613 | 596 / 728 / 537 / 757 | 798 / 969 / 741 / 1044 | n/a | n/a | 520 / 714 / 433 / 880 | 594 / 812 / 512 / 985 | 731 / 1011 / 606 / 1169 |
+| pig-basket | 10 | 424 / 510 / 362 / 535 | 888 / 1026 / 828 / 1045 | 1031 / 1199 / 960 / 1213 | n/a | n/a | 469 / 586 / 419 / 601 | 683 / 900 / 644 / 911 | 768 / 1008 / 722 / 1014 |
+| claude-approve | 10 | 395 / 435 / 352 / 468 | 2112 / 2589 / 2047 / 2665 | 4543 / 5754 / 4401 / 5772 | 2112 / 2589 / 2047 / 2665 | 2427 / 3096 / 2314 / 3190 | 356 / 500 / 298 / 507 | 1902 / 2288 / 1737 / 2337 | 2074 / 2490 / 1931 / 2531 |
+| codex-approve | 10 | 372 / 427 / 307 / 489 | 1500 / 1911 / 1397 / 1926 | 3287 / 3981 / 2942 / 4011 | 1500 / 1911 / 1397 / 1926 | 1788 / 2068 / 1527 / 2085 | 310 / 404 / 278 / 412 | 1208 / 1431 / 1135 / 1483 | 1328 / 1591 / 1261 / 1652 |
+| pig-approve | 10 | 466 / 548 / 402 / 583 | 778 / 884 / 713 / 959 | 1830 / 2334 / 1696 / 2406 | 778 / 884 / 713 / 959 | 1072 / 1383 / 958 / 1529 | 474 / 667 / 435 / 694 | 696 / 936 / 636 / 964 | 787 / 1051 / 735 / 1165 |
+
+### Server side lifecycle (s, median / p90), from Substrate records of the same sessions
+
+| agent | first resume (create to running) | restore total, first | restore kind | 2nd resume | restore total, 2nd | restore kind | checkpoint total | suspend start vs turn end (negative = before the client saw the end) | suspend duration |
+|---|---:|---:|---|---:|---:|---|---:|---:|---:|
+| claude-basket | 0.317 / 0.372 | 0.312 / 0.366 | latest | 0.28 / 0.321 | 0.277 / 0.316 | local | 0.223 / 0.264 | -0.039 / -0.038 | 0.229 / 0.269 |
+| codex-basket | 0.284 / 0.315 | 0.281 / 0.311 | latest | 0.232 / 0.32 | 0.228 / 0.314 | local | 0.222 / 0.313 | -0.043 / -0.037 | 0.227 / 0.322 |
+| pigo-basket | 0.319 / 0.365 | 0.315 / 0.361 | latest | 0.293 / 0.323 | 0.289 / 0.319 | local | 0.207 / 0.231 | -0.044 / -0.042 | 0.213 / 0.236 |
+| pig-basket | 0.345 / 0.4 | 0.341 / 0.398 | latest | 0.288 / 0.366 | 0.285 / 0.362 | local | 0.202 / 0.25 | -0.044 / -0.029 | 0.207 / 0.254 |
+| claude-approve | 0.288 / 0.354 | 0.285 / 0.351 | latest | 0.278 / 0.346 | 0.274 / 0.342 | local | 0.226 / 0.239 | -0.045 / -0.04 | 0.232 / 0.247 |
+| codex-approve | 0.288 / 0.339 | 0.285 / 0.336 | latest | 0.253 / 0.313 | 0.249 / 0.309 | local | 0.223 / 0.266 | -0.044 / -0.043 | 0.231 / 0.27 |
+| pig-approve | 0.374 / 0.456 | 0.372 / 0.452 | latest | 0.296 / 0.379 | 0.293 / 0.374 | local | 0.211 / 0.24 | -0.045 / -0.038 | 0.215 / 0.247 |
+
+### Memory per actor activation (MiB, median / p90 / max over sessions)
+
+Sum of the actor's cgroup leaves `<actorUID>-*` below the worker pod, working set = memory.current - inactive_file, sampled every 0.25 s; `peak` is the leaf's memory.peak high-water mark read before the leaf disappeared.
+
+| agent | activation | samples | ws first sample | ws median | ws max | sandbox ws max | memory.peak | cpu ms |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| claude-basket | act1 | 11 | 12.1 / 26.7 / 38.3 | 118.2 / 125.4 / 126.1 | 141.9 / 142.7 / 142.8 | 141.9 / 142.7 / 142.8 | 145.5 / 147.0 / 147.4 | 2412.8 / 2853.4 / 3331.8 |
+| claude-basket | act2 | 9 | 25.4 / 29.2 / 44.7 | 90.3 / 98.6 / 115.7 | 137.6 / 144.1 / 146.1 | 137.6 / 144.1 / 146.1 | 140.4 / 144.8 / 146.1 | 1781.0 / 2157.7 / 2207.5 |
+| codex-basket | act1 | 8 | 5.3 / 28.4 / 42.9 | 48.0 / 52.5 / 55.4 | 57.5 / 61.4 / 62.6 | 57.5 / 61.4 / 62.6 | 62.3 / 63.0 / 63.1 | 1413.7 / 1861.4 / 1979.8 |
+| codex-basket | act2 | 6 | 26.0 / 33.4 / 36.5 | 50.5 / 55.6 / 57.7 | 58.8 / 60.8 / 61.1 | 58.8 / 60.8 / 61.1 | 60.1 / 61.5 / 63.4 | 1090.8 / 1403.0 / 1447.2 |
+| pigo-basket | act1 | 3 | 12.9 / 22.9 / 25.3 | 29.5 / 30.3 / 31.2 | 31.4 / 31.9 / 32.1 | 31.4 / 31.9 / 32.1 | 32.5 / 32.8 / 32.8 | 356.8 / 511.2 / 597.2 |
+| pigo-basket | act2 | 2 | 19.5 / 26.2 / 27.1 | 29.2 / 30.2 / 30.7 | 29.3 / 30.4 / 30.7 | 29.3 / 30.4 / 30.7 | 30.9 / 31.5 / 31.7 | 326.6 / 404.4 / 417.3 |
+| pig-basket | act1 | 4 | 4.5 / 32.9 / 39.3 | 43.7 / 50.2 / 50.2 | 50.7 / 51.6 / 51.9 | 50.7 / 51.6 / 51.9 | 51.9 / 52.7 / 52.9 | 527.8 / 632.7 / 743.9 |
+| pig-basket | act2 | 3 | 11.1 / 27.4 / 48.8 | 31.4 / 47.9 / 48.8 | 47.5 / 48.8 / 48.9 | 47.5 / 48.8 / 48.9 | 49.5 / 50.0 / 50.5 | 422.4 / 513.9 / 607.5 |
+| claude-approve | act1 | 17 | 6.4 / 30.8 / 55.4 | 91.0 / 102.9 / 105.9 | 141.3 / 143.9 / 146.2 | 141.3 / 143.9 / 146.2 | 143.3 / 146.3 / 147.3 | 1839.5 / 2364.7 / 2571.1 |
+| claude-approve | act2 | 8 | 7.2 / 24.7 / 41.2 | 87.1 / 105.0 / 105.7 | 137.0 / 140.9 / 147.7 | 137.0 / 140.9 / 147.7 | 140.9 / 143.0 / 150.3 | 1802.5 / 2276.1 / 2325.2 |
+| codex-approve | act1 | 12 | 11.9 / 34.4 / 34.8 | 44.5 / 49.4 / 52.4 | 58.0 / 59.0 / 59.9 | 58.0 / 59.0 / 59.9 | 60.0 / 61.9 / 62.4 | 1113.2 / 1383.0 / 1491.4 |
+| codex-approve | act2 | 5 | 22.4 / 31.6 / 36.4 | 49.7 / 52.2 / 58.9 | 57.7 / 60.0 / 60.9 | 57.7 / 60.0 / 60.9 | 60.1 / 61.7 / 62.1 | 1115.0 / 1322.1 / 1432.3 |
+| pig-approve | act1 | 7 | 8.6 / 23.6 / 27.0 | 29.8 / 31.5 / 32.2 | 48.0 / 48.7 / 48.7 | 48.0 / 48.7 / 48.7 | 49.8 / 50.3 / 50.5 | 453.7 / 638.1 / 747.9 |
+| pig-approve | act2 | 3 | 10.6 / 26.7 / 30.9 | 30.1 / 31.9 / 32.3 | 46.5 / 48.3 / 48.7 | 46.5 / 48.3 / 48.7 | 49.0 / 50.2 / 50.7 | 446.4 / 649.9 / 685.2 |
+
+### Images
+
+| harness | image | compressed size (MiB, amd64 layers) | layers | registry pull, crane (s) |
+|---|---|---:|---:|---:|
+| claude | `ghcr.io/kagent-dev/kagent/claude-harness@sha256:216613bf155d3d437765675144fee19c9045cb21cd2e481189f2dcae36c24b3b` | 144.4 | 4 | 4.3 |
+| codex | `ghcr.io/kagent-dev/kagent/codex-harness@sha256:84c3275e36c0d98472a8b930a628e47e08277e7ce4438908e2a44fd1d8a9efd2` | 200.5 | 4 | 5.9 |
+| pi-go | `localhost:5001/pi-go-kagent@sha256:88e786481a656d6fc0d08d237e273cfe43d70f28a8940d874bcbc45b917af2f5` | 310 | 7 | 0.5 |
+| pig | `localhost:5001/pig-kagent@sha256:40b1397bdcd044726c7b0d4e20c3d7da5e1a60ba7d36f681f4db05c4c845824f` | 198.3 | 9 | 0.4 |
+
+### Cold start: Agent apply to Ready (s)
+
+| harness | n | median | min | max | values |
+|---|---:|---:|---:|---:|---|
+| claude-basket | 5 | 1.6 | 1.6 | 1.6 | 1.6, 1.6, 1.6, 1.6, 1.6 |
+| codex-basket | 5 | 1.6 | 1.6 | 2.2 | 2.2, 1.6, 2.2, 1.6, 1.6 |
+| pigo-basket | 5 | 1.6 | 1.0 | 2.2 | 1.6, 2.2, 1.6, 1.0, 1.6 |
+| pig-basket | 5 | 1.6 | 1.5 | 2.1 | 2.1, 1.6, 1.5, 1.5, 1.6 |
+
+
+### Worker pod (shared by all actors)
+
+Working set of the `kagent-default` worker pod: idle (no actor cgroup) median 60.7 MiB (n=481 samples), with an actor running median 107.1 MiB (n=2139). Actor memory in the tables above is the actor's own sandbox cgroup, not this pod number.
+
+## Caveats that apply to every number here
+
+- **Mock model.** All agents talk to the same hermetic mock (built from `mockllm/` in this directory). No real model is involved, so
+  model latency is a fixed 0.1 s per call and identical for every harness. The final `BASKET-DONE <sha>` differs per harness because each
+  harness formats tool results differently; correctness is checked by pattern, not by comparing shas across harnesses.
+- **What a turn contains.** kagent suspends the actor right after each turn (Substrate checkpoint, volumes-only snapshots) and restores it
+  into a **new process** for the next message. Every turn therefore includes harness process start-up; there is no warm idle state to measure.
+  Server records show 2 restores per `[basket]` session and 3 per `[approve]` session for every agent (10 of 10 sessions), so the `[recall]` turn is a
+  true restore, not a warm actor. "restore total" is Substrate's restore of the snapshot (about 0.3 s), not harness boot.
+- **n and statistics.** 2 warmup rounds (excluded), then 10 measured sessions per agent, one session per invocation, agents rotated each
+  round so none always goes first. Medians with p90, min and max; with n = 10 the p90 is the interpolated value between the 9th and 10th
+  sample and no confidence intervals are claimed. Differences under roughly 15 percent should not be read as real.
+- **Shared noisy host.** The run used a 192-core amd64 Linux host that was shared with other work (load average 64 when it began). `baseline.sh` gates on host
+  CPU pressure (PSI some avg10 at most 35 percent before each session); the observed range was 7.8 to 29.9 percent, so the gate never fired.
+  Other users of the host had agreed not to touch the worker pod or deploy during the run; that was an agreement, not enforcement.
+- **Memory accounting (gVisor).** Per actor activation the working set is summed (`memory.current - inactive_file`) of the cgroup leaves
+  `<actorUID>-*` that Substrate creates under the worker container scope. The gVisor sentry and gofer live in `<actorUID>-_sandbox`; the
+  number therefore includes the sentry's own overhead (Go heap, page tables, netstack), which any harness pays, and gVisor accounts
+  application memory as shmem, not anon (gvisor.dev resource model). Guest-internal `/proc` numbers were not used. Samples are every 0.25 s and an
+  activation lasts about 0.5 to 4 s (2 to 17 samples), so "ws max" can miss a short spike; the leaf's `memory.peak` high-water mark, read before the
+  leaf disappears, is reported beside it and stays within about 5 MiB of it. Numbers are per activation (one turn), not per session lifetime.
+- **Cold start.** "Agent apply to Ready" clones a Harness and Agent, applies them and polls the Ready condition every 0.5 s (about 0.3 s of
+  kubectl overhead per poll), so the resolution is about plus or minus 0.6 s and the values mostly show a floor of about 1.6 s. The image digest is already in the node
+  image cache, so no registry pull is included. It is golden-snapshot build time, not a first-ever cold start. The first message to a new
+  session resumes the actor from the golden snapshot; its server-side time is in the lifecycle table.
+- **Images.** Compressed size is the sum of the linux/amd64 layer sizes from the manifest. "Registry pull" is `crane pull` from the test host and is
+  not comparable across rows: Claude and Codex come from ghcr.io, PiG and pi-go from the local Kind registry. Substrate actors pull through
+  atelet, which was not timed.
+- **Version skew.** Claude and Codex are kagent's built-in harness images (rc3 catalog digests above); the CLI versions inside were not inspected.
+  pi-go is v0.3.10 rebuilt for amd64 from its upstream Dockerfile with `TARGETARCH=amd64`, because the published image's amd64 manifest holds an arm64 binary.
+  On kagent rc3 the pi-go harness receives no MCP tools and has no approval path, so its MCP step is skipped (`MCP probe called` = 0) and no approval row exists. pi-go streams
+  its tool activity as text, not as `function_call` parts. PiG is a development build of the `pig-kagent` harness image (digest `sha256:40b1397b...`), not a release; the PiG version inside it was not inspected.
+- **Latency definitions.** Client times are measured by `basket` through the public A2A gateway (`/agents/kagent/<agent>`, `SendStreamingMessage`),
+  from the send of the message. `turn1_first_event` includes session creation, actor restore from the golden snapshot and the harness start; `turn1_end_to_end` for `[approve]`
+  includes the automatic approval round trip with no human delay.
+- **Not measured.** Suspended footprint (snapshot size), per-turn growth over many turns, concurrency and throughput, image unpack time, and behaviour
+  after deleting the worker pod (the gateway returned JSON-RPC -32004 on the first message for about 11 s, after which a retry worked; the basket client retries the same message).
+
+## Reproducing and raw data
+
+See `README.md` in this directory. `data/baseline-20261107.json.gz` holds the per-session records and the aggregates of this run (`analyze.py` output; host name removed).
