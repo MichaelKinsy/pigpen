@@ -71,6 +71,7 @@ func Extension() *sdk.Extension {
 				"mutations":      map[string]any{"type": "string", "description": "Mutation list, JSON (mutate)"},
 				"sdkDir":         map[string]any{"type": "string", "description": "PiG's staged Go SDK (mutate: also run the port's go tests on each mutant; default $PIG_SDK_DIR)"},
 				"unit":           map[string]any{"type": "boolean", "description": "mutate: also run the port's go tests on each mutant first (needs sdkDir or $PIG_SDK_DIR). Omitted: on when sdkDir or $PIG_SDK_DIR is set; false turns the layer off."},
+				"tsClosure":      map[string]any{"type": "boolean", "description": "record: hash the TypeScript original's local import closure and its package.json into the golden header, not the entry file alone"},
 				"builtin":        map[string]any{"type": "boolean", "description": "check, record with self: the port is compiled into pig (a built Piglet Binary); no go directory is loaded. Not available for mutate."},
 				"keep":           map[string]any{"type": "boolean", "description": "Keep each lane's run directory; the report names it"},
 				"host":           map[string]any{"type": "string", "enum": []any{"pi", "pig"}, "description": "lane: the host to run"},
@@ -164,6 +165,7 @@ func runTool(ctx sdk.Context, params map[string]any) (any, error) {
 		Surface:       resolve(ctx, str(params, "surface")),
 		SkipHostCheck: params["skipHostRun"] == true,
 		Builtin:       params["builtin"] == true,
+		TSClosure:     params["tsClosure"] == true,
 		Options:       eq.Options{Stderr: &stderr, Keep: params["keep"] == true, StepTimeout: time.Duration(num(params, "stepTimeoutSec") * float64(time.Second))},
 	}
 	switch {

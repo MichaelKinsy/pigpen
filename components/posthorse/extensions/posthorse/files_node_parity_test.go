@@ -2,8 +2,8 @@ package posthorse
 
 // Review probes (CoreLane scope). Each DIVERGENCE test states the TS behaviour observed under Node 24.22.1 /
 // Pi 1.5.0 on xd6702 and fails while the port differs. The probe scripts are in
-// port/review/corereview-probes/ (probe.ts, schema.ts, decoder.ts, jsdiff.ts); the differential tests
-// read their JSON output from /home/kinsy/ph-work/scratch/reviewcore/ and skip when it is absent.
+// port/review/corereview-probes/ (probe.ts, schema.ts, decoder.ts, jsdiff.ts, gitdir.ts); the differential tests
+// read their JSON output from testdata/core_*.json.gz (port/tools/gen-testdata.sh regenerates it) and fail when it is absent.
 
 import (
 	"context"
@@ -155,10 +155,7 @@ func TestReviewContextToolSchemas(t *testing.T) {
 // C2 F4 9F) until the next write/end; utf8Decoder emits its U+FFFD at once. Totals agree, the per-window
 // distribution does not (decoder.ts on xd6702 vs utf8Decoder).
 func TestReviewUTF8DecoderDifferential(t *testing.T) {
-	raw, err := os.ReadFile("/home/kinsy/ph-work/scratch/reviewcore/decoder.json")
-	if err != nil {
-		t.Skip("decoder.json probe output not present")
-	}
+	raw := testdataGz(t, "core_decoder.json.gz")
 	var cases []struct {
 		Chunks [][]byte `json:"-"`
 		C      [][]int  `json:"chunks"`
@@ -221,10 +218,7 @@ func rvSameUnits(a []uint16, b []int) bool {
 // Differential against V8 (jsdiff.ts on xd6702): js.go and message_text.go string helpers over
 // random strings with lone surrogates, astral characters, sigma contexts and JS whitespace.
 func TestReviewJSDifferential(t *testing.T) {
-	raw, err := os.ReadFile("/home/kinsy/ph-work/scratch/reviewcore/jsdiff.json")
-	if err != nil {
-		t.Skip("jsdiff.json probe output not present")
-	}
+	raw := testdataGz(t, "core_jsdiff.json.gz")
 	var data struct {
 		Cases []struct {
 			S, Sub, Header                                    []uint16
@@ -329,10 +323,7 @@ func slicesEqual16(a, b []uint16) bool {
 
 // Differential against V8 (gitdir.ts): gitdirOf is `text.match(/^gitdir:\s*(.+?)\s*$/m)?.[1]` (files.ts:187).
 func TestReviewGitdirDifferential(t *testing.T) {
-	raw, err := os.ReadFile("/home/kinsy/ph-work/scratch/reviewcore/gitdir.json")
-	if err != nil {
-		t.Skip("gitdir.json probe output not present")
-	}
+	raw := testdataGz(t, "core_gitdir.json.gz")
 	var cases []struct {
 		S string
 		M *string

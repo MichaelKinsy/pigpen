@@ -1,4 +1,4 @@
-{"kind":"header","scenario":"nat-settlement-in-reminder-band-none-stop","lane":"pi-ts","host":"pi 1.5.0","extension":"sha256:9d89e432d4bc435133ae3ca72f8d0a676feffc6631b2e9599356bfce3db87aa7","normalizer":"v3"}
+{"kind":"header","scenario":"nat-settlement-in-reminder-band-none-stop","lane":"pi-ts","host":"pi 1.5.0","extension":"sha256:4bab1cebde74a7ae04678b910890f69c35fe10cac426049efed530b5e6de6933","extensionFiles":"closure","normalizer":"v3"}
 {"step":"01-work","ch":"response","data":{"command":"prompt","data":{"disposition":"started"},"success":true}}
 {"step":"01-work","ch":"host","data":{"type":"agent_start"}}
 {"step":"01-work","ch":"host","data":{"type":"turn_start"}}

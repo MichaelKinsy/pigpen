@@ -488,8 +488,8 @@
 {
 "name": "live-policy-provider",
 "file": "extension.go",
-"find": "\"provider\": ctx.ModelProvider()",
-"replace": "\"provider\": \"\""
+"find": "\"provider\": provider,",
+"replace": "\"provider\": \"\","
 },
 {
 "name": "relative-same-path",
@@ -670,5 +670,17 @@
 "file": "session_lines.go",
 "find": "if units+n > overlap {",
 "replace": "if units+n >= overlap {"
+},
+{
+"name": "tool-tokens-cache-ignores-parameters",
+"file": "extension.go",
+"find": "hit.description == tool.Description && hit.parameters == string(tool.Parameters)",
+"replace": "hit.description == tool.Description"
+},
+{
+"name": "guidance-custom-displayed",
+"file": "guidance.go",
+"find": "\"display\":    false,",
+"replace": "\"display\":    true,"
 }
 ]

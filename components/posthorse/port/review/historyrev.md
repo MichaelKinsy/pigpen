@@ -8,8 +8,8 @@ xd6702; Go 1.27.3.
 Proof file: `extensions/posthorse/review_historyrev_test.go` (test-only, `package posthorse`). Probe scripts:
 `port/review/historyrev-probes/probe.mts` (differential oracle data) and `perf.mts` (`gen` / `run [norg]`). To rerun:
 `ph run "cd components/posthorse/port/review/historyrev-probes && node probe.mts"`, then
-`go test -run TestReviewHistoryrev .`; the differential tests read `/home/kinsy/ph-work/scratch/historyrev/*.json` and skip
-when absent (scratch deleted after the review). Perf: `node perf.mts gen && node perf.mts run [norg]`, Go side
+`go test -run TestReviewHistoryrev .`; the differential tests read `extensions/posthorse/testdata/historyrev_*.json.gz` (shipped; `port/tools/gen-testdata.sh` regenerates them) and fail
+when absent. The head-to-head perf test (`HISTORYREV_PERF`) was removed: its 276 MB archives cannot ship; `perf.mts` stays for the TS side and `history_bench_test.go` is the Go side. Perf: `node perf.mts gen && node perf.mts run [norg]`, Go side
 `HISTORYREV_PERF=1 [HISTORYREV_NORG=1] [HISTORYREV_ONLY=a200/lorem] go test -run TestReviewHistoryrevPerfShapes -v .`.
 
 ## Findings

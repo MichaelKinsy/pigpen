@@ -18,6 +18,15 @@ import (
 // Extension is the factory PiG loads: index.ts `export default createPosthorse()`.
 func Extension() *sdk.Extension { return newPosthorse(nil) }
 
+// compactionModelArg is `ctx.model` as getCompactionSettings reads it (provider and id, which key
+// compaction.modelOverrides); nil when no model is selected (`undefined`).
+func compactionModelArg(id, provider string) map[string]any {
+	if id == "" {
+		return nil
+	}
+	return map[string]any{"provider": provider, "id": id}
+}
+
 // liveCompactionPolicy is index.ts:46: `SettingsManager.inMemory(pi.getSettings())
 // .getCompactionSettings(ctx.model)`, Pi's live effective settings.
 func liveCompactionPolicy(ctx sdk.Context) (compactionPolicy, error) {
@@ -29,10 +38,7 @@ func liveCompactionPolicy(ctx sdk.Context) (compactionPolicy, error) {
 	if err != nil {
 		return compactionPolicy{}, err
 	}
-	var model map[string]any
-	if id := ctx.Model(); id != "" {
-		model = map[string]any{"provider": ctx.ModelProvider(), "id": id}
-	}
+	model := compactionModelArg(ctx.Model(), ctx.ModelProvider())
 	resolved, err := manager.GetCompactionSettings(model)
 	if err != nil {
 		return compactionPolicy{}, err

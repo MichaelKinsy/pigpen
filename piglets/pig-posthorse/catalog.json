@@ -1,0 +1,9 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-07",
+  "languages": ["go"],
+  "notes": [
+    "Go only, no Node. Posthorse, a Go port of pi-posthorse 0.10.11 (Mitch Fultz, MIT): no-summary context rollover for long tasks with new_context, get_context_remaining, notes and history tools, one task-note reminder, automatic rollover with a bounded recovery record, fork-private notes. Makes no network request. The Package keeps the original, the recorded Pi traces and its mutation lists under components/posthorse/port. Run npm run stage before using its generated manifest under dist/staged.",
+    "No release is published; version 0.1.0 is a development default. Needs pig 0.7.0 or later (Pi 1.5 extension API). Clicking a reminder or context-window card does not toggle it (Ctrl+O works): see the Package README."
+  ]
+}

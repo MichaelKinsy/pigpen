@@ -78,8 +78,7 @@ Eight run on a hermetic extension that carries the four cards (`uiExtension`), s
 | U6 | fixed | `u16Cursor.to` reports a target inside a surrogate pair (or behind the cursor); `historySections` then slices by UTF-16 unit (`u16slice`), splitting the pair as JS does | `TestUiHistorySectionsSplitPair`, differential `hs:astral-split` |
 
 The reviewer's tests were renamed to `ui_proof_test.go` (self-contained) and `ui_differential_test.go` (the 656-case TS differential, `TestUiDifferential`/`TestUiSummaries`, and the U4 benchmarks);
-both skip when `/home/kinsy/ph-work/scratch/uireview/ui-cases.json` is absent. The probe scripts stay in `port/review/uireview-probes/` (`run-ts.sh` regenerates the cases inside the container, `run-go.sh 'TestUi'` runs them,
-`run-bench.sh` the benchmarks). After the fixes: 656 cases, 0 differ.
+read their cases from `extensions/posthorse/testdata/ui_cases.json.gz` (the 656 cases of the original, regenerated with `port/tools/gen-testdata.sh`); a missing file is a failure, not a skip. The probe scripts stay in `port/review/uireview-probes/` (`run-ts.sh` makes the cases inside the container, `run-bench.sh` the benchmarks). After the fixes: 656 cases, 0 differ.
 
 ## Findings and host/SDK gaps (decisions for the lead/owner)
 

@@ -360,8 +360,8 @@ func TestNotesSearchSkipsLargeNotesAndReportsThem(t *testing.T) {
 	big := strings.Repeat("l", 1024*1024)
 	notesSearchTree(t, dir, []struct{ name, text string }{
 		{"huge-1.log", "needle " + big},
-		{"exact.md", "needle" + big[:1024*1024-6]},   // exactly 1 MiB: searched
-		{"mid.md", "needle " + big[:1_030_000-7]},   // 1,030,000 bytes: searched
+		{"exact.md", "needle" + big[:1024*1024-6]}, // exactly 1 MiB: searched
+		{"mid.md", "needle " + big[:1_030_000-7]},  // 1,030,000 bytes: searched
 		{"huge-2.log", "needle " + big},
 		{"small.md", "a needle"},
 	})

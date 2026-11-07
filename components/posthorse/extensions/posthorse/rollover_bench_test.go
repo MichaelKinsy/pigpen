@@ -5,10 +5,11 @@ package posthorse
 // certification, the `context` hook, and the retained-tail cut.
 
 import (
-	"os"
+	"runtime"
 	"slices"
 	"strconv"
 	"testing"
+	"time"
 )
 
 // roMemorySession is a reminderSession over a map: GetEntry costs nothing, so the benchmark measures the
@@ -147,37 +148,37 @@ func BenchmarkContextHookStaleReminders1000(b *testing.B) {
 	}
 }
 
-// TestRolloverWireCosts logs what whole hooks cost through the fake host (JSON framing and decoding
-// included). It is a test because the fixture needs a *testing.T; run it with POSTHORSE_WIRE_COSTS=1.
+// TestRolloverWireCosts runs whole hooks through the fake host (JSON framing and decoding included) a fixed number of times and
+// logs what they cost (an upper bound: it includes the fixture's own work). It is a test because the fixture needs a *testing.T; the sessions are
+// ten times smaller than the benchmarks' so that it stays fast under the race detector (the fixture answers a request within 10 s).
 func TestRolloverWireCosts(t *testing.T) {
-	if os.Getenv("POSTHORSE_WIRE_COSTS") == "" {
-		t.Skip("set POSTHORSE_WIRE_COSTS=1 to measure hooks through the fake host")
-	}
-	report := func(name string, r testing.BenchmarkResult) {
-		t.Logf("%-40s %10d ns/op %10d B/op %8d allocs/op (N=%d)", name, r.NsPerOp(), r.AllocedBytesPerOp(), r.AllocsPerOp(), r.N)
+	const runs = 2
+	report := func(name string, run func()) {
+		var before, after runtime.MemStats
+		runtime.GC()
+		runtime.ReadMemStats(&before)
+		start := time.Now()
+		for range runs {
+			run()
+		}
+		elapsed := time.Since(start)
+		runtime.ReadMemStats(&after)
+		t.Logf("%-40s %10d ns/op %10d B/op %8d allocs/op (N=%d)", name, elapsed.Nanoseconds()/runs, (after.TotalAlloc-before.TotalAlloc)/runs, (after.Mallocs-before.Mallocs)/runs, runs)
 	}
 	manager := fxMemorySession("")
-	for range 20_000 {
+	for range 2_000 {
 		manager.appendCustomEntry("old", rec{})
 	}
 	f := newFixture(t, withUsage(100_000, 76_000), withSession(manager), withEmptyProjection())
-	report("turn_end cold lookup, 20,000 entries", testing.Benchmark(func(b *testing.B) {
-		b.ReportAllocs()
-		for b.Loop() {
-			f.FireAll("session_tree", rec{})
-			f.TurnEnd()
-		}
-	}))
-	report("turn_end certified leaf", testing.Benchmark(func(b *testing.B) {
-		b.ReportAllocs()
-		for b.Loop() {
-			f.TurnEnd()
-		}
-	}))
-	// A window opened by a retained-tail rollover over 20,000 earlier entries: every context event.
+	report("turn_end cold lookup, 2,000 entries", func() {
+		f.FireAll("session_tree", rec{})
+		f.TurnEnd()
+	})
+	report("turn_end certified leaf", func() { f.TurnEnd() })
+	// A window opened by a retained-tail rollover over 2,000 earlier entries: every context event.
 	summary := autoHandoffPrefix + "\nContext rolled over after entry boundary."
 	tail := fxMemorySession("")
-	for range 10_000 {
+	for range 1_000 {
 		tail.appendMessage(fxUser("earlier"))
 		tail.appendMessage(fxAssistant([]any{fxText("earlier reply")}))
 	}
@@ -186,12 +187,9 @@ func TestRolloverWireCosts(t *testing.T) {
 	tail.appendCompaction(summary, kept, 100, rec{"posthorse": float64(1)})
 	h := newFixture(t, withSession(tail), withRealProjection())
 	boundary := rec{"role": "compactionSummary", "summary": summary, "timestamp": float64(5)}
-	report("context, retained tail over 20,000 entries", testing.Benchmark(func(b *testing.B) {
-		b.ReportAllocs()
-		for b.Loop() {
-			h.ContextEvent(boundary, fxUser("kept ask"), fxAssistant([]any{fxText("kept reply")}), fxUser("after"))
-		}
-	}))
+	report("context, retained tail over 2,000 entries", func() {
+		h.ContextEvent(boundary, fxUser("kept ask"), fxAssistant([]any{fxText("kept reply")}), fxUser("after"))
+	})
 	plain, stale := benchMessages(1000, false), benchMessages(1000, true)
 	g := newFixture(t)
 	toRecs := func(list []any) []rec {
@@ -201,20 +199,9 @@ func TestRolloverWireCosts(t *testing.T) {
 		}
 		return out
 	}
-	report("context, 1000 messages, no reminder", testing.Benchmark(func(b *testing.B) {
-		b.ReportAllocs()
-		messages := toRecs(plain)
-		for b.Loop() {
-			g.ContextEvent(messages...)
-		}
-	}))
-	report("context, 1000 messages, 100 stale", testing.Benchmark(func(b *testing.B) {
-		b.ReportAllocs()
-		messages := toRecs(stale)
-		for b.Loop() {
-			g.ContextEvent(messages...)
-		}
-	}))
+	plainMessages, staleMessages := toRecs(plain), toRecs(stale)
+	report("context, 1000 messages, no reminder", func() { g.ContextEvent(plainMessages...) })
+	report("context, 1000 messages, 100 stale", func() { g.ContextEvent(staleMessages...) })
 }
 
 // BenchmarkRetainedTailCut is retention.go's projectedCut over n projected entries.

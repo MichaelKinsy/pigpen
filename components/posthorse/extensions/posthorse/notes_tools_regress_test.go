@@ -141,7 +141,6 @@ func TestNotesToolsGuardNoRootsSkipsToolPath(t *testing.T) {
 	}
 }
 
-
 // Regression (review N-finding): notes.ts:188 appendFileSync writes a JS string as UTF-8, a lone surrogate as
 // U+FFFD (EF BF BD), as `write` does through publishFile/jsUTF8Bytes; appendRecord writes the
 // SDK's WTF-8 bytes (ED A0 80) verbatim. The SDK decodes the argument "a\ud800" to that WTF-8 form.

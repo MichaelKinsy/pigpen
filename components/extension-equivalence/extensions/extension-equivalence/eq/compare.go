@@ -24,7 +24,10 @@ type Result struct {
 type Config struct {
 	Pi, Pig string // host executables
 	TS      string // the original TypeScript extension (oracle)
-	Go      string // the Go port directory
+	// TSClosure records the golden header's extension hash over the TS entry's local import closure plus the
+	// package.json beside it (TSClosureHash) instead of the entry file alone; the header then says so (extensionFiles).
+	TSClosure bool
+	Go        string // the Go port directory
 	// GoOracle is an original that is already a Go extension (relocated code): it runs
 	// under PiG as the oracle. Self means there is no original at all: the port is recorded
 	// as its own golden trace, a regression baseline and not proof of equivalence.
@@ -75,7 +78,7 @@ func (c Config) oracle() (Lane, string, error) {
 		if c.Pi == "" {
 			return Lane{}, "", errors.New("the TypeScript original needs a pi executable (--pi or PIGEQ_PI)")
 		}
-		return Lane{Name: OracleTS, Host: "pi", Bin: c.Pi, Ext: c.TS}, OracleTS, nil
+		return Lane{Name: OracleTS, Host: "pi", Bin: c.Pi, Ext: c.TS, HashClosure: c.TSClosure}, OracleTS, nil
 	}
 	if c.Pig == "" {
 		return Lane{}, "", errors.New("a pig executable is required (--pig or PIGEQ_PIG)")
@@ -238,7 +241,7 @@ func Run(scs []*Scenario, cfg Config) ([]Result, error) {
 		notes := []string{}
 		pass := true
 		if kind == OracleTS && !cfg.SkipHostCheck {
-			host, err := lane(Lane{Name: "pig-ts", Host: "pig", Bin: cfg.Pig, Ext: cfg.TS})
+			host, err := lane(Lane{Name: "pig-ts", Host: "pig", Bin: cfg.Pig, Ext: cfg.TS, HashClosure: cfg.TSClosure})
 			if err != nil {
 				return nil, err
 			}
@@ -328,7 +331,7 @@ func Record(scs []*Scenario, cfg Config, goldenDir string) ([]Result, error) {
 			r.Detail += ": " + goldenNote(kind)
 		}
 		if kind == OracleTS && cfg.Pig != "" {
-			host, err := RunLane(sc, Lane{Name: "pig-ts", Host: "pig", Bin: cfg.Pig, Ext: cfg.TS}, cfg.Options)
+			host, err := RunLane(sc, Lane{Name: "pig-ts", Host: "pig", Bin: cfg.Pig, Ext: cfg.TS, HashClosure: cfg.TSClosure}, cfg.Options)
 			if err != nil {
 				return nil, err
 			}

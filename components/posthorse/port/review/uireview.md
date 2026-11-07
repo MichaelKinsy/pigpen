@@ -10,8 +10,8 @@ Proof file: `extensions/posthorse/review_uireview_test.go` (test-only). Probes: 
   `TestReviewUIDifferential` recomputes every case in Go (`cardCallComponent`, `cardResultComponent`, `cardMessageRows`, zero `UITheme`
   = no palette, chalk bold) and compares row by row; `TestReviewUISummaries` compares `pageSummary`/`n` and the context summary.
   Regenerate: `ph sync`, then in the container `sh components/posthorse/port/review/uireview-probes/run-ts.sh` and
-  `sh .../run-go.sh TestReviewUI` (the TS output lives in `/home/kinsy/ph-work/scratch/uireview/`, removed after this review;
-  the two tests skip when it is absent).
+  `sh .../run-go.sh TestReviewUI` (the TS output is shipped as `extensions/posthorse/testdata/ui_cases.json.gz` by `port/tools/gen-testdata.sh`;
+  the tests fail when it is absent).
 - `run-bench.sh`: `TestReviewSafeCutScripts` and `BenchmarkReviewLeadingRows*`.
 - `tmux/gen.py` (adversarial fixtures + 21 scenarios for the `port/tmux` card probe), `tmux/run.sh` (probe mode into the
   reviewer's scratch), `tmux/run-real.sh` (real mode, prints the `details` persisted in each host's session files).

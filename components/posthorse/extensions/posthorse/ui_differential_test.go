@@ -2,12 +2,11 @@ package posthorse
 
 // Differential proof of the UI port (ui.go, ui_cards.go, ui_display.go, ui_text.go) against the original's cards and
 // message renderers. The TS side is port/review/uireview-probes/cases.ts, run under Node 24 with Pi 1.5.0's pi-tui; it
-// writes the inputs and the rows it rendered to /home/kinsy/ph-work/scratch/uireview/ui-cases.json (regenerate with
-// port/review/uireview-probes/run-ts.sh inside the xd6702 container). The tests skip when that file is absent.
+// writes the inputs and the rows it rendered; testdata/ui_cases.json.gz holds that output (regenerate with
+// port/tools/gen-testdata.sh inside the xd6702 container). The tests fail when the file is absent.
 
 import (
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -15,9 +14,8 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/PiG/extensions/sdk/json"
+	"github.com/MichaelKinsy/PiG/extensions/sdk/tui"
 )
-
-const uiDiffCases = "/home/kinsy/ph-work/scratch/uireview/ui-cases.json"
 
 type uiDiffCase struct {
 	ID               string              `json:"id"`
@@ -45,10 +43,7 @@ type uiDiffFile struct {
 }
 
 func uiDiffLoad(t *testing.T) *uiDiffFile {
-	raw, err := os.ReadFile(uiDiffCases)
-	if err != nil {
-		t.Skip("TS probe output absent: " + err.Error())
-	}
+	raw := testdataGz(t, "ui_cases.json.gz")
 	var f uiDiffFile
 	if err := json.Unmarshal(raw, &f); err != nil {
 		t.Fatal(err)
@@ -101,8 +96,10 @@ func uiDiffRender(c *uiDiffCase, nums []float64, width int) []string {
 // TestUiDifferential compares every case at every width, row by row, and lists the differing case ids.
 func TestUiDifferential(t *testing.T) {
 	f := uiDiffLoad(t)
+	// The message cases were rendered with no key bound to app.tools.expand.
+	tui.SetKeybindings(tui.NewKeybindingsManager(tui.KeybindingDefinitions{}, tui.KeybindingsConfig{}))
 	if sdk.KeyText("app.tools.expand") != "" {
-		t.Skip("message cases assume an empty keyText")
+		t.Fatal("the message cases assume an empty keyText")
 	}
 	nums := uiDiffNums(t, f)
 	var bad []string

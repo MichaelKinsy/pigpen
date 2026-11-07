@@ -14,7 +14,7 @@ import (
 // foreignWorld is a project session (parent) and a fork of it (child) taken before reference.md existed.
 type foreignWorld struct {
 	cwd, notes, childDir, shared string
-	parent, child               *forkSide
+	parent, child                *forkSide
 }
 
 func newForeignWorld(t *testing.T) *foreignWorld {

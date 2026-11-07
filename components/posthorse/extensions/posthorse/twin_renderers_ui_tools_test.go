@@ -335,7 +335,7 @@ func TestTwinRenderersUiTools(t *testing.T) {
 			t.Fatal("the message content is untouched")
 		}
 		t.Run("click toggles the message's local state", func(t *testing.T) {
-			t.Skip("the original answers a left click through a pi-tui MouseRegion over per-message state (ui.ts:14-17,74-80); the Go SDK delivers no mouse event and no message identity to a message renderer (docs/plan/extension-component-kit.md: renderer views take no mouse), so only the global expansion is observable here (see lane-UiLane.md, finding 1)")
+			t.Skip("SDK finding L1 (lane-UiLane.md finding 1, clickToggle proposal): the original answers a left click through a pi-tui MouseRegion over per-message state (ui.ts:14-17,74-80); the Go SDK delivers no mouse event and no message identity to a message renderer (docs/plan/extension-component-kit.md: renderer views take no mouse), so only the global expansion is observable here (see lane-UiLane.md, finding 1)")
 		})
 	})
 

@@ -31,6 +31,9 @@ type Lane struct {
 	Host string
 	Bin  string // path to the pi or pig executable
 	Ext  string // a TypeScript file, or a Go extension directory
+	// HashClosure (a TypeScript file original) makes the trace header's extension hash cover the entry's local import
+	// closure and the package.json beside it instead of the entry's bytes alone (TSClosureHash).
+	HashClosure bool
 }
 
 // Options tunes a run.
@@ -275,9 +278,13 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	if lane.Host != "pi" && lane.Host != "pig" {
 		return nil, fmt.Errorf("lane %s: host must be pi or pig", lane.Name)
 	}
-	extHash, extAbs := "none", ""
+	extHash, extAbs, extFiles := "none", "", ""
 	if lane.Ext != "" {
-		h, err := hashExtension(lane.Ext)
+		hash := hashExtension
+		if lane.HashClosure {
+			hash, extFiles = TSClosureHash, ExtensionFilesClosure
+		}
+		h, err := hash(lane.Ext)
 		if err != nil {
 			return nil, fmt.Errorf("lane %s: extension: %w", lane.Name, err)
 		}
@@ -566,7 +573,7 @@ func RunLane(sc *Scenario, lane Lane, opt Options) (*Trace, error) {
 	rec.mu.Lock()
 	defer rec.mu.Unlock()
 	return &Trace{
-		Header: Header{Kind: "header", Scenario: sc.Name, Lane: lane.Name, Host: lane.Host + " " + hostVersion(lane.Bin), Extension: extHash, Normalizer: NormalizerVersion},
+		Header: Header{Kind: "header", Scenario: sc.Name, Lane: lane.Name, Host: lane.Host + " " + hostVersion(lane.Bin), Extension: extHash, ExtensionFiles: extFiles, Normalizer: NormalizerVersion},
 		Events: rec.events,
 	}, nil
 }

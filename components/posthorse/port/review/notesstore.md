@@ -9,11 +9,11 @@ Proof: `extensions/posthorse/review_notesstore_test.go` (test code only; each fa
 TS values come from Node 24.22.1 and typebox 1.3.27 (`~/ph-work/pi-oracle/node_modules`) running the unmodified oracle
 sources on xd6702 (kernel 6.8, ext4). The probe scripts are in `port/review/notesstore-probes/` (they expect the oracle copy
 at `/home/kinsy/ph-work/scratch/notesstore/oracle` with `node_modules` linked; `gen.mjs`/`gen2.mjs` write the case files the
-two differential tests read through `REVIEW_NOTESSTORE_CASES` / `REVIEW_NOTESSTORE_PATHS`, `perf.mjs <n>` writes
-`grand-<n>.json` for the benchmark through `REVIEW_NOTESSTORE_GRAND`).
+two differential tests read, `perf.mjs 100` writes the benchmark's binding; all three are shipped as
+`extensions/posthorse/testdata/notes_*.json.gz` by `port/tools/gen-testdata.sh`, and the tests fail when they are absent).
 
 Run: `ph run "cd components/posthorse/extensions/posthorse && go test -count=1 -run TestReviewNotesstore ."` ->
-5 FAIL (S1, S2, S3, S4, S6), the differential tests skip without the env files and PASS with them;
+5 FAIL (S1, S2, S3, S4, S6), the differential tests PASS (data in testdata/);
 `go vet` passes for linux, darwin, windows.
 
 ## Findings

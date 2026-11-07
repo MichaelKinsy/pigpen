@@ -36,6 +36,14 @@ under PiG) or `--self` (no original exists: the port is recorded as its own regr
 baseline). The golden trace's header names the kind and `check` labels a self-recorded trace
 as a baseline, not equivalence. `run` needs an original.
 
+**What the header's `extension` hash covers.** For a TypeScript original it is the SHA-256 of the entry file's bytes. An
+original split over several files (an `index.ts` that imports `ui.ts` and `src/**`) is not identified by its entry alone:
+`record --ts-closure` (tool: `tsClosure`) hashes the entry, every local module it reaches and the `package.json` beside
+it, in path order, and the header gains `"extensionFiles": "closure"` (`eq.TSClosureHash`). It is opt-in so that no
+golden recorded before it existed changes; the header is not part of any comparison, so recording with it never changes a
+trace. `scripts/port-equivalence.test.mjs` finds the recorded entry of such a header from `port/oracle/package.json`
+(`pi.extensions`).
+
 ## Go originals (relocations)
 
 A Go extension moved from another repository has no Pi oracle. Pass `--go-oracle <dir>` (the

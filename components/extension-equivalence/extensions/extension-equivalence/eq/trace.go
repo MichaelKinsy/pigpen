@@ -40,12 +40,15 @@ type Event struct {
 
 // Header identifies how a trace was recorded. It is not part of the comparison.
 type Header struct {
-	Kind       string `json:"kind"` // always "header"
-	Scenario   string `json:"scenario"`
-	Lane       string `json:"lane"`
-	Host       string `json:"host"`
-	Extension  string `json:"extension"`
-	Normalizer string `json:"normalizer"`
+	Kind      string `json:"kind"` // always "header"
+	Scenario  string `json:"scenario"`
+	Lane      string `json:"lane"`
+	Host      string `json:"host"`
+	Extension string `json:"extension"`
+	// ExtensionFiles says what Extension hashes when it is more than the entry file: ExtensionFilesClosure. Empty
+	// (and absent from the JSON) for every header recorded before it existed.
+	ExtensionFiles string `json:"extensionFiles,omitempty"`
+	Normalizer     string `json:"normalizer"`
 }
 
 // Trace is a header plus the ordered events.

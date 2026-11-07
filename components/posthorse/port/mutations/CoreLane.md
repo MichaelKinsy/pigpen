@@ -1,17 +1,39 @@
 # CoreLane mutations
 
-`CoreLane.json`: 112 mutants of files.go, js.go, message_text.go, budget.go, paging.go, reset_requests.go, guidance.go,
-context_tools.go, extension.go, session_lines.go. Command (scratch copy on xd6702, other lanes' in-flux tests removed from the copy):
-`pigeq mutate --go extensions/posthorse --mutations port/mutations/CoreLane.json --unit-only --sdk-dir $PIG_SDK_DIR --jobs 6`.
+`CoreLane.json`: 114 mutants of files.go, js.go, message_text.go, budget.go, paging.go, reset_requests.go, guidance.go,
+context_tools.go, extension.go, session_lines.go (112 original + `tool-tokens-cache-ignores-parameters` (C-07) and
+`guidance-custom-displayed` (C-09)).
 
-First run: 98 killed, 14 survived, 0 INVALID (three mutants that did not build, `u16len-counts-runes`, `fresh-prompt-tokens`,
-`capacity-guidance`, were rewritten to keep their variables in use).
+## Runs (all on xd6702, `pigeq mutate --go extensions/posthorse --mutations <file> --unit-only --sdk-dir $PIG_SDK_DIR`)
 
-Survivors and their disposition (`core_mutation_regress_test.go` holds the new tests):
+1. Full run, 112 mutants, scratch copy, `--jobs 6`: 98 killed, 14 survived, 0 INVALID (three mutants that did not build were rewritten).
+2. Confirmation run of the 14 survivors + the two coverage mutants (16 mutants): a frozen snapshot of the whole
+   `components/posthorse` dir copied under `/home/kinsy/ph-work/scratch/CoreLane`, four shards of four mutants, each
+   `--jobs 1` with its own `TMPDIR`, in parallel. Result: **16 of 16 killed, 0 survivors**.
 
-- utf8bytes-pair-join, assistantFailure-aborted, boundedBlock-bytes-not-units, fresh-image-estimate, refusal-fit,
-  notes-empty-offset, guidance-findlast, guidance-settled-reset, migration-suffix, lstat-enotdir, latin1-tail-short: killed by new tests.
-- tool-label, tool-snippet: not equivalent; the tool `Label` and `PromptSnippet` are model/UI-visible and are compared by the pigeq
-  scenario traces (tool definitions in the model request), which `--unit-only` does not run. No Go unit test reads them.
-- live-policy-provider: not equivalent; `liveCompactionPolicy` is only reachable through the host settings graph, which the fake host
-  does not model; covered by the scenarios (settings in the model request), not by Go unit tests.
+Final: 114 mutants, 112 killed by Go tests (98 in run 1 plus the 14 former survivors now killed by regression tests and the
+two coverage mutants), 0 equivalent removed, 0 surviving. (The two coverage mutants raise 112 to 114; the 14 survivors of
+run 1 are among the 16 confirmed, the others are the two coverage mutants.) Arithmetic: 98 + 14 + 2 = 114.
+
+## How each former survivor is killed
+
+| mutant | killed by |
+|---|---|
+| utf8bytes-pair-join | `TestMutationJSUTF8BytesLoneLowThenLow` |
+| assistantFailure-aborted | `TestMutationAssistantFailureAbortedWithoutMessage` |
+| boundedBlock-bytes-not-units | `TestMutationBoundedBlockCountsUnitsOfTheHeader` |
+| fresh-image-estimate | `TestMutationFreshPayloadImagesAreEstimated` |
+| refusal-fit | `TestMutationRefusalTextKeptWhenItFitsExactly` |
+| notes-empty-offset | `TestMutationNotesEmptyPageAtOffsetZero` |
+| guidance-findlast | `TestMutationGuidanceTargetsTheLastPosthorseSection` |
+| guidance-settled-reset | `TestMutationAgentSettledForgetsTheForcedPrompt` |
+| migration-suffix | `TestMutationMigrationTargetFirstSuffixIsOne` |
+| lstat-enotdir | `TestMutationLstatSyncMissingTreatsNotADirectoryAsMissing` |
+| latin1-tail-short | `TestMutationLatin1TailKeepsExactlyTheOverlap` |
+| tool-label, tool-snippet | `TestContextToolDefinitionsOnTheRegisterFrame` (label, prompt_snippet and description on the register frame) |
+| live-policy-provider | `TestCompactionModelArgKeysOverridesByProviderAndID` (the model argument is built by `compactionModelArg`, a behaviour-preserving extraction in extension.go) and `TestLiveCompactionPolicyAsksTheSettingsManager` (the fake host sees `sessionGraph.new` SettingsManager.inMemory with the replicated settings and `getCompactionSettings` on that handle) |
+| tool-tokens-cache-ignores-parameters | `TestCoverageToolTokenCacheSeesParameterChanges` |
+| guidance-custom-displayed | `TestCoverageForcedPromptGuidanceIsAHiddenMessageUntilTheRunSettles` |
+
+The fake host's state has no selected model, so the live-path test asserts the no-model case (`ctx.model` undefined: no model
+argument); provider/id keying is asserted on the extracted helper.

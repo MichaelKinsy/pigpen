@@ -1,9 +1,13 @@
 package eq
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -79,4 +83,47 @@ func resolveLocalModule(dir, spec string) string {
 		}
 	}
 	return ""
+}
+
+// ExtensionFilesClosure is the trace header's extensionFiles value for a hash over an entry's import closure.
+const ExtensionFilesClosure = "closure"
+
+// TSClosureHash hashes a TypeScript original the way Pi loads it: the entry, every local module it reaches
+// (localModules) and the package.json in the entry's directory, if there is one. A change to any of those files
+// changes the hash, which the entry file's bytes alone cannot show for an original split over ui.ts and src/.
+// Each file contributes its path relative to the entry's directory and its bytes, in path order; a dependency
+// directory is never entered.
+func TSClosureHash(entry string) (string, error) {
+	files, err := localModules(filepath.Clean(entry))
+	if err != nil {
+		return "", err
+	}
+	dir := filepath.Dir(filepath.Clean(entry))
+	if pkg := filepath.Join(dir, "package.json"); fileExists(pkg) {
+		files = append(files, pkg)
+	}
+	rels := make([]string, 0, len(files))
+	for _, f := range files {
+		rel, err := filepath.Rel(dir, f)
+		if err != nil {
+			return "", err
+		}
+		rels = append(rels, filepath.ToSlash(rel))
+	}
+	sort.Strings(rels)
+	h := sha256.New()
+	for _, rel := range rels {
+		b, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(rel)))
+		if err != nil {
+			return "", err
+		}
+		fmt.Fprintf(h, "%s\x00%d\x00", rel, len(b))
+		h.Write(b)
+	}
+	return "sha256:" + hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func fileExists(p string) bool {
+	info, err := os.Stat(p)
+	return err == nil && !info.IsDir()
 }

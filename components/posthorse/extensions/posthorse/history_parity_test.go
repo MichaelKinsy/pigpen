@@ -1,8 +1,8 @@
 package posthorse
 
 // Parity tests of the history lane (history*.go, session_files.go, session_lines.go) against the TypeScript original. The differential tests read the oracle's answers from
-// /home/kinsy/ph-work/scratch/historyrev/*.json, written by port/review/historyrev-probes/probe.mts (Node 24.22.1 on
-// xd6702), and skip when those files are absent. See port/review/historyrev.md.
+// testdata/historyrev_*.json.gz, written by port/review/historyrev-probes/probe.mts (Node 24.22.1 on xd6702; regenerate with
+// port/tools/gen-testdata.sh), and fail when those files are absent. See port/review/historyrev.md.
 
 import (
 	"encoding/json"
@@ -11,22 +11,14 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"slices"
-	"strings"
 	"testing"
-	"time"
 	"unicode"
 	"unicode/utf8"
 )
 
-const historyParityOracle = "/home/kinsy/ph-work/scratch/historyrev"
-
 func historyParityLoad(t *testing.T, name string, v any) {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join(historyParityOracle, name))
-	if err != nil {
-		t.Skipf("oracle file %s absent (run port/review/historyrev-probes/probe.mts): %v", name, err)
-	}
+	data := testdataGz(t, "historyrev_"+name+".gz")
 	if err := json.Unmarshal(data, v); err != nil {
 		t.Fatal(err)
 	}
@@ -380,56 +372,6 @@ func TestHistoryParityFoldClassDifferential(t *testing.T) {
 	t.Logf("%d cased code points, %d class mismatches", len(cases), bad)
 }
 
-// Perf head-to-head (not a divergence): historyMatches with all=true on the archives perf.mts generates. Run with
-// HISTORYREV_PERF=1 (HISTORYREV_NORG=1 hides rg, HISTORYREV_ONLY=<shape>/<query> picks one cell).
-func TestHistoryParityPerfShapes(t *testing.T) {
-	root := filepath.Join(historyParityOracle, "perf")
-	if _, err := os.Stat(root); err != nil || os.Getenv("HISTORYREV_PERF") == "" {
-		t.Skip("set HISTORYREV_PERF=1 after node perf.mts gen")
-	}
-	if os.Getenv("HISTORYREV_NORG") != "" {
-		t.Setenv("PATH", "/nonexistent")
-	}
-	fail := func(m string) error { return fmt.Errorf("%s", m) }
-	for _, shape := range []string{"a200", "s1000"} {
-		for _, query := range []string{"zebra-marker-77", "lorem", "qqqxyz"} {
-			if only := os.Getenv("HISTORYREV_ONLY"); only != "" && only != shape+"/"+query {
-				continue
-			}
-			source := historySource{dir: filepath.Join(root, shape), cwd: "/proj",
-				branch: func() ([]entryLike, error) { return nil, nil }, projection: func() ([]projectedEntry, error) { return nil, nil }}
-			var times []time.Duration
-			hits := 0
-			ids := ""
-			var before runtime.MemStats
-			runtime.ReadMemStats(&before)
-			for range 5 {
-				start := time.Now()
-				m, err := historyMatches(t.Context(), source, historyParams{op: "search", query: query, hasQuery: true, all: true}, fail)
-				if err != nil {
-					t.Fatal(err)
-				}
-				times = append(times, time.Since(start))
-				hits = len(m.hits)
-				parts := make([]string, len(m.hits))
-				for i, h := range m.hits {
-					parts[i] = fmt.Sprintf("%s:%d:%d", h.id, h.priority, u16len(h.text))
-				}
-				ids = strings.Join(parts, ",")
-			}
-			slices.Sort(times)
-			var ms runtime.MemStats
-			runtime.ReadMemStats(&ms)
-			t.Logf("go %s %s: median %.1f ms, hits %d, heap sys %d MiB, peak RSS %s, %d MiB and %d allocs per search",
-				shape, query, float64(times[2].Microseconds())/1000, hits, ms.HeapSys>>20, historyParityPeakRSS(),
-				(ms.TotalAlloc-before.TotalAlloc)>>20/5, (ms.Mallocs-before.Mallocs)/5)
-			if os.Getenv("HISTORYREV_IDS") != "" {
-				t.Logf("ids %s %s %s", shape, query, ids)
-			}
-		}
-	}
-}
-
 // Equal (oracle values from node): the search scope key and an emitted cursor for queries with lone surrogates,
 // astral characters and U+2028 / HTML characters (JSON.stringify escapes, base64url without padding).
 func TestHistoryParityCursorKeys(t *testing.T) {
@@ -452,18 +394,4 @@ func TestHistoryParityCursorKeys(t *testing.T) {
 			t.Errorf("query %q: key %s cursor %s, oracle %s %s", c.q, key, cursor, c.key, c.cursor)
 		}
 	}
-}
-
-// historyParityPeakRSS is the process's peak resident set (Linux VmHWM), "n/a" elsewhere.
-func historyParityPeakRSS() string {
-	data, err := os.ReadFile("/proc/self/status")
-	if err != nil {
-		return "n/a"
-	}
-	for _, line := range strings.Split(string(data), "\n") {
-		if rest, ok := strings.CutPrefix(line, "VmHWM:"); ok {
-			return strings.Join(strings.Fields(rest), " ")
-		}
-	}
-	return "n/a"
 }

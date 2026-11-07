@@ -322,7 +322,7 @@ func forkNativeReceipt(s *fakeSession, id, tool string, args rec, text string) {
 func forkGit(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("git is not installed")
+		t.Fatal("git is required by the fork notes tests")
 	}
 	cmd := exec.Command("git", append([]string{"-C", dir, "-c", "user.name=Posthorse fixture", "-c", "user.email=posthorse@example.invalid"}, args...)...)
 	cmd.Env = append(os.Environ(), "GIT_CONFIG_GLOBAL=/dev/null", "GIT_CONFIG_SYSTEM=/dev/null")

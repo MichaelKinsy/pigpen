@@ -81,6 +81,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		accept    = fs.String("accept-gaps", "", "JSON object mapping an accepted gap symbol to its owner approval")
 		sdkDir    = fs.String("sdk-dir", os.Getenv("PIG_SDK_DIR"), "PiG's staged Go SDK (mutate: enables the unit-test layer)")
 		unitTests = fs.Bool("unit", false, "mutate: also run the port's go tests on each mutant first (needs --sdk-dir)")
+		tsClosure = fs.Bool("ts-closure", false, "record: hash the TypeScript original's local import closure and its package.json into the golden header, not the entry file alone")
 		builtin   = fs.Bool("builtin", false, "check, record --self: the port is compiled into --pig (a built Piglet Binary); load no extension directory")
 		unitOnly  = fs.Bool("unit-only", false, "mutate: judge mutants by the port's own go tests alone; no scenarios, golden traces or pig (for an original adapter)")
 		jobs      = fs.Int("jobs", 1, "mutate: how many mutants to run at once (each has its own copy)")
@@ -101,7 +102,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 			return 2
 		}
 	}
-	cfg := eq.Config{Surface: *surface, AcceptedGaps: accepted, Pi: *pi, Pig: *pig, TS: *ts, Go: *goDir, GoOracle: *goOracle, Self: *self, Builtin: *builtin, Out: *out, SkipHostCheck: *skipHost,
+	cfg := eq.Config{Surface: *surface, AcceptedGaps: accepted, Pi: *pi, Pig: *pig, TS: *ts, TSClosure: *tsClosure, Go: *goDir, GoOracle: *goOracle, Self: *self, Builtin: *builtin, Out: *out, SkipHostCheck: *skipHost,
 		Options: eq.Options{Keep: *keep, Stderr: stderr, StepTimeout: time.Duration(*stepSecs) * time.Second}}
 	need := func(pairs ...string) bool {
 		for i := 0; i < len(pairs); i += 2 {

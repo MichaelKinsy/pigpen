@@ -45,7 +45,7 @@ func TestHistoryAllSearchKeepsInvocationTimeContextVisibility(t *testing.T) {
 	started, release, gate := filepath.Join(bin, "started"), filepath.Join(bin, "release"), filepath.Join(bin, "gate")
 	for _, fifo := range []string{started, release} {
 		if out, err := exec.Command("mkfifo", fifo).CombinedOutput(); err != nil {
-			t.Skipf("no mkfifo: %v %s", err, out)
+			t.Fatalf("mkfifo is required by the archive I/O gate: %v %s", err, out)
 		}
 	}
 	if err := os.WriteFile(gate, nil, 0o644); err != nil {
