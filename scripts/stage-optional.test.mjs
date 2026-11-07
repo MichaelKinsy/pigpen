@@ -21,9 +21,10 @@ function fixture() {
   scratch.push(dir);
   writeFileSync(join(dir, 'LICENSE'), 'MIT\n');
   mkdirSync(join(dir, 'components/extra'), { recursive: true });
-  writeFileSync(join(dir, 'components/extra/package.json'), '{"name":"extra"}\n');
+  writeFileSync(join(dir, 'components/extra/package.json'), '{"name":"extra","license":"MIT"}\n');
   mkdirSync(join(dir, 'piglets/demo'), { recursive: true });
   writeFileSync(join(dir, 'piglets/demo/piglet.yaml'), 'name: demo\ndescription: demo\nrelease:\n  version: 0.1.0\npackages:\n  extra: local:../../components/extra\nextensions:\n  - name: base-ext\n    origins: [package:extra]\n');
+  writeFileSync(join(dir, 'piglets/demo/provenance.json'), '{"origin":"original","authors":["x"],"license":"MIT","licenseFile":"../../LICENSE","upstreams":[]}\n');
   writeFileSync(join(dir, 'piglets/demo/catalog.json'), '{"featured":false,"updatedAt":"2026-10-20","languages":["go"],"notes":["demo"]}\n');
   writeFileSync(join(dir, 'piglets/demo/optional.json'), JSON.stringify(OPTIONAL));
   return dir;

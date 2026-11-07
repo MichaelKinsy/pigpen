@@ -3,6 +3,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { isMap, parseDocument } from 'yaml';
 import { readManifests, root } from './generate-index.mjs';
 import { COMPONENT_REL } from './layout.mjs';
+import { assertLicensesCompatible } from './license-guard.mjs';
 
 // Stage local source only. PiG remains responsible for validating and running the resulting manifests.
 const excluded = new Set(['.git', 'node_modules', 'dist']);
@@ -35,6 +36,8 @@ try {
   const options = parseArguments(process.argv.slice(2), process.env);
   const used = new Set();
   const directory = realpathSync(resolve(options.root || root));
+  // A Package that is copied into a Piglet is fused into its Binary: refuse it before anything is copied if its licence is not compatible.
+  assertLicensesCompatible(directory);
   const dist = join(directory, 'dist');
   const output = join(dist, 'staged');
   for (const path of [dist, output]) {

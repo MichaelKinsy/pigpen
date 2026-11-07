@@ -1,13 +1,14 @@
 // Deterministic, generated view of authored Piglet manifests. Never hand-edit catalog/index.json.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync, lstatSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { packageEntry, readPackageRecords, readPackages } from './packages.mjs';
 import { readArchonPlugins } from './archon-plugins.mjs';
 import { catalogPath } from './catalog-paths.mjs';
 import { listOwners } from './layout.mjs';
+import { licenseNote, pigletLicense, withLicensesBlock } from './licenses.mjs';
 import { npmName } from './npm-packages.mjs';
 import { listingEntry, listingProblems, readListings } from './listings.mjs';
 import { readPinnedKeys, readReceipts, releaseFromReceipt } from './receipts.mjs';
@@ -74,7 +75,7 @@ export function generateIndex(directory = root, repository = config.repository) 
   for (const name of receipts.keys()) if (!manifests.some(({ manifest }) => manifest.name === name)) throw new Error(`releases/piglets/${name}: there is no Piglet manifest piglets/${name}`);
   const released = [...readPackageRecords(directory)].map(([name, record]) => ({ record, entry: packageEntry(name, record, { directory, repository }) }));
   const index = { schemaVersion: 1, updatedAt: [...manifests.map(m => m.metadata.updatedAt), ...released.map(({ record }) => record.date)].sort().at(-1),
-    entries: [...manifests.map(({ manifest, metadata, raw }) => pigletEntry({ manifest, metadata, raw }, receipts.get(manifest.name) ?? [], { repository, keys })), ...released.map(({ entry }) => entry)] };
+    entries: [...manifests.map(({ manifest, metadata, raw, path }) => pigletEntry({ manifest, metadata, raw, path }, receipts.get(manifest.name) ?? [], { repository, keys })), ...released.map(({ entry }) => entry)] };
   // Third-party listings (listings/<id>.json): official: false, the real maintainer, pinned to a full commit.
   const found = readListings(join(directory, 'listings'));
   const problems = listingProblems(found, { reserved: reservedNames(directory), repository });
@@ -89,7 +90,8 @@ export function generateIndex(directory = root, repository = config.repository) 
   return index;
 }
 
-function pigletEntry({ manifest, metadata, raw }, receipts, { repository, keys }) {
+function pigletEntry({ manifest, metadata, raw, path }, receipts, { repository, keys }) {
+  const license = pigletLicense(dirname(path));
   const releases = receipts.map((verified) => releaseFromReceipt(verified, { repository, keys, ref: config.ref }));
   const newest = releases[0];
   return {
@@ -99,20 +101,33 @@ function pigletEntry({ manifest, metadata, raw }, receipts, { repository, keys }
       source: { type: 'git', spec: 'git:https://github.com/' + repository + '.git',
         url: `https://github.com/${repository}/tree/${config.ref}/piglets/${manifest.name}` },
       manifestSha256: createHash('sha256').update(raw).digest('hex'),
-      releases, notes: [newest ? availableNote(newest) : PLANNED_NOTE, ...metadata.notes],
+      releases, notes: [newest ? availableNote(newest) : PLANNED_NOTE, ...(licenseNote(license, 'piglet') ? [licenseNote(license, 'piglet')] : []), ...metadata.notes],
   };
 }
 
 const availableNote = (release) => `Signed Piglet Binaries for ${release.platforms.join(', ')} from release ${release.version}, signed with ${release.verificationKey.id}. Pull one with the command above, after checking that key against ${release.verificationKey.publicKeyUrl}. pig pins the signer on the first pull.`;
 
+/** The generated files of `directory` as {file: text}: catalog/index.json and README.md with its licence block. */
+export function generatedFiles(directory = root) {
+  return {
+    'catalog/index.json': JSON.stringify(generateIndex(directory), null, 2) + '\n',
+    'README.md': withLicensesBlock(readFileSync(join(directory, 'README.md'), 'utf8'), directory),
+  };
+}
+
+/** The generated files whose committed text differs from what the sources generate. */
+export function staleFiles(directory = root) {
+  return Object.entries(generatedFiles(directory)).filter(([file, text]) => readFileSync(join(directory, file), 'utf8') !== text).map(([file]) => file);
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const text = JSON.stringify(generateIndex(), null, 2) + '\n';
-  const target = catalogPath(root, 'index.json');
   if (process.argv.includes('--check')) {
-    if (readFileSync(target, 'utf8') !== text) throw new Error('catalog/index.json is stale; run npm run generate');
+    const stale = staleFiles();
+    if (stale.includes('catalog/index.json')) throw new Error('catalog/index.json is stale; run npm run generate');
+    if (stale.includes('README.md')) throw new Error('The licence list in README.md is stale; run npm run generate');
     console.log('Piglets index matches the manifests');
   } else {
-    writeFileSync(target, text);
+    for (const [file, text] of Object.entries(generatedFiles())) writeFileSync(join(root, file), text);
     console.log('Generated catalog/index.json from Piglet manifests');
   }
 }

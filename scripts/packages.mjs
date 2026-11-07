@@ -12,6 +12,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listOwners } from './layout.mjs';
+import { licenseNote } from './licenses.mjs';
 
 export const root = fileURLToPath(new URL('../', import.meta.url));
 const NAME = /^[a-z0-9][a-z0-9.-]*$/;
@@ -131,6 +132,8 @@ export function packageEntry(name, record, { directory = root, repository }) {
   const resources = packageResources(manifest);
   const notes = [`Installs from the tag ${verified.tag} of the Pigpen repository with the command above; \`pig update\` keeps that tag. A later release is a new tag.`];
   if (resources.includes('extension') && languages.includes('go')) notes.push('The extension is Go and builds from source on first use, so it needs a Go toolchain; nothing is downloaded as a prebuilt Binary.');
+  const licence = licenseNote(manifest.license);
+  if (licence) notes.push(licence);
   if (resources.length === 0) notes.push('A library: a Go module that other Packages and Piglets build against. Installing it adds no Resource.');
   return {
     id: manifest.name, kind: 'package', name: manifest.name, description: manifest.description,
