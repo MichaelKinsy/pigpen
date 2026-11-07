@@ -47,17 +47,22 @@ How to read it, with the honest limits:
   last sample and dropped a leaf that had already gone; that is fixed and unit-tested, and the raw samples are in `data/` so the table can be re-derived).
 - The numbers above supersede an earlier run of the same schedule on an earlier PiG build and mock (10 measured rounds, memory 51/142/58/31 MiB). Where the two runs differ by more than the run to run spread it is
   noted here: PiG's first event (551 ms) is now about 20 percent behind Codex (452 ms) and Claude Code (486 ms) and its restore times are about 0.05 to 0.07 s longer; in the earlier run those were within noise.
+- **Absolute CPU per activation was 22 to 50 percent higher for every harness in this run than in the earlier run.** The earlier run's medians with its artifact rows (the activations under 100 ms) removed
+  were 540 (PiG), 2453 (Claude Code), 1425 (Codex) and 416 (pi-go) ms; this run's are 809, 3001, 1934 and 625 ms, that is +50, +22, +36 and +50 percent. The cause was not identified, and the corrected
+  metric does not explain it (the `_ckpt` leaf it adds is only about 20 to 35 ms); kagent's own Claude Code and Codex images moved too. Absolute values must therefore not be compared across runs, only the
+  ratios within a run. The ratios moved less: PiG over Claude Code 0.22 then, 0.27 now; PiG over Codex 0.38 then, 0.42 now.
 - pi-go is not like-for-like: on kagent rc3 it gets no MCP tools, so its turn does less work (one shell call, no MCP call), and it has no approval path.
 - **The mock's per-call floor is not subtracted.** Every model call costs about 0.11 s (50 ms first token plus chunk delays) and that is included in every reported time. It is
   identical per call, but the number of calls differs: PiG, Claude Code and Codex make 3 model calls for `[basket]` (shell call, MCP call, answer), pi-go makes 2 (it has no MCP
   tools here), so pi-go's times carry about 0.11 s less floor than the others'.
 - The memory figure includes the gVisor sentry overhead that every Actor pays, so ratios between harnesses understate the difference in the harness process itself.
-- Differences below roughly 15 percent (for example first event 452 to 565 ms among the others, restore times) are within the run-to-run spread and should not be read as an ordering.
+- Within one run, differences below roughly 15 percent (for example first event 452 to 565 ms among the others, restore times) are within the run-to-run spread and should not be read as an ordering. This
+  rule is for comparisons inside a single run; it does not carry across runs (see the CPU shift above).
 - Per-turn numbers include harness process start, because kagent suspends the Actor after every turn and restores it into a new process each time.
 - After the worker pod is replaced the gateway does not accept the first message to an existing session until the session is available again: every first attempt (25 of 25) returned JSON-RPC
   error -32004 (`KAGENT_SEND_NOT_ACCEPTED`, "input was not accepted; retry after the session becomes available") after a median 11.0 s, and the retry succeeded at once. So a client that does not retry sees a
   failure on the first message after a pod replacement, for about 11 s, and a client that retries the same message gets its answer about 12 to 14 s after the first send. This is what the gateway did on
-  this cluster for all three harness families that were tried; it is a property of kagent rc3 and Substrate, not of PiG.
+  this cluster for both harnesses tried (PiG and Claude Code; Codex and pi-go were not run); it looks like a property of kagent rc3 and Substrate, not of PiG.
 
 ## Method
 
@@ -218,7 +223,7 @@ failure was the same gateway error. Per-run records: `data/restart-20261107.json
   true restore, not a warm actor. "restore total" is Substrate's restore of the snapshot (about 0.3 s), not harness boot.
 - **n and statistics.** 2 warmup rounds (excluded), then 20 measured sessions per agent, one session per invocation, agents rotated each
   round so none always goes first. Medians with p90, min and max; with n = 20 the p90 is interpolated between the 18th and 19th
-  sample and no confidence intervals are claimed. The restart and rejection series have n = 10 (PiG), 5 (Claude Code restart) and 3 (Claude Code and Codex rejection). Differences under roughly 15 percent should not be read as real.
+  sample and no confidence intervals are claimed. The restart and rejection series have n = 10 (PiG), 5 (Claude Code restart) and 3 (Claude Code and Codex rejection). Within one run, differences under roughly 15 percent should not be read as real; the rule does not apply across runs (absolute CPU per activation moved 22 to 50 percent between two runs of the same schedule).
 - **Shared noisy host.** The run used a 192-core amd64 Linux host that was shared with other work (load average 2.4 when the schedule began; the Kind node was capped at 24 CPUs and 128 GiB). `baseline.sh` gates on host
   CPU pressure (PSI some avg10 at most 35 percent before each session); the observed range was 2.7 to 13.1 percent, so the gate never fired and no session proceeded over it.
   Other lanes of the same project had agreed to stay idle during the schedule and the two series; that was an agreement, not enforcement.
@@ -244,8 +249,11 @@ failure was the same gateway error. Per-run records: `data/restart-20261107.json
   includes the automatic approval round trip with no human delay.
 - **Not measured.** Suspended footprint (snapshot size), per-turn growth over many turns, concurrency and throughput, image unpack time, and the worker pod replacement for pi-go and Codex.
   The pod replacement series is one pod per run on a single-node cluster, so it shows the gateway's behaviour when the only worker is replaced, not a rolling update.
-- **Worker pod memory.** The shared worker pod's working set (idle median 546 MiB, with an actor 601 MiB) is far above the 61 and 107 MiB of the earlier run; the cause was not investigated. It does not enter the
-  per-actor tables, which are the actor's own cgroup leaves.
+- **Worker pod memory.** The shared worker pod's working set (idle median 546 MiB, with an actor 601 MiB) is far above the 61 and 107 MiB of the earlier run. From this run's raw samples
+  (`data/baseline-20261107-mem.jsonl.gz`, one worker pod for the whole 1323 s): the pod working set rose from 341 MiB at the first sample to about 588 MiB at the end (peak 731 MiB) while anon memory stayed
+  between 35 and 62 MiB; the rise is page cache (`file` 300 MiB at the start, 669 MiB at the end, peak 788 MiB; kernel memory 16 MiB to 112 MiB), and it sits in the pod's `worker` leaf (Substrate's worker process),
+  not in an actor. The pod already stood at 341 MiB, 300 MiB of it file cache, when the schedule began. The earlier run's 61 MiB cannot be compared: its raw samples were not shipped, so its anon and file split is
+  unknown. None of this enters the per-actor tables, which are the actors' own cgroup leaves (51 MiB for PiG in both runs).
 
 ## Reproducing and raw data
 

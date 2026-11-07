@@ -135,7 +135,8 @@ registry), in November 2026. **No real model provider was used**: every agent in
 | `requireApproval` on that binding becomes the approval gate | 20 of 20 sessions |
 
 After a worker pod is replaced, kagent and Substrate refuse the first message to an existing session with `-32004 input was not accepted; retry after the session becomes available`
-for about 11 seconds; clients must retry. The same behaviour appeared with the Claude Code harness (0 of 5 first attempts, 5 of 5 after the retry). Ordinary suspend and restore does not show it.
+for about 11 seconds; clients must retry. It was seen with both harnesses tried, PiG and Claude Code (0 of 5 first attempts for Claude Code, 5 of 5 after the retry); Codex and pi-go were not run.
+Ordinary suspend and restore does not show it.
 
 Per-turn cost, same task and same mock model on the same cluster, medians of 20 sessions, first-activation values (the Claude Code and Codex rows are kagent's own harness images from the rc3
 catalog; pi-go is the community harness [dimetron/pi-go](https://github.com/dimetron/pi-go) v0.3.10, rebuilt for amd64 because its published amd64 manifest holds an arm64 binary):
@@ -150,8 +151,9 @@ catalog; pi-go is the community harness [dimetron/pi-go](https://github.com/dime
 
 Read the table with its limits: memory is the working set of the Actor's gVisor sandbox cgroup, so it includes the sandbox's own overhead; every turn includes starting the
 harness process because kagent restores the Actor into a new process; pi-go makes two model calls per turn to the others' three, so it does less work, and the mock's 0.11 s per call is
-not subtracted from any time; PiG's first event and restore times are slower than Claude Code's and Codex's here, so do not read the table as faster on every axis; differences under about 15 percent
-are within run-to-run spread; and with a real model the model's latency would dominate every turn. The measurements used a mock model for every harness. Method, raw data, caveats and the scripts to repeat
+not subtracted from any time; PiG's first event and restore times are slower than Claude Code's and Codex's here, so do not read the table as faster on every axis; within one run, differences under about 15 percent
+are within run-to-run spread (the rule does not carry across runs: absolute CPU per activation was 22 to 50 percent higher for every harness in this run than in an earlier run of the same schedule, cause not identified,
+so compare the ratios within a run, never absolute values across runs); and with a real model the model's latency would dominate every turn. The measurements used a mock model for every harness. Method, raw data, caveats and the scripts to repeat
 them are in the [proof directory of the Pigpen repository](https://github.com/MichaelKinsy/pigpen/tree/main/components/kagent/proof).
 
 CI checks only that the image builds.
