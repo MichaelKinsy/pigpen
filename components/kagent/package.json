@@ -1,0 +1,38 @@
+{
+  "name": "@pi-in-go/pigpen-kagent",
+  "version": "0.1.0",
+  "description": "PiG policy extension for the kagent harness: registers the MCP servers a kagent Agent binds, gates tools that require approval and offers ask_user. Inert unless KAGENT_PIG_POLICY names a policy file.",
+  "keywords": [
+    "pig-package",
+    "kagent",
+    "mcp",
+    "approval",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/kagent"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/kagent#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/kagent-policy"
+    ]
+  }
+}

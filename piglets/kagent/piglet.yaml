@@ -1,0 +1,24 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG for the kagent harness: the kagent-policy extension fused into the Binary. Inert unless KAGENT_PIG_POLICY names a policy file.
+name: kagent
+description: "PiG for the kagent harness: registers the MCP servers a kagent Agent binds, holds the approval gate for tools that need approval, and offers ask_user. Inert until KAGENT_PIG_POLICY names a policy file."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64]
+  extensionRealization: fused
+packages:
+  kagent: local:../../components/kagent
+extensions:
+  # MCP servers, the require_approval gate and ask_user, all from the policy file; nothing happens without KAGENT_PIG_POLICY.
+  - name: kagent-policy
+    origins: [package:kagent]
+  # A Piglet that lists extensions: hides MCP tools unless it names pig-mcp-adapter; this entry keeps the built-in MCP
+  # support (the policy's servers connect and their tools reach the model) without adding code.
+  - name: pig-mcp-adapter
+# Opt-in strip (D92): a closed extension surface (discovery.extensions: []) so an extension planted in the workspace is never loaded, and no self-update in a container.
+strip:
+  features: [node-extensions, extension-sdk-go, extension-sdk-rust, extension-sdk-python, self-update]
+discovery:
+  extensions: []
+  skills: []

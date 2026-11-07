@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-02",
+  "updatedAt": "2026-11-07",
   "entries": [
     {
       "id": "a2a",
@@ -292,6 +292,34 @@
         "The judge is the model PiG is configured with (default) or the TypeSafe API, through the shared Go client Package components/typesafe. Content goes to that provider; /jev names it.",
         "Fails open: when the judge is unavailable, tool calls run unjudged. A judgment is probabilistic advice, not a sandbox.",
         "The manifest lists five build targets, but only linux/amd64 has been built and run; linux/arm64, darwin/arm64, darwin/amd64 and windows/amd64 are listed in the manifest and compile-checked only, so no platform is a support claim."
+      ]
+    },
+    {
+      "id": "kagent",
+      "kind": "piglet",
+      "name": "kagent",
+      "description": "PiG for the kagent harness: registers the MCP servers a kagent Agent binds, holds the approval gate for tools that need approval, and offers ask_user. Inert until KAGENT_PIG_POLICY names a policy file.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/kagent"
+      },
+      "manifestSha256": "b27aee75ad2535e4044fb42d7b8d9e8003aa9310a8f85278944c143516bfc566",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "Inert unless KAGENT_PIG_POLICY names a policy file; with a policy it registers the MCP servers, holds the approval gate and offers ask_user, and an unusable policy stops PiG from starting.",
+        "The extension is Go and fuses into the Piglet Binary; it is built against PiG v0.7.0 and uses no dependency beyond the PiG SDK.",
+        "The manifest lists linux/amd64 and linux/arm64 for the kagent harness image; only linux/amd64 has been built and run, linux/arm64 is not a support claim.",
+        "Verified only against a hermetic mock model and a local MCP server; no real model provider was used."
       ]
     },
     {
