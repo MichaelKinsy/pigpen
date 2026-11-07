@@ -1,0 +1,22 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with posthorse: no-summary context rollover for long tasks, durable notes and searchable history. No network.
+name: pig-posthorse
+description: "PiG with posthorse: when a long task fills the context window, PiG starts a fresh one without a model-written summary. The model keeps task notes under .pi/notes, finds earlier conversation with the history tool, and gets a bounded recovery record instead of a summary. No network call, no Node."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  posthorse: local:../../components/posthorse
+extensions:
+  # new_context, get_context_remaining, notes and history, the checkpoint reminder and automatic no-summary rollover (Mitch Fultz, pi-posthorse 0.10.11, MIT).
+  - name: posthorse
+    origins: [package:posthorse]
+    tools: [get_context_remaining, history, new_context, notes]
+skills: []
+# Posthorse adds no skill and keeps the user's own extensions and skills available beside it. Keep exactly one
+# compaction-policy extension loaded: two competing rollover hooks make the result depend on load order.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]
