@@ -106,7 +106,6 @@ type ModeState struct {
 type NewSessionResponse struct {
 	SessionID     string         `json:"sessionId"`
 	ConfigOptions []ConfigOption `json:"configOptions"`
-	Models        *ModelState    `json:"models"`
 	Modes         ModeState      `json:"modes"`
 	Meta          map[string]any `json:"_meta"`
 }
@@ -114,7 +113,6 @@ type NewSessionResponse struct {
 // LoadSessionResponse is `session/load` result.
 type LoadSessionResponse struct {
 	ConfigOptions []ConfigOption `json:"configOptions"`
-	Models        *ModelState    `json:"models"`
 	Modes         ModeState      `json:"modes"`
 	Meta          map[string]any `json:"_meta"`
 }

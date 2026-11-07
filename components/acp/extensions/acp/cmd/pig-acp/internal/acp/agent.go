@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the adapter version reported in agentInfo.
-var Version = "0.2.1"
+var Version = "0.2.2"
 
 const (
 	modelConfigID        = "model"
@@ -45,6 +45,8 @@ type agentState struct {
 
 	mu             sync.Mutex
 	lastSessionCwd string
+	// auth is what the client said it can do for sign-in (set by initialize, under mu).
+	auth AuthSupport
 	restoreMu      sync.Mutex
 
 	// updateNotice looks for a newer pig release (a test seam; BuildUpdateNotice by default).
@@ -115,15 +117,15 @@ func envFlag(names ...string) string {
 
 // Initialize negotiates the protocol version and advertises only what is implemented.
 func (a *Agent) Initialize(req InitializeRequest) (InitializeResponse, error) {
-	terminalAuth := false
-	if meta, ok := req.ClientCapabilities["_meta"].(map[string]any); ok {
-		terminalAuth = meta["terminal-auth"] == true
-	}
+	support := AuthSupportOf(req.ClientCapabilities)
+	a.mu.Lock()
+	a.auth = support
+	a.mu.Unlock()
 	return InitializeResponse{
 		// Only protocol version 1 is spoken: a client asking for another gets 1 and decides.
 		ProtocolVersion: ProtocolVersion,
 		AgentInfo:       map[string]any{"name": "pig-acp", "title": "PiG ACP adapter", "version": Version},
-		AuthMethods:     AuthMethods(terminalAuth),
+		AuthMethods:     AuthMethods(support),
 		AgentCapabilities: AgentCapabilities{
 			LoadSession:     true,
 			McpCapabilities: McpCapabilities{HTTP: false, SSE: false},
@@ -221,7 +223,6 @@ func (a *Agent) restoreSession(sessionID string, cwd string, mcp []any) (ActiveS
 
 type sessionConfiguration struct {
 	ConfigOptions []ConfigOption
-	Models        *ModelState
 	Modes         ModeState
 }
 
@@ -334,7 +335,7 @@ func getSessionConfiguration(proc Proc, state, models map[string]any, haveModels
 	if err != nil {
 		return sessionConfiguration{}, err
 	}
-	return sessionConfiguration{ConfigOptions: buildConfigOptions(ms, modes), Models: ms, Modes: modes}, nil
+	return sessionConfiguration{ConfigOptions: buildConfigOptions(ms, modes), Modes: modes}, nil
 }
 
 func (a *Agent) emitConfigOptionsUpdate(sessionID string, proc Proc) ([]ConfigOption, error) {
@@ -404,9 +405,15 @@ func messageOf(err error) string {
 	return err.Error()
 }
 
-func authRequired() *RequestError {
-	return ErrAuthRequired(map[string]any{"authMethods": AuthMethods(true)}, "Configure an API key or log in with an OAuth provider.")
+// authSupport is what the client that initialized this connection can do for sign-in; nothing before initialize.
+func (a *Agent) authSupport() AuthSupport {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.auth
 }
+
+// authRequired is the missing-credentials error for the connected client (see AuthRequiredError).
+func (a *Agent) authRequired() *RequestError { return AuthRequiredError(a.authSupport()) }
 
 // NewSession starts a pig child for a new session.
 func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
@@ -438,7 +445,7 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 
 	if modelsErr != nil {
 		a.cleanupFailedNewSession(sess.ID(), state)
-		if ae := MaybeAuthRequiredError(modelsErr); ae != nil {
+		if ae := MaybeAuthRequiredError(modelsErr, a.authSupport()); ae != nil {
 			return NewSessionResponse{}, ae
 		}
 		return NewSessionResponse{}, ErrInternal(map[string]any{}, messageOf(modelsErr))
@@ -446,11 +453,11 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 	// No models after spawning means pig has no credentials.
 	if raw, _ := models["models"].([]any); len(raw) == 0 {
 		a.cleanupFailedNewSession(sess.ID(), state)
-		return NewSessionResponse{}, authRequired()
+		return NewSessionResponse{}, a.authRequired()
 	}
-	if stateErr != nil && MaybeAuthRequiredError(stateErr) != nil {
+	if stateErr != nil && IsAuthFailure(stateErr) {
 		a.cleanupFailedNewSession(sess.ID(), state)
-		return NewSessionResponse{}, authRequired()
+		return NewSessionResponse{}, a.authRequired()
 	}
 	var cfg sessionConfiguration
 	if stateErr != nil {
@@ -460,7 +467,7 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 	}
 	if err != nil {
 		a.cleanupFailedNewSession(sess.ID(), state)
-		if ae := MaybeAuthRequiredError(err); ae != nil {
+		if ae := MaybeAuthRequiredError(err, a.authSupport()); ae != nil {
 			return NewSessionResponse{}, ae
 		}
 		return NewSessionResponse{}, ErrInternal(map[string]any{}, messageOf(err))
@@ -487,7 +494,7 @@ func (a *Agent) NewSession(req NewSessionRequest) (NewSessionResponse, error) {
 	if prelude != "" {
 		startup = prelude
 	}
-	resp := NewSessionResponse{SessionID: sess.ID(), ConfigOptions: cfg.ConfigOptions, Models: cfg.Models, Modes: cfg.Modes,
+	resp := NewSessionResponse{SessionID: sess.ID(), ConfigOptions: cfg.ConfigOptions, Modes: cfg.Modes,
 		Meta: map[string]any{"piAcp": map[string]any{"startupInfo": startup}}}
 
 	// Sent after the response: some clients ignore notifications for a session id they have not seen.
@@ -606,7 +613,7 @@ func (a *Agent) LoadSession(req LoadSessionRequest) (LoadSessionResponse, error)
 	}
 
 	a.defer_(a.commandsTask(sess, enableSkills, fileCommands))
-	return LoadSessionResponse{ConfigOptions: cfg.ConfigOptions, Models: cfg.Models, Modes: cfg.Modes,
+	return LoadSessionResponse{ConfigOptions: cfg.ConfigOptions, Modes: cfg.Modes,
 		Meta: map[string]any{"piAcp": map[string]any{"startupInfo": nil}}}, nil
 }
 

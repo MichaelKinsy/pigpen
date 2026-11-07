@@ -1,6 +1,7 @@
 package acp
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -40,6 +41,9 @@ func (a *Agent) Prompt(req PromptRequest) (PromptResponse, error) {
 
 	result := <-sess.Prompt(message, images)
 	if result.Err != nil {
+		if errors.Is(result.Err, errAuthFailure) {
+			return PromptResponse{}, a.authRequired()
+		}
 		return PromptResponse{}, result.Err
 	}
 	reason := result.Reason
