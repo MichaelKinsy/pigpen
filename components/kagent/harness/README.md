@@ -133,6 +133,7 @@ registry), in November 2026. **No real model provider was used**: every agent in
 | A parked approval, then the worker pod deleted, then approve and a later recall | first attempt 0 of 10 (the same `-32004` window); eventually 10 of 10, and the later recall named the first marker 10 of 10 |
 | MCP wiring: a `RemoteMCPServer` bound to the Agent, called by name | 20 of 20 sessions |
 | `requireApproval` on that binding becomes the approval gate | 20 of 20 sessions |
+| Cancel a parked approval through the gateway (`CancelTask`), including after the Actor was suspended and restored, a second cancel on the same task, and further work in the same session afterwards | task canceled each time, no panic in the worker log, the Actor kept serving; run once on a later image (Pigpen commit `b0c18f50f435369c830a460eaf9a9d266b7b507e`, digest `sha256:e160409826defcd76fd02586cef11a05e00c201e665569e2808f896fb37244b2`) because the adapter's cancel path changed after the measurements; the measurement table below was not re-run |
 
 After a worker pod is replaced, kagent and Substrate refuse the first message to an existing session with `-32004 input was not accepted; retry after the session becomes available`
 for about 11 seconds; clients must retry. It was seen with both harnesses tried, PiG and Claude Code (0 of 5 first attempts for Claude Code, 5 of 5 after the retry); Codex and pi-go were not run.
