@@ -438,27 +438,157 @@ func retainedProjection(projected []sdk.ProjectedSessionEntry) []sdk.ProjectedSe
 	return projected[1:end]
 }
 
-// countRetainedFromProjected is reminders.ts:223-244 over the retained span of the projection.
-func countRetainedFromProjected(retained []sdk.ProjectedSessionEntry, stale staleReminder) int {
-	count := 0
-	for _, item := range retained {
+// retainedMessages is the part of the retained span the count reads: each message's role, customType and
+// details (all that staleReminder looks at), in projection order. The result is small and independent of the
+// message bodies, so it can be kept between events.
+func retainedMessages(span []sdk.ProjectedSessionEntry) []rec {
+	var out []rec
+	for _, item := range span {
 		for _, message := range item.Messages {
-			if role, _ := str(message, "role"); role != "system" && (stale == nil || !stale(message)) {
-				count++
+			kept := rec{"role": message["role"]}
+			if customType, ok := message["customType"]; ok {
+				kept["customType"] = customType
 			}
+			if details, ok := message["details"]; ok {
+				kept["details"] = details
+			}
+			out = append(out, kept)
+		}
+	}
+	return out
+}
+
+// countRetained is reminders.ts:223-244: the retained messages that are not system messages and not stale.
+func countRetained(messages []rec, stale staleReminder) int {
+	count := 0
+	for _, message := range messages {
+		if role, _ := str(message, "role"); role != "system" && (stale == nil || !stale(message)) {
+			count++
 		}
 	}
 	return count
 }
 
-// countRetainedMessages is reminders.ts:263-288. The TS reads the branch to name the retained entries and
-// then the projection; the Go port reads the projection only (retainedProjection), one wire read per
-// call. The TS duck-types a session manager without getBranch/buildSessionProjection and falls back to a
-// raw-entry count; the Go SDK's ReadonlySessionManager always has both, so that branch cannot run.
-func countRetainedMessages(ctx sdk.Context, stale staleReminder) (int, error) {
-	projection, err := ctx.SessionManager().BuildSessionProjection()
+// countRetainedFromProjected is reminders.ts:223-244 over the retained span of the projection.
+func countRetainedFromProjected(retained []sdk.ProjectedSessionEntry, stale staleReminder) int {
+	return countRetained(retainedMessages(retained), stale)
+}
+
+// retainedSource is the part of ctx.sessionManager the retained count reads; ReadonlySessionManager implements it.
+type retainedSource interface {
+	GetLeafEntry() (map[string]any, error)
+	GetEntry(id string) (map[string]any, error)
+	BuildSessionProjection() (sdk.SessionProjection, error)
+}
+
+// retainedCertifySteps bounds the by-id walk that certifies the cached retained messages for a new leaf; a longer
+// walk is a miss (one projection read is cheaper than a long chain of entry reads).
+const retainedCertifySteps = 16
+
+// retainedCache keeps the retained messages of the newest compaction between `context` events.
+//
+// What the count reads is the span of the projection between the newest compaction and its child: the entries
+// from firstKeptEntryId up to the compaction, with the messages Pi projects for them. Entries are immutable and
+// the span lies before the compaction, so it changes only when (a) the newest compaction changes, (b) a
+// context_edit entry edits a retained entry (a null replacement removes its messages, any other replacement
+// keeps the role and details), or (c) the leaf leaves the branch the span was read for (navigation, another
+// session). Every other append (messages, custom messages, labels, summaries, settings) leaves it as it was.
+// A new leaf is therefore certified by walking its ancestors back to the leaf the cache was read at: if no
+// compaction or context_edit entry is among them, the cached messages are exact; anything else is a miss that
+// reads the projection again. session_start and session_tree reset the cache (they also reset the reminder
+// lookup), and a leaf that is not a descendant of the cached one within retainedCertifySteps is a miss, so a
+// navigation without the event is still correct. A hit costs one leaf read plus one read per entry appended
+// since; a miss costs the projection read the TS does in process (reminders.ts:263-288).
+type retainedCache struct {
+	mu       sync.Mutex
+	gen      uint64
+	valid    bool
+	leaf     rec
+	messages []rec
+}
+
+func newRetainedCache() *retainedCache { return &retainedCache{} }
+
+// reset drops the cached span (session start and tree navigation).
+func (c *retainedCache) reset() {
+	c.mu.Lock()
+	c.valid, c.leaf, c.messages = false, nil, nil
+	c.gen++
+	c.mu.Unlock()
+}
+
+// certified reports whether every entry appended after cached up to leaf leaves the retained span alone.
+func certified(source retainedSource, leaf, cached rec) (bool, error) {
+	if leaf == nil || cached == nil {
+		return false, nil
+	}
+	cachedID, ok := str(cached, "id")
+	if !ok {
+		return false, nil
+	}
+	for entry, steps := leaf, 0; ; steps++ {
+		if id, _ := str(entry, "id"); id == cachedID {
+			return true, nil
+		}
+		if kind := entryType(entry); kind == "compaction" || kind == "context_edit" {
+			return false, nil
+		}
+		parent := parentID(entry)
+		if parent == "" || steps >= retainedCertifySteps {
+			return false, nil
+		}
+		if parent == cachedID {
+			return true, nil
+		}
+		next, err := source.GetEntry(parent)
+		if err != nil || len(next) == 0 {
+			return false, err
+		}
+		entry = next
+	}
+}
+
+// count is countRetainedMessages (reminders.ts:263-288) over a source. The TS reads the branch to name the
+// retained entries and then the projection; the Go port reads the projection only (retainedProjection) and,
+// between events, not at all (see retainedCache). The TS duck-types a session manager without
+// getBranch/buildSessionProjection and falls back to a raw-entry count; the Go SDK's ReadonlySessionManager
+// always has both, so that branch cannot run.
+func (c *retainedCache) count(source retainedSource, stale staleReminder) (int, error) {
+	leaf, err := source.GetLeafEntry()
 	if err != nil {
 		return 0, err
 	}
-	return countRetainedFromProjected(retainedProjection(projection.Entries), stale), nil
+	if len(leaf) == 0 {
+		leaf = nil
+	}
+	c.mu.Lock()
+	valid, cachedLeaf, messages, gen := c.valid, c.leaf, c.messages, c.gen
+	c.mu.Unlock()
+	if valid {
+		ok, err := certified(source, leaf, cachedLeaf)
+		if err != nil {
+			return 0, err
+		}
+		if ok {
+			c.mu.Lock()
+			if c.gen == gen {
+				c.leaf = leaf
+			}
+			c.mu.Unlock()
+			return countRetained(messages, stale), nil
+		}
+	}
+	projection, err := source.BuildSessionProjection()
+	if err != nil {
+		return 0, err
+	}
+	messages = retainedMessages(retainedProjection(projection.Entries))
+	if leaf != nil {
+		c.mu.Lock()
+		if c.gen == gen {
+			c.valid, c.leaf, c.messages = true, leaf, messages
+		}
+		c.mu.Unlock()
+	}
+	return countRetained(messages, stale), nil
 }

@@ -22,5 +22,11 @@
   "file": "rollover.go",
   "find": "projected[boundary+1:]",
   "replace": "projected[boundary:]"
+ },
+ {
+  "name": "retained-cache-nil-leaf-cached",
+  "file": "reminders.go",
+  "find": "\tif leaf != nil {\n\t\tc.mu.Lock()\n\t\tif c.gen == gen {\n\t\t\tc.valid, c.leaf, c.messages = true, leaf, messages",
+  "replace": "\tif true {\n\t\tc.mu.Lock()\n\t\tif c.gen == gen {\n\t\t\tc.valid, c.leaf, c.messages = true, leaf, messages"
  }
 ]

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
+	"runtime/pprof"
 	"syscall"
 )
 
@@ -41,11 +42,22 @@ func init() {
 	if dir == "" {
 		return
 	}
+	// PH_PERF_CPUPROF=1 (diagnosis only, never part of a measured sample): a CPU profile from process start to the second signal.
+	var prof *os.File
+	if os.Getenv("PH_PERF_CPUPROF") == "1" {
+		if f, err := os.Create(filepath.Join(dir, fmt.Sprintf("%d.pprof", os.Getpid()))); err == nil && pprof.StartCPUProfile(f) == nil {
+			prof = f
+		}
+	}
 	signals := make(chan os.Signal, 4)
 	signal.Notify(signals, syscall.SIGUSR2)
 	go func() {
 		for seq := 0; ; seq++ {
 			<-signals
+			if seq == 1 && prof != nil {
+				pprof.StopCPUProfile()
+				prof.Close()
+			}
 			asis := perfRead()
 			runtime.GC()
 			debug.FreeOSMemory()

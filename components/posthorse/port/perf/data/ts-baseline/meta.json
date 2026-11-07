@@ -1,6 +1,7 @@
 {
-  "started": "2026-11-06T23:56:39+0000",
+  "started": "2026-11-07T05:22:39+0000",
   "sides": [
+    "go",
     "ts",
     "pi"
   ],
@@ -15,7 +16,7 @@
     "e",
     "f"
   ],
-  "samples": 15,
+  "samples": 25,
   "cpus": [
     186,
     187,
@@ -25,9 +26,9 @@
     191
   ],
   "loadavg_start": [
-    9.2578125,
-    10.75537109375,
-    9.6728515625
+    3.5234375,
+    4.767578125,
+    7.564453125
   ],
   "versions": {
     "pig": "0.7.0+1.5.0",
@@ -42,17 +43,22 @@
   "args": [
     "run",
     "--out",
-    "/home/kinsy/ph-work/scratch/PerfLane/out/ts-baseline",
+    "/home/kinsy/ph-work/scratch/PerfLane/out/both",
     "--sides",
-    "ts,pi",
+    "go,ts,pi",
     "--samples",
-    "15"
+    "25"
   ],
-  "extension_sources_sha256": "9b4ede9cbb592d9c254dd50d225cf136186e3b905d36a2526f21a6e91c7305ca",
-  "finished": "2026-11-07T00:53:07+0000",
+  "extension_sources_sha256": "0185329ff57d518b7bc4a569f54d9e4c2ff6f7d12bd06e0f22db5fbe02926608",
+  "go_binary": {
+    "runner_bytes": 7803040,
+    "sha256": "8837336760ca4fc184f9b4b224395f94ca673fb67110123a2000f6268fa47b57",
+    "stripped_bytes": 7800072
+  },
+  "finished": "2026-11-07T07:42:53+0000",
   "loadavg_end": [
-    5.396484375,
-    7.115234375,
-    8.61669921875
+    2.68212890625,
+    3.45263671875,
+    4.41650390625
   ]
 }

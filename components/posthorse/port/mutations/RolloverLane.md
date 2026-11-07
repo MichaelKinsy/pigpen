@@ -11,19 +11,19 @@ ph run "cd components/posthorse && pigeq mutate --go <scratch copy of extensions
   --mutations port/mutations/RolloverLane.json --unit-only --sdk-dir \$PIG_SDK_DIR --jobs 6"
 ```
 
-Each mutant runs the copy's whole test suite (about 20 s) under pigeq's 180 s bound; 227 mutants took about 7.5 minutes with 6 jobs.
+Each mutant runs the copy's whole test suite (about 20 s) under pigeq's 180 s bound; 251 mutants took about 10 minutes with 6 jobs.
 
 ## Families (one or more mutants per function or contract row)
 
 | Area | Functions / rows | Mutants |
 |---|---|---|
 | retention.go | `isCutRole`, `safeStart`, `messageCost`, `projectedCut` (materialization, owner index, keep), `pairedTail`, `boundedTail` (costs, budget, pairing, ids, first kept), `retainedTailOf` (default keep, boundary, prepared id), `sourceIDMatches`, `automaticRecovery` (limit, minimum page, payload cap, tail share, retained ids, notes, owner flag, handoff bound, first kept, error propagation) | 47 |
-| reminders.go | `reminderMatches`, `strictIntMember`, `hasReminder`, `reminderBudget` (band, buffer, supported/enabled), `endsRun`, `reminderDecision`, `sameEntry`, the walk (`visit`, `result`, `scanAncestry`, hybrid), `reminderLookup` (reset, generation, key, certification, errors), `retainedProjection`, `countRetainedFromProjected`, `countRetainedMessages` | 56 |
-| rollover.go | `runAborted`, `explicitReset`, `scanReminderMessages`, `staleReminderPredicate`, `chronologicalRetainedTail`, `dropStale`, the context hook, `automaticDraft`, `reportAutomaticFailure`, `freshWindowWithoutInput`, `reachedThreshold`, `fallbackTurnEligible`, `askQuestionRegistered`, `thresholdFallback`, `compactionCancelled`, `policyFromSettings`, `prepareAutomatic`, `automaticCompactionHook`, `registerRollover` (every registration, the turn_end branches, the reminder message) | 124 |
+| reminders.go | `reminderMatches`, `strictIntMember`, `hasReminder`, `reminderBudget` (band, buffer, supported/enabled), `endsRun`, `reminderDecision`, `sameEntry`, the walk (`visit`, `result`, `scanAncestry`, hybrid), `reminderLookup` (reset, generation, key, certification, errors), `retainedProjection`, `retainedMessages`, `countRetained`, `retainedCache` (certification, bounded walk, reset, generation, stale rule, errors) | 76 |
+| rollover.go | `runAborted`, `explicitReset`, `scanReminderMessages`, `staleReminderPredicate`, `chronologicalRetainedTail`, `dropStale`, the context hook, `automaticDraft`, `reportAutomaticFailure`, `freshWindowWithoutInput`, `reachedThreshold`, `fallbackTurnEligible`, `askQuestionRegistered`, `thresholdFallback`, `compactionCancelled`, `policyFromSettings`, `prepareAutomatic`, `automaticCompactionHook`, `registerRollover` (every registration, the turn_end branches, the reminder message) | 128 |
 
 ## Result
 
-227 mutants: 227 killed, 0 survived, 0 invalid (final run, `real 5m47s`). Every mutant of `RolloverLane.json` is killed by a test that follows the TS code it pins (the tests are in
+251 mutants: 251 killed, 0 survived, 0 invalid (final run, `real 9m46s`, after the retained-count cache change added the `retained-cache-*` family). Every mutant of `RolloverLane.json` is killed by a test that follows the TS code it pins (the tests are in
 `rollover_mutation_test.go`, `rollover_hooks_test.go`, `reminders_test.go`, `retention_unit_test.go`, `retention_pi_test.go`, `retention_recovery_test.go`
 and `twin_posthorse_rollover_test.go`). Survivors of the first run that became tests: the retention rules on hand-built projections (system and compaction
 entries, the zero-token tail, the prepared id, the boundary), the reminder predicates (`===` strictness, queued reminders, run end), the walk
@@ -43,6 +43,7 @@ on a request that is already cancelled (audit finding C-04). No behaviour change
 | `filter-always-replaces` (`if changed \|\| reordered` -> `if true`) | The SDK compares the returned list with the one it was given, element by element and by map identity (`contextEventResult`): an unchanged list is reported unchanged whatever the handler returns, so the reply on the wire is the same. |
 | `fresh-boundary-included` (`projected[boundary+1:]` -> `projected[boundary:]`) | The boundary entry is a compaction, and the loop skips every compaction entry, so including it adds nothing. |
 | `recovery-handoff-limit-exclusive` (`> limit` -> `>= limit`) | The record builder never returns a record of exactly its limit: searched over 6,000 owner-input lengths with the limit set to the record's own natural length (1,000 to 4,462 characters), the builder shrinks the record (to 501 characters at limit 1,000..1,020) rather than filling it, so equality is not reachable. Not a proof over all inputs; the boundary of the original (`handoff.length > limit`) is kept as is. |
+| `retained-cache-nil-leaf-cached` (store the result for an empty session) | `certified` is false whenever the leaf or the cached leaf is nil, so a state stored for an empty session is never served: the projection is read again either way. |
 
 Not in either list and not mutated: the dead guard `if start < 0` after the prepared-id lookup in `retainedTailOf` (`projectedCut` always returns an index) and the `maxTokens <= 0`
 guard (a zero budget retains nothing either way).

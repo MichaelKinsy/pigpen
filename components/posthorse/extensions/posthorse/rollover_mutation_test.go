@@ -802,7 +802,7 @@ func TestReminderLookupPropagatesAndResets(t *testing.T) {
 
 func TestRetainedProjectionNeedsANewestCompaction(t *testing.T) {
 	msg := func(id, parent string) sdk.ProjectedSessionEntry {
-		return sdk.ProjectedSessionEntry{SourceEntry: rec{"type": "message", "id": id, "parentId": parent}, Messages: []rec{{"role": "user", "content": id}}}
+		return sdk.ProjectedSessionEntry{SourceEntry: rec{"type": "message", "id": id, "parentId": parent}, Messages: []rec{{"role": "user", "content": id, "customType": id}}}
 	}
 	compaction := func(id string) sdk.ProjectedSessionEntry {
 		return sdk.ProjectedSessionEntry{SourceEntry: rec{"type": "compaction", "id": id}, Messages: []rec{{"role": "compactionSummary", "summary": "s"}}}
@@ -822,7 +822,7 @@ func TestRetainedProjectionNeedsANewestCompaction(t *testing.T) {
 	if span := retainedProjection([]sdk.ProjectedSessionEntry{compaction("C"), msg("k1", "a"), msg("k2", "k1")}); len(span) != 2 {
 		t.Errorf("without a child the whole tail is kept, got %v", span)
 	}
-	stale := func(m rec) bool { return m["content"] == "k2" }
+	stale := func(m rec) bool { return m["customType"] == "k2" } // the predicate reads role, customType and details only
 	if got := countRetainedFromProjected(span, stale); got != 1 {
 		t.Errorf("a stale reminder is not counted, got %d", got)
 	}

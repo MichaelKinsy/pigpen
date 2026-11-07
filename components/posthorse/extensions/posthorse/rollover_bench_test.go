@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -188,6 +189,20 @@ func TestRolloverWireCosts(t *testing.T) {
 	h := newFixture(t, withSession(tail), withRealProjection())
 	boundary := rec{"role": "compactionSummary", "summary": summary, "timestamp": float64(5)}
 	report("context, retained tail over 2,000 entries", func() {
+		h.ContextEvent(boundary, fxUser("kept ask"), fxAssistant([]any{fxText("kept reply")}), fxUser("after"))
+	})
+	// The same window after 1,000 more entries (the projection grows with the window), and growing by one entry per
+	// event the way a run does: the projection read per event is what the retained cache removes.
+	body := strings.Repeat("window text ", 40)
+	for range 500 {
+		tail.appendMessage(fxUser(body))
+		tail.appendMessage(fxAssistant([]any{fxText(body)}))
+	}
+	report("context, retained tail + 1,000 entries", func() {
+		h.ContextEvent(boundary, fxUser("kept ask"), fxAssistant([]any{fxText("kept reply")}), fxUser("after"))
+	})
+	report("context, retained tail, +1 entry per event", func() {
+		tail.appendMessage(fxUser(body))
 		h.ContextEvent(boundary, fxUser("kept ask"), fxAssistant([]any{fxText("kept reply")}), fxUser("after"))
 	})
 	plain, stale := benchMessages(1000, false), benchMessages(1000, true)

@@ -4,673 +4,673 @@
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 2167.4 / 2259.2 (15) | 1533.0 / 1593.3 (15) |
-| cpu_total_ms_end | 3520 / 3640 (15) | 2560 / 2610 (15) |
-| cpu_total_workload_ms | 0.0 / 0.0 (15) | 0.0 / 0.0 (15) |
-| cpu_ext_workload_ms | 0.0 / 0.0 (15) | 0.0 / 0.0 (15) |
-| ext_cpu_ms_end | 2940 / 3040 (15) | 2560 / 2610 (15) |
-| ext_rss_end | 312.27 MiB / 314.13 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| ext_pss_end | 268.51 MiB / 274.21 MiB (15) | 231.66 MiB / 233.68 MiB (15) |
-| tree_rss_end | 469.14 MiB / 472.75 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| tree_pss_end | 400.61 MiB / 427.13 MiB (15) | 231.66 MiB / 233.78 MiB (15) |
-| ext_peak_rss_end | 312.27 MiB / 314.13 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| ext_anon_end | 256.52 MiB / 258.49 MiB (15) | 218.12 MiB / 220.99 MiB (15) |
-| ext_rss_ready | 312.27 MiB / 314.13 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| ext_pss_ready | 268.51 MiB / 274.21 MiB (15) | 231.66 MiB / 233.78 MiB (15) |
-| heap_used_gc_end | 47.18 MiB / 47.18 MiB (15) | 33.89 MiB / 33.89 MiB (15) |
-| heap_used_asis_end | 48.61 MiB / 48.62 MiB (15) | 35.34 MiB / 35.35 MiB (15) |
-| heap_inuse_gc_end | 181.25 MiB / 181.50 MiB (15) | 167.57 MiB / 168.32 MiB (15) |
-| heap_inuse_asis_end | 181.25 MiB / 181.75 MiB (15) | 168.57 MiB / 169.07 MiB (15) |
-| sys_asis_end | 301.08 MiB / 306.00 MiB (15) | 264.35 MiB / 265.82 MiB (15) |
-| sys_gc_end | 301.08 MiB / 306.00 MiB (15) | 264.35 MiB / 265.82 MiB (15) |
-| cpu_total_ms_ready | 3520 / 3640 (15) | 2560 / 2610 (15) |
-| cpu_wait4_ms | 592.3 / 624.2 (15) | 2599.6 / 2654.6 (15) |
-| ext_anon_ready | 256.52 MiB / 258.49 MiB (15) | 218.12 MiB / 220.99 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 2940 / 3040 (15) | 2560 / 2610 (15) |
-| ext_peak_rss_ready | 312.27 MiB / 314.13 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 193.00 MiB / 195.00 MiB (15) | 187.07 MiB / 188.32 MiB (15) |
-| heap_inuse_gc_ready | 181.25 MiB / 181.75 MiB (15) | 168.57 MiB / 169.07 MiB (15) |
-| heap_used_asis_ready | 49.83 MiB / 49.93 MiB (15) | 37.65 MiB / 38.39 MiB (15) |
-| heap_used_gc_ready | 48.56 MiB / 48.57 MiB (15) | 35.29 MiB / 35.30 MiB (15) |
-| host_anon_end | 112.80 MiB / 113.87 MiB (15) | 218.12 MiB / 220.99 MiB (15) |
-| host_anon_ready | 112.80 MiB / 113.87 MiB (15) | 218.12 MiB / 220.99 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 560 / 590 (15) | 2560 / 2610 (15) |
-| host_cpu_ms_ready | 560 / 590 (15) | 2560 / 2610 (15) |
-| host_peak_rss_end | 159.14 MiB / 160.24 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| host_peak_rss_ready | 159.14 MiB / 160.24 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| host_pss_end | 135.41 MiB / 157.69 MiB (15) | 231.66 MiB / 233.78 MiB (15) |
-| host_pss_ready | 135.41 MiB / 157.69 MiB (15) | 231.66 MiB / 233.78 MiB (15) |
-| host_rss_end | 159.14 MiB / 160.24 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| host_rss_ready | 159.14 MiB / 160.24 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
-| host_threads_end | 12 / 13 (15) | 11 / 11 (15) |
-| host_threads_ready | 12 / 13 (15) | 11 / 11 (15) |
-| num_gc_end | 11 / 11 (15) | 10 / 10 (15) |
-| num_gc_ready | 10 / 10 (15) | 9 / 9 (15) |
-| num_gc_workload | 1 / 1 (15) | 1 / 1 (15) |
-| sys_asis_ready | 301.08 MiB / 306.00 MiB (15) | 264.35 MiB / 265.82 MiB (15) |
-| sys_gc_ready | 301.08 MiB / 306.00 MiB (15) | 264.35 MiB / 265.82 MiB (15) |
-| tree_pss_ready | 400.61 MiB / 427.45 MiB (15) | 231.66 MiB / 233.78 MiB (15) |
-| tree_rss_ready | 469.14 MiB / 472.75 MiB (15) | 270.48 MiB / 273.40 MiB (15) |
+| startup_ms | 2193.8 / 2272.0 (25) | 1542.5 / 1629.0 (25) |
+| cpu_total_ms_end | 3530 / 3670 (25) | 2580 / 2730 (25) |
+| cpu_total_workload_ms | 0.0 / 0.0 (25) | 0.0 / 0.0 (25) |
+| cpu_ext_workload_ms | 0.0 / 0.0 (25) | 0.0 / 0.0 (25) |
+| ext_cpu_ms_end | 2950 / 3080 (25) | 2580 / 2730 (25) |
+| ext_rss_end | 311.45 MiB / 313.56 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| ext_pss_end | 307.33 MiB / 309.50 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| tree_rss_end | 467.43 MiB / 471.72 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| tree_pss_end | 461.96 MiB / 466.17 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| ext_peak_rss_end | 311.45 MiB / 313.56 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| ext_anon_end | 255.66 MiB / 257.89 MiB (25) | 217.60 MiB / 220.72 MiB (25) |
+| ext_rss_ready | 311.45 MiB / 313.56 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| ext_pss_ready | 307.33 MiB / 309.50 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| heap_used_gc_end | 47.18 MiB / 47.18 MiB (25) | 33.89 MiB / 33.89 MiB (25) |
+| heap_used_asis_end | 48.61 MiB / 48.62 MiB (25) | 35.34 MiB / 35.35 MiB (25) |
+| heap_inuse_gc_end | 181.25 MiB / 181.50 MiB (25) | 168.07 MiB / 168.57 MiB (25) |
+| heap_inuse_asis_end | 181.25 MiB / 181.50 MiB (25) | 168.82 MiB / 169.32 MiB (25) |
+| sys_asis_end | 302.14 MiB / 304.50 MiB (25) | 264.38 MiB / 268.88 MiB (25) |
+| sys_gc_end | 302.14 MiB / 304.50 MiB (25) | 264.38 MiB / 268.88 MiB (25) |
+| cpu_total_ms_ready | 3530 / 3670 (25) | 2580 / 2730 (25) |
+| cpu_wait4_ms | 605.7 / 647.2 (25) | 2621.4 / 2776.5 (25) |
+| ext_anon_ready | 255.66 MiB / 257.89 MiB (25) | 217.60 MiB / 220.72 MiB (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 1 / 1 (25) | 1 / 1 (25) |
+| ext_cpu_ms_ready | 2950 / 3080 (25) | 2580 / 2730 (25) |
+| ext_peak_rss_ready | 311.45 MiB / 313.56 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| ext_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| ext_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| heap_inuse_asis_ready | 193.25 MiB / 194.00 MiB (25) | 186.57 MiB / 188.07 MiB (25) |
+| heap_inuse_gc_ready | 181.25 MiB / 181.50 MiB (25) | 168.82 MiB / 169.32 MiB (25) |
+| heap_used_asis_ready | 49.83 MiB / 49.96 MiB (25) | 37.65 MiB / 38.40 MiB (25) |
+| heap_used_gc_ready | 48.56 MiB / 48.57 MiB (25) | 35.29 MiB / 35.30 MiB (25) |
+| host_anon_end | 112.52 MiB / 112.94 MiB (25) | 217.60 MiB / 220.72 MiB (25) |
+| host_anon_ready | 112.52 MiB / 112.94 MiB (25) | 217.60 MiB / 220.72 MiB (25) |
+| host_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| host_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 570 / 610 (25) | 2580 / 2730 (25) |
+| host_cpu_ms_ready | 570 / 610 (25) | 2580 / 2730 (25) |
+| host_peak_rss_end | 158.76 MiB / 159.39 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| host_peak_rss_ready | 158.76 MiB / 159.39 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| host_pss_end | 157.30 MiB / 157.97 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| host_pss_ready | 157.30 MiB / 157.97 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| host_rss_end | 158.76 MiB / 159.39 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| host_rss_ready | 158.76 MiB / 159.39 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
+| host_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| host_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| num_gc_end | 11 / 11 (25) | 10 / 10 (25) |
+| num_gc_ready | 10 / 10 (25) | 9 / 9 (25) |
+| num_gc_workload | 1 / 1 (25) | 1 / 1 (25) |
+| sys_asis_ready | 302.14 MiB / 304.50 MiB (25) | 264.38 MiB / 268.88 MiB (25) |
+| sys_gc_ready | 302.14 MiB / 304.50 MiB (25) | 264.38 MiB / 268.88 MiB (25) |
+| tree_pss_ready | 461.96 MiB / 466.17 MiB (25) | 268.05 MiB / 271.14 MiB (25) |
+| tree_rss_ready | 467.43 MiB / 471.72 MiB (25) | 269.96 MiB / 273.09 MiB (25) |
 
 ### Workload a, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 759.2 / 770.4 (15) | 408.6 / 413.9 (15) |
-| cpu_total_ms_end | 1030 / 1040 (15) | 590 / 600 (15) |
-| cpu_total_workload_ms | 0.0 / 0.0 (15) | 0.0 / 0.0 (15) |
-| cpu_ext_workload_ms | 0.0 / 0.0 (15) | 0.0 / 0.0 (15) |
-| ext_cpu_ms_end | 860 / 870 (15) | 590 / 600 (15) |
-| ext_rss_end | 161.33 MiB / 162.38 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| ext_pss_end | 118.76 MiB / 121.14 MiB (15) | 70.95 MiB / 73.53 MiB (15) |
-| tree_rss_end | 245.49 MiB / 246.80 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| tree_pss_end | 200.17 MiB / 203.95 MiB (15) | 70.96 MiB / 73.53 MiB (15) |
-| ext_peak_rss_end | 161.33 MiB / 162.38 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| ext_anon_end | 105.75 MiB / 106.64 MiB (15) | 58.90 MiB / 59.47 MiB (15) |
-| ext_rss_ready | 161.33 MiB / 162.38 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| ext_pss_ready | 118.79 MiB / 121.14 MiB (15) | 71.01 MiB / 73.53 MiB (15) |
-| heap_used_gc_end | 34.94 MiB / 34.94 MiB (15) | 21.75 MiB / 21.76 MiB (15) |
-| heap_used_asis_end | 35.17 MiB / 35.20 MiB (15) | 21.98 MiB / 21.99 MiB (15) |
-| heap_inuse_gc_end | 101.34 MiB / 101.59 MiB (15) | 40.16 MiB / 40.66 MiB (15) |
-| heap_inuse_asis_end | 101.34 MiB / 101.59 MiB (15) | 40.91 MiB / 41.41 MiB (15) |
-| sys_asis_end | 152.91 MiB / 156.00 MiB (15) | 104.17 MiB / 106.90 MiB (15) |
-| sys_gc_end | 152.91 MiB / 156.00 MiB (15) | 104.17 MiB / 106.90 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1040 (15) | 590 / 600 (15) |
-| cpu_wait4_ms | 194.0 / 200.7 (15) | 614.4 / 621.6 (15) |
-| ext_anon_ready | 105.75 MiB / 106.64 MiB (15) | 58.90 MiB / 59.47 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 860 / 870 (15) | 590 / 600 (15) |
-| ext_peak_rss_ready | 161.33 MiB / 162.38 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 66.09 MiB / 98.34 MiB (15) | 40.41 MiB / 40.66 MiB (15) |
-| heap_inuse_gc_ready | 101.34 MiB / 101.59 MiB (15) | 40.91 MiB / 41.41 MiB (15) |
-| heap_used_asis_ready | 36.96 MiB / 41.58 MiB (15) | 25.65 MiB / 25.68 MiB (15) |
-| heap_used_gc_ready | 35.12 MiB / 35.15 MiB (15) | 21.93 MiB / 21.94 MiB (15) |
-| host_anon_end | 43.29 MiB / 43.71 MiB (15) | 58.90 MiB / 59.47 MiB (15) |
-| host_anon_ready | 43.29 MiB / 43.71 MiB (15) | 58.90 MiB / 59.47 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 170 / 180 (15) | 590 / 600 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 590 / 600 (15) |
-| host_peak_rss_end | 84.04 MiB / 84.35 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| host_peak_rss_ready | 84.04 MiB / 84.35 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| host_pss_end | 82.31 MiB / 82.81 MiB (15) | 70.96 MiB / 73.53 MiB (15) |
-| host_pss_ready | 82.31 MiB / 82.81 MiB (15) | 71.06 MiB / 73.53 MiB (15) |
-| host_rss_end | 84.04 MiB / 84.35 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| host_rss_ready | 84.04 MiB / 84.35 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
-| host_threads_end | 7 / 7 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| num_gc_end | 8 / 8 (15) | 2 / 2 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 1 / 1 (15) | 1 / 1 (15) |
-| sys_asis_ready | 154.50 MiB / 156.00 MiB (15) | 104.07 MiB / 106.90 MiB (15) |
-| sys_gc_ready | 152.91 MiB / 156.00 MiB (15) | 104.17 MiB / 106.90 MiB (15) |
-| tree_pss_ready | 200.17 MiB / 203.95 MiB (15) | 71.06 MiB / 73.53 MiB (15) |
-| tree_rss_ready | 245.49 MiB / 246.80 MiB (15) | 111.00 MiB / 111.54 MiB (15) |
+| startup_ms | 768.1 / 788.7 (25) | 408.7 / 427.3 (25) |
+| cpu_total_ms_end | 1040 / 1070 (25) | 600 / 640 (25) |
+| cpu_total_workload_ms | 0.0 / 0.0 (25) | 0.0 / 0.0 (25) |
+| cpu_ext_workload_ms | 0.0 / 0.0 (25) | 0.0 / 0.0 (25) |
+| ext_cpu_ms_end | 870 / 900 (25) | 600 / 640 (25) |
+| ext_rss_end | 160.74 MiB / 162.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| ext_pss_end | 156.74 MiB / 158.50 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| tree_rss_end | 245.24 MiB / 246.99 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| tree_pss_end | 239.74 MiB / 241.51 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| ext_peak_rss_end | 160.74 MiB / 162.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| ext_anon_end | 105.25 MiB / 106.96 MiB (25) | 59.10 MiB / 61.99 MiB (25) |
+| ext_rss_ready | 160.74 MiB / 162.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| ext_pss_ready | 156.74 MiB / 158.50 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| heap_used_gc_end | 34.94 MiB / 34.94 MiB (25) | 21.75 MiB / 21.76 MiB (25) |
+| heap_used_asis_end | 35.19 MiB / 35.20 MiB (25) | 21.98 MiB / 21.99 MiB (25) |
+| heap_inuse_gc_end | 69.84 MiB / 101.59 MiB (25) | 40.66 MiB / 40.91 MiB (25) |
+| heap_inuse_asis_end | 70.09 MiB / 101.59 MiB (25) | 40.91 MiB / 42.41 MiB (25) |
+| sys_asis_end | 150.00 MiB / 155.94 MiB (25) | 105.11 MiB / 107.78 MiB (25) |
+| sys_gc_end | 150.00 MiB / 155.94 MiB (25) | 105.11 MiB / 107.78 MiB (25) |
+| cpu_total_ms_ready | 1040 / 1070 (25) | 600 / 640 (25) |
+| cpu_wait4_ms | 197.9 / 204.0 (25) | 620.2 / 659.3 (25) |
+| ext_anon_ready | 105.25 MiB / 106.96 MiB (25) | 59.10 MiB / 61.99 MiB (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 1 / 1 (25) | 1 / 1 (25) |
+| ext_cpu_ms_ready | 870 / 900 (25) | 600 / 640 (25) |
+| ext_peak_rss_ready | 160.74 MiB / 162.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| ext_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| ext_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| heap_inuse_asis_ready | 63.84 MiB / 98.09 MiB (25) | 40.41 MiB / 42.66 MiB (25) |
+| heap_inuse_gc_ready | 70.09 MiB / 101.59 MiB (25) | 40.91 MiB / 42.41 MiB (25) |
+| heap_used_asis_ready | 41.36 MiB / 41.55 MiB (25) | 25.20 MiB / 30.87 MiB (25) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (25) | 21.93 MiB / 21.94 MiB (25) |
+| host_anon_end | 43.28 MiB / 43.62 MiB (25) | 59.10 MiB / 61.99 MiB (25) |
+| host_anon_ready | 43.28 MiB / 43.62 MiB (25) | 59.10 MiB / 61.99 MiB (25) |
+| host_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| host_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 170 / 180 (25) | 600 / 640 (25) |
+| host_cpu_ms_ready | 170 / 180 (25) | 600 / 640 (25) |
+| host_peak_rss_end | 84.25 MiB / 84.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| host_peak_rss_ready | 84.25 MiB / 84.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| host_pss_end | 82.74 MiB / 83.00 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| host_pss_ready | 82.74 MiB / 83.00 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| host_rss_end | 84.25 MiB / 84.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| host_rss_ready | 84.25 MiB / 84.50 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
+| host_threads_end | 7 / 7 (25) | 11 / 11 (25) |
+| host_threads_ready | 7 / 7 (25) | 11 / 11 (25) |
+| num_gc_end | 8 / 8 (25) | 2 / 2 (25) |
+| num_gc_ready | 7 / 7 (25) | 1 / 1 (25) |
+| num_gc_workload | 1 / 1 (25) | 1 / 1 (25) |
+| sys_asis_ready | 151.50 MiB / 156.00 MiB (25) | 105.11 MiB / 107.78 MiB (25) |
+| sys_gc_ready | 150.00 MiB / 155.94 MiB (25) | 105.11 MiB / 107.78 MiB (25) |
+| tree_pss_ready | 239.74 MiB / 241.51 MiB (25) | 109.17 MiB / 112.08 MiB (25) |
+| tree_rss_ready | 245.24 MiB / 246.99 MiB (25) | 111.16 MiB / 114.14 MiB (25) |
 
 ### Workload b, cold
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 2173.2 / 2188.8 (15) | 1537.4 / 1586.6 (15) |
-| first_turn_ms | 55.5 / 61.9 (15) | 99.5 / 109.8 (15) |
-| to_first_tool_ms | 29.9 / 34.0 (15) | 84.8 / 93.3 (15) |
-| turn_ms | 55.5 / 61.9 (15) | 99.5 / 109.8 (15) |
-| cpu_total_ms_end | 3580 / 3610 (15) | 2670 / 2710 (15) |
-| cpu_total_workload_ms | 70.0 / 90.0 (15) | 110.0 / 130.0 (15) |
-| cpu_ext_workload_ms | 50.0 / 60.0 (15) | 110.0 / 130.0 (15) |
-| ext_cpu_ms_end | 2980 / 3030 (15) | 2670 / 2710 (15) |
-| ext_rss_end | 316.61 MiB / 318.97 MiB (15) | 277.73 MiB / 278.40 MiB (15) |
-| ext_pss_end | 274.11 MiB / 276.78 MiB (15) | 235.73 MiB / 241.66 MiB (15) |
-| tree_rss_end | 465.84 MiB / 482.34 MiB (15) | 277.73 MiB / 278.40 MiB (15) |
-| tree_pss_end | 415.95 MiB / 420.55 MiB (15) | 235.73 MiB / 241.67 MiB (15) |
-| ext_peak_rss_end | 316.61 MiB / 318.97 MiB (15) | 277.73 MiB / 278.40 MiB (15) |
-| ext_anon_end | 256.31 MiB / 258.41 MiB (15) | 219.36 MiB / 220.01 MiB (15) |
-| ext_rss_ready | 311.57 MiB / 313.68 MiB (15) | 270.60 MiB / 271.28 MiB (15) |
-| ext_pss_ready | 270.20 MiB / 272.93 MiB (15) | 229.37 MiB / 232.41 MiB (15) |
-| heap_used_gc_end | 47.42 MiB / 47.43 MiB (15) | 36.77 MiB / 36.77 MiB (15) |
-| heap_used_asis_end | 49.99 MiB / 49.99 MiB (15) | 40.83 MiB / 40.83 MiB (15) |
-| heap_inuse_gc_end | 181.25 MiB / 181.75 MiB (15) | 169.25 MiB / 170.00 MiB (15) |
-| heap_inuse_asis_end | 181.25 MiB / 181.75 MiB (15) | 169.50 MiB / 170.50 MiB (15) |
-| sys_asis_end | 307.34 MiB / 309.66 MiB (15) | 270.70 MiB / 276.44 MiB (15) |
-| sys_gc_end | 307.34 MiB / 309.66 MiB (15) | 271.01 MiB / 276.44 MiB (15) |
-| cpu_total_ms_ready | 3490 / 3540 (15) | 2560 / 2580 (15) |
-| cpu_wait4_ms | 621.2 / 637.5 (15) | 2713.1 / 2749.3 (15) |
-| ext_anon_ready | 255.98 MiB / 257.82 MiB (15) | 218.20 MiB / 218.88 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 2920 / 2970 (15) | 2560 / 2580 (15) |
-| ext_peak_rss_ready | 311.57 MiB / 313.68 MiB (15) | 270.60 MiB / 271.28 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 194.25 MiB / 196.00 MiB (15) | 186.82 MiB / 188.82 MiB (15) |
-| heap_inuse_gc_ready | 181.00 MiB / 181.75 MiB (15) | 169.07 MiB / 169.82 MiB (15) |
-| heap_used_asis_ready | 49.86 MiB / 49.97 MiB (15) | 38.18 MiB / 38.45 MiB (15) |
-| heap_used_gc_ready | 48.58 MiB / 48.58 MiB (15) | 35.41 MiB / 35.42 MiB (15) |
-| host_anon_end | 101.20 MiB / 118.28 MiB (15) | 219.36 MiB / 220.01 MiB (15) |
-| host_anon_ready | 101.00 MiB / 114.39 MiB (15) | 218.20 MiB / 218.88 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 590 / 610 (15) | 2670 / 2710 (15) |
-| host_cpu_ms_ready | 560 / 590 (15) | 2560 / 2580 (15) |
-| host_peak_rss_end | 148.94 MiB / 165.90 MiB (15) | 277.73 MiB / 278.40 MiB (15) |
-| host_peak_rss_ready | 147.54 MiB / 160.99 MiB (15) | 270.60 MiB / 271.28 MiB (15) |
-| host_pss_end | 140.65 MiB / 147.30 MiB (15) | 235.73 MiB / 241.67 MiB (15) |
-| host_pss_ready | 136.26 MiB / 146.05 MiB (15) | 229.37 MiB / 232.41 MiB (15) |
-| host_rss_end | 148.94 MiB / 165.90 MiB (15) | 277.73 MiB / 278.40 MiB (15) |
-| host_rss_ready | 147.54 MiB / 160.99 MiB (15) | 270.60 MiB / 271.28 MiB (15) |
-| host_threads_end | 12 / 13 (15) | 11 / 11 (15) |
-| host_threads_ready | 12 / 13 (15) | 11 / 11 (15) |
-| llm_requests | 2 / 2 (15) | 2 / 2 (15) |
-| num_gc_end | 11 / 11 (15) | 10 / 10 (15) |
-| num_gc_ready | 10 / 10 (15) | 9 / 9 (15) |
-| num_gc_workload | 1 / 1 (15) | 1 / 1 (15) |
-| sys_asis_ready | 301.22 MiB / 303.00 MiB (15) | 264.70 MiB / 270.44 MiB (15) |
-| sys_gc_ready | 301.22 MiB / 303.00 MiB (15) | 264.70 MiB / 270.44 MiB (15) |
-| tool_ms:get_context_remaining | 8.9 / 11.1 (15) | 4.4 / 4.8 (15) |
-| tree_pss_ready | 406.30 MiB / 418.28 MiB (15) | 229.37 MiB / 232.41 MiB (15) |
-| tree_rss_ready | 459.48 MiB / 472.37 MiB (15) | 270.60 MiB / 271.28 MiB (15) |
+| startup_ms | 2176.7 / 2267.8 (25) | 1562.9 / 1833.0 (25) |
+| first_turn_ms | 53.8 / 60.1 (25) | 100.5 / 111.7 (25) |
+| to_first_tool_ms | 28.1 / 34.1 (25) | 85.9 / 96.7 (25) |
+| turn_ms | 53.8 / 60.1 (25) | 100.5 / 111.7 (25) |
+| cpu_total_ms_end | 3540 / 3740 (25) | 2660 / 2900 (25) |
+| cpu_total_workload_ms | 80.0 / 90.0 (25) | 120.0 / 130.0 (25) |
+| cpu_ext_workload_ms | 50.0 / 70.0 (25) | 120.0 / 130.0 (25) |
+| ext_cpu_ms_end | 2950 / 3160 (25) | 2660 / 2900 (25) |
+| ext_rss_end | 317.11 MiB / 320.46 MiB (25) | 278.19 MiB / 281.89 MiB (25) |
+| ext_pss_end | 313.13 MiB / 316.39 MiB (25) | 275.98 MiB / 279.73 MiB (25) |
+| tree_rss_end | 480.90 MiB / 485.38 MiB (25) | 278.19 MiB / 281.89 MiB (25) |
+| tree_pss_end | 475.41 MiB / 479.85 MiB (25) | 275.98 MiB / 279.73 MiB (25) |
+| ext_peak_rss_end | 317.11 MiB / 320.46 MiB (25) | 278.19 MiB / 281.89 MiB (25) |
+| ext_anon_end | 256.87 MiB / 260.14 MiB (25) | 219.77 MiB / 223.52 MiB (25) |
+| ext_rss_ready | 311.98 MiB / 315.38 MiB (25) | 271.20 MiB / 274.60 MiB (25) |
+| ext_pss_ready | 307.92 MiB / 311.30 MiB (25) | 269.12 MiB / 272.58 MiB (25) |
+| heap_used_gc_end | 47.42 MiB / 47.43 MiB (25) | 36.77 MiB / 36.78 MiB (25) |
+| heap_used_asis_end | 49.99 MiB / 50.00 MiB (25) | 40.83 MiB / 40.83 MiB (25) |
+| heap_inuse_gc_end | 181.25 MiB / 181.75 MiB (25) | 169.25 MiB / 169.75 MiB (25) |
+| heap_inuse_asis_end | 181.25 MiB / 181.75 MiB (25) | 169.50 MiB / 170.25 MiB (25) |
+| sys_asis_end | 306.83 MiB / 309.00 MiB (25) | 270.72 MiB / 273.38 MiB (25) |
+| sys_gc_end | 306.83 MiB / 309.00 MiB (25) | 271.29 MiB / 273.38 MiB (25) |
+| cpu_total_ms_ready | 3470 / 3650 (25) | 2550 / 2780 (25) |
+| cpu_wait4_ms | 613.6 / 700.0 (25) | 2701.5 / 2939.5 (25) |
+| ext_anon_ready | 256.27 MiB / 259.73 MiB (25) | 218.62 MiB / 222.25 MiB (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 1 / 1 (25) | 1 / 1 (25) |
+| ext_cpu_ms_ready | 2900 / 3090 (25) | 2550 / 2780 (25) |
+| ext_peak_rss_ready | 311.98 MiB / 315.38 MiB (25) | 271.20 MiB / 274.60 MiB (25) |
+| ext_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| ext_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| heap_inuse_asis_ready | 193.75 MiB / 194.50 MiB (25) | 187.57 MiB / 188.57 MiB (25) |
+| heap_inuse_gc_ready | 181.25 MiB / 181.75 MiB (25) | 168.82 MiB / 169.82 MiB (25) |
+| heap_used_asis_ready | 49.85 MiB / 49.98 MiB (25) | 38.31 MiB / 38.49 MiB (25) |
+| heap_used_gc_ready | 48.58 MiB / 48.59 MiB (25) | 35.41 MiB / 35.42 MiB (25) |
+| host_anon_end | 117.05 MiB / 118.23 MiB (25) | 219.77 MiB / 223.52 MiB (25) |
+| host_anon_ready | 113.28 MiB / 114.42 MiB (25) | 218.62 MiB / 222.25 MiB (25) |
+| host_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| host_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 580 / 670 (25) | 2660 / 2900 (25) |
+| host_cpu_ms_ready | 560 / 650 (25) | 2550 / 2780 (25) |
+| host_peak_rss_end | 164.66 MiB / 165.93 MiB (25) | 278.19 MiB / 281.89 MiB (25) |
+| host_peak_rss_ready | 159.68 MiB / 160.98 MiB (25) | 271.20 MiB / 274.60 MiB (25) |
+| host_pss_end | 163.19 MiB / 164.46 MiB (25) | 275.98 MiB / 279.73 MiB (25) |
+| host_pss_ready | 158.21 MiB / 159.54 MiB (25) | 269.12 MiB / 272.58 MiB (25) |
+| host_rss_end | 164.66 MiB / 165.93 MiB (25) | 278.19 MiB / 281.89 MiB (25) |
+| host_rss_ready | 159.68 MiB / 160.98 MiB (25) | 271.20 MiB / 274.60 MiB (25) |
+| host_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| host_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| llm_requests | 2 / 2 (25) | 2 / 2 (25) |
+| num_gc_end | 11 / 11 (25) | 10 / 10 (25) |
+| num_gc_ready | 10 / 10 (25) | 9 / 9 (25) |
+| num_gc_workload | 1 / 1 (25) | 1 / 1 (25) |
+| sys_asis_ready | 301.69 MiB / 303.21 MiB (25) | 264.39 MiB / 266.80 MiB (25) |
+| sys_gc_ready | 301.69 MiB / 303.21 MiB (25) | 264.60 MiB / 266.80 MiB (25) |
+| tool_ms:get_context_remaining | 9.0 / 10.9 (25) | 4.5 / 4.7 (25) |
+| tree_pss_ready | 465.29 MiB / 469.86 MiB (25) | 269.12 MiB / 272.58 MiB (25) |
+| tree_rss_ready | 470.79 MiB / 475.39 MiB (25) | 271.20 MiB / 274.60 MiB (25) |
 
 ### Workload b, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 770.9 / 829.2 (15) | 413.8 / 427.7 (15) |
-| first_turn_ms | 56.9 / 65.2 (15) | 86.2 / 92.9 (15) |
-| to_first_tool_ms | 30.0 / 34.8 (15) | 70.8 / 77.0 (15) |
-| turn_ms | 56.9 / 65.2 (15) | 86.2 / 92.9 (15) |
-| cpu_total_ms_end | 1130 / 1170 (15) | 710 / 740 (15) |
-| cpu_total_workload_ms | 80.0 / 90.0 (15) | 100.0 / 110.0 (15) |
-| cpu_ext_workload_ms | 60.0 / 60.0 (15) | 100.0 / 110.0 (15) |
-| ext_cpu_ms_end | 930 / 980 (15) | 710 / 740 (15) |
-| ext_rss_end | 167.01 MiB / 168.44 MiB (15) | 123.53 MiB / 124.75 MiB (15) |
-| ext_pss_end | 123.31 MiB / 126.02 MiB (15) | 79.42 MiB / 82.33 MiB (15) |
-| tree_rss_end | 256.69 MiB / 257.90 MiB (15) | 123.53 MiB / 124.75 MiB (15) |
-| tree_pss_end | 193.30 MiB / 210.16 MiB (15) | 79.42 MiB / 82.33 MiB (15) |
-| ext_peak_rss_end | 167.01 MiB / 168.44 MiB (15) | 123.53 MiB / 124.75 MiB (15) |
-| ext_anon_end | 106.81 MiB / 108.31 MiB (15) | 65.34 MiB / 66.32 MiB (15) |
-| ext_rss_ready | 161.08 MiB / 162.68 MiB (15) | 112.00 MiB / 114.77 MiB (15) |
-| ext_pss_ready | 117.83 MiB / 121.41 MiB (15) | 71.10 MiB / 72.97 MiB (15) |
-| heap_used_gc_end | 35.17 MiB / 35.17 MiB (15) | 24.52 MiB / 24.52 MiB (15) |
-| heap_used_asis_end | 36.54 MiB / 36.54 MiB (15) | 27.33 MiB / 27.33 MiB (15) |
-| heap_inuse_gc_end | 70.09 MiB / 101.84 MiB (15) | 43.10 MiB / 43.35 MiB (15) |
-| heap_inuse_asis_end | 70.34 MiB / 101.59 MiB (15) | 42.85 MiB / 42.85 MiB (15) |
-| sys_asis_end | 158.10 MiB / 162.84 MiB (15) | 112.59 MiB / 113.18 MiB (15) |
-| sys_gc_end | 158.10 MiB / 162.84 MiB (15) | 113.18 MiB / 114.46 MiB (15) |
-| cpu_total_ms_ready | 1040 / 1120 (15) | 610 / 630 (15) |
-| cpu_wait4_ms | 224.9 / 231.0 (15) | 731.0 / 759.0 (15) |
-| ext_anon_ready | 105.45 MiB / 107.20 MiB (15) | 59.91 MiB / 62.57 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 870 / 950 (15) | 610 / 630 (15) |
-| ext_peak_rss_ready | 161.08 MiB / 162.68 MiB (15) | 112.00 MiB / 114.77 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 63.59 MiB / 98.59 MiB (15) | 40.41 MiB / 40.66 MiB (15) |
-| heap_inuse_gc_ready | 70.34 MiB / 101.59 MiB (15) | 40.91 MiB / 41.41 MiB (15) |
-| heap_used_asis_ready | 41.46 MiB / 41.59 MiB (15) | 25.66 MiB / 26.15 MiB (15) |
-| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (15) | 21.93 MiB / 21.94 MiB (15) |
-| host_anon_end | 47.06 MiB / 47.21 MiB (15) | 65.34 MiB / 66.32 MiB (15) |
-| host_anon_ready | 43.13 MiB / 43.28 MiB (15) | 59.91 MiB / 62.57 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 200 / 200 (15) | 710 / 740 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 610 / 630 (15) |
-| host_peak_rss_end | 89.48 MiB / 89.88 MiB (15) | 123.53 MiB / 124.75 MiB (15) |
-| host_peak_rss_ready | 84.05 MiB / 84.34 MiB (15) | 112.00 MiB / 114.77 MiB (15) |
-| host_pss_end | 69.90 MiB / 87.95 MiB (15) | 79.42 MiB / 82.33 MiB (15) |
-| host_pss_ready | 63.61 MiB / 82.22 MiB (15) | 71.12 MiB / 72.97 MiB (15) |
-| host_rss_end | 89.48 MiB / 89.88 MiB (15) | 123.53 MiB / 124.75 MiB (15) |
-| host_rss_ready | 84.05 MiB / 84.34 MiB (15) | 112.00 MiB / 114.77 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 2 / 2 (15) | 2 / 2 (15) |
-| num_gc_end | 8 / 8 (15) | 2 / 2 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 1 / 1 (15) | 1 / 1 (15) |
-| sys_asis_ready | 151.50 MiB / 156.00 MiB (15) | 104.78 MiB / 105.68 MiB (15) |
-| sys_gc_ready | 150.60 MiB / 155.64 MiB (15) | 104.78 MiB / 105.68 MiB (15) |
-| tool_ms:get_context_remaining | 9.5 / 11.3 (15) | 4.6 / 4.7 (15) |
-| tree_pss_ready | 182.44 MiB / 199.61 MiB (15) | 71.12 MiB / 72.97 MiB (15) |
-| tree_rss_ready | 244.91 MiB / 246.55 MiB (15) | 112.00 MiB / 114.77 MiB (15) |
+| startup_ms | 812.5 / 878.0 (25) | 430.2 / 477.7 (25) |
+| first_turn_ms | 62.3 / 75.1 (25) | 91.9 / 96.9 (25) |
+| to_first_tool_ms | 33.1 / 38.0 (25) | 75.3 / 78.6 (25) |
+| turn_ms | 62.3 / 75.1 (25) | 91.9 / 96.9 (25) |
+| cpu_total_ms_end | 1180 / 1300 (25) | 750 / 840 (25) |
+| cpu_total_workload_ms | 80.0 / 120.0 (25) | 110.0 / 120.0 (25) |
+| cpu_ext_workload_ms | 50.0 / 80.0 (25) | 110.0 / 120.0 (25) |
+| ext_cpu_ms_end | 980 / 1070 (25) | 750 / 840 (25) |
+| ext_rss_end | 167.31 MiB / 169.08 MiB (25) | 122.96 MiB / 123.71 MiB (25) |
+| ext_pss_end | 163.33 MiB / 165.14 MiB (25) | 120.76 MiB / 121.56 MiB (25) |
+| tree_rss_end | 257.10 MiB / 258.81 MiB (25) | 122.96 MiB / 123.71 MiB (25) |
+| tree_pss_end | 251.59 MiB / 253.28 MiB (25) | 120.76 MiB / 121.56 MiB (25) |
+| ext_peak_rss_end | 167.31 MiB / 169.08 MiB (25) | 122.96 MiB / 123.71 MiB (25) |
+| ext_anon_end | 107.14 MiB / 108.89 MiB (25) | 64.80 MiB / 65.46 MiB (25) |
+| ext_rss_ready | 160.88 MiB / 161.69 MiB (25) | 111.57 MiB / 114.25 MiB (25) |
+| ext_pss_ready | 156.83 MiB / 157.72 MiB (25) | 109.49 MiB / 112.14 MiB (25) |
+| heap_used_gc_end | 35.17 MiB / 35.17 MiB (25) | 24.52 MiB / 24.52 MiB (25) |
+| heap_used_asis_end | 36.54 MiB / 36.55 MiB (25) | 27.33 MiB / 27.33 MiB (25) |
+| heap_inuse_gc_end | 70.09 MiB / 101.84 MiB (25) | 43.10 MiB / 59.60 MiB (25) |
+| heap_inuse_asis_end | 69.84 MiB / 101.59 MiB (25) | 42.85 MiB / 44.10 MiB (25) |
+| sys_asis_end | 156.00 MiB / 161.62 MiB (25) | 113.16 MiB / 114.68 MiB (25) |
+| sys_gc_end | 156.00 MiB / 161.62 MiB (25) | 113.18 MiB / 114.83 MiB (25) |
+| cpu_total_ms_ready | 1090 / 1210 (25) | 630 / 720 (25) |
+| cpu_wait4_ms | 234.9 / 259.4 (25) | 772.7 / 858.6 (25) |
+| ext_anon_ready | 105.27 MiB / 106.21 MiB (25) | 59.41 MiB / 62.10 MiB (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 1 / 1 (25) | 1 / 1 (25) |
+| ext_cpu_ms_ready | 920 / 1010 (25) | 630 / 720 (25) |
+| ext_peak_rss_ready | 160.88 MiB / 161.69 MiB (25) | 111.57 MiB / 114.25 MiB (25) |
+| ext_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| ext_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| heap_inuse_asis_ready | 63.59 MiB / 98.34 MiB (25) | 40.41 MiB / 42.41 MiB (25) |
+| heap_inuse_gc_ready | 69.84 MiB / 101.59 MiB (25) | 41.16 MiB / 42.66 MiB (25) |
+| heap_used_asis_ready | 41.47 MiB / 41.57 MiB (25) | 25.66 MiB / 26.15 MiB (25) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (25) | 21.93 MiB / 21.94 MiB (25) |
+| host_anon_end | 47.12 MiB / 47.43 MiB (25) | 64.80 MiB / 65.46 MiB (25) |
+| host_anon_ready | 43.24 MiB / 43.55 MiB (25) | 59.41 MiB / 62.10 MiB (25) |
+| host_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| host_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 210 / 220 (25) | 750 / 840 (25) |
+| host_cpu_ms_ready | 180 / 200 (25) | 630 / 720 (25) |
+| host_peak_rss_end | 89.48 MiB / 90.01 MiB (25) | 122.96 MiB / 123.71 MiB (25) |
+| host_peak_rss_ready | 84.06 MiB / 84.46 MiB (25) | 111.57 MiB / 114.25 MiB (25) |
+| host_pss_end | 87.98 MiB / 88.52 MiB (25) | 120.76 MiB / 121.56 MiB (25) |
+| host_pss_ready | 82.56 MiB / 82.96 MiB (25) | 109.49 MiB / 112.14 MiB (25) |
+| host_rss_end | 89.48 MiB / 90.01 MiB (25) | 122.96 MiB / 123.71 MiB (25) |
+| host_rss_ready | 84.06 MiB / 84.46 MiB (25) | 111.57 MiB / 114.25 MiB (25) |
+| host_threads_end | 8 / 8 (25) | 11 / 11 (25) |
+| host_threads_ready | 7 / 7 (25) | 11 / 11 (25) |
+| llm_requests | 2 / 2 (25) | 2 / 2 (25) |
+| num_gc_end | 8 / 8 (25) | 2 / 3 (25) |
+| num_gc_ready | 7 / 7 (25) | 1 / 2 (25) |
+| num_gc_workload | 1 / 1 (25) | 1 / 1 (25) |
+| sys_asis_ready | 150.00 MiB / 156.00 MiB (25) | 105.66 MiB / 106.92 MiB (25) |
+| sys_gc_ready | 148.50 MiB / 154.50 MiB (25) | 105.68 MiB / 106.98 MiB (25) |
+| tool_ms:get_context_remaining | 10.4 / 13.8 (25) | 4.6 / 5.1 (25) |
+| tree_pss_ready | 239.48 MiB / 240.65 MiB (25) | 109.49 MiB / 112.14 MiB (25) |
+| tree_rss_ready | 244.98 MiB / 246.15 MiB (25) | 111.57 MiB / 114.25 MiB (25) |
 
 ### Workload c1, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 764.9 / 793.6 (15) | 409.7 / 414.4 (15) |
-| to_first_tool_ms | 29.4 / 33.4 (15) | 70.8 / 73.7 (15) |
-| turn_ms | 616.9 / 673.2 (15) | 310.6 / 350.0 (15) |
-| cpu_total_ms_end | 1810 / 1890 (15) | 1040 / 1110 (15) |
-| cpu_total_workload_ms | 780.0 / 860.0 (15) | 450.0 / 500.0 (15) |
-| cpu_ext_workload_ms | 460.0 / 510.0 (15) | 450.0 / 500.0 (15) |
-| ext_cpu_ms_end | 1320 / 1380 (15) | 1040 / 1110 (15) |
-| ext_rss_end | 208.99 MiB / 209.81 MiB (15) | 154.74 MiB / 156.40 MiB (15) |
-| ext_pss_end | 170.81 MiB / 185.97 MiB (15) | 117.73 MiB / 125.02 MiB (15) |
-| tree_rss_end | 321.90 MiB / 325.33 MiB (15) | 154.74 MiB / 156.40 MiB (15) |
-| tree_pss_end | 271.85 MiB / 285.24 MiB (15) | 117.73 MiB / 125.02 MiB (15) |
-| ext_peak_rss_end | 208.99 MiB / 209.81 MiB (15) | 154.74 MiB / 156.40 MiB (15) |
-| ext_anon_end | 148.79 MiB / 149.68 MiB (15) | 95.92 MiB / 97.43 MiB (15) |
-| ext_rss_ready | 161.05 MiB / 161.88 MiB (15) | 111.52 MiB / 115.06 MiB (15) |
-| ext_pss_ready | 125.59 MiB / 126.99 MiB (15) | 76.84 MiB / 78.97 MiB (15) |
-| heap_used_gc_end | 35.89 MiB / 35.89 MiB (15) | 26.95 MiB / 26.96 MiB (15) |
-| heap_used_asis_end | 60.58 MiB / 60.65 MiB (15) | 32.39 MiB / 36.71 MiB (15) |
-| heap_inuse_gc_end | 102.59 MiB / 102.84 MiB (15) | 63.10 MiB / 63.60 MiB (15) |
-| heap_inuse_asis_end | 107.27 MiB / 107.52 MiB (15) | 63.60 MiB / 63.85 MiB (15) |
-| sys_asis_end | 187.49 MiB / 198.83 MiB (15) | 145.92 MiB / 148.14 MiB (15) |
-| sys_gc_end | 183.81 MiB / 198.57 MiB (15) | 145.92 MiB / 148.14 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1080 (15) | 600 / 610 (15) |
-| cpu_wait4_ms | 513.6 / 541.8 (15) | 1064.6 / 1130.0 (15) |
-| ext_anon_ready | 105.56 MiB / 106.30 MiB (15) | 59.37 MiB / 62.91 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 860 / 910 (15) | 600 / 610 (15) |
-| ext_peak_rss_ready | 161.05 MiB / 161.88 MiB (15) | 111.52 MiB / 115.06 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 63.34 MiB / 98.84 MiB (15) | 40.41 MiB / 42.16 MiB (15) |
-| heap_inuse_gc_ready | 69.84 MiB / 101.34 MiB (15) | 40.91 MiB / 42.16 MiB (15) |
-| heap_used_asis_ready | 41.39 MiB / 41.59 MiB (15) | 26.12 MiB / 31.29 MiB (15) |
-| heap_used_gc_ready | 35.15 MiB / 35.16 MiB (15) | 21.94 MiB / 21.94 MiB (15) |
-| host_anon_end | 70.95 MiB / 72.74 MiB (15) | 95.92 MiB / 97.43 MiB (15) |
-| host_anon_ready | 43.30 MiB / 43.70 MiB (15) | 59.37 MiB / 62.91 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 480 / 510 (15) | 1040 / 1110 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 600 / 610 (15) |
-| host_peak_rss_end | 113.50 MiB / 115.51 MiB (15) | 154.74 MiB / 156.40 MiB (15) |
-| host_peak_rss_ready | 84.07 MiB / 84.49 MiB (15) | 111.52 MiB / 115.06 MiB (15) |
-| host_pss_end | 93.78 MiB / 112.49 MiB (15) | 117.73 MiB / 125.02 MiB (15) |
-| host_pss_ready | 64.72 MiB / 82.74 MiB (15) | 76.84 MiB / 78.97 MiB (15) |
-| host_rss_end | 113.50 MiB / 115.51 MiB (15) | 154.74 MiB / 156.40 MiB (15) |
-| host_rss_ready | 84.07 MiB / 84.49 MiB (15) | 111.52 MiB / 115.06 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 31 / 31 (15) | 31 / 31 (15) |
-| num_gc_end | 11 / 11 (15) | 7 / 7 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 4 / 4 (15) | 6 / 6 (15) |
-| sys_asis_ready | 151.50 MiB / 154.50 MiB (15) | 104.85 MiB / 107.16 MiB (15) |
-| sys_gc_ready | 151.03 MiB / 154.27 MiB (15) | 104.86 MiB / 107.53 MiB (15) |
-| tool_ms:notes.append | 6.2 / 9.3 (90) | 1.4 / 1.9 (90) |
-| tool_ms:notes.list | 6.6 / 11.7 (90) | 3.0 / 10.3 (90) |
-| tool_ms:notes.read | 6.3 / 9.2 (90) | 1.5 / 4.6 (90) |
-| tool_ms:notes.search | 6.4 / 9.4 (90) | 3.8 / 4.8 (90) |
-| tool_ms:notes.write | 7.8 / 11.1 (90) | 2.9 / 4.0 (90) |
-| tree_pss_ready | 191.30 MiB / 208.44 MiB (15) | 76.84 MiB / 78.97 MiB (15) |
-| tree_rss_ready | 245.51 MiB / 245.77 MiB (15) | 111.52 MiB / 115.06 MiB (15) |
+| startup_ms | 845.4 / 880.3 (60) | 454.0 / 476.8 (60) |
+| to_first_tool_ms | 33.8 / 37.3 (60) | 76.2 / 80.5 (60) |
+| turn_ms | 682.0 / 825.2 (60) | 369.1 / 386.1 (60) |
+| cpu_total_ms_end | 2015 / 2250 (60) | 1200 / 1280 (60) |
+| cpu_total_workload_ms | 850.0 / 1060.0 (60) | 550.0 / 570.0 (60) |
+| cpu_ext_workload_ms | 515.0 / 650.0 (60) | 550.0 / 570.0 (60) |
+| ext_cpu_ms_end | 1490 / 1650 (60) | 1200 / 1280 (60) |
+| ext_rss_end | 208.80 MiB / 209.95 MiB (60) | 155.10 MiB / 157.31 MiB (60) |
+| ext_pss_end | 204.87 MiB / 206.02 MiB (60) | 152.97 MiB / 155.25 MiB (60) |
+| tree_rss_end | 318.20 MiB / 323.78 MiB (60) | 155.10 MiB / 157.31 MiB (60) |
+| tree_pss_end | 312.90 MiB / 318.61 MiB (60) | 152.97 MiB / 155.25 MiB (60) |
+| ext_peak_rss_end | 208.80 MiB / 209.95 MiB (60) | 155.10 MiB / 157.31 MiB (60) |
+| ext_anon_end | 148.63 MiB / 149.70 MiB (60) | 96.22 MiB / 98.46 MiB (60) |
+| ext_rss_ready | 160.89 MiB / 161.93 MiB (60) | 111.80 MiB / 114.20 MiB (60) |
+| ext_pss_ready | 156.94 MiB / 157.93 MiB (60) | 109.84 MiB / 112.30 MiB (60) |
+| heap_used_gc_end | 35.89 MiB / 35.89 MiB (60) | 26.95 MiB / 26.96 MiB (60) |
+| heap_used_asis_end | 60.36 MiB / 60.66 MiB (60) | 32.39 MiB / 32.46 MiB (60) |
+| heap_inuse_gc_end | 102.59 MiB / 102.84 MiB (60) | 63.10 MiB / 63.60 MiB (60) |
+| heap_inuse_asis_end | 107.27 MiB / 107.54 MiB (60) | 63.35 MiB / 64.10 MiB (60) |
+| sys_asis_end | 188.18 MiB / 199.11 MiB (60) | 146.03 MiB / 148.50 MiB (60) |
+| sys_gc_end | 184.81 MiB / 199.01 MiB (60) | 146.03 MiB / 148.65 MiB (60) |
+| cpu_total_ms_ready | 1150 / 1210 (60) | 675 / 720 (60) |
+| cpu_wait4_ms | 557.7 / 640.0 (60) | 1222.7 / 1307.6 (60) |
+| ext_anon_ready | 105.32 MiB / 106.30 MiB (60) | 59.72 MiB / 62.12 MiB (60) |
+| ext_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| ext_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| ext_count | 1 / 1 (60) | 1 / 1 (60) |
+| ext_cpu_ms_ready | 970 / 1010 (60) | 675 / 720 (60) |
+| ext_peak_rss_ready | 160.89 MiB / 161.93 MiB (60) | 111.80 MiB / 114.20 MiB (60) |
+| ext_threads_end | 12 / 12 (60) | 11 / 11 (60) |
+| ext_threads_ready | 12 / 12 (60) | 11 / 11 (60) |
+| heap_inuse_asis_ready | 63.71 MiB / 98.34 MiB (60) | 40.41 MiB / 42.16 MiB (60) |
+| heap_inuse_gc_ready | 70.09 MiB / 101.59 MiB (60) | 41.16 MiB / 42.41 MiB (60) |
+| heap_used_asis_ready | 41.42 MiB / 41.59 MiB (60) | 25.67 MiB / 26.13 MiB (60) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (60) | 21.93 MiB / 21.94 MiB (60) |
+| host_anon_end | 66.98 MiB / 72.60 MiB (60) | 96.22 MiB / 98.46 MiB (60) |
+| host_anon_ready | 43.15 MiB / 43.57 MiB (60) | 59.72 MiB / 62.12 MiB (60) |
+| host_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| host_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| host_cpu_ms_end | 530 / 610 (60) | 1200 / 1280 (60) |
+| host_cpu_ms_ready | 180 / 200 (60) | 675 / 720 (60) |
+| host_peak_rss_end | 109.55 MiB / 115.15 MiB (60) | 155.10 MiB / 157.31 MiB (60) |
+| host_peak_rss_ready | 84.09 MiB / 84.45 MiB (60) | 111.80 MiB / 114.20 MiB (60) |
+| host_pss_end | 108.15 MiB / 113.76 MiB (60) | 152.97 MiB / 155.25 MiB (60) |
+| host_pss_ready | 82.67 MiB / 83.00 MiB (60) | 109.84 MiB / 112.30 MiB (60) |
+| host_rss_end | 109.55 MiB / 115.15 MiB (60) | 155.10 MiB / 157.31 MiB (60) |
+| host_rss_ready | 84.09 MiB / 84.45 MiB (60) | 111.80 MiB / 114.20 MiB (60) |
+| host_threads_end | 8 / 8 (60) | 11 / 11 (60) |
+| host_threads_ready | 7 / 7 (60) | 11 / 11 (60) |
+| llm_requests | 31 / 31 (60) | 31 / 31 (60) |
+| num_gc_end | 11 / 11 (60) | 7 / 8 (60) |
+| num_gc_ready | 7 / 7 (60) | 1 / 2 (60) |
+| num_gc_workload | 4 / 4 (60) | 6 / 6 (60) |
+| sys_asis_ready | 150.75 MiB / 156.00 MiB (60) | 105.29 MiB / 107.55 MiB (60) |
+| sys_gc_ready | 150.00 MiB / 154.50 MiB (60) | 105.36 MiB / 107.57 MiB (60) |
+| tool_ms:notes.append | 7.1 / 10.7 (360) | 1.5 / 2.1 (360) |
+| tool_ms:notes.list | 8.0 / 14.1 (360) | 3.7 / 11.1 (360) |
+| tool_ms:notes.read | 7.2 / 10.4 (360) | 1.8 / 5.2 (360) |
+| tool_ms:notes.search | 7.7 / 11.4 (360) | 4.4 / 5.6 (360) |
+| tool_ms:notes.write | 9.1 / 13.0 (360) | 3.3 / 4.7 (360) |
+| tree_pss_ready | 239.67 MiB / 240.56 MiB (60) | 109.84 MiB / 112.30 MiB (60) |
+| tree_rss_ready | 244.98 MiB / 245.90 MiB (60) | 111.80 MiB / 114.20 MiB (60) |
 
 ### Workload c100, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 764.9 / 785.6 (15) | 408.9 / 436.6 (15) |
-| to_first_tool_ms | 30.3 / 32.3 (15) | 71.3 / 80.0 (15) |
-| turn_ms | 903.9 / 955.4 (15) | 444.9 / 517.7 (15) |
-| cpu_total_ms_end | 2110 / 2220 (15) | 1200 / 1340 (15) |
-| cpu_total_workload_ms | 1080.0 / 1160.0 (15) | 590.0 / 690.0 (15) |
-| cpu_ext_workload_ms | 700.0 / 740.0 (15) | 590.0 / 690.0 (15) |
-| ext_cpu_ms_end | 1560 / 1610 (15) | 1200 / 1340 (15) |
-| ext_rss_end | 224.95 MiB / 227.21 MiB (15) | 158.77 MiB / 160.25 MiB (15) |
-| ext_pss_end | 181.12 MiB / 187.07 MiB (15) | 117.32 MiB / 120.06 MiB (15) |
-| tree_rss_end | 334.02 MiB / 339.18 MiB (15) | 158.77 MiB / 160.25 MiB (15) |
-| tree_pss_end | 277.14 MiB / 298.53 MiB (15) | 117.32 MiB / 120.06 MiB (15) |
-| ext_peak_rss_end | 224.95 MiB / 227.21 MiB (15) | 158.77 MiB / 160.25 MiB (15) |
-| ext_anon_end | 164.69 MiB / 166.88 MiB (15) | 99.97 MiB / 101.31 MiB (15) |
-| ext_rss_ready | 161.41 MiB / 162.37 MiB (15) | 111.61 MiB / 112.28 MiB (15) |
-| ext_pss_ready | 118.01 MiB / 121.48 MiB (15) | 70.15 MiB / 74.45 MiB (15) |
-| heap_used_gc_end | 36.08 MiB / 36.09 MiB (15) | 27.15 MiB / 27.16 MiB (15) |
-| heap_used_asis_end | 64.77 MiB / 64.77 MiB (15) | 34.75 MiB / 34.93 MiB (15) |
-| heap_inuse_gc_end | 103.59 MiB / 104.59 MiB (15) | 65.10 MiB / 65.60 MiB (15) |
-| heap_inuse_asis_end | 112.85 MiB / 113.35 MiB (15) | 65.63 MiB / 66.13 MiB (15) |
-| sys_asis_end | 213.65 MiB / 217.27 MiB (15) | 149.31 MiB / 151.29 MiB (15) |
-| sys_gc_end | 208.80 MiB / 212.14 MiB (15) | 149.31 MiB / 151.29 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1060 (15) | 600 / 650 (15) |
-| cpu_wait4_ms | 587.7 / 620.1 (15) | 1223.1 / 1369.5 (15) |
-| ext_anon_ready | 105.89 MiB / 106.66 MiB (15) | 59.47 MiB / 60.23 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 860 / 880 (15) | 600 / 650 (15) |
-| ext_peak_rss_ready | 161.41 MiB / 162.37 MiB (15) | 111.61 MiB / 112.28 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 97.84 MiB / 98.34 MiB (15) | 40.41 MiB / 42.41 MiB (15) |
-| heap_inuse_gc_ready | 101.34 MiB / 101.59 MiB (15) | 41.16 MiB / 42.41 MiB (15) |
-| heap_used_asis_ready | 36.90 MiB / 41.56 MiB (15) | 25.67 MiB / 31.31 MiB (15) |
-| heap_used_gc_ready | 35.12 MiB / 35.15 MiB (15) | 21.94 MiB / 21.94 MiB (15) |
-| host_anon_end | 65.58 MiB / 70.33 MiB (15) | 99.97 MiB / 101.31 MiB (15) |
-| host_anon_ready | 43.29 MiB / 43.73 MiB (15) | 59.47 MiB / 60.23 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 560 / 590 (15) | 1200 / 1340 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 600 / 650 (15) |
-| host_peak_rss_end | 108.30 MiB / 113.00 MiB (15) | 158.77 MiB / 160.25 MiB (15) |
-| host_peak_rss_ready | 84.14 MiB / 84.57 MiB (15) | 111.61 MiB / 112.28 MiB (15) |
-| host_pss_end | 91.47 MiB / 111.45 MiB (15) | 117.32 MiB / 120.06 MiB (15) |
-| host_pss_ready | 64.50 MiB / 82.69 MiB (15) | 70.15 MiB / 74.45 MiB (15) |
-| host_rss_end | 108.30 MiB / 113.00 MiB (15) | 158.77 MiB / 160.25 MiB (15) |
-| host_rss_ready | 84.14 MiB / 84.57 MiB (15) | 111.61 MiB / 112.28 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 31 / 31 (15) | 31 / 31 (15) |
-| num_gc_end | 10 / 13 (15) | 9 / 9 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 3 / 6 (15) | 8 / 8 (15) |
-| sys_asis_ready | 154.50 MiB / 157.50 MiB (15) | 105.45 MiB / 107.18 MiB (15) |
-| sys_gc_ready | 152.37 MiB / 155.38 MiB (15) | 105.45 MiB / 107.18 MiB (15) |
-| tool_ms:notes.append | 6.2 / 8.7 (90) | 1.3 / 1.9 (90) |
-| tool_ms:notes.list | 17.0 / 22.1 (90) | 11.0 / 18.5 (90) |
-| tool_ms:notes.read | 6.3 / 8.2 (90) | 1.5 / 2.6 (90) |
-| tool_ms:notes.search | 23.2 / 31.5 (90) | 17.9 / 24.3 (90) |
-| tool_ms:notes.write | 7.9 / 10.5 (90) | 2.7 / 4.2 (90) |
-| tree_pss_ready | 185.98 MiB / 203.84 MiB (15) | 70.15 MiB / 74.45 MiB (15) |
-| tree_rss_ready | 245.44 MiB / 246.58 MiB (15) | 111.61 MiB / 112.28 MiB (15) |
+| startup_ms | 858.5 / 887.4 (60) | 460.8 / 478.5 (60) |
+| to_first_tool_ms | 34.4 / 38.0 (60) | 78.4 / 81.0 (60) |
+| turn_ms | 1108.2 / 1215.3 (60) | 561.4 / 598.8 (60) |
+| cpu_total_ms_end | 2505 / 2710 (60) | 1415 / 1510 (60) |
+| cpu_total_workload_ms | 1355.0 / 1500.0 (60) | 775.0 / 800.0 (60) |
+| cpu_ext_workload_ms | 895.0 / 1020.0 (60) | 775.0 / 800.0 (60) |
+| ext_cpu_ms_end | 1845 / 2030 (60) | 1415 / 1510 (60) |
+| ext_rss_end | 224.54 MiB / 226.93 MiB (60) | 158.99 MiB / 160.80 MiB (60) |
+| ext_pss_end | 220.61 MiB / 222.96 MiB (60) | 156.81 MiB / 158.65 MiB (60) |
+| tree_rss_end | 334.80 MiB / 340.58 MiB (60) | 158.99 MiB / 160.80 MiB (60) |
+| tree_pss_end | 329.27 MiB / 335.28 MiB (60) | 156.81 MiB / 158.65 MiB (60) |
+| ext_peak_rss_end | 224.54 MiB / 226.93 MiB (60) | 158.99 MiB / 160.80 MiB (60) |
+| ext_anon_end | 164.36 MiB / 166.60 MiB (60) | 100.14 MiB / 101.88 MiB (60) |
+| ext_rss_ready | 160.97 MiB / 161.95 MiB (60) | 111.81 MiB / 114.29 MiB (60) |
+| ext_pss_ready | 157.06 MiB / 157.97 MiB (60) | 109.90 MiB / 112.38 MiB (60) |
+| heap_used_gc_end | 36.07 MiB / 36.09 MiB (60) | 27.15 MiB / 27.16 MiB (60) |
+| heap_used_asis_end | 58.24 MiB / 64.77 MiB (60) | 34.81 MiB / 38.70 MiB (60) |
+| heap_inuse_gc_end | 103.34 MiB / 104.84 MiB (60) | 64.85 MiB / 65.35 MiB (60) |
+| heap_inuse_asis_end | 110.09 MiB / 113.60 MiB (60) | 65.50 MiB / 65.88 MiB (60) |
+| sys_asis_end | 205.40 MiB / 217.65 MiB (60) | 149.70 MiB / 151.87 MiB (60) |
+| sys_gc_end | 200.39 MiB / 211.52 MiB (60) | 149.70 MiB / 151.87 MiB (60) |
+| cpu_total_ms_ready | 1175 / 1220 (60) | 690 / 720 (60) |
+| cpu_wait4_ms | 674.9 / 727.8 (60) | 1440.1 / 1534.6 (60) |
+| ext_anon_ready | 105.42 MiB / 106.37 MiB (60) | 59.78 MiB / 62.15 MiB (60) |
+| ext_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| ext_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| ext_count | 1 / 1 (60) | 1 / 1 (60) |
+| ext_cpu_ms_ready | 985 / 1020 (60) | 690 / 720 (60) |
+| ext_peak_rss_ready | 160.97 MiB / 161.95 MiB (60) | 111.81 MiB / 114.29 MiB (60) |
+| ext_threads_end | 12 / 12 (60) | 11 / 11 (60) |
+| ext_threads_ready | 12 / 12 (60) | 11 / 11 (60) |
+| heap_inuse_asis_ready | 63.59 MiB / 98.34 MiB (60) | 40.66 MiB / 42.41 MiB (60) |
+| heap_inuse_gc_ready | 70.09 MiB / 101.84 MiB (60) | 41.16 MiB / 58.41 MiB (60) |
+| heap_used_asis_ready | 41.39 MiB / 41.58 MiB (60) | 25.66 MiB / 26.15 MiB (60) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (60) | 21.94 MiB / 21.94 MiB (60) |
+| host_anon_end | 67.56 MiB / 72.85 MiB (60) | 100.14 MiB / 101.88 MiB (60) |
+| host_anon_ready | 43.17 MiB / 43.58 MiB (60) | 59.78 MiB / 62.15 MiB (60) |
+| host_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| host_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| host_cpu_ms_end | 645 / 690 (60) | 1415 / 1510 (60) |
+| host_cpu_ms_ready | 180 / 200 (60) | 690 / 720 (60) |
+| host_peak_rss_end | 110.17 MiB / 115.57 MiB (60) | 158.99 MiB / 160.80 MiB (60) |
+| host_peak_rss_ready | 84.09 MiB / 84.62 MiB (60) | 111.81 MiB / 114.29 MiB (60) |
+| host_pss_end | 108.77 MiB / 114.18 MiB (60) | 156.81 MiB / 158.65 MiB (60) |
+| host_pss_ready | 82.64 MiB / 83.20 MiB (60) | 109.90 MiB / 112.38 MiB (60) |
+| host_rss_end | 110.17 MiB / 115.57 MiB (60) | 158.99 MiB / 160.80 MiB (60) |
+| host_rss_ready | 84.09 MiB / 84.62 MiB (60) | 111.81 MiB / 114.29 MiB (60) |
+| host_threads_end | 8 / 8 (60) | 11 / 11 (60) |
+| host_threads_ready | 7 / 7 (60) | 11 / 11 (60) |
+| llm_requests | 31 / 31 (60) | 31 / 31 (60) |
+| num_gc_end | 13 / 13 (60) | 9 / 10 (60) |
+| num_gc_ready | 7 / 7 (60) | 1 / 2 (60) |
+| num_gc_workload | 6 / 6 (60) | 8 / 8 (60) |
+| sys_asis_ready | 151.36 MiB / 156.00 MiB (60) | 105.16 MiB / 108.00 MiB (60) |
+| sys_gc_ready | 150.00 MiB / 154.34 MiB (60) | 105.46 MiB / 108.57 MiB (60) |
+| tool_ms:notes.append | 8.0 / 11.3 (360) | 1.5 / 2.2 (360) |
+| tool_ms:notes.list | 21.4 / 28.8 (360) | 13.4 / 21.0 (360) |
+| tool_ms:notes.read | 8.2 / 11.3 (360) | 1.8 / 3.1 (360) |
+| tool_ms:notes.search | 31.2 / 41.8 (360) | 23.1 / 31.8 (360) |
+| tool_ms:notes.write | 10.0 / 13.9 (360) | 3.2 / 5.0 (360) |
+| tree_pss_ready | 239.80 MiB / 240.73 MiB (60) | 109.90 MiB / 112.38 MiB (60) |
+| tree_rss_ready | 245.12 MiB / 246.07 MiB (60) | 111.81 MiB / 114.29 MiB (60) |
 
 ### Workload c1000, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 766.4 / 775.5 (15) | 407.5 / 435.1 (15) |
-| to_first_tool_ms | 28.7 / 31.8 (15) | 70.6 / 74.0 (15) |
-| turn_ms | 1396.5 / 1464.4 (15) | 919.9 / 1125.6 (15) |
-| cpu_total_ms_end | 2910 / 2960 (15) | 1990 / 2060 (15) |
-| cpu_total_workload_ms | 1870.0 / 1930.0 (15) | 1390.0 / 1440.0 (15) |
-| cpu_ext_workload_ms | 1490.0 / 1530.0 (15) | 1390.0 / 1440.0 (15) |
-| ext_cpu_ms_end | 2360 / 2380 (15) | 1990 / 2060 (15) |
-| ext_rss_end | 232.20 MiB / 233.25 MiB (15) | 163.76 MiB / 170.90 MiB (15) |
-| ext_pss_end | 185.62 MiB / 187.27 MiB (15) | 120.84 MiB / 125.47 MiB (15) |
-| tree_rss_end | 340.08 MiB / 348.51 MiB (15) | 163.76 MiB / 170.90 MiB (15) |
-| tree_pss_end | 272.33 MiB / 292.47 MiB (15) | 120.84 MiB / 125.47 MiB (15) |
-| ext_peak_rss_end | 232.20 MiB / 233.25 MiB (15) | 163.76 MiB / 170.90 MiB (15) |
-| ext_anon_end | 171.88 MiB / 173.02 MiB (15) | 104.88 MiB / 112.04 MiB (15) |
-| ext_rss_ready | 161.21 MiB / 161.64 MiB (15) | 111.68 MiB / 112.61 MiB (15) |
-| ext_pss_ready | 116.21 MiB / 120.26 MiB (15) | 69.88 MiB / 73.49 MiB (15) |
-| heap_used_gc_end | 36.16 MiB / 36.18 MiB (15) | 27.21 MiB / 27.24 MiB (15) |
-| heap_used_asis_end | 52.66 MiB / 64.26 MiB (15) | 51.36 MiB / 51.75 MiB (15) |
-| heap_inuse_gc_end | 107.84 MiB / 108.84 MiB (15) | 94.60 MiB / 95.35 MiB (15) |
-| heap_inuse_asis_end | 113.92 MiB / 115.24 MiB (15) | 102.13 MiB / 102.88 MiB (15) |
-| sys_asis_end | 219.52 MiB / 223.37 MiB (15) | 166.81 MiB / 179.75 MiB (15) |
-| sys_gc_end | 216.39 MiB / 220.39 MiB (15) | 166.81 MiB / 179.75 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1050 (15) | 590 / 630 (15) |
-| cpu_wait4_ms | 582.9 / 603.9 (15) | 2013.3 / 2084.8 (15) |
-| ext_anon_ready | 105.70 MiB / 106.19 MiB (15) | 59.66 MiB / 60.55 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 860 / 880 (15) | 590 / 630 (15) |
-| ext_peak_rss_ready | 161.21 MiB / 161.64 MiB (15) | 111.68 MiB / 112.61 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 63.59 MiB / 98.34 MiB (15) | 40.16 MiB / 40.41 MiB (15) |
-| heap_inuse_gc_ready | 70.09 MiB / 101.34 MiB (15) | 40.91 MiB / 41.16 MiB (15) |
-| heap_used_asis_ready | 41.51 MiB / 41.76 MiB (15) | 26.08 MiB / 27.58 MiB (15) |
-| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (15) | 21.93 MiB / 21.94 MiB (15) |
-| host_anon_end | 65.11 MiB / 72.62 MiB (15) | 104.88 MiB / 112.04 MiB (15) |
-| host_anon_ready | 43.16 MiB / 43.60 MiB (15) | 59.66 MiB / 60.55 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 560 / 580 (15) | 1990 / 2060 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 590 / 630 (15) |
-| host_peak_rss_end | 107.34 MiB / 115.66 MiB (15) | 163.76 MiB / 170.90 MiB (15) |
-| host_peak_rss_ready | 84.09 MiB / 84.79 MiB (15) | 111.68 MiB / 112.61 MiB (15) |
-| host_pss_end | 85.49 MiB / 111.09 MiB (15) | 120.84 MiB / 125.47 MiB (15) |
-| host_pss_ready | 63.12 MiB / 82.51 MiB (15) | 69.88 MiB / 73.76 MiB (15) |
-| host_rss_end | 107.34 MiB / 115.66 MiB (15) | 163.76 MiB / 170.90 MiB (15) |
-| host_rss_ready | 84.09 MiB / 84.79 MiB (15) | 111.68 MiB / 112.61 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 31 / 31 (15) | 31 / 31 (15) |
-| num_gc_end | 20 / 22 (15) | 20 / 21 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 13 / 15 (15) | 19 / 20 (15) |
-| sys_asis_ready | 150.00 MiB / 154.50 MiB (15) | 105.04 MiB / 107.69 MiB (15) |
-| sys_gc_ready | 150.00 MiB / 152.86 MiB (15) | 105.12 MiB / 108.02 MiB (15) |
-| tool_ms:notes.append | 6.5 / 8.4 (90) | 1.3 / 1.9 (90) |
-| tool_ms:notes.list | 37.0 / 47.7 (90) | 28.9 / 42.8 (90) |
-| tool_ms:notes.read | 6.1 / 8.4 (90) | 1.5 / 2.6 (90) |
-| tool_ms:notes.search | 83.6 / 125.4 (90) | 75.8 / 122.0 (90) |
-| tool_ms:notes.write | 7.9 / 11.3 (90) | 2.8 / 4.4 (90) |
-| tree_pss_ready | 178.82 MiB / 199.17 MiB (15) | 69.88 MiB / 73.76 MiB (15) |
-| tree_rss_ready | 245.19 MiB / 246.48 MiB (15) | 111.68 MiB / 112.61 MiB (15) |
+| startup_ms | 824.3 / 881.1 (60) | 437.4 / 483.6 (60) |
+| to_first_tool_ms | 33.0 / 38.3 (60) | 74.5 / 79.9 (60) |
+| turn_ms | 1645.1 / 2083.1 (60) | 1142.2 / 1410.8 (60) |
+| cpu_total_ms_end | 3205 / 3920 (60) | 2295 / 2660 (60) |
+| cpu_total_workload_ms | 2080.0 / 2710.0 (60) | 1600.0 / 1960.0 (60) |
+| cpu_ext_workload_ms | 1670.0 / 2210.0 (60) | 1600.0 / 1960.0 (60) |
+| ext_cpu_ms_end | 2610 / 3210 (60) | 2295 / 2660 (60) |
+| ext_rss_end | 231.21 MiB / 233.26 MiB (60) | 167.76 MiB / 170.29 MiB (60) |
+| ext_pss_end | 227.34 MiB / 229.33 MiB (60) | 165.67 MiB / 168.22 MiB (60) |
+| tree_rss_end | 338.65 MiB / 346.00 MiB (60) | 167.76 MiB / 170.29 MiB (60) |
+| tree_pss_end | 333.39 MiB / 340.69 MiB (60) | 165.67 MiB / 168.22 MiB (60) |
+| ext_peak_rss_end | 231.21 MiB / 233.26 MiB (60) | 167.76 MiB / 170.29 MiB (60) |
+| ext_anon_end | 170.95 MiB / 173.08 MiB (60) | 108.80 MiB / 111.38 MiB (60) |
+| ext_rss_ready | 160.87 MiB / 161.84 MiB (60) | 111.67 MiB / 113.93 MiB (60) |
+| ext_pss_ready | 156.84 MiB / 157.81 MiB (60) | 109.76 MiB / 111.98 MiB (60) |
+| heap_used_gc_end | 36.16 MiB / 36.17 MiB (60) | 27.20 MiB / 27.21 MiB (60) |
+| heap_used_asis_end | 53.80 MiB / 65.20 MiB (60) | 51.45 MiB / 51.88 MiB (60) |
+| heap_inuse_gc_end | 104.09 MiB / 109.09 MiB (60) | 95.10 MiB / 95.85 MiB (60) |
+| heap_inuse_asis_end | 113.24 MiB / 117.49 MiB (60) | 102.13 MiB / 103.13 MiB (60) |
+| sys_asis_end | 219.95 MiB / 223.60 MiB (60) | 177.49 MiB / 180.39 MiB (60) |
+| sys_gc_end | 217.96 MiB / 220.25 MiB (60) | 177.80 MiB / 180.39 MiB (60) |
+| cpu_total_ms_ready | 1120 / 1210 (60) | 640 / 720 (60) |
+| cpu_wait4_ms | 632.8 / 729.6 (60) | 2328.4 / 2694.3 (60) |
+| ext_anon_ready | 105.15 MiB / 106.14 MiB (60) | 59.63 MiB / 61.83 MiB (60) |
+| ext_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| ext_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| ext_count | 1 / 1 (60) | 1 / 1 (60) |
+| ext_cpu_ms_ready | 935 / 1020 (60) | 640 / 720 (60) |
+| ext_peak_rss_ready | 160.87 MiB / 161.84 MiB (60) | 111.67 MiB / 113.93 MiB (60) |
+| ext_threads_end | 12 / 12 (60) | 11 / 11 (60) |
+| ext_threads_ready | 12 / 12 (60) | 11 / 11 (60) |
+| heap_inuse_asis_ready | 63.59 MiB / 98.09 MiB (60) | 40.41 MiB / 42.41 MiB (60) |
+| heap_inuse_gc_ready | 70.21 MiB / 101.59 MiB (60) | 40.91 MiB / 42.66 MiB (60) |
+| heap_used_asis_ready | 41.42 MiB / 41.56 MiB (60) | 25.65 MiB / 26.17 MiB (60) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (60) | 21.93 MiB / 21.94 MiB (60) |
+| host_anon_end | 64.78 MiB / 70.77 MiB (60) | 108.80 MiB / 111.38 MiB (60) |
+| host_anon_ready | 43.14 MiB / 43.56 MiB (60) | 59.63 MiB / 61.83 MiB (60) |
+| host_cchild_ms_end | 0 / 0 (60) | 0 / 0 (60) |
+| host_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| host_cpu_ms_end | 600 / 690 (60) | 2295 / 2660 (60) |
+| host_cpu_ms_ready | 180 / 200 (60) | 640 / 720 (60) |
+| host_peak_rss_end | 107.38 MiB / 113.83 MiB (60) | 167.76 MiB / 170.29 MiB (60) |
+| host_peak_rss_ready | 84.08 MiB / 84.47 MiB (60) | 111.67 MiB / 113.93 MiB (60) |
+| host_pss_end | 105.94 MiB / 112.43 MiB (60) | 165.67 MiB / 168.22 MiB (60) |
+| host_pss_ready | 82.62 MiB / 83.02 MiB (60) | 109.76 MiB / 111.98 MiB (60) |
+| host_rss_end | 107.38 MiB / 113.83 MiB (60) | 167.76 MiB / 170.29 MiB (60) |
+| host_rss_ready | 84.08 MiB / 84.47 MiB (60) | 111.67 MiB / 113.93 MiB (60) |
+| host_threads_end | 8 / 8 (60) | 11 / 11 (60) |
+| host_threads_ready | 7 / 7 (60) | 11 / 11 (60) |
+| llm_requests | 31 / 31 (60) | 31 / 31 (60) |
+| num_gc_end | 20 / 22 (60) | 20 / 21 (60) |
+| num_gc_ready | 7 / 7 (60) | 1 / 2 (60) |
+| num_gc_workload | 13 / 15 (60) | 19 / 20 (60) |
+| sys_asis_ready | 150.00 MiB / 156.00 MiB (60) | 105.14 MiB / 107.19 MiB (60) |
+| sys_gc_ready | 150.00 MiB / 155.33 MiB (60) | 105.26 MiB / 107.19 MiB (60) |
+| tool_ms:notes.append | 6.8 / 10.6 (360) | 1.4 / 2.1 (360) |
+| tool_ms:notes.list | 42.9 / 61.9 (360) | 33.2 / 48.4 (360) |
+| tool_ms:notes.read | 7.3 / 11.4 (360) | 1.6 / 2.8 (360) |
+| tool_ms:notes.search | 114.1 / 176.4 (360) | 99.0 / 155.4 (360) |
+| tool_ms:notes.write | 9.0 / 13.2 (360) | 3.1 / 4.8 (360) |
+| tree_pss_ready | 239.52 MiB / 240.65 MiB (60) | 109.76 MiB / 111.98 MiB (60) |
+| tree_rss_ready | 244.96 MiB / 245.86 MiB (60) | 111.67 MiB / 113.93 MiB (60) |
 
 ### Workload d50, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 765.4 / 773.0 (15) | 406.6 / 425.6 (15) |
-| to_first_tool_ms | 32.8 / 36.3 (15) | 71.3 / 78.9 (15) |
-| turn_ms | 326.9 / 337.8 (15) | 317.7 / 334.5 (15) |
-| cpu_total_ms_end | 1570 / 1600 (15) | 1160 / 1210 (15) |
-| cpu_total_workload_ms | 540.0 / 550.0 (15) | 570.0 / 590.0 (15) |
-| cpu_ext_workload_ms | 370.0 / 380.0 (15) | 450.0 / 450.0 (15) |
-| ext_cpu_ms_end | 1230 / 1260 (15) | 1040 / 1080 (15) |
-| ext_rss_end | 208.56 MiB / 209.39 MiB (15) | 168.05 MiB / 169.25 MiB (15) |
-| ext_pss_end | 161.24 MiB / 164.25 MiB (15) | 123.17 MiB / 125.88 MiB (15) |
-| tree_rss_end | 300.95 MiB / 302.32 MiB (15) | 168.05 MiB / 169.25 MiB (15) |
-| tree_pss_end | 249.02 MiB / 253.43 MiB (15) | 123.20 MiB / 125.88 MiB (15) |
-| ext_peak_rss_end | 208.56 MiB / 209.39 MiB (15) | 168.05 MiB / 169.25 MiB (15) |
-| ext_anon_end | 148.37 MiB / 148.98 MiB (15) | 108.79 MiB / 110.21 MiB (15) |
-| ext_rss_ready | 161.01 MiB / 161.75 MiB (15) | 111.66 MiB / 112.49 MiB (15) |
-| ext_pss_ready | 115.17 MiB / 118.87 MiB (15) | 68.66 MiB / 70.25 MiB (15) |
-| heap_used_gc_end | 36.27 MiB / 36.27 MiB (15) | 25.70 MiB / 25.71 MiB (15) |
-| heap_used_asis_end | 60.10 MiB / 60.33 MiB (15) | 33.34 MiB / 33.38 MiB (15) |
-| heap_inuse_gc_end | 104.09 MiB / 104.84 MiB (15) | 61.35 MiB / 62.10 MiB (15) |
-| heap_inuse_asis_end | 105.11 MiB / 105.36 MiB (15) | 64.57 MiB / 64.82 MiB (15) |
-| sys_asis_end | 207.94 MiB / 209.34 MiB (15) | 161.21 MiB / 163.83 MiB (15) |
-| sys_gc_end | 207.94 MiB / 209.34 MiB (15) | 161.21 MiB / 163.83 MiB (15) |
-| cpu_total_ms_ready | 1040 / 1050 (15) | 590 / 630 (15) |
-| cpu_wait4_ms | 241.2 / 250.7 (15) | 1194.0 / 1253.6 (15) |
-| ext_anon_ready | 105.35 MiB / 106.12 MiB (15) | 59.47 MiB / 60.37 MiB (15) |
-| ext_cchild_ms_end | 120 / 130 (15) | 120 / 140 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 870 / 880 (15) | 590 / 630 (15) |
-| ext_peak_rss_ready | 161.01 MiB / 161.75 MiB (15) | 111.66 MiB / 112.49 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 97.59 MiB / 98.34 MiB (15) | 40.41 MiB / 42.41 MiB (15) |
-| heap_inuse_gc_ready | 101.34 MiB / 101.84 MiB (15) | 40.91 MiB / 42.66 MiB (15) |
-| heap_used_asis_ready | 36.93 MiB / 41.56 MiB (15) | 25.68 MiB / 31.25 MiB (15) |
-| heap_used_gc_ready | 35.12 MiB / 35.15 MiB (15) | 21.94 MiB / 21.95 MiB (15) |
-| host_anon_end | 50.05 MiB / 50.47 MiB (15) | 108.79 MiB / 110.21 MiB (15) |
-| host_anon_ready | 43.16 MiB / 43.59 MiB (15) | 59.47 MiB / 60.37 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 120 / 140 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 220 / 220 (15) | 1040 / 1080 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 590 / 630 (15) |
-| host_peak_rss_end | 92.52 MiB / 93.29 MiB (15) | 168.05 MiB / 169.25 MiB (15) |
-| host_peak_rss_ready | 84.13 MiB / 84.76 MiB (15) | 111.66 MiB / 112.49 MiB (15) |
-| host_pss_end | 90.83 MiB / 91.11 MiB (15) | 123.20 MiB / 125.88 MiB (15) |
-| host_pss_ready | 82.43 MiB / 82.69 MiB (15) | 68.52 MiB / 70.25 MiB (15) |
-| host_rss_end | 92.52 MiB / 93.29 MiB (15) | 168.05 MiB / 169.25 MiB (15) |
-| host_rss_ready | 84.13 MiB / 84.76 MiB (15) | 111.66 MiB / 112.49 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 4 / 4 (15) | 4 / 4 (15) |
-| num_gc_end | 12 / 12 (15) | 10 / 12 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 5 / 5 (15) | 9 / 11 (15) |
-| sys_asis_ready | 154.50 MiB / 156.00 MiB (15) | 105.05 MiB / 107.18 MiB (15) |
-| sys_gc_ready | 152.34 MiB / 154.28 MiB (15) | 105.65 MiB / 107.18 MiB (15) |
-| tool_ms:history.read | 27.2 / 28.7 (15) | 23.9 / 25.6 (15) |
-| tool_ms:history.search:common | 25.7 / 28.0 (15) | 21.5 / 22.9 (15) |
-| tool_ms:history.search:rare | 200.4 / 213.4 (15) | 176.2 / 190.7 (15) |
-| tree_pss_ready | 196.49 MiB / 199.36 MiB (15) | 68.52 MiB / 70.25 MiB (15) |
-| tree_rss_ready | 245.04 MiB / 245.93 MiB (15) | 111.66 MiB / 112.49 MiB (15) |
+| startup_ms | 804.9 / 881.8 (60) | 429.7 / 480.1 (60) |
+| to_first_tool_ms | 35.7 / 39.5 (60) | 76.5 / 82.2 (60) |
+| turn_ms | 367.8 / 402.9 (60) | 349.5 / 380.1 (60) |
+| cpu_total_ms_end | 1715 / 1870 (60) | 1250 / 1400 (60) |
+| cpu_total_workload_ms | 610.0 / 670.0 (60) | 605.0 / 680.0 (60) |
+| cpu_ext_workload_ms | 420.0 / 470.0 (60) | 480.0 / 530.0 (60) |
+| ext_cpu_ms_end | 1330 / 1470 (60) | 1115 / 1250 (60) |
+| ext_rss_end | 208.75 MiB / 210.27 MiB (60) | 168.01 MiB / 169.22 MiB (60) |
+| ext_pss_end | 204.81 MiB / 206.42 MiB (60) | 165.87 MiB / 167.09 MiB (60) |
+| tree_rss_end | 301.36 MiB / 303.11 MiB (60) | 168.01 MiB / 169.22 MiB (60) |
+| tree_pss_end | 296.03 MiB / 297.63 MiB (60) | 165.87 MiB / 167.09 MiB (60) |
+| ext_peak_rss_end | 208.75 MiB / 210.27 MiB (60) | 168.27 MiB / 169.22 MiB (60) |
+| ext_anon_end | 148.40 MiB / 150.04 MiB (60) | 108.89 MiB / 110.18 MiB (60) |
+| ext_rss_ready | 161.11 MiB / 161.89 MiB (60) | 111.81 MiB / 114.59 MiB (60) |
+| ext_pss_ready | 157.12 MiB / 157.90 MiB (60) | 109.85 MiB / 112.67 MiB (60) |
+| heap_used_gc_end | 36.26 MiB / 36.27 MiB (60) | 25.70 MiB / 25.71 MiB (60) |
+| heap_used_asis_end | 60.11 MiB / 60.56 MiB (60) | 33.36 MiB / 44.55 MiB (60) |
+| heap_inuse_gc_end | 104.09 MiB / 104.59 MiB (60) | 61.60 MiB / 63.10 MiB (60) |
+| heap_inuse_asis_end | 105.36 MiB / 105.86 MiB (60) | 64.82 MiB / 66.82 MiB (60) |
+| sys_asis_end | 208.38 MiB / 210.00 MiB (60) | 162.56 MiB / 167.00 MiB (60) |
+| sys_gc_end | 208.38 MiB / 210.00 MiB (60) | 162.56 MiB / 167.00 MiB (60) |
+| cpu_total_ms_ready | 1090 / 1210 (60) | 630 / 720 (60) |
+| cpu_wait4_ms | 268.8 / 292.0 (60) | 1278.6 / 1433.9 (60) |
+| ext_anon_ready | 105.55 MiB / 106.34 MiB (60) | 59.72 MiB / 62.44 MiB (60) |
+| ext_cchild_ms_end | 130 / 150 (60) | 130 / 160 (60) |
+| ext_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| ext_count | 1 / 1 (60) | 1 / 1 (60) |
+| ext_cpu_ms_ready | 915 / 1020 (60) | 630 / 720 (60) |
+| ext_peak_rss_ready | 161.11 MiB / 161.89 MiB (60) | 111.81 MiB / 114.59 MiB (60) |
+| ext_threads_end | 12 / 12 (60) | 11 / 11 (60) |
+| ext_threads_ready | 12 / 12 (60) | 11 / 11 (60) |
+| heap_inuse_asis_ready | 64.84 MiB / 98.34 MiB (60) | 40.41 MiB / 42.41 MiB (60) |
+| heap_inuse_gc_ready | 85.84 MiB / 101.59 MiB (60) | 41.16 MiB / 42.66 MiB (60) |
+| heap_used_asis_ready | 39.16 MiB / 41.60 MiB (60) | 26.11 MiB / 27.52 MiB (60) |
+| heap_used_gc_ready | 35.13 MiB / 35.15 MiB (60) | 21.94 MiB / 21.94 MiB (60) |
+| host_anon_end | 50.16 MiB / 50.61 MiB (60) | 108.89 MiB / 110.18 MiB (60) |
+| host_anon_ready | 43.29 MiB / 43.71 MiB (60) | 59.72 MiB / 62.44 MiB (60) |
+| host_cchild_ms_end | 0 / 0 (60) | 130 / 160 (60) |
+| host_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| host_cpu_ms_end | 230 / 260 (60) | 1115 / 1250 (60) |
+| host_cpu_ms_ready | 180 / 200 (60) | 630 / 720 (60) |
+| host_peak_rss_end | 92.62 MiB / 93.06 MiB (60) | 168.27 MiB / 169.22 MiB (60) |
+| host_peak_rss_ready | 84.19 MiB / 84.55 MiB (60) | 111.81 MiB / 114.59 MiB (60) |
+| host_pss_end | 91.18 MiB / 91.64 MiB (60) | 165.87 MiB / 167.09 MiB (60) |
+| host_pss_ready | 82.72 MiB / 83.15 MiB (60) | 109.85 MiB / 112.67 MiB (60) |
+| host_rss_end | 92.62 MiB / 93.06 MiB (60) | 168.01 MiB / 169.22 MiB (60) |
+| host_rss_ready | 84.19 MiB / 84.55 MiB (60) | 111.81 MiB / 114.59 MiB (60) |
+| host_threads_end | 8 / 8 (60) | 11 / 11 (60) |
+| host_threads_ready | 7 / 7 (60) | 11 / 11 (60) |
+| llm_requests | 4 / 4 (60) | 4 / 4 (60) |
+| num_gc_end | 12 / 12 (60) | 10 / 12 (60) |
+| num_gc_ready | 7 / 7 (60) | 1 / 2 (60) |
+| num_gc_workload | 5 / 5 (60) | 9 / 11 (60) |
+| sys_asis_ready | 153.00 MiB / 156.00 MiB (60) | 105.67 MiB / 107.87 MiB (60) |
+| sys_gc_ready | 151.40 MiB / 156.00 MiB (60) | 105.67 MiB / 107.87 MiB (60) |
+| tool_ms:history.read | 34.1 / 39.0 (60) | 25.7 / 32.2 (60) |
+| tool_ms:history.search:common | 30.5 / 36.7 (60) | 23.4 / 29.0 (60) |
+| tool_ms:history.search:rare | 231.9 / 245.0 (60) | 188.6 / 212.9 (60) |
+| tree_pss_ready | 239.79 MiB / 240.91 MiB (60) | 109.85 MiB / 112.67 MiB (60) |
+| tree_rss_ready | 245.16 MiB / 246.34 MiB (60) | 111.81 MiB / 114.59 MiB (60) |
 
 ### Workload d200, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 760.7 / 828.8 (15) | 408.6 / 418.4 (15) |
-| to_first_tool_ms | 32.2 / 38.5 (15) | 71.3 / 72.9 (15) |
-| turn_ms | 430.6 / 500.6 (15) | 423.1 / 429.8 (15) |
-| cpu_total_ms_end | 1910 / 1990 (15) | 1520 / 1530 (15) |
-| cpu_total_workload_ms | 890.0 / 960.0 (15) | 920.0 / 940.0 (15) |
-| cpu_ext_workload_ms | 430.0 / 490.0 (15) | 510.0 / 520.0 (15) |
-| ext_cpu_ms_end | 1290 / 1350 (15) | 1100 / 1120 (15) |
-| ext_rss_end | 212.49 MiB / 214.81 MiB (15) | 156.34 MiB / 170.29 MiB (15) |
-| ext_pss_end | 161.96 MiB / 168.09 MiB (15) | 111.62 MiB / 124.80 MiB (15) |
-| tree_rss_end | 305.20 MiB / 307.68 MiB (15) | 156.34 MiB / 170.29 MiB (15) |
-| tree_pss_end | 240.08 MiB / 254.58 MiB (15) | 111.62 MiB / 124.80 MiB (15) |
-| ext_peak_rss_end | 212.49 MiB / 214.81 MiB (15) | 168.85 MiB / 170.29 MiB (15) |
-| ext_anon_end | 152.23 MiB / 154.52 MiB (15) | 97.33 MiB / 111.23 MiB (15) |
-| ext_rss_ready | 161.43 MiB / 162.14 MiB (15) | 111.71 MiB / 114.55 MiB (15) |
-| ext_pss_ready | 113.72 MiB / 116.05 MiB (15) | 66.60 MiB / 69.32 MiB (15) |
-| heap_used_gc_end | 36.31 MiB / 36.31 MiB (15) | 25.75 MiB / 25.77 MiB (15) |
-| heap_used_asis_end | 52.53 MiB / 52.81 MiB (15) | 26.59 MiB / 38.80 MiB (15) |
-| heap_inuse_gc_end | 104.09 MiB / 104.34 MiB (15) | 60.85 MiB / 62.85 MiB (15) |
-| heap_inuse_asis_end | 105.34 MiB / 105.84 MiB (15) | 62.10 MiB / 67.27 MiB (15) |
-| sys_asis_end | 207.81 MiB / 211.50 MiB (15) | 163.90 MiB / 166.07 MiB (15) |
-| sys_gc_end | 207.81 MiB / 211.50 MiB (15) | 163.90 MiB / 166.07 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1080 (15) | 590 / 610 (15) |
-| cpu_wait4_ms | 244.1 / 262.4 (15) | 1558.1 / 1567.6 (15) |
-| ext_anon_ready | 105.86 MiB / 106.66 MiB (15) | 59.45 MiB / 62.45 MiB (15) |
-| ext_cchild_ms_end | 410 / 420 (15) | 420 / 430 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 850 / 910 (15) | 590 / 610 (15) |
-| ext_peak_rss_ready | 161.43 MiB / 162.14 MiB (15) | 111.71 MiB / 114.55 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 63.84 MiB / 98.34 MiB (15) | 40.41 MiB / 40.91 MiB (15) |
-| heap_inuse_gc_ready | 70.34 MiB / 101.59 MiB (15) | 40.91 MiB / 41.41 MiB (15) |
-| heap_used_asis_ready | 41.49 MiB / 41.59 MiB (15) | 26.13 MiB / 27.57 MiB (15) |
-| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (15) | 21.94 MiB / 21.94 MiB (15) |
-| host_anon_end | 50.31 MiB / 50.68 MiB (15) | 97.33 MiB / 111.23 MiB (15) |
-| host_anon_ready | 43.32 MiB / 43.67 MiB (15) | 59.45 MiB / 62.45 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 420 / 430 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 220 / 230 (15) | 1100 / 1120 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 590 / 610 (15) |
-| host_peak_rss_end | 92.56 MiB / 93.11 MiB (15) | 168.85 MiB / 170.29 MiB (15) |
-| host_peak_rss_ready | 84.01 MiB / 84.38 MiB (15) | 111.71 MiB / 114.55 MiB (15) |
-| host_pss_end | 73.51 MiB / 91.15 MiB (15) | 111.62 MiB / 124.80 MiB (15) |
-| host_pss_ready | 64.88 MiB / 82.56 MiB (15) | 66.60 MiB / 69.32 MiB (15) |
-| host_rss_end | 92.56 MiB / 93.11 MiB (15) | 156.34 MiB / 170.29 MiB (15) |
-| host_rss_ready | 84.01 MiB / 84.38 MiB (15) | 111.71 MiB / 114.55 MiB (15) |
-| host_threads_end | 8 / 8 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 4 / 4 (15) | 4 / 4 (15) |
-| num_gc_end | 14 / 14 (15) | 15 / 15 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 1 (15) |
-| num_gc_workload | 7 / 7 (15) | 14 / 14 (15) |
-| sys_asis_ready | 151.50 MiB / 156.00 MiB (15) | 105.68 MiB / 107.18 MiB (15) |
-| sys_gc_ready | 150.00 MiB / 154.14 MiB (15) | 105.68 MiB / 107.24 MiB (15) |
-| tool_ms:history.read | 48.6 / 55.5 (15) | 43.7 / 45.1 (15) |
-| tool_ms:history.search:common | 36.6 / 40.8 (15) | 32.2 / 34.1 (15) |
-| tool_ms:history.search:rare | 275.2 / 322.8 (15) | 250.3 / 260.1 (15) |
-| tree_pss_ready | 180.12 MiB / 197.08 MiB (15) | 66.60 MiB / 69.32 MiB (15) |
-| tree_rss_ready | 245.41 MiB / 246.62 MiB (15) | 111.71 MiB / 114.55 MiB (15) |
+| startup_ms | 785.5 / 879.4 (60) | 435.2 / 483.0 (60) |
+| to_first_tool_ms | 32.5 / 38.7 (60) | 73.2 / 81.8 (60) |
+| turn_ms | 465.5 / 529.7 (60) | 437.2 / 505.5 (60) |
+| cpu_total_ms_end | 2000 / 2310 (60) | 1575 / 1820 (60) |
+| cpu_total_workload_ms | 940.0 / 1100.0 (60) | 945.0 / 1110.0 (60) |
+| cpu_ext_workload_ms | 455.0 / 540.0 (60) | 520.0 / 610.0 (60) |
+| ext_cpu_ms_end | 1355 / 1560 (60) | 1160 / 1310 (60) |
+| ext_rss_end | 212.39 MiB / 214.01 MiB (60) | 168.72 MiB / 170.13 MiB (60) |
+| ext_pss_end | 208.41 MiB / 210.02 MiB (60) | 166.63 MiB / 167.96 MiB (60) |
+| tree_rss_end | 305.02 MiB / 306.48 MiB (60) | 168.72 MiB / 170.13 MiB (60) |
+| tree_pss_end | 299.67 MiB / 301.15 MiB (60) | 166.63 MiB / 167.96 MiB (60) |
+| ext_peak_rss_end | 212.39 MiB / 214.01 MiB (60) | 168.72 MiB / 170.13 MiB (60) |
+| ext_anon_end | 152.07 MiB / 153.75 MiB (60) | 109.69 MiB / 111.04 MiB (60) |
+| ext_rss_ready | 161.16 MiB / 162.13 MiB (60) | 111.94 MiB / 114.50 MiB (60) |
+| ext_pss_ready | 157.16 MiB / 158.18 MiB (60) | 109.95 MiB / 112.60 MiB (60) |
+| heap_used_gc_end | 36.31 MiB / 36.32 MiB (60) | 25.76 MiB / 25.77 MiB (60) |
+| heap_used_asis_end | 52.71 MiB / 53.06 MiB (60) | 37.06 MiB / 38.80 MiB (60) |
+| heap_inuse_gc_end | 104.34 MiB / 104.84 MiB (60) | 61.60 MiB / 63.85 MiB (60) |
+| heap_inuse_asis_end | 105.59 MiB / 106.09 MiB (60) | 65.29 MiB / 67.77 MiB (60) |
+| sys_asis_end | 207.85 MiB / 210.00 MiB (60) | 163.76 MiB / 167.13 MiB (60) |
+| sys_gc_end | 207.85 MiB / 210.00 MiB (60) | 163.69 MiB / 167.13 MiB (60) |
+| cpu_total_ms_ready | 1055 / 1220 (60) | 625 / 720 (60) |
+| cpu_wait4_ms | 258.7 / 287.7 (60) | 1621.6 / 1855.9 (60) |
+| ext_anon_ready | 105.53 MiB / 106.43 MiB (60) | 59.80 MiB / 62.45 MiB (60) |
+| ext_cchild_ms_end | 440 / 500 (60) | 425 / 500 (60) |
+| ext_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| ext_count | 1 / 1 (60) | 1 / 1 (60) |
+| ext_cpu_ms_ready | 880 / 1020 (60) | 625 / 720 (60) |
+| ext_peak_rss_ready | 161.16 MiB / 162.13 MiB (60) | 111.94 MiB / 114.50 MiB (60) |
+| ext_threads_end | 12 / 12 (60) | 11 / 11 (60) |
+| ext_threads_ready | 12 / 12 (60) | 11 / 11 (60) |
+| heap_inuse_asis_ready | 63.84 MiB / 98.34 MiB (60) | 40.66 MiB / 42.41 MiB (60) |
+| heap_inuse_gc_ready | 70.34 MiB / 101.59 MiB (60) | 40.91 MiB / 42.66 MiB (60) |
+| heap_used_asis_ready | 41.39 MiB / 41.63 MiB (60) | 25.68 MiB / 26.16 MiB (60) |
+| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (60) | 21.94 MiB / 21.95 MiB (60) |
+| host_anon_end | 50.16 MiB / 50.61 MiB (60) | 109.69 MiB / 111.04 MiB (60) |
+| host_anon_ready | 43.15 MiB / 43.59 MiB (60) | 59.80 MiB / 62.45 MiB (60) |
+| host_cchild_ms_end | 0 / 0 (60) | 425 / 500 (60) |
+| host_cchild_ms_ready | 0 / 0 (60) | 0 / 0 (60) |
+| host_cpu_ms_end | 230 / 250 (60) | 1160 / 1310 (60) |
+| host_cpu_ms_ready | 180 / 200 (60) | 625 / 720 (60) |
+| host_peak_rss_end | 92.60 MiB / 93.10 MiB (60) | 168.72 MiB / 170.13 MiB (60) |
+| host_peak_rss_ready | 84.06 MiB / 84.44 MiB (60) | 111.94 MiB / 114.50 MiB (60) |
+| host_pss_end | 91.21 MiB / 91.64 MiB (60) | 166.63 MiB / 167.96 MiB (60) |
+| host_pss_ready | 82.62 MiB / 82.99 MiB (60) | 109.95 MiB / 112.60 MiB (60) |
+| host_rss_end | 92.60 MiB / 93.10 MiB (60) | 168.72 MiB / 170.13 MiB (60) |
+| host_rss_ready | 84.06 MiB / 84.44 MiB (60) | 111.94 MiB / 114.50 MiB (60) |
+| host_threads_end | 8 / 8 (60) | 11 / 11 (60) |
+| host_threads_ready | 7 / 7 (60) | 11 / 11 (60) |
+| llm_requests | 4 / 4 (60) | 4 / 4 (60) |
+| num_gc_end | 14 / 14 (60) | 14 / 15 (60) |
+| num_gc_ready | 7 / 7 (60) | 1 / 2 (60) |
+| num_gc_workload | 7 / 7 (60) | 12 / 14 (60) |
+| sys_asis_ready | 151.50 MiB / 156.00 MiB (60) | 105.58 MiB / 107.72 MiB (60) |
+| sys_gc_ready | 150.00 MiB / 154.50 MiB (60) | 105.62 MiB / 107.72 MiB (60) |
+| tool_ms:history.read | 54.5 / 66.0 (60) | 45.9 / 57.3 (60) |
+| tool_ms:history.search:common | 41.3 / 49.9 (60) | 33.5 / 42.7 (60) |
+| tool_ms:history.search:rare | 293.5 / 329.0 (60) | 258.8 / 296.9 (60) |
+| tree_pss_ready | 239.79 MiB / 241.10 MiB (60) | 109.95 MiB / 112.60 MiB (60) |
+| tree_rss_ready | 245.27 MiB / 246.42 MiB (60) | 111.94 MiB / 114.50 MiB (60) |
 
 ### Workload e, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| startup_ms | 765.5 / 775.9 (15) | 408.4 / 421.0 (15) |
-| to_first_tool_ms | 29.9 / 37.8 (15) | 71.8 / 73.5 (15) |
-| turn_ms | 14948.2 / 15096.9 (15) | 2180.3 / 2230.1 (15) |
-| cpu_total_ms_end | 18130 / 18610 (15) | 3630 / 3700 (15) |
-| cpu_total_workload_ms | 17090.0 / 17580.0 (15) | 3030.0 / 3110.0 (15) |
-| cpu_ext_workload_ms | 8540.0 / 8960.0 (15) | 3030.0 / 3110.0 (15) |
-| ext_cpu_ms_end | 9390 / 9820 (15) | 3630 / 3700 (15) |
-| ext_rss_end | 416.06 MiB / 472.58 MiB (15) | 315.89 MiB / 317.00 MiB (15) |
-| ext_pss_end | 364.01 MiB / 425.09 MiB (15) | 269.41 MiB / 277.21 MiB (15) |
-| tree_rss_end | 544.31 MiB / 605.12 MiB (15) | 315.89 MiB / 317.00 MiB (15) |
-| tree_pss_end | 468.00 MiB / 535.17 MiB (15) | 269.55 MiB / 277.23 MiB (15) |
-| ext_peak_rss_end | 498.54 MiB / 518.14 MiB (15) | 315.89 MiB / 317.00 MiB (15) |
-| ext_anon_end | 355.78 MiB / 412.39 MiB (15) | 256.81 MiB / 258.08 MiB (15) |
-| ext_rss_ready | 161.27 MiB / 162.00 MiB (15) | 111.43 MiB / 112.16 MiB (15) |
-| ext_pss_ready | 114.74 MiB / 120.28 MiB (15) | 69.71 MiB / 77.07 MiB (15) |
-| heap_used_gc_end | 35.91 MiB / 35.93 MiB (15) | 30.14 MiB / 30.20 MiB (15) |
-| heap_used_asis_end | 47.34 MiB / 55.66 MiB (15) | 62.70 MiB / 95.98 MiB (15) |
-| heap_inuse_gc_end | 168.84 MiB / 169.34 MiB (15) | 162.10 MiB / 174.85 MiB (15) |
-| heap_inuse_asis_end | 174.24 MiB / 177.58 MiB (15) | 188.93 MiB / 203.34 MiB (15) |
-| sys_asis_end | 412.89 MiB / 423.44 MiB (15) | 293.41 MiB / 296.86 MiB (15) |
-| sys_gc_end | 406.11 MiB / 415.29 MiB (15) | 275.79 MiB / 278.57 MiB (15) |
-| cpu_total_ms_ready | 1030 / 1040 (15) | 600 / 610 (15) |
-| cpu_wait4_ms | 8756.7 / 8883.7 (15) | 3660.7 / 3734.1 (15) |
-| ext_anon_ready | 105.62 MiB / 106.51 MiB (15) | 59.28 MiB / 60.03 MiB (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 1 / 1 (15) | 1 / 1 (15) |
-| ext_cpu_ms_ready | 860 / 870 (15) | 600 / 610 (15) |
-| ext_peak_rss_ready | 161.27 MiB / 162.00 MiB (15) | 111.43 MiB / 112.16 MiB (15) |
-| ext_threads_end | 12 / 12 (15) | 11 / 11 (15) |
-| ext_threads_ready | 12 / 12 (15) | 11 / 11 (15) |
-| heap_inuse_asis_ready | 63.84 MiB / 98.34 MiB (15) | 40.41 MiB / 42.66 MiB (15) |
-| heap_inuse_gc_ready | 70.09 MiB / 101.59 MiB (15) | 40.91 MiB / 58.16 MiB (15) |
-| heap_used_asis_ready | 41.42 MiB / 41.60 MiB (15) | 25.67 MiB / 26.15 MiB (15) |
-| heap_used_gc_ready | 35.15 MiB / 35.15 MiB (15) | 21.94 MiB / 21.94 MiB (15) |
-| host_anon_end | 87.55 MiB / 96.12 MiB (15) | 256.81 MiB / 258.08 MiB (15) |
-| host_anon_ready | 43.32 MiB / 43.74 MiB (15) | 59.28 MiB / 60.03 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cchild_ms_ready | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 8720 / 8850 (15) | 3630 / 3700 (15) |
-| host_cpu_ms_ready | 170 / 180 (15) | 600 / 610 (15) |
-| host_peak_rss_end | 132.22 MiB / 139.23 MiB (15) | 315.89 MiB / 317.00 MiB (15) |
-| host_peak_rss_ready | 84.10 MiB / 84.65 MiB (15) | 111.43 MiB / 112.16 MiB (15) |
-| host_pss_end | 104.51 MiB / 110.36 MiB (15) | 269.55 MiB / 277.23 MiB (15) |
-| host_pss_ready | 62.92 MiB / 82.52 MiB (15) | 69.71 MiB / 77.07 MiB (15) |
-| host_rss_end | 131.00 MiB / 139.23 MiB (15) | 315.89 MiB / 317.00 MiB (15) |
-| host_rss_ready | 84.10 MiB / 84.65 MiB (15) | 111.43 MiB / 112.16 MiB (15) |
-| host_threads_end | 9 / 9 (15) | 11 / 11 (15) |
-| host_threads_ready | 7 / 7 (15) | 11 / 11 (15) |
-| llm_requests | 200 / 200 (15) | 200 / 200 (15) |
-| num_gc_end | 65 / 68 (15) | 23 / 24 (15) |
-| num_gc_ready | 7 / 7 (15) | 1 / 2 (15) |
-| num_gc_workload | 58 / 61 (15) | 22 / 23 (15) |
-| session_compaction | 3 / 3 (15) | 3 / 3 (15) |
-| session_context_window | 0 / 0 (15) | 0 / 0 (15) |
-| session_custom_message | 3 / 3 (15) | 3 / 3 (15) |
-| session_entries | 531 / 531 (15) | 531 / 531 (15) |
-| session_tool_results | 180 / 180 (15) | 180 / 180 (15) |
-| sys_asis_ready | 151.50 MiB / 154.50 MiB (15) | 105.01 MiB / 109.38 MiB (15) |
-| sys_gc_ready | 151.28 MiB / 154.47 MiB (15) | 105.01 MiB / 109.38 MiB (15) |
-| tool_ms:get_context_remaining | 5.8 / 8.1 (450) | 0.4 / 0.6 (450) |
-| tool_ms:notes.append | 8.2 / 10.9 (900) | 1.1 / 1.5 (900) |
-| tool_ms:notes.write | 10.1 / 13.1 (900) | 3.0 / 4.0 (900) |
-| tool_ms:read | 10.9 / 13.0 (450) | 3.3 / 4.2 (450) |
-| tree_pss_ready | 177.28 MiB / 196.52 MiB (15) | 69.71 MiB / 77.07 MiB (15) |
-| tree_rss_ready | 245.33 MiB / 246.29 MiB (15) | 111.43 MiB / 112.16 MiB (15) |
+| startup_ms | 796.4 / 882.3 (25) | 435.1 / 482.1 (25) |
+| to_first_tool_ms | 33.9 / 41.3 (25) | 75.7 / 82.9 (25) |
+| turn_ms | 15996.7 / 16444.8 (25) | 2545.2 / 2668.4 (25) |
+| cpu_total_ms_end | 19490 / 19910 (25) | 4200 / 4450 (25) |
+| cpu_total_workload_ms | 18370.0 / 18830.0 (25) | 3570.0 / 3730.0 (25) |
+| cpu_ext_workload_ms | 9300.0 / 9650.0 (25) | 3570.0 / 3730.0 (25) |
+| ext_cpu_ms_end | 10230 / 10550 (25) | 4200 / 4450 (25) |
+| ext_rss_end | 459.14 MiB / 487.18 MiB (25) | 310.57 MiB / 316.40 MiB (25) |
+| ext_pss_end | 455.12 MiB / 483.25 MiB (25) | 308.32 MiB / 314.31 MiB (25) |
+| tree_rss_end | 591.01 MiB / 619.77 MiB (25) | 310.57 MiB / 316.40 MiB (25) |
+| tree_pss_end | 585.53 MiB / 614.21 MiB (25) | 308.32 MiB / 314.31 MiB (25) |
+| ext_peak_rss_end | 516.88 MiB / 540.95 MiB (25) | 311.85 MiB / 316.96 MiB (25) |
+| ext_anon_end | 398.77 MiB / 426.95 MiB (25) | 251.51 MiB / 257.46 MiB (25) |
+| ext_rss_ready | 161.12 MiB / 161.66 MiB (25) | 111.50 MiB / 113.69 MiB (25) |
+| ext_pss_ready | 157.14 MiB / 157.71 MiB (25) | 109.51 MiB / 111.62 MiB (25) |
+| heap_used_gc_end | 35.93 MiB / 36.81 MiB (25) | 30.18 MiB / 30.22 MiB (25) |
+| heap_used_asis_end | 48.24 MiB / 96.66 MiB (25) | 86.66 MiB / 104.08 MiB (25) |
+| heap_inuse_gc_end | 168.84 MiB / 169.34 MiB (25) | 162.60 MiB / 174.35 MiB (25) |
+| heap_inuse_asis_end | 174.49 MiB / 197.35 MiB (25) | 190.07 MiB / 206.20 MiB (25) |
+| sys_asis_end | 446.05 MiB / 487.97 MiB (25) | 291.68 MiB / 314.69 MiB (25) |
+| sys_gc_end | 426.42 MiB / 466.71 MiB (25) | 272.16 MiB / 292.32 MiB (25) |
+| cpu_total_ms_ready | 1080 / 1210 (25) | 630 / 710 (25) |
+| cpu_wait4_ms | 9229.2 / 9507.9 (25) | 4242.2 / 4491.1 (25) |
+| ext_anon_ready | 105.62 MiB / 106.13 MiB (25) | 59.46 MiB / 61.50 MiB (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 1 / 1 (25) | 1 / 1 (25) |
+| ext_cpu_ms_ready | 900 / 1010 (25) | 630 / 710 (25) |
+| ext_peak_rss_ready | 161.12 MiB / 161.66 MiB (25) | 111.50 MiB / 113.69 MiB (25) |
+| ext_threads_end | 12 / 12 (25) | 11 / 11 (25) |
+| ext_threads_ready | 12 / 12 (25) | 11 / 11 (25) |
+| heap_inuse_asis_ready | 66.09 MiB / 98.34 MiB (25) | 40.41 MiB / 42.41 MiB (25) |
+| heap_inuse_gc_ready | 101.09 MiB / 101.84 MiB (25) | 41.16 MiB / 42.66 MiB (25) |
+| heap_used_asis_ready | 36.96 MiB / 41.56 MiB (25) | 26.08 MiB / 26.16 MiB (25) |
+| heap_used_gc_ready | 35.12 MiB / 35.15 MiB (25) | 21.94 MiB / 21.94 MiB (25) |
+| host_anon_end | 87.31 MiB / 92.23 MiB (25) | 251.51 MiB / 257.46 MiB (25) |
+| host_anon_ready | 43.16 MiB / 43.61 MiB (25) | 59.46 MiB / 61.50 MiB (25) |
+| host_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| host_cchild_ms_ready | 0 / 0 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 9190 / 9470 (25) | 4200 / 4450 (25) |
+| host_cpu_ms_ready | 180 / 200 (25) | 630 / 710 (25) |
+| host_peak_rss_end | 131.50 MiB / 135.33 MiB (25) | 311.85 MiB / 316.96 MiB (25) |
+| host_peak_rss_ready | 84.04 MiB / 84.63 MiB (25) | 111.50 MiB / 113.69 MiB (25) |
+| host_pss_end | 128.84 MiB / 133.76 MiB (25) | 308.32 MiB / 314.31 MiB (25) |
+| host_pss_ready | 82.57 MiB / 83.12 MiB (25) | 109.51 MiB / 111.62 MiB (25) |
+| host_rss_end | 130.29 MiB / 135.33 MiB (25) | 310.57 MiB / 316.40 MiB (25) |
+| host_rss_ready | 84.04 MiB / 84.63 MiB (25) | 111.50 MiB / 113.69 MiB (25) |
+| host_threads_end | 9 / 9 (25) | 11 / 11 (25) |
+| host_threads_ready | 7 / 7 (25) | 11 / 11 (25) |
+| llm_requests | 200 / 200 (25) | 200 / 200 (25) |
+| num_gc_end | 48 / 64 (25) | 23 / 23 (25) |
+| num_gc_ready | 7 / 7 (25) | 1 / 2 (25) |
+| num_gc_workload | 41 / 57 (25) | 21 / 22 (25) |
+| session_compaction | 3 / 3 (25) | 3 / 3 (25) |
+| session_context_window | 0 / 0 (25) | 0 / 0 (25) |
+| session_custom_message | 3 / 3 (25) | 3 / 3 (25) |
+| session_entries | 531 / 531 (25) | 531 / 531 (25) |
+| session_tool_results | 180 / 180 (25) | 180 / 180 (25) |
+| sys_asis_ready | 154.50 MiB / 157.50 MiB (25) | 104.66 MiB / 106.83 MiB (25) |
+| sys_gc_ready | 152.30 MiB / 156.97 MiB (25) | 104.91 MiB / 106.83 MiB (25) |
+| tool_ms:get_context_remaining | 6.7 / 9.1 (750) | 0.5 / 0.7 (750) |
+| tool_ms:notes.append | 9.1 / 12.1 (1500) | 1.3 / 1.6 (1500) |
+| tool_ms:notes.write | 11.3 / 14.7 (1500) | 3.5 / 4.6 (1500) |
+| tool_ms:read | 11.8 / 14.0 (750) | 3.8 / 4.8 (750) |
+| tree_pss_ready | 239.54 MiB / 240.67 MiB (25) | 109.51 MiB / 111.62 MiB (25) |
+| tree_rss_ready | 245.09 MiB / 246.16 MiB (25) | 111.50 MiB / 113.69 MiB (25) |
 
 ### Workload f, warm
 
 | Metric | ts median / p90 (n) | pi median / p90 (n) |
 |---|---:|---:|
-| cpu_total_ms_end | 68170 / 69040 (15) | 40740 / 40980 (15) |
-| ext_cpu_ms_end | 58000 / 58730 (15) | 40740 / 40980 (15) |
-| ext_rss_end | 8104.57 MiB / 8143.22 MiB (15) | 6165.25 MiB / 6173.42 MiB (15) |
-| ext_pss_end | 4823.92 MiB / 4860.11 MiB (15) | 3084.85 MiB / 3096.39 MiB (15) |
-| tree_rss_end | 13156.59 MiB / 13197.94 MiB (15) | 6165.25 MiB / 6173.42 MiB (15) |
-| tree_pss_end | 7466.56 MiB / 7501.35 MiB (15) | 3084.85 MiB / 3096.39 MiB (15) |
-| ext_peak_rss_end | 9336.89 MiB / 9352.98 MiB (15) | 6389.30 MiB / 6401.93 MiB (15) |
-| ext_anon_end | 4772.55 MiB / 4810.62 MiB (15) | 3037.86 MiB / 3046.13 MiB (15) |
-| ext_avg_rss_end | 135.08 MiB / 135.72 MiB (15) | 102.75 MiB / 102.89 MiB (15) |
-| ext_avg_pss_end | 80.40 MiB / 81.00 MiB (15) | 51.41 MiB / 51.61 MiB (15) |
-| all_ready_ms | 46051.9 / 46228.0 (15) | 24874.5 / 24924.9 (15) |
-| ext_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| ext_count | 60 / 60 (15) | 60 / 60 (15) |
-| ext_threads_end | 720 / 720 (15) | 660 / 660 (15) |
-| host_anon_end | 2601.07 MiB / 2603.02 MiB (15) | 3037.86 MiB / 3046.13 MiB (15) |
-| host_cchild_ms_end | 0 / 0 (15) | 0 / 0 (15) |
-| host_cpu_ms_end | 10270 / 10390 (15) | 40740 / 40980 (15) |
-| host_peak_rss_end | 5052.30 MiB / 5054.71 MiB (15) | 6389.30 MiB / 6401.93 MiB (15) |
-| host_pss_end | 2642.64 MiB / 2644.91 MiB (15) | 3084.85 MiB / 3096.39 MiB (15) |
-| host_rss_end | 5052.30 MiB / 5054.71 MiB (15) | 6165.25 MiB / 6173.42 MiB (15) |
-| host_threads_end | 420 / 421 (15) | 660 / 660 (15) |
+| cpu_total_ms_end | 70830 / 72760 (25) | 42200 / 43180 (25) |
+| ext_cpu_ms_end | 60270 / 62060 (25) | 42210 / 43180 (25) |
+| ext_rss_end | 8093.95 MiB / 8132.78 MiB (25) | 6165.12 MiB / 6177.95 MiB (25) |
+| ext_pss_end | 4814.08 MiB / 4852.40 MiB (25) | 3090.12 MiB / 3102.97 MiB (25) |
+| tree_rss_end | 13149.36 MiB / 13182.81 MiB (25) | 6165.11 MiB / 6177.95 MiB (25) |
+| tree_pss_end | 7461.77 MiB / 7495.47 MiB (25) | 3090.10 MiB / 3102.97 MiB (25) |
+| ext_peak_rss_end | 9332.15 MiB / 9349.92 MiB (25) | 6389.39 MiB / 6405.65 MiB (25) |
+| ext_anon_end | 4761.07 MiB / 4799.39 MiB (25) | 3037.91 MiB / 3050.75 MiB (25) |
+| ext_avg_rss_end | 134.90 MiB / 135.55 MiB (25) | 102.75 MiB / 102.97 MiB (25) |
+| ext_avg_pss_end | 80.23 MiB / 80.87 MiB (25) | 51.50 MiB / 51.72 MiB (25) |
+| all_ready_ms | 47176.5 / 48278.1 (25) | 25532.0 / 25878.6 (25) |
+| ext_cchild_ms_end | 0 / 0 (25) | 0 / 0 (25) |
+| ext_count | 60 / 60 (25) | 60 / 60 (25) |
+| ext_threads_end | 720 / 720 (25) | 660 / 660 (25) |
+| host_anon_end | 2603.15 MiB / 2606.03 MiB (25) | 3037.90 MiB / 3050.75 MiB (25) |
+| host_cchild_ms_end | 0 / 10 (25) | 0 / 0 (25) |
+| host_cpu_ms_end | 10550 / 10750 (25) | 42200 / 43180 (25) |
+| host_peak_rss_end | 5053.06 MiB / 5056.39 MiB (25) | 6389.39 MiB / 6405.65 MiB (25) |
+| host_pss_end | 2645.75 MiB / 2649.01 MiB (25) | 3090.10 MiB / 3102.97 MiB (25) |
+| host_rss_end | 5053.06 MiB / 5056.39 MiB (25) | 6165.11 MiB / 6177.95 MiB (25) |
+| host_threads_end | 420 / 422 (25) | 660 / 660 (25) |
 

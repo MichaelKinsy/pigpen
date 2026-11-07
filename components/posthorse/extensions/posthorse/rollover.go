@@ -161,7 +161,7 @@ const retainedTailContent = "[Retained pre-rollover tail]"
 // chronologicalRetainedTail is rollover.ts:116-149: the retained pre-rollover messages move ahead
 // of the recovery record, so the model reads them in order. changed is false when messages is
 // returned as is (the TS reference-identity test).
-func chronologicalRetainedTail(messages []any, ctx sdk.Context, stale staleReminder) ([]any, bool, error) {
+func chronologicalRetainedTail(messages []any, ctx sdk.Context, stale staleReminder, cache *retainedCache) ([]any, bool, error) {
 	if len(messages) < 2 {
 		return messages, false, nil
 	}
@@ -172,7 +172,7 @@ func chronologicalRetainedTail(messages []any, ctx sdk.Context, stale staleRemin
 	if summary, _ := str(first, "summary"); !hasRetainedRolloverMarker(summary) {
 		return messages, false, nil
 	}
-	count, err := countRetainedMessages(ctx, stale)
+	count, err := cache.count(ctx.SessionManager(), stale)
 	if err != nil {
 		return nil, false, err
 	}
@@ -216,7 +216,7 @@ func dropStale(messages []any, stale staleReminder) (filtered []any, changed boo
 }
 
 // registerReminderFilter is rollover.ts:150-166.
-func registerReminderFilter(ext *sdk.Extension, policy snapshotReader, reminders *reminderLookup) {
+func registerReminderFilter(ext *sdk.Extension, policy snapshotReader, reminders *reminderLookup, retained *retainedCache) {
 	ext.OnEvent(sdk.EventContext, func(ctx sdk.Context, event map[string]any) (any, error) {
 		messages, _ := arrOf(event["messages"])
 		stale, err := staleReminderPredicate(messages, ctx, policy, reminders)
@@ -224,7 +224,7 @@ func registerReminderFilter(ext *sdk.Extension, policy snapshotReader, reminders
 			return nil, err
 		}
 		filtered, changed := dropStale(messages, stale)
-		ordered, reordered, err := chronologicalRetainedTail(filtered, ctx, stale)
+		ordered, reordered, err := chronologicalRetainedTail(filtered, ctx, stale, retained)
 		if err != nil {
 			return nil, err
 		}
@@ -540,6 +540,7 @@ func registerAutomaticRollover(ext *sdk.Extension, policy snapshotReader, toolTo
 func registerRollover(ext *sdk.Extension, policy snapshotReader, toolTokens toolTokensFunc, resources rolloverResources) {
 	resetRequests := newResetRequests(ext)
 	reminders := createReminderLookup()
+	retained := newRetainedCache()
 	resetTurn := func() {
 		resetRequests.clear()
 		resources.resetPages()
@@ -551,14 +552,16 @@ func registerRollover(ext *sdk.Extension, policy snapshotReader, toolTokens tool
 	ext.OnEvent(sdk.EventSessionStart, func(sdk.Context, map[string]any) (any, error) {
 		resetTurn()
 		reminders.reset()
+		retained.reset()
 		return nil, nil
 	})
 	ext.OnEvent(sdk.EventSessionTree, func(sdk.Context, map[string]any) (any, error) {
 		reminders.reset()
+		retained.reset()
 		return nil, nil
 	})
 	registerGuidance(ext, policy)
-	registerReminderFilter(ext, policy, reminders)
+	registerReminderFilter(ext, policy, reminders, retained)
 	registerAutomaticRollover(ext, policy, toolTokens, resources.notes)
 	ext.OnEvent(sdk.EventTurnEnd, func(ctx sdk.Context, event map[string]any) (any, error) {
 		results, _ := arrOf(event["toolResults"])

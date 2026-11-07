@@ -118,6 +118,14 @@ under test between samples.
 Generated data (archives, notes) are deterministic (fixed seeds) and cached under the scratch tree. A tool call that
 fails, or a search whose result lacks the planted needle, invalidates the sample.
 
+## Diagnosis hooks and top-up runs
+
+* `--first N` (with `PH_PERF_KEEP=1` in `run.sh`) appends a top-up of `--samples` runs from index N to the same data directory; `summarize` pools them.
+* `PH_PERF_CPUPROF=1`: the Go mem reporter also writes a CPU profile of the extension process (start to the second snapshot);
+  `PH_PERF_HOSTPROF=1`: the host runs with `PIG_PROFILE=cpu`. Profiles land in `$PH_PERF_SCRATCH/prof` (never in a measured sample's
+  data); read them with `go tool pprof -top -cum`. Extension write/read syscall counters (`ext_sys*_workload`) are information only.
+* `summarize` ends with the relative-spread list ((p90-p50)/p50 above 5%).
+
 ## Ratchet rules
 
 1. On the `both` run, Go must be `<=` TS (side `ts`, same pig host) on the median of every metric in `perf.py`'s `RATCHET`

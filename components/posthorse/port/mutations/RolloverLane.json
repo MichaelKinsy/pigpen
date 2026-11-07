@@ -1208,13 +1208,13 @@
  {
   "name": "register-session-start-reset-dropped",
   "file": "rollover.go",
-  "find": "\t\tresetTurn()\n\t\treminders.reset()\n\t\treturn nil, nil",
-  "replace": "\t\treminders.reset()\n\t\treturn nil, nil"
+  "find": "\t\tresetTurn()\n\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil",
+  "replace": "\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil"
  },
  {
   "name": "register-session-tree-dropped",
   "file": "rollover.go",
-  "find": "\text.OnEvent(sdk.EventSessionTree, func(sdk.Context, map[string]any) (any, error) {\n\t\treminders.reset()\n\t\treturn nil, nil\n\t})",
+  "find": "\text.OnEvent(sdk.EventSessionTree, func(sdk.Context, map[string]any) (any, error) {\n\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil\n\t})",
   "replace": ""
  },
  {
@@ -1238,7 +1238,7 @@
  {
   "name": "register-filter-dropped",
   "file": "rollover.go",
-  "find": "\tregisterReminderFilter(ext, policy, reminders)\n",
+  "find": "\tregisterReminderFilter(ext, policy, reminders, retained)\n",
   "replace": ""
  },
  {
@@ -1360,5 +1360,149 @@
   "file": "rollover.go",
   "find": "\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t\treturn nil, nil",
   "replace": "\t\t}\n\t\treturn nil, nil"
+ },
+ {
+  "name": "retained-count-error-swallowed",
+  "file": "reminders.go",
+  "find": "\tprojection, err := source.BuildSessionProjection()\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\tmessages = retainedMessages",
+  "replace": "\tprojection, _ := source.BuildSessionProjection()\n\tmessages = retainedMessages"
+ },
+ {
+  "name": "tail-count-error-swallowed",
+  "file": "rollover.go",
+  "find": "\tcount, err := cache.count(ctx.SessionManager(), stale)\n\tif err != nil {\n\t\treturn nil, false, err\n\t}",
+  "replace": "\tcount, _ := cache.count(ctx.SessionManager(), stale)"
+ },
+ {
+  "name": "register-session-start-reminders-kept",
+  "file": "rollover.go",
+  "find": "\t\tresetTurn()\n\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil",
+  "replace": "\t\tresetTurn()\n\t\tretained.reset()\n\t\treturn nil, nil"
+ },
+ {
+  "name": "retained-session-start-cache-kept",
+  "file": "rollover.go",
+  "find": "\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil\n\t})\n\text.OnEvent(sdk.EventSessionTree",
+  "replace": "\t\treminders.reset()\n\t\treturn nil, nil\n\t})\n\text.OnEvent(sdk.EventSessionTree"
+ },
+ {
+  "name": "retained-session-tree-cache-kept",
+  "file": "rollover.go",
+  "find": "\t\treminders.reset()\n\t\tretained.reset()\n\t\treturn nil, nil\n\t})\n\tregisterGuidance",
+  "replace": "\t\treminders.reset()\n\t\treturn nil, nil\n\t})\n\tregisterGuidance"
+ },
+ {
+  "name": "retained-cache-compaction-not-a-miss",
+  "file": "reminders.go",
+  "find": "if kind := entryType(entry); kind == \"compaction\" || kind == \"context_edit\" {",
+  "replace": "if kind := entryType(entry); kind == \"context_edit\" {"
+ },
+ {
+  "name": "retained-cache-edit-not-a-miss",
+  "file": "reminders.go",
+  "find": "if kind := entryType(entry); kind == \"compaction\" || kind == \"context_edit\" {",
+  "replace": "if kind := entryType(entry); kind == \"compaction\" {"
+ },
+ {
+  "name": "retained-cache-same-leaf-needs-no-id",
+  "file": "reminders.go",
+  "find": "\t\tif id, _ := str(entry, \"id\"); id == cachedID {\n\t\t\treturn true, nil\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "retained-cache-walk-unbounded",
+  "file": "reminders.go",
+  "find": "if parent == \"\" || steps >= retainedCertifySteps {",
+  "replace": "if parent == \"\" {"
+ },
+ {
+  "name": "retained-cache-walk-bound-small",
+  "file": "reminders.go",
+  "find": "if parent == \"\" || steps >= retainedCertifySteps {",
+  "replace": "if parent == \"\" || steps >= 2 {"
+ },
+ {
+  "name": "retained-cache-parent-match-lost",
+  "file": "reminders.go",
+  "find": "\t\tif parent == cachedID {\n\t\t\treturn true, nil\n\t\t}\n",
+  "replace": ""
+ },
+ {
+  "name": "retained-cache-missing-parent-certifies",
+  "file": "reminders.go",
+  "find": "\t\tif err != nil || len(next) == 0 {\n\t\t\treturn false, err\n\t\t}",
+  "replace": "\t\tif err != nil {\n\t\t\treturn false, err\n\t\t}\n\t\tif len(next) == 0 {\n\t\t\treturn true, nil\n\t\t}"
+ },
+ {
+  "name": "retained-cache-leaf-not-advanced",
+  "file": "reminders.go",
+  "find": "\t\t\tif c.gen == gen {\n\t\t\t\tc.leaf = leaf\n\t\t\t}",
+  "replace": "\t\t\t_ = gen"
+ },
+ {
+  "name": "retained-cache-store-ignores-reset",
+  "file": "reminders.go",
+  "find": "\t\tif c.gen == gen {\n\t\t\tc.valid, c.leaf, c.messages = true, leaf, messages",
+  "replace": "\t\tif c.gen == gen || true {\n\t\t\tc.valid, c.leaf, c.messages = true, leaf, messages"
+ },
+ {
+  "name": "retained-cache-reset-keeps-valid",
+  "file": "reminders.go",
+  "find": "\tc.valid, c.leaf, c.messages = false, nil, nil\n\tc.gen++",
+  "replace": "\tc.gen++"
+ },
+ {
+  "name": "retained-cache-reset-no-generation",
+  "file": "reminders.go",
+  "find": "\tc.valid, c.leaf, c.messages = false, nil, nil\n\tc.gen++",
+  "replace": "\tc.valid, c.leaf, c.messages = false, nil, nil"
+ },
+ {
+  "name": "retained-cache-never-valid",
+  "file": "reminders.go",
+  "find": "\t\t\tc.valid, c.leaf, c.messages = true, leaf, messages",
+  "replace": "\t\t\tc.valid, c.leaf, c.messages = false, leaf, messages"
+ },
+ {
+  "name": "retained-cache-stale-ignored",
+  "file": "reminders.go",
+  "find": "\treturn countRetained(messages, stale), nil\n}",
+  "replace": "\treturn countRetained(messages, nil), nil\n}"
+ },
+ {
+  "name": "retained-cache-hit-stale-ignored",
+  "file": "reminders.go",
+  "find": "\t\t\treturn countRetained(messages, stale), nil\n\t\t}",
+  "replace": "\t\t\treturn countRetained(messages, nil), nil\n\t\t}"
+ },
+ {
+  "name": "retained-messages-customtype-dropped",
+  "file": "reminders.go",
+  "find": "\t\t\tif customType, ok := message[\"customType\"]; ok {\n\t\t\t\tkept[\"customType\"] = customType\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "retained-messages-details-dropped",
+  "file": "reminders.go",
+  "find": "\t\t\tif details, ok := message[\"details\"]; ok {\n\t\t\t\tkept[\"details\"] = details\n\t\t\t}",
+  "replace": ""
+ },
+ {
+  "name": "retained-messages-role-dropped",
+  "file": "reminders.go",
+  "find": "\t\t\tkept := rec{\"role\": message[\"role\"]}",
+  "replace": "\t\t\tkept := rec{}"
+ },
+ {
+  "name": "retained-leaf-read-error-swallowed",
+  "file": "reminders.go",
+  "find": "\tleaf, err := source.GetLeafEntry()\n\tif err != nil {\n\t\treturn 0, err\n\t}\n\tif len(leaf) == 0 {\n\t\tleaf = nil\n\t}\n\tc.mu.Lock()",
+  "replace": "\tleaf, _ := source.GetLeafEntry()\n\tif len(leaf) == 0 {\n\t\tleaf = nil\n\t}\n\tc.mu.Lock()"
+ },
+ {
+  "name": "retained-cache-certify-error-swallowed",
+  "file": "reminders.go",
+  "find": "\t\tok, err := certified(source, leaf, cachedLeaf)\n\t\tif err != nil {\n\t\t\treturn 0, err\n\t\t}",
+  "replace": "\t\tok, _ := certified(source, leaf, cachedLeaf)"
  }
 ]

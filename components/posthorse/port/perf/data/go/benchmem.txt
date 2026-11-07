@@ -1,0 +1,80 @@
+goos: linux
+goarch: amd64
+cpu: Intel(R) Xeon(R) Platinum 8468
+BenchmarkBudgetFor-8                               	 2737945	        87.77 ns/op	     112 B/op	       2 allocs/op
+BenchmarkBuildGuidance-8                           	  106502	      2314 ns/op	    4488 B/op	      10 allocs/op
+BenchmarkGuidanceTokens-8                          	   47179	      4711 ns/op	    7192 B/op	      12 allocs/op
+BenchmarkFreshPayloadChars-8                       	   44222	      5150 ns/op	    7240 B/op	      13 allocs/op
+BenchmarkPageCapacity-8                            	   46975	      4487 ns/op	    7240 B/op	      13 allocs/op
+BenchmarkContextReport-8                           	  244675	       970.4 ns/op	     704 B/op	      17 allocs/op
+BenchmarkLfLines-8                                 	      39	   5627342 ns/op	1785.92 MB/s	10705877 B/op	     319 allocs/op
+BenchmarkIndexLF-8                                 	    9934	     28002 ns/op	37446.43 MB/s	     105 B/op	       0 allocs/op
+BenchmarkSearchArchive/rg/rare-needle-marker-8     	       3	  88290251 ns/op	 701.02 MB/s	        34.29 peakRSS-MiB	 1405056 B/op	    2941 allocs/op
+BenchmarkSearchArchive/rg/entry_1999-8             	       3	  72078706 ns/op	 858.68 MB/s	        34.29 peakRSS-MiB	 1307896 B/op	    1763 allocs/op
+BenchmarkSearchArchive/noRg/rare-needle-marker-8   	       3	  74742208 ns/op	 828.08 MB/s	        34.29 peakRSS-MiB	 1339045 B/op	    2808 allocs/op
+BenchmarkSearchArchive/noRg/entry_1999-8           	       4	  66471453 ns/op	 931.12 MB/s	        34.29 peakRSS-MiB	 1251588 B/op	    1644 allocs/op
+BenchmarkSearchArchiveEveryLine-8                  	       1	 666288323 ns/op	  92.89 MB/s	        34.29 peakRSS-MiB	199589136 B/op	 2600324 allocs/op
+BenchmarkFindEntry-8                               	       5	  44845500 ns/op	1380.13 MB/s	        34.29 peakRSS-MiB	 1125112 B/op	     123 allocs/op
+BenchmarkSearchBranch-8                            	     196	   1163098 ns/op	  339307 B/op	     149 allocs/op
+BenchmarkReadPage-8                                	      80	   2845895 ns/op	 140.55 MB/s	  414273 B/op	     156 allocs/op
+BenchmarkSearchPage-8                              	    1632	    146579 ns/op	   66828 B/op	    1059 allocs/op
+BenchmarkLineMatcher/rare-needle-marker-8          	    1296	    175023 ns/op	5913.51 MB/s	       0 B/op	       0 allocs/op
+BenchmarkLineMatcher/dolor_sit-8                   	    1136	    210007 ns/op	4928.41 MB/s	       0 B/op	       0 allocs/op
+BenchmarkLineMatcher/sk-8                          	    1039	    211029 ns/op	4904.53 MB/s	       0 B/op	       0 allocs/op
+BenchmarkLineMatcher/unicode-8                     	    3404	     70359 ns/op	14710.34 MB/s	       0 B/op	       0 allocs/op
+BenchmarkU16LenASCII-8                             	   10000	     25244 ns/op	2596.14 MB/s	       6 B/op	       0 allocs/op
+BenchmarkU16LenMixed-8                             	     798	    253121 ns/op	 388.37 MB/s	     123 B/op	       0 allocs/op
+BenchmarkU16SliceASCII-8                           	   10174	     24173 ns/op	       6 B/op	       0 allocs/op
+BenchmarkU16SliceMixed-8                           	     507	    442712 ns/op	     193 B/op	       0 allocs/op
+BenchmarkU16IndexASCII-8                           	   14996	     27175 ns/op	       9 B/op	       0 allocs/op
+BenchmarkU16IndexMixed-8                           	    1119	    192474 ns/op	     183 B/op	       0 allocs/op
+BenchmarkJSFromBytesValid-8                        	    1099	    210542 ns/op	 466.91 MB/s	   98393 B/op	       1 allocs/op
+BenchmarkJSToLocaleInt-8                           	 3734964	        68.88 ns/op	      24 B/op	       2 allocs/op
+BenchmarkTextOf-8                                  	  103930	      2097 ns/op	    1680 B/op	      14 allocs/op
+BenchmarkExcerpt-8                                 	     307	    723439 ns/op	    2848 B/op	       1 allocs/op
+BenchmarkShortKey-8                                	  530751	       424.5 ns/op	      96 B/op	       2 allocs/op
+BenchmarkNoteParityParseLeakedForkOfFork-8         	    1693	    118389 ns/op	   34088 B/op	     712 allocs/op
+BenchmarkNoteSnapshot300-8                         	       8	  26262444 ns/op	10009227 B/op	  105944 allocs/op
+BenchmarkNotesUnder500-8                           	      39	   5381204 ns/op	  745727 B/op	    7028 allocs/op
+BenchmarkNoteCollapse600Cold-8                     	       8	  34255803 ns/op	 4905947 B/op	   37266 allocs/op
+BenchmarkNoteCollapse600Warm-8                     	       7	  30084543 ns/op	 4076560 B/op	   33634 allocs/op
+BenchmarkNoteBindingsOf3000-8                      	      62	   3691975 ns/op	 1097471 B/op	   23008 allocs/op
+BenchmarkNoteTouchRecords3000-8                    	     184	   1272983 ns/op	  615425 B/op	    3012 allocs/op
+BenchmarkNoteSessionNoteTouches3000-8              	      24	   8528192 ns/op	 3443993 B/op	   30098 allocs/op
+BenchmarkNoteParseLeakedForkOfFork100-8            	    1893	    126045 ns/op	   34096 B/op	     714 allocs/op
+BenchmarkNoteParseLeakedForkOfFork300-8            	     492	    479819 ns/op	  100848 B/op	    2114 allocs/op
+BenchmarkNotesList1000-8                           	      13	  15464216 ns/op	 4418404 B/op	   32988 allocs/op
+BenchmarkNotesSearch1000-8                         	       8	  25340551 ns/op	 5209867 B/op	   38487 allocs/op
+BenchmarkNotesAppendLarge-8                        	   14373	     22214 ns/op	     816 B/op	       9 allocs/op
+BenchmarkNotesMatchingLines/ascii-8                	      57	   4020743 ns/op	 228.20 MB/s	   16394 B/op	       4 allocs/op
+BenchmarkNotesMatchingLines/unicode-8              	      13	  15962314 ns/op	  59.53 MB/s	  960152 B/op	       6 allocs/op
+BenchmarkNotesToolsASCIIFoldWorst/matchingLines-8  	      60	   3450824 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNotesToolsASCIIFoldWorst/stdlibIndexOfLowered-8         	      57	   4122368 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPageSize-8                                              	   42861	      5288 ns/op	    7240 B/op	      13 allocs/op
+BenchmarkPageNotes-8                                             	    4474	     49604 ns/op	   61335 B/op	      33 allocs/op
+BenchmarkNotesRange-8                                            	   66782	      3799 ns/op	    1984 B/op	       5 allocs/op
+BenchmarkBuildAutoHandoff5000-8                                  	      18	  13019348 ns/op	 5113796 B/op	   27669 allocs/op
+BenchmarkBuildAutoHandoff5000Retained-8                          	      16	  13028732 ns/op	 5104272 B/op	   27644 allocs/op
+BenchmarkResetRequests-8                                         	  162193	      1325 ns/op	     448 B/op	       7 allocs/op
+BenchmarkReminderLookupCold20000NoWindow-8                       	      81	   2654661 ns/op	  320080 B/op	   20001 allocs/op
+BenchmarkReminderLookupCold20000WindowNearLeaf-8                 	  319003	       650.4 ns/op	     128 B/op	       4 allocs/op
+BenchmarkReminderLookupCertified20000-8                          	 1225131	       195.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkContextHookNoReminder1000-8                             	   16670	     14224 ns/op	       0 B/op	       0 allocs/op
+BenchmarkContextHookStaleReminders1000-8                         	    2754	     84125 ns/op	   16384 B/op	       1 allocs/op
+BenchmarkRetainedTailCut-8                                       	      74	   3150812 ns/op	 1952996 B/op	   17875 allocs/op
+BenchmarkSessionLinesScan-8                                      	      12	  18402188 ns/op	1715.01 MB/s	 6311455 B/op	      16 allocs/op
+BenchmarkSessionLinesScanLatin1-8                                	      15	  15469786 ns/op	2040.11 MB/s	 5259286 B/op	      15 allocs/op
+BenchmarkCardNotePage40k/collapsed-8                             	     241	    992978 ns/op	   29360 B/op	     546 allocs/op
+BenchmarkCardNotePage40k/expanded-8                              	      27	   7498368 ns/op	 1468688 B/op	   14761 allocs/op
+BenchmarkCardHistoryPage/collapsed-8                             	    7062	     34946 ns/op	    4016 B/op	      27 allocs/op
+BenchmarkCardHistoryPage/expanded-8                              	     141	   1543297 ns/op	  627124 B/op	    7423 allocs/op
+BenchmarkCardMessage40k/collapsed-8                              	     422	    555315 ns/op	   28312 B/op	     522 allocs/op
+BenchmarkCardMessage40k/expanded-8                               	      25	  11257545 ns/op	 2105012 B/op	   22149 allocs/op
+BenchmarkDisplayOf-8                                             	  564980	       483.2 ns/op	     248 B/op	       5 allocs/op
+BenchmarkUiLeadingRowsLatin-8                                    	     920	    264794 ns/op	   26784 B/op	     461 allocs/op
+BenchmarkUiLeadingRowsCyrillic-8                                 	     283	    842941 ns/op	   31872 B/op	     588 allocs/op
+BenchmarkUiLeadingRowsThai-8                                     	     228	   1043176 ns/op	   31168 B/op	     497 allocs/op
+BenchmarkUiLeadingRowsArabic-8                                   	     279	    861399 ns/op	   32184 B/op	     623 allocs/op
+BenchmarkUiLeadingRowsHangul-8                                   	     235	   1016635 ns/op	   68872 B/op	     410 allocs/op
+BenchmarkUiLeadingRowsEmoji-8                                    	     360	    657358 ns/op	   31856 B/op	     393 allocs/op
+ok  	github.com/MichaelKinsy/pigpen/posthorse	29.936s

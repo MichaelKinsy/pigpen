@@ -76,6 +76,30 @@ the TS fixture's throwing `getBranch` is `withHostError("sessionRead.getBranch")
    `TestRetainedProjectionCountMatchesPi` (100 Pi 1.5.0 `SessionManager` sessions with the oracle's `countRetainedMessages` as the answer, `testdata/retained_count_cases.json`)
    and `TestRetainedProjectionCountMatchesBranchWalk` (400 seeded fixture sessions against the old full-walk code, kept in the test as `roOldCount`). One projection read per
    event remains (`TestRetainedTailContextNeedsNoBranchRead`; through the fake host 11 ms per event with 20,000 earlier entries, 2.0 MB, 10,700 allocs).
+7d. **Retained count cached between `context` events (PerfLane workload e).** `countRetainedMessages` read the whole session projection on every `context`
+   event of a window opened by a retained-tail rollover (19% of host CPU in `handleSessionRead`, plus the decode in the extension). `retainedCache`
+   (reminders.go) now keeps the retained messages (role, customType, details: all the stale predicate reads) and certifies them for the new leaf instead of
+   re-reading. Why that is exact, from Pi's session semantics: the span is the projection between the newest compaction and its child, i.e. the entries from
+   `firstKeptEntryId` up to the compaction. Entries are immutable and the span lies before the compaction, so it changes only when (a) the newest compaction
+   changes (a new `compaction` entry), (b) a `context_edit` entry edits a retained entry (a null replacement removes its messages), or (c) the leaf leaves the branch
+   (navigation, another session). A new leaf is certified by walking its ancestors back to the leaf the cache was read at (`certified`): no `compaction` or
+   `context_edit` entry among them means the cached messages are exact. Anything else, a walk longer than `retainedCertifySteps` (16), a missing parent or a
+   leaf that is not a descendant, is a miss that reads the projection again (so navigation without an event is still correct). `session_start` and
+   `session_tree` reset the cache. Cost of a hit: one `getLeafEntry` plus one `getEntry` per entry appended since the cached leaf, minus one (a child of the cached
+   leaf costs none). The stale predicate is evaluated per event over the cached messages, so a change of window, budget or `compaction.enabled` needs no invalidation.
+   Proof of identical results: `TestRetainedCacheAgreesWithTheProjection` (session that grows, is edited by null and replacing `context_edit`, compacted again, with
+   several stale rules), `TestRetainedCacheLeavesTheCachedBranch` (navigation with and without the event, another session, empty session),
+   `TestRetainedCacheWalkIsBounded`, `TestRetainedCacheWalkReadsOnlyTheNewEntries`, `TestRetainedCacheIsResetByTheSessionEvents`: at every step the cached count equals the
+   fresh count and the projection is read exactly when it must be; the projection-only count itself is still proved against Pi 1.5.0 and the old branch walk (item 7b).
+   Numbers (fake host, a window of 1,000 entries after the rollover, one entry appended per `context` event, per event): 43 ms, 15-19 MB, 72,600 allocations before;
+   0.4-0.6 ms, 39-44 KB, 500 allocations after (steady state; the first event of a window reads the projection once). The same window with an unchanged leaf:
+   49 ms before, 27-29 ms after (the first event averaged in). In-memory: a hit is 10.8 us and 0 allocations (200 retained messages), a miss counting a projection
+   already in memory is 83 us and 407 allocations, before the wire read and its decode.
+   Other per-event work in the hot handlers: `context` makes no host call and allocates nothing when no reminder message is present (9-14 us for 1,000 messages;
+   `scanReminderMessages` is the TS early exit, `dropStale` copies only when something is stale); with a reminder and no window marker it costs the three reminder-lookup
+   reads (session id, file, leaf entry; see item 7). `context_with_system` (CoreLane's guidance.go) makes one `getContextUsage` read per event, as `ctx.getContextUsage()`
+   does in TS; its guidance string is rebuilt per event (could be memoized by window, reserve and enabled; not done, it is not in this lane's files).
+
 7c. **Reset during a lookup (R8, fixed).** `reminderLookup` guards its state with a mutex and bumps a generation on `reset`; a lookup that began before a reset returns its
    result but does not store it (`TestReminderLookupResetDuringReadStoresNothing`, `TestReminderLookupConcurrentReadsAndResets` under `-race`). R9: `onlyReminders` (dead) deleted.
    R10: the call site is RecoveryLane's `collectTouches`; NotesStoreLane added `sortNoteDirectories`/`matchSortedNoteDirectory` and told RecoveryLane.

@@ -228,7 +228,8 @@ func TestRetainedTailContextNeedsNoBranchRead(t *testing.T) {
 		roSameJSON(t, got["messages"], []rec{user, assistant, boundary, fxUser("after")}, "retained tail moved ahead of the record")
 	}
 	roEqual(t, roGetBranchReads(f), 0, "no branch read")
-	roEqual(t, f.Reads("sessionRead.buildSessionProjection"), events, "one projection read per context event")
+	roEqual(t, f.Reads("sessionRead.buildSessionProjection"), 1, "one projection read, then the cache serves the events")
+	roEqual(t, f.Reads("sessionRead.getLeafEntry"), events, "one leaf read per context event")
 }
 
 // TestReminderReadUsesLeafEntry is R6: the leaf is one getLeafEntry read, not getLeafId plus getEntry.

@@ -67,12 +67,19 @@ def proc_mem(pid):
         elif line.startswith("Threads:"):
             out["threads"] = int(line.split()[1])
     _, out["cpu_ms"], out["cchild_ms"] = stat_fields(pid)
+    try:                                                   # write/read syscalls and bytes: one write is one wire frame to the host
+        for line in pathlib.Path(f"/proc/{pid}/io").read_text().splitlines():
+            key, _, rest = line.partition(":")
+            if key in ("syscw", "syscr", "wchar", "rchar"):
+                out[key] = int(rest)
+    except OSError:
+        pass
     out["fds"] = len(os.listdir(f"/proc/{pid}/fd"))
     return out
 
 
 def sum_mem(rows):
-    keys = ("rss", "pss", "anonymous", "hwm", "threads", "cpu_ms", "cchild_ms", "fds")
+    keys = ("rss", "pss", "anonymous", "hwm", "threads", "cpu_ms", "cchild_ms", "fds", "syscw", "syscr", "wchar", "rchar")
     return {k: sum(r.get(k, 0) for r in rows) for k in keys}
 
 
@@ -159,8 +166,13 @@ def host_env(root, mem_dir=None):
     for k in ("GOROOT", "GOCACHE", "GOMODCACHE", "GOPROXY", "GOFLAGS", "PIG_SDK_DIR"):
         if k in os.environ:
             e[k] = os.environ[k]
+    if os.environ.get("PH_PERF_HOSTPROF"):               # diagnosis only: the host's own CPU profile (PIG_PROFILE=cpu)
+        e["PIG_PROFILE"], e["PIG_PROFILE_DIR"] = "cpu", str(root / "hostprof")
+        (root / "hostprof").mkdir(parents=True, exist_ok=True)
     if mem_dir:
         e["PH_PERF_MEM_DIR"] = str(mem_dir)
+        if os.environ.get("PH_PERF_CPUPROF"):
+            e["PH_PERF_CPUPROF"] = os.environ["PH_PERF_CPUPROF"]
     return e
 
 
@@ -433,6 +445,15 @@ def run_one(cfg, side, variant, workload, cache, idx, snap, llmbin, warm_root):
             llm.stdin.close()
             llm.wait()
     row["wall_ms"] = (time.perf_counter_ns() - host.t0) / 1e6
+    if mem_dir:                                           # diagnosis only: PH_PERF_CPUPROF=1 leaves CPU profiles in scratch/prof
+        for prof in mem_dir.glob("*.pprof"):
+            (SCRATCH / "prof").mkdir(exist_ok=True)
+            shutil.copy(prof, SCRATCH / "prof" / f"{side}-{workload}-{idx}-{prof.name}")
+    if os.environ.get("PH_PERF_HOSTPROF"):
+        (SCRATCH / "prof").mkdir(exist_ok=True)
+        for prof in (root / "hostprof").glob("*"):
+            shutil.copy(prof, SCRATCH / "prof" / f"host-{side}-{variant}-{workload}-{idx}-{prof.name}")
+            prof.unlink()
     if cold:
         shutil.rmtree(root, ignore_errors=True)
     if row["ok"] and row["returncode"] != 0:
@@ -664,7 +685,7 @@ def cmd_run(a):
         if workload == "f":
             caches = ("warm",)
         for cache in caches:
-            for i in range(a.samples):
+            for i in range(a.first, a.first + a.samples):
                 order = sides[i % len(sides):] + sides[:i % len(sides)]
                 for side in order:
                     variants = ("plain",) if workload == "f" else (("plain", "mem") if i % 2 == 0 else ("mem", "plain"))
@@ -684,7 +705,7 @@ def cmd_run(a):
                             print("ok", tag, f"startup={row.get('startup_ms', row.get('all_ready_ms', 0)):.0f}ms", flush=True)
     meta["finished"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
     meta["loadavg_end"] = os.getloadavg()
-    (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+    (out / ("meta.json" if a.first == 0 else f"meta-topup-{a.first}-{'-'.join(workloads)}.json")).write_text(json.dumps(meta, indent=2) + "\n")
     shutil.rmtree(SCRATCH / "warm", ignore_errors=True)
     shutil.rmtree(SCRATCH / "cold", ignore_errors=True)
     shutil.rmtree(WS, ignore_errors=True)
@@ -752,6 +773,9 @@ def metrics_of(row):
     if "end" in row and "ready" in row:
         m["cpu_ext_workload_ms"] = row["end"]["ext"].get("cpu_ms", 0) - row["ready"]["ext"].get("cpu_ms", 0)
         m["cpu_total_workload_ms"] = m["cpu_total_ms_end"] - m["cpu_total_ms_ready"]
+        for k in ("syscw", "syscr", "wchar", "rchar"):      # information: extension wire traffic during the workload
+            if k in row["end"]["ext"] and k in row["ready"]["ext"] and row["side"] != "pi":
+                m[f"ext_{k}_workload"] = row["end"]["ext"][k] - row["ready"]["ext"][k]
         for k in ("total_alloc", "mallocs", "num_gc"):
             if f"{k}_end" in m and f"{k}_ready" in m:
                 m[f"{k}_workload"] = m[f"{k}_end"] - m[f"{k}_ready"]
@@ -833,6 +857,26 @@ def parity(c, keys, sides):
     return out
 
 
+def spread(c, keys, sides, ordered):
+    out = []
+    for wl, cache in keys:
+        for metric in ordered:
+            if metric not in RATCHET and not metric.startswith("tool_ms:"):
+                continue
+            variant = "mem" if metric.startswith(("heap", "sys")) else "plain"
+            for s in sides:
+                v = c.get((wl, cache, s, variant), {}).get(metric)
+                if not v or s == "pi":
+                    continue
+                med = statistics.median(v)
+                if med <= 0:
+                    continue
+                sp = (q(v, .9) - med) / med
+                if sp > .05:
+                    out.append(f"- {wl}/{cache} {s} {metric}: {sp * 100:.1f}% (n={len(v)}, median {fmt(metric, med)})")
+    return out
+
+
 def cmd_summarize(a):
     rows = load_rows(a.dir)
     other = load_rows(a.vs) if a.vs else []
@@ -867,7 +911,9 @@ def cmd_summarize(a):
                 fails += bad
                 verdict.append(f"| {wl}/{cache} | {metric} | {fmt(metric, gm)} | {fmt(metric, tm)} | {fmt(metric, g9)} | {fmt(metric, t9)} | {'FAIL (median)' if bad else ('pass, p90 worse' if warn else 'pass')} |")
         verdict += ["", f"Median misses: {fails}."]
-    text = "\n".join(lines + verdict) + "\n"
+    noisy = spread(c, keys, sides, ordered)
+    spreadlines = ["", "## Relative spread (p90-p50)/p50 above 5% (go and ts sides, ratchet metrics)", ""] + (noisy or ["none: every ratchet metric of every cell is within 5%."]) + [""]
+    text = "\n".join(lines + verdict + spreadlines) + "\n"
     (pathlib.Path(a.dir) / "summary.md").write_text(text)
     print(text)
     return 1 if mismatches or (verdict and "Median misses: 0." not in verdict[-1]) else 0
@@ -884,6 +930,7 @@ def main():
     r.add_argument("--sessions", type=int, default=60)
     r.add_argument("--cpus", default=os.environ.get("PH_PERF_CPUS", ""))
     r.add_argument("--keep-going", action="store_true")
+    r.add_argument("--first", type=int, default=0, help="first run index (a top-up run appends rows from this index on)")
     r.add_argument("--seed", default="b", help="workload of the three unmeasured warm-up launches (b exercises the tools)")
     s = sub.add_parser("summarize")
     s.add_argument("dir")

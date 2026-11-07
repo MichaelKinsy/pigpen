@@ -27,7 +27,7 @@ wt=${PH_WT:-$(cd "$here/../../../.." && pwd)}
 remote_out=/home/kinsy/ph-work/scratch/PerfLane/out/$name
 data="$here/data/$name"
 # The remote copy lives under the scratch tree: `ph sync` rsyncs --delete into components/posthorse and would erase data kept there.
-PH_WT=$wt ~/work/ph-tools/ph run "mkdir -p $remote_out && rm -f $remote_out/samples.jsonl && python3 components/posthorse/port/perf/perf.py run --out $remote_out --sides $sides $*; rc=\$?; python3 components/posthorse/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
+PH_WT=$wt ~/work/ph-tools/ph run "mkdir -p $remote_out && ${PH_PERF_KEEP:+:} ${PH_PERF_KEEP:-rm -f $remote_out/samples.jsonl} && python3 components/posthorse/port/perf/perf.py run --out $remote_out --sides $sides $*; rc=\$?; python3 components/posthorse/port/perf/perf.py summarize $remote_out >/dev/null || true; exit \$rc"
 mkdir -p "$data"
 rsync -a xd6702:ph-work/scratch/PerfLane/out/$name/ "$data/"
 python3 "$here/perf.py" summarize "$data" > /dev/null || true   # re-summarize locally: the remote summary ran the code as synced
