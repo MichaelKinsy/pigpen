@@ -15,6 +15,10 @@ import { requirePig } from './pig-bin.mjs';
 
 export function run(pig, env, cwd, ...args) {
   const result = spawnSync(pig, args, { cwd, env, encoding: 'utf8' });
+  // A status of null is a pig that was signalled, not one that failed: assert.equal would only print "null !== 0". Nothing in
+  // pig install sends itself a signal, so the sender is outside the test: on a host shared by several users or jobs, a
+  // `pkill -f <pattern>` whose pattern matches this command line (it carries the Package name) ends exactly this one install.
+  assert.ok(result.signal === null, `pig ${args.join(' ')} was killed by ${result.signal} from outside the test (a host-wide pkill -f or kill matching this command line, or the OOM killer)\n${result.stdout}${result.stderr}`);
   assert.equal(result.status, 0, `pig ${args.join(' ')}\n${result.stdout}${result.stderr}`);
   return result.stdout + result.stderr;
 }
