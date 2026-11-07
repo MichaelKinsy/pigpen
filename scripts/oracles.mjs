@@ -17,7 +17,7 @@
 // lock file.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -139,8 +139,9 @@ export function planFetch(entry, gitDir) {
     if (!tree.length) throw new Error(`${entry.id}: ${from} is not in ${entry.repository} at ${entry.commit}`);
     for (const blob of tree) {
       const inside = from && blob.path === from ? '' : blob.path.slice(from ? from.length + 1 : 0);
-      const rel = slash(join(to, inside));
-      if (included(entry.include, rel)) files.set(rel, { sha: blob.sha });
+      const joined = slash(join(to, inside));
+      const rel = joined === '.' ? '' : joined;
+      if (included(entry.include, rel)) files.set(rel, { sha: blob.sha, executable: blob.mode === '100755' });
     }
   }
   return files;
@@ -156,11 +157,13 @@ export function materialize(entry, { directory = root, cache = defaultCache() } 
   const plan = planFetch(entry, gitDir);
   const blobs = readBlobs(gitDir, [...plan.values()].map(({ sha }) => sha));
   const isFile = entry.map.length === 1 && plan.size === 1 && plan.has('') ;
-  for (const [rel, { sha }] of plan) {
+  for (const [rel, { sha, executable }] of plan) {
     if (kept.has(rel)) continue;
     const target = rel ? join(place, rel) : place;
     mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, blobs.get(sha));
+    // The mode is not in the digest, but a drift check compares it with the original's, so it is kept.
+    writeFileSync(target, blobs.get(sha), { mode: executable ? 0o755 : 0o644 });
+    chmodSync(target, executable ? 0o755 : 0o644);
   }
   const after = treeDigest(place);
   if (after.sha256 !== entry.sha256) throw new Error(`${entry.id}: the fetched tree does not match the lock (${after.files} files, sha256 ${after.sha256}, the lock says ${entry.files} files, ${entry.sha256}). ${describeDifference(entry, place, plan, blobs)}`);
