@@ -57,12 +57,14 @@ test('porter stages one shared Package for two Piglets without changing authored
   mkdirSync(join(source, 'piglets/pig-porter'), { recursive: true });
   writeFileSync(manifest, stringify(focused));
   cpSync(join(root, 'piglets/pig-extension-porter/catalog.json'), join(source, 'piglets/pig-porter/catalog.json'));
+  cpSync(join(root, 'piglets/pig-extension-porter/provenance.json'), join(source, 'piglets/pig-porter/provenance.json'));
   const peer = join(source, 'piglets/porter-peer');
   mkdirSync(peer);
   const authored = readFileSync(manifest, 'utf8');
   const peerManifest = authored.replace('name: pig-porter\n', 'name: porter-peer\n') + 'tools: []\n';
   writeFileSync(join(peer, 'piglet.yaml'), peerManifest);
   cpSync(join(root, 'piglets/pig-extension-porter/catalog.json'), join(peer, 'catalog.json'));
+  cpSync(join(root, 'piglets/pig-extension-porter/provenance.json'), join(peer, 'provenance.json'));
   const stage = (status = 0) => {
     const result = spawnSync(process.execPath, [join(root, 'scripts/stage-piglets.mjs'), source], { cwd, env, encoding: 'utf8' });
     assert.ifError(result.error);

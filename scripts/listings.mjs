@@ -6,6 +6,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { licenseNote } from './licenses.mjs';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
@@ -134,6 +135,7 @@ export function listingEntry(listing) {
     `Third-party listing: ${listing.name} is maintained by ${listing.maintainer}, not by Pigpen. Pigpen pins commit ${listing.commit}${listing.tag ? ` (${listing.tag})` : ''} of ${listing.repository}; a later commit is not listed until the listing is updated. Pigpen did not review its code for security.`,
     `Verified with PiG ${verified.pigVersion} (${verified.pigCommit.slice(0, 12)}) on ${verified.date}: ${what}. That checks it loads, not what it does, and not Pi compatibility.`,
     ...(kind === 'piglet' ? ['Pigpen publishes no Binary for a listed Piglet: add the source with the command above and build it with pig piglet build.'] : []),
+    ...(licenseNote(listing.license) ? [licenseNote(listing.license)] : []),
     ...(listing.notes ?? []),
   ];
   const common = {

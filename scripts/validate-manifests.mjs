@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { readManifests, generateIndex, root } from './generate-index.mjs';
 import { componentKind, validatePlugin } from './archon-plugins.mjs';
 import { goModules, isLibraryModule, registersNativeProvider } from './go-modules.mjs';
+import { assertLicensesCompatible } from './license-guard.mjs';
 import { requirePig } from './pig-bin.mjs';
 import { loadsInPig } from './platform-smoke.mjs';
 export function run(args) {
@@ -19,6 +20,7 @@ function loadInPig(module) {
   if (!result.ok) throw new Error(`PiG could not load extension ${module}: ${result.detail}`);
   console.log('loaded extension: ' + module);
 }
+assertLicensesCompatible(root);
 generateIndex();
 for (const component of readdirSync(join(root, 'components'), { withFileTypes: true })) {
   if (!component.isDirectory()) continue;
