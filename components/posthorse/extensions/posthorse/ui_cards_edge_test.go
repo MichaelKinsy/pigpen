@@ -135,3 +135,11 @@ func TestUiApplyToolCardsLeavesTheDefaultShell(t *testing.T) {
 		}
 	}
 }
+
+// A collapsed history search shows each match on one row: its whitespace runs become single blanks.
+func TestUiSearchPreviewsAreOneRowEach(t *testing.T) {
+	raw := "H1 a\n  b\tc\nH2 d"
+	d := displayHistorySearch([]historySpan{{3, 10}, {3, 4}}, 0, false, 0)
+	rows := uiPlain(cardResultComponent(&cardResultFacts{name: "history", raw: raw, args: map[string]any{"op": "search"}, display: d, expandKey: "ctrl+o"}, sdk.UITheme{}, 40))
+	uiSame(t, "previews", rows, []string{"2 matches · current branch", "a b c", "d", "… ctrl+o to expand"})
+}

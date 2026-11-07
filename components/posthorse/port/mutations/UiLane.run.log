@@ -1,0 +1,609 @@
+== run 1: 276 mutants, 6 shards
+KILLED   call-title-notes
+         unit test: --- FAIL: TestTwinRenderersUi (0.30s)
+KILLED   target-notes-list-path
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-scope-all
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-number-ungrouped
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-marker-expanded
+         unit test: --- FAIL: TestTwinRenderersUi (0.05s)
+KILLED   call-expanded-details-dropped
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   submitted-empty
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   color-error
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   body-error
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED preview-history-prefix
+         the unit tests passed on the mutant
+KILLED   attach-hidden
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   full-header-order
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.19s)
+KILLED   expanded-footer-slice
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   collapsed-room
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.18s)
+SURVIVED collapsed-details-submitted
+         the unit tests passed on the mutant
+SURVIVED render-partial-option
+         the unit tests passed on the mutant
+SURVIVED apply-shell
+         the unit tests passed on the mutant
+KILLED   msg-handoff-skip
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-title-reminder
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-expanded-color
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   msg-hint-dropped
+         unit test: --- FAIL: TestTwinRenderersUi (0.11s)
+KILLED   box-top-pad
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   text-space-nbsp
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-fast-c1
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-range-c1
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   argument-clean
+         unit test: --- FAIL: TestTwinRenderersUi (0.30s)
+KILLED   pitext-blank
+         unit test: --- FAIL: TestUiPiText (0.00s)
+KILLED   leading-empty
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   sum-empty-note
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   sum-next-offset
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   ctx-configured-max
+         unit test: --- FAIL: TestUiContextSummary (0.00s)
+KILLED   ctx-used
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hr-image-offset
+         unit test: --- FAIL: TestUiHistorySummaries (0.00s)
+KILLED   hs-none
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.41s)
+KILLED   hs-more-default
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-search-none
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-all
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   sec-tile
+         unit test: --- FAIL: TestUiHistorySectionsExact (0.00s)
+KILLED   sec-footer-valid
+         unit test: --- FAIL: TestUiHistorySectionsExact (0.00s)
+KILLED   n-frac-trim
+         unit test: --- FAIL: TestUiLocaleNumberFormat (0.00s)
+KILLED   do-notes-count
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   do-kinds
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-search-skipped
+         unit test: --- FAIL: TestHistoryAllSearchKeepsInvocationTimeContextVisibility (0.01s)
+KILLED   ctor-noteread-kind
+         unit test: --- FAIL: TestNativeHost_pageReadsEstimateCurrentActiveSchemasOnlyWhenUsageIsUnknown (0.10s)
+KILLED   site-context-kind
+         unit test: --- FAIL: TestContextReport (0.00s)
+KILLED   site-notes-page
+         unit test: --- FAIL: TestNotesSearchStopsAtTheLimitInUnits (0.07s)
+46 mutation(s), 4 not killed
+KILLED   call-title-history
+         unit test: --- FAIL: TestTwinRenderersUi (0.28s)
+KILLED   target-notes-path-invalid
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-scope-default
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-invalid-text
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-color-error
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+KILLED   call-expanded-details-color
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   submitted-label
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   color-warning-token
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+KILLED   body-empty-note
+         unit test: --- FAIL: TestTwinRenderersUi (0.30s)
+SURVIVED preview-sections-join
+         the unit tests passed on the mutant
+KILLED   attach-show
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED search-previews-count
+         the unit tests passed on the mutant
+KILLED   expanded-submission-gap
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   collapsed-room-attachment
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   collapsed-details-header
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   render-iserror
+         unit test: --- FAIL: TestTwinRenderersUi (0.30s)
+KILLED   apply-result
+         unit test: --- FAIL: TestTwinRenderersUi (0.01s)
+KILLED   msg-no-handoff
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-title-window
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-expanded-width
+         unit test: --- FAIL: TestTwinRenderersUi (0.33s)
+KILLED   msg-hint-key
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   box-bottom-pad
+         unit test: --- FAIL: TestTwinRenderersUi (0.06s)
+KILLED   text-space-bom
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-fast-del
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-range-ann
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   textof-sep
+         unit test: --- FAIL: TestTwinRenderersUi (0.33s)
+KILLED   block-empty
+         unit test: --- FAIL: TestTwinRenderersUi (0.07s)
+KILLED   hint-text
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   sum-complete
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   sum-final
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-rollover-tokens
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-slash
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hr-image-cond
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hs-all
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   hs-invalid-sections
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.11s)
+KILLED   ds-cleared
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   so-note-read
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.12s)
+KILLED   sec-next
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.11s)
+KILLED   sec-read-span
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.19s)
+KILLED   n-lead
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   do-notes-more
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-context-order
+         unit test: --- FAIL: TestExtensionStartsOnTheFakeHost (0.00s)
+KILLED   json-span-key
+         unit test: --- FAIL: TestHistoryAllSearchKeepsInvocationTimeContextVisibility (0.01s)
+KILLED   ctor-history-skipped
+         unit test: --- FAIL: TestHistoryAllSearchKeepsInvocationTimeContextVisibility (0.01s)
+INVALID  site-context-rollover
+         mutant does not build: # github.com/MichaelKinsy/pigpen/posthorse [github.com/MichaelKinsy/pigpen/posthorse.test]
+KILLED   site-notes-count
+         unit test: --- FAIL: TestPageNotes (0.00s)
+46 mutation(s), 3 not killed
+KILLED   call-title-context
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   target-history-read-id
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-scope-all-test
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   details-join
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-title-token
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+KILLED   call-expanded-branch
+         unit test: --- FAIL: TestTwinRenderersUi (0.28s)
+KILLED   summary-error-partial
+         unit test: --- FAIL: TestTwinRenderersUi (0.27s)
+KILLED   color-unsupported
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   body-no-text
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   preview-header-slice
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   full-sections-sep
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   search-previews-kind
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.17s)
+KILLED   expanded-submission-color
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   collapsed-shown-cap
+         unit test: --- FAIL: TestTwinRenderersUi (0.06s)
+KILLED   collapsed-details-summaryonly
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED render-showimages
+         the unit tests passed on the mutant
+KILLED   msg-window-type
+         unit test: --- FAIL: TestTwinRenderersUi (0.11s)
+KILLED   msg-padding
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-color-reminder
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   msg-history-text
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-expanded-swap
+         unit test: --- FAIL: TestTwinRenderersUi (0.07s)
+KILLED   box-pad-width
+         unit test: --- FAIL: TestUiMessageRowsFillTheWidth (0.00s)
+KILLED   text-space-range
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-fast-ef
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   clean-strip
+         unit test: --- FAIL: TestTwinRenderersUi (0.33s)
+KILLED   textof-blocks-type
+         unit test: --- FAIL: TestTwinRenderersUi (0.21s)
+KILLED   leading-lines
+         unit test: --- FAIL: TestUiLeadingRowsCounts (0.00s)
+KILLED   hint-empty
+         unit test: --- FAIL: TestUiPiText (0.00s)
+KILLED   sum-complete-cond
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.28s)
+KILLED   sum-final-cond
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-rollover-cond
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   ctx-percent-guard
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.17s)
+KILLED   hr-next
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hs-branch
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-list-singular
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-saved
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   so-notes
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   sec-header-trim
+         unit test: --- FAIL: TestUiHistorySectionsExact (0.00s)
+SURVIVED sec-split
+         the unit tests passed on the mutant
+SURVIVED int-zero
+         the unit tests passed on the mutant
+KILLED   do-note-read
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-notes-count-order
+         unit test: --- FAIL: TestUiDisplaySites (0.04s)
+KILLED   json-read-image
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.41s)
+KILLED   ctor-history-more
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.13s)
+KILLED   site-new-context
+         unit test: --- FAIL: TestNewContextTool (0.01s)
+KILLED   site-history-search-footer
+         unit test: --- FAIL: TestTwinPosthorseHistory (1.78s)
+46 mutation(s), 3 not killed
+KILLED   call-title-new
+         unit test: --- FAIL: TestTwinRenderersUi (0.35s)
+KILLED   status-error
+         unit test: --- FAIL: TestTwinRenderersUi (0.32s)
+KILLED   details-offset-label
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-action-request
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-bold-dropped
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   submitted-handoff
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   summary-page-kinds
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   color-partial
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+KILLED   body-trim
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   attach-image
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.18s)
+KILLED   full-body-color
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+SURVIVED search-previews-spaces
+         the unit tests passed on the mutant
+KILLED   preview-summaryonly-error
+         unit test: --- FAIL: TestTwinRenderersUi (0.32s)
+KILLED   collapsed-attachment-color
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+SURVIVED component-sections-partial
+         the unit tests passed on the mutant
+KILLED   render-image-count
+         unit test: --- FAIL: TestTwinRenderersUi (0.05s)
+KILLED   msg-preview-rows
+         unit test: --- FAIL: TestTwinRenderersUi (0.08s)
+KILLED   msg-padding-clamp
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-color-window
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   msg-history-color
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   msg-bg-token
+         unit test: --- FAIL: TestTwinRenderersUi (0.08s)
+KILLED   box-empty
+         unit test: --- FAIL: TestUiBoxRows (0.00s)
+KILLED   collapse-run
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+SURVIVED clean-fast-c0
+         the unit tests passed on the mutant
+KILLED   args-nil
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   pitext-tab
+         unit test: --- FAIL: TestUiPiText (0.00s)
+KILLED   leading-limit
+         unit test: --- FAIL: TestUiLeadingRowsCounts (0.00s)
+KILLED   hint-dim
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   sum-chars
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-unknown
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-rollover-max
+         unit test: --- FAIL: TestUiContextSummary (0.00s)
+KILLED   ctx-percent-fmt
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   hr-more-cond
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.21s)
+KILLED   hs-skipped
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-list-returned
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-write-empty
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   so-search
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.21s)
+KILLED   sec-valid-header
+         unit test: --- FAIL: TestTwinRenderersUi (0.29s)
+SURVIVED n-negzero
+         the unit tests passed on the mutant
+KILLED   do-context-rollover
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   do-history-read
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-notes-more
+         unit test: --- FAIL: TestNotesSearchStopsAtTheLimitInUnits (0.06s)
+KILLED   json-context-usage-null
+         unit test: --- FAIL: TestExtensionStartsOnTheFakeHost (0.00s)
+KILLED   ctor-history-read-offset
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   site-note-read
+         unit test: --- FAIL: TestNotesReadPagesByUTF16Units (0.03s)
+KILLED   site-history-search-skipped
+         unit test: --- FAIL: TestHistoryAllSearchKeepsInvocationTimeContextVisibility (0.01s)
+46 mutation(s), 4 not killed
+KILLED   target-search-quote
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   status-running-preparing-swap
+         unit test: --- FAIL: TestTwinRenderersUi (0.29s)
+KILLED   details-image-offset-label
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-action-op
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-collapsed-spaces
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   submitted-handoff-name
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.18s)
+KILLED   summary-page-offset
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   color-tokens-null
+         unit test: --- FAIL: TestUiColorTokens (0.01s)
+SURVIVED header-error-ignored
+         the unit tests passed on the mutant
+KILLED   attach-plural
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   full-header-color
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   expanded-attachment-dropped
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED preview-rows
+         the unit tests passed on the mutant
+KILLED   collapsed-hint-condition
+         unit test: --- FAIL: TestTwinRenderersUi (0.07s)
+KILLED   component-expanded-swap
+         unit test: --- FAIL: TestTwinRenderersUi (0.05s)
+KILLED   render-key
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   msg-window-rows
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-inner
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-bold-dropped
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   msg-history-rows
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-box-paddingY
+         unit test: --- FAIL: TestTwinRenderersUi (0.07s)
+KILLED   reg-types
+         unit test: --- FAIL: TestTwinRenderersUi (0.07s)
+KILLED   collapse-lone
+         unit test: --- FAIL: TestTwinRenderersUi (0.04s)
+KILLED   clean-range-c0
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   argument-null
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   pitext-pad
+         unit test: --- FAIL: TestUiPiText (0.00s)
+SURVIVED leading-double
+         the unit tests passed on the mutant
+KILLED   hint-truncate
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   sum-dash
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-unknown-cond
+         unit test: --- FAIL: TestUiColorTokens (0.00s)
+KILLED   ctx-auto
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ctx-order
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hr-first-line
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.14s)
+KILLED   hs-skipped-cond
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-none
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   ds-append
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   so-kinds
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED sec-valid-body
+         the unit tests passed on the mutant
+KILLED   n-round
+         unit test: --- FAIL: TestUiLocaleNumberFormat (0.00s)
+KILLED   do-context-usage
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   do-search-entries
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-noteread-order
+         unit test: --- FAIL: TestUiDisplaySites (0.04s)
+KILLED   json-context-rollover
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   ctor-context-rolloverat
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   site-note-write
+         unit test: --- FAIL: TestNotesToolResultTextsAndErrors (0.02s)
+KILLED   site-history-read-images
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+46 mutation(s), 4 not killed
+KILLED   target-search-skips-op
+         unit test: --- FAIL: TestTwinRenderersUi (0.30s)
+KILLED   status-partial-dropped
+         unit test: --- FAIL: TestTwinRenderersUi (0.06s)
+KILLED   details-limit-key
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-marker-partial
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   call-collapsed-no-truncate
+         unit test: --- FAIL: TestTwinRenderersUi (0.25s)
+KILLED   submitted-op-append
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   summary-page-more
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.19s)
+KILLED   body-running
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   header-kinds
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   attach-attached
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.21s)
+SURVIVED full-body-clean
+         the unit tests passed on the mutant
+KILLED   expanded-footer-dropped
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.14s)
+SURVIVED collapsed-summary-cap
+         the unit tests passed on the mutant
+KILLED   collapsed-hint-rows
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+SURVIVED render-expanded-option
+         the unit tests passed on the mutant
+KILLED   call-executionstarted
+         unit test: --- FAIL: TestTwinRenderersUi (0.28s)
+KILLED   msg-handoff-label
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-marker-expanded
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-heading-truncate
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   msg-preview-color
+         unit test: --- FAIL: TestUiMessageColors (0.00s)
+KILLED   box-left-pad
+         unit test: --- FAIL: TestUiMessageRows (0.00s)
+KILLED   reg-types2
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   clean-fast-esc
+         unit test: --- FAIL: TestTwinRenderersUi (0.35s)
+KILLED   clean-range-vt
+         unit test: --- FAIL: TestUiTextHelpers (0.00s)
+KILLED   argument-invalid
+         unit test: --- FAIL: TestUiCallCards (0.00s)
+KILLED   pitext-width
+         unit test: --- FAIL: TestUiMessageRowsFillTheWidth (0.00s)
+KILLED   leading-stop
+         unit test: --- FAIL: TestUiLeadingRowsCounts (0.00s)
+KILLED   hint-key-empty
+         unit test: --- FAIL: TestUiPiText (0.00s)
+KILLED   sum-more-plus
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.20s)
+KILLED   ctx-configured
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.16s)
+KILLED   ctx-unknown-state
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hr-images
+         unit test: --- FAIL: TestUiResultCards (0.00s)
+KILLED   hs-matches
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.13s)
+KILLED   hs-more
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.12s)
+KILLED   ds-search
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   ds-new-context
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.24s)
+KILLED   sec-footer
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.21s)
+KILLED   sec-valid-int
+         unit test: --- FAIL: TestUiHistorySectionsExact (0.00s)
+KILLED   n-group
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.15s)
+KILLED   do-context-rolloverat
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   do-search-span
+         unit test: --- FAIL: TestUiDisplayOfAccepts (0.00s)
+KILLED   json-search-footer
+         unit test: --- FAIL: TestTwinPosthorseHistory (1.69s)
+KILLED   ctor-notes-more
+         unit test: --- FAIL: TestUiDisplaySites (0.03s)
+KILLED   ctor-context-percent
+         unit test: --- FAIL: TestUiDisplaySites (0.04s)
+KILLED   site-note-append
+         unit test: --- FAIL: TestNotesToolResultTextsAndErrors (0.02s)
+KILLED   site-history-read-header
+         unit test: --- FAIL: TestTwinPosthorseHistory (1.87s)
+46 mutation(s), 3 not killed
+
+== run 2: the 20 survivors and the 1 invalid of run 1, after the added tests
+KILLED   header-error-ignored
+         unit test: --- FAIL: TestUiResultCardEdges (0.00s)
+SURVIVED preview-rows
+         the unit tests passed on the mutant
+KILLED   render-showimages
+         unit test: --- FAIL: TestUiRendererFlagsComeFromOptionsAndContext (0.00s)
+SURVIVED n-negzero
+         the unit tests passed on the mutant
+4 mutation(s), 2 not killed
+KILLED   preview-history-prefix
+         unit test: --- FAIL: TestUiResultCardEdges (0.00s)
+KILLED   collapsed-summary-cap
+         unit test: --- FAIL: TestUiResultCardEdges (0.00s)
+KILLED   apply-shell
+         unit test: --- FAIL: TestUiApplyToolCardsLeavesTheDefaultShell (0.00s)
+KILLED   int-zero
+         unit test: --- FAIL: TestUiNumberLimits (0.00s)
+4 mutation(s), 0 not killed
+SURVIVED preview-sections-join
+         the unit tests passed on the mutant
+KILLED   collapsed-details-submitted
+         unit test: --- FAIL: TestUiResultCardEdges (0.00s)
+SURVIVED clean-fast-c0
+         the unit tests passed on the mutant
+KILLED   site-context-rollover
+         unit test: --- FAIL: TestTwinRenderersUiTools (0.17s)
+4 mutation(s), 2 not killed
+KILLED   full-body-clean
+         unit test: --- FAIL: TestUiExpandedSectionsAreSanitised (0.00s)
+KILLED   component-sections-partial
+         unit test: --- FAIL: TestUiResultCardEdges (0.00s)
+SURVIVED leading-double
+         the unit tests passed on the mutant
+3 mutation(s), 1 not killed
+SURVIVED search-previews-count
+         the unit tests passed on the mutant
+KILLED   render-expanded-option
+         unit test: --- FAIL: TestUiRendererFlagsComeFromOptionsAndContext (0.00s)
+SURVIVED sec-valid-body
+         the unit tests passed on the mutant
+3 mutation(s), 2 not killed
+SURVIVED search-previews-spaces
+         the unit tests passed on the mutant
+KILLED   render-partial-option
+         unit test: --- FAIL: TestUiRendererFlagsComeFromOptionsAndContext (0.00s)
+KILLED   sec-split
+         unit test: --- FAIL: TestUiHistorySectionsSplitAtTheEnd (0.00s)
+3 mutation(s), 1 not killed
