@@ -14,6 +14,9 @@
 #             attest provenance and the SBOMs, stamp the index digest into the chart, verify what was just signed.
 #   release   attaches the stamped chart, the SBOMs and the digests to one GitHub Release.
 #
+# `:<version>` is only an alias, never what to pin: `docker buildx imagetools create` cannot push an index without a name, so the
+# publish job tags the merged index and, after signing, fails unless that tag still resolves to the signed digest. The Harness CRD and
+# Substrate reject tags anyway.
 # What a user pins is the index digest: `ghcr.io/michaelkinsy/pig-kagent@sha256:<index digest>`. Verify it with
 #   cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com \
 #     --certificate-identity-regexp '^https://github\.com/MichaelKinsy/pigpen/\.github/workflows/kagent-harness-image\.yml@refs/tags/components/kagent/harness/v[0-9]+\.[0-9]+\.[0-9]+$' \
@@ -239,15 +242,18 @@ jobs:
         shell: bash
         env:
           INDEX: ${{ steps.index.outputs.digest }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
           set -euo pipefail
           cosign verify \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --certificate-identity "https://github.com/$GITHUB_REPOSITORY/.github/workflows/kagent-harness-image.yml@$GITHUB_REF" \
             "$IMAGE@$INDEX" > /dev/null
+          alias="$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)"
+          [[ "$alias" == "$INDEX" ]] || { echo "the alias $IMAGE:$VERSION resolves to $alias, not the signed index $INDEX" >&2; exit 1; }
           GH_TOKEN="${{ github.token }}" gh attestation verify "oci://$IMAGE@$INDEX" --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/kagent-harness-image.yml" > /dev/null
-      # The chart has `image: ""` and refuses to render without it; a release asset carries the index digest, never a tag.
+      # The chart has `image: ""` and refuses to render without it; a release asset carries the index digest, never the alias tag.
       - name: Stamp the index digest into the chart and package it
         id: chart
         shell: bash

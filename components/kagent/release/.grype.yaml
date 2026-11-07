@@ -19,3 +19,4 @@ ignore:
       name: golang.org/x/net
       version: v0.60.0
       type: go-module
+      location: /usr/local/bin/gh

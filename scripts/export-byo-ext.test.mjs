@@ -1,6 +1,6 @@
 // scripts/export-byo-ext.sh builds the self-contained byo-ext harness tree from the canonical Pigpen tree and checks one for drift.
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, appendFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, appendFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -54,5 +54,21 @@ describe('export-byo-ext.sh', () => {
     rmSync(join(again, 'NOTICE'));
     assert.equal(run('--check', again).status, 1);
     assert.equal(run('--check', join(scratch, 'missing')).status, 1);
+  });
+  it('stops when find fails instead of exporting a partial tree, in export and in --check', () => {
+    const bin = join(scratch, 'bin');
+    mkdirSync(bin, { recursive: true });
+    const real = spawnSync('sh', ['-c', 'command -v find'], { encoding: 'utf8' }).stdout.trim();
+    writeFileSync(join(bin, 'find'), `#!/bin/sh\ncase "$*" in *"-type f"*) echo "find: simulated failure" >&2; exit 1;; esac\nexec ${real} "$@"\n`, { mode: 0o755 });
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}` };
+    const broken = join(scratch, 'broken');
+    const result = spawnSync('sh', [script, broken], { encoding: 'utf8', env });
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /find failed/);
+    const fresh = join(scratch, 'fresh');
+    assert.equal(run(fresh).status, 0);
+    const check = spawnSync('sh', [script, '--check', fresh], { encoding: 'utf8', env });
+    assert.notEqual(check.status, 0, 'a failing find must not let --check pass');
+    assert.equal(run('--check', fresh).status, 0, 'and --check still passes with a working find');
   });
 });

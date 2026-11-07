@@ -27,10 +27,14 @@ die() { echo "export-byo-ext: $*" >&2; exit 2; }
 copy_tree() {
   src=$1; dst=$2
   [ -d "$src" ] || die "missing directory $src"
-  if [ -n "$(find "$src" -type l -print -quit)" ]; then die "$src contains a symlink; the export refuses them"; fi
+  # Each find runs on its own, so a failing find stops the export; in a pipeline into `while` its status would be lost.
+  links=$(find "$src" -type l -print -quit) || die "find failed on $src"
+  if [ -n "$links" ]; then die "$src contains a symlink; the export refuses them"; fi
+  list=$(cd "$src" && find . \( -name testdata -o -name proof \) -type d -prune -o -type f ! -name '*_test.go' ! -name .DS_Store -print) || die "find failed on $src"
   mkdir -p "$dst"
-  (cd "$src" && find . \( -name testdata -o -name proof \) -type d -prune -o -type f ! -name '*_test.go' ! -name .DS_Store -print | LC_ALL=C sort) |
+  printf '%s\n' "$list" | LC_ALL=C sort |
     while IFS= read -r file; do
+      [ -n "$file" ] || continue
       mkdir -p "$dst/$(dirname "$file")"
       cp -p "$src/$file" "$dst/$file"
     done

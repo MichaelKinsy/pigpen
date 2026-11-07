@@ -522,6 +522,25 @@ describe('the kagent harness image workflow', () => {
     assert.match(problems(workflow.replace('push-by-digest=true,', '')), /pushed by digest only/);
     assert.match(problems(workflow.replace('needs: [plan, build]', 'needs: [plan]')), /publish must need build/);
   });
+  it('requires the scan, sign and attest steps to exist, not only to be well formed', () => {
+    const drop = (marker, label) => {
+      const lines = workflow.split('\n');
+      const at = lines.findIndex((line) => line.includes(marker));
+      assert.ok(at > 0, `${label} marker present`);
+      let start = at;
+      while (!/^      - /.test(lines[start])) start -= 1;
+      let end = at + 1;
+      while (end < lines.length && !/^      - /.test(lines[end]) && !/^  \S/.test(lines[end])) end += 1;
+      return [...lines.slice(0, start), ...lines.slice(end)].join('\n');
+    };
+    assert.match(problems(drop('anchore/scan-action@', 'scan')), /job build must have exactly one anchore\/scan-action step/);
+    assert.match(problems(drop('cosign sign --yes', 'sign')), /job publish must have exactly one cosign sign step/);
+    assert.match(problems(drop('actions/attest-build-provenance@', 'provenance')), /exactly one actions\/attest-build-provenance step/);
+    assert.match(problems(drop('Attest the linux/amd64 SBOM', 'amd64 sbom')), /exactly two actions\/attest steps/);
+    assert.match(problems(drop('Attest the linux/arm64 SBOM', 'arm64 sbom')), /exactly two actions\/attest steps/);
+    const twice = workflow.replace('      - name: Sign the index digest', '      - name: Sign again\n        run: cosign sign --yes "$IMAGE@$INDEX"\n      - name: Sign the index digest');
+    assert.match(problems(twice), /exactly one cosign sign step/);
+  });
   it('requires the protected environment on publish and release', () => {
     assert.match(problems(workflow.replace('    environment: release-image\n    permissions:\n      contents: read\n      packages: write\n      id-token', '    permissions:\n      contents: read\n      packages: write\n      id-token')), /job publish must run in environment: release-image/);
     assert.match(problems(workflow.replaceAll('environment: release-image', 'environment: release')), /job release must run in environment: release-image/);
@@ -550,6 +569,15 @@ describe('the kagent harness image grype policy', () => {
     assert.match(grypeIgnoreProblems(config.replace('version: v0.60.0', 'version: v0.*')).join('\n'), /no wildcard/);
     assert.match(grypeIgnoreProblems(config.replace('    package:', '    fix-state: unknown\n    package:')).join('\n'), /fix-state widens the exception/);
     assert.match(grypeIgnoreProblems(`${config}\nonly-fixed: false\n`).join('\n'), /only an ignore list is allowed/);
+  });
+  it('requires an exact file location on every ignore, so the same package anywhere else still fails', () => {
+    assert.match(grypeIgnoreProblems(config.replace('      location: /usr/local/bin/gh\n', '')).join('\n'), /package needs an exact absolute location/);
+    assert.match(grypeIgnoreProblems(config.replace('/usr/local/bin/gh', '/usr/local/bin/*')).join('\n'), /needs an exact absolute location/);
+    assert.match(grypeIgnoreProblems(config.replace('/usr/local/bin/gh', 'gh')).join('\n'), /needs an exact absolute location/);
+    // grype ignores a top-level location silently, so it must not stand in for package.location.
+    const top = config.replace('      location: /usr/local/bin/gh\n', '').replace('    package:', '    location: /usr/local/bin/gh\n    package:');
+    assert.match(grypeIgnoreProblems(top).join('\n'), /package needs an exact absolute location/);
+    assert.match(grypeIgnoreProblems(top).join('\n'), /location widens the exception/);
   });
   it('refuses an undated exception or one that runs past 120 days of its review', () => {
     assert.match(grypeIgnoreProblems(config.replace('# expires: 2026-12-15\n', '')).join('\n'), /needs a "# reviewed/);

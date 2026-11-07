@@ -12,8 +12,9 @@
 # `pig piglet build` builds only for the machine it runs on, so stage `piglet` runs on the TARGET platform (a native
 # arm64 runner for arm64). Everything else (the adapter, the downloads) is built or fetched on the BUILD platform.
 #
-# The kagent sandbox runs this image as UID 65532 with no capabilities and a durable volume at /data. Nothing
-# can be installed at run time, so everything the agent needs is baked here.
+# Substrate runs the image's USER (here the numeric 65532:65532) and a non-root user starts with no effective capabilities
+# (Substrate docs/reference/sandbox-classes.md and the user section of docs/reference/api-guide.md; research: image-options.md).
+# The durable volume is at /data. Run-time package installs therefore cannot work, so everything the agent needs is baked here.
 
 ARG DEBIAN_IMAGE=debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 ARG GOLANG_IMAGE=golang:1.27.3-trixie@sha256:af1bfc2614ebb1dbd31af514b78740fd678850e76498762b425ecee4c5c6ea80
@@ -100,7 +101,7 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* /var/log/apt /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache; \
     groupadd -g 65532 kagent; \
     useradd -u 65532 -g 65532 -d /data -M -s /bin/bash kagent; \
-    mkdir -p /data /workspace; chown 65532:65532 /data
+    mkdir -p /data; chown 65532:65532 /data
 COPY --from=unpack /out/go /usr/local/go
 COPY --from=unpack /out/tools/ /usr/local/bin/
 COPY --from=piglet /out/pig /usr/local/bin/pig
@@ -109,9 +110,12 @@ COPY LICENSE NOTICE /usr/share/licenses/pig-kagent/
 COPY --from=adapter /out/kagent-pig /usr/local/bin/kagent-pig
 
 # HOME and every cache live on the durable /data volume (kagent mounts it 0777). /tmp is memory-backed in the sandbox.
+# The model can write /data, so its bin directories come LAST on PATH: nothing it installs there can shadow a system binary, and the
+# adapter runs pig by the absolute path KAGENT_PIG_BIN.
 # kagent sets the TLS trust variables itself and refuses an Agent that sets them, so none are set here.
 ENV HOME=/data \
-    PATH=/data/.local/bin:/data/go/bin:/usr/local/go/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    PATH=/usr/local/go/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/data/.local/bin:/data/go/bin \
+    KAGENT_PIG_BIN=/usr/local/bin/pig \
     GOPATH=/data/go GOCACHE=/data/.cache/go-build GOTOOLCHAIN=local \
     PYTHONUSERBASE=/data/.local PIP_BREAK_SYSTEM_PACKAGES=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
     XDG_CACHE_HOME=/data/.cache

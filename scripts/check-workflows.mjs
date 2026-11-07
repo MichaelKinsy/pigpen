@@ -226,7 +226,7 @@ export const GRYPE_CONFIG = 'components/kagent/release/.grype.yaml';
 
 /**
  * The gate fails on every fixed High or worse finding. An exception is allowed only as a reviewed, dated, narrowly scoped ignore entry:
- * a vulnerability id plus the exact package name and version and its type (never a bare vulnerability or a package wildcard, so the same
+ * a vulnerability id plus the exact package name and version, its type and the exact file location (never a bare vulnerability or a package wildcard, so the same
  * finding anywhere else still fails), at most five entries, and a `# expires: YYYY-MM-DD` line no more than 120 days after the
  * `# reviewed:` date line, which the release workflow also enforces at run time.
  */
@@ -243,6 +243,8 @@ export function grypeIgnoreProblems(text) {
     if (typeof entry?.vulnerability !== 'string' || !/^[A-Za-z0-9-]+$/.test(entry.vulnerability)) problems.push(`${where}: needs one vulnerability id`);
     const pkg = entry?.package;
     if (!pkg?.name || !pkg?.version || !pkg?.type || /[*?]/.test(`${pkg.name}${pkg.version}`)) problems.push(`${where}: needs a package with an exact name, an exact version and a type, no wildcard`);
+    // grype reads the file only from package.location; a top-level location key is silently ignored, which would leave the entry unscoped.
+    if (typeof pkg?.location !== 'string' || !/^\/[^*?]+$/.test(pkg.location)) problems.push(`${where}: package needs an exact absolute location (the path of the one binary), no wildcard`);
     for (const key of Object.keys(entry ?? {})) if (!['vulnerability', 'package'].includes(key)) problems.push(`${where}: ${key} widens the exception; only vulnerability and package are allowed`);
   });
   if (ignore.length) {
@@ -305,6 +307,14 @@ export function kagentImageProblems(name, text, runners = {}) {
       }
     }
   }
+  // The steps that make the gate and the signature real must exist, not only be well formed when present.
+  const steps = (id) => jobs[id]?.steps ?? [];
+  const count = (id, test) => steps(id).filter((step) => test(String(step.uses ?? ''), String(step.run ?? ''))).length;
+  const scans = count('build', (uses) => uses.startsWith('anchore/scan-action@'));
+  if (scans !== 1) problems.push(`${name}: job build must have exactly one anchore/scan-action step (the vulnerability gate), found ${scans}`);
+  if (count('publish', (_, run) => /(^|[\s;&|(])cosign\s+sign\b/.test(run)) !== 1) problems.push(`${name}: job publish must have exactly one cosign sign step`);
+  if (count('publish', (uses) => uses.startsWith('actions/attest-build-provenance@')) !== 1) problems.push(`${name}: job publish must have exactly one actions/attest-build-provenance step`);
+  if (count('publish', (uses) => uses.startsWith('actions/attest@')) !== 2) problems.push(`${name}: job publish must have exactly two actions/attest steps (the amd64 and the arm64 SBOM)`);
   return problems;
 }
 
