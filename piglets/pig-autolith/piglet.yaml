@@ -1,0 +1,28 @@
+# Pigpen composition input. Run npm run stage before selecting it in PiG.
+# PiG with autolith-bridge: a Common Lisp extension that hands jobs to Autolith, a separate program.
+name: pig-autolith
+description: "PiG with autolith-bridge, a Common Lisp extension that runs Autolith jobs and sessions from PiG: the autolith_job and autolith_session tools and the /autolith command. Needs SBCL, an installed Autolith and a model login."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+extensions:
+  # A Lisp extension (an ASDF system): PiG builds it into a cached SBCL image the first time it loads.
+  # autolith_job and autolith_session call the `autolith` program on PATH; nothing runs until the model uses a tool or you run /autolith.
+  - name: autolith-bridge
+    origins: [local:./extensions/autolith-bridge]
+    tools: [autolith_job, autolith_session]
+  # Empty Go factory: PiG rejects a Binary build with no fused member, and the Lisp extension is not fused.
+  - name: fuse-anchor
+    origins: [local:./extensions/fuse-anchor]
+    tools: []
+skills: []
+# Opt-in strip (D92): this Piglet declares a closed extension surface (discovery.extensions: []), and ships only the Go and Lisp
+# extension runtimes. `pig -e <file>` for a TypeScript, JavaScript, Rust or Python extension fails with a message that names
+# this Piglet and the entry to remove. The Go SDK stays because the Binary is PiG itself; extension-sdk-lisp stays because the
+# bridge is Lisp.
+strip:
+  features: [node-extensions, extension-sdk-rust, extension-sdk-python, self-update]
+discovery:
+  extensions: []
+  skills: []

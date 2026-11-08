@@ -2,7 +2,7 @@
 // Build every Piglet for this machine and smoke each Binary: the per-OS job of the CI platform matrix, and the same
 // check anyone can run locally.
 //
-//   node scripts/platform-smoke.mjs [--only name,name] [--out dir] [--no-stage]
+//   node scripts/platform-smoke.mjs [--only name,name] [--except name,name] [--out dir] [--no-stage]
 //
 // PiG's native builder builds only the machine it runs on, so each OS builds its own target (scripts/host-target.mjs),
 // with the PiG that scripts/pig-bin.mjs selects (PIG_BIN) and the PiG source checkout it needs (PIG_SOURCE_ROOT).
@@ -195,7 +195,10 @@ async function main() {
   const only = value('--only')?.split(',').filter(Boolean);
   const unknown = (only ?? []).filter((name) => !all.includes(name));
   if (unknown.length) throw new Error(`no staged Piglet named ${unknown.join(', ')} (staged: ${all.join(', ') || 'none; run npm run stage'})`);
-  const names = only ?? all;
+  const except = value('--except')?.split(',').filter(Boolean) ?? [];
+  const unknownExcept = except.filter((name) => !all.includes(name));
+  if (unknownExcept.length) throw new Error(`no staged Piglet named ${unknownExcept.join(', ')} to leave out (staged: ${all.join(', ') || 'none; run npm run stage'})`);
+  const names = (only ?? all).filter((name) => !except.includes(name));
   if (!names.length) throw new Error('no staged Piglets; run npm run stage');
 
   mkdirSync(out, { recursive: true });
