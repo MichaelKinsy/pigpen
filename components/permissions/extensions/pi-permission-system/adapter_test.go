@@ -30,11 +30,17 @@ type adapterRig struct {
 	h      *Host
 	active []string
 	set    []string
+	// selectAnswer is what ui.select answers with: nil dismisses the dialog (deny, fail-closed), a string is the
+	// chosen option.
+	selectAnswer any
+	// inputs holds what each ui.input dialog answered with, in call order.
+	inputs []any
 }
 
 func rigWith(t *testing.T, config string, active ...string) *adapterRig {
 	t.Helper()
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "") // the host's agent dir would win over the environment
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	if config != "" {
@@ -59,6 +65,20 @@ func rigWith(t *testing.T, config string, active ...string) *adapterRig {
 				r.set = append(r.set, x.(string))
 			}
 			r.active = r.set
+		case "ui.select":
+			if r.selectAnswer == nil {
+				return map[string]any{}, "" // dismissed
+			}
+			return map[string]any{"ok": true, "selected": r.selectAnswer}, ""
+		case "ui.input":
+			var text any
+			if len(r.inputs) > 0 {
+				text, r.inputs = r.inputs[0], r.inputs[1:]
+			}
+			if text == nil {
+				return map[string]any{}, ""
+			}
+			return map[string]any{"ok": true, "text": text}, ""
 		}
 		return map[string]any{}, ""
 	}})
@@ -158,9 +178,11 @@ func TestAdapterBeforeAgentStart(t *testing.T) {
 	eq(t, r.set, []string{"read"}, "session start reset the baseline")
 }
 
-// The skill-read gate: a read of a listed skill's file is refused while the skill surface asks (skill-read.ts).
+// The skill-read gate: a read of a listed skill's file asks while the skill surface asks (skill-read.ts), and the
+// dialog decides it.
 func TestAdapterSkillRead(t *testing.T) {
 	dir := t.TempDir()
+	t.Setenv("PIG_EXT_HOST_INFO", "")
 	t.Setenv("PI_CODING_AGENT_DIR", dir)
 	agentDirForTest = dir
 	os.MkdirAll(filepath.Dir(configPath()), 0o755)
@@ -174,9 +196,10 @@ func TestAdapterSkillRead(t *testing.T) {
 	blocked, _ := r.toolCall("read", map[string]any{"path": "skills/demo/SKILL.md"})
 	eq(t, blocked, false, "no skills listed yet")
 	h.Fire("before_agent_start", map[string]any{"systemPrompt": prompt, "systemPromptOptions": map[string]any{}})
+	// The dialog is dismissed: the read is denied, and the reason names the skill.
 	blocked, reason := r.toolCall("read", map[string]any{"path": "skills/demo/SKILL.md"})
-	eq(t, blocked, true, "the skill's file")
-	eq(t, strings.Contains(reason, "skill 'demo'"), true, "names the skill")
+	eq(t, blocked, true, "the skill's file, denied at a dismissed dialog")
+	eq(t, strings.Contains(reason, "'skill' call 'demo' for tool 'read'"), true, "names the skill")
 	blocked, _ = r.toolCall("read", map[string]any{"path": "notes.txt"})
 	eq(t, blocked, false, "another file")
 	h.Fire("session_start", map[string]any{})

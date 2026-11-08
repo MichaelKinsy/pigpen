@@ -106,6 +106,14 @@ func NewNormalizer(cwd, tmp, home string) *Normalizer {
 			return
 		}
 		n.Replace = append(n.Replace, Replacement{from, to})
+		// A host on Windows prints paths in either separator form (pig's <cwd> block uses forward
+		// slashes while its docs paths use backslashes); both must normalize to the same token.
+		if alt := strings.ReplaceAll(from, "\\", "/"); alt != from {
+			n.Replace = append(n.Replace, Replacement{alt, to})
+		}
+		if alt := strings.ReplaceAll(from, "/", "\\"); alt != from {
+			n.Replace = append(n.Replace, Replacement{alt, to})
+		}
 		if real, err := filepath.EvalSymlinks(from); err == nil && real != from {
 			n.Replace = append(n.Replace, Replacement{real, to})
 		}
