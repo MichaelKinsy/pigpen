@@ -262,19 +262,9 @@ their cases without a twin or named skip are counted as `DEFERRED`, not hidden b
 synthetic reasons. A helper other than `tw`/`tskip` is invisible to the checker: keep the twin
 helper, and put an adaptation note inside its body.
 
-**Intention check before a skip.** A case that does not apply as written is not a skip yet.
-First ask what the case protects, then whether the port can test that idea in its own way.
-- A JS-only input (a Symbol key, a getter, a `WeakRef`) may still reach the port through a
-  TypeScript caller or a vendored module. Test it there.
-- An esbuild or bundle check may become a check on the Go build, such as `go list -deps` on the
-  binary.
-- Implicit module state may become an explicit parameter. Test that the outer value is restored
-  after a nested call and after a panic.
-- A tutorial or example becomes the port's own example, with the same checks.
-
-A `tskip` reason must name the property, the Go-shaped test you considered, and why it is
-impossible or worthless. "Go has no X" is not a reason by itself. Reviewers reject a skip
-without these three parts.
+**Intention check before a skip.** If a case does not apply as written, test what it protects
+in the port's own way: through a TypeScript caller, as a Go build check, or as an explicit
+parameter. Skip only when that is impossible or worthless, and give the reason in `tskip`.
 
 **Layer 2: scenarios and golden traces.** When the original has no tests (or beyond
 them), derive scenarios from every branch of the source: each success, rejection,
