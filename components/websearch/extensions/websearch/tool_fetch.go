@@ -99,7 +99,7 @@ func (r *Runtime) fetchContent(ctx context.Context, params map[string]any, updat
 
 	responseID := GenerateID()
 	data := &StoredSearchData{ID: responseID, Type: "fetch", Timestamp: nowMs(), URLs: stripThumbnails(fetched)}
-	r.host.AppendEntry("web-search-results", StoreFetchedContentResult(responseID, data))
+	r.hostFor(ctx).AppendEntry("web-search-results", StoreFetchedContentResult(responseID, data))
 
 	optional := func(d map[string]any) map[string]any {
 		if opts.Prompt != "" {
