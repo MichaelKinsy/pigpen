@@ -22,7 +22,7 @@ import (
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
-var version = "0.2.1"
+var version = "0.2.2"
 
 type multiFlag []string
 
@@ -40,7 +40,8 @@ Usage:
   pig-acp --version | --help
 
 Flags:
-  --pig <command>       the pig executable or a Piglet Binary to drive (default: pig)
+  --pig <command>       the pig executable or a Piglet Binary to drive (default: the pig beside
+                        pig-acp, else pig on PATH; a relative path is relative to pig-acp's directory)
   --piglet <value>      start pig with --piglet <value> (a Piglet name or a piglet.yaml)
   --pig-arg <arg>       an extra argument for pig; repeatable
   --terminal-login      start pig interactively, for signing in or configuring keys
@@ -48,7 +49,7 @@ Flags:
   --help                print this text
 
 Environment:
-  PIG_ACP_PIG_COMMAND              the pig executable when --pig is not given
+  PIG_ACP_PIG_COMMAND              the pig executable when --pig is not given (same path rules)
                                    (PI_ACP_PI_COMMAND is accepted for pi-acp users)
   PIG_ACP_ENABLE_EMBEDDED_CONTEXT  "true" advertises embedded context support in prompts
                                    (PI_ACP_ENABLE_EMBEDDED_CONTEXT is accepted)

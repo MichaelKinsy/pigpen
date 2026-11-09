@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the adapter version reported in agentInfo.
-var Version = "0.2.1"
+var Version = "0.2.2"
 
 const (
 	modelConfigID        = "model"
@@ -763,10 +763,7 @@ func (a *Agent) SetSessionConfigOption(req SetSessionConfigOptionRequest) (SetSe
 // one directory up (bin/pig with a CHANGELOG.md at the root). "" when there is none. PiG binaries
 // carry no changelog of their own, so this is only found for installs that ship one.
 func FindChangelog(pigExecutable string) string {
-	if pigExecutable == "" {
-		pigExecutable = pirpc.Command("")
-	}
-	path := pigExecutable
+	path := pirpc.Command(pigExecutable)
 	if !strings.ContainsAny(path, `/\`) {
 		p, err := exec.LookPath(path)
 		if err != nil {
