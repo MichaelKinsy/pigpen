@@ -27,7 +27,7 @@ Build the companion (Go 1.26 or later) and put it on your `PATH`:
 ```sh
 cd components/acp/extensions/acp/cmd/pig-acp
 go build -trimpath -o pig-acp .
-pig-acp --version        # pig-acp 0.2.1 (ACP protocol version 1)
+pig-acp --version        # pig-acp 0.2.2 (ACP protocol version 1)
 ```
 
 Zed, `settings.json` (`/acp` prints this with your paths filled in):
@@ -41,15 +41,17 @@ Zed, `settings.json` (`/acp` prints this with your paths filled in):
 ```
 
 Other ACP clients run `pig-acp --pig <pig>` and speak newline-delimited JSON-RPC on stdio. `--pig` also takes a built Piglet
-Binary (`--pig ./acp`). `--piglet <name-or-file>` starts pig with `--piglet ...`, and `--pig-arg <arg>` (repeatable) passes any
-other argument. Without `--pig`, `PIG_ACP_PIG_COMMAND` (or `PI_ACP_PI_COMMAND`) is used, then `pig`.
+Binary (`--pig ./acp`). A relative `--pig` with a path separator resolves against the directory of the `pig-acp` executable, not
+the project directory the agent runs in; an absolute path is used as is, and a bare name is looked up on `PATH`. `--piglet <name-or-file>` starts pig with `--piglet ...`, and `--pig-arg <arg>` (repeatable) passes any
+other argument. Without `--pig`, `PIG_ACP_PIG_COMMAND` (or `PI_ACP_PI_COMMAND`) is used, then the `pig` (`pig.exe` on Windows) that sits beside the `pig-acp` executable, then `pig` on `PATH`, so a release archive that ships
+both needs no `--pig`.
 
 Signing in: if pig has no model or key, `session/new` fails with the ACP "authentication required" error (-32000) and one
 terminal auth method, `pig-acp --terminal-login`, which starts pig interactively in the editor's terminal.
 
 | Flag or variable | Meaning |
 |---|---|
-| `--pig <command>` | the pig executable or Piglet Binary to drive |
+| `--pig <command>` | the pig executable or Piglet Binary to drive (relative paths resolve against `pig-acp`'s own directory) |
 | `--piglet <value>`, `--pig-arg <arg>` | extra pig arguments |
 | `--terminal-login` | start pig interactively (sign in, configure keys) and exit with its status |
 | `--version`, `--help` | print and exit |
@@ -119,3 +121,10 @@ Everything below was first run on PiG 0.3.0 and re-run on 0.4.0 (the 11 end-to-e
   equivalent; results in `port/mutation-results.txt`.
 
 **Not verified:** Zed and JetBrains themselves (no editor could be run here). The reference client is the interop evidence.
+
+## Changes
+
+- **0.2.2:** without `--pig`, `pig-acp` starts the `pig` (`pig.exe` on Windows) that sits beside its own executable before looking on
+  `PATH`, and a relative `--pig` (or `PIG_ACP_PIG_COMMAND`) such as `./pig` resolves against the directory of the `pig-acp` executable
+  instead of the project directory the child runs in. Absolute paths are unchanged. The version check, the update notice and the
+  `/changelog` lookup use the same resolution. See D16 in `port/PORT.md`.

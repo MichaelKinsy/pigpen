@@ -9,15 +9,15 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/MichaelKinsy/pigpen/acp/cmd/pig-acp/internal/pirpc"
 )
 
 var leadingV = regexp.MustCompile(`^[vV]`)
 
 // pigVersionHeader is `pig --version`, or "" when the executable does not answer.
 func pigVersionHeader(piCommand string) string {
-	if piCommand == "" {
-		piCommand = "pig"
-	}
+	piCommand = pirpc.Command(piCommand)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, piCommand, "--version")
