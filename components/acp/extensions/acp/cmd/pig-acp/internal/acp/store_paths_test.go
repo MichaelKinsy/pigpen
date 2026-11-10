@@ -284,9 +284,10 @@ func TestLoadSlashCommands(t *testing.T) {
 }
 
 func TestAuthRequiredError(t *testing.T) {
+	terminal := AuthSupport{Terminal: true}
 	for _, msg := range []string{"No API key found", "apikey missing", "missing key for x", "no key", "provider not configured", "Unauthorized", "authentication failed", "permission denied", "Forbidden", "HTTP 401", "status 403"} {
 		t.Run("detects "+msg, func(t *testing.T) {
-			re := MaybeAuthRequiredError(errors.New(msg))
+			re := MaybeAuthRequiredError(errors.New(msg), terminal)
 			if re == nil || re.Code != -32000 || !strings.Contains(re.Message, "Configure an API key or log in with an OAuth provider.") {
 				t.Fatalf("re = %+v", re)
 			}
@@ -297,8 +298,17 @@ func TestAuthRequiredError(t *testing.T) {
 		})
 	}
 	t.Run("ignores other errors and nil", func(t *testing.T) {
-		if MaybeAuthRequiredError(errors.New("socket hang up")) != nil || MaybeAuthRequiredError(nil) != nil {
+		if MaybeAuthRequiredError(errors.New("socket hang up"), terminal) != nil || MaybeAuthRequiredError(nil, terminal) != nil {
 			t.Error("false positive")
+		}
+	})
+	// acp-tck ACP-AUTH-005: -32000 is only for a client that was given a method to authenticate with.
+	t.Run("a client with no advertised method gets an internal error naming the remedy, not -32000", func(t *testing.T) {
+		for _, s := range []AuthSupport{{}} {
+			re := MaybeAuthRequiredError(errors.New("No API key found"), s)
+			if re == nil || re.Code != -32603 || !strings.Contains(re.Message, "/login") {
+				t.Fatalf("re = %+v", re)
+			}
 		}
 	})
 }

@@ -305,8 +305,7 @@ func TestSessionTurns(t *testing.T) {
 		proc.promptErr = errors.New("pi prompt failed: No API key found for provider")
 		s := newTestSession(cwdNow(t), proc, conn)
 		r := wait(t, s.Prompt("hi", nil))
-		re, ok := r.Err.(*RequestError)
-		if !ok || re.Code != -32000 {
+		if !errors.Is(r.Err, errAuthFailure) {
 			t.Fatalf("r = %+v", r)
 		}
 	})

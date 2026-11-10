@@ -159,7 +159,7 @@ func scriptedProc(t *testing.T) *fakeProc {
 func TestServeInitialize(t *testing.T) {
 	t.Run("initialize advertises exactly the implemented capabilities", func(t *testing.T) {
 		c := startServer(t, nil)
-		resp := c.call("initialize", map[string]any{"protocolVersion": 1, "clientCapabilities": map[string]any{}})
+		resp := c.call("initialize", map[string]any{"protocolVersion": 1, "clientCapabilities": map[string]any{"auth": map[string]any{"terminal": true}}})
 		result, _ := resp["result"].(map[string]any)
 		if result["protocolVersion"] != float64(1) {
 			t.Fatalf("result = %v", resp)
@@ -175,8 +175,23 @@ func TestServeInitialize(t *testing.T) {
 			t.Errorf("agentInfo = %v", info)
 		}
 		methods, _ := result["authMethods"].([]any)
-		if len(methods) != 1 {
+		if len(methods) != 1 || methods[0].(map[string]any)["type"] != "terminal" {
 			t.Errorf("authMethods = %v", methods)
+		}
+	})
+
+	t.Run("initialize without auth.terminal advertises no authentication method (ACP-AUTH-002)", func(t *testing.T) {
+		for name, caps := range map[string]any{"empty": map[string]any{}, "absent": nil} {
+			c := startServer(t, nil)
+			params := map[string]any{"protocolVersion": 1}
+			if caps != nil {
+				params["clientCapabilities"] = caps
+			}
+			result, _ := c.call("initialize", params)["result"].(map[string]any)
+			methods, ok := result["authMethods"].([]any)
+			if !ok || len(methods) != 0 {
+				t.Errorf("%s: authMethods = %#v, want []", name, result["authMethods"])
+			}
 		}
 	})
 
