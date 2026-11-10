@@ -3,9 +3,11 @@
 package driver
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -1029,5 +1031,103 @@ func TestDuplicatePassEnvNamesAreSentOnce(t *testing.T) {
 	}
 	if n != 2 {
 		t.Fatalf("PATH and GORACE appear %d times in total, want 2", n)
+	}
+}
+
+// fakeTasks is kagent's TaskStore as RestorePending sees it.
+type fakeTasks struct {
+	mu    sync.Mutex
+	state a2atype.TaskState
+	err   error
+	asked []string
+}
+
+func (f *fakeTasks) TaskState(_ context.Context, taskID string) (a2atype.TaskState, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.asked = append(f.asked, taskID)
+	return f.state, f.err
+}
+
+// parkThroughTheExecutor parks task-2 of ctx-1 on an approval and returns the continuation store.
+func parkThroughTheExecutor(t *testing.T, h *harness) *memoryContinuation {
+	t.Helper()
+	store := &memoryContinuation{}
+	executor, err := runtimea2a.New(h.d, store, tracing.RuntimeTelemetry{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := a2atype.NewMessage(a2atype.MessageRoleUser, a2atype.NewTextPart("probe [approve]"))
+	message.TaskID, message.ContextID = "task-2", "ctx-1"
+	events, errs := collectEvents(executor.Execute(t.Context(), &a2asrv.ExecutorContext{TaskID: "task-2", ContextID: "ctx-1", Message: message}))
+	if len(errs) != 0 || finalState(events) != a2atype.TaskStateInputRequired {
+		t.Fatalf("events = %v errs = %v", events, errs)
+	}
+	return store
+}
+
+// After RevertSession kagent has failed the task that was being continued when the Actor crashed, while the restored
+// /data still holds the waiting record of that task. A restored executor then refused every new message ("native
+// session is waiting for another task"), so the session could only be deleted. RestorePending now asks the TaskStore
+// and releases a task that is no longer waiting.
+func TestRestoreReleasesAParkedTaskThatKagentHasEnded(t *testing.T) {
+	for _, state := range []a2atype.TaskState{a2atype.TaskStateFailed, a2atype.TaskStateCanceled, a2atype.TaskStateCompleted, a2atype.TaskStateRejected} {
+		t.Run(string(state), func(t *testing.T) {
+			h := newHarness(t, "approve")
+			store := parkThroughTheExecutor(t, h)
+			tasks := &fakeTasks{state: state}
+			h.d.cfg.Tasks = tasks
+			restarted := h.restart("text")
+			executor, err := runtimea2a.New(restarted, store, tracing.RuntimeTelemetry{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			next := a2atype.NewMessage(a2atype.MessageRoleUser, a2atype.NewTextPart("hello"))
+			next.TaskID, next.ContextID = "task-3", "ctx-1"
+			events, errs := collectEvents(executor.Execute(t.Context(), &a2asrv.ExecutorContext{TaskID: "task-3", ContextID: "ctx-1", Message: next}))
+			if len(errs) != 0 || finalState(events) != a2atype.TaskStateCompleted {
+				t.Fatalf("a new message on the reverted session: events = %v errs = %v", events, errs)
+			}
+			if reserved, err := executor.ReservedTaskID(); reserved != "" || err != nil {
+				t.Fatalf("the Actor is still reserved by %q, %v", reserved, err)
+			}
+			if r := record(t, h); r.Phase != journal.Canceled {
+				t.Fatalf("phase = %s, want canceled", r.Phase)
+			}
+			if len(tasks.asked) != 1 || tasks.asked[0] != "task-2" {
+				t.Fatalf("the TaskStore was asked about %v", tasks.asked)
+			}
+		})
+	}
+}
+
+// A task that kagent still holds open stays parked, and a store that cannot answer changes nothing: the restore never
+// guesses, it keeps the parked task and says why.
+func TestRestoreKeepsAParkedTaskWhenKagentHoldsItOrCannotSay(t *testing.T) {
+	tests := map[string]*fakeTasks{
+		"input required": {state: a2atype.TaskStateInputRequired},
+		"working":        {state: a2atype.TaskStateWorking},
+		"unreachable":    {err: errors.New("controller unavailable")},
+		"not found":      {err: a2atype.ErrTaskNotFound},
+	}
+	for name, tasks := range tests {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, "approve")
+			parkThroughTheExecutor(t, h)
+			h.d.cfg.Tasks = tasks
+			restarted := h.restart("text")
+			var logs bytes.Buffer
+			restarted.cfg.Logger = slog.New(slog.NewTextHandler(&logs, nil))
+			task, ctxID, pending, err := restarted.RestorePending()
+			if err != nil || pending == nil || task != "task-2" || ctxID != "ctx-1" {
+				t.Fatalf("RestorePending = %q %q %v, %v; want the parked task", task, ctxID, pending, err)
+			}
+			if r := record(t, h); r.Phase != journal.Waiting {
+				t.Fatalf("phase = %s, want waiting", r.Phase)
+			}
+			if tasks.err != nil && !strings.Contains(logs.String(), "kept the parked task") {
+				t.Fatalf("no explanation logged: %q", logs.String())
+			}
+		})
 	}
 }

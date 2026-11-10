@@ -165,10 +165,11 @@ CI checks only that the image builds.
 - Approvals are decided on the adapter side: when a call needs approval the adapter stops PiG, records the pending call durably, and on approval runs the MCP call itself, appends its
   result to the PiG session, and starts PiG again with one short continuation prompt. Other calls of the same assistant message are reported as not executed and may be re-issued.
 - If the process dies after a decision was recorded but before the continuation finished, the turn ends as `ErrSessionAbandoned`; an approved call is never run twice automatically.
-- `SessionService.RevertSession` (kagent v1.0.0) restores a crashed Actor to its last durable snapshot and needs nothing from the harness: `/data` comes back as it was at that suspend. Verified on Kind
-  with the mock model: a plain turn killed mid-model-call (worker pod deleted) is reverted and the session still recalls its earlier turn. Known gap, not fixed: if the Actor crashes while a
-  parked approval is being continued, kagent fails that task but the restored `/data` still holds the waiting record, so the session answers every new message with "native session is waiting for
-  another task" and has to be deleted. Releasing it needs the adapter to learn that the task is terminal.
+- `SessionService.RevertSession` (kagent v1.0.0) restores a crashed Actor to its last durable snapshot: `/data` comes back as it was at that suspend and nothing is replayed. Work after the snapshot is lost, and
+  an MCP call made after it is not undone. kagent fails the task that was running at the crash. If that task was the continuation of a parked approval, the restored `/data` still holds its waiting record, so
+  on restore the adapter asks kagent's TaskStore (at `control_plane_url`) whether the task is still open; when it has ended the record is cancelled like a client's cancel of a parked task and the session takes new
+  messages. If the TaskStore cannot be asked or does not know the task, the task stays parked and the reason is logged (`kept the parked task`); the restore never guesses. Verified on Kind with the mock model:
+  a plain turn and a parked approval's continuation, each killed mid-model-call, are reverted and the session answers the next message. kagent refuses a second approval of the task it failed.
 - A tool allowlist and `requireApproval` are filters for the model, not network controls: an approval-gated MCP origin is still reachable through `bash` with `curl` when the Actor's
   egress allows it. What the Actor can reach is decided by egress rules.
 - Rejected at startup with the field named: `sse_tools`, `token_passthrough`, per-server TLS options, `gemini_vertex_ai`, `gemini_anthropic`, `sap_ai_core`, the Foundry Anthropic format,

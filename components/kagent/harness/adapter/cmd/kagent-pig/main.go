@@ -23,6 +23,9 @@ import (
 
 	"github.com/kagent-dev/kagent/go/adk/pkg/app"
 	"github.com/kagent-dev/kagent/go/adk/pkg/bootstrap"
+	"github.com/kagent-dev/kagent/go/adk/pkg/controllerclient"
+	runtimetaskstore "github.com/kagent-dev/kagent/go/adk/pkg/taskstore"
+	apia2a "github.com/kagent-dev/kagent/go/api/a2a"
 	runtimea2a "github.com/kagent-dev/kagent/go/harness/runtime/a2a"
 	"github.com/kagent-dev/kagent/go/harness/runtime/continuation"
 	"github.com/kagent-dev/kagent/go/pkg/logging"
@@ -131,7 +134,19 @@ func run(ctx context.Context, check bool, d deps) error {
 	if err != nil {
 		return err
 	}
-	runner, err := driver.New(driver.Config{CABundle: caBundle,
+	// The Actor's task state lives in kagent's TaskStore. The restore asks it whether a parked task is still open, because
+	// RevertSession fails a task whose /data comes back from a snapshot that still shows it waiting. The app shares this channel.
+	var controller *controllerclient.Client
+	var tasks driver.TaskStates
+	if !check {
+		controller, err = controllerclient.New(controllerclient.Config{APIURL: compiled.ControlPlaneURL, AgentName: card.Name})
+		if err != nil {
+			return fmt.Errorf("connect to the kagent controller: %w", err)
+		}
+		defer controller.Close()
+		tasks = taskStates{store: runtimetaskstore.New(controller, apia2a.RuntimeIdentityPath)}
+	}
+	runner, err := driver.New(driver.Config{CABundle: caBundle, Tasks: tasks, Logger: logger,
 		Executable: executable, Workspace: filepath.Join(d.dataDir, "workspace"), SessionDir: filepath.Join(d.dataDir, "pig", "sessions"),
 		PigHome: pigHome, AdapterDir: filepath.Join(d.dataDir, "adapter"), Compiled: compiled, Environment: d.environ,
 		PassEnv: options.PassEnv, Tools: caller,
@@ -177,7 +192,7 @@ func run(ctx context.Context, check bool, d deps) error {
 		return err
 	}
 	application, err := app.New(app.AppConfig{
-		AgentCard: card, Port: privatePort, AppName: card.Name, ControlPlaneURL: compiled.ControlPlaneURL, MaxContentLength: compiled.MaxContentLength,
+		ControllerClient: controller, AgentCard: card, Port: privatePort, AppName: card.Name, ControlPlaneURL: compiled.ControlPlaneURL, MaxContentLength: compiled.MaxContentLength,
 		Logger: logger, Telemetry: compiled.Telemetry, Flush: providers.ForceFlush,
 		HandlerOpts: []a2asrv.RequestHandlerOption{a2asrv.WithExecutorContextInterceptor(startMetrics(providers.StartMetrics))},
 	}, executor)
@@ -296,4 +311,15 @@ type startMetrics func()
 func (start startMetrics) Intercept(ctx context.Context, _ *a2asrv.ExecutorContext) (context.Context, error) {
 	start()
 	return ctx, nil
+}
+
+// taskStates answers the restore's question from kagent's TaskStore.
+type taskStates struct{ store *runtimetaskstore.Store }
+
+func (t taskStates) TaskState(ctx context.Context, taskID string) (a2atype.TaskState, error) {
+	stored, err := t.store.Get(ctx, a2atype.TaskID(taskID))
+	if err != nil {
+		return "", err
+	}
+	return stored.Task.Status.State, nil
 }

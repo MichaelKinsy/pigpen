@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -68,7 +69,12 @@ type Config struct {
 	// ReapTimeout bounds waiting for a killed process to be reaped.
 	ReapTimeout time.Duration
 	Tools       ToolCaller
-	Now         func() time.Time
+	// Tasks tells RestorePending whether kagent still holds a restored parked task open. Nil leaves every restored
+	// record parked, which is what a Substrate restore of an undisturbed Actor needs.
+	Tasks TaskStates
+	// Logger receives the restore's explanations; nil means slog.Default().
+	Logger *slog.Logger
+	Now    func() time.Time
 }
 
 // Driver implements runtime.Runner and the executor's PendingRestorer.

@@ -4,15 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/MichaelKinsy/pigpen/components/kagent/harness/adapter/internal/config"
 	"github.com/MichaelKinsy/pigpen/components/kagent/harness/adapter/internal/journal"
 	"github.com/MichaelKinsy/pigpen/components/kagent/harness/adapter/internal/session"
+	a2atype "github.com/a2aproject/a2a-go/v2/a2a"
 	"github.com/kagent-dev/kagent/go/harness/runtime"
 	"github.com/kagent-dev/kagent/go/pkg/logging"
 )
+
+// TaskStates reads a task's state from kagent's TaskStore, which is where kagent records that a task ended.
+type TaskStates interface {
+	TaskState(ctx context.Context, taskID string) (a2atype.TaskState, error)
+}
 
 // RejectionText is what the model sees for a rejected call: kagent's ADK wording, which appends a space and the
 // trimmed reason only when that reason is not blank.
@@ -83,7 +91,46 @@ func (d *Driver) RestorePending() (string, string, runtime.PendingTurn, error) {
 		// An approved call may have run, or a model turn may have started.
 		return "", "", nil, runtime.ErrSessionAbandoned
 	}
-	return r.TaskID, r.ContextID, &pending{d: d, record: *r}, nil
+	handle := &pending{d: d, record: *r}
+	if ended, err := d.taskEnded(r); err != nil {
+		return "", "", nil, err
+	} else if ended {
+		return "", "", nil, nil
+	}
+	return r.TaskID, r.ContextID, handle, nil
+}
+
+// taskStateTimeout bounds one question to the TaskStore. The restore runs before admission, so it must not hold a new message for long.
+const taskStateTimeout = 15 * time.Second
+
+// taskEnded releases a restored parked task that kagent no longer holds open. kagent fails the work an Actor was doing when
+// it crashed (RevertSession), but /data comes back from the last snapshot, where that task is still waiting; the executor
+// would then answer every new message with "already has an active task". It cancels the record exactly as a client's cancel
+// of the parked task would, so the next turn starts clean. Only a terminal state released by the TaskStore itself counts:
+// a store that cannot answer, or does not know the task, leaves the task parked, with the reason logged, and nothing is guessed.
+func (d *Driver) taskEnded(r *journal.Record) (bool, error) {
+	if d.cfg.Tasks == nil {
+		return false, nil
+	}
+	log := d.cfg.Logger
+	if log == nil {
+		log = slog.Default()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), taskStateTimeout)
+	defer cancel()
+	state, err := d.cfg.Tasks.TaskState(ctx, r.TaskID)
+	if err != nil {
+		log.WarnContext(ctx, "kept the parked task: could not learn from the TaskStore whether kagent still holds it open", "task", r.TaskID, "error", err)
+		return false, nil
+	}
+	if !state.Terminal() {
+		return false, nil
+	}
+	log.InfoContext(ctx, "kagent ended the parked task while this runtime was restored from a snapshot; cancelling its waiting record", "task", r.TaskID, "state", state)
+	if err := (&pending{d: d, record: *r}).Cancel(ctx, nil); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (p *pending) current() (*journal.Record, error) {

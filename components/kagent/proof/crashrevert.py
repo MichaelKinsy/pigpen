@@ -129,11 +129,12 @@ for _ in range(1):
     cur = rpc("pig-approve", "GetTask", {"id": tp["id"]}) if False else None
 try:
     t3, txt, evs = approve("pig-approve", tp, retry=True)
-    print("   second approval:", t3 and t3["status"]["state"], txt[:80], json.dumps([e for e in evs if "error" in e])[:300])
-    res("B4 the approval parked in the snapshot runs once more and the task completes", t3 is not None and t3["status"]["state"] == "TASK_STATE_COMPLETED" and txt.startswith("APPROVE-DONE"), txt)
+    err = json.dumps([e for e in evs if "error" in e])
+    print("   second approval of the task kagent failed:", t3 and t3["status"]["state"], err[:200])
+    res("B4 kagent refuses the approval of the task it failed (the harness does not resurrect it)", t3 is None and "TASK_STATE_FAILED" in err, err[:120])
 except Exception as e:
     res("B4 second approval", False, repr(e))
 t5, txt5, evs5 = stream("pig-approve", retry=True, text="[recall] go", ctx=ctx)
 print("   new task on the reverted approval session:", t5 and t5["status"]["state"], txt5[:60], json.dumps([e for e in evs5 if "error" in e])[:300])
-res("B5 a new message on the reverted session is answered", t5 is not None and t5["status"]["state"] == "TASK_STATE_COMPLETED", txt5)
+res("B5 a new message on the reverted session is answered (the restored waiting record was released)", t5 is not None and t5["status"]["state"] == "TASK_STATE_COMPLETED", txt5)
 print("DONE")
