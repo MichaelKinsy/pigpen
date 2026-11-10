@@ -148,7 +148,8 @@ const games = [
 const porterSkill = [{
   run: async (t) => {
     t.type('/skill:pigpen-pi-ex');
-    await t.waitFor(/→ skill:pigpen-pi-extension-port\s+Port a Pi TypeScript extension to a Go PiG extension/);
+    // PiG 0.7 puts the source tag of the Skill, `[t]`, between its name and its description.
+    await t.waitFor(/→ skill:pigpen-pi-extension-port\s+(?:\[\w+\]\s+)?Port a Pi TypeScript extension to a Go PiG extension/);
     await t.say(`tension-port ${FAUX_TURN}`);
     await t.waitFor('</skill>');
     await t.until('the faux answer `done`', (screen) => screen.split('\n').some((line) => line.trim() === 'done'));
@@ -224,6 +225,9 @@ export const piglets = {
       { key: ['Down', 'Enter'], expect: 'still off; nothing is sent' },
     ],
   },
+  // The Piglet fuses only the kagent policy extension, which is inert without a policy file: the shared start, faux turn and clean /quit are its scenario.
+  // What the policy does with a real policy is the extension's own Go tests, run against a fused Binary.
+  kagent: { steps: [] },
   'pig-essentials': {
     steps: [
       { say: '/tasks', expect: 'View all tasks (0)' },
