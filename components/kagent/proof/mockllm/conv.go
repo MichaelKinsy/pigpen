@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"regexp"
 	"strings"
+	"sync/atomic"
 )
 
 // toolDef is one tool a client offered on the request.
@@ -584,4 +585,30 @@ func chunks(s string, n int) []string {
 		s = s[k:]
 	}
 	return out
+}
+
+// holds is how many model calls the hold markers may still block (MOCK_HOLD_COUNT; 0 or unset: none). A held call is
+// never answered, so the turn that made it is still running until its client goes away; the crash-and-revert check
+// uses it to make an Actor crash in the middle of a turn.
+var holds = func() *atomic.Int64 {
+	var n atomic.Int64
+	n.Store(int64(envInt("MOCK_HOLD_COUNT", 0)))
+	return &n
+}()
+
+// shouldHold reports whether this call is held: a prompt with [hold] holds its first model call, one with [holdafter]
+// holds the call that follows its first tool result, as long as the budget lasts.
+func (c *conv) shouldHold() bool {
+	pi := c.lastPrompt()
+	if pi < 0 {
+		return false
+	}
+	prompt := cleanPrompt(c.Msgs[pi].Text)
+	switch {
+	case strings.Contains(prompt, "[hold]"):
+	case strings.Contains(prompt, "[holdafter]") && len(c.resultsAfter(pi)) > 0:
+	default:
+		return false
+	}
+	return holds.Add(-1) >= 0
 }

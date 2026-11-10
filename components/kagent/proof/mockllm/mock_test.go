@@ -267,3 +267,26 @@ func TestRequestLogCarriesToolResults(t *testing.T) {
 		t.Fatalf("no final log line in %q", logged)
 	}
 }
+
+func TestHoldMarkersBlockOnlyTheNamedCallWhileTheBudgetLasts(t *testing.T) {
+	holds.Store(2)
+	plain := mustConv(t, "chat", `{"model":"m","messages":[{"role":"user","content":"remember [m-1] ok"}]}`)
+	if plain.shouldHold() {
+		t.Fatal("a prompt without a hold marker was held")
+	}
+	first := mustConv(t, "chat", `{"model":"m","messages":[{"role":"user","content":"[hold] go"}]}`)
+	if !first.shouldHold() {
+		t.Fatal("[hold] did not hold its first model call")
+	}
+	after := `{"model":"m","messages":[{"role":"user","content":"[approve] [holdafter] go"}`
+	if call := mustConv(t, "chat", after+`]}`); call.shouldHold() {
+		t.Fatal("[holdafter] held the call before any tool result")
+	}
+	withResult := mustConv(t, "chat", after+`,{"role":"assistant","tool_calls":[{"id":"1","function":{"name":"bash"}}]},{"role":"tool","tool_call_id":"1","content":"x"}]}`)
+	if !withResult.shouldHold() {
+		t.Fatal("[holdafter] did not hold the call that follows a tool result")
+	}
+	if first.shouldHold() || withResult.shouldHold() {
+		t.Fatal("the hold budget of 2 held a third call")
+	}
+}

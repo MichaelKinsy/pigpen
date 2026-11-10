@@ -18,6 +18,7 @@ respective owners and are not affiliated with this repository.
 | `basket/` | Go A2A client. `-mode bench` (default) runs the task and records timings; `-mode send` / `-mode approve` send one message or one approval and print the events live (used by the demo); `-serve-fake` serves a fake gateway for self-tests. |
 | `collect.py`, `test_collect.py` | cgroup v2 sampler for pods and Substrate Actor cgroups, extractor for Substrate log records, report. Standard library only. |
 | `reject.sh`, `restart.sh`, `series.py` | The rejection series and the worker-pod-replacement series, and the record/summary logic behind them (`test_series.py`). |
+| `crashrevert.py`, `revert/` | The kagent v1.0.0 crash-and-RevertSession check: kills the worker while a turn (or a parked approval's continuation) is in flight, calls `SessionService.RevertSession` through the Go client in `revert/` (no CLI or HTTP route exists for it), then checks the session. The mock holds a model call when the prompt carries `[hold]` or `[holdafter]` (budget `MOCK_HOLD_COUNT`). |
 | `perf.sh` | One harness: collector plus basket plus report. |
 | `baseline.sh` | The interleaved schedule over several agents with a host-noise gate; streams the Substrate logs. |
 | `analyze.py` | Joins the basket runs, the memory samples and the Substrate records per session and writes the tables. |

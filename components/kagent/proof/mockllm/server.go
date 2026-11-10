@@ -201,6 +201,11 @@ func (s *server) handleModel(api string, parse func(map[string]any) *conv, rende
 			return
 		}
 		c := parse(body)
+		if c.shouldHold() { // a model call that never answers: the turn is still running when the harness is made to crash
+			entry["status"] = "held"
+			<-r.Context().Done()
+			return
+		}
 		rep := plan(c)
 		if dir := os.Getenv("MOCK_DUMP_DIR"); dir != "" { // debugging aid: request bodies hold prompts, never credentials
 			os.WriteFile(fmt.Sprintf("%s/req-%04d-%s.json", dir, entry["seq"], api), raw, 0o600)
