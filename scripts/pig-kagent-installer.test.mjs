@@ -60,7 +60,7 @@ case $1 in
     echo $((n + 1)) > "$FAKE_DIR/templates"
     if [ -n "\${FAKE_RENDER_OK:-}" ] && [ "$n" -ge "$FAKE_RENDER_OK" ]; then echo "Error: template boom" >&2; exit 1; fi
     cat "$FAKE_DIR/render";;
-  show) echo 'pig.dev/tested-kagent: "v1.0.0-rc3"';;
+  show) echo 'pig.dev/tested-kagent: "v1.0.0"';;
   status)
     case \${FAKE_STATUS:-ok} in
       ok) echo "STATUS: deployed";;
@@ -91,7 +91,7 @@ case $1 in
     case $all in
       "get crd agents.kagent.dev"*) exit 1;;
       "get crd"*) echo "v1alpha3 v1 ";;
-      "get deploy"*) echo "kagent/kagent-controller@v1.0.0-rc3";;
+      "get deploy"*) echo "kagent/kagent-controller@v1.0.0";;
       "get ns"*) echo true;;
       "get pods"*"spec.containers"*) echo "--preview PerTemplateSnapshotLocation GoldenEgressPolicy";;
       "get pods"*) echo substrate;;

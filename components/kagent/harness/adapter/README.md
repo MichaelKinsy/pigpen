@@ -3,7 +3,7 @@
 `kagent-pig` runs [PiG](https://github.com/MichaelKinsy/PiG) as a native Harness of [kagent](https://github.com/kagent-dev/kagent).
 It serves kagent's private A2A endpoint (port 80, `/readyz` on 8081) through kagent's own Go packages
 (`adk/pkg/app`, `harness/runtime/a2a`, `harness/runtime/continuation`, pinned at
-`v0.0.0-20261106154534-3548b7aaf4d9`) and drives one `pig --mode rpc` process per turn.
+`v0.0.0-20261109152041-a08cde76ad64`) and drives one `pig --mode rpc` process per turn.
 
 Licence: Apache-2.0 (this directory is part of the byo-ext tree). kagent is Apache-2.0 and PiG and Pi are separate
 projects; this program is not affiliated with or endorsed by either.

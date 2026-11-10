@@ -17,7 +17,7 @@ For a local cluster from scratch, read [kind.md](kind.md) first. Day-two topics 
 
 | Component | Version this chart targets | Notes |
 | --- | --- | --- |
-| kagent | `1.0.0-rc3` (`api.kagent.dev/v1alpha3`) | The API is alpha. The installer warns when the controller version differs from the tested one. |
+| kagent | `1.0.0` (`api.kagent.dev/v1alpha3`) | The API is alpha. The installer warns when the controller version differs from the tested one. |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | Preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` must be enabled. |
 | Kubernetes | 1.30 or newer for the chart; Substrate needs `ClusterTrustBundle`, `ClusterTrustBundleProjection` and `PodCertificateRequest` | kagent's own Kind setup enables them, see [kind.md](kind.md). |
 | Helm, kubectl | Helm 3.13 or newer (`--dry-run=server`), kubectl | The installer needs nothing else. |

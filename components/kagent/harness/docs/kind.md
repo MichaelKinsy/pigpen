@@ -1,7 +1,7 @@
 # Running the PiG harness on a local Kind cluster
 
 A reproducible path from nothing to an approval round trip on one machine. It follows kagent's own Kind
-setup (`scripts/kind/` and the `Makefile` of the kagent repository, tag `v1.0.0-rc3`); only the parts that
+setup (`scripts/kind/` and the `Makefile` of the kagent repository, tag `v1.0.0`); only the parts that
 differ for a harness you build yourself are added here. Nothing in the chart is specific to Kind: the same
 chart and installer work on any cluster that meets the prerequisites in [deploy.md](deploy.md).
 
@@ -10,8 +10,8 @@ kagent and Agent Substrate are separate Apache-2.0 projects and are not affiliat
 ## What you need
 
 - Docker (or Podman), [kind](https://kind.sigs.k8s.io/) v0.33.0 (the version kagent's CI pins), `kubectl`, Helm 3.13 or newer.
-- The kagent CLI for the release you target. For rc3:
-  `https://github.com/kagent-dev/kagent/releases/download/v1.0.0-rc3/kagent-<os>-<arch>` (for example
+- The kagent CLI for the release you target. For v1.0.0:
+  `https://github.com/kagent-dev/kagent/releases/download/v1.0.0/kagent-<os>-<arch>` (for example
   `kagent-linux-amd64`); verify it against the checksum published with the release.
 - A model: an OpenAI-compatible endpoint, or an API key for a supported provider. Substrate's egress allows DNS
   names only, so the endpoint of an in-cluster model is a Service DNS name, never an IP address.
@@ -74,7 +74,7 @@ printf '[host."http://kind-registry:5000"]\n  skip_verify = true\n' |
 ## 3. Install kagent and Substrate
 
 `kagent install` installs the kagent CRDs, Substrate (CRDs, pod-certificate controller, node agent, API, credential
-provider and egress gateway), a development PostgreSQL, and kagent. The rc3 CLI is configured through a JSON config
+provider and egress gateway), a development PostgreSQL, and kagent. The v1.0.0 CLI is configured through a JSON config
 file (`kagent --config FILE`) and ignores the `KAGENT_SUBSTRATE_HELM_EXTRA_ARGS` and `KAGENT_DEFAULT_MODEL_PROVIDER`
 variables that appear in kagent's Makefile for the previous release's CLI. Pass the registry rewrite as a Substrate values
 file; the node agent inherits the Substrate values files:
