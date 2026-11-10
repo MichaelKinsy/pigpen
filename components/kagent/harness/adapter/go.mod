@@ -5,7 +5,7 @@ go 1.27.3
 require (
 	github.com/a2aproject/a2a-go/v2 v2.7.0
 	github.com/google/uuid v1.6.0
-	github.com/kagent-dev/kagent/go v0.0.0-20261106154534-3548b7aaf4d9
+	github.com/kagent-dev/kagent/go v0.0.0-20261109152041-a08cde76ad64
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	golang.org/x/sys v0.49.0
 	google.golang.org/protobuf v1.36.12

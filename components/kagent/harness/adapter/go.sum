@@ -136,8 +136,8 @@ github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
 github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/kagent-dev/kagent/go v0.0.0-20261106154534-3548b7aaf4d9 h1:qFgOR8gHwVQnQ44RO0txdaO9OjxSRTN/O6q+5aoYEJo=
-github.com/kagent-dev/kagent/go v0.0.0-20261106154534-3548b7aaf4d9/go.mod h1:NKU6s2dR2gHN4TTLwcr+TvNyhhUmArZ+n/d47FvGyyw=
+github.com/kagent-dev/kagent/go v0.0.0-20261109152041-a08cde76ad64 h1:YewjLhVHsY2XdBG9RMvloHYapKXW5kgetbiMCO4qfsM=
+github.com/kagent-dev/kagent/go v0.0.0-20261109152041-a08cde76ad64/go.mod h1:NKU6s2dR2gHN4TTLwcr+TvNyhhUmArZ+n/d47FvGyyw=
 github.com/keybase/go-keychain v0.0.1 h1:way+bWYa6lDppZoZcgMbYsvC7GxljxrskdNInRtuthU=
 github.com/keybase/go-keychain v0.0.1/go.mod h1:PdEILRW3i9D8JcdM+FmY6RwkHGnhHxXwkPPMeUgOK1k=
 github.com/klauspost/compress v1.20.3 h1:zWNoFqq/lSuYQRim3dUXlXeA0IqwuZGicdG5ZTfY5j4=
