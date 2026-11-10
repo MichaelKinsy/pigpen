@@ -19,7 +19,7 @@ permissions:
 
 env:
   # The PiG release release.yml builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
-  PIG_COMMIT: '526c86df885eba5e214355e7f70205e06d59bfa2' # PiG v0.5.3
+  PIG_COMMIT: 'beb56447c476da70d05d8e1e1ca9e993b367cb8b' # PiG v0.7.0
 
 jobs:
   warm:
