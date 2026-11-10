@@ -27,7 +27,7 @@ Build the companion (Go 1.26 or later) and put it on your `PATH`:
 ```sh
 cd components/acp/extensions/acp/cmd/pig-acp
 go build -trimpath -o pig-acp .
-pig-acp --version        # pig-acp 0.2.2 (ACP protocol version 1)
+pig-acp --version        # pig-acp 0.2.3 (ACP protocol version 1)
 ```
 
 Zed, `settings.json` (`/acp` prints this with your paths filled in):
@@ -45,10 +45,10 @@ Prebuilt executables are attached to the GitHub Release `components/acp/v<versio
 `SHA256SUMS.sig` by the Pigpen release key (`release-keys/pigpen-piglets.pub`) and a Sigstore provenance bundle per archive:
 
 ```sh
-gh release download components/acp/v0.2.2 --repo MichaelKinsy/pigpen -p 'pig-acp-0.2.2-linux-amd64.tar.gz*' -p SHA256SUMS -p SHA256SUMS.sig
+gh release download components/acp/v0.2.3 --repo MichaelKinsy/pigpen -p 'pig-acp-0.2.3-linux-amd64.tar.gz*' -p SHA256SUMS -p SHA256SUMS.sig
 openssl pkeyutl -verify -rawin -pubin -inkey release-keys/pigpen-piglets.pub -in SHA256SUMS -sigfile SHA256SUMS.sig
 sha256sum -c --ignore-missing SHA256SUMS
-gh attestation verify pig-acp-0.2.2-linux-amd64.tar.gz --repo MichaelKinsy/pigpen --bundle pig-acp-0.2.2-linux-amd64.tar.gz.sigstore.json \
+gh attestation verify pig-acp-0.2.3-linux-amd64.tar.gz --repo MichaelKinsy/pigpen --bundle pig-acp-0.2.3-linux-amd64.tar.gz.sigstore.json \
   --signer-workflow MichaelKinsy/pigpen/.github/workflows/release-pig-acp.yml
 ```
 
@@ -138,6 +138,7 @@ Everything below was first run on PiG 0.3.0 and re-run on 0.4.0 (the 11 end-to-e
 
 ## Changes
 
+- **0.2.3:** `initialize` advertises the terminal auth method only to a client that said it can use it, and `session/new` and `session/load` no longer return the non-spec `models` field. See D17 and D18 in `port/PORT.md`.
 - **0.2.2:** without `--pig`, `pig-acp` starts the `pig` (`pig.exe` on Windows) that sits beside its own executable before looking on
   `PATH`, and a relative `--pig` (or `PIG_ACP_PIG_COMMAND`) such as `./pig` resolves against the directory of the `pig-acp` executable
   instead of the project directory the child runs in. Absolute paths are unchanged. The version check, the update notice and the
