@@ -21,9 +21,9 @@ This directory is exported from `components/kagent/harness` of [MichaelKinsy/pig
 
 | Component | Version | Status |
 | --- | --- | --- |
-| kagent | `v1.0.0-rc3` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against (main `ccb2dd350e06` has the same harness runtime packages) |
+| kagent | `v1.0.0` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `a08cde76ad64` as a Go pseudo-version |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | the chart's tested version; preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` are required |
-| PiG | `v0.7.0` (`pig version`: 0.7.0, upstream Pi 1.5.0), commit `beb56447c476da70d05d8e1e1ca9e993b367cb8b` | built from source at that commit; the build fails if the tag moves |
+| PiG | commit `51cc9f6f56be2ddcbd010e26db311814e9ddf08b` (the 0.8.0 line, branch `fix/pi-pin-bump`, not yet tagged; earlier images used `v0.7.0`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
 | Go | 1.27.3 | adapter and Piglet builder |
 | Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 image builds from this directory with plain `docker build` and passes the tool smoke below. Not verified: arm64 was not built or run; the release workflow builds it on a native arm64 runner |
 
@@ -165,6 +165,10 @@ CI checks only that the image builds.
 - Approvals are decided on the adapter side: when a call needs approval the adapter stops PiG, records the pending call durably, and on approval runs the MCP call itself, appends its
   result to the PiG session, and starts PiG again with one short continuation prompt. Other calls of the same assistant message are reported as not executed and may be re-issued.
 - If the process dies after a decision was recorded but before the continuation finished, the turn ends as `ErrSessionAbandoned`; an approved call is never run twice automatically.
+- `SessionService.RevertSession` (kagent v1.0.0) restores a crashed Actor to its last durable snapshot and needs nothing from the harness: `/data` comes back as it was at that suspend. Verified on Kind
+  with the mock model: a plain turn killed mid-model-call (worker pod deleted) is reverted and the session still recalls its earlier turn. Known gap, not fixed: if the Actor crashes while a
+  parked approval is being continued, kagent fails that task but the restored `/data` still holds the waiting record, so the session answers every new message with "native session is waiting for
+  another task" and has to be deleted. Releasing it needs the adapter to learn that the task is terminal.
 - A tool allowlist and `requireApproval` are filters for the model, not network controls: an approval-gated MCP origin is still reachable through `bash` with `curl` when the Actor's
   egress allows it. What the Actor can reach is decided by egress rules.
 - Rejected at startup with the field named: `sse_tools`, `token_passthrough`, per-server TLS options, `gemini_vertex_ai`, `gemini_anthropic`, `sap_ai_core`, the Foundry Anthropic format,

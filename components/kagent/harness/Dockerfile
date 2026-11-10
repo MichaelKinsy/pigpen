@@ -18,8 +18,7 @@
 
 ARG DEBIAN_IMAGE=debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 ARG GOLANG_IMAGE=golang:1.27.3-trixie@sha256:af1bfc2614ebb1dbd31af514b78740fd678850e76498762b425ecee4c5c6ea80
-ARG PIG_VERSION=0.7.0
-ARG PIG_COMMIT=beb56447c476da70d05d8e1e1ca9e993b367cb8b
+ARG PIG_COMMIT=51cc9f6f56be2ddcbd010e26db311814e9ddf08b
 ARG GH_VERSION=2.103.3
 ARG RG_VERSION=15.2.0
 ARG FD_VERSION=10.5.1
@@ -39,11 +38,13 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
     CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o /out/kagent-pig ${ADAPTER_PKG}
 
-# ---- PiG source at the release tag, verified against the commit it must be
+# ---- PiG source at the exact commit (the 0.8.0 line, not yet tagged), verified against the commit it must be
 FROM ${GOLANG_IMAGE} AS pig-src
-ARG PIG_VERSION PIG_COMMIT
+ARG PIG_COMMIT
 RUN set -eux; \
-    git clone --quiet --depth 1 --branch "v${PIG_VERSION}" https://github.com/MichaelKinsy/PiG.git /pig-src; \
+    git init --quiet /pig-src; \
+    git -C /pig-src fetch --quiet --depth 1 https://github.com/MichaelKinsy/PiG.git "${PIG_COMMIT}"; \
+    git -C /pig-src checkout --quiet --detach FETCH_HEAD; \
     test "$(git -C /pig-src rev-parse HEAD)" = "${PIG_COMMIT}"
 
 # ---- pig: the stock PiG builds the kagent Piglet into one fused Binary. It runs `go build` itself, so this stage is native
