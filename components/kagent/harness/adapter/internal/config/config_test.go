@@ -536,3 +536,50 @@ func distinctTools(n int) string {
 	raw, _ := json.Marshal(names)
 	return string(raw)
 }
+
+// kagent's Go ADK connects to MCP servers and lists their tools when an invocation is prepared, not at startup,
+// so a binding names no tools the runtime has seen. The harness checks the shape of each binding at startup and
+// never asks a server anything: a binding with no allowlist, a slow server, an approval requirement and the
+// connection options kagent compiles all stay accepted, and the tool list is left to the first use.
+func TestMCPBindingsWithoutAnAllowlistAreAcceptedAndDiscoveredOnFirstUse(t *testing.T) {
+	raw := document(`{"model":"m","openai":{}}`, `"http_tools":[
+		{"params":{"url":"http://kagent-tools.kagent:8084/mcp"}},
+		{"params":{"url":"http://slow.kagent:8080/mcp","timeout":"600s","sse_read_timeout":"300s","terminate_on_close":false,"headers":{"X-Team":"a"}},"require_approval":true},
+		{"params":{"url":"http://narrow.kagent:8080/mcp"},"tools":["only_this"]}]`, "")
+	c := mustParse(t, raw, allKeys)
+	if len(c.Policy.MCPServers) != 3 {
+		t.Fatalf("servers = %+v", c.Policy.MCPServers)
+	}
+	open, approval, narrow := c.Policy.MCPServers[0], c.Policy.MCPServers[1], c.Policy.MCPServers[2]
+	if len(open.Tools) != 0 || len(approval.Tools) != 0 || !slices.Equal(narrow.Tools, []string{"only_this"}) {
+		t.Fatalf("allowlists = %v %v %v", open.Tools, approval.Tools, narrow.Tools)
+	}
+	if !approval.RequireApproval || open.RequireApproval || approval.TimeoutSeconds != 600 {
+		t.Fatalf("approval server = %+v", approval)
+	}
+	for _, want := range []string{"mcp__kagent_tools__*", "mcp__slow__*", "mcp__narrow__*"} {
+		if !strings.Contains(c.ToolsArg(), want) {
+			t.Errorf("tools %q lack %s", c.ToolsArg(), want)
+		}
+	}
+	// the policy file carries the empty allowlist as no restriction, never as "no tools"
+	var policy struct {
+		Servers []struct {
+			Name  string   `json:"name"`
+			Tools []string `json:"tools"`
+		} `json:"mcp_servers"`
+	}
+	if err := json.Unmarshal(c.PolicyJSON, &policy); err != nil || len(policy.Servers) != 3 || len(policy.Servers[0].Tools) != 0 {
+		t.Fatalf("policy = %s (%v)", c.PolicyJSON, err)
+	}
+	// only sse_read_timeout and terminate_on_close are reported, once
+	var noted int
+	for _, w := range c.Warnings {
+		if strings.Contains(w, "sse_read_timeout") {
+			noted++
+		}
+	}
+	if noted != 1 {
+		t.Fatalf("warnings = %v", c.Warnings)
+	}
+}

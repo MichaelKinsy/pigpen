@@ -4,10 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	runtimev1 "github.com/kagent-dev/kagent/go/api/gen/kagent/runtime/v1"
 	"github.com/kagent-dev/kagent/go/pkg/logging"
@@ -295,5 +299,37 @@ func TestResolvePigRejectsWhatIsNotAnExecutableFile(t *testing.T) {
 		if _, err := resolvePig(path, filepath.Join(t.TempDir(), "data")); err == nil {
 			t.Errorf("%s: accepted", name)
 		}
+	}
+}
+
+// Startup must not wait for, or depend on, MCP discovery: kagent's Go ADK lists MCP tools when an invocation is
+// prepared, and this harness does the same on first use. A bound server that is down, slow or hung when the Actor
+// starts must neither fail startup nor receive a request from it.
+func TestStartupNeverContactsABoundMCPServer(t *testing.T) {
+	var requests atomic.Int32
+	hung := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		select {
+		case <-hung:
+		case <-r.Context().Done():
+		}
+	}))
+	t.Cleanup(func() { close(hung); server.Close() })
+	closed := httptest.NewServer(http.NotFoundHandler())
+	closedURL := closed.URL
+	closed.Close()
+	config := fmt.Sprintf(`{"runtime":{"control_plane_url":"http://kagent-controller.kagent:8083"},
+	 "agent":{"name":"pig_demo","instruction":"x","model":{"model":"mock-model","openai":{"base_url":"http://kagent-mock.kagent:8080/v1"}},
+	 "http_tools":[{"params":{"url":%q}},{"params":{"url":%q,"timeout":"600s"},"require_approval":true},{"params":{"url":%q},"tools":["kagent_probe"]}]}}`,
+		server.URL+"/mcp", server.URL+"/other", closedURL+"/mcp")
+	env := map[string]string{"OPENAI_API_KEY": "kagent-credential-injected", "KAGENT_PIG_BIN": fakePigBinary(t)}
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	if err := run(ctx, true, testDeps(t, []byte(config), env)); err != nil {
+		t.Fatalf("run -check with unreachable and hung MCP servers: %v", err)
+	}
+	if n := requests.Load(); n != 0 {
+		t.Fatalf("startup sent %d requests to a bound MCP server", n)
 	}
 }

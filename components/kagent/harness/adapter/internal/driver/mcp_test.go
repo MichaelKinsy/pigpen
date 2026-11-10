@@ -295,3 +295,23 @@ func unrelatedCA(t *testing.T) []byte {
 	}
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
 }
+
+// A binding with no allowlist leaves the tool list to the first use, as kagent's Go ADK does: the caller lists the
+// server's tools when the approved call arrives and finds the raw name PiG's sanitising folded.
+func TestMCPCallerDiscoversTheRawToolNameOnFirstUseWithoutAnAllowlist(t *testing.T) {
+	f := newFakeMCP(t)
+	server := config.PolicyServer{Name: "localhost", URL: f.url()}
+	caller := mustCaller(t, nil, "")
+	result, err := caller.Call(t.Context(), server, "mcp__localhost__kagent_probe", map[string]any{"note": "first-use"})
+	if err != nil || outcomeOf(result).Content[0].Text != "probe:first-use" {
+		t.Fatalf("Call = %+v, %v", result, err)
+	}
+	_, err = caller.Call(t.Context(), server, "mcp__localhost__not_a_tool", nil)
+	var notExecuted *notExecutedError
+	if err == nil || !asNotExecuted(err, &notExecuted) {
+		t.Fatalf("a tool the server does not list: err = %v, want a not-executed error", err)
+	}
+	if f.callCount() != 1 {
+		t.Fatalf("tools/call count = %d", f.callCount())
+	}
+}
