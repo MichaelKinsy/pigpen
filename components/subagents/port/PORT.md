@@ -1,4 +1,4 @@
-# Port record: pi-subagents (partial: definitions, discovery, list and get, single-agent and chain runs)
+# Port record: pi-subagents (partial: definitions, discovery, list, get and status, single-agent and chain runs)
 
 | Input | Identity |
 |---|---|
@@ -27,7 +27,26 @@ takes what can be checked against the original by running it, and one execution 
 - the tool the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
   tools the original registers beside them, with the original's descriptions and JSON Schemas (read from the request the original
   made, `port/gen-tooldefs.py`); `subagent {action: "list"}` and `{action: "get"}` with the original's text;
-- the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
+- the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget;
+- the observability surfaces over the port's runs, in the original's rows and text (its `src/tui/render.ts`,
+  `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts`): the `subagent-async` widget (the "Async agents" view),
+  `/subagents-fleet` and `subagent({ action: "status", view: "fleet" })` (the fleet inspector's textual fallback),
+  `subagent({ action: "status" })` (the active runs list) and `{ id, view: "transcript" }` (the result transcript tail),
+  and the inspector TUI itself: the original's `SubagentFleetComponent` (its `src/tui/fleet.ts` frame, roster, detail pane,
+  footer and keys) as a `sdk.RemoteComponent` over `Context.Custom`, the same `ui.custom()` overlay the original mounts
+  (`anchor: center, width: 95%, minWidth: 60, maxHeight: 85%, margin: 1`).
+  Adaptations: steer, stop, Inspect, Prompt Audit and tool details are refused with the port's message where the original
+  runs them; the detail pane shows the port's remembered status and result transcript tail instead of the original's live
+  transcript events; rows the port cannot fill (a child's current tool, token accounting) are omitted, never invented; the
+  expand-key hint is the original's unconfigured wording; `Recent runs:` in the fleet text is a port addition (the port
+  runs children in the foreground, so the inspector's "recent children and completed output/session paths" live there);
+- the runs' control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions (`bg_wait`
+  refused). A detached child lives in the registry and the views; completion follows the original's policy (a success
+  stays quiet, a failure or pause notifies). `steer` pivots: a print child cannot be redirected mid-turn, so the current
+  turn is interrupted and the next turn continues the child's session with the message (the original delivers mid-turn
+  through its runner); `resume` is the original's new run id per pass, and a stopped run is not resumable. Children pin
+  session files in the parent's session directory (as pane children always did) so turns can continue. The port keeps
+  the foreground default where the original defaults to async.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
 Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,
@@ -111,6 +130,8 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go`, `panes.go`, `hc.go` | `run_test.go`, `panes_test.go`, `hc_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M9 | the observability views (`tui/render.ts` widget rows; `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts` text; `tui/fleet.ts` inspector) | `fleet.go`, `fleet_tui.go` | `fleet_test.go`, `fleet_tui_test.go` (the original's rows, text and frame, pinned) |
+| M10 | (addition) async runs and control actions; `runs/background` control-channel semantics | `async.go`, `run.go` | `async_test.go` |
 
 ## Process: what was written before its tests
 
@@ -139,7 +160,7 @@ first commit (`a34f8e42`); the later fixes were tests first.
   (the real runner's directory and environment, the tool's `cwd` and `agentScope`, `/run-chain`'s task, the binary override all
   survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**. The pane work added `pane-*` mutations (the setting, the labels, the environment, the cleanup, the
   fallback, the chain wiring) and the pane tests (`panes_test.go`, `hc_test.go`, the wiring tests in `run_host_test.go`): **174 mutations** in the generator now.
-- `pig install --validate-only --json`: valid (1 command, 3 handlers, 4 tools).
+- `pig install --validate-only --json`: valid (2 commands, 3 handlers, 4 tools).
 - Piglet: `piglets/pig-popular` now selects six ports. A Binary built from this member alone gives traces equal to the Pi goldens in
   every event outside the `llm` channel (5 of 5); the `llm` channel differs by the host (a Binary's default tool set), as for the permissions port.
 - tmux, detached, interactive pig 0.4.0 (`port/demo/pane-*.txt`): the model enables the tool, lists the project's agents, runs

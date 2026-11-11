@@ -74,6 +74,7 @@ func TestExtensionSettings(t *testing.T) {
 }
 
 func TestExtensionSettingsFromTheHost(t *testing.T) {
+	skipUnescapedJSONPath(t)
 	home := withTempHome(t)
 	cwd := tmp(t)
 	pigUser := filepath.Join(home, ".pig", "agent", "settings.json")

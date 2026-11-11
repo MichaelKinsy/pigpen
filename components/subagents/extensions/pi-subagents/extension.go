@@ -142,6 +142,7 @@ func Extension() *sdk.Extension {
 	})
 
 	e.Command("run-chain", "Run a .chain.md chain: /run-chain <chain> <task> (Go port addition)", runChainCommand)
+	e.Command("subagents-fleet", "Show the subagent fleet inspector (Go port: the original's text view): /subagents-fleet", fleetCommand)
 
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		// the subagent tool stays out of the model's tools until subagents_enable is called
@@ -150,6 +151,14 @@ func Extension() *sdk.Extension {
 		// same way and has no worktrees to recover.
 		_, _ = ctx.Exec("git", []string{"-C", ctx.Cwd(), "rev-parse", "--show-toplevel"})
 		_ = ctx.SetWidget(asyncWidget, nil)
+		// the async agents view: the registry's runs as the `subagent-async` widget rows, live while children run
+		dir := ""
+		if f, err := ctx.GetSessionFile(); err == nil && f != nil {
+			dir, _ = ctx.SessionManager().GetSessionDir()
+		}
+		setChildSessionDir(dir)
+		fleet.reset()
+		fleet.setSink(func(rows []string) { _ = ctx.SetWidget(asyncWidget, rows) })
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -166,6 +175,9 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		fleet.stopAll()
+		setChildSessionDir("")
+		fleet.setSink(nil)
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
@@ -275,6 +287,12 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		ctx.Notify(w, "warning")
 	}
 	model, _ := params["model"].(string)
+	if async, msg := asyncParam(params); msg != "" {
+		return nil, sdk.NewToolError(msg)
+	} else if async {
+		run := startAsyncRun(cwd, a, task, model, ctx.Notify)
+		return explicitOK{Content: asyncStartedMessage(a.Name, run.id), Details: map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}}, nil
+	}
 	done, stop := cancellation(ctx)
 	defer stop()
 	out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))

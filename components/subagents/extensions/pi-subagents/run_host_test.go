@@ -3,12 +3,22 @@ package pi_subagents_test
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 
 	sub "github.com/MichaelKinsy/pigpen/pi-subagents"
 )
+
+// skipPanesOnWindows skips a test that asserts a child ran in a Herdr pane: panesEnabled never enables panes on Windows
+// (the README says so), so such a test cannot pass there however the fake herdr-core behaves.
+func skipPanesOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Herdr panes are never enabled on Windows")
+	}
+}
 
 // The running addition through the host boundary (review rev-port-popular-5): the tool and the command with a fake
 // child runner (export_test.go).
@@ -179,6 +189,7 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 }
 
 func TestSubagentToolPanes(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, fakeCalls := sub.StartPaneFake(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
@@ -199,6 +210,7 @@ func TestSubagentToolPanes(t *testing.T) {
 }
 
 func TestChainPanes(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, fakeCalls := sub.StartPaneFake(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
@@ -215,6 +227,7 @@ func TestChainPanes(t *testing.T) {
 }
 
 func TestPaneChildGetsTheParentSessionDir(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, _, params := sub.StartPaneFakeParams(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
