@@ -155,10 +155,11 @@ describe('pig-rea (open)', () => {
     assert.doesNotMatch(systemText(result.requests[0]), /REA harness/, 'the dashboard\'s identity paragraph is still there');
   });
 
-  // PiG 0.7.0 (still on PiG main, coding/cli/cli_runtime_build.go:281): when the project has config that needs a trust
-  // decision (here .pig/mcp.json), the pre-trust pass loads user-scope extensions with a fixed scope ["user"], ignoring the
-  // Piglet's discovery. The user's extension factory runs although the harness says discovery.extensions: [].
-  test('a project with its own config does not run the user\'s extensions', { todo: 'PiG pre-trust pass ignores Piglet discovery' }, async () => {
+  // PiG 0.7.0 (coding/cli/cli_runtime_build.go:281): when the project has config that needs a trust decision (here
+  // .pig/mcp.json), the pre-trust pass loads user-scope extensions with a fixed scope ["user"], ignoring the Piglet's
+  // discovery. The user's extension factory runs although the harness says discovery.extensions: []. Fixed by PiG #453;
+  // drop the todo when PIG_COMMIT includes it.
+  test('a project with its own config does not run the user\'s extensions', { todo: 'PiG #453: pre-trust pass ignores Piglet discovery' }, async () => {
     const marker = join(work, `marker-${runs + 1}`);
     const box = sandbox((home, project) => {
       mkdirSync(join(home, 'agent', 'extensions'), { recursive: true });
@@ -197,8 +198,8 @@ describe('pig-rea-sealed', () => {
     }
   });
 
-  // Same PiG pre-trust bug as above; in a closed Binary without the Node runtime it stops startup.
-  test('a project .pig/mcp.json is refused without loading user extensions', { todo: 'PiG pre-trust pass ignores closed scopes' }, async () => {
+  // Same PiG pre-trust bug as above (PiG #453); in a closed Binary without the Node runtime it stops startup.
+  test('a project .pig/mcp.json is refused without loading user extensions', { todo: 'PiG #453: pre-trust pass ignores closed scopes' }, async () => {
     const box = sandbox((home, project) => {
       seedUserResources(home);
       mkdirSync(join(project, '.pig'), { recursive: true });
