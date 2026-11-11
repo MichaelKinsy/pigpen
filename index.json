@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-05",
+  "updatedAt": "2026-11-10",
   "entries": [
     {
       "id": "a2a",
@@ -483,6 +483,62 @@
         "Go only. The umbrella porter: it extends pig-extension-porter (PiG's extends), so it carries the same porting Skill and Go equivalence extension without a copy. Run npm run stage before using its generated manifest under dist/staged.",
         "Most users porting a Pi extension should use pig-extension-porter. This is not PiG's core parity-maintenance porter. No public release or Piglet Binary is available.",
         "pig piglet add cannot copy an extends closure, so it is not installable remotely today. See RELEASE-BLOCKERS.md."
+      ]
+    },
+    {
+      "id": "pig-rea",
+      "kind": "piglet",
+      "name": "pig-rea",
+      "description": "The REA harness: Reverse Engineer Anything as one executable with REA's MCP tools, skill and dashboard, on a pinned Node.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-rea"
+      },
+      "manifestSha256": "c8dcf6ecb330719c80b4a332ba290263d2f6b508a062af2202e4a163bf117e7e",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "The REA harness: REA (Reverse Engineer Anything, rea-agents 6.8.0 by morluto, MIT) as one executable. The Binary embeds the published package, its production dependencies from REA's tagged lockfile and Node 24.22.2 (a 42 MB zstd payload for darwin/arm64), unpacks it once per REA version into the agent directory, and registers REA's MCP server as rea setup --client pi does. No Node, npm or network is needed at runtime.",
+        "Ambient extensions and skills are off by default. The Binary is open: an overlay Piglet (pig-rea --piglet overlay.yaml, extends.allowWiden: true) brings them back at launch. pig-rea-sealed is the closed variant.",
+        "Build the payload before the Binary: node components/rea/scripts/payload.mjs for the build machine's target, then npm run build:piglet -- pig-rea. npm run test:rea checks the payload against npx's REA (catalog), rea setup's registration and REA's skill.",
+        "REA's providers (Hopper, Ghidra, IDA, JADX and others) are not bundled; REA finds them as it does when installed with npx. Frida is absent, as for npx users.",
+        "The manifest lists five build targets, but only darwin/arm64 has been built and run; the others are listed in the manifest and not yet built, so no other platform is a support claim."
+      ]
+    },
+    {
+      "id": "pig-rea-sealed",
+      "kind": "piglet",
+      "name": "pig-rea-sealed",
+      "description": "The REA harness, sealed: REA only, refuses overlays, -e, mcp.json and installs.",
+      "maintainer": "MichaelKinsy",
+      "official": false,
+      "featured": false,
+      "status": "planned",
+      "languages": [
+        "go"
+      ],
+      "repository": "https://github.com/MichaelKinsy/pigpen",
+      "source": {
+        "type": "git",
+        "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
+        "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-rea-sealed"
+      },
+      "manifestSha256": "c464689797973aef28e9bb4190ab3fe423f4b204ac24c6d4d067f7e1975c628c",
+      "releases": [],
+      "notes": [
+        "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",
+        "pig-rea in a closed Binary: the same members and skills, and it refuses overlay Piglets, -e, settings extensions, mcp.json servers and installs, so the tool surface is identical on every machine. For CI and for evidence compared across runs.",
+        "Build the payload first (node components/rea/scripts/payload.mjs), then npm run build:piglet -- pig-rea-sealed.",
+        "The manifest lists five build targets, but only darwin/arm64 has been built and run; the others are listed in the manifest and not yet built, so no other platform is a support claim."
       ]
     },
     {

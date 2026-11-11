@@ -1,0 +1,12 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-10",
+  "languages": [
+    "go"
+  ],
+  "notes": [
+    "pig-rea in a closed Binary: the same members and skills, and it refuses overlay Piglets, -e, settings extensions, mcp.json servers and installs, so the tool surface is identical on every machine. For CI and for evidence compared across runs.",
+    "Build the payload first (node components/rea/scripts/payload.mjs), then npm run build:piglet -- pig-rea-sealed.",
+    "The manifest lists five build targets, but only darwin/arm64 has been built and run; the others are listed in the manifest and not yet built, so no other platform is a support claim."
+  ]
+}

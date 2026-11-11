@@ -1,0 +1,33 @@
+{
+  "origin": "original",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [],
+  "dependencies": [
+    {
+      "name": "rea-agents",
+      "authors": [
+        "morluto"
+      ],
+      "url": "https://github.com/morluto/rea",
+      "revision": "160d821ac9a0310afcb8d1fc427862dd6508add5",
+      "license": "MIT",
+      "licenseFile": "licenses/rea-agents-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "Node.js",
+      "authors": [
+        "Node.js contributors"
+      ],
+      "url": "https://github.com/nodejs/node",
+      "revision": "f7f273a9bb6445f6f7fb6349105e7532972045fb",
+      "license": "MIT",
+      "licenseFile": "licenses/node-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

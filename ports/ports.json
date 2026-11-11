@@ -684,6 +684,34 @@
       "status": "review",
       "credit": "Original adapter that calls Autolith, https://github.com/lambda-symbolics/autolith, by Lambda Symbolics OÜ (ISC), pinned at commit 505e814610cd4ad10ea8d30654fe89b4f1113341. Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied.",
       "notes": "Common Lisp on the PiG 0.7.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review."
+    },
+    {
+      "id": "rea",
+      "name": "REA harness: Reverse Engineer Anything as one PiG Binary",
+      "kind": "adapter",
+      "summary": "Original members that unpack the published rea-agents package and a pinned Node from the Piglet Binary, register REA's MCP server as rea setup --client pi does, and present REA in a dashboard. REA itself runs unmodified.",
+      "upstream": {
+        "name": "REA (rea-agents)",
+        "url": "https://github.com/morluto/rea",
+        "commit": "160d821ac9a0310afcb8d1fc427862dd6508add5",
+        "license": "MIT",
+        "author": "morluto"
+      },
+      "additionalUpstreams": [
+        {
+          "name": "Node.js",
+          "url": "https://github.com/nodejs/node",
+          "commit": "f7f273a9bb6445f6f7fb6349105e7532972045fb",
+          "license": "MIT",
+          "author": "Node.js contributors"
+        }
+      ],
+      "targetPackage": "components/rea",
+      "otherTargets": ["piglets/pig-rea", "piglets/pig-rea-sealed"],
+      "lane": "pigpen-rea",
+      "status": "review",
+      "credit": "Original adapter that embeds and runs REA (rea-agents) 6.8.0, https://github.com/morluto/rea, by morluto (MIT), unmodified, at commit 160d821ac9a0310afcb8d1fc427862dd6508add5, on Node.js 24.22.2, https://github.com/nodejs/node, by Node.js contributors (MIT), commit f7f273a9bb6445f6f7fb6349105e7532972045fb.",
+      "notes": "No REA code is changed: the payload is the published npm tarball with production dependencies from REA's tagged lockfile. Gates: catalog equal to npx's REA, rea setup registration, skill drift (npm run test:rea) and the Binary harness (npm run test:rea-harness). Awaiting review."
     }
   ]
 }

@@ -1,0 +1,17 @@
+# The REA harness, sealed: the same members and skills as pig-rea in a closed Binary. It refuses overlays, -e, settings
+# extensions, mcp.json servers and installs, so the tool surface is identical on every machine (CI, evidence compared
+# across runs).
+name: pig-rea-sealed
+description: "The REA harness, sealed: REA only, refuses overlays, -e, mcp.json and installs."
+release:
+  version: 0.1.0
+extends:
+  source: local:../pig-rea/piglet.yaml
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+  # Not inherited through extends, so the child sets it.
+  closed: true
+# Nothing can load a sidecar extension here; this merges with the base's list.
+strip:
+  features: [node-extensions, extension-sdk-go]

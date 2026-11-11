@@ -1,0 +1,7 @@
+{
+  "$comment": "Gate 6 baseline per target: Binary sizes in bytes as built by npm run build:piglet. npm run test:rea-harness fails when a Binary grows more than 10% past its baseline and reports first-start and warm start-to-first-request times. Update a row in the change that explains the growth.",
+  "darwin/arm64": {
+    "pig-rea": 108663858,
+    "pig-rea-sealed": 101821890
+  }
+}

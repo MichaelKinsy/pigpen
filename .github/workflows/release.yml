@@ -137,6 +137,12 @@ jobs:
       - name: Say what the cache did
         shell: bash
         run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }}, matched ${{ steps.cache.outputs.cache-matched-key }}" >> "$GITHUB_STEP_SUMMARY"
+      # pig-rea and pig-rea-sealed embed REA and its pinned Node, built from components/rea/rea.lock.json for this target before
+      # staging copies the Package. No secrets; npm and nodejs.org downloads are checked against the pins.
+      - name: Build the REA payload for ${{ matrix.target }}
+        if: ${{ needs.plan.outputs.name == 'pig-rea' || needs.plan.outputs.name == 'pig-rea-sealed' }}
+        shell: bash
+        run: node components/rea/scripts/payload.mjs '${{ matrix.target }}'
       - name: Build PiG and stage the Piglet (no secrets)
         shell: bash
         env:

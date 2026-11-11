@@ -1,0 +1,39 @@
+# The REA harness: REA (Reverse Engineer Anything) as one PiG Binary. The rea member unpacks the published rea-agents
+# package and its pinned Node from the Binary on first start and registers REA's MCP server as `rea setup --client pi`
+# does. rea-dashboard is the UI. Build the payload first: node components/rea/scripts/payload.mjs (see components/rea).
+name: pig-rea
+description: "The REA harness: Reverse Engineer Anything as one executable with REA's MCP tools, skill and dashboard, on a pinned Node."
+release:
+  version: 0.1.0
+build:
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  extensionRealization: fused
+packages:
+  rea: local:../../components/rea
+extensions:
+  # Unpacks the payload, registers the rea MCP server, /rea-runtime status|verify|gc.
+  - name: rea
+    origins: [package:rea]
+    tools: []
+  # Header, status, live investigation widget, /rea overlay, tool cards. A headless derivative removes it.
+  - name: rea-dashboard
+    origins: [package:rea]
+    tools: []
+  # Required: a Piglet that lists extensions but not pig-mcp-adapter hides every MCP tool, REA's included.
+  - name: pig-mcp-adapter
+skills:
+  # REA's own skill, byte for byte apart from the pigpen- name prefix (payload.mjs fails when it drifts from the pinned package's).
+  - name: pigpen-reverse-engineer-anything
+    origins: [package:rea]
+  # Ours: REA evidence -> behavior spec -> a new piglet.
+  - name: pigpen-derive-a-harness
+    origins: [package:rea]
+# No ambient extensions or skills by default. The Binary is open, so an overlay (pig-rea --piglet overlay.yaml with
+# extends.allowWiden: true) brings them back at launch without a rebuild; pig-rea-sealed is the closed variant.
+discovery:
+  extensions: []
+  skills: []
+# Only what nothing in this harness or its overlays can use. node-extensions and extension-sdk-go stay so an overlay can
+# add extensions; piglet-builder and docs stay for the pigpen-derive-a-harness loop.
+strip:
+  features: [extension-sdk-rust, extension-sdk-python, extension-sdk-lisp, self-update]

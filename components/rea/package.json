@@ -1,0 +1,50 @@
+{
+  "name": "@pi-in-go/pigpen-rea",
+  "version": "0.1.0",
+  "description": "REA (Reverse Engineer Anything) for PiG: unpacks the published rea-agents package with its pinned Node from the Piglet Binary and registers REA's MCP server, plus the REA dashboard (header, live investigation widget, /rea overlay, tool cards).",
+  "keywords": [
+    "pig-package",
+    "rea",
+    "reverse-engineering",
+    "mcp",
+    "pigpen",
+    "skill",
+    "extension"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/rea"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/rea#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "licenses",
+    "locks",
+    "rea.lock.json",
+    "scripts",
+    "skills",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/rea",
+      "extensions/rea-dashboard"
+    ],
+    "skills": [
+      "skills/pigpen-reverse-engineer-anything",
+      "skills/pigpen-derive-a-harness"
+    ]
+  }
+}
