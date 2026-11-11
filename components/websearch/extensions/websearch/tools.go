@@ -119,8 +119,8 @@ func (r *Runtime) Warning() string { return r.cfg.Warning }
 // Config exposes the registration configuration.
 func (r *Runtime) Config() *ToolConfig { return r.cfg }
 
-func (r *Runtime) hasUI() bool {
-	if u, ok := r.host.(UIHost); ok {
+func (r *Runtime) hasUI(ctx context.Context) bool {
+	if u, ok := r.hostFor(ctx).(UIHost); ok {
 		return u.HasUI()
 	}
 	return true
