@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 # The Package version this plugin was released with. `refresh` keeps an installed
 # copy in step with it. A test keeps it equal to components/herdr/package.json.
 $PackageName = "npm:@pi-in-go/pigpen-herdr"
-$PackageVersion = "0.3.0"
+$PackageVersion = "0.3.1"
 # PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
 # or a packed tarball of the Package; it is never refreshed.
 $Package = if ($env:PIGPEN_HERDR_PACKAGE) { $env:PIGPEN_HERDR_PACKAGE } else { "$PackageName@$PackageVersion" }

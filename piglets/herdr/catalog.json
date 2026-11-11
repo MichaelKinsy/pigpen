@@ -1,6 +1,6 @@
 {
   "featured": false,
-  "updatedAt": "2026-11-02",
+  "updatedAt": "2026-11-11",
   "languages": ["go"],
   "notes": [
     "Optional: the reporter is the standalone extension Package components/herdr, which works on its own in plain PiG without this Piglet.",
