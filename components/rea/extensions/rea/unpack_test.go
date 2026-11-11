@@ -85,7 +85,7 @@ func fixture(t *testing.T, files []fixtureFile, extra ...*tar.Header) (payloadSo
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256(compressed.Bytes())
-	info := payloadInfo{Target: runtime.GOOS + "/" + runtime.GOARCH, Entry: "rea/scripts/rea.mjs", TreeSha256: hex.EncodeToString(tree.Sum(nil)), ArchiveSha256: hex.EncodeToString(sum[:]), Files: len(files)}
+	info := payloadInfo{Target: runtime.GOOS + "/" + runtime.GOARCH, Entry: "rea/scripts/rea.mjs", ToolTimeoutSec: 450, TreeSha256: hex.EncodeToString(tree.Sum(nil)), ArchiveSha256: hex.EncodeToString(sum[:]), Files: len(files)}
 	info.Rea.Package, info.Rea.Version = "rea-agents", "6.8.0"
 	info.Node.Version, info.Node.Executable = "24.22.2", "node/bin/node"
 	description, err := json.Marshal(info)
@@ -266,6 +266,10 @@ func TestPrepareRegistersTheUnpackedPayload(t *testing.T) {
 	}
 	if config.Env != nil || config.Exposure != "" || config.Description != "" || config.Cwd != "" {
 		t.Fatalf("the registration overrides what rea setup leaves unset: %+v", config)
+	}
+	// PiG's MCP default (60 s) would cancel REA's own analysis budgets; the payload carries REA's recommended deadline.
+	if config.Timeout == nil || *config.Timeout != info.ToolTimeoutSec {
+		t.Fatalf("timeout %v, want REA's recommended %v s", config.Timeout, info.ToolTimeoutSec)
 	}
 }
 

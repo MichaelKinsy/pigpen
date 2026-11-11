@@ -72,6 +72,19 @@ function walk(root) {
   return entries.sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
 }
 
+/** The tool_timeout_sec `rea setup --client codex` writes with REA's default environment. */
+function recommendedToolTimeoutSec(node, entry, work) {
+  const home = join(work, 'setup-home');
+  mkdirSync(join(home, '.codex'), { recursive: true });
+  const env = { PATH: `${dirname(node)}${process.platform === 'win32' ? ';' : ':'}${process.env.PATH ?? ''}`, HOME: home, USERPROFILE: home, CODEX_HOME: join(home, '.codex') };
+  if (process.env.SystemRoot) env.SystemRoot = process.env.SystemRoot;
+  run(node, [entry, 'setup', '--client', 'codex', '--yes'], { cwd: home, env });
+  const config = readFileSync(join(home, '.codex', 'config.toml'), 'utf8');
+  const seconds = Number(/^\s*tool_timeout_sec\s*=\s*(\d+)\s*$/m.exec(config)?.[1]);
+  if (!(seconds > 0)) fail(`rea setup --client codex wrote no tool_timeout_sec:\n${config}`);
+  return seconds;
+}
+
 // ---- deterministic tar ----
 
 function octal(value, width) {
@@ -224,6 +237,12 @@ async function main() {
     cpSync(join(unpack, member), join(nodeDir, 'bin', exe));
     cpSync(join(unpack, base, 'LICENSE'), join(nodeDir, 'LICENSE'));
 
+    // 4b: the MCP tool deadline REA recommends for its server. `rea setup` writes it only for clients whose config has the
+    // field (Codex: tool_timeout_sec); Pi's has none, and PiG's default of 60 s cancels REA's longer analyses. Ask REA itself,
+    // with the default environment, in a throwaway HOME. The staged Node runs it when it is this machine's.
+    const setupNode = target === hostTarget() ? join(nodeDir, 'bin', exe) : process.execPath;
+    const toolTimeoutSec = recommendedToolTimeoutSec(setupNode, join(reaDir, 'scripts/rea.mjs'), work);
+
     // Gate 4: REA's skill in the Piglet is the published one, byte for byte apart from the prefixed name.
     const drift = skillDrift(join(reaDir, 'skills', upstreamSkill), pigletSkill);
     if (drift && !dev) fail(`${relative(repository, pigletSkill)} is not ${lock.rea.package}@${lock.rea.version}'s skill (${drift}). Run payload.mjs --sync-skill.`);
@@ -245,6 +264,7 @@ async function main() {
       rea: { package: pkg.name, version: pkg.version, ...(dev ? { dev } : { tag: lock.rea.tag, commit: lock.rea.commit, integrity: lock.rea.integrity }) },
       node: { version: lock.node.version, archive: archive.file, sha256: archive.sha256, executable: `node/bin/${exe}` },
       entry: 'rea/scripts/rea.mjs',
+      toolTimeoutSec,
       treeSha256: tree.digest('hex'),
       files,
       bytes,

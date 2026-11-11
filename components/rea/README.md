@@ -6,7 +6,10 @@ members of the [`pig-rea`](../../piglets/pig-rea/README.md) harness:
 - **`rea`** unpacks the REA payload embedded in the Piglet Binary into `<agent dir>/rea/<sha256[:16]>/` on the first start
   of a REA version (about 2 s on an M-series Mac; later starts only read a sentinel) and registers REA's MCP server the way
   `rea setup --client pi` does: `{"type":"stdio","command":<node>,"args":[<rea.mjs>,"mcp"]}`, with the embedded Node in
-  front of `rea.mjs` instead of the `node` on PATH. No environment, exposure or description is set. `/rea-runtime status`,
+  front of `rea.mjs` instead of the `node` on PATH. No environment, exposure or description is set. The one addition is the
+  tool deadline: Pi's config has no such field, and PiG's default (60 s) cancels REA's longer analyses, so the payload
+  records the `tool_timeout_sec` REA's own `rea setup` writes for clients that have one (450 s for 6.8.0, from
+  `rea setup --client codex` at payload build) and the member registers with it. `/rea-runtime status`,
   `/rea-runtime verify` (every unpacked file against the embedded archive) and `/rea-runtime gc` (old versions).
 - **`rea-dashboard`** is the UI; see [its README](extensions/rea-dashboard/README.md). It only observes: it never sets REA's
   environment, never changes the registration and never opens a second REA session.

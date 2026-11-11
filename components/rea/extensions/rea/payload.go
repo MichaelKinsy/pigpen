@@ -31,7 +31,9 @@ type payloadInfo struct {
 		Version    string `json:"version"`
 		Executable string `json:"executable"`
 	} `json:"node"`
-	Entry         string `json:"entry"`
+	Entry string `json:"entry"`
+	// ToolTimeoutSec is the MCP tool deadline REA recommends (what `rea setup --client codex` writes as tool_timeout_sec).
+	ToolTimeoutSec float64 `json:"toolTimeoutSec"`
 	TreeSha256    string `json:"treeSha256"`
 	Files         int    `json:"files"`
 	Bytes         int64  `json:"bytes"`

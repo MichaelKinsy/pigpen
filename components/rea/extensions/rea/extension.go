@@ -72,9 +72,16 @@ func prepare(src payloadSource, agentDir func() (string, error)) *member {
 }
 
 // serverConfig is the registration `rea setup --client pi` writes ({"type":"stdio","command":<rea.mjs>,"args":["mcp"]}), with
-// the embedded Node running rea.mjs instead of the shebang's `node` from PATH.
+// the embedded Node running rea.mjs instead of the shebang's `node` from PATH, and REA's recommended tool deadline. Pi's
+// config has no such field, so `rea setup` writes it only for clients that have one; without it PiG cancels any REA call
+// after 60 s, which cuts off REA's own analysis budgets (5 min for JavaScript by default).
 func (m *member) serverConfig() sdk.McpServerConfig {
-	return sdk.McpServerConfig{Type: "stdio", Command: m.layout.node, Args: []string{m.layout.entry, "mcp"}}
+	config := sdk.McpServerConfig{Type: "stdio", Command: m.layout.node, Args: []string{m.layout.entry, "mcp"}}
+	if m.info.ToolTimeoutSec > 0 {
+		timeout := m.info.ToolTimeoutSec
+		config.Timeout = &timeout
+	}
+	return config
 }
 
 func (m *member) version() string {
