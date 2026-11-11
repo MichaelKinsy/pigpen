@@ -34,7 +34,9 @@ func startFakeHC(t *testing.T, handle func(method string, params map[string]any)
 	f := &fakeHC{socket: filepath.Join(dir, "s")}
 	ln, err := net.Listen("unix", f.socket)
 	if err != nil {
-		t.Fatal(err)
+		// a unix socket cannot be bound here (Windows refuses over-length paths; locked-down accounts refuse them at all):
+		// the herdr-core tests need one, so they skip instead of failing
+		t.Skipf("unix sockets unavailable: %v", err)
 	}
 	t.Cleanup(func() { ln.Close() })
 	go func() {

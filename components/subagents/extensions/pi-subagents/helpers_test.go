@@ -4,9 +4,20 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+// skipUnescapedJSONPath skips a test whose fixture embeds a filesystem path raw inside JSON: the backslashes of a
+// Windows path are JSON escapes, so PIG_EXT_HOST_INFO does not parse and the host's file is never read. The fixture would
+// have to JSON-escape the path for the test to run on Windows.
+func skipUnescapedJSONPath(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("fixture embeds a Windows path unescaped in JSON (PIG_EXT_HOST_INFO); the host file is not read")
+	}
+}
 
 func eq(t *testing.T, got, want any, what string) {
 	t.Helper()
