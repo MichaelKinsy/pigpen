@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 1 · review: 12 · done: 19
+Status: queued: 2 · porting: 1 · review: 13 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -44,6 +44,7 @@ Status: queued: 2 · porting: 1 · review: 12 · done: 19
 | `superpowers` | [superpowers](https://github.com/obra/superpowers) | [`bb92a7774141`](https://github.com/obra/superpowers/commit/bb92a77741419a4ab5f06e711a283343f1ada0c3) | MIT | Jesse Vincent | `components/superpowers` | `pig-essentials` | review | Skills from superpowers, https://github.com/obra/superpowers, by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent), release v7.0.0, commit bb92a77741419a4ab5f06e711a283343f1ada0c3. Renamed with the pigpen-superpowers- prefix; every change is in the Package's port/ADAPTATIONS.md. Adaptation by Michael Kinsy (MIT). |
 | `pig-model-tweaks` | [pi-tweaks](https://github.com/liyu1981/pi-tweaks) | [`65e6ccfbb779`](https://github.com/liyu1981/pi-tweaks/commit/65e6ccfbb77956aa15ce34e7ca9735e1d476c292) | MIT | Yu Li | `components/pig-model-tweaks` | `pig-model-tweaks` | porting | Go port of the three model extensions of pi-tweaks, https://github.com/liyu1981/pi-tweaks, by Yu Li (MIT, v0.1.1), at commit 65e6ccfbb77956aa15ce34e7ca9735e1d476c292. |
 | `autolith-bridge` | [Autolith](https://github.com/lambda-symbolics/autolith) | [`505e814610cd`](https://github.com/lambda-symbolics/autolith/commit/505e814610cd4ad10ea8d30654fe89b4f1113341) | ISC | Lambda Symbolics OÜ | `piglets/pig-autolith` | `pigpen-autolith` | review | Original adapter that calls Autolith, https://github.com/lambda-symbolics/autolith, by Lambda Symbolics OÜ (ISC), pinned at commit 505e814610cd4ad10ea8d30654fe89b4f1113341. Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied. |
+| `rea` | [REA (rea-agents)](https://github.com/morluto/rea)<br>[Node.js](https://github.com/nodejs/node) | [`160d821ac9a0`](https://github.com/morluto/rea/commit/160d821ac9a0310afcb8d1fc427862dd6508add5)<br>[`f7f273a9bb64`](https://github.com/nodejs/node/commit/f7f273a9bb6445f6f7fb6349105e7532972045fb) | MIT<br>MIT | morluto<br>Node.js contributors | `components/rea`<br>`piglets/pig-rea`<br>`piglets/pig-rea-sealed` | `pigpen-rea` | review | Original adapter that embeds and runs REA (rea-agents) 6.8.0, https://github.com/morluto/rea, by morluto (MIT), unmodified, at commit 160d821ac9a0310afcb8d1fc427862dd6508add5, on Node.js 24.22.2, https://github.com/nodejs/node, by Node.js contributors (MIT), commit f7f273a9bb6445f6f7fb6349105e7532972045fb. |
 
 ## How to read it
 
@@ -248,3 +249,8 @@ Status: queued: 2 · porting: 1 · review: 12 · done: 19
 
 - Kind: adapter. Original Common Lisp extension that drives Autolith through its documented run-job, detached-session and localgroup commands. Autolith is not bundled; it must be installed separately.
 - Notes: Common Lisp on the PiG 0.7.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review.
+
+### `rea`: REA harness: Reverse Engineer Anything as one PiG Binary
+
+- Kind: adapter. Original members that unpack the published rea-agents package and a pinned Node from the Piglet Binary, register REA's MCP server as rea setup --client pi does, and present REA in a dashboard. REA itself runs unmodified.
+- Notes: No REA code is changed: the payload is the published npm tarball with production dependencies from REA's tagged lockfile. Gates: catalog equal to npx's REA, rea setup registration, skill drift (npm run test:rea) and the Binary harness (npm run test:rea-harness). Awaiting review.

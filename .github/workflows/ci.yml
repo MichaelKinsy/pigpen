@@ -189,11 +189,23 @@ jobs:
           cache-dependency-path: '**/go.sum'
       - name: Download the pinned PiG release for ${{ matrix.target }} and verify its checksum
         run: node scripts/fetch-pig.mjs --target '${{ matrix.target }}' --out "$RUNNER_TEMP/pig" --github-env
+      # pig-rea embeds REA and its pinned Node: build the payload for this target before the Piglets are staged and built.
+      - name: Build the REA payload for ${{ matrix.target }}
+        run: node components/rea/scripts/payload.mjs '${{ matrix.target }}'
       - name: Build all Piglets but pig-autolith (SBCL, job autolith-binary) for ${{ matrix.target }} and smoke every Binary
         env:
           PIG_HOME: ${{ runner.temp }}/pig-home
           PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
         run: node scripts/platform-smoke.mjs --except pig-autolith --out dist/bin
+      - name: REA faithfulness gates (catalog against npx's REA, rea setup registration, skill)
+        run: npm run test:rea
+      # The harness gate symlinks one unpacked payload into every sandbox, which Windows runners do not allow unprivileged.
+      - name: REA harness gate on the pig-rea and pig-rea-sealed Binaries
+        if: ${{ runner.os != 'Windows' }}
+        env:
+          PIG_REA_BIN: ${{ github.workspace }}/dist/bin/pig-rea
+          PIG_REA_SEALED_BIN: ${{ github.workspace }}/dist/bin/pig-rea-sealed
+        run: npm run test:rea-harness
       # Each Binary in a real terminal (tmux), with only system tools on PATH: its main features, a faux turn and a clean /quit.
       - name: Drive every Binary in a terminal
         if: ${{ runner.os == 'Linux' }}

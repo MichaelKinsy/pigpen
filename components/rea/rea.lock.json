@@ -1,0 +1,28 @@
+{
+  "$comment": "Pins for the REA payload. scripts/payload.mjs builds a target's payload from exactly these; scripts/lock.mjs moves them to a new release.",
+  "rea": {
+    "package": "rea-agents",
+    "version": "6.8.0",
+    "tag": "rea-agents-6.8.0",
+    "commit": "160d821ac9a0310afcb8d1fc427862dd6508add5",
+    "repository": "https://github.com/morluto/rea",
+    "integrity": "sha512-9QDeRnGqEDzABZyr04eLnBXBv/c6I9/TWu/6M0MD4pEfkySI/BIgwTODIbAReX3C1x6hjw9+Jlx4A2yUSPZ9ww==",
+    "lockfile": "locks/rea-agents-6.8.0.package-lock.json",
+    "lockfileSha256": "1d8fa0f33b3125d3e601ec832b18d9d35b37453f36340dc0507f065a8de158ad"
+  },
+  "node": {
+    "version": "24.22.2",
+    "releaseKeys": {
+      "repository": "https://github.com/nodejs/release-keys",
+      "commit": "481637f813e912c4aa3622d7964ab426c97b8e8d",
+      "keyring": "gpg-only-active-keys/pubring.kbx"
+    },
+    "archives": {
+      "linux/amd64": { "file": "node-v24.22.2-linux-x64.tar.xz", "sha256": "48cc0e21e048790e54c0cf5749c2725005313d652651c40b7a21feb9697aaf75" },
+      "linux/arm64": { "file": "node-v24.22.2-linux-arm64.tar.xz", "sha256": "eb187837a2230d4047161ac0be008584e16b46f726e9c9490ee35dc6b17d9ba8" },
+      "darwin/arm64": { "file": "node-v24.22.2-darwin-arm64.tar.xz", "sha256": "1f5ac075be50bed4780ea3be19a007fda95ea4d527d28d76d0b91de47d915115" },
+      "darwin/amd64": { "file": "node-v24.22.2-darwin-x64.tar.xz", "sha256": "6965578fd823e72c1b5387f5ab84cb25368f886e02eb8779e6f0fce6b91c27b7" },
+      "windows/amd64": { "file": "node-v24.22.2-win-x64.zip", "sha256": "ca1bff5d8ead13c9f2ea404a176db46bd430704d5b5113734049fa365e7799e2" }
+    }
+  }
+}
