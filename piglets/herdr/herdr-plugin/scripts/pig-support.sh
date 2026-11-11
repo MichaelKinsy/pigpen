@@ -14,7 +14,7 @@ set -eu
 # copy in step with it, as herdr-pig's refresh keeps the extension file in step
 # with its own copy. A test keeps it equal to components/herdr/package.json.
 PACKAGE_NAME="npm:@pi-in-go/pigpen-herdr"
-PACKAGE_VERSION="0.3.0"
+PACKAGE_VERSION="0.3.1"
 # PIGPEN_HERDR_PACKAGE installs another source, for example a local checkout
 # or a packed tarball of the Package; it is never refreshed.
 PACKAGE="${PIGPEN_HERDR_PACKAGE:-$PACKAGE_NAME@$PACKAGE_VERSION}"
