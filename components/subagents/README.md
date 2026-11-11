@@ -24,6 +24,11 @@ original); then:
 - `subagent {action: "list"}` lists the agents (`agentScope`: user, project or both; `capabilities: true` adds each one's tools, model
   and thinking), `{action: "get", agent: "helper"}` shows one;
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
+- `subagent {agent, task, async: true}` runs the child detached: the call returns `Async: <agent> [<id>]` at once and the
+  run lives in the fleet views. `stop`, `interrupt`, `resume` and `steer` manage it (`resume` and `steer` continue the
+  child's session; `steer` pivots the running turn to your message). A successful completion stays quiet, a failed or
+  paused one notifies the session. The original defaults to async; the port keeps the foreground default. `bg_wait` is
+  not ported;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
 
@@ -90,22 +95,47 @@ and when the task is over 100 KiB (it travels as an argument).
 
 Checked with PiG 0.5.3, herdr-core 0.1.16 and 0.1.17, and the Herdr app 0.1.11.
 
+## The fleet inspector and the async agents view
+
+The original's two observability surfaces are ported over the runs this port makes (a `subagent` child, a `/run-chain` step),
+in the original's rows and text:
+
+- the **async agents view** is the `subagent-async` widget under the editor, live while children run: one child is an
+  `async subagent <agent> · background` block with its `Step 1/1` row, its task and its activity (`⎿`), several children sit
+  under the `● Async agents · background` header, and a finished child collapses to `✓ <agent> · complete · <elapsed>`;
+- the **fleet inspector** is `/subagents-fleet` (and `subagent({ action: "status", view: "fleet" })`): the original's
+  inspector overlay (a centred 95% frame with the roster, the detail pane and the key footer, driven by the original's
+  keys: `↑/k` `↓/j` select, `K`/`J` scroll, `r` refresh, `Esc` close, `D` stops the selected run, `s` composes a steer
+  message (Enter sends, Esc cancels); `p`, `Enter` and `x` show the port's refusal text where the original runs Prompt
+  Audit, Inspect and tool details) and, without a UI, the
+  original's text: `Subagent fleet: N tracked`, `Foreground runs:`, `Recent runs:` with the session paths the port keeps
+  (a port addition: the port runs children in the foreground), and the `Commands:` block.
+
+`subagent({ action: "status" })` lists the active runs; `{ action: "status", id }` shows one run's block and, with
+`view: "transcript"` (`index` picks the step of a chain), its result transcript tail. The inspector's Inspect panes and
+Prompt Audit are not ported; rows the port cannot fill (a child's current tool, token accounting) are omitted.
+
 ## What is ported
 
 Frontmatter parsing, agent and chain definitions (discovery in the project, the user's directories and the builtin set,
 precedence project over user over builtin, packages, aliases, name resolution), markdown chain files (parse and write), the
-`subagent` tool's `list` and `get`, the `subagents_enable` loader, and running one agent or a chain through a child process (a Go
-addition: the original runs children through its own executor and scripted workflows).
+`subagent` tool's `list`, `get` and `status`, the `subagents_enable` loader, running one agent or a chain through a child
+process (a Go addition: the original runs children through its own executor and scripted workflows), and the runs'
+control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions.
 
-**Not ported, and refused:** parallel, async and background runs, scripted workflows (`workflow`, `workflowScript`,
-`workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet and status views, steering and
-the supervisor channel, the watchdog, missions, profiles, `agentOverrides` other than `model` and `thinking`, `.chain.json` chains, the management actions other
-than `list` and `get`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model` and
-`async: false` (the port always runs in the foreground) and, for `list` and `get`, `action`, `agent` and `agentScope` (and `capabilities` for `list`). Any other
+**Not ported, and refused:** parallel runs, scripted workflows (`workflow`, `workflowScript`,
+`workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet inspector's
+Inspect panes, Prompt Audit and tool details, the supervisor channel, the watchdog, missions, profiles,
+`agentOverrides` other than `model` and `thinking`, `.chain.json` chains, `bg_wait`, the management actions other than
+`list`, `get`, `status`, `stop`, `interrupt`, `resume` and `steer`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`,
+`async` (true detaches the child), for `list` and `get`, `action`, `agent` and `agentScope` (and `capabilities` for `list`),
+for `status`, `id`, `view`, `index` and `lines`, for `stop` and `interrupt`, `id`, and for `resume` and `steer`, `id` and
+`message`. Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused
 with one message and nothing runs:
 
 > @pi-in-go/pigpen-subagents (Go port) does not support async (background) runs (`async: true`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
 
-The original's slash commands other than the port's own `/run-chain` (`/run`, `/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not
-registered, and neither are its skills and prompt templates. See [port/PORT.md](port/PORT.md).
+The original's slash commands other than the port's own `/run-chain` and the fleet inspector's `/subagents-fleet` (`/run`,
+`/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not registered, and neither are its skills and prompt
+templates. See [port/PORT.md](port/PORT.md).

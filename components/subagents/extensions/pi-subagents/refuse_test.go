@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	sub "github.com/MichaelKinsy/pigpen/pi-subagents"
 )
@@ -64,16 +65,22 @@ func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	eq(t, len(*calls), 0, "no child started")
 }
 
-func TestAsyncRunsAreRefusedAndForegroundStillRuns(t *testing.T) {
+func TestAsyncRunsDetach(t *testing.T) {
 	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": true})
-	wantRefusal(t, failure, "async (background) runs (`async: true`)")
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": true})
+	eq(t, failure, "", "async runs")
+	if !strings.Contains(string(raw), "Async: helper [run-") {
+		t.Errorf("receipt: %s", raw)
+	}
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": "yes"})
-	wantRefusal(t, failure, "async (background) runs (`async: yes`)")
-	eq(t, len(*calls), 0, "no child started")
+	eq(t, failure, "async must be a boolean when provided.", "async type")
 	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": false})
 	eq(t, failure, "", "async false is the port's foreground run")
-	eq(t, len(*calls), 1, "it ran")
+	deadline := time.Now().Add(2 * time.Second)
+	for len(*calls) < 2 && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	eq(t, len(*calls) >= 2, true, "the detached child ran as well as the foreground one")
 }
 
 func TestWorkflowRunsAreRefused(t *testing.T) {
@@ -110,9 +117,9 @@ func TestParallelAndChainRunsAreRefused(t *testing.T) {
 	eq(t, len(*calls), 0, "nothing ran")
 }
 
-func TestManagementActionsOtherThanListAndGetAreRefused(t *testing.T) {
+func TestUnportedManagementActionsAreRefused(t *testing.T) {
 	h, _ := refusedHost(t)
-	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "status", "doctor", "guide", "interrupt", "stop", "resume", "steer", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
+	actions := []string{"create", "update", "delete", "eject", "disable", "enable", "reset", "models", "doctor", "guide", "debug.run", "validate", "schedule.create", "single", "append-step", "unheard-of"}
 	for _, a := range actions {
 		t.Run(a, func(t *testing.T) {
 			_, failure := h.Tool("subagent", map[string]any{"action": a, "agent": "helper"})
@@ -161,15 +168,19 @@ func TestUnportedToolsRefuse(t *testing.T) {
 }
 
 // The original's other slash commands are not registered: a command the port lacks is not offered, and the README says so.
+// /subagents-fleet (the fleet inspector) and the port's own /run-chain are registered.
 func TestTheOriginalsOtherCommandsAreNotRegistered(t *testing.T) {
 	h, _ := refusedHost(t)
-	for _, name := range []string{"subagents", "run", "subagent-cost", "subagents-doctor", "subagents-guide", "subagents-fleet", "subagents-stop", "subagents-steer", "subagents-watchdog", "prompt-workflow"} {
+	for _, name := range []string{"subagents", "run", "subagent-cost", "subagents-doctor", "subagents-guide", "subagents-stop", "subagents-steer", "subagents-watchdog", "prompt-workflow"} {
 		if h.cmds[name] {
 			t.Errorf("/%s is registered", name)
 		}
 	}
 	if !h.cmds["run-chain"] {
 		t.Error("the port's own /run-chain is gone")
+	}
+	if !h.cmds["subagents-fleet"] {
+		t.Error("the fleet inspector's /subagents-fleet is gone")
 	}
 }
 

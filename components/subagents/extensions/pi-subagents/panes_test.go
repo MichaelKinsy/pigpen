@@ -195,7 +195,10 @@ func TestPaneRun(t *testing.T) {
 	r.host.sessionDir = ""
 	res, err := r.host.run(nil, r.req, "scout")
 	eq(t, err, nil, "error")
-	eq(t, res, childResult{Stdout: "answer"}, "result")
+	eq(t, childResult{Stdout: res.Stdout, Stderr: res.Stderr, Exit: res.Exit}, childResult{Stdout: "answer"}, "result")
+	if !regexp.MustCompile(`1_[0-9a-f-]+\.jsonl$`).MatchString(res.Session) {
+		t.Errorf("the child's session file: %q", res.Session)
+	}
 	p := r.fake.calls("terminal.run")[0]
 	argv := p["argv"].([]any)
 	eq(t, argv[0], "pig", "bin")
