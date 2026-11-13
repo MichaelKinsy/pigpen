@@ -1,0 +1,100 @@
+# Name of the Harness (unless harness.name is set), AgentTemplate and Agent. The EgressPolicy gets the
+# suffix "-egress". Empty means "pig".
+fullnameOverride: ""
+
+# REQUIRED. The PiG kagent harness image pinned by digest. The release pipeline stamps it; it is
+# never a tag. The Harness CRD and Substrate both reject tags (pattern ^[^[:space:]@]+@sha256:[a-f0-9]{64}$).
+image: ""
+
+# Entrypoint of the image. kagent's BYO rule requires workload.command to be set.
+command: ["/usr/local/bin/kagent-pig"]
+# The adapter takes no arguments.
+args: []
+
+# What the harness reads (all optional; empty means the adapter default).
+runtime:
+  # debug | info | warn | error. Becomes KAGENT_PIG_LOG_LEVEL.
+  logLevel: ""
+  # PiG built-in tools the model may use, for example [read, bash, edit, write, grep, find, ls].
+  # Becomes KAGENT_PIG_TOOLS (comma list, names [A-Za-z0-9_-]+).
+  tools: []
+  # Absolute path of the pig binary inside the image (not under /data; there is no PATH lookup). Empty uses
+  # /usr/local/bin/pig. Becomes KAGENT_PIG_BIN.
+  bin: ""
+  # Model limits, because kagent compiles none. 0 means the adapter default (128000 and 8192).
+  # PiG compacts the session by the context window. Become KAGENT_PIG_CONTEXT_WINDOW and KAGENT_PIG_MAX_TOKENS.
+  contextWindow: 0
+  maxTokens: 0
+  # Names of extra environment variables that pig and its tools may inherit (never KAGENT_*). Their values
+  # come from env below. Becomes KAGENT_PIG_PASS_ENV (comma list).
+  passEnv: []
+
+# Extra literal environment for the Harness (Harness env has no secret-backed form in v1alpha3).
+# OpenTelemetry settings go here, for example OTEL_EXPORTER_OTLP_ENDPOINT; kagent adds that
+# endpoint's origin to the Actor's egress itself. kagent owns SSL_CERT_*, the CA bundle variables
+# and its bootstrap variables, and rejects them.
+env: {}
+
+# A Harness is reusable platform policy: several Agents (several releases) may run on one. With create: false
+# this release renders no Harness and its Agent runs on the existing, "byo" Harness named by name (required then).
+# env, args and runtime.* belong to the Harness and are refused with create: false; command and substrate.* are
+# ignored. image must still be set: pig-kagent.sh warns when the existing Harness runs another image.
+# With create: true, name (default: the release's name, "pig") names the Harness this release creates.
+harness:
+  create: true
+  name: ""
+
+substrate:
+  # WorkerPool in the release namespace. The kagent chart creates "kagent-default" when
+  # substrateWorkerPool.create=true, which is also what "kagent install" sets up.
+  workerPoolRef: kagent-default
+  # Per-Harness snapshot location. It must be a location Substrate's object store serves. The
+  # default is the one kagent's own harness documentation uses; Substrate needs the preview gate
+  # PerTemplateSnapshotLocation.
+  snapshotLocation: gs://ate-snapshots/kagent/
+
+agentTemplate:
+  # Also the Agent Card description kagent publishes for this Agent.
+  description: PiG coding agent running on Agent Substrate
+  systemPrompt: ""
+  # ModelConfig in this namespace. Ignored when modelConfig.create is true (the created one is used).
+  modelConfig: default-model-config
+
+# The Agent pairs the template with the Harness. Turn off when Agents are authored elsewhere;
+# such an Agent must add egressPolicyRefs: [{name: <name>-egress}] itself.
+agent:
+  create: true
+
+# Extra egress for what tools reach on their own. Model, MCP and telemetry egress is inferred by
+# kagent from ModelConfig, RemoteMCPServer and env, so by default nothing is listed here and the
+# Actor reaches only those. Examples a coding agent usually needs:
+#   - origin: https://github.com
+#   - origin: https://*.githubusercontent.com
+#   - origin: https://proxy.golang.org
+#   - origin: https://pypi.org
+#   - origin: https://files.pythonhosted.org
+#   - origin: https://api.github.com
+#     authentication: {header: Authorization, prefix: "Bearer ", secretKeyRef: {name: github-token, key: token}}
+egress:
+  destinations: []
+
+# Optional ModelConfig. The Secret is referenced by name and must already exist; this chart never creates it.
+modelConfig:
+  create: false
+  name: pig-model
+  provider: OpenAI          # OpenAI | Anthropic | Ollama
+  model: ""
+  baseUrl: ""               # a DNS name, never an IP address (Substrate egress rejects IPs)
+  apiFormat: ""             # OpenAI only: chatCompletions (default) | responses
+  apiKeySecret: ""
+  apiKeySecretKey: ""
+
+# Optional RemoteMCPServers. Each is also bound into the AgentTemplate.
+mcpServers: []
+# - name: github
+#   url: https://api.githubcopilot.com/mcp/
+#   description: GitHub MCP
+#   protocol: STREAMABLE_HTTP
+#   requireApproval: true          # pause before each call; the Agent answers with an approval request
+#   tools: [get_issue, list_issues] # allowlist; empty exposes every tool of the server
+#   headersFrom: [{name: Authorization, valueFrom: {type: Secret, name: github-mcp, key: Authorization}}]

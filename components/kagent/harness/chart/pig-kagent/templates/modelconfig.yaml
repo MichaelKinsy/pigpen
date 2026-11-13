@@ -1,0 +1,41 @@
+{{- if .Values.modelConfig.create }}
+{{- $m := .Values.modelConfig }}
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata:
+  name: {{ $m.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pig.labels" . | nindent 4 }}
+spec:
+  provider: {{ $m.provider }}
+  model: {{ required "modelConfig.model is required" $m.model | quote }}
+  {{- if $m.apiKeySecret }}
+  apiKeySecret: {{ $m.apiKeySecret | quote }}
+  apiKeySecretKey: {{ required "modelConfig.apiKeySecretKey is required with apiKeySecret" $m.apiKeySecretKey | quote }}
+  {{- end }}
+  {{- if and $m.apiFormat (ne $m.provider "OpenAI") }}
+  {{- fail "modelConfig.apiFormat applies to provider OpenAI only" }}
+  {{- end }}
+  {{- if eq $m.provider "OpenAI" }}
+  {{- if or $m.baseUrl $m.apiFormat }}
+  openAI:
+    {{- with $m.baseUrl }}
+    baseUrl: {{ . | quote }}
+    {{- end }}
+    {{- with $m.apiFormat }}
+    apiFormat: {{ . }}
+    {{- end }}
+  {{- end }}
+  {{- else if eq $m.provider "Anthropic" }}
+  {{- with $m.baseUrl }}
+  anthropic:
+    baseUrl: {{ . | quote }}
+  {{- end }}
+  {{- else if eq $m.provider "Ollama" }}
+  {{- with $m.baseUrl }}
+  ollama:
+    host: {{ . | quote }}
+  {{- end }}
+  {{- end }}
+{{- end }}

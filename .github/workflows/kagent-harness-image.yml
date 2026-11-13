@@ -1,0 +1,323 @@
+# Builds, scans, signs and publishes the pig-kagent harness image (PiG as a kagent native Harness) for linux/amd64 and
+# linux/arm64. A pushed tag `components/kagent/harness/v<chart version>` starts it; nothing else does. The tag shape matches
+# neither a Piglet tag (`<name>/v*`, release.yml) nor a Package tag (`components/<name>/v*`, release-package.yml), and no
+# other workflow's filter matches it (scripts/check-workflows.mjs checks both directions).
+#
+# The image is built from the tree `scripts/export-byo-ext.sh` writes (the same tree that becomes harnesses/pig/ in kagent-dev's
+# byo-ext repository), so the Dockerfile CI proves buildable there is the one that ships here. Design, measurements and
+# the alternatives that lost: handoffs/0.7.1/kagent-harness-research/image-options.md.
+#
+#   plan      the tag must be components/kagent/harness/v<chart version> on a commit of main; no secrets, no write token.
+#   build     one job per architecture on a NATIVE runner (the PiG Piglet build runs `go build` for its own machine, so arm64
+#             must not be emulated): build, push by digest (no tag yet), SBOM, and a grype gate on what has a fix. packages: write only.
+#   publish   the one job that holds id-token: merge the two digests into one index, sign the INDEX digest with cosign keyless,
+#             attest provenance and the SBOMs, stamp the index digest into the chart, verify what was just signed.
+#   release   attaches the stamped chart, the SBOMs and the digests to one GitHub Release.
+#
+# `:<version>` is only an alias, never what to pin: `docker buildx imagetools create` cannot push an index without a name, so the
+# publish job tags the merged index and, after signing, fails unless that tag still resolves to the signed digest. The Harness CRD and
+# Substrate reject tags anyway.
+# What a user pins is the index digest: `ghcr.io/michaelkinsy/pig-kagent@sha256:<index digest>`. Verify it with
+#   cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#     --certificate-identity-regexp '^https://github\.com/MichaelKinsy/pigpen/\.github/workflows/kagent-harness-image\.yml@refs/tags/components/kagent/harness/v[0-9]+\.[0-9]+\.[0-9]+$' \
+#     ghcr.io/michaelkinsy/pig-kagent@sha256:<index digest>
+#   gh attestation verify oci://ghcr.io/michaelkinsy/pig-kagent@sha256:<index digest> --repo MichaelKinsy/pigpen \
+#     --signer-workflow MichaelKinsy/pigpen/.github/workflows/kagent-harness-image.yml
+#
+# Owner setup (not done by this file; see OWNER-ACTIONS.md style): an environment `release-image` limited to tags
+# `components/kagent/harness/v*` (deployment branch policy of type tag) with a required reviewer, a tag ruleset for the same
+# pattern, Actions allowed to create releases and attestations, and the ghcr.io package made public after its first push so
+# Substrate can pull it anonymously. No secrets are used: the registry login and the release use the job's own token.
+name: Release the kagent harness image
+
+on:
+  push:
+    tags: ['components/kagent/harness/v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kagent-harness-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/michaelkinsy/pig-kagent
+  CHART: components/kagent/harness/chart/pig-kagent
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      epoch: ${{ steps.plan.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The tagged commit must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: The tag must be components/kagent/harness/v<chart version>
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#components/kagent/harness/v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "tag $GITHUB_REF_NAME is not components/kagent/harness/v<x.y.z>" >&2; exit 1; }
+          chart="$(sed -n 's/^version: *//p' "$CHART/Chart.yaml")"
+          [ "$chart" = "$version" ] || { echo "tag version $version is not the chart version $chart ($CHART/Chart.yaml)" >&2; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "epoch=$(git log -1 --format=%ct "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    name: Build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 60
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.plan.outputs.epoch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Export the byo-ext tree, the whole build context
+        run: sh scripts/export-byo-ext.sh "$RUNNER_TEMP/context"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          version: v0.38.2
+          driver-opts: image=moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      # Pushed by digest only: no tag points at it until the publish job has merged both architectures. Attestations are
+      # made on the merged index, so the per-architecture images carry none (provenance and sbom off).
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ runner.temp }}/context
+          platforms: linux/${{ matrix.arch }}
+          build-args: |
+            VERSION=${{ needs.plan.outputs.version }}
+            REVISION=${{ github.sha }}
+          provenance: false
+          sbom: false
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true,rewrite-timestamp=true,compression=gzip,force-compression=true
+      - name: SBOM (SPDX)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.arch }}.spdx.json
+          upload-artifact: false
+          dependency-snapshot: false
+      # The gate is findings that have a fix and are High or worse. Debian lists unfixed and won't-fix entries that no rebuild can clear.
+      # The one reviewed exception (an unreachable finding in the upstream gh binary) lives in components/kagent/release/.grype.yaml
+      # with its evidence and an expiry date; after that date this job fails until the entry is removed or renewed after review.
+      - name: The reviewed grype exception must not have expired
+        shell: bash
+        run: |
+          set -euo pipefail
+          expires="$(sed -n 's/^# expires: //p' components/kagent/release/.grype.yaml)"
+          [[ "$expires" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "components/kagent/release/.grype.yaml has no '# expires: YYYY-MM-DD' line" >&2; exit 1; }
+          [[ "$(date -u +%F)" < "$expires" ]] || { echo "the grype exception expired on $expires: re-check gh (govulncheck on its source) and renew or remove it" >&2; exit 1; }
+      - name: Vulnerability gate (fixed High and Critical findings fail the release)
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          sbom: sbom-${{ matrix.arch }}.spdx.json
+          config: components/kagent/release/.grype.yaml
+          only-fixed: true
+          severity-cutoff: high
+          fail-build: true
+      - name: Keep the digest and the SBOM for the publish job
+        shell: bash
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          printf '%s\n' "$DIGEST" > "out/digest-${{ matrix.arch }}.txt"
+          mv "sbom-${{ matrix.arch }}.spdx.json" out/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-${{ matrix.arch }}
+          path: out/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: [plan, build]
+    runs-on: ubuntu-24.04
+    environment: release-image
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    timeout-minutes: 30
+    outputs:
+      image: ${{ env.IMAGE }}
+      index-digest: ${{ steps.index.outputs.digest }}
+      amd64-digest: ${{ steps.index.outputs.amd64 }}
+      arm64-digest: ${{ steps.index.outputs.arm64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: build-*
+          path: ${{ runner.temp }}/build
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          version: v0.38.2
+          driver-opts: image=moby/buildkit:v0.34.2@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Merge the two architectures into one index and tag it
+        id: index
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          amd64="$(cat "$RUNNER_TEMP/build/digest-amd64.txt")"
+          arm64="$(cat "$RUNNER_TEMP/build/digest-arm64.txt")"
+          docker buildx imagetools create --tag "$IMAGE:$VERSION" "$IMAGE@$amd64" "$IMAGE@$arm64"
+          index="$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)"
+          [[ "$index" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "no index digest for $IMAGE:$VERSION" >&2; exit 1; }
+          { echo "digest=$index"; echo "amd64=$amd64"; echo "arm64=$arm64"; } >> "$GITHUB_OUTPUT"
+          {
+            echo "### kagent harness image $VERSION"
+            echo "- index (pin this): \`$IMAGE@$index\`"
+            echo "- linux/amd64: \`$amd64\`"
+            echo "- linux/arm64: \`$arm64\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+        with:
+          cosign-release: v3.1.4
+      - name: Sign the index digest (keyless, the workflow identity)
+        env:
+          INDEX: ${{ steps.index.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$INDEX"
+      - name: Attest build provenance of the index
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.index.outputs.digest }}
+          push-to-registry: true
+      - name: Attest the linux/amd64 SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.index.outputs.amd64 }}
+          sbom-path: ${{ runner.temp }}/build/sbom-amd64.spdx.json
+          push-to-registry: true
+      - name: Attest the linux/arm64 SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.index.outputs.arm64 }}
+          sbom-path: ${{ runner.temp }}/build/sbom-arm64.spdx.json
+          push-to-registry: true
+      - name: Verify what was just published
+        shell: bash
+        env:
+          INDEX: ${{ steps.index.outputs.digest }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          cosign verify \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity "https://github.com/$GITHUB_REPOSITORY/.github/workflows/kagent-harness-image.yml@$GITHUB_REF" \
+            "$IMAGE@$INDEX" > /dev/null
+          alias="$(docker buildx imagetools inspect "$IMAGE:$VERSION" --format '{{json .Manifest}}' | jq -r .digest)"
+          [[ "$alias" == "$INDEX" ]] || { echo "the alias $IMAGE:$VERSION resolves to $alias, not the signed index $INDEX" >&2; exit 1; }
+          GH_TOKEN="${{ github.token }}" gh attestation verify "oci://$IMAGE@$INDEX" --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/kagent-harness-image.yml" > /dev/null
+      # The chart has `image: ""` and refuses to render without it; a release asset carries the index digest, never the alias tag.
+      - name: Stamp the index digest into the chart and package it
+        id: chart
+        shell: bash
+        env:
+          INDEX: ${{ steps.index.outputs.digest }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/chart"
+          mkdir -p "$work/assets"
+          cp -R "$CHART" "$work/pig-kagent"
+          ref="$IMAGE@$INDEX"
+          sed -i "s|^image: \"\"\$|image: \"$ref\"|" "$work/pig-kagent/values.yaml"
+          [ "$(grep -c "^image: \"$IMAGE@sha256:" "$work/pig-kagent/values.yaml")" = 1 ] || { echo "the chart's image line was not stamped" >&2; exit 1; }
+          helm lint "$work/pig-kagent"
+          helm package "$work/pig-kagent" --destination "$work/assets"
+          cp "$RUNNER_TEMP"/build/sbom-*.spdx.json "$work/assets/"
+          {
+            echo "image=$ref"
+            echo "amd64=$IMAGE@${{ steps.index.outputs.amd64 }}"
+            echo "arm64=$IMAGE@${{ steps.index.outputs.arm64 }}"
+          } > "$work/assets/image-digests.txt"
+          ls -l "$work/assets"
+          echo "dir=$work/assets" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-assets
+          path: ${{ steps.chart.outputs.dir }}/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: [plan, publish]
+    runs-on: ubuntu-24.04
+    environment: release-image
+    permissions:
+      contents: write
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-assets
+          path: ${{ runner.temp }}/assets
+      - name: Create the GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          INDEX_REF: ${{ needs.publish.outputs.image }}@${{ needs.publish.outputs.index-digest }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/notes.md" <<EOF
+          pig-kagent harness image $VERSION (independent work, not endorsed by the kagent project).
+
+          Image, pinned by index digest (linux/amd64 and linux/arm64): \`$INDEX_REF\`
+
+          The attached Helm chart already carries this digest. Verify the signature and the build provenance:
+
+          \`\`\`sh
+          cosign verify --certificate-oidc-issuer https://token.actions.githubusercontent.com \\
+            --certificate-identity "https://github.com/$GITHUB_REPOSITORY/.github/workflows/kagent-harness-image.yml@refs/tags/$GITHUB_REF_NAME" \\
+            $INDEX_REF
+          gh attestation verify oci://$INDEX_REF --repo $GITHUB_REPOSITORY
+          \`\`\`
+          EOF
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "kagent harness image $VERSION" --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP"/assets/*

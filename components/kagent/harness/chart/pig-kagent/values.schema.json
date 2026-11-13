@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "command", "substrate"],
+  "additionalProperties": false,
+  "if": {"properties": {"harness": {"properties": {"create": {"const": false}}, "required": ["create"]}}, "required": ["harness"]},
+  "then": {"properties": {"harness": {"required": ["name"], "properties": {"name": {"minLength": 1}}}}},
+  "properties": {
+    "fullnameOverride": {"type": "string", "pattern": "^$|^[a-z0-9]([-a-z0-9]{0,40}[a-z0-9])?$"},
+    "image": {"type": "string", "pattern": "^[^\\s@]+@sha256:[a-f0-9]{64}$", "description": "digest-pinned OCI reference; the Harness CRD pattern"},
+    "command": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"type": "string", "minLength": 1}},
+    "args": {"type": "array", "maxItems": 64, "items": {"type": "string"}},
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logLevel": {"enum": ["", "debug", "info", "warn", "error"]},
+        "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}},
+        "bin": {"type": "string", "pattern": "^(/[^\\s]*)?$"},
+        "contextWindow": {"type": "integer", "minimum": 0},
+        "maxTokens": {"type": "integer", "minimum": 0},
+        "passEnv": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$", "not": {"pattern": "^KAGENT_"}}}
+      }
+    },
+    "env": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": {
+        "pattern": "^[-._a-zA-Z][-._a-zA-Z0-9]*$",
+        "not": {"enum": ["SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "AWS_CA_BUNDLE", "NODE_EXTRA_CA_CERTS", "CURL_CA_BUNDLE", "GIT_SSL_CAINFO", "KAGENT_BOOTSTRAP_JSON", "KAGENT_CONFIG_JSON", "KAGENT_AGENT_CARD_JSON", "KAGENT_PIG_LOG_LEVEL", "KAGENT_PIG_TOOLS", "KAGENT_PIG_BIN", "KAGENT_PIG_CONTEXT_WINDOW", "KAGENT_PIG_MAX_TOKENS", "KAGENT_PIG_PASS_ENV"]}
+      },
+      "additionalProperties": {"type": "string"}
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {"type": "boolean"},
+        "name": {"type": "string", "pattern": "^$|^[a-z0-9]([-a-z0-9]{0,251}[a-z0-9])?$"}
+      }
+    },
+    "substrate": {
+      "type": "object",
+      "required": ["workerPoolRef", "snapshotLocation"],
+      "additionalProperties": false,
+      "properties": {
+        "workerPoolRef": {"type": "string", "minLength": 1},
+        "snapshotLocation": {"type": "string", "pattern": "^[^\\s]+$"}
+      }
+    },
+    "agentTemplate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {"type": "string"},
+        "systemPrompt": {"type": "string"},
+        "modelConfig": {"type": "string"}
+      }
+    },
+    "agent": {"type": "object", "additionalProperties": false, "properties": {"create": {"type": "boolean"}}},
+    "egress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "destinations": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["origin"],
+            "additionalProperties": false,
+            "properties": {
+              "origin": {"type": "string", "pattern": "^https?://(\\*\\.)?[A-Za-z0-9]([-A-Za-z0-9.]*[A-Za-z0-9])?(:[0-9]{1,5})?$", "not": {"pattern": "^https?://[0-9.]+(:[0-9]+)?$"}},
+              "authentication": {
+                "type": "object",
+                "required": ["header", "secretKeyRef"],
+                "additionalProperties": false,
+                "properties": {
+                  "header": {"type": "string", "minLength": 1},
+                  "prefix": {"type": "string"},
+                  "secretKeyRef": {"type": "object", "required": ["name", "key"], "additionalProperties": false, "properties": {"name": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}}}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "modelConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {"type": "boolean"},
+        "name": {"type": "string", "minLength": 1},
+        "provider": {"enum": ["OpenAI", "Anthropic", "Ollama"]},
+        "model": {"type": "string"},
+        "baseUrl": {"type": "string", "not": {"pattern": "^https?://(\\[.*\\]|[0-9.]+|localhost|127\\.0\\.0\\.1)(:[0-9]+)?(/.*)?$"}},
+        "apiFormat": {"enum": ["", "chatCompletions", "responses"]},
+        "apiKeySecret": {"type": "string"},
+        "apiKeySecretKey": {"type": "string"}
+      }
+    },
+    "mcpServers": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": ["name", "url", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"},
+          "url": {"type": "string", "pattern": "^https?://", "not": {"pattern": "^https?://(\\[.*\\]|[0-9.]+|localhost|127\\.0\\.0\\.1)(:[0-9]+)?(/.*)?$"}},
+          "description": {"type": "string", "minLength": 1},
+          "protocol": {"enum": ["SSE", "STREAMABLE_HTTP"]},
+          "requireApproval": {"type": "boolean"},
+          "tools": {"type": "array", "maxItems": 50, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "headersFrom": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "object",
+              "required": ["name", "valueFrom"],
+              "additionalProperties": false,
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "valueFrom": {
+                  "type": "object",
+                  "required": ["type", "name", "key"],
+                  "additionalProperties": false,
+                  "properties": {"type": {"enum": ["Secret", "ConfigMap"]}, "name": {"type": "string", "minLength": 1}, "key": {"type": "string", "minLength": 1}}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

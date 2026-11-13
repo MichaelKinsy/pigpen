@@ -3,7 +3,7 @@
 // not exist once it is installed from npm. The install proof with the real pig is scripts/npm-packages-install.test.mjs.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { describe, it, after } from 'node:test';
@@ -115,5 +115,37 @@ describe('buildPackageTree', () => {
     assert.deepEqual(packedProblems(tree, packed), []);
     assert.ok(packed.some((f) => f.endsWith('third_party/agent-host-protocol-go/go.mod')));
     assert.deepEqual(packedProblems(tree, packed.filter((f) => !f.endsWith('go.sum'))).length > 0, true, 'a missing go.sum is reported');
+  });
+  it('does not ask for the go.mod of a tree the Package does not ship, and still asks for the one of a tree it does', () => {
+    const tree = buildPackageTree('kagent', out);
+    const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
+    assert.ok(existsSync(join(tree, 'harness/adapter/go.mod')), 'the harness module is in the component directory');
+    assert.equal(packed.some((f) => f.startsWith('harness/')), false, 'and npm does not pack it');
+    assert.deepEqual(packedProblems(tree, packed), []);
+    assert.ok(packedProblems(tree, packed.filter((f) => !f.endsWith('kagent-policy/go.mod'))).includes('extensions/kagent-policy/go.mod is not packed'));
+  });
+  describe('go.mod and go.sum of a module the Package builds with, not covered by a Resource entry', () => {
+    // hardening has no extension (its `pi` is empty), so only the go.mod rule and the go.work `use` rule can report these.
+    const packedOf = (tree) => JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
+    it('asks for the go.sum of a packed module', () => {
+      const tree = buildPackageTree('hardening', out);
+      const packed = packedOf(tree);
+      assert.deepEqual(packedProblems(tree, packed), []);
+      assert.deepEqual(packedProblems(tree, packed.filter((f) => f !== 'policy/cedar/go.sum')), ['policy/cedar/go.sum is not packed']);
+      assert.deepEqual(packedProblems(tree, packed.filter((f) => f !== 'go.mod')), ['go.mod is not packed']);
+    });
+    it('asks for a module the packed go.work uses even when none of its files is packed', () => {
+      const tree = buildPackageTree('hardening', out);
+      const packed = packedOf(tree);
+      assert.deepEqual(packedProblems(tree, packed.filter((f) => !f.startsWith('policy/cedar/'))), ['policy/cedar/go.mod is not packed', 'policy/cedar/go.sum is not packed']);
+    });
+    it('asks for the go.mod of a directory the Package ships, no go.work needed, and not for one it does not ship', () => {
+      const tree = buildPackageTree('hardening', out);
+      const packed = packedOf(tree);
+      mkdirSync(join(tree, 'tools/side'), { recursive: true });
+      writeFileSync(join(tree, 'tools/side/go.mod'), 'module side\n');
+      assert.deepEqual(packedProblems(tree, packed), [], 'nothing of tools/side is packed: a choice');
+      assert.deepEqual(packedProblems(tree, [...packed, 'tools/side/side.go']), ['tools/side/go.mod is not packed'], 'a file of it is packed: a defect');
+    });
   });
 });

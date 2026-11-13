@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
-  PIG_COMMIT: '526c86df885eba5e214355e7f70205e06d59bfa2' # PiG v0.5.3
+  PIG_COMMIT: 'beb56447c476da70d05d8e1e1ca9e993b367cb8b' # PiG v0.7.0
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -186,6 +186,11 @@ jobs:
           cache-dependency-path: '**/go.sum'
       - name: Download the pinned PiG release for ${{ matrix.target }} and verify its checksum
         run: node scripts/fetch-pig.mjs --target '${{ matrix.target }}' --out "$RUNNER_TEMP/pig" --github-env
+      # The kagent adapter's Windows process-group code (job object, suspended start) runs nowhere else. It comes before the Piglet builds so that a failed build does not skip it.
+      - name: Test the kagent adapter's process groups
+        if: ${{ runner.os == 'Windows' }}
+        # Only the process-group tests: the package's file tests assert unix modes and directory sync, which Windows does not have.
+        run: go -C components/kagent/harness/adapter test -count=1 -v -run 'TestKill' ./internal/fsutil
       - name: Build all Piglets for ${{ matrix.target }} and smoke every Binary
         env:
           PIG_HOME: ${{ runner.temp }}/pig-home

@@ -131,20 +131,44 @@ export function buildPackageTree(dir, outRoot, { directory = root, repository = 
   return target;
 }
 
-/** What a packed list lacks that a Go extension or the docs need: go.mod and go.sum anywhere, the root documents, every Resource file. */
+/**
+ * Whether a packed file lies in the directory of `rel` or below it. A go.mod or go.sum that is not packed is a defect in a
+ * directory the Package ships (the build of an extension needs both), and a choice in a directory it does not ship at all
+ * (a harness or proof tree the Package's `files` leave out because it is not part of what a user installs).
+ */
+function sharesPackedDirectory(rel, packed) {
+  const directory = rel.slice(0, rel.lastIndexOf('/') + 1);
+  return packed.some((file) => file.startsWith(directory));
+}
+
+/**
+ * What a packed list lacks that a Go extension or the docs need: go.mod and go.sum in every directory the Package ships, and in
+ * every directory a packed go.work `use`s inside the Package (a module the Package builds with is shipped even when `files` names
+ * none of its other files), the root documents, every Resource file.
+ */
 export function packedProblems(tree, packed) {
   const have = new Set(packed);
   const problems = [];
+  const used = [];
   const walk = (path) => {
     for (const entry of readdirSync(path, { withFileTypes: true })) {
       if (['node_modules', '.git', 'port'].includes(entry.name)) continue;
       const full = join(path, entry.name);
       const rel = relative(tree, full).split(sep).join('/');
       if (entry.isDirectory()) walk(full);
-      else if (/(^|\/)(go\.mod|go\.sum)$/.test(rel) && !have.has(rel)) problems.push(`${rel} is not packed`);
+      else if (/(^|\/)(go\.mod|go\.sum)$/.test(rel) && !have.has(rel) && sharesPackedDirectory(rel, packed)) problems.push(`${rel} is not packed`);
+      else if (entry.name === 'go.work' && have.has(rel)) for (const dir of useEntries(readFileSync(full, 'utf8'))) used.push(relative(tree, resolve(path, dir)).split(sep).join('/'));
     }
   };
   walk(tree);
+  // A module outside the Package (a shared library, `../../../pigpen-<lib>`) is that Package's to ship.
+  for (const dir of used) {
+    if (dir === '..' || dir.startsWith('../')) continue;
+    for (const name of ['go.mod', 'go.sum']) {
+      const rel = dir ? `${dir}/${name}` : name;
+      if (existsSync(join(tree, rel)) && !have.has(rel)) problems.push(`${rel} is not packed`);
+    }
+  }
   for (const name of readdirSync(tree)) if (ROOT_FILES.test(name) && !have.has(name)) problems.push(`${name} is not packed`);
   const manifest = JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8'));
   for (const entries of [manifest.pi, manifest.pig]) for (const list of Object.values(entries ?? {})) {
@@ -157,7 +181,7 @@ export function packedProblems(tree, packed) {
       for (const file of files) { const rel = relative(tree, file).split(sep).join('/'); if (!have.has(rel)) problems.push(`${rel} is not packed`); }
     }
   }
-  return problems;
+  return [...new Set(problems)];
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {

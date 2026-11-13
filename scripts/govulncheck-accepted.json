@@ -1,0 +1,31 @@
+{
+  "note": "Reachable findings the gate (scripts/govulncheck.mjs) does not count, each with its evidence. A record excuses a finding only when the module directory, the vulnerable module AT THIS VERSION and the id all match, govulncheck names no fixed version, and every frame it reports is a package init (the package is linked in; no function of it is called). A call into the module, a new version, a new id or a fix turns the gate red again, and a record the run no longer reports fails the gate, so this list cannot go stale.",
+  "accepted": [
+    {
+      "directory": "components/kagent/harness/adapter",
+      "module": "github.com/ollama/ollama",
+      "version": "v0.40.13",
+      "ids": [
+        "GO-2025-3557",
+        "GO-2025-3558",
+        "GO-2025-3559",
+        "GO-2025-3582",
+        "GO-2025-3689",
+        "GO-2025-3695",
+        "GO-2025-3824",
+        "GO-2025-4251"
+      ],
+      "reason": "Eight advisories on the Ollama server (introduced 0, no fixed version, v0.40.15 is still affected). The adapter does not use Ollama: kagent's own packages do. cmd/kagent-pig calls kagent's adk/pkg/app.New, which imports adk/pkg/a2a, whose executor imports adk/pkg/models, which imports github.com/ollama/ollama/api for kagent's Ollama model client. The advisories name no symbol, so govulncheck reports the init of the linked packages (api, auth, envconfig, format, model, orderedmap, version) and nothing else; the adapter starts no Ollama server and serves no Ollama endpoint. kagent main (4de694355985) imports the same module at the same version, so a kagent bump does not remove it. kagent's own Claude Code and Codex harnesses (go/harness/claude/cmd/main.go, go/harness/codex/cmd/main.go at kagent main) import the same adk/pkg/app, so they link the same Ollama packages, and OSV lists no fixed version for any of the eight.",
+      "traces": [
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls api.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls auth.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls envconfig.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls format.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls model.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls orderedmap.init",
+        "cmd/kagent-pig/main.go:25:2: kagent.init calls app.init, which eventually calls version.init"
+      ],
+      "traces_note": "govulncheck -show traces at c7c1e47 printed exactly these seven for each of the eight ids; app is github.com/kagent-dev/kagent/go/adk/pkg/app, the init callees are packages of github.com/ollama/ollama (api, auth, envconfig, format, types/model, internal/orderedmap, version), reached through adk/pkg/a2a -> adk/pkg/models. Every frame is an init; the gate refuses the record if any frame is a call."
+    }
+  ]
+}

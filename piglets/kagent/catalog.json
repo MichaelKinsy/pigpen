@@ -1,0 +1,11 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-07",
+  "languages": ["go"],
+  "notes": [
+    "Inert unless KAGENT_PIG_POLICY names a policy file; with a policy it registers the MCP servers, holds the approval gate and offers ask_user, and an unusable policy stops PiG from starting.",
+    "The extension is Go and fuses into the Piglet Binary; it is built against PiG v0.7.0 and uses no dependency beyond the PiG SDK.",
+    "The manifest lists linux/amd64 and linux/arm64 for the kagent harness image; only linux/amd64 has been built and run, linux/arm64 is not a support claim.",
+    "Verified only against a hermetic mock model and a local MCP server; no real model provider was used."
+  ]
+}

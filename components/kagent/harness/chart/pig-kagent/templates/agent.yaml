@@ -1,0 +1,19 @@
+{{- if .Values.agent.create }}
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata:
+  name: {{ include "pig.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pig.labels" . | nindent 4 }}
+spec:
+  template:
+    ref:
+      name: {{ include "pig.name" . | quote }}
+  harnessRef:
+    name: {{ include "pig.harnessName" . | quote }}
+  {{- if .Values.egress.destinations }}
+  egressPolicyRefs:
+    - name: {{ include "pig.name" . }}-egress
+  {{- end }}
+{{- end }}

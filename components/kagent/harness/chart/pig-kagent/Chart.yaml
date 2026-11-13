@@ -1,0 +1,14 @@
+apiVersion: v2
+name: pig-kagent
+description: PiG as a kagent BYO Harness on Agent Substrate (Harness, AgentTemplate, Agent, EgressPolicy, optional ModelConfig and RemoteMCPServers). Ships no CRDs and no Secrets.
+type: application
+version: 0.1.0
+appVersion: "0.7.1"
+kubeVersion: ">=1.30.0-0"
+home: https://github.com/MichaelKinsy/pigpen
+annotations:
+  # Read by pig-kagent.sh check and test/validate.sh. Helm does not enforce them.
+  pig.dev/requires-kagent-api: api.kagent.dev/v1alpha3
+  pig.dev/requires-substrate-api: ate.dev/v1
+  pig.dev/tested-kagent: "v1.0.0"
+  pig.dev/tested-substrate: "v1.0.0"

@@ -1,0 +1,179 @@
+# Baseline agents for the harness comparison: Claude Code, Codex and pi-go (and approval-only variants of the first two), all
+# talking to the hermetic mock in ../mockllm. Namespace kagent; WorkerPool kagent-default (created by `kagent install`).
+#   kubectl apply -f baselines.yaml
+# Replace PIGO_IMAGE_DIGEST below. pi-go (https://github.com/dimetron/pi-go, MIT) is not built by this repository: build its
+# specs/kagent/Dockerfile yourself for the architecture of your nodes (at v0.3.10 the published amd64 manifest holds an arm64 binary;
+# `docker build --build-arg TARGETARCH=amd64 ...` fixed it) and push it to the local registry. On kagent rc3 the pi-go harness receives
+# no MCP tools and has no approval path, which is part of the comparison.
+apiVersion: v1
+kind: Secret
+metadata: {name: mock-key, namespace: kagent}
+stringData: {key: placeholder-not-a-real-key}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata: {name: mock-mcp, namespace: kagent}
+spec:
+  description: hermetic mock MCP server, tools kagent_probe and echo
+  url: http://kagent-mock.kagent.svc.cluster.local:8081/mcp
+  protocol: STREAMABLE_HTTP
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: RemoteMCPServer
+metadata: {name: mock-mcp-approval, namespace: kagent}
+spec:
+  description: the same mock MCP server, bound with requireApproval
+  url: http://kagent-mock.kagent.svc.cluster.local:8081/mcp
+  protocol: STREAMABLE_HTTP
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata: {name: mock-anthropic, namespace: kagent}
+spec:
+  provider: Anthropic
+  model: mock-model
+  apiKeySecret: mock-key
+  apiKeySecretKey: key
+  anthropic:
+    baseUrl: http://kagent-mock.kagent.svc.cluster.local:8080
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata: {name: mock-openai-responses, namespace: kagent}
+spec:
+  provider: OpenAI
+  model: mock-model
+  apiKeySecret: mock-key
+  apiKeySecretKey: key
+  openAI:
+    baseUrl: http://kagent-mock.kagent.svc.cluster.local:8080/v1
+    apiFormat: responses
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: ModelConfig
+metadata: {name: mock-openai, namespace: kagent}
+spec:
+  provider: OpenAI
+  model: mock-model
+  apiKeySecret: mock-key
+  apiKeySecretKey: key
+  openAI:
+    baseUrl: http://kagent-mock.kagent.svc.cluster.local:8080/v1
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata: {name: claude-basket, namespace: kagent}
+spec:
+  claude: {}
+  substrate:
+    workerPoolRef: {name: kagent-default}
+    snapshotPolicy: {location: "gs://ate-snapshots/kagent/"}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata: {name: claude-basket, namespace: kagent}
+spec:
+  harnessRef: {name: claude-basket}
+  template:
+    inline:
+      description: Claude Code harness baseline
+      systemPrompt: You are a test agent. Answer briefly.
+      modelConfig: {name: mock-anthropic}
+      tools:
+      - mcp:
+          server: {kind: RemoteMCPServer, name: mock-mcp}
+      - mcp:
+          requireApproval: true
+          server: {kind: RemoteMCPServer, name: mock-mcp-approval}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata: {name: claude-approve, namespace: kagent}
+spec:
+  harnessRef: {name: claude-basket}
+  template:
+    inline:
+      description: Claude Code harness, approval-only MCP binding
+      systemPrompt: You are a test agent. Answer briefly.
+      modelConfig: {name: mock-anthropic}
+      tools:
+      - mcp:
+          requireApproval: true
+          server: {kind: RemoteMCPServer, name: mock-mcp-approval}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata: {name: codex-basket, namespace: kagent}
+spec:
+  codex: {}
+  substrate:
+    workerPoolRef: {name: kagent-default}
+    snapshotPolicy: {location: "gs://ate-snapshots/kagent/"}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata: {name: codex-basket, namespace: kagent}
+spec:
+  harnessRef: {name: codex-basket}
+  template:
+    inline:
+      description: Codex harness baseline
+      systemPrompt: You are a test agent. Answer briefly.
+      modelConfig: {name: mock-openai-responses}
+      tools:
+      - mcp:
+          server: {kind: RemoteMCPServer, name: mock-mcp}
+      - mcp:
+          requireApproval: true
+          server: {kind: RemoteMCPServer, name: mock-mcp-approval}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata: {name: codex-approve, namespace: kagent}
+spec:
+  harnessRef: {name: codex-basket}
+  template:
+    inline:
+      description: Codex harness, approval-only MCP binding
+      systemPrompt: You are a test agent. Answer briefly.
+      modelConfig: {name: mock-openai-responses}
+      tools:
+      - mcp:
+          requireApproval: true
+          server: {kind: RemoteMCPServer, name: mock-mcp-approval}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Harness
+metadata: {name: pigo-basket, namespace: kagent}
+spec:
+  byo: {}
+  workload:
+    image: localhost:5001/pi-go-kagent@sha256:PIGO_IMAGE_DIGEST
+    command: ["pi", "a2a"]
+  env:
+  - {name: PI_MODEL, value: mock-model}
+  - {name: PI_BASE_URL, value: "http://kagent-mock.kagent.svc.cluster.local:8080/v1"}
+  - {name: KAGENT_API_URL, value: "http://kagent-controller.kagent.svc.cluster.local:8083"}
+  - {name: KAGENT_NAMESPACE, value: kagent}
+  # host:port, not a URL: pi-go hands the value straight to its gRPC client
+  - {name: KAGENT_TASK_STORE_ADDRESS, value: "kagent-controller.kagent.svc.cluster.local:8083"}
+  substrate:
+    workerPoolRef: {name: kagent-default}
+    snapshotPolicy: {location: "gs://ate-snapshots/kagent/"}
+---
+apiVersion: api.kagent.dev/v1alpha3
+kind: Agent
+metadata: {name: pigo-basket, namespace: kagent}
+spec:
+  harnessRef: {name: pigo-basket}
+  template:
+    inline:
+      description: pi-go harness baseline
+      systemPrompt: You are a test agent. Answer briefly.
+      modelConfig: {name: mock-openai}
+      tools:
+      - mcp:
+          server: {kind: RemoteMCPServer, name: mock-mcp}
+      - mcp:
+          requireApproval: true
+          server: {kind: RemoteMCPServer, name: mock-mcp-approval}

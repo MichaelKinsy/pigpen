@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Workflow hardening gate, part of `npm run quality`: the checks PiG's `make compliance` makes on its own workflows.
 // Every workflow under .github/workflows must pin each action to a full commit SHA, ask for a read-only token, use no
-// secrets and no pull_request_target, never persist the checkout token, and bound every job. Three workflows are excepted,
+// secrets and no pull_request_target, never persist the checkout token, and bound every job. Four workflows are excepted,
 // each with its own rules below. release.yml (releaseProblems) reads PIGLET_SIGNING_KEY, an environment secret read only
 // by a step that runs the pinned pig, holds the release writes it needs, and has a tag filter that no Package tag can
 // match. release-archon-provider.yml (archonReleaseProblems) reads ARCHON_PROVIDER_PIG_TOKEN, an environment secret read only
@@ -15,7 +15,7 @@
 // Every actions/setup-go step must read the .go-version of the PiG checkout (goToolchainProblems), never a go.mod floor.
 //
 // This checks hardening and drift, not behaviour: what the workflow does is shown by running it.
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
@@ -26,6 +26,10 @@ const shaPinned = /^[^@\s]+@[0-9a-f]{40}$/;
 const releaseWrites = { build: ['id-token: write', 'attestations: write'], publish: ['contents: write'] };
 // npm-publish.yml publishes with npm trusted publishing (OIDC): id-token in its one publish job, nothing else.
 const npmWrites = { publish: ['id-token: write'] };
+// kagent-harness-image.yml: the registry push in build (never id-token), the keyless signature and the attestations in publish (the one job with id-token), the release in release.
+const KAGENT_IMAGE_WORKFLOW = 'kagent-harness-image.yml';
+const KAGENT_IMAGE_TAG = 'components/kagent/harness/v*';
+const kagentImageWrites = { build: ['packages: write'], publish: ['packages: write', 'id-token: write', 'attestations: write', 'artifact-metadata: write'], release: ['contents: write'] };
 
 /** A positive timeout-minutes, or `${{ matrix.<key> }}` where every matrix.include entry sets <key> to a positive number. */
 function boundedTimeout(job) {
@@ -51,7 +55,7 @@ export function hardeningProblems(name, text) {
   if (![RELEASE_WORKFLOW, NOTIFY_WORKFLOW, ARCHON_RELEASE_WORKFLOW].includes(name) && /\$\{\{\s*secrets\./.test(text)) problems.push(`${name}: uses a secret`);
 
   for (const [id, job] of jobs) {
-    const allowed = name === RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
+    const allowed = name === RELEASE_WORKFLOW ? releaseWrites[id] ?? [] : name === KAGENT_IMAGE_WORKFLOW ? kagentImageWrites[id] ?? [] : name === 'npm-publish.yml' ? npmWrites[id] ?? [] : [];
     for (const grant of writes(job.permissions)) if (!allowed.includes(grant)) problems.push(`${name}: job ${id}: ${grant}`);
     if (job.uses && !job.uses.startsWith('./') && !shaPinned.test(job.uses)) problems.push(`${name}: ${job.uses} is not pinned to a full commit SHA`);
     if (!job.uses && !boundedTimeout(job)) problems.push(`${name}: job ${id} has no timeout-minutes`);
@@ -217,6 +221,103 @@ function tagFilter(pattern) {
   return new RegExp('^' + pattern.split('**').map((part) => part.split('*').map((lit) => lit.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&')).join('[^/]*')).join('.*') + '$');
 }
 
+/** The grype policy of the kagent harness image gate: the one file an exception may be written in. */
+export const GRYPE_CONFIG = 'components/kagent/release/.grype.yaml';
+
+/**
+ * The gate fails on every fixed High or worse finding. An exception is allowed only as a reviewed, dated, narrowly scoped ignore entry:
+ * a vulnerability id plus the exact package name and version, its type and the exact file location (never a bare vulnerability or a package wildcard, so the same
+ * finding anywhere else still fails), at most five entries, and a `# expires: YYYY-MM-DD` line no more than 120 days after the
+ * `# reviewed:` date line, which the release workflow also enforces at run time.
+ */
+export function grypeIgnoreProblems(text) {
+  const problems = [];
+  const config = parse(text) ?? {};
+  const unknown = Object.keys(config).filter((key) => key !== 'ignore');
+  if (unknown.length) problems.push(`${GRYPE_CONFIG}: only an ignore list is allowed, not ${unknown.join(', ')}`);
+  const ignore = config.ignore ?? [];
+  if (!Array.isArray(ignore)) return [...problems, `${GRYPE_CONFIG}: ignore must be a list`];
+  if (ignore.length > 5) problems.push(`${GRYPE_CONFIG}: ${ignore.length} ignore entries; at most 5`);
+  ignore.forEach((entry, index) => {
+    const where = `${GRYPE_CONFIG}: ignore[${index}]`;
+    if (typeof entry?.vulnerability !== 'string' || !/^[A-Za-z0-9-]+$/.test(entry.vulnerability)) problems.push(`${where}: needs one vulnerability id`);
+    const pkg = entry?.package;
+    if (!pkg?.name || !pkg?.version || !pkg?.type || /[*?]/.test(`${pkg.name}${pkg.version}`)) problems.push(`${where}: needs a package with an exact name, an exact version and a type, no wildcard`);
+    // grype reads the file only from package.location; a top-level location key is silently ignored, which would leave the entry unscoped.
+    if (typeof pkg?.location !== 'string' || !/^\/[^*?]+$/.test(pkg.location)) problems.push(`${where}: package needs an exact absolute location (the path of the one binary), no wildcard`);
+    for (const key of Object.keys(entry ?? {})) if (!['vulnerability', 'package'].includes(key)) problems.push(`${where}: ${key} widens the exception; only vulnerability and package are allowed`);
+  });
+  if (ignore.length) {
+    const expires = /^# expires: (\d{4}-\d{2}-\d{2})$/m.exec(text)?.[1];
+    const reviewed = /^# reviewed: (\d{4}-\d{2}-\d{2})$/m.exec(text)?.[1];
+    if (!expires || !reviewed) problems.push(`${GRYPE_CONFIG}: an exception needs a "# reviewed: YYYY-MM-DD" line and a "# expires: YYYY-MM-DD" line`);
+    else if ((Date.parse(expires) - Date.parse(reviewed)) / 86400000 > 120 || Date.parse(expires) <= Date.parse(reviewed)) problems.push(`${GRYPE_CONFIG}: the exception must expire after its review date and within 120 days of it`);
+  }
+  return problems;
+}
+
+/**
+ * kagent-harness-image.yml's own rules, on top of hardeningProblems. It builds, signs and publishes the pig-kagent container image on a
+ * pushed `components/kagent/harness/v*` tag and nothing else. It uses no secret (the registry login and the release use the job's own
+ * token), builds only push by digest and never hold id-token, and only `publish` (and `release`) run in the protected `release-image`
+ * environment: signing and attesting happen in `publish` alone, so the signing identity is one workflow, one job, one tag pattern.
+ * The build matrix names both architectures, each on its native runner (scripts/runners.mjs), because PiG's Piglet build runs `go build`
+ * for the machine it runs on.
+ */
+export function kagentImageProblems(name, text, runners = {}) {
+  if (name !== KAGENT_IMAGE_WORKFLOW) return [];
+  const problems = [];
+  const workflow = parse(text) ?? {};
+  const on = workflow.on ?? {};
+  const tags = on.push?.tags;
+  if (Object.keys(on).join() !== 'push' || Object.keys(on.push ?? {}).join() !== 'tags' || !Array.isArray(tags) || tags.join() !== KAGENT_IMAGE_TAG) {
+    problems.push(`${name}: must run only on a pushed ${KAGENT_IMAGE_TAG} tag, nothing else`);
+  }
+  const jobs = workflow.jobs ?? {};
+  for (const id of ['plan', 'build', 'publish', 'release']) if (!jobs[id]) problems.push(`${name}: job ${id} is missing`);
+  if (![jobs.publish?.needs ?? []].flat().includes('build')) problems.push(`${name}: publish must need build, so nothing is signed before both architectures built and passed the scan`);
+  if (![jobs.release?.needs ?? []].flat().includes('publish')) problems.push(`${name}: release must need publish`);
+  const include = jobs.build?.strategy?.matrix?.include ?? [];
+  for (const arch of ['amd64', 'arm64']) {
+    const entry = include.find((candidate) => candidate.arch === arch);
+    if (!entry) problems.push(`${name}: the build matrix has no ${arch} entry`);
+    else if (runners[`linux/${arch}`] && entry.runner !== runners[`linux/${arch}`]) problems.push(`${name}: ${arch} builds on ${entry.runner}, not the native ${runners[`linux/${arch}`]}`);
+  }
+  for (const [id, job] of Object.entries(jobs)) {
+    const environment = typeof job.environment === 'string' ? job.environment : job.environment?.name;
+    if (['publish', 'release'].includes(id) && environment !== 'release-image') problems.push(`${name}: job ${id} must run in environment: release-image`);
+    for (const step of job.steps ?? []) {
+      const uses = String(step.uses ?? '');
+      const run = String(step.run ?? '');
+      if (uses.startsWith('docker/login-action@') && String(step.with?.password ?? '').trim() !== '${{ github.token }}') {
+        problems.push(`${name}: job ${id}: the registry login must use \${{ github.token }}`);
+      }
+      if (uses.startsWith('docker/build-push-action@') && !/push-by-digest=true/.test(String(step.with?.outputs ?? ''))) {
+        problems.push(`${name}: job ${id}: an image is pushed by digest only (outputs must include push-by-digest=true), so no tag exists before the index is signed`);
+      }
+      if (id !== 'publish' && (/(^|[\s;&|(])cosign\s+sign\b/.test(run) || /^(actions\/attest(-build-provenance)?|sigstore\/cosign-installer)@/.test(uses))) {
+        problems.push(`${name}: job ${id}: signing and attesting belong in the publish job only`);
+      }
+      if (id !== 'release' && /(^|[\s;&|(])gh\s+release\b/.test(run)) problems.push(`${name}: job ${id}: a GitHub Release is created in the release job only`);
+      if (uses.startsWith('anchore/scan-action@')) {
+        if (step.with?.config !== GRYPE_CONFIG) problems.push(`${name}: job ${id}: the vulnerability gate must read ${GRYPE_CONFIG}, the one place an exception can be written`);
+        if (step.with?.['only-fixed'] !== true || step.with?.['fail-build'] !== true || step.with?.['severity-cutoff'] !== 'high') {
+          problems.push(`${name}: job ${id}: the vulnerability gate must keep only-fixed: true, severity-cutoff: high and fail-build: true`);
+        }
+      }
+    }
+  }
+  // The steps that make the gate and the signature real must exist, not only be well formed when present.
+  const steps = (id) => jobs[id]?.steps ?? [];
+  const count = (id, test) => steps(id).filter((step) => test(String(step.uses ?? ''), String(step.run ?? ''))).length;
+  const scans = count('build', (uses) => uses.startsWith('anchore/scan-action@'));
+  if (scans !== 1) problems.push(`${name}: job build must have exactly one anchore/scan-action step (the vulnerability gate), found ${scans}`);
+  if (count('publish', (_, run) => /(^|[\s;&|(])cosign\s+sign\b/.test(run)) !== 1) problems.push(`${name}: job publish must have exactly one cosign sign step`);
+  if (count('publish', (uses) => uses.startsWith('actions/attest-build-provenance@')) !== 1) problems.push(`${name}: job publish must have exactly one actions/attest-build-provenance step`);
+  if (count('publish', (uses) => uses.startsWith('actions/attest@')) !== 2) problems.push(`${name}: job publish must have exactly two actions/attest steps (the amd64 and the arm64 SBOM)`);
+  return problems;
+}
+
 /** A Piglet tag (`<name>/v<x>`) must start only release.yml, a Package tag (`components/<name>/v<x>`) only release-package.yml. */
 export function tagProblems(workflows) {
   const problems = [];
@@ -228,6 +329,22 @@ export function tagProblems(workflows) {
     const regexes = patterns.map((pattern) => [pattern, tagFilter(pattern)]);
     if (!regexes.some(([, re]) => re.test(wants))) problems.push(`${file}: the tag filter does not match the ${kind} tag ${wants} (filters: ${patterns.join(', ')})`);
     for (const [pattern, re] of regexes) if (re.test(refuses)) problems.push(`${file}: tag filter ${pattern} also matches the ${other} tag ${refuses}, so that tag would start this workflow`);
+  }
+  // The kagent harness image tag (components/kagent/harness/v<x>) must start kagent-harness-image.yml and no other workflow.
+  const harness = 'components/kagent/harness/v0.1.0';
+  for (const [file, workflow] of Object.entries(workflows)) {
+    if (file === KAGENT_IMAGE_WORKFLOW) continue;
+    for (const pattern of workflow?.on?.push?.tags ?? []) {
+      if (tagFilter(pattern).test(harness)) problems.push(`${file}: tag filter ${pattern} also matches the kagent harness image tag ${harness}, so that tag would start this workflow`);
+    }
+  }
+  const imagePatterns = workflows[KAGENT_IMAGE_WORKFLOW]?.on?.push?.tags;
+  if (imagePatterns) {
+    const regexes = imagePatterns.map((pattern) => [pattern, tagFilter(pattern)]);
+    if (!regexes.some(([, re]) => re.test(harness))) problems.push(`${KAGENT_IMAGE_WORKFLOW}: the tag filter does not match the kagent harness image tag ${harness} (filters: ${imagePatterns.join(', ')})`);
+    for (const [pattern, re] of regexes) {
+      for (const refused of [piglet, pkg, 'npm/v0.1.0']) if (re.test(refused)) problems.push(`${KAGENT_IMAGE_WORKFLOW}: tag filter ${pattern} also matches ${refused}, so that tag would start this workflow`);
+    }
   }
   return problems;
 }
@@ -357,7 +474,7 @@ async function main() {
   for (const file of readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).sort()) {
     const text = readFileSync(join(dir, file), 'utf8');
     parsed[file] = parse(text);
-    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...archonReleaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text));
+    problems.push(...hardeningProblems(file, text), ...releaseProblems(file, text), ...archonReleaseProblems(file, text), ...notifyProblems(file, text), ...npmPublishProblems(file, text), ...goToolchainProblems(file, text), ...kagentImageProblems(file, text, runners));
     const requirement = JSON.parse(readFileSync(join(root, 'scripts/pig-requirement.json'), 'utf8'));
     if (file !== 'ci.yml' && /MichaelKinsy\/PiG/.test(text)) problems.push(...pinProblems(parsed[file], requirement, file));
     if (file === 'ci.yml') {
@@ -367,6 +484,8 @@ async function main() {
     }
   }
   problems.push(...tagProblems(parsed));
+  const grypeConfig = join(root, GRYPE_CONFIG);
+  if (existsSync(grypeConfig)) problems.push(...grypeIgnoreProblems(readFileSync(grypeConfig, 'utf8')));
   const texts = Object.fromEntries(readdirSync(dir).filter((f) => /\.ya?ml$/.test(f)).map((f) => [f, readFileSync(join(dir, f), 'utf8')]));
   problems.push(...cacheProblems({ ...texts, parsed }));
   for (const problem of problems) console.error(`check-workflows: ${problem}`);
