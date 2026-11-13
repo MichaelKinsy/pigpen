@@ -41,7 +41,10 @@ A Binary built without a payload starts, says it carries no REA payload for its 
 `REA_SOURCE=/path/to/rea npm run payload:rea` packs a local REA checkout instead (it must have `dist/`); that payload
 reports `REA <version> dev <commit>` and is never released.
 
-The Package also carries the Piglet's two skills ([`skills/`](skills/)): `pigpen-derive-a-harness`, and REA's own skill as
+The Package also carries the Piglet's two skills ([`skills/`](skills/)). `pigpen-derive-a-harness` is ours: the loop
+from REA evidence to a piglet, with what derivations got wrong written in as rules that name no particular target
+(a result that was only partial, a piglet that looks right and has no effect, "done" taken from a comparison score; see
+its `references/`). The other is REA's own skill, as
 `pigpen-reverse-engineer-anything`, which `npm run payload:rea -- --sync-skill` writes from the pinned package: the published
 files byte for byte, except the frontmatter name, which Pigpen's skill rule prefixes ([`scripts/skill.mjs`](scripts/skill.mjs)).
 A payload build fails when the copy has drifted.

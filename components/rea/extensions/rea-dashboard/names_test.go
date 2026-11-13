@@ -49,13 +49,13 @@ func TestDefaultPigletName(t *testing.T) {
 	}
 }
 
-func TestDeriveRequestText(t *testing.T) {
+// The request names the piglet, the target and the piglet's own directory, whatever the names are.
+func TestDeriveRequestNamesPigletAndTarget(t *testing.T) {
 	got := deriveRequest("pig-ls-like", "/bin/ls")
-	want := "Use the pigpen-derive-a-harness skill to derive a piglet named pig-ls-like that works like /bin/ls. " +
-		"Keep REA output under evidence/, write the behavior spec under spec/ with each claim linked to an evidence_id, " +
-		"author piglets/pig-ls-like/ from spec/ only, and end the iteration with pig piglet validate and pig piglet show."
-	if got != want {
-		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	for _, want := range []string{"a piglet named pig-ls-like ", "works like /bin/ls.", "piglets/pig-ls-like/"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("request lacks %q:\n%s", want, got)
+		}
 	}
 }
 

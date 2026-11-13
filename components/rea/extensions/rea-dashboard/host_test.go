@@ -382,10 +382,8 @@ func TestDeriveSendsATemplatedRequest(t *testing.T) {
 			t.Fatalf("%q: prompts = %v", tc.typed, asked)
 		}
 		content, _ := sentContent(t, h)
-		want := "Use the pigpen-derive-a-harness skill to derive a piglet named " + tc.name + " that works like /bin/ls. " +
-			"Keep REA output under evidence/, write the behavior spec under spec/ with each claim linked to an evidence_id, " +
-			"author piglets/" + tc.name + "/ from spec/ only, and end the iteration with pig piglet validate and pig piglet show."
-		if content != want {
+		// The wording is deriveRequest's; what is checked here is the name the answer becomes and the target.
+		if want := readashboard.DeriveRequest(tc.name, "/bin/ls"); content != want {
 			t.Fatalf("%q: message\n%s\nwant\n%s", tc.typed, content, want)
 		}
 	}

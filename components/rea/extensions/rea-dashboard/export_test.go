@@ -13,3 +13,6 @@ func WithRunner(run func(ctx context.Context, node, entry string, args []string,
 		return run(ctx, srv.Node, srv.Entry, args, limit)
 	}, time.Now)
 }
+
+// DeriveRequest is the message of the Derive piglet action, for host tests that check which name and target it carries.
+func DeriveRequest(name, target string) string { return deriveRequest(name, target) }

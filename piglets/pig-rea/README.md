@@ -7,7 +7,8 @@ works, down to the binary level." `pig-rea` is a PiG Binary whose agent is set u
   both embedded in the Binary. No Node, npm, npx or network is needed at runtime. The first start of a REA version unpacks
   it into `~/.pig/agent/rea/` (about 2 s); later starts reuse it.
 - **REA's skill** (`pigpen-reverse-engineer-anything`, REA's own text) and **`pigpen-derive-a-harness`**, which turns REA
-  evidence about an agent harness or CLI into a behavior spec and then into a new piglet.
+  evidence about an agent harness, CLI or terminal app into an inventory of its surface, a behavior spec and a new
+  piglet, measures the piglet against the target, and re-checks the inventory before anything is called done.
 - **A REA dashboard**: a header with REA's version and providers, a widget with the REA calls in flight (including those
   made inside codemode scripts), the `/rea` overlay (investigation timeline, targets, providers, about) and compact cards
   for direct REA calls.

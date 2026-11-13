@@ -158,8 +158,9 @@ func investigateRequest(target, question string) string {
 // deriveRequest is the message the Derive piglet action sends.
 func deriveRequest(name, target string) string {
 	return fmt.Sprintf("Use the pigpen-derive-a-harness skill to derive a piglet named %s that works like %s. "+
-		"Keep REA output under evidence/, write the behavior spec under spec/ with each claim linked to an evidence_id, "+
-		"author piglets/%s/ from spec/ only, and end the iteration with pig piglet validate and pig piglet show.",
+		"Keep REA output under evidence/, list the target's surface in spec/inventory.md, write the behavior spec under "+
+		"spec/ with each claim linked to an evidence_id, author piglets/%s/ from spec/ only, and end the iteration with "+
+		"pig piglet validate and pig piglet show.",
 		name, target, name)
 }
 
