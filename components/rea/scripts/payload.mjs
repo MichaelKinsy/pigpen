@@ -4,11 +4,14 @@
 //   node components/rea/scripts/payload.mjs [<os>/<arch>]        default: this machine
 //   REA_SOURCE=/path/to/rea node components/rea/scripts/payload.mjs   pack a local REA checkout instead (dev, never released)
 //   node components/rea/scripts/payload.mjs --sync-skill         write the pinned REA skill into skills/ (scripts/skill.mjs) and exit
+//   node components/rea/scripts/payload.mjs --skills             refresh only the skills the member embeds (after editing skills/) and exit
 //
 // Output, read by the rea member's go:embed (extensions/rea/payload/, gitignored):
 //   <os>_<arch>.tar.zst  deterministic tar (sorted, uid/gid 0, mtime 0) of node/ (the pinned Node), rea/ (the published package
 //                        with its production dependencies installed from REA's tagged lockfile) and payload.json
 //   <os>_<arch>.json     what the member reads at startup: digests, versions, file count
+//   skills.json          the Piglet's skill trees from skills/ (path -> base64). A Binary bakes only each SKILL.md's body and gives
+//                        the model no readable location for it, so the member unpacks these and names their paths (skills.go)
 // Payloads for other targets are removed, so a Binary embeds only its own.
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -27,6 +30,8 @@ const payloadDir = join(component, 'extensions/rea/payload');
 // Downloaded Node archives, checked against rea.lock.json on every use. Under dist/, which staging never copies.
 const cacheDir = join(repository, 'dist/cache/rea');
 const pigletSkill = join(component, 'skills', shippedSkill);
+const skillsRoot = join(component, 'skills');
+const embeddedSkills = join(payloadDir, 'skills.json');
 
 const goTargets = { 'linux/amd64': ['linux', 'x64'], 'linux/arm64': ['linux', 'arm64'], 'darwin/arm64': ['darwin', 'arm64'], 'darwin/amd64': ['darwin', 'x64'], 'windows/amd64': ['win32', 'x64'] };
 
@@ -182,8 +187,28 @@ function checkLockRoot(pkg, lockfile) {
   }
 }
 
+/** Writes the Piglet's skill trees as the one file the member embeds (name -> base64 bytes), replacing what was there. A
+ * directory of copies would be a second set of SKILL.md files to Pigpen's skill rules. */
+function embedSkills() {
+  const files = {};
+  const names = [];
+  for (const name of readdirSync(skillsRoot).sort()) {
+    const from = join(skillsRoot, name);
+    if (!lstatSync(from).isDirectory()) continue;
+    names.push(name);
+    for (const rel of skillFiles(from)) files[`${name}/${rel}`] = readFileSync(join(from, rel)).toString('base64');
+  }
+  writeFileSync(embeddedSkills, `${JSON.stringify({ files }, null, 1)}\n`);
+  console.error(`payload: ${relative(repository, embeddedSkills)} holds ${names.join(', ')} (${Object.keys(files).length} files)`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes('--skills')) {
+    mkdirSync(payloadDir, { recursive: true });
+    embedSkills();
+    return;
+  }
   if (args.includes('--sync-skill')) {
     const work = mkdtempSync(join(tmpdir(), 'rea-skill-'));
     try {
@@ -287,8 +312,9 @@ async function main() {
     const compressed = readFileSync(out);
     const sidecar = { ...info, archiveSha256: sha256(compressed), archiveBytes: compressed.length };
     writeFileSync(join(payloadDir, `${stem}.json`), `${JSON.stringify(sidecar, null, 2)}\n`);
+    embedSkills();
     for (const name of readdirSync(payloadDir)) {
-      if (/\.(tar\.zst|json)$/.test(name) && !name.startsWith(`${stem}.`)) rmSync(join(payloadDir, name));
+      if (/\.(tar\.zst|json)$/.test(name) && !name.startsWith(`${stem}.`) && name !== 'skills.json') rmSync(join(payloadDir, name));
     }
     const mb = (n) => `${(n / 1e6).toFixed(1)} MB`;
     console.error(`payload: ${relative(repository, out)} ${mb(compressed.length)} (${files} files, ${mb(bytes)} unpacked), REA ${pkg.version}${dev ? ` dev ${dev.slice(0, 12)}` : ''}, Node ${lock.node.version}, ${((Date.now() - started) / 1000).toFixed(1)} s`);

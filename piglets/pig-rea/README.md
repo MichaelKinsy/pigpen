@@ -26,7 +26,7 @@ dist/bin/pig-rea
 ```
 
 Use your own provider and login as with `pig`. `/rea` opens the dashboard; `/rea-runtime status|verify|gc` reports, checks
-or cleans the unpacked REA. `-p` and `--mode rpc` give the scriptable harness, with the dashboard silent.
+or cleans the unpacked REA and skills. `-p` and `--mode rpc` give the scriptable harness, with the dashboard silent.
 
 ## Change it at launch, without rebuilding
 

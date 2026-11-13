@@ -49,6 +49,15 @@ its `references/`). The other is REA's own skill, as
 files byte for byte, except the frontmatter name, which Pigpen's skill rule prefixes ([`scripts/skill.mjs`](scripts/skill.mjs)).
 A payload build fails when the copy has drifted.
 
+**The agent reads the skills from disk, not from the Binary.** A Binary bakes only the body of each `SKILL.md`, and PiG
+lists a baked skill to the model with the location `builtin:piglet` and the instruction to load its file with the read
+tool. Nothing can read that location, and the files a skill links (`references/`) are not baked at all, so on its own the
+agent can never load either skill (only a user typing `/skill:<name>` gets the body). The `rea` member therefore embeds
+the skill trees (`payload/skills.json`, written by `payload.mjs`), unpacks them to `~/.pig/agent/rea/skills-<digest>/`
+and adds one prompt section that names each skill's `SKILL.md`. After editing a skill, run
+`npm run payload:rea -- --skills` before building; the harness gate below fails on a Binary whose unpacked skills are
+not the repository's.
+
 ## Gates
 
 - `npm run test:rea` (needs the payload, network and `zstd`): REA from the payload and REA as `npx rea-agents@<pin>`
@@ -56,7 +65,8 @@ A payload build fails when the copy has drifted.
   `rea setup --client pi` writes exactly `{type, command: rea.mjs, args: ["mcp"]}`, which is what `rea` registers with the
   Node in front; the skill copy has not drifted.
 - `PIG_REA_BIN=… PIG_REA_SEALED_BIN=… npm run test:rea-harness`: the built Binaries against a scripted local model. REA's
-  229 tools reach a codemode script and `binary_session` answers; a plain run loads no ambient extension or skill and the
+  229 tools reach a codemode script and `binary_session` answers; the prompt names a file for each skill and the unpacked
+  files are the repository's; a plain run loads no ambient extension or skill and the
   widening overlay brings them back; `-ns` keeps the Piglet's skills; `-ne` and `--no-mcp` drop REA and
   `-ne -e builtin:mcp -e builtin:codemode -e builtin:tool-search` restores it; an overlay can remove `rea-dashboard`; the
   sealed Binary refuses `mcp.json`, settings extensions, `-e` and `--piglet` and still connects REA. Two cases are marked

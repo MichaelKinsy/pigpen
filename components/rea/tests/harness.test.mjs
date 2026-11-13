@@ -11,7 +11,9 @@ import { dirname, join, resolve } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { startStubModel, stubModels } from './stub-model.mjs';
+import { skillFiles } from '../scripts/skill.mjs';
 
+const component = join(dirname(fileURLToPath(import.meta.url)), '..');
 const budget = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'budget.json'), 'utf8'));
 const target = `${{ win32: 'windows' }[process.platform] ?? process.platform}/${{ x64: 'amd64' }[process.arch] ?? process.arch}`;
 
@@ -110,6 +112,25 @@ describe('pig-rea (open)', () => {
     assert.ok(answer.count > 100, `codemode sees ${answer.count} REA tools: ${content.slice(0, 500)}`);
     assert.equal(answer.open, false, 'binary_session did not answer');
     assert.ok(answer.providers > 0, 'binary_session listed no providers');
+  });
+
+  // PiG lists a Binary's skills with the location "builtin:piglet", which no tool can read, and bakes only SKILL.md's body.
+  // The rea member unpacks the skill trees and names their files in the prompt; a Binary built from a stale
+  // payload/skills (payload.mjs --skills not run after an edit) fails here.
+  test('the agent can read every piglet skill: the prompt names its file, and the files are the repository\'s', async () => {
+    const result = await launch(binaries.open, []);
+    assert.equal(result.code, 0, result.out);
+    const text = systemText(result.requests[0]);
+    for (const name of pigletSkills) {
+      const file = new RegExp(`- ${name}: (\\S+SKILL\\.md)`).exec(text)?.[1];
+      assert.ok(file && existsSync(file), `the prompt names no readable file for ${name}: ${file}`);
+      const source = join(component, 'skills', name);
+      const unpacked = dirname(file);
+      assert.deepEqual(skillFiles(unpacked), skillFiles(source), `${name}: the unpacked files are not the repository's`);
+      for (const rel of skillFiles(source)) {
+        assert.ok(readFileSync(join(unpacked, rel)).equals(readFileSync(join(source, rel))), `${name}/${rel} differs from the repository's`);
+      }
+    }
   });
 
   test('a plain run loads no ambient extension or skill; the widening overlay brings them back', async () => {

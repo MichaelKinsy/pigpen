@@ -28,6 +28,9 @@ type member struct {
 	layout   layout
 	unpacked time.Duration // how long this start spent unpacking; zero when the payload was already there
 	err      error
+	// skills are the Piglet's skills as files (skills.go); skillsErr is why they could not be unpacked.
+	skills    skillSet
+	skillsErr error
 }
 
 func Extension() *sdk.Extension {
@@ -37,6 +40,21 @@ func Extension() *sdk.Extension {
 		// Before Run the registration is queued and applied when the member loads, so the first prompt already has REA.
 		m.err = ext.RegisterMcpServer(serverName, m.serverConfig())
 	}
+	if m.root != "" {
+		m.skills, m.skillsErr = ensureSkills(m.root, embeddedSkills())
+	}
+	// One paragraph in a per-run prompt section: where the skills' files are (skills.go says why PiG's list is not enough).
+	ext.OnEvent(sdk.EventBeforeAgentStart, func(_ sdk.Context, data map[string]any) (any, error) {
+		text := skillsParagraph(m.skills)
+		if text == "" {
+			return nil, nil
+		}
+		options, _ := data["systemPromptOptions"].(map[string]any)
+		if sections, ok := options["sections"].(*sdk.SystemPromptSections); ok {
+			sections.Set("rea_skills", text)
+		}
+		return nil, nil
+	})
 	ext.OnSessionStart(m.sessionStart)
 	ext.Command("rea-runtime", "REA payload: status, verify the unpacked copy against the Binary, or gc old versions.", m.command)
 	return ext
@@ -93,6 +111,9 @@ func (m *member) version() string {
 }
 
 func (m *member) sessionStart(ctx sdk.Context, _ map[string]any) (any, error) {
+	if m.skillsErr != nil {
+		ctx.Notify("The harness's skills could not be unpacked, so the agent cannot read them: "+m.skillsErr.Error(), "warning")
+	}
 	if m.err != nil {
 		ctx.Notify("REA is unavailable: "+m.err.Error(), "error")
 		if ctx.HasUI() {
@@ -163,8 +184,15 @@ func (m *member) run(action string, isRegistered bool) (string, error) {
 		if m.info.Rea.Commit != "" {
 			source += " (" + m.info.Rea.Tag + ", " + m.info.Rea.Commit[:12] + ")"
 		}
-		return fmt.Sprintf("%s on Node %s, %s.\nPackage: %s\nUnpacked: %s (%d files)\nPayload: %s/%s, sha256 %s",
-			m.version(), m.info.Node.Version, state, source, m.layout.dir, m.info.Files, runtime.GOOS, runtime.GOARCH, m.info.ArchiveSha256), nil
+		skills := "none in this Binary"
+		switch {
+		case m.skillsErr != nil:
+			skills = "not unpacked: " + m.skillsErr.Error()
+		case len(m.skills.names) > 0:
+			skills = m.skills.dir + " (" + strings.Join(m.skills.names, ", ") + ")"
+		}
+		return fmt.Sprintf("%s on Node %s, %s.\nPackage: %s\nUnpacked: %s (%d files)\nPayload: %s/%s, sha256 %s\nSkills: %s",
+			m.version(), m.info.Node.Version, state, source, m.layout.dir, m.info.Files, runtime.GOOS, runtime.GOARCH, m.info.ArchiveSha256, skills), nil
 	case "verify":
 		if m.err != nil {
 			return "", fmt.Errorf("REA verify: %w", m.err)
@@ -181,6 +209,11 @@ func (m *member) run(action string, isRegistered bool) (string, error) {
 			return "", fmt.Errorf("REA gc: %w", m.err)
 		}
 		removed, err := gc(m.root, dirName(m.info), time.Now())
+		if err == nil {
+			var oldSkills []string
+			oldSkills, err = gcSkills(m.root, m.skills.dir)
+			removed = append(removed, oldSkills...)
+		}
 		if err != nil {
 			return "", fmt.Errorf("REA gc removed %d, then failed: %w", len(removed), err)
 		}

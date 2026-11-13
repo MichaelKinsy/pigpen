@@ -1,3 +1,6 @@
 The REA payload for one target is generated here by `node components/rea/scripts/payload.mjs [<os>/<arch>]` and embedded
 into the `rea` member when PiG builds the Binary. The generated `<os>_<arch>.tar.zst` and `<os>_<arch>.json` are not
 committed. A Binary built without them starts, reports that it carries no REA payload, and registers no REA server.
+
+`skills.json` is generated here too (also by `payload.mjs --skills` alone): the files of `components/rea/skills`, which the
+member unpacks so that the agent can read the skills and the files they link. Run it again after editing a skill.
