@@ -212,7 +212,8 @@ func (c *acpClient) untilUpdate(what string, pred func(u map[string]any) bool) m
 
 func (c *acpClient) initialize() map[string]any {
 	return c.result("initialize", map[string]any{"protocolVersion": 1, "clientCapabilities": map[string]any{
-		"fs": map[string]any{"readTextFile": true, "writeTextFile": true}, "terminal": true}})
+		"fs": map[string]any{"readTextFile": true, "writeTextFile": true}, "terminal": true,
+		"auth": map[string]any{"terminal": true}}})
 }
 
 func textPrompt(sessionID, text string) map[string]any {
@@ -242,9 +243,17 @@ func TestE2EPromptStreamsAndReportsUsage(t *testing.T) {
 	if sid == "" {
 		t.Fatalf("session/new = %v", sess)
 	}
-	models, _ := sess["models"].(map[string]any)
-	if models["currentModelId"] != "acp-llm/acp-1" {
-		t.Errorf("models = %v", models)
+	if _, ok := sess["models"]; ok {
+		t.Errorf("session/new carries the removed root field models: %v", sess["models"])
+	}
+	var current any
+	for _, o := range sess["configOptions"].([]any) {
+		if o := o.(map[string]any); o["id"] == "model" {
+			current = o["currentValue"]
+		}
+	}
+	if current != "acp-llm/acp-1" {
+		t.Errorf("model config option = %v, configOptions = %v", current, sess["configOptions"])
 	}
 	resp, _ := c.await(c.request("session/prompt", textPrompt(sid, "say hello")))
 	if resp["result"].(map[string]any)["stopReason"] != "end_turn" {

@@ -111,7 +111,14 @@ func (u UnitTest) run(dir string, siblings []string) (failed bool, detail string
 			continue
 		}
 		text := string(out)
-		if strings.Contains(text, "build failed") || strings.Contains(text, "[setup failed]") || strings.Contains(text, "cannot find") {
+		// Test output decides first: a failing test is a kill even when its message
+		// happens to contain a toolchain-looking phrase (a Windows assertion such as
+		// "The system cannot find the file specified" matched `cannot find` and
+		// misclassified a kill as INVALID). A compile failure reports only
+		// "FAIL [build failed]", never a `--- FAIL` line, so the markers below still
+		// see it.
+		hasTestOutput := strings.Contains(text, "--- FAIL") || strings.Contains(text, "\npanic:")
+		if !hasTestOutput && (strings.Contains(text, "build failed") || strings.Contains(text, "[setup failed]") || strings.Contains(text, "cannot find")) {
 			return false, "", fmt.Errorf("mutant does not build: %s", firstLine(text))
 		}
 		// Only a test failure the go command reports is a kill. A non-zero exit with no test

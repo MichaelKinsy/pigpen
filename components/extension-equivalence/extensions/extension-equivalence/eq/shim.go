@@ -77,7 +77,7 @@ func newShimSet(root string, specs map[string]CommandSpec, origPath string, reco
 			}
 			s.real[name] = path
 		}
-		if err := os.Symlink(bin, filepath.Join(s.dir, name)); err != nil {
+		if err := linkOrCopy(bin, filepath.Join(s.dir, name)); err != nil {
 			return nil, err
 		}
 	}

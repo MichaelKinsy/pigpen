@@ -69,10 +69,10 @@ not the repository's.
   files are the repository's; a plain run loads no ambient extension or skill and the
   widening overlay brings them back; `-ns` keeps the Piglet's skills; `-ne` and `--no-mcp` drop REA and
   `-ne -e builtin:mcp -e builtin:codemode -e builtin:tool-search` restores it; an overlay can remove `rea-dashboard`; the
-  sealed Binary refuses `mcp.json`, settings extensions, `-e` and `--piglet` and still connects REA. Two cases are marked
-  `todo` for a PiG bug: when the project has config that needs a trust decision (for example `.pig/mcp.json`), PiG's
-  pre-trust pass loads user extensions with a fixed `["user"]` scope (`coding/cli/cli_runtime_build.go:281`), ignoring the
-  Piglet's `discovery` and a closed Binary.
+  sealed Binary refuses `mcp.json`, settings extensions, `-e` and `--piglet` and still connects REA; and a project with
+  config that needs a trust decision (for example `.pig/mcp.json`) does not make PiG's pre-trust pass run the user's
+  extensions, in the open or the sealed Binary (PiG 0.7.0 did, `coding/cli/cli_runtime_build.go:281`; fixed by
+  MichaelKinsy/PiG#453, which the pinned PiG commit has).
 - `go test ./...` in `extensions/rea`: unpack, reuse, a racing unpack, unsafe archive entries, digests, `verify` and `gc`,
   plus the real payload when this checkout has one.
 

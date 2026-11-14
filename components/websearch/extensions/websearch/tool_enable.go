@@ -25,13 +25,13 @@ func (r *Runtime) webEnableSpec() ToolSpec {
 		PromptSnippet: fmt.Sprintf("If tools for %s are not already available, call web_enable first whenever current, external, or linked information could help; the tools appear on the next model request.", strings.Join(caps, ", ")),
 		parameters:    append(sObject(nil, obj{}), kv{"additionalProperties", false}),
 		Execute: func(ctx context.Context, _ map[string]any, _ func(ToolOutput)) (ToolOutput, error) {
-			return r.webEnable()
+			return r.webEnable(ctx)
 		},
 	}
 }
 
-func (r *Runtime) webEnable() (ToolOutput, error) {
-	act, ok := r.host.(ToolActivator)
+func (r *Runtime) webEnable(ctx context.Context) (ToolOutput, error) {
+	act, ok := r.hostFor(ctx).(ToolActivator)
 	if !ok {
 		return ToolOutput{}, errors.New("web_enable needs a host that can change the active tool set")
 	}

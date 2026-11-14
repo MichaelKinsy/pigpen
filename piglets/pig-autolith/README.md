@@ -83,7 +83,7 @@ the tools to do anything.
 pig: baked Piglet Binary binary-packed extensions do not match its plan: missing [autolith-bridge], unexpected []
 ```
 
-PiG 0.7.1 fixes this (`fix/071-lisp-packed`). Pigpen builds this Piglet with PiG at commit `7c2c1da2bcba` of that branch until 0.7.1
+PiG 0.7.1 fixes this (MichaelKinsy/PiG#490). Pigpen builds this Piglet with PiG at commit `ea89b2804ed9`, the head of that pull request, until 0.7.1
 ships. Nothing here is signed or published.
 
 ## Measured size and first-load time

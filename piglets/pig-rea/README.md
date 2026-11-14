@@ -51,11 +51,12 @@ extensions by `origins`. It cannot bring back what the Binary left out: the Rust
 
 For a Binary that accepts none of this, use [`pig-rea-sealed`](../pig-rea-sealed/README.md).
 
-## Known PiG issue
+## Known issue in the PiG 0.7.0 release
 
-When the project directory has its own PiG config that needs a trust decision (for example `.pig/mcp.json`), PiG 0.7.0 runs
-the user's `~/.pig/agent/extensions` in its pre-trust pass even though this Piglet loads no ambient extensions. They do not
-join the session, but their factories run. `npm run test:rea-harness` keeps this as a `todo` case until PiG fixes it.
+When the project directory has its own PiG config that needs a trust decision (for example `.pig/mcp.json`), the PiG 0.7.0
+release (`v0.7.0`) runs the user's `~/.pig/agent/extensions` in its pre-trust pass even though this Piglet loads no ambient
+extensions. They do not join the session, but their factories run. PiG fixed this after 0.7.0 (MichaelKinsy/PiG#453); the
+PiG commit Pigpen pins has the fix, and `npm run test:rea-harness` checks it on both Binaries.
 
 ## Platforms
 

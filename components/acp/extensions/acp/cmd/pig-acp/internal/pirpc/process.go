@@ -22,7 +22,7 @@ import (
 // SessionStatsTimeoutMs bounds the auxiliary context-usage request.
 const SessionStatsTimeoutMs = 1000
 
-// DefaultCommand is the executable started when none is configured.
+// DefaultCommand is the PATH name started when none is configured and no pig sits beside pig-acp.
 func DefaultCommand(goos string) string {
 	if goos == "windows" {
 		return "pig.cmd"
@@ -30,12 +30,57 @@ func DefaultCommand(goos string) string {
 	return "pig"
 }
 
-// Command returns the override, or the default for this OS.
-func Command(override string) string {
-	if override != "" {
-		return override
+// SiblingName is the file name of the pig that ships beside pig-acp.
+func SiblingName(goos string) string {
+	if goos == "windows" {
+		return "pig.exe"
 	}
-	return DefaultCommand(runtime.GOOS)
+	return "pig"
+}
+
+// ownDir is the directory of pig-acp's own executable, "" when the OS cannot say.
+var ownDir = sync.OnceValue(func() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return filepath.Dir(exe)
+})
+
+// Command returns the executable to start for a configured --pig value (override, "" when none).
+//
+//   - An absolute override is used as is.
+//   - A relative override with a path separator (./pig, bin/pig) is resolved against pig-acp's own
+//     directory, not the project directory the child runs in.
+//   - A bare name is looked up on PATH by the OS.
+//   - No override: the pig beside pig-acp (pig, or pig.exe on Windows) when there is one, else the
+//     default name on PATH.
+func Command(override string) string {
+	return resolve(override, runtime.GOOS, ownDir(), isExecutableFile)
+}
+
+func resolve(override, goos, dir string, isExec func(string) bool) string {
+	if override != "" {
+		if dir == "" || filepath.IsAbs(override) || !strings.ContainsAny(override, `/\`) {
+			return override
+		}
+		return filepath.Join(dir, filepath.FromSlash(override))
+	}
+	if dir != "" {
+		if p := filepath.Join(dir, SiblingName(goos)); isExec(p) {
+			return p
+		}
+	}
+	return DefaultCommand(goos)
+}
+
+// isExecutableFile reports whether path is a regular file that can be started (any execute bit off Windows).
+func isExecutableFile(path string) bool {
+	st, err := os.Stat(path)
+	if err != nil || !st.Mode().IsRegular() {
+		return false
+	}
+	return runtime.GOOS == "windows" || st.Mode().Perm()&0o111 != 0
 }
 
 // ShouldUseShell reports whether a launcher needs a shell (Windows .cmd and .bat).

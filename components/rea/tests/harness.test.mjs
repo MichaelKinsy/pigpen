@@ -177,10 +177,10 @@ describe('pig-rea (open)', () => {
   });
 
   // PiG 0.7.0 (coding/cli/cli_runtime_build.go:281): when the project has config that needs a trust decision (here
-  // .pig/mcp.json), the pre-trust pass loads user-scope extensions with a fixed scope ["user"], ignoring the Piglet's
-  // discovery. The user's extension factory runs although the harness says discovery.extensions: []. Fixed by PiG #453;
-  // drop the todo when PIG_COMMIT includes it.
-  test('a project with its own config does not run the user\'s extensions', { todo: 'PiG #453: pre-trust pass ignores Piglet discovery' }, async () => {
+  // .pig/mcp.json), the pre-trust pass loaded user-scope extensions with a fixed scope ["user"], ignoring the Piglet's
+  // discovery, so the user's extension factory ran although the harness says discovery.extensions: []. Fixed by PiG #453,
+  // which the pinned PiG commit has.
+  test('a project with its own config does not run the user\'s extensions', async () => {
     const marker = join(work, `marker-${runs + 1}`);
     const box = sandbox((home, project) => {
       mkdirSync(join(home, 'agent', 'extensions'), { recursive: true });
@@ -219,8 +219,9 @@ describe('pig-rea-sealed', () => {
     }
   });
 
-  // Same PiG pre-trust bug as above (PiG #453); in a closed Binary without the Node runtime it stops startup.
-  test('a project .pig/mcp.json is refused without loading user extensions', { todo: 'PiG #453: pre-trust pass ignores closed scopes' }, async () => {
+  // The pre-trust pass of PiG 0.7.0 ignored a closed Binary's scopes as well (PiG #453); without the Node runtime that
+  // stopped startup.
+  test('a project .pig/mcp.json is refused without loading user extensions', async () => {
     const box = sandbox((home, project) => {
       seedUserResources(home);
       mkdirSync(join(project, '.pig'), { recursive: true });

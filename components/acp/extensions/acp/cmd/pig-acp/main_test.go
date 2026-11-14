@@ -182,7 +182,8 @@ func TestPigletAndPigArgReachPig(t *testing.T) {
 // advertised arguments kept only --pig.)
 func TestTerminalAuthMethodKeepsTheAgentSelection(t *testing.T) {
 	req, _ := json.Marshal(map[string]any{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": map[string]any{
-		"protocolVersion": 1, "clientCapabilities": map[string]any{"_meta": map[string]any{"terminal-auth": true}}}})
+		"protocolVersion": 1, "clientCapabilities": map[string]any{
+			"auth": map[string]any{"terminal": true}, "_meta": map[string]any{"terminal-auth": true}}}})
 	var out bytes.Buffer
 	args := []string{"--pig", "/opt/pig", "--piglet", "acp", "--pig-arg", "-e", "--pig-arg", "/x y"}
 	if code := run(args, strings.NewReader(string(req)+"\n"), &out, io.Discard); code != 0 {

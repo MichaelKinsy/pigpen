@@ -262,6 +262,10 @@ their cases without a twin or named skip are counted as `DEFERRED`, not hidden b
 synthetic reasons. A helper other than `tw`/`tskip` is invisible to the checker: keep the twin
 helper, and put an adaptation note inside its body.
 
+**Intention check before a skip.** If a case does not apply as written, test what it protects
+in the port's own way: through a TypeScript caller, as a Go build check, or as an explicit
+parameter. Skip only when that is impossible or worthless, and give the reason in `tskip`.
+
 **Layer 2: scenarios and golden traces.** When the original has no tests (or beyond
 them), derive scenarios from every branch of the source: each success, rejection,
 missing/empty/malformed input, unavailable service (`commands` mode `missing`), non-zero
