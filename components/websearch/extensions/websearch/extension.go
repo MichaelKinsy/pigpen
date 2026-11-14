@@ -50,6 +50,7 @@ func Extension() *sdk.Extension {
 				h.set(ctx)
 				cctx, cancel := bridgeContext(ctx)
 				defer cancel()
+				cctx = withSDKContext(cctx, ctx)
 				out, err := spec.Execute(cctx, params, func(partial ToolOutput) { _ = ctx.OnUpdate(toToolResult(partial)) })
 				if err != nil {
 					return nil, err
@@ -170,6 +171,27 @@ func bridgeContext(ctx sdk.Context) (context.Context, context.CancelFunc) {
 		}
 	}()
 	return c, cancel
+}
+
+// sdkContextKey carries the SDK Context of the handler that is running.
+type sdkContextKey struct{}
+
+// withSDKContext binds a call's SDK Context into the context the handler is given, so host calls
+// made inside that call can ride its own tool-start slot.
+func withSDKContext(ctx context.Context, sc sdk.Context) context.Context {
+	return context.WithValue(ctx, sdkContextKey{}, sc)
+}
+
+// hostFor returns the Host bound to this call's SDK Context. Two tool calls of one parallel batch
+// run at the same time, so a host call must not go through whichever handler set the retained
+// host last: the SDK's tool-start order (extension-api D187) is per request, and a call issued on
+// a sibling's Context waits for this request to open a dialog it never opens. A context that
+// carries none - a background fetch, which outlives its request - falls back to the retained host.
+func (r *Runtime) hostFor(ctx context.Context) Host {
+	if sc, ok := ctx.Value(sdkContextKey{}).(sdk.Context); ok {
+		return &sdkHost{ctx: sc, have: true}
+	}
+	return r.host
 }
 
 // sdkHost implements Host, ToolActivator and UIHost over the most recent SDK context. A retained

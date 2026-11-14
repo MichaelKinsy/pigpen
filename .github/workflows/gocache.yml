@@ -19,7 +19,7 @@ permissions:
 
 env:
   # The PiG release release.yml builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
-  PIG_COMMIT: '7c2c1da2bcbae34cecac0d420b6967d5630cf032' # PiG fix/071-lisp-packed (unreleased 0.7.1)
+  PIG_COMMIT: 'ea89b2804ed969768f71e97db5caa8ead415e940' # PiG main plus the Lisp cell fix, MichaelKinsy/PiG#490 (unreleased 0.7.1)
 
 jobs:
   warm:

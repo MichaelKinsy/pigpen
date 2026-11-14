@@ -322,8 +322,8 @@ func (s *Session) startTurn(t *queuedTurn) {
 		depth := len(s.queue)
 		s.mu.Unlock()
 		if pending != nil {
-			if authErr := MaybeAuthRequiredError(err); authErr != nil {
-				pending.result <- TurnResult{Err: authErr}
+			if IsAuthFailure(err) {
+				pending.result <- TurnResult{Err: errAuthFailure}
 			} else if cancelled {
 				pending.result <- TurnResult{Reason: StopCancelled}
 			} else {

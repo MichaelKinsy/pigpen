@@ -89,7 +89,7 @@ func TestSlashCommands(t *testing.T) {
 
 func TestAuthMethods(t *testing.T) {
 	tw(t, "unit/auth-methods-terminal-auth-meta", "getAuthMethods: includes Zed terminal-auth metadata when enabled", func(t *testing.T) {
-		methods := AuthMethods(true)
+		methods := AuthMethods(AuthSupport{Terminal: true, ZedMeta: true})
 		if len(methods) != 1 {
 			t.Fatalf("%d methods", len(methods))
 		}
@@ -115,7 +115,7 @@ func TestAuthMethods(t *testing.T) {
 		jsonEqual(t, m["args"], []any{"--terminal-login"})
 	})
 	tw(t, "unit/auth-methods-terminal-auth-meta", "getAuthMethods: omits Zed terminal-auth metadata when disabled", func(t *testing.T) {
-		methods := AuthMethods(false)
+		methods := AuthMethods(AuthSupport{Terminal: true})
 		if len(methods) != 1 {
 			t.Fatalf("%d methods", len(methods))
 		}
@@ -123,6 +123,54 @@ func TestAuthMethods(t *testing.T) {
 		meta, _ := m["_meta"].(map[string]any)
 		if _, ok := meta["terminal-auth"]; ok {
 			t.Error("terminal-auth present")
+		}
+	})
+
+	// ACP v1 (Authentication): an agent may advertise a `terminal` method only when the client advertised
+	// clientCapabilities.auth.terminal. acp-tck ACP-AUTH-002 sends `clientCapabilities: {}`.
+	t.Run("no terminal method for a client that advertised no sign-in capability", func(t *testing.T) {
+		methods := AuthMethods(AuthSupportOf(map[string]any{}))
+		if methods == nil || len(methods) != 0 {
+			t.Fatalf("methods = %#v, want an empty, non-nil list", methods)
+		}
+		if got := AuthMethods(AuthSupportOf(nil)); got == nil || len(got) != 0 {
+			t.Fatalf("methods = %#v for no capabilities at all", got)
+		}
+		// `terminal: false` and a non-boolean value are not the capability.
+		for _, caps := range []map[string]any{
+			{"auth": map[string]any{"terminal": false}}, {"auth": map[string]any{"terminal": "true"}}, {"auth": "terminal"},
+			{"terminal": true}, {"_meta": map[string]any{"terminal-auth": false}},
+		} {
+			if got := AuthMethods(AuthSupportOf(caps)); len(got) != 0 {
+				t.Errorf("%v advertised %v", caps, got)
+			}
+		}
+	})
+	t.Run("auth.terminal gets the spec's terminal method and no Zed banner", func(t *testing.T) {
+		methods := AuthMethods(AuthSupportOf(map[string]any{"auth": map[string]any{"terminal": true}}))
+		if len(methods) != 1 || methods[0]["type"] != "terminal" || methods[0]["id"] != PiSetupMethodID {
+			t.Fatalf("methods = %v", methods)
+		}
+		jsonEqual(t, methods[0]["args"], []any{"--terminal-login"})
+		jsonEqual(t, methods[0]["env"], map[string]any{})
+		if _, ok := methods[0]["_meta"]; ok {
+			t.Error("_meta without the Zed flag")
+		}
+	})
+	t.Run("a Zed-only client gets the banner method without a terminal type", func(t *testing.T) {
+		methods := AuthMethods(AuthSupportOf(map[string]any{"_meta": map[string]any{"terminal-auth": true}}))
+		if len(methods) != 1 {
+			t.Fatalf("methods = %v", methods)
+		}
+		m := methods[0]
+		if _, ok := m["type"]; ok {
+			t.Errorf("type = %v: a terminal method needs auth.terminal", m["type"])
+		}
+		if _, ok := m["args"]; ok {
+			t.Errorf("args = %v without type terminal", m["args"])
+		}
+		if _, ok := m["_meta"].(map[string]any)["terminal-auth"]; !ok {
+			t.Errorf("no terminal-auth banner: %v", m)
 		}
 	})
 }

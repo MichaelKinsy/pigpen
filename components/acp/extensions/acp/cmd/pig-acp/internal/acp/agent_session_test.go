@@ -206,6 +206,17 @@ func TestNewSessionFailures(t *testing.T) {
 		return 0
 	}
 
+	t.Run("a client that advertised no sign-in method gets an internal error naming the remedy, not -32000 (ACP-AUTH-005)", func(t *testing.T) {
+		proc := failing(func() (map[string]any, error) { return map[string]any{"models": []any{}}, nil }, map[string]any{"thinkingLevel": "medium", "model": nil})
+		a, _ := testAgent(newFakeConn())
+		a.auth = AuthSupport{}
+		a.sessions = &fakeSessions{session: &fakeSession{id: "s1", cwd: cwdNow(t), proc: proc}}
+		_, err := a.NewSession(newSessionReq(cwdNow(t)))
+		if errCode(err) != -32603 || !strings.Contains(err.Error(), "/login") {
+			t.Fatalf("err = %v", err)
+		}
+	})
+
 	tw(t, "unit/new-session-auth-required-when-no-models", "PiAcpAgent: newSession throws AUTH_REQUIRED when pi reports zero available models", func(t *testing.T) {
 		proc := failing(func() (map[string]any, error) { return map[string]any{"models": []any{}}, nil }, map[string]any{"thinkingLevel": "medium", "model": nil})
 		sessions := &fakeSessions{session: &fakeSession{id: "s1", cwd: cwdNow(t), proc: proc}}
