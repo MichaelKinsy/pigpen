@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 )
@@ -143,6 +144,10 @@ type Policy struct {
 	// bashUnchecked is the permission map's `bash_unchecked: "allow"` directive: the bash surface is unchecked —
 	// no external-directory gate over its words and no ask it raises; see NewPolicy.
 	bashUnchecked bool
+	// serversMu guards the configured MCP server names (mcp.go), cached on the mcp.json stamps.
+	serversMu    sync.Mutex
+	serversStamp string
+	servers      []string
 }
 
 // NewPolicy composes the ruleset the way PermissionManager does for one scope: the `*` key is the default rule only, the other
@@ -311,8 +316,12 @@ func (p *Policy) DecideIn(tool string, input map[string]any, session Ruleset, cw
 		return p.decideBash(cmd, session, cwd)
 	case p.shellTools[name]:
 		return unsupported("the 'shellTools' option (the '" + name + "' tool routed through the bash surface)")
-	case name == "mcp", name == "skill", isPiMcpToolName(name):
-		return unsupported("permissions for the '" + name + "' tool (the MCP and skill surfaces)")
+	case name == "mcp":
+		return p.decideMcp(name, createMcpPermissionTargets(input, p.mcpServerNames(cwd)), session)
+	case isPiMcpToolName(name):
+		return p.decideMcp(name, createPiMcpToolTargets(name, p.mcpServerNames(cwd)), session)
+	case name == "skill":
+		return unsupported("permissions for the '" + name + "' tool (the skill surface)")
 	case pathBearingTools[name]:
 		if p.valuePatterns(name) {
 			return unsupported("path rules with value patterns for the '" + name + "' tool (path matching)")
@@ -340,10 +349,13 @@ func (p *Policy) decidePathTool(name string, input map[string]any, session Rules
 }
 
 // IsToolFullyDenied reports whether every value of the tool's surface is denied, so the tool is withheld from the model.
-func (p *Policy) IsToolFullyDenied(tool string) bool {
+// A Pi MCP tool's identity is its name, so its candidates decide (resolvePiMcpTool); every other surface is the
+// surface's own deny-all probe.
+func (p *Policy) IsToolFullyDenied(tool, cwd string) bool {
 	name := jsTrim(tool)
 	if isPiMcpToolName(name) {
-		return false // the MCP surface is not ported
+		_, _, values := mcpToolCandidates(name, p.mcpServerNames(cwd))
+		return EvaluateAnyValue("mcp", values, p.rules, PosixPathFlavor).Rule.Action == "deny"
 	}
 	return IsSurfaceFullyDenied(name, p.rules, PosixPathFlavor)
 }

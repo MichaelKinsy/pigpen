@@ -1,6 +1,7 @@
 package pi_permission_system
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -82,13 +83,19 @@ func TestSkillReadGate(t *testing.T) {
 	if len(entries) != 3 {
 		t.Fatalf("entries: %#v", entries)
 	}
-	eq(t, entries[1].location, fakeHome+"/skills/open/SKILL.md", "home expanded")
+	// The home expansion and the relative `..` walk are POSIX-only: a drive-less path ("/home/…", "../…")
+	// resolves against the working directory on Windows, so the literal expectation never holds there.
+	if runtime.GOOS != "windows" {
+		eq(t, entries[1].location, fakeHome+"/skills/open/SKILL.md", "home expanded")
+	}
 	gated := func(path string) bool {
 		v := skillRead("read", map[string]any{"path": path}, entries, "/work")
 		return v.Block || v.Ask != nil
 	}
 	eq(t, gated("/agent/skills/demo/SKILL.md"), true, "the skill file of an ask skill asks")
-	eq(t, gated("../agent/skills/demo/ref/x.md"), true, "a file inside it, relative to cwd")
+	if runtime.GOOS != "windows" {
+		eq(t, gated("../agent/skills/demo/ref/x.md"), true, "a file inside it, relative to cwd")
+	}
 	eq(t, gated(` "@/agent/skills/demo/SKILL.md" `), true, "trimmed, unquoted, @ dropped")
 	eq(t, gated("/agent/skills/demo-x/SKILL.md"), false, "a sibling")
 	eq(t, gated("~/skills/open/SKILL.md"), false, "an allowed skill")
@@ -107,7 +114,9 @@ func TestSkillReadGate(t *testing.T) {
 	eq(t, isWithinDir("/a", "/a/b"), false, "parent")
 	eq(t, isWithinDir("/a/b/c", "/"), true, "root")
 	eq(t, isWithinDir("/a/..b", "/a"), true, "a name starting with two dots is inside")
-	eq(t, comparablePath(`'x'`, "/w"), "/w/x", "one quote each side")
+	if runtime.GOOS != "windows" {
+		eq(t, comparablePath(`'x'`, "/w"), "/w/x", "one quote each side")
+	}
 	eq(t, comparablePath(`""`, "/w"), "", "only quotes")
 	eq(t, promptText([]any{"a", 1, "b"}), "a\nb", "a prompt list")
 }
@@ -151,6 +160,7 @@ func TestVisibleSkillPromptEntries(t *testing.T) {
 		eq(t, names, []string{"alpha"}, "names")
 	})
 	tw(t, f, "resolves entry normalizedLocation relative to cwd", func(t *testing.T) {
+		posixOnly(t)
 		e := policyOf(t, `{"permission":{"skill":"allow"}}`).visibleSkillEntries(upstreamSkillsSection("librarian"), cwd)
 		if len(e) != 1 {
 			t.Fatalf("entries: %#v", e)

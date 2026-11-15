@@ -5,7 +5,7 @@
 | Original | `@gotgenes/pi-permission-system` 39.0.3 by MasuRii and Christopher D. Lasher, https://github.com/gotgenes/pi-packages (`packages/pi-permission-system`), commit `c5bc74712cd2fe808d70246d93d26a092f736676`, MIT (its LICENSE file) |
 | Oracle | Pi 1.0.0, Node 24.19.0; the original package and the repository files it builds with, unmodified, at `port/oracle` (installed with pnpm from its own lockfile, see `port/oracle/UPSTREAM.md`); its own suite passes there: 177 files, 5418 tests |
 | Target | PiG 0.4.0+1.0.0, go1.27.1 |
-| Original's tests | 3949 titles in 177 files. Slice: 229 exact twins in 10 files (all of `detect-permissive-bash-fallback`, part of `wrapper-analysis` and `skill-prompt-sanitizer`); the other 167 files, and the rest of those two, are deferred by name in `port/slices.json` |
+| Original's tests | 3949 titles in 177 files. Slice: 274 exact twins in 11 files (all of `detect-permissive-bash-fallback`, part of `wrapper-analysis` and `skill-prompt-sanitizer`, and all of `access-intent/mcp-targets`); the other 166 files, and the rest of those two, are deferred by name in `port/slices.json` |
 | Original's decisions | `port/record-probe.sh` runs the original's own functions on `port/probe/cases.json` inside an installed copy of the oracle and writes `extensions/pi-permission-system/testdata/oracle.json`: the bash surface's verdict for 646 commands under 11 configs, the schema's verdict and output for 91 config files, the wrapper classification for 48 units |
 | Kind | 1: an extension, no CLI built-in, no provider |
 
@@ -57,6 +57,16 @@ against the original without a person: the rules and the tool gate for what they
 - the skill-read gate: a `read` of a file inside a skill that the system prompt lists is decided by the `skill` surface for that
   skill's name, so it asks while that surface asks (with the default `*: ask`, every listed skill), and without a session option,
   as in the original (its skill gates carry no SessionApproval);
+- the **MCP surface**: a `mcp` proxy call and a built-in `mcp__<server>__<tool>` call are decided on the `mcp` surface by the
+  candidates their input and name derive — the whole of `access-intent/mcp-targets.ts` (`McpTargetList`,
+  `parseQualifiedMcpToolName`, `createMcpPermissionTargets`, `createPiMcpToolTargets`) and `normalizeMcpTargets` from
+  `input-normalizer.ts` (the surface, the candidates with the surface-wide `mcp` appended, the first candidate as the target):
+  the last rule matching any candidate wins and the reported target is the first candidate it matches
+  (`permission-manager.ts` buildCheckResult), the configured server names come from the agent's and the project's `mcp.json`
+  (`policy-loader.ts` getConfiguredMcpServerNames, longest name first, so `mcp-dap_start_session` and `mcp_dap_start_session`
+  are one call), the ask's session option is the exact Pi tool name or the proxy target's server pattern
+  (`pattern-suggest.ts`), the denial is the original's on the `mcp` surface, a fully denied Pi MCP tool is withheld from the
+  model (`resolvePiMcpTool`), and no path or external-directory gate touches an MCP call's arguments;
 - withholding tools the policy denies outright from the model at `before_agent_start`, and restoring them (the tool-surface
   baseline), the `yolo` status, and the permissive-`*` warning at session start.
 
@@ -69,7 +79,8 @@ against the original without a person: the rules and the tool gate for what they
 - a path-bearing tool (`read`, `write`, `edit`, `find`, `grep`, `ls`) whose own rules have path patterns: the tool-surface path
   matching (lexical plus canonical aliases) is not ported. The cross-cutting `path` and `external_directory` gates are (above);
 - a tool that `shellTools` routes through the bash surface (the aliases are not ported);
-- the MCP and skill surfaces (`mcp`, `skill` and `mcp__server__tool` tool calls);
+- the `skill` surface (`skill` tool calls): PiG registers no `skill` tool — a skill is read as a file, which the skill-read gate
+  above decides — so the refusal has no caller in a PiG session;
 - the project scope while the project is trusted (`ctx.IsProjectTrusted`; unknown counts as trusted) and a project config file exists,
   and the agent scope while the active agent (the last `active_agent` session entry, else the `<active_agent name="...">` tag of the
   system prompt) has a definition file with a `permission` frontmatter block: every call the port would allow is refused
@@ -113,6 +124,7 @@ port refuse it.
 | M9 | `handlers/gates/skill-read.ts`, `exposure/skill-prompt-sanitizer.ts` (parsing, visibility, path match) | `skills.go` | 15 twins; `skills_test.go`; `adapter_test.go` |
 | M10 | `authority/permission-prompt-decision.ts`, `authority/local-user-authorizer.ts` (the decisions), `policy/permission-gate.ts`, `session/session-rules.ts`, `presentation/pattern-suggest.ts`, `presentation/agent-renderer.ts` (the user and unavailable renders) | `ask.go` | `ask_test.go`; the dialog flow through a fake interactive host (`askflow_test.go`) |
 | M11 | `handlers/gates/path.ts`, `handlers/gates/external-directory.ts`, `access-intent/tool-input-path.ts`, `access-intent/path-surfaces.ts`, and the word-level part of the bash path gates | `paths.go` | `extras_test.go` (the gates); `ask_test.go` (the word scan); the harness-shape scenarios |
+| M12 | `access-intent/mcp-targets.ts` (all four exports), `access-intent/input-normalizer.ts` (`normalizeMcpTargets`), `config/policy-loader.ts` (`getConfiguredMcpServerNames`), `presentation/pattern-suggest.ts` (`suggestMcpPattern`, `suggestExactSessionPattern`), `policy/permission-manager.ts` (`resolvePiMcpTool`) | `mcp.go`, `ask.go`, `config.go` (the gate and the exposure) | 45 twins (`mcp_test.go`); `TestDecideMcp`; `TestConfiguredMcpServerNames`; `TestIsToolFullyDenied` |
 
 ## Process: what was written before its tests
 
@@ -166,7 +178,7 @@ bash shape — an absolute-path shell with a quoted payload — now takes one ap
 
 ## Results
 
-- `go test -race`: pass. 229 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded
+- `go test -race`: pass. 274 twins (`pigeq twins check --deferred port/slices.json`: exit 0). Against the original's recorded
   decisions: none of the 646 commands is allowed where the original asks or denies; 586 get the original's decision and text,
   60 are differences listed in `testdata/port-differences.json` (commands the port still refuses against bash patterns — it
   decides by value alone wherever there are no patterns, exactly as the original); all 91 config files get the original's verdict, messages (a parse error: Go's message) and
@@ -194,8 +206,9 @@ bash shape — an absolute-path shell with a quoted payload — now takes one ap
 - tmux, detached, in an interactive pig 0.4.0 (`port/demo/pane-*.txt`): `echo hello` runs, `rm important.txt` is refused with the
   rule's reason. After the review (`pane-review.txt`, with `config-review.json`, which has comments, and `turns-review.json`):
   `nice rm important.txt` is asked about (blocked), `ls && /bin/sh -c 'rm important.txt'` is refused, `ls | wc -l` runs.
-- Size: 2120 hand-written Go lines (non-test, 379 of them copied helpers; the review added 682 in `bash.go`, `schema.go`,
-  `skills.go`), 2528 test lines; recorded, not written: `testdata/oracle.json`.
+- Size: 3776 lines of Go outside the tests (379 of them copied helpers; the review added 682 in `bash.go`, `schema.go`,
+  `skills.go`, the MCP surface 366 in `mcp.go`), 3972 test lines (274 of them twins); recorded, not written:
+  `testdata/oracle.json`.
 
 ## Findings (to file against PiG, and notes on the porter)
 
