@@ -25,7 +25,7 @@ import { goCaches } from './go-modules.mjs';
 import { hostTarget } from './host-target.mjs';
 import { listingInstallCommand, listingSpec, readListings, root, validSpdx } from './listings.mjs';
 import { packageResources } from './packages.mjs';
-import { parsePigVersion, requirePig } from './pig-bin.mjs';
+import { PIG_VERSION_ARGS, parsePigVersion, requirePig } from './pig-bin.mjs';
 import { build, FAUX_PROMPT, loadErrors, loadFailure, smokeBinary, smokeEnv } from './platform-smoke.mjs';
 
 const LIMIT_MS = { fetch: 300_000, install: 900_000, session: 120_000, build: 1_800_000 };
@@ -180,7 +180,7 @@ function verifyPiglet(listing, { pig, env, cwd, dir, home }) {
 
 /** The PiG the listing says it was verified with is the pig this run uses. */
 function checkVerifiedWith(listing, pig, requirement) {
-  const result = spawnSync(pig, ['--version'], { encoding: 'utf8', env: { PATH: process.env.PATH ?? '', PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
+  const result = spawnSync(pig, PIG_VERSION_ARGS, { encoding: 'utf8', env: { PATH: process.env.PATH ?? '', PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
   const found = parsePigVersion(result.stdout ?? '')?.join('.');
   if (found !== listing.verified.pigVersion) throw new Error(`the listing says it was verified with PiG ${listing.verified.pigVersion}, this run uses PiG ${found}: re-verify it and update verified (pigVersion, pigCommit, date)`);
   if (requirement && listing.verified.pigCommit !== requirement.commit) throw new Error(`the listing says it was verified with PiG commit ${listing.verified.pigCommit}, this run uses ${requirement.commit} (scripts/pig-requirement.json): update verified.pigCommit`);

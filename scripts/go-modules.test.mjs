@@ -13,7 +13,7 @@ const scratch = mkdtempSync(join(tmpdir(), 'go-modules-test-'));
 const fakePig = join(scratch, 'pig');
 // Reports the required version, and stages an "SDK" inside PIG_HOME as `pig reload --sdk-path` does.
 const required = JSON.parse(readFileSync(new URL('./pig-requirement.json', import.meta.url), 'utf8')).pig;
-writeFileSync(fakePig, `#!/bin/sh\nif [ "$1" = --version ]; then echo ${required}; exit 0; fi\nmkdir -p "$PIG_HOME/state/pigsdk/sdk"\necho "$PIG_HOME/state/pigsdk/sdk"\n`);
+writeFileSync(fakePig, `#!/bin/sh\nif [ "$1" = version ]; then echo "pig: ${required}"; exit 0; fi\nmkdir -p "$PIG_HOME/state/pigsdk/sdk"\necho "$PIG_HOME/state/pigsdk/sdk"\n`);
 chmodSync(fakePig, 0o755);
 const helpers = fileURLToPath(new URL('./go-modules.mjs', import.meta.url));
 
