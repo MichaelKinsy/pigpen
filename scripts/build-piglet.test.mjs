@@ -15,7 +15,7 @@ after(() => rmSync(scratch, { recursive: true, force: true }));
 const fake = join(scratch, 'pig');
 const record = join(scratch, 'args.json');
 const required = JSON.parse(readFileSync(new URL('./pig-requirement.json', import.meta.url), 'utf8')).pig;
-writeFileSync(fake, `#!/bin/sh\nif [ "$1" = --version ]; then echo ${required}; exit 0; fi\nnode -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({argv: process.argv.slice(2), cwd: process.cwd(), root: process.env.PIG_SOURCE_ROOT || ""}))' "${record}" "$@"\nexit "\${FAKE_PIG_EXIT:-0}"\n`);
+writeFileSync(fake, `#!/bin/sh\nif [ "$1" = version ]; then echo "pig: ${required}"; exit 0; fi\nnode -e 'require("fs").writeFileSync(process.argv[1], JSON.stringify({argv: process.argv.slice(2), cwd: process.cwd(), root: process.env.PIG_SOURCE_ROOT || ""}))' "${record}" "$@"\nexit "\${FAKE_PIG_EXIT:-0}"\n`);
 chmodSync(fake, 0o755);
 
 const run = (args, env = {}) => spawnSync(process.execPath, [join(root, 'scripts/build-piglet.mjs'), ...args], {
