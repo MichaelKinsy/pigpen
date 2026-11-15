@@ -2,8 +2,20 @@ package pi_permission_system
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 )
+
+// posixOnly skips a case that only holds in the POSIX path flavor: a drive-less absolute path ("/home/…") is
+// not absolute on Windows, so it resolves against the working directory and the literal expectation never
+// holds. The suite runs its POSIX paths on Linux CI; the Windows flavor has its own twins (the
+// windowsSeparators and separator-normalization cases).
+func posixOnly(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("POSIX path flavor: a drive-less absolute path resolves against the cwd on Windows")
+	}
+}
 
 func eq(t *testing.T, got, want any, what string) {
 	t.Helper()
