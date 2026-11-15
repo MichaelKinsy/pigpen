@@ -7,7 +7,7 @@
 // PiG's native builder builds only the machine it runs on, so each OS builds its own target (scripts/host-target.mjs),
 // with the PiG that scripts/pig-bin.mjs selects (PIG_BIN) and the PiG source checkout it needs (PIG_SOURCE_ROOT).
 // Each Binary is run twice, in a throwaway HOME, with PIG_TEST_FAUX (no network, no model, no credentials):
-//   1. `--version` reports the pig version these scripts target;
+//   1. `version` reports the pig version these scripts target;
 //   2. a one-turn print-mode run (`-p "reply with exactly: ok" --model test-faux/faux-1 --no-session`) exits 0, answers
 //      `ok`, and prints no `Failed to load extension` diagnostic (pig exits 1 when an extension fails to load).
 // This proves a Binary starts on the platform, loads every fused extension and completes a turn. What each extension
@@ -21,7 +21,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { root } from './go-modules.mjs';
 import { hostTarget } from './host-target.mjs';
-import { parsePigVersion, pigVersionMatches, requirePig, requiredPigVersion } from './pig-bin.mjs';
+import { PIG_VERSION_ARGS, parsePigVersion, pigVersionMatches, requirePig, requiredPigVersion } from './pig-bin.mjs';
 
 export const FAUX_PROMPT = 'reply with exactly: ok';
 const RUN_LIMIT_MS = 120_000; // a hung Binary must fail the job, not hold the runner for six hours
@@ -92,10 +92,10 @@ export function smokeBinary(bin, { required = parsePigVersion(requiredPigVersion
     const run = (args) => spawnSync(bin, args, { cwd: join(home, 'work'), env, encoding: 'utf8', timeout: RUN_LIMIT_MS, killSignal: process.platform === 'win32' ? 'SIGTERM' : 'SIGQUIT', maxBuffer: 64 << 20 });
     const checks = [];
 
-    const version = run(['--version']);
+    const version = run(PIG_VERSION_ARGS);
     const found = parsePigVersion(version.stdout ?? '');
     checks.push({
-      name: '--version',
+      name: 'version',
       ok: version.status === 0 && !!found && pigVersionMatches(found, required),
       detail: version.error ? version.error.message : `exit ${version.status}, ${JSON.stringify(firstLine(version.stdout))}`,
     });
@@ -165,7 +165,7 @@ export function build(pig, name, out, host, manifestPath = join(root, 'dist/stag
 const sha256 = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
 
 function markdown(host, rows) {
-  const lines = [`### Piglet Binaries for ${host.target}`, '', '| Piglet | Build | --version | Faux turn | Size | SHA-256 |', '| --- | --- | --- | --- | --- | --- |'];
+  const lines = [`### Piglet Binaries for ${host.target}`, '', '| Piglet | Build | version | Faux turn | Size | SHA-256 |', '| --- | --- | --- | --- | --- | --- |'];
   for (const row of rows) {
     const mark = (ok) => (ok ? 'pass' : '**FAIL**');
     const [version, turn] = row.checks ?? [];
