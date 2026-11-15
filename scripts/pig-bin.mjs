@@ -14,7 +14,14 @@ export function requiredPigVersion() {
   return JSON.parse(readFileSync(requirementFile, 'utf8')).pig;
 }
 
-/** [major, minor, patch] from the first x.y.z in `pig --version` output ("0.3.1+0.99.2" is 0.3.1), or undefined. */
+/**
+ * The arguments that make a pig, or a Piglet Binary, print PiG's own version: the first line of `pig version` is
+ * `pig: 0.7.0`. `--version` is not that: from PiG 0.8.0 on it prints the version of Pi that PiG follows (`1.5.2`), as
+ * Pi's own flag does, so a check of it would compare Pi's version with the pig these scripts target.
+ */
+export const PIG_VERSION_ARGS = ['version'];
+
+/** [major, minor, patch] from the first x.y.z on the first line (`pig: 0.3.1` of `pig version`, or a bare "0.3.1"), or undefined. */
 export function parsePigVersion(text) {
   const m = /(\d+)\.(\d+)\.(\d+)/.exec(String(text).split('\n')[0] ?? '');
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : undefined;
@@ -37,11 +44,11 @@ export function requirePig(env = process.env) {
   const build = `Build the pig from the PiG source Pigpen targets (go build -o /path/to/pig ./cmd/pig in a PiG checkout at ${required} or later) and set PIG_BIN to it. Pigpen never falls back to the pig on PATH.`;
   if (!pig) throw new Error(`PIG_BIN is not set. These tests need pig ${required.split('.').slice(0, 2).join('.')}.x (>= ${required}). ${build}`);
   if (checked.has(pig)) return checked.get(pig);
-  const result = spawnSync(pig, ['--version'], { encoding: 'utf8', env: { ...env, PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
+  const result = spawnSync(pig, PIG_VERSION_ARGS, { encoding: 'utf8', env: { ...env, PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
   if (result.error) throw new Error(`PIG_BIN=${pig} cannot be run: ${result.error.message}. ${build}`);
   const found = parsePigVersion(result.stdout);
   if (result.status !== 0 || !found) {
-    throw new Error(`PIG_BIN=${pig} did not report a version for --version (exit ${result.status}: ${(result.stdout + result.stderr).trim().slice(0, 200)}). ${build}`);
+    throw new Error(`PIG_BIN=${pig} did not report a version for \`${PIG_VERSION_ARGS.join(' ')}\` (exit ${result.status}: ${(result.stdout + result.stderr).trim().slice(0, 200)}). ${build}`);
   }
   if (!pigVersionMatches(found, parsePigVersion(required))) {
     throw new Error(`PIG_BIN=${pig} is pig ${found.join('.')}, but these tests target pig ${required.split('.').slice(0, 2).join('.')}.x (>= ${required}). ${build}`);
