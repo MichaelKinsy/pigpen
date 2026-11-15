@@ -267,27 +267,25 @@ func SnapshotSource(from, rev, out string) error {
 	return nil
 }
 
-// CheckPiVersion requires the Pi used as the oracle to be the Pi the pig is built to match
-// (`pig --version` prints PiG version plus Pi version, for example 0.4.0+1.0.0). A pig that does not report
-// one cannot be checked.
+// CheckPiVersion requires the Pi used as the oracle to be the Pi the pig is built to match: the `upstream pi:` line
+// of `pig version`, for example `upstream pi: 1.5.2`. `pig --version` is not read: from PiG 0.8.0 on it prints Pi's
+// version alone, as Pi's own flag does, without the commit of an untagged pin. A pig that does not report its Pi
+// cannot be checked.
 //
-// A PiG that pins an untagged Pi commit reports a four-part Pi version, 0.5.0+1.3.0.1402973a: the Pi
-// package version and the commit. Such a Pi must print the package version from `--version` and be a
-// build of that commit, read from the git checkout it runs from. piSource names that checkout; empty
-// means the nearest git checkout above the (symlink-resolved) pi executable.
+// A PiG that pins an untagged Pi commit reports the Pi package version and the commit, `upstream pi: 1.4.0+74f46864`.
+// Such a Pi must print the package version from `--version` and be a build of that commit, read from the git
+// checkout it runs from. piSource names that checkout; empty means the nearest git checkout above the
+// (symlink-resolved) pi executable.
 func CheckPiVersion(pi, pig, piSource string) error {
-	out, err := exec.Command(pig, "--version").Output()
+	out, err := exec.Command(pig, "version").Output()
 	if err != nil {
 		return nil
 	}
-	_, want, ok := strings.Cut(strings.TrimSpace(string(out)), "+")
-	if !ok || want == "" {
+	want := upstreamPi(string(out))
+	if want == "" {
 		return nil
 	}
-	wantVersion, wantCommit := want, ""
-	if parts := strings.Split(want, "."); len(parts) == 4 {
-		wantVersion, wantCommit = strings.Join(parts[:3], "."), parts[3]
-	}
+	wantVersion, wantCommit, _ := strings.Cut(want, "+")
 	got, err := exec.Command(pi, "--version").Output()
 	if err != nil {
 		return fmt.Errorf("%s --version: %w (the Pi oracle must run; node must be on PATH)", pi, err)
@@ -314,4 +312,14 @@ func CheckPiVersion(pi, pig, piSource string) error {
 		return fmt.Errorf("the Pi at %s is built from commit %s but %s is built to match Pi commit %s: check out and build that commit", pi, have, pig, wantCommit)
 	}
 	return nil
+}
+
+// upstreamPi is the value of the `upstream pi:` line of `pig version` output, or "" when there is none.
+func upstreamPi(versionOutput string) string {
+	for line := range strings.SplitSeq(versionOutput, "\n") {
+		if value, ok := strings.CutPrefix(strings.TrimSpace(line), "upstream pi:"); ok {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
 }
