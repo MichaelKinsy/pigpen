@@ -3,17 +3,19 @@
 // have shown. It is not a GitHub Actions emulator: it understands only the handful of actions and expressions this
 // workflow uses, and it fails on anything else instead of guessing.
 //
-//   PIG_BIN=<pig 0.4.x> node scripts/rehearse-release.mjs --pig-src <PiG checkout at PIG_COMMIT> [--keep]
+//   PIG_BIN=<pig> node scripts/rehearse-release.mjs --pig-src <PiG checkout at PIG_COMMIT> [--piglet <name>, default herdr] [--keep]
+//                 [--expect-tools a,b [--without <extension>]]   (a Lisp Piglet: also start the released Binary and check those tools)
 //
-// What it does: a bare repository stands in for GitHub (a clone of this tree plus one commit that limits herdr to the
-// host target, because only the host can build here); tags `herdr/v<version>` on that commit; then runs `plan`,
+// What it does: a bare repository stands in for GitHub (a clone of this tree plus one commit that limits the Piglet to the
+// host target, because only the host can build here: run it on each runner OS the Piglet ships for); tags `<name>/v<version>` on that commit; then runs `plan`,
 // `android-check`, `build` (one matrix entry) and `publish` from .github/workflows/release.yml, each in a fresh
-// checkout and a fresh RUNNER_TEMP. Then it checks what the owner will rely on: the signed receipt verifies against the
+// checkout and a fresh RUNNER_TEMP, honouring every step's `if:` (so the SBCL install and the REA payload step run for the
+// Piglets that have them). Then it checks what the owner will rely on: the signed receipt verifies against the
 // pinned key with scripts/receipts.mjs, the Binary verifies and runs, the key file is gone after every step and the key
 // never reaches a log. Last, the refusals: a tag that is not the manifest version, a second publish of the same tag,
 // and a Binary altered after it was built. Nothing is pushed, nothing leaves the temp directory, no real key is read.
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,7 +31,10 @@ const option = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : u
 // `.pig-src`) would not resolve.
 const pigSrc = option('--pig-src') && resolve(option('--pig-src'));
 const pig = process.env.PIG_BIN;
-if (!pigSrc || !pig) throw new Error('usage: PIG_BIN=<pig> node scripts/rehearse-release.mjs --pig-src <PiG checkout at the pinned commit> [--keep]');
+if (!pigSrc || !pig) throw new Error('usage: PIG_BIN=<pig> node scripts/rehearse-release.mjs --pig-src <PiG checkout at the pinned commit> [--piglet <name>] [--expect-tools a,b [--without <extension>]] [--keep]');
+const name = option('--piglet') ?? 'herdr';
+const expectTools = option('--expect-tools');
+const without = option('--without');
 
 const R = realpathSync(mkdtempSync(join(tmpdir(), 'pigpen-rehearsal-')));
 const repository = 'MichaelKinsy/pigpen';
@@ -70,26 +75,32 @@ const keyBody = privateKey.split('\n').filter((l) => !l.startsWith('-----') && l
 const pinned = parsePinnedKey(readFileSync(keyPath + '.pub', 'utf8'));
 const keys = new Map([[pinned.keyId, { ...pinned, file: 'rehearsal.pub' }]]);
 
-// The "GitHub": a bare clone of this tree plus one commit that limits herdr to the host target.
-const herdr = readManifests().find(({ manifest }) => manifest.name === 'herdr').manifest;
-const version = herdr.release.version;
+// The "GitHub": a bare clone of this tree plus one commit that limits the Piglet to the host target.
+const found = readManifests().find(({ manifest }) => manifest.name === name);
+if (!found) throw new Error(`rehearsal: no Piglet named ${name}`);
+const version = found.manifest.release.version;
 const host = `${process.platform === 'darwin' ? 'darwin' : 'linux'}/${process.arch === 'arm64' ? 'arm64' : 'amd64'}`;
+if (!found.manifest.build.targets.includes(host)) throw new Error(`rehearsal: ${name} does not list the host target ${host} (${found.manifest.build.targets.join(', ')})`);
 const origin = join(R, 'origin.git');
 git(R, 'clone', '-q', '--bare', repoRoot, origin);
 const seed = join(R, 'seed');
 git(R, 'clone', '-q', origin, seed);
-const manifestFile = join(seed, 'piglets/herdr/piglet.yaml');
-writeFileSync(manifestFile, readFileSync(manifestFile, 'utf8').replace(/^build:\n  targets: \[.*\]$/m, `build:\n  targets: [${host}]`));
-git(seed, 'commit', '-qam', 'rehearsal: herdr builds the host target only');
+const manifestFile = join(seed, `piglets/${name}/piglet.yaml`);
+const manifestText = readFileSync(manifestFile, 'utf8');
+const limited = manifestText.replace(/^build:\n  targets: \[.*\]$/m, `build:\n  targets: [${host}]`);
+if (!limited.includes(`targets: [${host}]`)) throw new Error(`rehearsal: could not limit ${name} to ${host}`);
+writeFileSync(manifestFile, limited);
+git(seed, 'commit', '-qam', `rehearsal: ${name} builds the host target only`);
 // Forced: the bare clone carries every local branch of this repository, so a checkout on a branch of its own finds a `main` it is not
 // a descendant of; the bare repository is the rehearsal's, so replacing its main is the point.
 git(seed, 'push', '-q', '-f', 'origin', 'HEAD:refs/heads/main');
 const tagSha = git(seed, 'rev-parse', 'HEAD');
-const tag = `herdr/v${version}`;
+const tag = `${name}/v${version}`;
+const wrongTag = `${name}/v9.9.9`;
 // The clone may already carry the real tags (the repository has released); the rehearsal's own commit gets them, forced, in its own bare repository.
 git(seed, 'tag', '-f', tag);
-git(seed, 'tag', '-f', 'herdr/v9.9.9');
-git(seed, 'push', '-q', '-f', 'origin', tag, 'herdr/v9.9.9');
+git(seed, 'tag', '-f', wrongTag);
+git(seed, 'push', '-q', '-f', 'origin', tag, wrongTag);
 
 const workflow = parse(readFileSync(join(repoRoot, '.github/workflows/release.yml'), 'utf8'));
 
@@ -198,12 +209,12 @@ function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
     console.log(`${result.status === 0 ? '     ' : expectFail ? 'REFUSED ' : 'FAIL '}${label}`);
     if (result.status !== 0) return { ok: false, outputs, failedAt: label, stderr: result.stderr + result.stdout };
   }
-  return { ok: true, outputs };
+  return { ok: true, outputs, workspace, exported };
 }
 
 // 1. Negative: a tag that is not the manifest version never reaches a runner.
-const bad = runJob('plan', {}, { ref: 'herdr/v9.9.9', sha: git(seed, 'rev-parse', 'herdr/v9.9.9'), expectFail: true });
-note(!bad.ok && /matches 0 Piglets/.test(bad.stderr ?? ''), 'plan refuses the tag herdr/v9.9.9 (not the manifest version)');
+const bad = runJob('plan', {}, { ref: wrongTag, sha: git(seed, 'rev-parse', wrongTag), expectFail: true });
+note(!bad.ok && /matches 0 Piglets/.test(bad.stderr ?? ''), `plan refuses the tag ${wrongTag} (not the manifest version)`);
 
 // 2. The release.
 const plan = runJob('plan', {});
@@ -211,13 +222,13 @@ note(plan.ok, 'plan: tag matches the manifest, tagged commit is on main');
 if (!plan.ok) process.exit(1);
 const planOut = plan.outputs.steps.plan;
 const needs = { plan: { outputs: planOut } };
-note(planOut.name === 'herdr' && JSON.parse(planOut.matrix).include.length === 1, `plan emits herdr and its host target ${host}`);
+note(planOut.name === name && JSON.parse(planOut.matrix).include.length === 1, `plan emits ${name} and its host target ${host}`);
 const android = runJob('android-check', { needs });
 note(android.ok, 'android-check: every module compiles and vets for android/arm64');
 const matrix = JSON.parse(planOut.matrix).include[0];
 const build = runJob('build', { needs, matrix });
 note(build.ok, `build ${matrix.target}: signed Binary built on its native runner`);
-if (!build.ok) process.exit(1);
+if (!build.ok) { console.log(`${build.failedAt}\n${(build.stderr ?? '').split('\n').slice(-40).join('\n')}`); process.exit(1); }
 const artifactDir = join(R, 'artifacts', `piglet-binary-${matrix.goos}-${matrix.goarch}`);
 const produced = readdirSync(artifactDir);
 note(produced.length === 1, `one Binary artifact: ${produced.join(', ')}`);
@@ -236,13 +247,13 @@ cpSync(join(R, 'artifacts-good'), artifactDir, { recursive: true });
 const publish = runJob('publish', { needs });
 note(publish.ok, `publish: one release ${tag} created`);
 const assets = existsSync(join(R, 'releases', tag)) ? readdirSync(join(R, 'releases', tag)).sort() : [];
-const binaryName = `pig-herdr-${matrix.goos}-${matrix.goarch}`;
+const binaryName = `pig-${name}-${matrix.goos}-${matrix.goarch}`;
 note(JSON.stringify(assets) === JSON.stringify(['SHA256SUMS', 'piglet-release.json', binaryName].sort()), `release assets: ${assets.join(', ')}`);
 
 // 3. What the owner relies on.
 try {
   const receipt = readFileSync(join(R, 'releases', tag, 'piglet-release.json'), 'utf8');
-  const verified = verifyReceipt(receipt, { keys, repository, name: 'herdr', version });
+  const verified = verifyReceipt(receipt, { keys, repository, name, version });
   note(true, `the receipt verifies against the pinned key ${verified.keyId} (scripts/receipts.mjs), tag, name, version and URLs equal`);
   note(verified.sourceRef.length > 0, `sourceRef: ${verified.sourceRef}`);
   writeFileSync(join(R, 'receipt.json'), receipt);
@@ -253,10 +264,20 @@ try {
 const binary = join(R, 'releases', tag, binaryName);
 if (existsSync(binary)) {
   chmodSync(binary, 0o755);
+  note(true, `released Binary ${binaryName}: ${statSync(binary).size} bytes`);
   const verify = spawnSync(pig, ['piglet', 'verify', binary], { env: baseEnv, encoding: 'utf8' });
   note(verify.status === 0 && /ed25519:/.test(verify.stdout + verify.stderr), 'pig piglet verify accepts the released Binary: ' + (verify.stdout + verify.stderr).trim().split('\n')[0]);
   const run = spawnSync(binary, ['--version'], { env: baseEnv, encoding: 'utf8' });
   note(run.status === 0, 'the Binary runs: ' + run.stdout.trim());
+  if (expectTools) {
+    // A Lisp Piglet: the released Binary must start, load its embedded cell and register its tools in a faux turn (the check ci.yml's
+    // autolith-binary jobs make on an unsigned Binary), with the SBCL the build job's own install step put in the environment.
+    const staged = join(build.workspace, 'dist/staged/piglets', name, 'piglet.yaml');
+    const measure = spawnSync(process.execPath, [join(repoRoot, 'scripts/measure-lisp-piglet.mjs'), '--piglet', staged, ...(without ? ['--without', without] : []), '--binary', binary, '--expect-tools', expectTools, '--runs', '1'],
+      { env: { ...process.env, ...build.exported, PIG_BIN: pig, PIG_HOME: join(R, 'measure-home'), PI_TELEMETRY: '0' }, encoding: 'utf8' });
+    console.log((measure.stdout + measure.stderr).trim().split('\n').map((l) => '     ' + l).join('\n'));
+    note(measure.status === 0, `the released Binary starts and registers ${expectTools} (measure-lisp-piglet)`);
+  }
 }
 const again = runJob('publish', { needs }, { expectFail: true });
 note(!again.ok && /exists|already/i.test(again.stderr ?? ''), 'a second publish of the same tag is refused');

@@ -106,16 +106,21 @@ jobs:
   # (30 min). Read the real step times from the first runs and tighten them.
   slow-checks:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { name: 'Package installs from tags (test:packages)', timeout: 30, run: 'npm run test:packages' }
-          - { name: 'Package installs from npm (test:npm-packages)', timeout: 30, run: 'npm run test:npm-packages' }
-          - { name: 'Piglet sources from npm (test:npm-piglets)', timeout: 30, run: 'npm run test:npm-piglets' }
-          - { name: 'Release rehearsal', timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src' }
+          - { name: 'Package installs from tags (test:packages)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:packages' }
+          - { name: 'Package installs from npm (test:npm-packages)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:npm-packages' }
+          - { name: 'Piglet sources from npm (test:npm-piglets)', runner: ubuntu-24.04, timeout: 30, run: 'npm run test:npm-piglets' }
+          - { name: 'Release rehearsal', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src' }
+          # The same rehearsal, release.yml's own steps for pig-autolith on each target it ships for, on that target's native runner
+          # (the rehearsal builds the host target): the pinned SBCL install, the signed Binary build, plan, publish, the signed receipt,
+          # then the released Binary started with its tools registered. The darwin/arm64 run builds SBCL from source (about 10 minutes).
+          - { name: 'Release rehearsal pig-autolith linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
+          - { name: 'Release rehearsal pig-autolith darwin/arm64', runner: macos-15, timeout: 60, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
