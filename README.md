@@ -227,7 +227,7 @@ Staging copies local source, licenses, and executable permissions. It excludes
 missing local Packages, invalid YAML, and generated-destination collisions.
 PiG still validates the resulting manifests and selected members.
 
-Every Piglet manifest lists five build targets: `linux/amd64`, `linux/arm64`,
+Every Piglet manifest but `pig-autolith` (`linux/amd64` only) lists five build targets: `linux/amd64`, `linux/arm64`,
 `darwin/arm64`, `darwin/amd64` and `windows/amd64`. `pig piglet build` builds only the
 machine it runs on, so a local Binary build names that machine:
 `npm run build:piglet -- <piglet-name>` does this for you, and a direct

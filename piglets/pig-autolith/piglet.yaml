@@ -5,7 +5,7 @@ description: "PiG with autolith-bridge, a Common Lisp extension that runs Autoli
 release:
   version: 0.1.0
 build:
-  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+  targets: [linux/amd64]
 extensions:
   # A Lisp extension (an ASDF system): PiG builds it into a cached SBCL image the first time it loads.
   # autolith_job and autolith_session call the `autolith` program on PATH; nothing runs until the model uses a tool or you run /autolith.
