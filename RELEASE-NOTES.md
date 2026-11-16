@@ -215,9 +215,11 @@ If any of them fails, the target is not shipped until it does not.
   `/autolith` command. It needs **PiG 0.8.0** (0.7.0 builds a Binary with a Lisp member without embedding the Lisp cell), SBCL 2.6.9 to build the
   Lisp image from source, Autolith installed and on `PATH`, and Autolith's own model login. No Autolith code is shipped. The Binary ships for
   **linux/amd64 and darwin/arm64**: building it needs a native SBCL 2.6.9 on the build machine; the release workflow installs the
-  checksum-pinned official binary on linux/amd64 and builds SBCL from its checksum-pinned official source on darwin/arm64. Run: the bridge's parser tests, a linux/amd64 Binary build that is static and starts and registers
-  `autolith_job` and `autolith_session` (CI job `autolith-binary`), and an arm64 darwin Binary build on the maintainer's machine (not started in a
-  model turn). Not run: a model turn against a live Autolith from the Binary; any other platform.
+  checksum-pinned official binary on linux/amd64 and builds SBCL from its checksum-pinned official source on darwin/arm64 (SBCL publishes no
+  macOS arm64 binary of 2.6.9). Run: the bridge's parser tests; on GitHub's runners, a static linux/amd64 Binary that starts and registers
+  `autolith_job` and `autolith_session` (CI job `autolith-binary`), and a darwin/arm64 Binary (103,561,554 bytes) built with that source-built
+  SBCL on a macos-15 runner that starts and registers the same tools (CI job `autolith-binary-macos`). Not run: a model turn against a live
+  Autolith from the Binary; linux/arm64, darwin/amd64 and windows/amd64 (not built by a release).
 
 - **`pig-rea` and `pig-rea-sealed` 0.1.0** (new Piglets, one Package `rea`): REA (Reverse Engineer Anything, the npm package `rea-agents` 6.8.0 by
   morluto, MIT; no endorsement implied) as one PiG Binary with its MCP tools, its skill and a dashboard. The Binary embeds the published REA
