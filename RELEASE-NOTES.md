@@ -1,8 +1,10 @@
-# Pigpen: first release notes (release candidate, not published)
+# Pigpen: release notes (PiG 0.8.0 candidate, not published)
 
-Status of this file: the notes for the first Pigpen release candidate. Nothing here is published, signed or tagged. It states
-only what was run (the final run is on **PiG 0.4.1**, listed below) and what the Packages' own READMEs and `provenance.json`
-files say. Anything not run is listed under "Not verified".
+Status of this file: the notes for the Pigpen release built on the PiG 0.8.0 candidate (pin `05a1dfd242b9d7211940a88309975cd866a29d68`,
+which reports 0.7.0 until the release commit). Nothing here is published, signed or tagged. The "What was verified" section below is the
+last full manual run, on **PiG 0.4.1**, and is history: the current evidence for the candidate is the CI of the pull requests (validate,
+the release rehearsals, the platform jobs), named in the pull requests. It states only what was run and what the Packages' own READMEs and
+`provenance.json` files say. Anything not run is listed under "Not verified".
 
 ## What Pigpen is
 
