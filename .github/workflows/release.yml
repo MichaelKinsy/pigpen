@@ -137,6 +137,27 @@ jobs:
       - name: Say what the cache did
         shell: bash
         run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }}, matched ${{ steps.cache.outputs.cache-matched-key }}" >> "$GITHUB_STEP_SUMMARY"
+      # pig-autolith has a Common Lisp extension: PiG builds its SBCL image into the Binary and does not bundle SBCL, so the runner
+      # needs it (PIG_SBCL). The same checksum-pinned official binary as ci.yml's autolith-binary job; linux/amd64 is the only
+      # target pig-autolith lists (piglets/pig-autolith/piglet.yaml). No secret is read here.
+      - name: Install SBCL 2.6.9 for pig-autolith (official binary, checksum pinned)
+        if: ${{ needs.plan.outputs.name == 'pig-autolith' }}
+        shell: bash
+        env:
+          SBCL_VERSION: '2.6.9'
+          SBCL_SHA256: '39fac28407405841003e4c2abfbe0d96abd93b7701e8b61cdd35e713943b46d6'
+        run: |
+          set -euo pipefail
+          archive="sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "https://downloads.sourceforge.net/project/sbcl/sbcl/${SBCL_VERSION}/$archive"
+          echo "$SBCL_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -C "$RUNNER_TEMP" -xjf "$RUNNER_TEMP/$archive"
+          (cd "$RUNNER_TEMP/sbcl-${SBCL_VERSION}-x86-64-linux" && INSTALL_ROOT="$RUNNER_TEMP/sbcl" sh install.sh)
+          {
+            echo "PIG_SBCL=$RUNNER_TEMP/sbcl/bin/sbcl"
+            echo "SBCL_HOME=$RUNNER_TEMP/sbcl/lib/sbcl"
+          } >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/sbcl/bin/sbcl" --version
       - name: Build PiG and stage the Piglet (no secrets)
         shell: bash
         env:
