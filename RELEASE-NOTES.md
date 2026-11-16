@@ -210,6 +210,15 @@ If any of them fails, the target is not shipped until it does not.
   are decoded (a 420 KiB 20000×20000 PNG used to allocate 459 MiB and take 8 s of CPU). The cap is the same value as
   `websearch`'s `maxDecodePixels`; a `websearch` test keeps the two equal. A panic while the chat driver hands a client's
   prompt or steering message (and its images) to the agent now fails that turn or message instead of ending the host.
+- **`pig-autolith` 0.1.0** (new Piglet): the `autolith-bridge` extension, written in Common Lisp, runs Autolith (a separate coding agent by
+  Lambda Symbolics, ISC; <https://autolith.rocks>; no endorsement implied) from PiG: the `autolith_job` and `autolith_session` tools and the
+  `/autolith` command. It needs **PiG 0.8.0** (0.7.0 builds a Binary with a Lisp member without embedding the Lisp cell), SBCL 2.6.9 to build the
+  Lisp image from source, Autolith installed and on `PATH`, and Autolith's own model login. No Autolith code is shipped. The Binary ships for
+  **linux/amd64 only**: building it needs a native SBCL on the build machine and the release workflow installs the checksum-pinned official
+  SBCL for linux/amd64 only. Run: the bridge's parser tests, a linux/amd64 Binary build that is static and starts and registers
+  `autolith_job` and `autolith_session` (CI job `autolith-binary`), and an arm64 darwin Binary build on the maintainer's machine (not started in a
+  model turn). Not run: a model turn against a live Autolith from the Binary; any other platform.
+
 - **To re-release:** the `pig-with-batteries` Piglet as **0.1.1** (it fuses `websearch` into its Binary; the existing
   `pig-with-batteries/v0.1.0` tag carries x/image v0.41.0), and the `websearch` and `ahp` Packages as **0.1.1** (tags
   `components/websearch/v0.1.1` and `components/ahp/v0.1.1`, and npm, where `@pi-in-go/pigpen-ahp@0.1.0` is already
