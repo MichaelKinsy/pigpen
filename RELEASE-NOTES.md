@@ -219,6 +219,17 @@ If any of them fails, the target is not shipped until it does not.
   `autolith_job` and `autolith_session` (CI job `autolith-binary`), and an arm64 darwin Binary build on the maintainer's machine (not started in a
   model turn). Not run: a model turn against a live Autolith from the Binary; any other platform.
 
+- **`pig-rea` and `pig-rea-sealed` 0.1.0** (new Piglets, one Package `rea`): REA (Reverse Engineer Anything, the npm package `rea-agents` 6.8.0 by
+  morluto, MIT; no endorsement implied) as one PiG Binary with its MCP tools, its skill and a dashboard. The Binary embeds the published REA
+  package, its production dependencies from REA's tagged lockfile and Node.js 24.22.2 (a zstd payload, about 42 MB for darwin/arm64), and unpacks
+  them once per REA version into the agent directory; it needs **PiG 0.8.0** to build, and no Node, npm or network to start. REA's providers
+  (Hopper, Ghidra, IDA, JADX and others) are not bundled; REA finds them as it does under `npx`. `pig-rea-sealed` is the closed variant: it
+  refuses overlays, `-e`, `mcp.json` servers and installs. Run on darwin/arm64 against the PiG 0.8.0 candidate: `npm run test:rea` (5 of 5: the
+  tool catalog equals `npx`'s REA, `rea setup` registration, skill drift, the 450 s tool timeout pin), the Binary harness gate (10 of 10) on both
+  Binaries, `platform-smoke` for both, and `go test -race` for the `rea` and `rea-dashboard` members. Not run: any platform but darwin/arm64
+  (linux/amd64, linux/arm64, darwin/amd64 and windows/amd64 are in the manifest and are built by the release workflow, not run), and a REA
+  investigation against a real binary through the Piglet.
+
 - **To re-release:** the `pig-with-batteries` Piglet as **0.1.1** (it fuses `websearch` into its Binary; the existing
   `pig-with-batteries/v0.1.0` tag carries x/image v0.41.0), and the `websearch` and `ahp` Packages as **0.1.1** (tags
   `components/websearch/v0.1.1` and `components/ahp/v0.1.1`, and npm, where `@pi-in-go/pigpen-ahp@0.1.0` is already
