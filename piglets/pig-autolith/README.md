@@ -115,7 +115,8 @@ PIG_BIN=<pig built from the pinned commit> PIG_SBCL=<sbcl> node scripts/measure-
 
 ## Platform status
 
-The manifest lists one build target, `linux/amd64`, the only one built and run (the Binary and the source run above). The release
-workflow installs the pinned SBCL on its linux/amd64 runner for this Piglet and on no other. `darwin/arm64`, `darwin/amd64`,
-`linux/arm64` and `windows/amd64` are not built by a release and not claimed. The CI platform matrix leaves this Piglet out (building it
-needs SBCL); the job `autolith-binary` builds it and starts it on linux/amd64.
+pig-autolith 0.1.0 ships for linux/amd64 only: building its Binary needs a native SBCL 2.6.9 on the build machine, and the release
+workflow installs the checksum-pinned official SBCL for linux/amd64 only (SourceForge lists no official SBCL 2.6.9 binary for macOS or
+linux/arm64). `darwin/arm64`, `darwin/amd64`, `linux/arm64` and `windows/amd64` are not built by a release and not claimed. The Binary
+and the source run above are linux/amd64. The CI platform matrix leaves this Piglet out (building it needs SBCL); the job
+`autolith-binary` builds it and starts it on linux/amd64.
