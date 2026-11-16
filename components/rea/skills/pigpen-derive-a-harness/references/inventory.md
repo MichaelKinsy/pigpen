@@ -20,6 +20,8 @@ Take the kinds the target has; these are the usual ones for a harness, a CLI or 
 - files it writes (state, sessions, logs)
 - output formats and exit statuses
 - events and protocol methods it emits or serves
+- hosts and endpoints it contacts on its own, per mode (update checks, catalogs it fetches, feature flags, telemetry,
+  helper programs that reach a host of their own)
 
 Go by the target's own tables where it has them (a command table, a settings schema, the help output): they are more
 complete than what you happen to run into.

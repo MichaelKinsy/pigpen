@@ -28,6 +28,9 @@ skills:
   # Ours: REA evidence -> behavior spec -> a new piglet.
   - name: pigpen-derive-a-harness
     origins: [package:rea]
+  # Ours: a traffic capture -> what an app sends, where, with which of the user's values, and what likely sent it.
+  - name: pigpen-audit-app-traffic
+    origins: [package:rea]
 # No ambient extensions or skills by default. The Binary is open, so an overlay (pig-rea --piglet overlay.yaml with
 # extends.allowWiden: true) brings them back at launch without a rebuild; pig-rea-sealed is the closed variant.
 discovery:

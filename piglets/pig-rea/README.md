@@ -9,6 +9,9 @@ works, down to the binary level." `pig-rea` is a PiG Binary whose agent is set u
 - **REA's skill** (`pigpen-reverse-engineer-anything`, REA's own text) and **`pigpen-derive-a-harness`**, which turns REA
   evidence about an agent harness, CLI or terminal app into an inventory of its surface, a behavior spec and a new
   piglet, measures the piglet against the target, and re-checks the inventory before anything is called done.
+- **`pigpen-audit-app-traffic`**, which reads a capture of an app's traffic (HAR, Fiddler, or one made with a private
+  mitmproxy for that one process) and reports what the app sent, where, which requests carry your data and what likely
+  sent them, with what was observed kept apart from what was inferred. mitmproxy is not bundled.
 - **A REA dashboard**: a header with REA's version and providers, a widget with the REA calls in flight (including those
   made inside codemode scripts), the `/rea` overlay (investigation timeline, targets, providers, about) and compact cards
   for direct REA calls.
@@ -46,7 +49,7 @@ An overlay can also remove the dashboard (`extends: {remove: {extensions: [rea-d
 extensions by `origins`. It cannot bring back what the Binary left out: the Rust, Python and Lisp extension SDKs and
 `self-update` (a new harness version is a new Piglet release, not `pig update`).
 
-`-ns` keeps the harness's two skills. `-ne` and `--no-mcp` also turn off PiG's MCP support, so REA's tools disappear; the
+`-ns` keeps the harness's three skills. `-ne` and `--no-mcp` also turn off PiG's MCP support, so REA's tools disappear; the
 `rea` member says which switch did it. `-ne -e builtin:mcp -e builtin:codemode -e builtin:tool-search` keeps REA.
 
 For a Binary that accepts none of this, use [`pig-rea-sealed`](../pig-rea-sealed/README.md).
@@ -66,4 +69,4 @@ built and run (108 MB Binary, 41.9 MB of it the payload); CI builds the payload 
 ## Credits
 
 REA by morluto (MIT) and Node.js (MIT), embedded unmodified; see [components/rea/CREDITS.md](../../components/rea/CREDITS.md).
-The harness members and `pigpen-derive-a-harness` are original work by Michael Kinsy (MIT).
+The harness members, `pigpen-derive-a-harness` and `pigpen-audit-app-traffic` are original work by Michael Kinsy (MIT).

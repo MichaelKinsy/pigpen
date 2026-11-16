@@ -76,7 +76,7 @@ const systemText = (request) => {
 };
 const skills = (request) => [...systemText(request).matchAll(/<name>([^<]+)<\/name>/g)].map((m) => m[1]);
 const reaListed = (request) => /- mcp__rea \(codemode\)/.test(systemText(request));
-const pigletSkills = ['pigpen-reverse-engineer-anything', 'pigpen-derive-a-harness'];
+const pigletSkills = ['pigpen-reverse-engineer-anything', 'pigpen-derive-a-harness', 'pigpen-audit-app-traffic'];
 
 // A user skill and a user extension in the agent directory, which a plain run of the harness must not load.
 function seedUserResources(home) {

@@ -43,6 +43,27 @@ If you can do neither, the claim is "exists; effect not established".
   captured request to the model, not from reading the code.
 - **Keep what you typed and when.** The script, the timings and the raw output all stay under `evidence/`.
 
+## Everything the target sends
+
+A stand-in model endpoint shows one kind of request: the one to the model. A target usually talks to more than that
+on its own: an update check, a catalog or marketplace it fetches, feature flags, telemetry, a helper program it
+starts that contacts a host of its own. None of it reaches the stand-in, and none of it is in the help text.
+
+Capture it once per mode, early, with the model still on the stand-in and everything else through a private proxy.
+The `pigpen-audit-app-traffic` skill has the procedure (its `references/capture.md` and `references/read.md`): a
+proxy with its own certificate authority, handed to the target through its environment only, and REA's
+`inspect_web_network_capture` and its `api-surface` view over the result.
+
+- Each destination and path template becomes a row of the inventory, with what triggers it (start-up, a command, a
+  timer) and the mode it was seen in.
+- Write down what the capture could not see: hosts whose connections refused the proxy's certificate, programs that
+  do not use the proxy setting. A destination list from a capture with blind spots is "at least these".
+- Capture the same run with the target's own switches off (no update check, no telemetry, offline). A request that is
+  still sent is a finding about the target, and a row of its own.
+- The piglet does not copy these requests. Each row gets a decision: the piglet has its own equivalent (its own update
+  channel, its own catalog), says plainly that it has none, or needs the vendor's service. A piglet must never send the
+  target's telemetry or call the target's private endpoints under the target's name.
+
 ## Modes
 
 A target usually has several modes, and a capture shows one of them: signed in, own key or offline; interactive,
@@ -66,7 +87,8 @@ When the capture script changes, capture the target again. A reference made by a
 ## Safety while capturing
 
 - Do not let the target act on real accounts or the machine's trust settings to see what happens: publishing or
-  uploading, signing in or out, installing certificates, changing a keychain. Read the code path instead and mark the
-  claim `static`.
+  uploading, signing in or out, adding a certificate to the system or a keychain, changing a keychain. Read the code
+  path instead and mark the claim `static`. A proxy's certificate given to the target through its environment, for
+  that one process, is not a trust setting of the machine and is fine.
 - Ask the user before any capture that writes outside the scratch directories or contacts a service with their
   credentials.

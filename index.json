@@ -503,7 +503,7 @@
         "spec": "git:https://github.com/MichaelKinsy/pigpen.git",
         "url": "https://github.com/MichaelKinsy/pigpen/tree/main/piglets/pig-rea"
       },
-      "manifestSha256": "c8dcf6ecb330719c80b4a332ba290263d2f6b508a062af2202e4a163bf117e7e",
+      "manifestSha256": "4ba5960f241158036c56ba7efaecb97de54ebc0b7a946f880801cb38c9c868e4",
       "releases": [],
       "notes": [
         "Not released yet: no signed Piglet Binary is published and no remote install command is offered. The source composition is in this repository; see RELEASE-BLOCKERS.md.",

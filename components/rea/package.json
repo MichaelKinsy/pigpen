@@ -44,7 +44,8 @@
     ],
     "skills": [
       "skills/pigpen-reverse-engineer-anything",
-      "skills/pigpen-derive-a-harness"
+      "skills/pigpen-derive-a-harness",
+      "skills/pigpen-audit-app-traffic"
     ]
   }
 }
