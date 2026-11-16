@@ -120,8 +120,15 @@ test('gate 2: rea setup --client pi registers exactly the stdio command the rea 
   const server = JSON.parse(readFileSync(written[0], 'utf8')).mcpServers.rea;
   assert.deepEqual(Object.keys(server).sort(), ['args', 'command', 'type']);
   assert.equal(server.type, 'stdio');
-  assert.deepEqual(server.args, ['mcp']);
-  assert.equal(server.command, entry);
+  if (process.platform === 'win32') {
+    // REA registers [process.execPath, entrypoint, "mcp"] on Windows (a .mjs cannot be spawned directly): the node that ran setup, then the
+    // entrypoint, the same node + entrypoint + "mcp" shape the rea member builds on every platform (extension.go serverConfig).
+    assert.deepEqual(server.args, [entry, 'mcp']);
+    assert.equal(resolve(server.command).toLowerCase(), resolve(node).toLowerCase());
+  } else {
+    assert.deepEqual(server.args, ['mcp']);
+    assert.equal(server.command, entry);
+  }
 });
 
 test('gate 2b: rea.lock.json pins the tool_timeout_sec that rea setup --client codex writes', () => {
