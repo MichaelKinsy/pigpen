@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Measures a Piglet whose extension is Common Lisp: the cached SBCL image PiG builds at the first load, and the time of that
 // first load (a cold run: empty PIG_HOME and cache) against a warm run (image cached). PiG 0.7.0 builds a Piglet Binary with
-// a Lisp member but that Binary stops at startup (its baked closure expects the Lisp cell inside it); PiG 0.7.1 embeds the cell.
+// a Lisp member but that Binary stops at startup (its baked closure expects the Lisp cell inside it); PiG 0.8.0 embeds the cell.
 // The image runs use the Piglet source with PIG_BIN. --binary also measures a Binary built from the same manifest: its size, its
 // --version, and cold and warm starts (a faux turn in JSON mode); it fails when the Binary does not start or when a tool named
 // by --expect-tools is not registered.
