@@ -101,6 +101,23 @@ function evaluate(text, ctx) {
   });
 }
 
+/**
+ * A step's `if:`, for the only forms release.yml uses: `==` and `!=` against a quoted string, joined by `&&` and `||` (`&&` binds tighter).
+ * Anything else fails the rehearsal rather than being guessed, and a step with no `if` always runs.
+ */
+function holds(condition, ctx) {
+  if (condition === undefined) return true;
+  const text = String(condition).trim().replace(/^\$\{\{\s*([\s\S]*?)\s*\}\}$/, '$1');
+  const term = (t) => {
+    const m = /^([A-Za-z_][\w.]*)\s*(==|!=)\s*'([^']*)'$/.exec(t.trim());
+    if (!m) throw new Error(`rehearsal: cannot evaluate the condition \`${condition}\``);
+    const value = m[1].split('.').reduce((o, k) => (o === undefined ? undefined : o[k]), ctx);
+    if (value === undefined) throw new Error(`rehearsal: cannot evaluate ${m[1]} in the condition \`${condition}\``);
+    return m[2] === '==' ? String(value) === m[3] : String(value) !== m[3];
+  };
+  return text.split('||').some((or) => or.split('&&').every(term));
+}
+
 /** Run one job in a fresh workspace and RUNNER_TEMP; `ctx` carries needs and matrix. */
 function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
   const job = workflow.jobs[id];
@@ -123,6 +140,7 @@ function runJob(id, ctx, { ref = tag, sha = tagSha, expectFail = false } = {}) {
   for (const step of job.steps) {
     n += 1;
     const label = `${id}#${n} ${step.name ?? step.uses ?? step.run.split('\n')[0].slice(0, 50)}`;
+    if (!holds(step.if, base)) { console.log(`     skipped (if: ${String(step.if).trim()}) ${label}`); continue; }
     if (step.uses) {
       const action = step.uses.split('@')[0];
       const w = step.with ?? {};
