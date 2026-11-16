@@ -214,8 +214,8 @@ If any of them fails, the target is not shipped until it does not.
   Lambda Symbolics, ISC; <https://autolith.rocks>; no endorsement implied) from PiG: the `autolith_job` and `autolith_session` tools and the
   `/autolith` command. It needs **PiG 0.8.0** (0.7.0 builds a Binary with a Lisp member without embedding the Lisp cell), SBCL 2.6.9 to build the
   Lisp image from source, Autolith installed and on `PATH`, and Autolith's own model login. No Autolith code is shipped. The Binary ships for
-  **linux/amd64 only**: building it needs a native SBCL on the build machine and the release workflow installs the checksum-pinned official
-  SBCL for linux/amd64 only. Run: the bridge's parser tests, a linux/amd64 Binary build that is static and starts and registers
+  **linux/amd64 and darwin/arm64**: building it needs a native SBCL 2.6.9 on the build machine; the release workflow installs the
+  checksum-pinned official binary on linux/amd64 and builds SBCL from its checksum-pinned official source on darwin/arm64. Run: the bridge's parser tests, a linux/amd64 Binary build that is static and starts and registers
   `autolith_job` and `autolith_session` (CI job `autolith-binary`), and an arm64 darwin Binary build on the maintainer's machine (not started in a
   model turn). Not run: a model turn against a live Autolith from the Binary; any other platform.
 

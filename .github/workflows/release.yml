@@ -138,10 +138,12 @@ jobs:
         shell: bash
         run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }}, matched ${{ steps.cache.outputs.cache-matched-key }}" >> "$GITHUB_STEP_SUMMARY"
       # pig-autolith has a Common Lisp extension: PiG builds its SBCL image into the Binary and does not bundle SBCL, so the runner
-      # needs it (PIG_SBCL). The same checksum-pinned official binary as ci.yml's autolith-binary job; linux/amd64 is the only
-      # target pig-autolith lists (piglets/pig-autolith/piglet.yaml). No secret is read here.
-      - name: Install SBCL 2.6.9 for pig-autolith (official binary, checksum pinned)
-        if: ${{ needs.plan.outputs.name == 'pig-autolith' }}
+      # needs it (PIG_SBCL). pig-autolith lists linux/amd64 and darwin/arm64 (piglets/pig-autolith/piglet.yaml). linux/amd64: the
+      # official binary, checksum pinned, as ci.yml's autolith-binary job. darwin/arm64: SBCL publishes no 2.6.9 binary for it, so
+      # scripts/install-sbcl-macos.sh builds the checksum-pinned official source (ci.yml's autolith-binary-macos job runs the same
+      # script). No secret is read in these steps.
+      - name: Install SBCL 2.6.9 for pig-autolith on linux/amd64 (official binary, checksum pinned)
+        if: ${{ needs.plan.outputs.name == 'pig-autolith' && matrix.target == 'linux/amd64' }}
         shell: bash
         env:
           SBCL_VERSION: '2.6.9'
@@ -158,6 +160,10 @@ jobs:
             echo "SBCL_HOME=$RUNNER_TEMP/sbcl/lib/sbcl"
           } >> "$GITHUB_ENV"
           "$RUNNER_TEMP/sbcl/bin/sbcl" --version
+      - name: Install SBCL 2.6.9 for pig-autolith on darwin/arm64 (official source, checksum pinned)
+        if: ${{ needs.plan.outputs.name == 'pig-autolith' && matrix.target == 'darwin/arm64' }}
+        shell: bash
+        run: sh scripts/install-sbcl-macos.sh "$RUNNER_TEMP/sbcl" >> "$GITHUB_ENV"
       # pig-rea and pig-rea-sealed embed REA and its pinned Node, built from components/rea/rea.lock.json for this target before
       # staging copies the Package. No secrets; npm and nodejs.org downloads are checked against the pins.
       - name: Build the REA payload for ${{ matrix.target }}

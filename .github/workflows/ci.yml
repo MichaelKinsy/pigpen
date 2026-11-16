@@ -19,6 +19,7 @@
 #   autolith-binary every run, in parallel with validate: the Lisp Piglet pig-autolith needs SBCL, which no other job installs, so it is
 #                   left out of platform-matrix and proved here on linux/amd64: the bridge's own tests, a native Piglet Binary build
 #                   (statically linked, starts, registers its tools), and the size and first-load time of its SBCL image (scripts/measure-lisp-piglet.mjs).
+#   autolith-binary-macos  the same on a macos-15 runner for darwin/arm64, with SBCL built from pinned source by scripts/install-sbcl-macos.sh, the script release.yml runs.
 #   ci-result       the one required check. Green when validate, every slow check, govulncheck, listings and autolith-binary passed and each
 #                   other tier passed or was skipped.
 name: Validate Pigpen
@@ -342,6 +343,56 @@ jobs:
       - name: Binary start and tool registration, size and first-load time of the SBCL image
         run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
 
+  # The darwin/arm64 half of the pig-autolith release, on a real Apple-silicon runner: the same SBCL install script release.yml runs
+  # (scripts/install-sbcl-macos.sh: SBCL 2.6.9 built from the checksum-pinned official source, no official macOS arm64 binary of 2.6.9
+  # exists), then the same unsigned Binary build, start, tool registration and image measurement as autolith-binary. The Binary size
+  # is printed in the job summary to compare with the 104,288,082 bytes built on the maintainer's Mac.
+  autolith-binary-macos:
+    name: Lisp Piglet pig-autolith on darwin/arm64 (SBCL from source, Binary build)
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the reviewed PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build the PiG validator
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig ./cmd/pig
+          {
+            echo "PIG_BIN=$PWD/.pig-bin/pig"
+            echo "PIG_HOME=$RUNNER_TEMP/pig-home"
+            echo "PIG_SOURCE_ROOT=$GITHUB_WORKSPACE/.pig-src"
+          } >> "$GITHUB_ENV"
+      - name: Install SBCL 2.6.9 (official source, checksum pinned; the script release.yml runs)
+        run: sh scripts/install-sbcl-macos.sh "$RUNNER_TEMP/sbcl" >> "$GITHUB_ENV"
+      - name: Build the pig-autolith Binary for darwin/arm64 and check it starts
+        run: |
+          set -euo pipefail
+          node scripts/build-piglet.mjs pig-autolith --out dist/bin/pig-autolith
+          file dist/bin/pig-autolith
+          dist/bin/pig-autolith --version
+          size=$(stat -f %z dist/bin/pig-autolith)
+          echo "pig-autolith darwin/arm64 Binary: $size bytes (maintainer's Mac: 104288082)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Binary start and tool registration, size and first-load time of the SBCL image
+        run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
+
   # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
   # pig this run builds (the PiG 0.8.0 release candidate, 05a1dfd242b9), before index.json may claim it. The fixture test runs first so a broken check cannot pass
   # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
@@ -386,7 +437,7 @@ jobs:
   ci-result:
     name: CI result
     if: ${{ always() }}
-    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings, autolith-binary]
+    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings, autolith-binary, autolith-binary-macos]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -399,13 +450,15 @@ jobs:
           GOVULNCHECK: ${{ needs.govulncheck.result }}
           LISTINGS: ${{ needs.listings.result }}
           AUTOLITH_BINARY: ${{ needs.autolith-binary.result }}
+          AUTOLITH_BINARY_MACOS: ${{ needs.autolith-binary-macos.result }}
         run: |
-          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS autolith-binary=$AUTOLITH_BINARY"
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS autolith-binary=$AUTOLITH_BINARY autolith-binary-macos=$AUTOLITH_BINARY_MACOS"
           [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
           [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
           [ "$GOVULNCHECK" = success ] || { echo "govulncheck did not pass"; exit 1; }
           [ "$LISTINGS" = success ] || { echo "a third-party listing did not verify (see the listings job)"; exit 1; }
           [ "$AUTOLITH_BINARY" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load (see the autolith-binary job)"; exit 1; }
+          [ "$AUTOLITH_BINARY_MACOS" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load on darwin/arm64 (see the autolith-binary-macos job)"; exit 1; }
           for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
             case "$result" in
               success | skipped) ;;
