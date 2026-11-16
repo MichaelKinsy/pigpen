@@ -1,5 +1,5 @@
 {
-  "$comment": "Pins for the REA payload. scripts/payload.mjs builds a target's payload from exactly these; scripts/lock.mjs moves them to a new release.",
+  "$comment": "Pins for the REA payload. scripts/payload.mjs builds a target's payload from exactly these; no script moves them: a new release is a hand edit of this file, then npm run test:rea. The Node archive sha256 values were checked against the GPG-signed SHASUMS256.txt of that release with the keyring named in node.releaseKeys when they were pinned; nothing re-checks that signature at build time, the sha256 pins are what the build verifies. rea.toolTimeoutSec is the tool_timeout_sec that `rea setup --client codex` writes; tests/faithful.test.mjs fails when REA writes another value.",
   "rea": {
     "package": "rea-agents",
     "version": "6.8.0",
@@ -8,7 +8,8 @@
     "repository": "https://github.com/morluto/rea",
     "integrity": "sha512-9QDeRnGqEDzABZyr04eLnBXBv/c6I9/TWu/6M0MD4pEfkySI/BIgwTODIbAReX3C1x6hjw9+Jlx4A2yUSPZ9ww==",
     "lockfile": "locks/rea-agents-6.8.0.package-lock.json",
-    "lockfileSha256": "1d8fa0f33b3125d3e601ec832b18d9d35b37453f36340dc0507f065a8de158ad"
+    "lockfileSha256": "1d8fa0f33b3125d3e601ec832b18d9d35b37453f36340dc0507f065a8de158ad",
+    "toolTimeoutSec": 450
   },
   "node": {
     "version": "24.22.2",

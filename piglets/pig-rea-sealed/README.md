@@ -17,4 +17,4 @@ To change it, derive another Piglet from `pig-rea` and rebuild.
 Known PiG issue: a project with its own `.pig/mcp.json` makes PiG 0.7.0 load the user's `~/.pig/agent/extensions` in its
 pre-trust pass, which fails startup here because the Binary has no TypeScript runtime. See the `pig-rea` README.
 
-Only darwin/arm64 has been built and run (101.5 MB).
+Only darwin/arm64 has been built and run (102 MB).

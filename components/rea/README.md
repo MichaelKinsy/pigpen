@@ -1,6 +1,6 @@
 # rea
 
-REA ([Reverse Engineer Anything](https://github.com/morluto/rea), `rea-agents` by morluto, MIT) for PiG, as the
+REA ([Reverse Engineer Anything](https://github.com/morluto/rea), `rea-agents` by morluto, MIT; no endorsement implied) for PiG, as the
 members of the [`pig-rea`](../../piglets/pig-rea/README.md) harness:
 
 - **`rea`** unpacks the REA payload embedded in the Piglet Binary into `<agent dir>/rea/<sha256[:16]>/` on the first start

@@ -43,7 +43,9 @@ function fail(message) {
 function run(command, args, options = {}) {
   // npm is npm.cmd on Windows, which Node runs only through a shell.
   const shell = command === 'npm' && process.platform === 'win32';
-  const result = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 64 << 20, shell, ...options });
+  // The Node archive for Windows is a .zip: only Windows' own bsdtar reads it, and the GNU tar of a Git Bash PATH takes `C:\...` for a remote host.
+  const program = command === 'tar' && process.platform === 'win32' && process.env.SystemRoot ? join(process.env.SystemRoot, 'System32', 'tar.exe') : command;
+  const result = spawnSync(program, args, { encoding: 'utf8', maxBuffer: 64 << 20, shell, ...options });
   if (result.error) fail(`cannot run ${command}: ${result.error.message}`);
   if (result.status !== 0) fail(`${command} ${args.join(' ')} exited ${result.status}:\n${(result.stderr || result.stdout || '').trim().slice(-4000)}`);
   return result.stdout;
@@ -75,19 +77,6 @@ function walk(root) {
   };
   visit(root);
   return entries.sort((a, b) => (a.rel < b.rel ? -1 : a.rel > b.rel ? 1 : 0));
-}
-
-/** The tool_timeout_sec `rea setup --client codex` writes with REA's default environment. */
-function recommendedToolTimeoutSec(node, entry, work) {
-  const home = join(work, 'setup-home');
-  mkdirSync(join(home, '.codex'), { recursive: true });
-  const env = { PATH: `${dirname(node)}${process.platform === 'win32' ? ';' : ':'}${process.env.PATH ?? ''}`, HOME: home, USERPROFILE: home, CODEX_HOME: join(home, '.codex') };
-  if (process.env.SystemRoot) env.SystemRoot = process.env.SystemRoot;
-  run(node, [entry, 'setup', '--client', 'codex', '--yes'], { cwd: home, env });
-  const config = readFileSync(join(home, '.codex', 'config.toml'), 'utf8');
-  const seconds = Number(/^\s*tool_timeout_sec\s*=\s*(\d+)\s*$/m.exec(config)?.[1]);
-  if (!(seconds > 0)) fail(`rea setup --client codex wrote no tool_timeout_sec:\n${config}`);
-  return seconds;
 }
 
 // ---- deterministic tar ----
@@ -262,11 +251,11 @@ async function main() {
     cpSync(join(unpack, member), join(nodeDir, 'bin', exe));
     cpSync(join(unpack, base, 'LICENSE'), join(nodeDir, 'LICENSE'));
 
-    // 4b: the MCP tool deadline REA recommends for its server. `rea setup` writes it only for clients whose config has the
-    // field (Codex: tool_timeout_sec); Pi's has none, and PiG's default of 60 s cancels REA's longer analyses. Ask REA itself,
-    // with the default environment, in a throwaway HOME. The staged Node runs it when it is this machine's.
-    const setupNode = target === hostTarget() ? join(nodeDir, 'bin', exe) : process.execPath;
-    const toolTimeoutSec = recommendedToolTimeoutSec(setupNode, join(reaDir, 'scripts/rea.mjs'), work);
+    // 4b: the MCP tool deadline REA recommends for its server, pinned in rea.lock.json (rea.toolTimeoutSec). `rea setup` writes it only
+    // for clients whose config has the field (Codex: tool_timeout_sec); Pi's has none, and PiG's default of 60 s cancels REA's longer
+    // analyses. tests/faithful.test.mjs asks REA itself and fails when the lock disagrees, so no REA code runs in the release build job.
+    const toolTimeoutSec = lock.rea.toolTimeoutSec;
+    if (!(toolTimeoutSec > 0)) fail('rea.lock.json has no rea.toolTimeoutSec');
 
     // Gate 4: REA's skill in the Piglet is the published one, byte for byte apart from the prefixed name.
     const drift = skillDrift(join(reaDir, 'skills', upstreamSkill), pigletSkill);

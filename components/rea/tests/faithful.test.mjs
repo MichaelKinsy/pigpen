@@ -27,7 +27,8 @@ let reference;
 let node;
 
 function run(command, args, options = {}) {
-  const result = spawnSync(command, args, { encoding: 'utf8', maxBuffer: 64 << 20, ...options });
+  const program = command === 'tar' && process.platform === 'win32' && process.env.SystemRoot ? join(process.env.SystemRoot, 'System32', 'tar.exe') : command;
+  const result = spawnSync(program, args, { encoding: 'utf8', maxBuffer: 64 << 20, ...options });
   assert.equal(result.status, 0, `${command} ${args.join(' ')}: ${result.error?.message ?? ''}${result.stderr}`);
   return result.stdout;
 }
@@ -121,6 +122,18 @@ test('gate 2: rea setup --client pi registers exactly the stdio command the rea 
   assert.equal(server.type, 'stdio');
   assert.deepEqual(server.args, ['mcp']);
   assert.equal(server.command, entry);
+});
+
+test('gate 2b: rea.lock.json pins the tool_timeout_sec that rea setup --client codex writes', () => {
+  const home = join(work, 'codex-home');
+  mkdirSync(join(home, '.codex'), { recursive: true });
+  const entry = join(payloadRoot, 'rea/scripts/rea.mjs');
+  const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: join(home, '.codex') };
+  run(node, [entry, 'setup', '--client', 'codex', '--yes'], { cwd: home, env });
+  const config = readFileSync(join(home, '.codex', 'config.toml'), 'utf8');
+  const seconds = Number(/^\s*tool_timeout_sec\s*=\s*(\d+)\s*$/m.exec(config)?.[1]);
+  assert.ok(seconds > 0, `rea setup --client codex wrote no tool_timeout_sec:\n${config}`);
+  assert.equal(lock.rea.toolTimeoutSec, seconds);
 });
 
 test("gate 4: the Piglet's REA skill is the payload's, byte for byte apart from the prefixed name", () => {

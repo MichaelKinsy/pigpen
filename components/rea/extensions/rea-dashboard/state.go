@@ -118,7 +118,9 @@ func (d *dashboard) attach(ctx sdk.Context) {
 	d.hasUI = ui
 	d.mu.Unlock()
 	if ui {
+		d.mu.Lock() // revive resets loopOnce under this lock; the func only starts the goroutine, which takes the lock itself later
 		d.loopOnce.Do(func() { go d.loop() })
+		d.mu.Unlock()
 	}
 	if first {
 		harness := harnessVersion(ctx)

@@ -68,5 +68,5 @@ built and run (108 MB Binary, 41.9 MB of it the payload); CI builds the payload 
 
 ## Credits
 
-REA by morluto (MIT) and Node.js (MIT), embedded unmodified; see [components/rea/CREDITS.md](../../components/rea/CREDITS.md).
+REA by morluto (MIT) and Node.js (MIT), embedded unmodified; REA is a separate project and no endorsement is implied. See [components/rea/CREDITS.md](../../components/rea/CREDITS.md).
 The harness members, `pigpen-derive-a-harness` and `pigpen-audit-app-traffic` are original work by Michael Kinsy (MIT).
