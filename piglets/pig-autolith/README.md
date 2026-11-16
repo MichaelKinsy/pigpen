@@ -25,7 +25,7 @@ finished call twice) and resets its counters when Autolith's launcher re-runs a 
 
 This Piglet does not bundle any of these. Without them the tools report the missing program.
 
-1. **SBCL 2.6.9** to build the Lisp image (building the Binary, or running the Piglet from source). A Binary built with PiG 0.7.1
+1. **SBCL 2.6.9** to build the Lisp image (building the Binary, or running the Piglet from source). A Binary built with PiG 0.8.0
    carries the image. `pig setup` shows what is missing; `PIG_SBCL` names another executable.
    Official binaries: <https://www.sbcl.org/platform-table.html>.
 2. **Autolith** installed and on `PATH`: `nix run github:lambda-symbolics/autolith`, or the installer on
@@ -33,7 +33,7 @@ This Piglet does not bundle any of these. Without them the tools report the miss
 3. **A model login** for Autolith (it keeps its own) and one for PiG. With a GitHub Copilot login the bundled Autolith roles fail
    (`Unsupported reasoning effort "medium" for model copilot/auto`); give the project a role that pins a Copilot model and
    `:reasoning-effort :none` in `.autolith/agents/`.
-4. **PiG 0.7.1 or later.** Common Lisp extensions first ship in 0.7.0, but 0.7.0 has a known issue: it builds a Piglet Binary with
+4. **PiG 0.8.0 or later.** Common Lisp extensions first ship in 0.7.0, but 0.7.0 has a known issue: it builds a Piglet Binary with
    a Lisp member and does not embed the Lisp cell, so that Binary stops at startup (see below). Running the Piglet from source works on 0.7.0.
 
 Autolith's `--permissions auto` denied a plain test command in one real run, where `sandbox` ran it; the tool has a `permissions`
@@ -70,7 +70,7 @@ The first start builds the Lisp image (below); later starts reuse it.
 ## Binary
 
 `pig piglet build` produces a statically linked Binary (`CGO_ENABLED=0` is the default when nothing in the Binary uses cgo; `file`
-reports `statically linked`, `ldd` `not a dynamic executable`). With PiG 0.7.1 the Binary embeds the Lisp cell, so it starts with
+reports `statically linked`, `ldd` `not a dynamic executable`). With PiG 0.8.0 the Binary embeds the Lisp cell, so it starts with
 no SBCL build step and registers `autolith_job`, `autolith_session` and `/autolith`. The Lisp cell is the image below (an SBCL core),
 which is why the Binary is larger than a Go-only Piglet. The built Binary started and registered its tools on a PATH with no `sbcl`
 (checked on imladris); building it, and running the Piglet from source, need SBCL. Autolith and a model login are still needed for
@@ -83,8 +83,8 @@ the tools to do anything.
 pig: baked Piglet Binary binary-packed extensions do not match its plan: missing [autolith-bridge], unexpected []
 ```
 
-PiG 0.7.1 fixes this (MichaelKinsy/PiG#490). Pigpen builds this Piglet with PiG at commit `ea89b2804ed9`, the head of that pull request, until 0.7.1
-ships. Nothing here is signed or published.
+PiG 0.8.0 has the fix (MichaelKinsy/PiG#490). Pigpen builds this Piglet with the PiG 0.8.0 release candidate (`PIG_COMMIT` in the workflows) until the release is tagged,
+then with the tag. Nothing here is signed or published.
 
 ## Measured size and first-load time
 

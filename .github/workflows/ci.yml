@@ -266,7 +266,7 @@ jobs:
 
   # pig-autolith has a Common Lisp extension (an ASDF system), so loading it needs SBCL 2.6.9, which PiG does not bundle. The archive
   # is the official linux/x86-64 binary; its SHA-256 is the one of the file downloaded on 2026-11-05 (the release signature is not verified).
-  # The pig is built from PIG_COMMIT, PiG main plus MichaelKinsy/PiG#490 (0.7.1), which embeds the Lisp cell in a Piglet Binary; PiG 0.7.0 builds a
+  # The pig is built from PIG_COMMIT, the PiG 0.8.0 release candidate, which embeds the Lisp cell in a Piglet Binary (MichaelKinsy/PiG#490); PiG 0.7.0 builds a
   # Binary that stops at startup. The proof: the Binary builds, is statically linked, starts, loads the embedded cell and registers
   # autolith_job and autolith_session in a faux turn (the step fails otherwise); the Piglet source answers a faux turn through the real
   # Lisp image; the sizes and the cold and warm times are printed in the job summary.
