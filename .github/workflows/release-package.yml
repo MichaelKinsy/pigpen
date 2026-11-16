@@ -22,7 +22,7 @@ concurrency:
 
 env:
   # The PiG release this job builds with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
-  PIG_COMMIT: 'ea89b2804ed969768f71e97db5caa8ead415e940' # PiG main plus the Lisp cell fix, MichaelKinsy/PiG#490 (unreleased 0.7.1)
+  PIG_COMMIT: '05a1dfd242b9d7211940a88309975cd866a29d68' # PiG 0.8.0 release candidate (canary/line-24-pinned), reports 0.7.0 until the release commit; re-pinned to the tag after the release
 
 jobs:
   verify:

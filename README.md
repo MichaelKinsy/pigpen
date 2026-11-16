@@ -30,11 +30,10 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.7.0 line, built from commit `ea89b2804ed9`** (Pi 1.5.0; that pig prints `0.7.0+1.5.0`). The pin is not a release: it is PiG's
-main branch of 2026-11-14 plus the fix of MichaelKinsy/PiG#490, which will ship as 0.7.1 and embeds a Lisp member's cell in a Piglet Binary (the `v0.7.0` tag,
-`beb56447c476`, builds such a Binary that stops at startup). It is recorded in `scripts/pig-requirement.json` and `PIG_COMMIT` in the
-workflows; the version stays `0.7.0` because the commit reports it. No release has pig archives for it, so `release.published` is
-false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.7.1` can record the SHA-256 of its archives; until then
+**Target: PiG 0.8.0 release candidate, built from commit `05a1dfd242b9`** (branch `canary/line-24-pinned` of MichaelKinsy/PiG; Pi 1.5.2). The pin is not a release: it is the 0.8.0 line, which embeds a Lisp member's cell in a Piglet Binary
+(the `v0.7.0` tag, `beb56447c476`, builds such a Binary that stops at startup). It is recorded in `scripts/pig-requirement.json` and `PIG_COMMIT` in the
+workflows; the version stays `0.7.0` because the commit reports it until the release commit sets it. No release has pig archives for it, so `release.published` is
+false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.8.0` can record the SHA-256 of its archives; until then
 `scripts/fetch-pig.mjs` (the platform matrix) refuses to download a pig, and CI builds pig from the pinned commit. `scripts/pig-requirement.json` makes every script and test refuse a pig of another
 minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.4). Every Go module still requires
 `github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3` (a Piglet build refuses a member that requires a newer SDK than PiG's, not an
