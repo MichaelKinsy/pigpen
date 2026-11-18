@@ -378,7 +378,7 @@ func (e *childExit) Error() string {
 	return fmt.Sprintf("%s exited with code %d: %s", e.agent, e.code, e.detail)
 }
 
-func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes *paneHost) (string, error) {
+func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes paneRunner) (string, error) {
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
@@ -424,7 +424,7 @@ func chainTask(steps []ChainStep, i int, request, previous string) string {
 
 // runChain runs the steps in order, each one's output flowing into the next; it stops at the first failing step. Every
 // agent is resolved before any child starts.
-func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string), panes *paneHost) (string, error) {
+func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string), panes paneRunner) (string, error) {
 	resolved := make([]*AgentConfig, len(c.Steps))
 	for i, s := range c.Steps {
 		a, msg := ResolveAgentName(s.Agent, agents)
