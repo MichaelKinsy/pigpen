@@ -77,6 +77,9 @@ describe('the Packages in this tree', () => {
   });
 });
 
+// npm 12 prints an object keyed by package name where npm 11 printed an array; Object.values reads both.
+const packedOf = (tree) => Object.values(JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' })))[0].files.map((f) => f.path);
+
 describe('buildPackageTree', () => {
   const out = mkdtempSync(join(tmpdir(), 'pigpen-npm-tree-'));
   after(() => rmSync(out, { recursive: true, force: true }));
@@ -111,14 +114,14 @@ describe('buildPackageTree', () => {
   });
   it('leaves nothing out that npm would need to build the extension', () => {
     const tree = buildPackageTree('ahp', out);
-    const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
+    const packed = packedOf(tree);
     assert.deepEqual(packedProblems(tree, packed), []);
     assert.ok(packed.some((f) => f.endsWith('third_party/agent-host-protocol-go/go.mod')));
     assert.deepEqual(packedProblems(tree, packed.filter((f) => !f.endsWith('go.sum'))).length > 0, true, 'a missing go.sum is reported');
   });
   it('does not ask for the go.mod of a tree the Package does not ship, and still asks for the one of a tree it does', () => {
     const tree = buildPackageTree('kagent', out);
-    const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
+    const packed = packedOf(tree);
     assert.ok(existsSync(join(tree, 'harness/adapter/go.mod')), 'the harness module is in the component directory');
     assert.equal(packed.some((f) => f.startsWith('harness/')), false, 'and npm does not pack it');
     assert.deepEqual(packedProblems(tree, packed), []);
@@ -126,7 +129,6 @@ describe('buildPackageTree', () => {
   });
   describe('go.mod and go.sum of a module the Package builds with, not covered by a Resource entry', () => {
     // hardening has no extension (its `pi` is empty), so only the go.mod rule and the go.work `use` rule can report these.
-    const packedOf = (tree) => JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8' }))[0].files.map((f) => f.path);
     it('asks for the go.sum of a packed module', () => {
       const tree = buildPackageTree('hardening', out);
       const packed = packedOf(tree);
