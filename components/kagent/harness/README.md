@@ -25,7 +25,7 @@ This directory is exported from `components/kagent/harness` of [MichaelKinsy/pig
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | the chart's tested version; preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` are required |
 | PiG | commit `51cc9f6f56be2ddcbd010e26db311814e9ddf08b` (the 0.8.0 line, branch `fix/pi-pin-bump`, not yet tagged; earlier images used `v0.7.0`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
 | Go | 1.27.3 | adapter and Piglet builder |
-| Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 image builds from this directory with plain `docker build` and passes the tool smoke below. Not verified: arm64 was not built or run; the release workflow builds it on a native arm64 runner |
+| Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 and the arm64 image each build from this directory with plain `docker build` on a host of their own architecture and pass the tool smoke below. For arm64 that host was OrbStack on Apple Silicon, where the adapter also started in the image (`/readyz` answered 200 and `lf.a2a.v1.A2AService` was served on port 80) and the adapter's real-pig scenarios passed with the image's `pig` against the mock model. Not verified: the arm64 image on a cluster (every cluster result below is amd64); the release workflow builds it on a native arm64 runner |
 
 Verified, with PiG v0.7.0 release binaries on a Linux amd64 host (no real model provider was used):
 - closing PiG's stdin while an approval request is outstanding leaves a valid session JSONL with nothing of the pending batch executed;
@@ -52,10 +52,10 @@ What the image holds (everything is baked: the Substrate sandbox runs the Actor 
 | OS | `bash ca-certificates curl git python3 python3-pip python3-venv` from a snapshot.debian.org timestamp; user and group 65532 |
 | Go toolchain | Go 1.27.3 in `/usr/local/go` |
 | tools | `gh` 2.103.3, `rg` (ripgrep) 15.2.0, `fd` 10.5.1, `jq` 1.8.2 |
-| PiG | `/usr/local/bin/pig`: PiG v0.7.0 with the `kagent` Piglet fused in |
+| PiG | `/usr/local/bin/pig`: PiG at the pinned commit (it reports `pig: 0.7.0`) with the `kagent` Piglet fused in |
 | adapter | `/usr/local/bin/kagent-pig` |
 
-Every archive is pinned by sha256 (`ADD --checksum`), the base images by digest, Go modules by `go.sum`. The image has no `ENTRYPOINT`, no `CMD` and no health check:
+Every archive is pinned by sha256 (`ADD --checksum`), the base images by digest, Go modules by `go.sum`. The image sets no `ENTRYPOINT`, no `CMD` and no health check (it inherits the base image's `CMD ["bash"]`, which Substrate drops once a command is set):
 the Harness supplies `workload.command: ["/usr/local/bin/kagent-pig"]` and kagent probes `/readyz` on port 8081. `HOME` and every cache are under `/data`, the
 durable volume kagent mounts. kagent sets the TLS trust variables itself and rejects an Agent that sets them, so the image sets none; the adapter combines the
 system roots in `/etc/ssl/certs/ca-certificates.crt` with the egress trust bundle for `pig` and its tools.
@@ -92,7 +92,7 @@ docker run --rm --entrypoint sh byo-ext/pig:local -c 'id; git --version; rg --ve
 ```
 
 Verified on the image built from this tree: `uid=65532(kagent)`, git 2.47.3, ripgrep 15.2.0, fd 10.5.1, gh 2.103.3, jq 1.8.2, curl 8.14.1, Python 3.13.5 with pip,
-go1.27.3 linux/amd64, `pig: 0.7.0`.
+go1.27.3 linux/amd64, `pig: 0.7.0`. The arm64 image prints the same versions with go1.27.3 linux/arm64.
 
 Reproducibility, measured: with `SOURCE_DATE_EPOCH` and `rewrite-timestamp` the OS, Go, tool and adapter layers were identical across two cold builds. The fused
 `pig` layer differs by 123 bytes because PiG v0.7.0 records the build time in the Piglet's embedded resolution record; the digest a release publishes is what a Harness pins.
@@ -176,7 +176,7 @@ CI checks only that the image builds.
   `token_exchange`, TLS skip or CA overrides, `api_key_passthrough`, and `n > 1`. Providers mapped: openai (chat completions and responses), anthropic, azure_openai (responses), mistral,
   gemini (default endpoint), bedrock (bearer only), ollama.
 - PiG's session file format (version 3) is a compatibility surface: the PiG version is pinned and the adapter's session handling is tested against recorded v0.7.0 sessions.
-- The image is amd64-verified only (see Compatibility). The kagent API is alpha; the chart is tested against the versions above.
+- On a cluster the image is amd64-verified only (see Compatibility). The kagent API is alpha; the chart is tested against the versions above.
 - kagent (Apache-2.0), Agent Substrate (Apache-2.0) and Pi are the work of their own authors; nothing here implies their endorsement.
 
 ## Licences
