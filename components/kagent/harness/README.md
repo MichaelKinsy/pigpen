@@ -67,7 +67,7 @@ and never enter the image or a manifest: the compiled kagent configuration carri
 
 ## Build
 
-This directory is the whole build context. From here:
+This directory is the whole build context (in a Pigpen checkout that is the tree `scripts/export-byo-ext.sh` writes: `components/kagent/harness` itself lacks `piglet/` and `policy/`). From here:
 
 ```sh
 docker build --tag byo-ext/pig:local .

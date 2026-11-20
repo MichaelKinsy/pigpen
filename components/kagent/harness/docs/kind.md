@@ -115,12 +115,14 @@ kubectl -n kagent get modelconfig default-model-config
 
 ## 4. Build the image and pin its digest
 
-The harness directory is the build context and needs no build arguments or secrets. Build for the architecture of
-the Kind node (the host's, for Kind):
+The exported harness tree is the build context and needs no build arguments or secrets. In a Pigpen checkout, export it
+first, from the repository root: `components/kagent/harness` alone lacks `piglet/` and `policy/`, which the export adds. In
+byo-ext, `harnesses/pig` is already that tree: skip the export and build that directory. Build for the architecture of the
+Kind node (the host's, for Kind):
 
 ```sh
-cd components/kagent/harness
-docker build -t localhost:5001/pig/pig-kagent:dev .
+sh scripts/export-byo-ext.sh /tmp/pig-harness        # Pigpen only; the target must be new or empty
+docker build -t localhost:5001/pig/pig-kagent:dev /tmp/pig-harness
 docker push localhost:5001/pig/pig-kagent:dev
 ```
 
@@ -142,7 +144,7 @@ curl -sI -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oc
 ## 5. Install the harness
 
 ```sh
-cd components/kagent/harness
+cd components/kagent/harness      # or the exported harnesses/pig directory in byo-ext
 ./pig-kagent.sh check   -n kagent --set image="$IMAGE"
 ./pig-kagent.sh install -n kagent --set image="$IMAGE"
 ```
