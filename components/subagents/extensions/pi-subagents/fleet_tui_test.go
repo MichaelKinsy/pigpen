@@ -5,6 +5,7 @@ package pi_subagents
 // the host's sdk.UITheme adds the original's colours at runtime.
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -67,7 +68,7 @@ func TestFleetInspectorRosterAndDetailLookLikeTheOriginal(t *testing.T) {
 		"├" + space("─", 46) + "┬" + space("─", 81) + "┤",
 		"│" + left + space(" ", 22) + "running│" + "Session: C:/s/child.jsonl" + space(" ", 56) + "│",
 		"│" + space(" ", 46) + "│" + space(" ", 81) + "│",
-		"│" + space(" ", 46) + "│" + "Result transcript tail:" + space(" ", 58) + "│",
+		"│" + space(" ", 46) + "│" + "Live output:" + space(" ", 69) + "│",
 		"│" + space(" ", 46) + "│" + "  All good" + space(" ", 71) + "│",
 		"├" + space("─", 46) + "┴" + space("─", 81) + "┤",
 		"│" + footer + "│",
@@ -161,4 +162,57 @@ func TestFleetInspectorSelectionSurvivesRefresh(t *testing.T) {
 	r.addStep("reviewer", "t", "").state = stateRunning
 	c.refreshSnapshot()
 	eq(t, c.items[c.selected].agent, "worker", "selection follows its child")
+}
+
+// The detail pane shows the child's live transcript and the progress rows the original shows (its
+// renderedTranscript over the child's transcript events, its foregroundActiveDetail rows above).
+func TestFleetInspectorDetailShowsTheLiveTranscript(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	dir := tmp(t)
+	session := filepath.Join(dir, "1_c1.jsonl")
+	writeFile(t, session, transcriptFixture)
+	r := fleet.beginRun("single", "scout", "find it", "/work")
+	s := r.addStep("scout", "find it", "")
+	s.state = stateRunning
+	s.startedAt = time.Unix(1700000000, 0)
+	s.sessionDir, s.sessionID = dir, "c1"
+	c := inspectorFor(t, 20)
+	c.refreshSnapshotLocked()
+	eq(t, c.detailLines(200), []string{
+		"● scout · running",
+		"Run: " + r.id + " · Step 1",
+		"Task: find it",
+		"Started: 2023-11-14T22:13:20Z",
+		"Model: m",
+		"Turns: 2",
+		"Tools: 1",
+		"Tokens: 250",
+		"Session: " + shortenPath(session),
+		"",
+		"Conversation · supervisor message",
+		"├─ ✓ read a.txt",
+		"│   file body",
+		"◆ Assistant · p/m",
+		"│ found it",
+		"│",
+		"◇ Supervisor",
+		"│ thanks",
+	}, "the live transcript and progress rows")
+}
+
+// A settled child with no transcript keeps the result tail (the original's formatRememberedForegroundTranscript).
+func TestFleetInspectorDetailShowsTheResultTailWhenSettled(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	r := fleet.beginRun("single", "scout", "t", "/work")
+	s := r.addStep("scout", "t", "")
+	s.state = stateComplete
+	s.output = "done\n"
+	c := inspectorFor(t, 20)
+	c.refreshSnapshotLocked()
+	detail := strings.Join(c.detailLines(200), "\n")
+	if !strings.Contains(detail, "Result transcript tail:\n  done") {
+		t.Errorf("result tail:\n%s", detail)
+	}
 }

@@ -65,7 +65,7 @@ func continuationRequest(base childRequest, message string) childRequest {
 func startAsyncRun(cwd string, a *AgentConfig, task, model string, notify func(message, level string)) *runRecord {
 	run := fleet.beginRun("single", a.Name, task, cwd)
 	go func() {
-		_, err := runAgent(nil, cwd, a, task, model, nil, run)
+		_, _, err := runAgent(nil, cwd, a, task, model, nil, run)
 		switch run.state() {
 		case stateFailed:
 			detail := ""

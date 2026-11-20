@@ -77,6 +77,9 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 		labels["herdr.space"], labels["herdr.tab"] = s, b
 	}
 	id := uuidV4()
+	if req.OnSession != nil {
+		req.OnSession(dir, id) // the fleet views resolve the child's session file live
+	}
 	var started hcTerminal
 	err = h.call("terminal.run", map[string]any{
 		"argv": append([]string{req.Bin}, paneArgs(req.Args, dir, id, req.Stdin)...), "cwd": req.Cwd, "env": paneEnv(req.Env),

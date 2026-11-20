@@ -427,11 +427,11 @@ func TestRunAgentPanes(t *testing.T) {
 	a := &AgentConfig{Name: "scout", SystemPromptMode: "replace"}
 	r := newPaneRig(t, bothLabels, []string{"idle/0", "working/0", "blocked/1", "blocked/1", "working/1", "done/2"}, "answer")
 
-	out, err := runAgent(nil, ".", a, "t", "", nil)
+	out, _, err := runAgent(nil, ".", a, "t", "", nil)
 	eq(t, []any{out, err, hidden}, []any{"hidden", nil, 1}, "nil panes: the hidden runner")
 	eq(t, len(r.fake.methods()), 0, "no herdr-core call")
 
-	out, err = runAgent(nil, ".", a, "t", "", r.host)
+	out, _, err = runAgent(nil, ".", a, "t", "", r.host)
 	eq(t, []any{out, err, hidden}, []any{"answer", nil, 1}, "panes: the pane runner")
 	eq(t, len(r.fake.calls("terminal.run")), 1, "terminal.run")
 }

@@ -36,7 +36,7 @@ func TestRefusalMessage(t *testing.T) {
 
 // every parameter of the original's schema that a run does not honor is refused, one test case each
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
-	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "action": true}
+	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "includeProgress": true, "action": true}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)

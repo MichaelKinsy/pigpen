@@ -112,8 +112,10 @@ in the original's rows and text:
   (a port addition: the port runs children in the foreground), and the `Commands:` block.
 
 `subagent({ action: "status" })` lists the active runs; `{ action: "status", id }` shows one run's block and, with
-`view: "transcript"` (`index` picks the step of a chain), its result transcript tail. The inspector's Inspect panes and
-Prompt Audit are not ported; rows the port cannot fill (a child's current tool, token accounting) are omitted.
+`view: "transcript"` (`index` picks the step of a chain), the child's live transcript while it runs (its session entries
+as the original's live view) and its result transcript tail once it settles. The inspector's Inspect panes and
+Prompt Audit are not ported; the detail pane shows the child's live transcript and the progress rows the port can fill
+(current tool, turns, tools, tokens); rows it cannot fill are omitted.
 
 ## What is ported
 
@@ -121,7 +123,8 @@ Frontmatter parsing, agent and chain definitions (discovery in the project, the 
 precedence project over user over builtin, packages, aliases, name resolution), markdown chain files (parse and write), the
 `subagent` tool's `list`, `get` and `status`, the `subagents_enable` loader, running one agent or a chain through a child
 process (a Go addition: the original runs children through its own executor and scripted workflows), and the runs'
-control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions.
+control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions. `includeProgress` carries
+the run's full progress record (the original's AgentProgress) in the result.
 
 **Not ported, and refused:** parallel runs, scripted workflows (`workflow`, `workflowScript`,
 `workflowScriptPath`) and the legacy `tasks`/`chain` inputs, council mode, worktree isolation, the fleet inspector's

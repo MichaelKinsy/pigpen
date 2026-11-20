@@ -27,7 +27,7 @@ func blockingRunner(t *testing.T) *[]childRequest {
 		got = append(got, req)
 		mu.Unlock()
 		if req.OnOutput != nil {
-			req.OnOutput()
+			req.OnOutput("hi")
 		}
 		<-done
 		return childResult{}, errCancelled
@@ -62,6 +62,26 @@ func waitState(t *testing.T, r *runRecord, want runState) {
 		time.Sleep(2 * time.Millisecond)
 	}
 	t.Fatalf("state: got %s, want %s", r.state(), want)
+}
+
+// waitStepState waits for one step to settle: a cancelled child finishes on its own goroutine after its run is
+// terminated.
+func waitStepState(t *testing.T, r *runRecord, i int, want runState) {
+	t.Helper()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		fleet.mu.Lock()
+		got := stateQueued
+		if i < len(r.steps) {
+			got = r.steps[i].state
+		}
+		fleet.mu.Unlock()
+		if got == want {
+			return
+		}
+		time.Sleep(2 * time.Millisecond)
+	}
+	t.Fatalf("step %d state: got %s, want %s", i, r.steps[i].state, want)
 }
 
 func TestAsyncRunIsTrackedAndStoppable(t *testing.T) {
@@ -136,6 +156,7 @@ func TestControlActions(t *testing.T) {
 	}
 	waitState(t, run, stateRunning) // the pivoted turn runs
 	eq(t, len(run.steps), 2, "two turns")
+	waitStepState(t, run, 0, statePaused)
 	eq(t, run.steps[0].state, statePaused, "the first turn was interrupted")
 
 	// stop
@@ -194,11 +215,13 @@ func TestInterruptAndResume(t *testing.T) {
 		t.Errorf("resume receipt: %s", text)
 	}
 	var next *runRecord
-	for _, r := range fleet.snapshot() {
+	fleet.mu.Lock()
+	for _, r := range fleet.runs {
 		if r.resumedFrom == run.id {
-			next = r
+			next = r // the registry's live record: a snapshot copy would never settle
 		}
 	}
+	fleet.mu.Unlock()
 	if next == nil {
 		t.Fatal("no follow-up run")
 	}

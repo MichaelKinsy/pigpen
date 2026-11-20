@@ -31,13 +31,18 @@ takes what can be checked against the original by running it, and one execution 
 - the observability surfaces over the port's runs, in the original's rows and text (its `src/tui/render.ts`,
   `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts`): the `subagent-async` widget (the "Async agents" view),
   `/subagents-fleet` and `subagent({ action: "status", view: "fleet" })` (the fleet inspector's textual fallback),
-  `subagent({ action: "status" })` (the active runs list) and `{ id, view: "transcript" }` (the result transcript tail),
+  `subagent({ action: "status" })` (the active runs list) and `{ id, view: "transcript" }` (the live transcript tail while
+  the child runs — its formatLiveForegroundTranscript over the child's session entries — and the result transcript tail once
+  it settles),
   and the inspector TUI itself: the original's `SubagentFleetComponent` (its `src/tui/fleet.ts` frame, roster, detail pane,
   footer and keys) as a `sdk.RemoteComponent` over `Context.Custom`, the same `ui.custom()` overlay the original mounts
   (`anchor: center, width: 95%, minWidth: 60, maxHeight: 85%, margin: 1`).
   Adaptations: steer, stop, Inspect, Prompt Audit and tool details are refused with the port's message where the original
-  runs them; the detail pane shows the port's remembered status and result transcript tail instead of the original's live
-  transcript events; rows the port cannot fill (a child's current tool, token accounting) are omitted, never invented; the
+  runs them; the detail pane shows the original's live transcript events (read from the child's session entries) and its
+  live progress rows (current tool, turns, tools, tokens) over them, with the original's collapsed tool form — without its
+  markdown renderer or the expand key — and a child that keeps no transcript shows the port's remembered status and result
+  transcript tail instead; rows the port cannot fill (token accounting a message never reports) are omitted, never
+  invented; the
   expand-key hint is the original's unconfigured wording; `Recent runs:` in the fleet text is a port addition (the port
   runs children in the foreground, so the inspector's "recent children and completed output/session paths" live there);
 - the runs' control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions (`bg_wait`
@@ -46,7 +51,9 @@ takes what can be checked against the original by running it, and one execution 
   turn is interrupted and the next turn continues the child's session with the message (the original delivers mid-turn
   through its runner); `resume` is the original's new run id per pass, and a stopped run is not resumable. Children pin
   session files in the parent's session directory (as pane children always did) so turns can continue. The port keeps
-  the foreground default where the original defaults to async.
+  the foreground default where the original defaults to async. `includeProgress` is honored: with it the result carries the
+  run's full progress record (the original's AgentProgress) over the child's transcript and output; without it the result
+  stays compact.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
 Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,

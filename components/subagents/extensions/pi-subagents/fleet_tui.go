@@ -3,8 +3,9 @@ package pi_subagents
 // The fleet inspector's TUI. The original opens `/subagents-fleet` as `ctx.ui.custom(...)` with
 // `overlayOptions: { anchor: "center", width: "95%", minWidth: 60, maxHeight: "85%", margin: 1 }` and renders
 // SubagentFleetComponent (port/oracle/src/tui/fleet.ts). This is that component as a sdk.RemoteComponent: the same
-// frame, rows, footer and keys over Context.Custom. The detail pane shows what the port keeps for a child (its status
-// and result transcript tail) instead of the original's live transcript events; actions the port does not run
+// frame, rows, footer and keys over Context.Custom. The detail pane shows the original's live transcript events (the
+// child's session entries, parsed in transcript.go) and its live progress rows; a child that keeps no transcript shows
+// what the port remembers for it (its status and result transcript tail). Actions the port does not run
 // (Prompt Audit, Inspect, steer, stop, tool details) show the port's refusal text where the original shows an action
 // notice. Without a UI the command falls back to the original's textual fleet view.
 
@@ -66,7 +67,7 @@ func fleetItems(runs []*runRecord) []fleetItem {
 			items = append(items, fleetItem{
 				runID: r.id, step: i, agent: s.agent, state: s.state, task: s.task,
 				thinking: s.thinking, startedAt: s.startedAt, endedAt: s.endedAt,
-				activity: s.lastActivity, output: s.output, err: s.err, session: s.session,
+				activity: s.lastActivity, output: s.output, err: s.err, session: s.sessionPath(),
 			})
 		}
 	}
@@ -100,9 +101,9 @@ var fleetInspectorOpen atomic.Bool
 // newFleetInspector builds the component over the live registry and host.
 func newFleetInspector(ctx sdk.Context) *fleetInspector {
 	c := &fleetInspector{
-		theme:   func() fleetTheme { return ctx.UITheme() },
-		rows:    func() int { return ctx.Height() },
-		refresh: fleetRefreshMs * time.Millisecond,
+		theme:            func() fleetTheme { return ctx.UITheme() },
+		rows:             func() int { return ctx.Height() },
+		refresh:          fleetRefreshMs * time.Millisecond,
 		detailAutoFollow: true,
 		tone: func(level string) func(string) string {
 			return ctx.UITheme().GetThinkingBorderColor(level)
@@ -360,7 +361,7 @@ func (c *fleetInspector) Render(width int) []string {
 	} else if c.detailScroll > maxDetailScroll {
 		c.detailScroll = maxDetailScroll
 	}
-	visible := detail[min(c.detailScroll, len(detail)) : min(c.detailScroll+bodyHeight, len(detail))]
+	visible := detail[min(c.detailScroll, len(detail)):min(c.detailScroll+bodyHeight, len(detail))]
 
 	lines := []string{theme.Fg("border", "╭"+strings.Repeat("─", innerWidth)+"╮")}
 	var title, status string
@@ -426,14 +427,16 @@ func (c *fleetInspector) rosterLines(width, bodyHeight int) []string {
 	return rows
 }
 
-// detailLines is the right pane: the selected child's status and result transcript tail, wrapped (the original shows
-// its live transcript here).
+// detailLines is the right pane: the selected child's status and its live transcript (the original's detail pane:
+// structuredHeader and the rendered transcript when the child's transcript has events, its status detail otherwise).
 func (c *fleetInspector) detailLines(width int) []string {
 	if len(c.items) == 0 {
 		return nil
 	}
 	theme := c.theme()
 	item := c.items[c.selected]
+	transcript := readSessionTranscript(item.session)
+	facts := factsFromTranscript(transcript)
 	raw := []string{
 		c.statusGlyph(item) + " " + item.agent + " · " + string(item.state),
 		fmt.Sprintf("Run: %s · Step %d", item.runID, item.step+1),
@@ -447,24 +450,67 @@ func (c *fleetInspector) detailLines(width int) []string {
 	if a := formatActivityLabel(item.activity, fleetNow()); a != "" {
 		raw = append(raw, "Activity: "+a)
 	}
+	// the original's live progress rows (its foregroundActiveDetail); omitted where the child has shown nothing yet
+	if m := formatModelLabel(facts.model, item.thinking); m != "" {
+		raw = append(raw, "Model: "+m)
+	}
+	if facts.currentTool != "" {
+		row := "Current tool: " + facts.currentTool
+		if facts.currentPath != "" {
+			row += " · " + shortenPath(facts.currentPath)
+		}
+		raw = append(raw, row)
+	}
+	if facts.turnCount > 0 {
+		raw = append(raw, fmt.Sprintf("Turns: %d", facts.turnCount))
+	}
+	if len(transcript.events) > 0 {
+		raw = append(raw, fmt.Sprintf("Tools: %d", facts.toolCount))
+		if facts.tokensKnown {
+			raw = append(raw, "Tokens: "+formatTokens(int(facts.tokens)))
+		}
+	}
 	if item.session != "" {
 		raw = append(raw, "Session: "+shortenPath(item.session))
 	}
 	if item.err != "" {
 		raw = append(raw, "Error: "+item.err)
 	}
-	raw = append(raw, "", "Result transcript tail:")
-	tail := outputTail(item.output, 20)
-	if len(tail) == 0 {
-		raw = append(raw, "  (no recovered final output available yet)")
-	}
-	for _, l := range tail {
-		raw = append(raw, "  "+l)
+	live := item.state == stateRunning || item.state == stateQueued
+	switch {
+	case len(transcript.events) > 0:
+		raw = append(raw, "", "Conversation · "+conversationState(transcript.events))
+	case live:
+		raw = append(raw, "", "Live output:")
+	default:
+		raw = append(raw, "", "Result transcript tail:")
 	}
 	var lines []string
 	for _, l := range raw {
 		for _, w := range wrapPlain(l, width) {
 			lines = append(lines, theme.Fg("dim", w))
+		}
+	}
+	if len(transcript.events) > 0 {
+		lines = append(lines, c.transcriptBody(transcript, width)...)
+	} else {
+		tail := outputTail(item.output, 20)
+		if len(tail) == 0 {
+			note := "  (no recovered final output available yet)"
+			if live {
+				note = "  (no output yet)"
+			}
+			raw = []string{note}
+		} else {
+			raw = nil
+			for _, l := range tail {
+				raw = append(raw, "  "+l)
+			}
+		}
+		for _, l := range raw {
+			for _, w := range wrapPlain(l, width) {
+				lines = append(lines, theme.Fg("dim", w))
+			}
 		}
 	}
 	if c.notice != "" {
@@ -477,6 +523,143 @@ func (c *fleetInspector) detailLines(width int) []string {
 		for _, w := range wrapPlain(draft, width) {
 			lines = append(lines, theme.Fg("accent", w))
 		}
+	}
+	return lines
+}
+
+// conversationState is the original's label for where the conversation is (its wrappedDetail).
+func conversationState(events []transcriptEvent) string {
+	switch e := events[len(events)-1]; e.kind {
+	case "assistant":
+		return "assistant response"
+	case "user":
+		return "supervisor message"
+	case "tool":
+		return e.name + " · " + e.status
+	}
+	return "activity"
+}
+
+// formatModelLabel is the original's formatModelThinking: the model's tail name and the thinking level it runs with.
+func formatModelLabel(model, thinking string) string {
+	display, suffix := model, ""
+	if i := strings.LastIndex(display, ":"); i > 0 && isThinkingLevel(display[i+1:]) {
+		suffix, display = display[i+1:], display[:i]
+	}
+	if i := strings.LastIndex(display, "/"); i >= 0 {
+		display = display[i+1:]
+	}
+	level := jsTrim(thinking)
+	if level == "" {
+		level = suffix
+	}
+	parts := []string{}
+	if display != "" {
+		parts = append(parts, display)
+	}
+	if level != "" {
+		parts = append(parts, "thinking "+level)
+	}
+	return strings.Join(parts, " · ")
+}
+
+// isThinkingLevel is the model suffix vocabulary (`:high` and friends).
+func isThinkingLevel(s string) bool {
+	switch s {
+	case "off", "minimal", "low", "medium", "high", "xhigh", "max":
+		return true
+	}
+	return false
+}
+
+// transcriptBody renders the child's live transcript (the original's renderFleetTranscript: its collapsed tool form,
+// plain text where the original highlights markdown).
+func (c *fleetInspector) transcriptBody(t sessionTranscript, width int) []string {
+	theme := c.theme()
+	var lines []string
+	rail := func(content string) string {
+		return truncVisible(theme.Fg("dim", "│")+" "+content, width)
+	}
+	if t.truncated {
+		lines = append(lines, truncVisible(theme.Fg("dim", "↑ Earlier activity omitted"), width))
+	}
+	for _, e := range t.events {
+		switch e.kind {
+		case "tool":
+			glyph, color := "✓", "success"
+			if e.status == "running" {
+				glyph, color = "●", "warning"
+			} else if e.status == "error" {
+				glyph, color = "✗", "error"
+			}
+			head := "├─ " + theme.Fg(color, glyph) + " " + theme.Bold(e.name)
+			if e.args != "" {
+				head += " " + theme.Fg("dim", e.args)
+			}
+			if e.status == "running" {
+				head += theme.Fg("warning", " running")
+			}
+			lines = append(lines, truncVisible(head, width))
+			if e.status == "error" {
+				for _, l := range strings.Split(e.errText, "\n") {
+					for _, w := range wrapPlain(l, max(1, width-4)) {
+						lines = append(lines, rail("  "+theme.Fg("error", w)))
+					}
+				}
+				continue
+			}
+			if e.output == "" {
+				continue
+			}
+			if e.name == "bash" {
+				all := strings.Split(strings.TrimRight(e.output, "\r\n"), "\n")
+				visible := all
+				hidden := 0
+				if len(visible) > transcriptToolPreviewLine {
+					hidden = len(visible) - transcriptToolPreviewLine
+					visible = visible[len(visible)-transcriptToolPreviewLine:]
+				}
+				for _, l := range visible {
+					for _, w := range wrapPlain(l, max(1, width-4)) {
+						lines = append(lines, rail("  "+theme.Fg("dim", w)))
+					}
+				}
+				if hidden > 0 {
+					lines = append(lines, rail("  "+theme.Fg("dim", fmt.Sprintf("… %d earlier lines", hidden))))
+				}
+				took := ""
+				if !e.endedAt.IsZero() && !e.startedAt.IsZero() {
+					took = " " + formatDuration(max64(0, e.endedAt.Sub(e.startedAt).Milliseconds()))
+				}
+				lines = append(lines, rail("  "+theme.Fg("dim", "Took"+took)))
+				continue
+			}
+			summary := strings.Join(strings.Fields(e.output), " ")
+			if summary != "" {
+				lines = append(lines, rail("  "+theme.Fg("dim", truncVisible(summary, max(1, width-18)))))
+			}
+		case "notice":
+			for _, l := range wrapPlain(e.text, max(1, width-2)) {
+				lines = append(lines, rail(theme.Fg("warning", l)))
+			}
+		default:
+			marker, label := theme.Fg("accent", "◆"), "Assistant"
+			if e.kind == "user" {
+				marker, label = theme.Fg("warning", "◇"), "Supervisor"
+			}
+			head := marker + " " + theme.Bold(label)
+			if e.model != "" {
+				head += theme.Fg("dim", " · "+e.model)
+			}
+			lines = append(lines, truncVisible(head, width))
+			for _, l := range wrapPlain(e.text, max(1, width-2)) {
+				lines = append(lines, rail(l))
+			}
+			lines = append(lines, truncVisible(theme.Fg("dim", "│"), width))
+		}
+	}
+	for len(lines) > 0 && visibleWidth(lines[len(lines)-1]) <= 1 {
+		lines = lines[:len(lines)-1] // the original drops trailing bare rails
 	}
 	return lines
 }

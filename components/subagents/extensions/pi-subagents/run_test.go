@@ -77,11 +77,11 @@ func TestRunChainStopsOnFailureAndChecksAgentsFirst(t *testing.T) {
 
 func TestRunAgentReportsExit(t *testing.T) {
 	fakeRunner(t, map[string]string{"hi": "hello"}, "")
-	out, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "hi", "", nil)
+	out, _, err := runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "hi", "", nil)
 	if err != nil || out != "hello" {
 		t.Errorf("out %q err %v", out, err)
 	}
 	fakeRunner(t, nil, "bad")
-	_, err = runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "bad", "", nil)
+	_, _, err = runAgent(nil, ".", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "bad", "", nil)
 	hasMatch(t, err, "exited with code 3")
 }

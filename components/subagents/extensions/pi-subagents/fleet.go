@@ -50,10 +50,12 @@ type stepRecord struct {
 	endedAt   time.Time
 	// lastActivity is when the child last produced output; zero when nothing was seen (the original's activity facts).
 	lastActivity time.Time
-	output       string // the answer it gave back, remembered for the transcript view
+	output       string // the answer it gave back (live while it runs), remembered for the transcript view
 	err          string
 	exit         int
 	session      string // the child's session file, when it has one (pane children do)
+	sessionDir   string // where the child's session file lands when it is pinned (hidden children and continuations)
+	sessionID    string
 }
 
 // runRecord is one `subagent` call's run: a single child, or a chain's steps in order. It carries the run's control
@@ -205,11 +207,36 @@ func (s *stepRecord) begin() {
 	s.startedAt = fleetNow()
 }
 
-// touch records child activity (output arrived, a pane poll answered).
-func (s *stepRecord) touch() {
+// touchLive records child activity and the output produced so far (the fleet views show it live while the child runs).
+func (s *stepRecord) touchLive(stdout string) {
 	fleet.mu.Lock()
 	defer fleet.mu.Unlock()
 	s.lastActivity = fleetNow()
+	if stdout != "" {
+		s.output = stdout
+	}
+}
+
+// pinSession records where the child's session file lands: the fleet views resolve it live, and steer and resume
+// continue it.
+func (s *stepRecord) pinSession(dir, id string) {
+	if dir == "" || id == "" {
+		return
+	}
+	fleet.mu.Lock()
+	defer fleet.mu.Unlock()
+	s.sessionDir, s.sessionID = dir, id
+}
+
+// sessionPath is the child's transcript: its session file, resolved live (the file appears as the child works).
+func (s *stepRecord) sessionPath() string {
+	if s.session != "" {
+		return s.session
+	}
+	if s.sessionDir != "" && s.sessionID != "" {
+		return sessionFile(s.sessionDir, s.sessionID)
+	}
+	return ""
 }
 
 // finish ends a step; state is complete, failed, paused or stopped.
@@ -910,21 +937,25 @@ func transcriptIndexError(r *runRecord, index *int) string {
 	return ""
 }
 
-// transcriptText is `subagent({ action: "status", id, view: "transcript" })`: the result transcript tail
-// (formatRememberedForegroundTranscript). index is already validated (transcriptIndexError).
+// transcriptText is `subagent({ action: "status", id, view: "transcript" })`: the live transcript tail while the child
+// runs (run-status.ts: formatLiveForegroundTranscript), the result transcript tail once it settled
+// (its formatRememberedForegroundTranscript). index is already validated (transcriptIndexError).
 func transcriptText(r *runRecord, index *int, lines int) string {
 	i := 0
 	if index != nil {
 		i = *index
 	}
 	s := r.steps[i]
+	if s.state == stateRunning || s.state == stateQueued {
+		return liveTranscriptText(r, i, s, lines)
+	}
 	out := []string{
 		"Run: " + r.id,
 		"State: " + string(s.state),
 		fmt.Sprintf("Child: %d (%s)", i, s.agent),
 	}
-	if s.session != "" {
-		out = append(out, "Session: "+s.session)
+	if session := s.sessionPath(); session != "" {
+		out = append(out, "Session: "+session)
 	}
 	out = append(out, "Result transcript tail:")
 	tail := outputTail(s.output, lines)
@@ -934,6 +965,39 @@ func transcriptText(r *runRecord, index *int, lines int) string {
 		for _, l := range tail {
 			out = append(out, "  "+l)
 		}
+	}
+	return strings.Join(out, "\n")
+}
+
+// liveTranscriptText is the live view: the child's transcript events as they land, or its output so far when there is
+// no transcript to read yet (the port's children print their answer to stdout).
+func liveTranscriptText(r *runRecord, i int, s *stepRecord, lines int) string {
+	out := []string{
+		"Run: " + r.id,
+		"State: live foreground",
+		fmt.Sprintf("Child: %d (%s)", i, s.agent),
+	}
+	path := s.sessionPath()
+	if path != "" {
+		out = append(out, "Transcript: "+path)
+	}
+	body, truncated := transcriptTailLines(readSessionTranscript(path), lines)
+	if body == "" {
+		tail := outputTail(s.output, lines+1)
+		if len(tail) > lines {
+			tail, truncated = tail[1:], true
+		}
+		body = strings.Join(tail, "\n")
+	}
+	if truncated {
+		out = append(out, "Live transcript tail (tail truncated):")
+	} else {
+		out = append(out, "Live transcript tail:")
+	}
+	if body == "" {
+		out = append(out, "Transcript unavailable: no readable activity in the bounded artifact tail yet.")
+	} else {
+		out = append(out, body)
 	}
 	return strings.Join(out, "\n")
 }

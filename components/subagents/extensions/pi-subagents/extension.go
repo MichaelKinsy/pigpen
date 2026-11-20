@@ -287,19 +287,44 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		ctx.Notify(w, "warning")
 	}
 	model, _ := params["model"].(string)
+	includeProgress, msg := includeProgressParam(params)
+	if msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
 	if async, msg := asyncParam(params); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	} else if async {
 		run := startAsyncRun(cwd, a, task, model, ctx.Notify)
-		return explicitOK{Content: asyncStartedMessage(a.Name, run.id), Details: map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}}, nil
+		details := map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}
+		if includeProgress {
+			details["progress"] = []any{detachedProgressRecord(a, task, model)}
+		}
+		return explicitOK{Content: asyncStartedMessage(a.Name, run.id), Details: details}, nil
 	}
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
+	out, st, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
-	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
+	details := map[string]any{"mode": "single", "agent": a.Name}
+	if includeProgress {
+		details["progress"] = []any{progressRecordOf(st, 0, fleetNow(), effectiveModel(a, model))}
+	}
+	return explicitOK{Content: out, Details: details}, nil
+}
+
+// includeProgressParam reads `includeProgress`: set, the result carries the run's full progress record (the original's
+// AgentProgress; its subagent-executor.ts adds details.progress only when the flag is set, default false).
+func includeProgressParam(params map[string]any) (bool, string) {
+	v, ok := params["includeProgress"]
+	if !ok || v == nil {
+		return false, ""
+	}
+	if b, isBool := v.(bool); isBool {
+		return b, ""
+	}
+	return false, "includeProgress must be a boolean when provided."
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an

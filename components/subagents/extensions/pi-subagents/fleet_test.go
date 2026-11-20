@@ -5,6 +5,7 @@ package pi_subagents
 // text to those shapes.
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -254,8 +255,11 @@ func TestStatusViewDispatch(t *testing.T) {
 	eq(t, errMsg, "Transcript index must be an integer.", "index type")
 	text, _, errMsg = statusView(map[string]any{"id": r.id, "view": "transcript"})
 	eq(t, errMsg, "", "transcript runs")
-	if !strings.Contains(text, "Result transcript tail:") {
-		t.Errorf("transcript:\n%s", text)
+	if !strings.Contains(text, "Live transcript tail:") {
+		t.Errorf("live transcript:\n%s", text)
+	}
+	if !strings.Contains(text, "Transcript unavailable: no readable activity in the bounded artifact tail yet.") {
+		t.Errorf("live transcript note:\n%s", text)
 	}
 }
 
@@ -266,11 +270,11 @@ func TestRunLifecycleIsTracked(t *testing.T) {
 	t.Cleanup(func() { runChild = old; fleet.reset() })
 	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
 		if req.OnOutput != nil {
-			req.OnOutput()
+			req.OnOutput("hi")
 		}
 		return childResult{Stdout: "hello"}, nil
 	}
-	out, err := runAgent(nil, "/work", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "t", "", nil)
+	out, _, err := runAgent(nil, "/work", &AgentConfig{Name: "a", SystemPromptMode: "replace"}, "t", "", nil)
 	eq(t, err, nil, "run")
 	eq(t, out, "hello", "answer")
 	runs := fleet.snapshot()
@@ -288,7 +292,7 @@ func TestRunLifecycleIsTracked(t *testing.T) {
 	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
 		return childResult{Exit: 2, Stderr: "boom"}, nil
 	}
-	_, err = runAgent(nil, "/work", &AgentConfig{Name: "a"}, "t", "", nil)
+	_, _, err = runAgent(nil, "/work", &AgentConfig{Name: "a"}, "t", "", nil)
 	if err == nil {
 		t.Error("a failing child must fail")
 	}
@@ -297,7 +301,7 @@ func TestRunLifecycleIsTracked(t *testing.T) {
 	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
 		return childResult{}, errCancelled
 	}
-	_, err = runAgent(nil, "/work", &AgentConfig{Name: "a"}, "t", "", nil)
+	_, _, err = runAgent(nil, "/work", &AgentConfig{Name: "a"}, "t", "", nil)
 	if err == nil {
 		t.Error("a cancelled child must be cancelled")
 	}
@@ -324,4 +328,49 @@ func TestWidgetSinkRendersAndClears(t *testing.T) {
 	got = []string{"sentinel"}
 	fleet.pushWidget()
 	eq(t, got, []string{"sentinel"}, "no sink: nothing pushed")
+}
+
+// `subagent({ action: "status", id, view: "transcript" })` on a live child is the original's live view
+// (run-status.ts: formatLiveForegroundTranscript): its transcript events as they land.
+func TestLiveTranscriptViewShowsTheChildsTranscript(t *testing.T) {
+	dir := tmp(t)
+	session := filepath.Join(dir, "1_c1.jsonl")
+	writeFile(t, session, transcriptFixture)
+	r := &runRecord{id: "run-1", mode: "single", name: "scout", task: "t", cwd: "/work", startedAt: fleetT.Add(-time.Second)}
+	s := r.addStep("scout", "t", "")
+	s.state = stateRunning
+	s.sessionDir, s.sessionID = dir, "c1"
+	eq(t, transcriptText(r, nil, 80), strings.Join([]string{
+		"Run: run-1",
+		"State: live foreground",
+		"Child: 0 (scout)",
+		"Transcript: " + session,
+		"Live transcript tail:",
+		"Tool: read (complete)",
+		`{"path":"a.txt"}`,
+		"file body",
+		"Assistant: found it",
+		"Supervisor: thanks",
+	}, "\n"), "the live transcript")
+
+	// a live child with nothing in a transcript yet shows its output (the port's children print their answer)
+	other := r.addStep("scout", "t", "")
+	other.state = stateRunning
+	other.output = "so far\n"
+	one := 1
+	eq(t, transcriptText(r, &one, 80), strings.Join([]string{
+		"Run: run-1",
+		"State: live foreground",
+		"Child: 1 (scout)",
+		"Live transcript tail:",
+		"so far",
+	}, "\n"), "the live output tail")
+
+	// and with nothing at all it says so (the original's line)
+	empty := r.addStep("scout", "t", "")
+	empty.state = stateRunning
+	two := 2
+	if !strings.Contains(transcriptText(r, &two, 80), "Transcript unavailable: no readable activity in the bounded artifact tail yet.") {
+		t.Errorf("empty live view:\n%s", transcriptText(r, &two, 80))
+	}
 }

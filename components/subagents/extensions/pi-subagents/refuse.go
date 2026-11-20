@@ -30,7 +30,7 @@ type action struct {
 
 var (
 	// runParams are the parameters an execution ({agent, task}) honors.
-	runParams = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true}
+	runParams = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "includeProgress": true}
 	actions   = map[string]*action{}
 )
 
