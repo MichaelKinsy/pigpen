@@ -62,7 +62,7 @@ describe('Piglet Binaries in a real terminal', { skip }, () => {
   });
 
   for (const name of names) {
-    it(`${name}: starts, answers a turn, runs its features, and exits cleanly`, async () => {
+    it(`${name}: starts, answers a turn, runs its features, and exits cleanly`, { skip: piglets[name].skip }, async () => {
       const spec = piglets[name];
       const bin = binaryFor(name);
       const t = new Terminal(bin, { prepare: spec.prepare });

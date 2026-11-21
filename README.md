@@ -30,12 +30,14 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.5.3** (Pi 1.4.0; `pig --version` prints `0.5.3+1.4.0`). The pin is the published release `v0.5.3`
-(commit `526c86df885e`; `scripts/pig-requirement.json`, `PIG_COMMIT` in the workflows, re-pinned with
-`node scripts/pin-pig-release.mjs 0.5.3`), and `scripts/pig-requirement.json` makes every script and test refuse a pig of another
-minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.3). Every Go module requires
-`github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3`, the version PiG's own go.mod pins (a Piglet build refuses a member that
-requires a newer one), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
+**Target: PiG 0.8.0 release candidate, built from commit `0e35a120627a`** (branch `release/v0.8.0` of MichaelKinsy/PiG; Pi 1.5.2). The pin is not a release: it is the 0.8.0 line, which embeds a Lisp member's cell in a Piglet Binary
+(the `v0.7.0` tag, `beb56447c476`, builds such a Binary that stops at startup). It is recorded in `scripts/pig-requirement.json` and `PIG_COMMIT` in the
+workflows; the version stays `0.7.0` because the commit reports it until the release commit sets it. No release has pig archives for it, so `release.published` is
+false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.8.0` can record the SHA-256 of its archives; until then
+`scripts/fetch-pig.mjs` (the platform matrix) refuses to download a pig, and CI builds pig from the pinned commit. `scripts/pig-requirement.json` makes every script and test refuse a pig of another
+minor version. Every workflow takes its Go toolchain from that commit's `.go-version` (1.27.4). Every Go module still requires
+`github.com/MichaelKinsy/PiG/extensions/sdk v0.5.3` (a Piglet build refuses a member that requires a newer SDK than PiG's, not an
+older one; moving the modules to SDK v0.7.0 is a separate change), and builds with the SDK of the pinned PiG source (`PIG_SDK_DIR` for the module tests). The SDK has tool
 renderers (`pi.registerToolRenderer`), so the tests that need them run (build tag `pigsdk_tool_renderer`, set automatically for an
 SDK that has them). `npm run govulncheck` scans every Go module for vulnerabilities its code can reach (CI runs it on every run).
 Where a note names PiG 0.5 behavior, it is the target; a note that names an earlier PiG says so.
@@ -225,7 +227,7 @@ Staging copies local source, licenses, and executable permissions. It excludes
 missing local Packages, invalid YAML, and generated-destination collisions.
 PiG still validates the resulting manifests and selected members.
 
-Every Piglet manifest lists five build targets: `linux/amd64`, `linux/arm64`,
+Every Piglet manifest but `pig-autolith` (`linux/amd64` and `darwin/arm64`) lists five build targets: `linux/amd64`, `linux/arm64`,
 `darwin/arm64`, `darwin/amd64` and `windows/amd64`. `pig piglet build` builds only the
 machine it runs on, so a local Binary build names that machine:
 `npm run build:piglet -- <piglet-name>` does this for you, and a direct
@@ -307,6 +309,7 @@ piglets/
   herdr/                            PiG plus the herdr agent-state reporter
     piglet.yaml, catalog.json, README.md, tests/   (tests/ runs real pig: npm run test:pig)
   pig-tern/                         coming soon: PiG as Tern's agent (not in this repository yet)
+  pig-autolith/                     Lisp Piglet: the autolith-bridge extension (autolith_job, autolith_session, /autolith); needs SBCL, Autolith and a model login
 scripts/stage-piglets.mjs            materializes local shared Packages
 dist/staged/                        GENERATED, gitignored local Piglet trees
 scripts/generate-index.mjs           derives catalog data from authored compositions
@@ -335,7 +338,7 @@ SECURITY.md                         private security reporting guidance
 
 ## Maintain and validate
 
-Use Node.js 24 and PiG 0.5.3 (CI builds the pig from the pinned PiG commit). PiG is the
+Use Node.js 24 and PiG 0.7.0 (CI builds the pig from the pinned PiG commit). PiG is the
 authority for the closed Piglet manifest and resource contract.
 
 ```sh
@@ -382,7 +385,7 @@ fixture provider. It checks exact Skill delivery, selection, source preservation
 restaging, and path safety. It does not measure an LLM's ability to follow the Skill.
 
 The scenario also checks that an explicit `tools: []` reaches the provider with
-no tools; it passes on PiG 0.5.3 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
+no tools; it passes on PiG 0.7.0 and the assertion stays as a regression guard. CI runs `npm run validate`, `test:porter`,
 `test:tool-scope`, `test:moved` and `test:go-ports` with the pig it builds from the pinned PiG commit. No hosted CI pass is
 claimed yet (these steps were run locally with that pig, not on GitHub). CI also runs `test:packages`, `test:npm-packages`,
 `test:npm-piglets` and the release rehearsal, each in its own parallel `slow-checks` job (one serial job ran past its 45-minute
@@ -401,8 +404,8 @@ Binaries it builds as short-lived artifacts for inspection.
 | `android-cross` | with `platform-matrix` | `go build` and `go vet` of every module for `android/arm64` (Termux) with `CGO_ENABLED=0`. A compile check, not a Binary: pig's builder builds only the machine it runs on |
 | `ci-result` | always | the one required check: green when `validate` and every `slow-checks` job passed and the other tiers passed or were skipped |
 
-The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `--version` must match the
-pinned pig, and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no
+The smoke runs each Binary in a throwaway home with `PIG_TEST_FAUX=1` (no network, model or credentials): `version` must report the
+pinned pig (`--version` prints Pi's version from PiG 0.8.0 on), and `-p "reply with exactly: ok" --model test-faux/faux-1 --no-session` must exit 0, answer `ok` and print no
 `Failed to load extension`. That proves a Binary starts on the platform, loads every fused extension and completes a turn; what each
 extension does is the Go tests' job. Run it yourself with `npm run platform-smoke` (set `PIG_BIN` and `PIG_SOURCE_ROOT`; `-- --only <name>`
 for one Piglet) and the android check with `npm run cross-check` (set `PIG_SDK_DIR` or `PIG_BIN`).

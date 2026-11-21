@@ -33,7 +33,7 @@ concurrency:
 
 env:
   # The PiG release these jobs build with: scripts/pig-requirement.json (`release`); scripts/check-workflows.mjs keeps it equal.
-  PIG_COMMIT: '526c86df885eba5e214355e7f70205e06d59bfa2' # PiG v0.5.3
+  PIG_COMMIT: '0e35a120627aa6ab2a8e1d7ae72bd15394b8078f' # PiG 0.8.0 release candidate (release/v0.8.0), reports 0.7.0 until the release commit; re-pinned to the tag after the release
 
 jobs:
   plan:
@@ -137,6 +137,33 @@ jobs:
       - name: Say what the cache did
         shell: bash
         run: echo "Go build cache exact hit ${{ steps.cache.outputs.cache-hit }}, matched ${{ steps.cache.outputs.cache-matched-key }}" >> "$GITHUB_STEP_SUMMARY"
+      # pig-autolith has a Common Lisp extension: PiG builds its SBCL image into the Binary and does not bundle SBCL, so the runner
+      # needs it (PIG_SBCL). pig-autolith lists linux/amd64 and darwin/arm64 (piglets/pig-autolith/piglet.yaml). linux/amd64: the
+      # official binary, checksum pinned, as ci.yml's autolith-binary job. darwin/arm64: SBCL publishes no 2.6.9 binary for it, so
+      # scripts/install-sbcl-macos.sh builds the checksum-pinned official source (ci.yml's autolith-binary-macos job runs the same
+      # script). No secret is read in these steps.
+      - name: Install SBCL 2.6.9 for pig-autolith on linux/amd64 (official binary, checksum pinned)
+        if: ${{ needs.plan.outputs.name == 'pig-autolith' && matrix.target == 'linux/amd64' }}
+        shell: bash
+        env:
+          SBCL_VERSION: '2.6.9'
+          SBCL_SHA256: '39fac28407405841003e4c2abfbe0d96abd93b7701e8b61cdd35e713943b46d6'
+        run: |
+          set -euo pipefail
+          archive="sbcl-${SBCL_VERSION}-x86-64-linux-binary.tar.bz2"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "https://downloads.sourceforge.net/project/sbcl/sbcl/${SBCL_VERSION}/$archive"
+          echo "$SBCL_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -C "$RUNNER_TEMP" -xjf "$RUNNER_TEMP/$archive"
+          (cd "$RUNNER_TEMP/sbcl-${SBCL_VERSION}-x86-64-linux" && INSTALL_ROOT="$RUNNER_TEMP/sbcl" sh install.sh)
+          {
+            echo "PIG_SBCL=$RUNNER_TEMP/sbcl/bin/sbcl"
+            echo "SBCL_HOME=$RUNNER_TEMP/sbcl/lib/sbcl"
+          } >> "$GITHUB_ENV"
+          "$RUNNER_TEMP/sbcl/bin/sbcl" --version
+      - name: Install SBCL 2.6.9 for pig-autolith on darwin/arm64 (official source, checksum pinned)
+        if: ${{ needs.plan.outputs.name == 'pig-autolith' && matrix.target == 'darwin/arm64' }}
+        shell: bash
+        run: sh scripts/install-sbcl-macos.sh "$RUNNER_TEMP/sbcl" >> "$GITHUB_ENV"
       - name: Build PiG and stage the Piglet (no secrets)
         shell: bash
         env:

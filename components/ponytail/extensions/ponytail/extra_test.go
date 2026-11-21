@@ -228,7 +228,7 @@ func TestAliasQueuesAsFollowUpWhileBusy(t *testing.T) {
 	r.mu.Unlock()
 	r.command("ponytail-audit", "")
 	c = r.CallsTo("sendUserMessage")
-	eq(t, c[1].Args["options"], obj{"deliverAs": ""}) // idle: sent as an ordinary message
+	eq(t, c[1].Args["options"], obj{}) // idle: sent as an ordinary message (PiG 0.8.0 omits an empty deliverAs)
 }
 
 func TestOffSessionLeavesThePromptAlone(t *testing.T) {
