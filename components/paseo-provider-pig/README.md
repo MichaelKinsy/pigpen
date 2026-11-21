@@ -25,7 +25,7 @@ paseo plugin ls
 paseo provider diagnostic pig
 ```
 
-`paseo plugin ls` should show `pig-provider` as `running`, and the diagnostic should end with `Status: Ready` and a line such as `pig-acp 0.2.2, Pi 1.5.0`.
+`paseo plugin ls` should show `pig-provider` as `running`, and the diagnostic should end with `Status: Ready` and a line such as `pig-acp 0.2.3, Pi 1.5.1`.
 
 ## Point it at a different pig
 
@@ -89,4 +89,4 @@ To typecheck the plugin, copy it next to the `package.json` and `tsconfig.json` 
 
 ## Verified with
 
-Paseo 0.15.3 (daemon, CLI and SDK), pig-acp 0.2.1 and 0.2.2, and pig 0.7.0 and the 0.7.1 line, on Linux, against a scripted local model. Nothing in this directory is published yet.
+Paseo 0.16.2 (daemon, CLI and `@getpaseo/plugin` 0.16.2 typecheck), pig-acp 0.2.3, and pig at the pre-0.8.0 line (`51cc9f6f56be`, `pig --version` printing `1.5.1`), on macOS arm64, against a scripted local model. Earlier verified with Paseo 0.15.3, pig-acp 0.2.1 and 0.2.2, and pig 0.7.0 and the 0.7.1 line, on Linux. Nothing in this directory is published yet.
