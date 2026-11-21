@@ -3,9 +3,10 @@
 //   PASEO_BIN=/path/to/paseo PIG_BIN=/path/to/pig PIG_ACP_BIN=/path/to/pig-acp node test/e2e/e2e.mjs
 //
 // It starts a scratch Paseo daemon (its own home, a private port, relay off), installs this directory as a plugin,
-// points pig at a scripted local model, and drives three agents through the plugin's "pig" provider: a plain turn, a
-// read tool call, and a bash tool call held by an approval that the run first allows and then denies. Everything lives
-// in one temporary directory that is removed at the end, and only the processes this script started are stopped.
+// points pig at a scripted local model, and drives four agents through the plugin's "pig" provider: a plain turn, a
+// read tool call, a bash tool call held by an approval that the run first allows and then denies, and an edit tool
+// call. Everything lives in one temporary directory that is removed at the end, and only the processes this script
+// started are stopped.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync, readFileSync } from "node:fs";
