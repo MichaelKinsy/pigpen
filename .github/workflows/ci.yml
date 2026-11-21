@@ -42,7 +42,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
   # The PiG release these jobs target is scripts/pig-requirement.json (`release`); a test keeps this commit equal to it.
-  PIG_COMMIT: '05a1dfd242b9d7211940a88309975cd866a29d68' # PiG 0.8.0 release candidate (canary/line-24-pinned), reports 0.7.0 until the release commit; re-pinned to the tag after the release
+  PIG_COMMIT: '0e35a120627aa6ab2a8e1d7ae72bd15394b8078f' # PiG 0.8.0 release candidate (release/v0.8.0), reports 0.7.0 until the release commit; re-pinned to the tag after the release
 jobs:
   validate:
     runs-on: ubuntu-24.04
@@ -387,7 +387,7 @@ jobs:
         run: node scripts/measure-lisp-piglet.mjs --piglet dist/staged/piglets/pig-autolith/piglet.yaml --without fuse-anchor --binary dist/bin/pig-autolith --expect-tools autolith_job,autolith_session --runs 5
 
   # Third-party listings: no listing is Pigpen's code, so each one is built and loaded here, from its pinned commit, with the
-  # pig this run builds (the PiG 0.8.0 release candidate, 05a1dfd242b9), before index.json may claim it. The fixture test runs first so a broken check cannot pass
+  # pig this run builds (the PiG 0.8.0 release candidate, 0e35a120627a), before index.json may claim it. The fixture test runs first so a broken check cannot pass
   # for a working listing. The job has the read-only token and no secret; a listing's code runs only here (CONTRIBUTING.md).
   listings:
     name: Third-party listings (verify:listings)
