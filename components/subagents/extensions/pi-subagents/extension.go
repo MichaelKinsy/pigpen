@@ -157,6 +157,9 @@ func Extension() *sdk.Extension {
 			dir, _ = ctx.SessionManager().GetSessionDir()
 		}
 		setChildSessionDir(dir)
+		if id, err := ctx.SessionManager().GetSessionID(); err == nil {
+			setParentSessionID(id)
+		}
 		setCompletionSender(func(content string, display bool) error {
 			// the original's pi.sendMessage for its completion notifications: triggerTurn wakes the model
 			return ctx.SendMessage("subagent-notify", content, display, sdk.SendMessageOptions{TriggerTurn: sdk.Bool(true)})
@@ -181,6 +184,7 @@ func Extension() *sdk.Extension {
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		fleet.stopAll()
 		setChildSessionDir("")
+		setParentSessionID("")
 		setCompletionSender(nil)
 		fleet.setSink(nil)
 		_ = ctx.SetWidget(asyncWidget, nil)

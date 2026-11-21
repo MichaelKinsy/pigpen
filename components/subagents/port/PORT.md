@@ -91,6 +91,10 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
   child knows its depth from `PIG_SUBAGENT_DEPTH` (`PIG_SUBAGENT` alone counts as 1). The child loads this extension again from the
   settings, and even `--no-extensions` would not help: a Piglet Binary keeps its fused members under it, so a Binary that
   starts itself would nest without end;
+- every child also carries `PIG_PARENT_SESSION=<the session's id>` — one generic provenance marker (it names the session
+  that delegated the child; no policy, no sandbox vocabulary) beside `PIG_SUBAGENT` / `PIG_SUBAGENT_DEPTH` /
+  `PIG_AGENT_ROLE`. Child-side tooling such as pig-bg-tasks uses it to reach the delegating session (its escalation
+  relay and workspace policy); nested children re-declare it at every level;
 - at most 4 children run at once (the original's `MAX_CONCURRENCY`), whatever one model turn asks for;
 - a cancelled call (Escape, the session ending) sends the child SIGTERM and kills it 5 s later; on Linux a child also gets
   SIGTERM when its parent dies, so a host killed outright leaves none behind;

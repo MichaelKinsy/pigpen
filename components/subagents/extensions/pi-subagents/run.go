@@ -313,16 +313,20 @@ func noExtensionsWarning(a *AgentConfig) string {
 func childPrompt(task string) string { return "Task: " + task }
 
 // childEnv is this process's environment without the host's internals for this extension (its socket, packed cell and
-// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent.
+// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent, and which
+// session delegated it (parent.go's PIG_PARENT_SESSION).
 func childEnv(base []string, depth int, role string) []string {
 	out := []string{}
 	for _, kv := range base {
 		k, _, _ := strings.Cut(kv, "=")
 		switch {
-		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE":
+		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE", k == "PIG_PARENT_SESSION":
 			continue
 		}
 		out = append(out, kv)
+	}
+	if id := parentSessionIDFor(); id != "" {
+		out = append(out, "PIG_PARENT_SESSION="+id)
 	}
 	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
 }
