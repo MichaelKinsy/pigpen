@@ -124,7 +124,7 @@ func TestFleetInspectorKeys(t *testing.T) {
 	if c.steerDraft != nil {
 		t.Error("Enter closes the compose line")
 	}
-	if !strings.Contains(c.notice, "Steered run") {
+	if !strings.Contains(c.notice, "Steering queued for run run-2") {
 		t.Errorf("steer notice: %q", c.notice)
 	}
 	_, _ = c.HandleInput("j")

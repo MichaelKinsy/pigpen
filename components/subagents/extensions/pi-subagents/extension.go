@@ -159,6 +159,17 @@ func Extension() *sdk.Extension {
 		setChildSessionDir(dir)
 		if id, err := ctx.SessionManager().GetSessionID(); err == nil {
 			setParentSessionID(id)
+			startSessionLink(id) // this session's children talk to it over the parent link (link.go)
+		}
+		if parent := os.Getenv("PIG_PARENT_SESSION"); parent != "" {
+			// this process is a delegated child: serve the parent link's operations on its own session
+			go serveParentLink(parent, parentSessionIDFor(), func(op string, req map[string]any) error {
+				if op != "steer" {
+					return fmt.Errorf("unknown link operation %q", op)
+				}
+				message, _ := req["message"].(string)
+				return ctx.SendUserMessage(message, "steer") // the host queues it at the turn's next safe point
+			})
 		}
 		setCompletionSender(func(content string, display bool) error {
 			// the original's pi.sendMessage for its completion notifications: triggerTurn wakes the model
@@ -185,6 +196,7 @@ func Extension() *sdk.Extension {
 		fleet.stopAll()
 		setChildSessionDir("")
 		setParentSessionID("")
+		closeSessionLink()
 		setCompletionSender(nil)
 		fleet.setSink(nil)
 		_ = ctx.SetWidget(asyncWidget, nil)

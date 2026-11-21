@@ -7,6 +7,7 @@ package pi_subagents
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -66,10 +67,9 @@ func continuationRequest(base childRequest, message string) childRequest {
 // is delivered natively").
 func startAsyncRun(cwd string, a *AgentConfig, task, model string) *runRecord {
 	run := fleet.beginRun("single", a.Name, task, cwd)
+	run.setTurnNotice("Background task")
 	go func() {
-		_, st, _ := runAgent(nil, cwd, a, task, model, nil, run)
-		st.setNotice("Background task", "")
-		notifyTurnEnd(run)
+		_, _, _ = runAgent(nil, cwd, a, task, model, nil, run) // its drain runs queued steer turns and settles the run
 		fleet.changed()
 	}()
 	return run
@@ -77,8 +77,7 @@ func startAsyncRun(cwd string, a *AgentConfig, task, model string) *runRecord {
 
 // notifyTurnEnd delivers the completion notification once the run has settled (every turn terminal): whichever turn's
 // goroutine returns last sees the settled run and delivers the last turn's outcome exactly once (run.noticeSent). A
-// steer's interrupted turn therefore never notifies — its pivoted turn is the run's answer — and the steered turn's
-// answer is delivered as its steer reply.
+// turn that queued the next one stays quiet for it, and a steered turn's answer is delivered as its steer reply.
 func notifyTurnEnd(run *runRecord) {
 	fleet.mu.Lock()
 	for _, s := range run.steps {
@@ -122,28 +121,74 @@ func notifyTurnEnd(run *runRecord) {
 		preview: completionPreview(preview),
 		session: last.sessionPath(),
 	}
-	n.display = n.kind == "Detached foreground task" || n.status != "completed" // its sendCompletion display rule
+	n.display = n.kind == "Detached foreground task" || n.status != "completed" || n.info != "" // its sendCompletion
+	// display rule, plus a steer reply: the model asked for that answer
 	completions.deliver(n)
 }
 
-// steerRun interrupts the run's current turn and continues its session with the message (the port's steer: a print
-// child cannot be redirected mid-turn, so the child pivots at once; the run keeps its id). The next turn is queued
-// before the pivot, so the interrupted turn's goroutine sees it and stays quiet; the steered turn's answer is delivered
-// as a completion notification when it settles (its steer reply).
-func steerRun(run *runRecord, message string) {
-	thinking := run.lastThinking()
-	st := run.addStep(run.name, message, thinking)
-	st.setNotice("Detached foreground task", " (steer reply)")
-	run.terminate(statePaused)
-	run.rearm()
-	base, _, _ := run.getLaunch()
-	req := continuationRequest(base, message)
-	done := run.currentDone()
-	go func() {
-		_, _ = runStep(done, run, st, req, nil)
-		notifyTurnEnd(run)
-	}()
-	fleet.changed()
+// steerMessage delivers the model's message to a run's child (the original's steer action). A child reached over the
+// parent link (link.go) receives it in its running turn — the host queues it at the next safe point, so the turn is
+// never interrupted and nothing in flight is lost. mode "follow_up" always queues the message for the run's next turn
+// instead; so does a steer the link cannot deliver. The receipt states which happened, as the original's does.
+func steerMessage(run *runRecord, message, mode string) string {
+	if mode != "follow_up" {
+		if sid := run.runningChildSession(); sid != "" {
+			if err := sendToChild(sid, map[string]any{"op": "steer", "message": message}); err == nil {
+				run.markSteerReply()
+				return steeringReceipt(message, fmt.Sprintf("Steering delivered for run %s: the message joins its running turn at the next safe point; the turn is not interrupted.", run.id))
+			}
+		}
+	}
+	if run.queueSteer(message) {
+		go drainSteers(run)
+	}
+	label := "Steering queued"
+	if mode == "follow_up" {
+		label = "Follow-up queued"
+	}
+	return steeringReceipt(message, fmt.Sprintf("%s for run %s: its current turn continues undisturbed; the message runs as the next turn.", label, run.id))
+}
+
+// drainSteers runs steer messages queued behind the current turn as further turns (the original's follow-up turns) and
+// settles the run when none remain. The queued turn is detached from whatever call queued it, so its answer is
+// delivered as its steer reply.
+func drainSteers(run *runRecord) {
+	for {
+		msg, ok := run.nextSteer()
+		if !ok {
+			notifyTurnEnd(run)
+			return
+		}
+		st := run.addStep(run.name, msg, run.lastThinking())
+		st.setNotice("Detached foreground task", " (steer reply)")
+		base, _, _ := run.getLaunch()
+		runStep(run.currentDone(), run, st, continuationRequest(base, msg), nil)
+	}
+}
+
+// steerMode is the original's normalizeSteerDeliveryMode: steer, follow_up or auto; anything else is its default.
+func steerMode(params map[string]any) string {
+	if s, _ := params["mode"].(string); s == "steer" || s == "follow_up" || s == "auto" {
+		return s
+	}
+	return "steer"
+}
+
+// backtickRun matches the fenced runs steeringReceipt must out-fence.
+var backtickRun = regexp.MustCompile("`{3,}")
+
+// steeringReceipt is the original's steeringReceipt (its steering.ts): the receipt with the message sent under a text
+// fence.
+func steeringReceipt(message, receipt string) string {
+	preview := truncateRunes(message, 160) // its STEERING_MESSAGE_PREVIEW_LIMIT
+	longest := 2
+	for _, run := range backtickRun.FindAllString(preview, -1) {
+		if len(run) > longest {
+			longest = len(run)
+		}
+	}
+	fence := strings.Repeat("`", longest+1)
+	return receipt + "\n\nMessage sent:\n" + fence + "text\n" + preview + "\n" + fence
 }
 
 // resumeRun starts a follow-up run on the stopped one's session (the original's resume: a new run id per pass).
@@ -153,11 +198,12 @@ func resumeRun(old *runRecord, message string) *runRecord {
 	run := fleet.beginRun("single", old.name, message, old.cwd)
 	run.setResumedFrom(old.id)
 	run.setLaunch(req, dir, id)
+	run.setTurnNotice("Background task")
+	run.beginSteerPump()
 	st := run.addStep(old.name, message, old.lastThinking())
-	st.setNotice("Background task", "")
 	go func() {
 		_, _ = runStep(run.currentDone(), run, st, req, nil)
-		notifyTurnEnd(run)
+		drainSteers(run)
 	}()
 	return run
 }
@@ -224,7 +270,7 @@ func init() {
 		run.terminate(statePaused)
 		return controlOK(fmt.Sprintf("Interrupt requested for async run %s.", run.id)), nil
 	})
-	registerAction("steer", []string{"id", "runId", "message"}, func(_ sdk.Context, params map[string]any) (any, error) {
+	registerAction("steer", []string{"id", "runId", "message", "mode"}, func(_ sdk.Context, params map[string]any) (any, error) {
 		run, msg := controlTarget(params, "steer")
 		if msg != "" {
 			return nil, sdk.NewToolError(msg)
@@ -236,8 +282,7 @@ func init() {
 		if !run.isLive() {
 			return nil, sdk.NewToolError(fmt.Sprintf("Async run '%s' is not running or queued and cannot be steered.", run.id))
 		}
-		steerRun(run, message)
-		return controlOK(fmt.Sprintf("Steered run %s: its current turn was interrupted and turn %d continues the session with your message.\nStatus: subagent({ action: \"status\", id: \"%s\" })", run.id, len(run.steps), run.id)), nil
+		return controlOK(steerMessage(run, jsTrim(message), steerMode(params))), nil
 	})
 	registerAction("resume", []string{"id", "runId", "message"}, func(_ sdk.Context, params map[string]any) (any, error) {
 		run, msg := controlTarget(params, "resume")

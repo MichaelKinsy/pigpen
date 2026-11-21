@@ -50,11 +50,14 @@ takes what can be checked against the original by running it, and one execution 
   lives in the registry and the views; its completion is delivered to the session as the original's `subagent-notify`
   completion notification (its runs/background/notify.ts: `sendMessage` with triggerTurn, which wakes the model; its
   display rule, its formatSingleCompletion/formatGroupedCompletion text, and its completion-batcher: sibling successes
-  batch into one grouped message, while failures, pauses and stops flush the batch and go at once). `steer` pivots: a
-  print child cannot be redirected mid-turn, so the current
-  turn is interrupted and the next turn continues the child's session with the message (the original delivers mid-turn
-  through its runner); the steered turn's answer is delivered as its steer reply notification (a port addition: the
-  original has no turn to reply with). `resume` is the original's new run id per pass, and a stopped run is not
+  batch into one grouped message, while failures, pauses and stops flush the batch and go at once). `steer` delivers
+  mid-turn like the original: over the parent link (link.go — the agreed OS socket between a session and its children,
+  both ends this extension) the child's host queues the message at the running turn's next safe point, so the turn is
+  never interrupted and nothing in flight is lost. Its `mode` (`steer` | `follow_up` | `auto`, the original's
+  normalizeSteerDeliveryMode) is honored: `follow_up` always queues the message for the run's next turn, and so does a
+  steer no link can deliver. The receipt is the original's steeringReceipt and states delivered or queued; a steered
+  turn's answer is delivered as its steer reply notification (a port addition: the original has no per-turn reply).
+  `resume` is the original's new run id per pass, and a stopped run is not
   resumable. Children pin
   session files in the parent's session directory (as pane children always did) so turns can continue. The port keeps
   the foreground default where the original defaults to async. `includeProgress` is honored: with it the result carries the
@@ -94,7 +97,8 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
 - every child also carries `PIG_PARENT_SESSION=<the session's id>` — one generic provenance marker (it names the session
   that delegated the child; no policy, no sandbox vocabulary) beside `PIG_SUBAGENT` / `PIG_SUBAGENT_DEPTH` /
   `PIG_AGENT_ROLE`. Child-side tooling such as pig-bg-tasks uses it to reach the delegating session (its escalation
-  relay and workspace policy); nested children re-declare it at every level;
+  relay and workspace policy); the port's own parent link (link.go) derives its socket name from the same id, and
+  steering rides that link into the running child's turn. Nested children re-declare it at every level;
 - at most 4 children run at once (the original's `MAX_CONCURRENCY`), whatever one model turn asks for;
 - a cancelled call (Escape, the session ending) sends the child SIGTERM and kills it 5 s later; on Linux a child also gets
   SIGTERM when its parent dies, so a host killed outright leaves none behind;

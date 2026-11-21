@@ -83,6 +83,11 @@ type runRecord struct {
 	sessionID   string
 	resumedFrom string
 	noticeSent  bool // the settle notification for the current turns went out (notify.go)
+
+	steerMu       sync.Mutex
+	pendingSteers []string // messages queued for the run's next turns (steer without a live link, follow_up)
+	pumping       bool     // a turn goroutine owns the run's turns (nothing else may drain the queue)
+	turnNotice    string   // the completion notice kind every detached turn of this run carries
 }
 
 // terminate stops the run's child process: intent is stateStopped (stop) or statePaused (interrupt, steer). It reports
@@ -168,10 +173,19 @@ func (f *fleetState) beginRun(mode, name, task, cwd string) *runRecord {
 func (r *runRecord) addStep(agent, task, thinking string) *stepRecord {
 	s := &stepRecord{agent: agent, task: task, thinking: thinking, state: stateQueued}
 	fleet.mu.Lock()
+	s.noticeKind = r.turnNotice
 	r.steps = append(r.steps, s)
 	r.noticeSent = false // the new turn settles again
 	fleet.mu.Unlock()
 	return s
+}
+
+// setTurnNotice names the completion notice every detached turn of this run carries ("Background task"; a turn its
+// tool call reports itself leaves it empty).
+func (r *runRecord) setTurnNotice(kind string) {
+	fleet.mu.Lock()
+	r.turnNotice = kind
+	fleet.mu.Unlock()
 }
 
 // setLaunch records what a later turn needs to continue the child (steer, resume).
@@ -239,6 +253,64 @@ func (s *stepRecord) setNotice(kind, info string) {
 	fleet.mu.Lock()
 	defer fleet.mu.Unlock()
 	s.noticeKind, s.noticeInfo = kind, info
+}
+
+// beginSteerPump claims the run's turns for one goroutine: steer messages queue instead of starting turns of their
+// own while a turn runs.
+func (r *runRecord) beginSteerPump() {
+	r.steerMu.Lock()
+	r.pumping = true
+	r.steerMu.Unlock()
+}
+
+// queueSteer appends a message for the run's next turn and reports whether the caller must start the turn drain (no
+// turn goroutine owns the run right now).
+func (r *runRecord) queueSteer(message string) bool {
+	r.steerMu.Lock()
+	defer r.steerMu.Unlock()
+	r.pendingSteers = append(r.pendingSteers, message)
+	if r.pumping {
+		return false
+	}
+	r.pumping = true
+	return true
+}
+
+// nextSteer is the next queued message; with none left it releases the run's turns.
+func (r *runRecord) nextSteer() (string, bool) {
+	r.steerMu.Lock()
+	defer r.steerMu.Unlock()
+	if len(r.pendingSteers) == 0 {
+		r.pumping = false
+		return "", false
+	}
+	msg := r.pendingSteers[0]
+	r.pendingSteers = r.pendingSteers[1:]
+	return msg, true
+}
+
+// runningChildSession is the running turn's pinned child session id (the parent link routes by it).
+func (r *runRecord) runningChildSession() string {
+	fleet.mu.Lock()
+	defer fleet.mu.Unlock()
+	for _, s := range r.steps {
+		if s.state == stateRunning {
+			return s.sessionID
+		}
+	}
+	return ""
+}
+
+// markSteerReply records that steering reached the running turn: its completion is delivered as a steer reply.
+func (r *runRecord) markSteerReply() {
+	fleet.mu.Lock()
+	defer fleet.mu.Unlock()
+	for _, s := range r.steps {
+		if s.state == stateRunning {
+			s.noticeInfo = " (steer reply)"
+			return
+		}
+	}
 }
 
 // sessionPath is the child's transcript: its session file, resolved live (the file appears as the child works).

@@ -448,7 +448,9 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	run.setLaunch(req, dir, id)
 	merged, stop := eitherDone(done, run.currentDone())
 	defer stop()
+	run.beginSteerPump() // this goroutine owns the run's turns
 	out, err := runStep(merged, run, st, req, panes)
+	drainSteers(run) // queued steer messages run as further turns; the run settles there
 	return out, st, err
 }
 

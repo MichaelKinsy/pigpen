@@ -136,26 +136,139 @@ func TestAsyncRunCompletionsAreDelivered(t *testing.T) {
 	eq(t, got[1].display, true, "a failure is displayed")
 }
 
-// A steer reply is delivered when the steered turn settles, and the interrupted turn stays quiet: the steer action
-// reported the pivot.
-func TestSteerRepliesAreDelivered(t *testing.T) {
+// A steer delivered over the parent link (link.go) joins the child's running turn at the host's next safe point: the
+// turn is never interrupted and loses nothing in flight, and its answer is delivered as the steer reply.
+func TestSteerDeliversToTheRunningTurn(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	t.Cleanup(closeSessionLink)
+	notices := captureCompletions(t)
+	startSessionLink("link-deliver")
+	applied := make(chan string, 4)
+	go serveParentLink("link-deliver", "child-1", func(op string, req map[string]any) error {
+		if op == "steer" {
+			message, _ := req["message"].(string)
+			applied <- message
+		}
+		return nil
+	})
+	old := runChild
+	t.Cleanup(func() { runChild = old })
+	release := make(chan struct{})
+	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
+		req.OnOutput("working")
+		select {
+		case <-release:
+			return childResult{Stdout: "all done"}, nil
+		case <-done:
+			return childResult{}, errCancelled
+		}
+	}
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
+	waitState(t, run, stateRunning)
+	run.steps[0].pinSession("d", "child-1")
+	deadline := time.Now().Add(2 * time.Second)
+	for sendToChild("child-1", map[string]any{"op": "ping"}) != nil {
+		if time.Now().After(deadline) {
+			t.Fatalf("the child never connected to the parent link: %v", sendToChild("child-1", map[string]any{"op": "ping"}))
+		}
+		time.Sleep(2 * time.Millisecond)
+	}
+	out, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": "hold that thought"})
+	eq(t, err, nil, "steer")
+	if !strings.Contains(out.(explicitOK).Content, "Steering delivered for run "+run.id) {
+		t.Errorf("steer: %v", out)
+	}
+	eq(t, <-applied, "hold that thought", "the link carried the message into the running turn")
+	eq(t, len(run.steps), 1, "no new turn")
+	eq(t, run.steps[0].state, stateRunning, "the running turn is undisturbed")
+
+	close(release)
+	got := waitNotices(t, notices, 1)
+	eq(t, got[0].content, "Background task completed: **scout** (steer reply)\n\nall done", "the turn's answer is the steer reply")
+	eq(t, got[0].display, true, "a steer reply is displayed")
+}
+
+// A steer the link cannot deliver queues the message for the run's next turn: the current turn continues undisturbed
+// (the port's steer no longer interrupts a turn and loses what is in flight).
+func TestSteerQueuesTheNextTurnWithoutInterrupting(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
 	notices := captureCompletions(t)
-	blockingRunner(t)
+	old := runChild
+	t.Cleanup(func() { runChild = old })
+	release := make(chan struct{})
+	calls := 0
+	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
+		calls++
+		if calls == 1 {
+			req.OnOutput("working")
+			select {
+			case <-release:
+				return childResult{Stdout: "done"}, nil
+			case <-done:
+				return childResult{}, errCancelled
+			}
+		}
+		return childResult{Stdout: "sure"}, nil
+	}
 	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
 	waitState(t, run, stateRunning)
-	answerRunner(t, "here is the report") // the steered turn answers
 	out, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": "report please"})
 	eq(t, err, nil, "steer")
-	if !strings.Contains(out.(explicitOK).Content, "Steered run "+run.id) {
+	if !strings.Contains(out.(explicitOK).Content, "Steering queued for run "+run.id) {
 		t.Errorf("steer: %v", out)
 	}
+	eq(t, len(run.steps), 1, "no new turn yet")
+	eq(t, run.steps[0].state, stateRunning, "the running turn is undisturbed")
+
+	close(release)
 	got := waitNotices(t, notices, 1)
-	eq(t, got[0].content, "Detached foreground task completed: **scout** (steer reply)\n\nhere is the report", "the reply wake")
-	eq(t, got[0].display, true, "a steer reply is displayed")
-	time.Sleep(20 * time.Millisecond) // the interrupted turn's goroutine must stay quiet
-	eq(t, len(notices()), 1, "only the reply is delivered")
+	eq(t, len(run.steps), 2, "the message ran as the next turn")
+	eq(t, run.steps[1].task, "report please", "the message is the next turn's task")
+	eq(t, got[0].content, "Detached foreground task completed: **scout** (steer reply)\n\nsure", "the queued turn's answer is the steer reply")
+}
+
+// follow_up always queues, and says so.
+func TestSteerFollowUpQueues(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	notices := captureCompletions(t)
+	old := runChild
+	t.Cleanup(func() { runChild = old })
+	release := make(chan struct{})
+	calls := 0
+	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
+		calls++
+		if calls == 1 {
+			select {
+			case <-release:
+				return childResult{Stdout: "done"}, nil
+			case <-done:
+				return childResult{}, errCancelled
+			}
+		}
+		return childResult{Stdout: "follow"}, nil
+	}
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
+	waitState(t, run, stateRunning)
+	out, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": "and then", "mode": "follow_up"})
+	eq(t, err, nil, "steer")
+	if !strings.Contains(out.(explicitOK).Content, "Follow-up queued for run "+run.id) {
+		t.Errorf("steer: %v", out)
+	}
+	close(release)
+	got := waitNotices(t, notices, 1)
+	eq(t, got[0].content, "Detached foreground task completed: **scout** (steer reply)\n\nfollow", "the follow-up runs as the next turn")
+}
+
+func TestSteeringReceiptLooksLikeTheOriginal(t *testing.T) {
+	eq(t, steeringReceipt("do it", "Steering delivered for run run-1."),
+		"Steering delivered for run run-1.\n\nMessage sent:\n```text\ndo it\n```", "a plain message")
+	eq(t, steeringReceipt("with ``` fence", "Q"),
+		"Q\n\nMessage sent:\n````text\nwith ``` fence\n````", "the fence out-fences the message")
+	eq(t, steerMode(map[string]any{"mode": "follow_up"}), "follow_up", "mode")
+	eq(t, steerMode(map[string]any{"mode": "plan"}), "steer", "an unknown mode is the default")
 }
 
 func TestContinuationRequestKeepsTheSessionAndDropsTheSystemPrompt(t *testing.T) {
@@ -174,19 +287,12 @@ func TestControlActions(t *testing.T) {
 	waitState(t, run, stateRunning)
 	id := map[string]any{"id": run.id}
 
-	// steer interrupts the turn and continues the session in the same run
-	out, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": "look left"})
-	eq(t, err, nil, "steer")
-	if !strings.Contains(out.(explicitOK).Content, "Steered run "+run.id) {
-		t.Errorf("steer: %v", out)
-	}
-	waitState(t, run, stateRunning) // the pivoted turn runs
-	eq(t, len(run.steps), 2, "two turns")
-	waitStepState(t, run, 0, statePaused)
-	eq(t, run.steps[0].state, statePaused, "the first turn was interrupted")
+	// steering delivery lives in TestSteerDeliversToTheRunningTurn / TestSteerQueuesTheNextTurnWithoutInterrupting
+	_, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": ""})
+	eq(t, err.Error(), "Steer requires message.", "message")
 
 	// stop
-	out, err = actions["stop"].run(sdkContext(), id)
+	out, err := actions["stop"].run(sdkContext(), id)
 	eq(t, err, nil, "stop")
 	if !strings.Contains(out.(explicitOK).Content, "Stop requested for run "+run.id) {
 		t.Errorf("stop: %v", out)

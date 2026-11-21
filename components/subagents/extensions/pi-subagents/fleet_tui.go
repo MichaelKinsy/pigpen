@@ -268,7 +268,7 @@ func (c *fleetInspector) controlNotice(action string) string {
 }
 
 // handleSteerDraft is the steer compose line: type the message, Enter steers, Esc cancels (the original's steerDraft;
-// its Tab-cycled delivery modes are not ported).
+// the draft sends with the default delivery mode — the steer action takes `mode`).
 func (c *fleetInspector) handleSteerDraft(data string) {
 	switch {
 	case data == "\x1b":
