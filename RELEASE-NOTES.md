@@ -1,6 +1,6 @@
 # Pigpen: release notes (PiG 0.8.0 candidate, not published)
 
-Status of this file: the notes for the Pigpen release built on the PiG 0.8.0 candidate (pin `05a1dfd242b9d7211940a88309975cd866a29d68`,
+Status of this file: the notes for the Pigpen release built on the PiG 0.8.0 candidate (pin `0e35a120627aa6ab2a8e1d7ae72bd15394b8078f`,
 which reports 0.7.0 until the release commit). Nothing here is published, signed or tagged. The "What was verified" section below is the
 last full manual run, on **PiG 0.4.1**, and is history: the current evidence for the candidate is the CI of the pull requests (validate,
 the release rehearsals, the platform jobs), named in the pull requests. It states only what was run and what the Packages' own READMEs and
