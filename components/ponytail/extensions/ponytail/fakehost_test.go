@@ -383,8 +383,13 @@ func (h *Host) Fire(event string, data map[string]any) json.RawMessage {
 	if failure != "" {
 		h.t.Errorf("%s handler failed: %s", event, failure)
 	}
-	if event == "tool_call" {
+	switch event {
+	case "tool_call":
 		return h.toolCallResult(result)
+	case "tool_result":
+		return h.toolResultReply(result)
+	case "message_start", "message_end", "agent_end":
+		return h.eventResultReply(result)
 	}
 	return result
 }
@@ -409,25 +414,59 @@ func (h *Host) FireAll(event string, data map[string]any) {
 }
 
 // toolCallResult unwraps the handler's {block, reason} from the host reply. The SDK carries it
-// in "_pigToolCallResult" beside any edited input ("_pigToolCallInput"), and the host reads
-// the same field, so a test must see what the host sees. Like the host, it rejects a reply
-// in any other shape: decoded loosely, such a reply would read as "no block" and hide one.
+// in "_pigToolCallResult" beside any edited or reassigned input ("_pigToolCallInput",
+// "_pigToolCallEventInput"), and the host reads the same field, so a test must see what the host
+// sees. Like the host, it rejects a reply in any other shape: decoded loosely, such a reply would
+// read as "no block" and hide one.
 func (h *Host) toolCallResult(reply json.RawMessage) json.RawMessage {
 	h.t.Helper()
 	if len(reply) == 0 {
 		return nil
 	}
 	var wrapped struct {
-		Input  json.RawMessage `json:"_pigToolCallInput"`
-		Result json.RawMessage `json:"_pigToolCallResult"`
+		Input      json.RawMessage `json:"_pigToolCallInput"`
+		EventInput json.RawMessage `json:"_pigToolCallEventInput"`
+		Result     json.RawMessage `json:"_pigToolCallResult"`
 	}
 	decoder := json.NewDecoder(bytes.NewReader(reply))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&wrapped); err != nil {
-		h.t.Errorf("tool_call reply %s is not {_pigToolCallResult, _pigToolCallInput}: %v", reply, err)
+		h.t.Errorf("tool_call reply %s is not {_pigToolCallResult, _pigToolCallInput, _pigToolCallEventInput}: %v", reply, err)
 		return nil
 	}
 	return wrapped.Result
+}
+
+// toolResultReply unwraps {_pigToolResultResult, _pigToolResultEdits} (PiG 0.8.0+) or returns the
+// bare reply for older SDKs.
+func (h *Host) toolResultReply(reply json.RawMessage) json.RawMessage {
+	h.t.Helper()
+	if len(reply) == 0 {
+		return nil
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(reply, &raw); err == nil {
+		if res, ok := raw["_pigToolResultResult"]; ok {
+			return res
+		}
+	}
+	return reply
+}
+
+// eventResultReply unwraps {_pigEventResult, _pigEventEdits} (PiG 0.8.0+) or returns the bare reply
+// for older SDKs.
+func (h *Host) eventResultReply(reply json.RawMessage) json.RawMessage {
+	h.t.Helper()
+	if len(reply) == 0 {
+		return nil
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(reply, &raw); err == nil {
+		if res, ok := raw["_pigEventResult"]; ok {
+			return res
+		}
+	}
+	return reply
 }
 
 // Command runs a registered slash command and returns its error text ("" on success).
