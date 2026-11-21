@@ -20,6 +20,7 @@
 #                   left out of platform-matrix and proved here on linux/amd64: the bridge's own tests, a native Piglet Binary build
 #                   (statically linked, starts, registers its tools), and the size and first-load time of its SBCL image (scripts/measure-lisp-piglet.mjs).
 #   autolith-binary-macos  the same on a macos-15 runner for darwin/arm64, with SBCL built from pinned source by scripts/install-sbcl-macos.sh, the script release.yml runs.
+#   rea-windows     every run: the windows/amd64 half of a pig-rea and pig-rea-sealed release build on a windows-2025 runner (the REA payload with System32 tar.exe and zstd, both Binaries built and smoked, test:rea), with the pig built from PIG_COMMIT.
 #   ci-result       the one required check. Green when validate, every slow check, govulncheck, listings and autolith-binary passed and each
 #                   other tier passed or was skipped.
 name: Validate Pigpen
@@ -121,6 +122,12 @@ jobs:
           # then the released Binary started with its tools registered. The darwin/arm64 run builds SBCL from source (about 10 minutes).
           - { name: 'Release rehearsal pig-autolith linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
           - { name: 'Release rehearsal pig-autolith darwin/arm64', runner: macos-15, timeout: 60, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-autolith --expect-tools autolith_job,autolith_session --without fuse-anchor' }
+          # pig-rea and pig-rea-sealed: release.yml's REA payload step and Binary build on the Linux and macOS targets (windows/amd64 is
+          # rea-windows; linux/arm64 and darwin/amd64 have no runner here and are covered by platform-matrix after the release).
+          - { name: 'Release rehearsal pig-rea linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea' }
+          - { name: 'Release rehearsal pig-rea darwin/arm64', runner: macos-15, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea' }
+          - { name: 'Release rehearsal pig-rea-sealed linux/amd64', runner: ubuntu-24.04, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea-sealed' }
+          - { name: 'Release rehearsal pig-rea-sealed darwin/arm64', runner: macos-15, timeout: 45, run: 'node scripts/rehearse-release.mjs --pig-src .pig-src --piglet pig-rea-sealed' }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -195,11 +202,23 @@ jobs:
           cache-dependency-path: '**/go.sum'
       - name: Download the pinned PiG release for ${{ matrix.target }} and verify its checksum
         run: node scripts/fetch-pig.mjs --target '${{ matrix.target }}' --out "$RUNNER_TEMP/pig" --github-env
+      # pig-rea embeds REA and its pinned Node: build the payload for this target before the Piglets are staged and built.
+      - name: Build the REA payload for ${{ matrix.target }}
+        run: node components/rea/scripts/payload.mjs '${{ matrix.target }}'
       - name: Build all Piglets but pig-autolith (SBCL, job autolith-binary) for ${{ matrix.target }} and smoke every Binary
         env:
           PIG_HOME: ${{ runner.temp }}/pig-home
           PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
         run: node scripts/platform-smoke.mjs --except pig-autolith --out dist/bin
+      - name: REA faithfulness gates (catalog against npx's REA, rea setup registration, skill)
+        run: npm run test:rea
+      # The harness gate symlinks one unpacked payload into every sandbox, which Windows runners do not allow unprivileged.
+      - name: REA harness gate on the pig-rea and pig-rea-sealed Binaries
+        if: ${{ runner.os != 'Windows' }}
+        env:
+          PIG_REA_BIN: ${{ github.workspace }}/dist/bin/pig-rea
+          PIG_REA_SEALED_BIN: ${{ github.workspace }}/dist/bin/pig-rea-sealed
+        run: npm run test:rea-harness
       # Each Binary in a real terminal (tmux), with only system tools on PATH: its main features, a faux turn and a clean /quit.
       - name: Drive every Binary in a terminal
         if: ${{ runner.os == 'Linux' }}
@@ -427,10 +446,58 @@ jobs:
       - name: Install, validate, build and load every listing (verify:listings)
         run: npm run verify:listings
 
+  # The Windows half of a pig-rea / pig-rea-sealed release build, proved before a release tag and with no published PiG release:
+  # platform-matrix's windows entry does the same but starts with fetch-pig, which needs the v0.8.0 assets. Here the pig is built
+  # from PIG_COMMIT, as release.yml does. It unpacks the pinned Node .zip with System32\tar.exe (payload.mjs), packs the zstd payload,
+  # builds both Binaries for windows/amd64 and smokes them. Nothing is signed or published, no secret is read.
+  rea-windows:
+    name: REA payload and Binaries for windows/amd64
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Keep line endings as committed
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - name: Check out the PiG source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: MichaelKinsy/PiG
+          ref: ${{ env.PIG_COMMIT }}
+          path: .pig-src
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: .pig-src/.go-version
+          cache-dependency-path: '**/go.sum'
+      - name: Build pig from source
+        run: |
+          set -euo pipefail
+          mkdir -p .pig-bin
+          go -C .pig-src build -trimpath -o ../.pig-bin/pig.exe ./cmd/pig
+          echo "PIG_BIN=$PWD/.pig-bin/pig.exe" >> "$GITHUB_ENV"
+      - name: Say which zstd the payload step will spawn
+        run: zstd --version
+      - run: node components/rea/scripts/payload.mjs windows/amd64
+      - name: Build and smoke pig-rea and pig-rea-sealed
+        env:
+          PIG_HOME: ${{ runner.temp }}/pig-home
+          PIG_SOURCE_ROOT: ${{ github.workspace }}/.pig-src
+        run: node scripts/platform-smoke.mjs --only pig-rea,pig-rea-sealed --out dist/bin
+      - run: npm run test:rea
+
   ci-result:
     name: CI result
     if: ${{ always() }}
-    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings, autolith-binary, autolith-binary-macos]
+    needs: [validate, slow-checks, platform-matrix, android-cross, govulncheck, listings, autolith-binary, autolith-binary-macos, rea-windows]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -444,14 +511,16 @@ jobs:
           LISTINGS: ${{ needs.listings.result }}
           AUTOLITH_BINARY: ${{ needs.autolith-binary.result }}
           AUTOLITH_BINARY_MACOS: ${{ needs.autolith-binary-macos.result }}
+          REA_WINDOWS: ${{ needs.rea-windows.result }}
         run: |
-          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS autolith-binary=$AUTOLITH_BINARY autolith-binary-macos=$AUTOLITH_BINARY_MACOS"
+          echo "validate=$VALIDATE slow-checks=$SLOW_CHECKS platform-matrix=$PLATFORM_MATRIX android-cross=$ANDROID_CROSS govulncheck=$GOVULNCHECK listings=$LISTINGS autolith-binary=$AUTOLITH_BINARY autolith-binary-macos=$AUTOLITH_BINARY_MACOS rea-windows=$REA_WINDOWS"
           [ "$VALIDATE" = success ] || { echo "validate did not pass"; exit 1; }
           [ "$SLOW_CHECKS" = success ] || { echo "a slow check did not pass"; exit 1; }
           [ "$GOVULNCHECK" = success ] || { echo "govulncheck did not pass"; exit 1; }
           [ "$LISTINGS" = success ] || { echo "a third-party listing did not verify (see the listings job)"; exit 1; }
           [ "$AUTOLITH_BINARY" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load (see the autolith-binary job)"; exit 1; }
           [ "$AUTOLITH_BINARY_MACOS" = success ] || { echo "the Lisp Piglet pig-autolith did not build or load on darwin/arm64 (see the autolith-binary-macos job)"; exit 1; }
+          [ "$REA_WINDOWS" = success ] || { echo "the REA payload and Binaries did not build on windows/amd64 (see the rea-windows job)"; exit 1; }
           for result in "$PLATFORM_MATRIX" "$ANDROID_CROSS"; do
             case "$result" in
               success | skipped) ;;

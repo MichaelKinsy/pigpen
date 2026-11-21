@@ -246,6 +246,24 @@ export const piglets = {
     ],
   },
   'pig-porter': { steps: porterSkill },
+  // The isolated PATH has no Node: REA runs on the Node embedded in the Binary. The provider row appears once the dashboard's
+  // background `rea doctor --json` finished; /rea-runtime reports the unpacked payload and the registration.
+  'pig-rea': {
+    steps: [
+      { run: async (t) => { await t.waitFor('not configured · /rea', 60_000); } },
+      { say: '/rea', expect: 'Investigation' },
+      { key: ['Tab', 'Tab', 'Tab'], expect: 'Tree sha256' },
+      { key: ['Escape'], gone: 'Tree sha256' },
+      { say: '/rea-runtime status', expect: 'registered as MCP server "rea"' },
+    ],
+  },
+  'pig-rea-sealed': {
+    steps: [
+      { run: async (t) => { await t.waitFor('not configured · /rea', 60_000); } },
+      // The message wraps at the pane width; its start and its digest summary are each on one line.
+      { say: '/rea-runtime verify', expect: /REA verify: \d+ files in[\s\S]*\(archive sha256 [0-9a-f]{16}, tree [0-9a-f]{16}\)/ },
+    ],
+  },
   'pig-tern': {
     // CI has no Tern. TERM_PROGRAM=tern and the multiplexer tmux puts between them are what the member sees in Tern's own
     // pane inside tmux, and PIG_TUI_NATIVE=0 is the user's switch: either way the member declines and PiG draws its own
