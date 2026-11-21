@@ -17,7 +17,7 @@ For a local cluster from scratch, read [kind.md](kind.md) first. Day-two topics 
 
 | Component | Version this chart targets | Notes |
 | --- | --- | --- |
-| kagent | `1.0.0` (`api.kagent.dev/v1alpha3`) | The API is alpha. The installer warns when the controller version differs from the tested one. |
+| kagent | `1.0.1` (`api.kagent.dev/v1alpha3`) | The API is alpha. The installer warns when the controller version differs from the tested one. |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | Preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` must be enabled. |
 | Kubernetes | 1.30 or newer for the chart; Substrate needs `ClusterTrustBundle`, `ClusterTrustBundleProjection` and `PodCertificateRequest` | kagent's own Kind setup enables them, see [kind.md](kind.md). |
 | Helm, kubectl | Helm 3.13 or newer (`--dry-run=server`), kubectl | The installer needs nothing else. |
@@ -36,7 +36,7 @@ The versions are recorded in `chart/pig-kagent/Chart.yaml` annotations (`pig.dev
 3. A `WorkerPool` in the namespace of the Agent. The kagent chart creates `kagent-default` when
    `substrateWorkerPool.create=true`, which is also what `kagent install` sets up, and that is the chart's
    default `substrate.workerPoolRef`.
-4. A snapshot location Substrate serves. The default, `gs://ate-snapshots/kagent/`, is the one kagent's own
+4. A snapshot location Substrate serves. The default, `s3://ate-snapshots/kagent/`, is the one kagent's own
    harness documentation uses. kagent passes it to Substrate as the base prefix for this Harness's snapshots, so it has
    to name a location your Substrate object store serves; set `substrate.snapshotLocation` to match it.
 5. A model: an existing `ModelConfig` (the chart default is `default-model-config`, which `kagent install`
@@ -118,7 +118,7 @@ environment variable kagent owns is an error at `helm template` time.
 | `runtime.passEnv` | `[]` | Names of extra environment variables that `pig` and its tools may inherit; becomes `KAGENT_PIG_PASS_ENV` (comma list). Names must not start with `KAGENT_`. The values come from `env`. `pig` otherwise gets an allowlist of the environment only. |
 | `env` | `{}` | More literal environment for the Harness, at most 16. See [Telemetry](#telemetry). |
 | `substrate.workerPoolRef` | `kagent-default` | WorkerPool in the release namespace. |
-| `substrate.snapshotLocation` | `gs://ate-snapshots/kagent/` | Per-Harness snapshot location. |
+| `substrate.snapshotLocation` | `s3://ate-snapshots/kagent/` | Per-Harness snapshot location. |
 | `agentTemplate.description` | `PiG coding agent running on Agent Substrate` | Also the description in the Agent Card kagent publishes for the Agent. |
 | `agentTemplate.systemPrompt` | empty | System prompt of the template. |
 | `agentTemplate.modelConfig` | `default-model-config` | Existing ModelConfig. Ignored when `modelConfig.create` is true. |

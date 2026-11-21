@@ -21,11 +21,11 @@ This directory is exported from `components/kagent/harness` of [MichaelKinsy/pig
 
 | Component | Version | Status |
 | --- | --- | --- |
-| kagent | `v1.0.0` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `a08cde76ad64` as a Go pseudo-version |
+| kagent | `v1.0.1` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `558e3d761d8e` as a Go pseudo-version |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | the chart's tested version; preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` are required |
 | PiG | commit `51cc9f6f56be2ddcbd010e26db311814e9ddf08b` (the 0.8.0 line, branch `fix/pi-pin-bump`, not yet tagged; earlier images used `v0.7.0`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
 | Go | 1.27.3 | adapter and Piglet builder |
-| Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 image builds from this directory with plain `docker build` and passes the tool smoke below. Not verified: arm64 was not built or run; the release workflow builds it on a native arm64 runner |
+| Platforms | `linux/amd64`, `linux/arm64` | Verified: the amd64 and the arm64 image each build from this directory with plain `docker build` on a host of their own architecture and pass the tool smoke below. For arm64 that host was OrbStack on Apple Silicon, where the adapter's real-pig scenarios also passed with the image's `pig` against the mock model and the functional cluster checks passed on Kind (see [Verified on a cluster](#verified-on-a-cluster)). The measurements are amd64 only; the release workflow builds arm64 on a native arm64 runner |
 
 Verified, with PiG v0.7.0 release binaries on a Linux amd64 host (no real model provider was used):
 - closing PiG's stdin while an approval request is outstanding leaves a valid session JSONL with nothing of the pending batch executed;
@@ -52,10 +52,10 @@ What the image holds (everything is baked: the Substrate sandbox runs the Actor 
 | OS | `bash ca-certificates curl git python3 python3-pip python3-venv` from a snapshot.debian.org timestamp; user and group 65532 |
 | Go toolchain | Go 1.27.3 in `/usr/local/go` |
 | tools | `gh` 2.103.3, `rg` (ripgrep) 15.2.0, `fd` 10.5.1, `jq` 1.8.2 |
-| PiG | `/usr/local/bin/pig`: PiG v0.7.0 with the `kagent` Piglet fused in |
+| PiG | `/usr/local/bin/pig`: PiG at the pinned commit (it reports `pig: 0.7.0`) with the `kagent` Piglet fused in |
 | adapter | `/usr/local/bin/kagent-pig` |
 
-Every archive is pinned by sha256 (`ADD --checksum`), the base images by digest, Go modules by `go.sum`. The image has no `ENTRYPOINT`, no `CMD` and no health check:
+Every archive is pinned by sha256 (`ADD --checksum`), the base images by digest, Go modules by `go.sum`. The image sets no `ENTRYPOINT`, no `CMD` and no health check (it inherits the base image's `CMD ["bash"]`, which Substrate drops once a command is set):
 the Harness supplies `workload.command: ["/usr/local/bin/kagent-pig"]` and kagent probes `/readyz` on port 8081. `HOME` and every cache are under `/data`, the
 durable volume kagent mounts. kagent sets the TLS trust variables itself and rejects an Agent that sets them, so the image sets none; the adapter combines the
 system roots in `/etc/ssl/certs/ca-certificates.crt` with the egress trust bundle for `pig` and its tools.
@@ -67,7 +67,7 @@ and never enter the image or a manifest: the compiled kagent configuration carri
 
 ## Build
 
-This directory is the whole build context. From here:
+This directory is the whole build context (in a Pigpen checkout that is the tree `scripts/export-byo-ext.sh` writes: `components/kagent/harness` itself lacks `piglet/` and `policy/`). From here:
 
 ```sh
 docker build --tag byo-ext/pig:local .
@@ -92,7 +92,7 @@ docker run --rm --entrypoint sh byo-ext/pig:local -c 'id; git --version; rg --ve
 ```
 
 Verified on the image built from this tree: `uid=65532(kagent)`, git 2.47.3, ripgrep 15.2.0, fd 10.5.1, gh 2.103.3, jq 1.8.2, curl 8.14.1, Python 3.13.5 with pip,
-go1.27.3 linux/amd64, `pig: 0.7.0`.
+go1.27.3 linux/amd64, `pig: 0.7.0`. The arm64 image prints the same versions with go1.27.3 linux/arm64.
 
 Reproducibility, measured: with `SOURCE_DATE_EPOCH` and `rewrite-timestamp` the OS, Go, tool and adapter layers were identical across two cold builds. The fused
 `pig` layer differs by 123 bytes because PiG v0.7.0 records the build time in the Piglet's embedded resolution record; the digest a release publishes is what a Harness pins.
@@ -135,6 +135,13 @@ registry), in November 2026. **No real model provider was used**: every agent in
 | `requireApproval` on that binding becomes the approval gate | 20 of 20 sessions |
 | Cancel a parked approval through the gateway (`CancelTask`), including after the Actor was suspended and restored, a second cancel on the same task, and further work in the same session afterwards | task canceled each time, no panic in the worker log, the Actor kept serving; run once on a later image (Pigpen commit `b0c18f50f435369c830a460eaf9a9d266b7b507e`, digest `sha256:e160409826defcd76fd02586cef11a05e00c201e665569e2808f896fb37244b2`) because the adapter's cancel path changed after the measurements; the measurement table below was not re-run |
 
+The PiG rows of this table were repeated on arm64 in November 2026, on a single-node Kind cluster under OrbStack on Apple Silicon (`kindest/node` v1.35.0, kagent `v1.0.1`,
+Agent Substrate `v1.0.0`, gVisor Actors, the same mock model), with the image built on that host at the commit that pins kagent `v1.0.1` and installed by `pig-kagent.sh` with the
+proof's values. 20 of 20 task sessions and 20 of 20 approval round trips completed, each followed by a recall after suspend and restore, and 10 of 10 rejections carried their reason.
+With the worker pod deleted (10 times idle, 10 times with a parked approval) the first attempt failed each time with the same `-32004` after about 11 s and the retry succeeded 10 of 10.
+Run once each: the cancel of a parked approval after suspend and restore, with a second cancel and further work in that session, and the crash and `RevertSession` check described under
+Limitations, all steps passing. The measurements were not repeated there.
+
 After a worker pod is replaced, kagent and Substrate refuse the first message to an existing session with `-32004 input was not accepted; retry after the session becomes available`
 for about 11 seconds; clients must retry. It was seen with both harnesses tried, PiG and Claude Code (0 of 5 first attempts for Claude Code, 5 of 5 after the retry); Codex and pi-go were not run.
 Ordinary suspend and restore does not show it.
@@ -176,7 +183,7 @@ CI checks only that the image builds.
   `token_exchange`, TLS skip or CA overrides, `api_key_passthrough`, and `n > 1`. Providers mapped: openai (chat completions and responses), anthropic, azure_openai (responses), mistral,
   gemini (default endpoint), bedrock (bearer only), ollama.
 - PiG's session file format (version 3) is a compatibility surface: the PiG version is pinned and the adapter's session handling is tested against recorded v0.7.0 sessions.
-- The image is amd64-verified only (see Compatibility). The kagent API is alpha; the chart is tested against the versions above.
+- The measurements are amd64 only, and arm64 was verified on one Apple Silicon host (see Compatibility). The kagent API is alpha; the chart is tested against the versions above.
 - kagent (Apache-2.0), Agent Substrate (Apache-2.0) and Pi are the work of their own authors; nothing here implies their endorsement.
 
 ## Licences

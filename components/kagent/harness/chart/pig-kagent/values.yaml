@@ -51,7 +51,7 @@ substrate:
   # Per-Harness snapshot location. It must be a location Substrate's object store serves. The
   # default is the one kagent's own harness documentation uses; Substrate needs the preview gate
   # PerTemplateSnapshotLocation.
-  snapshotLocation: gs://ate-snapshots/kagent/
+  snapshotLocation: s3://ate-snapshots/kagent/
 
 agentTemplate:
   # Also the Agent Card description kagent publishes for this Agent.

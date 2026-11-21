@@ -1,7 +1,7 @@
 # Running the PiG harness on a local Kind cluster
 
 A reproducible path from nothing to an approval round trip on one machine. It follows kagent's own Kind
-setup (`scripts/kind/` and the `Makefile` of the kagent repository, tag `v1.0.0`); only the parts that
+setup (`scripts/kind/` and the `Makefile` of the kagent repository, tag `v1.0.1`); only the parts that
 differ for a harness you build yourself are added here. Nothing in the chart is specific to Kind: the same
 chart and installer work on any cluster that meets the prerequisites in [deploy.md](deploy.md).
 
@@ -10,8 +10,8 @@ kagent and Agent Substrate are separate Apache-2.0 projects and are not affiliat
 ## What you need
 
 - Docker (or Podman), [kind](https://kind.sigs.k8s.io/) v0.33.0 (the version kagent's CI pins), `kubectl`, Helm 3.13 or newer.
-- The kagent CLI for the release you target. For v1.0.0:
-  `https://github.com/kagent-dev/kagent/releases/download/v1.0.0/kagent-<os>-<arch>` (for example
+- The kagent CLI for the release you target. For v1.0.1:
+  `https://github.com/kagent-dev/kagent/releases/download/v1.0.1/kagent-<os>-<arch>` (for example
   `kagent-linux-amd64`); verify it against the checksum published with the release.
 - A model: an OpenAI-compatible endpoint, or an API key for a supported provider. Substrate's egress allows DNS
   names only, so the endpoint of an in-cluster model is a Service DNS name, never an IP address.
@@ -74,7 +74,7 @@ printf '[host."http://kind-registry:5000"]\n  skip_verify = true\n' |
 ## 3. Install kagent and Substrate
 
 `kagent install` installs the kagent CRDs, Substrate (CRDs, pod-certificate controller, node agent, API, credential
-provider and egress gateway), a development PostgreSQL, and kagent. The v1.0.0 CLI is configured through a JSON config
+provider and egress gateway), a development PostgreSQL, and kagent. The v1.0.1 CLI is configured through a JSON config
 file (`kagent --config FILE`) and ignores the `KAGENT_SUBSTRATE_HELM_EXTRA_ARGS` and `KAGENT_DEFAULT_MODEL_PROVIDER`
 variables that appear in kagent's Makefile for the previous release's CLI. Pass the registry rewrite as a Substrate values
 file; the node agent inherits the Substrate values files:
@@ -115,12 +115,14 @@ kubectl -n kagent get modelconfig default-model-config
 
 ## 4. Build the image and pin its digest
 
-The harness directory is the build context and needs no build arguments or secrets. Build for the architecture of
-the Kind node (the host's, for Kind):
+The exported harness tree is the build context and needs no build arguments or secrets. In a Pigpen checkout, export it
+first, from the repository root: `components/kagent/harness` alone lacks `piglet/` and `policy/`, which the export adds. In
+byo-ext, `harnesses/pig` is already that tree: skip the export and build that directory. Build for the architecture of the
+Kind node (the host's, for Kind):
 
 ```sh
-cd components/kagent/harness
-docker build -t localhost:5001/pig/pig-kagent:dev .
+sh scripts/export-byo-ext.sh /tmp/pig-harness        # Pigpen only; the target must be new or empty
+docker build -t localhost:5001/pig/pig-kagent:dev /tmp/pig-harness
 docker push localhost:5001/pig/pig-kagent:dev
 ```
 
@@ -142,7 +144,7 @@ curl -sI -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oc
 ## 5. Install the harness
 
 ```sh
-cd components/kagent/harness
+cd components/kagent/harness      # or the exported harnesses/pig directory in byo-ext
 ./pig-kagent.sh check   -n kagent --set image="$IMAGE"
 ./pig-kagent.sh install -n kagent --set image="$IMAGE"
 ```
@@ -150,13 +152,15 @@ cd components/kagent/harness
 The Agent is `Ready` once Substrate has built the golden snapshot of the harness image. A failure prints the
 Agent's conditions; [deploy.md](deploy.md#troubleshooting-by-condition) explains each.
 
-The Harness the chart creates sets `substrate.snapshotPolicy.location` to the chart default `gs://ate-snapshots/kagent/`.
+The Harness the chart creates sets `substrate.snapshotPolicy.location` to the chart default `s3://ate-snapshots/kagent/`,
+the location `kagent install` gives its own harnesses since v1.0.1.
 kagent hands that value to Substrate as the base location for the snapshots of this Harness's Actors (the
 ActorTemplate's `snapshotConfig.storageLocation`, which `kagent install` allows by enabling Substrate's
 `PerTemplateSnapshotLocation` gate); Substrate writes below it, under `atespaces/<atespace>/actors/<uid>/...`. It is a
 base prefix, not a separate store: Substrate's chart keeps snapshots in an in-cluster RustFS bucket called `ate-snapshots`
-by default and addresses it with `gs://` URIs, which is why the default works unchanged on a Kind cluster set up with
-`kagent install`.
+by default, which is why the default works unchanged on a Kind cluster set up with `kagent install`. kagent v1.0.0
+spelled it `gs://`; both forms worked on a v1.0.1 cluster, but `pig-kagent.sh check` warns when the location differs from the
+one other Harnesses use.
 Change `substrate.snapshotLocation` only when your Substrate uses another object store; the value has to name a location
 that store serves.
 

@@ -24,7 +24,8 @@ test('every Package installs from npm as published', { skip: !pig && 'set PIG_BI
   const packages = readPackages();
   for (const { dir } of packages) {
     const tree = buildPackageTree(dir, trees);
-    const dry = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }))[0].files.map((f) => f.path);
+    // npm 12 prints an object keyed by package name where npm 11 printed an array; Object.values reads both.
+    const dry = Object.values(JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: tree, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] })))[0].files.map((f) => f.path);
     assert.deepEqual(packedProblems(tree, dry), [], dir);
     execFileSync('npm', ['pack', '--pack-destination', tarballs, '--ignore-scripts', '--silent'], { cwd: tree, stdio: 'ignore' });
   }

@@ -8,7 +8,8 @@ import { isolatedEnv } from './package-smoke.mjs';
 
 describe('isolatedEnv', () => {
   const scratch = mkdtempSync(join(tmpdir(), 'pigpen-smoke-env-'));
-  after(() => rmSync(scratch, { recursive: true, force: true }));
+  // `go env` under the isolated HOME leaves a telemetry child that can still be writing there when this runs.
+  after(() => rmSync(scratch, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
 
   it('isolates PiG state but shares Go\'s build and module caches with the caller', () => {
     const env = isolatedEnv(scratch, 'demo');
