@@ -13,9 +13,11 @@ Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied. See [CREDI
   `evidence`) or an error with its category and status. Esc cancels the job: the extension starts Autolith in its own process
   group and signals the whole group (SIGTERM, then SIGKILL after 4 s), because Autolith's launcher defers SIGTERM while its SBCL
   child runs and would otherwise leave orphans.
-- `autolith_session` (prompt, optional model, timeout): starts a detached primary Autolith session (`autolith --detached`), sends
-  the prompt with `autolith localgroup tell`, polls its status and reads its conversation file. A `run-job` child has no
-  `self.*` tools, so live self-modification needs a primary session.
+- `autolith_session` (prompt, optional model, timeout): runs a primary Autolith session (which has `self.*` tools that `run-job`
+  children omit). On Autolith 0.67.47+, it runs `autolith --permissions auto [--model M]` with the prompt on scripted stdin (the world
+  server's `world-client-run-script` path, avoiding option parsing of leading dashes and working on fresh worlds without a pre-existing
+  human participant); on Autolith 0.67.24 through 0.67.46, it falls back to `autolith --detached`, `autolith localgroup tell -- <id> <prompt>`,
+  `autolith localgroup status --sexp`, and `autolith localgroup kill -- <id>`.
 - `/autolith [role=NAME] prompt`: runs a job from the prompt and posts the result into the conversation.
 
 Nothing runs until the model calls a tool or you run `/autolith`. The extension counts tool calls by call id (Autolith reports a
@@ -29,7 +31,7 @@ This Piglet does not bundle any of these. Without them the tools report the miss
    carries the image. `pig setup` shows what is missing; `PIG_SBCL` names another executable.
    Official binaries: <https://www.sbcl.org/platform-table.html>.
 2. **Autolith** installed and on `PATH`: `nix run github:lambda-symbolics/autolith`, or the installer on
-   <https://autolith.rocks>. It was developed against Autolith 0.67.24.
+   <https://autolith.rocks>. Supports Autolith 0.67.47 through 0.67.66 (top-level CLI / scripted primary session) and 0.67.24 through 0.67.46 (legacy `localgroup` CLI), detected once from `autolith --version`.
 3. **A model login** for Autolith (it keeps its own) and one for PiG. With a GitHub Copilot login the bundled Autolith roles fail
    (`Unsupported reasoning effort "medium" for model copilot/auto`); give the project a role that pins a Copilot model and
    `:reasoning-effort :none` in `.autolith/agents/`.

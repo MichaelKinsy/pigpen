@@ -169,10 +169,10 @@ keeps its SBCL child and sandboxed shell commands running when it alone is signa
            (write-job job id role prompt timeout)
            (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (slurp events)) (lambda (event) (apply-event run event)) (lambda (e) (declare (ignore e)) (incf (run-warnings run))))))
            ;; exec returns the output when the process ends, so the events go to a file and the watcher reads them as they come
-           (let* ((exec (pig:ctx-exec ctx "bash"
-                                      :args (list "-c" *launcher* "bash" events diag
-                                                  "autolith" "--permissions" permissions "run-job" "--input" job "--output" out "--events" "sexp")
-                                      :timeout (* 1000 (+ timeout 60))))
+          (let* ((exec (pig:ctx-exec ctx "bash"
+                                     :args (append (list "-c" *launcher* "bash" events diag "autolith")
+                                                   (run-job-args permissions job out))
+                                     :timeout (* 1000 (+ timeout 60))))
                   (result (let ((forms (read-data-forms (slurp out) 0))) (first forms))))
              (setf (car stop) t)
              (sb-thread:join-thread watcher :default nil)
@@ -203,8 +203,10 @@ keeps its SBCL child and sandboxed shell commands running when it alone is signa
                             :is-error t :details details)))))
 
 ;;; The other way in: a primary Autolith session. Its self.* tools (redefine, exercise, commit) are the ones a run-job child never has
-;;; ("self.* tools are deliberately unavailable"), so Autolith can change its own running image only here. A session shows no sexp events;
-;;; its state comes from `autolith localgroup status --sexp` and its tool results from its conversation file under the data directory.
+;;; ("self.* tools are deliberately unavailable"), so Autolith can change its own running image only here.
+;;; On Autolith 0.67.47+, piping the prompt to `autolith --permissions auto [--model M]` runs one primary-session submission in the
+;;; world server (`world-client-run-script`) and prints the plain transcript; `autolith status --sexp`, `autolith tell -- TARGET MSG`
+;;; and `autolith pause -- TARGET` are top-level. Before 0.67.47, `autolith --detached` + `localgroup tell/status/kill` is used.
 
 (defun data-directory ()
   (let ((xdg (sb-ext:posix-getenv "XDG_DATA_HOME")))
@@ -245,6 +247,77 @@ and the last assistant message with text is the answer."
                      (+ (or (second (gethash "session" (run-usage run))) 0) (or (second (assoc "output_tokens" usage :test #'equal)) 0))
                      (max (or (getf meta :request-number) 0) (or (third (gethash "session" (run-usage run))) 0)))))))))
 
+(defvar *autolith-cli-style* nil
+  "Cached Autolith CLI style: :top-level (>= 0.67.47) or :localgroup (< 0.67.47), detected once from `autolith --version`.")
+
+(defun parse-autolith-version (text)
+  "Parse `autolith version X.Y.Z` (or bare `X.Y.Z`) into a list of integers, or NIL."
+  (when (stringp text)
+    (let* ((trimmed (string-trim '(#\Space #\Tab #\Newline #\Return) text))
+           (marker (search "version " trimmed))
+           (start (if marker (+ marker 8) 0))
+           (parts '()))
+      (loop while (< start (length trimmed))
+            do (let ((end (or (position-if-not #'digit-char-p trimmed :start start) (length trimmed))))
+                 (when (= end start) (return))
+                 (push (parse-integer trimmed :start start :end end) parts)
+                 (if (and (< end (length trimmed)) (char= (char trimmed end) #\.))
+                     (setf start (1+ end))
+                     (return))))
+      (nreverse parts))))
+
+(defun version>= (a b)
+  "True when integer version list A is greater than or equal to B."
+  (loop for rest-a = a then (rest rest-a)
+        for rest-b = b then (rest rest-b)
+        while (or rest-a rest-b)
+        for va = (or (first rest-a) 0)
+        for vb = (or (first rest-b) 0)
+        do (cond ((> va vb) (return t))
+                 ((< va vb) (return nil)))
+        finally (return t)))
+
+(defun cli-style-for-version (version-text)
+  "Return :localgroup for Autolith < 0.67.47, else :top-level (the 0.67.47+ CLI where status/tell/pause are top-level)."
+  (let ((parsed (parse-autolith-version version-text)))
+    (if (and parsed (not (version>= parsed '(0 67 47))))
+        :localgroup
+        :top-level)))
+
+(defun autolith-cli-style (ctx)
+  "Probe `autolith --version` once and cache whether this Autolith uses :top-level (>= 0.67.47) or :localgroup (< 0.67.47)."
+  (or *autolith-cli-style*
+      (setf *autolith-cli-style*
+            (let ((res (ignore-errors (pig:ctx-exec ctx "autolith" :args '("--version")))))
+              (cli-style-for-version (and res (zerop (pig:exec-result-exit-code res)) (pig:exec-result-stdout res)))))))
+
+(defun status-args (&optional (style :top-level))
+  (if (eq style :localgroup)
+      (list "localgroup" "status" "--sexp")
+      (list "status" "--sexp")))
+
+(defun tell-args (id prompt &optional (style :top-level))
+  (if (eq style :localgroup)
+      (list "localgroup" "tell" "--" id prompt)
+      (list "tell" "--" id prompt)))
+
+(defun stop-session-args (id &optional (style :top-level))
+  "Return the CLI argv that halts active work on session ID.
+On 0.67.47+, `kill` was removed (channels live in the world server): `pause` cancels active work without shutting down the user's other channels."
+  (if (eq style :localgroup)
+      (list "localgroup" "kill" "--" id)
+      (list "pause" "--" id)))
+
+(defun detached-args (model)
+  (append (list "--detached" "--permissions" "auto") (and model (list "--model" model))))
+
+(defun scripted-session-args (model)
+  "Return the CLI argv for running a primary Autolith session with scripted stdin on Autolith >= 0.67.47."
+  (append (list "--permissions" "auto") (and model (list "--model" model))))
+
+(defun run-job-args (permissions job out)
+  (list "--permissions" permissions "run-job" "--input" job "--output" out "--events" "sexp"))
+
 (defun session-id (text)
   "The session id in `Conversation 3-2XYLzs  PID 123`: the displayed id without its hyphen."
   (let ((start (search "Conversation " text)))
@@ -252,28 +325,103 @@ and the last assistant message with text is the answer."
       (let* ((from (+ start 13)) (end (or (position-if (lambda (c) (member c '(#\Space #\Newline))) text :start from) (length text))))
         (remove #\- (subseq text from end))))))
 
-(defun session-state (ctx id)
-  "The :STATE of session ID from `autolith localgroup status --sexp` as a lower-case string, or NIL."
-  (let ((status (pig:exec-result-stdout (pig:ctx-exec ctx "autolith" :args '("localgroup" "status" "--sexp")))))
+(defun session-state (ctx id &optional (style (autolith-cli-style ctx)))
+  "The :STATE of session ID from `autolith status --sexp` (or `localgroup status --sexp` before 0.67.47) as a lower-case string, or NIL."
+  (let ((status (pig:exec-result-stdout (pig:ctx-exec ctx "autolith" :args (status-args style)))))
     (dolist (form (ignore-errors (read-data-forms status 0)))
       (when (and (consp form) (equal (getf (rest form) :session-id) id))
         (return (label (getf (rest form) :state)))))))
 
-(defun kill-session (id)
-  "End the session. A run-program, not ctx-exec: after Esc the request is cancelled and the host refuses further calls."
-  (ignore-errors (sb-ext:run-program "autolith" (list "localgroup" "kill" id) :search t :output nil :error nil :input nil)))
+(defun stop-session (id &optional (style (or *autolith-cli-style* :top-level)))
+  "Stop active work in session ID. A run-program, not ctx-exec: after Esc the request is cancelled and the host refuses further calls."
+  (ignore-errors (sb-ext:run-program "autolith" (stop-session-args id style) :search t :output nil :error nil :input nil)))
 
-(defun run-autolith-session (ctx prompt model timeout)
-  (let* ((started (pig:exec-result-stdout (pig:ctx-exec ctx "autolith" :args (append (list "--detached" "--permissions" "auto") (and model (list "--model" model))))))
-         (id (or (session-id started) (error "autolith --detached printed no conversation id: ~A" started)))
+(defun extract-script-answer (stdout)
+  "Extract the assistant response from `autolith` scripted-stdin output, stripping the echoed `› ...` submission line."
+  (let* ((prompt-prefix (concatenate 'string (string (code-char #x203a)) " "))
+         (lines (loop with start = 0
+                      with acc = '()
+                      for nl = (position #\Newline stdout :start start)
+                      do (push (subseq stdout start (or nl (length stdout))) acc)
+                      while nl
+                      do (setf start (1+ nl))
+                      finally (return (nreverse acc))))
+         (after-prompt (loop for tail on lines
+                             when (and (>= (length (first tail)) (length prompt-prefix))
+                                       (string= (subseq (first tail) 0 (length prompt-prefix)) prompt-prefix))
+                               return (rest tail)))
+         (body (or after-prompt lines))
+         (text (string-trim '(#\Newline #\Return #\Space #\Tab)
+                            (format nil "~{~A~^~%~}" body))))
+    (and (plusp (length text)) text)))
+
+(defparameter *script-launcher*
+  "set -m; prompt_file=$1; diag=$2; shift 2
+\"$@\" <\"$prompt_file\" 2>\"$diag\" & pid=$!
+trap 'kill -TERM -- -$pid 2>/dev/null; { sleep 4; kill -KILL -- -$pid 2>/dev/null; } & wait $pid; exit 143' TERM
+wait $pid; exit $?"
+  "Runs a scripted primary Autolith session in its own process group with the prompt on stdin (so leading dashes or newlines are never parsed as options).")
+
+(defun run-autolith-session-scripted (ctx prompt model timeout)
+  "Run a primary Autolith session on Autolith >= 0.67.47 via scripted stdin (world-client-run-script)."
+  (let* ((dir (validate-temp-dir (pig:ctx-exec ctx "mktemp" :args '("-d" "-t" "autolith-session.XXXXXX"))))
+         (id (format nil "pig-~(~36R~)" (random (expt 36 6) (make-random-state t))))
+         (run (setf *last-run* (make-run :id id :state "running")))
+         (prompt-file (concatenate 'string dir "/prompt.txt"))
+         (diag (concatenate 'string dir "/diagnostics.log")))
+    (unwind-protect
+         (progn
+           (with-open-file (out prompt-file :direction :output :if-exists :supersede :external-format :utf-8)
+             ;; One submission per line; collapse embedded newlines to spaces so multi-line prompts are not split into separate submissions.
+             (write-string (substitute #\Space #\Newline (substitute #\Space #\Return prompt)) out)
+             (terpri out))
+           (ignore-errors (show ctx run))
+           (let* ((exec (pig:ctx-exec ctx "bash"
+                                      :args (append (list "-c" *script-launcher* "bash" prompt-file diag "autolith")
+                                                    (scripted-session-args model))
+                                      :timeout (* 1000 (+ timeout 60))))
+                  (answer (extract-script-answer (pig:exec-result-stdout exec)))
+                  (details (pig:obj "sessionId" id "seconds" (run-seconds run))))
+             (cond ((pig:ctx-cancelled-p ctx)
+                    (setf (run-state run) "cancelled")
+                    (pig:tool-result (format nil "Autolith session ~A was cancelled." id) :is-error t :details details))
+                   ((and (zerop (pig:exec-result-exit-code exec)) answer)
+                    (setf (run-state run) "succeeded")
+                    (pig:tool-result answer :details details))
+                   ((zerop (pig:exec-result-exit-code exec))
+                    (setf (run-state run) "done")
+                    (pig:tool-result (format nil "Autolith session ~A finished without an answer." id) :is-error t :details details))
+                   (t
+                    (setf (run-state run) "failed")
+                    (let ((d (string-trim '(#\Newline #\Space) (tail (slurp diag) 600))))
+                      (pig:tool-result (format nil "Autolith session exited with status ~D.~@[ Diagnostics:~%~A~]"
+                                               (pig:exec-result-exit-code exec) (and (plusp (length d)) d))
+                                       :is-error t :details details))))))
+      (when (member (run-state run) '("starting" "running") :test #'string=)
+        (setf (run-state run) (if (pig:ctx-cancelled-p ctx) "cancelled" "done") (run-tool run) nil))
+      (ignore-errors (pig:ctx-set-widget ctx "autolith" (widget-lines run)))
+      (ignore-errors (sb-ext:delete-directory dir :recursive t)))))
+
+(defun run-autolith-session-legacy (ctx prompt model timeout style)
+  (let* ((started-exec (pig:ctx-exec ctx "autolith" :args (detached-args model)))
+         (started (pig:exec-result-stdout started-exec))
+         (id (or (session-id started)
+                 (error "autolith --detached printed no conversation id (exit ~D): ~A~@[~%~A~]"
+                        (pig:exec-result-exit-code started-exec) started
+                        (let ((err (string-trim '(#\Newline #\Space) (pig:exec-result-stderr started-exec))))
+                          (and (plusp (length err)) err)))))
          (run (setf *last-run* (make-run :id id))) (stop (list nil)) (watcher nil))
     (unwind-protect
          (progn
-          (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (conversation-text id)) (lambda (record) (apply-record run record)) (lambda (e) (declare (ignore e)) (incf (run-warnings run))))))
-           (pig:ctx-exec ctx "autolith" :args (list "localgroup" "tell" id prompt))
+           (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (conversation-text id)) (lambda (record) (apply-record run record)) (lambda (e) (declare (ignore e)) (incf (run-warnings run))))))
+           (let ((tell-exec (pig:ctx-exec ctx "autolith" :args (tell-args id prompt style))))
+             (unless (zerop (pig:exec-result-exit-code tell-exec))
+               (error "autolith tell failed (exit ~D): ~A"
+                      (pig:exec-result-exit-code tell-exec)
+                      (string-trim '(#\Newline #\Space) (concatenate 'string (pig:exec-result-stdout tell-exec) " " (pig:exec-result-stderr tell-exec))))))
            (let ((busy nil) (deadline (+ (get-internal-real-time) (* timeout internal-time-units-per-second))))
              (loop
-               (let ((state (session-state ctx id)))
+               (let ((state (session-state ctx id style)))
                  (when state (setf (run-state run) state))
                  (when (and state (string/= state "idle")) (setf busy t))
                  (when (and busy (equal state "idle")) (return))
@@ -294,8 +442,13 @@ and the last assistant message with text is the answer."
       (when (member (run-state run) '("starting" "working" "active" "idle") :test #'string=)
         (setf (run-state run) (if (pig:ctx-cancelled-p ctx) "cancelled" "done") (run-tool run) nil)
         (ignore-errors (pig:ctx-set-widget ctx "autolith" (widget-lines run))))
-      (kill-session id))))
+      (stop-session id style))))
 
+(defun run-autolith-session (ctx prompt model timeout)
+  (let ((style (autolith-cli-style ctx)))
+    (if (eq style :localgroup)
+        (run-autolith-session-legacy ctx prompt model timeout style)
+        (run-autolith-session-scripted ctx prompt model timeout))))
 ;;; The extension.
 
 (defun string-param (params key) (let ((v (gethash key params))) (and (stringp v) (plusp (length v)) v)))
