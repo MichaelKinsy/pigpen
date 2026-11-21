@@ -61,5 +61,24 @@ line 2\")))" 0))))
   (let ((out (outcome (make-run :id "j") nil r "" nil)))
     (check "failure is an error with category and status" (and (eq (gethash "is_error" out) t) (search "timed-out" (gethash "content" out)) (search "category timeout" (gethash "content" out))))))
 
+;; validate-temp-dir rejects empty, relative or failing mktemp output before unwind-protect can delete anything
+(check "validate-temp-dir accepts absolute dir" (equal (validate-temp-dir (pig::make-exec-result (format nil "/tmp/autolith-bridge.abc~%") "" 0 nil nil)) "/tmp/autolith-bridge.abc"))
+(check "validate-temp-dir rejects empty stdout" (handler-case (progn (validate-temp-dir (pig::make-exec-result "" "" 0 nil nil)) nil) (error () t)))
+(check "validate-temp-dir rejects relative path" (handler-case (progn (validate-temp-dir (pig::make-exec-result "rel/dir" "" 0 nil nil)) nil) (error () t)))
+(check "validate-temp-dir rejects nonzero exit" (handler-case (progn (validate-temp-dir (pig::make-exec-result "/tmp/autolith-bridge.abc" "err" 1 nil nil)) nil) (error () t)))
+
+;; apply-record caps single-line tool output notes at 160 characters
+(let ((run (make-run :id "cap"))
+      (long (make-string 500 :initial-element #\a)))
+  (apply-record run `(:tool-result :tool "bash" :status :ok :output ,long))
+  (check "note capped at 160 chars when no newline" (= (length (first (run-notes run))) (+ (length "bash ok: ") 160))))
+
+;; file-poller isolates a signaling record so later records in the same read still apply
+(let ((seen '()) (errs 0))
+  (funcall (file-poller (lambda () "(:a) (:boom) (:b)")
+                        (lambda (form) (if (eq (first form) :boom) (error "bad record") (push (first form) seen)))
+                        (lambda (e) (declare (ignore e)) (incf errs))))
+  (check "file-poller applies records after a failing one" (and (equal (nreverse seen) '(:a :b)) (= errs 1))))
+
 (format t "~:[all checks passed~;~:*~D check(s) failed~]~%" (and (plusp *failures*) *failures*))
 (sb-ext:exit :code (if (zerop *failures*) 0 1))

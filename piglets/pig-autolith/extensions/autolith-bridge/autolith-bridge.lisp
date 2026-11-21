@@ -88,14 +88,16 @@ a form still being written (end of text inside it) is left for that call."
   (pig:ctx-set-widget ctx "autolith" (widget-lines run))
   (show-status ctx run))
 
-(defun file-poller (read-text apply)
+(defun file-poller (read-text apply &optional on-error)
   "A function that passes each new complete top-level form of the text READ-TEXT returns to APPLY."
   (let ((pos 0))
     (lambda ()
       (let ((text (funcall read-text)))
         (handler-case (multiple-value-bind (forms end) (read-data-forms text pos)
                         (setf pos end)
-                        (mapc apply forms))
+                        (dolist (form forms)
+                          (handler-case (funcall apply form)
+                            (error (e) (when on-error (funcall on-error e))))))
           (reader-error () (setf pos (length text))))))))
 
 (defun spawn-watch (ctx run stop poll)
@@ -145,9 +147,18 @@ wait $pid; exit $?"
   "Runs Autolith in its own process group and passes the host's SIGTERM (Esc) to the whole group. bash, because `set -m` gives the job its own group (dash refuses without a tty). Autolith's launcher is a bash script that
 keeps its SBCL child and sandboxed shell commands running when it alone is signalled.")
 
+(defun validate-temp-dir (exec)
+  "Return the absolute temp directory path from mktemp EXEC, or signal an error before any cleanup can run."
+  (let ((dir (string-right-trim '(#\Newline #\Return) (pig:exec-result-stdout exec))))
+    (unless (and (zerop (pig:exec-result-exit-code exec))
+                 (plusp (length dir))
+                 (char= (char dir 0) #\/))
+      (error "mktemp failed (exit ~D): ~A" (pig:exec-result-exit-code exec) (pig:exec-result-stderr exec)))
+    dir))
+
 (defun run-autolith-job (ctx prompt role timeout permissions)
   "Run an Autolith job and return the tool result. Cancelling the request (Esc) kills the process; the result file then says why."
-  (let* ((dir (string-right-trim '(#\Newline) (pig:exec-result-stdout (pig:ctx-exec ctx "mktemp" :args '("-d" "-t" "autolith-bridge.XXXXXX")))))
+  (let* ((dir (validate-temp-dir (pig:ctx-exec ctx "mktemp" :args '("-d" "-t" "autolith-bridge.XXXXXX"))))
          (id (format nil "pig-~(~36R~)" (random (expt 36 6) (make-random-state t))))
          (run (setf *last-run* (make-run :id id))) (stop (list nil))
          (events (concatenate 'string dir "/events.sexp")) (diag (concatenate 'string dir "/diagnostics.log"))
@@ -156,7 +167,7 @@ keeps its SBCL child and sandboxed shell commands running when it alone is signa
     (unwind-protect
          (progn
            (write-job job id role prompt timeout)
-           (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (slurp events)) (lambda (event) (apply-event run event)))))
+           (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (slurp events)) (lambda (event) (apply-event run event)) (lambda (e) (declare (ignore e)) (incf (run-warnings run))))))
            ;; exec returns the output when the process ends, so the events go to a file and the watcher reads them as they come
            (let* ((exec (pig:ctx-exec ctx "bash"
                                       :args (list "-c" *launcher* "bash" events diag
@@ -171,7 +182,7 @@ keeps its SBCL child and sandboxed shell commands running when it alone is signa
       (when watcher (sb-thread:join-thread watcher :default nil))
       (when (member (run-state run) '("starting" "running") :test #'string=)   ; no :run-finished arrived: the process was killed
         (setf (run-state run) (if (pig:ctx-cancelled-p ctx) "cancelled" "stopped") (run-tool run) nil)
-        (pig:ctx-set-widget ctx "autolith" (widget-lines run)))   ; a cancelled request can no longer set the status; :agent-end does
+        (ignore-errors (pig:ctx-set-widget ctx "autolith" (widget-lines run))))   ; a cancelled request can no longer set the status; :agent-end does
       (ignore-errors (sb-ext:delete-directory dir :recursive t)))))
 
 (defun outcome (run exec result diag cancelled)
@@ -216,7 +227,7 @@ and the last assistant message with text is the answer."
          (unless (eq (getf (rest record) :status) :ok) (incf (run-tools-failed run)))
          (setf (run-notes run) (append (run-notes run)
                                        (list (format nil "~A ~(~A~): ~A" tool (getf (rest record) :status)
-                                                     (if (stringp output) (subseq output 0 (position #\Newline output :end (min (length output) 160))) "")))))))
+                                                    (if (stringp output) (subseq output 0 (or (position #\Newline output :end (min (length output) 160)) (min (length output) 160))) "")))))))
       (:provider-item
        (let ((json (getf (rest record) :wire-json)))
          (when (stringp json)
@@ -258,7 +269,7 @@ and the last assistant message with text is the answer."
          (run (setf *last-run* (make-run :id id))) (stop (list nil)) (watcher nil))
     (unwind-protect
          (progn
-           (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (conversation-text id)) (lambda (record) (apply-record run record)))))
+          (setf watcher (spawn-watch ctx run stop (file-poller (lambda () (conversation-text id)) (lambda (record) (apply-record run record)) (lambda (e) (declare (ignore e)) (incf (run-warnings run))))))
            (pig:ctx-exec ctx "autolith" :args (list "localgroup" "tell" id prompt))
            (let ((busy nil) (deadline (+ (get-internal-real-time) (* timeout internal-time-units-per-second))))
              (loop
@@ -282,7 +293,7 @@ and the last assistant message with text is the answer."
       (when watcher (sb-thread:join-thread watcher :default nil))
       (when (member (run-state run) '("starting" "working" "active" "idle") :test #'string=)
         (setf (run-state run) (if (pig:ctx-cancelled-p ctx) "cancelled" "done") (run-tool run) nil)
-        (pig:ctx-set-widget ctx "autolith" (widget-lines run)))
+        (ignore-errors (pig:ctx-set-widget ctx "autolith" (widget-lines run))))
       (kill-session id))))
 
 ;;; The extension.
