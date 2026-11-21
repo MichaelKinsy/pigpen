@@ -142,6 +142,7 @@ func Extension() *sdk.Extension {
 	})
 
 	e.Command("run-chain", "Run a .chain.md chain: /run-chain <chain> <task> (Go port addition)", runChainCommand)
+	e.Command("subagents-fleet", "Show the subagent fleet inspector (Go port: the original's text view): /subagents-fleet", fleetCommand)
 
 	e.OnEvent(sdk.EventSessionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		// the subagent tool stays out of the model's tools until subagents_enable is called
@@ -150,6 +151,32 @@ func Extension() *sdk.Extension {
 		// same way and has no worktrees to recover.
 		_, _ = ctx.Exec("git", []string{"-C", ctx.Cwd(), "rev-parse", "--show-toplevel"})
 		_ = ctx.SetWidget(asyncWidget, nil)
+		// the async agents view: the registry's runs as the `subagent-async` widget rows, live while children run
+		dir := ""
+		if f, err := ctx.GetSessionFile(); err == nil && f != nil {
+			dir, _ = ctx.SessionManager().GetSessionDir()
+		}
+		setChildSessionDir(dir)
+		if id, err := ctx.SessionManager().GetSessionID(); err == nil {
+			setParentSessionID(id)
+			startSessionLink(id) // this session's children talk to it over the parent link (link.go)
+		}
+		if parent := os.Getenv("PIG_PARENT_SESSION"); parent != "" {
+			// this process is a delegated child: serve the parent link's operations on its own session
+			go serveParentLink(parent, parentSessionIDFor(), func(op string, req map[string]any) error {
+				if op != "steer" {
+					return fmt.Errorf("unknown link operation %q", op)
+				}
+				message, _ := req["message"].(string)
+				return ctx.SendUserMessage(message, "steer") // the host queues it at the turn's next safe point
+			})
+		}
+		setCompletionSender(func(content string, display bool) error {
+			// the original's pi.sendMessage for its completion notifications: triggerTurn wakes the model
+			return ctx.SendMessage("subagent-notify", content, display, sdk.SendMessageOptions{TriggerTurn: sdk.Bool(true)})
+		})
+		fleet.reset()
+		fleet.setSink(func(rows []string) { _ = ctx.SetWidget(asyncWidget, rows) })
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventBeforeAgentStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
@@ -166,6 +193,12 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		fleet.stopAll()
+		setChildSessionDir("")
+		setParentSessionID("")
+		closeSessionLink()
+		setCompletionSender(nil)
+		fleet.setSink(nil)
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
 	})
@@ -275,13 +308,44 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 		ctx.Notify(w, "warning")
 	}
 	model, _ := params["model"].(string)
+	includeProgress, msg := includeProgressParam(params)
+	if msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
+	if async, msg := asyncParam(params); msg != "" {
+		return nil, sdk.NewToolError(msg)
+	} else if async {
+		run := startAsyncRun(cwd, a, task, model)
+		details := map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}
+		if includeProgress {
+			details["progress"] = []any{detachedProgressRecord(a, task, model)}
+		}
+		return explicitOK{Content: asyncStartedMessage(a.Name, run.id), Details: details}, nil
+	}
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
+	out, st, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}
-	return explicitOK{Content: out, Details: map[string]any{"mode": "single", "agent": a.Name}}, nil
+	details := map[string]any{"mode": "single", "agent": a.Name}
+	if includeProgress {
+		details["progress"] = []any{progressRecordOf(st, 0, fleetNow(), effectiveModel(a, model))}
+	}
+	return explicitOK{Content: out, Details: details}, nil
+}
+
+// includeProgressParam reads `includeProgress`: set, the result carries the run's full progress record (the original's
+// AgentProgress; its subagent-executor.ts adds details.progress only when the flag is set, default false).
+func includeProgressParam(params map[string]any) (bool, string) {
+	v, ok := params["includeProgress"]
+	if !ok || v == nil {
+		return false, ""
+	}
+	if b, isBool := v.(bool); isBool {
+		return b, ""
+	}
+	return false, "includeProgress must be a boolean when provided."
 }
 
 // runChainCommand is `/run-chain <chain> <task>`: the chain files are the original's format; running them this way is an
