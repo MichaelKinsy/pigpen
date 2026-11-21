@@ -30,7 +30,7 @@ rules. The first port made with the workflow is
 scripted scenarios give identical traces for the original under Pi 1.0.x and the Go port
 under PiG 0.4, and 26 of 26 mutations are caught. Nothing here is a published release.
 
-**Target: PiG 0.8.0 release candidate, built from commit `05a1dfd242b9`** (branch `canary/line-24-pinned` of MichaelKinsy/PiG; Pi 1.5.2). The pin is not a release: it is the 0.8.0 line, which embeds a Lisp member's cell in a Piglet Binary
+**Target: PiG 0.8.0 release candidate, built from commit `0e35a120627a`** (branch `release/v0.8.0` of MichaelKinsy/PiG; Pi 1.5.2). The pin is not a release: it is the 0.8.0 line, which embeds a Lisp member's cell in a Piglet Binary
 (the `v0.7.0` tag, `beb56447c476`, builds such a Binary that stops at startup). It is recorded in `scripts/pig-requirement.json` and `PIG_COMMIT` in the
 workflows; the version stays `0.7.0` because the commit reports it until the release commit sets it. No release has pig archives for it, so `release.published` is
 false and `release.assets` is empty until `node scripts/pin-pig-release.mjs 0.8.0` can record the SHA-256 of its archives; until then
