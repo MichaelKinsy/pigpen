@@ -253,7 +253,7 @@ Status: queued: 2 · porting: 2 · review: 13 · done: 19
 ### `autolith-bridge`: autolith-bridge: run Autolith jobs and sessions from PiG
 
 - Kind: adapter. Original Common Lisp extension that drives Autolith through its documented run-job, detached-session and localgroup commands. Autolith is not bundled; it must be installed separately.
-- Notes: Common Lisp on the PiG 0.7.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review.
+- Notes: Common Lisp on the PiG 0.8.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review.
 
 ### `rea`: REA harness: Reverse Engineer Anything as one PiG Binary
 

@@ -700,7 +700,7 @@
       "lane": "pigpen-autolith",
       "status": "review",
       "credit": "Original adapter that calls Autolith, https://github.com/lambda-symbolics/autolith, by Lambda Symbolics OÜ (ISC), pinned at commit 505e814610cd4ad10ea8d30654fe89b4f1113341. Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied.",
-      "notes": "Common Lisp on the PiG 0.7.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review."
+      "notes": "Common Lisp on the PiG 0.8.0 Lisp SDK. No Autolith code is copied or shipped; the extension only runs the `autolith` program. Awaiting review."
     },
     {
       "id": "rea",
