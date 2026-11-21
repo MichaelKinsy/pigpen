@@ -36,20 +36,89 @@ export function parsePigVersion(stdout: string): { pig: string | undefined; pi: 
   return match ? { pig: match[1], pi: match[2] } : undefined;
 }
 
+interface ParsedSemver {
+  core: [number, number, number];
+  prerelease: string[];
+}
+
+function splitSemver(version: string): ParsedSemver {
+  const withoutBuild = version.split("+", 1)[0];
+  const dash = withoutBuild.indexOf("-");
+  const coreText = dash >= 0 ? withoutBuild.slice(0, dash) : withoutBuild;
+  const prereleaseText = dash >= 0 ? withoutBuild.slice(dash + 1) : "";
+  const parts = coreText.split(".").map(Number);
+  return {
+    core: [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0],
+    prerelease: prereleaseText ? prereleaseText.split(".") : [],
+  };
+}
+
+/** Semver 2.0.0 section 11 precedence (build metadata after `+` is ignored). */
 export function compareVersions(a: string, b: string): number {
-  const left = a.split("-")[0].split(".").map(Number);
-  const right = b.split("-")[0].split(".").map(Number);
+  const left = splitSemver(a);
+  const right = splitSemver(b);
   for (let i = 0; i < 3; i++) {
-    if (left[i] !== right[i]) return left[i] < right[i] ? -1 : 1;
+    if (left.core[i] !== right.core[i]) return left.core[i] < right.core[i] ? -1 : 1;
+  }
+  if (left.prerelease.length === 0 && right.prerelease.length === 0) return 0;
+  if (left.prerelease.length === 0) return 1;
+  if (right.prerelease.length === 0) return -1;
+  const limit = Math.min(left.prerelease.length, right.prerelease.length);
+  for (let i = 0; i < limit; i++) {
+    const l = left.prerelease[i];
+    const r = right.prerelease[i];
+    if (l === r) continue;
+    const lNum = /^\d+$/.test(l);
+    const rNum = /^\d+$/.test(r);
+    if (lNum && rNum) return Number(l) < Number(r) ? -1 : 1;
+    if (lNum) return -1;
+    if (rNum) return 1;
+    return l < r ? -1 : 1;
+  }
+  if (left.prerelease.length !== right.prerelease.length) {
+    return left.prerelease.length < right.prerelease.length ? -1 : 1;
   }
   return 0;
 }
 
-/** The pig executable pig-acp will drive: its `--pig` argument, then PIG_ACP_PIG_COMMAND, then `pig`. */
+const VALUE_FLAGS: Record<string, true> = { "-piglet": true, "--piglet": true, "-pig-arg": true, "--pig-arg": true };
+
+/**
+ * The pig executable pig-acp will drive: mirrors Go's flag.FlagSet (`--pig`, `--pig=`, `-pig`, `-pig=`, last wins,
+ * stopping at `--`), then PIG_ACP_PIG_COMMAND, then PI_ACP_PI_COMMAND, then `pig`.
+ */
 export function pigCommand(launch: LaunchLike): string {
-  const at = launch.args.indexOf("--pig");
-  if (at >= 0 && launch.args[at + 1]) return launch.args[at + 1];
-  return launch.env.PIG_ACP_PIG_COMMAND || "pig";
+  let found: string | undefined;
+  const args = launch.args;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--") break;
+    if (arg === "--pig" || arg === "-pig") {
+      if (i + 1 < args.length) {
+        found = args[i + 1];
+        i += 1;
+      }
+      continue;
+    }
+    if (arg.startsWith("--pig=")) {
+      found = arg.slice("--pig=".length);
+      continue;
+    }
+    if (arg.startsWith("-pig=")) {
+      found = arg.slice("-pig=".length);
+      continue;
+    }
+    if (Object.hasOwn(VALUE_FLAGS, arg) && i + 1 < args.length) {
+      i += 1;
+    }
+  }
+  if (found) return found;
+  return launch.env.PIG_ACP_PIG_COMMAND || launch.env.PI_ACP_PI_COMMAND || "pig";
+}
+
+function versionProbeArgs(args: readonly string[]): string[] {
+  const stripped = args.length > 0 && args[args.length - 1] === "--" ? args.slice(0, -1) : args;
+  return [...stripped, "--version"];
 }
 
 function reason(error: unknown): string {
@@ -63,7 +132,7 @@ export async function checkPigInstall(exec: Exec, launch: LaunchLike): Promise<P
 
   let acp;
   try {
-    acp = parsePigAcpVersion((await run(launch.command, [...launch.args, "--version"])).stdout);
+    acp = parsePigAcpVersion((await run(launch.command, versionProbeArgs(launch.args))).stdout);
   } catch (error) {
     return {
       available: false,
