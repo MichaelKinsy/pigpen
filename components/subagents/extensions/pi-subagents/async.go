@@ -61,37 +61,88 @@ func continuationRequest(base childRequest, message string) childRequest {
 }
 
 // startAsyncRun launches a child detached from the tool call (the original's async run). The child runs hidden (a pane
-// is a foreground surface); completion notifies this session only when it failed or was interrupted, as in the original.
-func startAsyncRun(cwd string, a *AgentConfig, task, model string, notify func(message, level string)) *runRecord {
+// is a foreground surface); its completion is delivered to the session as a completion notification that wakes the
+// model (the original's tool guidance: "ordinary async subagent runs do not need a wait call because their completion
+// is delivered natively").
+func startAsyncRun(cwd string, a *AgentConfig, task, model string) *runRecord {
 	run := fleet.beginRun("single", a.Name, task, cwd)
 	go func() {
-		_, _, err := runAgent(nil, cwd, a, task, model, nil, run)
-		switch run.state() {
-		case stateFailed:
-			detail := ""
-			if err != nil {
-				detail = ": " + firstLine(err.Error())
-			}
-			notify(fmt.Sprintf("Subagent run %s (%s) failed%s", run.id, a.Name, detail), "error")
-		case statePaused:
-			notify(fmt.Sprintf("Subagent run %s (%s) was interrupted; resume it with subagent({ action: \"resume\", id: %q, message: \"...\" })", run.id, a.Name, run.id), "warning")
-		}
+		_, st, _ := runAgent(nil, cwd, a, task, model, nil, run)
+		st.setNotice("Background task", "")
+		notifyTurnEnd(run)
 		fleet.changed()
 	}()
 	return run
 }
 
+// notifyTurnEnd delivers the completion notification once the run has settled (every turn terminal): whichever turn's
+// goroutine returns last sees the settled run and delivers the last turn's outcome exactly once (run.noticeSent). A
+// steer's interrupted turn therefore never notifies — its pivoted turn is the run's answer — and the steered turn's
+// answer is delivered as its steer reply.
+func notifyTurnEnd(run *runRecord) {
+	fleet.mu.Lock()
+	for _, s := range run.steps {
+		if s.state == stateRunning || s.state == stateQueued {
+			fleet.mu.Unlock()
+			return // the run continues
+		}
+	}
+	if run.noticeSent || len(run.steps) == 0 {
+		fleet.mu.Unlock()
+		return
+	}
+	last := *run.steps[len(run.steps)-1]
+	if last.noticeKind == "" {
+		fleet.mu.Unlock()
+		return // a turn its tool call reports itself
+	}
+	run.noticeSent = true
+	fleet.mu.Unlock()
+	status := "stopped"
+	switch last.state {
+	case stateComplete:
+		status = "completed"
+	case stateFailed:
+		status = "failed"
+	case statePaused:
+		status = "paused"
+	}
+	preview := last.output
+	if last.err != "" {
+		preview = last.err
+		if strings.TrimSpace(last.output) != "" {
+			preview += "\n\n" + last.output
+		}
+	}
+	n := completionNotice{
+		kind:    last.noticeKind,
+		status:  status,
+		agent:   last.agent,
+		info:    last.noticeInfo,
+		preview: completionPreview(preview),
+		session: last.sessionPath(),
+	}
+	n.display = n.kind == "Detached foreground task" || n.status != "completed" // its sendCompletion display rule
+	completions.deliver(n)
+}
+
 // steerRun interrupts the run's current turn and continues its session with the message (the port's steer: a print
-// child cannot be redirected mid-turn, so the child pivots at once; the run keeps its id).
+// child cannot be redirected mid-turn, so the child pivots at once; the run keeps its id). The next turn is queued
+// before the pivot, so the interrupted turn's goroutine sees it and stays quiet; the steered turn's answer is delivered
+// as a completion notification when it settles (its steer reply).
 func steerRun(run *runRecord, message string) {
 	thinking := run.lastThinking()
+	st := run.addStep(run.name, message, thinking)
+	st.setNotice("Detached foreground task", " (steer reply)")
 	run.terminate(statePaused)
 	run.rearm()
 	base, _, _ := run.getLaunch()
 	req := continuationRequest(base, message)
-	st := run.addStep(run.name, message, thinking)
 	done := run.currentDone()
-	go func() { _, _ = runStep(done, run, st, req, nil) }()
+	go func() {
+		_, _ = runStep(done, run, st, req, nil)
+		notifyTurnEnd(run)
+	}()
 	fleet.changed()
 }
 
@@ -103,7 +154,11 @@ func resumeRun(old *runRecord, message string) *runRecord {
 	run.setResumedFrom(old.id)
 	run.setLaunch(req, dir, id)
 	st := run.addStep(old.name, message, old.lastThinking())
-	go func() { _, _ = runStep(run.currentDone(), run, st, req, nil) }()
+	st.setNotice("Background task", "")
+	go func() {
+		_, _ = runStep(run.currentDone(), run, st, req, nil)
+		notifyTurnEnd(run)
+	}()
 	return run
 }
 
@@ -113,8 +168,7 @@ func asyncStartedMessage(agent, id string) string {
 	return strings.Join([]string{
 		fmt.Sprintf("Async: %s [%s]", agent, id),
 		"",
-		"The async run is detached. Do not run sleep timers or polling loops just to wait for it.",
-		"A failed or paused completion notifies this session; a successful one stays quiet and is shown in the fleet views (/subagents-fleet, the async agents widget).",
+		"The async run is detached. Return control to the user now: its completion notification wakes this session with the result when the subagent completes or needs attention. Do not run sleep timers or polling loops to wait for it.",
 		fmt.Sprintf(`Use subagent({ action: "status", id: "%s" }) when you need a one-shot status/result or to inspect a stopped run; do not poll in a loop.`, id),
 	}, "\n")
 }
@@ -125,7 +179,7 @@ func followUpStartedMessage(id string) string {
 		fmt.Sprintf("Follow-up run: %s", id),
 		fmt.Sprintf(`Status if needed: subagent({ action: "status", id: "%s" })`, id),
 		"",
-		"The async run is detached. Do not run sleep timers or polling loops just to wait for it.",
+		"The async run is detached. Its completion notification wakes this session with the result; do not run sleep timers or polling loops to wait for it.",
 		fmt.Sprintf(`Use subagent({ action: "status", id: "%s" }) when you need a one-shot status/result or to inspect a stopped run; do not poll in a loop.`, id),
 	}, "\n")
 }

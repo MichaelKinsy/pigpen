@@ -88,7 +88,7 @@ func TestAsyncRunIsTrackedAndStoppable(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
 	blockingRunner(t)
-	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "look around", "", func(string, string) {})
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "look around", "")
 	waitState(t, run, stateRunning)
 	eq(t, run.state(), stateRunning, "running in the background")
 
@@ -102,7 +102,7 @@ func TestAsyncRunInterruptIsResumable(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
 	blockingRunner(t)
-	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "look around", "", func(string, string) {})
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "look around", "")
 	waitState(t, run, stateRunning)
 
 	run.terminate(statePaused) // interrupt
@@ -111,25 +111,51 @@ func TestAsyncRunInterruptIsResumable(t *testing.T) {
 	eq(t, run.steps[0].state, statePaused, "paused step")
 }
 
-func TestAsyncRunCompletionIsQuietAndFailureNotifies(t *testing.T) {
+// A detached run's outcome is delivered to the session as the original's completion notification (its notify.ts): a
+// wake with the formatted summary. A plain success stays out of the transcript (its display rule); a failure displays.
+func TestAsyncRunCompletionsAreDelivered(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
-	var notes []string
-	notify := func(m, _ string) { notes = append(notes, m) }
+	notices := captureCompletions(t)
 
 	answerRunner(t, "all good")
-	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "", notify)
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
 	waitState(t, run, stateComplete)
-	eq(t, len(notes), 0, "a successful completion stays quiet")
+	got := waitNotices(t, notices, 1)
+	eq(t, len(got), 1, "one completion notification")
+	eq(t, got[0].content, "Background task completed: **scout**\n\nall good", "the formatted wake")
+	eq(t, got[0].display, false, "a plain success stays out of the transcript (its display rule)")
 
 	runChild = func(done <-chan struct{}, req childRequest) (childResult, error) {
 		return childResult{Exit: 2, Stderr: "boom"}, nil
 	}
-	run = startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "", notify)
+	run = startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
 	waitState(t, run, stateFailed)
-	if len(notes) != 1 || !strings.Contains(notes[0], "failed") {
-		t.Errorf("failure notice: %q", notes)
+	got = waitNotices(t, notices, 2)
+	eq(t, got[1].content, "Background task failed: **scout**\n\nscout exited with code 2: boom", "the failure summary")
+	eq(t, got[1].display, true, "a failure is displayed")
+}
+
+// A steer reply is delivered when the steered turn settles, and the interrupted turn stays quiet: the steer action
+// reported the pivot.
+func TestSteerRepliesAreDelivered(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	notices := captureCompletions(t)
+	blockingRunner(t)
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
+	waitState(t, run, stateRunning)
+	answerRunner(t, "here is the report") // the steered turn answers
+	out, err := actions["steer"].run(sdkContext(), map[string]any{"id": run.id, "message": "report please"})
+	eq(t, err, nil, "steer")
+	if !strings.Contains(out.(explicitOK).Content, "Steered run "+run.id) {
+		t.Errorf("steer: %v", out)
 	}
+	got := waitNotices(t, notices, 1)
+	eq(t, got[0].content, "Detached foreground task completed: **scout** (steer reply)\n\nhere is the report", "the reply wake")
+	eq(t, got[0].display, true, "a steer reply is displayed")
+	time.Sleep(20 * time.Millisecond) // the interrupted turn's goroutine must stay quiet
+	eq(t, len(notices()), 1, "only the reply is delivered")
 }
 
 func TestContinuationRequestKeepsTheSessionAndDropsTheSystemPrompt(t *testing.T) {
@@ -144,7 +170,7 @@ func TestControlActions(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
 	blockingRunner(t)
-	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "", func(string, string) {})
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
 	waitState(t, run, stateRunning)
 	id := map[string]any{"id": run.id}
 
@@ -192,7 +218,7 @@ func TestInterruptAndResume(t *testing.T) {
 	fleet.reset()
 	t.Cleanup(fleet.reset)
 	blockingRunner(t)
-	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "", func(string, string) {})
+	run := startAsyncRun("/work", &AgentConfig{Name: "scout"}, "t", "")
 	waitState(t, run, stateRunning)
 
 	out, err := actions["interrupt"].run(sdkContext(), map[string]any{"id": run.id})

@@ -26,9 +26,9 @@ original); then:
 - `subagent {agent: "helper", task: "..."}` runs one agent in a child `pig --print` process and returns its answer;
 - `subagent {agent, task, async: true}` runs the child detached: the call returns `Async: <agent> [<id>]` at once and the
   run lives in the fleet views. `stop`, `interrupt`, `resume` and `steer` manage it (`resume` and `steer` continue the
-  child's session; `steer` pivots the running turn to your message). A successful completion stays quiet, a failed or
-  paused one notifies the session. The original defaults to async; the port keeps the foreground default. `bg_wait` is
-  not ported;
+  child's session; `steer` pivots the running turn to your message). Completions and steer replies are delivered as the
+  original's `subagent-notify` completion notifications that wake the session (siblings finishing together arrive as one
+  grouped message). The original defaults to async; the port keeps the foreground default. `bg_wait` is not ported;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
 

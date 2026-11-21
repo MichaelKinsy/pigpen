@@ -56,6 +56,10 @@ type stepRecord struct {
 	session      string // the child's session file, when it has one (pane children do)
 	sessionDir   string // where the child's session file lands when it is pinned (hidden children and continuations)
 	sessionID    string
+	// the completion notification this turn delivers when its run settles (notify.go); empty for a turn a tool call
+	// returns itself
+	noticeKind string
+	noticeInfo string
 }
 
 // runRecord is one `subagent` call's run: a single child, or a chain's steps in order. It carries the run's control
@@ -78,6 +82,7 @@ type runRecord struct {
 	sessionDir  string // where the child's session file lives (hidden children), for steer and resume
 	sessionID   string
 	resumedFrom string
+	noticeSent  bool // the settle notification for the current turns went out (notify.go)
 }
 
 // terminate stops the run's child process: intent is stateStopped (stop) or statePaused (interrupt, steer). It reports
@@ -164,6 +169,7 @@ func (r *runRecord) addStep(agent, task, thinking string) *stepRecord {
 	s := &stepRecord{agent: agent, task: task, thinking: thinking, state: stateQueued}
 	fleet.mu.Lock()
 	r.steps = append(r.steps, s)
+	r.noticeSent = false // the new turn settles again
 	fleet.mu.Unlock()
 	return s
 }
@@ -228,6 +234,13 @@ func (s *stepRecord) pinSession(dir, id string) {
 	s.sessionDir, s.sessionID = dir, id
 }
 
+// setNotice records the completion notification this turn delivers when its run settles (notify.go).
+func (s *stepRecord) setNotice(kind, info string) {
+	fleet.mu.Lock()
+	defer fleet.mu.Unlock()
+	s.noticeKind, s.noticeInfo = kind, info
+}
+
 // sessionPath is the child's transcript: its session file, resolved live (the file appears as the child works).
 func (s *stepRecord) sessionPath() string {
 	if s.session != "" {
@@ -259,37 +272,22 @@ func (r *runRecord) state() runState {
 }
 
 func (r *runRecord) stateLocked() runState {
-	running, failed, stopped, paused, complete, queued := false, false, false, false, 0, 0
+	// the run is what its current turn is: the one running, else the queued one, else the last turn's outcome (a steer's
+	// pivoted turn decides the run, not the interrupted one)
 	for _, s := range r.steps {
-		switch s.state {
-		case stateRunning:
-			running = true
-		case stateFailed:
-			failed = true
-		case stateStopped:
-			stopped = true
-		case statePaused:
-			paused = true
-		case stateComplete:
-			complete++
-		case stateQueued:
-			queued++
+		if s.state == stateRunning {
+			return stateRunning
 		}
 	}
-	switch {
-	case running:
-		return stateRunning
-	case failed:
-		return stateFailed
-	case stopped:
-		return stateStopped
-	case paused:
-		return statePaused
-	case complete > 0 && complete+queued == len(r.steps):
-		return stateComplete
-	default:
+	for _, s := range r.steps {
+		if s.state == stateQueued {
+			return stateQueued
+		}
+	}
+	if len(r.steps) == 0 {
 		return stateQueued
 	}
+	return r.steps[len(r.steps)-1].state
 }
 
 // endedAt is when the run's last step ended, or the zero time while it lives.

@@ -157,6 +157,10 @@ func Extension() *sdk.Extension {
 			dir, _ = ctx.SessionManager().GetSessionDir()
 		}
 		setChildSessionDir(dir)
+		setCompletionSender(func(content string, display bool) error {
+			// the original's pi.sendMessage for its completion notifications: triggerTurn wakes the model
+			return ctx.SendMessage("subagent-notify", content, display, sdk.SendMessageOptions{TriggerTurn: sdk.Bool(true)})
+		})
 		fleet.reset()
 		fleet.setSink(func(rows []string) { _ = ctx.SetWidget(asyncWidget, rows) })
 		return nil, nil
@@ -177,6 +181,7 @@ func Extension() *sdk.Extension {
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
 		fleet.stopAll()
 		setChildSessionDir("")
+		setCompletionSender(nil)
 		fleet.setSink(nil)
 		_ = ctx.SetWidget(asyncWidget, nil)
 		return nil, nil
@@ -294,7 +299,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if async, msg := asyncParam(params); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	} else if async {
-		run := startAsyncRun(cwd, a, task, model, ctx.Notify)
+		run := startAsyncRun(cwd, a, task, model)
 		details := map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}
 		if includeProgress {
 			details["progress"] = []any{detachedProgressRecord(a, task, model)}

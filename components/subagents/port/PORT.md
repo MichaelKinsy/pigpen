@@ -46,10 +46,16 @@ takes what can be checked against the original by running it, and one execution 
   expand-key hint is the original's unconfigured wording; `Recent runs:` in the fleet text is a port addition (the port
   runs children in the foreground, so the inspector's "recent children and completed output/session paths" live there);
 - the runs' control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions (`bg_wait`
-  refused). A detached child lives in the registry and the views; completion follows the original's policy (a success
-  stays quiet, a failure or pause notifies). `steer` pivots: a print child cannot be redirected mid-turn, so the current
+  refused; the completion notification below is what wakes the session, so a wait call is not needed). A detached child
+  lives in the registry and the views; its completion is delivered to the session as the original's `subagent-notify`
+  completion notification (its runs/background/notify.ts: `sendMessage` with triggerTurn, which wakes the model; its
+  display rule, its formatSingleCompletion/formatGroupedCompletion text, and its completion-batcher: sibling successes
+  batch into one grouped message, while failures, pauses and stops flush the batch and go at once). `steer` pivots: a
+  print child cannot be redirected mid-turn, so the current
   turn is interrupted and the next turn continues the child's session with the message (the original delivers mid-turn
-  through its runner); `resume` is the original's new run id per pass, and a stopped run is not resumable. Children pin
+  through its runner); the steered turn's answer is delivered as its steer reply notification (a port addition: the
+  original has no turn to reply with). `resume` is the original's new run id per pass, and a stopped run is not
+  resumable. Children pin
   session files in the parent's session directory (as pane children always did) so turns can continue. The port keeps
   the foreground default where the original defaults to async. `includeProgress` is honored: with it the result carries the
   run's full progress record (the original's AgentProgress) over the child's transcript and output; without it the result
