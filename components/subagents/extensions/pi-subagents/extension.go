@@ -157,7 +157,9 @@ func Extension() *sdk.Extension {
 			dir, _ = ctx.SessionManager().GetSessionDir()
 		}
 		setChildSessionDir(dir)
-		if id, err := ctx.SessionManager().GetSessionID(); err == nil {
+		id := ""
+		if sid, err := ctx.SessionManager().GetSessionID(); err == nil {
+			id = sid
 			setParentSessionID(id)
 			startSessionLink(id) // this session's children talk to it over the parent link (link.go)
 		}
@@ -176,6 +178,10 @@ func Extension() *sdk.Extension {
 			return ctx.SendMessage("subagent-notify", content, display, sdk.SendMessageOptions{TriggerTurn: sdk.Bool(true)})
 		})
 		fleet.reset()
+		// The fleet this session had re-attaches from its sidecar (sidecar.go): the runs it showed before the process
+		// exited, a run that had not finished paused — and from here every transition is written back to it.
+		fleet.restore(dir, id)
+		fleet.bindPersist(dir, id)
 		fleet.setSink(func(rows []string) { _ = ctx.SetWidget(asyncWidget, rows) })
 		return nil, nil
 	})
@@ -193,6 +199,9 @@ func Extension() *sdk.Extension {
 		return nil, nil
 	})
 	e.OnEvent(sdk.EventSessionShutdown, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		// the last snapshot of the session's fleet — a run still going is recorded paused — before stopAll cancels
+		// its child; it also silences every later write, so those cancellations cannot rewrite it as `stopped`
+		fleet.finalizePersist()
 		fleet.stopAll()
 		setChildSessionDir("")
 		setParentSessionID("")

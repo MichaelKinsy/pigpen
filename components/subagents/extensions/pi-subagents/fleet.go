@@ -148,6 +148,13 @@ type fleetState struct {
 	stop     chan struct{}
 	wake     chan struct{}
 	renderMu sync.Mutex // serializes sink calls (the ticker and a run's transitions may both push)
+
+	// persistence (sidecar.go): the bound session's sidecar, written by every run-state transition and by the
+	// session's final snapshot. persistMu is always taken before mu, never the other way round.
+	persistMu      sync.Mutex
+	persistPath    string
+	persistSession string
+	persisting     bool
 }
 
 var fleet = &fleetState{next: 1}
@@ -158,13 +165,14 @@ var fleetNow = time.Now
 // beginRun registers a run at its first child. mode is "single" or "chain"; name the agent or chain name.
 func (f *fleetState) beginRun(mode, name, task, cwd string) *runRecord {
 	f.mu.Lock()
-	defer f.mu.Unlock()
 	r := &runRecord{id: "run-" + strconv.Itoa(f.next), mode: mode, name: name, task: task, cwd: cwd, startedAt: fleetNow(), done: make(chan struct{})}
 	f.next++
 	f.runs = append(f.runs, r)
 	if len(f.runs) > maxFleetRuns {
 		f.runs = f.runs[len(f.runs)-maxFleetRuns:]
 	}
+	f.mu.Unlock()
+	f.persist()
 	return r
 }
 
@@ -177,6 +185,7 @@ func (r *runRecord) addStep(agent, task, thinking string) *stepRecord {
 	r.steps = append(r.steps, s)
 	r.noticeSent = false // the new turn settles again
 	fleet.mu.Unlock()
+	fleet.persist()
 	return s
 }
 
@@ -191,8 +200,9 @@ func (r *runRecord) setTurnNotice(kind string) {
 // setLaunch records what a later turn needs to continue the child (steer, resume).
 func (r *runRecord) setLaunch(req childRequest, dir, id string) {
 	fleet.mu.Lock()
-	defer fleet.mu.Unlock()
 	r.childReq, r.sessionDir, r.sessionID = req, dir, id
+	fleet.mu.Unlock()
+	fleet.persist()
 }
 
 // getLaunch is setLaunch's reader.
@@ -215,16 +225,18 @@ func (r *runRecord) lastThinking() string {
 // setResumedFrom marks the run as a follow-up of another.
 func (r *runRecord) setResumedFrom(id string) {
 	fleet.mu.Lock()
-	defer fleet.mu.Unlock()
 	r.resumedFrom = id
+	fleet.mu.Unlock()
+	fleet.persist()
 }
 
 // begin marks a step as running.
 func (s *stepRecord) begin() {
 	fleet.mu.Lock()
-	defer fleet.mu.Unlock()
 	s.state = stateRunning
 	s.startedAt = fleetNow()
+	fleet.mu.Unlock()
+	fleet.persist()
 }
 
 // touchLive records child activity and the output produced so far (the fleet views show it live while the child runs).
@@ -244,8 +256,9 @@ func (s *stepRecord) pinSession(dir, id string) {
 		return
 	}
 	fleet.mu.Lock()
-	defer fleet.mu.Unlock()
 	s.sessionDir, s.sessionID = dir, id
+	fleet.mu.Unlock()
+	fleet.persist()
 }
 
 // setNotice records the completion notification this turn delivers when its run settles (notify.go).
@@ -327,13 +340,14 @@ func (s *stepRecord) sessionPath() string {
 // finish ends a step; state is complete, failed, paused or stopped.
 func (s *stepRecord) finish(state runState, output, errText, session string, exit int) {
 	fleet.mu.Lock()
-	defer fleet.mu.Unlock()
 	s.state = state
 	s.endedAt = fleetNow()
 	s.output = output
 	s.err = errText
 	s.exit = exit
 	s.session = session
+	fleet.mu.Unlock()
+	fleet.persist()
 }
 
 // state is the run's state: its steps' aggregate (the original's aggregateStepStatus), or stopped/queued while it lives.

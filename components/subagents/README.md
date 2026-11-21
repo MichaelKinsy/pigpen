@@ -118,6 +118,13 @@ as the original's live view) and its result transcript tail once it settles. The
 Prompt Audit are not ported; the detail pane shows the child's live transcript and the progress rows the port can fill
 (current tool, turns, tools, tokens); rows it cannot fill are omitted.
 
+A session's fleet survives the process: every run-state transition is written to `<session dir>/<session id>.subagents.json`
+and the session's last snapshot at shutdown records a run that had not finished as `paused`. Resuming the session
+(`pig -r`, `/resume`, `/reload`) re-attaches those runs with the ids the transcript names them by — the widget and the
+inspector show them again, `status` and `transcript` read them, and `resume` continues a paused run's child session.
+A restored run is not live: `stop`, `interrupt` and `steer` refuse it, and its child's environment is never written —
+the restore rebuilds it.
+
 ## What is ported
 
 Frontmatter parsing, agent and chain definitions (discovery in the project, the user's directories and the builtin set,
