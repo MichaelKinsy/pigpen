@@ -152,13 +152,15 @@ cd components/kagent/harness      # or the exported harnesses/pig directory in b
 The Agent is `Ready` once Substrate has built the golden snapshot of the harness image. A failure prints the
 Agent's conditions; [deploy.md](deploy.md#troubleshooting-by-condition) explains each.
 
-The Harness the chart creates sets `substrate.snapshotPolicy.location` to the chart default `gs://ate-snapshots/kagent/`.
+The Harness the chart creates sets `substrate.snapshotPolicy.location` to the chart default `s3://ate-snapshots/kagent/`,
+the location `kagent install` gives its own harnesses since v1.0.1.
 kagent hands that value to Substrate as the base location for the snapshots of this Harness's Actors (the
 ActorTemplate's `snapshotConfig.storageLocation`, which `kagent install` allows by enabling Substrate's
 `PerTemplateSnapshotLocation` gate); Substrate writes below it, under `atespaces/<atespace>/actors/<uid>/...`. It is a
 base prefix, not a separate store: Substrate's chart keeps snapshots in an in-cluster RustFS bucket called `ate-snapshots`
-by default and addresses it with `gs://` URIs, which is why the default works unchanged on a Kind cluster set up with
-`kagent install`.
+by default, which is why the default works unchanged on a Kind cluster set up with `kagent install`. kagent v1.0.0
+spelled it `gs://`; both forms worked on a v1.0.1 cluster, but `pig-kagent.sh check` warns when the location differs from the
+one other Harnesses use.
 Change `substrate.snapshotLocation` only when your Substrate uses another object store; the value has to name a location
 that store serves.
 
