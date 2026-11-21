@@ -7,9 +7,10 @@ function record(value: Input): Record<string, Input> | undefined {
 }
 
 /**
- * Paseo's ACP shim publishes a failed tool call with the call's raw output as its error, and the wire contract refuses a
- * null error. pig-acp reports a bash call's output through terminal metadata and sends no raw output, so a failed bash call
- * (a command that exits non-zero, or one the user denied) arrived with a null error and made the agent's timeline unreadable.
+ * Paseo's ACP shim publishes a failed tool call with the call's raw output as its error (in Paseo 0.15.x a null error
+ * broke the wire contract; Paseo 0.16.0 #9467 added a generic "Tool failed" fallback). pig-acp reports a bash call's
+ * output through terminal metadata and sends no raw output, so supplying a specific message keeps both 0.11-0.15
+ * compatibility and a descriptive title-based error on 0.16+.
  */
 function withFailureReason(toolCall: AcpToolCallSnapshot): AcpToolCallSnapshot {
   if (toolCall.status !== "failed" || toolCall.output !== null) return toolCall;
