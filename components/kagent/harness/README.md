@@ -21,7 +21,7 @@ This directory is exported from `components/kagent/harness` of [MichaelKinsy/pig
 
 | Component | Version | Status |
 | --- | --- | --- |
-| kagent | `v1.0.0` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `a08cde76ad64` as a Go pseudo-version |
+| kagent | `v1.0.1` (`api.kagent.dev/v1alpha3`) | the version the adapter's kagent packages and the chart are written against; the adapter pins its commit `558e3d761d8e` as a Go pseudo-version |
 | Agent Substrate | `v1.0.0` (`ate.dev/v1`) | the chart's tested version; preview gates `PerTemplateSnapshotLocation` and `GoldenEgressPolicy` are required |
 | PiG | commit `51cc9f6f56be2ddcbd010e26db311814e9ddf08b` (the 0.8.0 line, branch `fix/pi-pin-bump`, not yet tagged; earlier images used `v0.7.0`) | built from source at that exact commit; the build fails if it cannot be fetched or is not that commit |
 | Go | 1.27.3 | adapter and Piglet builder |

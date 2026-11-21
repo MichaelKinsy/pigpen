@@ -4,8 +4,8 @@ github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/kagent-dev/kagent/go v0.0.0-20261109152041-a08cde76ad64 h1:YewjLhVHsY2XdBG9RMvloHYapKXW5kgetbiMCO4qfsM=
-github.com/kagent-dev/kagent/go v0.0.0-20261109152041-a08cde76ad64/go.mod h1:NKU6s2dR2gHN4TTLwcr+TvNyhhUmArZ+n/d47FvGyyw=
+github.com/kagent-dev/kagent/go v0.0.0-20261111150159-558e3d761d8e h1:WzkMZ8zGhG+EnmDLSOGHbuIC6nJkgB4GyppZ9Q3h1NI=
+github.com/kagent-dev/kagent/go v0.0.0-20261111150159-558e3d761d8e/go.mod h1:NKU6s2dR2gHN4TTLwcr+TvNyhhUmArZ+n/d47FvGyyw=
 go.ate.dev/substrate v1.0.0 h1:7zFdRCb4e4OHoJUUWugBCQ7m1GLHHb1SxJo05HqEDjw=
 go.ate.dev/substrate v1.0.0/go.mod h1:iBSRX82TClE5CSsD80HoYsxVP81NSpf0zKKTW+2s/+0=
 golang.org/x/net v0.62.0 h1:18ELalfM5+XNRwzM2nYqXsZQ9ByS1uhj2O/U7+5jqRY=
