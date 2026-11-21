@@ -56,7 +56,7 @@ async function launch(bin, args, { box = sandbox(), reply } = {}) {
   try {
     const child = spawn(resolve(bin), ['-p', '--model', 'stub/stub', ...args, 'go'], {
       cwd: box.project,
-      env: { ...process.env, PIG_HOME: box.home, PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1', PIG_PIGLET_PATH: '', PIG_PIGLET_NAME: '' },
+      env: { ...process.env, PIG_HOME: box.home, PIG_CODING_AGENT_DIR: '', PI_CODING_AGENT_DIR: '', PI_HOME: '', PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1', PIG_PIGLET_PATH: '', PIG_PIGLET_NAME: '' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let out = '';
