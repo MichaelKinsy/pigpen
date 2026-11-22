@@ -216,3 +216,35 @@ func TestFleetInspectorDetailShowsTheResultTailWhenSettled(t *testing.T) {
 		t.Errorf("result tail:\n%s", detail)
 	}
 }
+
+// A child's bash tool result carries real line endings (\r\n). The detail pane draws that text on one
+// row of an alt-screen frame, so a bare CR in a rendered line is a rendering bug, not content: the
+// terminal returns to column 0 mid-row and the rest of the row's padding erases the border, roster and
+// divider already painted on it (a row with no left border and the roster entry missing).
+func TestFleetInspectorRenderedLinesCarryNoBareControlBytes(t *testing.T) {
+	fleet.reset()
+	t.Cleanup(fleet.reset)
+	dir := tmp(t)
+	session := filepath.Join(dir, "1_c1.jsonl")
+	// A bash result as the child really writes one: CRLF between lines, LF at the end.
+	writeFile(t, session, transcriptFixture+
+		`{"type":"message","id":"m7","timestamp":"2024-01-01T00:00:06Z","message":{"role":"assistant","content":[{"type":"toolCall","id":"call_2","name":"bash","arguments":{"command":"mypy ."}}],"stopReason":"toolUse","model":"p/m","usage":{"totalTokens":10}}}`+"\n"+
+		`{"type":"message","id":"m8","timestamp":"2024-01-01T00:00:07Z","message":{"role":"toolResult","toolCallId":"call_2","toolName":"bash","content":[{"type":"text","text":"Success: no issues found in 39 source files\r\nAll checks passed!\n"}],"isError":false,"durationMs":400}}`+"\n")
+	r := fleet.beginRun("single", "scout", "find it", "/work")
+	s := r.addStep("scout", "find it", "")
+	s.state = stateRunning
+	s.startedAt = time.Unix(1700000000, 0)
+	s.sessionDir, s.sessionID = dir, "c1"
+	c := inspectorFor(t, 40)
+	c.refreshSnapshotLocked()
+
+	for _, line := range c.Render(160) {
+		if strings.ContainsAny(line, "\r\n\t") {
+			t.Fatalf("Render emitted a bare control byte (the terminal would jump mid-row): %q", line)
+		}
+	}
+	// The CRLF join is content the reader should still see, minus the control bytes.
+	if !strings.Contains(strings.Join(c.detailLines(200), "\n"), "Success: no issues found in 39 source files") {
+		t.Errorf("the tool result text is missing:\n%s", strings.Join(c.detailLines(200), "\n"))
+	}
+}

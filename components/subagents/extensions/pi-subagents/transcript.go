@@ -198,8 +198,24 @@ func parseSessionEntries(lines []string) sessionTranscript {
 		if t.events[i].kind == "tool" && !t.events[i].matched {
 			t.events[i].status = "running"
 		}
+		t.events[i] = safeTranscriptEvent(t.events[i])
 	}
 	return t
+}
+
+// safeTranscriptEvent strips terminal escapes and control bytes from the strings an event will be drawn with (the
+// original's safeTranscriptEvent, applied when a transcript is read). A child's session text is not display text: the
+// fleet inspector writes it into one row of an alt-screen frame, where a control byte moves the terminal cursor
+// instead of printing. sanitizeDisplay keeps "\n" and "\t" the way the original's safeTerminalText does; wrapPlain
+// turns those into row breaks when it wraps.
+func safeTranscriptEvent(e transcriptEvent) transcriptEvent {
+	e.text = sanitizeDisplay(e.text)
+	e.model = sanitizeDisplay(e.model)
+	e.name = sanitizeDisplay(e.name)
+	e.args = sanitizeDisplay(e.args)
+	e.output = sanitizeDisplay(e.output)
+	e.errText = sanitizeDisplay(e.errText)
+	return e
 }
 
 // toolCall is one toolCall content block.

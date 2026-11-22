@@ -759,6 +759,10 @@ func isFleetKeyRelease(data string) bool {
 // sgrSequence matches an ANSI escape sequence: zero display width.
 var sgrSequence = regexp.MustCompile("\x1b" + `\[[0-9;:?]*[ -/]*[@-~]`)
 
+// lineBreak splits text at a line end the way the original's wrapTextWithAnsi does (\r\n, \r or \n), keeping empty
+// parts so a trailing break still ends the row.
+var lineBreak = regexp.MustCompile(`\r\n?|\n`)
+
 // visibleWidth is a string's display width: escape sequences are zero (pi-tui counts double-width runes as two; rune
 // count is the port's approximation).
 func visibleWidth(s string) int {
@@ -806,11 +810,26 @@ func rightAligned(left, right string, width int) string {
 	return fit(left, leftWidth) + strings.Repeat(" ", max(1, width-leftWidth-rightWidth)) + fit(right, rightWidth)
 }
 
-// wrapPlain word-wraps one plain line at display width.
+// wrapPlain word-wraps one plain line at display width. A line end in the text ends the row rather than landing inside
+// it (the original's wrapTextWithAnsi splits on \r\n, \r and \n first): a control byte inside a drawn row moves the
+// terminal cursor instead of printing, and a raw CR returns it to column 0, where the rest of the row's own padding
+// then erases the border, roster and divider already painted on it.
 func wrapPlain(s string, width int) []string {
 	if width < 1 {
 		width = 1
 	}
+	if !strings.ContainsAny(s, "\r\n") {
+		return wrapPlainRow(s, width)
+	}
+	var lines []string
+	for _, part := range lineBreak.Split(s, -1) {
+		lines = append(lines, wrapPlainRow(part, width)...)
+	}
+	return lines
+}
+
+// wrapPlainRow word-wraps one line of text that holds no line break.
+func wrapPlainRow(s string, width int) []string {
 	if visibleWidth(s) <= width {
 		return []string{s}
 	}
