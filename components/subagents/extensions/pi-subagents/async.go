@@ -67,12 +67,18 @@ func continuationRequest(base childRequest, message string) childRequest {
 // is delivered natively").
 func startAsyncRun(cwd string, a *AgentConfig, task, model string) *runRecord {
 	run := fleet.beginRun("single", a.Name, task, cwd)
+	startAsyncRunOn(run, cwd, a, task, model)
+	return run
+}
+
+// startAsyncRunOn launches the caller's own run (the tool call resolves the run's deadline, checkpoint lead and
+// output file before it exists, so the call registers the run itself).
+func startAsyncRunOn(run *runRecord, cwd string, a *AgentConfig, task, model string) {
 	run.setTurnNotice("Background task")
 	go func() {
 		_, _, _ = runAgent(nil, cwd, a, task, model, nil, run) // its drain runs queued steer turns and settles the run
 		fleet.changed()
 	}()
-	return run
 }
 
 // notifyTurnEnd delivers the completion notification once the run has settled (every turn terminal): whichever turn's

@@ -74,15 +74,26 @@ type runRecord struct {
 	endedAt   time.Time
 	steps     []*stepRecord
 
-	done        chan struct{}
-	ctrlMu      sync.Mutex
-	terminated  bool
-	endIntent   runState // the state a terminated step takes: statePaused (interrupt, steer) or stateStopped
-	childReq    childRequest
-	sessionDir  string // where the child's session file lives (hidden children), for steer and resume
-	sessionID   string
-	resumedFrom string
-	noticeSent  bool // the settle notification for the current turns went out (notify.go)
+	done       chan struct{}
+	ctrlMu     sync.Mutex
+	terminated bool
+	endIntent  runState // the state a terminated step takes: statePaused (interrupt, steer), stateStopped (stop) or stateFailed (deadline)
+	// the launch options the call set (runopts.go): the run's deadline, the checkpoint lead before it, and where the
+	// answer is persisted. All guarded by ctrlMu, all set before the run starts.
+	timeoutMs       int
+	checkpointMs    int
+	outputPath      string
+	deadlineAt      time.Time
+	deadlineArmed   bool
+	deadlineStopped bool
+	deadlineTimer   *time.Timer
+	deadlineStop    chan struct{}
+	timedOut        bool
+	childReq        childRequest
+	sessionDir      string // where the child's session file lives (hidden children), for steer and resume
+	sessionID       string
+	resumedFrom     string
+	noticeSent      bool // the settle notification for the current turns went out (notify.go)
 
 	steerMu       sync.Mutex
 	pendingSteers []string // messages queued for the run's next turns (steer without a live link, follow_up)
@@ -121,8 +132,13 @@ func (r *runRecord) currentDone() <-chan struct{} {
 
 // terminatedState is the state a cancelled step takes for this run.
 func (r *runRecord) terminatedState() runState {
-	if r.endIntent == statePaused {
+	r.ctrlMu.Lock()
+	defer r.ctrlMu.Unlock()
+	switch r.endIntent {
+	case statePaused:
 		return statePaused
+	case stateFailed: // the deadline fired: the step fails with the timeout text, it was not "cancelled"
+		return stateFailed
 	}
 	return stateStopped
 }

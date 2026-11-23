@@ -288,6 +288,17 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if task == "" {
 		return nil, sdk.NewToolError(refusal("a run without `task`"))
 	}
+	// The launch deadline resolves before the agent does (the original's resolveSingleAgentLaunchTimeout runs in
+	// execute, above the single-agent dispatch); `checkpointBeforeDeadlineMs` is validated with it, and `output` needs
+	// the agent's own default, so it is resolved below with the run.
+	timeoutMs, msg := runTimeoutParam(params)
+	if msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
+	checkpointMs, msg := checkpointParam(params)
+	if msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
 	if msg := nestedBlocked(os.Getenv); msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
@@ -321,10 +332,23 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	if msg != "" {
 		return nil, sdk.NewToolError(msg)
 	}
-	if async, msg := asyncParam(params); msg != "" {
+	async, msg := asyncParam(params)
+	if msg != "" {
 		return nil, sdk.NewToolError(msg)
-	} else if async {
-		run := startAsyncRun(cwd, a, task, model)
+	}
+	if !async {
+		// the original steers the pre-deadline checkpoint on async single runs only
+		checkpointMs = 0
+	}
+	outputFile, msg := outputParam(params, a.Output)
+	if msg != "" {
+		return nil, sdk.NewToolError(msg)
+	}
+	run := fleet.beginRun("single", a.Name, task, cwd)
+	outputPath := singleOutputPath(outputFile, run.id, childSessionDirFor())
+	run.setLaunchOptions(timeoutMs, checkpointMs, outputPath) // the child's prompt gets the output instruction (run.go)
+	if async {
+		startAsyncRunOn(run, cwd, a, task, model)
 		details := map[string]any{"mode": "single", "results": []any{}, "asyncId": run.id}
 		if includeProgress {
 			details["progress"] = []any{detachedProgressRecord(a, task, model)}
@@ -333,7 +357,7 @@ func runOne(ctx sdk.Context, params map[string]any) (any, error) {
 	}
 	done, stop := cancellation(ctx)
 	defer stop()
-	out, st, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults))
+	out, st, err := runAgent(done, cwd, a, task, model, paneHostFor(ctx, defaults), run)
 	if err != nil {
 		return nil, sdk.NewToolError(err.Error())
 	}

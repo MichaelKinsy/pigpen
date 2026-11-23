@@ -63,6 +63,21 @@ takes what can be checked against the original by running it, and one execution 
   the foreground default where the original defaults to async. `includeProgress` is honored: with it the result carries the
   run's full progress record (the original's AgentProgress) over the child's transcript and output; without it the result
   stays compact.
+- the single run's launch options (`runopts.go`): `timeoutMs` / `maxRuntimeMs`, `checkpointBeforeDeadlineMs` and
+  `output`, in the original's resolutions and texts — one positive integer no larger than 2147483647 for the deadline
+  (the two aliases only when they agree) with its 30-minute single-agent default and its terminal
+  `Subagent timed out after <n>ms.`; the pre-deadline checkpoint steer on async single runs only (its message, at the
+  lead before the deadline, never less than a second after launch and only while a step runs, over the steer route, the
+  deadline kill still applying); and the output file (its instruction in the task — the read-only wording for a child
+  that cannot write — a file the child wrote itself read back instead of overwritten, its
+  `Output saved to: <path> (<size>, <n> lines). Read this file if needed.` reference, a relative path under
+  `<artifacts>/outputs/<run id>`, an agent's own `output` frontmatter as the default and `get` showing it).
+  Adaptations: the file holds the bounded answer the port keeps (its 200 KB / 5000-line truncation) rather than the
+  child's whole output, and a child with no pinned session (a session without a directory) is not steered the
+  checkpoint — the port skips it rather than queue a turn the deadline would end. The
+  original's extension-config defaults (`config.timeoutMs`, `config.checkpointBeforeDeadlineMs`,
+  `singleRunOutputBaseDir`) are not ported: the port reads no extension config file. Checked by `runopts_test.go` and
+  `runopts_host_test.go`.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
 Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,
@@ -102,6 +117,10 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
 - at most 4 children run at once (the original's `MAX_CONCURRENCY`), whatever one model turn asks for;
 - a cancelled call (Escape, the session ending) sends the child SIGTERM and kills it 5 s later; on Linux a child also gets
   SIGTERM when its parent dies, so a host killed outright leaves none behind;
+- every single run has a deadline: the call's `timeoutMs` / `maxRuntimeMs`, else the original's 30-minute single-agent
+  default, and the child is stopped at it with `Subagent timed out after <n>ms.` — a run with no options of its own (a
+  chain's step, a resume's) has none. An async single run given `checkpointBeforeDeadlineMs` is steered to checkpoint
+  and hand off that long before the deadline (`runopts.go`), and `output` binds its answer to a file;
 - the child's environment is this process's without the host's internals for this extension (`PIG_EXT_*`, `PIG_HARNESS_*`);
 - the answer is the child's stdout, bounded as the original's `truncateOutput` bounds it (200 KB, 5000 lines, its marker);
   stderr (its last 8 KB) explains a failure;
@@ -128,15 +147,15 @@ dynamic fan-out validators they need; external CLI and external job runners (the
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
 document features that are not ported); the original's session-resume memory of whether `subagent` was enabled.
 
-**Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
+**Refusals (`refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
 accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`, plus `capabilities` for `list`, which gives the original's capability rows as text without its `agentCapabilities` details), `async` other than
-`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
+`agentScope`, `cwd`, `model`, `async`, `includeProgress`, `timeoutMs`, `maxRuntimeMs`, `checkpointBeforeDeadlineMs` and
+`output`; for `list` and `get`, `action`, `agent` and `agentScope`, plus `capabilities` for `list`, which gives the original's capability rows as text without its `agentCapabilities` details), `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
 other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
 original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
 <feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
 original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
+`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays:
 the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
 
 ## Mapping
@@ -153,6 +172,7 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
 | M9 | the observability views (`tui/render.ts` widget rows; `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts` text; `tui/fleet.ts` inspector) | `fleet.go`, `fleet_tui.go` | `fleet_test.go`, `fleet_tui_test.go` (the original's rows, text and frame, pinned) |
 | M10 | (addition) async runs and control actions; `runs/background` control-channel semantics | `async.go`, `run.go` | `async_test.go` |
+| M11 | `runs/foreground/subagent-executor.ts` + `execution.ts` (the run deadline), `runs/background/subagent-runner.ts` (the pre-deadline checkpoint steer), `runs/shared/single-output.ts` (the output file) | `runopts.go` | `runopts_test.go`, `runopts_host_test.go` |
 
 ## Process: what was written before its tests
 

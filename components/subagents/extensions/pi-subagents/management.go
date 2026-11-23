@@ -260,6 +260,9 @@ func formatDetail(a AgentConfig) string {
 	if s, ok := a.Thinking.(string); ok && s != "" {
 		lines = append(lines, "Thinking: "+s)
 	}
+	if a.Output != "" { // the original's `Output: <path>`, between Thinking and the reads
+		lines = append(lines, "Output: "+a.Output)
+	}
 	if len(a.DefaultReads) > 0 {
 		lines = append(lines, "Reads: "+strings.Join(a.DefaultReads, ", "))
 	}

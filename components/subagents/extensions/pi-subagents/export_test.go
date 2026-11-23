@@ -1,6 +1,9 @@
 package pi_subagents
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // Internals for the external tests (run_host_test.go, which uses the fake host of package pi_subagents_test).
 
@@ -15,11 +18,29 @@ var (
 	WithTempHome = withTempHome
 )
 
+// ErrCancelled is the child runner's cancellation error: the run's control channel closed (a stop, an interrupt, or
+// the deadline) and the child ended with it.
+var ErrCancelled = errCancelled
+
 // SetRunChild replaces the child runner for one test.
 func SetRunChild(t *testing.T, f func(done <-chan struct{}, req ChildRequest) (ChildResult, error)) {
 	old := runChild
-	t.Cleanup(func() { runChild = old })
+	t.Cleanup(func() {
+		// A detached child may still be starting when its test ends, and it reads the runner when it starts:
+		// wait for the registry to settle first, so the swap is ordered after that read (the race detector sees
+		// the otherwise unsynchronized pair, and a run that never settles must not hold the cleanup forever).
+		waitForRunsToSettle()
+		runChild = old
+	})
 	runChild = f
+}
+
+// waitForRunsToSettle waits for the runs still in the registry to end, or for a second.
+func waitForRunsToSettle() {
+	deadline := time.Now().Add(time.Second)
+	for len(fleet.active()) > 0 && time.Now().Before(deadline) {
+		time.Sleep(2 * time.Millisecond)
+	}
 }
 
 // ToolParamNames are the parameters of the subagent tool's schema (the original's), and OriginalCommands its commands.

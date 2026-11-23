@@ -34,9 +34,14 @@ func TestRefusalMessage(t *testing.T) {
 	eq(t, sub.Refusal("x"), refusalHead+"x"+refusalTail, "the exact text")
 }
 
-// every parameter of the original's schema that a run does not honor is refused, one test case each
+// every parameter of the original's schema that a run does not honor is refused, one test case each. The four the
+// port honors (timeoutMs, maxRuntimeMs, checkpointBeforeDeadlineMs, output) are checked by runopts_test.go instead:
+// their values are validated, not refused.
 func TestEveryUnportedParameterIsRefused(t *testing.T) {
-	honored := map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "includeProgress": true, "action": true}
+	honored := map[string]bool{
+		"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "includeProgress": true,
+		"action": true, "timeoutMs": true, "maxRuntimeMs": true, "checkpointBeforeDeadlineMs": true, "output": true,
+	}
 	special := map[string]bool{"workflow": true, "workflowScript": true, "workflowScriptPath": true}
 	names := sub.ToolParamNames()
 	sort.Strings(names)
@@ -60,8 +65,8 @@ func TestEveryUnportedParameterIsRefused(t *testing.T) {
 
 func TestSeveralUnportedParametersAreNamedTogether(t *testing.T) {
 	h, calls := refusedHost(t)
-	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "output": true, "acceptance": "checked"})
-	wantRefusal(t, failure, "the `acceptance`, `output` options")
+	_, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "outputMode": "file-only", "acceptance": "checked"})
+	wantRefusal(t, failure, "the `acceptance`, `outputMode` options")
 	eq(t, len(*calls), 0, "no child started")
 }
 

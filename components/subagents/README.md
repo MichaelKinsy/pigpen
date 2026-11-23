@@ -30,6 +30,15 @@ original); then:
   turn when no link reaches the child — without interrupting either). Completions and steer replies are delivered as the
   original's `subagent-notify` completion notifications that wake the session (siblings finishing together arrive as one
   grouped message). The original defaults to async; the port keeps the foreground default. `bg_wait` is not ported;
+- `subagent {agent, task, timeoutMs: 120000, output: "notes/report.md"}` takes the original's run options. `timeoutMs`
+  (alias `maxRuntimeMs`, same value or one alone) is the run's deadline: the child is stopped at it with the original's
+  `Subagent timed out after <n>ms.`, and a run without one gets the original's 30-minute single-agent default. `output`
+  binds the answer to a file — the child is told the authoritative path in its task, a relative path lands under the
+  session's `subagent-artifacts/outputs/<run id>/`, `false` turns the file off, and an agent's own `output` frontmatter
+  (`get` shows it) is the default — and the result ends with the original's
+  `Output saved to: <path> (<size>, <n> lines). Read this file if needed.` line; a file the child wrote itself is read
+  back, not overwritten. `checkpointBeforeDeadlineMs` (async single runs) steers the child to checkpoint and stop that
+  long before the deadline — the original's handoff message, with the deadline kill still applying;
 - `/run-chain <chain> <task>` runs a `.chain.md` chain (`.pi/chains/` or `~/.pi/agent/chains/`): each step's answer flows into the
   next as `{previous}`, the request as `{task}`.
 
@@ -139,13 +148,15 @@ the run's full progress record (the original's AgentProgress) in the result.
 Inspect panes, Prompt Audit and tool details, the supervisor channel, the watchdog, missions, profiles,
 `agentOverrides` other than `model` and `thinking`, `.chain.json` chains, `bg_wait`, the management actions other than
 `list`, `get`, `status`, `stop`, `interrupt`, `resume` and `steer`. The tool honors `agent`, `task`, `agentScope`, `cwd`, `model`,
+`timeoutMs`, `maxRuntimeMs`, `checkpointBeforeDeadlineMs` and `output` (the run's deadline, its pre-deadline checkpoint
+steer and its output file),
 `async` (true detaches the child), for `list` and `get`, `action`, `agent` and `agentScope` (and `capabilities` for `list`),
 for `status`, `id`, `view`, `index` and `lines`, for `stop` and `interrupt`, `id`, and for `resume` and `steer`, `id` and
 `message`. Any other
 parameter or action, and the tools `bg_wait` and `subagent_supervisor` (declared so the model sees the original's tools), is refused
 with one message and nothing runs:
 
-> @pi-in-go/pigpen-subagents (Go port) does not support async (background) runs (`async: true`) yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
+> @pi-in-go/pigpen-subagents (Go port) does not support the `acceptance` option yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.
 
 The original's slash commands other than the port's own `/run-chain` and the fleet inspector's `/subagents-fleet` (`/run`,
 `/subagents`, `/subagents-stop`, `/prompt-workflow`, ...) are not registered, and neither are its skills and prompt

@@ -182,6 +182,11 @@ func loadAgent(f definitionFile, source AgentSource, priority int) (*AgentConfig
 	if reads := ParseFrontmatterList(optional(fm, "defaultReads")); len(reads) > 0 {
 		a.DefaultReads = reads
 	}
+	// `output` is the agent's default single-run output file; its `false` (and its `true`) set none, as the original's
+	// normalizeSingleOutputOverride reads them.
+	if v := fm.Get("output"); v != "" && v != "true" && v != "false" {
+		a.Output = v
+	}
 	a.DefaultProgress = fm.Get("defaultProgress") == "true"
 	return a, nil
 }

@@ -432,9 +432,14 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 	} else {
 		run = fleet.beginRun("single", a.Name, task, cwd)
 	}
+	run.armDeadline()        // the call's timeoutMs: the deadline kills this run's child when it passes
+	defer run.stopDeadline() // and a run that settles keeps no timer
 	st := run.addStep(a.Name, task, thinkingLevelFor(a, model))
 	depth, _ := subagentDepth(os.Getenv)
-	req := childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd,
+	// The record keeps the task as the call wrote it; only the child's prompt carries the original's output-path
+	// instruction (runopts.go), as the original keeps its authoredTask apart from the effective prompt.
+	req := childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model),
+		Stdin: childPrompt(injectSingleOutputInstruction(task, run.outputFile(), a)), Cwd: cwd,
 		Env: childEnv(os.Environ(), depth, a.Name)}
 	dir, id := "", ""
 	if panes == nil {
@@ -463,6 +468,11 @@ func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequ
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
+		if run.didTimeout() { // the deadline fired while the step waited for a slot: it failed, it was not cancelled
+			message := run.timeoutMessage()
+			st.finish(stateFailed, "", message, "", 0)
+			return "", errors.New(message)
+		}
 		st.finish(run.terminatedState(), "", fmt.Sprintf("%s was cancelled", st.agent), "", 0)
 		return "", fmt.Errorf("%s was cancelled", st.agent)
 	}
@@ -470,6 +480,8 @@ func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequ
 	st.begin()
 	fleet.changed()
 	defer fleet.changed()
+	outputPath := run.outputFile()
+	snapshot := captureOutputSnapshot(outputPath) // a file the child writes itself is read back, not overwritten
 	var res childResult
 	var err error
 	if panes != nil {
@@ -482,6 +494,11 @@ func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequ
 		session = sessionFile(run.sessionDir, run.sessionID)
 	}
 	switch {
+	case errors.Is(err, errCancelled) && run.didTimeout():
+		// the run's deadline: the original's terminal timeout, not a cancellation
+		message := run.timeoutMessage()
+		st.finish(stateFailed, res.Stdout, message, session, 0)
+		return res.Stdout, errors.New(message)
 	case errors.Is(err, errCancelled):
 		st.finish(run.terminatedState(), res.Stdout, fmt.Sprintf("%s was cancelled", st.agent), session, 0)
 		return res.Stdout, fmt.Errorf("%s was cancelled", st.agent)
@@ -496,8 +513,9 @@ func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequ
 		st.finish(stateFailed, res.Stdout, (&childExit{agent: st.agent, code: res.Exit, detail: detail}).Error(), session, res.Exit)
 		return res.Stdout, &childExit{agent: st.agent, code: res.Exit, detail: detail}
 	}
-	st.finish(stateComplete, res.Stdout, "", session, res.Exit)
-	return res.Stdout, nil
+	answer := persistOutput(outputPath, res.Stdout, snapshot, res.Exit)
+	st.finish(stateComplete, answer, "", session, res.Exit)
+	return answer, nil
 }
 
 // chainTask is a step's task: its own template, else {task} for the first step and {previous} for the rest.
