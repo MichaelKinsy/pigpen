@@ -73,7 +73,7 @@ func TestSuspendClosesTheSurfaceAndResumeAdoptsIt(t *testing.T) {
 	// Resume carries only that change.
 	h.session.Resume()
 	expectWire(t, "resume", h.messages(),
-		`o {"adopt":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
+		`o {"adopt":true,"chat":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
 		`f {"ops":[["add","dock","pig",null,{"c":[{"id":"dock.dock","k":"ansi","p":{"key":"dock","text":"status"}},{"id":"dock.editor","k":"editor","p":{"key":"editor","sendable":true}}],"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":`+itoa(sent+1)+`,"sf":"pig"}`,
 		`f {"ops":[["text","dock.editor","replace","draft"],["set","dock.editor",{"cursor":5}],["focus","dock.editor"]],"s":`+itoa(sent+2)+`,"sf":"pig"}`,
 	)
@@ -122,7 +122,7 @@ func TestSuspendSendsWhatWaitsBeforeTheClose(t *testing.T) {
 	h.session.mu.Unlock()
 	h.session.Resume()
 	expectWire(t, "resume", h.messages(),
-		`o {"adopt":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
+		`o {"adopt":true,"chat":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
 		`f {"ops":[["add","dock","pig",null,{"c":[{"id":"dock.editor","k":"editor","p":{"key":"editor"}}],"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":`+itoa(sent+2)+`,"sf":"pig"}`,
 		`f {"ops":[["text","dock.editor","replace","z"],["set","dock.editor",{"cursor":1}],["focus","dock.editor"]],"s":`+itoa(sent+3)+`,"sf":"pig"}`,
 	)
@@ -184,7 +184,7 @@ func TestAdoptAnsweredGoneOpensANewSurfaceWithTheWholeDocument(t *testing.T) {
 	h.event(`{"ev":"gone","ids":["pig"]}`)
 	h.eventually("the new surface", func() bool { return strings.Count(h.out.peek(), "\x1b_tsp;f;") == 2 })
 	expectWire(t, "reopen", h.messages(),
-		`o {"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
+		`o {"chat":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
 		`f {"ops":[["add","main","pig",null,{"id":"main","k":"col"}],["add","dock","pig",null,{"c":[{"id":"dock.editor","k":"editor","p":{"key":"editor"}}],"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":1,"sf":"pig"}`,
 		`f {"ops":[["add","n.a","main",null,{"id":"n.a","k":"ansi","p":{"hidden":false,"text":"one"}}],["add","n.b","main",null,{"id":"n.b","k":"md","p":{"role":"pig.assistant","stream":false,"text":"two"}}],["settle","n.a"],["settle","n.b"],["add","pig.session","main","n.a",{"id":"pig.session","k":"text","p":{"hidden":true,"href":"/tmp/s.jsonl","role":"pig.session","text":""}}],["text","dock.editor","replace","draft"],["set","dock.editor",{"cursor":5}],["focus","dock.editor"]],"s":2,"sf":"pig"}`,
 	)
@@ -239,7 +239,7 @@ func TestSuspendBeforeTheSurfaceOpensDefersIt(t *testing.T) {
 	h.session.Resume()
 	h.apply()
 	expectWire(t, "resume", h.messages(),
-		`o {"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
+		`o {"chat":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
 		`f {"ops":[["add","main","pig",null,{"id":"main","k":"col"}],["add","dock","pig",null,{"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":1,"sf":"pig"}`,
 	)
 }

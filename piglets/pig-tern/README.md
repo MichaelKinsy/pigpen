@@ -13,7 +13,7 @@ PIG_SOURCE_ROOT=/path/to/pig-git-checkout \
   pig piglet build dist/staged/piglets/pig-tern/piglet.yaml --format binary --out ./pig-tern
 ```
 
-Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` v0.2.0 and its `golang.org/x` requirements. See the root [release blockers](../../RELEASE-BLOCKERS.md).
+Then run `./pig-tern` in a Tern pane. Building needs a Go toolchain, not Node.js. The member links Stencil's Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern`), a module outside PiG, so the build needs network access to the Go module proxy or a Go module cache that already holds `tern-sdk` `v0.2.1-0.20261123044329-25444b122bfb` and its `golang.org/x` requirements. See the root [release blockers](../../RELEASE-BLOCKERS.md).
 
 ## When it draws natively
 
@@ -57,7 +57,7 @@ The member draws only when all of these hold. Otherwise it declines and PiG uses
 
 Keys still reach PiG directly, so a picker or prefs sheet behaves like PiG's own selector; Tern's pointer events on it become the same actions.
 
-Because the editor takes `send`, Tern agent blocks and Carly can prompt PiG. A prompt that arrives while PiG cannot take input, for example during first-time setup, waits until it can.
+The surface opens as a chat session (`chat: true`), so Tern draws the transcript in the user's Chat style (Reader, Spine or Console) and treats the pane as an agent: its tab wears the agent icon, and the Agents widget, `cx.agents` and Carly reach it. Because the editor takes `send`, they can prompt PiG. A prompt that arrives while PiG cannot take input, for example during first-time setup, waits until it can.
 
 Frames respect Tern's credits. Tern acknowledges no frame while a pane is hidden, so PiG's startup fits in two frames and later frames wait until the pane shows: an agent started in a background tab still receives its prompt.
 
@@ -67,4 +67,4 @@ Tern's built-in styles and its chat styles (Reader, Spine and Console) target om
 
 ## Credits
 
-The composition and the frontend member are MIT, Michael Kinsy. The member is built on **tern-sdk**, Stencil's official Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern` v0.2.0, MIT, © Stencil Labs, Inc., <https://github.com/stencil-hq/tern-sdk>). A Binary that fuses the member redistributes it; see [CREDITS.md](CREDITS.md) and [licenses/tern-sdk-LICENSE](licenses/tern-sdk-LICENSE).
+The composition and the frontend member are MIT, Michael Kinsy. The member is built on **tern-sdk**, Stencil's official Go SDK for Tern (`github.com/stencil-hq/tern-sdk/go/tern` at commit `25444b122bfb` of 2026-11-23, the newest of its `main`, 16 commits after its last tag v0.2.0; MIT, © Stencil Labs, Inc., <https://github.com/stencil-hq/tern-sdk>). A Binary that fuses the member redistributes it; see [CREDITS.md](CREDITS.md) and [licenses/tern-sdk-LICENSE](licenses/tern-sdk-LICENSE).

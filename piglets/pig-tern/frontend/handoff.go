@@ -83,7 +83,7 @@ func (s *session) Resume() {
 	default:
 		s.lent = false
 		var sf *tern.Surface
-		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Adopt: true})
+		sf, err = s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true, Adopt: true})
 		if err != nil {
 			err = errRefused
 			break

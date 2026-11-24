@@ -340,7 +340,7 @@ var (
 
 // openLocked opens the surface and sends what is pending.
 func (s *session) openLocked() error {
-	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session"})
+	sf, err := s.tsp.Open(tern.SurfaceOptions{ID: surfaceID, Mode: tern.Inline, Title: "pig", Role: "pig.session", Chat: true})
 	if err != nil {
 		return errRefused
 	}

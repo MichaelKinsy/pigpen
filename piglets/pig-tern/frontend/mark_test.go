@@ -106,7 +106,7 @@ func TestMarkSheetStaysOnAdoptAndGoesToANewSurface(t *testing.T) {
 	h.event(`{"ev":"gone","ids":["pig"]}`)
 	h.eventually("the new surface", func() bool { return strings.Count(h.out.peek(), "\x1b_tsp;f;") == 1 })
 	expectWire(t, "reopen", h.messages(),
-		`o {"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
+		`o {"chat":true,"id":"pig","mode":"inline","role":"pig.session","title":"pig"}`,
 		markSheetWire(pinkSheet),
 		`f {"ops":[["add","main","pig",null,{"id":"main","k":"col"}],["add","dock","pig",null,{"id":"dock","k":"col"}],["add","layer","pig",null,{"id":"layer","k":"col"}]],"s":1,"sf":"pig"}`,
 	)
