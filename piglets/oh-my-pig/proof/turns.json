@@ -1,0 +1,75 @@
+[
+  {
+    "comment": "Turn 1: plain Markdown reply",
+    "text": "## Markdown Parity\n\nHere is a **bold** word, `inline code`, and a list:\n\n- first item\n- second item\n\n```go\npackage main\n\nfunc answer() int { return 42 }\n```\n"
+  },
+  {
+    "comment": "Turn 2: delayed response so working indicator is visible, then thinking + text",
+    "delay_ms": 2200,
+    "thinking": "Let me reason carefully about the sum of 20 and 22 before answering. 20 + 22 equals 42.",
+    "text": "The answer is **42**."
+  },
+  {
+    "comment": "Turn 3a: tool call to read notes.txt",
+    "tool_calls": [
+      {
+        "name": "read",
+        "arguments": {
+          "path": "notes.txt"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 3b: reply after read",
+    "text": "Read `notes.txt` successfully."
+  },
+  {
+    "comment": "Turn 4a: tool call to bash",
+    "tool_calls": [
+      {
+        "name": "bash",
+        "arguments": {
+          "command": "printf 'alpha\\nbeta\\n'"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 4b: reply after bash",
+    "text": "Command output captured."
+  },
+  {
+    "comment": "Turn 5a: tool call to edit notes.txt",
+    "tool_calls": [
+      {
+        "name": "edit",
+        "arguments": {
+          "path": "notes.txt",
+          "old_text": "status: draft",
+          "new_text": "status: verified",
+          "line": 2
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 5b: reply after edit",
+    "text": "Updated `notes.txt` to verified."
+  },
+  {
+    "comment": "Turn 6a: failing tool call (read missing file)",
+    "tool_calls": [
+      {
+        "name": "read",
+        "arguments": {
+          "path": "does-not-exist-proof.txt"
+        }
+      }
+    ]
+  },
+  {
+    "comment": "Turn 6b: reply after failing tool call",
+    "text": "That file does not exist."
+  }
+]

@@ -1,0 +1,32 @@
+# oh-my-pig: an homage to omp, on PiG. It derives from pig-tern (the frontend slot is inherited through extends and
+# then replaced by this Piglet's own member, which is pig-tern's member with omp's look fixed on), keeps none of PiG's
+# built-in tools, and takes omp's tools, prompt and commands from the oh-my-pig extension. PARITY.md lists what is
+# ported. Not affiliated with omp's authors.
+name: oh-my-pig
+description: "An homage to omp (oh-my-pi) on PiG: omp's tools, prompt and commands as a Go extension, drawn natively in Tern with omp's look. Unofficial; parity with omp is a goal, not a promise."
+extends:
+  source: local:../pig-tern/piglet.yaml
+  version: "^0.1.0"
+release:
+  version: 0.1.0
+build:
+  extensionRealization: fused
+  targets: [linux/amd64, linux/arm64, darwin/arm64, darwin/amd64, windows/amd64]
+packages:
+  oh-my-pig: local:../../components/oh-my-pig
+# omp's system prompt. The extension fills the slots each run and names only the tools that are registered.
+systemPrompt:
+  file: ./prompts/system.md
+extensions:
+  - name: oh-my-pig
+    origins: [package:oh-my-pig]
+skills: []
+# None of PiG's built-in tools: the model sees omp's read, write, edit, bash, grep, glob and find from the extension.
+tools: []
+slots:
+  frontend:
+    member: ./frontend
+# A user's own extensions and skills stay available, as in pig-tern.
+discovery:
+  extensions: [user, workspace]
+  skills: [user, workspace]

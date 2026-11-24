@@ -6,7 +6,7 @@ The dispatch list for every Pigpen port: one row per port or move, the upstream 
 where it ships and who is doing it. Generated from [`ports.json`](ports.json) (schema:
 [`ports.schema.json`](ports.schema.json)); `npm run quality` validates it. Edit `ports.json`, then run `npm run generate`.
 
-Status: queued: 2 · porting: 2 · review: 13 · done: 19
+Status: queued: 2 · porting: 3 · review: 13 · done: 19
 
 | ID | Upstream | Pinned commit | License | Upstream author | Target Package | Lane | Status | Credit |
 |---|---|---|---|---|---|---|---|---|
@@ -46,6 +46,7 @@ Status: queued: 2 · porting: 2 · review: 13 · done: 19
 | `pi-opencode-free` | [pi-opencode-free](https://github.com/pedrostarkealexis/pi-opencode-free) | [`0f4c16bade33`](https://github.com/pedrostarkealexis/pi-opencode-free/commit/0f4c16bade33106847ae4abd8d2be2d1b0058e36) | GPL-3.0-or-later | Pedro Alexis | `components/pi-opencode-free` | `pi-opencode-free` | porting | Go port of pi-opencode-free 0.2.0, https://github.com/pedrostarkealexis/pi-opencode-free, by Pedro Alexis (GPL-3.0-or-later), at commit 0f4c16bade33106847ae4abd8d2be2d1b0058e36. |
 | `autolith-bridge` | [Autolith](https://github.com/lambda-symbolics/autolith) | [`505e814610cd`](https://github.com/lambda-symbolics/autolith/commit/505e814610cd4ad10ea8d30654fe89b4f1113341) | ISC | Lambda Symbolics OÜ | `piglets/pig-autolith` | `pigpen-autolith` | review | Original adapter that calls Autolith, https://github.com/lambda-symbolics/autolith, by Lambda Symbolics OÜ (ISC), pinned at commit 505e814610cd4ad10ea8d30654fe89b4f1113341. Autolith by Lambda Symbolics, autolith.rocks; no endorsement implied. |
 | `rea` | [REA (rea-agents)](https://github.com/morluto/rea)<br>[Node.js](https://github.com/nodejs/node)<br>[klauspost/compress](https://github.com/klauspost/compress) | [`160d821ac9a0`](https://github.com/morluto/rea/commit/160d821ac9a0310afcb8d1fc427862dd6508add5)<br>[`f7f273a9bb64`](https://github.com/nodejs/node/commit/f7f273a9bb6445f6f7fb6349105e7532972045fb)<br>[`b946d41b75ce`](https://github.com/klauspost/compress/commit/b946d41b75cee10ea255ced85179e5224748a023) | MIT<br>MIT<br>BSD-3-Clause AND Apache-2.0 | morluto<br>Node.js contributors<br>Klaus Post and contributors | `components/rea`<br>`piglets/pig-rea`<br>`piglets/pig-rea-sealed` | `pigpen-rea` | review | Original adapter that embeds and runs REA (rea-agents) 6.8.0, https://github.com/morluto/rea, by morluto (MIT), unmodified, at commit 160d821ac9a0310afcb8d1fc427862dd6508add5, on Node.js 24.22.2, https://github.com/nodejs/node, by Node.js contributors (MIT), commit f7f273a9bb6445f6f7fb6349105e7532972045fb, and links klauspost/compress v1.20.3, https://github.com/klauspost/compress, by Klaus Post and contributors (BSD-3-Clause AND Apache-2.0), commit b946d41b75cee10ea255ced85179e5224748a023. REA by morluto; no endorsement implied. |
+| `oh-my-pig` | [oh-my-pi](https://github.com/can1357/oh-my-pi) | [`4df653426f40`](https://github.com/can1357/oh-my-pi/commit/4df653426f40ee1eb78ef408528eb9e6a5275b9d) | MIT | Can Bölük, Stencil Labs, Inc. | `components/oh-my-pig` | `pigpen-oh-my-pig` | porting | Go port of parts of omp (oh-my-pi), https://github.com/can1357/oh-my-pi, by Can Bölük, Stencil Labs, Inc. (MIT), at commit 4df653426f40ee1eb78ef408528eb9e6a5275b9d. |
 
 ## How to read it
 
@@ -259,3 +260,9 @@ Status: queued: 2 · porting: 2 · review: 13 · done: 19
 
 - Kind: adapter. Original members that unpack the published rea-agents package and a pinned Node from the Piglet Binary, register REA's MCP server as rea setup --client pi does, and present REA in a dashboard. REA itself runs unmodified.
 - Notes: No REA code is changed: the payload is the published npm tarball with production dependencies from REA's tagged lockfile. Gates: catalog equal to npx's REA, rea setup registration, skill drift (npm run test:rea) and the Binary harness (npm run test:rea-harness). Awaiting review.
+
+### `oh-my-pig`: oh-my-pig: omp's tools, prompt and commands
+
+- Kind: port. omp's model-facing surface (tool names, schemas, descriptions, prompt, commands) as one Go extension, for the oh-my-pig Piglet.
+- Upstream path: `packages/coding-agent` in oh-my-pi
+- Notes: An homage, not a Pi extension: omp is a fork of Pi and these are its built-in tools, so there is no Pi oracle. Each area is proved by tests ported from omp's own and by a side-by-side run against omp. piglets/oh-my-pig/PARITY.md is the inventory.

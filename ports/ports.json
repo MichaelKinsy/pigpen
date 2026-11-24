@@ -731,11 +731,33 @@
         }
       ],
       "targetPackage": "components/rea",
-      "otherTargets": ["piglets/pig-rea", "piglets/pig-rea-sealed"],
+      "otherTargets": [
+        "piglets/pig-rea",
+        "piglets/pig-rea-sealed"
+      ],
       "lane": "pigpen-rea",
       "status": "review",
       "credit": "Original adapter that embeds and runs REA (rea-agents) 6.8.0, https://github.com/morluto/rea, by morluto (MIT), unmodified, at commit 160d821ac9a0310afcb8d1fc427862dd6508add5, on Node.js 24.22.2, https://github.com/nodejs/node, by Node.js contributors (MIT), commit f7f273a9bb6445f6f7fb6349105e7532972045fb, and links klauspost/compress v1.20.3, https://github.com/klauspost/compress, by Klaus Post and contributors (BSD-3-Clause AND Apache-2.0), commit b946d41b75cee10ea255ced85179e5224748a023. REA by morluto; no endorsement implied.",
       "notes": "No REA code is changed: the payload is the published npm tarball with production dependencies from REA's tagged lockfile. Gates: catalog equal to npx's REA, rea setup registration, skill drift (npm run test:rea) and the Binary harness (npm run test:rea-harness). Awaiting review."
+    },
+    {
+      "id": "oh-my-pig",
+      "name": "oh-my-pig: omp's tools, prompt and commands",
+      "kind": "port",
+      "summary": "omp's model-facing surface (tool names, schemas, descriptions, prompt, commands) as one Go extension, for the oh-my-pig Piglet.",
+      "upstream": {
+        "name": "oh-my-pi",
+        "url": "https://github.com/can1357/oh-my-pi",
+        "commit": "4df653426f40ee1eb78ef408528eb9e6a5275b9d",
+        "license": "MIT",
+        "author": "Can Bölük, Stencil Labs, Inc.",
+        "path": "packages/coding-agent"
+      },
+      "targetPackage": "components/oh-my-pig",
+      "lane": "pigpen-oh-my-pig",
+      "status": "porting",
+      "credit": "Go port of parts of omp (oh-my-pi), https://github.com/can1357/oh-my-pi, by Can Bölük, Stencil Labs, Inc. (MIT), at commit 4df653426f40ee1eb78ef408528eb9e6a5275b9d.",
+      "notes": "An homage, not a Pi extension: omp is a fork of Pi and these are its built-in tools, so there is no Pi oracle. Each area is proved by tests ported from omp's own and by a side-by-side run against omp. piglets/oh-my-pig/PARITY.md is the inventory."
     }
   ]
 }

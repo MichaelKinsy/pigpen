@@ -1,0 +1,39 @@
+{
+  "name": "@pi-in-go/pigpen-oh-my-pig",
+  "version": "0.1.0",
+  "description": "Go port of parts of omp (oh-my-pi): its model-facing tools, prompt and commands as one PiG extension, for the oh-my-pig Piglet",
+  "keywords": [
+    "pig-package",
+    "omp",
+    "oh-my-pi",
+    "extension",
+    "pigpen"
+  ],
+  "license": "MIT",
+  "author": "Michael Kinsy",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichaelKinsy/pigpen.git",
+    "directory": "components/oh-my-pig"
+  },
+  "homepage": "https://github.com/MichaelKinsy/pigpen/tree/main/components/oh-my-pig#readme",
+  "bugs": {
+    "url": "https://github.com/MichaelKinsy/pigpen/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "extensions",
+    "licenses",
+    "README.md",
+    "LICENSE",
+    "CREDITS.md",
+    "provenance.json"
+  ],
+  "pi": {
+    "extensions": [
+      "extensions/oh-my-pig"
+    ]
+  }
+}

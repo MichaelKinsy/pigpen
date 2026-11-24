@@ -1,0 +1,24 @@
+{
+  "origin": "ported",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [
+    {
+      "name": "oh-my-pi",
+      "authors": [
+        "Can Bölük",
+        "Stencil Labs, Inc.",
+        "Mario Zechner"
+      ],
+      "url": "https://github.com/can1357/oh-my-pi",
+      "revision": "4df653426f40ee1eb78ef408528eb9e6a5275b9d",
+      "path": "extensions/oh-my-pig",
+      "license": "MIT",
+      "licenseFile": "licenses/oh-my-pi-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}
