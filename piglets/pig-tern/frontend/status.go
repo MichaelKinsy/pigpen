@@ -49,6 +49,9 @@ func (s *session) queueWorking(e *entry, working fe.Working, fresh bool) {
 	switch {
 	case fresh:
 		e.raw.text, e.raw.hot = h.text, h
+	case s.ompRoles:
+		// omp's row keeps the message and tone on its label child.
+		s.setProps(e.tid+".label", "text", &e.raw.hot, h)
 	case spinnerless(working):
 		s.patchText(e.tid, e.raw.text, h.text)
 		e.raw.text = h.text
@@ -110,16 +113,24 @@ func footerHot(footer fe.Footer) (slots [footerSlots]hot, statuses []hot) {
 // meter's value, the effort level and whether a segment hides are raw
 // props (see queueFooter), so only a change in the number of extension
 // statuses renders.
-func footerElement(id string, footer fe.Footer) tern.Element {
+//
+// A click on the model runs PiG's /model and one on the effort glyph runs
+// /thinking, through run (see runCommand), so their pickers open as when
+// typed.
+func footerElement(id string, footer fe.Footer, ompRoles bool, run func(command string)) tern.Element {
 	slots, statuses := footerHot(footer)
 	wide := &ui.Bounds{W: ui.Ch(12)}
 	common := func(key string, h hot) ui.Common {
-		return ui.Common{Key: key, Tone: h.tone, Hidden: h.hidden}
+		c := ui.Common{Key: key, Tone: h.tone, Hidden: h.hidden}
+		if ompRoles {
+			c.Role = footerRoles[key]
+		}
+		return c
 	}
 	cwd := ui.Seg{Common: common("cwd", slots[segCwd]), Icon: ui.IconFolder, Spans: cwdSpans(slots[segCwd].text), Priority: 7}
 	cwd.Min = wide
 	cwd.Href = cwdHref(slots[segCwd].text)
-	cwd.Actions = &ui.Actions{Click: "open", Menu: []string{"open", "copy"}}
+	cwd.Actions = &ui.Actions{Click: "open", Menu: []ui.MenuEntry{ui.MenuAct("open"), ui.MenuAct("copy")}}
 	segs := make([]tern.Element, 0, 7+len(statuses))
 	segs = append(segs,
 		cwd,
@@ -135,16 +146,25 @@ func footerElement(id string, footer fe.Footer) tern.Element {
 	}
 	xp := ui.Seg{Common: common("xp", slots[segXP]), Side: ui.SideRight, Text: "xp", Priority: 1}
 	xp.Tone = ui.ToneWarning
+	effort := ui.Effort{Common: common("effort", slots[segEffort]), Level: ui.EffortLevel(slots[segEffort].text)}
+	effort.Title = "Thinking level (/thinking)"
+	effort.OnClick = func(*tern.Action) { run("/thinking") }
 	model := ui.Seg{Common: common("model", slots[segModel]), Side: ui.SideRight, Icon: ui.IconName("model"), Text: slots[segModel].text, Priority: 9,
-		Children: []tern.Element{ui.Effort{Common: common("effort", slots[segEffort]), Level: ui.EffortLevel(slots[segEffort].text)}}}
+		Children: []tern.Element{effort}}
 	model.Min = wide
+	model.Title = "Select model (/model)"
+	model.OnClick = func(*tern.Action) { run("/model") }
 	segs = append(segs,
 		ui.Seg{Common: common("usage", slots[segUsage]), Side: ui.SideRight, Text: slots[segUsage].text, Priority: 6},
 		ui.Seg{Common: common("context", slots[segContext]), Side: ui.SideRight, Text: slots[segContext].text, Priority: 8, Children: []tern.Element{meter}},
 		xp,
 		model,
 	)
-	return ui.Status{Common: ui.Common{Key: id, Role: "pig.footer"}, Children: segs}
+	role := "pig.footer"
+	if ompRoles {
+		role = "omp.status"
+	}
+	return ui.Status{Common: ui.Common{Key: id, Role: role}, Children: segs}
 }
 
 // queueFooter queues the raw props of the footer's segments that changed
@@ -203,6 +223,7 @@ func (s *session) queueFooter(e *entry, prev, next fe.Footer, fresh bool) {
 		s.dropPending(f.statusIDs[i])
 	}
 	f.statuses = f.statuses[:n]
+	s.reportCwd(next.Cwd)
 }
 
 func (s *session) setSlot(f *footerProps, slot int, textKey string, next hot) {

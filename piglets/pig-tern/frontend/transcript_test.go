@@ -1,6 +1,7 @@
 package frontend
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -30,6 +31,9 @@ func TestCancelledToolKeepsItsStatus(t *testing.T) {
 	node := (&session{}).mainNode("n.t", fe.ToolCard{Name: "bash", Status: fe.ToolCancelled, Output: "Operation aborted"})
 	if status := node.P["status"]; status != "cancelled" {
 		t.Fatalf("status = %v", status)
+	}
+	if !reflect.DeepEqual(node.P["badges"], []any{map[string]any{"text": "cancelled", "tone": "warning"}}) {
+		t.Fatalf("badges = %#v", node.P["badges"])
 	}
 }
 
@@ -171,7 +175,7 @@ func TestToolCardPatchesAndDiffReplaces(t *testing.T) {
 	more.Output = "ab"
 	more.Status = fe.ToolDone
 	ops := h.applyOps(fe.Op{Kind: fe.Update, Region: fe.RegionMain, ID: "t", Node: more})
-	if !reflect.DeepEqual(ops, jsonOps(t, []any{"set", "n.t", map[string]any{"status": "done"}}, []any{"text", "n.t.out", "append", "b"}, []any{"settle", "n.t"})) {
+	if !reflect.DeepEqual(ops, jsonOps(t, []any{"set", "n.t", map[string]any{"status": "done", "badges": []any{map[string]any{"text": "done", "tone": "success"}}}}, []any{"text", "n.t.out", "append", "b"}, []any{"settle", "n.t"})) {
 		t.Fatalf("tool update = %#v", ops)
 	}
 	done := more
@@ -225,7 +229,7 @@ func TestFinalNodesSettle(t *testing.T) {
 	want := jsonOps(t,
 		[]any{"set", "n.b.0", map[string]any{"stream": false}},
 		[]any{"settle", "n.b.0"},
-		[]any{"set", "n.b.1", map[string]any{"status": "done"}},
+		[]any{"set", "n.b.1", map[string]any{"status": "done", "badges": []any{map[string]any{"text": "done", "tone": "success"}}}},
 		[]any{"settle", "n.b.1"},
 		[]any{"add", "n.m", "main", nil, map[string]any{"id": "n.m", "k": "card", "p": map[string]any{"role": "pig.user", "tone": "user"}, "c": []any{map[string]any{"id": "n.m.md", "k": "md", "p": map[string]any{"text": "Next"}}}}},
 		[]any{"settle", "n.m"},
@@ -358,5 +362,159 @@ func TestLinesDropPaddingThatDrawsNothing(t *testing.T) {
 	}
 	if got := linesText(nil); got != "" {
 		t.Fatalf("no lines = %q", got)
+	}
+}
+
+func TestToolStatusBadgeTones(t *testing.T) {
+	for status, tone := range map[fe.ToolStatus]string{
+		fe.ToolPending:   "pending",
+		fe.ToolRunning:   "info",
+		fe.ToolDone:      "success",
+		fe.ToolError:     "error",
+		fe.ToolCancelled: "warning",
+	} {
+		node := (&session{hasJSON: true}).mainNode("n.t", fe.ToolCard{Name: "bash", Status: status})
+		want := []any{map[string]any{"text": string(status), "tone": tone}}
+		if !reflect.DeepEqual(node.P["badges"], want) {
+			t.Fatalf("%s badges = %#v, want %#v", status, node.P["badges"], want)
+		}
+	}
+}
+
+func TestToolOutputJSONAndTree(t *testing.T) {
+	s := &session{hasJSON: true}
+	jsonCard := fe.ToolCard{Name: "bash", Status: fe.ToolDone, Output: `{"name":"pig-tern","version":2}`}
+	node := s.mainNode("n.j", jsonCard)
+	if len(node.C) != 1 || node.C[0].K != "json" || node.C[0].P["open"] != nil && node.C[0].P["open"].(json.Number) != "1" {
+		t.Fatalf("json tool body = %#v", node.C)
+	}
+	// A collapsed structure previews its top rows; plain output keeps the tail.
+	if !reflect.DeepEqual(node.P["preview"], map[string]any{"lines": 10}) {
+		t.Fatalf("json tool preview = %#v, want the first 10 lines", node.P["preview"])
+	}
+	// When the hello reply lacks the json kind, fall back to a tree node.
+	sNoJSON := &session{hasJSON: false}
+	fallback := sNoJSON.mainNode("n.j", jsonCard)
+	if len(fallback.C) != 1 || fallback.C[0].K != "tree" {
+		t.Fatalf("json fallback body = %#v", fallback.C)
+	}
+
+	lsCard := fe.ToolCard{Name: "ls", Status: fe.ToolDone, Output: "frontend/\nREADME.md\npiglet.yaml\n\n[500 entries limit reached]"}
+	lsNode := s.mainNode("n.ls", lsCard)
+	if len(lsNode.C) != 2 || lsNode.C[0].K != "tree" || lsNode.C[1].K != "text" {
+		t.Fatalf("ls tool body = %#v", lsNode.C)
+	}
+	nodes := lsNode.C[0].P["nodes"].([]any)
+	if len(nodes) != 3 || nodes[0].(map[string]any)["id"] != "frontend" || nodes[0].(map[string]any)["icon"] != "folder" {
+		t.Fatalf("ls tree nodes = %#v", nodes)
+	}
+	if !reflect.DeepEqual(lsNode.P["preview"], map[string]any{"lines": 10}) {
+		t.Fatalf("ls tool preview = %#v, want the first 10 lines", lsNode.P["preview"])
+	}
+	// A failed ls carries a message, not a listing: it stays plain text.
+	lsError := s.mainNode("n.lse", fe.ToolCard{Name: "ls", Status: fe.ToolError, Output: "Tool ls not found"})
+	if len(lsError.C) != 1 || lsError.C[0].K != "ansi" {
+		t.Fatalf("ls error body = %#v", lsError.C)
+	}
+	if !reflect.DeepEqual(lsError.P["preview"], map[string]any{"tail": 5}) {
+		t.Fatalf("ls error preview = %#v, want tail 5", lsError.P["preview"])
+	}
+
+	asciiTree := ".\n├── src\n│   └── main.go\n└── README.md\n\n1 directory, 2 files"
+	treeCard := fe.ToolCard{Name: "bash", Status: fe.ToolDone, Output: asciiTree}
+	treeNode := s.mainNode("n.tree", treeCard)
+	if len(treeNode.C) != 1 || treeNode.C[0].K != "tree" {
+		t.Fatalf("ascii tree body = %#v", treeNode.C)
+	}
+}
+
+func TestSessionInfoDrawsStatsAndTableWithMeterAndSparkCells(t *testing.T) {
+	lines := []string{
+		" \x1b[1mSession Info\x1b[22m",
+		"",
+		" \x1b[2mFile:\x1b[22m In-memory",
+		" \x1b[2mID:\x1b[22m s-1",
+		"",
+		" \x1b[1mMessages\x1b[22m",
+		" \x1b[2mTotal:\x1b[22m 4",
+		" \x1b[2mUser:\x1b[22m 1",
+		" \x1b[2mAssistant:\x1b[22m 2",
+		" \x1b[2mTools:\x1b[22m 1 calls, 1 results",
+		"",
+		" \x1b[1mTokens\x1b[22m",
+		" \x1b[2mInput:\x1b[22m 1,000",
+		"   \x1b[2mCached:\x1b[22m 600 \x1b[2m(60.0%)\x1b[22m",
+		"   \x1b[2mUncached:\x1b[22m 400",
+		" \x1b[2mOutput:\x1b[22m 250",
+		" \x1b[2mTotal:\x1b[22m 1,250",
+		"",
+		" \x1b[1mCache Warming\x1b[22m",
+		" \x1b[2mMode:\x1b[22m streaming",
+		" \x1b[2mStatus:\x1b[22m Inactive (cache warming unavailable)",
+		"",
+		" \x1b[1mCost\x1b[22m",
+		" \x1b[2mTotal:\x1b[22m $0.015",
+	}
+	node := (&session{}).mainNode("n.s", fe.Lines{Lines: lines})
+	if node.K != "col" || node.P["role"] != "pig.session-info" || len(node.C) != 3 {
+		t.Fatalf("session info node = %#v", node)
+	}
+	if node.C[1].K != "stats" || node.C[2].K != "table" {
+		t.Fatalf("session info children = %#v", node.C)
+	}
+	rows := node.C[2].P["rows"].([]any)
+	hasMeter, hasSpark := false, false
+	for _, r := range rows {
+		cells := r.(map[string]any)["cells"].(map[string]any)
+		if share, ok := cells["share"].(map[string]any); ok && share["meter"] != nil {
+			hasMeter = true
+		}
+		if split, ok := cells["split"].(map[string]any); ok && split["spark"] != nil {
+			hasSpark = true
+		}
+	}
+	if !hasMeter || !hasSpark {
+		t.Fatalf("table rows missing meter (%v) or spark (%v): %#v", hasMeter, hasSpark, rows)
+	}
+}
+
+// sparkRows lists the ids of the session table's rows that draw a spark.
+func sparkRows(t *testing.T, lines []string) []string {
+	t.Helper()
+	node := (&session{}).mainNode("n.s", fe.Lines{Lines: lines})
+	if len(node.C) != 3 || node.C[2].K != "table" {
+		t.Fatalf("session info node = %#v", node)
+	}
+	var ids []string
+	for _, r := range node.C[2].P["rows"].([]any) {
+		row := r.(map[string]any)
+		if split, ok := row["cells"].(map[string]any)["split"].(map[string]any); ok && split["spark"] != nil {
+			ids = append(ids, row["id"].(string))
+		}
+	}
+	return ids
+}
+
+func TestSessionInfoDrawsNoTokenSparkBeforeAnyTokens(t *testing.T) {
+	lines := func(input, output, total string) []string {
+		return []string{
+			" \x1b[1mSession Info\x1b[22m",
+			"",
+			" \x1b[1mMessages\x1b[22m",
+			" \x1b[2mTotal:\x1b[22m 2",
+			" \x1b[2mUser:\x1b[22m 1",
+			" \x1b[2mAssistant:\x1b[22m 1",
+			"",
+			" \x1b[1mTokens\x1b[22m",
+			" \x1b[2mInput:\x1b[22m " + input,
+			" \x1b[2mOutput:\x1b[22m " + output,
+			" \x1b[2mTotal:\x1b[22m " + total,
+		}
+	}
+	if got := sparkRows(t, lines("0", "0", "0")); !reflect.DeepEqual(got, []string{"Messages.0"}) {
+		t.Fatalf("zero tokens: spark rows = %v, want only Messages.0", got)
+	}
+	if got := sparkRows(t, lines("10", "5", "15")); !reflect.DeepEqual(got, []string{"Messages.0", "Tokens.2"}) {
+		t.Fatalf("with tokens: spark rows = %v, want Messages.0 and Tokens.2", got)
 	}
 }

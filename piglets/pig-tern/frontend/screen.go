@@ -179,7 +179,7 @@ func (s *session) screenDock(click func()) tern.Nodes {
 		el := s.element(e, false)
 		if editor, ok := e.node.(fe.Editor); ok {
 			cursor := editor.Cursor
-			el = ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Text: editor.Text, Cursor: &cursor, Placeholder: editor.Placeholder}}
+			el = ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Text: editor.Text, Cursor: &cursor, Placeholder: ui.T(editor.Placeholder)}}
 		}
 		node := buildNode(el)
 		if click != nil {
@@ -199,10 +199,6 @@ func (s *session) suspendScreen() {
 		s.screen.dirty = true
 	}
 }
-
-// clickID is the TSP id of the cells of a transcript node that take a
-// click.
-func clickID(id string) string { return id + ".hit" }
 
 // transcriptClick turns Tern's click on a transcript node's click cells into
 // PiG's click on the first cell of its Click area: Tern does not say which

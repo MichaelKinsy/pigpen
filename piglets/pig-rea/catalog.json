@@ -1,0 +1,14 @@
+{
+  "featured": false,
+  "updatedAt": "2026-11-10",
+  "languages": [
+    "go"
+  ],
+  "notes": [
+    "The REA harness: REA (Reverse Engineer Anything, rea-agents 6.8.0 by morluto, MIT) as one executable. The Binary embeds the published package, its production dependencies from REA's tagged lockfile and Node 24.22.2 (a 42 MB zstd payload for darwin/arm64), unpacks it once per REA version into the agent directory, and registers REA's MCP server as rea setup --client pi does. No Node, npm or network is needed at runtime.",
+    "Ambient extensions and skills are off by default. The Binary is open: an overlay Piglet (pig-rea --piglet overlay.yaml, extends.allowWiden: true) brings them back at launch. pig-rea-sealed is the closed variant.",
+    "Build the payload before the Binary: node components/rea/scripts/payload.mjs for the build machine's target, then npm run build:piglet -- pig-rea. npm run test:rea checks the payload against npx's REA (catalog), rea setup's registration and REA's skill.",
+    "REA's providers (Hopper, Ghidra, IDA, JADX and others) are not bundled; REA finds them as it does when installed with npx. Frida is absent, as for npx users.",
+    "The manifest lists five build targets, but only darwin/arm64 has been built and run; the others are listed in the manifest and not yet built, so no other platform is a support claim."
+  ]
+}

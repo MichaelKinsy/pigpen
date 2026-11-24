@@ -1,0 +1,44 @@
+{
+  "origin": "original",
+  "authors": [
+    "Michael Kinsy"
+  ],
+  "license": "MIT",
+  "licenseFile": "LICENSE",
+  "upstreams": [],
+  "dependencies": [
+    {
+      "name": "rea-agents",
+      "authors": [
+        "morluto"
+      ],
+      "url": "https://github.com/morluto/rea",
+      "revision": "160d821ac9a0310afcb8d1fc427862dd6508add5",
+      "license": "MIT",
+      "licenseFile": "licenses/rea-agents-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "Node.js",
+      "authors": [
+        "Node.js contributors"
+      ],
+      "url": "https://github.com/nodejs/node",
+      "revision": "f7f273a9bb6445f6f7fb6349105e7532972045fb",
+      "license": "MIT",
+      "licenseFile": "licenses/node-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "klauspost/compress",
+      "authors": [
+        "Klaus Post and contributors"
+      ],
+      "url": "https://github.com/klauspost/compress",
+      "revision": "b946d41b75cee10ea255ced85179e5224748a023",
+      "license": "BSD-3-Clause AND Apache-2.0",
+      "licenseFile": "licenses/klauspost-compress-LICENSE",
+      "attributionFile": "CREDITS.md"
+    }
+  ]
+}

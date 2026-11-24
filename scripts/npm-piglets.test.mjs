@@ -47,7 +47,8 @@ describe('npmPigletSource', () => {
     assert.match(notes.join(' '), /fixture/);
   });
   it('keeps what makes the Piglet what it is', () => {
-    for (const { manifest } of readManifests().filter(({ manifest: m }) => m.name !== 'pig-porter')) {
+    // A Piglet that extends another is flattened (pig-porter above): its source carries what it inherits.
+    for (const { manifest } of readManifests().filter(({ manifest: m }) => !m.extends)) {
       const { data } = npmPigletSource(manifest.name);
       assert.equal(data.name, manifest.name);
       assert.deepEqual(data.release, manifest.release);
