@@ -70,7 +70,7 @@ func TestHelloOpensTheSurfaceAndTheFirstFrameAddsTheRegions(t *testing.T) {
 		t.Fatalf("hello without the DA1 request: %q", out)
 	}
 	h.reply(`,"credits":2`)
-	if got := h.messages(); len(got) != 1 || got[0].verb != "o" || got[0].body["id"] != surfaceID || got[0].body["mode"] != "inline" || got[0].body["role"] != "pig.session" {
+	if got := h.messages(); len(got) != 1 || got[0].verb != "o" || got[0].body["id"] != surfaceID || got[0].body["mode"] != "inline" || got[0].body["role"] != "pig.session" || got[0].body["chat"] != true {
 		t.Fatalf("open = %#v", got)
 	}
 	h.session.InputReady()

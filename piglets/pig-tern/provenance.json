@@ -9,7 +9,7 @@
       "name": "tern-sdk",
       "authors": ["Stencil Labs, Inc."],
       "url": "https://github.com/stencil-hq/tern-sdk",
-      "revision": "46bd7df153d3135d84a0b5658dfb4705d0bddb81",
+      "revision": "25444b122bfb8b9fe01829e3fde16d5f74791474",
       "license": "MIT",
       "licenseFile": "licenses/tern-sdk-LICENSE",
       "attributionFile": "CREDITS.md"

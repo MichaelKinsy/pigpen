@@ -2,6 +2,7 @@ package frontend
 
 import (
 	"bytes"
+	"encoding/base64"
 	"image"
 	"image/color"
 	"image/png"
@@ -156,7 +157,8 @@ func (h *harness) blobsAndVerbs() (map[string]string, []string) {
 	for _, m := range h.messages() {
 		verbs = append(verbs, m.verb)
 		if m.verb == "b" {
-			blobs[m.params["id"]] = m.params["mime"]
+			raw, _ := base64.StdEncoding.DecodeString(m.body["data"].(string))
+			blobs[tern.BlobID(raw)] = m.params["mime"]
 		}
 	}
 	return blobs, verbs
@@ -183,7 +185,8 @@ func TestTranscriptViewDrawsEveryKind(t *testing.T) {
 		verbs = append(verbs, m.verb)
 		switch m.verb {
 		case "b":
-			blobs[m.params["id"]] = m.params["mime"]
+			raw, _ := base64.StdEncoding.DecodeString(m.body["data"].(string))
+			blobs[tern.BlobID(raw)] = m.params["mime"]
 		case "f":
 			ops = append(ops, m.body["ops"].([]any)...)
 		}
@@ -192,8 +195,8 @@ func TestTranscriptViewDrawsEveryKind(t *testing.T) {
 	if !reflect.DeepEqual(blobs, map[string]string{ref: "image/png"}) {
 		t.Fatalf("blobs = %#v", blobs)
 	}
-	if strings.Join(verbs, "") != "tbsf" {
-		t.Fatalf("messages = %q, want the palette, the blob and the view sheet before the frame", verbs)
+	if strings.Join(verbs, "") != "bsf" {
+		t.Fatalf("messages = %q, want the blob and the view sheet before the frame", verbs)
 	}
 	want := jsonOps(t, []any{"add", "n.ext", "main", nil, kitWant("n.ext", ref)})
 	if !reflect.DeepEqual(ops, want) {
@@ -654,7 +657,9 @@ func TestFramedOverlayViewClicksNameTheBodysPath(t *testing.T) {
 // component the second click with clickCount 2 (TuiSurface.Click).
 func TestRecordedListSelectsAndActivatesArePigClicks(t *testing.T) {
 	h := dockWithLines(t)
-	text := func(width int) fe.ViewNode { return fe.ViewNode{Kind: fe.ViewKindText, Text: "x", Rows: 1, Width: width} }
+	text := func(width int) fe.ViewNode {
+		return fe.ViewNode{Kind: fe.ViewKindText, Text: "x", Rows: 1, Width: width}
+	}
 	list := func(n, width int) fe.ViewNode {
 		l := fe.ViewNode{Kind: fe.ViewKindLines, Rows: n, Width: width, List: &fe.ViewList{Selected: n / 2}}
 		for i := range n {

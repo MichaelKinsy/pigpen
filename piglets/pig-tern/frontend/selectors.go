@@ -89,9 +89,11 @@ func isLayerNode(node fe.Node) bool {
 }
 
 // act performs a pointer event as PiG's action on the node with PiG id id.
-func (s *session) act(id string, kind fe.ActionKind, item, value string) {
+func (s *session) act(id string, kind fe.ActionKind, item, value any) {
 	if s.env.Act != nil {
-		s.env.Act(fe.Action{Node: id, Kind: kind, Item: item, Value: value})
+		it, _ := item.(string)
+		val, _ := value.(string)
+		s.env.Act(fe.Action{Node: id, Kind: kind, Item: it, Value: val})
 	}
 }
 
@@ -307,7 +309,7 @@ func (s *session) prefsHandlers(id string) tern.Handlers {
 		OnAction: map[string]func(*tern.Action){
 			"open": func(e *tern.Action) { s.act(id, fe.Choose, e.Value, "") },
 			"close": func(e *tern.Action) {
-				if e.Value != "" {
+				if v, _ := e.Value.(string); v != "" {
 					s.setEditing(id, "")
 				} else {
 					s.act(id, fe.Dismiss, "", "")

@@ -1,14 +1,19 @@
 package frontend
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
+	"path"
 	"reflect"
+	"slices"
+	"strconv"
 	"strings"
 	"unicode/utf16"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
+	"github.com/stencil-hq/tern-sdk/go/tern/ui"
 )
 
 // The transcript lives in main as nodes the member adds, patches and
@@ -37,6 +42,15 @@ type mainEntry struct {
 	settled, gone bool
 }
 
+// textRef is the boxed TSP id that streamed assistant text patches: the
+// node itself, or its md child in the omp role trial (markdownNode).
+func (s *session) textRef(id string, node fe.Node) any {
+	if md, ok := node.(fe.MarkdownText); ok && s.ompRoles && md.Role != fe.RoleUser {
+		return id + ".md"
+	}
+	return id
+}
+
 // convertMain queues the raw ops for an op on a node of main.
 func (s *session) convertMain(op fe.Op) {
 	switch op.Kind {
@@ -53,7 +67,7 @@ func (s *session) convertMain(op fe.Op) {
 		id := nodeID(op.ID)
 		before := s.liveFrom(op.Index)
 		s.order = insertID(s.order, op.Index, id)
-		e := &mainEntry{id: id, ref: id, node: op.Node}
+		e := &mainEntry{id: id, ref: s.textRef(id, op.Node), node: op.Node}
 		s.sent[op.ID] = e
 		s.queue(tern.OpAdd("main", before, s.mainNode(id, op.Node)))
 		s.settle(e, op.Index)
@@ -76,6 +90,7 @@ func (s *session) convertMain(op fe.Op) {
 		queued := s.queued
 		if !s.patchMain(e, prev, op.Node) {
 			// A node whose kind or children change is replaced in place.
+			e.ref = s.textRef(e.id, op.Node)
 			s.queue(tern.OpDel(e.id), tern.OpAdd("main", s.liveFrom(op.Index+1), s.mainNode(e.id, op.Node)))
 		}
 		if s.queued != queued {
@@ -155,7 +170,12 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 		}
 		s.patchText(e.ref, p.Text, n.Text)
 		if p.Streaming != n.Streaming {
-			s.queue(tern.OpSet(id, map[string]any{"stream": n.Streaming}))
+			// The md is the node itself, or its child in the omp trial.
+			target := id
+			if s.ompRoles {
+				target = id + ".md"
+			}
+			s.queue(tern.OpSet(target, map[string]any{"stream": n.Streaming}))
 		}
 		return true
 	case fe.Thinking:
@@ -350,11 +370,11 @@ func utf16Len(text string) int {
 func (s *session) mainNode(id string, node fe.Node) tern.WireNode {
 	switch n := node.(type) {
 	case fe.Thinking:
-		return thinkingNode(id, n)
+		return thinkingNode(id, n, s.ompRoles)
 	case fe.ToolCard:
 		return s.toolNode(id, n)
 	case fe.MarkdownText:
-		return markdownNode(id, n)
+		return markdownNode(id, n, s.ompRoles)
 	case fe.Lines:
 		if n.Click != nil {
 			return clickLinesNode(id, n.Lines, *n.Click)
@@ -363,6 +383,9 @@ func (s *session) mainNode(id string, node fe.Node) tern.WireNode {
 			return wireNode(id, s.viewElement("", id, n.View, n.Lines, ""))
 		}
 		s.dropViewRules(id)
+		if info, ok := sessionInfoNode(id, n.Lines); ok {
+			return info
+		}
 		return linesNode(id, n.Lines)
 	default:
 		return tern.WireNode{ID: id, K: tern.KindAnsi, P: map[string]any{"text": "", "hidden": true}}
@@ -376,14 +399,248 @@ func linesNode(id string, lines []string) tern.WireNode {
 	return tern.WireNode{ID: id, K: tern.KindAnsi, P: map[string]any{"text": text, "hidden": blank(text)}}
 }
 
+// sessionInfoNode parses PiG's /session block ("Session Info") and draws it
+// natively with a headline ui.Stats strip and a ui.Table using MeterCell and
+// SparkCell for the session's real message, token, cache warming and cost
+// statistics.
+func sessionInfoNode(id string, lines []string) (tern.WireNode, bool) {
+	if len(lines) < 3 {
+		return tern.WireNode{}, false
+	}
+	plain := make([]string, len(lines))
+	for i, l := range lines {
+		plain[i] = strings.TrimRight(stripANSI(l), " ")
+	}
+	if strings.TrimSpace(plain[0]) != "Session Info" {
+		return tern.WireNode{}, false
+	}
+	type kv struct{ k, v string }
+	var meta []kv
+	sections := map[string][]kv{}
+	var sectionOrder []string
+	section := ""
+	for _, raw := range plain[1:] {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		indented := strings.HasPrefix(raw, "  ")
+		switch trimmed {
+		case "Messages", "Tokens", "Cache Warming", "Cost":
+			if !indented {
+				section = trimmed
+				sectionOrder = append(sectionOrder, section)
+				continue
+			}
+		}
+		colon := strings.IndexByte(trimmed, ':')
+		if colon <= 0 {
+			return tern.WireNode{}, false
+		}
+		k := trimmed[:colon]
+		v := strings.TrimSpace(trimmed[colon+1:])
+		if indented {
+			k = "  " + k
+		}
+		if section == "" {
+			meta = append(meta, kv{k, v})
+		} else {
+			sections[section] = append(sections[section], kv{k, v})
+		}
+	}
+	if len(sections["Messages"]) == 0 || len(sections["Tokens"]) == 0 {
+		return tern.WireNode{}, false
+	}
+	lookup := func(sec, key string) string {
+		for _, item := range sections[sec] {
+			if item.k == key {
+				return item.v
+			}
+		}
+		return ""
+	}
+	msgTotal := parseCommaInt(lookup("Messages", "Total"))
+	msgUser := parseCommaInt(lookup("Messages", "User"))
+	msgAssistant := parseCommaInt(lookup("Messages", "Assistant"))
+	tokInput := parseCommaInt(lookup("Tokens", "Input"))
+	tokCached := parseCommaInt(firstToken(lookup("Tokens", "  Cached")))
+	tokUncached := parseCommaInt(firstToken(lookup("Tokens", "  Uncached")))
+	tokOutput := parseCommaInt(lookup("Tokens", "Output"))
+	tokTotal := parseCommaInt(lookup("Tokens", "Total"))
+
+	var statItems []ui.Stat
+	statItems = append(statItems, ui.Stat{
+		Label: ui.T("Messages"),
+		Value: ui.T(lookup("Messages", "Total")),
+		Sub:   ui.T(fmt.Sprintf("%d user · %d assistant", msgUser, msgAssistant)),
+	})
+	tokSub := fmt.Sprintf("%s in · %s out", lookup("Tokens", "Input"), lookup("Tokens", "Output"))
+	statItems = append(statItems, ui.Stat{
+		Label: ui.T("Tokens"),
+		Value: ui.T(lookup("Tokens", "Total")),
+		Sub:   ui.T(tokSub),
+	})
+	if costTotal := lookup("Cost", "Total"); costTotal != "" {
+		sub := ""
+		if rebilled := lookup("Cost", "Cache Re-billed"); rebilled != "" {
+			sub = "re-billed " + rebilled
+		}
+		statItems = append(statItems, ui.Stat{
+			Label: ui.T("Cost"),
+			Value: ui.T(costTotal),
+			Sub:   ui.T(sub),
+		})
+	}
+	if mode := lookup("Cache Warming", "Mode"); mode != "" {
+		status := lookup("Cache Warming", "Status")
+		shortStatus, _, _ := strings.Cut(status, " (")
+		tone := ui.ToneMuted
+		if strings.HasPrefix(shortStatus, "Warming") || strings.HasPrefix(shortStatus, "Scheduled") {
+			tone = ui.ToneAccent
+		}
+		statItems = append(statItems, ui.Stat{
+			Label: ui.T("Cache Warming"),
+			Value: ui.T(mode),
+			Sub:   ui.T(shortStatus),
+			Tone:  tone,
+		})
+	}
+
+	table := ui.Table{
+		Common: ui.Common{Key: "table"},
+		Cols: []ui.Column{
+			{ID: "section", Head: ui.T("Section"), Priority: 3},
+			{ID: "metric", Head: ui.T("Metric"), Grow: 1, Priority: 5},
+			{ID: "value", Head: ui.T("Value"), Align: ui.AlignEnd, Mono: true, Priority: 4},
+			{ID: "share", Head: ui.T("Share"), Priority: 2},
+			{ID: "split", Head: ui.T("Split"), Priority: 1},
+		},
+	}
+	for i, item := range meta {
+		sec := ""
+		if i == 0 {
+			sec = "Session"
+		}
+		table.Rows = append(table.Rows, ui.TableRow{
+			ID: "session." + strconv.Itoa(i),
+			Cells: map[string]ui.Cell{
+				"section": ui.Spans(ui.Span{T: sec, S: "strong"}),
+				"metric":  ui.Spans(ui.Span{T: item.k + ":", S: "dim"}),
+				"value":   ui.T(item.v),
+			},
+		})
+	}
+	for _, sec := range sectionOrder {
+		for i, item := range sections[sec] {
+			secLabel := ""
+			if i == 0 {
+				secLabel = sec
+			}
+			cells := map[string]ui.Cell{
+				"section": ui.Spans(ui.Span{T: secLabel, S: "strong"}),
+				"metric":  ui.Spans(ui.Span{T: item.k + ":", S: "dim"}),
+				"value":   ui.T(item.v),
+			}
+			switch sec {
+			case "Messages":
+				switch item.k {
+				case "Total":
+					var calls, results int
+					_, _ = fmt.Sscanf(lookup("Messages", "Tools"), "%d calls, %d results", &calls, &results)
+					cells["split"] = ui.SparkCell{
+						Values: []float64{float64(msgUser), float64(msgAssistant), float64(calls), float64(results)},
+						Min:    new(0.0),
+						Tone:   ui.ToneAccent,
+					}
+				case "User", "Assistant":
+					if msgTotal > 0 {
+						v := float64(parseCommaInt(item.v)) / float64(msgTotal)
+						cells["share"] = ui.MeterCell{Value: &v, Tone: ui.ToneAccent}
+					}
+				}
+			case "Tokens":
+				switch item.k {
+				case "Input":
+					if tokTotal > 0 {
+						v := float64(tokInput) / float64(tokTotal)
+						cells["share"] = ui.MeterCell{Value: &v, Tone: ui.ToneInfo}
+					}
+				case "  Cached":
+					if tokInput > 0 {
+						v := float64(tokCached) / float64(tokInput)
+						cells["share"] = ui.MeterCell{Value: &v, Tone: ui.ToneSuccess}
+					}
+				case "  Uncached":
+					if tokInput > 0 {
+						v := float64(tokUncached) / float64(tokInput)
+						cells["share"] = ui.MeterCell{Value: &v, Tone: ui.ToneWarning}
+					}
+				case "Output":
+					if tokTotal > 0 {
+						v := float64(tokOutput) / float64(tokTotal)
+						cells["share"] = ui.MeterCell{Value: &v, Tone: ui.ToneAccent}
+					}
+				case "Total":
+					// No tokens yet draws no spark, as a zero total draws no meters.
+					if tokTotal > 0 {
+						cells["split"] = ui.SparkCell{
+							Values: []float64{float64(tokInput), float64(tokCached), float64(tokOutput)},
+							Min:    new(0.0),
+							Tone:   ui.ToneInfo,
+						}
+					}
+				}
+			}
+			table.Rows = append(table.Rows, ui.TableRow{
+				ID:    sec + "." + strconv.Itoa(i),
+				Cells: cells,
+			})
+		}
+	}
+	col := ui.Col{
+		Common: ui.Common{Role: "pig.session-info"},
+		Gap:    ui.GapMD,
+		Children: ui.Nodes(
+			ui.Text{Common: ui.Common{Key: "head"}, Spans: []ui.Span{{T: "Session Info", S: "strong"}}},
+			ui.Stats{Common: ui.Common{Key: "stats"}, Items: statItems},
+			table,
+		),
+	}
+	return wireNode(id, col.Node()), true
+}
+
+func firstToken(s string) string {
+	tok, _, _ := strings.Cut(strings.TrimSpace(s), " ")
+	return tok
+}
+
+func parseCommaInt(s string) int {
+	clean := strings.ReplaceAll(strings.TrimSpace(s), ",", "")
+	n, _ := strconv.Atoi(clean)
+	return n
+}
+
 // markdownNode draws assistant text as an md node in the transcript, where
 // Tern's chat style lays it out, and a user message as an md node in a card
 // with the user tone. While the text streams, md shows Tern's caret, and an
 // update that only grew the source travels as a text append.
-func markdownNode(id string, md fe.MarkdownText) tern.WireNode {
+//
+// In the omp role trial (roles.go) the user card takes omp.user, and the
+// assistant md sits in a col with role omp.assistant, as omp sends it:
+// Tern's chat styles reach the md only as that col's child.
+func markdownNode(id string, md fe.MarkdownText, ompRoles bool) tern.WireNode {
 	if md.Role == fe.RoleUser {
-		return tern.WireNode{ID: id, K: tern.KindCard, P: map[string]any{"role": "pig.user", "tone": "user"}, C: []tern.WireNode{
+		role := "pig.user"
+		if ompRoles {
+			role = "omp.user"
+		}
+		return tern.WireNode{ID: id, K: tern.KindCard, P: map[string]any{"role": role, "tone": "user"}, C: []tern.WireNode{
 			{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": md.Text}},
+		}}
+	}
+	if ompRoles {
+		return tern.WireNode{ID: id, K: tern.KindCol, P: map[string]any{"role": "omp.assistant"}, C: []tern.WireNode{
+			{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": md.Text, "stream": md.Streaming}},
 		}}
 	}
 	return tern.WireNode{ID: id, K: tern.KindMd, P: map[string]any{"text": md.Text, "stream": md.Streaming, "role": "pig.assistant"}}
@@ -391,13 +648,21 @@ func markdownNode(id string, md fe.MarkdownText) tern.WireNode {
 
 // thinkingNode draws a thinking run as a muted collapsible card around its
 // Markdown. PiG's thinking toggle sets the fold; a fold the user flips in
-// Tern stays local until PiG's state changes.
-func thinkingNode(id string, thinking fe.Thinking) tern.WireNode {
+// Tern stays local until PiG's state changes. In the omp role trial it is
+// a section with role omp.thinking, as omp sends it.
+func thinkingNode(id string, thinking fe.Thinking, ompRoles bool) tern.WireNode {
+	md := tern.WireNode{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": thinking.Text, "stream": thinking.Streaming}}
+	if ompRoles {
+		props := map[string]any{"head": "Thinking", "role": "omp.thinking", "collapsible": true, "collapsed": thinking.Hidden}
+		return tern.WireNode{ID: id, K: tern.KindSection, P: props, C: []tern.WireNode{md}}
+	}
 	props := map[string]any{"head": "Thinking", "role": "pig.thinking", "tone": "muted", "collapsible": true, "collapsed": thinking.Hidden}
-	return tern.WireNode{ID: id, K: tern.KindCard, P: props, C: []tern.WireNode{
-		{ID: id + ".md", K: tern.KindMd, P: map[string]any{"text": thinking.Text, "stream": thinking.Streaming}},
-	}}
+	return tern.WireNode{ID: id, K: tern.KindCard, P: props, C: []tern.WireNode{md}}
 }
+
+// structuredPreviewLines is how many top lines a collapsed tool card shows of
+// a JSON value or file tree: as many as Tern's default card preview.
+const structuredPreviewLines = 10
 
 func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
 	title := tool.Name
@@ -409,6 +674,15 @@ func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
 		"name": tool.Name, "title": title, "target": target, "targetKind": kind,
 		"status": string(tool.Status), "collapsible": true, "collapsed": !tool.Expanded,
 		"preview": map[string]any{"tail": 5},
+	}
+	if badge := toolStatusBadge(tool.Status); badge != nil {
+		props["badges"] = []any{badge}
+	}
+	// A path target links to its file, so ⌘-click opens it in Tern.
+	if kind == "path" && target != "" {
+		if href := s.pathHref(target); href != "" {
+			props["href"] = href
+		}
 	}
 	if tool.Elapsed > 0 {
 		props["took"] = tool.Elapsed.Milliseconds()
@@ -430,6 +704,31 @@ func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
 		}}
 	}
 	s.dropViewRules(id)
+	if (tool.Status == fe.ToolDone || tool.Status == fe.ToolError) && tool.Output != "" {
+		// A structure reads from its top, so a collapsed JSON value or file
+		// tree previews its first rows, where a log previews its tail. Tern's
+		// "auto" preview is for cards: a tool draws no body with it.
+		if v, ok := parseToolJSON(tool.Output); ok {
+			props["preview"] = map[string]any{"lines": structuredPreviewLines}
+			if s.hasJSON {
+				return tern.WireNode{ID: id, K: tern.KindTool, P: props, C: []tern.WireNode{
+					wireNode(id+".json", (ui.JSON{Value: v, Open: 1}).Node()),
+				}}
+			}
+			return tern.WireNode{ID: id, K: tern.KindTool, P: props, C: []tern.WireNode{
+				wireNode(id+".tree", (ui.Tree{Nodes: jsonTreeNodes("", v, 1)}).Node()),
+			}}
+		}
+		// An error's text is a message, never a listing, even from ls or find.
+		if nodes, note, ok := parseToolFileTree(tool.Name, tool.Output); ok && tool.Status == fe.ToolDone {
+			props["preview"] = map[string]any{"lines": structuredPreviewLines}
+			children := []tern.WireNode{wireNode(id+".tree", (ui.Tree{Nodes: nodes}).Node())}
+			if note != "" {
+				children = append(children, wireNode(id+".note", (ui.Text{Spans: []ui.Span{{T: note, S: "warning"}}}).Node()))
+			}
+			return tern.WireNode{ID: id, K: tern.KindTool, P: props, C: children}
+		}
+	}
 	body := tool.Output
 	if rendered := linesText(tool.Result); !blank(rendered) {
 		body = rendered
@@ -437,6 +736,356 @@ func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
 	return tern.WireNode{ID: id, K: tern.KindTool, P: props, C: []tern.WireNode{
 		{ID: id + ".out", K: tern.KindAnsi, P: map[string]any{"text": body}},
 	}}
+}
+
+// toolStatusBadge is a head chip with the tone of the tool's status.
+func toolStatusBadge(status fe.ToolStatus) map[string]any {
+	var tone ui.Tone
+	switch status {
+	case fe.ToolPending:
+		tone = ui.TonePending
+	case fe.ToolRunning:
+		tone = ui.ToneInfo
+	case fe.ToolDone:
+		tone = ui.ToneSuccess
+	case fe.ToolError:
+		tone = ui.ToneError
+	case fe.ToolCancelled:
+		tone = ui.ToneWarning
+	default:
+		return nil
+	}
+	return map[string]any{"text": string(status), "tone": string(tone)}
+}
+
+// parseToolJSON decodes text when it is a JSON object or array.
+func parseToolJSON(text string) (any, bool) {
+	trimmed := strings.TrimSpace(text)
+	if len(trimmed) < 2 {
+		return nil, false
+	}
+	first, last := trimmed[0], trimmed[len(trimmed)-1]
+	if (first != '{' || last != '}') && (first != '[' || last != ']') {
+		return nil, false
+	}
+	if !json.Valid([]byte(trimmed)) {
+		return nil, false
+	}
+	dec := json.NewDecoder(strings.NewReader(trimmed))
+	dec.UseNumber()
+	var v any
+	if dec.Decode(&v) != nil {
+		return nil, false
+	}
+	return v, true
+}
+
+// jsonTreeNodes builds a disclosure tree for a JSON value when Tern lacks the
+// json kind.
+func jsonTreeNodes(prefix string, v any, open int) []ui.TreeNode {
+	nodeID := func(key string) string {
+		if prefix == "" {
+			return key
+		}
+		return prefix + "." + key
+	}
+	switch x := v.(type) {
+	case map[string]any:
+		keys := make([]string, 0, len(x))
+		for k := range x {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		out := make([]ui.TreeNode, 0, len(keys))
+		for _, k := range keys {
+			id := nodeID(k)
+			val := x[k]
+			if isJSONContainer(val) {
+				out = append(out, ui.TreeNode{
+					ID: id, Label: ui.T(k), Open: open > 0,
+					Children: jsonTreeNodes(id, val, open-1),
+				})
+			} else {
+				out = append(out, ui.TreeNode{
+					ID: id, Label: ui.Spans(ui.Span{T: k + ": ", S: "muted"}, ui.Span{T: formatJSONScalar(val), S: "mono"}),
+				})
+			}
+		}
+		return out
+	case []any:
+		out := make([]ui.TreeNode, 0, len(x))
+		for i, val := range x {
+			k := strconv.Itoa(i)
+			id := nodeID(k)
+			if isJSONContainer(val) {
+				out = append(out, ui.TreeNode{
+					ID: id, Label: ui.Spans(ui.Span{T: k, S: "muted mono"}), Open: open > 0,
+					Children: jsonTreeNodes(id, val, open-1),
+				})
+			} else {
+				out = append(out, ui.TreeNode{
+					ID: id, Label: ui.Spans(ui.Span{T: k + ": ", S: "muted mono"}, ui.Span{T: formatJSONScalar(val), S: "mono"}),
+				})
+			}
+		}
+		return out
+	default:
+		id := prefix
+		if id == "" {
+			id = "0"
+		}
+		return []ui.TreeNode{{ID: id, Label: ui.Spans(ui.Span{T: formatJSONScalar(v), S: "mono"})}}
+	}
+}
+
+func isJSONContainer(v any) bool {
+	switch x := v.(type) {
+	case map[string]any:
+		return len(x) > 0
+	case []any:
+		return len(x) > 0
+	}
+	return false
+}
+
+func formatJSONScalar(v any) string {
+	b, err := tern.Marshal(v)
+	if err != nil {
+		return fmt.Sprint(v)
+	}
+	return string(b)
+}
+
+// parseToolFileTree builds a file tree from the output of ls or find, or from
+// an ASCII tree output (lines with ├── or └──).
+func parseToolFileTree(toolName, output string) ([]ui.TreeNode, string, bool) {
+	trimmed := strings.TrimSpace(output)
+	if trimmed == "" || trimmed == "(empty directory)" {
+		return nil, "", false
+	}
+	var note string
+	body := trimmed
+	if idx := strings.LastIndex(trimmed, "\n\n["); idx >= 0 && strings.HasSuffix(trimmed, "]") {
+		body = strings.TrimSpace(trimmed[:idx])
+		note = strings.TrimSpace(trimmed[idx+2:])
+	}
+	lines := strings.Split(body, "\n")
+	if toolName == "ls" || toolName == "find" {
+		nodes, ok := buildPathTree(lines)
+		return nodes, note, ok
+	}
+	if nodes, ok := parseASCIITree(lines); ok {
+		return nodes, note, true
+	}
+	return nil, "", false
+}
+
+type pathDir struct {
+	id    string
+	name  string
+	order []string
+	dirs  map[string]*pathDir
+	files []string
+}
+
+func buildPathTree(lines []string) ([]ui.TreeNode, bool) {
+	root := &pathDir{dirs: map[string]*pathDir{}}
+	count := 0
+	for _, raw := range lines {
+		line := strings.TrimSpace(raw)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "Path not found:") || strings.HasPrefix(line, "Not a directory:") ||
+			strings.HasPrefix(line, "Cannot read directory:") || strings.HasPrefix(line, "Operation aborted") ||
+			strings.HasPrefix(line, "No files found") || strings.ContainsAny(line, "\x00\t") {
+			return nil, false
+		}
+		line = strings.TrimPrefix(line, "./")
+		isDir := strings.HasSuffix(line, "/")
+		clean := strings.TrimSuffix(line, "/")
+		if clean == "" || clean == "." {
+			continue
+		}
+		parts := strings.Split(clean, "/")
+		cur := root
+		prefix := ""
+		for i, part := range parts {
+			if part == "" {
+				continue
+			}
+			if prefix == "" {
+				prefix = part
+			} else {
+				prefix += "/" + part
+			}
+			last := i == len(parts)-1
+			if !last || isDir {
+				sub := cur.dirs[part]
+				if sub == nil {
+					sub = &pathDir{id: prefix, name: part, dirs: map[string]*pathDir{}}
+					cur.dirs[part] = sub
+					cur.order = append(cur.order, "d:"+part)
+				}
+				cur = sub
+			} else {
+				cur.files = append(cur.files, part)
+				cur.order = append(cur.order, "f:"+part)
+			}
+		}
+		count++
+	}
+	if count == 0 {
+		return nil, false
+	}
+	var toNodes func(d *pathDir, depth int) []ui.TreeNode
+	toNodes = func(d *pathDir, depth int) []ui.TreeNode {
+		out := make([]ui.TreeNode, 0, len(d.order))
+		seen := map[string]bool{}
+		for _, entry := range d.order {
+			if seen[entry] {
+				continue
+			}
+			seen[entry] = true
+			kind, name, _ := strings.Cut(entry, ":")
+			if kind == "d" {
+				sub := d.dirs[name]
+				children := toNodes(sub, depth+1)
+				out = append(out, ui.TreeNode{
+					ID:       sub.id,
+					Label:    ui.T(sub.name + "/"),
+					Icon:     ui.IconFolder,
+					Open:     depth < 2 && len(children) > 0,
+					Children: children,
+				})
+			} else {
+				id := name
+				if d.id != "" {
+					id = d.id + "/" + name
+				}
+				out = append(out, ui.TreeNode{
+					ID:    id,
+					Label: ui.T(name),
+					Icon:  fileIcon(name),
+				})
+			}
+		}
+		return out
+	}
+	return toNodes(root, 0), true
+}
+
+func fileIcon(name string) ui.IconName {
+	switch strings.ToLower(path.Ext(name)) {
+	case ".md", ".mdx":
+		return ui.IconMarkdown
+	case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp":
+		return ui.IconFileImage
+	case ".pdf":
+		return ui.IconFilePdf
+	case ".go", ".rs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".py", ".rb", ".c", ".cc", ".cpp", ".h", ".java", ".sh", ".luau", ".lua", ".json", ".yaml", ".yml", ".toml", ".html", ".css":
+		return ui.IconFileCode
+	}
+	return ui.IconFile
+}
+
+// parseASCIITree parses standard `tree` command output (lines containing
+// ├── or └──).
+func parseASCIITree(lines []string) ([]ui.TreeNode, bool) {
+	if len(lines) < 2 {
+		return nil, false
+	}
+	hasMarker := false
+	for _, l := range lines[1:] {
+		if strings.Contains(l, "├── ") || strings.Contains(l, "└── ") {
+			hasMarker = true
+			break
+		}
+	}
+	if !hasMarker {
+		return nil, false
+	}
+	rootName := strings.TrimSpace(lines[0])
+	if rootName == "" {
+		return nil, false
+	}
+	type item struct {
+		depth int
+		name  string
+	}
+	var items []item
+	for _, raw := range lines[1:] {
+		trimmed := strings.TrimSpace(raw)
+		if trimmed == "" {
+			continue
+		}
+		idx := strings.Index(raw, "├── ")
+		if idx < 0 {
+			idx = strings.Index(raw, "└── ")
+		}
+		if idx < 0 {
+			// Summary line at the bottom of `tree` output ("2 directories, 3 files").
+			if strings.Contains(trimmed, "director") && strings.Contains(trimmed, "file") {
+				continue
+			}
+			return nil, false
+		}
+		prefix := raw[:idx]
+		name := strings.TrimSpace(raw[idx+len("├── "):])
+		if name == "" {
+			return nil, false
+		}
+		// Each indent level in `tree` is 4 columns ("│   " or "    ").
+		cols := 0
+		for _, r := range prefix {
+			cols += runeCells(r)
+		}
+		items = append(items, item{depth: cols / 4, name: name})
+	}
+	if len(items) == 0 {
+		return nil, false
+	}
+	var build func(start, depth int, parentID string) ([]ui.TreeNode, int)
+	build = func(start, depth int, parentID string) ([]ui.TreeNode, int) {
+		var out []ui.TreeNode
+		i := start
+		for i < len(items) && items[i].depth == depth {
+			name := items[i].name
+			id := name
+			if parentID != "" {
+				id = parentID + "/" + name
+			}
+			i++
+			var children []ui.TreeNode
+			if i < len(items) && items[i].depth > depth {
+				children, i = build(i, items[i].depth, strings.TrimSuffix(id, "/"))
+			}
+			isDir := len(children) > 0 || strings.HasSuffix(name, "/")
+			icon := fileIcon(name)
+			if isDir {
+				icon = ui.IconFolder
+			}
+			out = append(out, ui.TreeNode{
+				ID:       strings.TrimSuffix(id, "/"),
+				Label:    ui.T(name),
+				Icon:     icon,
+				Open:     depth < 1 && len(children) > 0,
+				Children: children,
+			})
+		}
+		return out, i
+	}
+	children, _ := build(0, items[0].depth, strings.TrimSuffix(rootName, "/"))
+	if rootName == "." {
+		return children, true
+	}
+	return []ui.TreeNode{{
+		ID:       strings.TrimSuffix(rootName, "/"),
+		Label:    ui.T(rootName),
+		Icon:     ui.IconFolder,
+		Open:     true,
+		Children: children,
+	}}, true
 }
 
 // diffStat counts a unified diff's added and removed lines as "+N −M", which

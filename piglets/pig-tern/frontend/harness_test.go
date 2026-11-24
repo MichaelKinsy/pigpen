@@ -120,10 +120,22 @@ type harness struct {
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()
+	return newHarnessEnv(t, nil)
+}
+
+// newHarnessEnv is newHarness with more environment variables for PiG's
+// Getenv, beside TERM_PROGRAM=tern.
+func newHarnessEnv(t *testing.T, vars map[string]string) *harness {
+	t.Helper()
 	h := &harness{t: t, out: &terminal{}}
 	env := fe.Env{
-		Out:     h.out,
-		Getenv:  func(key string) string { return map[string]string{"TERM_PROGRAM": "tern"}[key] },
+		Out: h.out,
+		Getenv: func(key string) string {
+			if key == "TERM_PROGRAM" {
+				return "tern"
+			}
+			return vars[key]
+		},
 		Version: "test",
 		Fallback: func(reason string) {
 			h.mu.Lock()
@@ -245,7 +257,13 @@ func (h *harness) frames() []message {
 // frame, so the next Apply goes out at once and holds only its own ops.
 func ready(t *testing.T) *harness {
 	t.Helper()
-	h := newHarness(t)
+	return readyEnv(t, nil)
+}
+
+// readyEnv is ready with more environment variables (newHarnessEnv).
+func readyEnv(t *testing.T, vars map[string]string) *harness {
+	t.Helper()
+	h := newHarnessEnv(t, vars)
 	h.reply(`,"credits":64,"cols":137,"cell":{"w":8,"h":16}`)
 	h.session.InputReady()
 	h.apply()
