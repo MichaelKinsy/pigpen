@@ -102,13 +102,24 @@ const (
 // Frontend is the member's factory, the symbol the Piglet build registers.
 func Frontend() fe.Frontend { return member{} }
 
-type member struct{}
+// Options are what a Piglet that derives from pig-tern fixes for its member.
+type Options struct {
+	// Omp draws the transcript and the dock with omp's roles and node
+	// shapes (roles.go), as PIG_TERN_ROLES=omp does for a run.
+	Omp bool
+}
+
+// FrontendWith is the member with opts fixed: the factory a derived Piglet's
+// own member returns.
+func FrontendWith(opts Options) fe.Frontend { return member{opts: opts} }
+
+type member struct{ opts Options }
 
 // Open starts a session only when the process runs directly in a Tern pane:
 // a multiplexer between them swallows TSP, and PIG_TUI_NATIVE=0 (or the
 // SDK's TERN_TSP=0) opts out. The hello goes out from a goroutine, so Open
 // never waits for Tern.
-func (member) Open(env fe.Env) (fe.Session, error) {
+func (m member) Open(env fe.Env) (fe.Session, error) {
 	if env.Getenv("PIG_TUI_NATIVE") == "0" || env.Getenv("TERN_TSP") == "0" || env.Getenv("TERM_PROGRAM") != "tern" {
 		return nil, nil
 	}
@@ -118,6 +129,7 @@ func (member) Open(env fe.Env) (fe.Session, error) {
 		}
 	}
 	s := newSession(env)
+	s.ompRoles = s.ompRoles || m.opts.Omp
 	s.start()
 	return s, nil
 }
@@ -202,10 +214,12 @@ type session struct {
 	dirty            bool
 	renders          int
 	renderedSendable bool
-	// editor is the editor node shown, if hasEditor.
+	// editor is the editor node shown, if hasEditor; footer is the footer node
+	// shown, if hasFooter (used by ompRoles to feed the composer bar).
 	editor    fe.Editor
 	hasEditor bool
-
+	footer    fe.Footer
+	hasFooter bool
 	// What HandleInput read from Tern: the pane's width in cells and a
 	// cell's height in CSS pixels, the credits, the highest acknowledged
 	// frame, whether the DA1 answer the hello asked for is still owed, and
@@ -242,8 +256,10 @@ type session struct {
 	blobCache  bool
 	blobInline map[string]bool
 
-	// ompRoles is the omp role trial (roles.go).
+	// ompRoles is the omp role mode (roles.go, omp_*.go). now is the clock for
+	// omp's elapsed timers (time.Now by default; overridden in tests).
 	ompRoles bool
+	now      func() time.Time
 }
 
 func newSession(env fe.Env) *session {
@@ -266,6 +282,7 @@ func newSession(env fe.Env) *session {
 		hostname:     hostname(),
 		blobDir:      env.Getenv("TERN_BLOB_DIR"),
 		ompRoles:     ompRolesOn(env.Getenv),
+		now:          time.Now,
 	}
 }
 

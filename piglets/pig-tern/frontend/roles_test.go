@@ -40,7 +40,7 @@ func TestOmpRolesTranscript(t *testing.T) {
 	}
 
 	ops = h.applyOps(fe.Op{Kind: fe.Insert, Region: fe.RegionMain, ID: "th", Index: 2, Node: fe.Thinking{Text: "hmm", Streaming: true}})
-	if n := node(ops, "n.th"); n["k"] != "section" || props(n)["role"] != "omp.thinking" || props(n)["collapsible"] != true {
+	if n := node(ops, "n.th"); n["k"] != "section" || props(n)["role"] != "omp.thinking.live" || props(n)["collapsible"] != true {
 		t.Fatalf("thinking = %#v", ops)
 	}
 }
@@ -57,16 +57,21 @@ func TestOmpRolesDock(t *testing.T) {
 		t.Fatalf("working = %#v", ops)
 	}
 	kids := row["c"].([]any)
-	if len(kids) != 2 || kids[0].(map[string]any)["k"] != "spinner" || props(kids[0].(map[string]any))["style"] != "starburst" ||
-		kids[1].(map[string]any)["id"] != "dock.working.label" || props(kids[1].(map[string]any))["text"] != "Working" {
+	if len(kids) != 5 || kids[0].(map[string]any)["k"] != "spinner" || props(kids[0].(map[string]any))["style"] != "starburst" ||
+		kids[1].(map[string]any)["k"] != "elapsed" ||
+		kids[2].(map[string]any)["id"] != "dock.working.sep" || props(kids[2].(map[string]any))["role"] != "omp.working.sep" ||
+		kids[3].(map[string]any)["id"] != "dock.working.label" || kids[3].(map[string]any)["k"] != "shimmer" ||
+		!reflect.DeepEqual(props(kids[3].(map[string]any))["spans"], []any{map[string]any{"t": "Working", "s": "muted"}}) ||
+		kids[4].(map[string]any)["id"] != "dock.working.fill" {
 		t.Fatalf("working children = %#v", kids)
 	}
 	working.Message = "Reading files"
 	ops = h.applyOps(workingOp(fe.Update, working))
-	if want := jsonOps(t, []any{"set", "dock.working.label", map[string]any{"text": "Reading files"}}); !reflect.DeepEqual(ops, want) {
+	if want := jsonOps(t, []any{"set", "dock.working.label", map[string]any{"spans": []any{map[string]any{"t": "Reading files", "s": "muted"}}}}); !reflect.DeepEqual(ops, want) {
 		t.Fatalf("working update = %#v, want %#v", ops, want)
 	}
 
+	// Without an editor mounted, the footer renders as omp's status strip.
 	ops = h.applyOps(footerOp(fe.Insert, fe.Footer{Cwd: "~/src", GitBranch: "main", Model: "m"}))
 	footer := node(ops, "dock.footer")
 	if props(footer)["role"] != "omp.status" {
@@ -79,5 +84,21 @@ func TestOmpRolesDock(t *testing.T) {
 	}
 	if roles["dock.footer.cwd"] != "omp.status.path" || roles["dock.footer.branch"] != "omp.status.git" || roles["dock.footer.model"] != "omp.status.model" || roles["dock.footer.xp"] != nil {
 		t.Fatalf("footer segment roles = %#v", roles)
+	}
+
+	// Once the composer mounts, dock.footer is removed because the composer bar
+	// carries its facts.
+	ops = h.applyOps(fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "editor", Index: 1, Node: fe.Editor{Sendable: true}})
+	if node(ops, "dock.editor") == nil || props(node(ops, "dock.editor"))["role"] != "omp.editor" {
+		t.Fatalf("composer = %#v", ops)
+	}
+	unmountedFooter := false
+	for _, op := range ops {
+		if o := op.([]any); o[0] == "del" && o[1] == "dock.footer" {
+			unmountedFooter = true
+		}
+	}
+	if !unmountedFooter {
+		t.Fatalf("dock.footer was not unmounted when composer mounted: %#v", ops)
 	}
 }

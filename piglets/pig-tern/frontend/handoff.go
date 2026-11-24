@@ -151,7 +151,7 @@ func (s *session) redrawAll() {
 			continue
 		}
 		e.settled = false
-		s.pending = append(s.pending, tern.OpAdd("main", "", s.mainNode(e.id, e.node)))
+		s.pending = append(s.pending, tern.OpAdd("main", "", s.mainNodeFor(e, e.node)))
 	}
 	for i, id := range s.order {
 		s.settle(s.sent[strings.TrimPrefix(id, "n.")], i)

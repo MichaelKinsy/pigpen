@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf16"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
@@ -36,10 +37,15 @@ func nodeID(id string) string { return "n." + id }
 // It holds no copy of the node's text. settled reports that its last op
 // was a settle, and gone that Tern evicted it.
 type mainEntry struct {
-	id            string
-	ref           any
-	node          fe.Node
-	settled, gone bool
+	id                 string
+	ref                any
+	node               fe.Node
+	settled, gone      bool
+	startedAt, endedAt time.Time
+	// thinkingCollapsed tracks the omp thinking section's current collapsed
+	// state: true when a run finishes (collapsing on end as omp does), then
+	// updated whenever PiG's Thinking.Hidden changes.
+	thinkingCollapsed bool
 }
 
 // textRef is the boxed TSP id that streamed assistant text patches: the
@@ -68,8 +74,11 @@ func (s *session) convertMain(op fe.Op) {
 		before := s.liveFrom(op.Index)
 		s.order = insertID(s.order, op.Index, id)
 		e := &mainEntry{id: id, ref: s.textRef(id, op.Node), node: op.Node}
+		if s.ompRoles {
+			s.recordMainTiming(e, nil, op.Node)
+		}
 		s.sent[op.ID] = e
-		s.queue(tern.OpAdd("main", before, s.mainNode(id, op.Node)))
+		s.queue(tern.OpAdd("main", before, s.mainNodeFor(e, op.Node)))
 		s.settle(e, op.Index)
 		// Lines settle once a node follows them.
 		if op.Index > 0 {
@@ -84,6 +93,9 @@ func (s *session) convertMain(op fe.Op) {
 		}
 		prev := e.node
 		e.node = op.Node
+		if s.ompRoles {
+			s.recordMainTiming(e, prev, op.Node)
+		}
 		if e.gone {
 			return
 		}
@@ -91,12 +103,51 @@ func (s *session) convertMain(op fe.Op) {
 		if !s.patchMain(e, prev, op.Node) {
 			// A node whose kind or children change is replaced in place.
 			e.ref = s.textRef(e.id, op.Node)
-			s.queue(tern.OpDel(e.id), tern.OpAdd("main", s.liveFrom(op.Index+1), s.mainNode(e.id, op.Node)))
+			s.queue(tern.OpDel(e.id), tern.OpAdd("main", s.liveFrom(op.Index+1), s.mainNodeFor(e, op.Node)))
 		}
 		if s.queued != queued {
 			e.settled = false
 		}
 		s.settle(e, op.Index)
+	}
+}
+
+// recordMainTiming tracks start and end instants for omp's thinking and tool
+// elapsed timers (only used when ompRoles is on).
+func (s *session) recordMainTiming(e *mainEntry, prev, next fe.Node) {
+	switch n := next.(type) {
+	case fe.Thinking:
+		if n.Streaming {
+			if e.startedAt.IsZero() {
+				e.startedAt = s.now()
+			}
+			e.endedAt = time.Time{}
+			e.thinkingCollapsed = n.Hidden
+		} else {
+			p, wasThinking := prev.(fe.Thinking)
+			switch {
+			case !wasThinking:
+				// Inserted already finished (e.g. session resume): collapse by default.
+				e.thinkingCollapsed = true
+			case p.Streaming:
+				// Streaming just ended: record end time and collapse as omp does.
+				if !e.startedAt.IsZero() && e.endedAt.IsZero() {
+					e.endedAt = s.now()
+				}
+				e.thinkingCollapsed = true
+			case p.Hidden != n.Hidden:
+				// PiG's thinking toggle flipped after the run ended: follow it.
+				e.thinkingCollapsed = n.Hidden
+			}
+		}
+	case fe.ToolCard:
+		if n.Status == fe.ToolRunning || n.Status == fe.ToolPending {
+			if e.startedAt.IsZero() && n.Status == fe.ToolRunning {
+				e.startedAt = s.now()
+			}
+		} else if !e.startedAt.IsZero() && e.endedAt.IsZero() {
+			e.endedAt = s.now()
+		}
 	}
 }
 
@@ -165,6 +216,9 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 			return false
 		}
 		if n.Role == fe.RoleUser {
+			if s.ompRoles && len(p.Images) != len(n.Images) {
+				return false
+			}
 			s.patchText(id+".md", p.Text, n.Text)
 			return true
 		}
@@ -183,6 +237,20 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 		if !ok {
 			return false
 		}
+		if s.ompRoles {
+			if p.Streaming != n.Streaming {
+				// Streaming transition changes the head child's kind (row -> text),
+				// role (omp.thinking.live -> omp.thinking), took, and collapsed.
+				return false
+			}
+			if p.Hidden != n.Hidden {
+				s.queue(tern.OpSet(id, map[string]any{"collapsed": e.thinkingCollapsed}))
+			}
+			if p.Text != n.Text {
+				s.patchText(id+".md", p.Text, n.Text)
+			}
+			return true
+		}
 		if p.Hidden != n.Hidden {
 			s.queue(tern.OpSet(id, map[string]any{"collapsed": n.Hidden}))
 		}
@@ -195,7 +263,7 @@ func (s *session) patchMain(e *mainEntry, prev, next fe.Node) bool {
 		}
 		return true
 	}
-	ops, ok := patchNode(s.mainNode(id, prev), s.mainNode(id, next))
+	ops, ok := patchNode(s.mainNodeFor(e, prev), s.mainNodeFor(e, next))
 	s.queue(ops...)
 	return ok
 }
@@ -368,12 +436,26 @@ func utf16Len(text string) int {
 // for its whole text on every token. Lines and a tool's result that an
 // extension's components drew draw as their view.
 func (s *session) mainNode(id string, node fe.Node) tern.WireNode {
+	return s.mainNodeFor(&mainEntry{id: id}, node)
+}
+
+func (s *session) mainNodeFor(e *mainEntry, node fe.Node) tern.WireNode {
+	id := e.id
 	switch n := node.(type) {
 	case fe.Thinking:
-		return thinkingNode(id, n, s.ompRoles)
+		if s.ompRoles {
+			return s.ompThinkingNode(id, n, e.startedAt, e.endedAt, e.thinkingCollapsed)
+		}
+		return thinkingNode(id, n, false)
 	case fe.ToolCard:
+		if s.ompRoles {
+			return s.ompToolNode(id, n, e.startedAt, e.endedAt)
+		}
 		return s.toolNode(id, n)
 	case fe.MarkdownText:
+		if s.ompRoles && n.Role == fe.RoleUser {
+			return s.ompUserMarkdownNode(id, n)
+		}
 		return markdownNode(id, n, s.ompRoles)
 	case fe.Lines:
 		if n.Click != nil {
@@ -383,6 +465,11 @@ func (s *session) mainNode(id string, node fe.Node) tern.WireNode {
 			return wireNode(id, s.viewElement("", id, n.View, n.Lines, ""))
 		}
 		s.dropViewRules(id)
+		if s.ompRoles {
+			if ompNode, ok := ompLinesNode(id, strings.TrimPrefix(id, "n."), n.Lines); ok {
+				return ompNode
+			}
+		}
 		if info, ok := sessionInfoNode(id, n.Lines); ok {
 			return info
 		}

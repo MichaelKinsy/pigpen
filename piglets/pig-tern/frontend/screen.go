@@ -176,8 +176,11 @@ func (s *session) screenDock(click func()) tern.Nodes {
 		if isLayerNode(e.node) {
 			continue
 		}
+		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
+			continue
+		}
 		el := s.element(e, false)
-		if editor, ok := e.node.(fe.Editor); ok {
+		if editor, ok := e.node.(fe.Editor); ok && !s.ompRoles {
 			cursor := editor.Cursor
 			el = ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Text: editor.Text, Cursor: &cursor, Placeholder: ui.T(editor.Placeholder)}}
 		}

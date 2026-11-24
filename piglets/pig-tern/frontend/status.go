@@ -45,13 +45,14 @@ func workingHot(working fe.Working) hot {
 // queueWorking queues a change of the indicator's message, as the spinner's
 // label or the text, and of its tone. A fresh indicator's view holds them.
 func (s *session) queueWorking(e *entry, working fe.Working, fresh bool) {
+	if s.ompRoles {
+		s.queueOmpWorking(e, working, fresh)
+		return
+	}
 	h := workingHot(working)
 	switch {
 	case fresh:
 		e.raw.text, e.raw.hot = h.text, h
-	case s.ompRoles:
-		// omp's row keeps the message and tone on its label child.
-		s.setProps(e.tid+".label", "text", &e.raw.hot, h)
 	case spinnerless(working):
 		s.patchText(e.tid, e.raw.text, h.text)
 		e.raw.text = h.text
@@ -171,6 +172,10 @@ func footerElement(id string, footer fe.Footer, ompRoles bool, run func(command 
 // from prev; each segment is derived only when the fields it shows changed.
 // A fresh footer's view, and a new status segment's, holds their props.
 func (s *session) queueFooter(e *entry, prev, next fe.Footer, fresh bool) {
+	if s.ompFooterSuppressed() {
+		s.reportCwd(next.Cwd)
+		return
+	}
 	f := &e.raw.footer
 	if fresh {
 		for i, key := range footerKeys {
@@ -250,7 +255,11 @@ func (s *session) setCwd(f *footerProps, cwd string) {
 	if f.slots[segCwd].text == cwd {
 		return
 	}
-	s.queue(tern.OpSet(f.ids[segCwd], map[string]any{"spans": cwdSpans(cwd), "href": cwdHref(cwd)}))
+	spans := cwdSpans(cwd)
+	if s.ompRoles {
+		spans = ompPathSpans(cwd)
+	}
+	s.queue(tern.OpSet(f.ids[segCwd], map[string]any{"spans": spans, "href": cwdHref(cwd)}))
 	f.slots[segCwd].text = cwd
 }
 

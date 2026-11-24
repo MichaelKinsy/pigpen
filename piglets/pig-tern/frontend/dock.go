@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 	"strings"
+	"time"
 
 	fe "github.com/MichaelKinsy/PiG/extensions/sdk/frontend"
 	"github.com/stencil-hq/tern-sdk/go/tern"
@@ -42,6 +43,8 @@ type entry struct {
 	unsent   bool
 	// raw are the raw props last queued on the rendered node.
 	raw rawProps
+	// startedAt is when a dock working indicator started (ompRoles elapsed timer).
+	startedAt time.Time
 	// A sheet's state: the picker's catalog, and the prefs row whose
 	// choice menu is open, or "".
 	catalog pickerCatalog
@@ -180,15 +183,45 @@ func kindOf(node fe.Node) int {
 // node removed or replaced by another kind are dropped.
 func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 	_, wasEditor := prev.(fe.Editor)
+	editorToggled := false
 	if editor, ok := next.(fe.Editor); ok {
+		if !s.hasEditor {
+			editorToggled = true
+		}
 		s.editor, s.hasEditor = editor, true
 	} else if wasEditor {
 		s.editor, s.hasEditor = fe.Editor{}, false
+		editorToggled = true
+	}
+	if editorToggled && s.ompRoles {
+		s.syncOmpFooterMount()
+	}
+	_, wasFooter := prev.(fe.Footer)
+	footerChanged := false
+	if footer, ok := next.(fe.Footer); ok {
+		if !s.hasFooter || !sameFooterComposerData(s.footer, footer) {
+			footerChanged = true
+		}
+		s.footer, s.hasFooter = footer, true
+	} else if wasFooter {
+		s.footer, s.hasFooter = fe.Footer{}, false
+		footerChanged = true
 	}
 	_, wasWorking := prev.(fe.Working)
 	_, isWorking := next.(fe.Working)
 	if isWorking != wasWorking {
 		s.setProgress(isWorking)
+		if isWorking {
+			e.startedAt = s.now()
+		} else {
+			e.startedAt = time.Time{}
+		}
+		if s.ompRoles {
+			s.rebuildOmpEditor()
+		}
+	}
+	if footerChanged && s.ompRoles {
+		s.rebuildOmpEditor()
 	}
 	if kindOf(prev) == kindOf(next) {
 		return
@@ -209,14 +242,17 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 // restructured reports whether next needs another view than prev, the node
 // e's view was last made for: another kind, or other fixed props. rows are
 // a selector's rows.
-func restructured(e *entry, prev, next fe.Node, rows pickerRows) bool {
+func (s *session) restructured(e *entry, prev, next fe.Node, rows pickerRows) bool {
 	switch n := next.(type) {
 	case fe.Editor:
 		p, ok := prev.(fe.Editor)
 		return !ok || p.Placeholder != n.Placeholder || p.Sendable != n.Sendable
 	case fe.Working:
 		p, ok := prev.(fe.Working)
-		return !ok || spinnerless(p) != spinnerless(n)
+		if !ok || spinnerless(p) != spinnerless(n) {
+			return true
+		}
+		return s.ompRoles && (p.Kind == fe.WorkingCompaction) != (n.Kind == fe.WorkingCompaction)
 	case fe.Footer:
 		p, ok := prev.(fe.Footer)
 		return !ok || len(p.ExtensionStatuses) != len(n.ExtensionStatuses)
@@ -255,10 +291,21 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 		rows = rowsOf(sel, &e.raw)
 	}
 	fresh := false
-	if e.unsent || restructure || restructured(e, prev, e.node, rows) {
+	if e.unsent || restructure || s.restructured(e, prev, e.node, rows) {
 		e.tree = rows.tree
+		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
+			// Under ompRoles, the composer carries the footer's facts, so
+			// dock.footer is not mounted while the editor is shown.
+			s.dropPending(e.tid)
+			e.view, e.unsent, e.raw = tern.Node{}, true, rawProps{}
+			s.dirty = true
+			s.reportCwd(e.node.(fe.Footer).Cwd)
+			return
+		}
 		view := buildNode(s.element(e, true))
-		view.Handlers = e.handlers
+		if _, isEditor := e.node.(fe.Editor); !isEditor || !s.ompRoles {
+			view.Handlers = e.handlers
+		}
 		fresh = e.unsent || e.view.Kind != view.Kind
 		if _, ok := e.node.(fe.Footer); ok && !fresh {
 			// The segments kept show their raw props; their views stay
@@ -276,7 +323,7 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 	case fe.Editor:
 		s.queueEditor(e, n, fresh)
 		if fresh {
-			s.queue(tern.OpFocus(e.tid))
+			s.queue(tern.OpFocus(s.editorInputID(e)))
 		}
 	case fe.Working:
 		s.queueWorking(e, n, fresh)
@@ -356,6 +403,9 @@ func (s *session) view() tern.View {
 		layer = append(layer, e.view)
 	}
 	for _, e := range s.dock {
+		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
+			continue
+		}
 		if isLayerNode(e.node) {
 			layer = append(layer, e.view)
 		} else {
@@ -386,14 +436,20 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 	}
 	switch n := e.node.(type) {
 	case fe.Editor:
+		if s.ompRoles {
+			return s.ompComposerElement(e, n, clicks)
+		}
 		return ui.Editor{Common: ui.Common{Key: e.id}, Field: ui.Field{Placeholder: ui.T(n.Placeholder), Sendable: n.Sendable}}
 	case fe.Working:
 		if s.ompRoles {
-			return ompWorkingElement(e.id, n)
+			return s.ompWorkingElement(e.id, n, e.startedAt)
 		}
 		return workingElement(e.id, n)
 	case fe.Footer:
-		return footerElement(e.id, n, s.ompRoles, s.runCommand)
+		if s.ompRoles {
+			return ompFooterElement(e.id, n, s.runCommand)
+		}
+		return footerElement(e.id, n, false, s.runCommand)
 	case fe.Selector:
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:
@@ -466,15 +522,16 @@ func (s *session) queueLines(e *entry, prev fe.Node, lines fe.Lines, fresh bool)
 // queueEditor queues the editor's text and cursor. PiG's editor owns them:
 // keys still reach PiG on the pty and come back as new text and cursor.
 func (s *session) queueEditor(e *entry, editor fe.Editor, fresh bool) {
+	tid := s.editorInputID(e)
 	if fresh {
 		if editor.Text != "" {
-			s.queue(tern.OpText(e.tid, "replace", editor.Text))
+			s.queue(tern.OpText(tid, "replace", editor.Text))
 		}
 	} else {
-		s.patchText(e.tid, e.raw.text, editor.Text)
+		s.patchText(tid, e.raw.text, editor.Text)
 	}
 	if fresh || editor.Cursor != e.raw.cursor {
-		s.queue(tern.OpSet(e.tid, map[string]any{"cursor": editor.Cursor}))
+		s.queue(tern.OpSet(tid, map[string]any{"cursor": editor.Cursor}))
 	}
 	e.raw.text, e.raw.cursor = editor.Text, editor.Cursor
 }
@@ -506,7 +563,7 @@ func (s *session) editorHandlers(e *entry) tern.Handlers {
 		OnFocus: func(*tern.Focus) {
 			s.mu.Lock()
 			defer s.mu.Unlock()
-			s.queue(tern.OpFocus(e.tid))
+			s.queue(tern.OpFocus(s.editorInputID(e)))
 			_ = s.flushLocked()
 		},
 	}
