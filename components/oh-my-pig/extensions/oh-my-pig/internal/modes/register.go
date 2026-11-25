@@ -184,6 +184,10 @@ func registerWithManager(e *sdk.Extension, m *manager) {
 		Description: "Quit the application",
 		Handler:     m.handleExitCommand,
 	})
+	e.RegisterCommand("import-omp", sdk.CommandOptions{
+		Description: "Import and switch to an omp session JSONL (defaults to latest for current cwd; --full keeps pre-compaction history)",
+		Handler:     m.handleImportOmpCommand,
+	})
 
 	// Event hooks
 	e.OnSessionStart(m.onSessionStart)
