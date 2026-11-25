@@ -65,6 +65,9 @@ const (
 	watchedFilesTimeout    = 2 * time.Second
 	stdinWriteFallbackWait = 5 * time.Second
 	stderrRingLimit        = 16 * 1024
+	// outputDrainWait bounds the wait, once the server has exited, for what it wrote last to be read: a process
+	// the server started may keep the pipes open for as long as it lives.
+	outputDrainWait = 200 * time.Millisecond
 )
 
 type openFileState struct {
@@ -116,6 +119,11 @@ type Client struct {
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
+	stderr io.ReadCloser
+	// readDone closes when readLoop has read the server's stdout to its end, stderrDone when captureStderr has
+	// read its stderr to its end.
+	readDone   chan struct{}
+	stderrDone chan struct{}
 
 	writeMu sync.Mutex
 
@@ -703,19 +711,31 @@ func (m *ClientManager) startClient(ctx context.Context, key string, cfg ServerC
 	if err != nil {
 		return nil, fmt.Errorf("create LSP stdin pipe: %w", err)
 	}
-	stdout, err := cmd.StdoutPipe()
+	// The server's output is read from pipes this client owns. cmd.Wait closes the pipes that StdoutPipe and
+	// StderrPipe make as soon as the process exits, whatever is still unread in them: the reader then failed
+	// with "file already closed" where the stream ended, and a server's last words on stderr could be lost.
+	stdout, stdoutW, err := os.Pipe()
 	if err != nil {
 		_ = stdin.Close()
 		return nil, fmt.Errorf("create LSP stdout pipe: %w", err)
 	}
-	stderr, err := cmd.StderrPipe()
+	stderr, stderrW, err := os.Pipe()
 	if err != nil {
 		_ = stdin.Close()
 		_ = stdout.Close()
+		_ = stdoutW.Close()
 		return nil, fmt.Errorf("create LSP stderr pipe: %w", err)
 	}
+	cmd.Stdout, cmd.Stderr = stdoutW, stderrW
 
-	if err := cmd.Start(); err != nil {
+	err = cmd.Start()
+	// The server holds the write ends now; this process must not, or the read ends never see the end.
+	_ = stdoutW.Close()
+	_ = stderrW.Close()
+	if err != nil {
+		_ = stdin.Close()
+		_ = stdout.Close()
+		_ = stderr.Close()
 		return nil, fmt.Errorf("start LSP server %s: %w", cfg.Command, err)
 	}
 
@@ -724,6 +744,7 @@ func (m *ClientManager) startClient(ctx context.Context, key string, cfg ServerC
 		key:                   key,
 		cwd:                   cwd,
 		config:                cfg,
+		stderr:                stderr,
 		trusted:               trusted,
 		cmd:                   cmd,
 		stdin:                 stdin,
@@ -743,11 +764,13 @@ func (m *ClientManager) startClient(ctx context.Context, key string, cfg ServerC
 		projectLoadedCh:       make(chan struct{}),
 		diagNotify:            make(chan struct{}),
 		exitedCh:              make(chan struct{}),
+		readDone:              make(chan struct{}),
+		stderrDone:            make(chan struct{}),
 	}
 	c.idleTimeoutMs.Store(int64(idleTimeoutMs))
 	c.projectMaxTimer = time.AfterFunc(projectLoadTimeout, c.resolveProjectLoaded)
 
-	go c.captureStderr(stderr)
+	go c.captureStderr()
 	go c.readLoop(m)
 	go c.waitProcess(m)
 
@@ -841,7 +864,9 @@ func (c *Client) failAndKill(m *ClientManager) {
 	}
 }
 
-func (c *Client) captureStderr(r io.Reader) {
+func (c *Client) captureStderr() {
+	defer close(c.stderrDone)
+	r := c.stderr
 	buf := make([]byte, 4096)
 	for {
 		n, err := r.Read(buf)
@@ -896,6 +921,21 @@ func (c *Client) waitProcess(m *ClientManager) {
 		}
 	}
 
+	// The server's last output may still be in the pipes: an answer it sent before it exited, the reason it
+	// died. It is read before the exit is reported, and then the pipes are closed, so that nothing more is read
+	// from a process the server left behind.
+	deadline := time.After(outputDrainWait)
+drain:
+	for _, done := range [...]chan struct{}{c.stderrDone, c.readDone} {
+		select {
+		case <-done:
+		case <-deadline:
+			break drain
+		}
+	}
+	_ = c.stderr.Close()
+	_ = c.stdout.Close()
+
 	c.mu.Lock()
 	c.exitCode = code
 	c.hasExit = true
@@ -949,12 +989,14 @@ func (c *Client) readLoop(m *ClientManager) {
 			}
 		}
 		if err != nil {
-			if err != io.EOF {
+			// os.ErrClosed: waitProcess closed the pipe after the server exited.
+			if err != io.EOF && !errors.Is(err, os.ErrClosed) {
 				c.rejectAllPending(fmt.Errorf("LSP connection closed: %w", err))
 			}
 			break
 		}
 	}
+	close(c.readDone)
 
 	select {
 	case <-c.exitedCh:

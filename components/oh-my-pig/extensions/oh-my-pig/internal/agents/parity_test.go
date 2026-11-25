@@ -264,7 +264,11 @@ func TestAbortedSubagentTimeoutAndYieldErrorAreDeliveredAsFailedJobs(t *testing.
 
 	var deliveredMu sync.Mutex
 	var deliveries []string
+	// The sink is the process's: a job an earlier test left running delivers here too when it ends.
 	jobs.SetDeliverySink(func(sessionID, customType, content string, _ bool, _ sdk.SendMessageOptions) error {
+		if sessionID != "timeout-sess" {
+			return nil
+		}
 		deliveredMu.Lock()
 		deliveries = append(deliveries, content)
 		deliveredMu.Unlock()
@@ -2403,9 +2407,15 @@ func TestRound4_YieldSchemaTaskDetailsPromptAndWaitDetails(t *testing.T) {
 	// Finding 16, Finding 18 (3), and Wait details end-to-end with a 2-child batch.
 	ext := sdk.New("test-round4-batch")
 	RegisterWithRuntime(ext, rt)
+	// The children finish only once `wait` watches them. A child that finished and delivered its result before
+	// the call leaves `wait` nothing to report, and one still starting when the test ends fails in a later test.
+	childrenMayFinish := make(chan struct{})
+	releaseChildren := sync.OnceFunc(func() { close(childrenMayFinish) })
+	t.Cleanup(releaseChildren)
 	h := startFakeHost(t, ext, fakeHostOptions{
 		SessionID: "round4-batch-sess",
 		OnChild: func(h *fakeHost, child *fakeChildState, _ string) error {
+			<-childrenMayFinish
 			h.finishChildWithText(child, "ok")
 			return nil
 		},
@@ -2457,6 +2467,22 @@ func TestRound4_YieldSchemaTaskDetailsPromptAndWaitDetails(t *testing.T) {
 	}
 
 	// Wait for both children to finish and check wait details (`meta.source`, no `agentOutputPublished`).
+	// `wait` sends a progress update when it starts to watch its jobs.
+	go func() {
+		defer releaseChildren()
+		for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(2 * time.Millisecond) {
+			h.mu.Lock()
+			updates := append([]map[string]any(nil), h.toolUpdates...)
+			h.mu.Unlock()
+			for _, update := range updates {
+				result, _ := update["result"].(map[string]any)
+				details, _ := result["details"].(map[string]any)
+				if details["op"] == "wait" {
+					return
+				}
+			}
+		}
+	}()
 	waitRes, errMsg := h.callTool("wait", map[string]any{})
 	if errMsg != "" {
 		t.Fatalf("wait failed: %s", errMsg)

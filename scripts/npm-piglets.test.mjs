@@ -1,6 +1,6 @@
 // The generated npm source of each Piglet: what is rewritten, what is dropped, and the package.json PiG reads.
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, after } from 'node:test';
@@ -91,5 +91,15 @@ describe('buildPigletTree', () => {
     assert.match(readme, /pig piglet add npm:@pi-in-go\/pigpen-piglet-herdr/);
     assert.match(readFileSync(join(tree, 'LICENSE'), 'utf8'), /MIT/);
     assert.equal(JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8')).name, '@pi-in-go/pigpen-piglet-herdr');
+  });
+  it('ships the file a system prompt names, where the manifest says it is', () => {
+    for (const name of names) {
+      const file = npmPigletSource(name).data.systemPrompt?.file;
+      if (!file) continue;
+      const tree = buildPigletTree(name, out, { repository });
+      assert.ok(existsSync(join(tree, file)), `${name}: ${file} is not in the package tree`);
+      const packed = JSON.parse(readFileSync(join(tree, 'package.json'), 'utf8')).files;
+      assert.ok(packed.some((entry) => join(tree, entry) === join(tree, file)), `${name}: npm would not pack ${file}`);
+    }
   });
 });

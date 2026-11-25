@@ -14,7 +14,8 @@ import "fmt"
 //   - Subshell function body isolates `set +x +v +e +u +a`, `pipefail`, and FD 8/9.
 //   - Uses `pwd -W` (falling back to `$PWD`) so Go on Windows receives a native
 //     Windows path (`C:/...`) for relative `@file` resolution rather than MSYS `/c/...`.
-//   - Reports `<name>: tool-command bridge closed the connection` on EOF without RC.
+//   - Reports `<name>: tool-command bridge closed the connection` on EOF without RC. A child shell
+//     that ignores SIGPIPE writes the request, for the reason preamble_unix.go gives.
 func renderDispatcherFunction(port int, token string) string {
 	return fmt.Sprintf(`__omp_tc_port=%d
 __omp_tc_token=%s
@@ -86,7 +87,7 @@ END"
     exit 127
   fi
   exec 2>&8 8>&-
-  printf '%%s\n' "$__omp_tc_req" >&9
+  ( trap '' PIPE; exec 1>&9 2>/dev/null; printf '%%s\n' "$__omp_tc_req" )
   __omp_tc_rc=1
   __omp_tc_got_rc=0
   __omp_tc_out_b64=""
@@ -99,7 +100,7 @@ END"
       ERR\ *) __omp_tc_err_b64="${__omp_tc_line#ERR }" ;;
       DONE)   break ;;
     esac
-  done
+  done 2>/dev/null
   exec 9>&- 9<&-
   if [ "$__omp_tc_got_rc" != "1" ]; then
     printf '%%s: tool-command bridge closed the connection\n' "$__omp_tc_name" >&2

@@ -1233,7 +1233,11 @@ func TestChildSessionFusedOptionsAndSingleDelivery(t *testing.T) {
 
 	var deliveredMu sync.Mutex
 	var deliveries []string
+	// The sink is the process's: a job an earlier test left running delivers here too when it ends.
 	jobs.SetDeliverySink(func(sessionID, customType, content string, _ bool, _ sdk.SendMessageOptions) error {
+		if sessionID != "fused-sess" {
+			return nil
+		}
 		deliveredMu.Lock()
 		deliveries = append(deliveries, sessionID+":"+customType+":"+content)
 		deliveredMu.Unlock()

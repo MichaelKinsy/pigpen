@@ -5,10 +5,11 @@
 //   - each `local:../../components/<dir>` Package becomes `npm:@pi-in-go/pigpen-<dir>@^<version of that Package>`;
 //   - `extends` is flattened into one manifest;
 //   - an extension that only exists as a local fixture (`local:./extensions/seed-check`, an empty build-pipeline fixture the
-//     Binary needs and the source does not) is dropped.
+//     Binary needs and the source does not) is dropped;
+//   - the file a `systemPrompt.file` names ships in the package, at the same path: PiG reads it when it registers the source.
 // The signed Binaries stay on GitHub Releases (`pig piglet pull github:<repo>/<name>@<version>`); the README says so.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMap, parseDocument, stringify } from 'yaml';
 import { readManifests, root } from './generate-index.mjs';
@@ -26,11 +27,14 @@ export function npmPigletSource(name, { directory = root } = {}) {
   const versions = new Map(readPackages(directory).map(({ dir, manifest }) => [dir, manifest.version]));
   const notes = [];
   let data = found.manifest;
+  // The Piglet whose directory the system prompt's file is relative to: the base's when the prompt is inherited.
+  let promptOwner = name;
   if (data.extends) {
     const baseName = /^local:\.\.\/([a-z0-9][a-z0-9.-]*)\/piglet\.yaml$/.exec(data.extends.source)?.[1];
     const base = manifests.find(({ manifest }) => manifest.name === baseName)?.manifest;
     if (!base) throw new Error(`${name}: cannot flatten extends ${data.extends.source}`);
     const { extends: _extends, ...own } = data;
+    if (!own.systemPrompt) promptOwner = baseName;
     data = { ...base, ...own };
     notes.push(`extends ${baseName} is flattened into this manifest`);
   }
@@ -52,12 +56,18 @@ export function npmPigletSource(name, { directory = root } = {}) {
       if (origin.startsWith('local:')) throw new Error(`${name}: ${kind} ${entry.name} has the local origin ${origin}, which a remote source cannot take`);
     }
   }
-  return { data, notes, metadata: found.metadata };
+  const files = [];
+  if (data.systemPrompt?.file) {
+    const path = normalize(data.systemPrompt.file);
+    if (isAbsolute(path) || path.startsWith('..')) throw new Error(`${name}: systemPrompt.file ${data.systemPrompt.file} is outside the Piglet`);
+    files.push({ path, from: join(directory, 'piglets', promptOwner, path) });
+  }
+  return { data, notes, files, metadata: found.metadata };
 }
 
 /** package.json of the npm Piglet source. */
 export function pigletPackageJson(name, { directory = root, repository } = {}) {
-  const { data, metadata } = npmPigletSource(name, { directory });
+  const { data, files, metadata } = npmPigletSource(name, { directory });
   return {
     name: pigletNpmName(name), version: data.release.version, description: data.description,
     keywords: ['pig-piglet', 'pigpen', ...(metadata.languages ?? [])], license: 'MIT', author: 'Michael Kinsy',
@@ -65,7 +75,7 @@ export function pigletPackageJson(name, { directory = root, repository } = {}) {
     homepage: `https://github.com/${repository}/tree/main/piglets/${name}#readme`,
     bugs: { url: `https://github.com/${repository}/issues` },
     publishConfig: { access: 'public' },
-    files: ['piglet.yaml', 'README.md', 'LICENSE', 'provenance.json'],
+    files: ['piglet.yaml', 'README.md', 'LICENSE', 'provenance.json', ...files.map(({ path }) => path)],
     pig: { piglet: 'piglet.yaml' },
   };
 }
@@ -74,7 +84,7 @@ const binaryNote = (name, version, repository) => `\n## Signed Binary\n\nThis np
 
 /** Generate dist/npm/piglets/<name>; returns the directory. */
 export function buildPigletTree(name, outRoot, { directory = root, repository = JSON.parse(readFileSync(join(directory, 'catalog.config.json'), 'utf8')).repository } = {}) {
-  const { data, notes } = npmPigletSource(name, { directory });
+  const { data, notes, files } = npmPigletSource(name, { directory });
   const target = join(outRoot, name);
   rmSync(target, { recursive: true, force: true });
   mkdirSync(target, { recursive: true });
@@ -85,6 +95,10 @@ export function buildPigletTree(name, outRoot, { directory = root, repository = 
   cpSync(join(directory, 'LICENSE'), join(target, 'LICENSE'));
   const provenance = join(directory, 'piglets', name, 'provenance.json');
   writeFileSync(join(target, 'provenance.json'), existsSync(provenance) ? readFileSync(provenance) : '{}\n');
+  for (const { path, from } of files) {
+    mkdirSync(dirname(join(target, path)), { recursive: true });
+    cpSync(from, join(target, path));
+  }
   writeFileSync(join(target, 'package.json'), JSON.stringify(pigletPackageJson(name, { directory, repository }), null, 2) + '\n');
   return target;
 }

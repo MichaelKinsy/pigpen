@@ -32,7 +32,13 @@ import "fmt"
 //     closes FD 8/9 held open by the caller (e.g. `flock 9`).
 //   - If the bridge closes the connection before sending an `RC` line, the
 //     dispatcher writes `<name>: tool-command bridge closed the connection` to
-//     stderr and exits 1 (never failing silently).
+//     stderr and exits 1 (never failing silently). A bridge that closes early
+//     answers the request's first bytes with a reset, and a write after a
+//     reset raises SIGPIPE, which would end the dispatcher with 141 and no
+//     message. So a child shell writes the request: it ignores the signal, and
+//     its only output is the connection, so a write that failed leaves nothing
+//     in a buffer for a later flush to send elsewhere (the request holds the
+//     token). bash's own `read error` line for the reset is not shown.
 //
 // Stdin is only read when argv contains a bare `-` (matching omp's
 // `crates/shell/src/commands.rs:312`).
@@ -120,7 +126,7 @@ END"
       exit 127
     fi
     exec 2>&8 8>&-
-    printf '%%s\n' "$__omp_tc_req" >&9
+    ( trap '' PIPE; exec 1>&9 2>/dev/null; printf '%%s\n' "$__omp_tc_req" )
     while IFS= read -r __omp_tc_line <&9; do
       case "$__omp_tc_line" in
         RC\ *)  __omp_tc_rc="${__omp_tc_line#RC }"; __omp_tc_got_rc=1 ;;
@@ -128,7 +134,7 @@ END"
         ERR\ *) __omp_tc_err_b64="${__omp_tc_line#ERR }" ;;
         DONE)   break ;;
       esac
-    done
+    done 2>/dev/null
     exec 9>&- 9<&-
   else
     printf '%%s: tool-command transport requires bash with /dev/tcp support\n' "$__omp_tc_name" >&2

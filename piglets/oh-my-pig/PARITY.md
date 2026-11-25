@@ -95,7 +95,7 @@ Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blan
 - **Bash interceptor differential** (`internal/shell/testdata/gen_interceptor_diff.ts` + checked-in `interceptor_diff.txt.gz`, **200,000** recorded omp verdicts, `go test ./internal/shell -run TestInterceptorDifferentialAgainstOmp`): **0** differences across all 4 lookaround rules ported to Go.
 - **Hashline block-op oracle** (`internal/hashline/testdata/blockspans/*.json`, **10,573** anchors across 30 files from real `omp` 19.1.1, `go test ./internal/hashline -run TestBlockSpansAgainstRealOmpOracle`): **0 WRONG** spans; on held-out Sample 3 (9 resolvable languages, 4,088 anchors, 1,604 omp-resolved): **1,063** exact matches, **541** conservative refusals (**33.7%**), **0 WRONG**; plus third-party YAML hold-out (1,666 anchors): 644 equal, 33 refused, 989 refused by both, **0 WRONG**.
 - **JS cell rewriter** (`internal/eval`, `go test ./internal/eval`): runs omp `v19.1.1`'s bundled rewriter + `@babel/parser@7.29.9`; verified on 190 JS/TS matrix and adversarial cases under `bun` and `node` 22+, and deterministic regeneration verified (`OMP_REGEN_JS_REWRITER=1`).
-- **Unit & integration test counts**: **1,156** executable top-level Go `Test*` tests in the extension module (`1,157` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,142` in 30 `internal/` packages + `15` in module root), **138** in `piglets/pig-tern/frontend`, and **43** Python `test_*` methods in `proof/test_oracle_harness.py`.
+- **Unit & integration test counts**: **1,157** executable top-level Go `Test*` tests in the extension module (`1,158` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,143` in 30 `internal/` packages + `15` in module root; one test more than the gate run above, added with a later fix), **138** in `piglets/pig-tern/frontend`, and **43** Python `test_*` methods in `proof/test_oracle_harness.py`.
 ---
 
 ## What Each Comparison Covers — and Does Not Cover
@@ -421,7 +421,7 @@ provs = set(re.findall(r"\"([a-z0-9-]+)\"", (OMP / "packages/catalog/src/compat/
 print("keybindings:", len(kb), "subcommands:", len(subs), "flags:", len(ft | af), "providers:", len(provs))
 '
 
-# Port test counts: extension Go func Test* (1,157 declarations = 1,156 tests + TestMain),
+# Port test counts: extension Go func Test* (1,158 declarations = 1,157 tests + TestMain),
 # pig-tern/frontend Go Test* (138), proof Python test_* (43):
 grep -rn '^func Test' components/oh-my-pig/extensions/oh-my-pig --include='*_test.go' | wc -l
 grep -rn '^func Test' piglets/pig-tern/frontend --include='*_test.go' | wc -l
@@ -446,7 +446,7 @@ PIG_SRC=$PIG_SRC DIFF_OUT=<out>/approval piglets/oh-my-pig/proof/diff/approval/m
 ### Disagreements Between Sources
 
 - **Blockspans anchor total**: `internal/hashline/UPSTREAM.md` prose says `10,568` (Sample 3 `4,083`), while summing `total` across all 30 JSON files in `internal/hashline/testdata/blockspans/` gives **10,573** (Sample 3 `4,088`). The JSON sum (`10,573`) is used here.
-- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,157** declarations, while `go test` executes **1,156** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
+- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,158** declarations, while `go test` executes **1,157** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
 - **Settings consumed**: scanning non-test Go files outside `internal/settings/` for all 644 schema keys matches 102 literals; `"temperature"` is an LLM/web API field rather than a setting read and is excluded, giving **101**.
 - **Welcome tip lists vs omp's `tips.txt`**: omp's `packages/tui/src/prompt/tips.txt` has **35** tips (plus 1 hard-coded unicode-preset tip); `welcomeTips` (16) has 10 lines matching omp's `tips.txt` ignoring backticks + 6 port-adapted lines, and `ompWelcomeTips` (14) has 6 lines matching omp's `tips.txt` ignoring backticks + 8 port-adapted command lines.
 - **Full differential READMEs vs latest gate runs**: `proof/diff/intent/README.md` and `proof/diff/approval/README.md` embed earlier snapshots (233 host refusals; 279 approval mismatches); the run on the PiG `v0.8.0` SDK ran both full corpora with `FAIL=1` and 0 unexpected mismatches (8 lenient host refusals in `intent-diff`, 0 unexpected in `approval-diff`).
