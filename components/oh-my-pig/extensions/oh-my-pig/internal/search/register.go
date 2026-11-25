@@ -42,6 +42,38 @@ func readSetting(ctx sdk.Context, key string) any {
 	return fn(ctx, key)
 }
 
+// ArchivePathCandidate is a (ArchivePath, SubPath) split of a path selector.
+type ArchivePathCandidate struct {
+	ArchivePath string
+	SubPath     string
+}
+
+// ArchiveMemberReader provides archive path parsing and member reading without
+// importing internal/files from internal/search.
+type ArchiveMemberReader struct {
+	ParseCandidates func(filePath string) []ArchivePathCandidate
+	ReadMember      func(archiveAbs, memberPath string) (data []byte, openErr error, readErr error)
+}
+
+var (
+	archiveReaderMu sync.RWMutex
+	archiveReader   *ArchiveMemberReader
+)
+
+// SetArchiveReader installs the archive member reader used by grep.
+func SetArchiveReader(r *ArchiveMemberReader) {
+	archiveReaderMu.Lock()
+	archiveReader = r
+	archiveReaderMu.Unlock()
+}
+
+func getArchiveReader() *ArchiveMemberReader {
+	archiveReaderMu.RLock()
+	r := archiveReader
+	archiveReaderMu.RUnlock()
+	return r
+}
+
 // Per-session `find` activation tracking, shared across extension instances
 // because PiG constructs a fresh extension per session while package state is
 // process-wide. Keyed strictly by non-empty sessionID and released via

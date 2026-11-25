@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -48,10 +50,11 @@ type grepMatch struct {
 }
 
 type grepPathSpec struct {
-	original string
-	clean    string
-	ranges   []lineRange
-	isURL    bool
+	original               string
+	clean                  string
+	ranges                 []lineRange
+	isURL                  bool
+	literalFilesystemMatch bool
 }
 
 type grepCandidate struct {
@@ -397,10 +400,26 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 			ranges = parsedRanges
 		}
 		specs = append(specs, grepPathSpec{
-			original: entry,
-			clean:    clean,
-			ranges:   ranges,
+			original:               entry,
+			clean:                  clean,
+			ranges:                 ranges,
+			literalFilesystemMatch: literal,
 		})
+	}
+
+	// Pre-resolve archive-member selectors (e.g. `bundle.zip:src/foo.ts`) into
+	// temporary scratch files so the rest of grep handles them uniformly.
+	// upstream: packages/coding-agent/src/tools/grep.ts:298-374,722-740
+	archiveRes, err := resolveArchiveSearchPaths(specs, cwd)
+	if err != nil {
+		return nil, err
+	}
+	defer archiveRes.cleanup()
+	if len(archiveRes.unreadable) > 0 && len(archiveRes.resolvedPaths) == len(archiveRes.unreadable) {
+		return nil, fmt.Errorf(
+			"Cannot search archive member(s): %s. Read the member with `read <archive>:<member>` and inspect the returned text, or pass a UTF-8 text member.",
+			strings.Join(archiveRes.unreadable, ", "),
+		)
 	}
 
 	type resolvedTarget struct {
@@ -417,8 +436,9 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 	var missingPaths []string
 	rangesByKey := make(map[string][]lineRange)
 
-	for _, spec := range specs {
-		parsed, parseErr := parseSearchTarget(spec.clean, cwd)
+	for idx, spec := range specs {
+		resolvedPath := archiveRes.resolvedPaths[idx]
+		parsed, parseErr := parseSearchTarget(resolvedPath, cwd)
 		if parseErr != nil {
 			return nil, parseErr
 		}
@@ -458,7 +478,7 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 			if len(spec.ranges) > 0 {
 				return nil, fmt.Errorf("Path not found for line-range selector: %s", spec.original)
 			}
-			missingPaths = append(missingPaths, spec.clean)
+			missingPaths = append(missingPaths, resolvedPath)
 			targets = append(targets, resolvedTarget{spec: spec, parsed: parsed, missing: true})
 			continue
 		}
@@ -486,26 +506,59 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 	if len(validTargets) == 0 {
 		// Single missing path emits bare `Path not found: <scopePath>` (path-utils.ts:1655-1656);
 		// all-missing multi-path list adds the `; list each target` hint (grep.ts:804-806).
-		if len(specs) == 1 {
+		if len(specs) == 1 && len(archiveRes.unreadable) == 0 {
 			return nil, fmt.Errorf("Path not found: %s", formatRelToCwd(resolvePath(missingPaths[0], cwd), cwd, false))
 		}
-		return nil, fmt.Errorf("Path not found: %s; list each target in the semicolon-delimited `path`", strings.Join(missingPaths, ", "))
+		archiveHint := ""
+		if len(archiveRes.unreadable) > 0 {
+			archiveHint = fmt.Sprintf(" (archive members were not searchable: %s)", strings.Join(archiveRes.unreadable, ", "))
+		}
+		return nil, fmt.Errorf("Path not found: %s; list each target in the semicolon-delimited `path`%s", strings.Join(missingPaths, ", "), archiveHint)
 	}
 
 	// Scope path and searchPath for GrepToolDetails.
 	var validDisplayInputs []string
 	for _, t := range validTargets {
-		validDisplayInputs = append(validDisplayInputs, t.spec.clean)
-	}
-	scopePath := toScopeDisplay(validDisplayInputs, cwd)
-	searchPath := cwd
-	if len(validTargets) == 1 {
-		searchPath = validTargets[0].parsed.basePath
-		if validTargets[0].parsed.hasGlob {
-			scopePath = formatRelToCwd(searchPath, cwd, false)
+		if disp, ok := archiveRes.displayMap[t.parsed.basePath]; ok {
+			if len(validTargets) == 1 {
+				validDisplayInputs = append(validDisplayInputs, disp)
+			} else {
+				validDisplayInputs = append(validDisplayInputs, t.parsed.basePath)
+			}
+		} else {
+			validDisplayInputs = append(validDisplayInputs, formatRelToCwd(t.parsed.basePath, cwd, false))
 		}
 	}
-
+	scopePath := strings.Join(validDisplayInputs, ", ")
+	if len(archiveRes.displayMap) == 0 {
+		scopePath = toScopeDisplay(validDisplayInputs, cwd)
+	}
+	searchPath := cwd
+	searchPathRaw := false
+	if len(validTargets) == 1 {
+		searchPath = validTargets[0].parsed.basePath
+		if disp, ok := archiveRes.displayMap[searchPath]; ok {
+			scopePath = disp
+			searchPathRaw = true
+		} else if validTargets[0].parsed.hasGlob {
+			scopePath = formatRelToCwd(searchPath, cwd, false)
+		}
+	} else if len(validTargets) > 1 {
+		// Mirror omp's common-ancestor searchPath when mixing scratch paths and cwd files:
+		// omp standardizes session.cwd once at startup while keeping mkdtemp scratch paths raw.
+		if len(archiveRes.displayMap) > 0 {
+			basePaths := make([]string, len(validTargets))
+			for i, t := range validTargets {
+				if _, isArchive := archiveRes.displayMap[t.parsed.basePath]; isArchive {
+					basePaths[i] = t.parsed.basePath
+				} else {
+					basePaths[i] = dirs.StandardizeMacOSPath(t.parsed.basePath)
+				}
+			}
+			searchPath = commonAncestorPath(basePaths)
+			searchPathRaw = true
+		}
+	}
 	isMultiScope := len(validTargets) > 1 || validTargets[0].isDir
 	perFileCap := grepSingleFilePerFileCap
 	if isMultiScope {
@@ -530,11 +583,17 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 				continue
 			}
 			seenKeys[key] = struct{}{}
+			relDisplay := formatRelToCwd(key, cwd, false)
+			immutable := t.immutable
+			if disp, ok := archiveRes.displayMap[key]; ok {
+				relDisplay = disp
+				immutable = true
+			}
 			cand := grepCandidate{
 				key:       key,
-				relPath:   formatRelToCwd(key, cwd, false),
+				relPath:   relDisplay,
 				size:      t.hostSize,
-				immutable: t.immutable,
+				immutable: immutable,
 				namedFile: true,
 			}
 			if t.urlNode != nil {
@@ -829,12 +888,23 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 	if len(binaryMatches) > 0 {
 		binaryMatchNote = fmt.Sprintf("Binary files also match (name one as `path` to search it as text): %s", formatCappedFiles(binaryMatches))
 	}
+	var archiveNote string
+	if len(archiveRes.unreadable) > 0 {
+		archiveNote = "Skipped archive entries (search supports text members only): " + strings.Join(archiveRes.unreadable, ", ")
+	}
+	// Suppress entries already explained via archiveNote (upstream: grep.ts:1194-1199).
+	var missingPathsForNote []string
+	for _, mp := range missingPaths {
+		if _, explained := archiveRes.unreadableSet[mp]; !explained {
+			missingPathsForNote = append(missingPathsForNote, mp)
+		}
+	}
 	var missingPathsNote string
-	if len(missingPaths) > 0 {
-		missingPathsNote = "Skipped missing paths: " + strings.Join(missingPaths, ", ")
+	if len(missingPathsForNote) > 0 {
+		missingPathsNote = "Skipped missing paths: " + strings.Join(missingPathsForNote, ", ")
 	}
 	var warningParts []string
-	for _, note := range []string{missingPathsNote, oversizedNote, binaryMatchNote} {
+	for _, note := range []string{archiveNote, missingPathsNote, oversizedNote, binaryMatchNote} {
 		if note != "" {
 			warningParts = append(warningParts, note)
 		}
@@ -1124,9 +1194,13 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 	}
 
 	truncated := fileLimitReached || perFileLimitReached || totalCapReached || byteTruncated || linesTruncated
+	displaySearchPath := dirs.StandardizeMacOSPath(searchPath)
+	if searchPathRaw {
+		displaySearchPath = searchPath
+	}
 	details := map[string]any{
 		"scopePath":      scopePath,
-		"searchPath":     dirs.StandardizeMacOSPath(searchPath),
+		"searchPath":     displaySearchPath,
 		"cwd":            dirs.StandardizeMacOSPath(cwd),
 		"matchCount":     totalSelected,
 		"fileCount":      len(fileList),
@@ -1539,4 +1613,150 @@ func ceilRuneBoundary(s string, idx int) int {
 		idx++
 	}
 	return idx
+}
+
+type archiveSearchResolution struct {
+	resolvedPaths []string
+	displayMap    map[string]string
+	unreadable    []string
+	unreadableSet map[string]struct{}
+	cleanup       func()
+}
+
+// resolveArchiveSearchPaths pre-resolves `paths` entries pointing at archive
+// members (e.g. `bundle.zip:src/foo.ts`, `release.tar.gz:notes.md`) by
+// extracting each UTF-8 text member into a temporary scratch file and
+// recording the scratch path -> original selector mapping.
+// upstream: packages/coding-agent/src/tools/grep.ts:298-374
+func resolveArchiveSearchPaths(specs []grepPathSpec, cwd string) (archiveSearchResolution, error) {
+	resolvedPaths := make([]string, len(specs))
+	for i, spec := range specs {
+		resolvedPaths[i] = spec.clean
+	}
+	displayMap := make(map[string]string)
+	unreadableSet := make(map[string]struct{})
+	var unreadable []string
+	var tempDir string
+
+	cleanup := func() {
+		if tempDir != "" {
+			_ = os.RemoveAll(tempDir)
+		}
+	}
+
+	reader := getArchiveReader()
+	if reader == nil || reader.ParseCandidates == nil || reader.ReadMember == nil {
+		return archiveSearchResolution{
+			resolvedPaths: resolvedPaths,
+			displayMap:    displayMap,
+			unreadable:    unreadable,
+			unreadableSet: unreadableSet,
+			cleanup:       cleanup,
+		}, nil
+	}
+
+	for idx, spec := range specs {
+		if spec.literalFilesystemMatch || spec.isURL {
+			continue
+		}
+		entry := spec.clean
+		candidates := reader.ParseCandidates(entry)
+		var member *ArchivePathCandidate
+		for i := range candidates {
+			if candidates[i].SubPath != "" && candidates[i].ArchivePath != entry {
+				member = &candidates[i]
+				break
+			}
+		}
+		if member == nil {
+			continue
+		}
+
+		archiveAbs := resolvePath(member.ArchivePath, cwd)
+		data, openErr, readErr := reader.ReadMember(archiveAbs, member.SubPath)
+		if openErr != nil {
+			unreadable = append(unreadable, fmt.Sprintf("%s (cannot open archive: %s)", entry, openErr.Error()))
+			unreadableSet[entry] = struct{}{}
+			continue
+		}
+		if readErr != nil {
+			unreadable = append(unreadable, fmt.Sprintf("%s (%s)", entry, readErr.Error()))
+			unreadableSet[entry] = struct{}{}
+			continue
+		}
+		// UTF-8 only — binary members would just produce noise through grep.
+		if bytes.IndexByte(data, 0) >= 0 {
+			unreadable = append(unreadable, fmt.Sprintf("%s (binary archive entry)", entry))
+			unreadableSet[entry] = struct{}{}
+			continue
+		}
+		if !utf8.Valid(data) {
+			unreadable = append(unreadable, fmt.Sprintf("%s (non-UTF-8 archive entry)", entry))
+			unreadableSet[entry] = struct{}{}
+			continue
+		}
+
+		if tempDir == "" {
+			var err error
+			tempDir, err = os.MkdirTemp("", "omp-search-archive-")
+			if err != nil {
+				cleanup()
+				return archiveSearchResolution{}, err
+			}
+			if realDir, err := filepath.EvalSymlinks(tempDir); err == nil {
+				tempDir = realDir
+			}
+		}
+		safeBase := sanitizeArchiveScratchBase(path.Base(strings.ReplaceAll(member.SubPath, "\\", "/")))
+		tempPath := filepath.Join(tempDir, fmt.Sprintf("%d-%s", idx, safeBase))
+		if err := os.WriteFile(tempPath, data, 0o600); err != nil {
+			cleanup()
+			return archiveSearchResolution{}, err
+		}
+		resolvedPaths[idx] = tempPath
+		displayMap[tempPath] = entry
+	}
+
+	return archiveSearchResolution{
+		resolvedPaths: resolvedPaths,
+		displayMap:    displayMap,
+		unreadable:    unreadable,
+		unreadableSet: unreadableSet,
+		cleanup:       cleanup,
+	}, nil
+}
+
+func sanitizeArchiveScratchBase(base string) string {
+	var b strings.Builder
+	b.Grow(len(base))
+	inBad := false
+	for i := range len(base) {
+		c := base[i]
+		ok := (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-'
+		if ok {
+			b.WriteByte(c)
+			inBad = false
+		} else if !inBad {
+			b.WriteByte('_')
+			inBad = true
+		}
+	}
+	if b.Len() == 0 {
+		return "entry"
+	}
+	return b.String()
+}
+
+func commonAncestorPath(paths []string) string {
+	if len(paths) == 0 {
+		return ""
+	}
+	cur := filepath.Dir(paths[0])
+	for _, p := range paths[1:] {
+		dir := filepath.Dir(p)
+		for cur != dir && !strings.HasPrefix(dir, cur+string(filepath.Separator)) && cur != filepath.Dir(cur) {
+			cur = filepath.Dir(cur)
+		}
+	}
+	return cur
 }

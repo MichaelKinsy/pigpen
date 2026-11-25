@@ -60,6 +60,23 @@ func wireSettings() {
 	ask.Setting = settings.Any
 	todo.Setting = settings.Any
 	search.SetSetting(settings.Any)
+	search.SetArchiveReader(&search.ArchiveMemberReader{
+		ParseCandidates: func(filePath string) []search.ArchivePathCandidate {
+			raw := files.ParseArchivePathCandidates(filePath)
+			if len(raw) == 0 {
+				return nil
+			}
+			out := make([]search.ArchivePathCandidate, len(raw))
+			for i, c := range raw {
+				out[i] = search.ArchivePathCandidate{
+					ArchivePath: c.ArchivePath,
+					SubPath:     c.SubPath,
+				}
+			}
+			return out
+		},
+		ReadMember: files.ReadArchiveMember,
+	})
 	tern.Setting = settings.Any
 	browser.Setting = settings.Any
 	web.Setting = settings.Any

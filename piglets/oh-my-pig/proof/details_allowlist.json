@@ -607,4 +607,37 @@
     ],
     "why": "Scoped strictly to failing todo calls (both isError=true) where omp returns exactly {phases, storage} and PiG PrepareArguments error returns empty {} (agent/tool_execution.go:378-381); never matches successful todo calls."
   }
+,
+  {
+    "tool": "grep",
+    "path": "searchPath",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "when": {
+      "omp_value_regex": "^/private<TMPDIR>/omp-search-archive-[A-Za-z0-9]+(/.*)?$",
+      "pig_value_regex": "^/private<TMPDIR>/omp-search-archive-[0-9]+(/.*)?$"
+    },
+    "ref_file": "internal/search/UPSTREAM.md",
+    "ref_term": [
+      "omp-search-archive-*",
+      "resolveArchiveSearchPaths"
+    ],
+    "why": "Archive-member grep materializes each text member into a random mkdtemp scratch directory (omp-search-archive-XXXXXX vs Go os.MkdirTemp numeric suffix); prefix and filename match and only the per-run random suffix differs."
+  },
+  {
+    "tool": "grep",
+    "path": "scopePath",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "when": {
+      "omp_value_regex": "/private<TMPDIR>/omp-search-archive-[A-Za-z0-9]+/",
+      "pig_value_regex": "/private<TMPDIR>/omp-search-archive-[0-9]+/"
+    },
+    "ref_file": "internal/search/UPSTREAM.md",
+    "ref_term": [
+      "omp-search-archive-*",
+      "resolveArchiveSearchPaths"
+    ],
+    "why": "When mixing an archive member with another path in a multi-target grep, both omp and Go include the /private<TMPDIR>/omp-search-archive-* scratch path in details.scopePath; only the per-run random suffix differs."
+  }
 ]

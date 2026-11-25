@@ -53,4 +53,36 @@
       { "tool": "find", "arguments": { "query": "function that computes the answer", "grep_keywords": ["computeAnswer", "42"] } }
     ]
   }
+,
+  {
+    "name": "grep-archive",
+    "description": "Exercise grep on archive members: zip, tar.gz, jar, mixed with plain file, missing member/archive, corrupt/truncated archives, directory members, two members from one archive, binary, non-UTF-8, all unreadable, and line ranges.",
+    "setup": "python3 -c 'import zipfile, tarfile, io\nwith zipfile.ZipFile(\"bundle.zip\", \"w\") as z:\n    z.writestr(\"src/\", \"\")\n    z.writestr(\"src/foo.ts\", \"line one\\nconst alpha = 1;\\nline three\\nconst alpha = 2;\\nline five\\n\")\n    z.writestr(\"src/bar.ts\", \"const alpha = 99;\\n\")\n    z.writestr(\"bin.dat\", b\"alpha\\x00binary\\n\")\n    z.writestr(\"badutf8.txt\", b\"alpha \\xff\\xfe invalid\\n\")\nwith zipfile.ZipFile(\"lib.jar\", \"w\") as z:\n    z.writestr(\"META-INF/MANIFEST.MF\", \"Manifest-Version: 1.0\\nMain-Class: com.example.Alpha\\n\")\nwith tarfile.open(\"release.tar.gz\", \"w:gz\") as t:\n    data = b\"Release notes\\nalpha feature\\nomega feature\\nalpha second\\n\"\n    info = tarfile.TarInfo(\"notes.md\")\n    info.size = len(data)\n    t.addfile(info, io.BytesIO(data))\nraw_zip = open(\"bundle.zip\", \"rb\").read()\nopen(\"trunc.zip\", \"wb\").write(raw_zip[:20])\n' && printf 'plain alpha line\n' > plain.txt && printf 'not a zip file\n' > corrupt.zip && printf 'not a gzip file\n' > corrupt.tar.gz && printf 'not a tar file\n' > corrupt.tar && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "release.tar.gz:notes.md" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:missing.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:missing.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.zip:a.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.tar:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "nope.tar.gz:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "trunc.zip:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.tar.gz:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "corrupt.tar:a.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts;bundle.zip:src/bar.ts" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:badutf8.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:badutf8.txt;plain.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:bin.dat;bundle.zip:badutf8.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "bundle.zip:src/foo.ts:1-3" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "release.tar.gz:notes.md:1-2" } },
+      { "tool": "grep", "arguments": { "pattern": "Alpha", "path": "lib.jar:META-INF/MANIFEST.MF" } }
+    ]
+  }
 ]
