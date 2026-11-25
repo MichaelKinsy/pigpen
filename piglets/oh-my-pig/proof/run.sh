@@ -84,6 +84,8 @@ require_bin() {
 }
 
 require_bin "$OMP_BIN"
+. "$SCRIPT_DIR/omp_version.sh"
+require_omp_reference "$OMP_BIN"
 require_bin "$OH_MY_PIG_BIN"
 # The Binary must be the oh-my-pig Piglet, not a stock pig: PIG_BIN, which Pigpen's scripts use for pig itself, is not read here.
 command -v tern >/dev/null 2>&1 || { echo "error: tern not found on PATH" >&2; exit 1; }

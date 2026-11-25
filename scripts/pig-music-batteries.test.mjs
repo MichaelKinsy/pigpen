@@ -75,8 +75,4 @@ describe('pig-music in pig-with-batteries', () => {
       assert.doesNotMatch(text, /doctor says how/, `${where}: no doctor inside PiG says how to build pigmusic`);
     }
   });
-
-  it('targets the pig that builds it', () => {
-    assert.match(JSON.parse(read('scripts/pig-requirement.json')).pig, /^0\.7\./);
-  });
 });

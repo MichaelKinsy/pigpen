@@ -27,7 +27,7 @@ This directory contains three self-contained, offline, hermetic verification too
 ## Prerequisites
 
 - `python3` (standard library only; no third-party packages; run with `-B` so no `__pycache__` is written)
-- `omp` binary (`v19.1.1`, default: `omp` on `PATH`, override with `OMP_BIN=...`)
+- `omp` binary at exactly `v19.1.1` (default: `omp` on `PATH`, override with `OMP_BIN=...`). omp updates itself, so the one on `PATH` is usually newer: the three scripts refuse any other version (`omp_version.sh`), because its changes would be reported as differences of the port. A Tern install keeps earlier versions under `~/Library/Application Support/Tern/omp/versions/`.
 - `oh-my-pig` Piglet binary (default: `/tmp/omp-bin/oh-my-pig`, override with `OH_MY_PIG_BIN=...`)
 - `tern` on `PATH` (only required for `run.sh`; not needed for `oracle.sh` or `ansi.sh`)
 

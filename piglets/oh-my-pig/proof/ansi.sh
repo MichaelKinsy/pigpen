@@ -389,6 +389,8 @@ OMP_RUN_RC=0
 PIG_RUN_RC=0
 if [ "$MODE" = "both" ] || [ "$MODE" = "omp-only" ]; then
   [ -n "$OMP_BIN" ] && [ -x "$OMP_BIN" ] || { echo "error: omp binary not found" >&2; exit 1; }
+  . "$SCRIPT_DIR/omp_version.sh"
+  require_omp_reference "$OMP_BIN"
   setup_omp
   reset_llm
   echo "Running omp in plain PTY (${COLS}x${ROWS}, no Tern)..."

@@ -41,6 +41,11 @@ if [ -z "$MODE" ]; then
     MODE="omp-only"
   fi
 fi
+if [ "$MODE" != "pig-only" ]; then
+  [ -n "$OMP_BIN" ] && [ -x "$OMP_BIN" ] || { echo "error: omp binary not found" >&2; exit 1; }
+  . "$SCRIPT_DIR/omp_version.sh"
+  require_omp_reference "$OMP_BIN"
+fi
 
 ARGS=(
   --mode "$MODE"
