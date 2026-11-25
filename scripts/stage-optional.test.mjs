@@ -117,3 +117,42 @@ describe('pig-essentials optional superpowers extensions', () => {
     assert.equal(staged.packages.superpowers, 'local:./packages/superpowers');
   });
 });
+
+describe('a Piglet module that replaces a module of a shared Package', () => {
+  it('names the staged Package in the staged go.mod and keeps every other line', () => {
+    const dir = fixture();
+    mkdirSync(join(dir, 'components/extra/extensions/extra'), { recursive: true });
+    writeFileSync(join(dir, 'components/extra/extensions/extra/go.mod'), 'module example.test/extra\n');
+    mkdirSync(join(dir, 'piglets/other/frontend'), { recursive: true });
+    writeFileSync(join(dir, 'piglets/other/piglet.yaml'), 'name: other\ndescription: other\nrelease:\n  version: 0.1.0\n');
+    writeFileSync(join(dir, 'piglets/other/catalog.json'), '{"featured":false,"updatedAt":"2026-10-20","languages":["go"],"notes":["other"]}\n');
+    writeFileSync(join(dir, 'piglets/other/frontend/go.mod'), 'module example.test/other/frontend\n');
+    mkdirSync(join(dir, 'piglets/demo/frontend'), { recursive: true });
+    const authored = [
+      'module example.test/demo/frontend',
+      '',
+      'require example.test/extra v0.0.0',
+      '',
+      'replace (',
+      '\texample.test/extra => ../../../components/extra/extensions/extra // the shared Package',
+      '\texample.test/other/frontend => ../../other/frontend',
+      '\texample.test/pinned v1.0.0 => example.test/fork v1.0.1',
+      ')',
+      '',
+      'replace example.test/whole => ../../../components/extra',
+      '',
+    ].join('\n');
+    writeFileSync(join(dir, 'piglets/demo/frontend/go.mod'), authored);
+    const r = stage(dir);
+    assert.equal(r.status, 0, r.stderr);
+    const staged = readFileSync(join(dir, 'dist/staged/piglets/demo/frontend/go.mod'), 'utf8');
+    assert.equal(staged, authored
+      .replace('../../../components/extra/extensions/extra', '../packages/extra/extensions/extra')
+      .replace('=> ../../../components/extra\n', '=> ../packages/extra\n'));
+    for (const target of ['../packages/extra/extensions/extra/go.mod', '../../other/frontend/go.mod']) {
+      assert.ok(existsSync(join(dir, 'dist/staged/piglets/demo/frontend', target)), `${target} resolves in the staged tree`);
+    }
+    assert.equal(readFileSync(join(dir, 'piglets/demo/frontend/go.mod'), 'utf8'), authored);
+    assert.equal(readFileSync(join(dir, 'dist/staged/piglets/other/frontend/go.mod'), 'utf8'), 'module example.test/other/frontend\n');
+  });
+});
