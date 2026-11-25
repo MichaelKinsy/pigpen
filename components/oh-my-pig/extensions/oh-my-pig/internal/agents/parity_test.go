@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1147,7 +1148,8 @@ func TestTUIWaitEndTurnAndPreflightShortPaths(t *testing.T) {
 func TestIdleParkingDisposesChildAndFiresLifecycleEnd(t *testing.T) {
 	resetAllRegistries(t)
 	cfg := DefaultConfig()
-	cfg.AgentIdleTTLMs = 40
+	// Long enough not to fire by itself: the test arms the park timer once it has read what parking removes.
+	cfg.AgentIdleTTLMs = 10 * 60 * 1000
 	rt := NewRuntime(cfg)
 	ext := sdk.New("test-idle-park")
 	RegisterWithRuntime(ext, rt)
@@ -1193,6 +1195,9 @@ func TestIdleParkingDisposesChildAndFiresLifecycleEnd(t *testing.T) {
 		t.Fatalf("expected child local:// root to match parent temp root omp-local/park-sess, got (%q, %v)", lr, ok)
 	}
 
+	// Parking ends the child session, which drops the lineage record read above; so the timer starts only now.
+	rt.Registry.ArmIdleParkTimer(ref, 40)
+
 	// Wait for idle park timer to fire and dispose child session.
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
@@ -1211,15 +1216,19 @@ func TestIdleParkingDisposesChildAndFiresLifecycleEnd(t *testing.T) {
 	if finalStatus != "parked" || finalSess != nil {
 		t.Fatalf("expected parked with nil session after idle TTL, got status=%q sess=%v", finalStatus, finalSess)
 	}
-	endedMu.Lock()
-	sawExactChild := false
-	for _, id := range ended {
-		if id == childSID {
-			sawExactChild = true
-		}
+	// The status flips to "parked" before the session is disposed and lifecycle.End fires (omp commits the
+	// status first too: registry/agent-lifecycle.ts:442-446), so the hook is awaited, not read at once.
+	sawExactChild := func() bool {
+		endedMu.Lock()
+		defer endedMu.Unlock()
+		return slices.Contains(ended, childSID)
 	}
-	endedMu.Unlock()
-	if !sawExactChild {
+	for !sawExactChild() && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	if !sawExactChild() {
+		endedMu.Lock()
+		defer endedMu.Unlock()
 		t.Fatalf("expected lifecycle.End for exact child session ID %q, got %v", childSID, ended)
 	}
 }
