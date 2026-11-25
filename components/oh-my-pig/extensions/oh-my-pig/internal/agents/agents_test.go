@@ -397,6 +397,7 @@ func TestTaskTwoParallelChildrenAndWait(t *testing.T) {
 				"toolName":   "read",
 				"isError":    false,
 			})
+			h.untilWaitWatches()
 
 			if strings.Contains(promptText, "task-alpha") {
 				h.finishChildWithText(child, "Alpha result payload")
@@ -682,7 +683,7 @@ func TestWaitWithAndWithoutJobs(t *testing.T) {
 	jobs.Add("wait-sess", bj)
 
 	go func() {
-		time.Sleep(40 * time.Millisecond)
+		h.untilWaitWatches()
 		bj.mu.Lock()
 		bj.status = "completed"
 		bj.result = "PASS ok 0.04s"

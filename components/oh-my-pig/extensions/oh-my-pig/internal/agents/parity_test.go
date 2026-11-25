@@ -39,7 +39,7 @@ func TestOracleGoldenTaskAndWaitTexts(t *testing.T) {
 	h := startFakeHost(t, ext, fakeHostOptions{
 		SessionID: "oracle-sess",
 		OnChild: func(h *fakeHost, child *fakeChildState, _ string) error {
-			time.Sleep(15 * time.Millisecond)
+			h.untilWaitWatches()
 			h.finishChildWithText(child, "ORACLE_CHILD_OK")
 			return nil
 		},
@@ -204,6 +204,7 @@ func TestWokenIdleSubagentRunsMonitoredTurnAndRelays(t *testing.T) {
 			if !strings.Contains(promptText, "delivered to `Main` when you stop") {
 				t.Errorf("expected relayOnStop clause on wake turn, got:\n%s", promptText)
 			}
+			h.untilWaitWatches()
 			h.finishChildWithText(child, "second turn follow-up answer")
 			return nil
 		},
@@ -216,8 +217,27 @@ func TestWokenIdleSubagentRunsMonitoredTurnAndRelays(t *testing.T) {
 	}); errMsg != "" {
 		t.Fatalf("spawn failed: %s", errMsg)
 	}
-	if _, errMsg := h.callTool("wait", map[string]any{}); errMsg != "" {
-		t.Fatalf("first wait failed: %s", errMsg)
+	j1, ok := jobs.Get("wake-sess", "FollowWorker")
+	if !ok {
+		t.Fatalf("expected FollowWorker job")
+	}
+	select {
+	case <-j1.Done():
+	case <-time.After(3 * time.Second):
+		t.Fatalf("FollowWorker initial turn did not finish")
+	}
+	// Wait for FollowWorker to transition to idle before messaging it.
+	if ref, ok := rt.Registry.GetInSession("wake-sess", "FollowWorker"); ok {
+		deadline := time.Now().Add(3 * time.Second)
+		for time.Now().Before(deadline) {
+			ref.mu.Lock()
+			st := ref.Status
+			ref.mu.Unlock()
+			if st == "idle" {
+				break
+			}
+			time.Sleep(5 * time.Millisecond)
+		}
 	}
 
 	// Message idle FollowWorker from Main via `agent://FollowWorker`.
@@ -1392,7 +1412,7 @@ func TestWaitUnwatchRedeliversSettledJobOnAbort(t *testing.T) {
 		defer close(waitDone)
 		_, _ = h.callToolAsync("wait", map[string]any{}, cancelCh)
 	}()
-	time.Sleep(30 * time.Millisecond)
+	h.untilWaitWatches()
 	j1.finish("completed", "J1 settled during wait", "", nil, nil, false, nil)
 	time.Sleep(30 * time.Millisecond)
 	close(cancelCh)
@@ -2407,15 +2427,10 @@ func TestRound4_YieldSchemaTaskDetailsPromptAndWaitDetails(t *testing.T) {
 	// Finding 16, Finding 18 (3), and Wait details end-to-end with a 2-child batch.
 	ext := sdk.New("test-round4-batch")
 	RegisterWithRuntime(ext, rt)
-	// The children finish only once `wait` watches them. A child that finished and delivered its result before
-	// the call leaves `wait` nothing to report, and one still starting when the test ends fails in a later test.
-	childrenMayFinish := make(chan struct{})
-	releaseChildren := sync.OnceFunc(func() { close(childrenMayFinish) })
-	t.Cleanup(releaseChildren)
 	h := startFakeHost(t, ext, fakeHostOptions{
 		SessionID: "round4-batch-sess",
 		OnChild: func(h *fakeHost, child *fakeChildState, _ string) error {
-			<-childrenMayFinish
+			h.untilWaitWatches()
 			h.finishChildWithText(child, "ok")
 			return nil
 		},
@@ -2467,22 +2482,6 @@ func TestRound4_YieldSchemaTaskDetailsPromptAndWaitDetails(t *testing.T) {
 	}
 
 	// Wait for both children to finish and check wait details (`meta.source`, no `agentOutputPublished`).
-	// `wait` sends a progress update when it starts to watch its jobs.
-	go func() {
-		defer releaseChildren()
-		for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(2 * time.Millisecond) {
-			h.mu.Lock()
-			updates := append([]map[string]any(nil), h.toolUpdates...)
-			h.mu.Unlock()
-			for _, update := range updates {
-				result, _ := update["result"].(map[string]any)
-				details, _ := result["details"].(map[string]any)
-				if details["op"] == "wait" {
-					return
-				}
-			}
-		}
-	}()
 	waitRes, errMsg := h.callTool("wait", map[string]any{})
 	if errMsg != "" {
 		t.Fatalf("wait failed: %s", errMsg)

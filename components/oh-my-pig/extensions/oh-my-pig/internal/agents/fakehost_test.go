@@ -56,24 +56,27 @@ type fakeHostOptions struct {
 }
 
 type fakeHost struct {
-	t           *testing.T
-	nc          net.Conn
-	opts        fakeHostOptions
-	runDone     chan error
-	writeMu     sync.Mutex
-	mu          sync.Mutex
-	calls       []fakeHostCall
-	sentMsgs    []map[string]any
-	toolUpdates []map[string]any
-	toolDescs   map[string]string
-	toolParams  map[string]map[string]any
-	children    map[string]*fakeChildState
-	handlers    map[string][]int
-	tools       map[string]bool
-	pending     map[string]chan json.RawMessage
-	failures    map[string]string
-	nextID      int
-	stopped     bool
+	t             *testing.T
+	nc            net.Conn
+	opts          fakeHostOptions
+	runDone       chan error
+	writeMu       sync.Mutex
+	mu            sync.Mutex
+	calls         []fakeHostCall
+	sentMsgs      []map[string]any
+	toolUpdates   []map[string]any
+	toolDescs     map[string]string
+	toolParams    map[string]map[string]any
+	children      map[string]*fakeChildState
+	handlers      map[string][]int
+	tools         map[string]bool
+	pending       map[string]chan json.RawMessage
+	failures      map[string]string
+	nextID        int
+	stopped       bool
+	stoppedCh     chan struct{}
+	waitWatching  chan struct{}
+	waitWatchOnce sync.Once
 }
 type fakeHostCall struct {
 	Method string
@@ -138,17 +141,19 @@ func startFakeHost(t *testing.T, ext *sdk.Extension, opts fakeHostOptions) *fake
 	}
 	hostSide, extSide := net.Pipe()
 	h := &fakeHost{
-		t:          t,
-		nc:         hostSide,
-		opts:       opts,
-		runDone:    make(chan error, 1),
-		toolDescs:  map[string]string{},
-		toolParams: map[string]map[string]any{},
-		children:   map[string]*fakeChildState{},
-		handlers:   map[string][]int{},
-		tools:      map[string]bool{},
-		pending:    map[string]chan json.RawMessage{},
-		failures:   map[string]string{},
+		t:            t,
+		nc:           hostSide,
+		opts:         opts,
+		runDone:      make(chan error, 1),
+		toolDescs:    map[string]string{},
+		toolParams:   map[string]map[string]any{},
+		children:     map[string]*fakeChildState{},
+		handlers:     map[string][]int{},
+		tools:        map[string]bool{},
+		pending:      map[string]chan json.RawMessage{},
+		failures:     map[string]string{},
+		stoppedCh:    make(chan struct{}),
+		waitWatching: make(chan struct{}),
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 
@@ -254,6 +259,11 @@ func (h *fakeHost) serve() {
 				h.mu.Lock()
 				h.toolUpdates = append(h.toolUpdates, u)
 				h.mu.Unlock()
+				if result, _ := u["result"].(map[string]any); result != nil {
+					if details, _ := result["details"].(map[string]any); details != nil && details["op"] == "wait" {
+						h.waitWatchOnce.Do(func() { close(h.waitWatching) })
+					}
+				}
 			}
 		case "response":
 			h.mu.Lock()
@@ -681,6 +691,19 @@ func (h *fakeHost) getChildren() []*fakeChildState {
 	return out
 }
 
+// untilWaitWatches blocks until the host observes the first `tool_update`
+// whose `result.details.op` is `"wait"` (emitted by ExecuteWait right after
+// registering its watch), the host stops, or 5 seconds elapse.
+func (h *fakeHost) untilWaitWatches() {
+	timer := time.NewTimer(5 * time.Second)
+	defer timer.Stop()
+	select {
+	case <-h.waitWatching:
+	case <-h.stoppedCh:
+	case <-timer.C:
+	}
+}
+
 func (h *fakeHost) stop() {
 	h.mu.Lock()
 	if h.stopped {
@@ -688,6 +711,7 @@ func (h *fakeHost) stop() {
 		return
 	}
 	h.stopped = true
+	close(h.stoppedCh)
 	h.mu.Unlock()
 
 	h.write(map[string]any{
