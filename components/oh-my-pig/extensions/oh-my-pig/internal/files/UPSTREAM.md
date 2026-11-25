@@ -8,6 +8,7 @@ Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, tag `v19.1.1`, comm
 - `packages/coding-agent/src/tools/read-selector.ts`
 - `packages/coding-agent/src/tools/read-format.ts`
 - `packages/coding-agent/src/tools/read-archive.ts`
+- `packages/coding-agent/src/tools/read-json.ts`
 - `packages/coding-agent/src/tools/write.ts`
 - `packages/coding-agent/src/tools/write-content.ts`
 - `packages/coding-agent/src/tools/auto-generated-guard.ts`
@@ -79,7 +80,6 @@ To avoid promising unsupported selectors/targets to the model:
 | `read` SQLite (`file.db`, `:table`, `?q=SELECT`) | Requires a SQLite driver; forbidden by no-third-party-modules / no-cgo rule |
 | `read` PDF, DOCX, PPTX, XLSX, EPUB (`markit`) | Requires external document converters / non-stdlib parsers |
 | `read` 7z, RAR, ISO, CAB, DEB, RPM, CPIO, AR, LZH, ARJ, ASAR, compressed streams | Formats not in the Go standard library (ZIP, JAR, APK, WHL, TAR, TAR.GZ/TGZ are supported) |
-| `read` JSON/JSONL `?q=<jq filter>` | Upstream runs `jq` as a builtin of its embedded shell (`read-json.ts:291-309`); omitted in pure-Go `internal/files` (returns an explicit unsupported-query error rather than `Path ... not found`) |
 | `read` video frames / contact sheets (`ffmpeg`/`ffprobe`) | Requires external `ffmpeg`/`ffprobe` binaries |
 | `read` SVG `:img` rasterization and HEIC/BMP transcoding / image auto-resize / `?q=` vision questions | Requires native image codecs/SVG rasterizer and a vision sub-call not available in Go stdlib |
 | `read` executable binary views (ELF/PE/Mach-O, Ghidra/dsm) | Requires binary analysis backend (`dsm`) |
@@ -91,4 +91,3 @@ To avoid promising unsupported selectors/targets to the model:
 | `write` LSP formatting (`lsp.formatOnWrite`) | LSP area provides diagnostics hook only; format-on-write edits are not wired |
 | `write` held-open SQLite file guard (`assertNotHeldOpen`) | Requires process-wide SQLite handle tracking not present since SQLite is not linked |
 | `write` `conflict://` URI prefix recovery (`recoverConflictUriPrefix`) | `write` does not strip an erroneous `<file>:` prefix before `conflict://N` (the helper exists in `internal/urls.RecoverConflictURIPrefix`) |
-| `read` `meta.pagedSource` flag | Only read by omp's `output-meta.ts` spill-skip optimization; not needed by PiG renderers |

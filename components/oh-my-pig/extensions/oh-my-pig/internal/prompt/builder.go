@@ -1027,7 +1027,12 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 		contextFiles := contextFilesFromOptions(options, cwd)
 		skills := skillsFromOptions(options)
 		appendPrompt, _ := options["appendSystemPrompt"].(string)
-		alwaysApply := DiscoverStickyRules(cwd, agentDir, "")
+		var ruleOpts RuleDiscoveryOptions
+		if RuleOptions != nil {
+			ruleOpts = RuleOptions(ctx)
+		}
+		discovered := DiscoverRules(cwd, agentDir, "", ruleOpts)
+		alwaysApply := append(DiscoverStickyRules(cwd, agentDir, ""), discovered.AlwaysApply...)
 
 		tmpl := base
 		if tmpl == "" {
@@ -1064,6 +1069,7 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			ToolCommandDocs:    toolCommandDocs,
 			ContextFiles:       contextFiles,
 			Skills:             skills,
+			Rules:              discovered.Rulebook,
 			AlwaysApplyRules:   alwaysApply,
 			EvalPreludes:       eval.EnabledPreludes(ctx),
 			Context:            ctx,

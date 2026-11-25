@@ -109,67 +109,6 @@
     "why": "Port's help://read/urls proc:// line documents both unavailable stream tapping and session-only service mode (no out-of-process daemon broker)."
   },
   {
-    "case": "read-structured",
-    "call_index": 0,
-    "tool": "read",
-    "regex": "(?:^\"a\"$|^JSON/JSONL `\\?q=` jq filter queries are not supported in oh-my-pig \\(read 'data\\.json' with line selectors or use jq via bash instead\\)\\.$)",
-    "is_error_mismatch": [
-      false,
-      true
-    ],
-    "details_paths": [
-      "meta",
-      "resolvedPath"
-    ],
-    "class": "LISTED",
-    "ref_file": "internal/files/UPSTREAM.md",
-    "ref_term": [
-      "`read` JSON/JSONL `?q=<jq filter>`"
-    ],
-    "ref_subject": [
-      "?q="
-    ],
-    "why": "JSON/JSONL ?q= jq filter queries are not ported in pure-Go internal/files (port errors with empty details while omp succeeds with meta+resolvedPath)."
-  },
-  {
-    "case": "read-structured",
-    "call_index": 1,
-    "tool": "read",
-    "regex": "(?:^\\{\"id\":[12],\"name\":\"[ab]\"\\}$|^JSON/JSONL `\\?q=` jq filter queries are not supported in oh-my-pig \\(read 'data\\.json' with line selectors or use jq via bash instead\\)\\.$)",
-    "is_error_mismatch": [
-      false,
-      true
-    ],
-    "details_paths": [
-      "meta",
-      "resolvedPath"
-    ],
-    "class": "LISTED",
-    "ref_file": "internal/files/UPSTREAM.md",
-    "ref_term": [
-      "`read` JSON/JSONL `?q=<jq filter>`"
-    ],
-    "ref_subject": [
-      "?q="
-    ],
-    "why": "JSON/JSONL ?q= jq filter queries are not ported in pure-Go internal/files (port errors with empty details while omp succeeds with meta+resolvedPath)."
-  },
-  {
-    "case": "read-structured",
-    "call_index": 2,
-    "tool": "read",
-    "regex": "(?:^Failed to execute JSON query: jq: error: syntax error, unexpected end of file at <top-level>, line 1, column 6:$|^    \\.nope\\[$|^         \\^$|^jq: 1 compile error$|^JSON/JSONL `\\?q=` jq filter queries are not supported in oh-my-pig \\(read 'data\\.json' with line selectors or use jq via bash instead\\)\\.$)",
-    "class": "LISTED",
-    "ref_file": "internal/files/UPSTREAM.md",
-    "ref_term": [
-      "`read` JSON/JSONL `?q=<jq filter>`"
-    ],
-    "ref_subject": [
-      "?q="
-    ],
-    "why": "JSON/JSONL ?q= jq filter queries (including invalid jq syntax) are not ported in pure-Go internal/files."
-  },
-  {
     "case": "read-image-vision",
     "call_index": 0,
     "tool": "read",
@@ -184,50 +123,6 @@
       "image auto-resize"
     ],
     "why": "Image auto-resize / WebP transcoding note is not ported (Go stdlib sends original PNG)."
-  },
-  {
-    "case": "internal-urls-rule",
-    "call_index": 0,
-    "tool": "read",
-    "regex": "(?:^Always keep functions small\\.$|^Unknown rule: demo-rule$|^Available: none$)",
-    "is_error_mismatch": [
-      false,
-      true
-    ],
-    "details_paths": [
-      "contentType",
-      "displayContent",
-      "meta",
-      "resolvedPath",
-      "rowPrefixes",
-      "totalLines"
-    ],
-    "class": "LISTED",
-    "ref_file": "internal/prompt/UPSTREAM.md",
-    "ref_term": [
-      "Full multi-provider rulebook discovery",
-      "rule://"
-    ],
-    "ref_subject": [
-      "rule://"
-    ],
-    "why": "Multi-provider rulebook discovery (.agents/rules) and urls.SetActiveRules wiring are not ported (port returns Unknown rule error with empty details while omp serves the rule file)."
-  },
-  {
-    "case": "internal-urls-rule",
-    "call_index": 1,
-    "tool": "read",
-    "regex": "(?:^Available: demo-rule, go-add-cleanup, go-bench-loop, go-exp-promoted, go-ioutil, go-join-hostport, go-new-expr, go-rand-v2, go-range-int, rs-box-leak, rs-future-prelude, rs-lazylock, rs-match-ergonomics, rs-result-type, ts-bare-catch, ts-import-type, ts-no-any, ts-no-deprecated-leftovers, ts-no-dynamic-import, ts-no-inline-cast-access, ts-no-local-is-record, ts-no-return-type, ts-no-test-timers, ts-no-tiny-functions, ts-promise-with-resolvers, ts-redundant-clear-guard, ts-set-map$|^Available: none$)",
-    "class": "LISTED",
-    "ref_file": "internal/prompt/UPSTREAM.md",
-    "ref_term": [
-      "Full multi-provider rulebook discovery",
-      "rule://"
-    ],
-    "ref_subject": [
-      "rule://"
-    ],
-    "why": "Bundled rulebook discovery (26 built-in rules + .agents/rules) is not ported, so unknown rule:// reports Available: none."
   },
   {
     "case": "bash-async-and-service",

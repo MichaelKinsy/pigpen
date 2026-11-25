@@ -776,34 +776,18 @@ func (p palette) renderDiffLines(diffText string, expanded bool, innerWidth int)
 
 	var rows []string
 	prevLineNum := ""
-	for i, pd := range parsed {
-		if !pd.ok {
-			prevLineNum = ""
-			if strings.TrimSpace(rawLines[i]) == "" || strings.TrimSpace(rawLines[i]) == "..." {
-				rows = append(rows, p.fg("dim", strings.Repeat(" ", numWidth)+"…"))
-			} else {
-				rows = append(rows, wrapAnsi(p.fg("toolDiffContext", replaceTabs(rawLines[i])), innerWidth)...)
-			}
-			continue
-		}
-		displayNum := pd.lineNum
+	emitDiffRow := func(prefix, lineNum, content, color string) {
+		displayNum := lineNum
 		if displayNum != "" && displayNum == prevLineNum {
 			displayNum = ""
 		} else if displayNum != "" {
 			prevLineNum = displayNum
 		}
-		gutter := formatCodeFrameLine(pd.prefix, displayNum, "", numWidth)
-		color := "toolDiffContext"
-		switch pd.prefix {
-		case "+":
-			color = "toolDiffAdded"
-		case "-":
-			color = "toolDiffRemoved"
-		}
+		gutter := formatCodeFrameLine(prefix, displayNum, "", numWidth)
 		gutterW := tui.VisibleWidth(gutter)
 		contPrefix := strings.Repeat(" ", max(0, gutterW-1)) + "│"
 		bodyW := max(1, innerWidth-gutterW)
-		wrapped := wrapAnsi(pd.content, bodyW)
+		wrapped := wrapAnsi(content, bodyW)
 		for j, seg := range wrapped {
 			g := contPrefix
 			if j == 0 {
@@ -811,6 +795,56 @@ func (p palette) renderDiffLines(diffText string, expanded bool, innerWidth int)
 			}
 			rows = append(rows, clampRow(p.fg(color, g+seg), innerWidth))
 		}
+	}
+
+	for i := 0; i < len(parsed); {
+		pd := parsed[i]
+		if !pd.ok {
+			prevLineNum = ""
+			if strings.TrimSpace(rawLines[i]) == "" || strings.TrimSpace(rawLines[i]) == "..." {
+				rows = append(rows, p.fg("dim", strings.Repeat(" ", numWidth)+"…"))
+			} else {
+				rows = append(rows, wrapAnsi(p.fg("toolDiffContext", replaceTabs(rawLines[i])), innerWidth)...)
+			}
+			i++
+			continue
+		}
+
+		// Match chrome/diff.ts:231-273: collect consecutive '-' and '+' runs;
+		// when it is a 1-to-1 replacement, render intra-line word diff with inverse.
+		if pd.prefix == "-" {
+			remStart := i
+			for i < len(parsed) && parsed[i].ok && parsed[i].prefix == "-" {
+				i++
+			}
+			remEnd := i
+			addStart := i
+			for i < len(parsed) && parsed[i].ok && parsed[i].prefix == "+" {
+				i++
+			}
+			addEnd := i
+
+			if remEnd-remStart == 1 && addEnd-addStart == 1 {
+				remLine, addLine := p.renderIntraLineDiff(parsed[remStart].content, parsed[addStart].content)
+				emitDiffRow("-", parsed[remStart].lineNum, remLine, "toolDiffRemoved")
+				emitDiffRow("+", parsed[addStart].lineNum, addLine, "toolDiffAdded")
+			} else {
+				for k := remStart; k < remEnd; k++ {
+					emitDiffRow("-", parsed[k].lineNum, parsed[k].content, "toolDiffRemoved")
+				}
+				for k := addStart; k < addEnd; k++ {
+					emitDiffRow("+", parsed[k].lineNum, parsed[k].content, "toolDiffAdded")
+				}
+			}
+			continue
+		}
+
+		color := "toolDiffContext"
+		if pd.prefix == "+" {
+			color = "toolDiffAdded"
+		}
+		emitDiffRow(pd.prefix, pd.lineNum, pd.content, color)
+		i++
 	}
 
 	if !expanded && len(rows) > previewDiffLines {

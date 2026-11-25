@@ -433,6 +433,7 @@ export PIG_CODING_AGENT_SESSION_DIR="$base/agent/sessions"
 export PI_CODING_AGENT_SESSION_DIR="$base/agent/sessions"
 export PIG_OFFLINE=1
 export PI_OFFLINE=1
+export PI_NO_RULES=1
 export TERN_TSP_RECORD="$base/out/tsp.jsonl"
 export XDG_CONFIG_HOME="$base/home/.config"
 export XDG_DATA_HOME="$base/home/.local/share"

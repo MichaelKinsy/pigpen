@@ -415,6 +415,15 @@ func setMetaTruncation(details map[string]any, trunc map[string]any) {
 	meta["truncation"] = trunc
 }
 
+func setMetaPagedSource(details map[string]any) {
+	meta, ok := details["meta"].(map[string]any)
+	if !ok || meta == nil {
+		meta = map[string]any{}
+		details["meta"] = meta
+	}
+	meta["pagedSource"] = true
+}
+
 // setMetaColumnTruncated records meta.limits.columnTruncated matching omp's OutputMetaBuilder.columnTruncated.
 // upstream: packages/coding-agent/src/tools/read.ts:3485-3496, output-meta.ts:397-420
 func setMetaColumnTruncated(details map[string]any, cut *columnCutInfo, selectorBase string, rawLineBudget int) {
@@ -452,34 +461,6 @@ func isMarkdownPath(p string) bool {
 		}
 	}
 	return false
-}
-
-// checkUnsupportedJSONQuery returns an explicit unsupported-feature error when
-// rawPath looks like `<existing-file>?q=<jq>` (and does not exist literally on disk).
-func checkUnsupportedJSONQuery(basePath, cwd string) error {
-	qIdx := strings.IndexByte(basePath, '?')
-	if qIdx <= 0 {
-		return nil
-	}
-	filePart := basePath[:qIdx]
-	queryStr := basePath[qIdx+1:]
-	hasJSONParam := false
-	for part := range strings.SplitSeq(queryStr, "&") {
-		k, _, _ := strings.Cut(part, "=")
-		switch k {
-		case "q", "query", "raw", "compact", "offset", "limit":
-			hasJSONParam = true
-		}
-	}
-	if !hasJSONParam {
-		return nil
-	}
-	absFile := resolveToCwd(filePart, cwd)
-	info, err := os.Stat(absFile)
-	if err != nil || !info.Mode().IsRegular() {
-		return nil
-	}
-	return fmt.Errorf("JSON/JSONL `?q=` jq filter queries are not supported in oh-my-pig (read '%s' with line selectors or use jq via bash instead).", filePart)
 }
 
 func copyDetails(in map[string]any) map[string]any {
@@ -582,8 +563,8 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	info, err := os.Stat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if qErr := checkUnsupportedJSONQuery(basePath, cwd); qErr != nil {
-				return sdk.ToolResult{}, qErr
+			if jsonAbs, jsonSel, ok := resolveJSONReadPath(basePath, cwd); ok {
+				return readJSONQuery(context.Background(), jsonAbs, jsonSel, parsed)
 			}
 			if diagErr := checkLineColDiagnosis(basePath, selStr, cwd); diagErr != nil {
 				return sdk.ToolResult{}, diagErr
@@ -896,6 +877,16 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		if rawMode {
 			details["raw"] = true
 		}
+		details["truncation"] = map[string]any{
+			"truncated":             true,
+			"truncatedBy":           "bytes",
+			"totalLines":            totalLines - startIdx,
+			"totalBytes":            firstBytes,
+			"outputLines":           1,
+			"outputBytes":           len(snippet),
+			"lastLinePartial":       false,
+			"firstLineExceedsLimit": true,
+		}
 		truncMeta := map[string]any{
 			"direction":   "head",
 			"truncatedBy": "bytes",
@@ -921,8 +912,12 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		} else {
 			setMetaSource(details, "path", absPath)
 		}
+		if unspilledPages {
+			setMetaPagedSource(details)
+		}
 		if rawMode {
 			details["raw"] = true
+			setMetaPagedSource(details)
 			return sdk.ToolResult{Content: "", Details: details}, nil
 		}
 		if shouldAddHashLines {
@@ -933,8 +928,13 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 				"startLine":   1,
 				"lineNumbers": []any{1},
 			}
-			return sdk.ToolResult{Content: header + "\n1:", Details: details}, nil
+			out := header + "\n1:"
+			if len(out) <= DefaultSpillThreshold {
+				setMetaPagedSource(details)
+			}
+			return sdk.ToolResult{Content: out, Details: details}, nil
 		}
+		setMetaPagedSource(details)
 		return sdk.ToolResult{Content: "", Details: details}, nil
 	}
 
@@ -1144,6 +1144,16 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		// upstream: packages/coding-agent/src/tools/read.ts:3322-3331, output-meta.ts:181-197
 		// omp always passes maxBytes: maxBytesForRead into resultBuilder.truncation on truncated
 		// non-partial reads (both truncatedBy:"lines" and truncatedBy:"bytes").
+		details["truncation"] = map[string]any{
+			"truncated":             true,
+			"truncatedBy":           truncBy,
+			"totalLines":            selectedWindowLines,
+			"totalBytes":            selectedBytes,
+			"outputLines":           len(collected),
+			"outputBytes":           collectedBytes,
+			"lastLinePartial":       false,
+			"firstLineExceedsLimit": false,
+		}
 		truncMeta := map[string]any{
 			"direction":   "head",
 			"truncatedBy": truncBy,
@@ -1160,6 +1170,9 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	if colCut != nil {
 		out += formatColumnCutNotice(colCut, selectorBase)
 		setMetaColumnTruncated(details, colCut, selectorBase, DefaultMaxBytes)
+	}
+	if unspilledPages || len(out) <= DefaultSpillThreshold {
+		setMetaPagedSource(details)
 	}
 	return sdk.ToolResult{Content: out, Details: details}, nil
 }
@@ -1534,6 +1547,9 @@ func readLargeFileStreaming(
 			truncMeta["totalLines"] = tailPlan.totalLines
 		}
 		setMetaTruncation(details, truncMeta)
+	}
+	if unspilledPages || len(out) <= DefaultSpillThreshold {
+		setMetaPagedSource(details)
 	}
 	return sdk.ToolResult{Content: out, Details: details}, nil
 }

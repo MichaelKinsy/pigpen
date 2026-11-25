@@ -116,23 +116,6 @@
     "why": "commit and dsm eval preludes are not ported, so their guidance paragraphs are absent."
   },
   {
-    "kind": "system_prompt",
-    "target": "*",
-    "case": "internal-urls-rule",
-    "side": "omp",
-    "regex": "(?:^# Skills & Rules$|^<domain-rules>$|^  - demo-rule \\(\\): Demo oracle rule$|^- demo-rule \\(\\): Demo oracle rule$|^</domain-rules>$|^  - rule://<name>: details\\.$|^- rule://<name>: details\\.$|^  - Read relevant rules first\\.$|^- Read relevant rules first\\.$)",
-    "class": "LISTED",
-    "ref_file": "internal/prompt/UPSTREAM.md",
-    "ref_term": [
-      "Full multi-provider rulebook discovery",
-      "rule://"
-    ],
-    "ref_subject": [
-      "rule://"
-    ],
-    "why": "Multi-provider rulebook discovery (.agents/rules) and <domain-rules> prompt injection are not ported."
-  },
-  {
     "kind": "child_system_prompt",
     "target": "child",
     "case": "*",

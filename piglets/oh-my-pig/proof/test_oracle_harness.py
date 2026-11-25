@@ -743,10 +743,22 @@ class TestHarnessFixes(unittest.TestCase):
 
     def test_audit_f1_unexplained_details_fail_under_listed_text_and_timing(self) -> None:
         """Audit #1 demonstrating inputs: unexplained details MUST produce `differs`, never `differs-listed` or `timing`."""
-        t_entries = oracle.load_text_allowlist()
+        t_entries = [
+            {
+                "case": "read-structured",
+                "call_index": 0,
+                "tool": "read",
+                "regex": r"(?:^\"a\"$|^JSON/JSONL `\?q=` jq filter queries are not supported in oh-my-pig \(read 'data\.json' with line selectors or use jq via bash instead\)\.$)",
+                "is_error_mismatch": [False, True],
+                "details_paths": ["meta", "resolvedPath"],
+                "class": "LISTED",
+                "ref": "synthetic:1",
+                "why": "synthetic listed text entry for audit #1 test",
+            }
+        ]
         d_entries = oracle.load_details_allowlist()
 
-        # Demo 1: read-structured#0 with listed jq text + garbage port details -> differs (NOT differs-listed)
+        # Demo 1: listed text entry + garbage port details -> differs (NOT differs-listed)
         case = {"name": "read-structured", "calls": [{"tool": "read", "arguments": {"path": "data.json?q=.items[0].name"}}]}
         omp_res = {
             "rc": 0, "setup_rc": 0, "timed_out": False, "network_attempts": [], "leaked_pids": [],

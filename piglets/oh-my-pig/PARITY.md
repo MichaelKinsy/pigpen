@@ -14,24 +14,24 @@ States used in this document:
 
 ---
 
-## Final Gate Proof Runs (Single Binary `r19`)
+## Final Gate Proof Runs (Single Binary `r20`)
 
-Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and each proof harness below ran alone on **one final Binary** (the oracle in gate run 3, the two drawing harnesses in gate run 4): **`r19`** (`74,660,050` bytes, sha256 `da201049f29de0fa963c14209f7f12fd4dad3c80d5212b785ad9e7933b020218`; no production code changed after `r19` was built — later changes are tests, proof harness, and documentation).
+Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r20`** (`74,793,234` bytes, sha256 `73953fcc240ab22c0f84371b0e50bb82ed4aa0ab87d90ce70aa321778b5a1c44`).
 
 ### Block 1 — Per-Tool Oracle (`proof/oracle.sh`)
 
 ```text
 Command: ORACLE_MODE=both OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ORACLE_OUT=<out>/oracle piglets/oh-my-pig/proof/oracle.sh piglets/oh-my-pig/proof/cases
-Run:     Binary r19 (sha256 da201049f29de0fa963c14209f7f12fd4dad3c80d5212b785ad9e7933b020218),
-         gate run 3, measured 2026-11-25 05:43:31 (load ~1), alone, no allowances, exit 0
+Run:     Binary r20 (sha256 73953fcc240ab22c0f84371b0e50bb82ed4aa0ab87d90ce70aa321778b5a1c44),
+         measured 2026-11-25, alone, no allowances, exit 0
 Totals:  52 cases (0 failed), 309 calls:
-         166 identical, 131 details-listed, 12 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
+         225 identical, 77 details-listed, 7 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
 Recorded tool_execution_start: 306 identical, 3 recorded-listed (HOST), 0 recorded-differs
 Surfaces: 8 parent snapshots listed (0 differs),
           6 child surfaces across 5 cases paired by agent id — 6 listed (0 differs, 0 missing),
-          45 follow-ups identical + 7 listed (0 differs)
-Allowlists: 0 stale across details (48; 3 real_model_only), text (14), recorded (1), surface (27)
+          45 follow-ups identical + 5 listed (0 differs)
+Allowlists: 0 stale across details (46; 3 real_model_only), text (9), recorded (1), surface (26)
 Hygiene: network_attempts=0, leaked_pids=0
 ```
 
@@ -40,8 +40,8 @@ Hygiene: network_attempts=0, leaked_pids=0
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            OMP_PROOF_ROOT=<out>/tern piglets/oh-my-pig/proof/run.sh
-Run:     Binary r19 (sha256 da201049f29de0fa963c14209f7f12fd4dad3c80d5212b785ad9e7933b020218),
-         gate run 4, measured 2026-11-25 06:06:33 (load ~3, display locked), alone, no allowances, exit 0
+Run:     Binary r20 (sha256 73953fcc240ab22c0f84371b0e50bb82ed4aa0ab87d90ce70aa321778b5a1c44),
+         measured 2026-11-25, alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns consumed per side, in_flight=0)
 Parts:   30 parts across 23/23 steps (0 not-compared steps):
          13 same, 17 expected, 0 timing, 0 differs, 0 missing
@@ -59,10 +59,10 @@ Allowlist: 39 entries in drawing_allowlist.json, 0 stale, 0 zero-hit
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ANSI_OUT=<out>/ansi piglets/oh-my-pig/proof/ansi.sh
-Run:     Binary r19 (sha256 da201049f29de0fa963c14209f7f12fd4dad3c80d5212b785ad9e7933b020218),
-         gate run 4, measured 2026-11-25 06:07:52 (load ~3, display locked), alone, no allowances, exit 0
+Run:     Binary r20 (sha256 73953fcc240ab22c0f84371b0e50bb82ed4aa0ab87d90ce70aa321778b5a1c44),
+         measured 2026-11-25, alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns, 15 prompts, 5 snapshots, 0 leaked PIDs per side;
-         scrollback 232 omp / 238 pig lines)
+         scrollback 231 omp / 238 pig lines)
 Final screen (80x24, --screen-regions):
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
          text: 2/2 hunks expected (11 HOST lines); blank: 1 expected;
@@ -71,10 +71,10 @@ Final screen (80x24, --screen-regions):
          dock height: omp 15 vs pig 15 (delta 0); full-screen clears: omp 2 vs pig 6
 Full scrollback (120x40 -> 80x24):
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
-         text: 7/7 hunks expected (34 lines: ON_PURPOSE=6, HOST=22, LISTED=6); blank: 9 expected;
-         colour+attrs: 73/73 runs expected across 149 text-matching lines (66 HOST, 7 LISTED);
+         text: 7/7 hunks expected (33 lines: ON_PURPOSE=5, HOST=22, LISTED=6); blank: 9 expected;
+         colour+attrs: 71/71 runs expected across text-matching lines (66 HOST, 5 LISTED);
          mode: 1 expected (OMP_ARTIFACT)
-Allowlist: 20 entries in terminal_allowlist.json (9 text, 6 colour/attrs, 4 blank_row, 1 terminal_mode)
+Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blank_row, 1 terminal_mode)
 ```
 
 ### Block 4 — Gate Suites, Differentials, Vet & Repository Checks
@@ -128,7 +128,7 @@ Do not read "0 unexplained" as "identical to omp". Each harness checks a bounded
 
 Every item below comes directly from the six checked-in allowlist files (`piglets/oh-my-pig/proof/{surface,text,recorded,details,drawing,terminal}_allowlist.json`) and the `UPSTREAM.md` / `OMP-UPSTREAM.md` rows they cite, ordered **model-facing first**, then **user-facing (Tern & terminal)**, then **details-only**.
 
-### 1. Model-Facing Differences (`surface_allowlist.json` [27], `text_allowlist.json` [14], `recorded_allowlist.json` [1])
+### 1. Model-Facing Differences (`surface_allowlist.json` [26], `text_allowlist.json` [9], `recorded_allowlist.json` [1])
 
 **`ON_PURPOSE`** (2 entries):
 - **Role line (parent & child system prompts)**: the model reads `You are oh-my-pig's trusted coding assistant.` instead of `You are omp's trusted coding assistant.` (`internal/prompt/UPSTREAM.md:92`).
@@ -138,17 +138,16 @@ Every item below comes directly from the six checked-in allowlist files (`piglet
 - **Depth-1 subagents cannot delegate (`child_system_prompt`, `child_tool_membership`, `child_tool_description`)**: PiG does not bind `createChildSession` on child sessions (`coding/create_agent_session.go:149`), so depth-1 children omit `task` from their tool list, `# Tool Inventory`, `# Delegation`, and `eval`'s `Session tool names:` line (`internal/agents/UPSTREAM.md:111`).
 - **`tool_execution_start` keeps `i` inside `args` (`recorded_allowlist.json`)**: PiG emits raw `args` before `PrepareArguments` with no top-level `intent` field (`$PIG_SRC/agent/tool_execution.go:640`, `coding/cli/rpc_events.go:146-147`).
 
-**`LISTED` — System prompt & tool descriptions/schemas** (20 entries in `surface_allowlist.json`):
-- **System prompt lines omitted (parent & child)**: `proc://<id>/streams` clause (`internal/shell/UPSTREAM.md:116`); `ssh://` (`internal/urls/UPSTREAM.md:75`); `omp://` (`internal/urls/UPSTREAM.md:74`); `report_issue` Automated QA `<critical>` block (`internal/prompt/UPSTREAM.md:101`); `commit` and `dsm` eval prelude guidance paragraphs (`internal/prompt/UPSTREAM.md:102`); `<domain-rules>` `.agents/rules` injection (`internal/prompt/UPSTREAM.md:107`).
+**`LISTED` — System prompt & tool descriptions/schemas** (19 entries in `surface_allowlist.json`):
+- **System prompt lines omitted (parent & child)**: `proc://<id>/streams` clause (`internal/shell/UPSTREAM.md:116`); `ssh://` (`internal/urls/UPSTREAM.md:75`); `omp://` (`internal/urls/UPSTREAM.md:74`); `report_issue` Automated QA `<critical>` block (`internal/prompt/UPSTREAM.md:101`); `commit` and `dsm` eval prelude guidance paragraphs (`internal/prompt/UPSTREAM.md:102`).
 - **Same-batch sibling status in child `# Peers` (`peers_sibling_idle_vs_running`)**: in a multi-child batch under an instant scripted model, a sibling listed in `# Peers` appears as `running` in oh-my-pig where omp shows `idle` because omp speculatively launches the first batch item while arguments are still streaming (`internal/agents/UPSTREAM.md:119`).
 - **Tool descriptions & schema narrowed to what is ported**: `read` omits AST folding, PDF/DOCX/SQLite/7z/RAR/jq/video/SVG promises (`internal/files/UPSTREAM.md:28`); `bash` omits "5.3", `pty` = interactive, internal-URI VFS, and the ~95 in-process builtins list (`internal/shell/UPSTREAM.md:114`); `eval` omits `@tool`/`tool(fn)` (`internal/eval/UPSTREAM.md:98`) and `archive`/`commit`/`dsm` namespaces (`internal/eval/UPSTREAM.md:107`); `task` description and JSON schema omit `tasks[].tools` (`internal/agents/UPSTREAM.md:107`); `write` omits archive/SQLite writes (`internal/files/UPSTREAM.md:90`).
 - **Vision follow-up attachment (`read-image-vision`)**: the model receives the original 92-byte PNG instead of omp's auto-resized/WebP-transcoded 184-byte attachment (`internal/files/UPSTREAM.md:84`).
-**`LISTED` — Tool result text** (14 entries in `text_allowlist.json`):
+
+**`LISTED` — Tool result text** (9 entries in `text_allowlist.json`):
 - **`proc://<id>/streams` and `/streams/<n>` (`bash-notify-streams-cancel` #5, #6)**: always returns the empty-streams notice or `Stream not found` (`isError=true`) because system `bash` has no pipe/redirection taps (`internal/shell/UPSTREAM.md:116`).
 - **`help://read/urls` (`internal-urls-read-write` #5)**: omits `ssh://` (`internal/urls/UPSTREAM.md:75`) and marks `proc://<id>/streams` unavailable and service mode session-only (`internal/shell/UPSTREAM.md:116,119`).
-- **`read` JSON/JSONL `?q=` jq filter (`read-structured` #0, #1, #2)**: returns an explicit unsupported-query error instead of running `jq` (`internal/files/UPSTREAM.md:82`).
 - **`read` image metadata line (`read-image-vision` #0)**: omits omp's auto-resize/WebP transcoding note (`internal/files/UPSTREAM.md:84`).
-- **`rule://` (`internal-urls-rule` #0, #1)**: returns `Unknown rule` / `Available: none` because `.agents/rules` and omp's 26 bundled rules are not wired (`internal/prompt/UPSTREAM.md:107`).
 - **Named services in print mode (`bash-async-and-service` #3, #4)**: omits omp's ` — persistent` suffix because in-process `ServiceManager` is session-only (`internal/shell/UPSTREAM.md:119`).
 - **Unknown-agent `Searched:` list (`task-errors-and-agent-urls` #0)**: prints `~/.pig/agent/agents, ~/.omp/agent/agents` where omp prints `~/.omp/agent/agents` (`internal/agents/UPSTREAM.md:118`).
 
@@ -177,15 +176,14 @@ Every item below comes directly from the six checked-in allowlist files (`piglet
 **`HOST` tagged `class_in_doubt`** (3 entries — flagged by the audit because the Piglet may be able to reach part of the behaviour):
 - **`card[omp.user]` `actions.hold`, `row[omp.user.tools]`, and `col[omp.assistant]` `actions.hold`** (3 entries): timestamps and per-message rewind targets are HOST, but OSC 52 copy and `/rewind` via `Env.Send` may be reachable (`OMP-UPSTREAM.md:94-95`). *(The earlier 4th entry for the composer model chip display name was removed once `Options.ModelDisplayName` was wired; `drawing_allowlist.json` has 39 entries and 0 stale.)*
 
-### 3. User-Facing Differences — Plain-PTY Terminal (`terminal_allowlist.json` [20])
+### 3. User-Facing Differences — Plain-PTY Terminal (`terminal_allowlist.json` [19])
 
 **`ON_PURPOSE`** (2 text entries):
 - **Welcome version & random tip**: displays Piglet version (`v0.1.0`) and a random filtered tip validated against source tip lists and 72-col wrap (`internal/ansi/UPSTREAM.md:89`).
 
-**`LISTED`** (1 text + 2 colour entries):
+**`LISTED`** (1 text + 1 colour entry):
 - **Bash command text**: renders `$ <command>` instead of omp's Rust shell visualizer pseudo-code (`internal/ansi/UPSTREAM.md:95`).
 - **Syntax highlighting in `eval` code bodies**: plain `toolOutput` fg instead of tree-sitter/syntect syntax colours (`internal/ansi/UPSTREAM.md:86`).
-- **Intra-line word diffs in `edit`**: line-level green/red diff colours match, without omp's `diffWords` SGR inverse spans on changed tokens (`internal/ansi/UPSTREAM.md:87`).
 
 **`HOST`** (5 text + 4 colour + 3 blank-row entries):
 - **Stock editor frame**: PiG's stock editor draws top/bottom `───` rules and a blank input row instead of omp's frameless `╰─ ` gutter (integrator decision: delegated `SetEditorComponent` drops `/` and `@` completion and deadlocks exit; `internal/ansi/UPSTREAM.md:110`).
@@ -198,13 +196,12 @@ Every item below comes directly from the six checked-in allowlist files (`piglet
 **`OMP_ARTIFACT`** (1 text + 1 blank-row + 1 terminal-mode entry):
 - **omp resize alt-screen borrow & stale pre-resize dock copy**: on width resize, omp briefly enters `CSI ?1049h`…`?1049l` (verified strictly inside the resize byte range on omp, never on port) and can leave a stale 120-col pre-resize dock block in scrollback while PiG clears cleanly via `CSI 2J + CSI 3J` (`internal/ansi/UPSTREAM.md:105`).
 
-### 4. Details-Only Differences (`details_allowlist.json` [48])
+### 4. Details-Only Differences (`details_allowlist.json` [46])
 
 - **`HOST`** (3 entries): agent-loop prepare-phase failures return `{}` instead of omp's `{isError: true, error}` (`$PIG_SRC/agent/tool_execution.go:323-327`, 8 calls); failing `todo` `PrepareArguments` returns `{}` instead of `{phases, storage}` (`internal/todo/UPSTREAM.md:46`, 1 call).
-- **`LISTED`** (27 active entries): `bash` omits `trace` (36 calls, `internal/shell/UPSTREAM.md:117`) and `toolCommands[].tier` (9 calls, `internal/toolcmd/UPSTREAM.md:87`); `read` omits legacy top-level `truncation` object (uses `meta.truncation`/`meta.limits`, 8 calls, `internal/ansi/UPSTREAM.md:85`); `proc://` read/write daemon snapshots use service name as `id`, `policy.hold: "leases"`, and omit 9 out-of-process broker fields (`command`, `cwd`, `generation`, `leases`, `outputBytes`, `owner`, `readyMatch`, `restartCount`, `scope`, 1 call each, `internal/shell/UPSTREAM.md:120`); piped `bash` job fallback widget counts `outputTap` lines (`2`) without pipe-tap lines (`4`, 3 calls across `read`/`wait`, `internal/shell/UPSTREAM.md:116`).
+- **`LISTED`** (26 active entries): `bash` omits `trace` (36 calls, `internal/shell/UPSTREAM.md:117`) and `toolCommands[].tier` (9 calls, `internal/toolcmd/UPSTREAM.md:87`); `proc://` read/write daemon snapshots use service name as `id`, `policy.hold: "leases"`, and omit 9 out-of-process broker fields (`command`, `cwd`, `generation`, `leases`, `outputBytes`, `owner`, `readyMatch`, `restartCount`, `scope`, 1 call each, `internal/shell/UPSTREAM.md:120`); piped `bash` job fallback widget counts `outputTap` lines (`2`) without pipe-tap lines (`4`, 3 calls across `read`/`wait`, `internal/shell/UPSTREAM.md:116`).
 - **`LISTED [real_model_only]`** (3 entries, 0 hits in offline oracle): `read proc.jobs[].widget`, `write proc.jobs[].widget`, and `wait jobs[].widget` when omp's background cheap-model spec author produces `state: "live"` / `"authoring"` (`internal/shell/UPSTREAM.md:121`, `internal/agents/UPSTREAM.md:94`).
 - **`PORT_EXTRA`** (14 entries — extra fields emitted by the port for PiG's frontend/renderers, visible in JSON/RPC): `bash` `toolCommands[].callId` (9) and `toolCommandsSole` (4, `internal/toolcmd/UPSTREAM.md:87`); `edit` `patch` (9) and `perFileResults[].patch` (1, `internal/files/UPSTREAM.md:43`); `write` `diff` (18) and `patch` (18, `internal/files/UPSTREAM.md:42`); `read` `isDirectory: true` on `proc://` directory reads (6, `internal/shell/UPSTREAM.md:120`); `proc://` daemon convenience fields `name`, `pid` (read), `persist`, `detached` (`internal/shell/UPSTREAM.md:120`).
-- **`NO_CONSUMER_AT_TAG`** (1 entry): `read` omits `meta.pagedSource` (61 calls; at tag `v19.1.1` read only by `tools/output-meta.ts:597` and listed in `session-anonymizer.ts:166`, `internal/files/UPSTREAM.md:94`).
 
 ---
 
@@ -246,8 +243,8 @@ One deduplicated list across oracle, Tern, terminal, and extension areas, naming
 | Eval preludes (optional namespaces) | 6 (`browser`, `archive`, `commit`, `dsm`, `ratchet`, `computer`) | 1 (`browser`, accepted in 8th review) + 2 host bridges (`agent`, `workpool`) | `archive`, `commit`, `dsm`, `ratchet`, `computer` absent. |
 | Internal URL schemes | 20 | 15 registered (14 working, 1 `mcp://` SDK-gap stub) | Absent: `omp://`, `ssh://`, `vault://`, `memory://`, `security://`. |
 | System prompt | 1 | 1, with listed sections omitted | 49-fixture bun oracle test (`TestOracleFixtureParity`) byte-identical for ported sections; 8 parent + 6 child snapshots classified `listed` (0 unexplained, 0 missing) in gate 3. |
-| Headless Tern drawing | 30 parts / 23 steps | 13 same, 17 expected, 0 differs (Block 2) | 347 expected unmatched children + 413 expected count deltas, 0 unexplained, `capture_valid: true` (gate 4 on `r19`). |
-| Plain-PTY terminal drawing | 120×40 → 80×24 | 0 unexplained across text, blank, colour+attrs, mode (Block 3) | Dock height 15 vs 15; clears 2 vs 6; `capture_valid: true` (gate 4 on `r19`). |
+| Headless Tern drawing | 30 parts / 23 steps | 13 same, 17 expected, 0 differs (Block 2) | 347 expected unmatched children + 413 expected count deltas, 0 unexplained, `capture_valid: true` (`r20`). |
+| Plain-PTY terminal drawing | 120×40 → 80×24 | 0 unexplained across text, blank, colour+attrs, mode (Block 3) | Dock height 15 vs 15; clears 2 vs 6; `capture_valid: true` (`r20`). |
 | Slash commands | 89 built-in (+ `/skill:<name>`) | 21 of omp's own (+ 2 aliases `/rewind`, `/q`) + 17 PiG same-name (+ `/skill:<name>`) | 51 omp commands absent; Go tests only (`internal/modes`: 21, `internal/todo`: 20). |
 | Modes and directors | 16 (15 modes + 1 magic-keyword family of 5 words) | 5 (`plan`, `goal`, `loop`, `btw`, magic keywords ×5) | 11 absent (`plan-yolo`, `vibe`, `advisor`, `autoresearch`, `prewalk`, `ratchet`, `live`, `collab`, `cleanse`, `tan`, plus `rpc-ui`/`acp`). Go tests only. |
 | Shipped agents | 5 (`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`) | 5 (`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`) | `task.maxEffort` honoured; `auto` thinking falls back to `"high"` (no judge classifier). |
@@ -258,9 +255,9 @@ One deduplicated list across oracle, Tern, terminal, and extension areas, naming
 
 ## Per-Tool Table
 
-| Tool | State | Evidence (gate 3 on `r19` / tests) | Main things left out |
+| Tool | State | Evidence (`r20` / tests) | Main things left out |
 |---|---|---|---|
-| `read` | **same** (text, dirs, HTTP/HTML, conflict scan, URLs) / **listed** (`?q=`, image meta, streams, `rule://`) | Oracle: 90 calls / 32 cases (21 identical, 59 details-listed, 10 differs-listed). 48 Go tests. | PDF/DOCX/PPTX/XLSX/EPUB; SQLite; 7z/RAR/ISO/CAB/DEB/RPM/CPIO/AR/ASAR; `?q=` jq; video; SVG `:img` / image resize / `?q=` vision; binary `dsm`; tree-sitter declaration-only summary; workspace suffix resolution; multi-range streaming >4 MiB. |
+| `read` | **same** (text, dirs, HTTP/HTML, `?q=` jq, `rule://`, conflict scan, URLs) / **listed** (image meta, streams) | Oracle: 90 calls / 32 cases (80 identical, 5 details-listed, 5 differs-listed). 50+ Go tests. | PDF/DOCX/PPTX/XLSX/EPUB; SQLite; 7z/RAR/ISO/CAB/DEB/RPM/CPIO/AR/ASAR; video; SVG `:img` / image resize / `?q=` vision; binary `dsm`; tree-sitter declaration-only summary; workspace suffix resolution; multi-range streaming >4 MiB. |
 | `write` | **same** / **listed** (service stop text, `diff`/`patch` extras) | Oracle: 31 calls / 11 cases (11 identical, 19 details-listed, 1 differs-listed). 48 Go tests. | Archive member & SQLite writes; `lsp.formatOnWrite` structured detail; SQLite held-open guard; `conflict://` prefix recovery. |
 | `edit` | **same** / **listed** (lexical block ops, `patch` extra) | Oracle: 22 calls / 6 cases (13 identical, 9 details-listed). Block-op oracle: 10,573 anchors, 0 WRONG (Sample 3: 33.7% refused). 187 Go tests. | Tree-sitter block resolution (lexical only for ts/tsx/js/json/go/py/md/rs/yaml); syntax-probed warnings/blackbox/auto-repair; non-hashline dialects; streaming previews; SSH mirror writes. |
 | `bash` | **same** / **listed** (`trace`, `toolCommands` fields) | Oracle: 49 calls / 15 cases (12 identical, 37 details-listed). Interceptor diff: 200,000 cases (0 diffs). Approval diff: 32,599 cases (0 unexpected). 79 Go tests + 51 (`toolcmd`). | Embedded bash 5.3 VM & ~95 builtins; `proc://<id>/streams`; `details.trace`/AST visualizer; finite-command PTY overlay; persistent out-of-process daemon; shell minimizer/Spotlight; shell URL VFS; `direnv`; `bash.gitGuard`; `bash.allowCompoundCommands`; Kitty/Sixel; user rc snapshot; Windows `SIGTERM` trap grace. |

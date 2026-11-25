@@ -111,29 +111,6 @@
   },
   {
     "tool": "read",
-    "path": "meta.pagedSource",
-    "side": "omp-only",
-    "class": "NO_CONSUMER_AT_TAG",
-    "ref_file": "internal/files/UPSTREAM.md",
-    "ref_term": [
-      "`read` `meta.pagedSource` flag"
-    ],
-    "why": "At tag v19.1.1, meta.pagedSource is read only by omp's output-meta.ts:597 spill-skip optimization (and listed in session-anonymizer.ts:166); visible in JSON/RPC output."
-  },
-  {
-    "tool": "read",
-    "path": "truncation",
-    "side": "omp-only",
-    "class": "LISTED",
-    "ref_file": "internal/ansi/UPSTREAM.md",
-    "ref_term": [
-      "firstLineExceedsLimit",
-      "meta.truncation"
-    ],
-    "why": "Port reports read line/column truncation via meta.truncation / meta.limits rather than omp's legacy top-level truncation object (portable; tracked in internal/ansi/UPSTREAM.md)."
-  },
-  {
-    "tool": "read",
     "path": "isDirectory",
     "side": "port-only",
     "class": "PORT_EXTRA",

@@ -272,33 +272,6 @@
     "why": "omp applies Rust tree-sitter/syntect syntax highlighting to `eval` code bodies while oh-my-pig renders plain `toolOutput` (`rgb:156;163;176`); requires matching background and identical SGR attributes."
   },
   {
-    "name": "listed-edit-diffwords-inverse",
-    "kind": "colour",
-    "regions": [
-      "card:edit"
-    ],
-    "omp_fg": [
-      "rgb:0;255;136",
-      "rgb:255;71;87"
-    ],
-    "omp_attrs": [
-      "inverse"
-    ],
-    "pig_attrs": [],
-    "fg_must_match": true,
-    "bg_must_match": true,
-    "class": "LISTED",
-    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
-    "ref_term": [
-      "Intra-line word-level diff highlighting (`diffWords` inverse spans)"
-    ],
-    "ref_subject": [
-      "diffWords",
-      "inverse"
-    ],
-    "why": "omp highlights changed tokens inside `edit` diff lines with `@oh-my-pi/pi-natives` `diffWords` SGR inverse (`\\x1b[7m`) on green/red diff fg, while oh-my-pig renders matching line-level green/red fg and bg without intra-line inverse spans."
-  },
-  {
     "name": "blank-welcome-and-startup-notices",
     "kind": "blank_row",
     "side": "both",

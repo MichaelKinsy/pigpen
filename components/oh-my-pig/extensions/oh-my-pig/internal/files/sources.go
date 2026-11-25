@@ -668,6 +668,9 @@ func renderInMemoryText(
 				"lineNumbers": []any{ln},
 			}
 		}
+		if !unbounded && len(out) <= DefaultSpillThreshold {
+			setMetaPagedSource(details)
+		}
 		return sdk.ToolResult{Content: out, Details: details}, nil
 	}
 
@@ -763,6 +766,16 @@ func renderInMemoryText(
 		}
 		if stoppedByByteLimit || rawTruncated || !hasLimit {
 			// upstream: packages/coding-agent/src/tools/read-format.ts:540-549, output-meta.ts:188
+			details["truncation"] = map[string]any{
+				"truncated":             true,
+				"truncatedBy":           truncBy,
+				"totalLines":            selectedWindowLines,
+				"totalBytes":            len(normalized),
+				"outputLines":           len(collected),
+				"outputBytes":           collectedBytes,
+				"lastLinePartial":       false,
+				"firstLineExceedsLimit": false,
+			}
 			truncMeta := map[string]any{
 				"direction":   "head",
 				"truncatedBy": truncBy,
@@ -776,6 +789,9 @@ func renderInMemoryText(
 			}
 			setMetaTruncation(details, truncMeta)
 		}
+	}
+	if !unbounded && len(out) <= DefaultSpillThreshold {
+		setMetaPagedSource(details)
 	}
 	return sdk.ToolResult{Content: out, Details: details}, nil
 }

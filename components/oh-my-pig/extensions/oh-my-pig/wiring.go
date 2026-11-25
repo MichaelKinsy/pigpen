@@ -254,6 +254,17 @@ func wireSpillAndURLs() {
 		return outPolicy(ctx).Enabled
 	}
 	approval.OutPolicy = outPolicy
+	prompt.RuleOptions = func(ctx sdk.Context) prompt.RuleDiscoveryOptions {
+		store := settings.StoreFor(ctx)
+		builtin := store.Bool("ttsr.builtinRules")
+		return prompt.RuleDiscoveryOptions{
+			BuiltinRules:  &builtin,
+			DisabledRules: store.Strings("ttsr.disabledRules"),
+		}
+	}
+	urls.SetRulesProvider(func(c urls.Context) []urls.RuleEntry {
+		return prompt.DiscoverRulesForContext(c.SDK, c.Cwd)
+	})
 
 	urls.SetConflictWriteHooks(urls.ConflictWriteHooks{
 		OnFileWritten: func(c urls.Context, absPath, _, after string) string {

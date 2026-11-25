@@ -419,22 +419,151 @@ func TestRawURLReadHTMLContentType(t *testing.T) {
 	}
 }
 
-// Reading `<existing-file>?q=<jq>` must say jq filter queries are not supported
-// rather than misleadingly saying `Path '...?q=...' not found`.
-func TestUnsupportedJSONQueryMessage(t *testing.T) {
+// upstream: packages/coding-agent/src/tools/read-json.ts
+// JSON/JSONL `?q=<jq filter>` queries execute via system jq and match omp's output, flags, paging, and error format.
+func TestJSONQueryRead(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "data.json"), []byte(`{"a":1}`+"\n"), 0o644); err != nil {
+	dataPath := filepath.Join(dir, "data.json")
+	if err := os.WriteFile(dataPath, []byte(`{"items":[{"id":1,"name":"a"},{"id":2,"name":"b"}]}`+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, err := executeRead(hashline.NewStore(), dir, "data.json?q=.a")
+
+	// 1. Basic query (read-structured#0)
+	res, err := executeRead(hashline.NewStore(), dir, "data.json?q=.items[0].name")
+	if err != nil {
+		t.Fatalf("read data.json?q=.items[0].name failed: %v", err)
+	}
+	if res.Content != `"a"` {
+		t.Fatalf("content = %q, want %q", res.Content, `"a"`)
+	}
+	wantPath := dirs.StandardizeMacOSPath(dataPath)
+	d, _ := res.Details.(map[string]any)
+	if d["resolvedPath"] != wantPath {
+		t.Fatalf("resolvedPath = %v, want %q", d["resolvedPath"], wantPath)
+	}
+	meta, _ := d["meta"].(map[string]any)
+	if meta == nil {
+		t.Fatalf("expected meta on JSON query result, got %+v", d)
+	}
+	if _, hasPaged := meta["pagedSource"]; hasPaged {
+		t.Fatalf("JSON query result must not set meta.pagedSource, got %+v", meta)
+	}
+	src, _ := meta["source"].(map[string]any)
+	if src["type"] != "path" || src["value"] != wantPath {
+		t.Fatalf("meta.source = %+v, want path %q", src, wantPath)
+	}
+
+	// 2. Compact query (read-structured#1)
+	res, err = executeRead(hashline.NewStore(), dir, "data.json?q=.items[]&compact=true")
+	if err != nil {
+		t.Fatalf("read compact failed: %v", err)
+	}
+	wantCompact := "{\"id\":1,\"name\":\"a\"}\n{\"id\":2,\"name\":\"b\"}"
+	if res.Content != wantCompact {
+		t.Fatalf("compact content = %q, want %q", res.Content, wantCompact)
+	}
+
+	// 3. Raw query
+	res, err = executeRead(hashline.NewStore(), dir, "data.json?q=.items[0].name&raw=true")
+	if err != nil {
+		t.Fatalf("read raw failed: %v", err)
+	}
+	if res.Content != "a" {
+		t.Fatalf("raw content = %q, want %q", res.Content, "a")
+	}
+
+	// 4. Array pagination
+	res, err = executeRead(hashline.NewStore(), dir, "data.json?q=.items&limit=1&offset=0&compact=true")
+	if err != nil {
+		t.Fatalf("read paged array failed: %v", err)
+	}
+	wantPage := "[{\"id\":1,\"name\":\"a\"}]\n[1 more items; append ?q=.items&compact=true&limit=1&offset=1 to continue]"
+	if res.Content != wantPage {
+		t.Fatalf("paged array content = %q, want %q", res.Content, wantPage)
+	}
+
+	// 5. Stream pagination + out-of-bounds offset
+	res, err = executeRead(hashline.NewStore(), dir, "data.json?q=.items[]&limit=1&offset=5&compact=true")
+	if err != nil {
+		t.Fatalf("read paged stream oob failed: %v", err)
+	}
+	if res.Content != "[offset 5 is past the last result (2 total)]" {
+		t.Fatalf("oob stream content = %q", res.Content)
+	}
+
+	// 6. Invalid jq syntax (read-structured#2)
+	_, err = executeRead(hashline.NewStore(), dir, "data.json?q=.nope[")
 	if err == nil {
-		t.Fatalf("expected error for data.json?q=.a")
+		t.Fatalf("expected error for invalid jq syntax")
 	}
-	if strings.Contains(err.Error(), "not found") {
-		t.Fatalf("error must not misleadingly claim path not found: %q", err.Error())
+	if !strings.HasPrefix(err.Error(), "Failed to execute JSON query: ") {
+		t.Fatalf("invalid jq error = %q, want prefix 'Failed to execute JSON query: '", err.Error())
 	}
-	if !strings.Contains(err.Error(), "not supported") {
-		t.Fatalf("expected unsupported jq query message, got %q", err.Error())
+
+	// 7. Missing jq binary fallback
+	t.Setenv("PATH", "")
+	_, err = executeRead(hashline.NewStore(), dir, "data.json?q=.items[0].name")
+	if err == nil || !strings.Contains(err.Error(), "Failed to execute JSON query:") {
+		t.Fatalf("expected missing jq error, got %v", err)
+	}
+}
+
+// upstream: packages/coding-agent/src/tools/read.ts:3158-3331,3446-3481
+// Truncated reads must emit legacy top-level details.truncation alongside meta.truncation,
+// and line-paged reads must emit meta.pagedSource = true.
+func TestReadDetailsTruncationAndPagedSource(t *testing.T) {
+	dir := t.TempDir()
+	var sb strings.Builder
+	for i := 1; i <= 5000; i++ {
+		sb.WriteString("row ")
+		sb.WriteString(strings.Repeat("x", 0))
+		sb.WriteString(string(rune('0' + (i % 10))))
+		sb.WriteByte('\n')
+	}
+	if err := os.WriteFile(filepath.Join(dir, "long.txt"), []byte(sb.String()), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. Offset read `long.txt:301-` (matches read-truncation#1: context expands to line 300 -> 4701 selectedWindowLines)
+	res, err := executeRead(hashline.NewStore(), dir, "long.txt:301-")
+	if err != nil {
+		t.Fatalf("read long.txt:301- failed: %v", err)
+	}
+	d, _ := res.Details.(map[string]any)
+	if d["totalLines"] != 5000 {
+		t.Fatalf("details.totalLines = %v, want 5000", d["totalLines"])
+	}
+	trunc, _ := d["truncation"].(map[string]any)
+	if trunc == nil {
+		t.Fatalf("expected top-level details.truncation, got %+v", d)
+	}
+	if trunc["truncated"] != true || trunc["truncatedBy"] != "lines" {
+		t.Fatalf("details.truncation = %+v", trunc)
+	}
+	if trunc["totalLines"] != 4701 {
+		t.Fatalf("details.truncation.totalLines = %v, want 4701", trunc["totalLines"])
+	}
+	if trunc["outputLines"] != 301 {
+		t.Fatalf("details.truncation.outputLines = %v, want 301", trunc["outputLines"])
+	}
+	if trunc["lastLinePartial"] != false || trunc["firstLineExceedsLimit"] != false {
+		t.Fatalf("details.truncation flags = %+v", trunc)
+	}
+	meta, _ := d["meta"].(map[string]any)
+	if meta == nil || meta["pagedSource"] != true {
+		t.Fatalf("expected meta.pagedSource = true, got %+v", meta)
+	}
+
+	// 2. Directory read must NOT set meta.pagedSource
+	dirRes, err := executeRead(hashline.NewStore(), dir, ".")
+	if err != nil {
+		t.Fatalf("read dir failed: %v", err)
+	}
+	dirD, _ := dirRes.Details.(map[string]any)
+	if dirMeta, _ := dirD["meta"].(map[string]any); dirMeta != nil {
+		if _, hasPaged := dirMeta["pagedSource"]; hasPaged {
+			t.Fatalf("directory read must not set meta.pagedSource, got %+v", dirMeta)
+		}
 	}
 }
 

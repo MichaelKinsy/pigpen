@@ -1180,6 +1180,8 @@ def run_side(
         ]
         if not case.get("enable_skills"):
             cmd.append("--no-skills")
+        if not case.get("enable_rules"):
+            env["PI_NO_RULES"] = "1"
         if case.get("pig_args"):
             cmd.extend(case["pig_args"])
         cmd.append(f"{parent_marker} Execute scripted calls.")

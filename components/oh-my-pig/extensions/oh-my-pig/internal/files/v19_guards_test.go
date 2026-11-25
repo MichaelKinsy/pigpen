@@ -283,8 +283,9 @@ func TestReadDefaultLimitColumnCapAndDetails(t *testing.T) {
 		if _, hasResolved := m["resolvedPath"]; hasResolved {
 			t.Fatalf("plain file read must not set resolvedPath, got %#v", m["resolvedPath"])
 		}
-		if _, hasTopTrunc := m["truncation"]; hasTopTrunc {
-			t.Fatalf("truncation must live under details.meta.truncation, not top-level")
+		topTrunc, _ := m["truncation"].(map[string]any)
+		if topTrunc == nil || topTrunc["truncated"] != true || topTrunc["truncatedBy"] != "lines" || topTrunc["outputLines"] != 300 || topTrunc["totalLines"] != 500 {
+			t.Fatalf("missing or wrong top-level details.truncation: %#v", m["truncation"])
 		}
 		meta, _ := m["meta"].(map[string]any)
 		trunc, _ := meta["truncation"].(map[string]any)

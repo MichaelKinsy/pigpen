@@ -2221,3 +2221,51 @@ func TestEvalPreludeGuidanceForSession(t *testing.T) {
 		t.Fatalf("session B did not receive isolated GuidanceFor(ctxB):\n%s", pB)
 	}
 }
+
+func TestDiscoverRulesBuiltinAndProject(t *testing.T) {
+	t.Setenv("PI_NO_RULES", "")
+	dir := t.TempDir()
+	home := t.TempDir()
+	rulesDir := filepath.Join(dir, ".agents", "rules")
+	if err := os.MkdirAll(rulesDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(rulesDir, "demo-rule.md"), []byte("---\ndescription: Demo oracle rule\n---\nAlways keep functions small.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(rulesDir, "always-rule.md"), []byte("---\nalwaysApply: true\n---\nAlways apply body.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(rulesDir, "disabled-rule.md"), []byte("---\nenabled: false\ndescription: Should not load\n---\nHidden.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := DiscoverRules(dir, "", home, RuleDiscoveryOptions{})
+	if len(got.Rulebook) != 1 || got.Rulebook[0].Name != "demo-rule" || got.Rulebook[0].Description != "Demo oracle rule" {
+		t.Fatalf("unexpected rulebook: %+v", got.Rulebook)
+	}
+	if len(got.AlwaysApply) != 1 || got.AlwaysApply[0].Name != "always-rule" || strings.TrimSpace(got.AlwaysApply[0].Content) != "Always apply body." {
+		t.Fatalf("unexpected alwaysApply: %+v", got.AlwaysApply)
+	}
+	// 26 bundled defaults (all TTSR) + demo-rule + always-rule = 28 addressable rules.
+	if len(got.All) != 28 {
+		t.Fatalf("expected 28 addressable rules (26 builtin + demo-rule + always-rule), got %d", len(got.All))
+	}
+	if got.All[0].Name != "demo-rule" {
+		t.Fatalf("expected demo-rule first in All, got %q", got.All[0].Name)
+	}
+
+	// builtinRules=false drops the 26 bundled rules.
+	f := false
+	noBuiltin := DiscoverRules(dir, "", home, RuleDiscoveryOptions{BuiltinRules: &f, DisabledRules: []string{"always-rule"}})
+	if len(noBuiltin.All) != 1 || noBuiltin.All[0].Name != "demo-rule" {
+		t.Fatalf("expected only demo-rule when builtinRules=false and always-rule disabled, got %+v", noBuiltin.All)
+	}
+
+	// PI_NO_RULES=1 disables all rule discovery.
+	t.Setenv("PI_NO_RULES", "1")
+	none := DiscoverRules(dir, "", home, RuleDiscoveryOptions{})
+	if len(none.All) != 0 || len(none.Rulebook) != 0 || len(none.AlwaysApply) != 0 {
+		t.Fatalf("expected empty discovery with PI_NO_RULES=1, got %+v", none)
+	}
+}
