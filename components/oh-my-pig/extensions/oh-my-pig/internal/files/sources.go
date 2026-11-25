@@ -74,11 +74,12 @@ func indexASCIIFold(s, lowerNeedle string, from int) int {
 	return -1
 }
 
-// splitArchivePath detects `<archive>.(zip|jar|apk|whl|tar|tar.gz|tgz)[:<member>[:<sel>]]`.
-// upstream: packages/coding-agent/src/tools/read-archive.ts
+// splitArchivePath detects `<archive>.<ext>[:<member>[:<sel>]]` for stdlib-readable
+// archive formats (ZIP family, TAR, TAR.GZ/TGZ).
+// upstream: packages/coding-agent/src/tools/read-archive.ts, packages/utils/src/ar/registry.ts:33-36
 func splitArchivePath(rawPath, cwd string) (archiveAbs, archiveDisplay, memberPath, selStr string, ok bool) {
 	// Match extensions longest-first using byte-safe ASCII case folding on rawPath.
-	exts := []string{".tar.gz", ".tgz", ".tar", ".zip", ".jar", ".apk", ".whl"}
+	exts := archiveReadExts()
 	for _, ext := range exts {
 		for idx := indexASCIIFold(rawPath, ext, 0); idx >= 0; idx = indexASCIIFold(rawPath, ext, idx+len(ext)) {
 			end := idx + len(ext)

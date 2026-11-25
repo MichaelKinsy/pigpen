@@ -66,6 +66,14 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 	if content == nil {
 		return sdk.ToolResult{}, fmt.Errorf("content is required for %s.", unwrapped)
 	}
+	// Peel a read-tool selector (`:raw`, `:conflicts`) from internal URLs and
+	// recover an erroneous `<file>:conflict://N` prefix before routing.
+	// upstream: packages/coding-agent/src/tools/write.ts:898-900
+	peeled, peelErr := urls.PeelWriteSelector(unwrapped, "write")
+	if peelErr != nil {
+		return sdk.ToolResult{}, peelErr
+	}
+	unwrapped, recoveredNote := urls.RecoverConflictURIPrefix(peeled)
 	rawContent := *content
 
 	var (
@@ -73,7 +81,6 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 		urlDisplay  string
 		verbatim    bool
 	)
-
 	// Check URI-like near-misses before routing.
 	// upstream: packages/coding-agent/src/tools/write.ts:921
 	if err := assertWriteTargetAddressable(unwrapped); err != nil {
@@ -144,7 +151,15 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 				if touchesNoFiles {
 					details["touchesNoFiles"] = true
 				}
-				return sdk.ToolResult{Content: wres.Text, Details: details, IsError: wres.IsError}, nil
+				text := wres.Text
+				if recoveredNote != "" {
+					if text != "" {
+						text += "\n" + recoveredNote
+					} else {
+						text = recoveredNote
+					}
+				}
+				return sdk.ToolResult{Content: text, Details: details, IsError: wres.IsError}, nil
 			}
 			out := fmt.Sprintf("Successfully wrote %d bytes to %s", len(cleanContent), unwrapped)
 			if stripped {
@@ -169,6 +184,23 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 			unwrapped = located
 		}
 	}
+	// Archive member writes (`archive.ext:member/path`) take precedence over literal
+	// disk files, matching omp's write.ts:974-1006. For file-backed internal URLs
+	// (`via: "file"`), `unwrapped` is the located filesystem path.
+	if !isURLTarget {
+		resolvedArchive, archErr := resolveArchiveWritePath(unwrapped, cwd)
+		if archErr != nil {
+			return sdk.ToolResult{}, archErr
+		}
+		if resolvedArchive != nil {
+			cleanContent := rawContent
+			stripped := false
+			if !verbatim {
+				cleanContent, stripped = stripWriteContent(store, rawContent, resolveToCwd(unwrapped, cwd))
+			}
+			return executeArchiveWrite(ctx, cwd, resolvedArchive, cleanContent, rawContent, stripped)
+		}
+	}
 
 	absPath := resolveToCwd(unwrapped, cwd)
 	// A located URL write keeps its URL identity in results and the hashline header.
@@ -187,8 +219,6 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 		}
 		cleanContent, stripped = stripWriteContent(store, rawContent, stripTarget)
 	}
-
-	// Refuse read-selector misfires (`foo.ts:1-260:raw` with empty content, or `;`-joined selector lists).
 	// upstream: packages/coding-agent/src/tools/write.ts:1026
 	if !isURLTarget {
 		if err := assertNotReadSelectorMisfire(unwrapped, cleanContent, cwd); err != nil {

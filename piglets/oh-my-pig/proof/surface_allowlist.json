@@ -399,16 +399,16 @@
     "kind": "tool_description",
     "target": "write",
     "case": "*",
-    "regex": "(?:^SHOULD `edit` existing files; `write` for required new files or whole-file replacement\\. NEVER create docs or emojis unless requested\\.$|^Archive members and SQLite rows are writable too: help://read/sources\\.$)",
+    "regex": "(?:^Archive members and SQLite rows are writable too: help://read/sources\\.$|^Archive members \\(`archive\\.ext:member`\\) are writable too for ZIP, TAR, and TAR\\.GZ/TGZ archives\\.$)",
     "class": "LISTED",
     "ref_file": "internal/files/UPSTREAM.md",
     "ref_term": [
-      "`write` archive member & SQLite row writes"
+      "Replaced `Archive members and SQLite rows are writable too: help://read/sources.`"
     ],
     "ref_subject": [
-      "archive member"
+      "SQLite"
     ],
-    "why": "Archive member and SQLite row writes are not ported, so write.md omits that line."
+    "why": "SQLite row writes and non-stdlib .tar.zst/.asar archive writes are not ported, so write.md advertises only stdlib-writable archives (ZIP, TAR, TAR.GZ/TGZ)."
   },
   {
     "kind": "followup",

@@ -175,5 +175,27 @@
       "~/.pig/agent/agents"
     ],
     "why": "Port searches both ~/.pig/agent/agents and ~/.omp/agent/agents, so unknown-agent preflight errors list both directories in Searched: where omp lists only ~/.omp/agent/agents."
+  },
+  {
+    "case": "write-archive-errors-and-edge-cases",
+    "call_index": 5,
+    "tool": "write",
+    "regex": "(?:^Successfully wrote 9 bytes to zstd\\.tar\\.zst:a\\.txt$|^Writing entries inside tar\\.zst archives is not supported in this Go standard-library port \\(only zip, tar, and tar\\.gz/tgz are writable\\)\\.$)",
+    "is_error_mismatch": [
+      false,
+      true
+    ],
+    "details_paths": [
+      "resolvedPath"
+    ],
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`write` non-stdlib archive formats (`.tar.zst`/`.tzst`, `.asar`)"
+    ],
+    "ref_subject": [
+      "tar.zst"
+    ],
+    "why": "tar.zst writing requires a zstd encoder outside the Go standard library; omp writes zstd.tar.zst:a.txt while the port refuses with an explicit stdlib-only error (isError=true, no resolvedPath)."
   }
 ]
