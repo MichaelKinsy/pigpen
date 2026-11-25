@@ -1,0 +1,56 @@
+[
+  {
+    "name": "grep-and-glob",
+    "description": "Exercise grep (basic, case-insensitive, path filter, no match) and glob.",
+    "setup": "mkdir -p src docs && printf 'func Alpha() {}\\nfunc beta() {}\\n' > src/a.go && printf 'ALPHA in docs\\n' > docs/readme.txt && printf 'ignored\\n' > .hidden.txt && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "Alpha" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "case": false } },
+      { "tool": "grep", "arguments": { "pattern": "Alpha", "path": "src" } },
+      { "tool": "grep", "arguments": { "pattern": "NO_SUCH_TOKEN_XYZ" } },
+      { "tool": "glob", "arguments": { "path": "**/*.go" } },
+      { "tool": "glob", "arguments": { "path": "*" } }
+    ]
+  },
+  {
+    "name": "grep-options",
+    "description": "Exercise grep gitignore, negation glob, line-range selector, multiline regex, invalid regex, missing path, and skip pagination.",
+    "setup": "mkdir -p src/deep node_modules/x many && printf 'foo one\\nbar\\nfoo two\\n' > src/a.txt && printf 'foo deep\\n' > src/deep/b.txt && printf 'foo ignored\\n' > node_modules/x/c.txt && printf 'node_modules/\\n' > .gitignore && printf 'foo hidden\\n' > .h.txt && for i in $(seq 1 150); do printf 'needle %s\\n' $i > many/f$i.txt; done && find . -exec touch -t 202001010000 {} + && git init -q .",
+    "calls": [
+      { "tool": "grep", "arguments": { "pattern": "foo" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "gitignore": false } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "src;!**/deep/**" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "src/a.txt:1-1" } },
+      { "tool": "grep", "arguments": { "pattern": "one\\nbar" } },
+      { "tool": "grep", "arguments": { "pattern": "(" } },
+      { "tool": "grep", "arguments": { "pattern": "foo", "path": "missing-dir" } },
+      { "tool": "grep", "arguments": { "pattern": "needle", "path": "many" } },
+      { "tool": "grep", "arguments": { "pattern": "needle", "path": "many", "skip": 100 } }
+    ]
+  },
+  {
+    "name": "glob-options",
+    "description": "Exercise glob limit, hidden, gitignore, bare dir, semicolon multi-pattern, no match, empty args, and limit=0.",
+    "setup": "mkdir -p src/deep node_modules/x many && printf a > src/a.txt && printf b > src/deep/b.txt && printf c > node_modules/x/c.txt && printf 'node_modules/\\n' > .gitignore && printf h > .h.txt && for i in $(seq 1 30); do printf n > many/f$i.txt; done && find . -exec touch -t 202001010000 {} + && git init -q .",
+    "calls": [
+      { "tool": "glob", "arguments": { "path": "many/*.txt", "limit": 5 } },
+      { "tool": "glob", "arguments": { "path": "**/*.txt", "hidden": false } },
+      { "tool": "glob", "arguments": { "path": "**/*.txt", "gitignore": false } },
+      { "tool": "glob", "arguments": { "path": "src" } },
+      { "tool": "glob", "arguments": { "path": "src/*;many/f1.txt" } },
+      { "tool": "glob", "arguments": { "path": "nomatch/**" } },
+      { "tool": "glob", "arguments": {} },
+      { "tool": "glob", "arguments": { "path": "*", "limit": 0 } }
+    ]
+  },
+  {
+    "name": "find-semantic",
+    "description": "Exercise semantic find with find.enabled: on and deterministic loopback chat-judge responses (yes).",
+    "config_yml": "find:\n  enabled: \"on\"\n",
+    "judge_reply": "yes",
+    "setup": "printf 'func computeAnswer() int { return 42 }\\n' > math.go",
+    "calls": [
+      { "tool": "find", "arguments": { "query": "function that computes the answer", "grep_keywords": ["computeAnswer", "42"] } }
+    ]
+  }
+]

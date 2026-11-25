@@ -1,0 +1,98 @@
+[
+  {
+    "name": "read-file-range-raw",
+    "description": "Read a 20-line text file whole, with a line range (verifying selector slicing), with :raw, and tail :-2.",
+    "setup": "seq 1 20 | sed 's/^/line /' > sample.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "sample.txt" } },
+      { "tool": "read", "arguments": { "path": "sample.txt:8-10" } },
+      { "tool": "read", "arguments": { "path": "sample.txt:8-10:raw" } },
+      { "tool": "read", "arguments": { "path": "sample.txt:-2" } }
+    ]
+  },
+  {
+    "name": "read-selectors",
+    "description": "Exercise every read selector form, multi-ranges, out-of-bounds, reversed, and invalid selectors.",
+    "setup": "seq 1 400 | sed 's/^/row /' > big.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "big.txt:50" } },
+      { "tool": "read", "arguments": { "path": "big.txt:50-" } },
+      { "tool": "read", "arguments": { "path": "big.txt:50-60" } },
+      { "tool": "read", "arguments": { "path": "big.txt:50+5" } },
+      { "tool": "read", "arguments": { "path": "big.txt:5-8,200-203" } },
+      { "tool": "read", "arguments": { "path": "big.txt:19,59" } },
+      { "tool": "read", "arguments": { "path": "big.txt:raw:2-4" } },
+      { "tool": "read", "arguments": { "path": "big.txt:-3:raw" } },
+      { "tool": "read", "arguments": { "path": "big.txt:390-450" } },
+      { "tool": "read", "arguments": { "path": "big.txt:900" } },
+      { "tool": "read", "arguments": { "path": "big.txt:60-50" } },
+      { "tool": "read", "arguments": { "path": "big.txt:abc" } },
+      { "tool": "read", "arguments": { "path": "big.txt:0" } }
+    ]
+  },
+  {
+    "name": "read-truncation",
+    "description": "Exercise line truncation, wide-line truncation, raw wide line, and empty file.",
+    "setup": "seq 1 5000 | sed 's/^/row /' > long.txt && printf 'x%.0s' $(seq 1 3000) > wide.txt && printf '\\nshort\\n' >> wide.txt && : > empty.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "long.txt" } },
+      { "tool": "read", "arguments": { "path": "long.txt:301-" } },
+      { "tool": "read", "arguments": { "path": "wide.txt" } },
+      { "tool": "read", "arguments": { "path": "wide.txt:raw" } },
+      { "tool": "read", "arguments": { "path": "empty.txt" } }
+    ]
+  },
+  {
+    "name": "read-directory-missing-binary",
+    "description": "Read a directory with deterministic mtimes, a missing file, and a POSIX-octal binary file.",
+    "setup": "mkdir -p sub && printf 'a\\n' > sub/alpha.txt && printf 'bb\\n' > sub/beta.txt && touch -t 202001010001 sub/alpha.txt && touch -t 202001010002 sub/beta.txt && touch -t 202001010003 sub && printf '\\000\\001\\002\\003\\004\\005\\377\\376\\000\\000hello\\000bin' > blob.bin",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "sub" } },
+      { "tool": "read", "arguments": { "path": "does-not-exist.txt" } },
+      { "tool": "read", "arguments": { "path": "blob.bin" } }
+    ]
+  },
+  {
+    "name": "read-directory-many",
+    "description": "Read a directory with >12 children, pagination selector, and nested subdirectory.",
+    "setup": "mkdir -p d/sub && i=0 && for n in $(seq -w 1 30); do i=$((i+1)); printf x > d/f$n.txt; touch -t 2020010100$(printf %02d $i) d/f$n.txt; done && i=0 && for n in $(seq -w 1 15); do i=$((i+1)); printf yy > d/sub/g$n.txt; touch -t 2019010100$(printf %02d $i) d/sub/g$n.txt; done && touch -t 201801010000 d/sub d",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "d" } },
+      { "tool": "read", "arguments": { "path": "d:1-5" } },
+      { "tool": "read", "arguments": { "path": "d/sub" } }
+    ]
+  },
+  {
+    "name": "read-structured",
+    "description": "Read JSON with jq query, TAR archive listing/member/missing, and Jupyter notebook projection.",
+    "setup": "printf '{\"items\":[{\"id\":1,\"name\":\"a\"},{\"id\":2,\"name\":\"b\"}]}\\n' > data.json && mkdir -p pack && printf 'inner\\n' > pack/in.txt && touch -t 202001010000 pack/in.txt pack && COPYFILE_DISABLE=1 tar -cf pack.tar pack && printf '{\"cells\":[{\"cell_type\":\"markdown\",\"metadata\":{},\"source\":[\"# T\"]},{\"cell_type\":\"code\",\"execution_count\":null,\"metadata\":{},\"outputs\":[],\"source\":[\"print(1)\"]}],\"metadata\":{},\"nbformat\":4,\"nbformat_minor\":5}\\n' > nb.ipynb",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "data.json?q=.items[0].name" } },
+      { "tool": "read", "arguments": { "path": "data.json?q=.items[]&compact=true" } },
+      { "tool": "read", "arguments": { "path": "data.json?q=.nope[" } },
+      { "tool": "read", "arguments": { "path": "pack.tar" } },
+      { "tool": "read", "arguments": { "path": "pack.tar:pack/in.txt" } },
+      { "tool": "read", "arguments": { "path": "pack.tar:pack/missing.txt" } },
+      { "tool": "read", "arguments": { "path": "nb.ipynb" } }
+    ]
+  },
+  {
+    "name": "read-image-vision",
+    "description": "Read a real 1x1 PNG image with a vision-capable model (captures attached image user message).",
+    "vision": true,
+    "setup": "python3 -B -c \"import base64; open('pix.png','wb').write(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='))\"",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "pix.png" } }
+    ]
+  },
+  {
+    "name": "read-local-http-url",
+    "description": "Read plain text, >2KB HTML (exercising native HTML->Markdown converter), and raw HTML from the loopback fixture HTTP server.",
+    "setup": "",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "{{FIXTURE_URL}}/hello.txt" } },
+      { "tool": "read", "arguments": { "path": "{{FIXTURE_URL}}/page.html" } },
+      { "tool": "read", "arguments": { "path": "{{FIXTURE_URL}}/page.html:raw" } }
+    ]
+  }
+]

@@ -1,0 +1,105 @@
+[
+  {
+    "name": "argument-validation",
+    "description": "Exercise schema validation errors, missing required args, wrong types, empty write, and unknown tool dispatch.",
+    "setup": "printf 'a\\n' > v.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "v.txt", "offset": 1 } },
+      { "tool": "read", "arguments": {} },
+      { "tool": "bash", "arguments": { "command": "echo hi", "timeout": "soon" } },
+      { "tool": "write", "arguments": { "path": "v2.txt" } },
+      { "tool": "write", "arguments": { "path": "empty-new.txt", "content": "" } },
+      { "tool": "no_such_tool", "arguments": {} },
+      { "tool": "my__grep", "arguments": {} },
+      { "tool": "fake_read", "arguments": {} }
+    ]
+  },
+  {
+    "name": "intent-tracing-on",
+    "description": "Exercise tools.intentTracing: true (advertises `i` in schemas/prompt, strips `i` into recorded `intent` on tool_execution_start, and surfaces intent on async jobs in proc:// and wait).",
+    "config_yml": "tools:\n  intentTracing: true\n",
+    "setup": "printf 'intent_ok\\n' > sample.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "i": "Reading sample file", "path": "sample.txt" } },
+      { "tool": "bash", "arguments": { "i": "Echoing greeting", "command": "echo hi" } },
+      { "tool": "bash", "arguments": { "i": "Running background job", "command": "sleep 0.3; echo bg_intent", "async": true } },
+      { "tool": "wait", "arguments": {} }
+    ]
+  },
+  {
+    "name": "intent-tracing-off",
+    "description": "Exercise tools.intentTracing: false explicitly (omits `i` in schemas/prompt and does not strip stray `i` into `intent` on tool_execution_start).",
+    "config_yml": "tools:\n  intentTracing: false\n",
+    "setup": "printf 'intent_off\\n' > sample.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "sample.txt" } },
+      { "tool": "read", "arguments": { "i": "Stray intent when off", "path": "sample.txt" } }
+    ]
+  },
+  {
+    "name": "approvals-policy-and-patterns",
+    "description": "Exercise approvalMode: always-ask with tools.approval.write: deny and bash.patterns deny across read, write, edit, eval, task, URL write, bash, and mounted tools (both via bash and directly).",
+    "no_auto_approve": true,
+    "requires_tools": ["ast-grep"],
+    "config_yml": "tools:\n  approvalMode: always-ask\n  approval:\n    write: deny\nbash:\n  patterns:\n    - match: \"echo forbidden*\"\n      approval: deny\n",
+    "setup": "printf 'readable\\n' > r.txt && printf 'console.log(\"a\");\\n' > s.js",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "r.txt" } },
+      { "tool": "write", "arguments": { "path": "blocked.txt", "content": "nope" } },
+      { "tool": "edit", "arguments": { "input": "[r.txt#{{TAG:r.txt}}]\nPUT 1.=1:\n+changed" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print(1)" } },
+      { "tool": "task", "arguments": { "context": "c", "tasks": [{ "name": "BlockedChild", "agent": "task", "task": "hi", "solutionSpace": "s" }] } },
+      { "tool": "write", "arguments": { "path": "local://note.md", "content": "hello" } },
+      { "tool": "bash", "arguments": { "command": "echo forbidden_cmd" } },
+      { "tool": "bash", "arguments": { "command": "echo needs_prompt" } },
+      { "tool": "bash", "arguments": { "command": "lsp status" } },
+      { "tool": "lsp", "arguments": { "action": "status" } },
+      { "tool": "bash", "arguments": { "command": "ast_edit -j '{\"ops\":[{\"pat\":\"console.log($A)\",\"out\":\"print($A)\"}],\"paths\":[\"s.js\"]}'" } },
+      { "tool": "ast_edit", "arguments": { "ops": [{ "pat": "console.log($A)", "out": "print($A)" }], "paths": ["s.js"] } }
+    ]
+  },
+  {
+    "name": "approvals-write-mode",
+    "description": "Exercise approvalMode: write (auto-approves read, write, edit, and local:// URL write; requires approval for exec-tier bash, eval, and task).",
+    "no_auto_approve": true,
+    "config_yml": "tools:\n  approvalMode: write\n",
+    "setup": "printf 'line1\\n' > w.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "w.txt" } },
+      { "tool": "write", "arguments": { "path": "created.txt", "content": "ok\n" } },
+      { "tool": "write", "arguments": { "path": "local://scratch.md", "content": "scratch\n" } },
+      { "tool": "edit", "arguments": { "input": "[w.txt#{{TAG:w.txt}}]\nPUT 1.=1:\n+line1_edited" } },
+      { "tool": "bash", "arguments": { "command": "echo exec_blocked" } },
+      { "tool": "eval", "arguments": { "language": "py", "code": "print(2)" } },
+      { "tool": "task", "arguments": { "context": "c", "tasks": [{ "name": "ExecBlocked", "agent": "task", "task": "hi", "solutionSpace": "s" }] } }
+    ]
+  },
+  {
+    "name": "parallel-tool-calls",
+    "description": "Exercise multiple read-only tools dispatched in parallel within a single assistant turn (read, read, grep, glob).",
+    "setup": "printf 'alpha\\n' > a.txt && printf 'beta\\n' > b.txt && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      {
+        "parallel": [
+          { "tool": "read", "arguments": { "path": "a.txt" } },
+          { "tool": "read", "arguments": { "path": "b.txt" } },
+          { "tool": "grep", "arguments": { "pattern": "alpha" } },
+          { "tool": "glob", "arguments": { "path": "*.txt" } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "checkpoint-and-rewind",
+    "description": "Exercise checkpoint and rewind lifecycle (with checkpoint.enabled: true): error without checkpoint, checkpoint creation, read, double-checkpoint error, and rewind.",
+    "config_yml": "checkpoint:\n  enabled: true\n",
+    "setup": "printf 'clue=42\\n' > clue.txt",
+    "calls": [
+      { "tool": "rewind", "arguments": { "report": "Too early" } },
+      { "tool": "checkpoint", "arguments": { "goal": "Inspect clue.txt" } },
+      { "tool": "checkpoint", "arguments": { "goal": "Nested not allowed" } },
+      { "tool": "read", "arguments": { "path": "clue.txt" } },
+      { "tool": "rewind", "arguments": { "report": "Found clue=42 in clue.txt." } }
+    ]
+  }
+]

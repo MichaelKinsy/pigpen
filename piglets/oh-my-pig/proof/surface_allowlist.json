@@ -1,0 +1,446 @@
+[
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "regex": "(?:^You are omp's trusted coding assistant\\.$|^You are oh-my-pig's trusted coding assistant\\.$)",
+    "class": "ON_PURPOSE",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "The role line reads",
+      "oh-my-pig's trusted coding assistant"
+    ],
+    "ref_subject": [
+      "oh-my-pig's trusted coding assistant"
+    ],
+    "why": "Branding: oh-my-pig identifies itself as oh-my-pig rather than omp."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "regex": "(?:^- proc://: jobs, agents, and services; proc://<id> status/output; proc://<id>/kill with empty `content` cancels/stops jobs, agents, and services; proc://<id>/streams: a bash job's pipes and redirected files so far \\(live under `\\| tail`/`\\| grep`/`> log`; never rerun to see it\\); parked agents/missing job ≠ lost: check agent://<id>, history://<id>\\.$|^- proc://: jobs, agents, and services; proc://<id> status/output; proc://<id>/kill with empty `content` cancels/stops jobs, agents, and services; parked agents/missing job ≠ lost: check agent://<id>, history://<id>\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "proc://<id>/streams"
+    ],
+    "ref_subject": [
+      "proc://<id>/streams"
+    ],
+    "why": "proc://<id>/streams is not portable without omp's embedded shell VM, so the port's proc:// URL summary omits the streams clause."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- ssh://host/<path>: remote UTF-8 file/dir for read/write/grep; bare lists hosts\\.$",
+    "class": "LISTED",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`ssh://` (`ssh-protocol.ts`)"
+    ],
+    "ref_subject": [
+      "ssh://"
+    ],
+    "why": "ssh:// protocol is not ported."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- mcp://<uri>: MCP resource\\.$",
+    "class": "HOST",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`mcp://` resource reading",
+      "PromptDoc"
+    ],
+    "ref_subject": [
+      "mcp://"
+    ],
+    "why": "PiG SDK lacks MCP client resources/list and resources/read, so MCPHandler.PromptDoc returns empty string."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- omp://: harness docs, AVOID unless asked\\.$",
+    "class": "LISTED",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`omp://` harness docs",
+      "Omitted from `RegisterExtension`"
+    ],
+    "ref_subject": [
+      "omp://"
+    ],
+    "why": "omp:// serves omp's own internal docs corpus and is omitted from oh-my-pig."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "side": "omp",
+    "regex": "(?:^$|^<critical>$|^Automated QA: any tool output inconsistent with the described behavior for its parameters → run `report_issue '<tool>: <concise description>'`\\. False positives fine\\.$|^</critical>$)",
+    "class": "LISTED",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "Default-on interactive blocks in live hook",
+      "dev.autoqa"
+    ],
+    "ref_subject": [
+      "report_issue"
+    ],
+    "why": "dev.autoqa / report_issue automated QA block is not ported."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "*",
+    "side": "omp",
+    "regex": "(?:^Use the eval `commit` namespace to commit your changes \\(`d = await commit\\.draft\\(\\)`, then `await d\\.commit\\(\"subject\", \\[\"- body\"\\]\\)`\\) rather than `git add`/`git commit`: it captures only the lines you and your subagents wrote, leaving other agents' staged and unstaged work untouched\\.$|^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "`commit` and `dsm` eval prelude guidance blocks"
+    ],
+    "ref_subject": [
+      "commit",
+      "dsm"
+    ],
+    "why": "commit and dsm eval preludes are not ported, so their guidance paragraphs are absent."
+  },
+  {
+    "kind": "system_prompt",
+    "target": "*",
+    "case": "internal-urls-rule",
+    "side": "omp",
+    "regex": "(?:^# Skills & Rules$|^<domain-rules>$|^  - demo-rule \\(\\): Demo oracle rule$|^- demo-rule \\(\\): Demo oracle rule$|^</domain-rules>$|^  - rule://<name>: details\\.$|^- rule://<name>: details\\.$|^  - Read relevant rules first\\.$|^- Read relevant rules first\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "Full multi-provider rulebook discovery",
+      "rule://"
+    ],
+    "ref_subject": [
+      "rule://"
+    ],
+    "why": "Multi-provider rulebook discovery (.agents/rules) and <domain-rules> prompt injection are not ported."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "regex": "(?:^You are omp's trusted coding assistant\\.$|^You are oh-my-pig's trusted coding assistant\\.$)",
+    "class": "ON_PURPOSE",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "The role line reads",
+      "oh-my-pig's trusted coding assistant"
+    ],
+    "ref_subject": [
+      "oh-my-pig's trusted coding assistant"
+    ],
+    "why": "Branding: child system prompt identifies oh-my-pig rather than omp."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "regex": "(?:^- proc://: jobs, agents, and services; proc://<id> status/output; proc://<id>/kill with empty `content` cancels/stops jobs, agents, and services; proc://<id>/streams: a bash job's pipes and redirected files so far \\(live under `\\| tail`/`\\| grep`/`> log`; never rerun to see it\\); parked agents/missing job ≠ lost: check agent://<id>, history://<id>\\.$|^- proc://: jobs, agents, and services; proc://<id> status/output; proc://<id>/kill with empty `content` cancels/stops jobs, agents, and services; parked agents/missing job ≠ lost: check agent://<id>, history://<id>\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "proc://<id>/streams"
+    ],
+    "ref_subject": [
+      "proc://<id>/streams"
+    ],
+    "why": "proc://<id>/streams is not portable without omp's embedded shell VM."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- ssh://host/<path>: remote UTF-8 file/dir for read/write/grep; bare lists hosts\\.$",
+    "class": "LISTED",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`ssh://` (`ssh-protocol.ts`)"
+    ],
+    "ref_subject": [
+      "ssh://"
+    ],
+    "why": "ssh:// protocol is not ported."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- mcp://<uri>: MCP resource\\.$",
+    "class": "HOST",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`mcp://` resource reading",
+      "PromptDoc"
+    ],
+    "ref_subject": [
+      "mcp://"
+    ],
+    "why": "PiG SDK lacks MCP client resources/list and resources/read."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- omp://: harness docs, AVOID unless asked\\.$",
+    "class": "LISTED",
+    "ref_file": "internal/urls/UPSTREAM.md",
+    "ref_term": [
+      "`omp://` harness docs",
+      "Omitted from `RegisterExtension`"
+    ],
+    "ref_subject": [
+      "omp://"
+    ],
+    "why": "omp:// harness docs are omitted from oh-my-pig."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "side": "omp",
+    "regex": "(?:^$|^<critical>$|^Automated QA: any tool output inconsistent with the described behavior for its parameters → run `report_issue '<tool>: <concise description>'`\\. False positives fine\\.$|^</critical>$)",
+    "class": "LISTED",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "Default-on interactive blocks in live hook",
+      "dev.autoqa"
+    ],
+    "ref_subject": [
+      "report_issue"
+    ],
+    "why": "dev.autoqa / report_issue automated QA block is not ported."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "side": "omp",
+    "regex": "(?:^Use the eval `commit` namespace to commit your changes \\(`d = await commit\\.draft\\(\\)`, then `await d\\.commit\\(\"subject\", \\[\"- body\"\\]\\)`\\) rather than `git add`/`git commit`: it captures only the lines you and your subagents wrote, leaving other agents' staged and unstaged work untouched\\.$|^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/prompt/UPSTREAM.md",
+    "ref_term": [
+      "`commit` and `dsm` eval prelude guidance blocks"
+    ],
+    "ref_subject": [
+      "commit",
+      "dsm"
+    ],
+    "why": "commit and dsm eval preludes are not ported."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "regex": "(?:^read, bash, edit, eval, glob, grep, task, wait, web_search, write(?:, yield)?$|^read, bash, edit, eval, glob, grep, wait, web_search, write(?:, yield)?$|^# Delegation$|^- Unfamiliar subsystem\\? Explore it with a read-only `scout` while you keep working; read known files yourself\\.$|^## Delegation gates$|^- Before spawning, map slices/shared contracts; user-enumerated 2\\+ self-contained runnable slices exempt\\. NEVER outsource top-level plan; slice design/competing plans allowed\\.$|^- Fan genuine slices in one `tasks\\[\\]` batch\\. NEVER pad, serialize independent work, or spawn then idle\\.$|^- Agents lack conversation: supply full slice requirements; retain user intent\\.$|^- Shared prerequisite inline; sequence ONLY true dependencies\\. Small missing detail\\? Run parallel; B asks A via `write agent://<id>` only if blocked\\.$)",
+    "class": "HOST",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Recursive child-spawning-child (`task` inside a subagent)",
+      "HostMaxRecursionDepth = 1"
+    ],
+    "ref_subject": [
+      "task"
+    ],
+    "why": "PiG CLI host does not bind createChildSession onto depth-1 child sessions (HostMaxRecursionDepth = 1), so depth-1 children omit `task` from Tool Inventory and the `# Delegation` section."
+  },
+  {
+    "kind": "child_system_prompt",
+    "target": "child",
+    "case": "*",
+    "match_kind": "peers_sibling_idle_vs_running",
+    "class": "LISTED",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "`# Peers` status of a same-batch sibling",
+      "speculative launch"
+    ],
+    "ref_subject": [
+      "# Peers",
+      "speculative launch"
+    ],
+    "why": "Inside `# Peers`, matches ONLY a paired `-`/`+` line for a `task (sub, ...)` sibling id of the same case where omp shows `idle` and oh-my-pig shows `running` (caused by omp's speculative batch launch finishing sibling 0 before sibling 1 builds its prompt under an instant scripted model); never matches Main, reversed statuses, mismatched ids, or reordered rosters."
+  },
+  {
+    "kind": "child_tool_membership",
+    "target": "task",
+    "side": "omp-only",
+    "case": "*",
+    "class": "HOST",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Recursive child-spawning-child (`task` inside a subagent)",
+      "HostMaxRecursionDepth = 1"
+    ],
+    "ref_subject": [
+      "task"
+    ],
+    "why": "PiG CLI host does not bind createChildSession onto depth-1 child sessions, so depth-1 children omit `task`."
+  },
+  {
+    "kind": "child_tool_description",
+    "target": "eval",
+    "case": "*",
+    "regex": "(?:^Session tool names: read, bash, edit, eval, glob, grep, task, wait, web_search, write, ast_edit, debug, lsp\\.$|^Session tool names: read, bash, edit, eval, glob, grep, wait, web_search, write, ast_edit, debug, lsp\\.$)",
+    "class": "HOST",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Recursive child-spawning-child (`task` inside a subagent)",
+      "Session tool names:"
+    ],
+    "ref_subject": [
+      "Session tool names:",
+      "task"
+    ],
+    "why": "PiG CLI host caps subagent recursion at depth 1 (HostMaxRecursionDepth = 1), so depth-1 children omit `task` from the `eval` description's `Session tool names:` line."
+  },
+  {
+    "kind": "tool_description",
+    "target": "read",
+    "case": "*",
+    "regex": "(?:^- :raw verbatim without anchors/prefixes \\(skips folding and the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- :raw verbatim without anchors/prefixes \\(skips the display-width limit\\); combine :2-4:raw or :raw:2-4 for exactly those lines\\.$|^- Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess `\\.\\.`/`…`\\.$|^- PDF/DOCX/PPTX/XLSX/EPUB: extracted text; notebooks: editable cells; images: decoded inline\\.$|^- Also, with selectors in help://read/sources \\(read it before first use\\):$|^  - SQLite, archives \\(ZIP, TAR, 7z, RAR and more\\), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts\\.$|^- Notebooks \\(\\.ipynb\\): cell text; images \\(PNG, JPEG, GIF, WebP\\): decoded inline\\.$|^- Archives \\(ZIP, JAR, APK, WHL, TAR, TAR\\.GZ, TGZ\\): directory listing; member via archive\\.ext:member/path\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "Sentences Removed from `read.md` and `write.md` (Unported Sources)"
+    ],
+    "ref_subject": [
+      "read.md"
+    ],
+    "why": "read.md intentionally omits unported sources (AST folding, PDF/DOCX/SQLite/7z/RAR/jq/video/SVG) to avoid promising unsupported selectors."
+  },
+  {
+    "kind": "tool_description",
+    "target": "bash",
+    "case": "*",
+    "regex": "(?:^Persistent bash 5\\.3\\.$|^Persistent bash\\.$|^cwd will reset after each turn, don't rely on cd; `pty` = interactive\\.$|^cwd will reset after each turn, don't rely on cd\\.$|^Internal URIs work as paths for builtins/coreutils, redirects, globs\\.$|^In-process builtins, ahead of PATH: ast-grep, awk, b2sum, base32, base64, basename, cat, chmod, cksum, cmp, column, combine, comm, cp, cut, date, dd, df, diff, direnv, dirname, du, entr, env, errno, fd, file, find, flock, fold, fswatch, grep, head, hostname, id, ifne, isutf8, jq, ln, ls, lsof, md5, md5sum, mkdir, mktemp, mv, nl, nohup, nproc, od, open, paste, pgrep, pidwait, pkill, printenv, ps, readlink, realpath, rg, rm, rmdir, rsync, say, sd, sed, seq, sg, sha1sum, sha224sum, sha256sum, sha384sum, sha512sum, shasum, sleep, sort, sponge, stat, strings, tac, tail, tar, tee, timeout, top, touch, tr, truncate, ts, uname, uniq, uptime, urlmap, watchexec, wc, which, whoami, xargs, xdg-open, yes\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Embedded bash 5.3 VM (`omp-shell`)",
+      "in-process coreutils/extras"
+    ],
+    "ref_subject": [
+      "bash 5.3"
+    ],
+    "why": "Port runs host system bash rather than omp's embedded bash 5.3 VM, in-process builtins, internal-URI VFS, and interactive finite-command PTY overlay."
+  },
+  {
+    "kind": "tool_description",
+    "target": "eval",
+    "case": "*",
+    "regex": "(?:^- `%load`, `%pip`, `%bun add`, `budget`, `@tool`/`tool\\(fn\\)`: setup, installs, utilities → help://eval/helpers$|^- `%load`, `%pip`, `%bun add`, `budget`: setup, installs, utilities → help://eval/helpers$)",
+    "class": "LISTED",
+    "ref_file": "internal/eval/UPSTREAM.md",
+    "ref_term": [
+      "Kernel-defined subagent tools",
+      "@tool"
+    ],
+    "ref_subject": [
+      "@tool"
+    ],
+    "why": "Kernel-defined subagent tools (@tool/tool(fn)) are not ported, so eval.md omits them from the helpers line."
+  },
+  {
+    "kind": "tool_description",
+    "target": "eval",
+    "case": "*",
+    "regex": "(?:^- `archive`: Read-only local history: recent projects, past sessions with recaps, full-text session search, prompt history\\. → help://eval/archive$|^- `commit`: Selective commits in a shared worktree: commit only the changes you and your subagents made while other agents and the user keep editing\\. → help://eval/commit$|^- `dsm`: Open, inspect, edit, and script binary analysis databases\\. → help://eval/dsm$)",
+    "class": "LISTED",
+    "ref_file": "internal/eval/UPSTREAM.md",
+    "ref_term": [
+      "Built-in eval namespaces: `archive`, `commit`, `dsm`"
+    ],
+    "ref_subject": [
+      "archive",
+      "commit",
+      "dsm"
+    ],
+    "why": "Built-in eval namespaces archive, commit, and dsm are not ported."
+  },
+  {
+    "kind": "tool_description",
+    "target": "task",
+    "case": "*",
+    "side": "omp",
+    "regex": "^- `tools`: eval-defined, run in your kernel\\.$",
+    "class": "LISTED",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Eval-defined `@tool`/`tool(fn)` forwarding into child sessions",
+      "tasks[].tools"
+    ],
+    "ref_subject": [
+      "tasks[].tools"
+    ],
+    "why": "Eval-defined tasks[].tools forwarding is not ported."
+  },
+  {
+    "kind": "tool_schema",
+    "target": "task",
+    "case": "*",
+    "side": "omp",
+    "regex": "(?:^          \\},$|^          \"tools\": \\{$|^            \"type\": \"array\",$|^            \"items\": \\{$|^              \"type\": \"string\"$|^            \\}$)",
+    "class": "LISTED",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "Eval-defined `@tool`/`tool(fn)` forwarding into child sessions",
+      "tasks[].tools"
+    ],
+    "ref_subject": [
+      "tasks[].tools"
+    ],
+    "why": "Advertised task JSON schema omits tasks[].tools because eval-defined child tools are not ported."
+  },
+  {
+    "kind": "tool_description",
+    "target": "write",
+    "case": "*",
+    "regex": "(?:^SHOULD `edit` existing files; `write` for required new files or whole-file replacement\\. NEVER create docs or emojis unless requested\\.$|^Archive members and SQLite rows are writable too: help://read/sources\\.$)",
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`write` archive member & SQLite row writes"
+    ],
+    "ref_subject": [
+      "archive member"
+    ],
+    "why": "Archive member and SQLite row writes are not ported, so write.md omits that line."
+  },
+  {
+    "kind": "followup",
+    "target": "user",
+    "case": "read-image-vision",
+    "regex": "(?:^  \"text\": \"Attached image\\(s\\) from tool result:\\\\n\\[image_url:data:image/webp;base64,b64_len=184\\]\"$|^  \"text\": \"Attached image\\(s\\) from tool result:\\\\n\\[image_url:data:image/png;base64,b64_len=92\\]\"$)",
+    "class": "LISTED",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "image auto-resize",
+      "SVG `:img` rasterization"
+    ],
+    "ref_subject": [
+      "image auto-resize"
+    ],
+    "why": "Image auto-resize / WebP transcoding is not ported, so the follow-up vision image attachment is the original 92-byte base64 PNG instead of omp's 184-byte base64 WebP."
+  }
+]

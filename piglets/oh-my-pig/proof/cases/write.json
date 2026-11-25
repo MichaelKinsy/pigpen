@@ -1,0 +1,13 @@
+[
+  {
+    "name": "write-create-and-overwrite",
+    "description": "Create a new file in a nested directory, verify with read, then overwrite it.",
+    "setup": "",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "nested/created.txt", "content": "first line\nsecond line\n" } },
+      { "tool": "read", "arguments": { "path": "nested/created.txt" } },
+      { "tool": "write", "arguments": { "path": "nested/created.txt", "content": "replaced\n" } },
+      { "tool": "read", "arguments": { "path": "nested/created.txt" } }
+    ]
+  }
+]

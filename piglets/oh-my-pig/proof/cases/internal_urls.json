@@ -1,0 +1,72 @@
+[
+  {
+    "name": "internal-urls-read-write",
+    "description": "Read and write internal URLs: local://, skill://, proc://, agent://, help://, cfg://.",
+    "enable_skills": true,
+    "setup": "mkdir -p .agents/skills/oracle-demo && printf -- '---\\nname: oracle-demo\\ndescription: Demo skill for oracle\\n---\\n# Oracle Demo Skill\\nUse this skill in tests.\\n' > .agents/skills/oracle-demo/SKILL.md",
+    "child_reply": "ORACLE_AGENT_URL_OK",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "local://note.md", "content": "shared artifact line 1\nline 2\n" } },
+      { "tool": "read", "arguments": { "path": "local://note.md" } },
+      { "tool": "read", "arguments": { "path": "skill://oracle-demo" } },
+      { "tool": "read", "arguments": { "path": "proc://" } },
+      { "tool": "read", "arguments": { "path": "help://read" } },
+      { "tool": "read", "arguments": { "path": "help://read/urls" } },
+      { "tool": "read", "arguments": { "path": "cfg://tools" } },
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "Spawn agent so agent:// has an entry.",
+          "tasks": [
+            {
+              "name": "UrlChild",
+              "agent": "task",
+              "task": "Reply with ORACLE_AGENT_URL_OK.",
+              "solutionSpace": "one fixed reply"
+            }
+          ]
+        }
+      },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "read", "arguments": { "path": "agent://UrlChild" } }
+    ]
+  },
+  {
+    "name": "internal-urls-conflict-out-cfg",
+    "description": "Exercise conflict:// (read :conflicts, conflict://1, conflict://1/ours, write @ours), out:// (disabled refusal + read-only error), cfg:// leaf read and headless write refusal, and writes to read-only URL schemes (history://, help://, skill://).",
+    "setup": "printf 'top\\n<<<<<<< ours\\nleft_line\\n=======\\nright_line\\n>>>>>>> theirs\\nbottom\\n' > merge.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "merge.txt:conflicts" } },
+      { "tool": "read", "arguments": { "path": "conflict://1" } },
+      { "tool": "read", "arguments": { "path": "conflict://1/ours" } },
+      { "tool": "write", "arguments": { "path": "conflict://1", "content": "@ours" } },
+      { "tool": "read", "arguments": { "path": "merge.txt" } },
+      { "tool": "write", "arguments": { "path": "out://", "content": "Mid-turn reply" } },
+      { "tool": "read", "arguments": { "path": "out://" } },
+      { "tool": "read", "arguments": { "path": "cfg://read/defaultLimit" } },
+      { "tool": "write", "arguments": { "path": "cfg://read/defaultLimit", "content": "500" } },
+      { "tool": "write", "arguments": { "path": "history://foo", "content": "x" } },
+      { "tool": "write", "arguments": { "path": "help://read", "content": "x" } },
+      { "tool": "write", "arguments": { "path": "skill://demo", "content": "x" } }
+    ]
+  },
+  {
+    "name": "internal-urls-out-enabled",
+    "description": "Exercise out:// write when out.enabled is explicitly turned on in config.yml.",
+    "config_yml": "out:\n  enabled: true\n",
+    "setup": "",
+    "calls": [
+      { "tool": "write", "arguments": { "path": "out://", "content": "Progress update from print mode." } }
+    ]
+  },
+  {
+    "name": "internal-urls-rule",
+    "description": "Exercise rule:// resolution when rules discovery is enabled (.agents/rules/demo-rule.md) and unknown rule error.",
+    "enable_rules": true,
+    "setup": "mkdir -p .agents/rules && printf -- '---\\ndescription: Demo oracle rule\\n---\\nAlways keep functions small.\\n' > .agents/rules/demo-rule.md",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "rule://demo-rule" } },
+      { "tool": "read", "arguments": { "path": "rule://no-such-rule" } }
+    ]
+  }
+]

@@ -1,0 +1,97 @@
+[
+  {
+    "name": "lsp-ast-edit-debug-direct",
+    "description": "Exercise direct call of unadvertised mounted tools (lsp, debug, ast_edit) and resolve success.",
+    "requires_tools": ["ast-grep"],
+    "setup": "printf 'console.log(\"hi\");\\n' > sample.js",
+    "calls": [
+      { "tool": "lsp", "arguments": { "action": "status" } },
+      { "tool": "debug", "arguments": { "action": "sessions" } },
+      {
+        "tool": "ast_edit",
+        "arguments": {
+          "ops": [{ "pat": "console.log($A)", "out": "print($A)" }],
+          "paths": ["sample.js"]
+        }
+      },
+      { "tool": "bash", "arguments": { "command": "resolve \"Apply oracle ast_edit preview\"" } },
+      { "tool": "read", "arguments": { "path": "sample.js" } }
+    ]
+  },
+  {
+    "name": "mounted-commands-in-bash",
+    "description": "Exercise lsp, debug, ast_edit, resolve, and reject (success + nothing pending) via their mounted bash tool-commands.",
+    "requires_tools": ["ast-grep"],
+    "setup": "printf 'console.log(\"hi\");\\n' > sample.js",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "lsp status; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "lsp bogus; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "debug sessions; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "lsp --help" } },
+      { "tool": "bash", "arguments": { "command": "ast_edit -j '{\"ops\":[{\"pat\":\"console.log($A)\",\"out\":\"print($A)\"}],\"paths\":[\"sample.js\"]}'; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "reject \"not wanted\"; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "resolve \"nothing pending\"; echo rc=$?" } },
+      { "tool": "bash", "arguments": { "command": "ast_edit; echo rc=$?" } }
+    ]
+  },
+  {
+    "name": "ast-grep-and-edit-resolve-reject",
+    "description": "Exercise ast_grep (with astGrep.enabled: true) and ast_edit + reject + ast_edit + resolve success.",
+    "requires_tools": ["ast-grep"],
+    "config_yml": "astGrep:\n  enabled: true\n",
+    "setup": "printf 'console.log(\"first\");\\nconsole.log(\"second\");\\n' > app.js",
+    "calls": [
+      { "tool": "ast_grep", "arguments": { "pat": "console.log($A)", "path": "app.js" } },
+      { "tool": "ast_grep", "arguments": { "pat": "no_match($X)", "path": "app.js" } },
+      {
+        "tool": "ast_edit",
+        "arguments": {
+          "ops": [{ "pat": "console.log($A)", "out": "warn($A)" }],
+          "paths": ["app.js"]
+        }
+      },
+      { "tool": "bash", "arguments": { "command": "reject \"Discard first rewrite\"" } },
+      { "tool": "read", "arguments": { "path": "app.js" } },
+      {
+        "tool": "ast_edit",
+        "arguments": {
+          "ops": [{ "pat": "console.log($A)", "out": "info($A)" }],
+          "paths": ["app.js"]
+        }
+      },
+      { "tool": "bash", "arguments": { "command": "resolve \"Apply second rewrite\"" } },
+      { "tool": "read", "arguments": { "path": "app.js" } }
+    ]
+  },
+  {
+    "name": "lsp-gopls-actions",
+    "description": "Exercise lsp beyond status against a real Go module using gopls (symbols, hover, definition, diagnostics).",
+    "requires_tools": ["gopls"],
+    "timeout": 60,
+    "setup": "printf 'module example.com/demo\\n\\ngo 1.22\\n' > go.mod && printf 'package main\\n\\nfunc add(a, b int) int {\\n\\treturn a + b\\n}\\n\\nfunc main() {\\n\\t_ = add(1, 2)\\n}\\n' > main.go",
+    "calls": [
+      { "tool": "lsp", "arguments": { "action": "status" } },
+      { "tool": "lsp", "arguments": { "action": "symbols", "file": "main.go" } },
+      { "tool": "lsp", "arguments": { "action": "hover", "file": "main.go", "line": 3, "symbol": "add" } },
+      { "tool": "lsp", "arguments": { "action": "definition", "file": "main.go", "line": 8, "symbol": "add" } },
+      { "tool": "lsp", "arguments": { "action": "diagnostics", "file": "main.go" } }
+    ]
+  },
+  {
+    "name": "debug-dap-actions",
+    "description": "Exercise debug beyond sessions (launch, sessions, set_breakpoint, threads, stack_trace, scopes, variables, evaluate, terminate) using a deterministic stdio DAP adapter configured via dap.json.",
+    "requires_tools": ["python3"],
+    "setup": "cat > mock_dap.py <<'PY'\nimport json, sys\nseq = 1\ndef send(obj):\n    global seq\n    obj['seq'] = seq\n    seq += 1\n    body = json.dumps(obj).encode('utf-8')\n    sys.stdout.buffer.write(f'Content-Length: {len(body)}\\r\\n\\r\\n'.encode('ascii') + body)\n    sys.stdout.buffer.flush()\ndef read_msg():\n    hdrs = {}\n    while True:\n        line = sys.stdin.buffer.readline()\n        if not line:\n            return None\n        if line in (b'\\r\\n', b'\\n'):\n            break\n        k, _, v = line.decode('ascii').partition(':')\n        hdrs[k.strip().lower()] = v.strip()\n    n = int(hdrs.get('content-length', '0'))\n    return json.loads(sys.stdin.buffer.read(n).decode('utf-8'))\nwhile True:\n    msg = read_msg()\n    if msg is None:\n        break\n    cmd = msg.get('command')\n    rseq = msg.get('seq')\n    if cmd == 'initialize':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'supportsConfigurationDoneRequest':True,'supportsEvaluateForHovers':True}})\n        send({'type':'event','event':'initialized'})\n    elif cmd == 'launch':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd})\n    elif cmd == 'configurationDone':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd})\n        send({'type':'event','event':'stopped','body':{'reason':'entry','threadId':1,'allThreadsStopped':True}})\n    elif cmd == 'threads':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'threads':[{'id':1,'name':'main'}]}})\n    elif cmd == 'stackTrace':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'stackFrames':[{'id':10,'name':'main','line':5,'column':1,'source':{'name':'app.py','path':'app.py'}}],'totalFrames':1}})\n    elif cmd == 'setBreakpoints':\n        bps = msg.get('arguments',{}).get('breakpoints',[])\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'breakpoints':[{'id':1,'verified':True,'line':b.get('line',1)} for b in bps]}})\n    elif cmd == 'scopes':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'scopes':[{'name':'Locals','variablesReference':100,'expensive':False}]}})\n    elif cmd == 'variables':\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'variables':[{'name':'answer','value':'42','type':'int','variablesReference':0}]}})\n    elif cmd == 'evaluate':\n        expr = msg.get('arguments',{}).get('expression','')\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{'result':'42' if expr=='answer' else expr,'type':'int','variablesReference':0}})\n    elif cmd in ('disconnect', 'terminate'):\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd})\n        break\n    else:\n        send({'type':'response','request_seq':rseq,'success':True,'command':cmd,'body':{}})\nPY\ncat > dap.json <<'JSON'\n{\"adapters\":{\"mockdap\":{\"command\":\"python3\",\"args\":[\"mock_dap.py\"],\"languages\":[\"python\"],\"fileTypes\":[\".py\"],\"launchDefaults\":{\"request\":\"launch\",\"stopOnEntry\":true}}}}\nJSON\nprintf 'answer = 42\\nprint(answer)\\n' > app.py\n",
+    "calls": [
+      { "tool": "debug", "arguments": { "action": "launch", "adapter": "mockdap", "program": "app.py" } },
+      { "tool": "debug", "arguments": { "action": "sessions" } },
+      { "tool": "debug", "arguments": { "action": "set_breakpoint", "file": "app.py", "line": 2 } },
+      { "tool": "debug", "arguments": { "action": "threads" } },
+      { "tool": "debug", "arguments": { "action": "stack_trace" } },
+      { "tool": "debug", "arguments": { "action": "scopes" } },
+      { "tool": "debug", "arguments": { "action": "variables", "variable_ref": 100 } },
+      { "tool": "debug", "arguments": { "action": "evaluate", "expression": "answer" } },
+      { "tool": "debug", "arguments": { "action": "terminate" } }
+    ]
+  }
+]

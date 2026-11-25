@@ -1,0 +1,15 @@
+[
+  {
+    "name": "web-search-no-provider",
+    "description": "Invoke web_search offline with no search provider configured (tests deterministic error text).",
+    "setup": "",
+    "calls": [
+      {
+        "tool": "web_search",
+        "arguments": {
+          "query": "oracle offline test query"
+        }
+      }
+    ]
+  }
+]

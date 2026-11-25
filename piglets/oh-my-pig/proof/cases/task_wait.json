@@ -1,0 +1,105 @@
+[
+  {
+    "name": "task-and-wait",
+    "description": "Spawn a subagent via task (served by the loopback LLM server) and collect its result via wait.",
+    "setup": "",
+    "child_reply": "ORACLE_CHILD_OK",
+    "calls": [
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "Oracle subagent test.",
+          "tasks": [
+            {
+              "name": "EchoChild",
+              "agent": "task",
+              "task": "Reply with ORACLE_CHILD_OK.",
+              "solutionSpace": "one fixed reply"
+            }
+          ]
+        }
+      },
+      { "tool": "wait", "arguments": {} }
+    ]
+  },
+  {
+    "name": "task-errors-and-agent-urls",
+    "description": "Exercise unknown agent error, multi-child batch, double wait, history://, missing agent://, and empty task list.",
+    "setup": "",
+    "child_reply": "ORACLE_CHILD_OK",
+    "calls": [
+      { "tool": "task", "arguments": { "context": "c", "tasks": [{ "name": "Bad", "agent": "no-such-agent", "task": "t", "solutionSpace": "s" }] } },
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "c",
+          "tasks": [
+            { "name": "One", "agent": "task", "task": "Reply.", "solutionSpace": "s" },
+            { "name": "Two", "agent": "task", "task": "Reply.", "solutionSpace": "s" }
+          ]
+        }
+      },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "read", "arguments": { "path": "history://One" } },
+      { "tool": "read", "arguments": { "path": "agent://Nope" } },
+      { "tool": "task", "arguments": { "context": "c", "tasks": [] } }
+    ]
+  },
+  {
+    "name": "task-delayed-cancel",
+    "description": "Spawn a delayed child, wait briefly so the child is mid-request on both sides, then cancel it via write proc://<id>/kill before it finishes.",
+    "setup": "",
+    "child_delay_ms": 5000,
+    "child_reply": "SHOULD_NOT_FINISH",
+    "calls": [
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "Cancel test.",
+          "tasks": [
+            { "name": "SlowChild", "agent": "task", "task": "Wait.", "solutionSpace": "one fixed reply" }
+          ]
+        }
+      },
+      { "tool": "bash", "arguments": { "command": "sleep 0.5; echo child_in_flight" } },
+      { "tool": "write", "arguments": { "path": "proc://SlowChild/kill", "content": "" } },
+      { "tool": "wait", "arguments": {} }
+    ]
+  },
+  {
+    "name": "task-structured-yield",
+    "description": "Spawn a structured subagent (task.structured: true + outputSchema) that submits via yield, capturing child system prompt, child tools (including yield), and structured output.",
+    "config_yml": "task:\n  structured: true\n",
+    "setup": "",
+    "child_tool_calls": [
+      { "tool": "yield", "arguments": { "data": { "answer": 42, "summary": "structured ok" } } }
+    ],
+    "calls": [
+      {
+        "tool": "task",
+        "arguments": {
+          "context": "Structured output oracle test.",
+          "tasks": [
+            {
+              "name": "StructChild",
+              "agent": "task",
+              "task": "Yield answer=42 and summary='structured ok'.",
+              "solutionSpace": "one fixed object",
+              "outputSchema": {
+                "type": "object",
+                "properties": {
+                  "answer": { "type": "number" },
+                  "summary": { "type": "string" }
+                },
+                "required": ["answer", "summary"]
+              }
+            }
+          ]
+        }
+      },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "read", "arguments": { "path": "agent://StructChild" } }
+    ]
+  }
+]

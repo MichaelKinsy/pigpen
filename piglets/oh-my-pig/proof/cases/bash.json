@@ -1,0 +1,108 @@
+[
+  {
+    "name": "bash-exit-no-output-state",
+    "description": "Exercise zero exit, non-zero exit, silent command, and shell state across calls.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "printf 'hello\\nworld\\n'" } },
+      { "tool": "bash", "arguments": { "command": "true" } },
+      { "tool": "bash", "arguments": { "command": "echo 'boom' >&2; exit 7" } },
+      { "tool": "bash", "arguments": { "command": "export ORACLE_VAR=kept_42" } },
+      { "tool": "bash", "arguments": { "command": "printf 'val=%s\\n' \"${ORACLE_VAR:-missing}\"" } }
+    ]
+  },
+  {
+    "name": "bash-cwd-spill",
+    "description": "Exercise cwd option, missing cwd, cd persistence, pty fallback, ANSI stripping, wide line, output spill to local://1.log, exit code, stderr-only, and empty command.",
+    "setup": "mkdir -p sub",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "basename \"$PWD\"", "cwd": "sub" } },
+      { "tool": "bash", "arguments": { "command": "pwd", "cwd": "missing-dir" } },
+      { "tool": "bash", "arguments": { "command": "cd sub && basename \"$PWD\"" } },
+      { "tool": "bash", "arguments": { "command": "basename \"$PWD\"" } },
+      { "tool": "bash", "arguments": { "command": "test -t 1 && echo tty || echo notty", "pty": true } },
+      { "tool": "bash", "arguments": { "command": "printf 'a\\033[31mred\\033[0mz\\n'" } },
+      { "tool": "bash", "arguments": { "command": "head -c 3000 /dev/zero | tr '\\0' 'x'; echo" } },
+      { "tool": "bash", "arguments": { "command": "seq 1 40000" } },
+      { "tool": "read", "arguments": { "path": "local://1.log:39999-40000" } },
+      { "tool": "bash", "arguments": { "command": "exit 3" } },
+      { "tool": "bash", "arguments": { "command": "echo only-err >&2" } },
+      { "tool": "bash", "arguments": { "command": "" } }
+    ]
+  },
+  {
+    "name": "bash-timeout-foreground",
+    "description": "Exercise foreground timeout (timeout: 3) + wait + proc:// inspection.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "echo started; sleep 20; echo never", "timeout": 3 } },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "read", "arguments": { "path": "proc://" } }
+    ]
+  },
+  {
+    "name": "bash-async-and-service",
+    "description": "Exercise async job + wait and a named supervised service with readiness log + proc:// inspection + stop via write proc://<name>/kill.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "sleep 0.3; echo async_done", "async": true } },
+      { "tool": "wait", "arguments": {} },
+      {
+        "tool": "bash",
+        "arguments": {
+          "name": "oracle-svc",
+          "command": "echo SERVICE_READY; sleep 60",
+          "ready": { "log": "SERVICE_READY", "timeout": 5 }
+        }
+      },
+      { "tool": "read", "arguments": { "path": "proc://" } },
+      { "tool": "write", "arguments": { "path": "proc://oracle-svc/kill", "content": "" } }
+    ]
+  },
+  {
+    "name": "bash-notify-streams-cancel",
+    "description": "Exercise bash notify regex follow-ups, non-empty proc://<id>/streams inspection of a piped async job, and cancelling a truly running bash job via write proc://<id>/kill + verifying it is gone.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "echo ignore1; echo ALERT_HIT_1; sleep 1.5; echo done", "notify": "ALERT_" } },
+      { "tool": "bash", "arguments": { "command": "sleep 0.7; echo foreground_mid" } },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "bash", "arguments": { "command": "(echo pipe_one; sleep 1.5; echo pipe_two) | cat", "async": true } },
+      { "tool": "bash", "arguments": { "command": "sleep 0.3; echo waited_for_pipe" } },
+      { "tool": "read", "arguments": { "path": "proc://bg_2/streams" } },
+      { "tool": "read", "arguments": { "path": "proc://bg_2/streams/1" } },
+      { "tool": "wait", "arguments": {} },
+      { "tool": "bash", "arguments": { "command": "sleep 30", "async": true } },
+      { "tool": "bash", "arguments": { "command": "sleep 0.2; echo before_kill" } },
+      { "tool": "read", "arguments": { "path": "proc://" } },
+      { "tool": "write", "arguments": { "path": "proc://bg_3/kill", "content": "" } },
+      { "tool": "read", "arguments": { "path": "proc://" } },
+      { "tool": "wait", "arguments": {} }
+    ]
+  },
+  {
+    "name": "bash-chunked-column-cap",
+    "description": "Exercise per-line column cap when a single long line arrives across multiple flushed chunks.",
+    "requires_tools": ["python3"],
+    "setup": "",
+    "calls": [
+      {
+        "tool": "bash",
+        "arguments": {
+          "command": "python3 -c 'import sys, time\nfor ch in \"abcd\":\n    sys.stdout.write(ch * 300)\n    sys.stdout.flush()\n    time.sleep(0.05)\nsys.stdout.write(\"\\n\")\nsys.stdout.flush()'"
+        }
+      }
+    ]
+  },
+  {
+    "name": "bash-wall-time-notice",
+    "description": "Exercise WALL_TIME_NOTICE_MIN_MS (1000ms) notice formatting on both sides: plain foreground (>1s), foreground with pty: true (wall-time + pty fallback notice order and blank lines), and async job (>1s) reported via wait.",
+    "setup": "",
+    "calls": [
+      { "tool": "bash", "arguments": { "command": "sleep 1.4; echo wall_plain_done" } },
+      { "tool": "bash", "arguments": { "command": "sleep 1.4; test -t 1 && echo tty || echo notty", "pty": true } },
+      { "tool": "bash", "arguments": { "command": "sleep 1.4; echo wall_async_done", "async": true } },
+      { "tool": "wait", "arguments": {} }
+    ]
+  }
+]

@@ -1,0 +1,633 @@
+[
+  {
+    "tool": "bash",
+    "path": "trace",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Shell execution visualization traces",
+      "details.trace"
+    ],
+    "why": "Shell execution visualization trace (details.trace) is emitted only by omp's Rust embedded shell VM (omp-shell)."
+  },
+  {
+    "tool": "bash",
+    "path": "toolCommands[].tier",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/toolcmd/UPSTREAM.md",
+    "ref_term": [
+      "BashToolDetails.toolCommands[]",
+      "toolCommandsSole"
+    ],
+    "why": "Prewalk approval tier on ToolCommandDispatch is omitted because PiG has no prewalk coordinator."
+  },
+  {
+    "tool": "bash",
+    "path": "toolCommands[].callId",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/toolcmd/UPSTREAM.md",
+    "ref_term": [
+      "BashToolDetails.toolCommands[]",
+      "toolCommandsSole"
+    ],
+    "why": "Port records nested ExecuteTool callId on each ToolCommandDispatch for host nested-call correlation."
+  },
+  {
+    "tool": "bash",
+    "path": "toolCommandsSole",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/toolcmd/UPSTREAM.md",
+    "ref_term": [
+      "BashToolDetails.toolCommands[]",
+      "toolCommandsSole"
+    ],
+    "why": "Port attaches toolCommandsSole for internal/ansi/native_run.go:238 (omp derives isSoleInvocation inside the renderer)."
+  },
+  {
+    "tool": "*",
+    "match_kind": "agent_loop_error",
+    "path": "isError,error",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "PiG agent/tool_execution.go",
+    "ref_term": [
+      "errorToolResult is upstream createErrorToolResult",
+      "empty details object",
+      "no isError"
+    ],
+    "ref_subject": [
+      "errorToolResult",
+      "isError"
+    ],
+    "why": "Matches ONLY omp's prepare-phase agent-loop failure shape (details={isError: true, error: <omp result text>}, agent-loop.ts:3643-3650) vs PiG errorToolResult ({}, agent/tool_execution.go:323-327) with both isError=true; never swallows tool-emitted error/isError fields."
+  },
+  {
+    "tool": "edit",
+    "path": "patch",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`edit` populates `diff`, `patch`, `perFileResults[].patch`"
+    ],
+    "why": "Port emits unified patch on edit details for PiG's interactive_frontend.go Tern diff card (extra relative to omp; visible in JSON/RPC output)."
+  },
+  {
+    "tool": "edit",
+    "path": "perFileResults[].patch",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`edit` populates `diff`, `patch`, `perFileResults[].patch`"
+    ],
+    "why": "Port emits per-file unified patch on multi-file edit details for PiG's interactive_frontend.go Tern diff card (extra relative to omp)."
+  },
+  {
+    "tool": "write",
+    "path": "diff",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`write` populates `patch` and `diff`"
+    ],
+    "why": "Port emits unified diff on write details for PiG's frontend toolResultDiff and internal/ansi (omp emits neither diff nor patch on write)."
+  },
+  {
+    "tool": "write",
+    "path": "patch",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`write` populates `patch` and `diff`"
+    ],
+    "why": "Port emits unified patch on write details for PiG's frontend toolResultDiff and internal/ansi (omp emits neither diff nor patch on write)."
+  },
+  {
+    "tool": "read",
+    "path": "meta.pagedSource",
+    "side": "omp-only",
+    "class": "NO_CONSUMER_AT_TAG",
+    "ref_file": "internal/files/UPSTREAM.md",
+    "ref_term": [
+      "`read` `meta.pagedSource` flag"
+    ],
+    "why": "At tag v19.1.1, meta.pagedSource is read only by omp's output-meta.ts:597 spill-skip optimization (and listed in session-anonymizer.ts:166); visible in JSON/RPC output."
+  },
+  {
+    "tool": "read",
+    "path": "truncation",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "firstLineExceedsLimit",
+      "meta.truncation"
+    ],
+    "why": "Port reports read line/column truncation via meta.truncation / meta.limits rather than omp's legacy top-level truncation object (portable; tracked in internal/ansi/UPSTREAM.md)."
+  },
+  {
+    "tool": "read",
+    "path": "isDirectory",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "when": {
+      "pig_source_prefix": "proc://",
+      "pig_value": true
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Scoped strictly to proc:// directory reads carrying isDirectory: true in the port (never matches regular file reads)."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].id",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "omp_value": "<UUID>",
+      "pig_value_regex": "^[a-zA-Z0-9._-]+$"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Port daemon snapshots use the non-empty service name as id whereas omp's out-of-process broker assigns a UUID (<UUID>)."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].policy.hold",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "omp_value": "persist",
+      "pig_value": "leases"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Pinned value: port uses policy.hold='leases' (session-only) whereas omp print-mode broker uses 'persist'."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].command",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].cwd",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].generation",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].leases",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].outputBytes",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].owner",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].readyMatch",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].restartCount",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].scope",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].name",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].pid",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].persist",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "read",
+    "path": "proc.daemons[].detached",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "read",
+    "path": "proc.jobs[].widget",
+    "side": "omp-only",
+    "class": "LISTED",
+    "real_model_only": true,
+    "when": {
+      "omp_widget_states": [
+        "live",
+        "authoring"
+      ]
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "AI-authored live job widget specs",
+      "\"live\""
+    ],
+    "why": "Only live/authoring AI-authored job widgets are LISTED (hits only with a real model that authors specs; offline loopback oracle always observes deterministic state='fallback' views which are ported and NOT allowlisted)."
+  },
+  {
+    "tool": "read",
+    "path": "proc.jobs[].widget.blocks[].items[].text",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "case": "bash-notify-streams-cancel",
+      "enclosing_job_id": "bg_2",
+      "enclosing_job_label_contains": "|",
+      "enclosing_item_label": "lines",
+      "omp_value": "4",
+      "pig_value": "2"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "fallback widget `lines`"
+    ],
+    "ref_subject": [
+      "fallback widget `lines`",
+      "pipe"
+    ],
+    "why": "On piped bash job bg_2 (`(echo pipe_one; sleep 1.5; echo pipe_two) | cat`), omp sums outputTap (2 lines) + tapped pipe:1 stream (2 lines) = '4' (job-widgets/runtime.ts:378-382); system-shell port has no pipe taps so fallback widget lines = '2'."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.id",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "omp_value": "<UUID>",
+      "pig_value_regex": "^[a-zA-Z0-9._-]+$"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Port daemon snapshots use the non-empty service name as id whereas omp's out-of-process broker assigns a UUID (<UUID>)."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.policy.hold",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "omp_value": "persist",
+      "pig_value": "leases"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Pinned value: port uses policy.hold='leases' (session-only) whereas omp print-mode broker uses 'persist'."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.command",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.cwd",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.generation",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.leases",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.outputBytes",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.owner",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.readyMatch",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.restartCount",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.scope",
+    "side": "omp-only",
+    "class": "LISTED",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Broker-only daemon snapshot field omitted by in-process ServiceManager."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.name",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.persist",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "write",
+    "path": "proc.daemon.detached",
+    "side": "port-only",
+    "class": "PORT_EXTRA",
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "`proc://` read & kill `details` field differences"
+    ],
+    "why": "Renderer convenience field included on port daemon snapshots."
+  },
+  {
+    "tool": "write",
+    "path": "proc.jobs[].widget",
+    "side": "omp-only",
+    "class": "LISTED",
+    "real_model_only": true,
+    "when": {
+      "omp_widget_states": [
+        "live",
+        "authoring"
+      ]
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "AI-authored live job widget specs",
+      "\"live\""
+    ],
+    "why": "Only live/authoring AI-authored job widgets are LISTED (hits only with a real model; offline oracle observes deterministic state='fallback' views)."
+  },
+  {
+    "tool": "wait",
+    "path": "jobs[].widget",
+    "side": "omp-only",
+    "class": "LISTED",
+    "real_model_only": true,
+    "when": {
+      "omp_widget_states": [
+        "live",
+        "authoring"
+      ]
+    },
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "AI-authored live job widget specs",
+      "JobSnapshot.Widget"
+    ],
+    "why": "Only live/authoring AI-authored job widgets are LISTED (hits only with a real model; offline oracle observes deterministic state='fallback' views)."
+  },
+  {
+    "tool": "wait",
+    "path": "jobs[].widget.blocks[].items[].text",
+    "side": "value",
+    "class": "LISTED",
+    "when": {
+      "case": "bash-notify-streams-cancel",
+      "call_index": 7,
+      "enclosing_job_id": "bg_2",
+      "enclosing_job_label_contains": "|",
+      "enclosing_item_label": "lines",
+      "omp_value": "4",
+      "pig_value": "2"
+    },
+    "ref_file": "internal/shell/UPSTREAM.md",
+    "ref_term": [
+      "Live pipe/redirection stream tapping",
+      "fallback widget `lines`"
+    ],
+    "ref_subject": [
+      "fallback widget `lines`",
+      "pipe"
+    ],
+    "why": "On piped bash job bg_2 (`(echo pipe_one; sleep 1.5; echo pipe_two) | cat`), omp sums outputTap (2 lines) + tapped pipe:1 stream (2 lines) = '4' (job-widgets/runtime.ts:378-382); system-shell port has no pipe taps so fallback widget lines = '2'."
+  },
+  {
+    "tool": "todo",
+    "path": "phases",
+    "side": "omp-only",
+    "class": "HOST",
+    "when": {
+      "omp_is_error": true,
+      "pig_is_error": true,
+      "omp_details_keys_exact": [
+        "phases",
+        "storage"
+      ],
+      "pig_details_exact": {}
+    },
+    "ref_file": "internal/todo/UPSTREAM.md",
+    "ref_term": [
+      "{phases, storage}",
+      "PrepareArguments"
+    ],
+    "why": "Scoped strictly to failing todo calls (both isError=true) where omp returns exactly {phases, storage} and PiG PrepareArguments error returns empty {} (agent/tool_execution.go:378-381); never matches successful todo calls."
+  },
+  {
+    "tool": "todo",
+    "path": "storage",
+    "side": "omp-only",
+    "class": "HOST",
+    "when": {
+      "omp_is_error": true,
+      "pig_is_error": true,
+      "omp_details_keys_exact": [
+        "phases",
+        "storage"
+      ],
+      "pig_details_exact": {}
+    },
+    "ref_file": "internal/todo/UPSTREAM.md",
+    "ref_term": [
+      "{phases, storage}",
+      "PrepareArguments"
+    ],
+    "why": "Scoped strictly to failing todo calls (both isError=true) where omp returns exactly {phases, storage} and PiG PrepareArguments error returns empty {} (agent/tool_execution.go:378-381); never matches successful todo calls."
+  }
+]

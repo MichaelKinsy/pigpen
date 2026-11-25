@@ -1,0 +1,35 @@
+{
+ "omp": "v19.1.1 (31ffee513f)",
+ "cases": 32599,
+ "mounted": [
+  "ast_edit",
+  "debug",
+  "lsp"
+ ],
+ "active": [
+  "read",
+  "bash",
+  "edit",
+  "ast_edit",
+  "ask",
+  "debug",
+  "eval",
+  "glob",
+  "grep",
+  "lsp",
+  "task",
+  "wait",
+  "todo",
+  "web_search",
+  "write"
+ ],
+ "ompDecisions": {
+  "allow": 13040,
+  "deny": 8626,
+  "prompt": 9653,
+  "no-such-tool": 1232,
+  "port-stricter": 47,
+  "port-ignores-untrusted-project": 80,
+  "no-session": 48
+ }
+}

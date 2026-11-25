@@ -1,0 +1,396 @@
+[
+  {
+    "name": "welcome-version",
+    "omp_regex": "^\\s+██\\s+v19\\.1\\.1\\s*$",
+    "pig_regex": "^\\s+██\\s+v\\d+\\.\\d+\\.\\d+\\s*$",
+    "class": "ON_PURPOSE",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Animated welcome gradient sweep",
+      "PigletVersion"
+    ],
+    "ref_subject": [
+      "Piglet version",
+      "PigletVersion"
+    ],
+    "why": "Welcome banner prints the Piglet version (`v<PigletVersion>`) rather than omp's `v19.1.1`."
+  },
+  {
+    "name": "welcome-tip-block",
+    "match_kind": "welcome_tip_block",
+    "class": "ON_PURPOSE",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Animated welcome gradient sweep",
+      "PigletVersion"
+    ],
+    "ref_subject": [
+      "randomly",
+      "random welcome tip"
+    ],
+    "why": "Welcome tips are chosen randomly per launch and filtered to registered commands; each side's joined tip text is validated against its source tips list and 72-column wrap."
+  },
+  {
+    "name": "host-startup-notices",
+    "pig_regex": "^(?:\\[Extensions\\]|  path|    builtin:piglet|  builtin:piglet| Piglet oh-my-pig hid 2 tools from the registry:| - built-in tools: powershell, ls \\(the Piglet's `tools` list does not name it\\))$",
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host startup notices",
+      "quietStartup",
+      "powershell, ls"
+    ],
+    "ref_subject": [
+      "quietStartup",
+      "hid 2 tools"
+    ],
+    "why": "PiG host prints `[Extensions]` and `Piglet oh-my-pig hid 2 tools from the registry: powershell, ls` unless the user sets `quietStartup` (a Piglet manifest cannot set it and `sdk.Context.GetSettings()` is read-only); matched on the pig side only with the exact hidden tool list pinned."
+  },
+  {
+    "name": "host-markdown-code-indent",
+    "omp_regex": "^(?:package main|func answer\\(\\) int \\{ return 42 \\})$",
+    "pig_regex": "^   (?:package main|func answer\\(\\) int \\{ return 42 \\})$",
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host assistant markdown fenced code block indentation",
+      "markdown.codeBlockIndent"
+    ],
+    "ref_subject": [
+      "codeBlockIndent",
+      "fenced code block indentation"
+    ],
+    "why": "PiG's built-in assistant markdown renderer indents fenced code lines by 3 columns (`markdown.codeBlockIndent` default `\"  \"` + 1 column host margin), which a Piglet manifest or extension cannot override."
+  },
+  {
+    "name": "bash-shell-visualizer",
+    "match_kind": "bash_shell_visualizer_pair",
+    "class": "LISTED",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Bash visible command visualizer",
+      "ShellVizPresentation"
+    ],
+    "ref_subject": [
+      "ShellVizPresentation",
+      "plain fallback"
+    ],
+    "why": "omp renders bash commands via its Rust shell visualizer (`print(...)`, `seq 1 30 → awk ...`, `reject ...`), while oh-my-pig renders omp's plain `$ <command>` fallback; matched strictly as paired omp/pig rows for the same scripted command."
+  },
+  {
+    "name": "host-ctrl-o-status-text",
+    "omp_regex": "^ Tool output expansion: enabled$",
+    "pig_regex": "^ Tool output: expanded$",
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host Ctrl+O status text",
+      "Tool output: expanded"
+    ],
+    "ref_subject": [
+      "Tool output: expanded",
+      "setAllToolsExpanded"
+    ],
+    "why": "Emitted directly by PiG host `InteractiveMode.setAllToolsExpanded`; extensions cannot override this status message."
+  },
+  {
+    "name": "host-provider-error-text",
+    "match_kind": "provider_error_with_raw_http_log",
+    "omp_regex": "^ Error: 400 Proof simulated provider error \\(type=invalid_request_error\\)$",
+    "pig_regex": "^(?: Error: 400: \\{\"message\":\"Proof simulated provider| error\",\"type\":\"invalid_request_error\"\\}| If this looks like a pig bug, /bug sends a report to the developers\\.)$",
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host transcript provider error line",
+      "raw-http-request"
+    ],
+    "ref_subject": [
+      "raw-http-request",
+      "/bug"
+    ],
+    "why": "Strictly host-drawn transcript error lines (`Error: 400: ...`, `/bug` hint on pig) and omp's wrapped `raw-http-request=<log>.json` dump path (matched as one logical wrapped line from `raw-http-request=` through `.json` on omp's side only); does NOT match the port-drawn pinned `✘ 400 ...` banner line."
+  },
+  {
+    "name": "host-stock-editor-frame",
+    "match_kind": "prompt_editor_frame",
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Frameless `╰─ ` prompt gutter",
+      "SetEditorComponent"
+    ],
+    "ref_subject": [
+      "SetEditorComponent",
+      "prompt gutter"
+    ],
+    "why": "PiG's stock editor draws top/bottom full-width border rules around the input row (omitting omp's bare `╰─` prompt gutter) because installing a delegated `sdk.EditorComponent` breaks `/` & `@` autocomplete and deadlocks shutdown; matched structurally at the active dock tail only (omp side restricted to bare `╰─`)."
+  },
+  {
+    "name": "omp-stale-pre-resize-frame",
+    "match_kind": "stale_pre_resize_frame",
+    "class": "OMP_ARTIFACT",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host full-screen redraws",
+      "stale pre-resize frame",
+      "OMP_ARTIFACT"
+    ],
+    "ref_subject": [
+      "stale pre-resize",
+      "OMP_ARTIFACT"
+    ],
+    "why": "omp keeps a stale pre-resize copy of its active dock block in scrollback/screen after width resize while PiG clears cleanly via CSI 2J + CSI 3J; matched strictly on the omp side only when the stale block equals the active dock re-wrapped at the old width."
+  },
+  {
+    "name": "welcome-gradient-sweep-colour",
+    "kind": "colour",
+    "regions": [
+      "welcome"
+    ],
+    "omp_fg": "@omp_welcome_gradient",
+    "omp_bg": null,
+    "pig_fg": "@omp_welcome_gradient",
+    "pig_bg": null,
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Animated welcome gradient sweep",
+      "gradientLogo"
+    ],
+    "ref_subject": [
+      "gradient",
+      "gradientLogo"
+    ],
+    "why": "PiG SetHeaderRenderer renders static frames (resting 3-stop diagonal gradient) while omp animates the gradient sweep across those exact 3 stops (`welcome.ts` GRADIENT_STOPS + shine); BOTH sides must lie strictly inside `@omp_welcome_gradient`."
+  },
+  {
+    "name": "host-user-prompt-bubble-colour",
+    "kind": "colour",
+    "regions": [
+      "user_prompt"
+    ],
+    "omp_fg": [
+      null,
+      "rgb:229;229;231"
+    ],
+    "omp_bg": "rgb:15;18;22",
+    "pig_fg": null,
+    "pig_bg": null,
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host-owned terminal colours",
+      "user message bubble"
+    ],
+    "ref_subject": [
+      "user message bubble",
+      "#0f1216"
+    ],
+    "why": "PiG host owns user message rendering and does not expose theme registration for the `#0f1216` (`rgb:15;18;22`) user bubble background and `#e5e5e7` foreground."
+  },
+  {
+    "name": "host-assistant-markdown-colour",
+    "kind": "colour",
+    "regions": [
+      "transcript:markdown"
+    ],
+    "omp_fg": "@omp_host_markdown_fg",
+    "omp_bg": null,
+    "omp_attrs": [
+      [],
+      ["bold"],
+      ["italic"]
+    ],
+    "pig_fg": "@pig_host_markdown_fg",
+    "pig_bg": null,
+    "pig_attrs": [
+      [],
+      ["bold"],
+      ["faint"],
+      ["faint", "italic"]
+    ],
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host-owned terminal colours",
+      "assistant markdown palette"
+    ],
+    "ref_subject": [
+      "assistant markdown",
+      "38;5;1,3,4,5,6"
+    ],
+    "why": "PiG host owns assistant markdown & thinking text colours (emitting default/256-colour system tokens `38;5;1,3,4,5,6`, plus `faint+italic` on thinking text) while omp applies its titanium markdown palette."
+  },
+  {
+    "name": "host-notify-info-colour",
+    "kind": "colour",
+    "regions": [
+      "transcript:status"
+    ],
+    "line_regex": "^ Plan mode enabled\\. Plan file: ",
+    "omp_fg": "rgb:107;114;128",
+    "omp_bg": null,
+    "omp_attrs": [],
+    "pig_fg": null,
+    "pig_bg": null,
+    "pig_attrs": [
+      "faint"
+    ],
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host-owned terminal colours",
+      "ctx.Notify(..., \"info\")",
+      "Plan mode enabled. Plan file: local://PLAN.md"
+    ],
+    "ref_subject": [
+      "ctx.Notify",
+      "interactive_chat.go:583-604",
+      "Plan mode enabled"
+    ],
+    "why": "PiG renders `ctx.Notify(..., \"info\")` transcript status notices (such as `Plan mode enabled. Plan file: local://PLAN.md`) with host `ActiveTheme().Fg(\"dim\", msg)` (`\\x1b[39m\\x1b[2m`, SGR faint + default fg) in `internal/codingagent/interactive_chat.go:583-604`, while omp renders dim truecolor `rgb:107;114;128` without SGR faint."
+  },
+  {
+    "name": "listed-eval-syntax-highlighting-fg",
+    "kind": "colour",
+    "regions": [
+      "card:eval"
+    ],
+    "omp_fg": "@omp_syntax_fg",
+    "pig_fg": "rgb:156;163;176",
+    "bg_must_match": true,
+    "class": "LISTED",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Syntax highlighting inside",
+      "eval"
+    ],
+    "ref_subject": [
+      "Syntax highlighting",
+      "eval"
+    ],
+    "why": "omp applies Rust tree-sitter/syntect syntax highlighting to `eval` code bodies while oh-my-pig renders plain `toolOutput` (`rgb:156;163;176`); requires matching background and identical SGR attributes."
+  },
+  {
+    "name": "listed-edit-diffwords-inverse",
+    "kind": "colour",
+    "regions": [
+      "card:edit"
+    ],
+    "omp_fg": [
+      "rgb:0;255;136",
+      "rgb:255;71;87"
+    ],
+    "omp_attrs": [
+      "inverse"
+    ],
+    "pig_attrs": [],
+    "fg_must_match": true,
+    "bg_must_match": true,
+    "class": "LISTED",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Intra-line word-level diff highlighting (`diffWords` inverse spans)"
+    ],
+    "ref_subject": [
+      "diffWords",
+      "inverse"
+    ],
+    "why": "omp highlights changed tokens inside `edit` diff lines with `@oh-my-pi/pi-natives` `diffWords` SGR inverse (`\\x1b[7m`) on green/red diff fg, while oh-my-pig renders matching line-level green/red fg and bg without intra-line inverse spans."
+  },
+  {
+    "name": "blank-welcome-and-startup-notices",
+    "kind": "blank_row",
+    "side": "both",
+    "hunk_names": [
+      "welcome-version",
+      "welcome-tip-block",
+      "host-startup-notices"
+    ],
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host startup notices",
+      "blank separator rows"
+    ],
+    "ref_subject": [
+      "blank separator rows",
+      "quietStartup"
+    ],
+    "why": "Host startup notices (`[Extensions]` and `hid 2 tools`) and welcome tip wrapping change surrounding blank separator rows inside that classified hunk."
+  },
+  {
+    "name": "blank-markdown-code-block",
+    "kind": "blank_row",
+    "side": "both",
+    "hunk_names": [
+      "host-markdown-code-indent"
+    ],
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host assistant markdown fenced code block indentation",
+      "blank lines inside fenced code blocks"
+    ],
+    "ref_subject": [
+      "blank lines inside fenced code blocks",
+      "codeBlockIndent"
+    ],
+    "why": "PiG's assistant markdown code-block hunk includes the blank line separating lines inside the fenced Go code block."
+  },
+  {
+    "name": "blank-host-stock-editor-input-row",
+    "kind": "blank_row",
+    "side": "pig",
+    "hunk_names": [
+      "host-stock-editor-frame"
+    ],
+    "class": "HOST",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Frameless `╰─ ` prompt gutter",
+      "empty input row between them"
+    ],
+    "ref_subject": [
+      "empty input row",
+      "SetEditorComponent"
+    ],
+    "why": "PiG's stock editor draws an empty input row between its top and bottom full-width border rules."
+  },
+  {
+    "name": "blank-omp-stale-pre-resize-frame",
+    "kind": "blank_row",
+    "side": "omp",
+    "hunk_names": [
+      "omp-stale-pre-resize-frame"
+    ],
+    "class": "OMP_ARTIFACT",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "Host full-screen redraws",
+      "stale pre-resize frame",
+      "OMP_ARTIFACT"
+    ],
+    "ref_subject": [
+      "stale pre-resize",
+      "OMP_ARTIFACT"
+    ],
+    "why": "omp's stale pre-resize dock copy includes internal blank separator rows on the omp side only."
+  },
+  {
+    "name": "omp-resize-alt-screen-borrow",
+    "kind": "terminal_mode",
+    "mode": "alt_screen_resize_borrow",
+    "class": "OMP_ARTIFACT",
+    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
+    "ref_term": [
+      "omp resize alt-screen borrow",
+      "CSI ?1049h"
+    ],
+    "ref_subject": [
+      "?1049h",
+      "alt-screen"
+    ],
+    "why": "omp briefly borrows the alternate screen (`CSI ?1049h`...`?1049l`) strictly between width-resize start and settle (`tui.ts:2085-2197`) and nowhere else; verified from raw stream byte offsets."
+  }
+]

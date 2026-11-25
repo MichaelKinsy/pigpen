@@ -1,0 +1,61 @@
+[
+  {
+    "name": "todo-all-ops",
+    "description": "Exercise every todo op: init, view, start, done, append, drop, rm.",
+    "setup": "",
+    "calls": [
+      { "tool": "todo", "arguments": { "op": "init", "list": [{ "phase": "Build", "items": ["Write parser", "Write tests"] }] } },
+      { "tool": "todo", "arguments": { "op": "view" } },
+      { "tool": "todo", "arguments": { "op": "start", "task": "Write parser" } },
+      { "tool": "todo", "arguments": { "op": "done", "task": "Write parser" } },
+      { "tool": "todo", "arguments": { "op": "append", "phase": "Build", "items": ["Add docs", "Extra task"] } },
+      { "tool": "todo", "arguments": { "op": "drop", "task": "Extra task" } },
+      { "tool": "todo", "arguments": { "op": "rm", "task": "Add docs" } },
+      { "tool": "todo", "arguments": { "op": "view" } }
+    ]
+  },
+  {
+    "name": "todo-phases-and-parallel",
+    "description": "Exercise multi-phase todo transitions, array targets, missing task errors, flat init, bogus op, and parallel tool calls (todo + read in one turn).",
+    "setup": "printf 'parallel_read_ok\\n' > note.txt",
+    "calls": [
+      {
+        "parallel": [
+          { "tool": "todo", "arguments": { "op": "init", "list": [{ "phase": "Plan", "items": ["A", "B"] }, { "phase": "Build", "items": ["C", "D"] }] } },
+          { "tool": "read", "arguments": { "path": "note.txt" } }
+        ]
+      },
+      { "tool": "todo", "arguments": { "op": "done", "task": ["A", "B"] } },
+      { "tool": "todo", "arguments": { "op": "start", "task": "D" } },
+      { "tool": "todo", "arguments": { "op": "start", "task": "Nope" } },
+      { "tool": "todo", "arguments": { "op": "append", "items": ["E"] } },
+      { "tool": "todo", "arguments": { "op": "append", "phase": "Ship", "items": ["F"] } },
+      { "tool": "todo", "arguments": { "op": "append" } },
+      { "tool": "todo", "arguments": { "op": "done", "task": ["C", "D", "E", "F"] } },
+      { "tool": "todo", "arguments": { "op": "init", "items": ["X", "Y"] } },
+      { "tool": "todo", "arguments": { "op": "rm", "task": ["X", "Y"] } },
+      { "tool": "todo", "arguments": { "op": "bogus" } }
+    ]
+  },
+  {
+    "name": "todo-midrun-reminder",
+    "description": "Exercise todo mid-run reminder nudge after 12 mutating tool calls with open todos (stop-time todo reminders are disabled in single-shot print mode per print-mode.ts:195).",
+    "config_yml": "todo:\n  midRunNudges: capped\n",
+    "setup": "",
+    "calls": [
+      { "tool": "todo", "arguments": { "op": "init", "list": [{ "phase": "Work", "items": ["Task A", "Task B"] }] } },
+      { "tool": "write", "arguments": { "path": "f1.txt", "content": "1\n" } },
+      { "tool": "write", "arguments": { "path": "f2.txt", "content": "2\n" } },
+      { "tool": "write", "arguments": { "path": "f3.txt", "content": "3\n" } },
+      { "tool": "write", "arguments": { "path": "f4.txt", "content": "4\n" } },
+      { "tool": "write", "arguments": { "path": "f5.txt", "content": "5\n" } },
+      { "tool": "write", "arguments": { "path": "f6.txt", "content": "6\n" } },
+      { "tool": "write", "arguments": { "path": "f7.txt", "content": "7\n" } },
+      { "tool": "write", "arguments": { "path": "f8.txt", "content": "8\n" } },
+      { "tool": "write", "arguments": { "path": "f9.txt", "content": "9\n" } },
+      { "tool": "write", "arguments": { "path": "f10.txt", "content": "10\n" } },
+      { "tool": "write", "arguments": { "path": "f11.txt", "content": "11\n" } },
+      { "tool": "write", "arguments": { "path": "f12.txt", "content": "12\n" } }
+    ]
+  }
+]

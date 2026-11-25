@@ -121,10 +121,14 @@ class ScriptedLLMServer:
         self.log_path = log_path
         self.lock = threading.Lock()
         self.next_index = 0
+        self.completed = 0
+        self.in_flight = 0
 
     def reset(self) -> None:
         with self.lock:
             self.next_index = 0
+            self.completed = 0
+            self.in_flight = 0
 
     def log_event(self, event: dict[str, Any]) -> None:
         if not self.log_path:
@@ -139,9 +143,14 @@ class ScriptedLLMServer:
             if idx >= len(self.turns):
                 return idx, None
             self.next_index += 1
+            self.in_flight += 1
             return idx, self.turns[idx]
 
-
+    def finish_turn(self) -> None:
+        with self.lock:
+            if self.in_flight > 0:
+                self.in_flight -= 1
+            self.completed += 1
 def make_handler(state: ScriptedLLMServer) -> type[http.server.BaseHTTPRequestHandler]:
     class Handler(http.server.BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -175,7 +184,14 @@ def make_handler(state: ScriptedLLMServer) -> type[http.server.BaseHTTPRequestHa
                 )
                 return
             if self.path == "/health":
-                self._send_json(200, {"ok": True, "next": state.next_index})
+                with state.lock:
+                    payload = {
+                        "ok": True,
+                        "next": state.next_index,
+                        "completed": state.completed,
+                        "in_flight": state.in_flight,
+                    }
+                self._send_json(200, payload)
                 return
             self._send_json(404, {"error": "not found"})
 
@@ -236,6 +252,139 @@ def make_handler(state: ScriptedLLMServer) -> type[http.server.BaseHTTPRequestHa
                 self.wfile.flush()
                 return
 
+            # Helper to extract combined text of system/developer and first user messages.
+            sys_parts: list[str] = []
+            first_user_text = ""
+            for m in messages:
+                role = m.get("role")
+                c = m.get("content", "")
+                if isinstance(c, list):
+                    c = " ".join(p.get("text", "") for p in c if isinstance(p, dict))
+                ct = str(c)
+                if role in ("system", "developer"):
+                    sys_parts.append(ct)
+                elif role == "user" and not first_user_text:
+                    first_user_text = ct
+            sys_text = "\n".join(sys_parts)
+            tool_names = sorted(schemas.keys())
+
+            # Set aside omp's internal judge/classifier and task-label auxiliary requests
+            # (tools == [] or ["submit_judgment"]) so they never consume parent conversation turns.
+            is_judge_req = (
+                (not tool_names or tool_names == ["submit_judgment"])
+                and (
+                    "Answer with exactly one of:" in last_text
+                    or "Answer with exactly one of:" in first_user_text
+                    or "submit_judgment" in tool_names
+                    or "<solution_space>" in first_user_text
+                    or "Label the delegated work" in sys_text
+                )
+            )
+            if is_judge_req:
+                # Pick the first option offered (e.g. `medium` or `low`) deterministically.
+                ans = "medium"
+                m_opts = re.search(r"Answer with exactly one of:\s*([^\n]+)", last_text or first_user_text)
+                if m_opts:
+                    opts = re.findall(r"`([^`]+)`", m_opts.group(1))
+                    if opts:
+                        ans = opts[0]
+                elif "Label the delegated work" in sys_text:
+                    ans = "Proof child task"
+                state.log_event(
+                    {
+                        "turn_index": None,
+                        "auxiliary": "judge-or-label",
+                        "answer": ans,
+                        "tool_names": tool_names,
+                        "path": self.path,
+                        "model": body.get("model"),
+                    }
+                )
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                model_id = str(body.get("model") or "proof-1")
+                if tool_names == ["submit_judgment"]:
+                    chunks = [
+                        {
+                            "id": "aux-judge",
+                            "object": "chat.completion.chunk",
+                            "created": 1,
+                            "model": model_id,
+                            "choices": [{"index": 0, "delta": {"role": "assistant", "content": ""}, "finish_reason": None}],
+                        },
+                        {
+                            "id": "aux-judge",
+                            "object": "chat.completion.chunk",
+                            "created": 1,
+                            "model": model_id,
+                            "choices": [{
+                                "index": 0,
+                                "delta": {
+                                    "tool_calls": [{
+                                        "index": 0,
+                                        "id": "aux_judge_0",
+                                        "type": "function",
+                                        "function": {"name": "submit_judgment", "arguments": json.dumps({"answer": ans})},
+                                    }]
+                                },
+                                "finish_reason": None,
+                            }],
+                        },
+                        {
+                            "id": "aux-judge",
+                            "object": "chat.completion.chunk",
+                            "created": 1,
+                            "model": model_id,
+                            "choices": [{"index": 0, "delta": {}, "finish_reason": "tool_calls"}],
+                        },
+                    ]
+                    for ch in chunks:
+                        self.wfile.write(f"data: {json.dumps(ch)}\n\n".encode("utf-8"))
+                    self.wfile.write(b"data: [DONE]\n\n")
+                    self.wfile.flush()
+                else:
+                    chunk = {
+                        "id": "aux-judge",
+                        "object": "chat.completion.chunk",
+                        "created": 1,
+                        "model": model_id,
+                        "choices": [{"index": 0, "delta": {"role": "assistant", "content": ans}, "finish_reason": "stop"}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                return
+
+            # Serve subagent (task) child turns without advancing the parent cursor.
+            # Match ONLY on the first user message so an injected `<system-notice>`
+            # carrying the child's reply in a later parent turn never hijacks the parent.
+            if "PROOF_CHILD_OK" in first_user_text and "Spawn a proof subagent" not in first_user_text:
+                state.log_event(
+                    {
+                        "turn_index": None,
+                        "auxiliary": "subagent-child",
+                        "path": self.path,
+                        "model": body.get("model"),
+                    }
+                )
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                chunk = {
+                    "id": "proof-child",
+                    "object": "chat.completion.chunk",
+                    "created": 1,
+                    "model": str(body.get("model") or "proof-1"),
+                    "choices": [{"index": 0, "delta": {"role": "assistant", "content": "PROOF_CHILD_OK"}, "finish_reason": "stop"}],
+                }
+                self.wfile.write(f"data: {json.dumps(chunk)}\n\ndata: [DONE]\n\n".encode("utf-8"))
+                self.wfile.flush()
+                return
+
             idx, turn = state.pop_turn()
             state.log_event(
                 {
@@ -245,7 +394,7 @@ def make_handler(state: ScriptedLLMServer) -> type[http.server.BaseHTTPRequestHa
                     "message_count": len(messages),
                     "last_role": last_msg.get("role"),
                     "last_preview": last_text[:120],
-                    "tool_names": sorted(schemas.keys()),
+                    "tool_names": tool_names,
                     "has_turn": turn is not None,
                 }
             )
@@ -256,82 +405,90 @@ def make_handler(state: ScriptedLLMServer) -> type[http.server.BaseHTTPRequestHa
                     {"error": {"message": f"script exhausted at request {idx + 1}"}},
                 )
                 return
-            delay_ms = int(turn.get("delay_ms") or 0)
-            model_id = str(body.get("model") or "proof-1")
-            chunk_id = f"proof-{idx}"
 
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Connection", "close")
-            self.end_headers()
+            try:
+                if turn.get("http_error"):
+                    err_spec = turn["http_error"]
+                    status = int(err_spec.get("status", 400))
+                    msg = str(err_spec.get("message", "Proof simulated provider error"))
+                    self._send_json(status, {"error": {"message": msg, "type": "invalid_request_error"}})
+                    return
+                delay_ms = int(turn.get("delay_ms") or 0)
+                model_id = str(body.get("model") or "proof-1")
+                chunk_id = f"proof-{idx}"
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "close")
+                self.end_headers()
 
-            def emit(delta: dict[str, Any], finish: str | None) -> None:
-                chunk = {
+                def emit(delta: dict[str, Any], finish: str | None) -> None:
+                    chunk = {
+                        "id": chunk_id,
+                        "object": "chat.completion.chunk",
+                        "created": 1,
+                        "model": model_id,
+                        "choices": [{"index": 0, "delta": delta, "finish_reason": finish}],
+                    }
+                    self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
+                    self.wfile.flush()
+
+                emit({"role": "assistant", "content": ""}, None)
+
+                if delay_ms > 0:
+                    time.sleep(delay_ms / 1000.0)
+
+                thinking = turn.get("thinking")
+                if isinstance(thinking, str) and thinking:
+                    # Stream in two pieces so live thinking renders before finishing.
+                    mid = max(1, len(thinking) // 2)
+                    emit({"reasoning_content": thinking[:mid]}, None)
+                    if len(thinking) > mid:
+                        emit({"reasoning_content": thinking[mid:]}, None)
+
+                text = turn.get("text")
+                if isinstance(text, str) and text:
+                    emit({"content": text}, None)
+
+                tool_calls = turn.get("tool_calls") or []
+                finish_reason = "stop"
+                for j, call in enumerate(tool_calls):
+                    name, args = _adapt_tool_call(call, schemas, messages)
+                    args_str = json.dumps(args, ensure_ascii=False)
+                    emit(
+                        {
+                            "tool_calls": [
+                                {
+                                    "index": j,
+                                    "id": f"call_{idx}_{j}",
+                                    "type": "function",
+                                    "function": {"name": name, "arguments": args_str},
+                                }
+                            ]
+                        },
+                        None,
+                    )
+                    finish_reason = "tool_calls"
+
+                emit({}, finish_reason)
+
+                usage_chunk = {
                     "id": chunk_id,
                     "object": "chat.completion.chunk",
                     "created": 1,
                     "model": model_id,
-                    "choices": [{"index": 0, "delta": delta, "finish_reason": finish}],
-                }
-                self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode("utf-8"))
-                self.wfile.flush()
-
-            emit({"role": "assistant", "content": ""}, None)
-
-            if delay_ms > 0:
-                time.sleep(delay_ms / 1000.0)
-
-            thinking = turn.get("thinking")
-            if isinstance(thinking, str) and thinking:
-                # Stream in two pieces so live thinking renders before finishing.
-                mid = max(1, len(thinking) // 2)
-                emit({"reasoning_content": thinking[:mid]}, None)
-                if len(thinking) > mid:
-                    emit({"reasoning_content": thinking[mid:]}, None)
-
-            text = turn.get("text")
-            if isinstance(text, str) and text:
-                emit({"content": text}, None)
-
-            tool_calls = turn.get("tool_calls") or []
-            finish_reason = "stop"
-            for j, call in enumerate(tool_calls):
-                name, args = _adapt_tool_call(call, schemas, messages)
-                args_str = json.dumps(args, ensure_ascii=False)
-                emit(
-                    {
-                        "tool_calls": [
-                            {
-                                "index": j,
-                                "id": f"call_{idx}_{j}",
-                                "type": "function",
-                                "function": {"name": name, "arguments": args_str},
-                            }
-                        ]
+                    "choices": [],
+                    "usage": {
+                        "prompt_tokens": 120 + idx * 40,
+                        "completion_tokens": 35,
+                        "total_tokens": 155 + idx * 40,
                     },
-                    None,
-                )
-                finish_reason = "tool_calls"
-
-            emit({}, finish_reason)
-
-            usage_chunk = {
-                "id": chunk_id,
-                "object": "chat.completion.chunk",
-                "created": 1,
-                "model": model_id,
-                "choices": [],
-                "usage": {
-                    "prompt_tokens": 120 + idx * 40,
-                    "completion_tokens": 35,
-                    "total_tokens": 155 + idx * 40,
-                },
-            }
-            self.wfile.write(f"data: {json.dumps(usage_chunk)}\n\n".encode("utf-8"))
-            self.wfile.write(b"data: [DONE]\n\n")
-            self.wfile.flush()
-
+                }
+                self.wfile.write(f"data: {json.dumps(usage_chunk)}\n\n".encode("utf-8"))
+                self.wfile.write(b"data: [DONE]\n\n")
+                self.wfile.flush()
+            finally:
+                state.finish_turn()
     return Handler
 
 

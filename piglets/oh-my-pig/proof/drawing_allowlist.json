@@ -1,0 +1,764 @@
+[
+  {
+    "part": "surface root",
+    "node_path": "$",
+    "prop": "role",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": "omp.session",
+    "pig": "pig.session",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `surface root` |",
+      "pig.session"
+    ],
+    "ref_subject": [
+      "pig.session",
+      "omp.session"
+    ],
+    "why": "Root surface intentionally carries `pig.session` instead of `omp.session` (`PARITY.md:215`)."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "alt",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": "omp",
+    "pig": "oh-my-pig",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "logo",
+      "Branding intentionally names `oh-my-pig`"
+    ],
+    "why": "Welcome logo alt text is branded `oh-my-pig` rather than `omp`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > col[omp.welcome.mark] > text[omp.welcome.wordmark]",
+    "prop": "spans",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": [
+      {
+        "t": "omp",
+        "s": "strong"
+      }
+    ],
+    "pig": [
+      {
+        "t": "oh-my-pig",
+        "s": "strong"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "wordmark `oh-my-pig`"
+    ],
+    "why": "Welcome wordmark is branded `oh-my-pig` rather than `omp`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > col[omp.welcome.mark] > text[omp.welcome.version]",
+    "prop": "spans",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": [
+      {
+        "t_regex": "^v\\d+\\.\\d+\\.\\d+$",
+        "s": "dim mono"
+      }
+    ],
+    "pig": [
+      {
+        "t_regex": "^v\\d+\\.\\d+\\.\\d+$",
+        "s": "dim mono"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "Piglet version from `Env.Version`"
+    ],
+    "why": "Welcome version displays the Piglet version (`Env.Version`) rather than omp's `v19.1.1`."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.tip] > text[omp.welcome.tip-text]",
+    "prop": "text",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "match_kind": "welcome_tip",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "oh-my-pig"
+    ],
+    "ref_subject": [
+      "randomly chosen per launch"
+    ],
+    "why": "Welcome tip is randomly selected per launch and filtered to registered commands; each side's tip is checked against its source tips list."
+  },
+  {
+    "part": "user message",
+    "node_path": "$",
+    "prop": "actions",
+    "side": "omp-only",
+    "class": "HOST",
+    "class_in_doubt": true,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "omp.user.tools"
+    ],
+    "ref_subject": [
+      "actions.hold"
+    ],
+    "why": "PiG frontend.Env has no rewind/copy/edit-turn callbacks so `actions.hold` is omitted on `card[omp.user]` (class_in_doubt: audit Finding 20 notes copy via OSC 52 and /rewind via Env.Send are reachable)."
+  },
+  {
+    "part": "user message",
+    "node_path": "row[omp.user.tools]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "class_in_doubt": true,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `user message` |",
+      "omp.user.tools"
+    ],
+    "ref_subject": [
+      "omp.user.tools"
+    ],
+    "why": "PiG frontend.MarkdownText has no message timestamp or id and frontend.Env has no rewind/copy callbacks, so `row[omp.user.tools]` is omitted (class_in_doubt: audit Finding 20 notes timestamp is HOST while copy/rewind may be reachable)."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "$",
+    "prop": "actions",
+    "side": "omp-only",
+    "class": "HOST",
+    "class_in_doubt": true,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
+      "omp.turn.usage"
+    ],
+    "ref_subject": [
+      "actions.hold"
+    ],
+    "why": "PiG frontend.Env has no rewind/copy/retry-turn callbacks so `actions.hold` is omitted on `col[omp.assistant]` (class_in_doubt: audit Finding 20 notes copy via OSC 52 and /rewind via Env.Send are reachable)."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "row[omp.turn.usage]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `assistant text (markdown)` |",
+      "omp.turn.usage"
+    ],
+    "ref_subject": [
+      "omp.turn.usage"
+    ],
+    "why": "PiG frontend.Frame exposes no per-turn token/duration metrics (only session totals in Footer.UsageTotals), so `row[omp.turn.usage]` is omitted."
+  },
+  {
+    "part": "working row",
+    "node_path": "row[omp.working.stop]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.stop"
+    ],
+    "ref_subject": [
+      "omp.working.stop"
+    ],
+    "why": "PiG frontend.Env has no interrupt callback and frontend.Working carries no interrupt key, so `row[omp.working.stop]` is omitted."
+  },
+  {
+    "part": "tool card: bash",
+    "node_path": "col[omp.run] > [omp.tool.bash.command]",
+    "prop": "$kind",
+    "side": "value",
+    "class": "LISTED",
+    "omp": "shell",
+    "pig": "code",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `tool card: bash` |",
+      "ShellVizPresentation"
+    ],
+    "ref_subject": [
+      "omp.tool.bash.command",
+      "ShellVizPresentation"
+    ],
+    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props (`lang`, `preview`) and command text vs tool `command` are still compared below `$kind`."
+  },
+  {
+    "part": "long bash (folded)",
+    "node_path": "col[omp.run] > [omp.tool.bash.command]",
+    "prop": "$kind",
+    "side": "value",
+    "class": "LISTED",
+    "omp": "shell",
+    "pig": "code",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `long bash (folded)` |",
+      "omp.tool.bash.command"
+    ],
+    "ref_subject": [
+      "omp.tool.bash.command"
+    ],
+    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props and command text are still compared below `$kind`."
+  },
+  {
+    "part": "long bash (expanded)",
+    "node_path": "col[omp.run] > [omp.tool.bash.command]",
+    "prop": "$kind",
+    "side": "value",
+    "class": "LISTED",
+    "omp": "shell",
+    "pig": "code",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `long bash (expanded)` |",
+      "omp.tool.bash.command"
+    ],
+    "ref_subject": [
+      "omp.tool.bash.command"
+    ],
+    "why": "Shell visualizer AST (`shell` with `presentation`) is not ported; port draws `code[omp.tool.bash.command]` (`lang:\"bash\"`). Shared props and command text are still compared below `$kind`."
+  },
+  {
+    "part": "ask form (live)",
+    "node_path": "$",
+    "prop": "$kind",
+    "side": "value",
+    "class": "HOST",
+    "omp": "col",
+    "pig": "picker",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `ask form (live)` |",
+      "omp.ask.card"
+    ],
+    "ref_subject": [
+      "omp.ask.card",
+      "picker"
+    ],
+    "why": "PiG frontend.Env has no whole-form dialog primitive or answer callback; omp mounts `col[omp.ask.card]` in dock while PiG mounts `picker` in layer. Prompt title and option labels are still compared below `$kind`."
+  },
+  {
+    "part": "ask form (live)",
+    "node_path": "$",
+    "prop": "role",
+    "side": "value",
+    "class": "HOST",
+    "omp": "omp.ask.card",
+    "pig": null,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `ask form (live)` |",
+      "omp.ask.card"
+    ],
+    "ref_subject": [
+      "omp.ask.card"
+    ],
+    "why": "Host `picker` overlay carries no `omp.ask.card` role."
+  },
+  {
+    "part": "provider error turn",
+    "node_path": "row[omp.error.actions] > row[omp.error.action]@0",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "raw-http-request"
+    ],
+    "ref_subject": [
+      "Retry"
+    ],
+    "why": "`Retry` (`F5`) action on `card[omp.error]` is omitted because `frontend.Env` has no retry-turn callback and PiG has no `/retry` command."
+  },
+  {
+    "part": "provider error turn",
+    "node_path": "text[omp.error.message]",
+    "prop": "spans",
+    "side": "value",
+    "class": "HOST",
+    "omp": [
+      {
+        "t": "Proof simulated provider error (type=invalid_request_error)\nraw-http-request=<HTTP_LOG>",
+        "s": "mono"
+      }
+    ],
+    "pig": [
+      {
+        "t": "Proof simulated provider error (type=invalid_request_error)",
+        "s": "mono"
+      }
+    ],
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "raw-http-request"
+    ],
+    "ref_subject": [
+      "raw-http-request",
+      "ai/errors.go"
+    ],
+    "why": "Port now formats the JSON body identically to omp (`Proof simulated provider error (type=invalid_request_error)`); only omp's trailing `raw-http-request=<HTTP_LOG>` dump path differs because PiG's `ai/errors.go` does not write raw HTTP 400 dump files."
+  },
+  {
+    "part": "error banner",
+    "node_path": "button[omp.btn]@1",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.error.action`",
+      "Retry",
+      "Details"
+    ],
+    "ref_subject": [
+      "Details",
+      "button[omp.btn]"
+    ],
+    "why": "omp's error banner is 2 lines due to `raw-http-request=<log>` and shows a `Details` button (`button[omp.btn]`); port's banner has only the 1-line formatted error (≤80 runes) and omits the unnecessary `Details` toggle."
+  },
+  {
+    "part": "slash menu",
+    "node_path": "$",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete overlay",
+      "overlay[omp.autocomplete]"
+    ],
+    "ref_subject": [
+      "omp.autocomplete"
+    ],
+    "why": "PiG `frontend.Editor` carries no autocomplete items/selection state (`OMP-UPSTREAM.md:28,53`); PiG dumps completion lines into `dock.below` instead of `overlay[omp.autocomplete]`."
+  },
+  {
+    "part": "composer",
+    "parts": [
+      "composer",
+      "slash closed (composer)",
+      "narrow 80 (composer)"
+    ],
+    "node_path": "meter[omp.composer.context]",
+    "prop": "marks",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter auto-compact threshold marks"
+    ],
+    "ref_subject": [
+      "marks",
+      "ContextUsage"
+    ],
+    "why": "`frontend.Footer.ContextUsage` carries no auto-compact threshold positions (`marks`)."
+  },
+  {
+    "part": "composer",
+    "parts": [
+      "composer",
+      "slash closed (composer)",
+      "narrow 80 (composer)"
+    ],
+    "node_path": "meter[omp.composer.context]",
+    "prop": "title",
+    "side": "value",
+    "class": "HOST",
+    "omp_regex": "^Context (?:0|1)% used\\n(?:120|1\\.4K) of 128K tokens\\nAuto-compact at 85%$",
+    "pig_regex": "^Context (?:0|1)% used\\n(?:155|1\\.4K) of 128K tokens\\nAuto-compact enabled$",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter auto-compact threshold marks"
+    ],
+    "ref_subject": [
+      "Auto-compact enabled",
+      "TotalTokens"
+    ],
+    "why": "PiG `frontend.Footer.ContextUsage` has only bool `Footer.AutoCompact` (no compaction threshold %) and computes `Tokens` via `agent/context_tokens.go:32-37` (`TotalTokens` = 155 vs omp's prompt-only 120)."
+  },
+  {
+    "part": "composer",
+    "node_path": "meter[omp.composer.context]",
+    "prop": "value",
+    "side": "value",
+    "class": "HOST",
+    "omp": 0.0009375,
+    "pig": 0.0012109375,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter auto-compact threshold marks"
+    ],
+    "ref_subject": [
+      "TotalTokens",
+      "155"
+    ],
+    "why": "PiG `agent/context_tokens.go:32-37` reports `TotalTokens` (155/128K = 0.0012109375) whereas omp reports prompt tokens (120/128K = 0.0009375) at `01-markdown`."
+  },
+  {
+    "part": "slash closed (composer)",
+    "parts": [
+      "slash closed (composer)",
+      "narrow 80 (composer)"
+    ],
+    "node_path": "meter[omp.composer.context]",
+    "prop": "value",
+    "side": "value",
+    "class": "HOST",
+    "omp": 0.010671875000000003,
+    "pig": 0.010968749999999998,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Context meter auto-compact threshold marks"
+    ],
+    "ref_subject": [
+      "TotalTokens",
+      "155"
+    ],
+    "why": "PiG `agent/context_tokens.go:32-37` reports `TotalTokens` (1404/128K = 0.01096875) whereas omp reports prompt tokens (1366/128K = 0.010671875) at `17b-slash-closed` / `18-narrow-80`."
+  },
+  {
+    "part": "tool card: task",
+    "node_path": "agent@1",
+    "prop": "thinking",
+    "side": "value",
+    "class": "LISTED",
+    "omp": "thinkingLow",
+    "pig": "thinkingHigh",
+    "ref_file": "internal/agents/UPSTREAM.md",
+    "ref_term": [
+      "| `auto` thinking-level classification",
+      "auto-thinking/classifier.ts"
+    ],
+    "ref_subject": [
+      "thinking",
+      "fallback"
+    ],
+    "why": "omp's `auto` thinking level runs an LLM judge per child (`auto-thinking/classifier.ts:147-197`) that selects `thinkingLow`, whereas the port has no judge classifier and uses the fallback `thinkingHigh`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "omp-only",
+    "node_kind": "row",
+    "role": "omp.hud",
+    "child_roles": [
+      "row[omp.hud.pill]"
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "omp.hud.pill",
+      "omp.hud.judge"
+    ],
+    "ref_subject": [
+      "omp.hud"
+    ],
+    "why": "PiG frontend.Frame has no dock HUD pills node kind (`omp.hud` / `omp.hud.pill` / `omp.hud.seg`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "",
+    "child_roles": [
+      "col[omp.hud.judge]",
+      "col[omp.hud.downloads]",
+      "col[omp.hud.compaction]"
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "omp.hud.pill",
+      "omp.hud.judge"
+    ],
+    "ref_subject": [
+      "omp.hud.judge",
+      "omp.hud.downloads",
+      "omp.hud.compaction"
+    ],
+    "why": "PiG frontend.Frame has no dock judge/downloads/compaction container."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "omp.assistant",
+    "empty_container": true,
+    "next_sibling_kind": "tool",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Empty `col[omp.assistant]` before tool-call turns"
+    ],
+    "ref_subject": [
+      "col[omp.assistant]",
+      "tool-call-only"
+    ],
+    "why": "PiG's `AssistantMessageComponent.appendFrontendNodes` (`tui/tui_surface.go:914-944`) emits zero ops for tool-call-only turns; bounded strictly to empty `col[omp.assistant]` whose next non-empty sibling is a `tool` card."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "toast",
+    "role": "omp.toast.status",
+    "text_regex": "^(?:Tool output expansion: enabled|Plan mode enabled\\. Plan file: local://PLAN\\.md)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.toast.status`"
+    ],
+    "ref_subject": [
+      "omp.toast.status"
+    ],
+    "why": "PiG frontend.Session has no Toast/Notification node kind for ephemeral status toasts (`Tool output expansion: enabled`, `Plan mode enabled...`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "ansi",
+    "role": "",
+    "text_regex": "^(?:Tool output: expanded|Plan mode enabled\\. Plan file: local://PLAN\\.md)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `omp.toast.status`"
+    ],
+    "ref_subject": [
+      "Tool output: expanded",
+      "Plan mode enabled"
+    ],
+    "why": "PiG host `showStatus` (`interactive_chat.go:583-604`) and `ctx.Notify` (`ext_ui_context.go:457-473`) append plain `tui.ThemedText` lines to `chatContainer`, delivered as unmarked `ansi` nodes in `RegionMain`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "ansi",
+    "role": "",
+    "text_regex": "^(?:\\[Extensions\\] (?:path )?builtin:piglet|Piglet oh-my-pig hid 2 tools from the registry: - built-in tools: powershell, ls|If this looks like a pig bug, /bug sends a report to the developers\\.)$",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Host transcript notices in `main`"
+    ],
+    "ref_subject": [
+      "[Extensions]",
+      "/bug"
+    ],
+    "why": "PiG host emits startup notices (`[Extensions]`, `Piglet oh-my-pig hid 2 tools: powershell, ls`) and `/bug` hint (`interactive_chat.go:524-531`) as plain `frontend.Lines` in `RegionMain`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "omp.ask.card",
+    "step": "08a-ask-form",
+    "text_regex": "^ask Choose a mode:",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "omp.ask.card",
+      "picker"
+    ],
+    "why": "omp mounts live `col[omp.ask.card]` inline in `main` at `08a-ask-form` whereas PiG mounts `picker` in `layer` (`tui_surface.go:578-585, 626-638`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "08a-ask-form",
+    "child_roles": [
+      "col[omp.editor]"
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "col[omp.editor]",
+      "composer swap"
+    ],
+    "why": "PiG `TuiSurface.dockEntries` (`tui/tui_surface.go:578-585, 626-638`) replaces the `Editor` slot with `Selector` (`picker` in `layer`) while `ctx.Select` runs at `08a-ask-form`, leaving `dock.editor` empty instead of keeping `col[omp.editor]` mounted."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "port-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "08a-ask-form",
+    "empty_container": true,
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "col[omp.editor]",
+      "composer swap"
+    ],
+    "why": "Paired with omp's `col(col[omp.editor])` at `08a-ask-form`: PiG swaps the editor for `picker` in `layer`, leaving the port's `dock.editor` slot as an empty `col`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "layer",
+    "side": "port-only",
+    "node_kind": "picker",
+    "role": "",
+    "step": "08a-ask-form",
+    "text": "Choose a mode:",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Interactive `omp.ask.pill` / live inline `col[omp.ask.card]`"
+    ],
+    "ref_subject": [
+      "picker",
+      "layer"
+    ],
+    "why": "PiG mounts `Selector` as a `picker` in `layer` during `08a-ask-form` (`tui/tui_surface.go:578-585, 626-638`)."
+  },
+  {
+    "kind": "frame_child",
+    "region": "layer",
+    "side": "omp-only",
+    "node_kind": "overlay",
+    "role": "omp.autocomplete",
+    "step": "17a-slash-menu",
+    "child_roles": [
+      "col[omp.select]"
+    ],
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete overlay",
+      "overlay[omp.autocomplete]"
+    ],
+    "ref_subject": [
+      "overlay[omp.autocomplete]"
+    ],
+    "why": "PiG frontend.Editor carries no structured autocomplete items; omp mounts overlay[omp.autocomplete] in layer."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "port-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "17a-slash-menu",
+    "child_roles": [
+      "ansi"
+    ],
+    "text_regex": "settings|model|tree|plan",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete overlay",
+      "overlay[omp.autocomplete]"
+    ],
+    "ref_subject": [
+      "dock.below",
+      "ANSI list"
+    ],
+    "why": "PiG Editor.frontendParts dumps the slash completion list as a pre-rendered `ansi` node inside `dock.below` rather than `overlay[omp.autocomplete]`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "dock",
+    "side": "omp-only",
+    "node_kind": "col",
+    "role": "",
+    "step": "17a-slash-menu",
+    "empty_container": true,
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Slash autocomplete overlay",
+      "overlay[omp.autocomplete]"
+    ],
+    "ref_subject": [
+      "dock.below",
+      "ANSI list"
+    ],
+    "why": "Paired with port's `dock.below` `col(ansi)` at `17a-slash-menu`: omp keeps its `below` dock slot as an empty `col` while rendering slash completions in `overlay[omp.autocomplete]`."
+  },
+  {
+    "kind": "frame_child",
+    "region": "main",
+    "side": "port-only",
+    "node_kind": "section",
+    "role": "omp.thinking",
+    "text_regex": "Thought.*Let me reason carefully about the sum of 20 and 22",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Thinking block nested inside `col[omp.assistant]`"
+    ],
+    "ref_subject": [
+      "Thinking",
+      "sibling"
+    ],
+    "why": "PiG frontend.Frame emits Thinking as a top-level sibling in main instead of nesting it inside col[omp.assistant]."
+  },
+  {
+    "part": "assistant text (markdown)",
+    "node_path": "section[omp.thinking]",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "HOST",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Thinking block nested inside `col[omp.assistant]`"
+    ],
+    "ref_subject": [
+      "Thinking",
+      "col[omp.assistant]"
+    ],
+    "why": "omp nests `section[omp.thinking]` inside `col[omp.assistant]`, while PiG emits it as a top-level sibling in main."
+  }
+]
