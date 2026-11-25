@@ -70,6 +70,7 @@ func (s *session) Resume() {
 		s.startKeepalive()
 	}
 	var err error
+	var opened bool
 	switch {
 	case s.closed || s.fellBack:
 	case s.tsp == nil:
@@ -79,6 +80,7 @@ func (s *session) Resume() {
 	case !s.lent:
 		if s.sf == nil {
 			err = s.openLocked()
+			opened = err == nil
 		}
 	default:
 		s.lent = false
@@ -96,6 +98,9 @@ func (s *session) Resume() {
 		}
 	}
 	s.mu.Unlock()
+	if opened {
+		s.notifySurface(true)
+	}
 	if err != nil {
 		s.fallback(err.Error())
 	}

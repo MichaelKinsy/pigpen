@@ -207,7 +207,13 @@ func (s *session) suspendScreen() {
 // PiG's click on the first cell of its Click area: Tern does not say which
 // cell was clicked.
 func (s *session) transcriptClick(action *tern.Action) {
-	if action.SF != surfaceID || action.Act != "click" {
+	if action.SF != surfaceID {
+		return
+	}
+	if s.ompRoles && s.ompErrorAction(action) {
+		return
+	}
+	if action.Act != "click" {
 		return
 	}
 	nodeID, ok := strings.CutSuffix(action.ID, ".hit")

@@ -75,6 +75,10 @@ type viewer struct {
 	// click sends PiG's click on the view's node, or is nil when the view
 	// takes none.
 	click func(fe.Click)
+	// ompMap, when non-nil (ompRoles only), maps ViewNodes carrying an
+	// `omp.*` role ID to omp's native Tern node while letting role-less
+	// nodes use viewer's full layout/style/theme handling.
+	ompMap func(b *viewer, n *fe.ViewNode, id string, r region, path []int) (tern.Node, bool)
 }
 
 // region is the cells a node covers in the surface's lines.
@@ -207,6 +211,14 @@ func (s *session) rethemeViewRules() {
 // n's clicks.
 func (b *viewer) node(n *fe.ViewNode, id string, r region, path []int) tern.Node {
 	if len(n.Theme) == 0 {
+		if b.ompMap != nil {
+			if mapped, ok := b.ompMap(b, n, id, r, path); ok {
+				if mapped.Kind == "" {
+					return tern.Node{}
+				}
+				return b.clickable(n, mapped, path)
+			}
+		}
 		return b.clickable(n, b.kind(n, id, r, path), path)
 	}
 	sub := *b
@@ -216,9 +228,19 @@ func (b *viewer) node(n *fe.ViewNode, id string, r region, path []int) tern.Node
 		sub.theme = map[string]string{}
 	}
 	maps.Copy(sub.theme, n.Theme)
-	return tern.Node{Kind: tern.KindCol, Props: map[string]any{"role": b.s.themeRole(id, n.Theme, sub.theme, n)}, Children: []tern.Element{
-		sub.clickable(n, sub.kind(n, id+".0", r, path), path),
-	}}
+	var inner tern.Node
+	if sub.ompMap != nil {
+		if mapped, ok := sub.ompMap(&sub, n, id+".0", r, path); ok {
+			if mapped.Kind == "" {
+				return tern.Node{}
+			}
+			inner = sub.clickable(n, mapped, path)
+		}
+	}
+	if inner.Kind == "" {
+		inner = sub.clickable(n, sub.kind(n, id+".0", r, path), path)
+	}
+	return tern.Node{Kind: tern.KindCol, Props: map[string]any{"role": b.s.themeRole(id, n.Theme, sub.theme, n)}, Children: []tern.Element{inner}}
 }
 
 // clickable makes el, the element of n at path, take a click as PiG's click
@@ -249,11 +271,13 @@ func (b *viewer) kind(n *fe.ViewNode, id string, r region, path []int) tern.Node
 				props["align"] = align
 			}
 		}
-		children := make([]tern.Element, len(n.Children))
+		children := make([]tern.Element, 0, len(n.Children))
 		row := r.row
 		for i := range n.Children {
 			child := &n.Children[i]
-			children[i] = b.stackChild(child, id+"."+strconv.Itoa(i), region{row, r.col, child.Rows, r.width}, n, false, childPath(path, i))
+			if el := b.stackChild(child, id+"."+strconv.Itoa(i), region{row, r.col, child.Rows, r.width}, n, false, childPath(path, i)); el.Kind != "" {
+				children = append(children, el)
+			}
 			row += child.Rows + n.Gap*boolInt(n.Kind == fe.ViewKindVStack)
 		}
 		return tern.Node{Kind: tern.KindCol, Props: hiddenIf(props, n.Rows == 0), Children: children}
@@ -263,21 +287,25 @@ func (b *viewer) kind(n *fe.ViewNode, id string, r region, path []int) tern.Node
 		if align := stackAlign(n.Align); align != "" {
 			props["align"] = align
 		}
-		children := make([]tern.Element, len(n.Children))
+		children := make([]tern.Element, 0, len(n.Children))
 		col := r.col
 		for i := range n.Children {
 			child := &n.Children[i]
-			children[i] = b.stackChild(child, id+"."+strconv.Itoa(i), region{r.row, col, r.rows, child.Width}, n, true, childPath(path, i))
+			if el := b.stackChild(child, id+"."+strconv.Itoa(i), region{r.row, col, r.rows, child.Width}, n, true, childPath(path, i)); el.Kind != "" {
+				children = append(children, el)
+			}
 			col += child.Width + n.Gap
 		}
 		return tern.Node{Kind: tern.KindRow, Props: hiddenIf(props, n.Rows == 0), Children: children}
 	case fe.ViewKindBox:
 		inner := region{r.row + n.PaddingY, r.col + n.PaddingX, max(r.rows-2*n.PaddingY, 0), max(r.width-2*n.PaddingX, 0)}
-		children := make([]tern.Element, len(n.Children))
+		children := make([]tern.Element, 0, len(n.Children))
 		row := inner.row
 		for i := range n.Children {
 			child := &n.Children[i]
-			children[i] = b.node(child, id+"."+strconv.Itoa(i), region{row, inner.col, child.Rows, inner.width}, childPath(path, i))
+			if el := b.node(child, id+"."+strconv.Itoa(i), region{row, inner.col, child.Rows, inner.width}, childPath(path, i)); el.Kind != "" {
+				children = append(children, el)
+			}
 			row += child.Rows
 		}
 		if n.Bg == "" {
@@ -423,6 +451,9 @@ func (b *viewer) linesList(l *fe.ViewList, id string, path []int) tern.Node {
 // hstack) or lines (a vstack). A container's children have none.
 func (b *viewer) stackChild(child *fe.ViewNode, id string, r region, stack *fe.ViewNode, horizontal bool, path []int) tern.Node {
 	node := b.node(child, id, r, path)
+	if node.Kind == "" {
+		return tern.Node{}
+	}
 	entry := child.Stack
 	if entry == nil || stack.Kind == fe.ViewKindContainer {
 		return node

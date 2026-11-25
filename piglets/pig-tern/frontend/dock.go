@@ -37,12 +37,12 @@ type entry struct {
 	// render runs no builder, with the node's handlers. tree reports a
 	// picker view laid out as a tree. unsent reports a fresh view no render
 	// took yet, which a change builds again whole.
-	view     tern.Node
-	handlers tern.Handlers
-	tree     bool
-	unsent   bool
-	// raw are the raw props last queued on the rendered node.
-	raw rawProps
+	view           tern.Node
+	ompDockWidgets *ompDockWidgets
+	handlers       tern.Handlers
+	tree           bool
+	unsent         bool
+	raw            rawProps
 	// startedAt is when a dock working indicator started (ompRoles elapsed timer).
 	startedAt time.Time
 	// A sheet's state: the picker's catalog, and the prefs row whose
@@ -233,6 +233,18 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 		e.catalog, e.editing = pickerCatalog{}, ""
 		e.handlers = s.handlers(e, next)
 		e.tid = "dock." + e.id
+		if s.ompRoles {
+			switch next.(type) {
+			case fe.Working:
+				e.tid = "dock.activity.status.working"
+			case fe.Editor:
+				e.tid = "dock.editor.editor"
+			case fe.Lines:
+				if e.id == "dock.below" {
+					e.tid = "dock.below.dock.below"
+				}
+			}
+		}
 		if isLayerNode(next) {
 			e.tid = "layer." + e.id
 		}
@@ -302,6 +314,17 @@ func (s *session) rebuild(e *entry, prev fe.Node, restructure bool) {
 			s.reportCwd(e.node.(fe.Footer).Cwd)
 			return
 		}
+		if s.ompRoles && e.id == "dock" {
+			if lines, ok := e.node.(fe.Lines); ok && validView(lines.View, lines.Lines) {
+				if widgets, matched := s.ompDockWidgetParts(e.tid, lines.View, lines.Lines); matched {
+					e.ompDockWidgets = &widgets
+					e.view, e.unsent = tern.Node{}, false
+					s.dirty = true
+					return
+				}
+			}
+		}
+		e.ompDockWidgets = nil
 		view := buildNode(s.element(e, true))
 		if _, isEditor := e.node.(fe.Editor); !isEditor || !s.ompRoles {
 			view.Handlers = e.handlers
@@ -397,20 +420,132 @@ func (s *session) applyOverlay(op fe.Op) {
 // view is the surface's view: main is an empty list, so the reconciler adds
 // the region root and never touches the transcript's raw nodes under it.
 func (s *session) view() tern.View {
+	if s.ompRoles {
+		return s.ompView()
+	}
 	dock := make(tern.Nodes, 0, len(s.dock))
 	layer := make(tern.Nodes, 0, len(s.overlays)+1)
 	for _, e := range s.overlays {
 		layer = append(layer, e.view)
 	}
 	for _, e := range s.dock {
+		if isLayerNode(e.node) {
+			layer = append(layer, e.view)
+			continue
+		}
+		dock = append(dock, e.view)
+	}
+	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
+}
+
+// ompView lays out RegionDock in omp's fixed `nativeDock` slot order
+// (upstream: packages/coding-agent/src/modes/interactive-mode.ts:2820-2835,
+// 1772-1805):
+//
+//	btw, omfg, cleanse, errorBanner, modelCycle, deferred, above,
+//	activity (col[omp.hud.status](row[omp.working]) + checklist[omp.hud.todo]),
+//	pending, editor, below.
+//
+// Each slot is an anonymous `col` container (empty when unused, rendered as
+// `sf-void` by Tern so it adds zero height), except `activity` which becomes
+// `row[omp.hud.activity]` whenever working or todo is present (and an empty
+// `col` otherwise, matching `EMPTY_HUD`).
+func (s *session) ompView() tern.View {
+	layer := make(tern.Nodes, 0, len(s.overlays)+1)
+	for _, e := range s.overlays {
+		layer = append(layer, e.view)
+	}
+
+	var (
+		errorBannerChildren []tern.Element
+		aboveChildren       []tern.Element
+		workingNode         *tern.Node
+		todoNode            *tern.Node
+		editorChildren      []tern.Element
+		belowChildren       []tern.Element
+	)
+	for _, e := range s.dock {
 		if _, isFooter := e.node.(fe.Footer); isFooter && s.ompFooterSuppressed() {
 			continue
 		}
 		if isLayerNode(e.node) {
 			layer = append(layer, e.view)
-		} else {
-			dock = append(dock, e.view)
+			continue
 		}
+		if e.id == "dock" && e.ompDockWidgets != nil {
+			if e.ompDockWidgets.errorBanner != nil {
+				errorBannerChildren = append(errorBannerChildren, *e.ompDockWidgets.errorBanner)
+			}
+			for _, n := range e.ompDockWidgets.other {
+				aboveChildren = append(aboveChildren, n)
+			}
+			if e.ompDockWidgets.todo != nil {
+				todoNode = e.ompDockWidgets.todo
+			}
+			continue
+		}
+		switch e.node.(type) {
+		case fe.Working:
+			n := e.view
+			workingNode = &n
+		case fe.Editor:
+			editorChildren = append(editorChildren, e.view)
+		case fe.Lines:
+			if e.id == "dock.below" {
+				belowChildren = append(belowChildren, e.view)
+			} else if !e.raw.hot.hidden && e.view.Kind != "" {
+				aboveChildren = append(aboveChildren, e.view)
+			}
+		default:
+			if e.view.Kind != "" {
+				aboveChildren = append(aboveChildren, e.view)
+			}
+		}
+	}
+
+	slot := func(key string, children ...tern.Element) tern.Node {
+		return tern.Node{Kind: tern.KindCol, Props: map[string]any{"key": key}, Children: children}
+	}
+
+	var activitySlot tern.Node
+	if workingNode != nil || todoNode != nil {
+		parts := make([]tern.Element, 0, 2)
+		if workingNode != nil {
+			parts = append(parts, tern.Node{
+				Kind:     tern.KindCol,
+				Props:    map[string]any{"key": "status", "role": "omp.hud.status"},
+				Children: []tern.Element{*workingNode},
+			})
+		}
+		if todoNode != nil {
+			parts = append(parts, *todoNode)
+		}
+		activitySlot = tern.Node{
+			Kind: tern.KindRow,
+			Props: map[string]any{
+				"key":   "activity",
+				"role":  "omp.hud.activity",
+				"align": "center",
+				"gap":   "sm",
+			},
+			Children: parts,
+		}
+	} else {
+		activitySlot = slot("activity")
+	}
+
+	dock := tern.Nodes{
+		slot("btw"),
+		slot("omfg"),
+		slot("cleanse"),
+		slot("errorBanner", errorBannerChildren...),
+		slot("modelCycle"),
+		slot("deferred"),
+		slot("above", aboveChildren...),
+		activitySlot,
+		slot("pending"),
+		slot("editor", editorChildren...),
+		slot("below", belowChildren...),
 	}
 	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
 }
@@ -451,8 +586,14 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 		}
 		return footerElement(e.id, n, false, s.runCommand)
 	case fe.Selector:
+		if s.ompRoles {
+			return ompPickerElement(e.id, n, e.tree)
+		}
 		return pickerElement(e.id, n, e.tree)
 	case fe.Settings:
+		if s.ompRoles {
+			return ompPrefsElement(e.id, n, e.editing)
+		}
 		return prefsElement(e.id, n, e.editing)
 	case fe.Overlay:
 		var body tern.Element

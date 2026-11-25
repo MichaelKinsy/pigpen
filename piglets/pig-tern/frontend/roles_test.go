@@ -52,53 +52,46 @@ func TestOmpRolesDock(t *testing.T) {
 	h := readyOmpRoles(t)
 	working := fe.Working{Kind: fe.WorkingAgent, Message: "Working"}
 	ops := h.applyOps(workingOp(fe.Insert, working))
-	row := node(ops, "dock.working")
-	if row["k"] != "row" || props(row)["role"] != "omp.working" {
+	act := node(ops, "dock.activity")
+	if act == nil || act["k"] != "row" || props(act)["role"] != "omp.hud.activity" {
+		t.Fatalf("activity = %#v", ops)
+	}
+	statusCol := node(ops, "dock.activity.status")
+	if statusCol == nil || statusCol["k"] != "col" || props(statusCol)["role"] != "omp.hud.status" {
+		t.Fatalf("status col = %#v", ops)
+	}
+	row := node(ops, "dock.activity.status.working")
+	if row == nil || row["k"] != "row" || props(row)["role"] != "omp.working" {
 		t.Fatalf("working = %#v", ops)
 	}
 	kids := row["c"].([]any)
 	if len(kids) != 5 || kids[0].(map[string]any)["k"] != "spinner" || props(kids[0].(map[string]any))["style"] != "starburst" ||
 		kids[1].(map[string]any)["k"] != "elapsed" ||
-		kids[2].(map[string]any)["id"] != "dock.working.sep" || props(kids[2].(map[string]any))["role"] != "omp.working.sep" ||
-		kids[3].(map[string]any)["id"] != "dock.working.label" || kids[3].(map[string]any)["k"] != "shimmer" ||
+		kids[2].(map[string]any)["id"] != "dock.activity.status.working.sep" || props(kids[2].(map[string]any))["role"] != "omp.working.sep" ||
+		kids[3].(map[string]any)["id"] != "dock.activity.status.working.label" || kids[3].(map[string]any)["k"] != "shimmer" ||
 		!reflect.DeepEqual(props(kids[3].(map[string]any))["spans"], []any{map[string]any{"t": "Working", "s": "muted"}}) ||
-		kids[4].(map[string]any)["id"] != "dock.working.fill" {
+		kids[4].(map[string]any)["id"] != "dock.activity.status.working.fill" {
 		t.Fatalf("working children = %#v", kids)
 	}
 	working.Message = "Reading files"
 	ops = h.applyOps(workingOp(fe.Update, working))
-	if want := jsonOps(t, []any{"set", "dock.working.label", map[string]any{"spans": []any{map[string]any{"t": "Reading files", "s": "muted"}}}}); !reflect.DeepEqual(ops, want) {
+	if want := jsonOps(t, []any{"set", "dock.activity.status.working.label", map[string]any{"spans": []any{map[string]any{"t": "Reading files", "s": "muted"}}}}); !reflect.DeepEqual(ops, want) {
 		t.Fatalf("working update = %#v, want %#v", ops, want)
 	}
 
-	// Without an editor mounted, the footer renders as omp's status strip.
+	// Under ompRoles, dock.footer is always suppressed (matching omp's
+	// status-line/component.ts:3810: "on a TSP terminal, which draws no status
+	// strip"); its facts feed the composer bar once the editor mounts.
 	ops = h.applyOps(footerOp(fe.Insert, fe.Footer{Cwd: "~/src", GitBranch: "main", Model: "m"}))
-	footer := node(ops, "dock.footer")
-	if props(footer)["role"] != "omp.status" {
-		t.Fatalf("footer = %#v", footer)
-	}
-	roles := map[string]any{}
-	for _, c := range footer["c"].([]any) {
-		seg := c.(map[string]any)
-		roles[seg["id"].(string)] = props(seg)["role"]
-	}
-	if roles["dock.footer.cwd"] != "omp.status.path" || roles["dock.footer.branch"] != "omp.status.git" || roles["dock.footer.model"] != "omp.status.model" || roles["dock.footer.xp"] != nil {
-		t.Fatalf("footer segment roles = %#v", roles)
+	if footer := node(ops, "dock.footer"); footer != nil {
+		t.Fatalf("dock.footer must remain suppressed under ompRoles, got %#v", footer)
 	}
 
-	// Once the composer mounts, dock.footer is removed because the composer bar
-	// carries its facts.
 	ops = h.applyOps(fe.Op{Kind: fe.Insert, Region: fe.RegionDock, ID: "editor", Index: 1, Node: fe.Editor{Sendable: true}})
-	if node(ops, "dock.editor") == nil || props(node(ops, "dock.editor"))["role"] != "omp.editor" {
+	if node(ops, "dock.editor.editor") == nil || props(node(ops, "dock.editor.editor"))["role"] != "omp.editor" {
 		t.Fatalf("composer = %#v", ops)
 	}
-	unmountedFooter := false
-	for _, op := range ops {
-		if o := op.([]any); o[0] == "del" && o[1] == "dock.footer" {
-			unmountedFooter = true
-		}
-	}
-	if !unmountedFooter {
-		t.Fatalf("dock.footer was not unmounted when composer mounted: %#v", ops)
+	if got := props(node(ops, "dock.editor.editor.bar.model.name"))["spans"]; !reflect.DeepEqual(got, []any{map[string]any{"t": "m", "s": "statusLineModel"}}) {
+		t.Fatalf("composer model spans = %#v", got)
 	}
 }

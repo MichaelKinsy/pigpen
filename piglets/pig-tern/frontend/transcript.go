@@ -46,6 +46,9 @@ type mainEntry struct {
 	// state: true when a run finishes (collapsing on end as omp does), then
 	// updated whenever PiG's Thinking.Hidden changes.
 	thinkingCollapsed bool
+	// hasWelcomeSpacers reports that ompWelcomeNode emitted sibling spacer
+	// nodes (`<id>.sp0` before, `<id>.sp1` after) in main flanking card[omp.welcome].
+	hasWelcomeSpacers bool
 }
 
 // textRef is the boxed TSP id that streamed assistant text patches: the
@@ -66,7 +69,11 @@ func (s *session) convertMain(op fe.Op) {
 			s.order = removeID(s.order, op.Index)
 			s.dropViewRules(e.id)
 			if !e.gone {
-				s.queue(tern.OpDel(e.id))
+				if e.hasWelcomeSpacers {
+					s.queue(tern.OpDel(e.id+".sp0"), tern.OpDel(e.id), tern.OpDel(e.id+".sp1"))
+				} else {
+					s.queue(tern.OpDel(e.id))
+				}
 			}
 		}
 	case fe.Insert:
@@ -78,7 +85,19 @@ func (s *session) convertMain(op fe.Op) {
 			s.recordMainTiming(e, nil, op.Node)
 		}
 		s.sent[op.ID] = e
-		s.queue(tern.OpAdd("main", before, s.mainNodeFor(e, op.Node)))
+		wire := s.mainNodeFor(e, op.Node)
+		if s.ompRoles && wire.K == tern.KindCard && wire.P["role"] == "omp.welcome" {
+			// upstream: packages/tui/src/prompt/composer.ts:1108-1112 — Composer
+			// flanks WelcomeComponent with Spacer(1) (`spacer{size:"sm"}`) above
+			// and below inside `main`.
+			e.hasWelcomeSpacers = true
+			sp0 := tern.WireNode{ID: id + ".sp0", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			sp1 := tern.WireNode{ID: id + ".sp1", K: tern.KindSpacer, P: map[string]any{"size": "sm"}}
+			s.queue(tern.OpAdd("main", before, sp0), tern.OpAdd("main", before, wire), tern.OpAdd("main", before, sp1))
+			s.queue(tern.OpSettle(sp0.ID), tern.OpSettle(sp1.ID))
+		} else {
+			s.queue(tern.OpAdd("main", before, wire))
+		}
 		s.settle(e, op.Index)
 		// Lines settle once a node follows them.
 		if op.Index > 0 {
@@ -103,7 +122,11 @@ func (s *session) convertMain(op fe.Op) {
 		if !s.patchMain(e, prev, op.Node) {
 			// A node whose kind or children change is replaced in place.
 			e.ref = s.textRef(e.id, op.Node)
-			s.queue(tern.OpDel(e.id), tern.OpAdd("main", s.liveFrom(op.Index+1), s.mainNodeFor(e, op.Node)))
+			before := s.liveFrom(op.Index + 1)
+			if e.hasWelcomeSpacers {
+				before = e.id + ".sp1"
+			}
+			s.queue(tern.OpDel(e.id), tern.OpAdd("main", before, s.mainNodeFor(e, op.Node)))
 		}
 		if s.queued != queued {
 			e.settled = false
@@ -141,6 +164,7 @@ func (s *session) recordMainTiming(e *mainEntry, prev, next fe.Node) {
 			}
 		}
 	case fe.ToolCard:
+		s.toolsExpanded = n.Expanded
 		if n.Status == fe.ToolRunning || n.Status == fe.ToolPending {
 			if e.startedAt.IsZero() && n.Status == fe.ToolRunning {
 				e.startedAt = s.now()
@@ -156,6 +180,9 @@ func (s *session) recordMainTiming(e *mainEntry, prev, next fe.Node) {
 func (s *session) liveFrom(at int) string {
 	for _, id := range s.order[min(at, len(s.order)):] {
 		if e := s.sent[id[len("n."):]]; e == nil || !e.gone {
+			if e != nil && e.hasWelcomeSpacers {
+				return id + ".sp0"
+			}
 			return id
 		}
 	}
@@ -459,6 +486,10 @@ func (s *session) mainNodeFor(e *mainEntry, node fe.Node) tern.WireNode {
 		return markdownNode(id, n, s.ompRoles)
 	case fe.Lines:
 		if n.Click != nil {
+			if s.ompRoles && isPiGHeaderLines(n.Lines, n.Click) {
+				s.dropViewRules(id)
+				return s.ompWelcomeNode(id, n.Lines)
+			}
 			return clickLinesNode(id, n.Lines, *n.Click)
 		}
 		if validView(n.View, n.Lines) {
@@ -466,7 +497,7 @@ func (s *session) mainNodeFor(e *mainEntry, node fe.Node) tern.WireNode {
 		}
 		s.dropViewRules(id)
 		if s.ompRoles {
-			if ompNode, ok := ompLinesNode(id, strings.TrimPrefix(id, "n."), n.Lines); ok {
+			if ompNode, ok := ompLinesNode(id, strings.TrimPrefix(id, "n."), n.Lines, s.toolsExpanded); ok {
 				return ompNode
 			}
 		}
@@ -752,10 +783,7 @@ func thinkingNode(id string, thinking fe.Thinking, ompRoles bool) tern.WireNode 
 const structuredPreviewLines = 10
 
 func (s *session) toolNode(id string, tool fe.ToolCard) tern.WireNode {
-	title := tool.Name
-	if title != "" {
-		title = strings.ToUpper(title[:1]) + title[1:]
-	}
+	title := capitalizeFirst(tool.Name)
 	target, kind := toolTarget(tool)
 	props := map[string]any{
 		"name": tool.Name, "title": title, "target": target, "targetKind": kind,

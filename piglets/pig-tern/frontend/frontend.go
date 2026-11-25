@@ -107,9 +107,27 @@ type Options struct {
 	// Omp draws the transcript and the dock with omp's roles and node
 	// shapes (roles.go), as PIG_TERN_ROLES=omp does for a run.
 	Omp bool
+	// OnSurface, when non-nil, is called with true once the native surface is
+	// open and drawing, and with false when the member declines, falls back to
+	// PiG's terminal renderer, or closes.
+	OnSurface func(native bool)
+	// Name and Version are what omp's welcome card prints as the wordmark and
+	// the version. Empty means the derived Piglet did not say: the card then
+	// falls back to the host's own name and version.
+	Name    string
+	Version string
+	// ModelDisplayName, when non-nil, resolves a PiG Footer.Model ID (e.g.
+	// "proof-1") to the model's human display name (e.g. "Proof 1") published
+	// by the extension over the shared `surface` channel (Finding 20).
+	// Returning "" falls back to Footer.Model.
+	ModelDisplayName func(modelID string) string
+	// DisplayPath, when non-nil, normalizes the session working directory when
+	// the frontend resolves a cwd-relative path for display or `file://` hrefs
+	// (e.g. stripping macOS `/private` on project cwd). Absolute paths already
+	// supplied by tool details/args are preserved verbatim. Nil means identity.
+	DisplayPath func(path string) string
 }
 
-// FrontendWith is the member with opts fixed: the factory a derived Piglet's
 // own member returns.
 func FrontendWith(opts Options) fe.Frontend { return member{opts: opts} }
 
@@ -121,15 +139,26 @@ type member struct{ opts Options }
 // never waits for Tern.
 func (m member) Open(env fe.Env) (fe.Session, error) {
 	if env.Getenv("PIG_TUI_NATIVE") == "0" || env.Getenv("TERN_TSP") == "0" || env.Getenv("TERM_PROGRAM") != "tern" {
+		if m.opts.OnSurface != nil {
+			m.opts.OnSurface(false)
+		}
 		return nil, nil
 	}
 	for _, key := range []string{"TMUX", "STY", "ZELLIJ", "HERDR_ENV"} {
 		if env.Getenv(key) != "" {
+			if m.opts.OnSurface != nil {
+				m.opts.OnSurface(false)
+			}
 			return nil, nil
 		}
 	}
 	s := newSession(env)
 	s.ompRoles = s.ompRoles || m.opts.Omp
+	s.onSurface = m.opts.OnSurface
+	s.pigletName = m.opts.Name
+	s.pigletVersion = m.opts.Version
+	s.modelDisplayName = m.opts.ModelDisplayName
+	s.displayPath = m.opts.DisplayPath
 	s.start()
 	return s, nil
 }
@@ -216,12 +245,11 @@ type session struct {
 	renderedSendable bool
 	// editor is the editor node shown, if hasEditor; footer is the footer node
 	// shown, if hasFooter (used by ompRoles to feed the composer bar).
-	editor    fe.Editor
-	hasEditor bool
-	footer    fe.Footer
-	hasFooter bool
-	// What HandleInput read from Tern: the pane's width in cells and a
-	// cell's height in CSS pixels, the credits, the highest acknowledged
+	editor        fe.Editor
+	hasEditor     bool
+	footer        fe.Footer
+	hasFooter     bool
+	toolsExpanded bool
 	// frame, whether the DA1 answer the hello asked for is still owed, and
 	// whether the pane is hidden (another tab shows). Frames are counted
 	// from the session's first; frameBase is the count before the surface's
@@ -258,31 +286,46 @@ type session struct {
 
 	// ompRoles is the omp role mode (roles.go, omp_*.go). now is the clock for
 	// omp's elapsed timers (time.Now by default; overridden in tests).
-	ompRoles bool
-	now      func() time.Time
+	ompRoles      bool
+	now           func() time.Time
+	welcomeTipIdx int
+	// pigletName and pigletVersion are Options.Name and Options.Version.
+	pigletName           string
+	pigletVersion        string
+	modelDisplayName     func(modelID string) string
+	displayPath          func(path string) string
+	errorBannerMsg       string
+	errorBannerExpanded  bool
+	errorBannerDismissed bool
+	// surfaceMu serializes callbacks and re-checks closed/fellBack so a late
+	// open notification can never overwrite a Close or fallback(false) (fixes N6).
+	onSurface    func(native bool)
+	surfaceMu    sync.Mutex
+	surfaceState int // 0 unreported, 1 false, 2 true
 }
 
 func newSession(env fe.Env) *session {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &session{
-		env:          env,
-		out:          &termWriter{w: env.Out},
-		in:           newInputPipe(),
-		ctx:          ctx,
-		cancel:       cancel,
-		connectDone:  make(chan struct{}),
-		afterFunc:    time.AfterFunc,
-		keepalive:    progressKeepalive,
-		sent:         map[string]*mainEntry{},
-		dirty:        true,
-		cols:         env.Columns,
-		cellHeightPx: defaultCellHeightPx,
-		credits:      tern.DefaultCredits,
-		hasJSON:      true,
-		hostname:     hostname(),
-		blobDir:      env.Getenv("TERN_BLOB_DIR"),
-		ompRoles:     ompRolesOn(env.Getenv),
-		now:          time.Now,
+		env:           env,
+		out:           &termWriter{w: env.Out},
+		in:            newInputPipe(),
+		ctx:           ctx,
+		cancel:        cancel,
+		connectDone:   make(chan struct{}),
+		afterFunc:     time.AfterFunc,
+		keepalive:     progressKeepalive,
+		sent:          map[string]*mainEntry{},
+		dirty:         true,
+		cols:          env.Columns,
+		cellHeightPx:  defaultCellHeightPx,
+		credits:       tern.DefaultCredits,
+		hasJSON:       true,
+		hostname:      hostname(),
+		blobDir:       env.Getenv("TERN_BLOB_DIR"),
+		ompRoles:      ompRolesOn(env.Getenv),
+		now:           time.Now,
+		welcomeTipIdx: int((uint64(time.Now().UnixNano())) % uint64(len(ompWelcomeTips))),
 	}
 }
 
@@ -331,13 +374,18 @@ func (s *session) connect(opts tern.Options) {
 	// A surface opened while PiG lends the terminal out would cover the
 	// other program; Resume opens it instead.
 	var openErr error
+	var opened bool
 	if !s.suspended {
 		openErr = s.openLocked()
+		opened = openErr == nil
 	}
 	if errors.Is(openErr, errRefused) {
 		s.tsp = nil
 	}
 	s.mu.Unlock()
+	if opened {
+		s.notifySurface(true)
+	}
 	if errors.Is(openErr, errRefused) {
 		_ = tsp.Close()
 		s.fallback(openErr.Error())
@@ -389,12 +437,41 @@ func (s *session) run(tsp *tern.Session) {
 	}
 }
 
+// notifySurface serializes OnSurface callbacks and never reports native=true
+// after Close or fallback has already ended the session (fixes N6).
+func (s *session) notifySurface(native bool) {
+	s.surfaceMu.Lock()
+	defer s.surfaceMu.Unlock()
+	s.mu.Lock()
+	onSurface := s.onSurface
+	if onSurface == nil {
+		s.mu.Unlock()
+		return
+	}
+	if native && (s.closed || s.fellBack) {
+		s.mu.Unlock()
+		return
+	}
+	next := 1
+	if native {
+		next = 2
+	}
+	if s.surfaceState == next {
+		s.mu.Unlock()
+		return
+	}
+	s.surfaceState = next
+	s.mu.Unlock()
+	onSurface(native)
+}
+
 // fallback asks PiG, once, to continue with its ANSI renderer.
 func (s *session) fallback(reason string) {
 	s.mu.Lock()
 	first := !s.fellBack && !s.closed
 	s.fellBack = true
 	s.mu.Unlock()
+	s.notifySurface(false)
 	if first && s.env.Fallback != nil {
 		s.env.Fallback(reason)
 	}
@@ -691,6 +768,7 @@ func (s *session) Close() error {
 	}
 	s.closed = true
 	s.mu.Unlock()
+	s.notifySurface(false)
 	s.setProgress(false)
 	s.cancel()
 	<-s.connectDone

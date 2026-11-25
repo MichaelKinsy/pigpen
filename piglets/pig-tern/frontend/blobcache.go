@@ -31,6 +31,12 @@ func (s *session) flushBlobs() error {
 	var cached []*fe.ViewImage
 	for len(s.blobQueue) > 0 {
 		img := s.blobQueue[0]
+		if len(img.Data) > tern.MaxBlob {
+			// Oversize blobs cannot be sent over TSP; drop them so later frames succeed.
+			s.blobQueue[0] = nil
+			s.blobQueue = s.blobQueue[1:]
+			continue
+		}
 		if s.cacheBlob(img) {
 			cached = append(cached, img)
 		} else if _, err := s.tsp.Blob(img.Data, img.MimeType); err != nil {

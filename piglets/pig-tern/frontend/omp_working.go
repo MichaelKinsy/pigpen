@@ -38,11 +38,18 @@ func (s *session) ompWorkingElement(id string, working fe.Working, startedAt tim
 			Style:  ui.SpinnerStarburst,
 		})
 	}
+	// upstream: packages/tui/src/components/loader.ts:72 — `elapsed(now - startedAt)`
+	// ALWAYS sends the numeric `age` prop (even when 0). `ui.Elapsed` tags `Age`
+	// with `omitzero`, which drops `age: 0` on the wire; construct the `tern.Node`
+	// directly so `age` is always present.
 	children = append(children,
-		ui.Elapsed{
-			Common: ui.Common{Key: "elapsed"},
-			Age:    ageMs,
-			Format: ui.ElapsedShort,
+		tern.Node{
+			Kind: tern.KindElapsed,
+			Props: map[string]any{
+				"key":    "elapsed",
+				"age":    ageMs,
+				"format": string(ui.ElapsedShort),
+			},
 		},
 		ui.Text{
 			Common: ui.Common{Key: "sep", Role: "omp.working.sep"},
@@ -84,6 +91,8 @@ func ompWorkingLabelSpans(text string) []ui.Span {
 }
 
 // queueOmpWorking queues raw prop updates for omp's shimmering working label.
+// Under ompRoles, the working row sits at `dock.activity.status.working` inside
+// `row[omp.hud.activity] > col[omp.hud.status]`.
 func (s *session) queueOmpWorking(e *entry, working fe.Working, fresh bool) {
 	h := workingHot(working)
 	if fresh {
@@ -101,7 +110,7 @@ func (s *session) queueOmpWorking(e *entry, working fe.Working, fresh bool) {
 		set["tone"] = nullable(string(h.tone))
 	}
 	if len(set) > 0 {
-		s.queue(tern.OpSet(e.tid+".label", set))
+		s.queue(tern.OpSet("dock.activity.status.working.label", set))
 	}
 	e.raw.text, e.raw.hot = h.text, h
 }

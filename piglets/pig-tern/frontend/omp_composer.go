@@ -13,8 +13,7 @@ import (
 // ompComposerPlaceholder is omp's untitled-session placeholder (custom-editor.ts:54).
 const ompComposerPlaceholder = "What are we cooking?"
 
-// ompComposerElement builds omp's composer column (custom-editor.ts:1112,
-// verified against /tmp/omp-proof/omp/out/tsp.jsonl):
+// ompComposerElement builds omp's composer column (custom-editor.ts:1112):
 //
 //	col(role="omp.editor", tone="pending" while running):
 //	  - meter(key="context", role="omp.composer.context", style="bar", ...)  [when footer present]
@@ -28,13 +27,14 @@ const ompComposerPlaceholder = "What are we cooking?"
 //	          - icon(key="chev", name="chev")
 //	      - status(key="extras", role="omp.composer.extras", transparent=true, grow=1)
 //	      - text(key="usage", role="omp.composer.usage", ...)                [when footer present]
-//	      - kbd(key="send", role="omp.composer.send", keys=["enter"], ...)
+//	      - text(key="stop", role="omp.composer.stop", ...)                  [when running]
+//	        OR kbd(key="send", role="omp.composer.send", keys=["enter"], ...) [when idle]
 //
 // In omp, the composer's input is a child keyed "input" under row "line", so
 // its TSP id is "<editorTID>.line.input". Handlers for edit, undo, send and
 // focus live on that input node. When PiG is working (running == true), the
-// composer column gets tone "pending". A Stop control is omitted because PiG's
-// frontend.Env provides no interrupt/abort callback; Send stays visible.
+// composer column gets tone "pending" and the submit control swaps from Send
+// to Stop (non-interactive since frontend.Env has no interrupt callback).
 func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive bool) tern.Element {
 	running := s.progress
 	placeholder := editor.Placeholder
@@ -51,11 +51,10 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 		inputField.Text = editor.Text
 		inputField.Cursor = &cursor
 	}
-	inputNode := ui.Editor{Common: inputCommon, Field: inputField}.Node()
+	inputNode := ui.Editor{Common: inputCommon, Field: inputField, MaxLines: 18}.Node()
 	if interactive {
 		inputNode.Handlers = s.editorHandlers(e)
 	}
-
 	line := ui.Row{
 		Common:   ui.Common{Key: "line", Role: "omp.composer.line"},
 		Align:    ui.AlignStart,
@@ -66,15 +65,18 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 	var barChildren []tern.Element
 	var children []tern.Element
 	if s.hasFooter {
-		children = append(children, ompContextMeter(s.footer))
-		barChildren = append(barChildren, ompComposerModelChip(s.footer, interactive, s.runCommand))
+		children = append(children, ompContextMeter(s.footer, interactive, s.runCommand))
+		barChildren = append(barChildren, ompComposerModelChip(s.footer, s.resolveModelDisplayName(s.footer.Model), interactive, s.runCommand))
 	}
 	barChildren = append(barChildren, ompComposerExtras(s.hasFooter, s.footer))
 	if s.hasFooter {
-		barChildren = append(barChildren, ompComposerUsageText(s.footer))
+		barChildren = append(barChildren, ompComposerUsageText(s.footer, interactive, s.runCommand))
 	}
-	barChildren = append(barChildren, ompComposerSendControl(editor, interactive, s.submitEditorDraft))
-
+	if running {
+		barChildren = append(barChildren, ompComposerStopControl())
+	} else {
+		barChildren = append(barChildren, ompComposerSendControl(editor, interactive, s.submitEditorDraft))
+	}
 	bar := ui.Row{
 		Common:   ui.Common{Key: "bar", Role: "omp.composer.bar"},
 		Gap:      ui.GapSM,
@@ -95,7 +97,7 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 // the "line" row ("dock.editor.line.input").
 func (s *session) editorInputID(e *entry) string {
 	if s.ompRoles {
-		return e.tid + ".line.input"
+		return "dock.editor.editor.line.input"
 	}
 	return e.tid
 }
@@ -113,8 +115,8 @@ func (s *session) submitEditorDraft() {
 }
 
 // ompContextMeter builds omp's context hairline meter above the composer
-// (status-line/component.ts:3685-3737).
-func ompContextMeter(footer fe.Footer) ui.Meter {
+// (status-line/component.ts:3925-3977).
+func ompContextMeter(footer fe.Footer, interactive bool, run func(string)) ui.Meter {
 	usage := footer.ContextUsage
 	var value *float64
 	var label ui.Rich
@@ -141,12 +143,17 @@ func ompContextMeter(footer fe.Footer) ui.Meter {
 	if footer.AutoCompact {
 		lines = append(lines, "Auto-compact enabled")
 	}
+	common := ui.Common{
+		Key:   "context",
+		Role:  "omp.composer.context",
+		Title: strings.Join(lines, "\n"),
+	}
+	if interactive && run != nil {
+		common.Actions = &ui.Actions{Click: "status.context"}
+		common.OnClick = func(*tern.Action) { run("/context") }
+	}
 	return ui.Meter{
-		Common: ui.Common{
-			Key:   "context",
-			Role:  "omp.composer.context",
-			Title: strings.Join(lines, "\n"),
-		},
+		Common:     common,
 		Value:      value,
 		Style:      ui.MeterBar,
 		Thresholds: ompContextThresholds(usage.ContextWindow),
@@ -178,11 +185,11 @@ func ompThresholdShare(contextWindow int, pctThreshold, tokenThreshold float64) 
 // the effort glyph sits as the model chip's leading icon with role
 // "omp.composer.model.effort" and its own click handler for /thinking; clicking
 // the model chip itself opens PiG's /model picker.
-func ompComposerModelChip(footer fe.Footer, interactive bool, run func(string)) ui.Row {
+func ompComposerModelChip(footer fe.Footer, displayName string, interactive bool, run func(string)) ui.Row {
 	common := ui.Common{
 		Key:   "model",
 		Role:  "omp.composer.model",
-		Title: "Switch model",
+		Title: "Switch model  ⌥P",
 	}
 	if interactive {
 		common.Actions = &ui.Actions{Click: "status.model"}
@@ -193,7 +200,7 @@ func ompComposerModelChip(footer fe.Footer, interactive bool, run func(string)) 
 		effortCommon := ui.Common{
 			Key:   "effort",
 			Role:  "omp.composer.model.effort",
-			Title: "Thinking effort: " + footer.ThinkingLevel,
+			Title: "Thinking effort: " + footer.ThinkingLevel + "  ⇧⇥",
 		}
 		if interactive {
 			effortCommon.Actions = &ui.Actions{Click: "thinking.cycle"}
@@ -209,7 +216,7 @@ func ompComposerModelChip(footer fe.Footer, interactive bool, run func(string)) 
 		Align:  ui.AlignCenter,
 		Children: []tern.Element{
 			lead,
-			ui.Text{Common: ui.Common{Key: "name"}, Spans: ompModelSpans(footer, false), Wrap: ui.WrapNone},
+			ui.Text{Common: ui.Common{Key: "name"}, Spans: ompModelSpansWithName(footer, displayName, false), Wrap: ui.WrapNone},
 			ui.Icon{Common: ui.Common{Key: "chev"}, Name: ui.IconChev},
 		},
 	}
@@ -235,6 +242,10 @@ func ompComposerExtras(hasFooter bool, footer fe.Footer) ui.Status {
 			if text == "" {
 				continue
 			}
+			if seg, ok := ompModeFactSeg(text); ok {
+				segs = append(segs, seg)
+				continue
+			}
 			segs = append(segs, ui.Seg{
 				Common:   ui.Common{Key: "hook-" + strconv.Itoa(i), Role: "omp.composer.fact"},
 				Spans:    []ui.Span{{T: text}},
@@ -249,22 +260,67 @@ func ompComposerExtras(hasFooter bool, footer fe.Footer) ui.Status {
 	}
 }
 
+// ompModeFactSeg converts PiG's extension status strings emitted by
+// `internal/modes` (`"PLAN"`, `"PLAN (paused)"`, `"GOAL ..."`, `"GOAL (paused)"`)
+// into omp's native `mode` segment (upstream: status-line/segments.ts:505-520,
+// status-line/component.ts:80 `priority: 8`).
+func ompModeFactSeg(text string) (ui.Seg, bool) {
+	switch {
+	case text == "PLAN":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("plan"),
+			Spans:    []ui.Span{{T: "Plan", S: "accent"}},
+			Priority: 8,
+		}, true
+	case text == "PLAN (paused)":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("plan"),
+			Spans:    []ui.Span{{T: "Plan (paused)", S: "warning"}},
+			Priority: 8,
+		}, true
+	case text == "GOAL (paused)":
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("goal"),
+			Spans:    []ui.Span{{T: "Goal (paused)", S: "warning"}},
+			Priority: 8,
+		}, true
+	case strings.HasPrefix(text, "GOAL"):
+		label := "Goal" + text[len("GOAL"):]
+		return ui.Seg{
+			Common:   ui.Common{Key: "mode", Role: "omp.composer.fact"},
+			Icon:     ui.IconName("goal"),
+			Spans:    []ui.Span{{T: label, S: "accent"}},
+			Priority: 8,
+		}, true
+	default:
+		return ui.Seg{}, false
+	}
+}
+
 // ompComposerUsageText builds omp's session cost text in the composer bar
 // (status-line/component.ts:3740-3755).
-func ompComposerUsageText(footer fe.Footer) ui.Text {
+func ompComposerUsageText(footer fe.Footer, interactive bool, run func(string)) ui.Text {
 	cost := ompCostSummary(footer)
 	title := ""
 	if cost != "" {
 		title = "Session cost " + cost
 	}
+	common := ui.Common{
+		Key:   "usage",
+		Role:  "omp.composer.usage",
+		Title: title,
+	}
+	if interactive {
+		common.Actions = &ui.Actions{Click: "status.cost"}
+		common.OnClick = func(*tern.Action) { run("/usage") }
+	}
 	return ui.Text{
-		Common: ui.Common{
-			Key:   "usage",
-			Role:  "omp.composer.usage",
-			Title: title,
-		},
-		Text: cost,
-		Wrap: ui.WrapNone,
+		Common: common,
+		Text:   cost,
+		Wrap:   ui.WrapNone,
 	}
 }
 
@@ -274,7 +330,7 @@ func ompComposerSendControl(editor fe.Editor, interactive bool, submit func()) u
 	common := ui.Common{
 		Key:   "send",
 		Role:  "omp.composer.send",
-		Title: "Send",
+		Title: "Send  ⏎",
 	}
 	if !editor.Sendable {
 		common.Tone = ui.ToneMuted
@@ -286,11 +342,45 @@ func ompComposerSendControl(editor fe.Editor, interactive bool, submit func()) u
 	return ui.Kbd{Common: common, Keys: []string{"enter"}}
 }
 
+// ompComposerStopControl builds omp's Stop indicator shown in place of Send
+// while the agent is working (upstream: prompt/custom-editor.ts:1491-1503).
+// PiG's frontend.Env has no interrupt callback, so clicking is omitted while
+// the Escape key still interrupts via the PTY.
+func ompComposerStopControl() ui.Text {
+	return ui.Text{
+		Common: ui.Common{
+			Key:   "stop",
+			Role:  "omp.composer.stop",
+			Tone:  ui.ToneError,
+			Title: "Stop  esc",
+		},
+		Text: "Stop",
+	}
+}
+
+// resolveModelDisplayName returns the human display name for modelID when a
+// derived Piglet provides Options.ModelDisplayName, falling back to modelID.
+func (s *session) resolveModelDisplayName(modelID string) string {
+	if s != nil && s.modelDisplayName != nil && modelID != "" {
+		if name := strings.TrimSpace(s.modelDisplayName(modelID)); name != "" {
+			return name
+		}
+	}
+	return modelID
+}
+
 // ompModelSpans formats the model name as omp's model segment spans
 // (status-line/segments.ts:391-404). When includeThinking is true (status bar),
 // the thinking level follows after " · ".
 func ompModelSpans(footer fe.Footer, includeThinking bool) []ui.Span {
-	name := footer.Model
+	return ompModelSpansWithName(footer, footer.Model, includeThinking)
+}
+
+func ompModelSpansWithName(footer fe.Footer, modelName string, includeThinking bool) []ui.Span {
+	name := modelName
+	if name == "" {
+		name = footer.Model
+	}
 	if name == "" {
 		name = "no-model"
 	}
@@ -408,10 +498,13 @@ func sameFooterComposerData(a, b fe.Footer) bool {
 	return true
 }
 
-// ompFooterSuppressed reports whether dock.footer is omitted under ompRoles
-// because the composer bar carries the status facts (matching omp's TSP layout).
+// ompFooterSuppressed reports whether dock.footer is omitted under ompRoles.
+// Upstream status-line/component.ts:3810 ("on a TSP terminal, which draws no
+// status strip"): omp NEVER mounts a separate dock status bar in Tern — even
+// while a picker/selector replaces the editor — so suppress dock.footer
+// whenever ompRoles is active.
 func (s *session) ompFooterSuppressed() bool {
-	return s.ompRoles && s.hasEditor
+	return s.ompRoles
 }
 
 // syncOmpFooterMount reconciles dock.footer whenever the editor mounts or
