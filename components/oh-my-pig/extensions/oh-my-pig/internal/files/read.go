@@ -175,31 +175,63 @@ func executeRead(store *hashline.Store, cwd, rawPath string) (sdk.ToolResult, er
 // directories, archives, notebooks, and raster images.
 // upstream: packages/coding-agent/src/tools/read.ts
 func executeReadWithCtx(ctx sdk.Context, store *hashline.Store, cwd, rawPath string) (sdk.ToolResult, error) {
-	// 1. Internal URL routing (skill://, local://, agent://, proc://, etc.).
-	// upstream: packages/coding-agent/src/tools/read.ts:2217
-	if res, handled, err := tryReadInternalURL(ctx, store, cwd, rawPath); handled {
-		if err == nil {
-			// upstream: packages/coding-agent/src/tools/read.ts:2082-2083
-			// Attach displayTarget from router.locateSync (unstandardized path from handler).
-			uc := urls.Context{SDK: ctx, Cwd: cwd}
-			if target, ok := urls.LocateSync(uc, rawPath); ok && target != "" {
-				if d, ok := res.Details.(map[string]any); ok && d != nil {
-					d["displayTarget"] = target
-				}
-			}
-		}
+	res, err := executeReadInner(ctx, store, cwd, rawPath)
+	if err != nil {
 		return res, err
 	}
+	// upstream: packages/coding-agent/src/tools/read.ts:2082-2083
+	// Attach displayTarget from router.locateSync (unstandardized path from handler).
+	uc := urls.Context{SDK: ctx, Cwd: cwd}
+	if target, ok := urls.LocateSync(uc, rawPath); ok && target != "" {
+		if d, ok := res.Details.(map[string]any); ok && d != nil {
+			d["displayTarget"] = target
+		}
+	}
+	return res, nil
+}
 
-	// 2. External http(s) URLs.
-	if urlTarget, err := parseReadURLTarget(rawPath); err != nil {
+// executeReadInner runs one read target (used both top-level and per delimited part).
+// upstream: packages/coding-agent/src/tools/read.ts:2125-2305
+func executeReadInner(ctx sdk.Context, store *hashline.Store, cwd, rawPath string) (sdk.ToolResult, error) {
+	readPath := rawPath
+	if strings.HasPrefix(readPath, "file://") {
+		readPath = expandPath(readPath)
+	}
+
+	// 0. Mixed URL+local path lists and `?q=` query path lists split before URL/query routing.
+	// upstream: packages/coding-agent/src/tools/read.ts:2143-2150
+	if mixedParts, err := splitMixedURLPathList(readPath, cwd, isReadableTargetURL); err != nil {
+		return sdk.ToolResult{}, err
+	} else if len(mixedParts) > 0 {
+		return readDelimitedParts(ctx, store, cwd, mixedParts)
+	}
+	if queryParts := splitQueryPathList(readPath, cwd); len(queryParts) > 0 {
+		return readDelimitedParts(ctx, store, cwd, queryParts)
+	}
+
+	// 1. External http(s) URLs.
+	// upstream: packages/coding-agent/src/tools/read.ts:2163-2197
+	if urlTarget, err := parseReadURLTarget(readPath); err != nil {
 		return sdk.ToolResult{}, err
 	} else if urlTarget != nil {
 		sig := safeRunSignal(ctx)
 		return executeReadURL(sig, urlTarget)
 	}
 
-	return readFilesystemPath(ctx, store, cwd, rawPath, nil)
+	// 2. Internal URL routing (skill://, local://, agent://, proc://, etc.),
+	// including `;`-delimited internal URL lists (`local://a;local://b`).
+	// upstream: packages/coding-agent/src/tools/read.ts:2200-2204
+	trimmedURL := normalizeAtPrefix(strings.TrimSpace(readPath))
+	if urls.CanHandle(trimmedURL) {
+		if res, ok, err := tryReadDelimitedPaths(ctx, store, cwd, readPath, isInternalURLPath); ok || err != nil {
+			return res, err
+		}
+	}
+	if res, handled, err := tryReadInternalURL(ctx, store, cwd, readPath); handled {
+		return res, err
+	}
+
+	return readFilesystemPath(ctx, store, cwd, readPath, nil)
 }
 
 func safeRunSignal(ctx sdk.Context) context.Context {
@@ -498,7 +530,7 @@ func countTextLines(text string) int {
 
 // checkLineColDiagnosis detects `file:line:col` typos when `file` exists and returns omp's message.
 // upstream: packages/coding-agent/src/tools/read.ts:2524-2541
-func checkLineColDiagnosis(localReadPath, selStr, cwd string) error {
+func checkLineColDiagnosis(ctx context.Context, localReadPath, selStr, cwd string, suffixCache suffixMatchCache) error {
 	if selStr == "" || !allDigits(selStr) {
 		return nil
 	}
@@ -506,8 +538,16 @@ func checkLineColDiagnosis(localReadPath, selStr, cwd string) error {
 	if prefixSel == "" || !allDigits(prefixSel) {
 		return nil
 	}
-	absPrefix := resolveToCwd(prefixPath, cwd)
-	if _, err := os.Lstat(absPrefix); err != nil {
+	exists := probeLiteralPathExists(prefixPath, cwd) == "exists"
+	if !exists {
+		absPrefix := resolveToCwd(prefixPath, cwd)
+		if !isRemoteMountPath(absPrefix) {
+			if sm, err := findSuffixMatchCached(ctx, suffixCache, prefixPath, cwd); err == nil && sm != nil {
+				exists = true
+			}
+		}
+	}
+	if !exists {
 		return nil
 	}
 	pNum, _ := strconv.Atoi(prefixSel)
@@ -520,32 +560,106 @@ func checkLineColDiagnosis(localReadPath, selStr, cwd string) error {
 }
 
 func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, loc *locatedURLOpts) (sdk.ToolResult, error) {
-	// Check archive targets (`archive.zip`, `archive.zip:member/path:1-20`, `archive.tar.gz:member`).
-	if archiveAbs, archiveDisplay, memberPath, selStr, ok := splitArchivePath(rawPath, cwd); ok {
-		parsed, err := ParseSel(selStr)
-		if err != nil {
-			return sdk.ToolResult{}, err
-		}
-		archiveReadPath := rawPath
-		if loc != nil {
-			archiveReadPath = loc.url
-		}
-		return readArchive(archiveAbs, archiveDisplay, archiveReadPath, memberPath, parsed)
-	}
+	sig := safeRunSignal(ctx)
+	suffixCache := make(suffixMatchCache)
 
+	// Prefer a literal filesystem match over selector interpretation so real
+	// POSIX filenames containing selector-looking suffixes win over structured
+	// archive / JSON dispatch.
+	// upstream: packages/coding-agent/src/tools/read.ts:2356-2363
 	var basePath, selStr string
 	if loc != nil {
-		// For located URLs, selector was explicitly appended after target.Path by tryReadInternalURL.
 		basePath, selStr = SplitPathAndSelPreferringLiteral(rawPath, cwd)
 	} else {
-		basePath, selStr = SplitPathAndSelPreferringLiteral(rawPath, cwd)
+		basePath, selStr = preferLiteralSplit(rawPath, cwd)
 	}
+	strictBase, strictSel := SplitPathAndSel(rawPath)
+	_ = strictBase
+	rawPathIsLiteral := loc == nil && selStr == "" &&
+		(strictSel != "" || (strings.Contains(rawPath, "?") && probeLiteralPathExists(rawPath, cwd) != "missing"))
+
+	if !rawPathIsLiteral {
+		// Check archive targets (`archive.zip`, `archive.zip:member/path:1-20`, `archive.tar.gz:member`),
+		// including suffix-resolved archives.
+		// upstream: packages/coding-agent/src/tools/read.ts:2368-2389
+		if archiveAbs, archiveDisplay, memberPath, archiveSelStr, archiveSuffix, ok := splitArchivePath(sig, rawPath, cwd, suffixCache); ok {
+			parsedArchive, err := ParseSel(archiveSelStr)
+			if err != nil {
+				return sdk.ToolResult{}, err
+			}
+			markRawSuffixResolution(archiveSuffix, parsedArchive.IsRaw())
+			archiveReadPath := rawPath
+			if loc != nil {
+				archiveReadPath = loc.url
+			}
+			return readArchive(archiveAbs, archiveDisplay, archiveReadPath, memberPath, parsedArchive, archiveSuffix)
+		}
+
+		// Check JSON query targets (`file.json?q=.foo`), including suffix-resolved JSON files.
+		// upstream: packages/coding-agent/src/tools/read.ts:2405-2414
+		if jsonAbs, jsonSel, jsonSuffix, ok := resolveJSONReadPath(sig, basePath, cwd, suffixCache); ok {
+			parsedJSON, err := ParseSel(selStr)
+			if err != nil {
+				return sdk.ToolResult{}, err
+			}
+			markRawSuffixResolution(jsonSuffix, parsedJSON.IsRaw())
+			return readJSONQuery(sig, jsonAbs, jsonSel, parsedJSON, jsonSuffix)
+		}
+	}
+
 	parsed, err := ParseSel(selStr)
 	if err != nil {
 		return sdk.ToolResult{}, err
 	}
 
 	absPath := resolveToCwd(basePath, cwd)
+	var suffixRes *SuffixResolution
+
+	info, err := os.Stat(absPath)
+	if err != nil {
+		// An explicit `;` list takes precedence over suffix recovery and can exceed NAME_MAX.
+		// upstream: packages/coding-agent/src/tools/read.ts:2473-2476
+		if loc == nil && strings.Contains(rawPath, ";") && (isNotFoundError(err) || isNameTooLongError(err)) {
+			if res, ok, derr := tryReadDelimitedPaths(ctx, store, cwd, rawPath, nil); ok || derr != nil {
+				return res, derr
+			}
+		}
+		if isNotFoundError(err) {
+			// Attempt unique workspace-suffix resolution before delimited fallback and not-found error.
+			// upstream: packages/coding-agent/src/tools/read.ts:2484-2499
+			if !isRemoteMountPath(absPath) {
+				sm, sErr := findSuffixMatchCached(sig, suffixCache, basePath, cwd)
+				if sErr != nil {
+					return sdk.ToolResult{}, sErr
+				}
+				if sm != nil {
+					if retryInfo, retryErr := os.Stat(sm.AbsolutePath); retryErr == nil {
+						absPath = sm.AbsolutePath
+						info = retryInfo
+						suffixRes = &SuffixResolution{From: basePath, To: sm.DisplayPath}
+						err = nil
+					}
+				}
+			}
+			if err != nil && suffixRes == nil {
+				// Try delimited multi-path fallback (comma / whitespace / mixed).
+				// upstream: packages/coding-agent/src/tools/read.ts:2519-2521
+				if loc == nil {
+					if res, ok, derr := tryReadDelimitedPaths(ctx, store, cwd, rawPath, nil); ok || derr != nil {
+						return res, derr
+					}
+				}
+				if diagErr := checkLineColDiagnosis(sig, basePath, selStr, cwd, suffixCache); diagErr != nil {
+					return sdk.ToolResult{}, diagErr
+				}
+				// upstream: packages/coding-agent/src/tools/read.ts:2543
+				return sdk.ToolResult{}, fmt.Errorf("Path '%s' not found", basePath)
+			}
+		} else {
+			return sdk.ToolResult{}, err
+		}
+	}
+
 	displayPath := formatPathRelativeToCwd(absPath, cwd)
 	selectorBase := ""
 	immutable := false
@@ -560,31 +674,22 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		unspilledPages = loc.unspilledPages
 	}
 
-	info, err := os.Stat(absPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			if jsonAbs, jsonSel, ok := resolveJSONReadPath(basePath, cwd); ok {
-				return readJSONQuery(context.Background(), jsonAbs, jsonSel, parsed)
-			}
-			if diagErr := checkLineColDiagnosis(basePath, selStr, cwd); diagErr != nil {
-				return sdk.ToolResult{}, diagErr
-			}
-			// upstream: packages/coding-agent/src/tools/read.ts:2543
-			return sdk.ToolResult{}, fmt.Errorf("Path '%s' not found", basePath)
-		}
-		return sdk.ToolResult{}, err
-	}
+	markRawSuffixResolution(suffixRes, parsed.IsRaw())
+
 	if info.IsDir() {
 		text, err := readDirectory(absPath, parsed)
 		if err != nil {
 			return sdk.ToolResult{}, err
 		}
-		// upstream: packages/coding-agent/src/tools/read.ts:3648-3651
+		// upstream: packages/coding-agent/src/tools/read.ts:2572-2577,3648-3651
 		details := map[string]any{
 			"isDirectory":  true,
 			"resolvedPath": dirs.StandardizeMacOSPath(absPath),
 		}
 		setMetaSource(details, "path", absPath)
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
+		}
 		return sdk.ToolResult{Content: text, Details: details}, nil
 	}
 
@@ -594,7 +699,7 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	}
 
 	if parsed.Kind == SelectorConflicts {
-		return readFileConflicts(ctx, cwd, absPath)
+		return readFileConflicts(ctx, cwd, absPath, suffixRes)
 	}
 	fileSize := info.Size()
 
@@ -624,9 +729,12 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 			}
 			encoded := base64.StdEncoding.EncodeToString(data)
 			details := map[string]any{"fileSize": fileSize}
+			if suffixRes != nil {
+				details["suffixResolution"] = suffixRes.toMap()
+			}
 			setMetaSource(details, "path", absPath)
 			return sdk.ToolResult{
-				Content: fmt.Sprintf("Read image file [%s]", mime),
+				Content: prependSuffixResolutionNotice(fmt.Sprintf("Read image file [%s]", mime), suffixRes),
 				Images:  []sdk.ImageContent{{Data: encoded, MimeType: mime}},
 				Details: details,
 			}, nil
@@ -639,9 +747,12 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		details := map[string]any{
 			"resolvedPath": dirs.StandardizeMacOSPath(absPath),
 		}
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
+		}
 		setMetaSource(details, "path", absPath)
 		return sdk.ToolResult{
-			Content: fmt.Sprintf("[Cannot read binary file '%s' (%s); not valid UTF-8 text. Use ':raw' to read bytes verbatim.]", displayPath, formatBytes(fileSize)),
+			Content: prependSuffixResolutionNotice(fmt.Sprintf("[Cannot read binary file '%s' (%s); not valid UTF-8 text. Use ':raw' to read bytes verbatim.]", displayPath, formatBytes(fileSize)), suffixRes),
 			Details: details,
 		}, nil
 	}
@@ -653,15 +764,30 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		if err != nil {
 			return sdk.ToolResult{}, err
 		}
-		return readNotebook(data, store, absPath, displayPath, parsed, immutable, unbounded)
+		res, err := readNotebook(data, store, absPath, displayPath, parsed, immutable, unbounded)
+		if err != nil {
+			return sdk.ToolResult{}, err
+		}
+		if suffixRes != nil {
+			res.Content = prependSuffixResolutionNotice(res.Content, suffixRes)
+			ensureDetailsMap(&res)["suffixResolution"] = suffixRes.toMap()
+		}
+		return res, nil
 	}
 
 	// Large file streaming path (> SNAPSHOT_MAX_BYTES = 4 MiB) when not unbounded.
 	// upstream: packages/coding-agent/src/tools/read.ts:218,3003
 	if fileSize > SnapshotMaxBytes && !unbounded {
-		return readLargeFileStreaming(ctx, store, cwd, absPath, displayPath, selectorBase, fileSize, parsed, immutable, unspilledPages)
+		res, err := readLargeFileStreaming(ctx, store, cwd, absPath, displayPath, selectorBase, fileSize, parsed, immutable, unspilledPages)
+		if err != nil {
+			return sdk.ToolResult{}, err
+		}
+		if suffixRes != nil {
+			res.Content = prependSuffixResolutionNotice(res.Content, suffixRes)
+			ensureDetailsMap(&res)["suffixResolution"] = suffixRes.toMap()
+		}
+		return res, nil
 	}
-
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return sdk.ToolResult{}, err
@@ -738,6 +864,10 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		if colCut != nil {
 			setMetaColumnTruncated(details, colCut, selectorBase, DefaultMaxBytes)
 		}
+		if suffixRes != nil {
+			text = prependSuffixResolutionNotice(text, suffixRes)
+			details["suffixResolution"] = suffixRes.toMap()
+		}
 		if loc != nil {
 			details["resolvedPath"] = absPath
 			setMetaSource(details, "internal", loc.url)
@@ -778,6 +908,9 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 		}
 		details := map[string]any{
 			"resolvedPath": resolvedOut,
+		}
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
 		}
 		if rawMode {
 			details["raw"] = true
@@ -1170,6 +1303,10 @@ func readFilesystemPath(ctx sdk.Context, store *hashline.Store, cwd, rawPath str
 	if colCut != nil {
 		out += formatColumnCutNotice(colCut, selectorBase)
 		setMetaColumnTruncated(details, colCut, selectorBase, DefaultMaxBytes)
+	}
+	if suffixRes != nil {
+		details["suffixResolution"] = suffixRes.toMap()
+		out = prependSuffixResolutionNotice(out, suffixRes)
 	}
 	if unspilledPages || len(out) <= DefaultSpillThreshold {
 		setMetaPagedSource(details)

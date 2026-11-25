@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -75,9 +76,10 @@ func indexASCIIFold(s, lowerNeedle string, from int) int {
 }
 
 // splitArchivePath detects `<archive>.<ext>[:<member>[:<sel>]]` for stdlib-readable
-// archive formats (ZIP family, TAR, TAR.GZ/TGZ).
-// upstream: packages/coding-agent/src/tools/read-archive.ts, packages/utils/src/ar/registry.ts:33-36
-func splitArchivePath(rawPath, cwd string) (archiveAbs, archiveDisplay, memberPath, selStr string, ok bool) {
+// archive formats (ZIP family, TAR, TAR.GZ/TGZ), falling back to a unique workspace
+// suffix match when the archive path does not exist directly.
+// upstream: packages/coding-agent/src/tools/read-archive.ts:171-215, packages/utils/src/ar/registry.ts:33-36
+func splitArchivePath(ctx context.Context, rawPath, cwd string, suffixCache suffixMatchCache) (archiveAbs, archiveDisplay, memberPath, selStr string, suffixRes *SuffixResolution, ok bool) {
 	// Match extensions longest-first using byte-safe ASCII case folding on rawPath.
 	exts := archiveReadExts()
 	for _, ext := range exts {
@@ -88,27 +90,46 @@ func splitArchivePath(rawPath, cwd string) (archiveAbs, archiveDisplay, memberPa
 			}
 			candPath := rawPath[:end]
 			abs := resolveToCwd(candPath, cwd)
-			if info, err := os.Stat(abs); err == nil && info.Mode().IsRegular() {
-				rest := ""
-				if end < len(rawPath) {
-					rest = rawPath[end+1:]
+			var sr *SuffixResolution
+			info, err := os.Stat(abs)
+			if err != nil {
+				if !isNotFoundError(err) || isRemoteMountPath(abs) {
+					continue
 				}
-				if rest != "" {
-					if p, err := ParseSel(rest); err == nil && p.Kind != SelectorNone {
-						return abs, formatPathRelativeToCwd(abs, cwd), "", rest, true
-					}
-					mPath, mSel := SplitPathAndSel(rest)
-					cleanMember := strings.TrimPrefix(path.Clean("/"+strings.ReplaceAll(mPath, "\\", "/")), "/")
-					if cleanMember == "." {
-						cleanMember = ""
-					}
-					return abs, formatPathRelativeToCwd(abs, cwd), cleanMember, mSel, true
+				sm, sErr := findSuffixMatchCached(ctx, suffixCache, candPath, cwd)
+				if sErr != nil || sm == nil {
+					continue
 				}
-				return abs, formatPathRelativeToCwd(abs, cwd), "", "", true
+				retryInfo, retryErr := os.Stat(sm.AbsolutePath)
+				if retryErr != nil || !retryInfo.Mode().IsRegular() {
+					continue
+				}
+				abs = sm.AbsolutePath
+				info = retryInfo
+				sr = &SuffixResolution{From: candPath, To: sm.DisplayPath}
 			}
+			if !info.Mode().IsRegular() {
+				continue
+			}
+			rest := ""
+			if end < len(rawPath) {
+				rest = rawPath[end+1:]
+			}
+			if rest != "" {
+				if p, err := ParseSel(rest); err == nil && p.Kind != SelectorNone {
+					return abs, formatPathRelativeToCwd(abs, cwd), "", rest, sr, true
+				}
+				mPath, mSel := SplitPathAndSel(rest)
+				cleanMember := strings.TrimPrefix(path.Clean("/"+strings.ReplaceAll(mPath, "\\", "/")), "/")
+				if cleanMember == "." {
+					cleanMember = ""
+				}
+				return abs, formatPathRelativeToCwd(abs, cwd), cleanMember, mSel, sr, true
+			}
+			return abs, formatPathRelativeToCwd(abs, cwd), "", "", sr, true
 		}
 	}
-	return "", "", "", "", false
+	return "", "", "", "", nil, false
 }
 
 type archiveEntry struct {
@@ -211,7 +232,7 @@ func formatArchiveEntryLines(entries []archiveDirEntry) []string {
 	return lines
 }
 
-func readArchive(archiveAbs, archiveDisplay, readPath, memberPath string, parsed ParsedSelector) (sdk.ToolResult, error) {
+func readArchive(archiveAbs, archiveDisplay, readPath, memberPath string, parsed ParsedSelector, suffixRes *SuffixResolution) (sdk.ToolResult, error) {
 	lower := strings.ToLower(archiveAbs)
 	isTar := strings.HasSuffix(lower, ".tar") || strings.HasSuffix(lower, ".tar.gz") || strings.HasSuffix(lower, ".tgz")
 	isGzip := strings.HasSuffix(lower, ".tar.gz") || strings.HasSuffix(lower, ".tgz")
@@ -271,15 +292,20 @@ func readArchive(archiveAbs, archiveDisplay, readPath, memberPath string, parsed
 			next := offset + len(limited)
 			output += fmt.Sprintf("\n\n[%d more entries in listing. Use :%d- to continue]", remaining, next)
 		}
+		output = prependSuffixResolutionNotice(output, suffixRes)
+		details := map[string]any{
+			"isDirectory":  true,
+			"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
+			"meta": map[string]any{
+				"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
+			},
+		}
+		if suffixRes != nil {
+			details["suffixResolution"] = suffixRes.toMap()
+		}
 		return sdk.ToolResult{
 			Content: output,
-			Details: map[string]any{
-				"isDirectory":  true,
-				"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
-				"meta": map[string]any{
-					"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
-				},
-			},
+			Details: details,
 		}, nil
 	}
 
@@ -299,26 +325,34 @@ func readArchive(archiveAbs, archiveDisplay, readPath, memberPath string, parsed
 			if len(data) > MaxImageBytes {
 				return sdk.ToolResult{}, fmt.Errorf("Image file too large: %s exceeds %s limit.", formatBytes(int64(len(data))), formatBytes(MaxImageBytes))
 			}
-			return sdk.ToolResult{
-				Content: fmt.Sprintf("Read image file [%s]", mime),
-				Images:  []sdk.ImageContent{{Data: base64.StdEncoding.EncodeToString(data), MimeType: mime}},
-				Details: map[string]any{
-					"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
-					"meta": map[string]any{
-						"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
-					},
+			details := map[string]any{
+				"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
+				"meta": map[string]any{
+					"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
 				},
+			}
+			if suffixRes != nil {
+				details["suffixResolution"] = suffixRes.toMap()
+			}
+			return sdk.ToolResult{
+				Content: prependSuffixResolutionNotice(fmt.Sprintf("Read image file [%s]", mime), suffixRes),
+				Images:  []sdk.ImageContent{{Data: base64.StdEncoding.EncodeToString(data), MimeType: mime}},
+				Details: details,
 			}, nil
 		}
 		if isProbablyBinary(data) {
-			return sdk.ToolResult{
-				Content: fmt.Sprintf("[Cannot read binary file '%s' (%s); not valid UTF-8 text. Use ':raw' to read bytes verbatim.]", display, formatBytes(int64(len(data)))),
-				Details: map[string]any{
-					"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
-					"meta": map[string]any{
-						"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
-					},
+			details := map[string]any{
+				"resolvedPath": dirs.StandardizeMacOSPath(archiveAbs),
+				"meta": map[string]any{
+					"source": map[string]any{"type": "path", "value": dirs.StandardizeMacOSPath(archiveAbs)},
 				},
+			}
+			if suffixRes != nil {
+				details["suffixResolution"] = suffixRes.toMap()
+			}
+			return sdk.ToolResult{
+				Content: prependSuffixResolutionNotice(fmt.Sprintf("[Cannot read binary file '%s' (%s); not valid UTF-8 text. Use ':raw' to read bytes verbatim.]", display, formatBytes(int64(len(data)))), suffixRes),
+				Details: details,
 			}, nil
 		}
 	}
@@ -326,8 +360,14 @@ func readArchive(archiveAbs, archiveDisplay, readPath, memberPath string, parsed
 	if err != nil {
 		return sdk.ToolResult{}, err
 	}
+	if suffixRes != nil {
+		res.Content = prependSuffixResolutionNotice(res.Content, suffixRes)
+	}
 	details := ensureDetailsMap(&res)
 	details["resolvedPath"] = dirs.StandardizeMacOSPath(archiveAbs)
+	if suffixRes != nil {
+		details["suffixResolution"] = suffixRes.toMap()
+	}
 	setMetaSource(details, "path", archiveAbs)
 	return res, nil
 }

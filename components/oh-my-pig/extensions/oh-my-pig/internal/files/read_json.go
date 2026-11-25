@@ -499,50 +499,74 @@ func executeJSONQuery(ctx context.Context, filePath string, sel *jsonSelector) (
 	return withJqStderr(text, stderr), nil
 }
 
-// resolveJSONReadPath resolves `file?q=...` to an existing non-image regular file.
-func resolveJSONReadPath(basePath, cwd string) (string, *jsonSelector, bool) {
+// resolveJSONReadPath resolves `file?q=...` to an existing non-image regular file,
+// falling back to a unique workspace suffix match when the path does not exist.
+// upstream: packages/coding-agent/src/tools/read-json.ts:407-450
+func resolveJSONReadPath(ctx context.Context, basePath, cwd string, suffixCache suffixMatchCache) (string, *jsonSelector, *SuffixResolution, bool) {
 	jsonPath, queryString, ok := splitJSONQueryTarget(basePath)
 	if !ok || jsonPath == "" {
-		return "", nil, false
+		return "", nil, nil, false
 	}
 	sel := parseJSONSelector(queryString)
 	if sel == nil {
-		return "", nil, false
+		return "", nil, nil, false
+	}
+
+	isJSONFile := func(filePath string) (bool, error) {
+		info, err := os.Stat(filePath)
+		if err != nil {
+			return false, err
+		}
+		if !info.Mode().IsRegular() {
+			return false, nil
+		}
+		f, err := os.Open(filePath)
+		if err != nil {
+			return false, err
+		}
+		header := make([]byte, 8192)
+		n, _ := f.Read(header)
+		_ = f.Close()
+		header = header[:n]
+		if detectImageMIME(header) != "" {
+			return false, nil
+		}
+		if !jsonFilePattern.MatchString(filePath) && !opensLikeJSON(header) {
+			return false, nil
+		}
+		return true, nil
 	}
 
 	absPath := resolveToCwd(jsonPath, cwd)
-	info, err := os.Stat(absPath)
-	if err != nil || !info.Mode().IsRegular() {
-		return "", nil, false
+	if matched, err := isJSONFile(absPath); err == nil {
+		if matched {
+			return absPath, sel, nil, true
+		}
+		return "", nil, nil, false
+	} else if !isNotFoundError(err) || isRemoteMountPath(absPath) {
+		return "", nil, nil, false
 	}
 
-	f, err := os.Open(absPath)
-	if err != nil {
-		return "", nil, false
+	suffixMatch, err := findSuffixMatchCached(ctx, suffixCache, jsonPath, cwd)
+	if err != nil || suffixMatch == nil {
+		return "", nil, nil, false
 	}
-	header := make([]byte, 8192)
-	n, _ := f.Read(header)
-	_ = f.Close()
-	header = header[:n]
-
-	if detectImageMIME(header) != "" {
-		return "", nil, false
+	if matched, err := isJSONFile(suffixMatch.AbsolutePath); err != nil || !matched {
+		return "", nil, nil, false
 	}
-	if !jsonFilePattern.MatchString(absPath) && !opensLikeJSON(header) {
-		return "", nil, false
-	}
-	return absPath, sel, true
+	return suffixMatch.AbsolutePath, sel, &SuffixResolution{From: jsonPath, To: suffixMatch.DisplayPath}, true
 }
 
-func readJSONQuery(ctx context.Context, absPath string, sel *jsonSelector, lineSel ParsedSelector) (sdk.ToolResult, error) {
+func readJSONQuery(ctx context.Context, absPath string, sel *jsonSelector, lineSel ParsedSelector, suffixRes *SuffixResolution) (sdk.ToolResult, error) {
 	queryOutput, err := executeJSONQuery(ctx, absPath, sel)
 	if err != nil {
 		return sdk.ToolResult{}, err
 	}
 
+	output := prependSuffixResolutionNotice(queryOutput, suffixRes)
 	stdPath := dirs.StandardizeMacOSPath(absPath)
 	if lineSel.Kind != SelectorNone {
-		res, err := renderInMemoryText(queryOutput, "", "JSON query output", lineSel, nil, "", 0, false, true)
+		res, err := renderInMemoryText(output, "", "JSON query output", lineSel, nil, "", 0, false, true)
 		if err != nil {
 			return sdk.ToolResult{}, err
 		}
@@ -551,6 +575,9 @@ func readJSONQuery(ctx context.Context, absPath string, sel *jsonSelector, lineS
 			d = map[string]any{}
 		}
 		d["resolvedPath"] = stdPath
+		if suffixRes != nil {
+			d["suffixResolution"] = suffixRes.toMap()
+		}
 		setMetaSource(d, "path", absPath)
 		res.Details = d
 		return res, nil
@@ -559,12 +586,15 @@ func readJSONQuery(ctx context.Context, absPath string, sel *jsonSelector, lineS
 	details := map[string]any{
 		"resolvedPath": stdPath,
 	}
+	if suffixRes != nil {
+		details["suffixResolution"] = suffixRes.toMap()
+	}
 	setMetaSource(details, "path", absPath)
 
 	// Head truncation matching read-json.ts:493-502 (DEFAULT_MAX_LINES=2000, DEFAULT_MAX_BYTES=50KB).
-	allLines := strings.Split(queryOutput, "\n")
+	allLines := strings.Split(output, "\n")
 	totalLines := len(allLines)
-	totalBytes := len(queryOutput)
+	totalBytes := len(output)
 	var kept []string
 	keptBytes := 0
 	truncBy := ""
@@ -590,7 +620,7 @@ func readJSONQuery(ctx context.Context, absPath string, sel *jsonSelector, lineS
 	}
 
 	if truncBy == "" {
-		return sdk.ToolResult{Content: queryOutput, Details: details}, nil
+		return sdk.ToolResult{Content: output, Details: details}, nil
 	}
 
 	out := strings.Join(kept, "\n")

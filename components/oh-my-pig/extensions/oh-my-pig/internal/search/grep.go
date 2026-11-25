@@ -613,7 +613,7 @@ func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, ed
 		if t.parsed.hasGlob {
 			m, err := compileGrepScopeGlob(t.parsed.globPattern, t.parsed.bareGlob)
 			if err != nil {
-				return nil, fmt.Errorf("invalid glob %q: %w", t.parsed.globPattern, err)
+				return nil, fmt.Errorf("Invalid glob pattern: %w", err)
 			}
 			includeMatcher = m
 		}

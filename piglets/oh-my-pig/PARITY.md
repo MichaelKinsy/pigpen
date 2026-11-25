@@ -14,9 +14,9 @@ States used in this document:
 
 ---
 
-## Final Gate Proof Runs (Single Binary `r25`, PiG `v0.8.0`)
+## Final Gate Proof Runs (Single Binary `r28`, PiG `v0.8.0`)
 
-Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r25`** (`75,176,658` bytes, sha256 `e12096dc49b5b08da302adb17c09a591863577b2cd14604fa4201d4b12e92819`), built from the source of the PiG release `v0.8.0` (commit `73585394f40c`, Pi 1.6.0).
+Earlier "0 unexplained" claims were withdrawn after an audit of the proof harness's allowlists and normalisers (the audit and the review notes cited below are working notes of the port and are not in this repository): the oracle hid details differences under listed text, path masks hid unstandardised macOS `/private` paths, the Tern comparer checked only one node per part without frame alignment, and the terminal comparer ignored per-cell colours and SGR attributes. All three harnesses were corrected, the port was fixed against them, and all three proof harnesses below ran alone in sequence on **one final Binary**: **`r28`** (`75,243,394` bytes, sha256 `8071fe1b4805531b241d7ca2f345e0e7fe08f4a56aefff563ae244ad32296e7c`), built from the source of the PiG release `v0.8.0` (commit `73585394f40c`, Pi 1.6.0).
 
 The reference is the omp `19.1.1` binary. omp updates itself: on the day of these runs `omp` on `PATH` became `19.2.1`, and a first run compared against it reported omp's own changes as 2 call and 16 surface differences. The harnesses now refuse any omp but `19.1.1` (`proof/omp_version.sh`); the runs below name the `19.1.1` binary with `OMP_BIN`.
 
@@ -25,15 +25,15 @@ The reference is the omp `19.1.1` binary. omp updates itself: on the day of thes
 ```text
 Command: ORACLE_MODE=both OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ORACLE_OUT=<out>/oracle piglets/oh-my-pig/proof/oracle.sh piglets/oh-my-pig/proof/cases
-Run:     Binary r25 (sha256 e12096dc49b5b08da302adb17c09a591863577b2cd14604fa4201d4b12e92819), omp 19.1.1,
-         measured 2026-11-25 21:29Z (load ~22-28 from other work), alone, no allowances, exit 0
-Totals:  60 cases (0 failed), 359 calls:
-         269 identical, 82 details-listed, 8 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
-Recorded tool_execution_start: 356 identical, 3 recorded-listed (HOST), 0 recorded-differs
+Run:     Binary r28 (sha256 8071fe1b4805531b241d7ca2f345e0e7fe08f4a56aefff563ae244ad32296e7c), omp 19.1.1,
+         measured 2026-11-25 23:53Z (load ~8-14 from other work), alone, no allowances, exit 0
+Totals:  65 cases (0 failed), 429 calls:
+         332 identical, 89 details-listed, 8 differs-listed, 0 details-only, 0 timing, 0 differs, 0 missing
+Recorded tool_execution_start: 426 identical, 3 recorded-listed (HOST), 0 recorded-differs
 Surfaces: 8 parent snapshots listed (0 differs),
           6 child surfaces across 5 cases paired by agent id — 6 listed (0 differs, 0 missing),
-          54 follow-ups identical + 6 listed (0 differs)
-Allowlists: 0 stale across details (46; 3 real_model_only), text (10), recorded (1), surface (26)
+          59 follow-ups identical + 6 listed (0 differs)
+Allowlists: 0 stale across details (48; 3 real_model_only), text (10), recorded (1), surface (26)
 Hygiene: network_attempts=0, leaked_pids=0
 ```
 
@@ -42,8 +42,8 @@ Hygiene: network_attempts=0, leaked_pids=0
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            OMP_PROOF_ROOT=<out>/tern piglets/oh-my-pig/proof/run.sh
-Run:     Binary r25 (sha256 e12096dc49b5b08da302adb17c09a591863577b2cd14604fa4201d4b12e92819), omp 19.1.1,
-         measured 2026-11-25 21:32Z (load ~22-25 from other work), alone, no allowances, exit 0
+Run:     Binary r28 (sha256 8071fe1b4805531b241d7ca2f345e0e7fe08f4a56aefff563ae244ad32296e7c), omp 19.1.1,
+         measured 2026-11-25 23:55Z (load ~8-14 from other work), alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns consumed per side, in_flight=0)
 Parts:   30 parts across 23/23 steps (0 not-compared steps):
          13 same, 17 expected, 0 timing, 0 differs, 0 missing
@@ -61,10 +61,10 @@ Allowlist: 39 entries in drawing_allowlist.json, 0 stale, 0 zero-hit
 ```text
 Command: OH_MY_PIG_BIN=<bin> ORACLE_TOOL_DIRS=<tools> PIG_SRC=$PIG_SRC \
            ANSI_OUT=<out>/ansi piglets/oh-my-pig/proof/ansi.sh
-Run:     Binary r25 (sha256 e12096dc49b5b08da302adb17c09a591863577b2cd14604fa4201d4b12e92819), omp 19.1.1,
-         measured 2026-11-25 21:34Z (load ~22-25 from other work), alone, no allowances, exit 0
+Run:     Binary r28 (sha256 8071fe1b4805531b241d7ca2f345e0e7fe08f4a56aefff563ae244ad32296e7c), omp 19.1.1,
+         measured 2026-11-25 23:56Z (load ~8-14 from other work), alone, no allowances, exit 0
 Capture: capture_valid=true (33/33 turns, 15 prompts, 5 snapshots, 0 leaked PIDs per side;
-         scrollback 232 omp / 237 pig lines)
+         scrollback 231 omp / 237 pig lines)
 Final screen (80x24, --screen-regions):
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
          text: 2/2 hunks expected (11 HOST lines); blank: 1 expected;
@@ -73,7 +73,7 @@ Final screen (80x24, --screen-regions):
          dock height: omp 15 vs pig 15 (delta 0); full-screen clears: omp 2 vs pig 6
 Full scrollback (120x40 -> 80x24):
          verdict=expected, total_unexplained_all=0 (text=0, blank=0, colour=0, mode=0), timing_pairs=0
-         text: 7/7 hunks expected (33 lines: ON_PURPOSE=5, HOST=22, LISTED=6); blank: 9 expected;
+         text: 7/7 hunks expected (32 lines: ON_PURPOSE=4, HOST=22, LISTED=6); blank: 9 expected;
          colour+attrs: 71/71 runs expected across text-matching lines (66 HOST, 5 LISTED);
          mode: 1 expected (OMP_ARTIFACT)
 Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blank_row, 1 terminal_mode)
@@ -81,7 +81,7 @@ Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blan
 
 ### Block 4 — Gate Suites, Differentials, Vet & Repository Checks
 
-- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-25 21:26Z`, Tern env vars unset, load ~23-28 from other work)**: **31 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,169 top-level tests: 1,169 `PASS` / 0 `FAIL` / 0 `SKIP`** (with real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, and the full approval and intent differential corpora with `FAIL=1`).
+- **Full extension suites (PiG `v0.8.0` SDK, measured `2026-11-25 23:50Z`, Tern env vars unset, load ~8-14 from other work)**: **31 packages `ok`, 0 `FAIL`, 3 packages without test files; 1,174 top-level tests: 1,174 `PASS` / 0 `FAIL` / 0 `SKIP`** (with real tools including `gopls` and `ast-grep`, `OMP_REAL_BROWSER=1` with the two click-loop tests at `OMP_LOOP_ITERS=200`, `OMP_TERN_DAEMON_TEST=1`, `OMP_REGEN_JS_REWRITER=1`, and the full approval and intent differential corpora with `FAIL=1`).
 - **Full 2,000-iteration real-Chrome click loops (run separately on the release candidate's SDK, not repeated on `v0.8.0`; `-timeout 60m`, `OMP_REAL_BROWSER=1`, display locked, load 23 → 9)**: `TestRealPass4_F1_NavigatingClickLoop2000Iterations` **PASS** (`60.07s`) and `TestRealPass5_F1_NoURLTabNavigatingClickLoop2000Iterations` **PASS** (`559.56s`) — 2,000 iterations each with sibling tab open and verified, `wedges=0`.
 - **Frontend, vet, harness & repository checks**:
   - `piglets/pig-tern/frontend` Go suite: **138 `Test*` functions, `ok`** (with `-race`); `gofmt` clean and `go vet` exit 0 on `darwin`, `linux`, and `windows` for the extension module, `pig-tern/frontend`, and `piglets/oh-my-pig/frontend`.
@@ -95,7 +95,7 @@ Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blan
 - **Bash interceptor differential** (`internal/shell/testdata/gen_interceptor_diff.ts` + checked-in `interceptor_diff.txt.gz`, **200,000** recorded omp verdicts, `go test ./internal/shell -run TestInterceptorDifferentialAgainstOmp`): **0** differences across all 4 lookaround rules ported to Go.
 - **Hashline block-op oracle** (`internal/hashline/testdata/blockspans/*.json`, **10,573** anchors across 30 files from real `omp` 19.1.1, `go test ./internal/hashline -run TestBlockSpansAgainstRealOmpOracle`): **0 WRONG** spans; on held-out Sample 3 (9 resolvable languages, 4,088 anchors, 1,604 omp-resolved): **1,063** exact matches, **541** conservative refusals (**33.7%**), **0 WRONG**; plus third-party YAML hold-out (1,666 anchors): 644 equal, 33 refused, 989 refused by both, **0 WRONG**.
 - **JS cell rewriter** (`internal/eval`, `go test ./internal/eval`): runs omp `v19.1.1`'s bundled rewriter + `@babel/parser@7.29.9`; verified on 190 JS/TS matrix and adversarial cases under `bun` and `node` 22+, and deterministic regeneration verified (`OMP_REGEN_JS_REWRITER=1`).
-- **Unit & integration test counts**: **1,169** executable top-level Go `Test*` tests in the extension module (`1,170` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,155` in 30 `internal/` packages + `15` in module root), **138** in `piglets/pig-tern/frontend`, and **43** Python `test_*` methods in `proof/test_oracle_harness.py`.
+- **Unit & integration test counts**: **1,174** executable top-level Go `Test*` tests in the extension module (`1,175` `func Test*` declarations including `TestMain` in `internal/ask/main_test.go`; `1,160` in 30 `internal/` packages + `15` in module root), **138** in `piglets/pig-tern/frontend`, and **43** Python `test_*` methods in `proof/test_oracle_harness.py`.
 ---
 
 ## What Each Comparison Covers — and Does Not Cover
@@ -103,7 +103,7 @@ Allowlist: 19 entries in terminal_allowlist.json (9 text, 5 colour/attrs, 4 blan
 Do not read "0 unexplained" as "identical to omp". Each harness checks a bounded slice under strict conditions:
 
 1. **Per-tool oracle (`proof/oracle.sh`)**:
-   - **Covers**: one local deterministic scripted model over **60 cases / 359 calls** in offline print mode (`-p --mode json`), comparing result text, `isError`, normalized `details`, `tool_execution_start` args/intent, parent/child system prompts and advertised tools/schemas, and follow-up messages.
+   - **Covers**: one local deterministic scripted model over **65 cases / 429 calls** in offline print mode (`-p --mode json`), comparing result text, `isError`, normalized `details`, `tool_execution_start` args/intent, parent/child system prompts and advertised tools/schemas, and follow-up messages.
    - **Tools with NO oracle case**:
      - Ported tools with zero oracle calls: **`github`**, **`propose`**, **`goal`**, and the **`browser`** eval prelude.
      - Ported tools exercised only on a refusal or narrow path: **`ask`** (print-mode refusal only — omp omits `ask` in `-p`), **`web_search`** (offline no-provider refusal only), **`debug`** (deterministic stdio DAP adapter only, not real `dlv`/`lldb-dap` because macOS sandbox blocks `task_for_pid`), **`find`** (`find.enabled: "on"` with deterministic chat judge, not native classifier).
@@ -244,9 +244,9 @@ One deduplicated list across oracle, Tern, terminal, and extension areas, naming
 | All model-facing tools | 49 (29 built-in + 3 hidden + 4 special + 13 mode/extra) | 25 (20 built-in + 2 hidden + 3 special) | 24 absent (see coverage list above). |
 | Eval preludes (optional namespaces) | 6 (`browser`, `archive`, `commit`, `dsm`, `ratchet`, `computer`) | 1 (`browser`, accepted in 8th review) + 2 host bridges (`agent`, `workpool`) | `archive`, `commit`, `dsm`, `ratchet`, `computer` absent. |
 | Internal URL schemes | 20 | 15 registered (14 working, 1 `mcp://` SDK-gap stub) | Absent: `omp://`, `ssh://`, `vault://`, `memory://`, `security://`. |
-| System prompt | 1 | 1, with listed sections omitted | 49-fixture bun oracle test (`TestOracleFixtureParity`) byte-identical for ported sections; 8 parent + 6 child snapshots classified `listed` (0 unexplained, 0 missing) on `r25`. |
-| Headless Tern drawing | 30 parts / 23 steps | 13 same, 17 expected, 0 differs (Block 2) | 347 expected unmatched children + 413 expected count deltas, 0 unexplained, `capture_valid: true` (`r25`). |
-| Plain-PTY terminal drawing | 120×40 → 80×24 | 0 unexplained across text, blank, colour+attrs, mode (Block 3) | Dock height 15 vs 15; clears 2 vs 6; `capture_valid: true` (`r25`). |
+| System prompt | 1 | 1, with listed sections omitted | 49-fixture bun oracle test (`TestOracleFixtureParity`) byte-identical for ported sections; 8 parent + 6 child snapshots classified `listed` (0 unexplained, 0 missing) on `r28`. |
+| Headless Tern drawing | 30 parts / 23 steps | 13 same, 17 expected, 0 differs (Block 2) | 347 expected unmatched children + 413 expected count deltas, 0 unexplained, `capture_valid: true` (`r28`). |
+| Plain-PTY terminal drawing | 120×40 → 80×24 | 0 unexplained across text, blank, colour+attrs, mode (Block 3) | Dock height 15 vs 15; clears 2 vs 6; `capture_valid: true` (`r28`). |
 | Slash commands | 89 built-in (+ `/skill:<name>`) | 21 of omp's own (+ 2 aliases `/rewind`, `/q`) + 17 PiG same-name (+ `/skill:<name>`) | 51 omp commands absent; Go tests only (`internal/modes`: 21, `internal/todo`: 20). |
 | Modes and directors | 16 (15 modes + 1 magic-keyword family of 5 words) | 5 (`plan`, `goal`, `loop`, `btw`, magic keywords ×5) | 11 absent (`plan-yolo`, `vibe`, `advisor`, `autoresearch`, `prewalk`, `ratchet`, `live`, `collab`, `cleanse`, `tan`, plus `rpc-ui`/`acp`). Go tests only. |
 | Shipped agents | 5 (`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`) | 5 (`scout`, `reviewer`, `security-reviewer`, `task`, `sonic`) | `task.maxEffort` honoured; `auto` thinking falls back to `"high"` (no judge classifier). |
@@ -257,14 +257,14 @@ One deduplicated list across oracle, Tern, terminal, and extension areas, naming
 
 ## Per-Tool Table
 
-| Tool | State | Evidence (`r25` / tests) | Main things left out |
+| Tool | State | Evidence (`r28` / tests) | Main things left out |
 |---|---|---|---|
-| `read` | **same** (text, dirs, HTTP/HTML, `?q=` jq, `rule://`, conflict scan, URLs) / **listed** (image meta, streams) | Oracle: 112 calls / 39 cases (102 identical, 5 details-listed, 5 differs-listed). 50+ Go tests. | PDF/DOCX/PPTX/XLSX/EPUB; SQLite; 7z/RAR/ISO/CAB/DEB/RPM/CPIO/AR/ASAR; video; SVG `:img` / image resize / `?q=` vision; binary `dsm`; tree-sitter declaration-only summary; workspace suffix resolution; multi-range streaming >4 MiB. |
-| `write` | **same** (files, stdlib archives ZIP/TAR/TAR.GZ, `conflict://` prefix recovery) / **listed** (service stop text, `.tar.zst` refusal, `diff`/`patch` extras) | Oracle: 55 calls / 19 cases (33 identical, 20 details-listed, 2 differs-listed). 61 Go tests in `internal/files`. | Non-stdlib archive writes (`.tar.zst`/`.tzst`, `.asar`); SQLite row writes; `lsp.formatOnWrite` structured detail; SQLite held-open guard. Writing one member rewrites the whole archive, as in omp: every member's mode and time are normalized (`0644`, a fixed time), directory records and empty directories are dropped, links to files become files, links that cannot be read are refused, and the archive file itself gets the default mode under the umask. |
+| `read` | **same** (text, dirs, HTTP/HTML, `?q=` jq, `rule://`, conflict scan, URLs, `;`-joined path lists, unique workspace-suffix resolution) / **listed** (image meta, streams) | Oracle: 146 calls / 42 cases (136 identical, 5 details-listed, 5 differs-listed). 66 Go tests in `internal/files`. | PDF/DOCX/PPTX/XLSX/EPUB; SQLite; 7z/RAR/ISO/CAB/DEB/RPM/CPIO/AR/ASAR; video; SVG `:img` / image resize / `?q=` vision; binary `dsm`; tree-sitter declaration-only summary; suffix resolution for those unported target types; multi-range streaming >4 MiB. |
+| `write` | **same** (files, stdlib archives ZIP/TAR/TAR.GZ, `conflict://` prefix recovery) / **listed** (service stop text, `.tar.zst` refusal, `diff`/`patch` extras) | Oracle: 55 calls / 19 cases (33 identical, 20 details-listed, 2 differs-listed). 66 Go tests in `internal/files`. | Non-stdlib archive writes (`.tar.zst`/`.tzst`, `.asar`); SQLite row writes; `lsp.formatOnWrite` structured detail; SQLite held-open guard. Writing one member rewrites the whole archive, as in omp: every member's mode and time are normalized (`0644`, a fixed time), directory records and empty directories are dropped, links to files become files, links that cannot be read are refused, and the archive file itself gets the default mode under the umask. |
 | `edit` | **same** / **listed** (lexical block ops, `patch` extra) | Oracle: 22 calls / 6 cases (13 identical, 9 details-listed). Block-op oracle: 10,573 anchors, 0 WRONG (Sample 3: 33.7% refused). 187 Go tests. | Tree-sitter block resolution (lexical only for ts/tsx/js/json/go/py/md/rs/yaml); syntax-probed warnings/blackbox/auto-repair; non-hashline dialects; streaming previews; SSH mirror writes. |
 | `bash` | **same** / **listed** (`trace`, `toolCommands` fields) | Oracle: 53 calls / 19 cases (12 identical, 41 details-listed). Interceptor diff: 200,000 cases (0 diffs). Approval diff: 32,599 cases (0 unexpected). 79 Go tests + 52 (`toolcmd`). | Embedded bash 5.3 VM & ~95 builtins; `proc://<id>/streams`; `details.trace`/AST visualizer; finite-command PTY overlay; persistent out-of-process daemon; shell minimizer/Spotlight; shell URL VFS; `direnv`; `bash.gitGuard`; `bash.allowCompoundCommands`; Kitty/Sixel; user rc snapshot; Windows `SIGTERM` trap grace. |
-| `grep` | **same** | Oracle: 14 calls / 3 cases (14 identical). 37 Go tests. | PCRE2 look-around/backreferences (RE2 only); archive/HTTP/ipynb grep; `grep.contextBefore`/`After`; comma/whitespace path lists; parallel directory walk. |
-| `glob` | **same** | Oracle: 11 calls / 3 cases (11 identical). 37 Go tests. | Streaming `onUpdate` progress; `eagerDelegation` description branch. |
+| `grep` | **same** (files, directories, globs, members of ZIP/TAR/TAR.GZ archives) / **listed** (random scratch directory name in `details` for archive members) | Oracle: 42 calls / 5 cases (35 identical, 7 details-listed). 37 Go tests. | PCRE2 look-around/backreferences (RE2 only); members of 7z/RAR/tar.zst and other non-stdlib archives; HTTP/ipynb grep; `grep.contextBefore`/`After`; comma/whitespace path lists; parallel directory walk. |
+| `glob` | **same** | Oracle: 19 calls / 4 cases (19 identical). 37 Go tests. | Streaming `onUpdate` progress; `eagerDelegation` description branch. |
 | `eval` | **same** | Oracle: 17 calls / 5 cases (16 identical, 1 details-listed agent-loop timeout). JS rewriter: 190 cases under `bun` & `node` 22+. 53 Go tests. | In-process Bun worker; `%bun add`; persistent shell/builtins/VFS in `sh()`; `completion`/`judge`/`judge_batch`; `@tool`/`tool(fn)`; `eval.autoBackground`; speculation; live token `budget`; `archive`/`commit`/`dsm`/`ratchet`/`computer` preludes; image resize; artifact spill. |
 | `task` | **same** / **listed** (`tasks[].tools`, depth cap 1, `Searched:`, `auto` thinking) | Oracle: 9 calls / 7 cases (8 identical, 1 differs-listed `Searched:`). 50 Go tests. | Depth > 1 delegation (HOST); `tasks[].tools`; `auto` thinking LLM judge (falls back to `"high"`, capped by `task.maxEffort`); worktree isolation; speculative launch; cold revival; completion probe & tiny-model labels; `before_subagent_spawn`; `@role` expansion; cross-instance mesh; idle forced `yield` ladder. |
 | `wait` | **same** / **listed** (piped widget line count) | Oracle: 13 calls / 10 cases (12 identical, 1 details-listed). 50 Go tests (`agents`) + 14 (`jobs`). | AI-authored `live`/`authoring` job widgets (`real_model_only`); piped bash widget pipe-tap lines; owned-service wake leg; `Finished earlier:` evicted list; `useless` flag; `AgentAwaits`. |
@@ -421,7 +421,7 @@ provs = set(re.findall(r"\"([a-z0-9-]+)\"", (OMP / "packages/catalog/src/compat/
 print("keybindings:", len(kb), "subcommands:", len(subs), "flags:", len(ft | af), "providers:", len(provs))
 '
 
-# Port test counts: extension Go func Test* (1,170 declarations = 1,169 tests + TestMain),
+# Port test counts: extension Go func Test* (1,175 declarations = 1,174 tests + TestMain),
 # pig-tern/frontend Go Test* (138), proof Python test_* (43):
 grep -rn '^func Test' components/oh-my-pig/extensions/oh-my-pig --include='*_test.go' | wc -l
 grep -rn '^func Test' piglets/pig-tern/frontend --include='*_test.go' | wc -l
@@ -446,7 +446,7 @@ PIG_SRC=$PIG_SRC DIFF_OUT=<out>/approval piglets/oh-my-pig/proof/diff/approval/m
 ### Disagreements Between Sources
 
 - **Blockspans anchor total**: `internal/hashline/UPSTREAM.md` prose says `10,568` (Sample 3 `4,083`), while summing `total` across all 30 JSON files in `internal/hashline/testdata/blockspans/` gives **10,573** (Sample 3 `4,088`). The JSON sum (`10,573`) is used here.
-- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,170** declarations, while `go test` executes **1,169** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
+- **Extension `func Test*` vs executed top-level tests**: `grep -rn '^func Test'` counts **1,175** declarations, while `go test` executes **1,174** top-level `Test*` functions; the difference of 1 is `TestMain` in `internal/ask/main_test.go`.
 - **Settings consumed**: scanning non-test Go files outside `internal/settings/` for all 644 schema keys matches 102 literals; `"temperature"` is an LLM/web API field rather than a setting read and is excluded, giving **101**.
 - **Welcome tip lists vs omp's `tips.txt`**: omp's `packages/tui/src/prompt/tips.txt` has **35** tips (plus 1 hard-coded unicode-preset tip); `welcomeTips` (16) has 10 lines matching omp's `tips.txt` ignoring backticks + 6 port-adapted lines, and `ompWelcomeTips` (14) has 6 lines matching omp's `tips.txt` ignoring backticks + 8 port-adapted command lines.
 - **Full differential READMEs vs latest gate runs**: `proof/diff/intent/README.md` and `proof/diff/approval/README.md` embed earlier snapshots (233 host refusals; 279 approval mismatches); the run on the PiG `v0.8.0` SDK ran both full corpora with `FAIL=1` and 0 unexpected mismatches (8 lenient host refusals in `intent-diff`, 0 unexpected in `approval-diff`).

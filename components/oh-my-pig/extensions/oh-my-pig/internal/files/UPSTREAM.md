@@ -9,6 +9,7 @@ Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, tag `v19.1.1`, comm
 - `packages/coding-agent/src/tools/read-format.ts`
 - `packages/coding-agent/src/tools/read-archive.ts`
 - `packages/coding-agent/src/tools/read-json.ts`
+- `packages/coding-agent/src/tools/read-path-resolution.ts`
 - `packages/coding-agent/src/tools/write.ts`
 - `packages/coding-agent/src/tools/write-content.ts`
 - `packages/coding-agent/src/tools/auto-generated-guard.ts`
@@ -49,6 +50,17 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
 - Explicit directory records and empty directories are not preserved (only parent directories of retained files are synthesized for TAR; ZIP omits directory entries).
 - File aliases (TAR hard links and TAR/ZIP symlinks targeting regular files) are flattened into regular files holding the target's bytes; TAR directory symlinks are dropped like directories; ZIP directory symlinks, dangling/escaping symlinks, TAR hard links to missing/unreadable/directory/cyclic targets, and sparse TAR members are refused with omp's exact error (leaving the original archive untouched).
 - Non-regular special TAR records (FIFO, char/block devices) and unrepresentable member paths (`..` / empty) are dropped during indexing, matching omp.
+
+## Delimited Multi-Path Reads & Unique Workspace-Suffix Resolution
+- Delimited multi-path reads (`internal/files/read_multipath.go`, `internal/files/read.go`):
+  - `splitDelimitedPathEntry` (`path-utils.ts:756-836`), `splitMixedUrlPathList` (`path-utils.ts:847-869`), `splitQueryPathList` / `splitTopLevelSemicolons` (`read.ts:924-963`), `#tryReadDelimitedPaths` / `#readDelimitedParts` (`read.ts:1488-1567`), `readDetailsLinkPath` (`read.ts:1056-1060`).
+  - Supports `;` (unconditional fan-out, including all-missing lists, internal URL lists, mixed URL+local lists, and `?q=` query lists), `,` (when at least one part resolves), whitespace and mixed delimiters (when every part resolves), while preserving literal files whose names contain delimiters, `{...}` brace groups, and backslash-escaped delimiters.
+  - Emits `Note: interpreted as N paths: …`, `[Could not read <part>: <message>]`, `details.notes`, `details.displayReadTargets` (flattening nested lists and using `suffixResolution.to` when resolved), and `details.displayReadTargetLinks`.
+- Unique workspace-suffix resolution (`internal/files/read_multipath.go`, `internal/search/suffix.go`, `internal/files/read.go`, `internal/files/sources.go`, `internal/files/read_json.go`, `internal/files/conflicts.go`):
+  - `findUniqueWorkspaceSuffix` (`path-utils.ts:1413-1458`), `findSuffixMatchCached` / `isRemoteMountPath` / `isNotFoundError` (`read-path-resolution.ts:7-36`), `prependSuffixResolutionNotice` / `markRawSuffixResolution` (`read-format.ts:56-58,719-727`), plus callers for files, directories, `:conflicts`, `:line:col` diagnosis (`read.ts:2459-2582`), stdlib archives (`read-archive.ts:171-215`), and JSON `?q=` queries (`read-json.ts:407-480`).
+  - Delegates to `internal/search.FindSuffixMatches` (shared `walkDir` + `compileGlob` with `pattern: "**/" + escapeGlobMetachars(normalized)`, `hidden=true`, `gitignore=true`, `includeDir=true`, `includeSymlinks=true`, `.git`/`node_modules` pruning unless named in the pattern, 5s timeout, per-call memoization, and early exit on 2 matches).
+  - Sets `details.suffixResolution` (`{ from, to, raw? }`) and prepends `[Path '<from>' not found; resolved to '<to>' via suffix match]` on non-raw non-directory reads; `:raw` keeps byte output clean and records `raw: true` in `details.suffixResolution`.
+  - Suffix resolution for unported target types (SQLite, PDF, video, non-stdlib archives) remains unported alongside those target types.
 ## Tests Ported (`internal/files`)
 - `internal/files/files_test.go`: 6 tests (read selector forms including bare `:N`, read-then-edit + stale/invented tag rejection, CRLF & no-trailing-newline, write + parent dirs + `MV` + `REM` + outside-cwd, directory listing & raster image read, tool registration).
 - `internal/files/v19_guards_test.go`: 9 tests porting upstream cases:
@@ -67,6 +79,7 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
 - `internal/files/round3_fixes_test.go`: 5 tests (one-letter relative path vs Windows drive split `d:1-5`/`a:2-3`/`C:\...`, `formatAge` boundary table test, URL-backed header path + no resource notes across `local://`/`history://`/`agent://`, archive missing-member error text, `read` conflict registration + warning footer + `:conflicts` summary + `conflict://` read/write splice).
 - `internal/files/round4_fixes_test.go`: 11 tests (`conflict://N` excerpt backing-file tag + edit follow-up, `out://` and read-only URL tool-policy denial prefix, located `skill://` `[Skill file: ...]` provenance + `contentType: text/markdown`, edit failure details preserved over wire, `:raw` `displayContent` `countTextLines` across all four oracle cases + non-raw context + comma-list `:raw`, `meta.limits.columnTruncated` + selected-window `meta.truncation.totalBytes`, raw HTML URL `contentType: text/html`, explicit `?q=` jq unsupported error, archive-member & notebook `meta.source`, `resolvedPath` on dir/binary/out-of-range & omission of port-only `totalLines`/`fileSize`/`meta`, macOS `/private` standardization on `skill://` and headers).
 - `internal/files/archive_write_test.go`: 12 tests (ZIP & aliases, TAR/TAR.GZ/TGZ, creating missing archives & literal archive filenames, refusals for read-only/non-stdlib/invalid subpaths/dir & plain files, atomicity on failure, write guards, concurrent serialization, `conflict://` prefix recovery, TAR link flattening & special typeflags, TAR broken-link & sparse refusals, ZIP symlinks & unsafe names, rewritten archive permissions matching umask).
+- `internal/files/read_multipath_test.go`: 3 tests (with subtests) porting `glob-validate-paths.test.ts`, `grep-path-lists.test.ts`, `read-mixed-path-list.test.ts`, and `read-raw-range.test.ts` (semicolon/comma/whitespace/mixed/nested delimited lists, literal delimiter precedence, `?q=` query lists, and unique suffix resolution for files, `:raw`, directories, archives, JSON queries, ambiguity, and `.gitignore`).
 ## Settings Read by Upstream
 | Key | Default | Honoured |
 |---|---|---|
@@ -92,7 +105,6 @@ Writing a member into an archive (`archive.ext:member`) rewrites the whole archi
 | `read` SVG `:img` rasterization and HEIC/BMP transcoding / image auto-resize / `?q=` vision questions | Requires native image codecs/SVG rasterizer and a vision sub-call not available in Go stdlib |
 | `read` executable binary views (ELF/PE/Mach-O, Ghidra/dsm) | Requires binary analysis backend (`dsm`) |
 | `read` AST structural summary (`details.summary`, bare-code declaration-only elision) | Requires tree-sitter (`crates/ast`); pure-Go reads full lines up to `read.defaultLimit` (300), so `details.summary` is never emitted |
-| `read` unique workspace-suffix resolution (`details.suffixResolution`) and `;`/`,` delimited multi-path lists | Requires workspace file index (`walker`) and multi-read fanout, so `details.suffixResolution` is never emitted |
 | `read` repeat-read loop hint & speculative read caching | Session-level optimization requiring conversation state |
 | `read` multi-range streaming on files > 4 MiB | Streaming reader supports single-range, bare, `:raw`, `:-N` tail, and streaming `[path#TAG]` up to 64 MiB; multi-range comma lists require buffered reads |
 | `write` SQLite row writes (`db.sqlite:table[:key]`) | Requires a SQLite driver; forbidden by no-third-party-modules / no-cgo rule |

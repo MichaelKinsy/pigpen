@@ -84,5 +84,24 @@
       { "tool": "grep", "arguments": { "pattern": "alpha", "path": "release.tar.gz:notes.md:1-2" } },
       { "tool": "grep", "arguments": { "pattern": "Alpha", "path": "lib.jar:META-INF/MANIFEST.MF" } }
     ]
+  },
+  {
+    "name": "glob-unopened-brace",
+    "description": "A closing brace with no opening one in a glob pattern (glob tool and grep path), and a brace inside a character class.",
+    "setup": "mkdir -p src && printf 'alpha\\n' > 'src/a}.txt' && printf 'alpha\\n' > 'src/b{2}.txt' && printf 'alpha\\n' > src/c.txt && find . -exec touch -t 202001010000 {} +",
+    "calls": [
+      { "tool": "glob", "arguments": { "path": "src/a}.txt" } },
+      { "tool": "glob", "arguments": { "path": "**/*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/b[{]2}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/{b,c}*.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/*}.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/a}.txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "*}.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/[z-a].txt" } },
+      { "tool": "grep", "arguments": { "pattern": "alpha", "path": "src/[z-a].txt" } },
+      { "tool": "glob", "arguments": { "path": "src/{b,c*.txt" } },
+      { "tool": "glob", "arguments": { "path": "src/[c.txt" } }
+    ]
   }
 ]

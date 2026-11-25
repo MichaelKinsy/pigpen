@@ -151,8 +151,13 @@ func looksLikeRangeOrTail(s string) bool {
 	if s == "" {
 		return false
 	}
-	// Comma list or single range/tail (`-N`, `1-2,-15`, `L5-10`).
-	for _, chunk := range strings.Split(s, ",") {
+	// Comma list or single range/tail (`-N`, `1-2,-15`, `L5-10`, `50+10`, `50..100`).
+	// Reject delimiter/path characters (`;`, `/`, `\`, whitespace) so multi-path
+	// lists like `a.txt:1-3;b.txt:raw` never peel `:1-3;b.txt:raw` as one selector.
+	if strings.ContainsAny(s, ";/\\ \t\r\n") {
+		return false
+	}
+	for chunk := range strings.SplitSeq(s, ",") {
 		if chunk == "" {
 			return false
 		}

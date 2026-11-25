@@ -403,7 +403,7 @@ func runGlobWithURLs(bgCtx context.Context, cwd string, urlCtx urls.Context, tim
 			if parsed.hasGlob {
 				m, err := compileGlob(parsed.globPattern)
 				if err != nil {
-					return nil, fmt.Errorf("invalid glob %q: %w", parsed.globPattern, err)
+					return nil, fmt.Errorf("Invalid glob pattern: %w", err)
 				}
 				includeMatcher = m
 			}
@@ -483,7 +483,7 @@ func runGlobWithURLs(bgCtx context.Context, cwd string, urlCtx urls.Context, tim
 		if parsed.hasGlob {
 			m, err := compileGlob(parsed.globPattern)
 			if err != nil {
-				return nil, fmt.Errorf("invalid glob %q: %w", parsed.globPattern, err)
+				return nil, fmt.Errorf("Invalid glob pattern: %w", err)
 			}
 			includeMatcher = m
 		}

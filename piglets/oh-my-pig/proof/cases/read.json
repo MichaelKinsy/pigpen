@@ -94,5 +94,60 @@
       { "tool": "read", "arguments": { "path": "{{FIXTURE_URL}}/page.html" } },
       { "tool": "read", "arguments": { "path": "{{FIXTURE_URL}}/page.html:raw" } }
     ]
+  },
+  {
+    "name": "read-delimited-semicolon",
+    "description": "Read semicolon-delimited multi-path lists: two files, partial missing, all missing, selectors on parts, literal semicolon filename, three-part list, and JSON query list.",
+    "setup": "printf 'a1\\na2\\na3\\na4\\n' > a.txt && printf 'b1\\nb2\\n' > b.txt && printf 'c1\\n' > c.txt && printf 'd1\\n' > d.txt && printf 'literal semi\\n' > 'a;b.txt' && printf '{\"a\":1,\"b\":2}\\n' > x.json && printf '{\"a\":3,\"b\":4}\\n' > y.json",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "a.txt;b.txt" } },
+      { "tool": "read", "arguments": { "path": "a.txt;missing.txt" } },
+      { "tool": "read", "arguments": { "path": "missing1.txt;missing2.txt" } },
+      { "tool": "read", "arguments": { "path": "a.txt:1-3;b.txt:raw" } },
+      { "tool": "read", "arguments": { "path": "a;b.txt" } },
+      { "tool": "read", "arguments": { "path": "b.txt;c.txt;d.txt" } },
+      { "tool": "read", "arguments": { "path": "x.json?q=.a;y.json?q=.b" } }
+    ]
+  },
+  {
+    "name": "read-delimited-comma-and-mixed",
+    "description": "Read comma-delimited, whitespace-delimited, and nested mixed-delimiter multi-path lists, plus an all-missing comma list that stays unsplit.",
+    "setup": "printf 'p1\\n' > p.txt && printf 'q1\\n' > q.txt && printf 'r1\\n' > r.txt && printf 's1\\n' > s.txt && printf 't1\\n' > t.txt && printf 'u1\\n' > u.txt",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "p.txt, q.txt" } },
+      { "tool": "read", "arguments": { "path": "missing.txt, r.txt" } },
+      { "tool": "read", "arguments": { "path": "nope1.txt, nope2.txt" } },
+      { "tool": "read", "arguments": { "path": "s.txt, t.txt; u.txt" } },
+      { "tool": "read", "arguments": { "path": "p.txt u.txt" } }
+    ]
+  },
+  {
+    "name": "read-suffix-resolution",
+    "description": "Read unique workspace-suffix matches for file, selector, raw, directory, archive, JSON query, plus ambiguous suffix, complete miss, and walker ignore/pruning/metachar/normalization rules.",
+    "setup": "mkdir -p deep/sub dup1 dup2 subuniq/dir ignored_dir sub_ig node_modules/pkg .git/refs .config/sub dup_ig dup_ok meta/dir pkg/util other/sub && printf 'u1\\nu2\\nu3\\n' > deep/sub/unique.txt && printf 'one\\n' > dup1/same.txt && printf 'two\\n' > dup2/same.txt && printf 'inside\\n' > subuniq/dir/f.txt && touch -t 202001010000 subuniq/dir/f.txt subuniq/dir && printf '{\"k\":\"v\"}\\n' > deep/sub/cfg.json && mkdir -p tmp_arc && printf 'arc\\n' > tmp_arc/in.txt && touch -t 202001010000 tmp_arc/in.txt tmp_arc && COPYFILE_DISABLE=1 tar -cf deep/sub/pkg.tar -C tmp_arc in.txt && rm -rf tmp_arc && printf 'ignored_dir/\\nignored_file.txt\\ndup_ig/\\n' > .gitignore && printf 'in ig dir\\n' > ignored_dir/igdir.txt && printf 'ig file\\n' > sub_ig/ignored_file.txt && printf 'nm\\n' > node_modules/pkg/nm.txt && printf 'gitref\\n' > .git/refs/gitonly.txt && printf 'hidden\\n' > .config/sub/x.txt && printf 'bad\\n' > dup_ig/half.txt && printf 'good\\n' > dup_ok/half.txt && printf 'bracket\\n' > 'meta/dir/a[1].txt' && printf 'brace\\n' > 'meta/dir/b{2}.txt' && printf 'pkg x\\n' > pkg/util/x.go && printf 'other x\\n' > other/sub/x.go",
+    "calls": [
+      { "tool": "read", "arguments": { "path": "unique.txt" } },
+      { "tool": "read", "arguments": { "path": "unique.txt:2-3" } },
+      { "tool": "read", "arguments": { "path": "unique.txt:2:raw" } },
+      { "tool": "read", "arguments": { "path": "same.txt" } },
+      { "tool": "read", "arguments": { "path": "dir" } },
+      { "tool": "read", "arguments": { "path": "cfg.json?q=.k" } },
+      { "tool": "read", "arguments": { "path": "pkg.tar:in.txt" } },
+      { "tool": "read", "arguments": { "path": "no-such-file.txt" } },
+      { "tool": "read", "arguments": { "path": "igdir.txt" } },
+      { "tool": "read", "arguments": { "path": "ignored_file.txt" } },
+      { "tool": "read", "arguments": { "path": "nm.txt" } },
+      { "tool": "read", "arguments": { "path": "gitonly.txt" } },
+      { "tool": "read", "arguments": { "path": "x.txt" } },
+      { "tool": "read", "arguments": { "path": "half.txt" } },
+      { "tool": "read", "arguments": { "path": "a[1].txt" } },
+      { "tool": "read", "arguments": { "path": "b{2}.txt" } },
+      { "tool": "read", "arguments": { "path": "./a[1].txt" } },
+      { "tool": "read", "arguments": { "path": "dir/" } },
+      { "tool": "read", "arguments": { "path": "util/x.go" } },
+      { "tool": "read", "arguments": { "path": "x.go" } },
+      { "tool": "read", "arguments": { "path": "/nonexistent/abs/a[1].txt" } },
+      { "tool": "read", "arguments": { "path": "../meta/dir/a[1].txt" } }
+    ]
   }
 ]

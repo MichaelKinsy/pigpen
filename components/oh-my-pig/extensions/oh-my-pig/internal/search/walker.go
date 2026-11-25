@@ -3,10 +3,13 @@ package search
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
+	"regexp/syntax"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -34,6 +37,7 @@ type walkOptions struct {
 	dirOnly            bool           // yield directories only (trailing-slash globs)
 	includeNodeModules bool           // allow descending into node_modules
 	includeGit         bool           // allow descending into .git
+	maxResults         int            // optional early-stop cap (>0 stops walk once reached)
 }
 
 // ignoreMatch mirrors crates/xfs/src/ignore.rs Match.
@@ -588,9 +592,11 @@ func walkDir(ctx context.Context, root string, opts walkOptions) ([]walkEntry, e
 					isSymlink: true,
 					mtime:     mt,
 				})
+				if opts.maxResults > 0 && len(results) >= opts.maxResults {
+					return errWalkLimitReached
+				}
 				continue
 			}
-
 			if isDir {
 				if opts.includeDir && (opts.include == nil || opts.include.match(relPath) || opts.include.match(relPath+"/")) {
 					info := resolvedInfo
@@ -607,6 +613,9 @@ func walkDir(ctx context.Context, root string, opts walkOptions) ([]walkEntry, e
 						isDir:   true,
 						mtime:   mt,
 					})
+					if opts.maxResults > 0 && len(results) >= opts.maxResults {
+						return errWalkLimitReached
+					}
 				}
 				if opts.recursive {
 					if opts.followLinks && isSymlink {
@@ -653,13 +662,21 @@ func walkDir(ctx context.Context, root string, opts walkOptions) ([]walkEntry, e
 				mtime:   mt,
 				size:    sz,
 			})
+			if opts.maxResults > 0 && len(results) >= opts.maxResults {
+				return errWalkLimitReached
+			}
 		}
 		return nil
 	}
 
 	err := visit(root, "", rootFrame)
+	if err == errWalkLimitReached {
+		return results, nil
+	}
 	return results, err
 }
+
+var errWalkLimitReached = fmt.Errorf("walk limit reached")
 
 func isExcluded(excludes []*globMatcher, relPath, baseName string, isDir bool) bool {
 	for _, ex := range excludes {
@@ -736,15 +753,15 @@ func compileGrepScopeGlob(pattern string, bareGlob bool) (*globMatcher, error) {
 	}
 	re1, err := globFragment(p, false)
 	if err != nil {
-		return nil, err
+		return nil, globPatternError(p, err)
 	}
 	re2, err := globFragment(base+"/**", false)
 	if err != nil {
-		return nil, err
+		return nil, globPatternError(p, err)
 	}
 	re, err := regexp.Compile("^(?:" + re1 + "|" + re2 + ")$")
 	if err != nil {
-		return nil, err
+		return nil, globPatternError(p, err)
 	}
 	return &globMatcher{re: re}, nil
 }
@@ -760,9 +777,28 @@ func isExactBraceUnion(pattern string) bool {
 func globToRegexp(pattern string, ignoreDialect bool) (*regexp.Regexp, error) {
 	frag, err := globFragment(pattern, ignoreDialect)
 	if err != nil {
-		return nil, err
+		return nil, globPatternError(pattern, err)
 	}
-	return regexp.Compile("^" + frag + "$")
+	re, err := regexp.Compile("^" + frag + "$")
+	if err != nil {
+		return nil, globPatternError(pattern, err)
+	}
+	return re, nil
+}
+
+// globSyntaxError is a reason crates/xfs/src/pattern.rs gives for a malformed pattern (parse, parse_class).
+type globSyntaxError string
+
+func (e globSyntaxError) Error() string { return string(e) }
+
+// globPatternError names the whole pattern in front of the reason, as PatternError's Display does
+// (crates/xfs/src/pattern.rs:58-61). A reversed class range is left to the regexp engine to find.
+func globPatternError(pattern string, err error) error {
+	var se *syntax.Error
+	if errors.As(err, &se) && se.Code == syntax.ErrInvalidCharRange {
+		return fmt.Errorf("%s: invalid character range", pattern)
+	}
+	return fmt.Errorf("%s: %w", pattern, err)
 }
 
 func globFragment(pattern string, ignoreDialect bool) (string, error) {
@@ -815,6 +851,10 @@ func globFragment(pattern string, ignoreDialect bool) (string, error) {
 				j++
 			}
 			if j >= n {
+				if !ignoreDialect {
+					// Only the gitignore dialect keeps an unclosed `[` as a literal (pattern.rs parse_class).
+					return "", globSyntaxError("unclosed character class")
+				}
 				b.WriteString(`\[`)
 				i++
 			} else {
@@ -853,6 +893,14 @@ func globFragment(pattern string, ignoreDialect bool) (string, error) {
 				b.WriteString(")")
 				i = end + 1
 			}
+		case '}':
+			if ignoreDialect {
+				b.WriteString(`\}`)
+				i++
+				continue
+			}
+			// crates/xfs/src/pattern.rs:245-252: a `}` with no open alternation is a pattern error.
+			return "", globSyntaxError("unopened alternation")
 		default:
 			b.WriteString(regexp.QuoteMeta(string(rune(c))))
 			i++

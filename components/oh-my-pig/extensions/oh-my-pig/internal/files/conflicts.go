@@ -134,7 +134,7 @@ func blockHasCutLine(b urls.ConflictBlock, cutSet map[int]bool) bool {
 // reconciles and registers every conflict block in the session's ConflictHistory, and
 // returns omp's compact `#N  L_a-L_b` index.
 // upstream: packages/coding-agent/src/tools/read.ts:3506-3539
-func readFileConflicts(ctx sdk.Context, cwd, absPath string) (sdk.ToolResult, error) {
+func readFileConflicts(ctx sdk.Context, cwd, absPath string, suffixRes *SuffixResolution) (sdk.ToolResult, error) {
 	scan, err := scanFileForConflicts(absPath)
 	if err != nil {
 		return sdk.ToolResult{}, err
@@ -161,6 +161,9 @@ func readFileConflicts(ctx sdk.Context, cwd, absPath string) (sdk.ToolResult, er
 	details := map[string]any{
 		"resolvedPath":  dirs.StandardizeMacOSPath(absPath),
 		"conflictCount": len(entries),
+	}
+	if suffixRes != nil {
+		details["suffixResolution"] = suffixRes.toMap()
 	}
 	setMetaSource(details, "path", absPath)
 	return sdk.ToolResult{Content: summary, Details: details}, nil
