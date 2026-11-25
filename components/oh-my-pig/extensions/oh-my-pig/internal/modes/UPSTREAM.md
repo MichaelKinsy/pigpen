@@ -112,6 +112,7 @@ Summary counts across the 89 built-in commands:
 | `/queue <message>` | Queue follow-up message behind active turn | **ported here** | Calls `ctx.SendUserMessage(msg, "followUp")` |
 | `/force <tool> [prompt]` (`/force:`) | Force next turn to use a specific tool | **ported here (partial)** | Injects hidden `forced-tool-notice` in `before_agent_start` (PiG SDK has no wire `tool_choice` override) |
 | `/exit` (`/q`) | Exit application | **ported here** | Calls `ctx.Shutdown()`; PiG only has `/quit` without `/exit` or `/q` aliases |
+| `/import-omp [latest\|<file>] [--full]` | (not in omp) | **own addition** | Switches to an omp session translated to a PiG session; `internal/ompsession/UPSTREAM.md` |
 | `/todo [...]` | View/modify agent todo list | **owned by `internal/todo`** | Registered by `internal/todo` |
 | `/settings` | Open omp settings menu | **PiG's own (differs)** | PiG builtin opens PiG's settings menu (not omp's settings schema) |
 | `/model` (`models`) | Open model role/thinking selector | **PiG's own (differs)** | PiG builtin `/model [provider/model]` picks/switches model without omp's role-model hub; `models` alias absent in PiG |

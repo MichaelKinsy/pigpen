@@ -331,6 +331,7 @@ One deduplicated list across oracle, Tern, terminal, and extension areas, naming
 8. **System `bash`, no pipe-stream capture or persistent daemon**: `proc://<id>/streams` is always empty, piped fallback widget counts `outputTap` lines only, and `proc://<id>/mode` rejects `persist`/`detached`.
 9. **Browser over raw CDP (no Puppeteer)**: `tab.run(fn)` refuses and points to `tab.*` helpers / `tab.evaluate(...)`.
 10. **No Tern split-pane `/fork` or `omp_restore` OSC 1337** (would launch real `omp` on a PiG session file) and **host-trust guard on `github` (`gh`) targets**.
+11. **omp's sessions resume here (own addition)**: `--resume`, `--continue`, `--session` and `--fork` find this project's omp sessions (`~/.omp/agent/sessions`), translated into PiG's session directory before PiG chooses one; `/import-omp` does the same inside a session. A translation starts at the entries its latest compaction kept, and a snapcompact archive is carried as text, not images. omp's files are only read (`internal/ompsession/UPSTREAM.md`).
 
 ---
 
