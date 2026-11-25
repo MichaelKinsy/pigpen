@@ -239,6 +239,11 @@ func TestWokenIdleSubagentRunsMonitoredTurnAndRelays(t *testing.T) {
 			time.Sleep(5 * time.Millisecond)
 		}
 	}
+	// The first turn's result is handed over before the wake: left undelivered, the `wait` below would report it
+	// at once and never watch the wake job. The first turn has finished, so this call returns without watching.
+	if _, errMsg := h.callTool("wait", map[string]any{}); errMsg != "" {
+		t.Fatalf("drain of the first turn failed: %s", errMsg)
+	}
 
 	// Message idle FollowWorker from Main via `agent://FollowWorker`.
 	wr, err := urls.Write(urls.Context{Cwd: h.opts.Cwd}, "agent://FollowWorker", "now answer follow-up question")
