@@ -14,10 +14,34 @@
         "Mario Zechner"
       ],
       "url": "https://github.com/can1357/oh-my-pi",
-      "revision": "4df653426f40ee1eb78ef408528eb9e6a5275b9d",
+      "revision": "31ffee513f27a01bba7d4dfbe12bae239cdc646a",
       "path": "extensions/oh-my-pig",
       "license": "MIT",
       "licenseFile": "licenses/oh-my-pi-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "@babel/parser",
+      "authors": [
+        "The Babel Team"
+      ],
+      "url": "https://github.com/babel/babel",
+      "revision": "54405f212b4e6a40f0e1dfba9293b0e3f3dd20e3",
+      "path": "extensions/oh-my-pig/internal/eval/js_rewriter.cjs",
+      "license": "MIT",
+      "licenseFile": "licenses/babel-parser-LICENSE",
+      "attributionFile": "CREDITS.md"
+    },
+    {
+      "name": "playwright",
+      "authors": [
+        "Microsoft Corporation"
+      ],
+      "url": "https://github.com/microsoft/playwright",
+      "revision": "1cc5a90cfa3eaa430b1a991963100f95126caa47",
+      "path": "extensions/oh-my-pig/internal/browser/assets/aria-snapshot.bundle.txt",
+      "license": "Apache-2.0",
+      "licenseFile": "licenses/playwright-LICENSE",
       "attributionFile": "CREDITS.md"
     }
   ]

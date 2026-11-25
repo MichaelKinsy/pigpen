@@ -1,0 +1,1198 @@
+{
+  "lang": "py",
+  "sample": "sample1",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample1",
+  "total": 149,
+  "omp_resolved": 136,
+  "omp_refused": 13,
+  "cases": [
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 3,
+      "refused": "line 1: `CUT 3*` could not resolve a syntactic block beginning on line 3 (blank/closer line, or parse error). Use `CUT 3.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 9; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 22,
+      "span": [
+        22,
+        29
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 35,
+      "span": [
+        35,
+        39
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 42,
+      "span": [
+        42,
+        46
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 49,
+      "span": [
+        49,
+        59
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 62,
+      "span": [
+        62,
+        67
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 66,
+      "span": [
+        66,
+        67
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 73,
+      "span": [
+        73,
+        86
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 89,
+      "span": [
+        89,
+        95
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 98,
+      "span": [
+        98,
+        108
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 111,
+      "span": [
+        111,
+        118
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 124,
+      "span": [
+        124,
+        125
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 128,
+      "span": [
+        128,
+        136
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 131,
+      "span": [
+        131,
+        133
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 135,
+      "span": [
+        135,
+        136
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 139,
+      "span": [
+        139,
+        140
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 143,
+      "span": [
+        143,
+        149
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 152,
+      "span": [
+        152,
+        187
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 153,
+      "span": [
+        153,
+        187
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 155,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 167,
+      "span": [
+        167,
+        168
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 190,
+      "span": [
+        190,
+        225
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 191,
+      "span": [
+        191,
+        225
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 193,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 208,
+      "span": [
+        208,
+        211
+      ]
+    },
+    {
+      "file": "files/py/test_retry.py",
+      "anchor": 210,
+      "span": [
+        210,
+        211
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 18,
+      "span": [
+        18,
+        23
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 26,
+      "span": [
+        26,
+        42
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 45,
+      "span": [
+        45,
+        89
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 80,
+      "span": [
+        80,
+        89
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 86,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 92,
+      "span": [
+        92,
+        93
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 96,
+      "span": [
+        96,
+        110
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 102,
+      "span": [
+        102,
+        106
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 113,
+      "span": [
+        113,
+        121
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 124,
+      "span": [
+        124,
+        139
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 142,
+      "span": [
+        142,
+        152
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 155,
+      "span": [
+        155,
+        159
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 162,
+      "span": [
+        162,
+        168
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 171,
+      "span": [
+        171,
+        176
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 179,
+      "span": [
+        179,
+        192
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 189,
+      "span": [
+        189,
+        190
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 195,
+      "span": [
+        195,
+        199
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 202,
+      "span": [
+        202,
+        208
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 203,
+      "span": [
+        203,
+        208
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 211,
+      "span": [
+        211,
+        219
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 212,
+      "refused": "line 1: `CUT 212*` resolved a single-line block — line 212 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 212`. The nearest enclosing multi-line block begins at line 211 and ends at line 219; use `CUT 211*` to target it."
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 213,
+      "span": [
+        213,
+        219
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 215,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 222,
+      "span": [
+        222,
+        239
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 223,
+      "span": [
+        223,
+        239
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 225,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 242,
+      "span": [
+        242,
+        251
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 249,
+      "span": [
+        249,
+        250
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 254,
+      "span": [
+        254,
+        269
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 259,
+      "span": [
+        259,
+        269
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 261,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 265,
+      "span": [
+        265,
+        266
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 272,
+      "span": [
+        272,
+        284
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 278,
+      "span": [
+        278,
+        281
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 287,
+      "span": [
+        287,
+        313
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 296,
+      "span": [
+        296,
+        313
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 298,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 306,
+      "span": [
+        306,
+        309
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 316,
+      "span": [
+        316,
+        328
+      ]
+    },
+    {
+      "file": "files/py/test_git_ops.py",
+      "anchor": 324,
+      "span": [
+        324,
+        325
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 11,
+      "span": [
+        11,
+        15
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 18,
+      "span": [
+        18,
+        22
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 25,
+      "span": [
+        25,
+        29
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 32,
+      "span": [
+        32,
+        36
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 39,
+      "span": [
+        39,
+        43
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 46,
+      "span": [
+        46,
+        51
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 54,
+      "span": [
+        54,
+        58
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 61,
+      "span": [
+        61,
+        65
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 68,
+      "span": [
+        68,
+        74
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 77,
+      "span": [
+        77,
+        81
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 84,
+      "span": [
+        84,
+        87
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 90,
+      "span": [
+        90,
+        94
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 97,
+      "span": [
+        97,
+        100
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 103,
+      "span": [
+        103,
+        109
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 112,
+      "span": [
+        112,
+        114
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 117,
+      "span": [
+        117,
+        120
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 123,
+      "span": [
+        123,
+        135
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 138,
+      "span": [
+        138,
+        141
+      ]
+    },
+    {
+      "file": "files/py/test_pragmas.py",
+      "anchor": 144,
+      "span": [
+        144,
+        147
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 11,
+      "span": [
+        11,
+        16
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 12,
+      "span": [
+        12,
+        16
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 19,
+      "span": [
+        19,
+        28
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 20,
+      "span": [
+        20,
+        28
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 31,
+      "span": [
+        31,
+        36
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 32,
+      "span": [
+        32,
+        36
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 39,
+      "span": [
+        39,
+        46
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 40,
+      "span": [
+        40,
+        46
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 49,
+      "span": [
+        49,
+        54
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 50,
+      "span": [
+        50,
+        54
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 57,
+      "span": [
+        57,
+        58
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 61,
+      "span": [
+        61,
+        93
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 96,
+      "span": [
+        96,
+        112
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 115,
+      "span": [
+        115,
+        133
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 136,
+      "span": [
+        136,
+        148
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 151,
+      "span": [
+        151,
+        163
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 166,
+      "span": [
+        166,
+        173
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 176,
+      "span": [
+        176,
+        183
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 186,
+      "span": [
+        186,
+        193
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 196,
+      "span": [
+        196,
+        206
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 209,
+      "span": [
+        209,
+        218
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 221,
+      "span": [
+        221,
+        229
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 232,
+      "span": [
+        232,
+        242
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 245,
+      "span": [
+        245,
+        270
+      ]
+    },
+    {
+      "file": "files/py/test_persona.py",
+      "anchor": 273,
+      "span": [
+        273,
+        276
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 137,
+      "span": [
+        137,
+        139
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 142,
+      "span": [
+        142,
+        147
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 144,
+      "span": [
+        144,
+        146
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 169,
+      "span": [
+        169,
+        175
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 172,
+      "span": [
+        172,
+        174
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 195,
+      "span": [
+        195,
+        205
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 197,
+      "span": [
+        197,
+        199
+      ]
+    },
+    {
+      "file": "files/py/regen.py",
+      "anchor": 202,
+      "span": [
+        202,
+        204
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 17,
+      "span": [
+        17,
+        26
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 21,
+      "span": [
+        21,
+        25
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 22,
+      "span": [
+        22,
+        25
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 31,
+      "span": [
+        31,
+        32
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 35,
+      "span": [
+        35,
+        52
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 36,
+      "span": [
+        36,
+        37
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 39,
+      "span": [
+        39,
+        42
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 40,
+      "span": [
+        40,
+        41
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 43,
+      "span": [
+        43,
+        51
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 45,
+      "span": [
+        45,
+        48
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 47,
+      "span": [
+        47,
+        48
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 49,
+      "span": [
+        49,
+        50
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 65,
+      "span": [
+        65,
+        73
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 70,
+      "span": [
+        70,
+        73
+      ]
+    },
+    {
+      "file": "files/py/check-glm-rankmerge.py",
+      "anchor": 72,
+      "span": [
+        72,
+        73
+      ]
+    },
+    {
+      "file": "files/py/constructed_n4_trailing_indented_comments.py",
+      "anchor": 1,
+      "constructed": true,
+      "name": "n4_trailing_indented_comments",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/py/constructed_n4_trailing_indented_comments.py",
+      "anchor": 2,
+      "constructed": true,
+      "name": "n4_trailing_indented_comments",
+      "span": [
+        2,
+        3
+      ]
+    },
+    {
+      "file": "files/py/constructed_n4_trailing_indented_comments.py",
+      "anchor": 6,
+      "constructed": true,
+      "name": "n4_trailing_indented_comments",
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/py/constructed_n4_trailing_indented_comments.py",
+      "anchor": 12,
+      "constructed": true,
+      "name": "n4_trailing_indented_comments",
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/py/constructed_decorators_multiline_docstring.py",
+      "anchor": 1,
+      "constructed": true,
+      "name": "decorators_multiline_docstring",
+      "span": [
+        1,
+        11
+      ]
+    },
+    {
+      "file": "files/py/constructed_decorators_multiline_docstring.py",
+      "anchor": 2,
+      "constructed": true,
+      "name": "decorators_multiline_docstring",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/py/constructed_decorators_multiline_docstring.py",
+      "anchor": 3,
+      "constructed": true,
+      "name": "decorators_multiline_docstring",
+      "span": [
+        3,
+        11
+      ]
+    },
+    {
+      "file": "files/py/constructed_decorators_multiline_docstring.py",
+      "anchor": 13,
+      "constructed": true,
+      "name": "decorators_multiline_docstring",
+      "span": [
+        13,
+        18
+      ]
+    },
+    {
+      "file": "files/py/constructed_decorators_multiline_docstring.py",
+      "anchor": 20,
+      "constructed": true,
+      "name": "decorators_multiline_docstring",
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/py/constructed_multiline_call_and_single_line.py",
+      "anchor": 1,
+      "constructed": true,
+      "name": "multiline_call_and_single_line",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/py/constructed_multiline_call_and_single_line.py",
+      "anchor": 5,
+      "constructed": true,
+      "name": "multiline_call_and_single_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/py/constructed_multiline_call_and_single_line.py",
+      "anchor": 7,
+      "constructed": true,
+      "name": "multiline_call_and_single_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/py/constructed_w4_later_decorator_after_multiline.py",
+      "anchor": 1,
+      "constructed": true,
+      "name": "w4_later_decorator_after_multiline",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/py/constructed_w4_later_decorator_after_multiline.py",
+      "anchor": 4,
+      "constructed": true,
+      "name": "w4_later_decorator_after_multiline",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/py/constructed_w4_later_decorator_after_multiline.py",
+      "anchor": 5,
+      "constructed": true,
+      "name": "w4_later_decorator_after_multiline",
+      "span": [
+        5,
+        7
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "unresolved": "line 1: `CUT 3*` could not resolve a syntactic block beginning on line 3 (blank/closer line, or parse error). Use `CUT 3.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 9; use `CUT 1*` to target it.",
+    "single_line": "line 1: `CUT 212*` resolved a single-line block — line 212 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 212`. The nearest enclosing multi-line block begins at line 211 and ends at line 219; use `CUT 211*` to target it."
+  }
+}

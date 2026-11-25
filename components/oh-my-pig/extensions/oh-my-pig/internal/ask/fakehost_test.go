@@ -45,6 +45,7 @@ type fakeHost struct {
 	pending  map[string]chan json.RawMessage
 	failures map[string]string
 	tools    map[string]registeredTool
+	handlers map[string][]int
 	nextID   int
 }
 
@@ -52,7 +53,11 @@ type wireFrame struct {
 	Type     string `json:"type"`
 	ID       string `json:"id,omitempty"`
 	Register *struct {
-		Tools []registeredTool `json:"tools"`
+		Tools    []registeredTool `json:"tools"`
+		Handlers []struct {
+			Event     string `json:"event"`
+			HandlerID int    `json:"handler_id"`
+		} `json:"handlers"`
 	} `json:"register,omitempty"`
 	Response *struct {
 		Result json.RawMessage `json:"result"`
@@ -87,6 +92,7 @@ func startHost(t *testing.T, ext *sdk.Extension, opts hostOptions) *fakeHost {
 		pending:  map[string]chan json.RawMessage{},
 		failures: map[string]string{},
 		tools:    map[string]registeredTool{},
+		handlers: map[string][]int{},
 	}
 	go func() { h.runDone <- ext.RunWithConn(extSide) }()
 	first := h.read()
@@ -99,6 +105,9 @@ func startHost(t *testing.T, ext *sdk.Extension, opts hostOptions) *fakeHost {
 	}
 	for _, tl := range first.Register.Tools {
 		h.tools[tl.Name] = tl
+	}
+	for _, hd := range first.Register.Handlers {
+		h.handlers[hd.Event] = append(h.handlers[hd.Event], hd.HandlerID)
 	}
 	state, _ := json.Marshal(map[string]any{"hasUI": hasUI})
 	h.write(map[string]any{"type": "ready", "ready": map[string]any{
@@ -137,6 +146,39 @@ func (h *fakeHost) callTool(name string, params map[string]any) (json.RawMessage
 		"tool_call_id": "call-1",
 		"args":         json.RawMessage(argv),
 	})
+}
+
+func (h *fakeHost) prepareArgs(name string, params map[string]any) (map[string]any, string) {
+	h.t.Helper()
+	argv, _ := json.Marshal(params)
+	raw, errMsg := h.roundTrip(map[string]any{
+		"method": "tool_prepare_arguments",
+		"tool":   name,
+		"args":   json.RawMessage(argv),
+	})
+	if errMsg != "" {
+		return nil, errMsg
+	}
+	var out map[string]any
+	_ = json.Unmarshal(raw, &out)
+	return out, ""
+}
+
+func (h *fakeHost) emitEvent(event string, payload map[string]any) {
+	h.t.Helper()
+	ids := h.handlers[event]
+	if payload == nil {
+		payload = map[string]any{}
+	}
+	for _, id := range ids {
+		args, _ := json.Marshal(payload)
+		_, _ = h.roundTrip(map[string]any{
+			"method":     "event",
+			"event":      event,
+			"handler_id": id,
+			"args":       json.RawMessage(args),
+		})
+	}
 }
 
 func (h *fakeHost) read() wireFrame {

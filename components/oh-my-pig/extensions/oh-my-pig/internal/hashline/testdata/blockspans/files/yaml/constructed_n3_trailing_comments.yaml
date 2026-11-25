@@ -1,0 +1,8 @@
+discovery:
+  a: 1
+  b: 2
+
+# comment after discovery
+# second comment
+next:
+  c: 3

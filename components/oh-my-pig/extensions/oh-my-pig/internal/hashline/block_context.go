@@ -143,6 +143,49 @@ func FindBlockContextLines(fullLines []string, visible map[int]bool) map[int]boo
 	return ctx
 }
 
+// FindBlockContextLinesForPath returns off-window block boundary lines for visible.
+// For indentation/heading languages modeled by the block resolver (Python, YAML, Markdown),
+// any modeled multi-line block whose start or end sits in visible contributes its opposite
+// off-window boundary (matching crates/ast/src/block.rs:351 `collect_boundaries`), in addition
+// to lexical bracket context for brace/bracket constructs.
+// upstream: crates/edit/src/diff_string.rs:455-492, crates/ast/src/block.rs:351-433
+func FindBlockContextLinesForPath(path string, fullLines []string, visible map[int]bool) map[int]bool {
+	if len(visible) == 0 || len(visible) >= len(fullLines) {
+		return nil
+	}
+	lang := detectLang(path)
+	ctx := FindBlockContextLines(fullLines, visible)
+	if lang != langPython && lang != langYAML && lang != langMarkdown {
+		return ctx
+	}
+	// Check every line that could open a modeled block in this language:
+	// if the block spans >1 line and exactly one endpoint is visible, add the other endpoint.
+	for idx := range fullLines {
+		ln := uint32(idx + 1)
+		span := ResolveBlockAt(path, fullLines, ln)
+		if span == nil || span.End <= span.Start {
+			continue
+		}
+		startVis := visible[int(span.Start)]
+		endVis := visible[int(span.End)]
+		if startVis && !endVis {
+			if ctx == nil {
+				ctx = make(map[int]bool)
+			}
+			ctx[int(span.End)] = true
+		} else if endVis && !startVis {
+			if ctx == nil {
+				ctx = make(map[int]bool)
+			}
+			ctx[int(span.Start)] = true
+		}
+	}
+	if len(ctx) == 0 {
+		return nil
+	}
+	return ctx
+}
+
 // RenderLinesWithBlockContext renders visible 1-indexed lines plus any off-window
 // block boundary lines, sorted in source order, with `…` (U+2026) across gaps.
 // upstream: packages/coding-agent/src/utils/block-context.ts:329

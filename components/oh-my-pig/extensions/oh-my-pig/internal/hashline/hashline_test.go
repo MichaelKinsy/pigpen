@@ -1,205 +1,203 @@
 package hashline
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
 
-// upstream: crates/pi-edit/src/store.rs: "file_hash strips trailing spaces/tabs/CRs"
-func TestFileHashNormalization(t *testing.T) {
-	base := "hello\nworld\n"
-	withTrailing := "hello   \t\r\nworld \r\n"
-	if got, want := FileHash(withTrailing), FileHash(base); got != want {
-		t.Fatalf("FileHash trailing whitespace mismatch: got %s, want %s", got, want)
+// Tests ported from crates/edit/src/text.rs, crates/edit/src/modes/hashline/messages.rs,
+// crates/edit/src/store.rs, and crates/edit/tests/hashline_parse.rs.
+
+// upstream: crates/edit/src/text.rs: "line_ending_detection_prefers_first_terminator"
+func TestLineEndingDetectionPrefersFirstTerminator(t *testing.T) {
+	if DetectLineEnding("a\r\nb\n") != LineEndingCRLF {
+		t.Fatal("expected CRLF")
 	}
-	if len(FileHash(base)) != 4 {
-		t.Fatalf("expected 4-hex tag, got %q", FileHash(base))
+	if DetectLineEnding("a\nb\r\n") != LineEndingLF {
+		t.Fatal("expected LF")
 	}
-	if FileHash("a\n") == FileHash("b\n") {
-		t.Fatalf("distinct files unexpectedly collided")
+	if DetectLineEnding("abc") != LineEndingLF {
+		t.Fatal("expected LF")
 	}
 }
 
-// upstream: crates/pi-edit/src/text.rs: "detect_line_ending and restore_line_endings"
-func TestLineEndingsAndBOM(t *testing.T) {
-	bom, rest := StripBOM(BOM + "a\r\nb\r\n")
-	if bom != BOM {
-		t.Fatalf("expected BOM")
+// upstream: crates/edit/src/text.rs: "lf_normalization_round_trips"
+func TestLFNormalizationRoundTrips(t *testing.T) {
+	// Lone \r stays content; only \r\n normalizes to \n.
+	if got := NormalizeToLF("a\r\nb\rc\n"); got != "a\nb\rc\n" {
+		t.Fatalf("NormalizeToLF = %q, want %q", got, "a\nb\rc\n")
 	}
-	if DetectLineEnding(rest) != LineEndingCRLF {
-		t.Fatalf("expected CRLF")
+	if got := NormalizeToLF("\r\r\n界\r"); got != "\r\n界\r" {
+		t.Fatalf("NormalizeToLF = %q, want %q", got, "\r\n界\r")
 	}
-	norm := NormalizeToLF(rest)
-	if norm != "a\nb\n" {
-		t.Fatalf("unexpected normalized: %q", norm)
+	if got := RestoreLineEndings("a\nb", LineEndingCRLF); got != "a\r\nb" {
+		t.Fatalf("RestoreLineEndings = %q, want %q", got, "a\r\nb")
 	}
-	if got := RestoreLineEndings(norm, LineEndingCRLF); got != "a\r\nb\r\n" {
-		t.Fatalf("unexpected restored: %q", got)
-	}
-}
-
-// upstream: crates/pi-edit/tests/hashline_parse.rs: "parse all hashline ops"
-func TestParseAllOps(t *testing.T) {
-	patch := strings.Join([]string{
-		"[foo.go#1A2B]",
-		"PUT 1.=2:",
-		"+line1",
-		"+line2",
-		"PUT 5*:",
-		"+func f() {}",
-		"PUT <1:",
-		"+// header",
-		"PUT >3:",
-		"+// after 3",
-		"PUT >$:",
-		"+// eof",
-		"PUT >5*:",
-		"+// after block",
-		"CUT 7.=8 @saved",
-		"CUT 10*",
-		"PUT <1 @saved",
-		"PUT >2",
-		"PUT >$ @saved",
-		"PUT 3.=4 @saved",
-		"PUT 6* @saved",
-		"MV \"sub/new name.go\"",
-		"[bar.go#3C4D]",
-		"REM",
-	}, "\n")
-
-	sections, err := ParseInput(patch)
-	if err != nil {
-		t.Fatalf("ParseInput failed: %v", err)
-	}
-	if len(sections) != 2 {
-		t.Fatalf("expected 2 sections, got %d", len(sections))
-	}
-	if sections[0].Path != "foo.go" || sections[0].FileHash != "1A2B" || !sections[0].HasHash {
-		t.Fatalf("unexpected section 0 header: %+v", sections[0])
-	}
-	if sections[0].FileOp.Kind != FileOpMove || sections[0].FileOp.Dest != "sub/new name.go" {
-		t.Fatalf("unexpected move op: %+v", sections[0].FileOp)
-	}
-	if len(sections[0].Ops) != 13 {
-		t.Fatalf("expected 13 ops, got %d", len(sections[0].Ops))
-	}
-	if sections[1].FileOp.Kind != FileOpDelete {
-		t.Fatalf("expected REM on section 1")
+	bom, rest := StripBOM("\uFEFFx")
+	if bom != BOM || rest != "x" {
+		t.Fatalf("StripBOM = (%q, %q)", bom, rest)
 	}
 }
 
-// upstream: crates/pi-edit/tests/hashline_apply.rs: "apply range, gap, block, cut, and paste ops"
-func TestApplyOps(t *testing.T) {
-	src := "alpha\nbeta\ngamma\ndelta\n"
-	clip := &Clipboard{}
-
-	// Replace range + insert before + insert after + insert EOF
-	patch := "[f.txt#0000]\nPUT <1:\n+head\nPUT 2.=3:\n+BETA\nPUT >4:\n+after4\nPUT >$:\n+tail\n"
-	secs, err := ParseInput(patch)
-	if err != nil {
-		t.Fatalf("parse: %v", err)
+// upstream: crates/edit/src/store.rs: "file_hash_matches_typescript"
+func TestFileHashMatchesTypeScript(t *testing.T) {
+	cases := [][2]string{
+		{"a \n b\t\r\nc", "80BA"},
+		{"hello\n", "5BF9"},
+		{"", "5D05"},
 	}
-	res, err := ApplyOps(src, "f.txt", secs[0].Ops, clip)
-	if err != nil {
-		t.Fatalf("apply: %v", err)
-	}
-	want := "head\nalpha\nBETA\ndelta\nafter4\ntail\n"
-	if res.Content != want {
-		t.Fatalf("got:\n%q\nwant:\n%q", res.Content, want)
-	}
-
-	// CUT and anonymous paste
-	patch2 := "[f.txt#0000]\nCUT 1.=2\nPUT >$\n"
-	secs2, err := ParseInput(patch2)
-	if err != nil {
-		t.Fatalf("parse2: %v", err)
-	}
-	res2, err := ApplyOps("a\nb\nc\n", "f.txt", secs2[0].Ops, &Clipboard{})
-	if err != nil {
-		t.Fatalf("apply2: %v", err)
-	}
-	if res2.Content != "c\na\nb\n" {
-		t.Fatalf("cut+paste got %q, want %q", res2.Content, "c\na\nb\n")
-	}
-
-	// Named register paste over range
-	clip3 := &Clipboard{}
-	secs3, _ := ParseInput("[f.txt#0000]\nCUT 1.=1 @r\nPUT 3.=3 @r\n")
-	res3, err := ApplyOps("one\ntwo\nthree\n", "f.txt", secs3[0].Ops, clip3)
-	if err != nil {
-		t.Fatalf("apply3: %v", err)
-	}
-	if res3.Content != "two\none\n" {
-		t.Fatalf("named paste over range got %q, want %q", res3.Content, "two\none\n")
+	for _, tc := range cases {
+		if got := FileHash(tc[0]); got != tc[1] {
+			t.Fatalf("FileHash(%q) = %q, want %q", tc[0], got, tc[1])
+		}
 	}
 }
 
-// upstream: crates/pi-edit/tests/hashline_apply.rs: "block resolution for brace, python, and markdown"
-func TestBlockOps(t *testing.T) {
-	// Go/brace block
-	goSrc := "package p\n\nfunc a() {\n\tprintln(1)\n}\n\nfunc b() {}\n"
-	secs, err := ParseInput("[a.go#0000]\nPUT 3*:\n+func a() {\n+\tprintln(2)\n+}\n")
-	if err != nil {
-		t.Fatalf("parse go: %v", err)
+// upstream: crates/edit/src/store.rs: "file_hash_streams_the_normalized_text"
+func TestFileHashStreamsNormalizedText(t *testing.T) {
+	refHash := func(text string) string {
+		var b strings.Builder
+		start := 0
+		for start < len(text) {
+			nl := strings.IndexByte(text[start:], '\n')
+			var seg, line, suffix string
+			if nl >= 0 {
+				seg = text[start : start+nl+1]
+				line = text[start : start+nl]
+				suffix = "\n"
+			} else {
+				seg = text[start:]
+				line = seg
+			}
+			b.WriteString(strings.TrimRight(line, " \t\r"))
+			b.WriteString(suffix)
+			start += len(seg)
+		}
+		h := newXXH32(0)
+		h.update([]byte(b.String()))
+		return fmt.Sprintf("%04X", h.digest()&0xffff)
 	}
-	res, err := ApplyOps(goSrc, "a.go", secs[0].Ops, &Clipboard{})
-	if err != nil {
-		t.Fatalf("apply go: %v", err)
+	longLine := strings.Repeat("x", 100)
+	var rows []string
+	suffixes := []string{"", " ", "\t", "\r", " \r"}
+	for n := range 200 {
+		rows = append(rows, fmt.Sprintf("line %d%s", n, suffixes[n%5]))
 	}
-	if !strings.Contains(res.Content, "println(2)") || !strings.Contains(res.Content, "func b()") {
-		t.Fatalf("unexpected go block result:\n%s", res.Content)
+	cases := []string{
+		"",
+		"\n",
+		"\r\n",
+		" \t\r",
+		"no final newline",
+		"no final newline with trailing space \t",
+		"crlf\r\nlines\r\nend\r\n",
+		"crlf without final\r\nnewline\r",
+		"trailing  \nwhitespace\t\t\n  only indent kept\n   \n\t\n",
+		"lone\rcarriage\r\rreturns \r\r\n",
+		"mixed 😀 \t\r\nünïcödé  \n中文\r",
+		fmt.Sprintf("%s \n%s\r\n%s\n%s\t", longLine, longLine, longLine, longLine),
+		strings.Join(rows, "\n"),
 	}
-
-	// Python indent block with decorator
-	pySrc := "@cache\ndef greet(name):\n    print(name)\n\nx = 1\n"
-	secsPy, err := ParseInput("[g.py#0000]\nPUT 1*:\n+def greet():\n+    pass\n")
-	if err != nil {
-		t.Fatalf("parse py: %v", err)
-	}
-	resPy, err := ApplyOps(pySrc, "g.py", secsPy[0].Ops, &Clipboard{})
-	if err != nil {
-		t.Fatalf("apply py: %v", err)
-	}
-	if resPy.Content != "def greet():\n    pass\n\nx = 1\n" {
-		t.Fatalf("unexpected py result: %q", resPy.Content)
-	}
-
-	// Markdown heading block + PUT >N*:
-	mdSrc := "# Title\n\n## Sub\ntext\n\n# Next\nmore\n"
-	secsMd, err := ParseInput("[doc.md#0000]\nPUT >1*:\n+\n+## Inserted\n")
-	if err != nil {
-		t.Fatalf("parse md: %v", err)
-	}
-	resMd, err := ApplyOps(mdSrc, "doc.md", secsMd[0].Ops, &Clipboard{})
-	if err != nil {
-		t.Fatalf("apply md: %v", err)
-	}
-	if !strings.Contains(resMd.Content, "## Inserted\n\n# Next") {
-		t.Fatalf("unexpected md result: %q", resMd.Content)
+	for _, text := range cases {
+		if got, want := FileHash(text), refHash(text); got != want {
+			t.Fatalf("FileHash(%q) = %q, want %q", text, got, want)
+		}
 	}
 }
 
-// upstream: crates/pi-edit/src/modes/hashline/mismatch.rs: "format_mismatch_message"
-func TestMismatchMessage(t *testing.T) {
-	msg := FormatMismatchMessage(MismatchDetails{
-		Path:             "foo.go",
-		ExpectedFileHash: "1111",
-		ActualFileHash:   "2222",
-		HashRecognized:   true,
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_format_anchored_context"
+func TestFormatAnchoredContext(t *testing.T) {
+	lines := []string{
+		"alpha", "bravo", "charlie", "delta", "echo",
+		"foxtrot", "golf", "hotel", "india", "juliet",
+	}
+	got := FormatAnchoredContext([]uint32{2, 8}, lines)
+	want := []string{
+		" 1:alpha",
+		"*2:bravo",
+		" 3:charlie",
+		" 4:delta",
+		"...",
+		" 6:foxtrot",
+		" 7:golf",
+		"*8:hotel",
+		" 9:india",
+		" 10:juliet",
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("got:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	if oor := FormatAnchoredContext([]uint32{999}, lines); len(oor) != 0 {
+		t.Fatalf("expected empty for OOR anchor, got %v", oor)
+	}
+}
+
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_invalid_absolute_range_message"
+func TestInvalidAbsoluteRangeMessage(t *testing.T) {
+	msg := InvalidAbsoluteRangeMessage(12, 5, 3, AbsoluteRangeReplace, &BlockSpan{Start: 5, End: 10}, "", false)
+	want := "line 12: Invalid absolute range: start 5, end 3. The value after `.=` is an absolute source line, not a line count or replacement length. For one line use `PUT 5:`. For 3 lines starting at 5, use `PUT 5.=7:`. The syntactic block beginning at 5 ends at 10, so `PUT 5*:` is also valid."
+	if msg != want {
+		t.Fatalf("got:\n%s\nwant:\n%s", msg, want)
+	}
+	msgCut := InvalidAbsoluteRangeMessage(10, 4, 1, AbsoluteRangeCut, nil, "clip", true)
+	wantCut := "line 10: Invalid absolute range: start 4, end 1. The value after `.=` is an absolute source line, not a line count or replacement length. For one line use `CUT 4 @clip`. For 1 lines starting at 4, use `CUT 4.=4 @clip`."
+	if msgCut != wantCut {
+		t.Fatalf("got:\n%s\nwant:\n%s", msgCut, wantCut)
+	}
+}
+
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_empty_register_paste_warning"
+func TestEmptyRegisterPasteWarning(t *testing.T) {
+	if got, want := EmptyRegisterPasteWarning("temp", nil), "`@temp` was empty — no `CUT … @temp` precedes this op in this call and no persisted register has that name — so nothing was pasted."; got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	if got, want := EmptyRegisterPasteWarning("temp", []string{"foo", "bar"}), "`@temp` was empty — no `CUT … @temp` precedes this op in this call and no persisted register has that name — so nothing was pasted. Available registers: `@foo`, `@bar`."; got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_unseen_lines_message"
+func TestUnseenLinesMessage(t *testing.T) {
+	msgEmpty := UnseenLinesMessage("src/foo.ts", []uint32{5, 6, 7, 10}, "AB12", UnseenLinesReveal{})
+	wantEmpty := "This edit anchors to lines 5-7, 10 of src/foo.ts that [src/foo.ts#AB12] never displayed (it showed a partial range, a search hit, or a folded summary). Re-read them in full first with a ranged read like `src/foo.ts:5-7,10` — it skips summarization and mints a fresh tag (a plain re-read just re-folds them) — then re-issue the edit."
+	if msgEmpty != wantEmpty {
+		t.Fatalf("got:\n%s\nwant:\n%s", msgEmpty, wantEmpty)
+	}
+	msgReveal := UnseenLinesMessage("src/foo.ts", []uint32{5}, "AB12", UnseenLinesReveal{
+		Lines: []RevealedLine{{Line: 5, Text: "let x = 1;"}},
 	})
-	if !strings.Contains(msg, "Edit rejected for foo.go: file changed between read and edit.") {
-		t.Fatalf("unexpected recognized mismatch: %s", msg)
+	wantReveal := "This edit anchors to lines 5 of src/foo.ts that [src/foo.ts#AB12] never displayed (it showed a partial range, a search hit, or a folded summary). Actual file content at those lines:\n  5:let x = 1;\nVerify the content matches what you intend to touch, then re-issue the edit with the same [path#tag] header — a straight retry now succeeds without a re-read. If the content does NOT match, fix your line numbers."
+	if msgReveal != wantReveal {
+		t.Fatalf("got:\n%s\nwant:\n%s", msgReveal, wantReveal)
 	}
-
-	msgUnrec := FormatMismatchMessage(MismatchDetails{
-		Path:             "foo.go",
-		ExpectedFileHash: "AAAA",
-		ActualFileHash:   "2222",
-		HashRecognized:   false,
-		TagOriginPaths:   []string{"/other/bar.go"},
+	msgTrunc := UnseenLinesMessage("src/foo.ts", []uint32{5, 6}, "AB12", UnseenLinesReveal{
+		Lines:     []RevealedLine{{Line: 5, Text: "let x = 1;"}},
+		Truncated: true,
 	})
-	if !strings.Contains(msgUnrec, "hash #AAAA is not from this session.") ||
-		!strings.Contains(msgUnrec, "Hash #AAAA was issued in this session for /other/bar.go.") {
-		t.Fatalf("unexpected unrecognized mismatch: %s", msgUnrec)
+	wantTrunc := "This edit anchors to lines 5-6 of src/foo.ts that [src/foo.ts#AB12] never displayed (it showed a partial range, a search hit, or a folded summary). Preview of the actual file content at the first 1 unseen line(s):\n  5:let x = 1;\nThe range exceeds the inline preview cap — re-read the remainder with `src/foo.ts:5-6` before re-issuing the edit."
+	if msgTrunc != wantTrunc {
+		t.Fatalf("got:\n%s\nwant:\n%s", msgTrunc, wantTrunc)
+	}
+}
+
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_block_single_line_message"
+func TestBlockSingleLineMessage(t *testing.T) {
+	msg := BlockSingleLineMessage(15, BlockOpReplace, nil)
+	want := "`PUT 15*:` resolved a single-line block — line 15 is a bare statement, not the opening line of a multi-line construct. For only this statement use `PUT 15:`."
+	if msg != want {
+		t.Fatalf("got %q, want %q", msg, want)
+	}
+	msgEnc := BlockSingleLineMessage(15, BlockOpInsertAfter, &BlockSpan{Start: 10, End: 20})
+	wantEnc := "`PUT >15*:` resolved a single-line block — line 15 is a bare statement, not the opening line of a multi-line construct. For only this statement use `PUT >15:`. The nearest enclosing multi-line block begins at line 10 and ends at line 20; use `PUT >10*:` to target it."
+	if msgEnc != wantEnc {
+		t.Fatalf("got %q, want %q", msgEnc, wantEnc)
+	}
+}
+
+// upstream: crates/edit/src/modes/hashline/messages.rs: "test_json_quote"
+func TestJSONQuote(t *testing.T) {
+	if got, want := JSONQuote("hello \"world\"\n\t\\"), `"hello \"world\"\n\t\\"`; got != want {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }

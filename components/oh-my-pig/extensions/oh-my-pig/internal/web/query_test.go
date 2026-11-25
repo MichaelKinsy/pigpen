@@ -314,14 +314,14 @@ func TestApplyQueryConstraints(t *testing.T) {
 		}
 	})
 
-	// upstream: test/web/search/query.test.ts: "drops a constraint that would eliminate every result and reports it"
+	// upstream: test/web/search/query.test.ts: "relaxes a non-scope directive that would eliminate every result and reports it"
 	t.Run("drops a constraint that would eliminate every result", func(t *testing.T) {
-		q := ParseSearchQuery("install site:nonexistent.example")
+		q := ParseSearchQuery("install intitle:nonexistent")
 		res := ApplyQueryConstraints(sources, q)
 		if len(res.Sources) != len(sources) {
 			t.Fatalf("expected all %d sources kept, got %d", len(sources), len(res.Sources))
 		}
-		if !reflect.DeepEqual(res.Dropped, []string{"site:nonexistent.example"}) {
+		if !reflect.DeepEqual(res.Dropped, []string{"intitle:nonexistent"}) {
 			t.Fatalf("Dropped = %v", res.Dropped)
 		}
 	})

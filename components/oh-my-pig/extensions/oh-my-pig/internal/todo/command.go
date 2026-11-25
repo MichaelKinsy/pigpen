@@ -15,6 +15,8 @@ const todoUsage = `Usage: /todo <verb> [args]
   /todo                              Show current todos
   /todo expand                       Show every phase and task in the HUD
   /todo collapse                     Restore the bounded HUD preview
+  /todo edit                         Edit todos as Markdown in the editor
+  /todo copy                         Copy todos as Markdown to the clipboard
   /todo export [<path>]              Write todos to file (default: TODO.md)
   /todo import [<path>]              Replace todos from file (default: TODO.md)
   /todo append [<phase>] <task...>   Append a task; phase fuzzy-matched or auto-created
@@ -171,16 +173,20 @@ func (a *app) handleCommand(ctx sdk.Context, args string) error {
 
 	switch verb {
 	case "expand":
-		a.setExpanded(true)
+		a.setExpanded(ctx, true)
 		a.refreshWidget(ctx)
 		return nil
 	case "collapse":
-		a.setExpanded(false)
+		a.setExpanded(ctx, false)
 		a.refreshWidget(ctx)
 		return nil
 	case "help", "?":
 		ctx.Notify(todoUsage, "info")
 		return nil
+	case "copy":
+		return a.cmdCopy(ctx)
+	case "edit":
+		return a.cmdEdit(ctx)
 	case "export":
 		return a.cmdExport(ctx, rest)
 	case "import":
@@ -199,6 +205,53 @@ func (a *app) handleCommand(ctx sdk.Context, args string) error {
 		ctx.Notify(fmt.Sprintf("Unknown /todo verb %q.\n%s", verb, todoUsage), "error")
 		return nil
 	}
+}
+func (a *app) cmdCopy(ctx sdk.Context) error {
+	phases := a.getPhases(ctx)
+	if len(phases) == 0 {
+		ctx.Notify("No todos to copy.", "warning")
+		return nil
+	}
+	if err := ctx.CopyToClipboard(PhasesToMarkdown(phases)); err != nil {
+		ctx.Notify(err.Error(), "error")
+		return nil
+	}
+	ctx.Notify("Copied todos as Markdown to clipboard.", "info")
+	return nil
+}
+
+func (a *app) cmdEdit(ctx sdk.Context) error {
+	if !ctx.HasUI() {
+		ctx.Notify("/todo edit requires interactive mode.", "error")
+		return nil
+	}
+	current := a.getPhases(ctx)
+	initial := "# Todos\n- [ ] (replace this with your tasks)\n"
+	if len(current) > 0 {
+		initial = PhasesToMarkdown(current)
+	}
+	raw, ok, err := ctx.Editor("Edit todos (Markdown)", initial)
+	if err != nil {
+		ctx.Notify("Failed to edit todos: "+err.Error(), "error")
+		return nil
+	}
+	if !ok || raw == nil {
+		ctx.Notify("Editor exited without saving; todos unchanged.", "warning")
+		return nil
+	}
+	edited, _ := raw.(string)
+	phases, errs := MarkdownToPhases(edited)
+	if len(errs) > 0 {
+		ctx.Notify("Could not parse Markdown:\n  "+strings.Join(errs, "\n  "), "error")
+		return nil
+	}
+	a.commitUserEdit(ctx, phases, "/todo edit", false)
+	taskCount := 0
+	for _, p := range phases {
+		taskCount += len(p.Tasks)
+	}
+	ctx.Notify(fmt.Sprintf("Todos updated from editor: %d phase(s), %d task(s).", len(phases), taskCount), "info")
+	return nil
 }
 
 func (a *app) cmdExport(ctx sdk.Context, rest string) error {
@@ -317,7 +370,17 @@ func (a *app) cmdMutateStatus(ctx sdk.Context, rest string, target TodoStatus) e
 	current := a.getPhases(ctx)
 	trimmed := strings.TrimSpace(rest)
 	if trimmed == "" {
-		next, errs := ApplyOpsToPhases(current, []TodoParams{{Op: op}})
+		var all []string
+		for _, p := range current {
+			for _, t := range p.Tasks {
+				all = append(all, t.Content)
+			}
+		}
+		next := current
+		var errs []string
+		if len(all) > 0 {
+			next, errs = ApplyOpsToPhases(current, []TodoParams{{Op: op, Tasks: all}})
+		}
 		if len(errs) > 0 {
 			ctx.Notify(strings.Join(errs, "; "), "error")
 			return nil
@@ -389,6 +452,7 @@ func (a *app) cmdRemove(ctx sdk.Context, rest string) error {
 func (a *app) commitUserEdit(ctx sdk.Context, next []TodoPhase, action string, removed bool) {
 	a.setPhases(ctx, next)
 	_ = ctx.AppendEntry(UserTodoEditCustomType, map[string]any{"phases": next})
+	a.syncHudState(ctx, nil)
 	a.refreshWidget(ctx)
 	reminder := BuildManualEditReminder(action, next, removed)
 	_ = ctx.SendMessage("todo-user-edit", reminder, false, sdk.SendMessageOptions{})

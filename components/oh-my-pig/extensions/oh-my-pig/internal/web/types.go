@@ -39,6 +39,8 @@ var SearchProviderLabels = map[string]string{
 	"zai":        "Z.AI",
 	"exa":        "Exa",
 	"tinyfish":   "TinyFish",
+	"keenable":   "Keenable",
+	"sofya":      "Sofya",
 	"jina":       "Jina",
 	"kagi":       "Kagi",
 	"tavily":     "Tavily",
@@ -55,6 +57,7 @@ var SearchProviderLabels = map[string]string{
 	"google":     "Google",
 	"mojeek":     "Mojeek",
 	"public":     "Public Web",
+	"hackernews": "Hacker News",
 }
 
 // GetSearchProviderLabel returns the human-readable label for a provider id.
@@ -109,11 +112,21 @@ type SearchResponse struct {
 	AuthMode         string           `json:"authMode,omitempty"`
 }
 
+// SearchFailureDetail records one provider that failed before another answered, or before the search gave up.
+// upstream: packages/coding-agent/src/web/search/types.ts:7-15
+type SearchFailureDetail struct {
+	Provider string `json:"provider"`
+	Label    string `json:"label"`
+	Reason   string `json:"reason"`
+	Status   int    `json:"status,omitempty"`
+}
+
 // SearchResultDetails is stored in ToolResult.Details for web_search calls.
-// upstream: packages/coding-agent/src/web/search/types.ts:6-9
+// upstream: packages/coding-agent/src/web/search/types.ts:17-22
 type SearchResultDetails struct {
-	Response SearchResponse `json:"response"`
-	Error    string         `json:"error,omitempty"`
+	Response SearchResponse        `json:"response"`
+	Error    string                `json:"error,omitempty"`
+	Failures []SearchFailureDetail `json:"failures,omitempty"`
 }
 
 // SearchProviderError carries provider id and optional HTTP status code.
@@ -229,7 +242,7 @@ func recencyAfterDate(recency string) string {
 }
 
 // formatAge formats age in seconds into a compact human-readable string.
-// upstream: packages/utils/src/format.ts:102-116
+// upstream: packages/utils/src/format.ts:106-122
 func formatAge(ageSeconds *int) string {
 	if ageSeconds == nil || *ageSeconds == 0 {
 		return ""
@@ -240,7 +253,11 @@ func formatAge(ageSeconds *int) string {
 	days := hours / 24
 	weeks := days / 7
 	months := days / 30
+	years := days / 365
 
+	if years > 0 {
+		return fmt.Sprintf("%dy ago", years)
+	}
 	if months > 0 {
 		return fmt.Sprintf("%dmo ago", months)
 	}

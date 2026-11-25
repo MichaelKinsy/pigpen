@@ -1,0 +1,81 @@
+# internal/urls — Upstream Tracking
+
+- Upstream pin: `v19.1.1` (`31ffee513f`)
+- Upstream directory: `packages/coding-agent/src/internal-urls/` (plus `packages/tui/src/tools/read.ts` for `splitInternalUrlSel`, `packages/tui/src/tools/url-scheme-host.ts`, `packages/coding-agent/src/tools/doc-topics.ts`, `packages/coding-agent/src/tools/eval-doc-topics.ts`, `packages/coding-agent/src/tools/conflict-detect.ts`, `packages/coding-agent/src/tools/conflict-uri.ts`, `packages/tui/src/tools/conflict-detect.ts`)
+
+## Upstream files followed
+
+| File | Ported to |
+|---|---|
+| `internal-urls/types.ts` | `api.go`, `router.go` |
+| `internal-urls/parse.ts` | `parse.go` |
+| `internal-urls/router.ts` | `router.go` |
+| `tui/src/tools/read.ts` (`splitInternalUrlSel`, `hoistChunkRaw`, `foldListColons`) | `selectors.go` |
+| `internal-urls/filesystem-resource.ts` | `filesystem.go`, `errno_unix.go`, `errno_windows.go` |
+| `internal-urls/local-root.ts`, `local-protocol.ts`, `prompts/internal-urls/local.md` | `local.go`, `prompts/local.md` |
+| `internal-urls/skill-protocol.ts`, `prompts/internal-urls/skill.md` | `skill.go`, `prompts/skill.md` |
+| `internal-urls/rule-protocol.ts`, `prompts/internal-urls/rule.md` | `rule.go`, `prompts/rule.md` |
+| `internal-urls/out-protocol.ts`, `prompts/internal-urls/out.md` | `out.go`, `prompts/out.md` |
+| `internal-urls/help-protocol.ts`, `tools/doc-topics.ts`, `tools/eval-doc-topics.ts`, `prompts/internal-urls/help-reference.md`, `prompts/tools/{read-sources,eval-helpers,eval-judge,eval-agents}.md` | `help.go`, `prompts/{help-reference,read-sources,eval-helpers,eval-judge,eval-agents}.md` |
+| `internal-urls/attachment-protocol.ts` | `attachment.go` |
+| `internal-urls/conflict-protocol.ts`, `tools/conflict-detect.ts`, `tools/conflict-uri.ts`, `tui/src/tools/conflict-detect.ts` | `conflict.go` |
+| `internal-urls/mcp-protocol.ts`, `prompts/internal-urls/mcp.md` | `mcp.go`, `prompts/mcp.md` |
+
+## Prompt template default branches
+
+- `prompts/read-sources.md`: `BINARY_VIEWS = false` (default when `disasm.backend` is unset).
+- `prompts/eval-helpers.md`, `prompts/eval-judge.md`, `prompts/eval-agents.md`: `py = true`, `js = true`, `evalTools = true`, `spawns = true`, `spawnDefaultAgent = "task"`, `waitTool = true`, `autoProvision = true`, `perCallModel = false`, `eagerDelegation = false`.
+
+## Settings read by omp
+
+| Setting | Default | Honoured |
+|---|---|---|
+| `out.enabled` | follows `tuiTranscript` (true in interactive TUI, false otherwise) | Closed by default until a host/area installs `SetOutPolicyProvider`. |
+| `disasm.backend` | unset | Default branch (`BINARY_VIEWS = false`) embedded in `prompts/read-sources.md`. |
+| `memory.backend` | unset | Not ported (see below). |
+| `security.enabled` | `false` | Not ported (see below). |
+| `vault.enabled` | `false` | Not ported (see below). |
+
+## Wiring owned by integrator / other areas
+
+The following hooks live in `internal/urls` and require wiring from the integrator or sibling areas for full end-to-end behaviour:
+- `urls.RegisterExtension(e)` — call in `extension.go` `registrars`.
+- `urls.SetLocalRootProvider(fn)` — wired by the `agents` lane so child/subagent sessions resolve `local://` to their parent's local root (see `local.go`).
+- `urls.SetEvalPreludeDocsProvider(fn)` — wired in `extension.go` or `internal/eval` to populate `help://eval/<prelude>` from `eval.EnabledPreludes(ctx)` without an import cycle.
+- `urls.SetOutPolicyProvider(fn)` — wired by the settings/prompt area to enable `out://` for top-level interactive TUI sessions and refuse subagents / non-TUI modes (`out://` is closed by default until wired).
+- `urls.SetConflictWriteHooks(hooks)` — wired by `internal/files` so `conflict://` writes apply the session display-mode gate (`StripContent`), record hashline snapshots (`[path#TAG]` header), and record file-change events (by default `hashline.StripHashlinePrefixes` + loose-header fallback runs, matching omp's default hashline display mode).
+- `urls.SetActiveRules` / `urls.SetRulesProvider`, `urls.RegisterAttachment` / `urls.SetAttachmentsProvider`, and `urls.SessionConflictHistory(c).Register(...)` — producers in other areas (`prompt`/rulebook, `files` read/attachment intake) must call these; until wired, `rule://`, `attachment://`, and `conflict://` report no entries registered.
+
+## Tests ported
+
+See `urls_test.go` and `conflict_test.go` (ported test groups carry `// upstream: <file>: ...` comments naming the upstream file and cases):
+- `test/marketplace/parse-internal-url.test.ts`: 17 cases (standard URLs, colons in host, `%3A` decoding, empty host, port in host, hyphens/dots, uppercase scheme, fragment, invalid/empty inputs, plus `ExtractScheme` guards and lenient query parsing).
+- `test/internal-urls/router-spec-contracts.test.ts`: register invariants, `Normalize` single-slash aliases and prefixed paths, `IsGlob` query vs path globs, `RequireLocal` diagnostics, `Split`/`PeelWriteSelector`, `Describe`/`Reference` omp scheme order, `CanResolve` fallback, `Enumerate`.
+- `test/internal-urls/local-protocol.test.ts`: listing, reading, locating, path traversal (`..`, `%2E%2E`, `..hidden`, `d/..x`), session-ID fallback sanitization, Windows long-path short root, symlink escape, creatable containment, symlink loop and file-ancestor error wording (naming URL, never host path), dangling symlink local root, `SetLocalRootProvider` precedence over override and ENOENT against caller root, `ListLocalFiles` newest-first order, `CopyLocalArtifacts`, binary guard, non-`.jsonl` session file fallback.
+- `test/skill-url-containment.test.ts`: host loaded skills via fake SDK `GetSystemPromptOptions` and `before_agent_start`, bare URI vs `Directory: true`, base dir escaping plugin root, in-root symlinks, escaping symlinks, dangling symlinks, uncontained skills unrestricted, namespaced skills, `a/../b.md` normalization, disk discovery for zero SDK context.
+- `test/internal-urls/rule-protocol.test.ts`: context-scoped rules, no leak to unscoped caller, global fallback, scoped completion, `Locate`.
+- `test/internal-urls/out-protocol.test.ts`: `PromptDoc` gating, closed by default without policy provider, enabled/disabled/subagent policy, blank/oversize (>64 KiB) rejection, write-only `Resolve`, no `SendMessage` host call on write.
+- `test/tools/help-selectors.test.ts`: `ParseHelpURL`, `help://read` (`sources`, `urls`), `help://eval` order (`judge`, `helpers`, `agents`, preludes), unknown topic listing available names, active tool with no doc topics vs absent tool.
+- `test/internal-urls/mcp-protocol.test.ts`: empty `mcp://` error, URI extraction preserving query/trailing slash/literal semicolon, `PromptDoc` returns `""` while SDK lacks resource reads, explicit SDK-gap error.
+- `test/tools/conflict-detect.test.ts`: `ScanConflictLines` (9), `ConflictHistory` (3), `parseConflictURI` (8), `RecoverConflictURIPrefix` (2), `spliceConflict` (10), boundary-echo repair (7), `renderConflictRegion` (7), `expandConflictTokens` (8).
+- `test/tools/conflict-integration.test.ts`: single-block splice, echo trimming note, two blocks in either order, `@both`, empty sides, side ending like context, `@base` on 2-way, unknown id & capped registered list (`+N more`), malformed URIs, scoped write refused, stale file, hashline prefix stripping (`42:cleanline` via `hashline.StripHashlinePrefixes`, loose-header fallback, non-sequential/plain preservation, and mode-gate hook), snapshot header hook, uniform bulk, per-id bulk & subset & unknown id & 6 malformed/literal directive cases, relocation, 3 BOM cases.
+- `test/tools/conflict-live-registry.test.ts`: vanished markers, changed-in-place block retired, shifted lines keep id, deleted file retires ids, BOM-prefixed CRLF diff3 block across stream chunks without trailing newline.
+
+## Not ported
+
+| Feature / Scheme | Reason |
+|---|---|
+| `mcp://` resource reading (`resources/list`, `resources/read`) | PiG's extension SDK exposes `RegisterMcpServer` and `GetMcpServers`, but does not expose MCP client resource listing or `resources/read`. `MCPHandler` returns `""` from `PromptDoc` so it is not advertised until readable, and returns an explicit SDK-gap error if called. |
+| `skill://` MCP resource fallback (`skill://` advertised by MCP server) | Blocked by the same PiG SDK gap (no MCP client `resources/list` / `resources/read`). |
+| `skill://` `context.containSkillPaths` flag and stale-skill plugin-upgrade rediscovery | PiG's SDK `SystemPromptSkill` does not carry omp's Agent Plugin `containRoot` or plugin registry version metadata; `SkillEntry.ContainRoot` enforces plugin containment whenever populated. |
+| `local://` `No session - local:// unavailable` error on zero context | `LocalRoot(sdk.Context{})` falls back to `$TMPDIR/omp-local/session` so standalone/test callers and tools without a live host connection still get a deterministic scratch root. |
+| `local://` 2 s completion listing LRU cache | `LocalHandler.Complete` walks the small session scratch directory directly; no external cache dependency needed. |
+| `conflict://` `recordFileChange` / `bumpFileMutationVersion` | Depends on omp's edit/session file-change store in `internal/files`; exposed via `ConflictWriteHooks.OnFileWritten` for `internal/files` to wire. |
+| `omp://` harness docs (`omp-protocol.ts`, `docs-index.ts`, `omp-scope.ts`) | `omp://` serves omp's own 100+ internal architecture/CLI/settings docs (`docs/*.md`); serving omp's docs inside PiG would make false claims about the running harness, and this Piglet has no separate embedded harness docs corpus. Omitted from `RegisterExtension`. |
+| `ssh://` (`ssh-protocol.ts`) | Not a thin wrapper over `ssh`/`scp`: depends on omp's ControlMaster `ConnectionManager`, POSIX `transferShell` probe, `ssh.json` capability discovery, `~/.ssh/config` parser, and remote POSIX shell transfer scripts. |
+| `vault://` (`vault-protocol.ts`) | Obsidian CLI wrapper and vault index (`obsidian` binary, 850 lines of Obsidian-specific ops); requires Obsidian app and `vault.enabled` setting subsystem. |
+| `memory://` (`memory-protocol.ts`) | Depends on omp's `mnemopi` / `hindsight` memory backends and `AgentRegistry` session memory roots. |
+| `security://` (`security-protocol.ts`) | Depends on omp's `SecurityStore` and vendor security-analysis adapters. |
+| `agent://`, `history://`, `proc://`, `cfg://`, `issue://`, `pr://`, `mr://` | Owned by other lanes (`agents`, `shell`, `settings`, `git`) and registered via `urls.Register(h)`. |
+| `InternalUrlFilesystem` (`url-filesystem.ts`) | Rust `pi-natives` shell VFS bridge (`ShellFsOp`); PiG's bash tool does not mount a native shell VFS callback. |
+| `Router.WriteTier` / `Router.ReadTier` approval ranking | Depends on omp's `ToolApprovalDecision` / `TIER_RANK` approval engine outside `internal/urls`. |

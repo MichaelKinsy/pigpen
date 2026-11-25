@@ -748,15 +748,33 @@
       "upstream": {
         "name": "oh-my-pi",
         "url": "https://github.com/can1357/oh-my-pi",
-        "commit": "4df653426f40ee1eb78ef408528eb9e6a5275b9d",
+        "commit": "31ffee513f27a01bba7d4dfbe12bae239cdc646a",
         "license": "MIT",
         "author": "Can Bölük, Stencil Labs, Inc.",
         "path": "packages/coding-agent"
       },
+      "additionalUpstreams": [
+        {
+          "name": "@babel/parser",
+          "url": "https://github.com/babel/babel",
+          "commit": "54405f212b4e6a40f0e1dfba9293b0e3f3dd20e3",
+          "license": "MIT",
+          "author": "The Babel Team",
+          "path": "packages/babel-parser"
+        },
+        {
+          "name": "playwright",
+          "url": "https://github.com/microsoft/playwright",
+          "commit": "1cc5a90cfa3eaa430b1a991963100f95126caa47",
+          "license": "Apache-2.0",
+          "author": "Microsoft Corporation",
+          "path": "packages"
+        }
+      ],
       "targetPackage": "components/oh-my-pig",
       "lane": "pigpen-oh-my-pig",
       "status": "porting",
-      "credit": "Go port of parts of omp (oh-my-pi), https://github.com/can1357/oh-my-pi, by Can Bölük, Stencil Labs, Inc. (MIT), at commit 4df653426f40ee1eb78ef408528eb9e6a5275b9d.",
+      "credit": "Go port of parts of omp (oh-my-pi), https://github.com/can1357/oh-my-pi, by Can Bölük, Stencil Labs, Inc. (MIT), at release tag v19.1.1, commit 31ffee513f27a01bba7d4dfbe12bae239cdc646a. It embeds, unmodified, omp's JS cell rewriter built with @babel/parser 7.29.9 (https://github.com/babel/babel, MIT) by The Babel Team, and the ARIA-snapshot bundle omp builds from playwright 1.61.0 (https://github.com/microsoft/playwright, Apache-2.0) by Microsoft Corporation.",
       "notes": "An homage, not a Pi extension: omp is a fork of Pi and these are its built-in tools, so there is no Pi oracle. Each area is proved by tests ported from omp's own and by a side-by-side run against omp. piglets/oh-my-pig/PARITY.md is the inventory."
     }
   ]

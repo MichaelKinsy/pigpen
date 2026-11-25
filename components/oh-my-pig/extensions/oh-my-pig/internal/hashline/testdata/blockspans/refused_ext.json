@@ -1,0 +1,77 @@
+{
+  "lang": "refused_ext",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py",
+  "total": 9,
+  "omp_resolved": 0,
+  "omp_refused": 9,
+  "cases": [
+    {
+      "file": "files/refused_ext/constructed_jsonc.jsonc",
+      "anchor": 1,
+      "constructed": true,
+      "name": "jsonc",
+      "refused": "line 1: `CUT 1*` could not resolve a syntactic block beginning on line 1 (block locators need a tree-sitter grammar, and this file type has none). Use `CUT 1.=M` with explicit lines."
+    },
+    {
+      "file": "files/refused_ext/constructed_jsonc.jsonc",
+      "anchor": 3,
+      "constructed": true,
+      "name": "jsonc",
+      "refused_kind": "no_grammar"
+    },
+    {
+      "file": "files/refused_ext/constructed_hxx.hxx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "hxx",
+      "refused_kind": "no_grammar"
+    },
+    {
+      "file": "files/refused_ext/constructed_pyw.pyw",
+      "anchor": 1,
+      "constructed": true,
+      "name": "pyw",
+      "refused_kind": "no_grammar"
+    },
+    {
+      "file": "files/refused_ext/constructed_proto.proto",
+      "anchor": 2,
+      "constructed": true,
+      "name": "proto",
+      "refused": "line 1: `CUT 2*` could not resolve a syntactic block beginning on line 2 (blank/closer line, or parse error). Use `CUT 2.=M` with explicit lines."
+    },
+    {
+      "file": "files/refused_ext/constructed_sol.sol",
+      "anchor": 1,
+      "constructed": true,
+      "name": "sol",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/refused_ext/constructed_zig.zig",
+      "anchor": 1,
+      "constructed": true,
+      "name": "zig",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/refused_ext/constructed_star.star",
+      "anchor": 1,
+      "constructed": true,
+      "name": "star",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/refused_ext/constructed_bzl.bzl",
+      "anchor": 1,
+      "constructed": true,
+      "name": "bzl",
+      "refused_kind": "unresolved"
+    }
+  ],
+  "refusal_samples": {
+    "no_grammar": "line 1: `CUT 1*` could not resolve a syntactic block beginning on line 1 (block locators need a tree-sitter grammar, and this file type has none). Use `CUT 1.=M` with explicit lines.",
+    "unresolved": "line 1: `CUT 2*` could not resolve a syntactic block beginning on line 2 (blank/closer line, or parse error). Use `CUT 2.=M` with explicit lines."
+  }
+}

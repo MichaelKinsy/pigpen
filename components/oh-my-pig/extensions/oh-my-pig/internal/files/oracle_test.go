@@ -76,7 +76,7 @@ func TestOracleExactCases(t *testing.T) {
 		"21:\t}",
 		"22:\treturn b.String()",
 		"",
-		"[Showing lines 15-22 of 32. Use :23 to continue]",
+		"[Showing lines 15-22 of 32. Use :23- to continue]",
 	}, "\n")
 	if res1.Content != want1 {
 		t.Fatalf("read :16-19 mismatch:\ngot:\n%s\n\nwant:\n%s", res1.Content, want1)
@@ -181,7 +181,7 @@ func TestOracleExactCases(t *testing.T) {
 		"29:",
 		"30:func main() {",
 		"31:\tg := Greeter{Name: \"pig\"}",
-		"32:\tfmt.Println(g.Greet(helper(1)))",
+		"…",
 		"33:}",
 	}, "\n")
 	if edit1Res.Content != wantEdit1 {
@@ -217,15 +217,17 @@ func TestOracleExactCases(t *testing.T) {
 	}(), "func main() {", "func main() { // changed", 1)), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, err6 := executeEdit(sdk.Context{}, store, dir, "[sample.go#0AC9]\nPUT 30*:\n+func main() {\n+\tfmt.Println(\"done\")\n+}\n")
-	if err6 == nil {
+	res6, err6 := executeEdit(sdk.Context{}, store, dir, "[sample.go#0AC9]\nPUT 30*:\n+func main() {\n+\tfmt.Println(\"done\")\n+}\n")
+	if err6 != nil {
+		t.Fatalf("expected nil Go error with IsError:true, got %v", err6)
+	}
+	if !res6.IsError {
 		t.Fatalf("expected stale tag rejection when target block changed")
 	}
-	if !strings.Contains(err6.Error(), "Edit rejected for sample.go: file changed between read and edit.") ||
-		!strings.Contains(err6.Error(), "\n 28:\n 29:\n*30:func main() { // changed\n 31:") {
-		t.Fatalf("unexpected stale tag rejection:\n%v", err6)
+	if !strings.Contains(res6.Content, "Edit rejected for sample.go: file changed between read and edit.") ||
+		!strings.Contains(res6.Content, "\n 28:\n 29:\n*30:func main() { // changed\n 31:") {
+		t.Fatalf("unexpected stale tag rejection:\n%v", res6.Content)
 	}
-
 	// Restore #DA7A on disk for case 7.
 	bCur, _ := os.ReadFile(samplePath)
 	if err := os.WriteFile(samplePath, []byte(strings.Replace(string(bCur), "func main() { // changed", "func main() {", 1)), 0o644); err != nil {

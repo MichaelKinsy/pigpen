@@ -1,0 +1,2776 @@
+{
+  "lang": "ts",
+  "sample": "sample2",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample2",
+  "total": 455,
+  "omp_resolved": 162,
+  "omp_refused": 293,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 86*` could not resolve a syntactic block beginning on line 86 (blank/closer line, or parse error). Use `CUT 86.=M` with explicit lines. The nearest enclosing multi-line block begins at line 81 and ends at line 86; use `CUT 81*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 86,
+      "refused": "line 1: `CUT 86*` could not resolve a syntactic block beginning on line 86 (blank/closer line, or parse error). Use `CUT 86.=M` with explicit lines. The nearest enclosing multi-line block begins at line 81 and ends at line 86; use `CUT 81*` to target it."
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 113,
+      "span": [
+        113,
+        115
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 158,
+      "span": [
+        158,
+        161
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 181,
+      "span": [
+        181,
+        185
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 209,
+      "span": [
+        209,
+        211
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 244,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 261,
+      "span": [
+        261,
+        266
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 300,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 327,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 352,
+      "span": [
+        352,
+        354
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 411,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 415,
+      "span": [
+        415,
+        476
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 443,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 479,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 494,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 543,
+      "span": [
+        543,
+        554
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 576,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 594,
+      "span": [
+        594,
+        596
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 631,
+      "span": [
+        631,
+        642
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 653,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 688,
+      "span": [
+        688,
+        722
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 729,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 737,
+      "span": [
+        737,
+        748
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 764,
+      "span": [
+        764,
+        768
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 793,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 816,
+      "span": [
+        816,
+        822
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 824,
+      "span": [
+        824,
+        836
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__agent-session-python-cleanup.test.ts",
+      "anchor": 855,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 4,
+      "span": [
+        4,
+        11
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 56,
+      "span": [
+        56,
+        80
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 63,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 93,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 98,
+      "span": [
+        98,
+        103
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 111,
+      "span": [
+        111,
+        121
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 115,
+      "span": [
+        115,
+        119
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 124,
+      "span": [
+        124,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 126,
+      "span": [
+        126,
+        134
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 142,
+      "span": [
+        142,
+        147
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 153,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 156,
+      "span": [
+        156,
+        164
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 157,
+      "span": [
+        157,
+        161
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 170,
+      "span": [
+        170,
+        176
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 180,
+      "span": [
+        180,
+        343
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 189,
+      "span": [
+        189,
+        200
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 190,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 202,
+      "span": [
+        202,
+        205
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 220,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 237,
+      "span": [
+        237,
+        244
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 246,
+      "span": [
+        246,
+        249
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 253,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 271,
+      "span": [
+        271,
+        277
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 283,
+      "span": [
+        283,
+        285
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 285,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 312,
+      "span": [
+        312,
+        316
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__anthropic-signature-drop-all-escalation.test.ts",
+      "anchor": 315,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 84,
+      "span": [
+        84,
+        86
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 90,
+      "span": [
+        90,
+        94
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 104,
+      "span": [
+        104,
+        110
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 109,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 118,
+      "span": [
+        118,
+        160
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 132,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 134,
+      "span": [
+        134,
+        141
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 152,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 154,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 163,
+      "span": [
+        163,
+        172
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 175,
+      "span": [
+        175,
+        177
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 180,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 185,
+      "span": [
+        185,
+        201
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 193,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 204,
+      "span": [
+        204,
+        210
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 211,
+      "span": [
+        211,
+        222
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 224,
+      "span": [
+        224,
+        231
+      ]
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 228,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 248,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 251,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 257,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/pig_chord__nextnode__plugins__node__pi__chord__src__host__route-admission.ts",
+      "anchor": 269,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 36,
+      "span": [
+        36,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 144,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 173,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 195,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 214,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 227,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 260,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 266,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 292,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 313,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 315,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 338,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 349,
+      "span": [
+        349,
+        350
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 361,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 368,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 383,
+      "span": [
+        383,
+        385
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 402,
+      "span": [
+        402,
+        406
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 420,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 432,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 460,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 470,
+      "span": [
+        470,
+        487
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 489,
+      "span": [
+        489,
+        530
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 505,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 519,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__ai__test__factory-droid-anthropic.test.ts",
+      "anchor": 537,
+      "span": [
+        537,
+        551
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 8,
+      "span": [
+        8,
+        74
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 13,
+      "span": [
+        13,
+        19
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 21,
+      "span": [
+        21,
+        42
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 25,
+      "span": [
+        25,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 29,
+      "span": [
+        29,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 30,
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 36,
+      "span": [
+        36,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 44,
+      "span": [
+        44,
+        55
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 49,
+      "span": [
+        49,
+        54
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 55,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 57,
+      "span": [
+        57,
+        73
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 61,
+      "span": [
+        61,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 68,
+      "span": [
+        68,
+        72
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 70,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__test__tools__launch-canonical-dir-permission.test.ts",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 2,
+      "span": [
+        2,
+        7
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 38,
+      "span": [
+        38,
+        55
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 46,
+      "span": [
+        46,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 49,
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 61,
+      "span": [
+        61,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 108,
+      "span": [
+        108,
+        112
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 116,
+      "span": [
+        116,
+        120
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 121,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 126,
+      "span": [
+        126,
+        130
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 134,
+      "span": [
+        134,
+        139
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 135,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 141,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__collab-web__scripts__build-export-viewer.ts",
+      "anchor": 146,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 9,
+      "span": [
+        9,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 26,
+      "span": [
+        26,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 74,
+      "span": [
+        74,
+        76
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 78,
+      "span": [
+        78,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 87,
+      "span": [
+        87,
+        89
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 98,
+      "span": [
+        98,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 103,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 112,
+      "span": [
+        112,
+        147
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 113,
+      "span": [
+        113,
+        116
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 122,
+      "span": [
+        122,
+        124
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 125,
+      "span": [
+        125,
+        137
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 128,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 130,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 135,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 141,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 144,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 145,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 150,
+      "span": [
+        150,
+        155
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 152,
+      "span": [
+        152,
+        154
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 157,
+      "span": [
+        157,
+        164
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__mnemopi__src__diagnose.ts",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 40,
+      "span": [
+        40,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 171,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 185,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 188,
+      "span": [
+        188,
+        201
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 192,
+      "span": [
+        192,
+        199
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 206,
+      "span": [
+        206,
+        215
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 209,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 219,
+      "span": [
+        219,
+        270
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 223,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 232,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 239,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 246,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 251,
+      "span": [
+        251,
+        257
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 254,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 265,
+      "span": [
+        265,
+        267
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 274,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 280,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 289,
+      "span": [
+        289,
+        378
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 291,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 297,
+      "span": [
+        297,
+        303
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 316,
+      "span": [
+        316,
+        328
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 326,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 329,
+      "span": [
+        329,
+        333
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 357,
+      "span": [
+        357,
+        368
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 361,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 374,
+      "span": [
+        374,
+        377
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__dom__parser.ts",
+      "anchor": 387,
+      "span": [
+        387,
+        391
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 59,
+      "span": [
+        59,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 140,
+      "span": [
+        140,
+        150
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 194,
+      "span": [
+        194,
+        213
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 205,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 230,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 259,
+      "span": [
+        259,
+        269
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 267,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 282,
+      "span": [
+        282,
+        285
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 309,
+      "span": [
+        309,
+        317
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 330,
+      "span": [
+        330,
+        341
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 340,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 365,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 392,
+      "span": [
+        392,
+        403
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 393,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 422,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 446,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 454,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 475,
+      "span": [
+        475,
+        489
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 492,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 514,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 531,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 555,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 575,
+      "span": [
+        575,
+        583
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 595,
+      "span": [
+        595,
+        606
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 622,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 635,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 639,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__utils__src__docx__converter.ts",
+      "anchor": 659,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 15,
+      "span": [
+        15,
+        32
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 102,
+      "span": [
+        102,
+        106
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 165,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 177,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 204,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 217,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 227,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 248,
+      "span": [
+        248,
+        255
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 267,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 271,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 289,
+      "span": [
+        289,
+        292
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 310,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 322,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 338,
+      "span": [
+        338,
+        340
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 358,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 375,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 383,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 404,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 427,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 428,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 455,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 480,
+      "span": [
+        480,
+        495
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 492,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 515,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 530,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__tools__browser__storage-state.ts",
+      "anchor": 540,
+      "span": [
+        540,
+        544
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 6,
+      "span": [
+        6,
+        148
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 17,
+      "span": [
+        17,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 22,
+      "span": [
+        22,
+        29
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 34,
+      "span": [
+        34,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 43,
+      "span": [
+        43,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 51,
+      "span": [
+        51,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 73,
+      "span": [
+        73,
+        76
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 80,
+      "span": [
+        80,
+        83
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 81,
+      "span": [
+        81,
+        82
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 109,
+      "span": [
+        109,
+        114
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 116,
+      "span": [
+        116,
+        130
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 126,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 133,
+      "span": [
+        133,
+        137
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 135,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__tui__test__welcome.test.ts",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 19,
+      "span": [
+        19,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 28,
+      "span": [
+        28,
+        30
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 40,
+      "span": [
+        40,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 56,
+      "span": [
+        56,
+        72
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 75,
+      "span": [
+        75,
+        191
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 93,
+      "span": [
+        93,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 105,
+      "span": [
+        105,
+        122
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 109,
+      "span": [
+        109,
+        111
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 120,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 126,
+      "span": [
+        126,
+        157
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 129,
+      "span": [
+        129,
+        131
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 132,
+      "span": [
+        132,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 138,
+      "span": [
+        138,
+        143
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 143,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 159,
+      "span": [
+        159,
+        164
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 160,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 166,
+      "span": [
+        166,
+        190
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 174,
+      "span": [
+        174,
+        179
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__catalog__test__issue-1846-repro.test.ts",
+      "anchor": 176,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 1,
+      "span": [
+        1,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 42,
+      "span": [
+        42,
+        46
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 74,
+      "span": [
+        74,
+        110
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 95,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 139,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 148,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 189,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 191,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 205,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 230,
+      "span": [
+        230,
+        232
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 258,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 274,
+      "span": [
+        274,
+        279
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 285,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 305,
+      "span": [
+        305,
+        332
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 326,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 335,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 348,
+      "span": [
+        348,
+        381
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 359,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 376,
+      "span": [
+        376,
+        379
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 381,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 401,
+      "span": [
+        401,
+        409
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 428,
+      "span": [
+        428,
+        431
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 430,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 451,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 475,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 481,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 491,
+      "span": [
+        491,
+        494
+      ]
+    },
+    {
+      "file": "files/sample2/ts/omp_packages__coding-agent__src__mcp__types.ts",
+      "anchor": 516,
+      "span": [
+        516,
+        528
+      ]
+    }
+  ]
+}

@@ -66,7 +66,7 @@ func readDirectory(absPath string, parsed ParsedSelector) (string, error) {
 		if start >= len(allLines) {
 			suggestion := "The listing is empty."
 			if len(allLines) > 0 {
-				suggestion = fmt.Sprintf("Use :1 to read from the start, or :%d to read the last line.", len(allLines))
+				suggestion = fmt.Sprintf("Use :1- to read from the start, or :%d to read the last line.", len(allLines))
 			}
 			return fmt.Sprintf("Line %d is beyond end of listing (%d lines total). %s", start+1, len(allLines), suggestion), nil
 		}
@@ -77,7 +77,7 @@ func readDirectory(absPath string, parsed ParsedSelector) (string, error) {
 		text := strings.Join(allLines[start:end], "\n")
 		if end < len(allLines) {
 			remaining := len(allLines) - end
-			text += fmt.Sprintf("\n\n[%d more lines in listing. Use :%d to continue]", remaining, end+1)
+			text += fmt.Sprintf("\n\n[%d more lines in listing. Use :%d- to continue]", remaining, end+1)
 		}
 		return text, nil
 	}
@@ -173,10 +173,10 @@ func renderDirNode(node *dirNode, now time.Time, out *[]string) {
 		}
 		line := fmt.Sprintf("%s- %s%s%s", indent, node.name, suffix, unreadable)
 		age := formatAge(now.Sub(node.mtime))
+		if !node.isDir {
+			line += " " + formatBytes(node.size)
+		}
 		if age != "" {
-			if !node.isDir {
-				line += " " + formatBytes(node.size)
-			}
 			line += " " + age
 		}
 		*out = append(*out, line)
@@ -209,21 +209,37 @@ func formatBytes(b int64) string {
 	}
 }
 
+// formatAge formats a duration matching omp's packages/utils/src/format.ts:106-122.
+// Zero (or negative) duration returns ""; sub-minute positive durations return "just now".
 func formatAge(d time.Duration) string {
-	if d < 0 {
-		d = 0
+	secs := int64(d / time.Second)
+	if secs <= 0 {
+		return ""
 	}
-	secs := int64(d.Seconds())
-	switch {
-	case secs < 60:
-		return fmt.Sprintf("%ds ago", secs)
-	case secs < 3600:
-		return fmt.Sprintf("%dm ago", secs/60)
-	case secs < 86400:
-		return fmt.Sprintf("%dh ago", secs/3600)
-	case secs < 30*86400:
-		return fmt.Sprintf("%dd ago", secs/86400)
-	default:
-		return fmt.Sprintf("%dmo ago", secs/(30*86400))
+	mins := secs / 60
+	hours := mins / 60
+	days := hours / 24
+	weeks := days / 7
+	months := days / 30
+	years := days / 365
+
+	if years > 0 {
+		return fmt.Sprintf("%dy ago", years)
 	}
+	if months > 0 {
+		return fmt.Sprintf("%dmo ago", months)
+	}
+	if weeks > 0 {
+		return fmt.Sprintf("%dw ago", weeks)
+	}
+	if days > 0 {
+		return fmt.Sprintf("%dd ago", days)
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%dh ago", hours)
+	}
+	if mins > 0 {
+		return fmt.Sprintf("%dm ago", mins)
+	}
+	return "just now"
 }

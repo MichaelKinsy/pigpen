@@ -1,0 +1,2572 @@
+{
+  "lang": "js",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 449,
+  "omp_resolved": 104,
+  "omp_refused": 345,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 81*` could not resolve a syntactic block beginning on line 81 (blank/closer line, or parse error). Use `CUT 81.=M` with explicit lines. The nearest enclosing multi-line block begins at line 73 and ends at line 81; use `CUT 73*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 16,
+      "span": [
+        16,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 26,
+      "span": [
+        26,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 35,
+      "span": [
+        35,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 44,
+      "span": [
+        44,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 55,
+      "span": [
+        55,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 59,
+      "span": [
+        59,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 75,
+      "span": [
+        75,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 81,
+      "refused": "line 1: `CUT 81*` could not resolve a syntactic block beginning on line 81 (blank/closer line, or parse error). Use `CUT 81.=M` with explicit lines. The nearest enclosing multi-line block begins at line 73 and ends at line 81; use `CUT 73*` to target it."
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 95,
+      "span": [
+        95,
+        105
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 109,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 113,
+      "span": [
+        113,
+        123
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 118,
+      "span": [
+        118,
+        121
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 121,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 130,
+      "span": [
+        130,
+        146
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__lib__rowdiff.mjs",
+      "anchor": 140,
+      "span": [
+        140,
+        143
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 3,
+      "span": [
+        3,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 24,
+      "span": [
+        24,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-coding-agent__highlightCode.mjs",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 13,
+      "span": [
+        13,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 15,
+      "span": [
+        15,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 26,
+      "span": [
+        26,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 38,
+      "span": [
+        38,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 44,
+      "span": [
+        44,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 50,
+      "span": [
+        50,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 56,
+      "span": [
+        56,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 62,
+      "span": [
+        62,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 69,
+      "span": [
+        69,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__contract-cli.test.mjs",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 7,
+      "span": [
+        7,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 13,
+      "span": [
+        13,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 26,
+      "span": [
+        26,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 45,
+      "span": [
+        45,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 57,
+      "span": [
+        57,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 61,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 67,
+      "span": [
+        67,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 72,
+      "span": [
+        72,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 104,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 109,
+      "span": [
+        109,
+        112
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 128,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 137,
+      "span": [
+        137,
+        165
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 141,
+      "span": [
+        141,
+        148
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 151,
+      "span": [
+        151,
+        155
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 152,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 153,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__interface-extractor__src__incremental.mjs",
+      "anchor": 159,
+      "span": [
+        159,
+        164
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 22,
+      "span": [
+        22,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 26,
+      "span": [
+        26,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 28,
+      "span": [
+        28,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 35,
+      "span": [
+        35,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 57,
+      "span": [
+        57,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 61,
+      "span": [
+        61,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 76,
+      "span": [
+        76,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 80,
+      "span": [
+        80,
+        88
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 90,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 95,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 101,
+      "span": [
+        101,
+        110
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__core__history__oracle__gen_summary.mjs",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 5,
+      "span": [
+        5,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 8,
+      "span": [
+        8,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 19,
+      "span": [
+        19,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 21,
+      "span": [
+        21,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 25,
+      "span": [
+        25,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 26,
+      "span": [
+        26,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 33,
+      "span": [
+        33,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__rea__tests__stub-model.mjs",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 4,
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 14,
+      "span": [
+        14,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/omp_packages__natives__native__clipboard.js",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 17,
+      "span": [
+        17,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 25,
+      "span": [
+        25,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 31,
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 41,
+      "span": [
+        41,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 50,
+      "span": [
+        50,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 52,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 53,
+      "span": [
+        53,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__pig-bin.mjs",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_coding__extension__host__subprocess__runtime-node__harness__supervisor.mjs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 16,
+      "span": [
+        16,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 64,
+      "span": [
+        64,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 68,
+      "span": [
+        68,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 86,
+      "span": [
+        86,
+        90
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 102,
+      "span": [
+        102,
+        178
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 119,
+      "span": [
+        119,
+        152
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 123,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 154,
+      "span": [
+        154,
+        167
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 163,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 171,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 172,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 183,
+      "span": [
+        183,
+        187
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 190,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 191,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__platform-smoke.test.mjs",
+      "anchor": 197,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 8,
+      "span": [
+        8,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 13,
+      "span": [
+        13,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 15,
+      "span": [
+        15,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 23,
+      "span": [
+        23,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 24,
+      "span": [
+        24,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 25,
+      "span": [
+        25,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 35,
+      "span": [
+        35,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 36,
+      "span": [
+        36,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 45,
+      "span": [
+        45,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 46,
+      "span": [
+        46,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 58,
+      "span": [
+        58,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_scripts__go-only.test.mjs",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 3,
+      "span": [
+        3,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 4,
+      "span": [
+        4,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 14,
+      "span": [
+        14,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 18,
+      "span": [
+        18,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 23,
+      "span": [
+        23,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_examples__extensions__node-factory__index.mjs",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 3,
+      "span": [
+        3,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 25,
+      "span": [
+        25,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 51,
+      "span": [
+        51,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 64,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 71,
+      "span": [
+        71,
+        81
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 77,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 84,
+      "span": [
+        84,
+        167
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 93,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 105,
+      "span": [
+        105,
+        108
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 108,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 124,
+      "span": [
+        124,
+        127
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 132,
+      "span": [
+        132,
+        134
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 140,
+      "span": [
+        140,
+        151
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 148,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 152,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 154,
+      "span": [
+        154,
+        163
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 156,
+      "span": [
+        156,
+        162
+      ]
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pigpen_components__superpowers__skills__pigpen-superpowers-writing-skills__render-graphs.js",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 2,
+      "span": [
+        2,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 17,
+      "span": [
+        17,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 20,
+      "span": [
+        20,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_test__parity__sdk-vectors__cases__pi-ai__envApiKeyAuth.mjs",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 14,
+      "span": [
+        14,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 17,
+      "span": [
+        17,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/js/pig_durable__contract__test__robust-recycle.test.mjs",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    }
+  ]
+}

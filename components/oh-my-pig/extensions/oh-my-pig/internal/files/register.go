@@ -7,6 +7,9 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/schemaorder"
 )
 
 //go:embed read.md
@@ -20,9 +23,14 @@ var editDescription string
 
 // Register registers omp's read, write, and edit tools on e.
 func Register(e *sdk.Extension) {
-	store := hashline.Default()
-
-	e.RegisterTool(sdk.ToolDefinition{
+	hashline.RegisterLifecycle()
+	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if sid, err := ctx.GetSessionID(); err == nil && sid != "" {
+			lifecycle.End(sid)
+		}
+		return nil, nil
+	})
+	readDef := schemaorder.Apply(sdk.ToolDefinition{
 		Name:        "read",
 		Label:       "Read",
 		Description: strings.TrimSpace(readDescription),
@@ -34,21 +42,24 @@ func Register(e *sdk.Extension) {
 					"description": "Local path, internal URI, or URL; selectors inline.",
 				},
 			},
-			"required": []string{"path"},
+			"required":             []string{"path"},
+			"additionalProperties": false,
 		},
 		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
 			path, ok := params["path"].(string)
 			if !ok {
 				return nil, fmt.Errorf("invalid read arguments: path must be a string")
 			}
-			return executeRead(store, ctx.Cwd(), path)
+			return executeReadWithCtx(ctx, hashline.ForSession(ctx), ctx.Cwd(), path)
 		},
 	})
+	e.RegisterTool(intent.Tool(readDef))
 
-	e.RegisterTool(sdk.ToolDefinition{
-		Name:        "write",
-		Label:       "Write",
-		Description: strings.TrimSpace(writeDescription),
+	writeDef := schemaorder.Apply(sdk.ToolDefinition{
+		Name:          "write",
+		Label:         "Write",
+		Description:   strings.TrimSpace(writeDescription),
+		ExecutionMode: "sequential",
 		Parameters: sdk.Schema{
 			"type": "object",
 			"properties": map[string]any{
@@ -59,7 +70,8 @@ func Register(e *sdk.Extension) {
 					"type": "string",
 				},
 			},
-			"required": []string{"path"},
+			"required":             []string{"path", "content"},
+			"additionalProperties": false,
 		},
 		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
 			path, ok := params["path"].(string)
@@ -74,14 +86,16 @@ func Register(e *sdk.Extension) {
 				}
 				content = &s
 			}
-			return executeWrite(ctx, store, ctx.Cwd(), path, content)
+			return executeWrite(ctx, hashline.ForSession(ctx), ctx.Cwd(), path, content)
 		},
 	})
+	e.RegisterTool(intent.Tool(writeDef))
 
-	e.RegisterTool(sdk.ToolDefinition{
-		Name:        "edit",
-		Label:       "Edit",
-		Description: strings.TrimSpace(editDescription),
+	editDef := schemaorder.Apply(sdk.ToolDefinition{
+		Name:          "edit",
+		Label:         "Edit",
+		Description:   strings.TrimSpace(editDescription),
+		ExecutionMode: "sequential",
 		Parameters: sdk.Schema{
 			"type": "object",
 			"properties": map[string]any{
@@ -89,14 +103,17 @@ func Register(e *sdk.Extension) {
 					"type": "string",
 				},
 			},
-			"required": []string{"input"},
+			"required":             []string{"input"},
+			"additionalProperties": false,
 		},
 		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
 			input, ok := params["input"].(string)
 			if !ok {
 				return nil, fmt.Errorf("invalid edit arguments: input must be a string")
 			}
-			return executeEdit(ctx, store, ctx.Cwd(), input)
+			return executeEdit(ctx, hashline.ForSession(ctx), ctx.Cwd(), input)
 		},
 	})
+	e.RegisterTool(intent.Tool(editDef))
+	intent.RegisterSync(e, readDef, writeDef, editDef)
 }

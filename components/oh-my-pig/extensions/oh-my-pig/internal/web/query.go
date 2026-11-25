@@ -734,6 +734,9 @@ func sourceTime(src SearchSource) (time.Time, bool) {
 
 type constraintDimension struct {
 	label string
+	// Scope directives (site:, inurl:, and every exclusion) are always enforced.
+	// upstream: packages/coding-agent/src/web/search/query.ts:763-769
+	scope bool
 	pred  func(SearchSource) bool
 }
 
@@ -748,6 +751,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		sites := q.Sites
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " OR "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				for _, s := range sites {
 					if MatchesSite(src.URL, s) {
@@ -766,6 +770,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		excluded := q.ExcludedSites
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				for _, s := range excluded {
 					if MatchesSite(src.URL, s) {
@@ -784,6 +789,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		inURL := q.InURL
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				lowerURL := strings.ToLower(src.URL)
 				for _, v := range inURL {
@@ -803,6 +809,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		exInURL := q.ExcludedInURL
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				lowerURL := strings.ToLower(src.URL)
 				for _, v := range exInURL {
@@ -822,6 +829,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		inTitle := q.InTitle
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: false,
 			pred: func(src SearchSource) bool {
 				lowerTitle := strings.ToLower(src.Title)
 				for _, v := range inTitle {
@@ -841,6 +849,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		exInTitle := q.ExcludedInTitle
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				lowerTitle := strings.ToLower(src.Title)
 				for _, v := range exInTitle {
@@ -860,6 +869,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		fts := q.Filetypes
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " OR "),
+			scope: false,
 			pred: func(src SearchSource) bool {
 				for _, ext := range fts {
 					if matchesFiletype(src.URL, ext) {
@@ -878,6 +888,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		exFts := q.ExcludedFiletypes
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labels, " "),
+			scope: true,
 			pred: func(src SearchSource) bool {
 				for _, ext := range exFts {
 					if matchesFiletype(src.URL, ext) {
@@ -908,6 +919,7 @@ func constraintDimensions(q StructuredQuery) []constraintDimension {
 		}
 		dims = append(dims, constraintDimension{
 			label: strings.Join(labelParts, " "),
+			scope: false,
 			pred: func(src SearchSource) bool {
 				t, ok := sourceTime(src)
 				if !ok {
@@ -937,8 +949,9 @@ func MatchesQueryConstraints(src SearchSource, q StructuredQuery) bool {
 	return true
 }
 
-// ApplyQueryConstraints leniently filters sources, relaxing any dimension that would drop all results.
-// upstream: packages/coding-agent/src/web/search/query.ts:840-850
+// ApplyQueryConstraints filters sources against q. Scope directives (site:, inurl:, and exclusions)
+// are always enforced; non-scope directives relax when they would drop all remaining sources.
+// upstream: packages/coding-agent/src/web/search/query.ts:859-870
 func ApplyQueryConstraints(sources []SearchSource, q StructuredQuery) ConstraintFilterResult {
 	current := make([]SearchSource, len(sources))
 	copy(current, sources)
@@ -953,11 +966,49 @@ func ApplyQueryConstraints(sources []SearchSource, q StructuredQuery) Constraint
 				kept = append(kept, src)
 			}
 		}
-		if len(kept) > 0 {
+		if len(kept) > 0 || dim.scope {
 			current = kept
 		} else {
 			dropped = append(dropped, dim.label)
 		}
+		if len(current) == 0 {
+			break
+		}
 	}
 	return ConstraintFilterResult{Sources: current, Dropped: dropped}
+}
+
+// ScopeConstraint holds the combined scope directives of a StructuredQuery.
+// upstream: packages/coding-agent/src/web/search/query.ts:877-886
+type ScopeConstraint struct {
+	Label   string
+	Matches func(SearchSource) bool
+}
+
+// ScopeConstraints returns the combined scope directives (site:, inurl:, and exclusions) of q,
+// or nil when q has none.
+// upstream: packages/coding-agent/src/web/search/query.ts:877-886
+func ScopeConstraints(q StructuredQuery) *ScopeConstraint {
+	var dims []constraintDimension
+	var labels []string
+	for _, dim := range constraintDimensions(q) {
+		if dim.scope {
+			dims = append(dims, dim)
+			labels = append(labels, dim.label)
+		}
+	}
+	if len(dims) == 0 {
+		return nil
+	}
+	return &ScopeConstraint{
+		Label: strings.Join(labels, " "),
+		Matches: func(src SearchSource) bool {
+			for _, dim := range dims {
+				if !dim.pred(src) {
+					return false
+				}
+			}
+			return true
+		},
+	}
 }

@@ -7,6 +7,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
 // LineRange is an inclusive 1-indexed line range. EndLine == 0 means open-ended (to EOF).
@@ -23,6 +27,7 @@ type SelectorKind int
 const (
 	SelectorNone SelectorKind = iota
 	SelectorRaw
+	SelectorConflicts
 	SelectorLines
 	SelectorTail
 )
@@ -43,20 +48,32 @@ func (p ParsedSelector) IsRaw() bool {
 
 // IsMultiRange reports whether multiple disjoint line ranges were requested.
 func (p ParsedSelector) IsMultiRange() bool {
-	return p.Kind == SelectorLines && len(p.Ranges) > 1
+	return (p.Kind == SelectorLines && len(p.Ranges) > 1) || (p.Kind == SelectorTail && len(p.Ranges) > 0)
 }
 
 // ResolveTail pins a :-N tail selector to an absolute range against totalLines.
-// upstream: packages/coding-agent/src/tools/read-selector.ts:39
+// Ranges listed with the tail join it in ascending order, merged where they overlap or touch.
+// upstream: packages/coding-agent/src/tools/read-selector.ts:45
 func (p ParsedSelector) ResolveTail(totalLines int) ParsedSelector {
 	if p.Kind != SelectorTail {
 		return p
 	}
 	start := max(1, totalLines-p.Tail+1)
 	end := max(start, totalLines)
+	tailRange := LineRange{StartLine: start, EndLine: end}
+	if len(p.Ranges) == 0 {
+		return ParsedSelector{
+			Kind:   SelectorLines,
+			Ranges: []LineRange{tailRange},
+			Raw:    p.Raw,
+		}
+	}
+	combined := make([]LineRange, 0, len(p.Ranges)+1)
+	combined = append(combined, p.Ranges...)
+	combined = append(combined, tailRange)
 	return ParsedSelector{
 		Kind:   SelectorLines,
-		Ranges: []LineRange{{StartLine: start, EndLine: end}},
+		Ranges: mergeLineRanges(combined),
 		Raw:    p.Raw,
 	}
 }
@@ -75,8 +92,10 @@ func SplitPathAndSelPreferringLiteral(rawPath, cwd string) (basePath, sel string
 // SplitPathAndSel splits a path and trailing selector (e.g. "foo.go:50-80", "foo.go:raw:2-4", "C:\foo.go:10").
 func SplitPathAndSel(rawPath string) (basePath, sel string) {
 	// Guard against Windows drive prefix like "C:\..." or "C:/...".
+	// A one-letter relative path followed by a selector (e.g. "d:1-5", "a:2-3")
+	// has no slash after the colon and must still split.
 	minColon := 0
-	if len(rawPath) >= 2 && isASCIILetter(rawPath[0]) && rawPath[1] == ':' {
+	if len(rawPath) >= 3 && isASCIILetter(rawPath[0]) && rawPath[1] == ':' && (rawPath[2] == '\\' || rawPath[2] == '/') {
 		minColon = 2
 	}
 
@@ -109,7 +128,7 @@ func looksLikeSelector(s string) bool {
 	if s == "" {
 		return false
 	}
-	if strings.EqualFold(s, "raw") {
+	if strings.EqualFold(s, "raw") || strings.EqualFold(s, "conflicts") {
 		return true
 	}
 	if strings.Contains(s, ":") {
@@ -132,14 +151,16 @@ func looksLikeRangeOrTail(s string) bool {
 	if s == "" {
 		return false
 	}
-	// Tail: -N
-	if s[0] == '-' {
-		return len(s) > 1 && allDigits(s[1:])
-	}
-	// Comma list or single range starting with digit or L+digit.
+	// Comma list or single range/tail (`-N`, `1-2,-15`, `L5-10`).
 	for _, chunk := range strings.Split(s, ",") {
 		if chunk == "" {
 			return false
+		}
+		if chunk[0] == '-' {
+			if len(chunk) <= 1 || !allDigits(chunk[1:]) {
+				return false
+			}
+			continue
 		}
 		c := chunk
 		if c[0] == 'L' || c[0] == 'l' {
@@ -201,6 +222,9 @@ func ParseSel(sel string) (ParsedSelector, error) {
 	if strings.EqualFold(sel, "raw") {
 		return ParsedSelector{Kind: SelectorRaw, Raw: true}, nil
 	}
+	if strings.EqualFold(sel, "conflicts") {
+		return ParsedSelector{Kind: SelectorConflicts}, nil
+	}
 	p, ok, err := parseRangeOrTail(sel, false)
 	if err != nil {
 		return ParsedSelector{}, err
@@ -219,17 +243,6 @@ func invalidSelectorErr(sel string) error {
 }
 
 func parseRangeOrTail(chunk string, raw bool) (ParsedSelector, bool, error) {
-	if strings.HasPrefix(chunk, "-") {
-		rest := chunk[1:]
-		if !allDigits(rest) {
-			return ParsedSelector{}, false, nil
-		}
-		n, err := strconv.Atoi(rest)
-		if err != nil || n < 1 {
-			return ParsedSelector{}, false, fmt.Errorf("Invalid tail selector %s: count must be >= 1.", chunk)
-		}
-		return ParsedSelector{Kind: SelectorTail, Tail: n, Raw: raw}, true, nil
-	}
 	ranges, ok, err := parseLineRanges(chunk)
 	if err != nil {
 		return ParsedSelector{}, false, err
@@ -237,34 +250,58 @@ func parseRangeOrTail(chunk string, raw bool) (ParsedSelector, bool, error) {
 	if ok {
 		return ParsedSelector{Kind: SelectorLines, Ranges: ranges, Raw: raw}, true, nil
 	}
-	return ParsedSelector{}, false, nil
-}
-
-// parseLineRanges parses comma-separated ranges, sorts ascending, and merges overlapping/adjacent ranges.
-// upstream: packages/tui/src/tools/line-ranges.ts:57
-func parseLineRanges(sel string) ([]LineRange, bool, error) {
-	chunks := strings.Split(sel, ",")
-	pinBare := len(chunks) > 1
-	parsed := make([]LineRange, 0, len(chunks))
-	for _, ch := range chunks {
-		r, ok, err := parseLineRangeChunk(ch, pinBare)
+	// A list with tails (`1-12,-15`, `-15`) keeps the longest tail.
+	// upstream: packages/coding-agent/src/tools/read-selector.ts:75
+	parts := strings.Split(chunk, ",")
+	count := 0
+	var listed []string
+	for _, part := range parts {
+		if strings.HasPrefix(part, "-") {
+			rest := part[1:]
+			if !allDigits(rest) {
+				return ParsedSelector{}, false, nil
+			}
+			n, err := strconv.Atoi(rest)
+			if err != nil || n < 1 {
+				return ParsedSelector{}, false, fmt.Errorf("Tail selector -0 is invalid; use :-N with N >= 1 to read the last N lines.")
+			}
+			if n > count {
+				count = n
+			}
+		} else {
+			listed = append(listed, part)
+		}
+	}
+	if count == 0 {
+		return ParsedSelector{}, false, nil
+	}
+	var listedRanges []LineRange
+	if len(listed) > 0 {
+		r, ok, err := parseLineRanges(strings.Join(listed, ","))
 		if err != nil {
-			return nil, false, err
+			return ParsedSelector{}, false, err
 		}
 		if !ok {
-			return nil, false, nil
+			return ParsedSelector{}, false, nil
 		}
-		parsed = append(parsed, r)
+		listedRanges = r
 	}
+	return ParsedSelector{Kind: SelectorTail, Tail: count, Ranges: listedRanges, Raw: raw}, true, nil
+}
+
+// mergeLineRanges sorts ranges ascending and merges overlapping or adjacent ones.
+// upstream: packages/tui/src/tools/line-ranges.ts:57
+func mergeLineRanges(parsed []LineRange) []LineRange {
 	if len(parsed) == 0 {
-		return nil, false, nil
+		return nil
 	}
-	slices.SortFunc(parsed, func(a, b LineRange) int {
+	out := make([]LineRange, len(parsed))
+	copy(out, parsed)
+	slices.SortFunc(out, func(a, b LineRange) int {
 		return a.StartLine - b.StartLine
 	})
-
-	merged := []LineRange{parsed[0]}
-	for _, cur := range parsed[1:] {
+	merged := []LineRange{out[0]}
+	for _, cur := range out[1:] {
 		last := &merged[len(merged)-1]
 		if last.EndLine == 0 {
 			continue // open-ended absorbs everything after
@@ -277,10 +314,31 @@ func parseLineRanges(sel string) ([]LineRange, bool, error) {
 		}
 		merged = append(merged, cur)
 	}
-	return merged, true, nil
+	return merged
 }
 
-func parseLineRangeChunk(chunk string, pinBare bool) (LineRange, bool, error) {
+// parseLineRanges parses comma-separated ranges, sorts ascending, and merges overlapping/adjacent ranges.
+// upstream: packages/tui/src/tools/line-ranges.ts:57
+func parseLineRanges(sel string) ([]LineRange, bool, error) {
+	chunks := strings.Split(sel, ",")
+	parsed := make([]LineRange, 0, len(chunks))
+	for _, ch := range chunks {
+		r, ok, err := parseLineRangeChunk(ch)
+		if err != nil {
+			return nil, false, err
+		}
+		if !ok {
+			return nil, false, nil
+		}
+		parsed = append(parsed, r)
+	}
+	if len(parsed) == 0 {
+		return nil, false, nil
+	}
+	return mergeLineRanges(parsed), true, nil
+}
+
+func parseLineRangeChunk(chunk string) (LineRange, bool, error) {
 	s := chunk
 	if strings.HasPrefix(s, "L") || strings.HasPrefix(s, "l") {
 		s = s[1:]
@@ -301,13 +359,10 @@ func parseLineRangeChunk(chunk string, pinBare bool) (LineRange, bool, error) {
 	}
 	rest := s[i:]
 	if rest == "" {
-		end := 0
-		if pinBare {
-			end = start
-		}
-		return LineRange{StartLine: start, EndLine: end}, true, nil
+		// v19.1.1: bare `:N` is that single line; `:N-` is open-ended from N onward.
+		// upstream: packages/tui/src/tools/line-ranges.ts:39
+		return LineRange{StartLine: start, EndLine: start}, true, nil
 	}
-
 	var sep string
 	switch {
 	case strings.HasPrefix(rest, ".."):
@@ -373,18 +428,61 @@ func isOnlySlashes(s string) bool {
 	return true
 }
 
-// expandPath strips surrounding double quotes, leading @, file://, and expands ~.
-// upstream: packages/coding-agent/src/tools/path-utils.ts:116
+// isWinAbsolutePath reports whether s is a Windows drive/UNC/root-relative absolute path.
+func isWinAbsolutePath(s string) bool {
+	if len(s) >= 2 && isASCIILetter(s[0]) && s[1] == ':' {
+		return true
+	}
+	return strings.HasPrefix(s, `\\`) || strings.HasPrefix(s, `\`)
+}
+
+// normalizeAtPrefix strips a leading '@' only before '/', '~', '~/', Windows absolute paths,
+// or a registered internal URL, keeping literal names like '@scope/pkg.txt' intact.
+// upstream: packages/coding-agent/src/tools/path-utils.ts:75
+func normalizeAtPrefix(filePath string) string {
+	if !strings.HasPrefix(filePath, "@") {
+		return filePath
+	}
+	withoutAt := filePath[1:]
+	if strings.HasPrefix(withoutAt, "/") ||
+		withoutAt == "~" ||
+		strings.HasPrefix(withoutAt, "~/") ||
+		strings.HasPrefix(withoutAt, `~\`) ||
+		isWinAbsolutePath(withoutAt) ||
+		urls.CanHandle(withoutAt) {
+		return withoutAt
+	}
+	return filePath
+}
+
+// stripLeadingColonPrefix strips a stray leading ':' before a POSIX/Windows path shape
+// (e.g. `:/abs/path`, `:../rel`, `:./src`, `:C:\repo\file`).
+// upstream: packages/coding-agent/src/tools/path-utils.ts:118
+func stripLeadingColonPrefix(s string) string {
+	if len(s) < 2 || s[0] != ':' {
+		return s
+	}
+	rest := s[1:]
+	if rest[0] == '/' || rest[0] == '\\' || rest[0] == '~' ||
+		strings.HasPrefix(rest, "./") || strings.HasPrefix(rest, `.\`) ||
+		strings.HasPrefix(rest, "../") || strings.HasPrefix(rest, `..\`) ||
+		(len(rest) >= 2 && isASCIILetter(rest[0]) && rest[1] == ':') {
+		return rest
+	}
+	return s
+}
+
+// expandPath strips surrounding double quotes, stray leading ':', qualified '@', file://, and expands ~.
+// upstream: packages/coding-agent/src/tools/path-utils.ts:109
 func expandPath(filePath string) string {
 	s := strings.TrimSpace(filePath)
 	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
 		s = s[1 : len(s)-1]
 	}
-	if strings.HasPrefix(s, "@") {
-		s = s[1:]
-	}
-	if strings.HasPrefix(s, "file://") {
-		s = strings.TrimPrefix(s, "file://")
+	s = stripLeadingColonPrefix(s)
+	s = normalizeAtPrefix(s)
+	if len(s) >= 7 && strings.EqualFold(s[:7], "file://") {
+		s = s[7:]
 	}
 	if s == "~" || strings.HasPrefix(s, "~/") || strings.HasPrefix(s, `~\`) {
 		if home, err := os.UserHomeDir(); err == nil && home != "" {
@@ -399,14 +497,25 @@ func expandPath(filePath string) string {
 
 // formatPathRelativeToCwd returns a POSIX-slash path relative to cwd if inside cwd,
 // or the absolute path with POSIX slashes if outside cwd.
-// upstream: packages/coding-agent/src/tools/path-utils.ts:501
+// Only cwd (the project directory, standardized once by omp at startup) is standardized;
+// an explicit or located absolute path outside cwd keeps its own spelling.
+// upstream: packages/coding-agent/src/tools/path-utils.ts:512-531, packages/utils/src/dirs.ts:148-158
 func formatPathRelativeToCwd(filePath, cwd string) string {
 	resolvedCwd, err := filepath.Abs(cwd)
 	if err != nil {
 		resolvedCwd = filepath.Clean(cwd)
 	}
-	resolvedPath := resolveToCwd(filePath, resolvedCwd)
-	rel, err := filepath.Rel(resolvedCwd, resolvedPath)
+	resolvedCwd = dirs.StandardizeMacOSPath(resolvedCwd)
+	expanded := expandPath(filePath)
+	var resolvedPath string
+	if filepath.IsAbs(expanded) {
+		resolvedPath = filepath.Clean(expanded)
+	} else {
+		resolvedPath = filepath.Clean(filepath.Join(resolvedCwd, expanded))
+	}
+	// Match against standardized cwd even if caller passed a /private-prefixed path inside cwd.
+	cmpPath := dirs.StandardizeMacOSPath(resolvedPath)
+	rel, err := filepath.Rel(resolvedCwd, cmpPath)
 	if err == nil && rel != "" && !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 		return filepath.ToSlash(rel)
 	}
@@ -416,15 +525,9 @@ func formatPathRelativeToCwd(filePath, cwd string) string {
 	return filepath.ToSlash(resolvedPath)
 }
 
-// unwrapHashlineHeaderPath strips a `[path#TAG]` wrapper if the model pasted a read header as a path.
-// upstream: packages/coding-agent/src/tools/write.ts:795
+// unwrapHashlineHeaderPath delegates to the shared hashline.UnwrapHeaderPath so
+// approval and write always resolve the exact same target string.
+// upstream: packages/coding-agent/src/tools/hashline-header-path.ts:18-35
 func unwrapHashlineHeaderPath(raw string) string {
-	t := strings.TrimSpace(raw)
-	if len(t) >= 3 && t[0] == '[' && t[len(t)-1] == ']' {
-		inner := t[1 : len(t)-1]
-		if idx := strings.LastIndexByte(inner, '#'); idx > 0 {
-			return strings.TrimSpace(inner[:idx])
-		}
-	}
-	return raw
+	return hashline.UnwrapHeaderPath(raw)
 }

@@ -160,16 +160,114 @@ func isURLSelectorToken(tok string) bool {
 	return looksLikeRangeOrTail(tok)
 }
 
-// stripURLFetchHeader removes the `URL:/Content-Type:/Method:\n\n---\n\n` header block
-// that web.Fetch prepends, returning the fetched body text for ranged URL reads.
-func stripURLFetchHeader(fetched string) string {
+// parseURLFetchMeta extracts URL/Content-Type/Method header metadata and body from web.Fetch output.
+func parseURLFetchMeta(fetched, fallbackURL string, raw bool) (body, finalURL, contentType, method string) {
+	finalURL = fallbackURL
+	contentType = "text/plain"
+	method = "fetch"
+	if raw {
+		method = "raw"
+		contentType = inferRawURLContentType(fetched, fallbackURL)
+	}
 	if !strings.HasPrefix(fetched, "URL: ") {
-		return fetched
+		return fetched, finalURL, contentType, method
 	}
-	if idx := strings.Index(fetched, "\n\n---\n\n"); idx >= 0 {
-		return fetched[idx+len("\n\n---\n\n"):]
+	sep := "\n\n---\n\n"
+	idx := strings.Index(fetched, sep)
+	if idx < 0 {
+		return fetched, finalURL, contentType, method
 	}
-	return fetched
+	header := fetched[:idx]
+	body = fetched[idx+len(sep):]
+	for line := range strings.SplitSeq(header, "\n") {
+		switch {
+		case strings.HasPrefix(line, "URL: "):
+			if v := strings.TrimSpace(strings.TrimPrefix(line, "URL: ")); v != "" {
+				finalURL = v
+			}
+		case strings.HasPrefix(line, "Content-Type: "):
+			if v := strings.TrimSpace(strings.TrimPrefix(line, "Content-Type: ")); v != "" {
+				contentType = v
+			}
+		case strings.HasPrefix(line, "Method: "):
+			if v := strings.TrimSpace(strings.TrimPrefix(line, "Method: ")); v != "" {
+				method = v
+			}
+		}
+	}
+	return body, finalURL, contentType, method
+}
+
+// inferRawURLContentType determines the MIME type for a raw URL response body when
+// web.Fetch returns raw bytes without a metadata header (upstream: tools/fetch.ts:1477).
+func inferRawURLContentType(body, rawURL string) string {
+	trimmed := strings.TrimLeft(body, " \t\r\n")
+	lowerPrefix := strings.ToLower(trimmed)
+	if len(lowerPrefix) > 32 {
+		lowerPrefix = lowerPrefix[:32]
+	}
+	if strings.HasPrefix(lowerPrefix, "<!doctype html") ||
+		strings.HasPrefix(lowerPrefix, "<html") ||
+		strings.HasPrefix(lowerPrefix, "<head") ||
+		strings.HasPrefix(lowerPrefix, "<body") ||
+		strings.HasPrefix(lowerPrefix, "<div") ||
+		strings.HasPrefix(lowerPrefix, "<h1") ||
+		strings.HasPrefix(lowerPrefix, "<p>") {
+		return "text/html"
+	}
+	if strings.HasPrefix(trimmed, "[Binary content: ") {
+		rest := strings.TrimPrefix(trimmed, "[Binary content: ")
+		if comma := strings.IndexByte(rest, ','); comma > 0 {
+			if ct := strings.TrimSpace(rest[:comma]); ct != "" {
+				return ct
+			}
+		}
+	}
+	// Fall back to path extension hint before defaulting to text/plain.
+	pathPart := rawURL
+	if q := strings.IndexAny(pathPart, "?#"); q >= 0 {
+		pathPart = pathPart[:q]
+	}
+	lowerPath := strings.ToLower(pathPart)
+	switch {
+	case strings.HasSuffix(lowerPath, ".html"), strings.HasSuffix(lowerPath, ".htm"):
+		return "text/html"
+	case strings.HasSuffix(lowerPath, ".xhtml"):
+		return "application/xhtml+xml"
+	case strings.HasSuffix(lowerPath, ".json"):
+		return "application/json"
+	case strings.HasSuffix(lowerPath, ".xml"):
+		return "application/xml"
+	case strings.HasSuffix(lowerPath, ".md"), strings.HasSuffix(lowerPath, ".markdown"):
+		return "text/markdown"
+	case strings.HasSuffix(lowerPath, ".css"):
+		return "text/css"
+	case strings.HasSuffix(lowerPath, ".js"), strings.HasSuffix(lowerPath, ".mjs"):
+		return "text/javascript"
+	}
+	return "text/plain"
+}
+func makeURLDetails(origURL, finalURL, contentType, method string, raw, truncated bool, truncMeta map[string]any) map[string]any {
+	meta := map[string]any{
+		"source": map[string]any{"type": "url", "value": finalURL},
+	}
+	if truncMeta != nil {
+		meta["truncation"] = truncMeta
+	}
+	d := map[string]any{
+		"kind":        "url",
+		"url":         origURL,
+		"finalUrl":    finalURL,
+		"contentType": contentType,
+		"method":      method,
+		"truncated":   truncated,
+		"notes":       []string{},
+		"meta":        meta,
+	}
+	if raw {
+		d["raw"] = true
+	}
+	return d
 }
 
 // executeReadURL fetches a URL via urlFetcher (default web.Fetch) and applies omp's
@@ -184,11 +282,12 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 		return sdk.ToolResult{}, err
 	}
 
+	body, finalURL, contentType, method := parseURLFetchMeta(fetched, target.URL, target.Sel.IsRaw())
+
 	// Line-range or tail selector: slice the body (no URL/Content-Type/Method header),
 	// with 1-before / 3-after context on single non-raw ranges, no line numbers,
-	// and omp's `[N more lines in URL output. Use :M to continue]` footer when lines remain.
+	// and omp's `[N more lines in URL output. Use :M- to continue]` footer when lines remain.
 	if target.Sel.Kind == SelectorLines || target.Sel.Kind == SelectorTail {
-		body := stripURLFetchHeader(fetched)
 		norm := strings.ReplaceAll(body, "\r\n", "\n")
 		allLines := strings.Split(norm, "\n")
 		if strings.HasSuffix(norm, "\n") && len(allLines) > 0 {
@@ -198,7 +297,10 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 
 		resolved := target.Sel.ResolveTail(totalLines)
 		if resolved.IsMultiRange() {
-			return sdk.ToolResult{Content: renderURLMultiRange(allLines, resolved)}, nil
+			return sdk.ToolResult{
+				Content: renderURLMultiRange(allLines, resolved),
+				Details: makeURLDetails(target.URL, finalURL, contentType, method, resolved.IsRaw(), false, nil),
+			}, nil
 		}
 
 		rawMode := resolved.IsRaw()
@@ -206,7 +308,8 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 		requestedStart := max(0, r.StartLine-1)
 		if requestedStart >= totalLines {
 			return sdk.ToolResult{
-				Content: fmt.Sprintf("Line %d is beyond end of URL output (%d lines total). Use :1 to read from the start, or :%d to read the last line.", r.StartLine, totalLines, totalLines),
+				Content: fmt.Sprintf("Line %d is beyond end of URL output (%d lines total). Use :1- to read from the start, or :%d to read the last line.", r.StartLine, totalLines, totalLines),
+				Details: makeURLDetails(target.URL, finalURL, contentType, method, rawMode, false, nil),
 			}, nil
 		}
 
@@ -245,14 +348,29 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 		}
 		out := strings.Join(outLines, "\n")
 		shownEnd := startIdx + len(outLines)
+		var truncMeta map[string]any
 		if truncated {
-			out += fmt.Sprintf("\n\n[Showing lines %d-%d of %d (%s limit). Use :%d to continue]",
+			out += fmt.Sprintf("\n\n[Showing lines %d-%d of %d (%s limit). Use :%d- to continue]",
 				startIdx+1, shownEnd, totalLines, formatBytes(DefaultMaxBytes), shownEnd+1)
+			truncMeta = map[string]any{
+				"direction":   "head",
+				"truncatedBy": "bytes",
+				"totalLines":  totalLines,
+				"totalBytes":  len(body),
+				"outputLines": len(outLines),
+				"outputBytes": bytesUsed,
+				"maxBytes":    DefaultMaxBytes,
+				"shownRange":  map[string]any{"start": startIdx + 1, "end": shownEnd},
+				"nextOffset":  shownEnd + 1,
+			}
 		} else if !rawMode && shownEnd < totalLines {
 			remaining := totalLines - shownEnd
-			out += fmt.Sprintf("\n\n[%d more lines in URL output. Use :%d to continue]", remaining, shownEnd+1)
+			out += fmt.Sprintf("\n\n[%d more lines in URL output. Use :%d- to continue]", remaining, shownEnd+1)
 		}
-		return sdk.ToolResult{Content: out}, nil
+		return sdk.ToolResult{
+			Content: out,
+			Details: makeURLDetails(target.URL, finalURL, contentType, method, rawMode, truncated, truncMeta),
+		}, nil
 	}
 
 	// Whole URL read (no range/tail selector): keep header block, head-truncate at 300 lines / 50 KB.
@@ -268,7 +386,7 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 	bytesUsed := 0
 	truncatedByBytes := false
 	truncatedByLines := false
-	for i := 0; i < totalLines; i++ {
+	for i := range totalLines {
 		if len(outLines) >= fetchDefaultMaxLines {
 			truncatedByLines = true
 			break
@@ -286,19 +404,40 @@ func executeReadURL(ctx context.Context, target *parsedURLTarget) (sdk.ToolResul
 	}
 
 	if !truncatedByBytes && !truncatedByLines {
-		return sdk.ToolResult{Content: fetched}, nil
+		return sdk.ToolResult{
+			Content: fetched,
+			Details: makeURLDetails(target.URL, finalURL, contentType, method, target.Sel.IsRaw(), false, nil),
+		}, nil
 	}
 
 	shownEnd := len(outLines)
 	out := strings.Join(outLines, "\n")
+	truncBy := "lines"
 	if truncatedByBytes {
-		out += fmt.Sprintf("\n\n[Showing lines 1-%d of %d (%s limit). Use :%d to continue]",
+		truncBy = "bytes"
+		out += fmt.Sprintf("\n\n[Showing lines 1-%d of %d (%s limit). Use :%d- to continue]",
 			shownEnd, totalLines, formatBytes(DefaultMaxBytes), shownEnd+1)
 	} else {
-		out += fmt.Sprintf("\n\n[Showing lines 1-%d of %d. Use :%d to continue]",
+		out += fmt.Sprintf("\n\n[Showing lines 1-%d of %d. Use :%d- to continue]",
 			shownEnd, totalLines, shownEnd+1)
 	}
-	return sdk.ToolResult{Content: out}, nil
+	truncMeta := map[string]any{
+		"direction":   "head",
+		"truncatedBy": truncBy,
+		"totalLines":  totalLines,
+		"totalBytes":  len(fetched),
+		"outputLines": shownEnd,
+		"outputBytes": bytesUsed,
+		"shownRange":  map[string]any{"start": 1, "end": shownEnd},
+		"nextOffset":  shownEnd + 1,
+	}
+	if truncatedByBytes {
+		truncMeta["maxBytes"] = DefaultMaxBytes
+	}
+	return sdk.ToolResult{
+		Content: out,
+		Details: makeURLDetails(target.URL, finalURL, contentType, method, target.Sel.IsRaw(), true, truncMeta),
+	}, nil
 }
 
 func renderURLMultiRange(allLines []string, sel ParsedSelector) string {

@@ -1,0 +1,2851 @@
+{
+  "lang": "yaml",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 470,
+  "omp_resolved": 162,
+  "omp_refused": 308,
+  "cases": [
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 33,
+      "span": [
+        33,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 39,
+      "span": [
+        39,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 46,
+      "span": [
+        46,
+        163
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 55,
+      "span": [
+        55,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 72,
+      "span": [
+        72,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 77,
+      "span": [
+        77,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 81,
+      "span": [
+        81,
+        85
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 86,
+      "span": [
+        86,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 90,
+      "span": [
+        90,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 95,
+      "span": [
+        95,
+        98
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 99,
+      "span": [
+        99,
+        101
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 102,
+      "span": [
+        102,
+        105
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 106,
+      "span": [
+        106,
+        109
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 115,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 123,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 135,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 142,
+      "span": [
+        142,
+        146
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 147,
+      "span": [
+        147,
+        152
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 154,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 158,
+      "span": [
+        158,
+        159
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 160,
+      "span": [
+        160,
+        163
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 166,
+      "span": [
+        166,
+        167
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 168,
+      "span": [
+        168,
+        171
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 170,
+      "span": [
+        170,
+        171
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.golangci.yml",
+      "anchor": 173,
+      "span": [
+        173,
+        175
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 9,
+      "span": [
+        9,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 20,
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 24,
+      "span": [
+        24,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 25,
+      "span": [
+        25,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 29,
+      "span": [
+        29,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 31,
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 34,
+      "span": [
+        34,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 38,
+      "span": [
+        38,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 40,
+      "span": [
+        40,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 45,
+      "span": [
+        45,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 46,
+      "span": [
+        46,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 49,
+      "span": [
+        49,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 54,
+      "span": [
+        54,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 57,
+      "span": [
+        57,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 60,
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 63,
+      "span": [
+        63,
+        65
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__gocache.yml",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 8,
+      "span": [
+        8,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 17,
+      "span": [
+        17,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 18,
+      "span": [
+        18,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 25,
+      "span": [
+        25,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 26,
+      "span": [
+        26,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 27,
+      "span": [
+        27,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 32,
+      "span": [
+        32,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 33,
+      "refused": "line 1: `CUT 33*` could not resolve a syntactic block beginning on line 33 (blank/closer line, or parse error). Use `CUT 33.=M` with explicit lines. The nearest enclosing multi-line block begins at line 32 and ends at line 38; use `CUT 32*` to target it."
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__cache-cleanup.yml",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 3,
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 10,
+      "span": [
+        10,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 16,
+      "span": [
+        16,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 19,
+      "span": [
+        19,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 20,
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 27,
+      "span": [
+        27,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 32,
+      "span": [
+        32,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 39,
+      "span": [
+        39,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 45,
+      "span": [
+        45,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 46,
+      "span": [
+        46,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 47,
+      "span": [
+        47,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 49,
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 52,
+      "span": [
+        52,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 55,
+      "span": [
+        55,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__security-insights.yml",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 6,
+      "span": [
+        6,
+        7
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 8,
+      "span": [
+        8,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 15,
+      "span": [
+        15,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 20,
+      "span": [
+        20,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 25,
+      "span": [
+        25,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 27,
+      "span": [
+        27,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 29,
+      "span": [
+        29,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 31,
+      "span": [
+        31,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 33,
+      "span": [
+        33,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 35,
+      "span": [
+        35,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 37,
+      "span": [
+        37,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 39,
+      "span": [
+        39,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 41,
+      "span": [
+        41,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 44,
+      "span": [
+        44,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__bench-ext10-split__piglet.yaml",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 17,
+      "span": [
+        17,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 18,
+      "span": [
+        18,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 26,
+      "span": [
+        26,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 30,
+      "span": [
+        30,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 31,
+      "span": [
+        31,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 34,
+      "span": [
+        34,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 36,
+      "span": [
+        36,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 37,
+      "span": [
+        37,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 40,
+      "span": [
+        40,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 41,
+      "span": [
+        41,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 44,
+      "span": [
+        44,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 47,
+      "span": [
+        47,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 55,
+      "span": [
+        55,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 56,
+      "span": [
+        56,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 60,
+      "span": [
+        60,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 63,
+      "span": [
+        63,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 65,
+      "span": [
+        65,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 68,
+      "span": [
+        68,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_.github__workflows__npm-publish.yml",
+      "anchor": 70,
+      "span": [
+        70,
+        71
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 5,
+      "span": [
+        5,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 15,
+      "span": [
+        15,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 17,
+      "span": [
+        17,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pigpen_piglets__pig-warden__piglet.yaml",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 12,
+      "span": [
+        12,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 13,
+      "span": [
+        13,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 20,
+      "span": [
+        20,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 22,
+      "span": [
+        22,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 43,
+      "span": [
+        43,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 47,
+      "span": [
+        47,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 53,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 59,
+      "span": [
+        59,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 61,
+      "span": [
+        61,
+        62
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 71,
+      "span": [
+        71,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 77,
+      "span": [
+        77,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 79,
+      "span": [
+        79,
+        81
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 92,
+      "span": [
+        92,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 94,
+      "span": [
+        94,
+        99
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 99,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 100,
+      "span": [
+        100,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 103,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 109,
+      "span": [
+        109,
+        110
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 112,
+      "span": [
+        112,
+        113
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 117,
+      "span": [
+        117,
+        126
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 122,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 124,
+      "span": [
+        124,
+        125
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 129,
+      "span": [
+        129,
+        131
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 133,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__dependabot.yml",
+      "anchor": 138,
+      "span": [
+        138,
+        139
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 4,
+      "span": [
+        4,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 7,
+      "span": [
+        7,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 10,
+      "span": [
+        10,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 12,
+      "span": [
+        12,
+        13
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_piglets__pig-bolt__pig-bolt.yaml",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 47,
+      "span": [
+        47,
+        52
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 69,
+      "span": [
+        69,
+        225
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 83,
+      "span": [
+        83,
+        225
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 92,
+      "span": [
+        92,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 101,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 115,
+      "span": [
+        115,
+        128
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 130,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 131,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 152,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 160,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 169,
+      "span": [
+        169,
+        173
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 184,
+      "span": [
+        184,
+        188
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 191,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 194,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 203,
+      "span": [
+        203,
+        218
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 222,
+      "span": [
+        222,
+        225
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 223,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 236,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 245,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 255,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 265,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 274,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 285,
+      "span": [
+        285,
+        288
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 287,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 297,
+      "span": [
+        297,
+        299
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 308,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 317,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 327,
+      "span": [
+        327,
+        338
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 345,
+      "span": [
+        345,
+        360
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 348,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 365,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 378,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 383,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 400,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 409,
+      "span": [
+        409,
+        428
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 410,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 420,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 438,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 441,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 447,
+      "span": [
+        447,
+        512
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 457,
+      "span": [
+        457,
+        464
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 471,
+      "span": [
+        471,
+        493
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 473,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 495,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 502,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 504,
+      "span": [
+        504,
+        505
+      ]
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 519,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 529,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 534,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 538,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 548,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/yaml/pig_.github__workflows__ci-images.yml",
+      "anchor": 557,
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 33*` could not resolve a syntactic block beginning on line 33 (blank/closer line, or parse error). Use `CUT 33.=M` with explicit lines. The nearest enclosing multi-line block begins at line 32 and ends at line 38; use `CUT 32*` to target it."
+  }
+}

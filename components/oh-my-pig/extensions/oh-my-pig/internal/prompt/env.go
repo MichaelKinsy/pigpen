@@ -7,10 +7,12 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 )
 
 // EnvEntry is one label/value row inside <workstation>.
-// upstream: packages/coding-agent/src/system-prompt.ts:221-226
+// upstream: packages/coding-agent/src/system-prompt.ts:252-257
 type EnvEntry struct {
 	Label string
 	Value string
@@ -25,7 +27,7 @@ type ActiveRepoContext struct {
 }
 
 // DefaultEnvironmentInfo returns platform/release and CPU architecture in omp's Node/Bun format.
-// upstream: packages/coding-agent/src/system-prompt.ts:221-226
+// upstream: packages/coding-agent/src/system-prompt.ts:252-257
 func DefaultEnvironmentInfo() []EnvEntry {
 	platform := nodePlatform(runtime.GOOS)
 	release := osRelease()
@@ -62,6 +64,10 @@ func nodeArch(goarch string) string {
 func NormalizePromptPath(value string) string {
 	return strings.ReplaceAll(value, `\`, "/")
 }
+
+// StandardizePromptCwd is the working directory as omp spells it in the prompt
+// and the reminder (dirs.StandardizeMacOSPath).
+func StandardizePromptCwd(p string) string { return dirs.StandardizeMacOSPath(p) }
 
 // FormatLocalCalendarDate formats t as YYYY-MM-DD in its local timezone.
 // upstream: packages/tui/src/chrome/local-date.ts:2-7

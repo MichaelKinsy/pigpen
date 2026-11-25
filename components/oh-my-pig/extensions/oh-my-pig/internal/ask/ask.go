@@ -1,1012 +1,811 @@
-// Package ask ports omp's interactive `ask` tool to PiG's Go SDK.
-//
-// Upstream: packages/coding-agent/src/tools/ask.ts,
-// packages/coding-agent/src/prompts/tools/ask.md,
-// packages/tui/src/render/render-utils.ts.
+// Package ask ports omp's HTML <form> ask tool onto PiG's Go extension SDK.
 package ask
 
 import (
-	"context"
 	_ "embed"
 	"errors"
 	"fmt"
+	"html"
 	"math"
 	"strings"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
-	"github.com/MichaelKinsy/PiG/extensions/sdk/tui"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/intent"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/schemaorder"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 //go:embed ask.md
-var askPromptMarkdown string
+var askPrompt string
+
+//go:embed ask-headless-fork.md
+var askHeadlessForkPrompt string
+
+//go:embed ask-result.md
+var askResultTemplate string
+
+//go:embed ask-split-radio-groups.md
+var askSplitRadioGroupsTemplate string
+
+// Setting reads an omp setting by key (e.g. "ask.timeout", "ask.notify").
+// Nil falls back to omp's defaults. Assigned by the integrator.
+var Setting func(ctx sdk.Context, key string) any
 
 const (
-	// otherOption is the runtime sentinel label appended by omp to every
-	// question so the user can enter a custom free-text response.
-	// upstream: packages/coding-agent/src/tools/ask.ts:51
-	otherOption = "Other (type your own)"
+	// DefaultAskTimeoutMs matches omp's default `ask.timeout` setting (0 = disabled).
+	// upstream: packages/coding-agent/src/modes/settings.ts:1443-1457
+	DefaultAskTimeoutMs = 0
 
-	chatAboutThisOption = "Chat about this"
-	nextOption          = "Next →"
+	// timeoutDetectionToleranceMs is the window after the deadline within which
+	// a nil dialog result is attributed to a UI-enforced timeout rather than Esc.
+	// upstream: packages/coding-agent/src/tools/ask.ts:74
+	timeoutDetectionToleranceMs = 1000
 
-	// doneOptionLabel mirrors getDoneOptionLabel() under omp's default unicode
-	// symbol preset (`status.success` = "✔").
-	// upstream: packages/coding-agent/src/tools/ask.ts:139-141, packages/tui/src/theme/symbols.ts:393
-	doneOptionLabel = "✔ Done selecting"
+	otherRowLabel = OtherLabel + " (type your own)"
+	// nativeOtherRowLabel is the free-text row's label in Tern.
+	// upstream: packages/tui/src/overlays/ask-dialog.ts:109 (OTHER_LABEL)
+	nativeOtherRowLabel = OtherLabel + "…"
+	doneRowLabel        = "✔ Done selecting"
 
-	recommendedSuffix = " (Recommended)"
-
-	// defaultTabWidth matches omp's DEFAULT_TAB_WIDTH used by replaceTabs.
-	// upstream: packages/utils/src/tab-spacing.ts:11
-	defaultTabWidth = 3
-
-	// errorLineWidth matches omp's TRUNCATE_LENGTHS.LINE for formatErrorValue.
-	// upstream: packages/tui/src/render/render-utils.ts:193
-	errorLineWidth = 110
-
-	// timeoutDetectionTolerance matches omp's TIMEOUT_DETECTION_TOLERANCE_MS:
-	// an `undefined` (ok=false) select reply arriving right around the deadline
-	// is attributed to a UI-enforced timeout rather than a user Esc cancel.
-	// upstream: packages/coding-agent/src/tools/ask.ts:137, 300-307
-	timeoutDetectionTolerance = 1000 * time.Millisecond
+	noNamedControlsError  = "Error: the form has no named controls. Put at least one <input>, <select> or <textarea> with a `name` attribute inside the <form>."
+	askTimedOutUnanswered = "The ask timed out before the user answered its required fields; no answer was given."
+	invalidAskError       = "Error: ask takes one `html` string holding a <form>."
 )
 
-var reservedOptionLabels = map[string]bool{
-	otherOption:         true,
-	chatAboutThisOption: true,
-	nextOption:          true,
+// AskToolDetails matches omp's AskToolDetails in packages/tui/src/tools/ask.ts:24-31,
+// plus the parsed Form so a Tern-native frontend can render the whole form at once.
+type AskToolDetails struct {
+	Answers  []FormAnswer `json:"answers"`
+	Notes    []OptionNote `json:"notes,omitempty"`
+	TimedOut bool         `json:"timedOut,omitempty"`
+	Form     *HtmlForm    `json:"form,omitempty"`
 }
 
-// config configures optional runtime overrides for tests.
-// Zero values match omp's defaults (no timeout, real monotonic clock).
-type config struct {
-	// timeout is the per-question dialog timeout (omp's `ask.timeout` in seconds,
-	// converted to duration). Zero disables auto-selection timeout, matching omp's
-	// default `ask.timeout: 0`.
-	// upstream: packages/coding-agent/src/modes/settings.ts:1239-1267
-	timeout time.Duration
-
-	// now overrides time.Now for deterministic timeout detection in tests.
-	now func() time.Time
+// Config configures optional ask behavior.
+type Config struct {
+	// TimeoutMs overrides ask.timeout in milliseconds when > 0 (0 reads Setting("ask.timeout")).
+	TimeoutMs int
+	// AdvertiseHeadlessAsk keeps `ask` advertised in headless sessions and returns
+	// the headless-fork guidance instead of aborting when ctx.HasUI() is false.
+	AdvertiseHeadlessAsk bool
 }
 
-// Register registers omp's `ask` tool on e.
+// Register registers the `ask` tool and headless visibility hook on the PiG extension.
 func Register(e *sdk.Extension) {
-	registerWithConfig(e, config{})
+	RegisterWithConfig(e, Config{TimeoutMs: DefaultAskTimeoutMs})
 }
-func registerWithConfig(e *sdk.Extension, cfg config) {
-	e.RegisterTool(sdk.ToolDefinition{
-		Name:          "ask",
-		Label:         "Ask",
-		Description:   strings.TrimSpace(askPromptMarkdown),
-		PromptSnippet: "Ask the user a clarifying question",
-		Parameters:    askSchema(),
-		ExecutionMode: "sequential",
+
+// RegisterWithConfig registers the `ask` tool with explicit configuration.
+func RegisterWithConfig(e *sdk.Extension, cfg Config) {
+	askDef := schemaorder.Apply(sdk.ToolDefinition{
+		Name:             "ask",
+		Label:            "Ask",
+		Description:      strings.TrimSpace(askPrompt),
+		Parameters:       askToolSchema(),
+		ExecutionMode:    "sequential",
+		PrepareArguments: prepareAskArguments,
 		Execute: func(ctx sdk.Context, params map[string]any) (any, error) {
 			return executeAsk(ctx, params, cfg)
 		},
 	})
+	e.RegisterTool(intent.Tool(askDef))
+	intent.RegisterSync(e, askDef)
+	// upstream: packages/coding-agent/src/tools/ask.ts:443-445 (AskTool.createIf)
+	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if ctx.HasUI() || cfg.AdvertiseHeadlessAsk {
+			return nil, nil
+		}
+		active, err := ctx.GetActiveTools()
+		if err != nil {
+			return nil, nil
+		}
+		filtered := make([]string, 0, len(active))
+		changed := false
+		for _, name := range active {
+			if name == "ask" {
+				changed = true
+				continue
+			}
+			filtered = append(filtered, name)
+		}
+		if changed {
+			ctx.SetActiveTools(filtered)
+		}
+		return nil, nil
+	})
 }
 
-// askSchema returns the JSON Schema emitted by omp's arkType definition of askSchema.
-// upstream: packages/coding-agent/src/tools/ask.ts:60-83
-func askSchema() sdk.Schema {
-	optionItem := map[string]any{
-		"type":     "object",
-		"required": []string{"label"},
-		"properties": map[string]any{
-			"label":       map[string]any{"type": "string"},
-			"description": map[string]any{"type": "string"},
-			"preview":     map[string]any{"type": "string", "description": "rich preview"},
-		},
+// prepareAskArguments mirrors omp's lenient ask validation before PiG's host
+// JSON Schema validator runs:
+//   - A valid string `html` passes through (extra root keys are stripped by
+//     intent's lenient wrapper on schema-valid calls, or kept only if valid).
+//   - A legacy `questions` payload is rebuilt into `{"html": ...}`.
+//   - Any other malformed shape (missing `html`, non-string `html` such as
+//     null, unknown keys without `html`, invalid legacy `questions`) is refused
+//     verbatim with omp's INVALID_ASK_ERROR so PiG's host validator never
+//     answers in PiG's wording or coerces `{"html": null}` to `{"html": "null"}`.
+//
+// upstream: packages/coding-agent/src/tools/ask.ts:69,87-120,429,520-523
+func prepareAskArguments(params map[string]any) (map[string]any, error) {
+	if params == nil {
+		return nil, errors.New(invalidAskError)
 	}
-	questionItem := map[string]any{
-		"type":     "object",
-		"required": []string{"id", "question", "options"},
-		"properties": map[string]any{
-			"id":       map[string]any{"type": "string"},
-			"question": map[string]any{"type": "string"},
-			"header":   map[string]any{"type": "string", "description": "display chip"},
-			"options": map[string]any{
-				"type":  "array",
-				"items": optionItem,
-			},
-			"multi":       map[string]any{"type": "boolean"},
-			"recommended": map[string]any{"type": "number", "description": "0-based default index"},
-		},
+	if rawHTML, ok := RecoverAskHTML(params); ok {
+		if _, hasHTML := params["html"].(string); hasHTML {
+			return params, nil
+		}
+		return map[string]any{"html": rawHTML}, nil
 	}
+	return nil, errors.New(invalidAskError)
+}
+
+// askToolSchema matches omp's askSchema in packages/coding-agent/src/tools/ask.ts:76-78.
+func askToolSchema() sdk.Schema {
 	return sdk.Schema{
-		"type":     "object",
-		"required": []string{"questions"},
+		"type": "object",
 		"properties": map[string]any{
-			"questions": map[string]any{
-				"type":     "array",
-				"items":    questionItem,
-				"minItems": 1,
+			"html": map[string]any{
+				"type":        "string",
+				"description": "one HTML <form>",
 			},
 		},
+		"required":             []any{"html"},
+		"additionalProperties": false,
 	}
 }
 
-type askOption struct {
-	Label       string
-	Description string
-	Preview     string
+// RecoverAskHTML extracts the form HTML from params, or rebuilds it from a legacy
+// pre-HTML `questions` list.
+// upstream: packages/coding-agent/src/tools/ask.ts:87-115
+func RecoverAskHTML(params map[string]any) (string, bool) {
+	return RecoverAskHTMLValue(params)
 }
 
-type askQuestion struct {
-	ID             string
-	Question       string
-	Header         string
-	Options        []askOption
-	Multi          bool
-	Recommended    int
-	HasRecommended bool
-}
-
-type askParams struct {
-	Questions []askQuestion
-}
-
-// questionResult matches omp's QuestionResult details shape.
-// upstream: packages/tui/src/tools/ask.ts:31-42
-type questionResult struct {
-	ID              string   `json:"id"`
-	Question        string   `json:"question"`
-	Options         []string `json:"options"`
-	Multi           bool     `json:"multi"`
-	SelectedOptions []string `json:"selectedOptions"`
-	CustomInput     *string  `json:"customInput,omitempty"`
-	Note            *string  `json:"note,omitempty"`
-	TimedOut        bool     `json:"timedOut,omitempty"`
-}
-
-// askToolDetails matches omp's AskToolDetails shape.
-// upstream: packages/tui/src/tools/ask.ts:45-61
-type askToolDetails struct {
-	Question        string           `json:"question,omitempty"`
-	Options         []string         `json:"options,omitempty"`
-	Multi           *bool            `json:"multi,omitempty"`
-	SelectedOptions []string         `json:"selectedOptions,omitempty"`
-	CustomInput     *string          `json:"customInput,omitempty"`
-	Note            *string          `json:"note,omitempty"`
-	TimedOut        bool             `json:"timedOut,omitempty"`
-	Results         []questionResult `json:"results,omitempty"`
-	ChatRedirect    bool             `json:"chatRedirect,omitempty"`
-	Questions       []string         `json:"questions,omitempty"`
-}
-
-// selectionResult holds the outcome of asking one question.
-// upstream: packages/coding-agent/src/tools/ask.ts:174-181
-type selectionResult struct {
-	selectedOptions []string
-	customInput     *string
-	timedOut        bool
-	cancelled       bool
-}
-
-type dialogUI interface {
-	Select(title string, options []string, timeout time.Duration) (string, bool, error)
-	Editor(title string) (string, bool, error)
-	Input(title string, timeout time.Duration) (string, bool, error)
-}
-
-type sdkDialogUI struct {
-	ctx sdk.Context
-}
-
-func (u sdkDialogUI) Select(title string, options []string, timeout time.Duration) (string, bool, error) {
-	var (
-		val any
-		ok  bool
-		err error
-	)
-	if timeout > 0 {
-		val, ok, err = u.ctx.SelectWithOptions(title, options, sdk.DialogOptions{
-			Timeout: float64(timeout) / float64(time.Millisecond),
-		})
-	} else {
-		val, ok, err = u.ctx.Select(title, options)
+// RecoverAskHTMLValue recovers form HTML from a bare string, an `{html}` object,
+// or a legacy `{questions: [...]}` object.
+// upstream: packages/coding-agent/src/tools/ask.ts:87-115
+func RecoverAskHTMLValue(raw any) (string, bool) {
+	if s, ok := raw.(string); ok {
+		return s, true
 	}
-	if err != nil || !ok {
-		return "", false, err
+	params, ok := raw.(map[string]any)
+	if !ok || params == nil {
+		return "", false
 	}
-	s, ok := val.(string)
-	if !ok {
-		return "", false, nil
+	if h, ok := params["html"].(string); ok {
+		return h, true
 	}
-	return s, true, nil
-}
-
-func (u sdkDialogUI) Editor(title string) (string, bool, error) {
-	val, ok, err := u.ctx.EditorWithoutPrefill(title)
-	if err != nil || !ok {
-		return "", false, err
-	}
-	s, ok := val.(string)
-	if !ok {
-		return "", false, nil
-	}
-	return s, true, nil
-}
-
-func (u sdkDialogUI) Input(title string, timeout time.Duration) (string, bool, error) {
-	var (
-		val any
-		ok  bool
-		err error
-	)
-	if timeout > 0 {
-		val, ok, err = u.ctx.InputWithoutPlaceholderWithOptions(title, sdk.DialogOptions{
-			Timeout: float64(timeout) / float64(time.Millisecond),
-		})
-	} else {
-		val, ok, err = u.ctx.InputWithoutPlaceholder(title)
-	}
-	if err != nil || !ok {
-		return "", false, err
-	}
-	s, ok := val.(string)
-	if !ok {
-		return "", false, nil
-	}
-	return s, true, nil
-}
-
-func executeAsk(ctx sdk.Context, raw map[string]any, cfg config) (any, error) {
-	// Headless fallback: matches omp's check (`!context?.hasUI || !context.ui`).
-	// upstream: packages/coding-agent/src/tools/ask.ts:651-654
-	if !ctx.HasUI() {
-		ctx.Abort()
-		return nil, errors.New("Ask tool requires interactive mode")
-	}
-
-	params, errText := parseAndSanitizeParams(raw)
-	if errText != "" {
-		return sdk.ToolResult{
-			Content: errText,
-			Details: map[string]any{},
-		}, nil
-	}
-
-	if errText := validateParams(params); errText != "" {
-		return sdk.ToolResult{
-			Content: errText,
-			Details: map[string]any{},
-		}, nil
-	}
-
-	if len(params.Questions) == 0 {
-		return sdk.ToolResult{
-			Content: "Error: questions must not be empty",
-			Details: map[string]any{},
-		}, nil
-	}
-
-	nowFn := cfg.now
-	if nowFn == nil {
-		nowFn = time.Now
-	}
-
-	ui := sdkDialogUI{ctx: ctx}
-
-	if len(params.Questions) == 1 {
-		q := params.Questions[0]
-		res, err := askSingleQuestion(ctx, ui, q, "", cfg.timeout, nowFn)
-		if err != nil {
-			return nil, err
-		}
-		if !res.timedOut && (res.cancelled || (len(res.selectedOptions) == 0 && res.customInput == nil)) {
-			ctx.Abort()
-			return nil, errors.New("Ask tool was cancelled by the user")
-		}
-		optionLabels := optionLabelsOf(q.Options)
-		multi := q.Multi
-		details := askToolDetails{
-			Question:        q.Question,
-			Options:         optionLabels,
-			Multi:           &multi,
-			SelectedOptions: nonNilSlice(res.selectedOptions),
-			CustomInput:     res.customInput,
-			TimedOut:        res.timedOut,
-		}
-		text := formatSingleQuestionResponse(res.selectedOptions, res.customInput, nil, res.timedOut, q.Multi)
-		return sdk.ToolResult{Content: text, Details: details}, nil
-	}
-
-	results := make([]questionResult, 0, len(params.Questions))
-	for i, q := range params.Questions {
-		progress := fmt.Sprintf("%d/%d", i+1, len(params.Questions))
-		res, err := askSingleQuestion(ctx, ui, q, progress, cfg.timeout, nowFn)
-		if err != nil {
-			return nil, err
-		}
-		if res.cancelled && !res.timedOut {
-			ctx.Abort()
-			return nil, errors.New("Ask tool was cancelled by the user")
-		}
-		results = append(results, questionResult{
-			ID:              q.ID,
-			Question:        q.Question,
-			Options:         optionLabelsOf(q.Options),
-			Multi:           q.Multi,
-			SelectedOptions: nonNilSlice(res.selectedOptions),
-			CustomInput:     res.customInput,
-			TimedOut:        res.timedOut,
-		})
-	}
-
-	lines := make([]string, len(results))
-	for i, r := range results {
-		lines[i] = formatQuestionResult(r)
-	}
-	details := askToolDetails{Results: results}
-	text := "User answers:\n" + strings.Join(lines, "\n")
-	return sdk.ToolResult{Content: text, Details: details}, nil
-}
-
-// askSingleQuestion drives a single question via PiG's blocking UI dialogs,
-// mirroring omp's degraded selector path (askSingleQuestion in ask.ts:225-479).
-func askSingleQuestion(
-	ctx sdk.Context,
-	ui dialogUI,
-	q askQuestion,
-	progressText string,
-	timeout time.Duration,
-	nowFn func() time.Time,
-) (selectionResult, error) {
-	promptWithProgress := q.Question
-	if progressText != "" {
-		promptWithProgress = fmt.Sprintf("%s (%s)", q.Question, progressText)
-	}
-
-	// Pure free-text question (no predefined options): open the text editor
-	// directly rather than forcing a single-row "Other (type your own)" menu.
-	// On timeout with no options, auto-selection is empty (same as omp's
-	// getAutoSelectionOnTimeout([]) -> []).
-	if len(q.Options) == 0 {
-		val, ok, timedOut, err := promptFreeText(ctx, ui, promptWithProgress, timeout, nowFn)
-		if err != nil {
-			return selectionResult{}, err
-		}
-		if timedOut {
-			return selectionResult{selectedOptions: []string{}, timedOut: true}, nil
-		}
-		if !ok {
-			return selectionResult{selectedOptions: []string{}, cancelled: true}, nil
-		}
-		return selectionResult{selectedOptions: []string{}, customInput: &val}, nil
-	}
-
-	if q.Multi {
-		return askMultiQuestion(ctx, ui, q, promptWithProgress, timeout, nowFn)
-	}
-	return askSingleChoiceQuestion(ctx, ui, q, promptWithProgress, timeout, nowFn)
-}
-
-func askSingleChoiceQuestion(
-	ctx sdk.Context,
-	ui dialogUI,
-	q askQuestion,
-	promptWithProgress string,
-	timeout time.Duration,
-	nowFn func() time.Time,
-) (selectionResult, error) {
-	baseLabels := addRecommendedSuffix(q.Options, q.Recommended, q.HasRecommended)
-	// upstream: ask.ts:404-410 — disambiguate badged display labels against
-	// OTHER_OPTION and each other so we map the user's pick back by index.
-	displayLabels := disambiguateDisplayLabels(baseLabels, []string{otherOption})
-	dialogOptions := formatSelectDisplayOptions(q.Options, displayLabels)
-	dialogOptions = append(dialogOptions, otherOption)
-
-	for {
-		choice, ok, timedOut, err := runSelect(ctx, ui, promptWithProgress, dialogOptions, timeout, nowFn)
-		if err != nil {
-			return selectionResult{}, err
-		}
-		if !ok {
-			if !timedOut {
-				return selectionResult{cancelled: true}, nil
-			}
-			return selectionResult{
-				selectedOptions: autoSelectionOnTimeout(q.Options, q.Recommended, q.HasRecommended),
-				timedOut:        true,
-			}, nil
-		}
-		if choice == otherOption {
-			if timedOut {
-				return selectionResult{
-					selectedOptions: autoSelectionOnTimeout(q.Options, q.Recommended, q.HasRecommended),
-					timedOut:        true,
-				}, nil
-			}
-			custom, customOK, err := runEditor(ctx, ui, promptWithProgress)
-			if err != nil {
-				return selectionResult{}, err
-			}
-			if !customOK {
-				// Dismissing the custom editor returns to the option selector.
-				// upstream: packages/coding-agent/src/tools/ask.ts:450-452
-				continue
-			}
-			return selectionResult{
-				selectedOptions: []string{},
-				customInput:     &custom,
-			}, nil
-		}
-
-		// Map displayed choice back to the offered option by index/identity so
-		// labels intrinsically ending with " (Recommended)" are preserved intact.
-		// upstream: packages/coding-agent/src/tools/ask.ts:457-464
-		picked := mapDisplayChoiceToLabel(choice, dialogOptions[:len(q.Options)], displayLabels, q.Options)
-		return selectionResult{
-			selectedOptions: []string{picked},
-			timedOut:        timedOut,
-		}, nil
-	}
-}
-
-func askMultiQuestion(
-	ctx sdk.Context,
-	ui dialogUI,
-	q askQuestion,
-	promptWithProgress string,
-	timeout time.Duration,
-	nowFn func() time.Time,
-) (selectionResult, error) {
-	selectedSet := make(map[string]bool, len(q.Options))
-	var selectedOrder []string
-
-	for {
-		dialogOptions := make([]string, 0, len(q.Options)+2)
-		optionDisplay := make([]string, len(q.Options))
-		for i, opt := range q.Options {
-			marker := "[ ] "
-			if selectedSet[opt.Label] {
-				marker = "[x] "
-			}
-			disp := marker + formatOptionDisplay(opt.Label, opt.Description)
-			optionDisplay[i] = disp
-			dialogOptions = append(dialogOptions, disp)
-		}
-		if len(selectedSet) > 0 {
-			dialogOptions = append(dialogOptions, doneOptionLabel)
-		}
-		dialogOptions = append(dialogOptions, otherOption)
-
-		prefix := ""
-		if len(selectedSet) > 0 {
-			prefix = fmt.Sprintf("(%d selected) ", len(selectedSet))
-		}
-		prompt := prefix + promptWithProgress
-
-		choice, ok, timedOut, err := runSelect(ctx, ui, prompt, dialogOptions, timeout, nowFn)
-		if err != nil {
-			return selectionResult{}, err
-		}
-		if !ok {
-			if timedOut {
-				selected := selectedOrder
-				if len(selected) == 0 {
-					selected = autoSelectionOnTimeout(q.Options, q.Recommended, q.HasRecommended)
-				}
-				return selectionResult{selectedOptions: selected, timedOut: true}, nil
-			}
-			return selectionResult{selectedOptions: selectedOrder, cancelled: true}, nil
-		}
-		if choice == doneOptionLabel {
-			return selectionResult{selectedOptions: selectedOrder, timedOut: timedOut}, nil
-		}
-		if choice == otherOption {
-			if timedOut {
-				selected := selectedOrder
-				if len(selected) == 0 {
-					selected = autoSelectionOnTimeout(q.Options, q.Recommended, q.HasRecommended)
-				}
-				return selectionResult{selectedOptions: selected, timedOut: true}, nil
-			}
-			custom, customOK, err := runEditor(ctx, ui, prompt)
-			if err != nil {
-				return selectionResult{}, err
-			}
-			if !customOK {
-				// Dismissing custom input returns to the multi-select list with
-				// existing ticks intact. upstream: ask.ts:377-379
-				continue
-			}
-			return selectionResult{
-				selectedOptions: selectedOrder,
-				customInput:     &custom,
-			}, nil
-		}
-
-		// Resolve toggled option by display row or bare label (fake hosts and
-		// RPC clients may echo either the formatted row or the raw label).
-		label, matched := resolveMultiChoice(choice, optionDisplay, q.Options)
-		if matched {
-			if selectedSet[label] {
-				delete(selectedSet, label)
-				selectedOrder = removeString(selectedOrder, label)
-			} else {
-				selectedSet[label] = true
-				selectedOrder = append(selectedOrder, label)
-			}
-		}
-
-		if timedOut {
-			selected := selectedOrder
-			if len(selected) == 0 {
-				selected = autoSelectionOnTimeout(q.Options, q.Recommended, q.HasRecommended)
-			}
-			return selectionResult{selectedOptions: selected, timedOut: true}, nil
-		}
-	}
-}
-
-func runSelect(
-	ctx sdk.Context,
-	ui dialogUI,
-	prompt string,
-	options []string,
-	timeout time.Duration,
-	nowFn func() time.Time,
-) (choice string, ok bool, timedOut bool, err error) {
-	if isAborted(ctx) {
-		return "", false, false, errors.New("Ask input was cancelled")
-	}
-	started := nowFn()
-	choice, ok, err = ui.Select(prompt, options, timeout)
-	if err != nil {
-		if isAbortErr(ctx, err) {
-			return "", false, false, errors.New("Ask input was cancelled")
-		}
-		return "", false, false, err
-	}
-	if !ok && timeout > 0 {
-		// PiG's SDK `SelectWithOptions` forwards `timeout` to the host but has no
-		// `onTimeout` callback. Mirror omp's deadline-window detection
-		// (ask.ts:300-307) so a UI-enforced timeout auto-selects while an early
-		// Esc or a cancel well past the deadline remains a user cancel.
-		elapsed := nowFn().Sub(started)
-		if elapsed >= timeout && elapsed <= timeout+timeoutDetectionTolerance {
-			timedOut = true
-		}
-	}
-	return choice, ok, timedOut, nil
-}
-
-func runEditor(ctx sdk.Context, ui dialogUI, title string) (string, bool, error) {
-	if isAborted(ctx) {
-		return "", false, errors.New("Ask input was cancelled")
-	}
-	text, ok, err := ui.Editor(title)
-	if err != nil {
-		if isAbortErr(ctx, err) {
-			return "", false, errors.New("Ask input was cancelled")
-		}
-		return "", false, err
-	}
-	return text, ok, nil
-}
-
-func promptFreeText(
-	ctx sdk.Context,
-	ui dialogUI,
-	title string,
-	timeout time.Duration,
-	nowFn func() time.Time,
-) (string, bool, bool, error) {
-	if isAborted(ctx) {
-		return "", false, false, errors.New("Ask input was cancelled")
-	}
-	started := nowFn()
-	if timeout > 0 {
-		text, ok, err := ui.Input(title, timeout)
-		if err != nil {
-			if isAbortErr(ctx, err) {
-				return "", false, false, errors.New("Ask input was cancelled")
-			}
-			return "", false, false, err
-		}
-		if !ok {
-			elapsed := nowFn().Sub(started)
-			if elapsed >= timeout && elapsed <= timeout+timeoutDetectionTolerance {
-				return "", false, true, nil
-			}
-			return "", false, false, nil
-		}
-		return text, true, false, nil
-	}
-	text, ok, err := ui.Editor(title)
-	if err != nil {
-		if isAbortErr(ctx, err) {
-			return "", false, false, errors.New("Ask input was cancelled")
-		}
-		return "", false, false, err
-	}
-	return text, ok, false, nil
-}
-
-func isAborted(ctx sdk.Context) bool {
-	if ctx.Err() != nil {
-		return true
-	}
-	if sig := ctx.Signal(); sig != nil && sig.Err() != nil {
-		return true
-	}
-	return false
-}
-
-func isAbortErr(ctx sdk.Context, err error) bool {
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-		return true
-	}
-	return isAborted(ctx)
-}
-
-// parseAndSanitizeParams decodes raw tool arguments and strips `\r` runs
-// before validation and rendering.
-// upstream: packages/coding-agent/src/tools/ask.ts:1010-1026
-func parseAndSanitizeParams(raw map[string]any) (askParams, string) {
-	if raw == nil {
-		return askParams{}, "Error: questions must not be empty"
-	}
-	rawQuestions, ok := raw["questions"].([]any)
-	if !ok {
-		return askParams{}, "Error: questions must not be empty"
-	}
-	questions := make([]askQuestion, 0, len(rawQuestions))
-	for _, entry := range rawQuestions {
-		m, ok := entry.(map[string]any)
-		if !ok {
-			continue
-		}
-		q := askQuestion{}
-		if id, ok := m["id"].(string); ok {
-			q.ID = sanitizeCarriageReturns(id)
-		}
-		if text, ok := m["question"].(string); ok {
-			q.Question = sanitizeCarriageReturns(text)
-		}
-		if header, ok := m["header"].(string); ok {
-			q.Header = sanitizeCarriageReturns(header)
-		}
-		if multi, ok := m["multi"].(bool); ok {
-			q.Multi = multi
-		}
-		if rec, ok := asIntIndex(m["recommended"]); ok {
-			q.Recommended = rec
-			q.HasRecommended = true
-		}
-		if rawOpts, ok := m["options"].([]any); ok {
-			q.Options = make([]askOption, 0, len(rawOpts))
-			for _, rawOpt := range rawOpts {
-				om, ok := rawOpt.(map[string]any)
-				if !ok {
-					continue
-				}
-				opt := askOption{}
-				if label, ok := om["label"].(string); ok {
-					opt.Label = sanitizeCarriageReturns(label)
-				}
-				if desc, ok := om["description"].(string); ok {
-					opt.Description = strings.TrimSpace(sanitizeCarriageReturns(desc))
-				}
-				if preview, ok := om["preview"].(string); ok {
-					opt.Preview = sanitizeCarriageReturns(preview)
-				}
-				q.Options = append(q.Options, opt)
-			}
-		}
-		questions = append(questions, q)
-	}
-	return askParams{Questions: questions}, ""
-}
-
-func asIntIndex(v any) (int, bool) {
-	switch n := v.(type) {
-	case float64:
-		if math.IsNaN(n) || math.IsInf(n, 0) || math.Trunc(n) != n {
-			return 0, false
-		}
-		return int(n), true
-	case int:
-		return n, true
-	case int64:
-		return int(n), true
-	default:
-		return 0, false
-	}
-}
-
-// validateParams enforces omp's runtime validation guards after sanitization:
-// reserved labels, multi-select Done collision, unique question IDs, and
-// unique option labels within a question.
-// upstream: packages/coding-agent/src/tools/ask.ts:663-732
-func validateParams(params askParams) string {
-	for _, q := range params.Questions {
-		for _, opt := range q.Options {
-			if reservedOptionLabels[opt.Label] {
-				return fmt.Sprintf("Error: option labels must not collide with reserved runtime labels: %s", formatErrorValue(opt.Label))
-			}
-		}
-	}
-	for _, q := range params.Questions {
-		if !q.Multi {
-			continue
-		}
-		for _, opt := range q.Options {
-			if opt.Label == doneOptionLabel {
-				return fmt.Sprintf("Error: option labels must not collide with reserved runtime labels: %s", formatErrorValue(opt.Label))
-			}
-		}
-	}
-	seenIDs := make(map[string]bool, len(params.Questions))
-	for _, q := range params.Questions {
-		if seenIDs[q.ID] {
-			return fmt.Sprintf("Error: question ids must be unique: %s", formatErrorValue(q.ID))
-		}
-		seenIDs[q.ID] = true
-
-		seenLabels := make(map[string]bool, len(q.Options))
-		for _, opt := range q.Options {
-			if seenLabels[opt.Label] {
-				return fmt.Sprintf("Error: option labels must be unique within a question: %s", formatErrorValue(opt.Label))
-			}
-			seenLabels[opt.Label] = true
-		}
-	}
-	return ""
-}
-
-// sanitizeCarriageReturns normalizes CRLF to LF and collapses stray CR runs
-// into a single space.
-// upstream: packages/tui/src/render/render-utils.ts:35-38
-func sanitizeCarriageReturns(text string) string {
-	if !strings.ContainsRune(text, '\r') {
-		return text
-	}
-	s := strings.ReplaceAll(text, "\r\n", "\n")
-	var b strings.Builder
-	b.Grow(len(s))
-	inCR := false
-	for i := range len(s) {
-		if s[i] == '\r' {
-			if !inCR {
-				b.WriteByte(' ')
-				inCR = true
-			}
-			continue
-		}
-		inCR = false
-		b.WriteByte(s[i])
-	}
-	return b.String()
-}
-
-// disambiguateDisplayLabels returns unique, action-safe display labels while
-// preserving slice order and indices.
-// upstream: packages/tui/src/render/render-utils.ts:50-59
-func disambiguateDisplayLabels(rawLabels []string, reserved []string) []string {
-	taken := make(map[string]bool, len(reserved)+len(rawLabels))
-	for _, r := range reserved {
-		taken[r] = true
-	}
-	out := make([]string, len(rawLabels))
-	for i, raw := range rawLabels {
-		base := sanitizeCarriageReturns(raw)
-		candidate := base
-		for suffix := 2; taken[candidate]; suffix++ {
-			candidate = fmt.Sprintf("%s (%d)", base, suffix)
-		}
-		taken[candidate] = true
-		out[i] = candidate
-	}
-	return out
-}
-
-// addRecommendedSuffix appends " (Recommended)" to the recommended option
-// unless its label already ends with that suffix.
-// upstream: packages/coding-agent/src/tools/ask.ts:144-155
-func addRecommendedSuffix(options []askOption, recommended int, hasRecommended bool) []string {
-	labels := make([]string, len(options))
-	for i, opt := range options {
-		label := opt.Label
-		if hasRecommended && i == recommended && recommended >= 0 && recommended < len(options) && !strings.HasSuffix(label, recommendedSuffix) {
-			label += recommendedSuffix
-		}
-		labels[i] = label
-	}
-	return labels
-}
-
-// autoSelectionOnTimeout picks the recommended option if in range, otherwise
-// the first option, or empty if no options exist.
-// upstream: packages/coding-agent/src/tools/ask.ts:157-163
-func autoSelectionOnTimeout(options []askOption, recommended int, hasRecommended bool) []string {
-	if len(options) == 0 {
-		return []string{}
-	}
-	if hasRecommended && recommended >= 0 && recommended < len(options) {
-		return []string{options[recommended].Label}
-	}
-	return []string{options[0].Label}
-}
-
-func stripRecommendedSuffix(label string) string {
-	return strings.TrimSuffix(label, recommendedSuffix)
-}
-
-func formatOptionDisplay(label, description string) string {
-	if description == "" {
-		return label
-	}
-	return label + " — " + description
-}
-
-func formatSelectDisplayOptions(options []askOption, displayLabels []string) []string {
-	out := make([]string, len(options))
-	for i, opt := range options {
-		out[i] = formatOptionDisplay(displayLabels[i], opt.Description)
-	}
-	return out
-}
-
-func mapDisplayChoiceToLabel(choice string, formattedRows []string, displayLabels []string, options []askOption) string {
-	for i, row := range formattedRows {
-		if row == choice {
-			return options[i].Label
-		}
-	}
-	for i, lbl := range displayLabels {
-		if lbl == choice {
-			return options[i].Label
-		}
-	}
-	for _, opt := range options {
-		if opt.Label == choice {
-			return opt.Label
-		}
-	}
-	return stripRecommendedSuffix(choice)
-}
-
-func resolveMultiChoice(choice string, optionDisplay []string, options []askOption) (string, bool) {
-	for i, row := range optionDisplay {
-		if row == choice {
-			return options[i].Label, true
-		}
-	}
-	for _, opt := range options {
-		if opt.Label == choice {
-			return opt.Label, true
-		}
+	if qs, ok := params["questions"].([]any); ok && len(qs) > 0 {
+		return legacyQuestionsHTML(qs)
 	}
 	return "", false
 }
 
-// formatErrorValue expands tabs and clamps display width to TRUNCATE_LENGTHS.LINE.
-// upstream: packages/coding-agent/src/tools/ask.ts:1006-1008
-func formatErrorValue(value string) string {
-	expanded := strings.ReplaceAll(value, "\t", strings.Repeat(" ", defaultTabWidth))
-	return tui.TruncateToWidth(expanded, errorLineWidth, "…", false)
-}
-
-// formatQuestionResult formats one answer line in a multi-question response.
-// upstream: packages/coding-agent/src/tools/ask.ts:481-492
-func formatQuestionResult(result questionResult) string {
-	noteSuffix := ""
-	if result.Note != nil && *result.Note != "" {
-		noteSuffix = fmt.Sprintf(" (note: %s)", *result.Note)
-	}
-	var custom string
-	hasCustom := result.CustomInput != nil
-	if hasCustom {
-		// upstream uses literal `"${result.customInput}"` without Go escaping.
-		custom = `"` + *result.CustomInput + `"`
-	}
-	if len(result.SelectedOptions) == 0 {
-		if hasCustom {
-			return fmt.Sprintf("%s: %s%s", result.ID, custom, noteSuffix)
+func legacyQuestionsHTML(questions []any) (string, bool) {
+	var fieldsets []string
+	for idx, raw := range questions {
+		item, ok := raw.(map[string]any)
+		if !ok {
+			return "", false
 		}
-		if result.Multi {
-			return fmt.Sprintf("%s: []%s", result.ID, noteSuffix)
+		q, ok := item["question"].(string)
+		if !ok {
+			return "", false
 		}
-		return fmt.Sprintf("%s: (cancelled)%s", result.ID, noteSuffix)
-	}
-	var picked string
-	if result.Multi {
-		picked = "[" + strings.Join(result.SelectedOptions, ", ") + "]"
-	} else {
-		picked = result.SelectedOptions[0]
-	}
-	answer := picked
-	if hasCustom {
-		answer = picked + " + " + custom
-	}
-	timeoutSuffix := ""
-	if result.TimedOut {
-		timeoutSuffix = " (auto-selected after timeout)"
-	}
-	return fmt.Sprintf("%s: %s%s%s", result.ID, answer, timeoutSuffix, noteSuffix)
-}
-
-// formatSingleQuestionResponse formats the model-facing answer text for a
-// single-question ask call.
-// upstream: packages/coding-agent/src/tools/ask.ts:494-530
-func formatSingleQuestionResponse(
-	selectedOptions []string,
-	customInput *string,
-	note *string,
-	timedOut bool,
-	multi bool,
-) string {
-	var parts []string
-	if len(selectedOptions) > 0 {
-		var selectedText string
-		if multi {
-			selectedText = "User selected: " + strings.Join(selectedOptions, ", ")
-		} else {
-			selectedText = "User selected: " + selectedOptions[0]
+		id, _ := item["id"].(string)
+		if id == "" {
+			id = fmt.Sprintf("q%d", idx+1)
 		}
-		if timedOut {
-			selectedText += " (auto-selected after timeout)"
+		name := html.EscapeString(id)
+		kind := "radio"
+		if m, ok := item["multi"].(bool); ok && m {
+			kind = "checkbox"
 		}
-		parts = append(parts, selectedText)
-	}
-	if customInput != nil {
-		if strings.Contains(*customInput, "\n") {
-			lines := strings.Split(*customInput, "\n")
-			for i, line := range lines {
-				lines[i] = "  " + line
+		recIdx := -1
+		if rec, ok := item["recommended"].(float64); ok {
+			recIdx = int(rec)
+		}
+		var inputs []string
+		if opts, ok := item["options"].([]any); ok {
+			for oi, opt := range opts {
+				var label, desc string
+				switch ov := opt.(type) {
+				case string:
+					label = ov
+				case map[string]any:
+					l, ok := ov["label"].(string)
+					if !ok {
+						return "", false
+					}
+					label = l
+					if d, ok := ov["description"].(string); ok && d != "" {
+						desc = " — " + html.EscapeString(d)
+					}
+				default:
+					return "", false
+				}
+				checked := ""
+				if recIdx == oi {
+					checked = " checked"
+				}
+				esc := html.EscapeString(label)
+				inputs = append(inputs, fmt.Sprintf(`<label><input type="%s" name="%s" value="%s"%s> %s%s</label>`, kind, name, esc, checked, esc, desc))
 			}
-			parts = append(parts, "User provided custom input:\n"+strings.Join(lines, "\n"))
-		} else {
-			parts = append(parts, "User provided custom input: "+*customInput)
 		}
+		control := strings.Join(inputs, "")
+		if control == "" {
+			control = fmt.Sprintf(`<textarea name="%s"></textarea>`, name)
+		}
+		fieldsets = append(fieldsets, fmt.Sprintf(`<fieldset><legend>%s</legend>%s</fieldset>`, html.EscapeString(q), control))
 	}
-	if note != nil && *note != "" {
-		if strings.Contains(*note, "\n") {
-			lines := strings.Split(*note, "\n")
-			for i, line := range lines {
-				lines[i] = "  " + line
+	return "<form>" + strings.Join(fieldsets, "") + "</form>", true
+}
+
+type splitRadioFieldset struct {
+	Legend string
+	Names  []string
+}
+
+// splitRadioFieldsets detects <fieldset>s whose radios each have a different name.
+// upstream: packages/coding-agent/src/tools/ask.ts:128-141
+func splitRadioFieldsets(form *HtmlForm) []splitRadioFieldset {
+	var split []splitRadioFieldset
+	for _, s := range form.Sections {
+		if !s.Fieldset {
+			continue
+		}
+		var names []string
+		for _, blk := range s.Blocks {
+			if blk.Kind != "field" || blk.Field == nil {
+				continue
 			}
-			parts = append(parts, "User added note:\n"+strings.Join(lines, "\n"))
+			f := blk.Field
+			if f.Kind != "choice" || f.Multi || f.Select {
+				continue
+			}
+			if f.Name != "" && len(f.Options) == 1 {
+				names = append(names, f.Name)
+			}
+		}
+		if len(names) > 1 {
+			split = append(split, splitRadioFieldset{Legend: SpansText(s.Title), Names: names})
+		}
+	}
+	return split
+}
+
+// formatSplitRadioError renders the embedded ask-split-radio-groups.md template.
+// upstream: packages/coding-agent/src/prompts/tools/ask-split-radio-groups.md
+func formatSplitRadioError(fieldsets []splitRadioFieldset) string {
+	tmpl := strings.TrimRight(askSplitRadioGroupsTemplate, "\n")
+	const startTag = "{{#each fieldsets}}\n"
+	const endTag = "\n{{/each}}"
+	sIdx := strings.Index(tmpl, startTag)
+	eIdx := strings.Index(tmpl, endTag)
+	if sIdx < 0 || eIdx < sIdx {
+		return tmpl
+	}
+	var rows []string
+	for _, fs := range fieldsets {
+		if fs.Legend != "" {
+			rows = append(rows, fmt.Sprintf(`- <fieldset> "%s": %s`, fs.Legend, strings.Join(fs.Names, ", ")))
 		} else {
-			parts = append(parts, "User added note: "+*note)
+			rows = append(rows, fmt.Sprintf("- An untitled <fieldset>: %s", strings.Join(fs.Names, ", ")))
 		}
 	}
-	if len(parts) > 0 {
-		return strings.Join(parts, "\n")
-	}
-	if multi {
-		return "User did not select any options"
-	}
-	return "User cancelled the selection"
+	return tmpl[:sIdx] + strings.Join(rows, "\n") + tmpl[eIdx+len(endTag):]
 }
 
-func optionLabelsOf(options []askOption) []string {
-	labels := make([]string, len(options))
-	for i, opt := range options {
-		labels[i] = opt.Label
+// disambiguateDisplayLabels appends " (2)", " (3)", ... when labels collide.
+// upstream: packages/tui/src/render/render-utils.ts
+func disambiguateDisplayLabels(labels []string, reserved []string) []string {
+	used := make(map[string]bool, len(reserved)+len(labels))
+	for _, r := range reserved {
+		used[r] = true
 	}
-	return labels
-}
-
-func nonNilSlice(s []string) []string {
-	if s == nil {
-		return []string{}
-	}
-	return s
-}
-
-func removeString(list []string, target string) []string {
-	out := make([]string, 0, len(list))
-	for _, s := range list {
-		if s != target {
-			out = append(out, s)
+	out := make([]string, len(labels))
+	for i, base := range labels {
+		cand := base
+		if used[cand] {
+			for n := 2; ; n++ {
+				cand = fmt.Sprintf("%s (%d)", base, n)
+				if !used[cand] {
+					break
+				}
+			}
 		}
+		used[cand] = true
+		out[i] = cand
 	}
 	return out
+}
+
+// FormatAskResult renders the embedded ask-result.md template with ordered,
+// non-HTML-escaped JSON matching omp's prompt.render(askResultTemplate, ...).
+// upstream: packages/coding-agent/src/prompts/tools/ask-result.md
+func FormatAskResult(data *FormData, timedOut bool, interrupted bool, notes []OptionNote) string {
+	tmpl := strings.TrimRight(askResultTemplate, "\n")
+	lines := strings.Split(tmpl, "\n")
+	header := renderAskResultHeader(lines[0], interrupted, timedOut)
+	out := strings.Replace(header+"\n"+lines[1], "{{json}}", data.MarshalJSONString(true), 1)
+	if len(notes) == 0 {
+		return out
+	}
+	notesIdx := strings.Index(tmpl, "{{#if notes}}\n")
+	if notesIdx < 0 {
+		return out
+	}
+	notesSection := strings.TrimSuffix(tmpl[notesIdx+len("{{#if notes}}\n"):], "\n{{/if}}")
+	eachStart := strings.Index(notesSection, "{{#each notes}}\n")
+	eachEnd := strings.Index(notesSection, "\n{{/each}}")
+	if eachStart < 0 || eachEnd < eachStart {
+		return out
+	}
+	heading := strings.TrimRight(notesSection[:eachStart], "\n")
+	rowTmpl := notesSection[eachStart+len("{{#each notes}}\n") : eachEnd]
+	var b strings.Builder
+	b.WriteString(out)
+	b.WriteByte('\n')
+	b.WriteString(heading)
+	for _, n := range notes {
+		row := strings.NewReplacer(
+			"{{question}}", n.Question,
+			"{{option}}", n.Option,
+			"{{name}}", n.Name,
+			"{{jsonStringify value}}", jsonStringNoEscape(n.Value),
+			"{{text}}", oneLine(n.Text),
+		).Replace(rowTmpl)
+		b.WriteByte('\n')
+		b.WriteString(row)
+	}
+	return b.String()
+}
+
+func renderAskResultHeader(line string, interrupted, timedOut bool) string {
+	const (
+		p1 = "{{#if interrupted}}"
+		p2 = "{{else}}{{#if timedOut}}"
+		p3 = "{{else}}"
+		p4 = "{{/if}}{{/if}}"
+	)
+	i1 := strings.Index(line, p1)
+	i2 := strings.Index(line, p2)
+	if i1 < 0 || i2 < 0 {
+		return line
+	}
+	i3 := strings.Index(line[i2+len(p2):], p3)
+	i4 := strings.Index(line, p4)
+	if i3 < 0 || i4 < 0 {
+		return line
+	}
+	i3 += i2 + len(p2)
+	if interrupted {
+		return line[i1+len(p1) : i2]
+	}
+	if timedOut {
+		return line[i2+len(p2) : i3]
+	}
+	return line[i3+len(p3) : i4]
+}
+
+// resolveAskTimeoutMs returns the dialog timeout in ms, or 0 in plan mode or when disabled.
+// upstream: packages/coding-agent/src/tools/ask.ts:541-542
+func resolveAskTimeoutMs(ctx sdk.Context, cfg Config) int {
+	if gate.PlanActive(ctx) {
+		return 0
+	}
+	if cfg.TimeoutMs > 0 {
+		return cfg.TimeoutMs
+	}
+	if Setting == nil {
+		return DefaultAskTimeoutMs
+	}
+	v := Setting(ctx, "ask.timeout")
+	switch n := v.(type) {
+	case int:
+		if n > 0 {
+			return n * 1000
+		}
+	case float64:
+		if n > 0 && !math.IsNaN(n) && !math.IsInf(n, 0) {
+			return int(math.Round(n * 1000))
+		}
+	}
+	return DefaultAskTimeoutMs
+}
+
+type fieldText struct {
+	question string
+	context  string
+}
+
+func promptTitle(ft fieldText, line string) string {
+	if ft.context != "" {
+		return ft.context + "\n\n" + line
+	}
+	return line
+}
+
+type choiceAnswer struct {
+	checked map[int]bool
+	other   string
+}
+
+func isTimeoutElapsed(start time.Time, timeoutMs int) bool {
+	if timeoutMs <= 0 {
+		return false
+	}
+	elapsed := time.Since(start).Milliseconds()
+	return elapsed >= int64(timeoutMs) && elapsed <= int64(timeoutMs+timeoutDetectionToleranceMs)
+}
+
+func selectWithTimeout(ctx sdk.Context, title string, options []string, timeoutMs int) (string, bool, bool, error) {
+	start := time.Now()
+	var val any
+	var ok bool
+	var err error
+	if timeoutMs > 0 {
+		val, ok, err = ctx.SelectWithOptions(title, options, sdk.DialogOptions{Timeout: float64(timeoutMs)})
+	} else {
+		val, ok, err = ctx.Select(title, options)
+	}
+	if err != nil {
+		return "", false, false, err
+	}
+	if !ok || val == nil {
+		return "", false, isTimeoutElapsed(start, timeoutMs), nil
+	}
+	s, _ := val.(string)
+	return s, true, false, nil
+}
+
+func inputWithTimeout(ctx sdk.Context, title, placeholder string, timeoutMs int) (string, bool, bool, error) {
+	start := time.Now()
+	var val any
+	var ok bool
+	var err error
+	if timeoutMs > 0 {
+		if placeholder != "" {
+			val, ok, err = ctx.InputWithOptions(title, placeholder, sdk.DialogOptions{Timeout: float64(timeoutMs)})
+		} else {
+			val, ok, err = ctx.InputWithoutPlaceholderWithOptions(title, sdk.DialogOptions{Timeout: float64(timeoutMs)})
+		}
+	} else {
+		if placeholder != "" {
+			val, ok, err = ctx.Input(title, placeholder)
+		} else {
+			val, ok, err = ctx.InputWithoutPlaceholder(title)
+		}
+	}
+	if err != nil {
+		return "", false, false, err
+	}
+	if !ok || val == nil {
+		return "", false, isTimeoutElapsed(start, timeoutMs), nil
+	}
+	s, _ := val.(string)
+	return s, true, false, nil
+}
+
+func askChoice(ctx sdk.Context, f *FormField, ft fieldText, timeoutMs int) (*choiceAnswer, bool, error) {
+	type optEntry struct {
+		index int
+		label string
+	}
+	var opts []optEntry
+	for i, opt := range f.Options {
+		if opt.Disabled {
+			continue
+		}
+		lbl := oneLine(SpansText(opt.Label))
+		if lbl == "" {
+			lbl = opt.Value
+		}
+		opts = append(opts, optEntry{index: i, label: lbl})
+	}
+	rawLabels := make([]string, len(opts))
+	for i, o := range opts {
+		rawLabels[i] = o.label
+	}
+	labels := disambiguateDisplayLabels(rawLabels, nil)
+	var otherRow string
+	choiceRows := append([]string(nil), labels...)
+	if f.Other {
+		label := otherRowLabel
+		if surface.Native() {
+			label = nativeOtherRowLabel
+		}
+		otherRow = disambiguateDisplayLabels([]string{label}, labels)[0]
+		choiceRows = append(choiceRows, otherRow)
+	}
+
+	if !f.Multi {
+		for {
+			picked, ok, timedOut, err := selectWithTimeout(ctx, promptTitle(ft, ft.question), choiceRows, timeoutMs)
+			if err != nil {
+				return nil, false, err
+			}
+			if timedOut {
+				return nil, true, nil
+			}
+			if !ok {
+				return nil, false, nil
+			}
+			if f.Other && picked == otherRow {
+				typed, tok, tTimedOut, terr := inputWithTimeout(ctx, promptTitle(ft, ft.question), "", timeoutMs)
+				if terr != nil {
+					return nil, false, terr
+				}
+				if tTimedOut {
+					return nil, true, nil
+				}
+				if !tok || trimJSSpace(typed) == "" {
+					continue
+				}
+				return &choiceAnswer{checked: map[int]bool{}, other: typed}, false, nil
+			}
+			for i, l := range labels {
+				if l == picked {
+					return &choiceAnswer{checked: map[int]bool{opts[i].index: true}}, false, nil
+				}
+			}
+			return nil, false, nil
+		}
+	}
+
+	doneLabel := disambiguateDisplayLabels([]string{doneRowLabel}, choiceRows)[0]
+	checked := make(map[int]bool)
+	for i, opt := range f.Options {
+		if opt.Checked && !opt.Disabled {
+			checked[i] = true
+		}
+	}
+	otherText := ""
+	hasOther := false
+
+	for {
+		answered := len(checked)
+		if hasOther {
+			answered++
+		}
+		canFinish := !f.Required || answered > 0
+		rows := make([]string, 0, len(choiceRows)+1)
+		for i, l := range labels {
+			mark := "[ ] "
+			if checked[opts[i].index] {
+				mark = "[x] "
+			}
+			rows = append(rows, mark+l)
+		}
+		if f.Other {
+			mark := "[ ] "
+			if hasOther {
+				mark = "[x] "
+			}
+			rows = append(rows, mark+otherRow)
+		}
+		if canFinish {
+			rows = append(rows, doneLabel)
+		}
+		prefix := ""
+		if answered > 0 {
+			prefix = fmt.Sprintf("(%d selected) ", answered)
+		}
+		picked, ok, timedOut, err := selectWithTimeout(ctx, promptTitle(ft, prefix+ft.question), rows, timeoutMs)
+		if err != nil {
+			return nil, false, err
+		}
+		if timedOut {
+			return &choiceAnswer{checked: checked, other: otherText}, true, nil
+		}
+		if !ok {
+			return nil, false, nil
+		}
+		if picked == doneLabel {
+			return &choiceAnswer{checked: checked, other: otherText}, false, nil
+		}
+		if f.Other && (picked == "[ ] "+otherRow || picked == "[x] "+otherRow) {
+			if hasOther {
+				hasOther = false
+				otherText = ""
+				continue
+			}
+			typed, tok, tTimedOut, terr := inputWithTimeout(ctx, promptTitle(ft, ft.question), "", timeoutMs)
+			if terr != nil {
+				return nil, false, terr
+			}
+			if tTimedOut {
+				return &choiceAnswer{checked: checked}, true, nil
+			}
+			if tok && trimJSSpace(typed) != "" {
+				hasOther = true
+				otherText = typed
+			}
+			continue
+		}
+		for i, l := range labels {
+			if picked == "[ ] "+l || picked == "[x] "+l {
+				idx := opts[i].index
+				if checked[idx] {
+					delete(checked, idx)
+				} else {
+					checked[idx] = true
+				}
+				break
+			}
+		}
+	}
+}
+
+func askText(ctx sdk.Context, f *FormField, ft fieldText, timeoutMs int) (string, bool, bool, error) {
+	useEditor := f.Multiline || f.Value != ""
+	errMsg := ""
+	current := f.Value
+	for {
+		line := ft.question
+		if errMsg != "" {
+			line = fmt.Sprintf("%s (%s)", ft.question, errMsg)
+		}
+		title := promptTitle(ft, line)
+		var val string
+		var ok, timedOut bool
+		var err error
+		if useEditor {
+			var raw any
+			if current != "" {
+				raw, ok, err = ctx.Editor(title, current)
+			} else {
+				raw, ok, err = ctx.EditorWithoutPrefill(title)
+			}
+			if err != nil {
+				return "", false, false, err
+			}
+			if ok && raw != nil {
+				val, _ = raw.(string)
+			}
+		} else {
+			val, ok, timedOut, err = inputWithTimeout(ctx, title, f.Placeholder, timeoutMs)
+			if err != nil {
+				return "", false, false, err
+			}
+		}
+		if timedOut {
+			return "", false, true, nil
+		}
+		if !ok {
+			return "", false, false, nil
+		}
+		if verr := FieldError(f, val, true); verr != "" {
+			errMsg = verr
+			current = val
+			continue
+		}
+		return val, true, false, nil
+	}
+}
+
+func askFieldByField(ctx sdk.Context, form *HtmlForm, timeoutMs int) (*FormData, bool, bool, error) {
+	data := DefaultFormData(form)
+	questions := FieldQuestions(form)
+	contexts := FieldContexts(form)
+	for _, f := range form.Fields {
+		if f.Name == "" {
+			continue
+		}
+		q := questions[f]
+		if q == "" {
+			q = f.Name
+		}
+		ft := fieldText{question: q, context: contexts[f]}
+		if f.Kind == "choice" {
+			ans, timedOut, err := askChoice(ctx, f, ft, timeoutMs)
+			if err != nil {
+				return nil, false, false, err
+			}
+			if ans != nil {
+				if val, has := ChoiceValue(f, ans.checked, ans.other); has {
+					data.Set(f.Name, val)
+				} else {
+					data.Delete(f.Name)
+				}
+			}
+			if timedOut {
+				return data, true, true, nil
+			}
+			if ans == nil {
+				return nil, false, false, nil
+			}
+			continue
+		}
+		val, ok, timedOut, err := askText(ctx, f, ft, timeoutMs)
+		if err != nil {
+			return nil, false, false, err
+		}
+		if timedOut {
+			return data, true, true, nil
+		}
+		if !ok {
+			return nil, false, false, nil
+		}
+		data.Set(f.Name, TextValue(f, val))
+	}
+	return data, true, false, nil
+}
+
+func executeAsk(ctx sdk.Context, params map[string]any, cfg Config) (any, error) {
+	if !ctx.HasUI() {
+		if cfg.AdvertiseHeadlessAsk {
+			return sdk.ToolResult{
+				Content: strings.TrimSpace(askHeadlessForkPrompt),
+				Details: AskToolDetails{Answers: []FormAnswer{}},
+				IsError: true,
+			}, nil
+		}
+		ctx.Abort()
+		return nil, errors.New("Ask tool requires interactive mode")
+	}
+
+	rawHTML, ok := RecoverAskHTML(params)
+	if !ok {
+		return sdk.ToolResult{
+			Content: invalidAskError,
+			Details: AskToolDetails{Answers: []FormAnswer{}},
+			IsError: true,
+		}, nil
+	}
+
+	form := ParseHtmlForm(rawHTML)
+	var named []*FormField
+	for _, f := range form.Fields {
+		if f.Name != "" {
+			named = append(named, f)
+		}
+	}
+	if len(named) == 0 {
+		return sdk.ToolResult{
+			Content: noNamedControlsError,
+			Details: AskToolDetails{Answers: []FormAnswer{}, Form: form},
+		}, nil
+	}
+	if split := splitRadioFieldsets(form); len(split) > 0 {
+		return sdk.ToolResult{
+			Content: formatSplitRadioError(split),
+			Details: AskToolDetails{Answers: []FormAnswer{}, Form: form},
+		}, nil
+	}
+
+	timeoutMs := resolveAskTimeoutMs(ctx, cfg)
+	data, submitted, timedOut, err := askFieldByField(ctx, form, timeoutMs)
+	if err != nil {
+		return nil, err
+	}
+	if !submitted {
+		ctx.Abort()
+		return nil, errors.New("Ask tool was cancelled by the user")
+	}
+
+	if timedOut {
+		for _, f := range named {
+			val, present := data.Get(f.Name)
+			if FieldError(f, val, present) != "" {
+				return sdk.ToolResult{
+					Content: askTimedOutUnanswered,
+					Details: AskToolDetails{Answers: []FormAnswer{}, TimedOut: true, Form: form},
+				}, nil
+			}
+		}
+	}
+
+	details := AskToolDetails{
+		Answers:  FormAnswers(form, data),
+		TimedOut: timedOut,
+		Form:     form,
+	}
+	text := FormatAskResult(data, timedOut, false, nil)
+	return sdk.ToolResult{
+		Content: text,
+		Details: details,
+	}, nil
 }

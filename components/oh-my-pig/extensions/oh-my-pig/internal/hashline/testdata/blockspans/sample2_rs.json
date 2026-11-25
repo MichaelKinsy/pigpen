@@ -1,0 +1,2977 @@
+{
+  "lang": "rs",
+  "sample": "sample2",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample2",
+  "total": 455,
+  "omp_resolved": 229,
+  "omp_refused": 226,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 286*` could not resolve a syntactic block beginning on line 286 (blank/closer line, or parse error). Use `CUT 286.=M` with explicit lines. The nearest enclosing multi-line block begins at line 284 and ends at line 288; use `CUT 284*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 138,
+      "span": [
+        138,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 193,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 286,
+      "refused": "line 1: `CUT 286*` could not resolve a syntactic block beginning on line 286 (blank/closer line, or parse error). Use `CUT 286.=M` with explicit lines. The nearest enclosing multi-line block begins at line 284 and ends at line 288; use `CUT 284*` to target it."
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 299,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 385,
+      "span": [
+        385,
+        389
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 502,
+      "span": [
+        502,
+        511
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 590,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 596,
+      "span": [
+        596,
+        600
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 702,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 813,
+      "span": [
+        813,
+        820
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 880,
+      "span": [
+        880,
+        884
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 939,
+      "span": [
+        939,
+        943
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1060,
+      "span": [
+        1060,
+        1066
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1148,
+      "span": [
+        1148,
+        1152
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1213,
+      "span": [
+        1213,
+        1215
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1363,
+      "span": [
+        1363,
+        1380
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1421,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1474,
+      "span": [
+        1474,
+        1497
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1605,
+      "span": [
+        1605,
+        1607
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1695,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1763,
+      "span": [
+        1763,
+        1765
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1858,
+      "span": [
+        1858,
+        1860
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1954,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 1969,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2041,
+      "span": [
+        2041,
+        2139
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2160,
+      "span": [
+        2160,
+        2162
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2246,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2279,
+      "span": [
+        2279,
+        2289
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2433,
+      "span": [
+        2433,
+        2438
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2529,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2656,
+      "span": [
+        2656,
+        2694
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2813,
+      "span": [
+        2813,
+        2814
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__rsync__filter.rs",
+      "anchor": 2877,
+      "span": [
+        2877,
+        2881
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 3,
+      "span": [
+        3,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 15,
+      "span": [
+        15,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 44,
+      "span": [
+        44,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 67,
+      "span": [
+        67,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 101,
+      "span": [
+        101,
+        118
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 131,
+      "span": [
+        131,
+        136
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 155,
+      "span": [
+        155,
+        157
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 174,
+      "span": [
+        174,
+        179
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 177,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 212,
+      "span": [
+        212,
+        217
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 227,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 269,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 281,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 288,
+      "span": [
+        288,
+        289
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 322,
+      "span": [
+        322,
+        335
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 334,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 343,
+      "span": [
+        343,
+        360
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 366,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 378,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 388,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 392,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 412,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 441,
+      "span": [
+        441,
+        508
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 442,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 452,
+      "span": [
+        452,
+        459
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 491,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 496,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 514,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 539,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 544,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__spawn__windows__tests.rs",
+      "anchor": 569,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 17,
+      "span": [
+        17,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 30,
+      "span": [
+        30,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 31,
+      "span": [
+        31,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 37,
+      "span": [
+        37,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 42,
+      "span": [
+        42,
+        52
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 45,
+      "span": [
+        45,
+        52
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 46,
+      "span": [
+        46,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 54,
+      "span": [
+        54,
+        77
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 57,
+      "span": [
+        57,
+        77
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 60,
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 62,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 67,
+      "span": [
+        67,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 72,
+      "span": [
+        72,
+        76
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__shell__src__sys__pump__orphan.rs",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 1,
+      "span": [
+        1,
+        2
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 4,
+      "span": [
+        4,
+        10
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 6,
+      "span": [
+        6,
+        10
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 19,
+      "span": [
+        19,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 29,
+      "span": [
+        29,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 45,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 54,
+      "span": [
+        54,
+        82
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 65,
+      "span": [
+        65,
+        67
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 71,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 76,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 84,
+      "span": [
+        84,
+        105
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        105
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 91,
+      "span": [
+        91,
+        103
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 95,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 101,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 109,
+      "span": [
+        109,
+        121
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 116,
+      "span": [
+        116,
+        120
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 123,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 125,
+      "span": [
+        125,
+        134
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 129,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 133,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 137,
+      "span": [
+        137,
+        153
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 141,
+      "span": [
+        141,
+        145
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__mermaid__xychart__colors.rs",
+      "anchor": 142,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 24,
+      "span": [
+        24,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        86
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 143,
+      "span": [
+        143,
+        152
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 204,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 237,
+      "span": [
+        237,
+        240
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 346,
+      "span": [
+        346,
+        348
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 459,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 475,
+      "span": [
+        475,
+        479
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 581,
+      "span": [
+        581,
+        587
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 656,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 688,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 735,
+      "span": [
+        735,
+        737
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 811,
+      "span": [
+        811,
+        816
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 888,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 914,
+      "span": [
+        914,
+        916
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 981,
+      "span": [
+        981,
+        983
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1057,
+      "span": [
+        1057,
+        1059
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1169,
+      "span": [
+        1169,
+        1186
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1257,
+      "span": [
+        1257,
+        1265
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1357,
+      "span": [
+        1357,
+        1363
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1380,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1480,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1589,
+      "span": [
+        1589,
+        1591
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1607,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1672,
+      "span": [
+        1672,
+        1676
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1737,
+      "span": [
+        1737,
+        1765
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1841,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 1963,
+      "span": [
+        1963,
+        2033
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 2061,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 2096,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 2238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 2292,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__linux__x11__mpx.rs",
+      "anchor": 2365,
+      "span": [
+        2365,
+        2407
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 6,
+      "span": [
+        6,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 13,
+      "span": [
+        13,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 14,
+      "span": [
+        14,
+        17
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 28,
+      "span": [
+        28,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 35,
+      "span": [
+        35,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 44,
+      "span": [
+        44,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 48,
+      "span": [
+        48,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 56,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 62,
+      "span": [
+        62,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 66,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 69,
+      "span": [
+        69,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 71,
+      "span": [
+        71,
+        77
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 75,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 87,
+      "span": [
+        87,
+        92
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 90,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 95,
+      "span": [
+        95,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 102,
+      "span": [
+        102,
+        123
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 106,
+      "span": [
+        106,
+        111
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 112,
+      "span": [
+        112,
+        116
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__edit__tests__sloppy_range_safety.rs",
+      "anchor": 115,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 5,
+      "span": [
+        5,
+        10
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 49,
+      "span": [
+        49,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 78,
+      "span": [
+        78,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 86,
+      "span": [
+        86,
+        90
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 94,
+      "span": [
+        94,
+        124
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 135,
+      "span": [
+        135,
+        144
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 146,
+      "span": [
+        146,
+        150
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 153,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 157,
+      "span": [
+        157,
+        159
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 173,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 190,
+      "span": [
+        190,
+        198
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 192,
+      "span": [
+        192,
+        198
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 200,
+      "span": [
+        200,
+        252
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 205,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 226,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 228,
+      "span": [
+        228,
+        232
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 246,
+      "span": [
+        246,
+        250
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 262,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 267,
+      "span": [
+        267,
+        400
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 274,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 294,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 300,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 330,
+      "span": [
+        330,
+        339
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 334,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 356,
+      "span": [
+        356,
+        399
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__desktop__macos__keymap.rs",
+      "anchor": 369,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 8,
+      "span": [
+        8,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 24,
+      "span": [
+        24,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 30,
+      "span": [
+        30,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 36,
+      "span": [
+        36,
+        38
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 40,
+      "span": [
+        40,
+        51
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 48,
+      "span": [
+        48,
+        51
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 53,
+      "span": [
+        53,
+        61
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 55,
+      "span": [
+        55,
+        60
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 61,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 64,
+      "span": [
+        64,
+        68
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__testing.rs",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 4,
+      "span": [
+        4,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 32,
+      "span": [
+        32,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 111,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 145,
+      "span": [
+        145,
+        150
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 172,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 174,
+      "span": [
+        174,
+        187
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 205,
+      "span": [
+        205,
+        209
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 250,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 282,
+      "span": [
+        282,
+        337
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 322,
+      "span": [
+        322,
+        335
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 326,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 356,
+      "span": [
+        356,
+        431
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 402,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 404,
+      "span": [
+        404,
+        407
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 438,
+      "span": [
+        438,
+        441
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 475,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 479,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 523,
+      "span": [
+        523,
+        529
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 553,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 568,
+      "span": [
+        568,
+        574
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 589,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 628,
+      "span": [
+        628,
+        631
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 633,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 665,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 694,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 709,
+      "span": [
+        709,
+        711
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 746,
+      "span": [
+        746,
+        752
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 785,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 790,
+      "span": [
+        790,
+        794
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__natives__src__oauth_callback__mod.rs",
+      "anchor": 826,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 13,
+      "span": [
+        13,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 20,
+      "span": [
+        20,
+        23
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 27,
+      "span": [
+        27,
+        77
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 41,
+      "span": [
+        41,
+        44
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 52,
+      "span": [
+        52,
+        59
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 56,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 63,
+      "span": [
+        63,
+        66
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 67,
+      "span": [
+        67,
+        70
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 79,
+      "span": [
+        79,
+        105
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 81,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 93,
+      "span": [
+        93,
+        95
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 107,
+      "span": [
+        107,
+        150
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 117,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 131,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 145,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 152,
+      "span": [
+        152,
+        205
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 157,
+      "span": [
+        157,
+        160
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 164,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 167,
+      "span": [
+        167,
+        170
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 172,
+      "span": [
+        172,
+        175
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 177,
+      "span": [
+        177,
+        180
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 183,
+      "span": [
+        183,
+        185
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 187,
+      "span": [
+        187,
+        190
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 188,
+      "span": [
+        188,
+        190
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__basename.rs",
+      "anchor": 193,
+      "span": [
+        193,
+        197
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 5,
+      "span": [
+        5,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 39,
+      "span": [
+        39,
+        55
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 84,
+      "span": [
+        84,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 99,
+      "span": [
+        99,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 109,
+      "span": [
+        109,
+        125
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 138,
+      "span": [
+        138,
+        152
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 140,
+      "span": [
+        140,
+        147
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 183,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 186,
+      "span": [
+        186,
+        222
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 194,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 202,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 208,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 216,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 225,
+      "span": [
+        225,
+        248
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 232,
+      "span": [
+        232,
+        234
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 239,
+      "span": [
+        239,
+        244
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 251,
+      "span": [
+        251,
+        290
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 257,
+      "span": [
+        257,
+        288
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 277,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 281,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 304,
+      "span": [
+        304,
+        307
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 315,
+      "span": [
+        315,
+        325
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 325,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 338,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 358,
+      "span": [
+        358,
+        434
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 368,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 408,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 446,
+      "span": [
+        446,
+        453
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 452,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 463,
+      "span": [
+        463,
+        470
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__builtins__src__uname.rs",
+      "anchor": 473,
+      "span": [
+        473,
+        476
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 14,
+      "span": [
+        14,
+        29
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 21,
+      "span": [
+        21,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 27,
+      "span": [
+        27,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 47,
+      "span": [
+        47,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 54,
+      "span": [
+        54,
+        57
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 70,
+      "span": [
+        70,
+        106
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 89,
+      "span": [
+        89,
+        91
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 113,
+      "span": [
+        113,
+        115
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 137,
+      "span": [
+        137,
+        146
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 155,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 169,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 200,
+      "span": [
+        200,
+        203
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 210,
+      "span": [
+        210,
+        211
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 227,
+      "span": [
+        227,
+        233
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 261,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 266,
+      "span": [
+        266,
+        270
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 296,
+      "span": [
+        296,
+        301
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 309,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 312,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 336,
+      "span": [
+        336,
+        341
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 356,
+      "span": [
+        356,
+        362
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 364,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 389,
+      "span": [
+        389,
+        395
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 414,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 417,
+      "span": [
+        417,
+        430
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 464,
+      "span": [
+        464,
+        466
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 469,
+      "span": [
+        469,
+        482
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 485,
+      "span": [
+        485,
+        492
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 515,
+      "span": [
+        515,
+        560
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 516,
+      "span": [
+        516,
+        560
+      ]
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 524,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/pig_extensions__sdk-rs__src__model_runtime.rs",
+      "anchor": 539,
+      "span": [
+        539,
+        541
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 24,
+      "span": [
+        24,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 33,
+      "span": [
+        33,
+        34
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 37,
+      "span": [
+        37,
+        38
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 45,
+      "span": [
+        45,
+        46
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 69,
+      "span": [
+        69,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 70,
+      "span": [
+        70,
+        71
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 85,
+      "span": [
+        85,
+        90
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 93,
+      "span": [
+        93,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 105,
+      "span": [
+        105,
+        106
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 107,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 127,
+      "span": [
+        127,
+        130
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 140,
+      "span": [
+        140,
+        143
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 145,
+      "span": [
+        145,
+        148
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 153,
+      "span": [
+        153,
+        161
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 178,
+      "span": [
+        178,
+        181
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 180,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 191,
+      "span": [
+        191,
+        198
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 208,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 227,
+      "span": [
+        227,
+        245
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 233,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 239,
+      "span": [
+        239,
+        241
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 247,
+      "span": [
+        247,
+        266
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 268,
+      "span": [
+        268,
+        379
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 280,
+      "span": [
+        280,
+        281
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 284,
+      "span": [
+        284,
+        296
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 315,
+      "span": [
+        315,
+        321
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 333,
+      "span": [
+        333,
+        343
+      ]
+    },
+    {
+      "file": "files/sample2/rs/omp_crates__ast__src__language__grammar.rs",
+      "anchor": 348,
+      "refused_kind": "unresolved"
+    }
+  ]
+}

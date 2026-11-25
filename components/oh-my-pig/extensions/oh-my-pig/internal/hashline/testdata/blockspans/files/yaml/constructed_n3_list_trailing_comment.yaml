@@ -1,0 +1,6 @@
+rules:
+  - linters: [gosec]
+    text: foo
+  # comment after item
+  - linters: [errcheck]
+    text: bar

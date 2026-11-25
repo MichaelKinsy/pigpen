@@ -1,6 +1,34 @@
 package todo
 
-// decodePhases defensively decodes a persisted JSON phases array.
+import "encoding/json"
+
+// TodoPhasesFingerprint returns omp's canonical JSON fingerprint for phases
+// (phase name + each task's content and status, in order).
+// upstream: packages/coding-agent/src/tools/todo.ts:169-176
+func TodoPhasesFingerprint(phases []TodoPhase) string {
+	type fpTask struct {
+		Content string     `json:"content"`
+		Status  TodoStatus `json:"status"`
+	}
+	type fpPhase struct {
+		Name  string   `json:"name"`
+		Tasks []fpTask `json:"tasks"`
+	}
+	out := make([]fpPhase, len(phases))
+	for i, p := range phases {
+		tasks := make([]fpTask, len(p.Tasks))
+		for j, t := range p.Tasks {
+			tasks[j] = fpTask{Content: t.Content, Status: t.Status}
+		}
+		out[i] = fpPhase{Name: p.Name, Tasks: tasks}
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
 // Returns (phases, true) only when every phase and task matches omp's schema.
 // upstream: packages/coding-agent/src/tools/todo.ts:21-33
 func decodePhases(v any) ([]TodoPhase, bool) {
@@ -33,17 +61,30 @@ func decodePhases(v any) ([]TodoPhase, bool) {
 				return nil, false
 			}
 			statusStr, ok := tm["status"].(string)
-			if !ok || !IsValidStatus(statusStr) {
+			if !ok {
 				return nil, false
 			}
-			item := TodoItem{
+			// Snapshots saved before `blocked` was removed read back as `pending`.
+			// upstream: packages/coding-agent/src/tools/todo.ts:179-189
+			if statusStr == "blocked" {
+				statusStr = string(StatusPending)
+			}
+			if !IsValidStatus(statusStr) {
+				return nil, false
+			}
+			var notes []string
+			if rawNotes, ok := tm["notes"].([]any); ok {
+				for _, rn := range rawNotes {
+					if s, ok := rn.(string); ok {
+						notes = append(notes, s)
+					}
+				}
+			}
+			tasks = append(tasks, TodoItem{
 				Content: content,
 				Status:  TodoStatus(statusStr),
-			}
-			if blocker, ok := tm["blocker"].(string); ok && blocker != "" {
-				item.Blocker = blocker
-			}
-			tasks = append(tasks, item)
+				Notes:   notes,
+			})
 		}
 		phases = append(phases, TodoPhase{Name: name, Tasks: tasks})
 	}
@@ -99,4 +140,71 @@ func GetLatestTodoPhasesFromEntries(entries []map[string]any) []TodoPhase {
 		}
 	}
 	return nil
+}
+
+// GetLatestTodoSnapshotIdentity identifies the latest durable canonical todo
+// snapshot on the active branch.
+// upstream: packages/coding-agent/src/tools/todo.ts:208-221
+func GetLatestTodoSnapshotIdentity(entries []map[string]any) (TodoSnapshotIdentity, bool) {
+	for i := len(entries) - 1; i >= 0; i-- {
+		phases, ok := canonicalTodoPhases(entries[i])
+		if !ok {
+			continue
+		}
+		sourceID, _ := entries[i]["id"].(string)
+		if sourceID == "" {
+			return TodoSnapshotIdentity{}, false
+		}
+		return TodoSnapshotIdentity{
+			SourceEntryID: sourceID,
+			Fingerprint:   TodoPhasesFingerprint(phases),
+		}, true
+	}
+	return TodoSnapshotIdentity{}, false
+}
+
+// GetTodoHudVisibility returns the persisted HUD visibility ("dismissed" or
+// "revealed") only when it targets the current canonical snapshot exactly.
+// upstream: packages/coding-agent/src/tools/todo.ts:224-243
+func GetTodoHudVisibility(entries []map[string]any, phases []TodoPhase) (TodoHudVisibility, bool) {
+	snapshot, ok := GetLatestTodoSnapshotIdentity(entries)
+	if !ok || snapshot.Fingerprint != TodoPhasesFingerprint(phases) {
+		return "", false
+	}
+	for i := len(entries) - 1; i >= 0; i-- {
+		entry := entries[i]
+		if t, _ := entry["type"].(string); t != "custom" {
+			continue
+		}
+		if ct, _ := entry["customType"].(string); ct != TodoHudStateCustomType {
+			continue
+		}
+		data, _ := entry["data"].(map[string]any)
+		if data == nil {
+			continue
+		}
+		srcID, _ := data["sourceEntryId"].(string)
+		fp, _ := data["fingerprint"].(string)
+		vis, _ := data["visibility"].(string)
+		if srcID == snapshot.SourceEntryID && fp == snapshot.Fingerprint &&
+			(vis == string(HudVisibilityDismissed) || vis == string(HudVisibilityRevealed)) {
+			return TodoHudVisibility(vis), true
+		}
+	}
+	return "", false
+}
+
+// CreateTodoHudStateData builds persisted HUD metadata only when phases match
+// the latest durable canonical snapshot on entries.
+// upstream: packages/coding-agent/src/tools/todo.ts:246-254
+func CreateTodoHudStateData(entries []map[string]any, phases []TodoPhase, visibility TodoHudVisibility) (TodoHudStateEntryData, bool) {
+	snapshot, ok := GetLatestTodoSnapshotIdentity(entries)
+	if !ok || snapshot.Fingerprint != TodoPhasesFingerprint(phases) {
+		return TodoHudStateEntryData{}, false
+	}
+	return TodoHudStateEntryData{
+		SourceEntryID: snapshot.SourceEntryID,
+		Fingerprint:   snapshot.Fingerprint,
+		Visibility:    visibility,
+	}, true
 }

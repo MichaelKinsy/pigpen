@@ -1,0 +1,2888 @@
+{
+  "lang": "md",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 466,
+  "omp_resolved": 181,
+  "omp_refused": 285,
+  "cases": [
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 1,
+      "span": [
+        1,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 3,
+      "refused": "line 1: `CUT 3*` resolved a single-line block — line 3 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 3`. The nearest enclosing multi-line block begins at line 1 and ends at line 32; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 5,
+      "span": [
+        5,
+        10
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 12,
+      "span": [
+        12,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 14,
+      "span": [
+        14,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 25,
+      "span": [
+        25,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 28,
+      "span": [
+        28,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 30,
+      "span": [
+        30,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__durable-final-100__PROGRESS.md",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 1,
+      "span": [
+        1,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 5,
+      "span": [
+        5,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 8,
+      "span": [
+        8,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 10,
+      "span": [
+        10,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 12,
+      "span": [
+        12,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 16,
+      "span": [
+        16,
+        17
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 18,
+      "span": [
+        18,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__plan__progress__port-99-f6f-events.md",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 3,
+      "refused": "line 1: `CUT 3*` could not resolve a syntactic block beginning on line 3 (blank/closer line, or parse error). Use `CUT 3.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it."
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 6,
+      "span": [
+        6,
+        95
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 12,
+      "span": [
+        12,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 20,
+      "span": [
+        20,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 22,
+      "span": [
+        22,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 24,
+      "span": [
+        24,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 27,
+      "span": [
+        27,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 40,
+      "span": [
+        40,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 43,
+      "span": [
+        43,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 48,
+      "span": [
+        48,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 50,
+      "span": [
+        50,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 53,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 60,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 69,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 77,
+      "span": [
+        77,
+        80
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 82,
+      "span": [
+        82,
+        95
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 85,
+      "span": [
+        85,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 88,
+      "span": [
+        88,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 91,
+      "span": [
+        91,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-requesting-code-review__SKILL.md",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 1,
+      "span": [
+        1,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 7,
+      "span": [
+        7,
+        8
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 9,
+      "span": [
+        9,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__memories__stage_one_system.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 1,
+      "span": [
+        1,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__parity__divergences__D138.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 1,
+      "span": [
+        1,
+        276
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 10,
+      "span": [
+        10,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 29,
+      "span": [
+        29,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 36,
+      "span": [
+        36,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 55,
+      "span": [
+        55,
+        123
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 69,
+      "span": [
+        69,
+        78
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 90,
+      "span": [
+        90,
+        101
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 105,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 109,
+      "span": [
+        109,
+        117
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 124,
+      "span": [
+        124,
+        148
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 132,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 149,
+      "span": [
+        149,
+        164
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 156,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 167,
+      "span": [
+        167,
+        170
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 176,
+      "span": [
+        176,
+        213
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 180,
+      "span": [
+        180,
+        181
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 184,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 185,
+      "span": [
+        185,
+        187
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 190,
+      "span": [
+        190,
+        191
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 195,
+      "span": [
+        195,
+        200
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 201,
+      "span": [
+        201,
+        209
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 207,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 214,
+      "span": [
+        214,
+        237
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 218,
+      "span": [
+        218,
+        220
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 227,
+      "span": [
+        227,
+        231
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 230,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 234,
+      "span": [
+        234,
+        237
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 252,
+      "span": [
+        252,
+        273
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 255,
+      "span": [
+        255,
+        271
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_python__robomp__README.md",
+      "anchor": 272,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 1,
+      "span": [
+        1,
+        98
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 32,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 44,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 47,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 48,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 54,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 56,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 63,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 67,
+      "span": [
+        67,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 68,
+      "span": [
+        68,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 69,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 70,
+      "span": [
+        70,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 73,
+      "span": [
+        73,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 74,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 77,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 78,
+      "span": [
+        78,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 82,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 86,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 91,
+      "span": [
+        91,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__eval.md",
+      "anchor": 95,
+      "span": [
+        95,
+        98
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 1,
+      "span": [
+        1,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 3,
+      "span": [
+        3,
+        7
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 22,
+      "span": [
+        22,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 26,
+      "span": [
+        26,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 33,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 36,
+      "span": [
+        36,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 45,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 47,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 49,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 51,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 53,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 56,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 58,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 60,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 63,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 65,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 67,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 70,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 72,
+      "span": [
+        72,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 74,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__angry-pigs__README.md",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 1,
+      "span": [
+        1,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 3,
+      "span": [
+        3,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 28,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 29,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 31,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 32,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 33,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 36,
+      "span": [
+        36,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 39,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 45,
+      "span": [
+        45,
+        49
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 46,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 47,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__tools__browser-core.md",
+      "anchor": 48,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 5,
+      "span": [
+        5,
+        92
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 7,
+      "span": [
+        7,
+        12
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 17,
+      "span": [
+        17,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 23,
+      "span": [
+        23,
+        24
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 25,
+      "span": [
+        25,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 31,
+      "span": [
+        31,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 35,
+      "span": [
+        35,
+        38
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 43,
+      "span": [
+        43,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 47,
+      "span": [
+        47,
+        66
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 69,
+      "span": [
+        69,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 76,
+      "span": [
+        76,
+        92
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 80,
+      "span": [
+        80,
+        91
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__threat-model.md",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 1,
+      "span": [
+        1,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 7,
+      "span": [
+        7,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 20,
+      "span": [
+        20,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 22,
+      "span": [
+        22,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 26,
+      "span": [
+        26,
+        45
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 30,
+      "span": [
+        30,
+        34
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 32,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 38,
+      "span": [
+        38,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 40,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 46,
+      "span": [
+        46,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 50,
+      "span": [
+        50,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 51,
+      "span": [
+        51,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 58,
+      "span": [
+        58,
+        84
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 69,
+      "span": [
+        69,
+        73
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 77,
+      "span": [
+        77,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 85,
+      "span": [
+        85,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 87,
+      "span": [
+        87,
+        90
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 89,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 91,
+      "span": [
+        91,
+        94
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 95,
+      "span": [
+        95,
+        98
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 99,
+      "span": [
+        99,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 103,
+      "span": [
+        103,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/md/pig_docs__site__docs__shell-aliases.md",
+      "anchor": 105,
+      "span": [
+        105,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 3,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 10,
+      "span": [
+        10,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 39,
+      "span": [
+        39,
+        42
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 44,
+      "span": [
+        44,
+        115
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 82,
+      "span": [
+        82,
+        115
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 92,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 110,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 114,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 122,
+      "span": [
+        122,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 130,
+      "span": [
+        130,
+        138
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 146,
+      "span": [
+        146,
+        153
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 155,
+      "span": [
+        155,
+        167
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 165,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 168,
+      "span": [
+        168,
+        183
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 180,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 188,
+      "span": [
+        188,
+        194
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 192,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 202,
+      "span": [
+        202,
+        213
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 217,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 219,
+      "span": [
+        219,
+        247
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 229,
+      "span": [
+        229,
+        232
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 236,
+      "span": [
+        236,
+        238
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 244,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 246,
+      "span": [
+        246,
+        247
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 252,
+      "span": [
+        252,
+        255
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 253,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 263,
+      "span": [
+        263,
+        278
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 275,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/omp_docs__skills__authoring-marketplaces.md",
+      "anchor": 281,
+      "span": [
+        281,
+        283
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 1,
+      "span": [
+        1,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 6,
+      "span": [
+        6,
+        16
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 21,
+      "span": [
+        21,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__coding-agent__src__prompts__system__plan-mode-approved.md",
+      "anchor": 25,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 3,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 30,
+      "span": [
+        30,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 48,
+      "span": [
+        48,
+        119
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 56,
+      "span": [
+        56,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 58,
+      "span": [
+        58,
+        63
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 66,
+      "span": [
+        66,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 78,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 82,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 93,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 116,
+      "span": [
+        116,
+        117
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 126,
+      "span": [
+        126,
+        127
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 133,
+      "span": [
+        133,
+        137
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 135,
+      "span": [
+        135,
+        136
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 147,
+      "span": [
+        147,
+        167
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 154,
+      "span": [
+        154,
+        155
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 159,
+      "span": [
+        159,
+        160
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 164,
+      "span": [
+        164,
+        165
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 173,
+      "span": [
+        173,
+        178
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 181,
+      "span": [
+        181,
+        182
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 185,
+      "span": [
+        185,
+        190
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 188,
+      "span": [
+        188,
+        189
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 196,
+      "span": [
+        196,
+        197
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 207,
+      "span": [
+        207,
+        208
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 210,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 220,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 225,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 236,
+      "span": [
+        236,
+        241
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 259,
+      "span": [
+        259,
+        264
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_components__superpowers__skills__pigpen-superpowers-systematic-debugging__SKILL.md",
+      "anchor": 266,
+      "span": [
+        266,
+        276
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 1,
+      "span": [
+        1,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 3,
+      "span": [
+        3,
+        4
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 6,
+      "span": [
+        6,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 11,
+      "span": [
+        11,
+        14
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 16,
+      "span": [
+        16,
+        19
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 30,
+      "span": [
+        30,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 32,
+      "span": [
+        32,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 33,
+      "span": [
+        33,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 41,
+      "span": [
+        41,
+        44
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 42,
+      "span": [
+        42,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 43,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 46,
+      "span": [
+        46,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 47,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/pigpen_piglets__pig-games__README.md",
+      "anchor": 49,
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 1,
+      "span": [
+        1,
+        37
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 3,
+      "span": [
+        3,
+        23
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 7,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 9,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 12,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 13,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 14,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 15,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 16,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 17,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 19,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 20,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 21,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 22,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 23,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 27,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 29,
+      "span": [
+        29,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 32,
+      "span": [
+        32,
+        35
+      ]
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 33,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 34,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/md/omp_packages__typescript-edit-benchmark__src__prompts__structural-task.md",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 3*` resolved a single-line block — line 3 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 3`. The nearest enclosing multi-line block begins at line 1 and ends at line 32; use `CUT 1*` to target it.",
+    "unresolved": "line 1: `CUT 3*` could not resolve a syntactic block beginning on line 3 (blank/closer line, or parse error). Use `CUT 3.=M` with explicit lines. The nearest enclosing multi-line block begins at line 1 and ends at line 4; use `CUT 1*` to target it."
+  }
+}

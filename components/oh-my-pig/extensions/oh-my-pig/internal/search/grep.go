@@ -7,69 +7,247 @@ import (
 	"math"
 	"os"
 	"regexp"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
+	"unicode/utf8"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
-// upstream: packages/coding-agent/src/tools/grep.ts:73-94
+// upstream: packages/coding-agent/src/tools/grep.ts:90-115,
+// packages/tui/src/tools/streaming-output.ts:14-16
 const (
 	grepDefaultFileLimit     = 20
-	grepMultiFilePerFileCap  = 20
-	grepSingleFilePerFileCap = 200
+	grepMultiFilePerFileCap  = 10
+	grepSingleFilePerFileCap = 50
 	grepInternalTotalCap     = 2000
 	grepMaxFileBytes         = 4 * 1024 * 1024
-	grepDefaultMaxColumn     = 500
+	grepDefaultMaxColumn     = 512
 	grepDefaultTimeout       = 30 * time.Second
-	grepBinaryProbeBytes     = 8192
+	grepGitignoreProbeBudget = 5 * time.Second
+	grepBinaryProbeBytes     = 64 * 1024
 	grepMaxOutputBytes       = 50 * 1024
 )
 
 type grepMatch struct {
-	absPath    string
-	relPath    string
+	key        string // absolute path or normalized internal URL
+	relPath    string // display path (cwd-relative or internal URL)
+	hostPath   string // backing host file path ("" for pure virtual/immutable)
+	immutable  bool
 	lineNumber int
 	line       string
 	truncated  bool
-	column     int // 1-based column when line was truncated
+	column     int // 1-based rune column when line was truncated
 }
 
-type grepTarget struct {
-	entry   string
-	clean   string
-	ranges  []lineRange
-	parsed  parsedGlobTarget
-	isFile  bool
-	missing bool
+type grepPathSpec struct {
+	original string
+	clean    string
+	ranges   []lineRange
+	isURL    bool
 }
 
-// pcreOnlyHint detects common PCRE2 constructs unsupported by Go's RE2 engine.
+type grepCandidate struct {
+	key       string // absolute path or internal URL
+	relPath   string // display path
+	hostPath  string // host path for disk reads & snapshot tags
+	content   []byte // pre-loaded bytes for virtual resources
+	size      int64
+	immutable bool
+	namedFile bool // explicitly targeted as a single file (search even if binary)
+}
+
+// pcreOnlyRe detects common PCRE2 constructs unsupported by Go's RE2 engine.
 var pcreOnlyRe = regexp.MustCompile(`\(\?[=!<]|\\[1-9]`)
 
-func compileGrepRegex(pattern string, caseSensitive bool, multiline bool) (*regexp.Regexp, error) {
-	// Normalize literal \\n to \n when multiline is enabled.
-	norm := pattern
-	flags := ""
-	if !caseSensitive {
-		flags += "i"
-	}
-	if multiline {
-		flags += "m"
-	}
-	expr := norm
-	if flags != "" {
-		expr = "(?" + flags + ")" + norm
-	}
-	re, err := regexp.Compile(expr)
-	if err != nil {
-		if pcreOnlyRe.MatchString(pattern) {
-			return nil, fmt.Errorf("Invalid regex: Go RE2 does not support look-around or backreferences (PCRE2 fallback not ported): %w", err)
+// ansiEscapeRe strips CSI/OSC/single-char ANSI escape sequences (mirroring Bun.stripANSI).
+var ansiEscapeRe = regexp.MustCompile(`\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])`)
+
+// sanitizeText strips ANSI escape sequences and control characters (preserving \t and \n).
+// upstream: packages/utils/src/sanitize-text.ts:21-40
+func sanitizeText(text string) string {
+	needsClean := false
+	for i := range len(text) {
+		c := text[i]
+		if c < 0x20 && c != '\t' && c != '\n' {
+			needsClean = true
+			break
 		}
-		return nil, fmt.Errorf("Invalid regex: %w", err)
+		if c == 0x7f {
+			needsClean = true
+			break
+		}
+		if c == 0xc2 && i+1 < len(text) && text[i+1] >= 0x80 && text[i+1] <= 0x9f {
+			needsClean = true
+			break
+		}
 	}
-	return re, nil
+	if !needsClean {
+		return text
+	}
+	if strings.ContainsRune(text, '\x1b') {
+		text = ansiEscapeRe.ReplaceAllString(text, "")
+	}
+	var b strings.Builder
+	b.Grow(len(text))
+	for _, r := range text {
+		if (r >= 0x00 && r <= 0x08) || (r >= 0x0b && r <= 0x1f) || (r >= 0x7f && r <= 0x9f) {
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+// sanitizeBraces escapes `{` and `}` that do not open a repetition quantifier
+// (`{N}`, `{N,}`, `{N,M}`) or braced escape (`\p{...}`, `\P{...}`, `\x{...}`, `\u{...}`).
+// upstream: crates/xfs/src/grep/engine.rs:187-261
+func sanitizeBraces(pattern string) string {
+	if !strings.ContainsAny(pattern, "{}") {
+		return pattern
+	}
+	var b strings.Builder
+	b.Grow(len(pattern) + 8)
+	n := len(pattern)
+	for i := 0; i < n; {
+		switch pattern[i] {
+		case '\\':
+			if i+1 < n {
+				r, sz := utf8.DecodeRuneInString(pattern[i+1:])
+				b.WriteByte('\\')
+				b.WriteRune(r)
+				i += 1 + sz
+				if (r == 'p' || r == 'P' || r == 'x' || r == 'u') && i < n && pattern[i] == '{' {
+					if end := strings.IndexByte(pattern[i:], '}'); end >= 0 {
+						b.WriteString(pattern[i : i+end+1])
+						i += end + 1
+					} else {
+						b.WriteString(pattern[i:])
+						i = n
+					}
+				}
+				continue
+			}
+			b.WriteByte('\\')
+			i++
+		case '{':
+			if end, ok := findValidRepetition(pattern, i); ok {
+				b.WriteString(pattern[i : end+1])
+				i = end + 1
+			} else {
+				b.WriteString(`\{`)
+				i++
+			}
+		case '}':
+			b.WriteString(`\}`)
+			i++
+		default:
+			r, sz := utf8.DecodeRuneInString(pattern[i:])
+			b.WriteRune(r)
+			i += sz
+		}
+	}
+	return b.String()
+}
+
+func findValidRepetition(s string, start int) (int, bool) {
+	digits := func(from int) int {
+		i := from
+		for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+			i++
+		}
+		return i
+	}
+	i := digits(start + 1)
+	if i == start+1 || i >= len(s) {
+		return 0, false
+	}
+	switch s[i] {
+	case '}':
+		return i, true
+	case ',':
+		j := digits(i + 1)
+		if j < len(s) && s[j] == '}' {
+			return j, true
+		}
+	}
+	return 0, false
+}
+
+// escapeUnescapedParentheses escapes every unescaped `(` and `)`.
+// upstream: crates/xfs/src/grep/engine.rs:263-293
+func escapeUnescapedParentheses(pattern string) string {
+	if !strings.ContainsAny(pattern, "()") {
+		return pattern
+	}
+	var b strings.Builder
+	b.Grow(len(pattern) + 4)
+	n := len(pattern)
+	for i := 0; i < n; {
+		if pattern[i] == '\\' && i+1 < n {
+			r, sz := utf8.DecodeRuneInString(pattern[i+1:])
+			b.WriteByte('\\')
+			b.WriteRune(r)
+			i += 1 + sz
+			continue
+		}
+		r, sz := utf8.DecodeRuneInString(pattern[i:])
+		if r == '(' || r == ')' {
+			b.WriteByte('\\')
+		}
+		b.WriteRune(r)
+		i += sz
+	}
+	return b.String()
+}
+
+// compileGrepRegex mirrors crates/xfs/src/grep/engine.rs:125-152:
+//  1. sanitize non-quantifier braces (`${platform}`),
+//  2. compile as Go RE2 (returning an explicit error with rewrite hint only for
+//     PCRE2-only look-around/backreferences that Go RE2 cannot execute),
+//  3. on missing/unexpected parenthesis error, retry with unescaped parens escaped
+//     so surrounding regex syntax (`foo.*(bar`) is preserved,
+//  4. fall back to literal text (`regexp.QuoteMeta(pattern)`).
+func compileGrepRegex(pattern string, caseSensitive bool, multiline bool) (*regexp.Regexp, error) {
+	flags := "m"
+	if !caseSensitive {
+		flags = "im"
+	}
+	compile := func(expr string) (*regexp.Regexp, error) {
+		return regexp.Compile("(?" + flags + ")" + expr)
+	}
+
+	sanitized := sanitizeBraces(pattern)
+	re, err := compile(sanitized)
+	if err == nil {
+		return re, nil
+	}
+	// Preserve explicit error for PCRE2-only look-around and backreferences.
+	if pcreOnlyRe.MatchString(pattern) {
+		return nil, fmt.Errorf("Invalid regex: Go RE2 does not support look-around or backreferences (PCRE2 fallback not ported; rewrite without look-around/backreferences): %w", err)
+	}
+	// Stray parenthesis repair: keep surrounding regex syntax intact.
+	msg := err.Error()
+	if strings.Contains(msg, "missing closing )") || strings.Contains(msg, "unexpected )") {
+		escaped := escapeUnescapedParentheses(sanitized)
+		if escaped != sanitized {
+			if re2, err2 := compile(escaped); err2 == nil {
+				return re2, nil
+			}
+		}
+	}
+	// Final fallback: search the original pattern as literal text.
+	if litRe, litErr := compile(regexp.QuoteMeta(pattern)); litErr == nil {
+		return litRe, nil
+	}
+	return nil, fmt.Errorf("Invalid regex: %w", err)
 }
 
 func isMultilinePattern(pattern string) bool {
@@ -79,17 +257,40 @@ func isMultilinePattern(pattern string) bool {
 func executeGrep(ctx sdk.Context, params map[string]any) (any, error) {
 	bgCtx, cancel := context.WithTimeout(context.Background(), grepDefaultTimeout)
 	defer cancel()
-	go func() {
-		select {
-		case <-ctx.Done():
-			cancel()
-		case <-bgCtx.Done():
-		}
-	}()
-	return runGrep(bgCtx, ctx.Cwd(), params)
+	if done := ctx.Done(); done != nil {
+		go func() {
+			select {
+			case <-done:
+				cancel()
+			case <-bgCtx.Done():
+			}
+		}()
+	}
+	return runGrepWithStore(bgCtx, ctx.Cwd(), urls.Context{SDK: ctx, Cwd: ctx.Cwd()}, hashline.ForSession(ctx), params)
 }
 
 func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, error) {
+	return runGrepWithStore(bgCtx, cwd, urls.Context{Cwd: cwd}, hashline.Default(), params)
+}
+
+func isStrictExternalURL(s string) bool {
+	lower := strings.ToLower(s)
+	return strings.HasPrefix(lower, "http://") ||
+		strings.HasPrefix(lower, "https://") ||
+		strings.HasPrefix(lower, "ftp://") ||
+		strings.HasPrefix(lower, "ws://") ||
+		strings.HasPrefix(lower, "wss://")
+}
+
+func runGrepWithURLs(bgCtx context.Context, cwd string, urlCtx urls.Context, params map[string]any) (any, error) {
+	store := hashline.Default()
+	if hashline.HasSessionID(urlCtx.SDK) {
+		store = hashline.ForSession(urlCtx.SDK)
+	}
+	return runGrepWithStore(bgCtx, cwd, urlCtx, store, params)
+}
+
+func runGrepWithStore(bgCtx context.Context, cwd string, urlCtx urls.Context, editStore *hashline.Store, params map[string]any) (any, error) {
 	if cwd == "" {
 		var err error
 		cwd, err = os.Getwd()
@@ -97,10 +298,13 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 			return nil, err
 		}
 	}
+	if urlCtx.Cwd == "" {
+		urlCtx.Cwd = cwd
+	}
 
 	pattern, _ := params["pattern"].(string)
-	if pattern == "" {
-		return nil, fmt.Errorf("`pattern` must be a non-empty string")
+	if strings.TrimSpace(pattern) == "" {
+		return nil, fmt.Errorf("Pattern must not be empty")
 	}
 
 	pathInput, _ := params["path"].(string)
@@ -113,11 +317,12 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 		useGitignore = v
 	}
 	skip := 0
-	if v, ok := params["skip"].(float64); ok && !math.IsNaN(v) && !math.IsInf(v, 0) {
-		if v < 0 {
-			return nil, fmt.Errorf("`skip` must be a non-negative integer")
+	if rawSkip, exists := params["skip"]; exists && rawSkip != nil {
+		v, ok := rawSkip.(float64)
+		if !ok || math.IsNaN(v) || math.IsInf(v, 0) || v < 0 {
+			return nil, fmt.Errorf("Skip must be a non-negative number")
 		}
-		skip = int(v)
+		skip = int(math.Floor(v))
 	}
 
 	multiline := isMultilinePattern(pattern)
@@ -126,118 +331,292 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 		return nil, err
 	}
 
-	rawEntries := toPathList(pathInput)
-	includes, excludes, err := splitExclusions(rawEntries)
-	if err != nil {
-		return nil, err
+	urlfs := newSearchURLFS(urlCtx)
+	scopedPaths := toPathList(pathInput)
+	if len(scopedPaths) == 0 {
+		scopedPaths = []string{"."}
 	}
-	if len(includes) == 0 {
-		includes = []string{"."}
+	expandedEntries := expandDelimitedPathEntries(scopedPaths, cwd, urlfs, true)
+
+	// Separate `!glob` exclusions from search targets; real `!`-prefixed paths stay targets.
+	// upstream: packages/coding-agent/src/tools/grep.ts:694-702
+	var rawExclusions []string
+	var searchEntries []string
+	for _, entry := range expandedEntries {
+		if isExclusionEntry(entry, cwd) {
+			rawExclusions = append(rawExclusions, entry[1:])
+		} else {
+			searchEntries = append(searchEntries, entry)
+		}
+	}
+	if len(searchEntries) == 0 {
+		searchEntries = []string{"."}
 	}
 
-	var targets []grepTarget
-	var missingPaths []string
-	rangesByAbs := make(map[string][]lineRange)
-
-	for _, entry := range includes {
+	// Parse path specs (selectors for internal URLs and host files).
+	// upstream: packages/coding-agent/src/tools/grep.ts:203-272
+	specs := make([]grepPathSpec, 0, len(searchEntries))
+	for _, entry := range searchEntries {
+		if isRegisteredURL(entry) {
+			base, sel, hasSel := splitInternalURLSel(entry)
+			var ranges []lineRange
+			if hasSel {
+				parsedRanges, valid := isReadSelectorGrammar(sel)
+				if !valid {
+					return nil, fmt.Errorf(`path entry %q has an invalid selector ":%s" — use ":N-M" line ranges, ":raw"/":conflicts", a range plus ":raw", or percent-encode a literal ":" as %%3A`, entry, sel)
+				}
+				if len(parsedRanges) > 0 && isInternalURLGlob(base) {
+					return nil, fmt.Errorf("Line-range selector requires a single file, not a glob: %s", entry)
+				}
+				ranges = parsedRanges
+			}
+			specs = append(specs, grepPathSpec{
+				original: entry,
+				clean:    base,
+				ranges:   ranges,
+				isURL:    true,
+			})
+			continue
+		}
+		if isStrictExternalURL(entry) {
+			return nil, fmt.Errorf("Cannot search %s: external URL grep is not supported (fetch with `read` instead)", entry)
+		}
 		if isRootOnlyPath(entry) {
 			return nil, fmt.Errorf("Searching from root directory '/' is not allowed")
 		}
-		clean, ranges, err := splitPathAndSelector(entry, cwd)
-		if err != nil {
-			return nil, err
-		}
-		parsed := parseGlobTarget(clean, cwd)
-		if isRootOnlyPath(parsed.basePath) {
-			return nil, fmt.Errorf("Searching from root directory '/' is not allowed")
-		}
-		info, statErr := os.Stat(parsed.basePath)
-		if statErr != nil {
-			missingPaths = append(missingPaths, entry)
-			targets = append(targets, grepTarget{entry: entry, clean: clean, ranges: ranges, parsed: parsed, missing: true})
-			continue
-		}
-		isFile := !info.IsDir()
-		if len(ranges) > 0 {
-			if !isFile {
-				return nil, fmt.Errorf("line-range selector on %q is only supported for files", entry)
+		clean, sel, literal := splitHostPathAndSelectorPreferLiteral(entry, cwd)
+		var ranges []lineRange
+		if !literal && sel != "" {
+			parsedRanges, ok := parseLineRanges(sel)
+			if !ok {
+				return nil, fmt.Errorf(`path entry %q — only line-range selectors like ":50-100" are supported (no ":raw"/":conflicts")`, entry)
 			}
-			rangesByAbs[parsed.basePath] = ranges
+			if hasGlobChars(clean) && probeLiteralPathExists(clean, cwd) == "missing" {
+				return nil, fmt.Errorf("Line-range selector requires a single file, not a glob: %s", entry)
+			}
+			ranges = parsedRanges
 		}
-		targets = append(targets, grepTarget{
-			entry:  entry,
-			clean:  clean,
-			ranges: ranges,
-			parsed: parsed,
-			isFile: isFile,
+		specs = append(specs, grepPathSpec{
+			original: entry,
+			clean:    clean,
+			ranges:   ranges,
 		})
 	}
 
-	validTargets := 0
+	type resolvedTarget struct {
+		spec      grepPathSpec
+		parsed    parsedGlobTarget
+		urlNode   *urlNode // non-nil when parsed.isURL
+		isDir     bool
+		missing   bool
+		hostSize  int64
+		immutable bool
+	}
+
+	var targets []resolvedTarget
+	var missingPaths []string
+	rangesByKey := make(map[string][]lineRange)
+
+	for _, spec := range specs {
+		parsed, parseErr := parseSearchTarget(spec.clean, cwd)
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		if !parsed.isURL && isRootOnlyPath(parsed.basePath) {
+			return nil, fmt.Errorf("Searching from root directory '/' is not allowed")
+		}
+		if parsed.isURL {
+			node, rErr := urlfs.resolve(parsed.basePath)
+			if rErr != nil {
+				if len(specs) == 1 {
+					return nil, fmt.Errorf("Cannot search %s: %w", spec.clean, rErr)
+				}
+				missingPaths = append(missingPaths, spec.clean)
+				targets = append(targets, resolvedTarget{spec: spec, parsed: parsed, missing: true})
+				continue
+			}
+			isDir := node.kind == urlNodeHostDir || node.kind == urlNodeVirtualDir
+			if len(spec.ranges) > 0 {
+				if isDir {
+					return nil, fmt.Errorf("Line-range selector requires a single file: %s is a directory", spec.original)
+				}
+				rangesByKey[node.url] = append(rangesByKey[node.url], spec.ranges...)
+			}
+			targets = append(targets, resolvedTarget{
+				spec:      spec,
+				parsed:    parsed,
+				urlNode:   node,
+				isDir:     isDir,
+				hostSize:  node.size,
+				immutable: node.immutable,
+			})
+			continue
+		}
+
+		info, statErr := os.Stat(parsed.basePath)
+		if statErr != nil {
+			if len(spec.ranges) > 0 {
+				return nil, fmt.Errorf("Path not found for line-range selector: %s", spec.original)
+			}
+			missingPaths = append(missingPaths, spec.clean)
+			targets = append(targets, resolvedTarget{spec: spec, parsed: parsed, missing: true})
+			continue
+		}
+		isDir := info.IsDir()
+		if len(spec.ranges) > 0 {
+			if isDir {
+				return nil, fmt.Errorf("Line-range selector requires a single file: %s is a directory", spec.original)
+			}
+			rangesByKey[parsed.basePath] = append(rangesByKey[parsed.basePath], spec.ranges...)
+		}
+		targets = append(targets, resolvedTarget{
+			spec:     spec,
+			parsed:   parsed,
+			isDir:    isDir,
+			hostSize: info.Size(),
+		})
+	}
+
+	var validTargets []resolvedTarget
 	for _, t := range targets {
 		if !t.missing {
-			validTargets++
+			validTargets = append(validTargets, t)
 		}
 	}
-	if validTargets == 0 {
+	if len(validTargets) == 0 {
+		// Single missing path emits bare `Path not found: <scopePath>` (path-utils.ts:1655-1656);
+		// all-missing multi-path list adds the `; list each target` hint (grep.ts:804-806).
+		if len(specs) == 1 {
+			return nil, fmt.Errorf("Path not found: %s", formatRelToCwd(resolvePath(missingPaths[0], cwd), cwd, false))
+		}
 		return nil, fmt.Errorf("Path not found: %s; list each target in the semicolon-delimited `path`", strings.Join(missingPaths, ", "))
 	}
 
-	isMultiScope := validTargets > 1 || !targets[0].isFile
+	// Scope path and searchPath for GrepToolDetails.
+	var validDisplayInputs []string
+	for _, t := range validTargets {
+		validDisplayInputs = append(validDisplayInputs, t.spec.clean)
+	}
+	scopePath := toScopeDisplay(validDisplayInputs, cwd)
+	searchPath := cwd
+	if len(validTargets) == 1 {
+		searchPath = validTargets[0].parsed.basePath
+		if validTargets[0].parsed.hasGlob {
+			scopePath = formatRelToCwd(searchPath, cwd, false)
+		}
+	}
+
+	isMultiScope := len(validTargets) > 1 || validTargets[0].isDir
 	perFileCap := grepSingleFilePerFileCap
 	if isMultiScope {
 		perFileCap = grepMultiFilePerFileCap
 	}
 
-	// Collect candidate files in deterministic sorted order per target.
-	type fileCandidate struct {
-		absPath string
-		relPath string
-		size    int64
-	}
-	seenFiles := make(map[string]struct{})
-	var candidates []fileCandidate
+	// Collect candidates deterministically.
+	seenKeys := make(map[string]struct{})
+	var candidates []grepCandidate
 
-	for _, t := range targets {
-		if t.missing {
-			continue
+	for _, t := range validTargets {
+		excludes, exErr := rebaseExclusionsForRoot(rawExclusions, cwd, t.parsed.basePath, t.parsed.isURL)
+		if exErr != nil {
+			return nil, exErr
 		}
-		if t.isFile {
-			if _, ok := seenFiles[t.parsed.basePath]; !ok {
-				seenFiles[t.parsed.basePath] = struct{}{}
-				info, _ := os.Stat(t.parsed.basePath)
-				var sz int64
-				if info != nil {
-					sz = info.Size()
-				}
-				candidates = append(candidates, fileCandidate{
-					absPath: t.parsed.basePath,
-					relPath: formatRelToCwd(t.parsed.basePath, cwd, false),
-					size:    sz,
-				})
+		if !t.isDir {
+			key := t.parsed.basePath
+			if t.urlNode != nil {
+				key = t.urlNode.url
 			}
+			if _, ok := seenKeys[key]; ok {
+				continue
+			}
+			seenKeys[key] = struct{}{}
+			cand := grepCandidate{
+				key:       key,
+				relPath:   formatRelToCwd(key, cwd, false),
+				size:      t.hostSize,
+				immutable: t.immutable,
+				namedFile: true,
+			}
+			if t.urlNode != nil {
+				cand.relPath = t.urlNode.url
+				cand.hostPath = t.urlNode.hostPath
+				if t.urlNode.kind == urlNodeVirtualFile {
+					cand.content = t.urlNode.content
+				}
+			} else {
+				cand.hostPath = t.parsed.basePath
+			}
+			candidates = append(candidates, cand)
 			continue
 		}
+
 		var includeMatcher *globMatcher
 		if t.parsed.hasGlob {
-			m, err := compileGlob(t.parsed.globPattern)
+			m, err := compileGrepScopeGlob(t.parsed.globPattern, t.parsed.bareGlob)
 			if err != nil {
 				return nil, fmt.Errorf("invalid glob %q: %w", t.parsed.globPattern, err)
 			}
 			includeMatcher = m
 		}
-		entries, err := walkDir(bgCtx, t.parsed.basePath, walkOptions{
-			hidden:    true,
-			gitignore: useGitignore,
-			recursive: t.parsed.recursive,
-			excludes:  excludes,
-			include:   includeMatcher,
+
+		// Virtual URL directory container.
+		if t.urlNode != nil && t.urlNode.kind == urlNodeVirtualDir {
+			vEntries, vErr := urlfs.walkVirtualDir(bgCtx, t.urlNode, includeMatcher, excludes, t.parsed.recursive, false, false)
+			if vErr != nil {
+				return nil, vErr
+			}
+			for _, ve := range vEntries {
+				if ve.isDir {
+					continue
+				}
+				if _, ok := seenKeys[ve.url]; ok {
+					continue
+				}
+				seenKeys[ve.url] = struct{}{}
+				content := ve.content
+				if content == nil {
+					if res, err := urls.Resolve(urlCtx, ve.url); err == nil && res != nil {
+						if res.Bytes != nil {
+							content = res.Bytes
+						} else {
+							content = []byte(res.Content)
+						}
+					}
+				}
+				candidates = append(candidates, grepCandidate{
+					key:       ve.url,
+					relPath:   ve.url,
+					content:   content,
+					size:      int64(len(content)),
+					immutable: t.immutable,
+				})
+			}
+			continue
+		}
+
+		// Host directory (either local path or file-backed internal URL directory).
+		walkRoot := t.parsed.basePath
+		followLinks := false
+		if t.urlNode != nil {
+			walkRoot = t.urlNode.hostPath
+			followLinks = isSkillURL(t.urlNode.url)
+		}
+		includeNodeModules := pathMentionsSegment(t.parsed.basePath, "node_modules") ||
+			pathMentionsSegment(t.parsed.globPattern, "node_modules")
+		entries, wErr := walkDir(bgCtx, walkRoot, walkOptions{
+			hidden:             true,
+			gitignore:          useGitignore,
+			recursive:          t.parsed.recursive,
+			followLinks:        followLinks,
+			excludes:           excludes,
+			include:            includeMatcher,
+			includeNodeModules: includeNodeModules,
 		})
-		if err != nil {
+		if wErr != nil {
 			if bgCtx.Err() == context.DeadlineExceeded {
 				return nil, fmt.Errorf("Grep timed out after %ds; narrow paths or pattern, or scope with `glob` first", int(grepDefaultTimeout.Seconds()))
 			}
-			return nil, err
+			return nil, wErr
 		}
 		sort.Slice(entries, func(i, j int) bool {
 			return entries[i].relPath < entries[j].relPath
@@ -246,57 +625,137 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 			if e.isDir {
 				continue
 			}
-			if _, ok := seenFiles[e.absPath]; ok {
+			key := e.absPath
+			relDisplay := formatRelToCwd(e.absPath, cwd, false)
+			if t.urlNode != nil {
+				key = resolveURLHostRelative(t.urlNode.url, walkRoot, e.absPath, false)
+				relDisplay = key
+			}
+			if _, ok := seenKeys[key]; ok {
 				continue
 			}
-			seenFiles[e.absPath] = struct{}{}
-			candidates = append(candidates, fileCandidate{
-				absPath: e.absPath,
-				relPath: formatRelToCwd(e.absPath, cwd, false),
-				size:    e.size,
+			seenKeys[key] = struct{}{}
+			candidates = append(candidates, grepCandidate{
+				key:       key,
+				relPath:   relDisplay,
+				hostPath:  e.absPath,
+				size:      e.size,
+				immutable: t.immutable,
 			})
 		}
 	}
 
-	// Search candidates up to grepInternalTotalCap.
+	// Search candidates in ordered chunks in parallel and stop after the chunk in
+	// which the running match total reaches grepInternalTotalCap (matching
+	// crates/xfs/src/grep/mod.rs:209-211).
+	const grepChunkSize = 256
+	type candOutcome struct {
+		matches  []grepMatch
+		isBinary bool
+	}
+
 	var allMatches []grepMatch
-	limitReached := false
-	for _, cand := range candidates {
+	var binaryMatches []string
+	seenMatchKeys := make(map[string]struct{})
+	totalCapReached := false
+	fetchCap := perFileCap + 1
+	maxWorkers := max(1, runtime.GOMAXPROCS(0))
+
+	for chunkStart := 0; chunkStart < len(candidates) && !totalCapReached; chunkStart += grepChunkSize {
 		if bgCtx.Err() != nil {
 			if bgCtx.Err() == context.DeadlineExceeded {
 				return nil, fmt.Errorf("Grep timed out after %ds; narrow paths or pattern, or scope with `glob` first", int(grepDefaultTimeout.Seconds()))
 			}
 			return nil, bgCtx.Err()
 		}
-		ranges := rangesByAbs[cand.absPath]
-		// Fetch perFileCap+1 so we know if the file overflowed.
-		fetchCap := perFileCap + 1
-		if len(allMatches)+fetchCap > grepInternalTotalCap {
-			fetchCap = grepInternalTotalCap - len(allMatches)
-			if fetchCap <= 0 {
-				limitReached = true
-				break
+		chunkEnd := min(chunkStart+grepChunkSize, len(candidates))
+		chunk := candidates[chunkStart:chunkEnd]
+		outcomes := make([]candOutcome, len(chunk))
+		workers := min(maxWorkers, len(chunk))
+		if len(chunk) <= 4 {
+			workers = 1
+		}
+		if workers == 1 {
+			var scratch []byte
+			for i, cand := range chunk {
+				if bgCtx.Err() != nil {
+					if bgCtx.Err() == context.DeadlineExceeded {
+						return nil, fmt.Errorf("Grep timed out after %ds; narrow paths or pattern, or scope with `glob` first", int(grepDefaultTimeout.Seconds()))
+					}
+					return nil, bgCtx.Err()
+				}
+				fm, isBin := searchCandidate(cand, re, multiline, rangesByKey[cand.key], fetchCap, &scratch)
+				outcomes[i] = candOutcome{matches: fm, isBinary: isBin}
+			}
+		} else {
+			jobs := make(chan int, len(chunk))
+			for i := range chunk {
+				jobs <- i
+			}
+			close(jobs)
+			var wg sync.WaitGroup
+			for range workers {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					var scratch []byte
+					for i := range jobs {
+						if bgCtx.Err() != nil {
+							return
+						}
+						cand := chunk[i]
+						fm, isBin := searchCandidate(cand, re, multiline, rangesByKey[cand.key], fetchCap, &scratch)
+						outcomes[i] = candOutcome{matches: fm, isBinary: isBin}
+					}
+				}()
+			}
+			wg.Wait()
+			if bgCtx.Err() != nil {
+				if bgCtx.Err() == context.DeadlineExceeded {
+					return nil, fmt.Errorf("Grep timed out after %ds; narrow paths or pattern, or scope with `glob` first", int(grepDefaultTimeout.Seconds()))
+				}
+				return nil, bgCtx.Err()
 			}
 		}
-		fileMatches := searchFile(cand.absPath, cand.relPath, re, multiline, ranges, fetchCap)
-		allMatches = append(allMatches, fileMatches...)
-		if len(allMatches) >= grepInternalTotalCap {
-			limitReached = true
-			break
+
+		for i, cand := range chunk {
+			out := outcomes[i]
+			if out.isBinary {
+				binaryMatches = append(binaryMatches, cand.relPath)
+			}
+			hasRanges := len(rangesByKey[cand.key]) > 0
+			for _, m := range out.matches {
+				mk := m.key + "\x00" + strconv.Itoa(m.lineNumber)
+				if _, dup := seenMatchKeys[mk]; dup {
+					continue
+				}
+				seenMatchKeys[mk] = struct{}{}
+				allMatches = append(allMatches, m)
+				if len(allMatches) >= grepInternalTotalCap && !hasRanges {
+					totalCapReached = true
+					break
+				}
+			}
+			if totalCapReached {
+				break
+			}
 		}
 	}
 
 	// Group matches by file in encounter order, applying pagination and per-file cap.
-	// upstream: packages/coding-agent/src/tools/grep.ts:785-842
+	// upstream: packages/coding-agent/src/tools/grep.ts:1082-1142
 	type fileGroup struct {
-		absPath string
-		relPath string
-		count   int
-		list    []grepMatch
+		key       string
+		relPath   string
+		hostPath  string
+		immutable bool
+		count     int
+		list      []grepMatch
 	}
 	groupIndex := make(map[string]int)
 	var groups []*fileGroup
 	var windowGroups []*fileGroup
+	var cappedFiles []string
 
 	canPaginate := isMultiScope
 	windowStart := 0
@@ -311,7 +770,13 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 		idx, ok := groupIndex[m.relPath]
 		if !ok {
 			order := len(groups)
-			g := &fileGroup{absPath: m.absPath, relPath: m.relPath, count: 1}
+			g := &fileGroup{
+				key:       m.key,
+				relPath:   m.relPath,
+				hostPath:  m.hostPath,
+				immutable: m.immutable,
+				count:     1,
+			}
 			if order >= windowStart && order < windowEnd {
 				g.list = append(g.list, m)
 				windowGroups = append(windowGroups, g)
@@ -324,6 +789,9 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 		g.count++
 		if g.count > perFileCap {
 			perFileLimitReached = true
+			if g.count == perFileCap+1 && g.list != nil {
+				cappedFiles = append(cappedFiles, g.relPath)
+			}
 			continue
 		}
 		if g.list != nil {
@@ -332,9 +800,9 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 	}
 
 	totalFiles := len(groups)
-	totalFilesLabel := fmt.Sprintf("%d", totalFiles)
-	if limitReached {
-		totalFilesLabel = fmt.Sprintf("%d+", totalFiles)
+	totalFilesLabel := strconv.Itoa(totalFiles)
+	if totalCapReached {
+		totalFilesLabel = strconv.Itoa(totalFiles) + "+"
 	}
 	skipFiles := 0
 	if canPaginate {
@@ -343,124 +811,585 @@ func runGrep(bgCtx context.Context, cwd string, params map[string]any) (any, err
 	fileLimitReached := canPaginate && totalFiles > skipFiles+grepDefaultFileLimit
 	nextSkip := skipFiles + len(windowGroups)
 
-	var warningParts []string
+	// Build warning notes matching grep.ts:1151-1203.
+	var oversizedFiles []string
+	if multiline {
+		for _, t := range validTargets {
+			if !t.isDir && t.hostSize > grepMaxFileBytes {
+				oversizedFiles = append(oversizedFiles, formatRelToCwd(t.parsed.basePath, cwd, false))
+			}
+		}
+	}
+	limitMB := grepMaxFileBytes / (1024 * 1024)
+	var oversizedNote string
+	if len(oversizedFiles) > 0 {
+		oversizedNote = fmt.Sprintf("Multiline search read only the first %dMB of large files (matches past the %dMB window are not shown; search without a newline in the pattern, or use `read`, for the rest): %s", limitMB, limitMB, strings.Join(oversizedFiles, ", "))
+	}
+	var binaryMatchNote string
+	if len(binaryMatches) > 0 {
+		binaryMatchNote = fmt.Sprintf("Binary files also match (name one as `path` to search it as text): %s", formatCappedFiles(binaryMatches))
+	}
+	var missingPathsNote string
 	if len(missingPaths) > 0 {
-		warningParts = append(warningParts, "Skipped missing paths: "+strings.Join(missingPaths, ", "))
+		missingPathsNote = "Skipped missing paths: " + strings.Join(missingPaths, ", ")
+	}
+	var warningParts []string
+	for _, note := range []string{missingPathsNote, oversizedNote, binaryMatchNote} {
+		if note != "" {
+			warningParts = append(warningParts, note)
+		}
 	}
 	warningNote := strings.Join(warningParts, "\n")
 
 	if len(windowGroups) == 0 {
+		skipPastEnd := canPaginate && skip > 0 && totalFiles > 0 && skipFiles >= totalFiles
 		var noMatchText string
-		if canPaginate && skip > 0 && totalFiles > 0 && skipFiles >= totalFiles {
+		switch {
+		case skipPastEnd:
 			noMatchText = fmt.Sprintf("No more results (%s files total; skip=%d is past the end)", totalFilesLabel, skip)
-		} else {
+		case oversizedNote != "":
+			noMatchText = fmt.Sprintf("No matches in searched content (multiline search limited large files to their first %dMB)", limitMB)
+		case binaryMatchNote != "":
+			noMatchText = "No matches in text files"
+		default:
 			noMatchText = "No matches found"
 		}
-		if warningNote != "" {
-			noMatchText += "\n" + warningNote
+
+		// Gitignored probe: when a single directory search with gitignore=true found nothing,
+		// check if gitignored files would have matched.
+		// upstream: packages/coding-agent/src/tools/grep.ts:1224-1257
+		var ignoredNote string
+		if useGitignore && len(validTargets) == 1 && validTargets[0].isDir && !skipPastEnd &&
+			(validTargets[0].urlNode == nil || validTargets[0].urlNode.kind == urlNodeHostDir) {
+			if example := probeGitignoredMatch(bgCtx, cwd, validTargets[0].parsed, validTargets[0].urlNode, rawExclusions, re, multiline); example != "" {
+				ignoredNote = fmt.Sprintf("Gitignored files match (e.g. %s); pass `gitignore: false` to search them.", example)
+			}
+		}
+
+		var parts []string
+		for _, p := range []string{noMatchText, ignoredNote, warningNote} {
+			if p != "" {
+				parts = append(parts, p)
+			}
+		}
+		details := map[string]any{
+			"scopePath":  scopePath,
+			"searchPath": dirs.StandardizeMacOSPath(searchPath),
+			"cwd":        dirs.StandardizeMacOSPath(cwd),
+			"matchCount": 0,
+			"fileCount":  0,
+			"files":      []string{},
+			"truncated":  false,
+		}
+		if len(binaryMatches) > 0 {
+			details["binaryMatches"] = binaryMatches
+		}
+		if len(missingPaths) > 0 {
+			details["missingPaths"] = missingPaths
 		}
 		return sdk.ToolResult{
-			Content: noMatchText,
-			Details: map[string]any{
-				"matchCount": 0,
-				"fileCount":  0,
-				"files":      []string{},
-				"truncated":  false,
-			},
+			Content: strings.Join(parts, "\n"),
+			Details: details,
 		}, nil
 	}
 
 	fileList := make([]string, len(windowGroups))
 	groupByRel := make(map[string]*fileGroup, len(windowGroups))
+	fileMatchCounts := make(map[string]int, len(windowGroups))
+	fileMatchesDetail := make([]map[string]any, len(windowGroups))
 	totalSelected := 0
 	for i, g := range windowGroups {
 		fileList[i] = g.relPath
 		groupByRel[g.relPath] = g
+		fileMatchCounts[g.relPath] = len(g.list)
+		fileMatchesDetail[i] = map[string]any{
+			"path":  g.relPath,
+			"count": len(g.list),
+		}
 		totalSelected += len(g.list)
 	}
 
+	// Per rendered row, record the 1-based line number (0 for ellipsis/cut rows) so
+	// post-truncation seen-line recording only records rows whose output index < keptLines.
+	type seenSection struct {
+		relPath  string
+		hostPath string
+		rowLines []int // parallel to modelOut; 0 means non-anchorable (ellipsis or cut)
+	}
+	var seenSections []seenSection
+
 	linesTruncated := false
-	outputLines := formatFileMatches(fileList, isMultiScope, func(relPath string) fileMatchSection {
+	matchOutput := formatFileMatches(fileList, isMultiScope, func(relPath string) fileMatchSection {
 		g := groupByRel[relPath]
-		shown := make([]int, 0, len(g.list))
-		for _, m := range g.list {
-			shown = append(shown, m.lineNumber)
+		var tag string
+		var snapPath string
+		// Notebook JSON lines never anchor an edit (upstream: grep.ts:1278-1281).
+		if !g.immutable && !strings.HasSuffix(strings.ToLower(relPath), ".ipynb") {
+			snapPath = urlfs.snapshotHostPath(g.relPath, cwd)
+			if snapPath == "" && g.hostPath != "" && !isRegisteredURL(g.relPath) {
+				snapPath = g.hostPath
+			}
 		}
-		tag := snapshotTagForFile(g.absPath, shown)
+		if snapPath != "" {
+			tag = snapshotTagForFileOnly(snapPath)
+		}
 		useHash := tag != ""
-		var lines []string
+
+		// Compute line number width for display code frame gutter.
+		lineNumWidth := 1
+		for _, m := range g.list {
+			rows := strings.Split(m.line, "\n")
+			lastNum := m.lineNumber + len(rows) - 1
+			if w := len(strconv.Itoa(lastNum)); w > lineNumWidth {
+				lineNumWidth = w
+			}
+		}
+		gutterPad := strings.Repeat(" ", lineNumWidth+1)
+
+		var modelOut []string
+		var displayOut []string
+		var rowLines []int
 		lastLine := 0
 		for _, m := range g.list {
-			if lastLine > 0 && m.lineNumber > lastLine+1 {
-				lines = append(lines, "...")
-			}
-			text := m.line
+			rows := strings.Split(m.line, "\n")
 			if m.truncated {
 				linesTruncated = true
-				if m.column > 0 {
-					text = fmt.Sprintf("%s [col %d]", text, m.column)
+				if m.column > 0 && len(rows) > 0 {
+					rows[0] = fmt.Sprintf("%s [col %d]", rows[0], m.column)
 				}
 			}
-			if useHash {
-				lines = append(lines, fmt.Sprintf("*%d:%s", m.lineNumber, text))
-			} else {
-				lines = append(lines, fmt.Sprintf("*%d|%s", m.lineNumber, text))
+			ranges := rangesByKey[m.key]
+			for rIdx, rowText := range rows {
+				lineNum := m.lineNumber + rIdx
+				if len(ranges) > 0 && !lineInRanges(lineNum, ranges) {
+					continue
+				}
+				cleanRow := sanitizeText(rowText)
+				if lastLine > 0 && lineNum > lastLine+1 {
+					modelOut = append(modelOut, "...")
+					displayOut = append(displayOut, gutterPad+"│...")
+					rowLines = append(rowLines, 0)
+				}
+				isMatch := rIdx == 0
+				marker := " "
+				if isMatch {
+					marker = "*"
+				}
+				if useHash {
+					modelOut = append(modelOut, fmt.Sprintf("%s%d:%s", marker, lineNum, cleanRow))
+				} else {
+					modelOut = append(modelOut, fmt.Sprintf("%s%d|%s", marker, lineNum, cleanRow))
+				}
+				displayOut = append(displayOut, formatCodeFrameLine(marker, lineNum, cleanRow, lineNumWidth))
+				if !m.truncated || (rIdx > 0 && rIdx < len(rows)-1) {
+					rowLines = append(rowLines, lineNum)
+				} else {
+					rowLines = append(rowLines, 0)
+				}
+				lastLine = lineNum
 			}
-			lastLine = m.lineNumber
 		}
-		return fileMatchSection{model: lines, tag: tag}
+		if snapPath != "" && tag != "" {
+			seenSections = append(seenSections, seenSection{
+				relPath:  relPath,
+				hostPath: snapPath,
+				rowLines: rowLines,
+			})
+		}
+		return fileMatchSection{model: modelOut, display: displayOut, tag: tag}
 	})
 
+	// Build trailer (page limit, warnings, per-file cap notice) kept outside the byte cap.
+	// upstream: packages/coding-agent/src/tools/grep.ts:1391-1430
+	limitMessage := ""
 	if fileLimitReached {
-		outputLines = append(outputLines, "", fmt.Sprintf("Showing files %d-%d of %s. Use skip=%d for the next page, or narrow paths/pattern.", skipFiles+1, nextSkip, totalFilesLabel, nextSkip))
+		limitMessage = fmt.Sprintf("Showing files %d-%d of %s. Use skip=%d for the next page, or narrow paths/pattern.", skipFiles+1, nextSkip, totalFilesLabel, nextSkip)
 	}
-	if warningNote != "" {
-		outputLines = append(outputLines, "", warningNote)
+	var cappedCandidates []string
+	for _, rel := range cappedFiles {
+		if fileMatchCounts[rel] == perFileCap {
+			cappedCandidates = append(cappedCandidates, rel)
+		}
+	}
+	buildTrailer := func(shownCapped []string) string {
+		var capNotice string
+		if len(shownCapped) > 0 {
+			if isMultiScope {
+				capNotice = fmt.Sprintf("More than %d matches in %s; grep keeps the first %d per file when searching several. Search one file alone for up to %d.",
+					perFileCap, formatCappedFiles(shownCapped), perFileCap, grepSingleFilePerFileCap)
+			} else {
+				capNotice = fmt.Sprintf("More than %d matches; grep keeps the first %d in a file. Add a line range (`path:N-M`) or narrow the pattern for the rest.",
+					perFileCap, perFileCap)
+			}
+		}
+		var b strings.Builder
+		for _, note := range []string{limitMessage, warningNote, capNotice} {
+			if note != "" {
+				b.WriteString("\n\n")
+				b.WriteString(note)
+			}
+		}
+		return b.String()
 	}
 
-	rawOutput := strings.Join(outputLines, "\n")
-	output, byteTruncated := truncateBytes(rawOutput, grepMaxOutputBytes)
-	// upstream: packages/coding-agent/src/tools/grep.ts:1072, packages/tui/src/tools/output-meta.ts:337-365
+	rawOutput := strings.Join(matchOutput.model, "\n")
+	suffix := buildTrailer(cappedCandidates)
+	var content string
+	var byteTruncated bool
+	var keptLines int
+	for {
+		reserved := len(suffix)
+		budget := grepMaxOutputBytes - reserved
+		if budget < 0 {
+			budget = 0
+		}
+		content, keptLines, byteTruncated = truncateHeadLines(matchOutput.model, budget)
+		shownCapped := cappedCandidates
+		if isMultiScope {
+			var surviving []string
+			for _, rel := range cappedCandidates {
+				if end, ok := matchOutput.modelEnds[rel]; ok && end <= keptLines {
+					surviving = append(surviving, rel)
+				}
+			}
+			shownCapped = surviving
+		}
+		nextSuffix := buildTrailer(shownCapped)
+		if len(nextSuffix) <= reserved {
+			suffix = nextSuffix
+			break
+		}
+		suffix = nextSuffix
+	}
+
+	// Record ONLY rows whose index survived the 50 KB head cap (upstream: grep.ts:1432-1446).
+	// When no full line survived (only header kept or every shown row was column-cut),
+	// record []int{0} (NO_FULL_LINE) so provenance is present without marking the file
+	// authored/unrestricted (upstream: edit/store.ts:22-41, grep.ts:1440-1443).
+	for _, sec := range seenSections {
+		end, ok := matchOutput.modelEnds[sec.relPath]
+		if !ok {
+			continue
+		}
+		firstRow := end - len(sec.rowLines)
+		if keptLines < firstRow {
+			continue // dropped with its header
+		}
+		keptRowCount := min(len(sec.rowLines), max(0, keptLines-firstRow))
+		var keptSeen []int
+		for i := range keptRowCount {
+			if ln := sec.rowLines[i]; ln > 0 {
+				keptSeen = append(keptSeen, ln)
+			}
+		}
+		if len(keptSeen) == 0 {
+			keptSeen = []int{0}
+		}
+		snapshotTagForFile(editStore, sec.hostPath, keptSeen)
+	}
+
+	output := content + suffix
+
+	// Append output-meta bracket notice matching packages/tui/src/tools/output-meta.ts:314-327,370-425.
+	var metaNotices []string
+	if byteTruncated {
+		metaNotices = append(metaNotices, fmt.Sprintf("Showing lines 1-%d of %d (%s limit)", keptLines, len(matchOutput.model), formatBytesCompact(grepMaxOutputBytes)))
+	}
 	if linesTruncated {
-		output += fmt.Sprintf("\n\n[Some lines truncated to %d bytes]", grepDefaultMaxColumn)
+		metaNotices = append(metaNotices, fmt.Sprintf("Some lines truncated to %d bytes", grepDefaultMaxColumn))
+	}
+	if len(metaNotices) > 0 {
+		output += "\n\n[" + strings.Join(metaNotices, ". ") + "]"
+	}
+
+	// Resolve displayTargets for internal URL headers in display output.
+	var displayTargets map[string]string
+	for _, line := range matchOutput.display {
+		if !strings.HasPrefix(line, "#") {
+			continue
+		}
+		trimmed := strings.TrimLeft(line, "#")
+		trimmed = strings.TrimSpace(trimmed)
+		if idx := strings.LastIndexByte(trimmed, '#'); idx > 0 && len(trimmed)-idx == 5 {
+			trimmed = trimmed[:idx]
+		}
+		if isRegisteredURL(trimmed) {
+			if target := urlfs.displayTarget(trimmed); target != "" {
+				if displayTargets == nil {
+					displayTargets = make(map[string]string)
+				}
+				displayTargets[trimmed] = target
+			}
+		}
+	}
+
+	truncated := fileLimitReached || perFileLimitReached || totalCapReached || byteTruncated || linesTruncated
+	details := map[string]any{
+		"scopePath":      scopePath,
+		"searchPath":     dirs.StandardizeMacOSPath(searchPath),
+		"cwd":            dirs.StandardizeMacOSPath(cwd),
+		"matchCount":     totalSelected,
+		"fileCount":      len(fileList),
+		"files":          fileList,
+		"fileMatches":    fileMatchesDetail,
+		"truncated":      truncated,
+		"displayContent": strings.Join(matchOutput.display, "\n"),
+	}
+	if fileLimitReached {
+		details["fileLimitReached"] = grepDefaultFileLimit
+	}
+	if perFileLimitReached {
+		details["perFileLimitReached"] = perFileCap
+	}
+	if len(binaryMatches) > 0 {
+		details["binaryMatches"] = binaryMatches
+	}
+	if len(missingPaths) > 0 {
+		details["missingPaths"] = missingPaths
+	}
+	if len(displayTargets) > 0 {
+		details["displayTargets"] = displayTargets
+	}
+	if linesTruncated {
+		details["linesTruncated"] = true
+	}
+	meta := map[string]any{}
+	if linesTruncated {
+		meta["limits"] = map[string]any{
+			"columnTruncated": map[string]any{
+				"maxColumn": grepDefaultMaxColumn,
+				"unit":      "bytes",
+			},
+		}
+	}
+	if byteTruncated {
+		truncInfo := map[string]any{
+			"truncated":   true,
+			"truncatedBy": "bytes",
+			"outputLines": keptLines,
+			"totalLines":  len(matchOutput.model),
+			"outputBytes": len(content),
+			"totalBytes":  len(rawOutput),
+			"maxBytes":    grepMaxOutputBytes,
+		}
+		details["truncation"] = truncInfo
+		meta["truncation"] = map[string]any{
+			"direction":   "head",
+			"truncatedBy": "bytes",
+			"outputLines": keptLines,
+			"totalLines":  len(matchOutput.model),
+			"outputBytes": len(content),
+			"totalBytes":  len(rawOutput),
+			"maxBytes":    grepMaxOutputBytes,
+			"shownRange":  map[string]any{"start": 1, "end": keptLines},
+		}
+	}
+	if len(meta) > 0 {
+		details["meta"] = meta
 	}
 
 	return sdk.ToolResult{
 		Content: output,
-		Details: map[string]any{
-			"matchCount": totalSelected,
-			"fileCount":  len(fileList),
-			"files":      fileList,
-			"truncated":  fileLimitReached || perFileLimitReached || limitReached || byteTruncated || linesTruncated,
-		},
+		Details: details,
 	}, nil
 }
 
-func searchFile(absPath, relPath string, re *regexp.Regexp, multiline bool, ranges []lineRange, maxMatches int) []grepMatch {
-	f, err := os.Open(absPath)
-	if err != nil {
-		return nil
+// formatCodeFrameLine mirrors packages/tui/src/render/render-utils.ts:468-478.
+func formatCodeFrameLine(marker string, lineNumber int, content string, lineNumberWidth int) string {
+	markerText := strings.TrimSpace(marker)
+	numText := strconv.Itoa(lineNumber)
+	gutter := numText
+	if markerText != "" {
+		gutter = markerText + numText
 	}
-	defer f.Close()
+	width := lineNumberWidth + 1
+	if len(gutter) < width {
+		gutter = strings.Repeat(" ", width-len(gutter)) + gutter
+	}
+	return gutter + "│" + content
+}
 
-	// Read up to grepMaxFileBytes.
-	buf := make([]byte, grepMaxFileBytes)
-	n, _ := f.Read(buf)
-	data := buf[:n]
-	if len(data) == 0 {
-		return nil
+// formatCappedFiles mirrors packages/coding-agent/src/tools/grep.ts:468-472.
+func formatCappedFiles(paths []string) string {
+	if len(paths) <= 5 {
+		return strings.Join(paths, ", ")
 	}
-	// Skip binary files (NUL byte in first 8KB).
-	probeLen := min(len(data), grepBinaryProbeBytes)
-	if bytes.IndexByte(data[:probeLen], 0) != -1 {
-		return nil
+	shown := strings.Join(paths[:5], ", ")
+	rest := len(paths) - 5
+	noun := "files"
+	if rest == 1 {
+		noun = "file"
+	}
+	return fmt.Sprintf("%s and %d more %s", shown, rest, noun)
+}
+
+func truncateHeadLines(lines []string, maxBytes int) (content string, kept int, truncated bool) {
+	if len(lines) == 0 {
+		return "", 0, false
+	}
+	var b strings.Builder
+	for i, line := range lines {
+		need := len(line)
+		if i > 0 {
+			need++
+		}
+		if b.Len()+need > maxBytes {
+			return b.String(), i, true
+		}
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+		b.WriteString(line)
+	}
+	return b.String(), len(lines), false
+}
+
+func probeGitignoredMatch(
+	parentCtx context.Context,
+	cwd string,
+	parsed parsedGlobTarget,
+	node *urlNode,
+	rawExclusions []string,
+	re *regexp.Regexp,
+	multiline bool,
+) string {
+	probeCtx, cancel := context.WithTimeout(parentCtx, grepGitignoreProbeBudget)
+	defer cancel()
+
+	walkRoot := parsed.basePath
+	followLinks := false
+	if node != nil {
+		walkRoot = node.hostPath
+		followLinks = isSkillURL(node.url)
+	}
+	excludes, err := rebaseExclusionsForRoot(rawExclusions, cwd, parsed.basePath, parsed.isURL)
+	if err != nil {
+		return ""
+	}
+	var includeMatcher *globMatcher
+	if parsed.hasGlob {
+		m, err := compileGrepScopeGlob(parsed.globPattern, parsed.bareGlob)
+		if err != nil {
+			return ""
+		}
+		includeMatcher = m
+	}
+	includeNodeModules := pathMentionsSegment(parsed.basePath, "node_modules") ||
+		pathMentionsSegment(parsed.globPattern, "node_modules")
+	entries, err := walkDir(probeCtx, walkRoot, walkOptions{
+		hidden:             true,
+		gitignore:          false,
+		recursive:          parsed.recursive,
+		followLinks:        followLinks,
+		excludes:           excludes,
+		include:            includeMatcher,
+		includeNodeModules: includeNodeModules,
+	})
+	if err != nil {
+		return ""
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].relPath < entries[j].relPath
+	})
+	var scratch []byte
+	for _, e := range entries {
+		if e.isDir || probeCtx.Err() != nil {
+			continue
+		}
+		relDisplay := formatRelToCwd(e.absPath, cwd, false)
+		if node != nil {
+			relDisplay = resolveURLHostRelative(node.url, walkRoot, e.absPath, false)
+		}
+		cand := grepCandidate{
+			key:      e.absPath,
+			relPath:  relDisplay,
+			hostPath: e.absPath,
+			size:     e.size,
+		}
+		matches, _ := searchCandidate(cand, re, multiline, nil, 1, &scratch)
+		if len(matches) > 0 {
+			return relDisplay
+		}
+	}
+	return ""
+}
+
+func searchCandidate(cand grepCandidate, re *regexp.Regexp, multiline bool, ranges []lineRange, maxMatches int, scratch *[]byte) ([]grepMatch, bool) {
+	var data []byte
+	if cand.content != nil {
+		data = cand.content
+		if multiline && len(data) > grepMaxFileBytes {
+			data = data[:grepMaxFileBytes]
+		}
+	} else {
+		f, err := os.Open(cand.hostPath)
+		if err != nil {
+			return nil, false
+		}
+		defer f.Close()
+
+		limit := grepMaxFileBytes
+		if !multiline && cand.namedFile && cand.size > int64(limit) {
+			limit = 64 * 1024 * 1024
+		}
+		// Size buffer from candidate stat size and reuse scratch per worker so
+		// small files never trigger a 4 MiB allocation.
+		want := limit
+		if cand.size > 0 && cand.size < int64(want) {
+			want = int(cand.size) + 1
+		} else if cand.size == 0 {
+			if info, statErr := f.Stat(); statErr == nil && info.Mode().IsRegular() {
+				if info.Size() == 0 {
+					return nil, false
+				}
+				if info.Size() < int64(want) {
+					want = int(info.Size()) + 1
+				}
+			}
+		}
+		var buf []byte
+		if scratch != nil {
+			if cap(*scratch) < want {
+				*scratch = make([]byte, want)
+			}
+			buf = (*scratch)[:want]
+		} else {
+			buf = make([]byte, want)
+		}
+		n := 0
+		for n < len(buf) {
+			k, readErr := f.Read(buf[n:])
+			n += k
+			if readErr != nil {
+				break
+			}
+			if k == 0 {
+				break
+			}
+		}
+		data = buf[:n]
+	}
+	if len(data) == 0 {
+		return nil, false
+	}
+
+	// Binary check: NUL in first 64KB (unless file was explicitly named).
+	// upstream: crates/xfs/src/grep/scan.rs:24-28
+	if !cand.namedFile {
+		probeLen := min(len(data), grepBinaryProbeBytes)
+		if bytes.IndexByte(data[:probeLen], 0) != -1 {
+			if re.Match(data) {
+				return nil, true
+			}
+			return nil, false
+		}
 	}
 
 	var matches []grepMatch
 	if multiline {
 		locs := re.FindAllIndex(data, maxMatches*4)
 		if len(locs) == 0 {
-			return nil
+			return nil, false
 		}
 		seenLines := make(map[int]struct{})
 		for _, loc := range locs {
@@ -472,22 +1401,29 @@ func searchFile(absPath, relPath string, re *regexp.Regexp, multiline bool, rang
 				continue
 			}
 			seenLines[lineNum] = struct{}{}
-			lineStart := bytes.LastIndexByte(data[:loc[0]], '\n') + 1
-			lineEnd := bytes.IndexByte(data[lineStart:], '\n')
-			var lineBytes []byte
-			if lineEnd == -1 {
-				lineBytes = data[lineStart:]
-			} else {
-				lineBytes = data[lineStart : lineStart+lineEnd]
+			blockStart := bytes.LastIndexByte(data[:loc[0]], '\n') + 1
+			matchEnd := loc[1]
+			if matchEnd > blockStart && matchEnd <= len(data) && data[matchEnd-1] == '\n' {
+				matchEnd--
 			}
-			lineStr := strings.TrimRight(string(lineBytes), "\r")
-			col := loc[0] - lineStart + 1
-			trimmed, trunc := truncateLine(lineStr, grepDefaultMaxColumn)
+			endOff := bytes.IndexByte(data[matchEnd:], '\n')
+			var blockBytes []byte
+			if endOff == -1 {
+				blockBytes = data[blockStart:]
+			} else {
+				blockBytes = data[blockStart : matchEnd+endOff]
+			}
+			blockStr := strings.TrimRight(strings.ReplaceAll(string(blockBytes), "\r\n", "\n"), " \t\r")
+			relStart := loc[0] - blockStart
+			relEnd := min(loc[1]-blockStart, len(blockStr))
+			rendered, trunc, col := windowMatchedLine(blockStr, grepDefaultMaxColumn, relStart, relEnd)
 			matches = append(matches, grepMatch{
-				absPath:    absPath,
-				relPath:    relPath,
+				key:        cand.key,
+				relPath:    cand.relPath,
+				hostPath:   cand.hostPath,
+				immutable:  cand.immutable,
 				lineNumber: lineNum,
-				line:       trimmed,
+				line:       rendered,
 				truncated:  trunc,
 				column:     col,
 			})
@@ -495,7 +1431,7 @@ func searchFile(absPath, relPath string, re *regexp.Regexp, multiline bool, rang
 				break
 			}
 		}
-		return matches
+		return matches, false
 	}
 
 	// Single-line scan.
@@ -515,6 +1451,13 @@ func searchFile(absPath, relPath string, re *regexp.Regexp, multiline bool, rang
 		if len(lineBytes) > 0 && lineBytes[len(lineBytes)-1] == '\r' {
 			lineBytes = lineBytes[:len(lineBytes)-1]
 		}
+		if !cand.namedFile && bytes.IndexByte(lineBytes, 0) != -1 {
+			// NUL past the 64KB probe window ends the scan, keeping prior matches.
+			if re.Match(lineBytes) {
+				return matches, true
+			}
+			break
+		}
 		if !lineInRanges(lineNum, ranges) {
 			continue
 		}
@@ -522,41 +1465,78 @@ func searchFile(absPath, relPath string, re *regexp.Regexp, multiline bool, rang
 		if loc == nil {
 			continue
 		}
-		trimmed, trunc := truncateLine(string(lineBytes), grepDefaultMaxColumn)
+		lineStr := strings.TrimRight(string(lineBytes), " \t\r")
+		startOff := min(loc[0], len(lineStr))
+		endOff := min(loc[1], len(lineStr))
+		rendered, trunc, col := windowMatchedLine(lineStr, grepDefaultMaxColumn, startOff, endOff)
 		matches = append(matches, grepMatch{
-			absPath:    absPath,
-			relPath:    relPath,
+			key:        cand.key,
+			relPath:    cand.relPath,
+			hostPath:   cand.hostPath,
+			immutable:  cand.immutable,
 			lineNumber: lineNum,
-			line:       trimmed,
+			line:       rendered,
 			truncated:  trunc,
-			column:     loc[0] + 1,
+			column:     col,
 		})
 		if len(matches) >= maxMatches {
 			break
 		}
 	}
-	return matches
+	return matches, false
 }
 
-func truncateLine(s string, maxBytes int) (string, bool) {
-	if len(s) <= maxBytes {
-		return s, false
+// windowMatchedLine mirrors crates/xfs/src/grep/render.rs:42-75.
+// Fits a matched line wider than maxBytes into maxBytes centered on its first match,
+// returning the windowed string, whether it was truncated, and the 1-based rune column.
+func windowMatchedLine(line string, maxBytes, matchStart, matchEnd int) (string, bool, int) {
+	if len(line) <= maxBytes {
+		return line, false, 0
 	}
-	// Trim on UTF-8 rune boundary.
-	cut := maxBytes - 3
-	for cut > 0 && (s[cut]&0xC0) == 0x80 {
-		cut--
+	headEnd := floorRuneBoundary(line, max(0, maxBytes-3))
+	start := floorRuneBoundary(line, min(matchStart, len(line)))
+	col := utf8.RuneCountInString(line[:start]) + 1
+	body := max(0, maxBytes-6)
+	if matchEnd <= headEnd || body == 0 {
+		return line[:headEnd] + "...", true, col
 	}
-	return s[:cut] + "...", true
+	matchLen := max(0, matchEnd-start)
+	lead := max(0, body-matchLen) / 2
+	from := max(0, start-lead)
+	if from+body >= len(line) {
+		cutFrom := ceilRuneBoundary(line, max(0, len(line)-max(0, maxBytes-3)))
+		return "..." + line[cutFrom:], true, col
+	}
+	cutFrom := ceilRuneBoundary(line, from)
+	cutTo := floorRuneBoundary(line, min(len(line), cutFrom+body))
+	if cutFrom == 0 {
+		return line[:cutTo] + "...", true, col
+	}
+	return "..." + line[cutFrom:cutTo] + "...", true, col
 }
 
-func truncateBytes(s string, maxBytes int) (string, bool) {
-	if len(s) <= maxBytes {
-		return s, false
+func floorRuneBoundary(s string, idx int) int {
+	if idx >= len(s) {
+		return len(s)
 	}
-	cut := maxBytes
-	for cut > 0 && (s[cut]&0xC0) == 0x80 {
-		cut--
+	if idx <= 0 {
+		return 0
 	}
-	return s[:cut] + "\n... (output truncated)", true
+	for idx > 0 && !utf8.RuneStart(s[idx]) {
+		idx--
+	}
+	return idx
+}
+
+func ceilRuneBoundary(s string, idx int) int {
+	if idx <= 0 {
+		return 0
+	}
+	if idx >= len(s) {
+		return len(s)
+	}
+	for idx < len(s) && !utf8.RuneStart(s[idx]) {
+		idx++
+	}
+	return idx
 }

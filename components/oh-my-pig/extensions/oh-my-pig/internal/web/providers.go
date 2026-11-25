@@ -1,8 +1,8 @@
 package web
 
 // Ported HTTP + environment-key web search providers from omp.
-// Selection order follows omp's default web role chain (behavior.kdl:467-479)
-// followed by the remaining HTTP+key providers in provider.ts:18-40 order.
+// Selection order follows omp's default web role chain (behavior.kdl:521-533)
+// followed by remaining credentialed HTTP+key providers in provider.ts:15-42 order.
 
 import (
 	"bytes"
@@ -93,7 +93,8 @@ type parallelProvider struct{}
 
 func (parallelProvider) ID() string        { return "parallel" }
 func (parallelProvider) Label() string     { return "Parallel" }
-func (parallelProvider) IsAvailable() bool { return envTrimmed("PARALLEL_API_KEY") != "" }
+func (parallelProvider) IsAvailable() bool { return true }
+func (parallelProvider) IsKeyless() bool   { return envTrimmed("PARALLEL_API_KEY") == "" }
 
 var parallelQuerySyntax = QuerySyntax{Phrases: true, Negation: true, Or: true}
 
@@ -124,21 +125,27 @@ func toParallelSourcePolicy(parsed StructuredQuery, recency string) *parallelSou
 }
 
 func (parallelProvider) Search(ctx context.Context, client *http.Client, params SearchParams) (SearchResponse, error) {
-	apiKey := envTrimmed("PARALLEL_API_KEY")
-	if apiKey == "" {
-		return SearchResponse{}, &SearchProviderError{
-			Provider: "parallel",
-			Message:  "Parallel credentials not found. Set PARALLEL_API_KEY.",
-			Status:   401,
-		}
-	}
 	numResults := clampNumResults(params.requestedResults(), 10, 40)
 	parsed := parsedOrParse(params)
 	query := params.Query
 	if parsed.HasDirectives {
 		query = FormatQuery(parsed, parallelQuerySyntax)
 	}
-
+	policy := toParallelSourcePolicy(parsed, params.Recency)
+	apiKey := envTrimmed("PARALLEL_API_KEY")
+	if apiKey == "" {
+		rawMCPQuery := params.Query
+		if parsed.HasDirectives {
+			rawMCPQuery = FormatQuery(parsed, parallelMCPQuerySyntax)
+		}
+		mcpQuery := rawMCPQuery
+		if parsed.After == "" && policy != nil && policy.AfterDate != "" {
+			mcpQuery = rawMCPQuery + " after:" + policy.AfterDate
+		}
+		tctx, cancel := withProviderTimeout(ctx, params.Timeout)
+		defer cancel()
+		return searchParallelPublicMCP(tctx, client, query, mcpQuery, numResults)
+	}
 	reqBody := map[string]any{
 		"objective":      query,
 		"search_queries": []string{query},
@@ -431,10 +438,11 @@ func (exaProvider) Search(ctx context.Context, client *http.Client, params Searc
 
 type firecrawlProvider struct{}
 
-func (firecrawlProvider) ID() string    { return "firecrawl" }
-func (firecrawlProvider) Label() string { return "Firecrawl" }
-func (firecrawlProvider) IsAvailable() bool {
-	return envTrimmed("FIRECRAWL_API_KEY") != "" || envTrimmed("FIRECRAWL_BASE_URL") != "" || envTrimmed("FIRECRAWL_API_URL") != ""
+func (firecrawlProvider) ID() string        { return "firecrawl" }
+func (firecrawlProvider) Label() string     { return "Firecrawl" }
+func (firecrawlProvider) IsAvailable() bool { return true }
+func (firecrawlProvider) IsKeyless() bool {
+	return envTrimmed("FIRECRAWL_API_KEY") == "" && envTrimmed("FIRECRAWL_BASE_URL") == "" && envTrimmed("FIRECRAWL_API_URL") == ""
 }
 
 var (
@@ -639,11 +647,50 @@ func (firecrawlProvider) Search(ctx context.Context, client *http.Client, params
 // upstream: packages/coding-agent/src/web/search/providers/searxng.ts
 // =============================================================================
 
+// ctxAvailableProvider is an optional interface for providers whose
+// availability depends on session settings read via ctx (e.g. searxng.endpoint).
+type ctxAvailableProvider interface {
+	IsAvailableCtx(ctx context.Context) bool
+}
+
 type searxngProvider struct{}
 
-func (searxngProvider) ID() string        { return "searxng" }
-func (searxngProvider) Label() string     { return "SearXNG" }
-func (searxngProvider) IsAvailable() bool { return envTrimmed("SEARXNG_ENDPOINT") != "" }
+func (searxngProvider) ID() string    { return "searxng" }
+func (searxngProvider) Label() string { return "SearXNG" }
+func (searxngProvider) IsAvailable() bool {
+	return searxngEndpoint(context.Background()) != ""
+}
+func (searxngProvider) IsAvailableCtx(ctx context.Context) bool {
+	return searxngEndpoint(ctx) != ""
+}
+
+// searxngEndpoint reads searxng.endpoint from settings, falling back to SEARXNG_ENDPOINT
+// when blank/unset (upstream: packages/coding-agent/src/web/settings.ts:33-44).
+func searxngEndpoint(ctx context.Context) string {
+	if v, ok := settingString(ctx, "searxng.endpoint"); ok && strings.TrimSpace(v) != "" {
+		return strings.TrimSpace(v)
+	}
+	return envTrimmed("SEARXNG_ENDPOINT")
+}
+
+// searxngToken reads searxng.token from settings, falling back to SEARXNG_TOKEN
+// when blank/unset (upstream: packages/coding-agent/src/web/settings.ts:46-52).
+func searxngToken(ctx context.Context) string {
+	if v, ok := settingString(ctx, "searxng.token"); ok && strings.TrimSpace(v) != "" {
+		return strings.TrimSpace(v)
+	}
+	return envTrimmed("SEARXNG_TOKEN")
+}
+
+// searxngBasicCred reads searxng.basicUsername/basicPassword from settings,
+// falling back to the env var when unset (preserving empty strings per RFC 7617).
+// upstream: packages/coding-agent/src/web/settings.ts:54-68
+func searxngBasicCred(ctx context.Context, settingKey, envKey string) (string, bool) {
+	if v, ok := settingString(ctx, settingKey); ok {
+		return v, true
+	}
+	return os.LookupEnv(envKey)
+}
 
 var searxngRecencyMap = map[string]string{
 	"day":   "day",
@@ -661,9 +708,9 @@ func hasControlChars(s string) bool {
 	return false
 }
 
-func findSearXNGAuth() (string, error) {
-	user, hasUser := os.LookupEnv("SEARXNG_BASIC_USERNAME")
-	pass, hasPass := os.LookupEnv("SEARXNG_BASIC_PASSWORD")
+func findSearXNGAuth(ctx context.Context) (string, error) {
+	user, hasUser := searxngBasicCred(ctx, "searxng.basicUsername", "SEARXNG_BASIC_USERNAME")
+	pass, hasPass := searxngBasicCred(ctx, "searxng.basicPassword", "SEARXNG_BASIC_PASSWORD")
 	if hasUser || hasPass {
 		if !hasUser || !hasPass {
 			return "", errors.New("SearXNG Basic auth requires both searxng.basicUsername and searxng.basicPassword, or SEARXNG_BASIC_USERNAME and SEARXNG_BASIC_PASSWORD.")
@@ -676,7 +723,7 @@ func findSearXNGAuth() (string, error) {
 		}
 		return "Basic " + base64.StdEncoding.EncodeToString([]byte(user+":"+pass)), nil
 	}
-	if tok := envTrimmed("SEARXNG_TOKEN"); tok != "" {
+	if tok := searxngToken(ctx); tok != "" {
 		return "Bearer " + tok, nil
 	}
 	return "", nil
@@ -750,13 +797,21 @@ func extractSearXNGAnswerText(raw any) string {
 }
 
 func (searxngProvider) Search(ctx context.Context, client *http.Client, params SearchParams) (SearchResponse, error) {
-	endpoint := envTrimmed("SEARXNG_ENDPOINT")
+	endpoint := searxngEndpoint(ctx)
 	if endpoint == "" {
 		return SearchResponse{}, errors.New("SearXNG endpoint not configured. Set searxng.endpoint in settings or SEARXNG_ENDPOINT in environment.")
 	}
-	authHeader, err := findSearXNGAuth()
+	authHeader, err := findSearXNGAuth(ctx)
 	if err != nil {
 		return SearchResponse{}, err
+	}
+
+	categories, _ := settingString(ctx, "searxng.categories")
+	engines, _ := settingString(ctx, "searxng.engines")
+	language, _ := settingString(ctx, "searxng.language")
+	safesearchVal, hasSafesearch := settingFloat(ctx, "searxng.safesearch")
+	if hasSafesearch && safesearchVal != 0 && safesearchVal != 1 && safesearchVal != 2 {
+		return SearchResponse{}, errors.New("searxng.safesearch must be 0 (off), 1 (moderate), or 2 (strict).")
 	}
 
 	numResults := clampNumResults(params.requestedResults(), 10, 20)
@@ -777,8 +832,20 @@ func (searxngProvider) Search(ctx context.Context, client *http.Client, params S
 			q.Set("time_range", tr)
 		}
 	}
+	if strings.TrimSpace(categories) != "" {
+		q.Set("categories", strings.TrimSpace(categories))
+	}
+	if strings.TrimSpace(engines) != "" {
+		q.Set("engines", strings.TrimSpace(engines))
+	}
+	if hasSafesearch {
+		q.Set("safesearch", strconv.Itoa(int(safesearchVal)))
+	}
 	if parsed.Lang != "" {
-		q.Set("language", parsed.Lang)
+		language = parsed.Lang
+	}
+	if strings.TrimSpace(language) != "" {
+		q.Set("language", strings.TrimSpace(language))
 	}
 	u.RawQuery = q.Encode()
 
@@ -2561,18 +2628,21 @@ func parsedOrParse(params SearchParams) StructuredQuery {
 	return ParseSearchQuery(params.Query)
 }
 
-// defaultProviders defines omp's selection order for HTTP+env-key providers:
-//  1. Default web role chain from catalog/src/compat/rules/runtime/behavior.kdl:467-479
-//     (parallel, exa, firecrawl, searxng)
-//  2. Remaining HTTP+env-key engines from coding-agent/src/web/search/provider.ts:18-40
-//     (perplexity, tinyfish, jina, kagi, tavily, brave, deepseek, kimi, synthetic, ollama)
+// defaultProviders defines the search provider selection order:
+//  1. omp's default web role chain (catalog/src/compat/rules/runtime/behavior.kdl:521-533):
+//     parallel (keyed or keyless MCP), exa, firecrawl (keyed/self-hosted or keyless), searxng, duckduckgo (keyless HTML)
+//  2. Port extension (because there is no modelRoles.web config here): remaining credentialed
+//     HTTP+env-key providers when their env key is set, in coding-agent/src/web/search/provider.ts order.
 var defaultProviders = []SearchProvider{
 	parallelProvider{},
 	exaProvider{},
 	firecrawlProvider{},
 	searxngProvider{},
+	duckDuckGoProvider{},
 	perplexityProvider{},
 	tinyfishProvider{},
+	keenableProvider{},
+	sofyaProvider{},
 	jinaProvider{},
 	kagiProvider{},
 	tavilyProvider{},

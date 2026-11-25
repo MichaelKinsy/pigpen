@@ -196,7 +196,14 @@ func contextDepth(cwd, filePath string) (int, bool) {
 
 // MaxAtImportDepth caps recursive @-imports inside context files.
 // upstream: packages/coding-agent/src/discovery/at-imports.ts:33
-const MaxAtImportDepth = 5
+const (
+	// MaxAtImportDepth is the maximum recursive @-import hop depth.
+	// upstream: packages/coding-agent/src/discovery/at-imports.ts:38
+	MaxAtImportDepth = 5
+	// MaxAtImportExpansions caps total file reads in one top-level document.
+	// upstream: packages/coding-agent/src/discovery/at-imports.ts:41
+	MaxAtImportExpansions = 256
+)
 
 var (
 	atImportRe    = regexp.MustCompile(`(^|[ \t])@([./~A-Za-z0-9_-](?:\\ |[^\s])*)`)
@@ -205,7 +212,7 @@ var (
 
 // ExpandAtImports expands @path/to/file includes in a context file relative to filePath's directory,
 // skipping fenced code blocks and inline code spans and breaking cycles.
-// upstream: packages/coding-agent/src/discovery/at-imports.ts:67-276
+// upstream: packages/coding-agent/src/discovery/at-imports.ts:75-199
 func ExpandAtImports(content, filePath, home string) string {
 	if !strings.Contains(content, "@") {
 		return content
@@ -217,11 +224,12 @@ func ExpandAtImports(content, filePath, home string) string {
 	if err != nil {
 		absSource = filePath
 	}
-	visited := map[string]bool{absSource: true}
-	return expandAtImportsRec(content, filepath.Dir(absSource), 0, MaxAtImportDepth, home, visited)
+	chain := []string{absSource}
+	remaining := MaxAtImportExpansions
+	return expandAtImportsRec(content, filepath.Dir(absSource), 0, MaxAtImportDepth, home, chain, &remaining)
 }
 
-func expandAtImportsRec(content, baseDir string, depth, maxDepth int, home string, visited map[string]bool) string {
+func expandAtImportsRec(content, baseDir string, depth, maxDepth int, home string, chain []string, remaining *int) string {
 	if depth >= maxDepth {
 		return content
 	}
@@ -233,20 +241,19 @@ func expandAtImportsRec(content, baseDir string, depth, maxDepth int, home strin
 			out.WriteString(seg.text)
 			continue
 		}
-		out.WriteString(expandAtTextSegment(seg.text, baseDir, depth, maxDepth, home, visited))
+		out.WriteString(expandAtTextSegment(seg.text, baseDir, depth, maxDepth, home, chain, remaining))
 	}
 	return out.String()
 }
 
-func expandAtTextSegment(text, baseDir string, depth, maxDepth int, home string, visited map[string]bool) string {
+func expandAtTextSegment(text, baseDir string, depth, maxDepth int, home string, chain []string, remaining *int) string {
 	lines := strings.Split(text, "\n")
 	for i, line := range lines {
-		lines[i] = expandAtLine(line, baseDir, depth, maxDepth, home, visited)
+		lines[i] = expandAtLine(line, baseDir, depth, maxDepth, home, chain, remaining)
 	}
 	return strings.Join(lines, "\n")
 }
-
-func expandAtLine(line, baseDir string, depth, maxDepth int, home string, visited map[string]bool) string {
+func expandAtLine(line, baseDir string, depth, maxDepth int, home string, chain []string, remaining *int) string {
 	if !strings.Contains(line, "@") {
 		return line
 	}
@@ -286,7 +293,7 @@ func expandAtLine(line, baseDir string, depth, maxDepth int, home string, visite
 	cursor := 0
 	for _, m := range matches {
 		out.WriteString(line[cursor:m.start])
-		if expanded, ok := resolveAndExpandAt(m.importPath, baseDir, depth, maxDepth, home, visited); ok {
+		if expanded, ok := resolveAndExpandAt(m.importPath, baseDir, depth, maxDepth, home, chain, remaining); ok {
 			out.WriteString(expanded)
 		} else {
 			out.WriteString(line[m.start:m.end])
@@ -297,10 +304,18 @@ func expandAtLine(line, baseDir string, depth, maxDepth int, home string, visite
 	return out.String()
 }
 
-func resolveAndExpandAt(importPath, baseDir string, depth, maxDepth int, home string, visited map[string]bool) (string, bool) {
-	resolved := resolveImportPath(importPath, baseDir, home)
-	if visited[resolved] {
+func resolveAndExpandAt(importPath, baseDir string, depth, maxDepth int, home string, chain []string, remaining *int) (string, bool) {
+	if *remaining <= 0 {
 		return "", false
+	}
+	resolved := resolveImportPath(importPath, baseDir, home)
+	// Only an ancestor in the current import chain counts as a cycle; a file
+	// imported multiple times from unrelated places is expanded at each occurrence.
+	// upstream: packages/coding-agent/src/discovery/at-imports.ts:184-189
+	for _, ancestor := range chain {
+		if ancestor == resolved {
+			return "", false
+		}
 	}
 	info, err := os.Stat(resolved)
 	if err != nil || !info.Mode().IsRegular() {
@@ -310,10 +325,12 @@ func resolveAndExpandAt(importPath, baseDir string, depth, maxDepth int, home st
 	if err != nil {
 		return "", false
 	}
-	visited[resolved] = true
-	return expandAtImportsRec(string(data), filepath.Dir(resolved), depth+1, maxDepth, home, visited), true
+	*remaining--
+	nextChain := make([]string, len(chain)+1)
+	copy(nextChain, chain)
+	nextChain[len(chain)] = resolved
+	return expandAtImportsRec(string(data), filepath.Dir(resolved), depth+1, maxDepth, home, nextChain, remaining), true
 }
-
 func resolveImportPath(importPath, baseDir, home string) string {
 	switch {
 	case importPath == "~":

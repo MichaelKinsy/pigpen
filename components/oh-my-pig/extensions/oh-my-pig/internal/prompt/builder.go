@@ -9,13 +9,19 @@ package prompt
 import (
 	_ "embed"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/toolcmd"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
 )
 
 //go:embed system-prompt.md
@@ -39,8 +45,48 @@ var friendlyPersonality string
 //go:embed personalities/pragmatic.md
 var pragmaticPersonality string
 
+// ToolCommands supplies mounted bash tool-command names and their rendered docs
+// for `# Tool Commands`. Nil by default; the integrator wires toolcmd docs here.
+// upstream: packages/coding-agent/src/system-prompt.ts:772-773,1020-1038
+var ToolCommands func(ctx sdk.Context) (mounted []string, docs string)
+
+// SubagentSession reports whether ctx belongs to a child (subagent) session.
+// Nil by default; the integrator assigns it from internal/agents. When true,
+// the hook renders with Subagent: true and PersonalityNone (upstream sdk.ts:4679-4680).
+var SubagentSession func(ctx sdk.Context) bool
+
+// Intent supplies whether intent tracing is active for ctx, the parameter field
+// name, and optional custom guidance. Nil by default; the integrator assigns it
+// from internal/intent. Must follow `tools.intentTracing` (or interactive host
+// when unset) only, NOT `PI_NO_INTENT` (upstream sdk.ts:4655, agent-loop.ts:1085).
+// PI_INTENT_PROMPT overrides guidance (upstream system-prompt.ts:1138-1140).
+var Intent func(ctx sdk.Context) (enabled bool, field string, guidance string)
+
+// SettingsApproval reports whether interactive `cfg://` writes can be approved in
+// ctx, feeding urls.SchemeHost.SettingsApproval. Nil by default (false); the
+// integrator assigns it (true in interactive top-level TUI sessions, false in
+// print/RPC/subagent sessions; upstream sdk.ts:4673, cfg-protocol.ts:352-354,
+// main.ts:2445).
+var SettingsApproval func(ctx sdk.Context) bool
+
+// OutReplies reports whether `out://` mid-turn replies are active in ctx, feeding
+// urls.SchemeHost.OutReplies. Nil by default (false); the integrator assigns it
+// (explicit `out.enabled` if configured, else interactive top-level TUI, never
+// subagents; upstream sdk.ts:4674, out-protocol.ts:45-47,77-79, main.ts:2446).
+var OutReplies func(ctx sdk.Context) bool
+
+// TaskIRC reports whether subagent IRC peer messaging is enabled for ctx, gating
+// the `B asks A via write agent://<id>` clause in Delegation gates. Nil by default
+// (defaults to true when `task` is active, matching omp's default
+// `task.maxRecursionDepth: 2` where top-level and subagent sessions both have
+// isIrcEnabled=true); the integrator may assign it from settings/agents
+// (`isIrcEnabled(settings, taskDepth)`: true when taskDepth > 0 or
+// canSpawnAtDepth(task.maxRecursionDepth, taskDepth); upstream sdk.ts:4664,
+// irc/messaging.ts:16-20).
+var TaskIRC func(ctx sdk.Context) bool
+
 // Personality selects one of omp's bundled personality presets (or "none").
-// upstream: packages/coding-agent/src/system-prompt.ts:95-99
+// upstream: packages/coding-agent/src/system-prompt.ts:125-130
 type Personality string
 
 const (
@@ -51,14 +97,14 @@ const (
 )
 
 // ToolInfoEntry is one entry rendered under `# Tool Inventory`.
-// upstream: packages/coding-agent/src/system-prompt.ts:900-904
+// upstream: packages/coding-agent/src/system-prompt.ts:1034-1038
 type ToolInfoEntry struct {
 	Name  string
 	Label string
 }
 
 // BuildOptions controls BuildSystemPrompt and RenderTemplate.
-// upstream: packages/coding-agent/src/system-prompt.ts:490-594
+// upstream: packages/coding-agent/src/system-prompt.ts:526-650
 type BuildOptions struct {
 	// Cwd is the working directory (used for active-repo detection and context discovery).
 	Cwd string
@@ -68,8 +114,13 @@ type BuildOptions struct {
 	Home string
 	// ToolNames lists active tool names from the session at run time.
 	ToolNames []string
-	// ToolLabels optionally maps tool name -> human label for `# Tool Inventory`.
+	// ToolLabels optionally maps tool name -> human label (retained for caller compatibility).
 	ToolLabels map[string]string
+	// MountedCommands lists tool names mounted as bash commands; they count as present
+	// for {{#has tools ...}} gates but are excluded from # Tool Inventory.
+	MountedCommands []string
+	// ToolCommandDocs is the rendered documentation body under # Tool Commands.
+	ToolCommandDocs string
 	// ContextFiles overrides context-file discovery when non-nil (even if empty).
 	ContextFiles []ContextFile
 	// Skills lists discovered skills; omitted when no skill reader (read) is active or when Hide is true.
@@ -78,8 +129,15 @@ type BuildOptions struct {
 	Rules []Rule
 	// AlwaysApplyRules lists always-apply rules rendered under <generic-rules>.
 	AlwaysApplyRules []AlwaysApplyRule
-	// InternalURLs lists supported internal URL doc lines; omitted when empty.
+	// InternalURLs overrides urls.Describe(host) when non-nil (even if empty).
 	InternalURLs []string
+	// InternalURLReference overrides urls.Reference() when non-nil; rendered when `read` is not active.
+	InternalURLReference []string
+	// EvalPreludes overrides eval.EnabledPreludes(ctx) when non-nil (even if empty).
+	EvalPreludes []eval.Prelude
+	// Context is the session sdk.Context passed to session-aware hooks such as
+	// eval.Prelude.GuidanceText(ctx).
+	Context sdk.Context
 	// Model is the provider-qualified model identifier (e.g. "anthropic/claude-opus-4").
 	Model string
 	// Personality selects the personality block ("default", "friendly", "pragmatic", "none").
@@ -92,30 +150,93 @@ type BuildOptions struct {
 	SetActiveRepoContext bool
 	// AppendSystemPrompt is appended after the <critical> block in project-prompt.md.
 	AppendSystemPrompt string
+	// Subagent switches Workflow #2/#3 and project-prompt <critical> to subagent hand-off wording.
+	Subagent bool
+	// DelegationBias selects the Delegation wording ("balanced" default, "restrained", "eager", "gated").
+	DelegationBias string
+	// EagerTasks enables eager delegation wording when `task` is active.
+	EagerTasks bool
+	// EagerTasksAlways enables mandatory delegation wording when EagerTasks is also true.
+	EagerTasksAlways bool
+	// TaskBatch toggles "in one `tasks[]` batch" vs "in parallel calls" (default true when nil).
+	TaskBatch *bool
+	// ScoutAvailable toggles scout reference in balanced/eager delegation (default true when nil).
+	ScoutAvailable *bool
+	// TaskIRCEnabled appends the IRC peer-messaging clause in Delegation gates.
+	TaskIRCEnabled bool
+	// EncourageEdits controls the `<critical>` edit-tool block (default true when nil).
+	EncourageEdits *bool
+	// Visuals and reactions flags (all default false in oh-my-pig; omp's settings default renderMermaid/Svg/Embeds/reactions to true and autoGraph to "auto").
+	RenderMermaid bool
+	RenderSVG     bool
+	RenderEmbeds  bool
+	AutoGraph     bool
+	Reactions     bool
+	// IntentTracing enables the intent-field bullet under # Tool I/O.
+	IntentTracing  bool
+	IntentField    string
+	IntentGuidance string
+	// SecretsEnabled enables the opaque secret-token bullet under # Tool I/O.
+	SecretsEnabled bool
+	// ResultShaping is optional extra guidance under # Tool I/O.
+	ResultShaping string
+	// AutoQAEnabled enables the automated QA `<critical>` block.
+	AutoQAEnabled bool
+	// Ovnfs enables the `# Separate checkouts` section when `bash` is active.
+	Ovnfs string
+	// SettingsApproval advertises `cfg://` in # Internal URLs (feeds urls.SchemeHost).
+	SettingsApproval bool
+	// OutReplies advertises `out://` in # Internal URLs (feeds urls.SchemeHost).
+	OutReplies bool
 }
 
 // templateSlots lists every placeholder recognized in piglets/oh-my-pig/prompts/system.md.
 var templateSlots = []string{
+	"{{visuals}}",
+	"{{reactions}}",
 	"{{personality}}",
-	"{{skills_and_rules}}",
-	"{{internal_urls}}",
+	"{{skills_and_rules_heading}}",
+	"{{skills_block}}",
+	"{{always_apply_rules_block}}",
+	"{{domain_rules_block}}",
+	"{{internal_urls_body}}",
 	"{{tool_inventory}}",
+	"{{tool_commands}}",
 	"{{scratchpad}}",
-	"{{general_delegation}}",
-	"{{specialized_tools}}",
+	"{{intent_line}}",
+	"{{secrets_line}}",
+	"{{result_shaping}}",
+	"{{specialized_read}}",
+	"{{specialized_write}}",
+	"{{specialized_lsp}}",
+	"{{specialized_find}}",
+	"{{edit_critical}}",
+	"{{auto_qa}}",
 	"{{exploration}}",
-	"{{ast}}",
+	"{{ovnfs}}",
 	"{{delegation}}",
-	"{{scope_prereq}}",
-	"{{research_lsp}}",
-	"{{decompose_todo}}",
-	"{{implement_destructive}}",
-	"{{project_context}}",
+	"{{before_editing_prereq}}",
+	"{{before_editing_lsp}}",
+	"{{before_editing_todo}}",
+	"{{before_editing_destructive}}",
+	"{{workflow_step2}}",
+	"{{workflow_cleanup}}",
 }
 
-// BuildSystemPrompt renders omp's system prompt and project-context footer using
-// the embedded copy of piglets/oh-my-pig/prompts/system.md.
-// upstream: packages/coding-agent/src/system-prompt.ts:630-1046
+// inlineSlots are placeholders that correspond to inline Handlebars blocks
+// (`{{#if ...}}...{{/if}}` on one line) which leave an empty line when untaken,
+// unlike standalone blocks whose empty result drops the line.
+var inlineSlots = map[string]bool{
+	"{{intent_line}}":       true,
+	"{{secrets_line}}":      true,
+	"{{specialized_read}}":  true,
+	"{{specialized_write}}": true,
+	"{{model_line}}":        true,
+}
+
+// BuildSystemPrompt renders omp's system prompt, eval prelude guidance blocks,
+// and project-context footer using the embedded copy of piglets/oh-my-pig/prompts/system.md.
+// upstream: packages/coding-agent/src/system-prompt.ts:722-1206
 func BuildSystemPrompt(opts BuildOptions) string {
 	return RenderTemplate(systemPromptTemplate, opts)
 }
@@ -130,11 +251,20 @@ func RenderTemplate(tmpl string, opts BuildOptions) string {
 	}
 	personalityText := resolvePersonality(personality, opts.AgentDir)
 
-	toolNames := dedupeStrings(opts.ToolNames)
-	hasTool := func(name string) bool { return slices.Contains(toolNames, name) }
-
+	mountedCommands := dedupeStrings(opts.MountedCommands)
+	// Mounted-only commands satisfy {{#has tools ...}} gates while staying out of
+	// # Tool Inventory (matching system-prompt.ts:1020-1033).
+	rawToolNames := dedupeStrings(opts.ToolNames)
+	inventoryTools := make([]string, 0, len(rawToolNames))
+	for _, name := range rawToolNames {
+		if !slices.Contains(mountedCommands, name) {
+			inventoryTools = append(inventoryTools, name)
+		}
+	}
+	allTools := dedupeStrings(append(append([]string(nil), rawToolNames...), mountedCommands...))
+	hasTool := func(name string) bool { return slices.Contains(allTools, name) }
 	// Skills require an active reader tool (`read`) and drop hidden skills.
-	// upstream: packages/coding-agent/src/system-prompt.ts:924-939
+	// upstream: packages/coding-agent/src/system-prompt.ts:1058-1076
 	var visibleSkills []SkillEntry
 	if hasTool("read") {
 		for _, s := range opts.Skills {
@@ -177,30 +307,89 @@ func RenderTemplate(tmpl string, opts BuildOptions) string {
 		repoCtx = ResolveActiveRepoContext(opts.Cwd)
 	}
 
-	slots := map[string]string{
-		"{{personality}}":           renderPersonalitySection(personalityText),
-		"{{skills_and_rules}}":      renderSkillsAndRules(visibleSkills, alwaysApply, opts.Rules),
-		"{{internal_urls}}":         renderInternalURLs(opts.InternalURLs),
-		"{{tool_inventory}}":        renderToolInventory(toolNames, opts.ToolLabels),
-		"{{scratchpad}}":            renderScratchpad(hasTool),
-		"{{general_delegation}}":    renderGeneralDelegation(hasTool),
-		"{{specialized_tools}}":     renderSpecializedTools(hasTool),
-		"{{exploration}}":           renderExploration(hasTool),
-		"{{ast}}":                   renderAST(hasTool),
-		"{{delegation}}":            renderDelegation(hasTool),
-		"{{scope_prereq}}":          renderScopePrereq(len(visibleSkills) > 0, len(opts.Rules) > 0),
-		"{{research_lsp}}":          renderResearchLSP(hasTool),
-		"{{decompose_todo}}":        renderDecomposeTodo(hasTool),
-		"{{implement_destructive}}": renderImplementDestructive(hasTool),
-		"{{project_context}}":       renderProjectPrompt(env, opts.Model, contextFiles, hasTool, repoCtx, opts.AppendSystemPrompt),
+	internalURLs := opts.InternalURLs
+	if internalURLs == nil {
+		host := urls.SchemeHost{
+			SkillURIAccess:   hasTool("read") && len(opts.Skills) > 0,
+			RuleCount:        len(opts.Rules),
+			SettingsApproval: opts.SettingsApproval,
+			OutReplies:       opts.OutReplies,
+			Subagent:         opts.Subagent,
+		}
+		internalURLs = urls.Describe(host)
+	}
+	internalURLRef := opts.InternalURLReference
+	if internalURLRef == nil && !hasTool("read") {
+		internalURLRef = urls.Reference()
 	}
 
-	return formatPrompt(fillSlots(tmpl, slots))
+	preludes := opts.EvalPreludes
+	browserEnabled := false
+	computerEnabled := false
+	for _, p := range preludes {
+		if p.Name == "browser" {
+			browserEnabled = true
+		}
+		if p.Name == "computer" {
+			computerEnabled = true
+		}
+	}
+
+	encourageEdits := true
+	if opts.EncourageEdits != nil {
+		encourageEdits = *opts.EncourageEdits
+	}
+
+	slots := map[string]string{
+		"{{visuals}}":                    renderVisuals(opts),
+		"{{reactions}}":                  renderReactions(opts.Reactions),
+		"{{personality}}":                renderPersonalitySection(personalityText),
+		"{{skills_and_rules_heading}}":   renderSkillsAndRulesHeading(visibleSkills, alwaysApply, opts.Rules),
+		"{{skills_block}}":               renderSkillsBlock(visibleSkills),
+		"{{always_apply_rules_block}}":   renderAlwaysApplyRulesBlock(alwaysApply),
+		"{{domain_rules_block}}":         renderDomainRulesBlock(opts.Rules),
+		"{{internal_urls_body}}":         renderInternalURLsBody(internalURLs, internalURLRef, hasTool("read")),
+		"{{tool_inventory}}":             renderToolInventory(inventoryTools),
+		"{{tool_commands}}":              renderToolCommands(mountedCommands, opts.ToolCommandDocs),
+		"{{scratchpad}}":                 renderScratchpad(hasTool),
+		"{{intent_line}}":                renderIntentLine(opts),
+		"{{secrets_line}}":               renderSecretsLine(opts.SecretsEnabled),
+		"{{result_shaping}}":             strings.TrimRight(opts.ResultShaping, "\n"),
+		"{{specialized_read}}":           renderSpecializedRead(hasTool),
+		"{{specialized_write}}":          renderSpecializedWrite(hasTool),
+		"{{specialized_lsp}}":            renderSpecializedLSP(hasTool),
+		"{{specialized_find}}":           renderSpecializedFind(hasTool),
+		"{{edit_critical}}":              renderEditCritical(encourageEdits, hasTool),
+		"{{auto_qa}}":                    renderAutoQA(opts.AutoQAEnabled),
+		"{{exploration}}":                renderExploration(hasTool),
+		"{{ovnfs}}":                      renderOvnfs(opts.Ovnfs, hasTool),
+		"{{delegation}}":                 renderDelegation(opts, hasTool),
+		"{{before_editing_prereq}}":      renderBeforeEditingPrereq(len(visibleSkills) > 0, len(opts.Rules) > 0),
+		"{{before_editing_lsp}}":         renderBeforeEditingLSP(hasTool),
+		"{{before_editing_todo}}":        renderBeforeEditingTodo(hasTool),
+		"{{before_editing_destructive}}": renderBeforeEditingDestructive(hasTool),
+		"{{workflow_step2}}":             renderWorkflowStep2(opts.Subagent, browserEnabled, computerEnabled),
+		"{{workflow_cleanup}}":           renderWorkflowCleanup(opts.Subagent),
+	}
+
+	// Render system-prompt, prelude guidance, and project-prompt as separate blocks
+	// matching upstream buildSystemPrompt (system-prompt.ts:1179-1196), then join
+	// with "\n\n" for PiG's single-string systemPrompt hook.
+	blocks := []string{formatPrompt(fillSlots(tmpl, slots))}
+	for _, p := range preludes {
+		if text := strings.TrimSpace(p.GuidanceText(opts.Context)); text != "" {
+			blocks = append(blocks, text)
+		}
+	}
+	if proj := renderProjectPrompt(env, opts.Model, contextFiles, opts.Subagent, repoCtx, opts.AppendSystemPrompt); proj != "" {
+		blocks = append(blocks, proj)
+	}
+	return strings.Join(blocks, "\n\n")
 }
 
-// fillSlots replaces each slot line in tmpl; when a slot occupies its own line and
-// expands to "", the line is dropped so surrounding blank lines do not double up
-// (matching Handlebars standalone-tag line stripping).
+// fillSlots replaces each slot line in tmpl. Standalone block slots drop their
+// line when empty (matching Handlebars stripStandalone); inline block slots leave
+// an empty line when empty, which formatPrompt then preserves or collapses.
 func fillSlots(tmpl string, slots map[string]string) string {
 	lines := strings.Split(tmpl, "\n")
 	out := make([]string, 0, len(lines))
@@ -208,6 +397,9 @@ func fillSlots(tmpl string, slots map[string]string) string {
 		trimmed := strings.TrimSpace(line)
 		if val, isSlot := slots[trimmed]; isSlot {
 			if val == "" {
+				if inlineSlots[trimmed] {
+					out = append(out, "")
+				}
 				continue
 			}
 			out = append(out, val)
@@ -231,162 +423,221 @@ func renderPersonalitySection(text string) string {
 	return "# Personality\n" + text
 }
 
-func renderSkillsAndRules(skills []SkillEntry, alwaysApply []AlwaysApplyRule, rules []Rule) string {
+func renderVisuals(opts BuildOptions) string {
+	if !opts.RenderMermaid && !opts.RenderSVG && !opts.RenderEmbeds && !opts.AutoGraph {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("- Visuals: first fit wins; one form per idea, NEVER the same content twice.")
+	if opts.AutoGraph {
+		b.WriteString("\n  - Numbers to compare? Markdown table; the UI charts it underneath. NEVER also chart that data in mermaid or svg.")
+	}
+	if opts.RenderMermaid {
+		b.WriteString("\n  - Flow, sequence, state, or dependencies? ` ```mermaid `; terminal renders ASCII. Genuine structure only, not trivia.")
+	}
+	if opts.RenderSVG {
+		var lead string
+		switch {
+		case opts.RenderMermaid && !opts.AutoGraph:
+			lead = "Mermaid can't draw it (layout, mockup, geometry, chart)?"
+		case opts.RenderMermaid:
+			lead = "Mermaid can't draw it (layout, mockup, geometry)?"
+		case opts.AutoGraph:
+			lead = "Diagram or mockup says more than prose?"
+		default:
+			lead = "Diagram, chart, or mockup says more than prose?"
+		}
+		b.WriteString("\n  - " + lead + " You SHOULD draw it in a ` ```svg ` block; it renders inline as an image. Reader sees it: NEVER announce or restate it, add only what it doesn't say.")
+		b.WriteString("\n    - viewBox sets size: 1 unit ≈ 1px, font-size 14 ≈ body text, ≤1000 wide fits the screen.")
+		b.WriteString("\n    - Colors ONLY via currentColor and var(--fg), --muted, --border, --surface, --accent, --success, --warning, --error; series --c1…--c6: the reader's theme. NEVER paint a background.")
+		b.WriteString("\n    - Static, self-contained: NEVER scripts, animation, foreignObject, external href.")
+	}
+	if opts.RenderEmbeds {
+		b.WriteString("\n  - Picture that exists (file, URL) or a web page to show? `<img src=\"…\" alt=\"…\">` / `<iframe src=\"…\" title=\"…\"></iframe>`, alone on its line; renders inline, a page live or as one screenshot, plus a link.")
+		b.WriteString("\n    - `src`: an http(s) URL, a data: URI, or a file path relative to the working directory; `<iframe>` takes a URL or a local HTML file.")
+		b.WriteString("\n    - Size: OPTIONAL `width`/`height` in px, %, vw, vh, ch, em (`width=\"50%\"`); one side keeps the aspect ratio.")
+	}
+	b.WriteString("\n  - Otherwise: table or prose.")
+	return b.String()
+}
+
+func renderReactions(enabled bool) string {
+	if !enabled {
+		return ""
+	}
+	return "- MAY react to the user when chatting: start reply with emoji."
+}
+
+func renderSkillsAndRulesHeading(skills []SkillEntry, alwaysApply []AlwaysApplyRule, rules []Rule) string {
 	if len(skills) == 0 && len(alwaysApply) == 0 && len(rules) == 0 {
 		return ""
 	}
-	var parts []string
-	var head strings.Builder
-	head.WriteString("# Skills & Rules")
-	if len(skills) > 0 {
-		hasSkillURLs := true
-		for _, s := range skills {
-			if s.FilePath != "" {
-				hasSkillURLs = false
-				break
-			}
-		}
-		if hasSkillURLs {
-			head.WriteString("\nMatching skill → MUST read `skill://<name>` first.\n<skills>")
-		} else {
-			head.WriteString("\nMatching skill → MUST read its `SKILL.md` file first.\n<skills>")
-		}
-		for _, s := range skills {
-			head.WriteString("\n- ")
-			head.WriteString(s.Name)
-			if s.FilePath != "" {
-				head.WriteString(" (`")
-				head.WriteString(NormalizePromptPath(s.FilePath))
-				head.WriteString("`)")
-			}
-			head.WriteString(": ")
-			head.WriteString(s.Description)
-		}
-		head.WriteString("\n</skills>")
-	}
-	parts = append(parts, head.String())
-	if len(alwaysApply) > 0 {
-		var b strings.Builder
-		b.WriteString("<generic-rules>")
-		for _, r := range alwaysApply {
-			b.WriteByte('\n')
-			b.WriteString(r.Content)
-		}
-		b.WriteString("\n</generic-rules>")
-		parts = append(parts, b.String())
-	}
-	if len(rules) > 0 {
-		var b strings.Builder
-		b.WriteString("<domain-rules>")
-		for _, r := range rules {
-			b.WriteString("\n- ")
-			b.WriteString(r.Name)
-			b.WriteString(" (")
-			b.WriteString(strings.Join(r.Globs, ", "))
-			b.WriteString("): ")
-			b.WriteString(r.Description)
-		}
-		b.WriteString("\n</domain-rules>")
-		parts = append(parts, b.String())
-	}
-	return strings.Join(parts, "\n\n")
+	return "# Skills & Rules"
 }
 
-func renderInternalURLs(urls []string) string {
-	if len(urls) == 0 {
+func renderSkillsBlock(skills []SkillEntry) string {
+	if len(skills) == 0 {
 		return ""
 	}
 	var b strings.Builder
-	b.WriteString("# Internal URLs\nMost FS/bash tools resolve these; path selectors: `read` docs.")
-	for _, u := range urls {
+	b.WriteString("Matching skill → MUST read skill://<name> first.\n<skills>")
+	for _, s := range skills {
+		b.WriteString("\n- ")
+		b.WriteString(s.Name)
+		b.WriteString(": ")
+		b.WriteString(s.Description)
+	}
+	b.WriteString("\n</skills>")
+	return b.String()
+}
+
+func renderAlwaysApplyRulesBlock(alwaysApply []AlwaysApplyRule) string {
+	if len(alwaysApply) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("<generic-rules>")
+	for _, r := range alwaysApply {
+		b.WriteByte('\n')
+		b.WriteString(r.Content)
+	}
+	b.WriteString("\n</generic-rules>")
+	return b.String()
+}
+
+func renderDomainRulesBlock(rules []Rule) string {
+	if len(rules) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("<domain-rules>")
+	for _, r := range rules {
+		b.WriteString("\n- ")
+		b.WriteString(r.Name)
+		b.WriteString(" (")
+		b.WriteString(strings.Join(r.Globs, ", "))
+		b.WriteString("): ")
+		b.WriteString(r.Description)
+	}
+	b.WriteString("\n</domain-rules>")
+	return b.String()
+}
+
+func renderInternalURLsBody(docLines, refLines []string, hasRead bool) string {
+	var b strings.Builder
+	b.WriteString("Most FS/bash tools resolve these; path selectors: `read` docs.")
+	if hasRead {
+		b.WriteString(" Further sub-paths, queries, limits: help://read/urls.")
+	}
+	for _, u := range docLines {
 		b.WriteString("\n- ")
 		b.WriteString(u)
 	}
-	return "\n" + b.String()
+	// Upstream system-prompt.md:72 has `{{#has tools "read"}}{{else}}\n`: the
+	// newline sits inside the else branch, so it is emitted only when `read` is
+	// absent (creating a blank line before reference lines, or merging with the
+	// following blank line into a stripped 2-blank run when refLines is empty).
+	if !hasRead {
+		b.WriteByte('\n')
+		for _, ref := range refLines {
+			b.WriteString("\n- ")
+			b.WriteString(ref)
+		}
+	}
+	return b.String()
 }
 
-func renderToolInventory(toolNames []string, labels map[string]string) string {
+func renderToolInventory(toolNames []string) string {
 	if len(toolNames) == 0 {
 		return ""
 	}
-	var b strings.Builder
-	b.WriteString("# Tool Inventory")
-	for _, name := range toolNames {
-		b.WriteString("\n- ")
-		if labels != nil && labels[name] != "" {
-			b.WriteString(labels[name])
-			b.WriteString(": `")
-			b.WriteString(name)
-			b.WriteByte('`')
-		} else {
-			b.WriteByte('`')
-			b.WriteString(name)
-			b.WriteByte('`')
-		}
+	return "# Tool Inventory\n" + strings.Join(toolNames, ", ")
+}
+
+func renderToolCommands(mounted []string, docs string) string {
+	if len(mounted) == 0 {
+		return ""
 	}
-	return "\n" + b.String()
+	var b strings.Builder
+	b.WriteString("# Tool Commands\n")
+	b.WriteString("Each listed tool is also a command in `bash`: run `<tool> <positional> [--flag value]`; `<tool> --help` prints usage derived from its schema.\n")
+	b.WriteString("Raw JSON arguments object: `-j '<json>'`, `@file`, or `-` (stdin); bad arguments exit 2 with a usage hint.\n")
+	b.WriteString(docs)
+	return b.String()
 }
 
 func renderScratchpad(hasTool func(string) bool) string {
 	if !hasTool("think") {
 		return ""
 	}
-	return "\n§ Scratchpad\n`think`: private scratchpad; not shown to user. MUST use for planning; other tools become callable when it completes."
+	return "⁂ Scratchpad\n`think`: private scratchpad; not shown to user. MUST use for planning; other tools become callable when it completes."
 }
 
-func renderGeneralDelegation(hasTool func(string) bool) string {
-	if !hasTool("task") {
+func renderIntentLine(opts BuildOptions) string {
+	if !opts.IntentTracing || opts.IntentField == "" {
 		return ""
 	}
-	return "- User says `parallel` or `parallelize` → MUST use `task` subagents; parallel tool calls insufficient."
+	guidance := os.Getenv("PI_INTENT_PROMPT")
+	if guidance == "" {
+		guidance = opts.IntentGuidance
+	}
+	if guidance == "" {
+		guidance = "capitalized 2–6-word present-participle intent (e.g. \"Reading model role settings\")."
+	}
+	return "- Most tools take `" + opts.IntentField + "`: " + guidance
 }
 
-func renderSpecializedTools(hasTool func(string) bool) string {
-	var lines []string
-	if hasTool("read") {
-		lines = append(lines, "- File/directory reads: `read` (directory lists entries).")
-	}
-	if hasTool("edit") {
-		lines = append(lines, "- Surgical edits: `edit`.")
-	}
-	if hasTool("write") {
-		lines = append(lines, "- Create/overwrite: `write`.")
-	}
-	if hasTool("lsp") {
-		lines = append(lines, "- Language server available: MUST use `lsp` for definitions, type definitions, implementations, references, hover; code actions for refactors/imports/fixes. NEVER text-search/edit for code intelligence.")
-	}
-	if hasTool("find") {
-		searchTargets := joinRegisteredPair(hasTool("grep"), "`grep`", hasTool("glob"), "`glob`")
-		if searchTargets != "" {
-			lines = append(lines, "- Unknown behavior/location: descriptive `find` FIRST; NEVER guess "+searchTargets+" targets.")
-		} else {
-			lines = append(lines, "- Unknown behavior/location: descriptive `find` FIRST.")
-		}
-	}
-	if hasTool("grep") {
-		kind := "target"
-		if hasTool("find") {
-			kind = "literal/known-symbol"
-		}
-		lines = append(lines, "- Regex/"+kind+" search: `grep`, NEVER shell `grep`/`rg`/`awk`.")
-	}
-	if hasTool("glob") {
-		lines = append(lines, "- File structure/names: `glob`, NEVER `ls **/*.ext`/`fd`.")
-	}
-	if hasTool("bash") {
-		lines = append(lines, "- `bash`: real binaries/short fact pipelines (counts, frequencies, set differences, checksums), NEVER specialized-tool work or paging/moving/trimming fetchable bytes.")
-	}
-	if hasTool("edit") {
-		via := ""
-		if hasTool("bash") {
-			via = " via `bash`"
-		}
-		lines = append(lines, "<critical>\nNEVER use `sed`|`perl`|`python`"+via+" to issue individual edits; MUST use `edit`.\n</critical>")
-	}
-	if len(lines) == 0 {
+func renderSecretsLine(enabled bool) string {
+	if !enabled {
 		return ""
 	}
-	return "# Specialized Tools\nMUST use specialized tool over shell equivalent:\n" + strings.Join(lines, "\n") + "\n"
+	return "- `$$HASH$$`, `$$HASH:CASE$$`, `$$NAME_HASH:CASE$$` output tokens: opaque strings."
+}
+
+func renderSpecializedRead(hasTool func(string) bool) string {
+	if !hasTool("read") {
+		return ""
+	}
+	return "- File/directory reads: `read` (directory lists entries)."
+}
+
+func renderSpecializedWrite(hasTool func(string) bool) string {
+	if !hasTool("write") {
+		return ""
+	}
+	return "- Create/overwrite: `write`."
+}
+
+func renderSpecializedLSP(hasTool func(string) bool) string {
+	if !hasTool("lsp") {
+		return ""
+	}
+	return "- Language server available: MUST use `lsp` for definitions, type definitions, implementations, references, hover; code actions for refactors/imports/fixes. NEVER text-search/edit for code intelligence."
+}
+
+func renderSpecializedFind(hasTool func(string) bool) string {
+	if !hasTool("find") {
+		return ""
+	}
+	return "- Unknown behavior/location: descriptive `find` FIRST; NEVER guess `grep`/`glob` targets."
+}
+
+func renderEditCritical(encourageEdits bool, hasTool func(string) bool) string {
+	if !encourageEdits || !hasTool("edit") {
+		return ""
+	}
+	suffix := ""
+	if hasTool("bash") || hasTool("eval") {
+		suffix = "; NEVER sed/perl/python edits"
+	}
+	return "<critical>\nFile edits: MUST use `edit`" + suffix + ".\n</critical>"
+}
+
+func renderAutoQA(enabled bool) string {
+	if !enabled {
+		return ""
+	}
+	return "<critical>\nAutomated QA: any tool output inconsistent with the described behavior for its parameters → run `report_issue '<tool>: <concise description>'`. False positives fine.\n</critical>"
 }
 
 func renderExploration(hasTool func(string) bool) string {
@@ -396,42 +647,117 @@ func renderExploration(hasTool func(string) bool) string {
 		b.WriteString(" Read `find` hits only.")
 	}
 	if hasTool("read") {
-		b.WriteString(" Use `read` ranges, not whole files.")
+		b.WriteString(" Read small files whole; ranges only for large files. NEVER re-read content you already have.")
 	}
 	return b.String()
 }
 
-func renderAST(hasTool func(string) bool) string {
-	if !hasTool("ast_grep") && !hasTool("ast_edit") {
-		return ""
-	}
-	var lines []string
-	lines = append(lines, "# AST", "SHOULD use syntax-aware tools before text hacks:")
-	if hasTool("ast_grep") {
-		lines = append(lines, "- Structural discovery → `ast_grep`.")
-	}
-	if hasTool("ast_edit") {
-		lines = append(lines, "- Codemods → `ast_edit`.")
-	}
-	return "\n" + strings.Join(lines, "\n")
+// quotePosixArgument mirrors packages/coding-agent/src/utils/shell-quote.ts:4-6.
+func quotePosixArgument(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", `'\''`) + "'"
 }
 
-func renderDelegation(hasTool func(string) bool) string {
+func renderOvnfs(ovnfs string, hasTool func(string) bool) string {
+	if ovnfs == "" || !hasTool("bash") {
+		return ""
+	}
+	quoted := quotePosixArgument(ovnfs)
+	return strings.Join([]string{
+		"# Separate checkouts",
+		"Need a second copy of a folder (risky experiment, another branch, tests or review beside the user's work)? MUST use an ovnfs checkout, not git worktree add, git clone or cp -r, unless the user asks for those:",
+		"- `cd <folder> && " + quoted + " new --name <name>` (lowercase a-z0-9._-) prints only the checkout's path, in about a second: the folder as it is now, uncommitted edits, untracked files and build dirs included. --rev <rev> starts tracked files at a commit or branch instead, without in-flight edits (to verify your patch); ignored build dirs stay.",
+		"- Work in the printed path: writes and commits stay in the checkout; git commands that discard changes run there, saving the discards first.",
+		"- Back: `" + quoted + " diff <name> [-p]` lists changes; `" + quoted + " apply <name> [--dry-run]` merges them into the folder as uncommitted edits; `" + quoted + " land <name>` puts the checkout's commits on the folder's branch, files included. Conflict? `" + quoted + " pull <name>` merges the folder's newer files into the checkout: resolve there, then apply or land again.",
+		"- Done: `" + quoted + " rm <name>` discards what was not applied or landed; `" + quoted + " ls` lists checkouts; more in `" + quoted + " help`.",
+	}, "\n")
+}
+func renderDelegation(opts BuildOptions, hasTool func(string) bool) string {
 	if !hasTool("task") {
 		return ""
 	}
-	return "\n" + strings.Join([]string{
-		"# Delegation",
-		"- Map unknown code via `task`, not reading file after file yourself. NEVER abandon phases under scope pressure: delegate, don't shrink.",
+	bias := opts.DelegationBias
+	if bias == "" {
+		bias = "balanced"
+	}
+	tier := bias
+	if opts.EagerTasks && bias != "gated" {
+		tier = "eager"
+	}
+	taskBatch := true
+	if opts.TaskBatch != nil {
+		taskBatch = *opts.TaskBatch
+	}
+	scoutAvailable := true
+	if opts.ScoutAvailable != nil {
+		scoutAvailable = *opts.ScoutAvailable
+	}
+
+	var lines []string
+	lines = append(lines, "# Delegation")
+	if tier == "gated" {
+		if opts.EagerTasks {
+			lines = append(lines, "Proactive multi-agent delegation active; earlier explicit-user-request gates no longer apply. Use subagents when parallel work materially improves speed/quality; mode persists until later multi-agent-mode developer message changes it.")
+		} else {
+			lines = append(lines, "No subagents unless user or applicable AGENTS.md/skill explicitly requests subagents, delegation, or parallel agent work.")
+		}
+	} else {
+		if opts.EagerTasks {
+			if opts.EagerTasksAlways {
+				lines = append(lines, "Delegation default. Once design settles, MUST fan work to `task`, except ONLY: approximately-under-30-line single-file edit; direct answer/explanation without code changes; or user explicitly asks you to run a command. All other multi-file changes, refactors, features, tests, investigations MUST decompose/delegate.")
+			} else {
+				lines = append(lines, "Delegation preferred. Once design settles, SHOULD fan substantial work to `task`; multi-file changes, refactors, features, tests, investigations strong candidates. Judge small single-file/interactive work.")
+			}
+		}
+		switch tier {
+		case "restrained":
+			findPrefix := ""
+			if hasTool("find") {
+				findPrefix = "`find`/"
+			}
+			waitClause := ""
+			if hasTool("wait") {
+				waitClause = "; use `wait` only when completely blocked"
+			}
+			lines = append(lines,
+				"Inline first. Fan out only when 2+ independent slices each cost more than a handful of your own calls, or the read set would flood context; decide after your own first "+findPrefix+"`grep`/`read`, never before it.",
+				"- NEVER open with a scout. Scope with "+findPrefix+"`grep`/`read`/`glob` yourself; a scout is for a genuinely unmapped subsystem after inline scoping stalls.",
+				"- NEVER delegate one slice. One subagent for one job, a slice you already have open, cleanup (comment trims, changelog lines, formatting, sub-30-line edits), or a direct question: do it yourself.",
+				"- NEVER babysit. Spawn → keep working → read the auto-delivered result"+waitClause+".",
+			)
+		case "balanced":
+			explorer := "a `task` subagent"
+			if scoutAvailable {
+				explorer = "a read-only `scout`"
+			}
+			lines = append(lines, "- Unfamiliar subsystem? Explore it with "+explorer+" while you keep working; read known files yourself.")
+		default:
+			lines = append(lines, "- Map unknown code via `task`, not reading file after file yourself. NEVER abandon phases under scope pressure: delegate, don't shrink.")
+		}
+	}
+
+	fanMode := "in parallel calls"
+	if taskBatch {
+		fanMode = "in one `tasks[]` batch"
+	}
+	scoutSuffix := ""
+	if scoutAvailable && tier == "eager" {
+		scoutSuffix = "; one read-only scout while working allowed"
+	}
+	ircLine := "- Shared prerequisite inline; sequence ONLY true dependencies."
+	if opts.TaskIRCEnabled {
+		ircLine += " Small missing detail? Run parallel; B asks A via `write agent://<id>` only if blocked."
+	}
+	lines = append(lines,
 		"## Delegation gates",
 		"- Before spawning, map slices/shared contracts; user-enumerated 2+ self-contained runnable slices exempt. NEVER outsource top-level plan; slice design/competing plans allowed.",
-		"- Fan genuine slices in one `tasks[]` batch. NEVER pad, serialize independent work, or spawn then idle; one read-only scout while working allowed.",
+		"- Fan genuine slices "+fanMode+". NEVER pad, serialize independent work, or spawn then idle"+scoutSuffix+".",
 		"- Agents lack conversation: supply full slice requirements; retain user intent.",
-		"- Shared prerequisite inline; sequence ONLY true dependencies.",
-	}, "\n")
+		ircLine,
+	)
+	return strings.Join(lines, "\n")
 }
 
-func renderScopePrereq(hasSkills, hasRules bool) string {
+func renderBeforeEditingPrereq(hasSkills, hasRules bool) string {
 	switch {
 	case hasSkills && hasRules:
 		return "- Read relevant skills and rules first."
@@ -444,37 +770,78 @@ func renderScopePrereq(hasSkills, hasRules bool) string {
 	}
 }
 
-func renderResearchLSP(hasTool func(string) bool) string {
+func renderBeforeEditingLSP(hasTool func(string) bool) string {
 	if !hasTool("lsp") {
 		return ""
 	}
-	return "  - Exported symbol changes: MUST run `lsp` references first."
+	return "- Exported symbol changes: MUST run `lsp` references first."
 }
 
-func renderDecomposeTodo(hasTool func(string) bool) string {
+func renderBeforeEditingTodo(hasTool func(string) bool) string {
 	if !hasTool("todo") {
 		return ""
 	}
-	return "- Update todos; skip trivial requests.\n- NEVER make a todo-only turn: send `todo` in the same response as the turn's real call (parallel tool calls); `init` with first work, `done` with next action/verification."
+	return "- Update todos; skip trivial requests."
 }
 
-func renderImplementDestructive(hasTool func(string) bool) string {
+func renderBeforeEditingDestructive(hasTool func(string) bool) string {
 	if hasTool("ask") {
-		return "- Ask before destructive commands or deleting unrelated code you didn't write; code made obsolete by cutover is in scope."
+		return "- Ask before destructive commands or deleting unrelated code you didn't write; code your change makes obsolete is in scope."
 	}
-	return "- NEVER run destructive git commands or delete unrelated code you didn't write; code made obsolete by cutover is in scope."
+	return "- NEVER run destructive git commands or delete unrelated code you didn't write; code your change makes obsolete is in scope."
 }
 
-func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFile, hasTool func(string) bool, repoCtx *ActiveRepoContext, appendPrompt string) string {
+func renderWorkflowStep2(subagent, browserEnabled, computerEnabled bool) string {
+	if subagent {
+		return strings.Join([]string{
+			"# 2. Hand-off",
+			"- NEVER run builds, tests, linters, formatters or smoke runs unless your assignment says to; the main agent verifies once all subagents land.",
+			"- Done → yield, naming the checks to run.",
+		}, "\n")
+	}
+	lines := []string{
+		"# 2. Verify",
+		"Run the narrowest check that exercises the change, once. Investigation: the output is the proof; no tests.",
+		"- UI: verify the actual surface.",
+	}
+	if browserEnabled {
+		lines = append(lines, "  - Web: open it in a browser tab; visual proof.")
+	}
+	if computerEnabled {
+		lines = append(lines, "  - Native desktop: JS/Python eval `computer` helpers; fresh screenshot/accessibility proof.")
+	}
+	lines = append(lines, "  - TUI/CLI: launch the program; observe output/state.")
+	if !browserEnabled || !computerEnabled {
+		lines = append(lines, "  - No runtime for changed surface: throwaway script; report visual limit.")
+	}
+	lines = append(lines,
+		"- Bug: a failing test or user report is the repro; add a regression test only when no existing test covers the path.",
+		"- Feature: prove via throwaway script; new tests ONLY for uncertain edges or on request.",
+		"- New tests MUST catch plausible consumer-visible bugs; deterministic, isolated, full-suite-safe. NEVER test wiring, echoes, source text, incidental defaults, tautologies, bare not-throw, length-grew.",
+		"- Tests your change breaks: update contract tests; delete wording/implementation ones regardless of author, NEVER re-pin.",
+	)
+	return strings.Join(lines, "\n")
+}
+
+func renderWorkflowCleanup(subagent bool) string {
+	if subagent {
+		return "Permanent fix/feature: update docs/changelog; delete throwaway scripts."
+	}
+	return "After smoke proof: permanent fix/feature: update docs/changelog; delete throwaway scripts."
+}
+
+func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFile, subagent bool, repoCtx *ActiveRepoContext, appendPrompt string) string {
 	var wsLines []string
 	for _, entry := range env {
 		wsLines = append(wsLines, "- "+entry.Label+": "+entry.Value)
 	}
+	modelLine := ""
 	if model != "" {
-		wsLines = append(wsLines, "- Model: "+model)
+		modelLine = "- Model: " + model
 	}
 
 	repoRules := ""
+	autoloadNote := ""
 	if len(contextFiles) > 0 {
 		var b strings.Builder
 		b.WriteString("<repo-rules>\nMUST follow these context files for all tasks:")
@@ -482,40 +849,34 @@ func renderProjectPrompt(env []EnvEntry, model string, contextFiles []ContextFil
 			b.WriteString("\n<file path=\"")
 			b.WriteString(cf.Path)
 			b.WriteString("\">\n")
-			b.WriteString(cf.Content)
+			// Close any unclosed fence so the rest of the prompt stays formatted.
+			// upstream: packages/coding-agent/src/system-prompt.ts:1092
+			b.WriteString(CloseCodeFence(cf.Content))
 			b.WriteString("\n</file>")
 		}
-		b.WriteString("\n</repo-rules>\n\n")
-		if searchTools := joinRegisteredPair(hasTool("grep"), "`grep`", hasTool("glob"), "`glob`"); searchTools != "" {
-			b.WriteString("Context files above auto-loaded. NEVER ")
-			b.WriteString(searchTools)
-			b.WriteString(" for `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or similar agent/context files: relevant files already in context; others noise.")
-		} else {
-			b.WriteString("Context files above auto-loaded. NEVER search for `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or similar agent/context files: relevant files already in context; others noise.")
-		}
+		b.WriteString("\n</repo-rules>")
 		repoRules = b.String()
+		autoloadNote = "Context files above auto-loaded. NEVER `grep`/`glob` for `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or similar agent/context files: relevant files already in context; others noise."
+	}
+
+	criticalTail := "- Before yielding, MUST verify significant behavioral changes: run the specific test, command, or scenario covering the change."
+	if subagent {
+		criticalTail = "- Changes complete → yield; verification is main agent's job. NEVER run it yourself unless your assignment explicitly instructs it."
 	}
 
 	slots := map[string]string{
-		"{{workstation}}":         strings.Join(wsLines, "\n"),
-		"{{repo_rules}}":          repoRules,
-		"{{active_repo_context}}": renderActiveRepoContext(repoCtx),
-		"{{append_prompt}}":       strings.TrimSpace(appendPrompt),
+		"{{workstation}}":           strings.Join(wsLines, "\n"),
+		"{{model_line}}":            modelLine,
+		"{{repo_rules}}":            repoRules,
+		"{{dir_context}}":           "",
+		"{{context_autoload_note}}": autoloadNote,
+		"{{workspace_tree}}":        "",
+		"{{workspace_roots}}":       "",
+		"{{active_repo_context}}":   renderActiveRepoContext(repoCtx),
+		"{{project_critical_tail}}": criticalTail,
+		"{{append_prompt}}":         appendPrompt,
 	}
 	return strings.TrimSpace(formatPrompt(fillSlots(projectPromptTemplate, slots)))
-}
-
-func joinRegisteredPair(hasA bool, a string, hasB bool, b string) string {
-	switch {
-	case hasA && hasB:
-		return a + "/" + b
-	case hasA:
-		return a
-	case hasB:
-		return b
-	default:
-		return ""
-	}
 }
 
 func resolvePersonality(preset Personality, agentDir string) string {
@@ -568,6 +929,34 @@ func dedupeStrings(items []string) []string {
 	return out
 }
 
+// Package-level per-session reminder registry shared across extension instances
+// so lifecycle.OnEnd("prompt", releaseSessionReminder) releases any session (top-level
+// or child) even after Register has run again for later sessions.
+var (
+	sessionRemindersMu sync.Mutex
+	sessionReminders   = map[string]*DateCwdReminderInjector{}
+)
+
+func reminderForSession(sessionID string) *DateCwdReminderInjector {
+	sessionRemindersMu.Lock()
+	defer sessionRemindersMu.Unlock()
+	inj := sessionReminders[sessionID]
+	if inj == nil {
+		inj = NewDateCwdReminderInjector()
+		sessionReminders[sessionID] = inj
+	}
+	return inj
+}
+
+func releaseSessionReminder(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+	sessionRemindersMu.Lock()
+	delete(sessionReminders, sessionID)
+	sessionRemindersMu.Unlock()
+}
+
 // Register wires omp's system prompt assembly and date/cwd user-turn reminder into e.
 // It performs no I/O at registration time.
 func Register(e *sdk.Extension) {
@@ -575,10 +964,34 @@ func Register(e *sdk.Extension) {
 }
 
 func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []EnvEntry) {
-	reminder := NewDateCwdReminderInjector()
+	// Fallback injector for an extension instance whose host supplies no session ID;
+	// kept strictly local to this Extension so it is never shared across sessions.
+	fallbackReminder := NewDateCwdReminderInjector()
 
-	e.OnSessionStart(func(_ sdk.Context, _ map[string]any) (any, error) {
-		reminder.Reset()
+	lifecycle.OnEnd("prompt", releaseSessionReminder)
+
+	injectorFor := func(ctx sdk.Context) *DateCwdReminderInjector {
+		if id, err := ctx.GetSessionID(); err == nil && id != "" {
+			return reminderForSession(id)
+		}
+		return fallbackReminder
+	}
+
+	e.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if id, err := ctx.GetSessionID(); err == nil && id != "" {
+			releaseSessionReminder(id)
+		} else {
+			fallbackReminder.Reset()
+		}
+		return nil, nil
+	})
+
+	e.OnSessionShutdown(func(ctx sdk.Context, _ map[string]any) (any, error) {
+		if id, err := ctx.GetSessionID(); err == nil && id != "" {
+			lifecycle.End(id)
+		} else {
+			fallbackReminder.Reset()
+		}
 		return nil, nil
 	})
 
@@ -592,14 +1005,22 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			return nil, nil
 		}
 
-		cwd := ctx.Cwd()
+		cwd := StandardizePromptCwd(ctx.Cwd())
 		if optCwd, ok := options["cwd"].(string); ok && optCwd != "" {
-			cwd = optCwd
+			cwd = StandardizePromptCwd(optCwd)
 		}
 
 		agentDir := ""
 		if cfgHome, err := ctx.ConfigHome(); err == nil && cfgHome != "" {
 			agentDir = filepath.Join(cfgHome, "agent")
+		}
+
+		// Sync tool commands before reading active tools so any SetActiveTools
+		// changes performed by ToolCommands are visible in the inventory and gates.
+		var mountedCommands []string
+		var toolCommandDocs string
+		if ToolCommands != nil {
+			mountedCommands, toolCommandDocs = ToolCommands(ctx)
 		}
 
 		activeTools := activeToolsFromSession(ctx, options)
@@ -613,15 +1034,48 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 			tmpl = systemPromptTemplate
 		}
 
+		isSubagent := SubagentSession != nil && SubagentSession(ctx)
+		personality := PersonalityDefault
+		if isSubagent {
+			// upstream: packages/coding-agent/src/sdk.ts:4679-4680
+			personality = PersonalityNone
+		}
+
+		var intentTracing bool
+		var intentField, intentGuidance string
+		if Intent != nil {
+			intentTracing, intentField, intentGuidance = Intent(ctx)
+		}
+
+		settingsApproval := SettingsApproval != nil && SettingsApproval(ctx)
+		outReplies := OutReplies != nil && OutReplies(ctx)
+		// upstream: sdk.ts:4664, irc/messaging.ts:16-20 — true for subagents and for
+		// top-level sessions able to spawn peers (default task.maxRecursionDepth=2).
+		taskIRCEnabled := true
+		if TaskIRC != nil {
+			taskIRCEnabled = TaskIRC(ctx)
+		}
+
 		rendered := RenderTemplate(tmpl, BuildOptions{
 			Cwd:                cwd,
 			AgentDir:           agentDir,
 			ToolNames:          activeTools,
+			MountedCommands:    mountedCommands,
+			ToolCommandDocs:    toolCommandDocs,
 			ContextFiles:       contextFiles,
 			Skills:             skills,
 			AlwaysApplyRules:   alwaysApply,
+			EvalPreludes:       eval.EnabledPreludes(ctx),
+			Context:            ctx,
 			Model:              ctx.ModelQualified(),
-			Personality:        PersonalityDefault,
+			Personality:        personality,
+			Subagent:           isSubagent,
+			TaskIRCEnabled:     taskIRCEnabled,
+			SettingsApproval:   settingsApproval,
+			OutReplies:         outReplies,
+			IntentTracing:      intentTracing,
+			IntentField:        intentField,
+			IntentGuidance:     intentGuidance,
 			Environment:        envOverride,
 			AppendSystemPrompt: appendPrompt,
 		})
@@ -633,8 +1087,15 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 		if !ok || len(messages) == 0 {
 			return nil, nil
 		}
-		updated, changed := reminder.Transform(messages, FormatLocalCalendarDate(now()), ctx.Cwd())
+		updated, changed, replacedList := injectorFor(ctx).TransformInPlace(messages, FormatLocalCalendarDate(now()), StandardizePromptCwd(ctx.Cwd()))
 		if !changed {
+			return nil, nil
+		}
+		// When only existing message maps were edited in place, return (nil, nil) so
+		// PiG's SDK wire layer leaves the message list identity intact (preserving
+		// positional system messages). Only return {"messages": updated} when a new
+		// synthetic user message was prepended.
+		if !replacedList {
 			return nil, nil
 		}
 		return map[string]any{"messages": updated}, nil
@@ -642,8 +1103,10 @@ func registerWithClock(e *sdk.Extension, now func() time.Time, envOverride []Env
 }
 
 // activeToolsFromSession takes the live active tool names from the session at run time,
-// falling back to systemPromptOptions["selectedTools"] when GetActiveTools fails, and
-// excluding any hiddenTools.
+// falling back to systemPromptOptions["selectedTools"] when GetActiveTools fails,
+// filtering through toolcmd.AdvertisedTools (so mounted and special bash commands
+// that remain in GetActiveTools for direct-call fallback stay out of the advertised
+// tool set), and excluding any hiddenTools.
 func activeToolsFromSession(ctx sdk.Context, options map[string]any) []string {
 	var active []string
 	if tools, err := ctx.GetActiveTools(); err == nil {
@@ -651,6 +1114,7 @@ func activeToolsFromSession(ctx sdk.Context, options map[string]any) []string {
 	} else {
 		active = stringSliceField(options, "selectedTools")
 	}
+	active = toolcmd.AdvertisedTools(ctx, active)
 	hidden := stringSliceField(options, "hiddenTools")
 	if len(hidden) == 0 {
 		return active

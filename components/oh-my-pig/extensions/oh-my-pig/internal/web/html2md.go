@@ -4,7 +4,7 @@ package web
 // Covers headings, paragraphs, blockquotes, links, images (dropping inline data: URIs),
 // inline emphasis/code/strikethrough, ordered/unordered nested lists, fenced code blocks,
 // and GFM pipe tables.
-// upstream: crates/pi-natives/src/html.rs, packages/coding-agent/src/tools/fetch.ts:564-574
+// upstream: crates/natives/src/html.rs, packages/coding-agent/src/tools/fetch.ts:550-560
 
 import (
 	"fmt"
@@ -69,14 +69,13 @@ type htmlNode struct {
 }
 
 // HTMLToMarkdown converts an HTML document to clean Markdown using the standard library only.
-// Mirrors omp's htmlToMarkdown (html-to-markdown-rs 3.12.4 Tier2 with extract_metadata: true):
+// Mirrors omp's htmlToMarkdown (crates/natives/src/html.rs, html-to-markdown-rs 3.18.3):
 //   - Prepends YAML frontmatter from `<head>` (`base`, `canonical`, `meta-<name>`,
 //     `meta-<property>`, `title`, sorted alphabetically; omitted when `<head>` yields no keys).
 //   - Preserves link `href` and image `src` values verbatim without resolving against a base URL.
 //
 // The second parameter is kept for signature compatibility and is unused.
-// upstream: crates/pi-natives/src/html.rs, html-to-markdown-rs 3.12.4 converter/main_helpers.rs,
-// converter/inline/link.rs, converter/handlers/image.rs
+// upstream: crates/natives/src/html.rs
 func HTMLToMarkdown(rawHTML, _ string) string {
 	root := parseHTMLTree(rawHTML)
 	meta := extractHeadMetadata(root)
@@ -94,7 +93,7 @@ func HTMLToMarkdown(rawHTML, _ string) string {
 }
 
 // extractHeadMetadata extracts YAML frontmatter key/value pairs from the first `<head>` element.
-// Keys match html-to-markdown-rs 3.12.4 `converter/main_helpers.rs:extract_head_metadata`:
+// Keys match omp's native HTML converter (`crates/natives/src/html.rs`):
 //   - `<title>` -> `title` (trimmed; omitted if empty)
 //   - `<meta name="X" content="Y">` -> `meta-<X>: <Y>`
 //   - `<meta property="X" content="Y">` -> `meta-<X>: <Y>`
@@ -160,7 +159,7 @@ func findFirstHead(node *htmlNode) *htmlNode {
 }
 
 // formatMetadataFrontmatter emits sorted `key: value` lines fenced by `---`.
-// upstream: html-to-markdown-rs 3.12.4 converter/main_helpers.rs:format_metadata_frontmatter
+// upstream: crates/natives/src/html.rs
 func formatMetadataFrontmatter(meta map[string]string) string {
 	keys := make([]string, 0, len(meta))
 	for k := range meta {
@@ -849,7 +848,7 @@ func collapseInlineSpace(s string) string {
 }
 
 // dataURIImageRe matches inline data: URI images in Markdown, keeping alt text.
-// upstream: packages/coding-agent/src/tools/fetch.ts:564-574
+// upstream: packages/coding-agent/src/tools/fetch.ts:550-560
 var dataURIImageRe = regexp.MustCompile(`(?i)!\[((?:\\.|[^\\\]])*)\]\(\s*(?:<data:[^>]*>|data:[^)\s]*)(?:\s+(?:"(?:\\.|[^\\"])*"|'(?:\\.|[^\\'])*'|\((?:\\.|[^\\)])*\)))?\s*\)`)
 
 func stripDataURIImages(md string) string {

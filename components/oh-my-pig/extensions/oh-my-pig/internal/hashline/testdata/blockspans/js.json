@@ -1,0 +1,1650 @@
+{
+  "lang": "js",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py",
+  "total": 247,
+  "omp_resolved": 129,
+  "omp_refused": 118,
+  "cases": [
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 1,
+      "span": [
+        1,
+        120
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 2,
+      "span": [
+        2,
+        9
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 4,
+      "refused": "line 1: `CUT 4*` resolved a single-line block — line 4 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 4`. The nearest enclosing multi-line block begins at line 2 and ends at line 9; use `CUT 2*` to target it."
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 10,
+      "span": [
+        10,
+        12
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 13,
+      "span": [
+        13,
+        16
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 21,
+      "span": [
+        21,
+        35
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 26,
+      "span": [
+        26,
+        29
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 31,
+      "span": [
+        31,
+        33
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 37,
+      "span": [
+        37,
+        42
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 38,
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 43,
+      "span": [
+        43,
+        109
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 45,
+      "span": [
+        45,
+        49
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 50,
+      "span": [
+        50,
+        52
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 53,
+      "span": [
+        53,
+        57
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 58,
+      "span": [
+        58,
+        60
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 61,
+      "span": [
+        61,
+        64
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 63,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 65,
+      "span": [
+        65,
+        68
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 69,
+      "span": [
+        69,
+        72
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 73,
+      "span": [
+        73,
+        77
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 78,
+      "span": [
+        78,
+        82
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 83,
+      "span": [
+        83,
+        88
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 89,
+      "span": [
+        89,
+        108
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 94,
+      "span": [
+        94,
+        100
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 110,
+      "span": [
+        110,
+        119
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 111,
+      "span": [
+        111,
+        118
+      ]
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 113,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/commit-prelude.js",
+      "anchor": 115,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 1,
+      "span": [
+        1,
+        480
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 2,
+      "span": [
+        2,
+        8
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 4,
+      "span": [
+        4,
+        6
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 9,
+      "span": [
+        9,
+        17
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 19,
+      "span": [
+        19,
+        30
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 23,
+      "span": [
+        23,
+        28
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 31,
+      "span": [
+        31,
+        35
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 38,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 60,
+      "span": [
+        60,
+        69
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 73,
+      "span": [
+        73,
+        89
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 80,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 85,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 94,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 99,
+      "span": [
+        99,
+        102
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 109,
+      "span": [
+        109,
+        142
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 116,
+      "span": [
+        116,
+        129
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 119,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 126,
+      "refused": "line 1: `CUT 126*` could not resolve a syntactic block beginning on line 126 (blank/closer line, or parse error). Use `CUT 126.=M` with explicit lines. The nearest enclosing multi-line block begins at line 125 and ends at line 127; use `CUT 125*` to target it."
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 131,
+      "span": [
+        131,
+        139
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 143,
+      "span": [
+        143,
+        146
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 293,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 333,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 338,
+      "span": [
+        338,
+        344
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 340,
+      "span": [
+        340,
+        342
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 345,
+      "span": [
+        345,
+        349
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 350,
+      "span": [
+        350,
+        354
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 357,
+      "span": [
+        357,
+        369
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 360,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 364,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 370,
+      "span": [
+        370,
+        381
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 372,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 376,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 382,
+      "span": [
+        382,
+        450
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 384,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 386,
+      "span": [
+        386,
+        388
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 389,
+      "span": [
+        389,
+        394
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 399,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 401,
+      "span": [
+        401,
+        403
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 406,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 414,
+      "span": [
+        414,
+        418
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 419,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 421,
+      "span": [
+        421,
+        426
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 445,
+      "span": [
+        445,
+        448
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 451,
+      "span": [
+        451,
+        479
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 453,
+      "span": [
+        453,
+        457
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 462,
+      "span": [
+        462,
+        467
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 468,
+      "span": [
+        468,
+        471
+      ]
+    },
+    {
+      "file": "files/js/browser-prelude.js",
+      "anchor": 472,
+      "span": [
+        472,
+        475
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 1,
+      "span": [
+        1,
+        283
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 3,
+      "span": [
+        3,
+        9
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 10,
+      "span": [
+        10,
+        18
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 19,
+      "span": [
+        19,
+        23
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 24,
+      "span": [
+        24,
+        28
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 29,
+      "span": [
+        29,
+        43
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 37,
+      "span": [
+        37,
+        41
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 44,
+      "span": [
+        44,
+        47
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 105,
+      "span": [
+        105,
+        110
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 106,
+      "span": [
+        106,
+        109
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 111,
+      "span": [
+        111,
+        119
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 120,
+      "span": [
+        120,
+        126
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 127,
+      "span": [
+        127,
+        130
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 133,
+      "span": [
+        133,
+        151
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 139,
+      "span": [
+        139,
+        141
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 144,
+      "span": [
+        144,
+        148
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 145,
+      "span": [
+        145,
+        147
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 154,
+      "span": [
+        154,
+        165
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 158,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 167,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 173,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 175,
+      "span": [
+        175,
+        178
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 177,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 189,
+      "span": [
+        189,
+        191
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 190,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 202,
+      "span": [
+        202,
+        212
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 203,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 214,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 220,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 221,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 223,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 224,
+      "span": [
+        224,
+        229
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 227,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 237,
+      "span": [
+        237,
+        240
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 241,
+      "span": [
+        241,
+        274
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 248,
+      "span": [
+        248,
+        253
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 255,
+      "span": [
+        255,
+        257
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 260,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 263,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 264,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 266,
+      "span": [
+        266,
+        271
+      ]
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 269,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 276,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/computer-prelude.js",
+      "anchor": 279,
+      "span": [
+        279,
+        281
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 1,
+      "span": [
+        1,
+        22
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 2,
+      "span": [
+        2,
+        13
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 3,
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 9,
+      "span": [
+        9,
+        11
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 14,
+      "span": [
+        14,
+        21
+      ]
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/archive-prelude.js",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 1,
+      "span": [
+        1,
+        75
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 2,
+      "span": [
+        2,
+        9
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 5,
+      "span": [
+        5,
+        7
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 10,
+      "span": [
+        10,
+        17
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 11,
+      "span": [
+        11,
+        12
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 13,
+      "span": [
+        13,
+        15
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 18,
+      "span": [
+        18,
+        63
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 22,
+      "span": [
+        22,
+        32
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 33,
+      "span": [
+        33,
+        35
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 36,
+      "span": [
+        36,
+        38
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 39,
+      "span": [
+        39,
+        41
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 42,
+      "span": [
+        42,
+        44
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 45,
+      "span": [
+        45,
+        47
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 48,
+      "span": [
+        48,
+        50
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 51,
+      "span": [
+        51,
+        53
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 54,
+      "span": [
+        54,
+        56
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 57,
+      "span": [
+        57,
+        59
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 60,
+      "span": [
+        60,
+        62
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 64,
+      "span": [
+        64,
+        74
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 65,
+      "span": [
+        65,
+        67
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 68,
+      "span": [
+        68,
+        70
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 71,
+      "span": [
+        71,
+        73
+      ]
+    },
+    {
+      "file": "files/js/disasm-prelude.js",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 7,
+      "span": [
+        7,
+        46
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 8,
+      "span": [
+        8,
+        29
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 10,
+      "span": [
+        10,
+        28
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 13,
+      "span": [
+        13,
+        17
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 20,
+      "span": [
+        20,
+        24
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 31,
+      "span": [
+        31,
+        45
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 33,
+      "span": [
+        33,
+        44
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 36,
+      "span": [
+        36,
+        40
+      ]
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/js/legacy-pi-grep-tool.test.js",
+      "anchor": 43,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 10,
+      "span": [
+        10,
+        30
+      ]
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 14,
+      "span": [
+        14,
+        19
+      ]
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 23,
+      "span": [
+        23,
+        26
+      ]
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 27,
+      "span": [
+        27,
+        29
+      ]
+    },
+    {
+      "file": "files/js/print-mode-signal.js",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/constructed_backslash_string.js",
+      "anchor": 1,
+      "constructed": true,
+      "name": "backslash_string",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/js/constructed_two_stmts_same_line.js",
+      "anchor": 1,
+      "constructed": true,
+      "name": "two_stmts_same_line",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/constructed_case_brace_break.js",
+      "anchor": 1,
+      "constructed": true,
+      "name": "case_brace_break",
+      "span": [
+        1,
+        6
+      ]
+    },
+    {
+      "file": "files/js/constructed_case_brace_break.js",
+      "anchor": 2,
+      "constructed": true,
+      "name": "case_brace_break",
+      "span": [
+        2,
+        5
+      ]
+    },
+    {
+      "file": "files/js/constructed_template_and_regex.js",
+      "anchor": 1,
+      "constructed": true,
+      "name": "template_and_regex",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/constructed_template_and_regex.js",
+      "anchor": 2,
+      "constructed": true,
+      "name": "template_and_regex",
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/js/constructed_template_and_regex.js",
+      "anchor": 3,
+      "constructed": true,
+      "name": "template_and_regex",
+      "span": [
+        3,
+        5
+      ]
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 4*` resolved a single-line block — line 4 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 4`. The nearest enclosing multi-line block begins at line 2 and ends at line 9; use `CUT 2*` to target it.",
+    "unresolved": "line 1: `CUT 126*` could not resolve a syntactic block beginning on line 126 (blank/closer line, or parse error). Use `CUT 126.=M` with explicit lines. The nearest enclosing multi-line block begins at line 125 and ends at line 127; use `CUT 125*` to target it."
+  }
+}

@@ -2,16 +2,15 @@ package hashline
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 // BOM is the UTF-8 byte order mark.
-// upstream: crates/pi-edit/src/text.rs:67
+// upstream: crates/edit/src/text.rs:57
 const BOM = "\uFEFF"
 
 // LineEnding is the line-ending style of a file.
-// upstream: crates/pi-edit/src/text.rs:12
+// upstream: crates/edit/src/text.rs:12
 type LineEnding int
 
 const (
@@ -20,7 +19,7 @@ const (
 )
 
 // DetectLineEnding detects the first line ending style in content; LF when neither is present.
-// upstream: crates/pi-edit/src/text.rs:28
+// upstream: crates/edit/src/text.rs:28
 func DetectLineEnding(content string) LineEnding {
 	lf := strings.IndexByte(content, '\n')
 	if lf < 0 {
@@ -33,29 +32,18 @@ func DetectLineEnding(content string) LineEnding {
 	return LineEndingLF
 }
 
-// NormalizeToLF converts every \r\n and lone \r to \n.
-// upstream: crates/pi-edit/src/text.rs:39
+// NormalizeToLF normalizes every \r\n to \n. A lone \r (e.g. progress-bar logs)
+// stays content, matching grep, wc -l, and omp v19.1.1.
+// upstream: crates/edit/src/text.rs:41, packages/coding-agent/src/edit/normalize.ts:12
 func NormalizeToLF(text string) string {
-	if !strings.ContainsRune(text, '\r') {
+	if !strings.Contains(text, "\r\n") {
 		return text
 	}
-	var b strings.Builder
-	b.Grow(len(text))
-	for i := 0; i < len(text); i++ {
-		if text[i] == '\r' {
-			if i+1 < len(text) && text[i+1] == '\n' {
-				i++
-			}
-			b.WriteByte('\n')
-		} else {
-			b.WriteByte(text[i])
-		}
-	}
-	return b.String()
+	return strings.ReplaceAll(text, "\r\n", "\n")
 }
 
 // RestoreLineEndings re-encodes LF text with the requested line ending.
-// upstream: crates/pi-edit/src/text.rs:59
+// upstream: crates/edit/src/text.rs:49
 func RestoreLineEndings(text string, ending LineEnding) string {
 	if ending == LineEndingCRLF {
 		return strings.ReplaceAll(text, "\n", "\r\n")
@@ -64,7 +52,7 @@ func RestoreLineEndings(text string, ending LineEnding) string {
 }
 
 // StripBOM splits a leading UTF-8 BOM off content.
-// upstream: crates/pi-edit/src/text.rs:70
+// upstream: crates/edit/src/text.rs:60
 func StripBOM(content string) (bom, rest string) {
 	if strings.HasPrefix(content, BOM) {
 		return BOM, content[len(BOM):]
@@ -74,7 +62,7 @@ func StripBOM(content string) (bom, rest string) {
 
 // FileHash computes the four-hex uppercase hashline content tag.
 // It hashes text with trailing spaces, tabs, and CRs stripped from every line.
-// upstream: crates/pi-edit/src/store.rs:79
+// upstream: crates/edit/src/store.rs:87
 func FileHash(text string) string {
 	h := newXXH32(0)
 	runStart := 0
@@ -108,42 +96,87 @@ func FileHash(text string) string {
 	return fmt.Sprintf("%04X", h.digest()&0xffff)
 }
 
-// FormatHeader formats a hashline file section header: [path#TAG].
-// upstream: crates/pi-edit/src/modes/hashline/format.rs:97
-func FormatHeader(path, tag string) string {
-	return "[" + path + "#" + tag + "]"
-}
-
-// FormatNumberedLine formats one numbered source line: N:line.
-// upstream: crates/pi-edit/src/modes/hashline/format.rs:101
-func FormatNumberedLine(lineNumber int, line string) string {
-	return strconv.Itoa(lineNumber) + ":" + line
-}
-
-// FormatNumberedLines formats every LF-delimited row starting at startLine.
-// upstream: crates/pi-edit/src/modes/hashline/format.rs:120
-func FormatNumberedLines(text string, startLine int) string {
-	lines := strings.Split(text, "\n")
-	var b strings.Builder
-	b.Grow(len(text) + len(lines)*6)
-	for i, line := range lines {
-		if i > 0 {
-			b.WriteByte('\n')
+// utf16Len returns the length in UTF-16 code units (JS string.length).
+// upstream: crates/edit/src/text.rs:98
+func utf16Len(s string) int {
+	n := 0
+	for _, r := range s {
+		if r >= 0x10000 {
+			n += 2
+		} else {
+			n++
 		}
-		b.WriteString(strconv.Itoa(startLine + i))
-		b.WriteByte(':')
-		b.WriteString(line)
 	}
-	return b.String()
+	return n
 }
 
-// SplitAddressableFileLines splits text into lines addressable by hashline anchors.
-// A trailing newline does not produce a phantom blank line.
-// upstream: crates/pi-edit/src/modes/hashline/format.rs:112
-func SplitAddressableFileLines(text string) []string {
-	lines := strings.Split(text, "\n")
-	if strings.HasSuffix(text, "\n") && len(lines) > 0 {
-		lines = lines[:len(lines)-1]
+// similarity computes Levenshtein similarity in [0, 1] over Unicode scalar values.
+// upstream: crates/edit/src/fuzzy.rs:434
+func similarity(a, b string) float64 {
+	if a == b {
+		return 1.0
 	}
-	return lines
+	if a == "" || b == "" {
+		return 0.0
+	}
+	ar := []rune(a)
+	br := []rune(b)
+	maxLen := len(ar)
+	if len(br) > maxLen {
+		maxLen = len(br)
+	}
+	dist := levenshteinRunes(ar, br)
+	return 1.0 - float64(dist)/float64(maxLen)
+}
+
+// levenshteinRunes matches crates/edit/src/fuzzy.rs:206.
+func levenshteinRunes(a, b []rune) int {
+	start := 0
+	limit := min(len(a), len(b))
+	for start < limit && a[start] == b[start] {
+		start++
+	}
+	aEnd := len(a)
+	bEnd := len(b)
+	for aEnd > start && bEnd > start && a[aEnd-1] == b[bEnd-1] {
+		aEnd--
+		bEnd--
+	}
+	longer := a[start:aEnd]
+	shorter := b[start:bEnd]
+	if len(longer) == 0 {
+		return len(shorter)
+	}
+	if len(shorter) == 0 {
+		return len(longer)
+	}
+	if len(shorter) > len(longer) {
+		longer, shorter = shorter, longer
+	}
+	row := make([]int, len(shorter)+1)
+	for i := range row {
+		row[i] = i
+	}
+	for i, ae := range longer {
+		diag := row[0]
+		row[0] = i + 1
+		for j, be := range shorter {
+			cell := j + 1
+			above := row[cell]
+			if ae == be {
+				row[cell] = diag
+			} else {
+				m := above + 1
+				if row[cell-1]+1 < m {
+					m = row[cell-1] + 1
+				}
+				if diag+1 < m {
+					m = diag + 1
+				}
+				row[cell] = m
+			}
+			diag = above
+		}
+	}
+	return row[len(shorter)]
 }

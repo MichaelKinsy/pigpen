@@ -11,13 +11,12 @@ const (
 	StatusInProgress TodoStatus = "in_progress"
 	StatusCompleted  TodoStatus = "completed"
 	StatusAbandoned  TodoStatus = "abandoned"
-	StatusBlocked    TodoStatus = "blocked"
 )
 
 // IsValidStatus reports whether s is a recognized omp TodoStatus.
 func IsValidStatus(s string) bool {
 	switch TodoStatus(s) {
-	case StatusPending, StatusInProgress, StatusCompleted, StatusAbandoned, StatusBlocked:
+	case StatusPending, StatusInProgress, StatusCompleted, StatusAbandoned:
 		return true
 	default:
 		return false
@@ -29,21 +28,19 @@ func IsValidStatus(s string) bool {
 type TodoOperation string
 
 const (
-	OpInit    TodoOperation = "init"
-	OpStart   TodoOperation = "start"
-	OpDone    TodoOperation = "done"
-	OpRm      TodoOperation = "rm"
-	OpDrop    TodoOperation = "drop"
-	OpBlock   TodoOperation = "block"
-	OpUnblock TodoOperation = "unblock"
-	OpAppend  TodoOperation = "append"
-	OpView    TodoOperation = "view"
+	OpInit   TodoOperation = "init"
+	OpStart  TodoOperation = "start"
+	OpDone   TodoOperation = "done"
+	OpRm     TodoOperation = "rm"
+	OpDrop   TodoOperation = "drop"
+	OpAppend TodoOperation = "append"
+	OpView   TodoOperation = "view"
 )
 
 // IsValidOp reports whether op is a recognized omp TodoOperation.
 func IsValidOp(op string) bool {
 	switch TodoOperation(op) {
-	case OpInit, OpStart, OpDone, OpRm, OpDrop, OpBlock, OpUnblock, OpAppend, OpView:
+	case OpInit, OpStart, OpDone, OpRm, OpDrop, OpAppend, OpView:
 		return true
 	default:
 		return false
@@ -55,7 +52,7 @@ func IsValidOp(op string) bool {
 type TodoItem struct {
 	Content string     `json:"content"`
 	Status  TodoStatus `json:"status"`
-	Blocker string     `json:"blocker,omitempty"`
+	Notes   []string   `json:"notes,omitempty"`
 }
 
 // TodoPhase is a named group of todo tasks.
@@ -91,24 +88,59 @@ type InitListEntry struct {
 // TodoParams is the decoded parameter object for a single todo operation.
 // upstream: packages/coding-agent/src/tools/todo.ts:60-72
 type TodoParams struct {
-	Op     TodoOperation   `json:"op"`
-	List   []InitListEntry `json:"list,omitempty"`
-	Task   string          `json:"task,omitempty"`
-	Phase  string          `json:"phase,omitempty"`
-	Items  []string        `json:"items,omitempty"`
-	Reason string          `json:"reason,omitempty"`
+	Op       TodoOperation   `json:"op"`
+	List     []InitListEntry `json:"list,omitempty"`
+	ListSet  bool            `json:"-"`
+	Task     string          `json:"task,omitempty"`
+	Tasks    []string        `json:"-"`
+	Phase    string          `json:"phase,omitempty"`
+	PhaseSet bool            `json:"-"`
+	Items    []string        `json:"items,omitempty"`
 }
 
 // UserTodoEditCustomType is the custom session entry type written by /todo mutations.
-// upstream: packages/coding-agent/src/tools/todo.ts:157
+// upstream: packages/coding-agent/src/tools/todo.ts:154
 const UserTodoEditCustomType = "user_todo_edit"
+
+// TodoHudStateCustomType is the custom session entry type persisting HUD visibility
+// ("dismissed" after auto-clear or "revealed" after explicit /todo expand).
+// upstream: packages/coding-agent/src/tools/todo.ts:156
+const TodoHudStateCustomType = "todo_hud_state"
+
+// TodoHudVisibility is the persisted HUD visibility state for a canonical todo snapshot.
+// upstream: packages/coding-agent/src/tools/todo.ts:158
+type TodoHudVisibility string
+
+const (
+	HudVisibilityDismissed TodoHudVisibility = "dismissed"
+	HudVisibilityRevealed  TodoHudVisibility = "revealed"
+)
+
+// TodoSnapshotIdentity uniquely identifies a durable canonical todo snapshot on a branch.
+// upstream: packages/coding-agent/src/tools/todo.ts:160-163
+type TodoSnapshotIdentity struct {
+	SourceEntryID string `json:"sourceEntryId"`
+	Fingerprint   string `json:"fingerprint"`
+}
+
+// TodoHudStateEntryData is the JSON payload stored in TodoHudStateCustomType entries.
+// upstream: packages/coding-agent/src/tools/todo.ts:165-167
+type TodoHudStateEntryData struct {
+	SourceEntryID string            `json:"sourceEntryId"`
+	Fingerprint   string            `json:"fingerprint"`
+	Visibility    TodoHudVisibility `json:"visibility"`
+}
 
 // CloneTask returns a copy of task.
 func CloneTask(task TodoItem) TodoItem {
+	var notes []string
+	if len(task.Notes) > 0 {
+		notes = append([]string(nil), task.Notes...)
+	}
 	return TodoItem{
 		Content: task.Content,
 		Status:  task.Status,
-		Blocker: task.Blocker,
+		Notes:   notes,
 	}
 }
 

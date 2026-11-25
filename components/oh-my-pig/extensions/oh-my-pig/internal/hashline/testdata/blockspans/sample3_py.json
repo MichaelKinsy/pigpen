@@ -1,0 +1,3005 @@
+{
+  "lang": "py",
+  "sample": "sample3",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample3",
+  "total": 445,
+  "omp_resolved": 255,
+  "omp_refused": 190,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 12*` resolved a single-line block — line 12 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 12`.",
+    "unresolved": "line 1: `CUT 302*` could not resolve a syntactic block beginning on line 302 (blank/closer line, or parse error). Use `CUT 302.=M` with explicit lines. The nearest enclosing multi-line block begins at line 296 and ends at line 303; use `CUT 296*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 1,
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 12,
+      "refused": "line 1: `CUT 12*` resolved a single-line block — line 12 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 12`."
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 18,
+      "span": [
+        18,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 19,
+      "span": [
+        19,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 24,
+      "span": [
+        24,
+        29
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 25,
+      "span": [
+        25,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 31,
+      "span": [
+        31,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 35,
+      "span": [
+        35,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 38,
+      "span": [
+        38,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 50,
+      "span": [
+        50,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 51,
+      "span": [
+        51,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 54,
+      "span": [
+        54,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 58,
+      "span": [
+        58,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 61,
+      "span": [
+        61,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 67,
+      "span": [
+        67,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 72,
+      "span": [
+        72,
+        84
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 75,
+      "span": [
+        75,
+        77
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 83,
+      "span": [
+        83,
+        84
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 87,
+      "span": [
+        87,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 91,
+      "span": [
+        91,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 100,
+      "span": [
+        100,
+        101
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 105,
+      "span": [
+        105,
+        137
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 111,
+      "span": [
+        111,
+        115
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 120,
+      "span": [
+        120,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 121,
+      "span": [
+        121,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 123,
+      "span": [
+        123,
+        124
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_extensions__sdk-py__tests__test_model_fetch.py",
+      "anchor": 130,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 56,
+      "span": [
+        56,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 75,
+      "span": [
+        75,
+        97
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 87,
+      "span": [
+        87,
+        91
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 107,
+      "span": [
+        107,
+        109
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 115,
+      "span": [
+        115,
+        116
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 127,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 130,
+      "span": [
+        130,
+        136
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 148,
+      "span": [
+        148,
+        152
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 158,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 163,
+      "span": [
+        163,
+        164
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 169,
+      "span": [
+        169,
+        179
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 182,
+      "span": [
+        182,
+        197
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 189,
+      "span": [
+        189,
+        190
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 195,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 200,
+      "span": [
+        200,
+        203
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 210,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 223,
+      "span": [
+        223,
+        225
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 228,
+      "span": [
+        228,
+        229
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 237,
+      "span": [
+        237,
+        258
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 248,
+      "span": [
+        248,
+        249
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 253,
+      "span": [
+        253,
+        257
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 258,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 278,
+      "span": [
+        278,
+        280
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 288,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 289,
+      "span": [
+        289,
+        290
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 302,
+      "refused": "line 1: `CUT 302*` could not resolve a syntactic block beginning on line 302 (blank/closer line, or parse error). Use `CUT 302.=M` with explicit lines. The nearest enclosing multi-line block begins at line 296 and ends at line 303; use `CUT 296*` to target it."
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 316,
+      "span": [
+        316,
+        321
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 317,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 330,
+      "span": [
+        330,
+        333
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__check-port-map-drift.py",
+      "anchor": 336,
+      "span": [
+        336,
+        337
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 16,
+      "span": [
+        16,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 17,
+      "span": [
+        17,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 22,
+      "span": [
+        22,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 23,
+      "span": [
+        23,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 33,
+      "span": [
+        33,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 34,
+      "span": [
+        34,
+        43
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 45,
+      "span": [
+        45,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 52,
+      "span": [
+        52,
+        57
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 54,
+      "span": [
+        54,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 59,
+      "span": [
+        59,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 67,
+      "span": [
+        67,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 69,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 72,
+      "span": [
+        72,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 73,
+      "span": [
+        73,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 78,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__pin__test_watch.py",
+      "anchor": 82,
+      "span": [
+        82,
+        83
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 21,
+      "span": [
+        21,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 40,
+      "span": [
+        40,
+        53
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 88,
+      "span": [
+        88,
+        100
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 134,
+      "span": [
+        134,
+        148
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 186,
+      "span": [
+        186,
+        208
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 201,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 232,
+      "span": [
+        232,
+        252
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 287,
+      "span": [
+        287,
+        300
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 297,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 355,
+      "span": [
+        355,
+        371
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 389,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 440,
+      "span": [
+        440,
+        457
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 483,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 492,
+      "span": [
+        492,
+        502
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 519,
+      "span": [
+        519,
+        529
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 549,
+      "span": [
+        549,
+        551
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 559,
+      "span": [
+        559,
+        560
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 573,
+      "span": [
+        573,
+        574
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 586,
+      "span": [
+        586,
+        588
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 596,
+      "span": [
+        596,
+        599
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 605,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 613,
+      "span": [
+        613,
+        633
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 682,
+      "span": [
+        682,
+        698
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 701,
+      "span": [
+        701,
+        719
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 743,
+      "span": [
+        743,
+        759
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 792,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 806,
+      "span": [
+        806,
+        826
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 878,
+      "span": [
+        878,
+        892
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 885,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 937,
+      "span": [
+        937,
+        956
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 976,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 985,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_github_events.py",
+      "anchor": 1029,
+      "span": [
+        1029,
+        1038
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 15,
+      "span": [
+        15,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 29,
+      "span": [
+        29,
+        30
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 56,
+      "span": [
+        56,
+        76
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 88,
+      "span": [
+        88,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 119,
+      "span": [
+        119,
+        120
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 134,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 165,
+      "span": [
+        165,
+        173
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 193,
+      "span": [
+        193,
+        198
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 194,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 218,
+      "span": [
+        218,
+        219
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 251,
+      "span": [
+        251,
+        266
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 259,
+      "span": [
+        259,
+        260
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 269,
+      "span": [
+        269,
+        335
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 301,
+      "span": [
+        301,
+        303
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 317,
+      "span": [
+        317,
+        318
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 321,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 339,
+      "span": [
+        339,
+        349
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 366,
+      "span": [
+        366,
+        369
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 384,
+      "span": [
+        384,
+        385
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 387,
+      "span": [
+        387,
+        393
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 410,
+      "span": [
+        410,
+        411
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 435,
+      "span": [
+        435,
+        446
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 444,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 488,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 498,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 504,
+      "span": [
+        504,
+        511
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 547,
+      "span": [
+        547,
+        560
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 555,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 574,
+      "span": [
+        574,
+        575
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 601,
+      "span": [
+        601,
+        604
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 609,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 626,
+      "span": [
+        626,
+        627
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__tests__test_overhead_driver.py",
+      "anchor": 645,
+      "span": [
+        645,
+        649
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 16,
+      "span": [
+        16,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 17,
+      "span": [
+        17,
+        28
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 31,
+      "span": [
+        31,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 38,
+      "span": [
+        38,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 43,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 49,
+      "span": [
+        49,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 53,
+      "span": [
+        53,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 55,
+      "span": [
+        55,
+        56
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 62,
+      "span": [
+        62,
+        70
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 73,
+      "span": [
+        73,
+        82
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 85,
+      "span": [
+        85,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 87,
+      "span": [
+        87,
+        89
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 99,
+      "span": [
+        99,
+        111
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 109,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 114,
+      "span": [
+        114,
+        122
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 125,
+      "span": [
+        125,
+        133
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 136,
+      "span": [
+        136,
+        148
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 139,
+      "span": [
+        139,
+        141
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 140,
+      "span": [
+        140,
+        141
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 151,
+      "span": [
+        151,
+        160
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 153,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 163,
+      "span": [
+        163,
+        169
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 166,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 172,
+      "span": [
+        172,
+        178
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 178,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 181,
+      "span": [
+        181,
+        191
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__test_autoclose.py",
+      "anchor": 182,
+      "span": [
+        182,
+        191
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 1,
+      "span": [
+        1,
+        9
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 30,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 37,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 42,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 68,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 79,
+      "span": [
+        79,
+        107
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 104,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 109,
+      "span": [
+        109,
+        126
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 110,
+      "span": [
+        110,
+        126
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 151,
+      "span": [
+        151,
+        159
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 161,
+      "span": [
+        161,
+        162
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 164,
+      "span": [
+        164,
+        168
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 165,
+      "span": [
+        165,
+        168
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 170,
+      "span": [
+        170,
+        176
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 175,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 178,
+      "span": [
+        178,
+        186
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 188,
+      "span": [
+        188,
+        193
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 202,
+      "span": [
+        202,
+        207
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 209,
+      "span": [
+        209,
+        235
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 213,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 237,
+      "span": [
+        237,
+        266
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 245,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 268,
+      "span": [
+        268,
+        285
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 278,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 290,
+      "span": [
+        290,
+        313
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 309,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 315,
+      "span": [
+        315,
+        316
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 323,
+      "span": [
+        323,
+        326
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 341,
+      "span": [
+        341,
+        351
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 344,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 353,
+      "span": [
+        353,
+        356
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__interface_extract_cache_test.py",
+      "anchor": 358,
+      "span": [
+        358,
+        375
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 26,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 63,
+      "span": [
+        63,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 70,
+      "span": [
+        70,
+        72
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 77,
+      "span": [
+        77,
+        79
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 80,
+      "span": [
+        80,
+        82
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 86,
+      "span": [
+        86,
+        96
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 92,
+      "span": [
+        92,
+        93
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 103,
+      "span": [
+        103,
+        106
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 109,
+      "span": [
+        109,
+        110
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 124,
+      "span": [
+        124,
+        125
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 131,
+      "span": [
+        131,
+        132
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 138,
+      "span": [
+        138,
+        139
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 148,
+      "span": [
+        148,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 156,
+      "span": [
+        156,
+        157
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 167,
+      "span": [
+        167,
+        168
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 169,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 175,
+      "span": [
+        175,
+        176
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 189,
+      "span": [
+        189,
+        198
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 196,
+      "span": [
+        196,
+        197
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 204,
+      "span": [
+        204,
+        205
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 216,
+      "span": [
+        216,
+        217
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 226,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 231,
+      "span": [
+        231,
+        236
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 240,
+      "span": [
+        240,
+        241
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 251,
+      "span": [
+        251,
+        252
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 255,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 262,
+      "span": [
+        262,
+        277
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 272,
+      "span": [
+        272,
+        273
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 280,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 282,
+      "span": [
+        282,
+        283
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__layout__docs.py",
+      "anchor": 297,
+      "span": [
+        297,
+        302
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 10,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 12,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 28,
+      "span": [
+        28,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 30,
+      "span": [
+        30,
+        31
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 32,
+      "span": [
+        32,
+        33
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 35,
+      "span": [
+        35,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 38,
+      "span": [
+        38,
+        39
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 43,
+      "span": [
+        43,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 52,
+      "span": [
+        52,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 53,
+      "span": [
+        53,
+        54
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__bookkeeping_shards.py",
+      "anchor": 58,
+      "span": [
+        58,
+        59
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 2,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 12,
+      "span": [
+        12,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 13,
+      "span": [
+        13,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 18,
+      "span": [
+        18,
+        21
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 25,
+      "span": [
+        25,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 26,
+      "span": [
+        26,
+        32
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 34,
+      "span": [
+        34,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 38,
+      "span": [
+        38,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 43,
+      "span": [
+        43,
+        46
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 48,
+      "span": [
+        48,
+        51
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 53,
+      "span": [
+        53,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 54,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 57,
+      "span": [
+        57,
+        60
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 60,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 62,
+      "span": [
+        62,
+        64
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_vet_tags.py",
+      "anchor": 67,
+      "span": [
+        67,
+        68
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 2,
+      "span": [
+        2,
+        6
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 14,
+      "span": [
+        14,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 21,
+      "span": [
+        21,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 24,
+      "span": [
+        24,
+        26
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_bench__evals__harbor__convert_check.py",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 16,
+      "span": [
+        16,
+        25
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 28,
+      "span": [
+        28,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 29,
+      "span": [
+        29,
+        41
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 30,
+      "span": [
+        30,
+        36
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 39,
+      "span": [
+        39,
+        40
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 44,
+      "span": [
+        44,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 45,
+      "span": [
+        45,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 46,
+      "span": [
+        46,
+        55
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 60,
+      "span": [
+        60,
+        61
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 63,
+      "span": [
+        63,
+        75
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 64,
+      "span": [
+        64,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 66,
+      "span": [
+        66,
+        67
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 68,
+      "span": [
+        68,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 70,
+      "span": [
+        70,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 71,
+      "span": [
+        71,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 73,
+      "span": [
+        73,
+        74
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 78,
+      "span": [
+        78,
+        104
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 79,
+      "span": [
+        79,
+        104
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 90,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 107,
+      "span": [
+        107,
+        122
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 108,
+      "span": [
+        108,
+        122
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 110,
+      "span": [
+        110,
+        111
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 115,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 125,
+      "span": [
+        125,
+        143
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 126,
+      "span": [
+        126,
+        143
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 129,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 132,
+      "span": [
+        132,
+        133
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 140,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 146,
+      "span": [
+        146,
+        150
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 147,
+      "span": [
+        147,
+        150
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 153,
+      "span": [
+        153,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/py/omp_python__robomp__tests__conftest.py",
+      "anchor": 154,
+      "span": [
+        154,
+        158
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 14,
+      "span": [
+        14,
+        27
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 17,
+      "span": [
+        17,
+        18
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 19,
+      "span": [
+        19,
+        22
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 30,
+      "span": [
+        30,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 36,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 37,
+      "span": [
+        37,
+        48
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 46,
+      "span": [
+        46,
+        47
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 61,
+      "span": [
+        61,
+        69
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 72,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 83,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 90,
+      "span": [
+        90,
+        214
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 91,
+      "span": [
+        91,
+        102
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 104,
+      "span": [
+        104,
+        114
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 116,
+      "span": [
+        116,
+        131
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 125,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 133,
+      "span": [
+        133,
+        145
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 138,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 147,
+      "span": [
+        147,
+        164
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 151,
+      "span": [
+        151,
+        157
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 166,
+      "span": [
+        166,
+        169
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 171,
+      "span": [
+        171,
+        181
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 174,
+      "span": [
+        174,
+        181
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 176,
+      "span": [
+        176,
+        177
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 179,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 183,
+      "span": [
+        183,
+        214
+      ]
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 192,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 203,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample3/py/pig_automation__ci__test_fuzz_nightly.py",
+      "anchor": 217,
+      "span": [
+        217,
+        218
+      ]
+    }
+  ]
+}

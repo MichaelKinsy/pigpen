@@ -1,0 +1,2999 @@
+{
+  "lang": "py",
+  "sample": "sample2",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py --sample sample2",
+  "total": 442,
+  "omp_resolved": 258,
+  "omp_refused": 184,
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 24*` resolved a single-line block — line 24 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 24`. The nearest enclosing multi-line block begins at line 23 and ends at line 24; use `CUT 23*` to target it.",
+    "unresolved": "line 1: `CUT 7*` could not resolve a syntactic block beginning on line 7 (blank/closer line, or parse error). Use `CUT 7.=M` with explicit lines. The nearest enclosing multi-line block begins at line 5 and ends at line 27; use `CUT 5*` to target it."
+  },
+  "cases": [
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 1,
+      "span": [
+        1,
+        8
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 24,
+      "refused": "line 1: `CUT 24*` resolved a single-line block — line 24 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 24`. The nearest enclosing multi-line block begins at line 23 and ends at line 24; use `CUT 23*` to target it."
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 27,
+      "span": [
+        27,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 35,
+      "span": [
+        35,
+        40
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 43,
+      "span": [
+        43,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 57,
+      "span": [
+        57,
+        58
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 74,
+      "span": [
+        74,
+        97
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 80,
+      "span": [
+        80,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 89,
+      "span": [
+        89,
+        97
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 94,
+      "span": [
+        94,
+        95
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 105,
+      "span": [
+        105,
+        114
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 109,
+      "span": [
+        109,
+        111
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 114,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 128,
+      "span": [
+        128,
+        148
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 133,
+      "span": [
+        133,
+        137
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 134,
+      "span": [
+        134,
+        137
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 136,
+      "span": [
+        136,
+        137
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 151,
+      "span": [
+        151,
+        176
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 156,
+      "span": [
+        156,
+        159
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 157,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 164,
+      "span": [
+        164,
+        166
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 170,
+      "span": [
+        170,
+        176
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 175,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 183,
+      "span": [
+        183,
+        191
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 185,
+      "span": [
+        185,
+        186
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 189,
+      "span": [
+        189,
+        191
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 198,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 201,
+      "span": [
+        201,
+        204
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 209,
+      "span": [
+        209,
+        210
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 219,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_handler_dispatch.py",
+      "anchor": 224,
+      "span": [
+        224,
+        228
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 1,
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 18,
+      "span": [
+        18,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 23,
+      "span": [
+        23,
+        25
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 31,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 46,
+      "span": [
+        46,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 58,
+      "span": [
+        58,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 80,
+      "span": [
+        80,
+        81
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 84,
+      "span": [
+        84,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 88,
+      "span": [
+        88,
+        90
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 105,
+      "span": [
+        105,
+        124
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 115,
+      "span": [
+        115,
+        124
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 131,
+      "span": [
+        131,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 133,
+      "span": [
+        133,
+        134
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 137,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 142,
+      "span": [
+        142,
+        143
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 155,
+      "span": [
+        155,
+        158
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 162,
+      "span": [
+        162,
+        179
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 163,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 167,
+      "span": [
+        167,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 178,
+      "span": [
+        178,
+        179
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 186,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 188,
+      "span": [
+        188,
+        196
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 205,
+      "span": [
+        205,
+        212
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 210,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 211,
+      "span": [
+        211,
+        212
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 219,
+      "span": [
+        219,
+        227
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 226,
+      "span": [
+        226,
+        227
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 235,
+      "span": [
+        235,
+        253
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 236,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 246,
+      "span": [
+        246,
+        253
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 260,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 262,
+      "span": [
+        262,
+        269
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_late_provider.py",
+      "anchor": 272,
+      "span": [
+        272,
+        282
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 7,
+      "refused": "line 1: `CUT 7*` could not resolve a syntactic block beginning on line 7 (blank/closer line, or parse error). Use `CUT 7.=M` with explicit lines. The nearest enclosing multi-line block begins at line 5 and ends at line 27; use `CUT 5*` to target it."
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 55,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 60,
+      "span": [
+        60,
+        73
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 71,
+      "span": [
+        71,
+        72
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 85,
+      "span": [
+        85,
+        87
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 97,
+      "span": [
+        97,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 112,
+      "span": [
+        112,
+        119
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 113,
+      "span": [
+        113,
+        114
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 125,
+      "span": [
+        125,
+        135
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 142,
+      "span": [
+        142,
+        145
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 163,
+      "span": [
+        163,
+        192
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 167,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 171,
+      "span": [
+        171,
+        172
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 183,
+      "span": [
+        183,
+        192
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 189,
+      "span": [
+        189,
+        192
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 212,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 221,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 266,
+      "span": [
+        266,
+        267
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 269,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 303,
+      "span": [
+        303,
+        304
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 316,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 352,
+      "span": [
+        352,
+        353
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 360,
+      "span": [
+        360,
+        361
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 369,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 371,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 418,
+      "span": [
+        418,
+        419
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 431,
+      "span": [
+        431,
+        439
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 451,
+      "span": [
+        451,
+        452
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 470,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 490,
+      "span": [
+        490,
+        503
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 507,
+      "span": [
+        507,
+        532
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 518,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 523,
+      "span": [
+        523,
+        530
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__exp14_bestgpt.py",
+      "anchor": 542,
+      "span": [
+        542,
+        545
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 5,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 89,
+      "span": [
+        89,
+        90
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 111,
+      "span": [
+        111,
+        112
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 128,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 133,
+      "span": [
+        133,
+        136
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 148,
+      "span": [
+        148,
+        151
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 166,
+      "span": [
+        166,
+        168
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 184,
+      "span": [
+        184,
+        185
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 187,
+      "span": [
+        187,
+        189
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 214,
+      "span": [
+        214,
+        215
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 232,
+      "span": [
+        232,
+        233
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 245,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 252,
+      "span": [
+        252,
+        265
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 274,
+      "span": [
+        274,
+        276
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 296,
+      "span": [
+        296,
+        297
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 305,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 311,
+      "span": [
+        311,
+        312
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 324,
+      "span": [
+        324,
+        325
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 340,
+      "span": [
+        340,
+        341
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 362,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 366,
+      "span": [
+        366,
+        368
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 391,
+      "span": [
+        391,
+        429
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 415,
+      "span": [
+        415,
+        428
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 427,
+      "span": [
+        427,
+        428
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 442,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 485,
+      "span": [
+        485,
+        486
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 489,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 523,
+      "span": [
+        523,
+        525
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 548,
+      "span": [
+        548,
+        551
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 551,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 562,
+      "span": [
+        562,
+        565
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 578,
+      "span": [
+        578,
+        580
+      ]
+    },
+    {
+      "file": "files/sample2/py/pigpen_piglets__oh-my-pig__proof__ansi_capture.py",
+      "anchor": 613,
+      "span": [
+        613,
+        669
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 26,
+      "span": [
+        26,
+        62
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 42,
+      "span": [
+        42,
+        46
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 66,
+      "span": [
+        66,
+        238
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 69,
+      "span": [
+        69,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 98,
+      "span": [
+        98,
+        105
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 126,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 152,
+      "span": [
+        152,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 182,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 185,
+      "span": [
+        185,
+        208
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 238,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 241,
+      "span": [
+        241,
+        262
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 257,
+      "span": [
+        257,
+        258
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 298,
+      "span": [
+        298,
+        440
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 307,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 317,
+      "span": [
+        317,
+        318
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 332,
+      "span": [
+        332,
+        333
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 356,
+      "span": [
+        356,
+        362
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 366,
+      "span": [
+        366,
+        378
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 375,
+      "span": [
+        375,
+        378
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 395,
+      "span": [
+        395,
+        396
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 425,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 426,
+      "span": [
+        426,
+        429
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 444,
+      "span": [
+        444,
+        510
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 471,
+      "span": [
+        471,
+        472
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 489,
+      "span": [
+        489,
+        497
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 499,
+      "span": [
+        499,
+        505
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 524,
+      "span": [
+        524,
+        528
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 553,
+      "span": [
+        553,
+        556
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 557,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 585,
+      "span": [
+        585,
+        586
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 605,
+      "span": [
+        605,
+        610
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 623,
+      "span": [
+        623,
+        685
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 649,
+      "span": [
+        649,
+        657
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__pin__test_carried.py",
+      "anchor": 669,
+      "span": [
+        669,
+        673
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 1,
+      "span": [
+        1,
+        2
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 2,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 8,
+      "span": [
+        8,
+        30
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 12,
+      "span": [
+        12,
+        15
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 13,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 18,
+      "span": [
+        18,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 25,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 33,
+      "span": [
+        33,
+        51
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 37,
+      "span": [
+        37,
+        42
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 39,
+      "span": [
+        39,
+        42
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 41,
+      "span": [
+        41,
+        42
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 45,
+      "span": [
+        45,
+        50
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_system_prompt_render.py",
+      "anchor": 50,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 1,
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 3,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 4,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 12,
+      "span": [
+        12,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 13,
+      "span": [
+        13,
+        24
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 16,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 19,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 24,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 25,
+      "span": [
+        25,
+        26
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 29,
+      "span": [
+        29,
+        30
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__tests__test_overlay_width.py",
+      "anchor": 30,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 7,
+      "span": [
+        7,
+        9
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 16,
+      "span": [
+        16,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 20,
+      "span": [
+        20,
+        21
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 25,
+      "span": [
+        25,
+        35
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 27,
+      "span": [
+        27,
+        28
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 32,
+      "span": [
+        32,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 41,
+      "span": [
+        41,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 42,
+      "span": [
+        42,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 44,
+      "span": [
+        44,
+        53
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 48,
+      "span": [
+        48,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 55,
+      "span": [
+        55,
+        58
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 62,
+      "span": [
+        62,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 75,
+      "span": [
+        75,
+        76
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 86,
+      "span": [
+        86,
+        108
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 89,
+      "span": [
+        89,
+        90
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 92,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 94,
+      "span": [
+        94,
+        95
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 99,
+      "span": [
+        99,
+        100
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 111,
+      "span": [
+        111,
+        134
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 117,
+      "span": [
+        117,
+        133
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 122,
+      "span": [
+        122,
+        123
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 123,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 129,
+      "span": [
+        129,
+        130
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 137,
+      "span": [
+        137,
+        178
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 139,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 154,
+      "span": [
+        154,
+        160
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 159,
+      "span": [
+        159,
+        160
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 164,
+      "span": [
+        164,
+        165
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 166,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__session_context.py",
+      "anchor": 168,
+      "span": [
+        168,
+        169
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 6,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 11,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 24,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 32,
+      "span": [
+        32,
+        33
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 36,
+      "span": [
+        36,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 38,
+      "span": [
+        38,
+        39
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 44,
+      "span": [
+        44,
+        45
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 50,
+      "span": [
+        50,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 51,
+      "span": [
+        51,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 53,
+      "span": [
+        53,
+        56
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 60,
+      "span": [
+        60,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 64,
+      "span": [
+        64,
+        65
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 65,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 69,
+      "span": [
+        69,
+        70
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 72,
+      "span": [
+        72,
+        73
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 74,
+      "span": [
+        74,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 76,
+      "span": [
+        76,
+        78
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 81,
+      "span": [
+        81,
+        89
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 85,
+      "span": [
+        85,
+        86
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 88,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 92,
+      "span": [
+        92,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 94,
+      "span": [
+        94,
+        97
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 96,
+      "span": [
+        96,
+        97
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 98,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 101,
+      "span": [
+        101,
+        109
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 106,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_automation__release__pig-acp-smoke.py",
+      "anchor": 112,
+      "span": [
+        112,
+        113
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1,
+      "span": [
+        1,
+        18
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 105,
+      "span": [
+        105,
+        121
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 147,
+      "span": [
+        147,
+        148
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 161,
+      "span": [
+        161,
+        162
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 215,
+      "span": [
+        215,
+        230
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 295,
+      "span": [
+        295,
+        296
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 347,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 371,
+      "span": [
+        371,
+        386
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 462,
+      "span": [
+        462,
+        480
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 510,
+      "span": [
+        510,
+        515
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 542,
+      "span": [
+        542,
+        549
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 612,
+      "span": [
+        612,
+        615
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 681,
+      "span": [
+        681,
+        683
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 682,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 755,
+      "span": [
+        755,
+        771
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 817,
+      "span": [
+        817,
+        818
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 861,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 914,
+      "span": [
+        914,
+        917
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 957,
+      "span": [
+        957,
+        958
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1008,
+      "span": [
+        1008,
+        1009
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1018,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1059,
+      "span": [
+        1059,
+        1060
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1162,
+      "span": [
+        1162,
+        1184
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1181,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1237,
+      "span": [
+        1237,
+        1238
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1276,
+      "span": [
+        1276,
+        1310
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1345,
+      "span": [
+        1345,
+        1346
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1355,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1412,
+      "span": [
+        1412,
+        1417
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1489,
+      "span": [
+        1489,
+        1494
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1525,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1568,
+      "span": [
+        1568,
+        1570
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1662,
+      "span": [
+        1662,
+        1685
+      ]
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1685,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/pig_extensions__sdk-py__pig_sdk__kit.py",
+      "anchor": 1745,
+      "span": [
+        1745,
+        1746
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 21,
+      "span": [
+        21,
+        36
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 39,
+      "span": [
+        39,
+        49
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 59,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 94,
+      "span": [
+        94,
+        129
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 100,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 103,
+      "span": [
+        103,
+        127
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 107,
+      "span": [
+        107,
+        108
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 111,
+      "span": [
+        111,
+        112
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 113,
+      "span": [
+        113,
+        126
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 132,
+      "span": [
+        132,
+        148
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 136,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 151,
+      "span": [
+        151,
+        166
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 156,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 169,
+      "span": [
+        169,
+        186
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 170,
+      "span": [
+        170,
+        186
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 189,
+      "span": [
+        189,
+        209
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 190,
+      "span": [
+        190,
+        209
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 202,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 212,
+      "span": [
+        212,
+        231
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 217,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 235,
+      "span": [
+        235,
+        254
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 236,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 257,
+      "span": [
+        257,
+        285
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 263,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 268,
+      "span": [
+        268,
+        272
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 269,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 289,
+      "span": [
+        289,
+        325
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 300,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 305,
+      "span": [
+        305,
+        306
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 328,
+      "span": [
+        328,
+        364
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 334,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_python__robomp__tests__test_tasks_release.py",
+      "anchor": 335,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 10,
+      "span": [
+        10,
+        11
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 14,
+      "span": [
+        14,
+        22
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 15,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 16,
+      "span": [
+        16,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 17,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 18,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 19,
+      "span": [
+        19,
+        20
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 20,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 21,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 25,
+      "span": [
+        25,
+        29
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 26,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 27,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 29,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 32,
+      "span": [
+        32,
+        41
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 33,
+      "span": [
+        33,
+        38
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 35,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 38,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 44,
+      "span": [
+        44,
+        47
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_sdk__python__omp-rpc__tests__test_user_group.py",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 8,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 14,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 18,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 22,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 26,
+      "span": [
+        26,
+        70
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 29,
+      "span": [
+        29,
+        31
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 35,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 39,
+      "span": [
+        39,
+        43
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 41,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 43,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 46,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 48,
+      "span": [
+        48,
+        52
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 53,
+      "span": [
+        53,
+        58
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 55,
+      "span": [
+        55,
+        57
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 59,
+      "span": [
+        59,
+        63
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 65,
+      "span": [
+        65,
+        69
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 66,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 73,
+      "span": [
+        73,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 76,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 79,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 84,
+      "span": [
+        84,
+        86
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 87,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 88,
+      "span": [
+        88,
+        102
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 91,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 95,
+      "span": [
+        95,
+        96
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 97,
+      "span": [
+        97,
+        98
+      ]
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 100,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/sample2/py/omp_packages__snapcompact__research__diag_glm_forensics.py",
+      "anchor": 105,
+      "span": [
+        105,
+        106
+      ]
+    }
+  ]
+}

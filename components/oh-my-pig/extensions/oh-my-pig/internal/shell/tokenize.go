@@ -6,22 +6,25 @@ import (
 
 // upstream: packages/coding-agent/src/tools/shell-tokenize.ts
 
-// extractLeadingCdTarget parses a leading `cd <path> && ...` prefix so the bash
-// tool can route the target through its structured `cwd` parameter when the
-// model omits it. Bails on redirects, extra arguments, or shell expansions
-// (`$`, backticks, `(`), leaving the whole command for the shell.
-// upstream: shell-tokenize.ts:527
-func extractLeadingCdTarget(command string) (path string, rest string, ok bool) {
+// extractLeadingCdTarget parses a leading `cd <path> && ...` or `cd <path>; ...`
+// prefix so the bash tool can route the target through its structured `cwd`
+// parameter when the model omits it. Bails on redirects, extra arguments,
+// directory-stack operands (`-`, `+1`, `-1`), named-user tildes (`~other`), or
+// shell expansions (`$`, backticks, `(`, globs), leaving the whole command for
+// the shell.
+// upstream: shell-tokenize.ts:846
+func extractLeadingCdTarget(command string) (path string, rest string, separator string, ok bool) {
 	if !strings.HasPrefix(command, "cd") || len(command) < 3 {
-		return "", "", false
+		return "", "", "", false
 	}
 	if command[2] != ' ' && command[2] != '\t' {
-		return "", "", false
+		return "", "", "", false
 	}
 	i := 2
 	for i < len(command) && (command[i] == ' ' || command[i] == '\t') {
 		i++
 	}
+	hasUnquotedLeadingTilde := i < len(command) && command[i] == '~'
 	var b strings.Builder
 	inSingle := false
 	inDouble := false
@@ -39,7 +42,7 @@ func extractLeadingCdTarget(command string) (path string, rest string, ok bool) 
 			if ch == '\\' && i+1 < len(command) {
 				next := command[i+1]
 				if next == '\n' || next == '\r' {
-					return "", "", false
+					return "", "", "", false
 				}
 				if next == '"' || next == '\\' || next == '$' || next == '`' {
 					b.WriteByte(next)
@@ -50,6 +53,9 @@ func extractLeadingCdTarget(command string) (path string, rest string, ok bool) 
 			if ch == '"' {
 				inDouble = false
 				continue
+			}
+			if ch == '$' || ch == '`' {
+				return "", "", "", false
 			}
 			b.WriteByte(ch)
 			continue
@@ -65,11 +71,14 @@ func extractLeadingCdTarget(command string) (path string, rest string, ok bool) 
 		if ch == '\\' && i+1 < len(command) {
 			next := command[i+1]
 			if next == '\n' || next == '\r' {
-				return "", "", false
+				return "", "", "", false
 			}
 			b.WriteByte(next)
 			i++
 			continue
+		}
+		if strings.ContainsRune("$`()*?[]{}", rune(ch)) {
+			return "", "", "", false
 		}
 		if isCdTargetTerminator(ch) {
 			break
@@ -78,22 +87,43 @@ func extractLeadingCdTarget(command string) (path string, rest string, ok bool) 
 	}
 	path = b.String()
 	if inSingle || inDouble || len(path) == 0 {
-		return "", "", false
+		return "", "", "", false
 	}
-	if strings.ContainsAny(path, "$`(") {
-		return "", "", false
+	// Directory-stack operands depend on shell state.
+	if path == "-" || isDirStackOperand(path) {
+		return "", "", "", false
+	}
+	// Named-user tilde prefixes (~other) stay with the shell.
+	if hasUnquotedLeadingTilde && path != "~" && !strings.HasPrefix(path, "~/") {
+		return "", "", "", false
 	}
 	for i < len(command) && (command[i] == ' ' || command[i] == '\t') {
 		i++
 	}
-	if i+1 >= len(command) || command[i] != '&' || command[i+1] != '&' {
-		return "", "", false
+	if i+1 < len(command) && command[i] == '&' && command[i+1] == '&' {
+		separator = "&&"
+	} else if i < len(command) && command[i] == ';' && (i+1 >= len(command) || (command[i+1] != ';' && command[i+1] != '&')) {
+		separator = ";"
+	} else {
+		return "", "", "", false
 	}
-	i += 2
+	i += len(separator)
 	for i < len(command) && (command[i] == ' ' || command[i] == '\t') {
 		i++
 	}
-	return path, command[i:], true
+	return path, command[i:], separator, true
+}
+
+func isDirStackOperand(s string) bool {
+	if len(s) < 2 || (s[0] != '+' && s[0] != '-') {
+		return false
+	}
+	for i := 1; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func isCdTargetTerminator(ch byte) bool {
@@ -231,93 +261,4 @@ func extractFlatShellCommandSegments(command string) []flatShellCommandSegment {
 
 func isBraceBoundary(ch byte) bool {
 	return ch == ' ' || ch == '\t' || ch == '\n' || ch == ';'
-}
-
-// isPersistentShellCdCommand reports whether command is a standalone `cd` whose
-// target can be tracked directly.
-// upstream: bash-executor.ts:349
-func isPersistentShellCdCommand(command string) bool {
-	if strings.ContainsAny(command, "\r\n") {
-		return false
-	}
-	trimmed := strings.TrimSpace(command)
-	if trimmed == "cd" {
-		return true
-	}
-	if !strings.HasPrefix(trimmed, "cd") || len(trimmed) < 3 || (trimmed[2] != ' ' && trimmed[2] != '\t') {
-		return false
-	}
-	rest := strings.TrimSpace(trimmed[2:])
-	if rest == "" || rest == "--" {
-		return true
-	}
-	hasOptionTerminator := false
-	if strings.HasPrefix(rest, "--") && len(rest) >= 3 && (rest[2] == ' ' || rest[2] == '\t') {
-		hasOptionTerminator = true
-		rest = strings.TrimLeft(rest[2:], " \t")
-	}
-	if rest == "" {
-		return true
-	}
-	var target string
-	quoted := false
-	quote := rest[0]
-	if quote == '"' || quote == '\'' {
-		if len(rest) < 2 || rest[len(rest)-1] != quote {
-			return false
-		}
-		target = rest[1 : len(rest)-1]
-		if strings.IndexByte(target, quote) >= 0 {
-			return false
-		}
-		if quote == '"' && strings.ContainsAny(target, "\\$`\r\n") {
-			return false
-		}
-		quoted = true
-	} else {
-		if hasUnsupportedUnquotedCdSyntax(rest) {
-			return false
-		}
-		target = rest
-	}
-	if target == "" {
-		return false
-	}
-	if isSignedDigits(target) {
-		return false
-	}
-	if !hasOptionTerminator && strings.HasPrefix(target, "-") && target != "-" {
-		return false
-	}
-	if !quoted && strings.HasPrefix(target, "~") && target != "~" && !strings.HasPrefix(target, "~/") {
-		return false
-	}
-	return true
-}
-
-const unsupportedUnquotedCdChars = "\\$`;&|<>(){}*?[]!#\"'"
-
-func hasUnsupportedUnquotedCdSyntax(s string) bool {
-	for i := range len(s) {
-		ch := s[i]
-		if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v' {
-			return true
-		}
-		if strings.IndexByte(unsupportedUnquotedCdChars, ch) >= 0 {
-			return true
-		}
-	}
-	return false
-}
-
-func isSignedDigits(s string) bool {
-	if len(s) < 2 || (s[0] != '+' && s[0] != '-') {
-		return false
-	}
-	for i := 1; i < len(s); i++ {
-		if s[i] < '0' || s[i] > '9' {
-			return false
-		}
-	}
-	return true
 }

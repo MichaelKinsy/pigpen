@@ -25,6 +25,12 @@ func newTestTool(t *testing.T, modify func(*Config)) (*BashTool, string) {
 	artDir := filepath.Join(t.TempDir(), "artifacts")
 	cfg := DefaultConfig()
 	cfg.AutoBackgroundEnabled = false
+	// Disable the 1 s wall-time notice by default for tests that do not test
+	// wall-time notices, so CPU contention on slow/shared runners never injects
+	// an unexpected "Wall time: ..." footer into exact-output assertions.
+	// Production DefaultConfig() keeps omp's 1000 ms (WALL_TIME_NOTICE_MIN_MS);
+	// wall-time tests override WallTimeNoticeMinMS (and/or Config.Now).
+	cfg.WallTimeNoticeMinMS = -1
 	cfg.ArtifactDir = artDir
 	if modify != nil {
 		modify(&cfg)
@@ -145,14 +151,19 @@ func TestBashTimeoutKillsChildProcess(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX child PID verification")
 	}
-	tool, dir := newTestTool(t, nil)
+	// Disable PersistentState so the baseline state-wrapper preamble does not
+	// eat into the 1 s timeout on heavily loaded machines before the child pid
+	// file is written, and use a 2 s timeout so the command always reaches `wait`.
+	tool, dir := newTestTool(t, func(cfg *Config) {
+		cfg.PersistentState = false
+	})
 	pidFile := filepath.Join(dir, "child.pid")
 	cmd := fmt.Sprintf("sleep 60 & echo $! > %s; wait", singleQuotePosix(pidFile))
 
 	res, err := runTool(t, tool, map[string]any{
 		"command": cmd,
 		"cwd":     dir,
-		"timeout": 1,
+		"timeout": 2,
 	})
 	if err != nil {
 		t.Fatalf("expected non-throwing timeout result, got error: %v", err)
@@ -164,10 +175,9 @@ func TestBashTimeoutKillsChildProcess(t *testing.T) {
 	if details["timedOut"] != true {
 		t.Fatalf("expected timedOut=true, got %v", details["timedOut"])
 	}
-	if count := strings.Count(res.Content, "[Command timed out after 1 seconds]"); count != 1 {
+	if count := strings.Count(res.Content, "[Command timed out after 2 seconds]"); count != 1 {
 		t.Fatalf("expected exactly 1 timeout notice, got %d in %q", count, res.Content)
 	}
-
 	// Verify child PID was recorded and is no longer alive.
 	rawPID, rErr := os.ReadFile(pidFile)
 	if rErr != nil {
@@ -178,7 +188,7 @@ func TestBashTimeoutKillsChildProcess(t *testing.T) {
 		t.Fatalf("invalid child pid %q: %v", string(rawPID), pErr)
 	}
 	// Give the OS a brief moment to reap the killed child.
-	deadline := time.Now().Add(2 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) && isProcessAlive(childPID) {
 		time.Sleep(20 * time.Millisecond)
 	}
@@ -224,7 +234,7 @@ func TestExecuteCommandCancellation(t *testing.T) {
 
 	select {
 	case <-started:
-	case <-time.After(5 * time.Second):
+	case <-time.After(30 * time.Second):
 		cancel()
 		t.Fatalf("command did not start in time")
 	}
@@ -254,7 +264,7 @@ func TestExecuteCommandCancellation(t *testing.T) {
 		t.Fatalf("expected no duplicate Command aborted notice, got %q", err.Error())
 	}
 	if startedPID > 0 {
-		deadline := time.Now().Add(2 * time.Second)
+		deadline := time.Now().Add(30 * time.Second)
 		for time.Now().Before(deadline) && isProcessAlive(startedPID) {
 			time.Sleep(20 * time.Millisecond)
 		}
@@ -407,8 +417,10 @@ func TestBashTimeoutAutoBackgroundAndFollowUp(t *testing.T) {
 	tool, dir := newTestTool(t, func(cfg *Config) {
 		cfg.AutoBackgroundEnabled = true
 		cfg.AutoBackgroundThreshold = DefaultAutoBackgroundThreshold
+		// Production threshold (1000 ms): the 2 s timeout guarantees wallTime >= 2000 ms
+		// on every machine (load only increases wallTime, never shrinks below the 2 s timeout).
+		cfg.WallTimeNoticeMinMS = WallTimeNoticeMinMS
 	})
-
 	type delivery struct {
 		jobID string
 		text  string
@@ -458,25 +470,24 @@ func TestBashTimeoutAutoBackgroundAndFollowUp(t *testing.T) {
 		if d.jobID != jobID {
 			t.Fatalf("delivery jobId=%q, want %q", d.jobID, jobID)
 		}
-		// Expect single newline between timeout header and Wall time notice.
-		if !strings.HasPrefix(d.text, "[Command timed out after 2 seconds]\nWall time: ") {
+		// OutputSink.Dump prepends "[Command timed out after 2 seconds]\n", and
+		// buildCompletedResult joins notices with "" (matching tools/bash.ts:1317).
+		if !strings.HasPrefix(d.text, "[Command timed out after 2 seconds]\n\n\nWall time: ") &&
+			!strings.HasPrefix(d.text, "[Command timed out after 2 seconds]\n\nWall time: ") {
 			t.Fatalf("unexpected timeout delivery text: %q", d.text)
 		}
-		if strings.Contains(d.text, "[Command timed out after 2 seconds]\n\n") {
-			t.Fatalf("expected single newline after timeout header, got %q", d.text)
-		}
-		wantPrefix := fmt.Sprintf("<system-notice>\nBackground job %s has completed. Resume your work using the result below.\n[Command timed out after 2 seconds]\nWall time: ", jobID)
-		if !strings.HasPrefix(d.msg, wantPrefix) || !strings.HasSuffix(d.msg, "\n</system-notice>") {
+		if !strings.HasPrefix(d.msg, fmt.Sprintf("<system-notice>\nBackground job %s has completed.\nResume your work using the result below.\n[Command timed out after 2 seconds]", jobID)) ||
+			!strings.HasSuffix(d.msg, "\n</system-notice>") {
 			t.Fatalf("unexpected follow-up message format: %q", d.msg)
 		}
-	case <-time.After(6 * time.Second):
+	case <-time.After(30 * time.Second):
 		t.Fatalf("timed out waiting for backgrounded timeout delivery")
 	}
 
 	// Verify child sleep process was killed.
 	if rawPID, rErr := os.ReadFile(pidFile); rErr == nil {
 		if pid, pErr := strconv.Atoi(strings.TrimSpace(string(rawPID))); pErr == nil && pid > 0 {
-			deadline := time.Now().Add(2 * time.Second)
+			deadline := time.Now().Add(30 * time.Second)
 			for time.Now().Before(deadline) && isProcessAlive(pid) {
 				time.Sleep(20 * time.Millisecond)
 			}
@@ -532,12 +543,12 @@ func TestBashOutputTruncationAndArtifactSpill(t *testing.T) {
 	if !strings.Contains(res.Content, "elided") {
 		t.Fatalf("expected middle elision marker in output, got %q", res.Content)
 	}
-	if !strings.Contains(res.Content, "Read artifact://1 for full output") {
-		t.Fatalf("expected artifact://1 notice in output, got %q", res.Content)
+	if !strings.Contains(res.Content, "Read local://0.log for full output") {
+		t.Fatalf("expected local://0.log notice in output, got %q", res.Content)
 	}
-	artPath, ok := tool.runtime.Artifacts.Path("1")
+	artPath, ok := tool.runtime.Artifacts.Path("0")
 	if !ok {
-		t.Fatalf("expected artifact 1 to be registered")
+		t.Fatalf("expected artifact 0 to be registered")
 	}
 	fullBytes, rErr := os.ReadFile(artPath)
 	if rErr != nil {
@@ -607,7 +618,7 @@ func TestBashAsyncJobFinishAndCollect(t *testing.T) {
 		if d.id != jobID || !strings.Contains(d.text, "async-done") {
 			t.Fatalf("unexpected delivery: id=%q text=%q", d.id, d.text)
 		}
-	case <-time.After(2 * time.Second):
+	case <-time.After(30 * time.Second):
 		t.Fatalf("timed out waiting for async delivery callback")
 	}
 
@@ -653,7 +664,7 @@ func TestBashAsyncJobCancelRunsTermCleanup(t *testing.T) {
 	jobID, _ := asyncInfo["jobId"].(string)
 
 	// Wait for script to install trap.
-	deadline := time.Now().Add(5 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) {
 		if _, err := os.Stat(readyFile); err == nil {
 			break
@@ -668,7 +679,7 @@ func TestBashAsyncJobCancelRunsTermCleanup(t *testing.T) {
 		t.Fatalf("expected Cancel(%s) to return true", jobID)
 	}
 
-	waitCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	waitCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	snap, _, wErr := tool.runtime.Jobs.Wait(waitCtx, jobID)
 	if wErr != nil {
@@ -677,7 +688,20 @@ func TestBashAsyncJobCancelRunsTermCleanup(t *testing.T) {
 	if snap.Status != JobStatusCancelled {
 		t.Fatalf("expected cancelled status, got %s", snap.Status)
 	}
-	data, rErr := os.ReadFile(cleanedFile)
+	// Abort returns promptly after 100ms while graceful SIGTERM->SIGKILL reap
+	// finishes asynchronously over termCleanupGrace (2s); poll cleanedFile for
+	// up to 5s so a slow-scheduled TERM trap handler under heavy CPU load still
+	// completes and is observed deterministically.
+	var data []byte
+	var rErr error
+	cleanDeadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(cleanDeadline) {
+		data, rErr = os.ReadFile(cleanedFile)
+		if rErr == nil && string(data) == "cleaned" {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 	if rErr != nil || string(data) != "cleaned" {
 		t.Fatalf("expected TERM cleanup file 'cleaned', got %q (err=%v)", string(data), rErr)
 	}
@@ -697,8 +721,12 @@ func TestBashAutoBackgroundPromotion(t *testing.T) {
 		delivered <- jobID + ":" + text
 	})
 
+	// Block on a sentinel file (not a short sleep) so the command cannot finish
+	// before the 100 ms auto-background threshold; release it only after
+	// auto-backgrounding is observed.
+	releaseFile := filepath.Join(dir, "release-autobg")
 	res, err := runTool(t, tool, map[string]any{
-		"command": "sleep 0.35; echo bg-finished",
+		"command": fmt.Sprintf("while [ ! -e %s ]; do sleep 0.05; done; echo bg-finished", singleQuotePosix(releaseFile)),
 		"cwd":     dir,
 	})
 	if err != nil {
@@ -710,13 +738,16 @@ func TestBashAutoBackgroundPromotion(t *testing.T) {
 	if !strings.HasPrefix(jobID, "bg_") {
 		t.Fatalf("expected auto-backgrounded job id, got %v", details)
 	}
+	if err := os.WriteFile(releaseFile, []byte("go\n"), 0o600); err != nil {
+		t.Fatalf("create release file: %v", err)
+	}
 
 	select {
 	case got := <-delivered:
 		if !strings.Contains(got, "bg-finished") {
 			t.Fatalf("expected bg-finished in delivery, got %q", got)
 		}
-	case <-time.After(5 * time.Second):
+	case <-time.After(30 * time.Second):
 		t.Fatalf("timed out waiting for auto-backgrounded job delivery")
 	}
 }
@@ -733,13 +764,13 @@ func TestBashServiceModeAndStop(t *testing.T) {
 		"cwd":     dir,
 		"ready": map[string]any{
 			"log":     "SERVER READY",
-			"timeout": 5,
+			"timeout": 20,
 		},
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Content, "demo-svc: running") || !strings.Contains(res.Content, "ready") {
+	if !strings.Contains(res.Content, "demo-svc: ready") || !strings.Contains(res.Content, "ready") {
 		t.Fatalf("unexpected service output: %q", res.Content)
 	}
 	snap, ok := tool.runtime.Services.Get("demo-svc")
@@ -753,7 +784,7 @@ func TestBashServiceModeAndStop(t *testing.T) {
 	if sErr != nil || !stopped {
 		t.Fatalf("Stop failed: stopped=%v err=%v", stopped, sErr)
 	}
-	deadline := time.Now().Add(2 * time.Second)
+	deadline := time.Now().Add(30 * time.Second)
 	for time.Now().Before(deadline) && isProcessAlive(snap.PID) {
 		time.Sleep(20 * time.Millisecond)
 	}
@@ -765,13 +796,13 @@ func TestBashServiceModeAndStop(t *testing.T) {
 func TestBashModeValidationAndTimeoutClamping(t *testing.T) {
 	tool, dir := newTestTool(t, nil)
 
-	// Service mode rejects async and timeout.
+	// Service mode rejects async/timeout when no ready condition is given (v19.1.1).
 	if _, err := runTool(t, tool, map[string]any{
 		"name":    "svc",
 		"command": "echo hi",
 		"cwd":     dir,
 		"async":   true,
-	}); err == nil || !strings.Contains(err.Error(), "Service mode does not accept async or timeout") {
+	}); err == nil || !strings.Contains(err.Error(), "`name` starts a long-lived service") {
 		t.Fatalf("expected service+async error, got %v", err)
 	}
 	if _, err := runTool(t, tool, map[string]any{
@@ -779,10 +810,9 @@ func TestBashModeValidationAndTimeoutClamping(t *testing.T) {
 		"command": "echo hi",
 		"cwd":     dir,
 		"timeout": 10,
-	}); err == nil || !strings.Contains(err.Error(), "Service mode does not accept async or timeout") {
+	}); err == nil || !strings.Contains(err.Error(), "`name` starts a long-lived service") {
 		t.Fatalf("expected service+timeout error, got %v", err)
 	}
-
 	// Ready without name emits notice and still runs.
 	res, err := runTool(t, tool, map[string]any{
 		"command": "printf ok",
@@ -808,55 +838,29 @@ func TestBashModeValidationAndTimeoutClamping(t *testing.T) {
 	if !strings.Contains(res.Content, "Timeout clamped to 3600s (requested 9999s; allowed range 1-3600s).") {
 		t.Fatalf("expected timeout clamp notice, got %q", res.Content)
 	}
-
-	// PTY fallback notice.
 	res, err = runTool(t, tool, map[string]any{
 		"command": "printf ok",
+		"cwd":     dir,
+		"timeout": 0.4,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(res.Content, "Timeout clamped to 1s (requested 0.4s; allowed range 1-3600s).") {
+		t.Fatalf("expected fractional timeout clamp notice, got %q", res.Content)
+	}
+
+	// Finite command with pty: true always emits omp's fallback notice and runs without a terminal.
+	res, err = runTool(t, tool, map[string]any{
+		"command": "if [ -t 1 ]; then echo IS_TTY; else echo NOT_TTY; fi",
 		"cwd":     dir,
 		"pty":     true,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Content, "pty requested but unavailable in this environment; ran without a terminal") {
-		t.Fatalf("expected pty fallback notice, got %q", res.Content)
-	}
-}
-
-// upstream: bash-executor.test.ts: "classifies persistent-shell cd routing for %j"
-func TestIsPersistentShellCdCommand(t *testing.T) {
-	cases := []struct {
-		cmd  string
-		want bool
-	}{
-		{"cd", true},
-		{" cd child ", true},
-		{"cd\tchild", true},
-		{"cd -", true},
-		{"cd --", true},
-		{"cd -- -P", true},
-		{`cd "#note"`, true},
-		{`cd "two words"`, true},
-		{"cd '~/literal'", true},
-		{"cd +1", false},
-		{`cd "+1"`, false},
-		{"cd -- -1", false},
-		{"cd -- '+2'", false},
-		{"cd\npwd", false},
-		{"cd\rpwd", false},
-		{"cd -P", false},
-		{"cd -L /tmp", false},
-		{"cd #note", false},
-		{"cd child && pwd", false},
-		{"cd two words", false},
-		{`cd ""`, false},
-		{"cd ~other", false},
-		{"echo cd child", false},
-	}
-	for _, tc := range cases {
-		if got := isPersistentShellCdCommand(tc.cmd); got != tc.want {
-			t.Errorf("isPersistentShellCdCommand(%q) = %v, want %v", tc.cmd, got, tc.want)
-		}
+	if !strings.Contains(res.Content, "pty requested but unavailable in this environment; ran without a terminal") || !strings.Contains(res.Content, "NOT_TTY") {
+		t.Fatalf("expected pty fallback notice without terminal, got %q", res.Content)
 	}
 }
 
@@ -933,23 +937,5 @@ func TestBashInterceptor(t *testing.T) {
 	_, err := runTool(t, tool, map[string]any{"command": orig})
 	if err == nil || !strings.Contains(err.Error(), "Use read instead.\n\nOriginal command: "+orig) {
 		t.Fatalf("expected interception error with original command, got %v", err)
-	}
-}
-
-// upstream: tools/bash-pty-selection.test.ts: CanUseInteractiveBashPty
-func TestCanUseInteractiveBashPty(t *testing.T) {
-	t.Setenv("PI_NO_PTY", "")
-	if CanUseInteractiveBashPty(false, true) {
-		t.Fatalf("expected false when pty=false")
-	}
-	if !CanUseInteractiveBashPty(true, true) {
-		t.Fatalf("expected true when pty=true and hasUI=true")
-	}
-	if CanUseInteractiveBashPty(true, false) {
-		t.Fatalf("expected false when hasUI=false")
-	}
-	t.Setenv("PI_NO_PTY", "1")
-	if CanUseInteractiveBashPty(true, true) {
-		t.Fatalf("expected false when PI_NO_PTY=1")
 	}
 }

@@ -1,0 +1,1204 @@
+{
+  "lang": "tsx",
+  "omp_tag": "v19.1.1",
+  "generator": "python3 -B internal/hashline/gen/gen_blockspans.py",
+  "total": 189,
+  "omp_resolved": 73,
+  "omp_refused": 116,
+  "cases": [
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 1,
+      "refused": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`."
+    },
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 11,
+      "span": [
+        11,
+        20
+      ]
+    },
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 12,
+      "span": [
+        12,
+        14
+      ]
+    },
+    {
+      "file": "files/tsx/App.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        17
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 23,
+      "span": [
+        23,
+        76
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 29,
+      "span": [
+        29,
+        74
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 30,
+      "span": [
+        30,
+        44
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 34,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 40,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 42,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 46,
+      "span": [
+        46,
+        50
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 47,
+      "span": [
+        47,
+        49
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 48,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 52,
+      "span": [
+        52,
+        56
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 59,
+      "span": [
+        59,
+        66
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 67,
+      "span": [
+        67,
+        71
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 68,
+      "span": [
+        68,
+        70
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 78,
+      "span": [
+        78,
+        87
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 82,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 84,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 89,
+      "span": [
+        89,
+        100
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 96,
+      "span": [
+        96,
+        98
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 97,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 102,
+      "span": [
+        102,
+        148
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 110,
+      "span": [
+        110,
+        124
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 111,
+      "span": [
+        111,
+        113
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 112,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 114,
+      "span": [
+        114,
+        119
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 116,
+      "refused": "line 1: `CUT 116*` could not resolve a syntactic block beginning on line 116 (blank/closer line, or parse error). Use `CUT 116.=M` with explicit lines. The nearest enclosing multi-line block begins at line 115 and ends at line 118; use `CUT 115*` to target it."
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 117,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 121,
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 123,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 125,
+      "span": [
+        125,
+        127
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 128,
+      "span": [
+        128,
+        130
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 129,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 131,
+      "span": [
+        131,
+        133
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 132,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 135,
+      "span": [
+        135,
+        139
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 142,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 150,
+      "span": [
+        150,
+        153
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 151,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 157,
+      "span": [
+        157,
+        162
+      ]
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 158,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/IssueCard.tsx",
+      "anchor": 160,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 10,
+      "span": [
+        10,
+        72
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 14,
+      "span": [
+        14,
+        17
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 23,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 29,
+      "span": [
+        29,
+        45
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 32,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 47,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 49,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 52,
+      "span": [
+        52,
+        57
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 58,
+      "span": [
+        58,
+        60
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 61,
+      "span": [
+        61,
+        63
+      ]
+    },
+    {
+      "file": "files/tsx/Shell.tsx",
+      "anchor": 64,
+      "span": [
+        64,
+        66
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 6,
+      "span": [
+        6,
+        8
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 10,
+      "span": [
+        10,
+        14
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 16,
+      "span": [
+        16,
+        23
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 25,
+      "span": [
+        25,
+        53
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 33,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 41,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 42,
+      "span": [
+        42,
+        49
+      ]
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 44,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/TopBar.tsx",
+      "anchor": 45,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 8,
+      "span": [
+        8,
+        12
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 10,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 11,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 14,
+      "span": [
+        14,
+        20
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 22,
+      "span": [
+        22,
+        147
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 26,
+      "span": [
+        26,
+        30
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 28,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 35,
+      "span": [
+        35,
+        41
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 37,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 39,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 45,
+      "span": [
+        45,
+        48
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 50,
+      "span": [
+        50,
+        54
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 51,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 56,
+      "span": [
+        56,
+        60
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 59,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 65,
+      "span": [
+        65,
+        75
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 67,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 73,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 77,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 82,
+      "span": [
+        82,
+        84
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 86,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 92,
+      "span": [
+        92,
+        94
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 96,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 101,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 103,
+      "span": [
+        103,
+        113
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 105,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 108,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 110,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 116,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 118,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 121,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 123,
+      "span": [
+        123,
+        125
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 124,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 129,
+      "span": [
+        129,
+        133
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 137,
+      "span": [
+        137,
+        141
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 143,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 149,
+      "span": [
+        149,
+        154
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 156,
+      "span": [
+        156,
+        168
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 158,
+      "span": [
+        158,
+        166
+      ]
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 159,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 161,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 162,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Vitals.tsx",
+      "anchor": 164,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 1,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 3,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 4,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 5,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 6,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 7,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 8,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 9,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 11,
+      "span": [
+        11,
+        13
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 15,
+      "span": [
+        15,
+        44
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 19,
+      "span": [
+        19,
+        42
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 20,
+      "span": [
+        20,
+        41
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 35,
+      "span": [
+        35,
+        37
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 36,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 46,
+      "span": [
+        46,
+        49
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 51,
+      "span": [
+        51,
+        84
+      ]
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 52,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 57,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 58,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 61,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 62,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 64,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 68,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 70,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 71,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 74,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 75,
+      "refused_kind": "single_line"
+    },
+    {
+      "file": "files/tsx/Events.tsx",
+      "anchor": 77,
+      "span": [
+        77,
+        79
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_valid_component_fn.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "valid_component_fn",
+      "span": [
+        1,
+        3
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_opening_tag.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "opening_tag",
+      "span": [
+        1,
+        7
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_opening_tag.tsx",
+      "anchor": 2,
+      "constructed": true,
+      "name": "opening_tag",
+      "span": [
+        2,
+        6
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_opening_tag.tsx",
+      "anchor": 3,
+      "constructed": true,
+      "name": "opening_tag",
+      "span": [
+        3,
+        5
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_multiline_props_fn.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "multiline_props_fn",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_multiline_props_fn.tsx",
+      "anchor": 3,
+      "constructed": true,
+      "name": "multiline_props_fn",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/tsx/constructed_continuation_ternary.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "continuation_ternary",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_continuation_ternary.tsx",
+      "anchor": 2,
+      "constructed": true,
+      "name": "continuation_ternary",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/tsx/constructed_template_closer_in_fn.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "template_closer_in_fn",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_decorator_class.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "decorator_class",
+      "span": [
+        1,
+        4
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_decorator_class.tsx",
+      "anchor": 2,
+      "constructed": true,
+      "name": "decorator_class",
+      "refused_kind": "unresolved"
+    },
+    {
+      "file": "files/tsx/constructed_inline_else_chain.tsx",
+      "anchor": 1,
+      "constructed": true,
+      "name": "inline_else_chain",
+      "span": [
+        1,
+        5
+      ]
+    },
+    {
+      "file": "files/tsx/constructed_inline_else_chain.tsx",
+      "anchor": 3,
+      "constructed": true,
+      "name": "inline_else_chain",
+      "refused_kind": "unresolved"
+    }
+  ],
+  "refusal_samples": {
+    "single_line": "line 1: `CUT 1*` resolved a single-line block — line 1 is a bare statement, not the opening line of a multi-line construct. For only this statement use `CUT 1`.",
+    "unresolved": "line 1: `CUT 116*` could not resolve a syntactic block beginning on line 116 (blank/closer line, or parse error). Use `CUT 116.=M` with explicit lines. The nearest enclosing multi-line block begins at line 115 and ends at line 118; use `CUT 115*` to target it."
+  }
+}

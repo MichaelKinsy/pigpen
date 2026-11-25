@@ -32,6 +32,8 @@ var allProviderEnvKeys = []string{
 	"PERPLEXITY_API_KEY",
 	"PI_PERPLEXITY_API_MODEL",
 	"TINYFISH_API_KEY",
+	"KEENABLE_API_KEY",
+	"SOFYA_API_KEY",
 	"JINA_API_KEY",
 	"KAGI_API_KEY",
 	"TAVILY_API_KEY",
@@ -43,13 +45,27 @@ var allProviderEnvKeys = []string{
 	"KIMI_SEARCH_BASE_URL",
 	"SYNTHETIC_API_KEY",
 	"OLLAMA_CLOUD_API_KEY",
+	"PI_OFFLINE",
+	"PIG_OFFLINE",
+}
+
+func withSettings(t *testing.T, vals map[string]any) {
+	t.Helper()
+	prev := Setting
+	Setting = func(_ sdk.Context, key string) any {
+		return vals[key]
+	}
+	t.Cleanup(func() { Setting = prev })
 }
 
 func clearProviderEnv(t *testing.T) {
 	t.Helper()
+	resetRateLimitCooldowns()
 	for _, k := range allProviderEnvKeys {
 		t.Setenv(k, "")
 	}
+	// Isolate credentialed-provider unit tests from keyless defaults unless explicitly enabled.
+	withSettings(t, map[string]any{"providers.webKeyless": false})
 }
 
 // hostRewriteTransport routes every outbound request to a local httptest.Server while
@@ -133,23 +149,29 @@ func TestRegisterAndToolDefinition(t *testing.T) {
 }
 
 func TestNoProviderConfigured(t *testing.T) {
-	// upstream: packages/coding-agent/src/web/search/index.ts:314-322
+	// upstream: packages/coding-agent/src/web/search/index.ts:509-521
 	clearProviderEnv(t)
 	text, details := ExecuteSearch(context.Background(), SearchParams{Query: "golang"})
-	if text != "Error: No web search model configured." {
-		t.Fatalf("text = %q, want omp message", text)
+	want := "No configured web search service is available, and providers.webKeyless is off. Configure a search credential or turn providers.webKeyless on."
+	if text != "Error: "+want {
+		t.Fatalf("text = %q, want %q", text, "Error: "+want)
 	}
-	if details.Response.Provider != "none" || details.Error != "No web search model configured." {
+	if details.Response.Provider != "none" || details.Error != want {
 		t.Fatalf("unexpected details: %+v", details)
+	}
+
+	// When no providers exist at all (empty chain), report omp's bare message.
+	text2, details2 := executeSearchWithProviders(context.Background(), httpClient, nil, SearchParams{Query: "golang"})
+	if text2 != "Error: No web search model configured." || details2.Error != "No web search model configured." {
+		t.Fatalf("empty chain mismatch: text=%q details=%+v", text2, details2)
 	}
 }
 
 func TestProviderSelectionOrderAndFallback(t *testing.T) {
-	// upstream: packages/catalog/src/compat/rules/runtime/behavior.kdl:467-479
+	// upstream: packages/catalog/src/compat/rules/runtime/behavior.kdl:521-533
 	clearProviderEnv(t)
 	t.Setenv("EXA_API_KEY", "exa-key")
 	t.Setenv("BRAVE_API_KEY", "brave-key")
-
 	_, rt := withTestHTTPClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"requestId":"exa-1","results":[{"title":"Exa Result","url":"https://example.com/exa","summary":"Exa summary"}]}`))
@@ -232,7 +254,7 @@ func TestCentralDirectivePipeline(t *testing.T) {
 		}
 	})
 
-	// upstream: test/web/search/query-pipeline.test.ts: "relaxes a constraint that matches nothing and leads the LLM text with a note"
+	// upstream: test/web/search/query-pipeline.test.ts: "relaxes a non-scope constraint that matches nothing and leads the LLM text with a note"
 	t.Run("relaxes constraint that matches nothing and prepends Note", func(t *testing.T) {
 		clearProviderEnv(t)
 		t.Setenv("SYNTHETIC_API_KEY", "s-key")
@@ -240,11 +262,11 @@ func TestCentralDirectivePipeline(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"results":[{"title":"Docs page","url":"https://docs.example.com/guide"}]}`))
 		})
-		text, details := ExecuteSearch(context.Background(), SearchParams{Query: "guide site:missing.example"})
+		text, details := ExecuteSearch(context.Background(), SearchParams{Query: "guide intitle:nonexistent"})
 		if len(details.Response.Sources) != 1 {
 			t.Fatalf("expected relaxed results, got %d", len(details.Response.Sources))
 		}
-		if !strings.HasPrefix(text, "Note: no results matched `site:missing.example`; the constraint was relaxed") {
+		if !strings.HasPrefix(text, "Note: no results matched `intitle:nonexistent`; the constraint was relaxed") {
 			t.Fatalf("expected relaxation note, got %q", text)
 		}
 	})
@@ -365,7 +387,7 @@ func TestProviderSearXNG(t *testing.T) {
 	_, rt := withTestHTTPClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{
-			"results":[{"title":"SearXNG","url":"https://github.com/r","content":"Metasearch result"}],
+			"results":[{"title":"SearXNG","url":"https://github.com/can1357/oh-my-pi/releases/tag/17.1.1","content":"Metasearch result"}],
 			"answers":["  Forty-two  ",{"answer":"Legacy answer"},{"translations":[{"text":"Hallo"},{"text":"Guten Tag"}]}],
 			"suggestions":["related search"]
 		}`))
@@ -390,7 +412,7 @@ func TestProviderSearXNG(t *testing.T) {
 		t.Fatalf("Authorization = %q, want %q", got, wantAuth)
 	}
 	u, _ := url.Parse(rt.recorded[0].OrigURL)
-	if u.Query().Get("time_range") != "month" || u.Query().Get("language") != "de" || strings.Contains(u.Query().Get("q"), "!!g") {
+	if u.Query().Get("time_range") != "month" || u.Query().Get("language") != "de" || strings.Contains(u.Query().Get("q"), "!!g") || strings.Contains(u.Query().Get("q"), "inurl:") {
 		t.Fatalf("unexpected query params: %v", u.Query())
 	}
 }
@@ -711,6 +733,7 @@ func TestProviderHTTPErrorAndClassification(t *testing.T) {
 	})
 
 	t.Run("context cancellation surfaces immediately without falling through", func(t *testing.T) {
+		resetRateLimitCooldowns()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		withTestHTTPClient(t, func(w http.ResponseWriter, r *http.Request) {

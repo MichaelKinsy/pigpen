@@ -1,0 +1,9 @@
+type: example.api.Service
+
+http:
+  rules:
+    - selector: example.Echo
+      post: /v1/echo
+    - selector: example.EchoDelete
+      delete: /v1/echo
+

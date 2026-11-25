@@ -1,0 +1,9 @@
+package p
+
+func f() {
+	x := 1
+	for i := 0; i < 3; i++ { b() }; for {
+		break
+	}
+	_ = x
+}

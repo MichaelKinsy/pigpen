@@ -1,270 +1,512 @@
 package hashline
 
 import (
-	"fmt"
 	"slices"
 	"strings"
+	"unicode/utf8"
 )
 
-const (
-	// RecoveryExternalWarning is emitted when an external write changed the file since the cached snapshot.
-	// upstream: crates/pi-edit/src/modes/hashline/messages.rs:682
-	RecoveryExternalWarning = "Recovered from a stale file hash using a previous read snapshot (file changed externally between read and edit)."
-	// RecoverySessionChainWarning is emitted when an earlier in-session snapshot was used for recovery.
-	// upstream: crates/pi-edit/src/modes/hashline/messages.rs:687
-	RecoverySessionChainWarning = "Recovered from a stale file hash using an earlier in-session snapshot (a prior edit in this session advanced the hash)."
-	// RecoveryLineRemapWarning is emitted when stale anchors shifted to new line numbers.
-	// upstream: crates/pi-edit/src/modes/hashline/messages.rs:693
-	RecoveryLineRemapWarning = "Recovered by remapping stale line anchors to unchanged current lines (file changed since the tagged read). Verify the diff matches your intent."
-)
+// Stale-tag anchor recovery.
+// upstream: crates/edit/src/modes/hashline/recovery.rs
 
-// TryRecover attempts to rebase ops anchored against a retained in-session snapshot
-// onto currentText. Returns (result, true, nil) on recovery, or (_, false, nil) if
-// the stale tag cannot be safely recovered.
-// upstream: crates/pi-edit/src/modes/hashline/recovery.rs:367
-func TryRecover(store *Store, absPath, displayPath, currentText, staleHash string, ops []Op, clipboard *Clipboard) (ApplyResult, bool, error) {
-	if store == nil || len(ops) == 0 {
-		return ApplyResult{}, false, nil
-	}
-	snap, ok := store.ByHash(absPath, staleHash)
-	if !ok {
-		return ApplyResult{}, false, nil
-	}
-
-	head, hasHead := store.Head(absPath)
-	warning := RecoverySessionChainWarning
-	if hasHead && head.Hash == snap.Hash {
-		warning = RecoveryExternalWarning
-	}
-
-	prevLines := SplitAddressableFileLines(snap.Text)
-	currLines := SplitAddressableFileLines(currentText)
-	lineMap := buildLineMap(prevLines, currLines)
-
-	// Remap all concrete line anchors in ops and verify a uniform offset + unchanged text.
-	remapped := make([]Op, len(ops))
-	offsetSet := false
-	uniformOffset := 0
-
-	mapOne := func(oldLine int) (int, bool) {
-		newLine, ok := lineMap[oldLine]
-		if !ok {
-			return 0, false
-		}
-		// Reject if the target line's content changed or is not a safe unique match.
-		if oldLine < 1 || oldLine > len(prevLines) || newLine < 1 || newLine > len(currLines) {
-			return 0, false
-		}
-		if prevLines[oldLine-1] != currLines[newLine-1] {
-			return 0, false
-		}
-		off := newLine - oldLine
-		if !offsetSet {
-			uniformOffset = off
-			offsetSet = true
-		} else if off != uniformOffset {
-			return 0, false
-		}
-		return newLine, true
-	}
-
-	for i, op := range ops {
-		r := op
-		switch op.Kind {
-		case OpPutEOF, OpPasteEOF:
-			// Content-independent.
-		case OpPutRange, OpCutRange, OpPasteRange:
-			ns, ok := mapOne(op.Start)
-			if !ok {
-				return ApplyResult{}, false, nil
-			}
-			ne := ns
-			for ln := op.Start + 1; ln <= op.End; ln++ {
-				mapped, ok := mapOne(ln)
-				if !ok || mapped != ne+1 {
-					return ApplyResult{}, false, nil
-				}
-				ne = mapped
-			}
-			r.Start = ns
-			r.End = ne
-		case OpPutBlock, OpPutAfterBlock, OpCutBlock, OpPasteBlock, OpPasteAfterBlock:
-			// Block ops require the anchor line AND the whole resolved block to be unchanged.
-			ns, ok := mapOne(op.Start)
-			if !ok {
-				return ApplyResult{}, false, nil
-			}
-			oldSpan, okOld := ResolveBlock(prevLines, displayPath, op.Start)
-			newSpan, okNew := ResolveBlock(currLines, displayPath, ns)
-			if !okOld || !okNew || (oldSpan.End-oldSpan.Start) != (newSpan.End-newSpan.Start) {
-				return ApplyResult{}, false, nil
-			}
-			for k := 0; k <= oldSpan.End-oldSpan.Start; k++ {
-				if prevLines[oldSpan.Start-1+k] != currLines[newSpan.Start-1+k] {
-					return ApplyResult{}, false, nil
-				}
-			}
-			r.Start = ns
-		case OpPutBefore, OpPutAfter, OpPasteBefore, OpPasteAfter:
-			if op.Kind == OpPutBefore && op.Start == 1 {
-				// BOF is content-independent.
-			} else {
-				ns, ok := mapOne(op.Start)
-				if !ok {
-					return ApplyResult{}, false, nil
-				}
-				r.Start = ns
-			}
-		}
-		remapped[i] = r
-	}
-
-	if !offsetSet {
-		return ApplyResult{}, false, nil
-	}
-
-	res, err := ApplyOps(currentText, displayPath, remapped, clipboard)
-	if err != nil || !res.Changed {
-		return ApplyResult{}, false, nil
-	}
-
-	w := warning
-	if uniformOffset != 0 {
-		w = RecoveryLineRemapWarning
-	}
-	res.Warnings = append([]string{w}, res.Warnings...)
-	return res, true, nil
+// RecoveryArgs holds inputs for stale-snapshot recovery.
+// upstream: crates/edit/src/modes/hashline/recovery.rs:26
+type RecoveryArgs struct {
+	Path        string
+	CurrentText string
+	FileHash    string
+	Edits       []Edit
+	Clipboard   *Clipboard
 }
 
-// buildLineMap aligns identical lines between prev and curr using LCS dynamic programming
-// (with common prefix/suffix trimming for speed), returning 1-indexed oldLine -> newLine.
-func buildLineMap(prev, curr []string) map[int]int {
-	m := make(map[int]int)
-	// Common prefix.
-	prefix := 0
-	for prefix < len(prev) && prefix < len(curr) && prev[prefix] == curr[prefix] {
-		m[prefix+1] = prefix + 1
-		prefix++
-	}
-	// Common suffix.
-	suffix := 0
-	for suffix < len(prev)-prefix && suffix < len(curr)-prefix &&
-		prev[len(prev)-1-suffix] == curr[len(curr)-1-suffix] {
-		m[len(prev)-suffix] = len(curr) - suffix
-		suffix++
-	}
+// RecoveryResult holds a successfully recovered application result.
+// upstream: crates/edit/src/modes/hashline/recovery.rs:41
+type RecoveryResult struct {
+	Text             string
+	FirstChangedLine uint32
+	Warnings         []string
+}
 
-	pMid := prev[prefix : len(prev)-suffix]
-	cMid := curr[prefix : len(curr)-suffix]
-	if len(pMid) == 0 || len(cMid) == 0 {
-		return m
-	}
-
-	// Standard LCS table on the middle slice (bounded for safety).
-	if len(pMid)*len(cMid) > 2_000_000 {
-		return m
-	}
-	rows := len(pMid) + 1
-	cols := len(cMid) + 1
-	dp := make([]int, rows*cols)
-	for i := len(pMid) - 1; i >= 0; i-- {
-		for j := len(cMid) - 1; j >= 0; j-- {
-			if pMid[i] == cMid[j] {
-				dp[i*cols+j] = dp[(i+1)*cols+(j+1)] + 1
-			} else if dp[(i+1)*cols+j] >= dp[i*cols+(j+1)] {
-				dp[i*cols+j] = dp[(i+1)*cols+j]
-			} else {
-				dp[i*cols+j] = dp[i*cols+(j+1)]
+func editAnchorsForRecovery(edit Edit) []Anchor {
+	switch edit.Kind {
+	case EditDelete, EditBlock:
+		return []Anchor{edit.Anchor}
+	case EditCut:
+		out := make([]Anchor, 0, edit.Range.End.Line-edit.Range.Start.Line+1)
+		for ln := edit.Range.Start.Line; ; ln++ {
+			out = append(out, Anchor{Line: ln})
+			if ln == edit.Range.End.Line {
+				break
 			}
 		}
+		return out
+	case EditPaste:
+		if edit.PasteAt.Kind == PasteTargetSpan {
+			out := make([]Anchor, 0, edit.PasteAt.Range.End.Line-edit.PasteAt.Range.Start.Line+1)
+			for ln := edit.PasteAt.Range.Start.Line; ; ln++ {
+				out = append(out, Anchor{Line: ln})
+				if ln == edit.PasteAt.Range.End.Line {
+					break
+				}
+			}
+			return out
+		}
+		if edit.PasteAt.Cursor.Kind == CursorBeforeAnchor || edit.PasteAt.Cursor.Kind == CursorAfterAnchor {
+			return []Anchor{edit.PasteAt.Cursor.Anchor}
+		}
+	case EditInsert:
+		if edit.Cursor.Kind == CursorBeforeAnchor || edit.Cursor.Kind == CursorAfterAnchor {
+			return []Anchor{edit.Cursor.Anchor}
+		}
 	}
-	i, j := 0, 0
-	for i < len(pMid) && j < len(cMid) {
-		if pMid[i] == cMid[j] {
-			m[prefix+i+1] = prefix + j + 1
-			i++
-			j++
-		} else if dp[(i+1)*cols+j] >= dp[i*cols+(j+1)] {
-			i++
+	return nil
+}
+
+// buildLineMap maps unchanged 1-indexed line numbers from previous to current.
+// upstream: crates/edit/src/modes/hashline/recovery.rs:68
+func buildLineMap(previous, current string) map[uint32]uint32 {
+	m := make(map[uint32]uint32)
+	var prevLine uint32 = 1
+	var curLine uint32 = 1
+	for _, run := range lineRunsStr(previous, current) {
+		if run.Added {
+			curLine += run.Count
+		} else if run.Removed {
+			prevLine += run.Count
 		} else {
-			j++
+			for off := range run.Count {
+				m[prevLine+off] = curLine + off
+			}
+			prevLine += run.Count
+			curLine += run.Count
 		}
 	}
 	return m
 }
 
-// FormatBlockResolution formats a resolved block op line as omp prints it.
-// upstream: crates/pi-edit/src/modes/hashline/patcher.rs:502
-func FormatBlockResolution(r BlockResolution) string {
-	var tmpl, suffix string
-	switch r.Kind {
-	case OpPutBlock, OpPasteBlock:
-		tmpl = "PUT N*:"
-	case OpPutAfterBlock:
-		tmpl = "PUT >N*:"
-		suffix = "; body lands after line "
-	case OpCutBlock:
-		tmpl = "CUT N*"
-	case OpPasteAfterBlock:
-		tmpl = "PUT >N*"
-		suffix = "; clipboard lands after line "
-	default:
-		tmpl = "PUT N*:"
+func duplicatedValues(lines []string) map[string]struct{} {
+	seen := make(map[string]struct{}, len(lines))
+	dup := make(map[string]struct{})
+	for _, line := range lines {
+		if _, ok := seen[line]; ok {
+			dup[line] = struct{}{}
+		} else {
+			seen[line] = struct{}{}
+		}
 	}
-	op := strings.Replace(tmpl, "N", fmt.Sprintf("%d", r.AnchorLine), 1)
-	count := r.End - r.Start + 1
-	span := fmt.Sprintf("lines %d-%d", r.Start, r.End)
-	if r.Start == r.End {
-		span = fmt.Sprintf("line %d", r.Start)
-	}
-	plural := "s"
-	if count == 1 {
-		plural = ""
-	}
-	if suffix != "" {
-		suffix = fmt.Sprintf("%s%d", suffix, r.End)
-	}
-	return fmt.Sprintf("%s → resolved %s (%d line%s)%s", op, span, count, plural, suffix)
+	return dup
 }
 
-// buildNewFilePreview renders the new file's lines around each changed window
-// as `N:text` rows joined by `…`, including off-window enclosing block boundaries.
-func buildNewFilePreview(newLines []string, changedWindows [][2]int) string {
-	if len(newLines) == 0 || len(changedWindows) == 0 {
-		return ""
-	}
-	visible := make(map[int]bool)
-	for _, w := range changedWindows {
-		lo := max(1, w[0]-2)
-		hi := min(len(newLines), w[1]+2)
-		// If a window is a pure insertion whose first line is blank (e.g. PUT >23: starting with `+`),
-		// 1 line before the insertion is the anchor line itself.
-		if w[0] > 1 && w[1] >= w[0] && newLines[w[0]-1] == "" {
-			lo = max(1, w[0]-1)
-		}
-		if w[0] > 2 && newLines[w[0]-2] == "" && newLines[w[0]-3] == "" {
-			lo = max(lo, w[0]-1)
-		}
-		// If the window is a pure deletion (w[1] < w[0]), show 2 lines before and 4 lines after
-		// (matching omp's diff_string 4-line context around deletions).
-		if w[1] < w[0] {
-			lo = max(1, w[0]-2)
-			hi = min(len(newLines), w[0]+4)
-		}
-		for ln := lo; ln <= hi; ln++ {
-			visible[ln] = true
-		}
-	}
-	// If every line is visible, render directly without block-context scanning.
-	if len(visible) >= len(newLines) {
-		var out []string
-		for i, line := range newLines {
-			out = append(out, FormatNumberedLine(i+1, line))
-		}
-		return strings.Join(out, "\n")
-	}
-	return RenderLinesWithBlockContext(newLines, visible)
+type lineNeighbors struct {
+	before    uint32
+	hasBefore bool
+	after     uint32
+	hasAfter  bool
 }
 
-// Suppress unused import if slices is only used in future extensions.
-var _ = slices.Sort[[]int]
+func anchorNeighbors(anchorLines map[uint32]struct{}, lineCount int) map[uint32]lineNeighbors {
+	sorted := make([]uint32, 0, len(anchorLines))
+	for ln := range anchorLines {
+		sorted = append(sorted, ln)
+	}
+	slices.Sort(sorted)
+	neighbors := make(map[uint32]lineNeighbors, len(sorted))
+	i := 0
+	for i < len(sorted) {
+		j := i + 1
+		for j < len(sorted) && sorted[j] == sorted[j-1]+1 {
+			j++
+		}
+		start := sorted[i]
+		end := sorted[j-1]
+		var nb lineNeighbors
+		if start > 1 {
+			nb.before = start - 1
+			nb.hasBefore = true
+		}
+		if int(end) < lineCount {
+			nb.after = end + 1
+			nb.hasAfter = true
+		}
+		for k := i; k < j; k++ {
+			neighbors[sorted[k]] = nb
+		}
+		i = j
+	}
+	return neighbors
+}
+
+func validateRecoveryContext(previous, current string, lineMap map[uint32]uint32, edits []Edit) bool {
+	prevLines := strings.Split(previous, "\n")
+	curLines := strings.Split(current, "\n")
+	anchors := make(map[uint32]struct{})
+	for _, edit := range edits {
+		for _, a := range editAnchorsForRecovery(edit) {
+			anchors[a.Line] = struct{}{}
+		}
+	}
+	prevDups := duplicatedValues(prevLines)
+	curDups := duplicatedValues(curLines)
+	for line, nb := range anchorNeighbors(anchors, len(prevLines)) {
+		mapped, ok := lineMap[line]
+		if !ok {
+			return false
+		}
+		prevVal := ""
+		if int(line-1) < len(prevLines) {
+			prevVal = prevLines[line-1]
+		}
+		curVal := ""
+		if int(mapped-1) < len(curLines) {
+			curVal = curLines[mapped-1]
+		}
+		_, inPrevDup := prevDups[prevVal]
+		_, inCurDup := curDups[curVal]
+		if !inPrevDup && !inCurDup {
+			offset := int64(mapped) - int64(line)
+			afterMatches := false
+			if nb.hasAfter {
+				if v, ok := lineMap[nb.after]; ok && int64(v) == int64(nb.after)+offset {
+					afterMatches = true
+				}
+			}
+			beforeMatches := false
+			if nb.hasBefore {
+				if v, ok := lineMap[nb.before]; ok && int64(v) == int64(nb.before)+offset {
+					beforeMatches = true
+				}
+			}
+			if !afterMatches && !beforeMatches {
+				return false
+			}
+		} else {
+			checked := false
+			if nb.hasBefore {
+				checked = true
+				v, ok := lineMap[nb.before]
+				diff := line - nb.before
+				if !ok || mapped < diff || v != mapped-diff {
+					return false
+				}
+			}
+			if nb.hasAfter {
+				checked = true
+				v, ok := lineMap[nb.after]
+				if !ok || v != mapped+(nb.after-line) {
+					return false
+				}
+			}
+			if !checked {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func mapLineOffset(lineMap map[uint32]uint32, line uint32, offsets *[]int64) (uint32, bool) {
+	mapped, ok := lineMap[line]
+	if !ok {
+		return 0, false
+	}
+	*offsets = append(*offsets, int64(mapped)-int64(line))
+	return mapped, true
+}
+
+func remapEdits(previous, current string, edits []Edit) ([]Edit, int64, bool) {
+	lineMap := buildLineMap(previous, current)
+	if !validateRecoveryContext(previous, current, lineMap, edits) {
+		return nil, 0, false
+	}
+	var offsets []int64
+	remapped := make([]Edit, 0, len(edits))
+	for _, edit := range edits {
+		cp := edit
+		switch edit.Kind {
+		case EditDelete:
+			ln, ok := mapLineOffset(lineMap, edit.Anchor.Line, &offsets)
+			if !ok {
+				return nil, 0, false
+			}
+			cp.Anchor.Line = ln
+		case EditBlock:
+			ln, ok := mapLineOffset(lineMap, edit.Anchor.Line, &offsets)
+			if !ok {
+				return nil, 0, false
+			}
+			cp.Anchor.Line = ln
+		case EditCut:
+			start, ok := mapLineOffset(lineMap, edit.Range.Start.Line, &offsets)
+			if !ok {
+				return nil, 0, false
+			}
+			end := start
+			if edit.Range.Start.Line < edit.Range.End.Line {
+				for ln := edit.Range.Start.Line + 1; ; ln++ {
+					end, ok = mapLineOffset(lineMap, ln, &offsets)
+					if !ok {
+						return nil, 0, false
+					}
+					if ln == edit.Range.End.Line {
+						break
+					}
+				}
+			}
+			cp.Range = ParsedRange{Start: Anchor{Line: start}, End: Anchor{Line: end}}
+		case EditPaste:
+			if edit.BlockStart > 0 {
+				bs, ok := mapLineOffset(lineMap, edit.BlockStart, &offsets)
+				if !ok {
+					return nil, 0, false
+				}
+				cp.BlockStart = bs
+			}
+			if edit.PasteAt.Kind == PasteTargetSpan {
+				start, ok := mapLineOffset(lineMap, edit.PasteAt.Range.Start.Line, &offsets)
+				if !ok {
+					return nil, 0, false
+				}
+				end := start
+				if edit.PasteAt.Range.Start.Line < edit.PasteAt.Range.End.Line {
+					for ln := edit.PasteAt.Range.Start.Line + 1; ; ln++ {
+						end, ok = mapLineOffset(lineMap, ln, &offsets)
+						if !ok {
+							return nil, 0, false
+						}
+						if ln == edit.PasteAt.Range.End.Line {
+							break
+						}
+					}
+				}
+				cp.PasteAt.Range = ParsedRange{Start: Anchor{Line: start}, End: Anchor{Line: end}}
+			} else if edit.PasteAt.Cursor.Kind == CursorBeforeAnchor || edit.PasteAt.Cursor.Kind == CursorAfterAnchor {
+				ln, ok := mapLineOffset(lineMap, edit.PasteAt.Cursor.Anchor.Line, &offsets)
+				if !ok {
+					return nil, 0, false
+				}
+				cp.PasteAt.Cursor.Anchor.Line = ln
+			}
+		case EditInsert:
+			if edit.BlockStart > 0 {
+				bs, ok := mapLineOffset(lineMap, edit.BlockStart, &offsets)
+				if !ok {
+					return nil, 0, false
+				}
+				cp.BlockStart = bs
+			}
+			if edit.Cursor.Kind == CursorBeforeAnchor || edit.Cursor.Kind == CursorAfterAnchor {
+				ln, ok := mapLineOffset(lineMap, edit.Cursor.Anchor.Line, &offsets)
+				if !ok {
+					return nil, 0, false
+				}
+				cp.Cursor.Anchor.Line = ln
+			}
+		}
+		remapped = append(remapped, cp)
+	}
+	if len(offsets) == 0 {
+		return nil, 0, false
+	}
+	first := offsets[0]
+	for _, o := range offsets[1:] {
+		if o != first {
+			return nil, 0, false
+		}
+	}
+	return remapped, first, true
+}
+
+const (
+	authoredLinesFloor  = 0.5
+	authoredLinesMargin = 0.3
+	keptShareBudget     = 1 << 23
+	keptShareMinChars   = 8
+)
+
+func identifiesLine(line string) bool {
+	return utf8.RuneCountInString(strings.TrimSpace(line)) >= keptShareMinChars
+}
+
+func keptShare(window, body []string, verbatim map[string]struct{}, budget *int) (float64, bool) {
+	if len(window) == 0 {
+		return 0, false
+	}
+	windowChars := 0
+	for _, line := range window {
+		windowChars += utf8.RuneCountInString(strings.TrimSpace(line))
+	}
+	bodyChars := 0
+	for _, row := range body {
+		bodyChars += utf8.RuneCountInString(row)
+	}
+	// Saturating multiply check against budget.
+	if windowChars > 0 && bodyChars > *budget/windowChars {
+		return 0, false
+	}
+	cost := windowChars * bodyChars
+	if cost > *budget {
+		return 0, false
+	}
+	*budget -= cost
+	var total float64
+	for _, line := range window {
+		t := strings.TrimSpace(line)
+		if !identifiesLine(t) {
+			continue
+		}
+		if _, ok := verbatim[t]; ok {
+			total += 1.0
+			continue
+		}
+		best := 0.0
+		for _, row := range body {
+			if s := similarity(t, row); s > best {
+				best = s
+			}
+		}
+		total += best
+	}
+	return total / float64(len(window)), true
+}
+
+// aimedAtAuthoredLines checks whether a remapped replacement reads as written for the
+// current lines at its authored numbers rather than the remapped target.
+// upstream: crates/edit/src/modes/hashline/recovery.rs:437
+func aimedAtAuthoredLines(current string, authored []Edit, offset int64) bool {
+	type grp struct {
+		payload []string
+		start   uint32
+		end     uint32
+	}
+	var groups []grp
+	start := 0
+	for start < len(authored) {
+		group, ok := findReplacementGroup(authored, start)
+		if !ok {
+			start++
+			continue
+		}
+		start = group.deleteIndices[len(group.deleteIndices)-1] + 1
+		hasNonBlank := false
+		for _, row := range group.payload {
+			if strings.TrimSpace(row) != "" {
+				hasNonBlank = true
+				break
+			}
+		}
+		if hasNonBlank {
+			groups = append(groups, grp{payload: group.payload, start: group.start, end: group.end})
+		}
+	}
+	if len(groups) == 0 {
+		return false
+	}
+	lines := strings.Split(current, "\n")
+	getWindow := func(s, e uint32, shift int64) []string {
+		out := make([]string, 0, e-s+1)
+		for ln := s; ; ln++ {
+			idx := int64(ln) + shift - 1
+			if idx >= 0 && int(idx) < len(lines) {
+				out = append(out, lines[idx])
+			} else {
+				out = append(out, "")
+			}
+			if ln == e {
+				break
+			}
+		}
+		return out
+	}
+	budget := keptShareBudget
+	for _, g := range groups {
+		var body []string
+		verbatim := make(map[string]struct{})
+		for _, row := range g.payload {
+			t := strings.TrimSpace(row)
+			if t != "" {
+				body = append(body, t)
+				verbatim[t] = struct{}{}
+			}
+		}
+		target := getWindow(g.start, g.end, offset)
+		hasIdent := false
+		for _, line := range target {
+			if identifiesLine(line) {
+				hasIdent = true
+				break
+			}
+		}
+		if !hasIdent {
+			continue
+		}
+		kept, ok := keptShare(getWindow(g.start, g.end, 0), body, verbatim, &budget)
+		if !ok {
+			return false
+		}
+		if kept < authoredLinesFloor {
+			continue
+		}
+		targetKept, ok := keptShare(target, body, verbatim, &budget)
+		if !ok {
+			return false
+		}
+		if kept > targetKept+authoredLinesMargin {
+			return true
+		}
+	}
+	return false
+}
+
+// TryRecover attempts to rebase stale anchors from a retained snapshot onto current text.
+// upstream: crates/edit/src/modes/hashline/recovery.rs:502
+func TryRecover(store *Store, args RecoveryArgs) (*RecoveryResult, *EditError) {
+	if store == nil {
+		return nil, nil
+	}
+	snapshot, ok := store.ByHash(args.Path, args.FileHash)
+	if !ok {
+		return nil, nil
+	}
+	warning := RecoverySessionChainWarning
+	if head, ok := store.Head(args.Path); ok && head.Text == snapshot.Text {
+		warning = RecoveryExternalWarning
+	}
+	remapped, offset, ok := remapEdits(snapshot.Text, args.CurrentText, args.Edits)
+	if !ok {
+		return nil, nil
+	}
+	if offset != 0 && aimedAtAuthoredLines(args.CurrentText, args.Edits, offset) {
+		return nil, nil
+	}
+	var fork *Clipboard
+	if args.Clipboard != nil && HasClipboardEdit(remapped) {
+		fork = args.Clipboard.Fork()
+	}
+	applied, err := ApplyEdits(args.CurrentText, remapped, ApplyOptions{
+		Clipboard:    fork,
+		Path:         args.Path,
+		OnEmptyPaste: EmptyPasteThrow,
+	})
+	if err != nil {
+		return nil, nil
+	}
+	if applied.Text == args.CurrentText {
+		return nil, nil
+	}
+	if offset != 0 && parsesCleanly(args.Path, args.CurrentText) && !parsesCleanly(args.Path, applied.Text) {
+		return nil, nil
+	}
+	if args.Clipboard != nil && fork != nil {
+		*args.Clipboard = *fork
+	}
+	banner := warning
+	if offset != 0 {
+		banner = RecoveryLineRemapWarning
+	}
+	warnings := append([]string{banner}, applied.Warnings...)
+	return &RecoveryResult{
+		Text:             applied.Text,
+		FirstChangedLine: applied.FirstChangedLine,
+		Warnings:         warnings,
+	}, nil
+}

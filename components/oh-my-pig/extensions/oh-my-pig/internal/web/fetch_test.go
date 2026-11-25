@@ -86,20 +86,19 @@ func TestFetchHTMLToMarkdown(t *testing.T) {
 		}
 	}
 
-	// Raw mode returns original HTML verbatim.
+	// Raw mode returns original HTML verbatim with no wrapper header.
 	rawOut, err := Fetch(context.Background(), srv.URL+"/articles/intro", true)
 	if err != nil {
 		t.Fatalf("Fetch raw failed: %v", err)
 	}
-	if !strings.Contains(rawOut, "Method: raw") || !strings.Contains(rawOut, "<h1>Main Heading</h1>") {
-		t.Fatalf("expected raw HTML output, got:\n%s", rawOut)
+	if strings.HasPrefix(rawOut, "URL: ") || !strings.HasPrefix(rawOut, "<!doctype html>") || !strings.Contains(rawOut, "<h1>Main Heading</h1>") {
+		t.Fatalf("expected raw HTML verbatim, got:\n%s", rawOut)
 	}
 }
 
 func TestFetchFixtureExactParity(t *testing.T) {
 	// Exact-text comparison against omp's `read` on a local HTML fixture.
-	// upstream: crates/pi-natives/src/html.rs (html-to-markdown-rs 3.12.4 Tier2),
-	// packages/coding-agent/src/tools/fetch.ts
+	// upstream: crates/natives/src/html.rs, packages/coding-agent/src/tools/fetch.ts
 	const page = `<!doctype html><html><head><title>Fixture page</title></head><body>` +
 		`<h1>Fixture page</h1>` +
 		`<p>A <a href="/other.html">link</a> and <strong>bold</strong> text.</p>` +
@@ -147,7 +146,7 @@ func TestFetchFixtureExactParity(t *testing.T) {
 }
 
 func TestHTMLToMarkdownFrontmatterAndHrefs(t *testing.T) {
-	// upstream: html-to-markdown-rs 3.12.4 converter/main_helpers.rs:extract_head_metadata
+	// upstream: crates/natives/src/html.rs
 	t.Run("emits sorted head metadata keys and keeps relative hrefs verbatim", func(t *testing.T) {
 		doc := `<!doctype html><html><head>` +
 			`<title>  Sample Title  </title>` +
@@ -239,13 +238,13 @@ func TestFetchPlainTextAndJSONAndRawMode(t *testing.T) {
 		t.Fatalf("expected pretty-printed JSON, got:\n%s", prettyJSON)
 	}
 
-	// upstream: test/tools/fetch-raw-mode.test.ts: "returns the raw JSON body when :raw is set"
+	// upstream: test/tools/fetch-raw-mode.test.ts: "keeps redirect metadata out of a raw JSON body and preserves the normal wrapper"
 	rawJSON, err := Fetch(context.Background(), srv.URL+"/data.json", true)
 	if err != nil {
 		t.Fatalf("raw json fetch failed: %v", err)
 	}
-	if !strings.Contains(rawJSON, "Method: raw") || !strings.Contains(rawJSON, `{"alpha":1,"beta":[2,3]}`) {
-		t.Fatalf("expected raw JSON, got:\n%s", rawJSON)
+	if rawJSON != `{"alpha":1,"beta":[2,3]}` {
+		t.Fatalf("expected verbatim raw JSON without wrapper, got:\n%q", rawJSON)
 	}
 }
 
@@ -404,16 +403,16 @@ func TestFetchHTTPStatusAndFeedsAndAlternates(t *testing.T) {
 	}
 
 	// upstream: test/tools/fetch-http-status.test.ts: "reports a bodyless 503 as a failed fetch"
-	if _, err := Fetch(context.Background(), srv.URL+"/503", false); err == nil || !strings.Contains(err.Error(), "Failed to fetch URL (HTTP 503)") {
-		t.Fatalf("503 mismatch: err=%v", err)
+	got503, err := Fetch(context.Background(), srv.URL+"/503", false)
+	if err != nil || !strings.Contains(got503, "Method: failed") || !strings.Contains(got503, "Failed to fetch URL (HTTP 503)") {
+		t.Fatalf("503 mismatch: err=%v out:\n%s", err, got503)
 	}
 
-	// 429 retry
+	// 429 rotates UA before waiting out Retry-After (succeeds on second UA)
 	got429, err := Fetch(context.Background(), srv.URL+"/429", false)
 	if err != nil || !strings.Contains(got429, "Recovered after 429") || attempts429 != 2 {
 		t.Fatalf("429 retry mismatch: attempts=%d out=%q err=%v", attempts429, got429, err)
 	}
-
 	// upstream: test/tools/fetch-feed.test.ts: "renders RSS channel title, item title, date, description text, and <link> body"
 	gotRSS, err := Fetch(context.Background(), srv.URL+"/rss", false)
 	if err != nil || !strings.Contains(gotRSS, "# Fluxer blog\n") || !strings.Contains(gotRSS, "## Mobile clients & v2\n*Mon, 15 Jun 2026 12:00:00 +0000*\n\nOpen source mobile apps.\n") || !strings.Contains(gotRSS, "[Read more](https://example.test/rss-item)") {
@@ -428,10 +427,9 @@ func TestFetchHTTPStatusAndFeedsAndAlternates(t *testing.T) {
 
 	// upstream: test/tools/fetch-alternates.test.ts: "uses a page-specific markdown alternate regardless of filename extension"
 	gotGuide, err := Fetch(context.Background(), srv.URL+"/guide/", false)
-	if err != nil || !strings.Contains(gotGuide, "Method: alternate-markdown") || !strings.Contains(gotGuide, "GUIDE_MARKDOWN") {
+	if err != nil || !strings.Contains(gotGuide, "URL: "+srv.URL+"/guide/index.txt\n") || !strings.Contains(gotGuide, "Method: alternate-markdown") || !strings.Contains(gotGuide, "GUIDE_MARKDOWN") {
 		t.Fatalf("guide alternate mismatch: err=%v out:\n%s", err, gotGuide)
 	}
-
 	// upstream: test/tools/fetch-alternates.test.ts: "keeps a pricing page instead of substituting site-wide llms.txt"
 	gotPricing, err := Fetch(context.Background(), srv.URL+"/pricing/", false)
 	if err != nil || !strings.Contains(gotPricing, "Method: native") || !strings.Contains(gotPricing, "PRICING_BODY") || strings.Contains(gotPricing, "SITE_WIDE") {

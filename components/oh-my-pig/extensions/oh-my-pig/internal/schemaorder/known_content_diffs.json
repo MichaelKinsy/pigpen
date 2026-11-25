@@ -1,0 +1,8 @@
+[
+  {
+    "tool": "task",
+    "path": "properties.tasks.items.properties.tools",
+    "area": "internal/agents",
+    "reason": "Port omits tasks[].tools (array of string) at default registration (omp advertises tools when eval.tools.enabled is default true)"
+  }
+]

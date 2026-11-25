@@ -22,6 +22,7 @@ type hostOptions struct {
 	Mode          string // "tui" (default), "rpc", "json", "print"
 	HasUI         *bool
 	Cwd           string
+	SessionID     string
 	Model         string
 	ModelProvider string
 	OnCall        func(method string, args map[string]any) (result map[string]any, errMessage string)
@@ -97,6 +98,10 @@ func startHost(t *testing.T, ext *sdk.Extension, opts hostOptions) *fakeHost {
 		h.handlers[hnd.Event] = append(h.handlers[hnd.Event], hnd.HandlerID)
 	}
 	stateObj := map[string]any{"hasUI": hasUI}
+	if opts.SessionID != "" {
+		stateObj["sessionId"] = opts.SessionID
+		stateObj["session"] = map[string]any{"sessionId": opts.SessionID}
+	}
 	if opts.Model != "" {
 		stateObj["model"] = map[string]any{"id": opts.Model, "provider": opts.ModelProvider}
 	}
@@ -135,6 +140,27 @@ func (h *fakeHost) fire(event string, data map[string]any) json.RawMessage {
 	return res
 }
 
+// fireAll dispatches event to every registered handler in registration order.
+func (h *fakeHost) fireAll(event string, data map[string]any) {
+	h.t.Helper()
+	ids := h.handlers[event]
+	args, err := json.Marshal(data)
+	if err != nil {
+		h.t.Fatalf("marshal event args: %v", err)
+	}
+	for _, hid := range ids {
+		_, errMsg := h.roundTrip(map[string]any{
+			"method":     "event",
+			"event":      event,
+			"handler_id": hid,
+			"args":       json.RawMessage(args),
+		})
+		if errMsg != "" {
+			h.t.Fatalf("event %q (handler %d) failed: %s", event, hid, errMsg)
+		}
+	}
+}
+
 func (h *fakeHost) fireBeforeAgentStart(data map[string]any) (string, bool) {
 	h.t.Helper()
 	raw := h.fire(sdk.EventBeforeAgentStart, data)
@@ -165,7 +191,9 @@ func (h *fakeHost) fireContext(messages []any) ([]any, bool) {
 	if err := json.Unmarshal(raw, &reply); err != nil {
 		h.t.Fatalf("decode context reply %s: %v", raw, err)
 	}
-	if reply.Unchanged {
+	// When a handler edits messages in place, PiG's SDK sets _pigContextUnchanged=true
+	// (meaning list identity is preserved) while still sending the modified `messages`.
+	if len(reply.Messages) == 0 {
 		return messages, false
 	}
 	return reply.Messages, true

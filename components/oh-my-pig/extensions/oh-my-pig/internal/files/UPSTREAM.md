@@ -1,51 +1,94 @@
-# Upstream Provenance: `internal/files` and `internal/hashline`
+# Upstream Provenance: `internal/files`
 
-Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, commit `4df653426f40`).
+Ported from omp (`https://github.com/can1357/oh-my-pi`, MIT, tag `v19.1.1`, commit `31ffee513f`).
+(`internal/hashline` and `internal/files/edit.go` are owned by the dedicated `OmpEdit` lane.)
 
 ## Upstream Files Followed
 - `packages/coding-agent/src/tools/read.ts`
 - `packages/coding-agent/src/tools/read-selector.ts`
 - `packages/coding-agent/src/tools/read-format.ts`
+- `packages/coding-agent/src/tools/read-archive.ts`
 - `packages/coding-agent/src/tools/write.ts`
+- `packages/coding-agent/src/tools/write-content.ts`
+- `packages/coding-agent/src/tools/auto-generated-guard.ts`
 - `packages/coding-agent/src/tools/path-utils.ts`
 - `packages/coding-agent/src/workspace-tree.ts`
-- `packages/coding-agent/src/edit/index.ts`
-- `packages/coding-agent/src/edit/schemas.ts`
+- `packages/utils/src/format.ts` (`formatAge`)
+- `packages/coding-agent/src/tools/conflict-detect.ts` (`scanFileForConflicts`, `formatConflictWarning`, `formatConflictSummary`, `formatScanCapNote`)
+- `packages/coding-agent/src/utils/file-display-mode.ts`
 - `packages/tui/src/tools/line-ranges.ts`
-- `packages/coding-agent/src/prompts/tools/read.md` (rendered with `IS_HL_MODE=true`, `BINARY_VIEWS=false`)
-- `packages/coding-agent/src/prompts/tools/write.md`
-- `crates/pi-edit/prompts/hashline.md`
-- `crates/pi-edit/src/store.rs`
-- `crates/pi-edit/src/text.rs`
-- `crates/pi-edit/src/diff_string.rs`
-- `crates/pi-edit/src/session.rs`
-- `crates/pi-edit/src/modes/hashline/{format,input,tokenizer,parser,block,clipboard,apply,mismatch,types}.rs`
+- `packages/tui/src/tools/streaming-output.ts`
+- `packages/tui/src/tools/output-meta.ts`
+- `packages/utils/src/ar/limits.ts`, `reader.ts`, `open.ts`
+- `crates/edit/src/path_policy.rs`
+- `crates/edit/src/modes/hashline/prefixes.rs`
+- `packages/coding-agent/src/prompts/tools/read.md` (rendered with `IS_HL_MODE=true`, unported source promises removed — see below)
+- `packages/coding-agent/src/prompts/tools/write.md` (rendered without archive/SQLite write promise — see below)
 
-## Tests Ported
-- `internal/hashline/hashline_test.go`: 6 tests (file hash normalization, line endings & BOM, all hashline ops parsing, range/gap/cut/paste application, brace/python/markdown block resolution, stale/unrecognized tag mismatch messages).
-- `internal/files/files_test.go`: 6 tests (all read selector forms + context lines + `:raw`, read-then-edit + stale/invented tag rejection, CRLF & no-trailing-newline preservation, write + parent dirs + `MV` + `REM` + outside-cwd path handling, directory listing & raster image read, registration smoke test).
+## Sentences Removed from `read.md` and `write.md` (Unported Sources)
+To avoid promising unsupported selectors/targets to the model:
+- Removed from `read.md`:
+  - `Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess .. / ….`
+  - `PDF/DOCX/PPTX/XLSX/EPUB: extracted text`
+  - `Also, with selectors in help://read/sources ... SQLite, archives (..., 7z, RAR and more), JSON/JSONL by jq filter, executable metadata, video, SVG as image, merge conflicts.`
+  - Changed `skips folding and the display-width limit` to `skips the display-width limit` (folding is not ported; the 768-char column cap is ported).
+  - Kept accurate descriptions for: line selectors, block open/close context, `:raw`, selected files, directories, URLs, `.ipynb` notebooks (read-only cell text), raster images, and stdlib archives (`ZIP, JAR, APK, WHL, TAR, TAR.GZ, TGZ`).
+- Removed from `write.md`:
+  - `Archive members and SQLite rows are writable too: help://read/sources.`
 
-## Not Ported (Wave 1)
+## Result `details`
+- `read` populates `resolvedPath` wherever omp does (directory, binary, out-of-range, unbounded, `:conflicts`, located/resource URLs, archive, and notebook reads — project-dir paths and project-derived virtual URLs (`conflict://`, `rule://`, `skill://`) standardized via `dirs.StandardizeMacOSPath` on macOS matching `dirs.ts:148-158`, `conflict-protocol.ts:45`, `rule-protocol.ts:64`, `skill-protocol.ts:111`, while located `local://`/`agent://` temp-dir realpaths keep their long `/private/...` spelling as in `local-protocol.ts:356,407` and `read.ts:2266,2292,3583`), `displayTarget` (from `urls.LocateSync` on linkable internal URLs such as `local://`, matching `read.ts:2082-2083`), `fileSize` (on text and image reads; omitted on binary, out-of-range, and unbounded reads — note `fileSize` is also set on located URL, out-of-range, and binary reads where omp omits it only if an older binary or caller passes them), `totalLines` (on single-window text/in-memory reads; omitted on multi-range and out-of-range reads), `rowPrefixes`, `raw` (when `:raw`), `isDirectory` (for directories and archive directory listings), `contentType` (`text/markdown` on located Markdown URL reads), `displayContent` (`{text, startLine, lineNumbers}`, including `:raw` reads using omp's `countTextLines`), `conflictCount` (when unresolved git merge-conflict blocks appear in displayed lines of a mutable file), `meta.truncation` (`totalBytes` = selected window bytes, `maxBytes` = read byte budget on all truncated non-partial reads matching `read.ts:3322-3331`, `read-format.ts:540-549`, `output-meta.ts:188`), `meta.limits.columnTruncated`, and `meta.source` (`{type, value}`, omitted on plain out-of-range reads as in omp), plus `ReadUrlToolDetails` (`kind`, `url`, `finalUrl`, `contentType`, `method`, `truncated`, `notes`, `meta`) for HTTP(S) URLs. `meta.pagedSource` is omitted (only used by omp's spill-skip path).
+- `details.mediaPath` on whole-file Tern-viewable reads is attached in one place by `internal/tern`'s `tool_result` hook (`internal/tern/register.go:205`, `internal/tern/media.go`, standardized via `dirs.StandardizeMacOSPath` on macOS, matching `read.ts:2611-2615` + `packages/utils/src/dirs.ts:148-158`), so `internal/files` does not duplicate it.
+- `write` populates `patch` and `diff` (unified patch via `sdk.GenerateUnifiedPatch` for PiG's frontend `toolResultDiff` and `internal/ansi`; extra relative to omp (omp emits neither diff nor patch on write)), `resolvedPath` (project-dir paths and `conflict://` writes standardized via `dirs.StandardizeMacOSPath` on macOS matching `write.ts:1028,1157`, `conflict-uri.ts:144,182`, and `dirs.ts:148-158`; located `local://` temp-dir paths keep their located spelling as in `local-protocol.ts:418`), `madeExecutable` (when shebang `chmod +x` flipped execute bits), `diagnostics` / `meta.diagnostics` (when `SetDiagnosticsHook` returns diagnostics), and the `write` `details.touchesNoFiles` flag (`touchesNoFiles: true`) on file-free handler writes (`out://`, `agent://`, `proc://<id>/kill`, etc., matching `write.ts:951-966`).
+- `edit` populates `diff`, `patch`, `perFileResults[].patch` (needed by PiG's frontend `interactive_frontend.go` Tern diff card; extra relative to omp), `path`, `move`, `sourcePath`, and `perFileResults[].path` (all standardized via `dirs.StandardizeMacOSPath` on macOS, matching `edit/index.ts:259-267`, `crates/natives/src/edit.rs:746,749`, `crates/edit/src/session.rs:515`, and `dirs.ts:148-158`, along with cross-directory `Moved to <abs>` text in `internal/hashline/patcher.go`), and on failure returns `IsError: true` with `details: {diff: "", errorKind}` and a nil Go error so PiG keeps the details intact.
+## Tests Ported (`internal/files`)
+- `internal/files/files_test.go`: 6 tests (read selector forms including bare `:N`, read-then-edit + stale/invented tag rejection, CRLF & no-trailing-newline, write + parent dirs + `MV` + `REM` + outside-cwd, directory listing & raster image read, tool registration).
+- `internal/files/v19_guards_test.go`: 9 tests porting upstream cases:
+  - `write-line-endings.test.ts`: CRLF preservation + note, CRLF+BOM preservation + note, verbatim write when input contains CR.
+  - `write-shebang-chmod.test.ts`: `#!` chmod + notice + `madeExecutable` detail, plain file no-op, Rust `#![` inner attribute no-op.
+  - `write-read-projection.test.ts`: rejects shorter `Showing lines`, byte-budget, entity-labelled, unscanned, ASCII elision, and column-cap read projections.
+  - `write-hashline-header.test.ts`: strips evidenced copied `[file#TAG]` + numbered prefixes with note; leaves unevidenced numbered text intact.
+  - `tools/auto-generated-guard.test.ts`: blocks overwriting files with generated comment markers or generated filenames (`*.pb.go`).
+  - `write-read-selector-misfire.test.ts`: refuses missing selector-suffixed empty write, semicolon-joined selector list, URI-like near-miss; preserves `@scope/pkg.txt`.
+  - `read-column-truncation-snapshot.test.ts` + `read.ts`: 300-line `read.defaultLimit` paging, 768-char column cap keeping untruncated snapshot & marking cut lines unseen, `Path '...' not found` + `:line:col` diagnosis, non-ASCII archive path (`Ⱥ.zip`).
+  - `gate.Check` refusal & URL identity, multi-session `Register` & `lifecycle.End` isolation.
+  - `tools/read-directory-range.test.ts` + `tools/path-literal-colon-selector.test.ts`: directory range slices (`:30-40`, `:-5`), literal colon filename (`test:1-2`).
+- `internal/files/pass2_fixes_test.go`: 7 tests (`net.Pipe` session-bearing `read`→`edit` shared `hashline.ForSession` store & wire JSON schemas, `read-raw-range.test.ts` open-ended `:raw` truncation + closed raw range terminator + oversized raw line, in-memory archive 1000-line read without 300-line cap, `withMutationQueue` panic propagation, >4 MiB streaming `[path#TAG]` hash + `:-N` tail + bounded huge line + bounded write, wire `details.conflictCount` for 2-way/diff3/windowed/clean reads, empty-file `[path#TAG]\n1:` read + `PUT 1.=1:` edit).
+- `internal/files/urls_sources_test.go`: 2 tests (internal URL routing via fake `urls.Handler` for `read`/`write`/`edit`, 0-based `.ipynb` notebook projection, single-level ZIP/tar.gz directory listing + member reads, mixed tail `:1-2,-2`, `SetDiagnosticsHook`).
+- `internal/files/url_seen_test.go` & `internal/files/oracle_test.go`: 4 tests (external URL reading with `:N-` continuation hints and `ReadUrlToolDetails`, seen-line enforcement, details patch, oracle parity checks).
+- `internal/files/round3_fixes_test.go`: 5 tests (one-letter relative path vs Windows drive split `d:1-5`/`a:2-3`/`C:\...`, `formatAge` boundary table test, URL-backed header path + no resource notes across `local://`/`history://`/`agent://`, archive missing-member error text, `read` conflict registration + warning footer + `:conflicts` summary + `conflict://` read/write splice).
+- `internal/files/round4_fixes_test.go`: 11 tests (`conflict://N` excerpt backing-file tag + edit follow-up, `out://` and read-only URL tool-policy denial prefix, located `skill://` `[Skill file: ...]` provenance + `contentType: text/markdown`, edit failure details preserved over wire, `:raw` `displayContent` `countTextLines` across all four oracle cases + non-raw context + comma-list `:raw`, `meta.limits.columnTruncated` + selected-window `meta.truncation.totalBytes`, raw HTML URL `contentType: text/html`, explicit `?q=` jq unsupported error, archive-member & notebook `meta.source`, `resolvedPath` on dir/binary/out-of-range & omission of port-only `totalLines`/`fileSize`/`meta`, macOS `/private` standardization on `skill://` and headers).
+## Settings Read by Upstream
+| Key | Default | Honoured |
+|---|---|---|
+| `read.defaultLimit` | `300` | Yes (hardcoded default `300`; settings integration wired via integrator) |
+| `read.lineNumbers` | `false` | Hashline mode implies line numbers (`N:`) |
+| `read.renderMarkdown` | `false` | No (plain text only) |
+| `read.summarize.enabled` | `true` | No (requires tree-sitter AST; see Not Ported) |
+| `read.summarize.prose` | `false` | No |
+| `tools.outputMaxColumns` | `768` | Yes (`768` char cap, skipped in `:raw`) |
+| `tools.artifactSpillThreshold` | `50` (KB) | Yes (`50 KB` page byte budget reserve) |
+| `edit.blockAutoGenerated` | `true` | Yes (always enforced in `write`) |
+| `lsp.diagnosticsOnWrite` | `true` | Via `SetDiagnosticsHook` (wired by integrator) |
+| `lsp.formatOnWrite` | `false` | No (see Not Ported) |
+
+## Not Ported
 
 | Feature | Reason |
 |---|---|
-| `read` PDF, Office documents (markit), SQLite, archives, Jupyter notebooks, JSON `?q=` jq filter, video frames/contact sheets, SVG `:img` rasterization, `:conflicts`, profiler summaries, executable binary views | Out of scope for wave 1 |
-| `read` URL site-specific scrapers, external reader backends (`trafilatura`/`lynx`/Jina/Firecrawl), artifact persistence | See `internal/web/UPSTREAM.md` for what `web.Fetch` omits |
-| `read`/`write`/`edit` internal URL schemes (`skill://`, `artifact://`, `local://`, `xd://`, `agent://`, `proc://`, `ssh://`, `mcp://`, etc.) | Out of scope for wave 1 |
-| `read` AST structural summary (bare-code declaration-only elision) | Requires tree-sitter (`pi-ast`); pure-Go wave 1 reads full lines |
-| `read` repeat-read loop hint & speculative read caching | Session-level optimization deferred |
-| `write` LSP formatting, LSP diagnostics, auto-generated file guard, chmod `+x` for shebangs, hashline prefix auto-stripping, truncated-read-projection guard, archive/SQLite writes | Out of scope for wave 1 |
-| `edit` LSP diagnostics, auto-repair, fuzzy recovery, streaming previews, non-hashline edit modes (`replace`, `patch`, `apply_patch`, `sloppy`), `ast_edit` | Out of scope for wave 1 |
-| `hashline` tree-sitter block resolution (`PUT N*:`, `PUT >N*:`, `CUT N*`) | Replaced with pure-Go heuristic supporting Markdown headings, brace/paren/bracket blocks, and indentation-scoped blocks |
-
-## Sentences Removed from `read.md` (Unported in Wave 1)
-- `:conflicts lists one line per unresolved merge block. SVG/SVGZ default text; :img rasterizes an SVG/SVGZ into an image, :raw original. ... :img rejects them. Video requires ffmpeg/ffprobe: bare preview grid+metadata, :412 frame, :1h5m42s/:90s/:01:23 time.`
-- `- Bare code: declarations only; re-read ONLY footer-named omissions, NEVER guess `..`/`…`.`
-- `- SQLite: file.db tables; :table schema/rows; :table:key by primary key; ?limit=, ?where=, ?q=SELECT.`
-- `- Archives: ZIP/JAR/APK/WHL, compressed TAR, RAR/7z/ISO/CAB/DEB/RPM/CPIO/AR/LZH/ARJ/ASAR, compressed streams; member via archive.ext:member/path.`
-- `- JSON/JSONL/NDJSON: file.json?q=<jq filter>; &raw=true unquoted strings, &compact=true one-line values, &offset=&limit= page results; `&` inside the filter → %26.`
-- `- PDF/documents: extracted text; notebooks: editable cells;`
-
-## Result `details` and Multi-File `patch`
-- `edit` and `write` populate `details["patch"]` (for PiG's frontend `toolResultDiff`) and `details["diff"]` via `sdk.GenerateUnifiedPatch`, alongside omp's `EditToolDetails` / `WriteToolDetails` fields (`resolvedPath`, `path`, `op`, `firstChangedLine`, `oldText`, `newText`, `move`, `sourcePath`, `perFileResults`).
-- For a multi-section `edit` touching several files, each section's unified patch is stored in `perFileResults[i].diff` and concatenated in section order (each patch already ends with `\n`) into the single `details["patch"]` / `details["diff"]` string.
+| `read` SQLite (`file.db`, `:table`, `?q=SELECT`) | Requires a SQLite driver; forbidden by no-third-party-modules / no-cgo rule |
+| `read` PDF, DOCX, PPTX, XLSX, EPUB (`markit`) | Requires external document converters / non-stdlib parsers |
+| `read` 7z, RAR, ISO, CAB, DEB, RPM, CPIO, AR, LZH, ARJ, ASAR, compressed streams | Formats not in the Go standard library (ZIP, JAR, APK, WHL, TAR, TAR.GZ/TGZ are supported) |
+| `read` JSON/JSONL `?q=<jq filter>` | Upstream runs `jq` as a builtin of its embedded shell (`read-json.ts:291-309`); omitted in pure-Go `internal/files` (returns an explicit unsupported-query error rather than `Path ... not found`) |
+| `read` video frames / contact sheets (`ffmpeg`/`ffprobe`) | Requires external `ffmpeg`/`ffprobe` binaries |
+| `read` SVG `:img` rasterization and HEIC/BMP transcoding / image auto-resize / `?q=` vision questions | Requires native image codecs/SVG rasterizer and a vision sub-call not available in Go stdlib |
+| `read` executable binary views (ELF/PE/Mach-O, Ghidra/dsm) | Requires binary analysis backend (`dsm`) |
+| `read` AST structural summary (`details.summary`, bare-code declaration-only elision) | Requires tree-sitter (`crates/ast`); pure-Go reads full lines up to `read.defaultLimit` (300), so `details.summary` is never emitted |
+| `read` unique workspace-suffix resolution (`details.suffixResolution`) and `;`/`,` delimited multi-path lists | Requires workspace file index (`walker`) and multi-read fanout, so `details.suffixResolution` is never emitted |
+| `read` repeat-read loop hint & speculative read caching | Session-level optimization requiring conversation state |
+| `read` multi-range streaming on files > 4 MiB | Streaming reader supports single-range, bare, `:raw`, `:-N` tail, and streaming `[path#TAG]` up to 64 MiB; multi-range comma lists require buffered reads |
+| `write` archive member & SQLite row writes | Archive rewriting and SQLite mutations require format writers / SQLite driver |
+| `write` LSP formatting (`lsp.formatOnWrite`) | LSP area provides diagnostics hook only; format-on-write edits are not wired |
+| `write` held-open SQLite file guard (`assertNotHeldOpen`) | Requires process-wide SQLite handle tracking not present since SQLite is not linked |
+| `write` `conflict://` URI prefix recovery (`recoverConflictUriPrefix`) | `write` does not strip an erroneous `<file>:` prefix before `conflict://N` (the helper exists in `internal/urls.RecoverConflictURIPrefix`) |
+| `read` `meta.pagedSource` flag | Only read by omp's `output-meta.ts` spill-skip optimization; not needed by PiG renderers |

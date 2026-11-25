@@ -12,7 +12,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/hashline"
 )
 
-// upstream: packages/coding-agent/src/tools/read-selector.ts: "every selector form"
+// Covers read selector forms (:N, :N-, :N-M, :N+K, :-N, comma lists, :raw).
 func TestReadSelectorForms(t *testing.T) {
 	dir := t.TempDir()
 	var lines []string
@@ -50,7 +50,7 @@ func TestReadSelectorForms(t *testing.T) {
 		t.Fatalf(":50+5 missing expected context:\n%s", res.Content)
 	}
 
-	// Open-ended :98 and :98-
+	// Single line :98 (lines 97..100 with context) and open-ended :98- (lines 97..100 with context)
 	for _, sel := range []string{"notes.txt:98", "notes.txt:98-"} {
 		res, err = executeRead(store, dir, sel)
 		if err != nil {
@@ -60,7 +60,17 @@ func TestReadSelectorForms(t *testing.T) {
 			t.Fatalf("%s unexpected output:\n%s", sel, res.Content)
 		}
 	}
-
+	// Bare :50 is single line (49..53 with context, not through EOF)
+	res, err = executeRead(store, dir, "notes.txt:50")
+	if err != nil {
+		t.Fatalf(":50 err: %v", err)
+	}
+	if !strings.Contains(res.Content, "\n49:line049\n50:line050\n") || !strings.Contains(res.Content, "\n53:line053") {
+		t.Fatalf(":50 missing expected context:\n%s", res.Content)
+	}
+	if strings.Contains(res.Content, "\n54:line054") {
+		t.Fatalf(":50 should not include line 54:\n%s", res.Content)
+	}
 	// Tail selector :-5 (lines 96..100 + leading context 95)
 	res, err = executeRead(store, dir, "notes.txt:-5")
 	if err != nil {
@@ -93,7 +103,7 @@ func TestReadSelectorForms(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s err: %v", sel, err)
 		}
-		want := "line002\nline003\nline004"
+		want := "line002\nline003\nline004\n"
 		if res.Content != want {
 			t.Fatalf("%s got %q, want %q", sel, res.Content, want)
 		}
@@ -108,7 +118,7 @@ func TestReadSelectorForms(t *testing.T) {
 	}
 }
 
-// upstream: packages/coding-agent/src/tools/read.ts + edit: "read then edit using returned tag, then stale tag refused"
+// Covers read-then-edit using returned tag, stale-tag rejection, and invented-tag rejection.
 func TestReadThenEditAndStaleTag(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "app.go")
@@ -141,25 +151,31 @@ func TestReadThenEditAndStaleTag(t *testing.T) {
 	}
 
 	// Reusing the stale tag from the earlier read must be rejected with omp's recognized-hash error.
-	_, err = executeEdit(sdk.Context{}, store, dir, firstLine+"\nPUT 4.=4:\n+\tprintln(\"again\")\n")
-	if err == nil {
-		t.Fatalf("expected stale tag error")
+	staleRes, err := executeEdit(sdk.Context{}, store, dir, firstLine+"\nPUT 4.=4:\n+\tprintln(\"again\")\n")
+	if err != nil {
+		t.Fatalf("expected nil Go error with IsError:true so details survive, got err=%v", err)
 	}
-	if !strings.Contains(err.Error(), "Edit rejected for app.go: file changed between read and edit.") {
-		t.Fatalf("unexpected stale tag error: %v", err)
+	if !staleRes.IsError {
+		t.Fatalf("expected stale tag IsError=true")
+	}
+	if !strings.Contains(staleRes.Content, "Edit rejected for app.go: file changed between read and edit.") {
+		t.Fatalf("unexpected stale tag error: %v", staleRes.Content)
 	}
 
 	// Invented tag must be rejected with omp's unrecognized-hash error.
-	_, err = executeEdit(sdk.Context{}, store, dir, "[app.go#DEAD]\nPUT 4.=4:\n+\tprintln(\"nope\")\n")
-	if err == nil {
-		t.Fatalf("expected invented tag error")
+	invRes, err := executeEdit(sdk.Context{}, store, dir, "[app.go#DEAD]\nPUT 4.=4:\n+\tprintln(\"nope\")\n")
+	if err != nil {
+		t.Fatalf("expected nil Go error with IsError:true so details survive, got err=%v", err)
 	}
-	if !strings.Contains(err.Error(), "Edit rejected for app.go: hash #DEAD is not from this session.") {
-		t.Fatalf("unexpected invented tag error: %v", err)
+	if !invRes.IsError {
+		t.Fatalf("expected invented tag IsError=true")
+	}
+	if !strings.Contains(invRes.Content, "Edit rejected for app.go: hash #DEAD is not from this session.") {
+		t.Fatalf("unexpected invented tag error: %v", invRes.Content)
 	}
 }
 
-// upstream: crates/pi-edit/tests/hashline_apply.rs: "CRLF and files without trailing newline"
+// Covers CRLF preservation and no-trailing-newline preservation across read and edit.
 func TestCRLFAndNoTrailingNewline(t *testing.T) {
 	dir := t.TempDir()
 	store := hashline.NewStore()
@@ -201,7 +217,7 @@ func TestCRLFAndNoTrailingNewline(t *testing.T) {
 	}
 }
 
-// upstream: packages/coding-agent/src/tools/write.ts + edit: "write creates parents, MV and REM, path outside cwd"
+// Covers write parent creation, MV, REM, and paths outside cwd.
 func TestWriteMoveDeleteAndOutsideCwd(t *testing.T) {
 	workDir := t.TempDir()
 	outsideDir := t.TempDir()
@@ -222,7 +238,7 @@ func TestWriteMoveDeleteAndOutsideCwd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("mv: %v", err)
 	}
-	if !strings.Contains(mvRes.Content, "Moved to nested/moved.txt") {
+	if !strings.Contains(mvRes.Content, "Moved to ") || !strings.Contains(mvRes.Content, "nested/moved.txt") {
 		t.Fatalf("unexpected mv output: %s", mvRes.Content)
 	}
 	if _, err := os.Stat(filepath.Join(workDir, "nested/sub/hello.txt")); !os.IsNotExist(err) {
@@ -254,7 +270,7 @@ func TestWriteMoveDeleteAndOutsideCwd(t *testing.T) {
 	}
 }
 
-// upstream: packages/coding-agent/src/tools/read.ts: "directory listing and image read"
+// Covers directory listing and raster PNG image reads.
 func TestReadDirectoryAndImage(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "a.txt"), []byte("hi"), 0o644); err != nil {
@@ -294,7 +310,16 @@ func TestReadDirectoryAndImage(t *testing.T) {
 	}
 }
 
-func TestRegisterDoesNotPanic(t *testing.T) {
+func TestRegisterTools(t *testing.T) {
 	e := sdk.New("test-files")
 	Register(e)
+	if readDescription == "" || writeDescription == "" || editDescription == "" {
+		t.Fatalf("embedded descriptions must be non-empty")
+	}
+	if strings.Contains(readDescription, "PDF/DOCX") || strings.Contains(readDescription, "Bare code: declarations only") {
+		t.Fatalf("read.md must not advertise unported sources:\n%s", readDescription)
+	}
+	if strings.Contains(writeDescription, "SQLite") {
+		t.Fatalf("write.md must not advertise unported SQLite writes:\n%s", writeDescription)
+	}
 }

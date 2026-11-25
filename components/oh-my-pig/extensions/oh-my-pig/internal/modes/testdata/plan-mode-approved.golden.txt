@@ -1,0 +1,26 @@
+Plan approved.
+- History usable; the plan below authoritative if it conflicts with earlier exploration.
+
+<instruction>
+Full plan inlined below; durable copy at `local://auth-plan.md` (identical content).
+Execute plan step-by-step with full tool access; MUST verify each step before next.
+NEVER re-read `local://auth-plan.md` while the inline plan is intact; the path is for subagent handoff and recovery only.
+Before execution: initialize todo tracking with `todo`.
+After each completed step: immediately update `todo`.
+If `todo` fails: fix payload; retry before continuing.
+</instruction>
+
+<plan path="local://auth-plan.md">
+# Auth Plan
+
+Keep literal {{planFilePath}} intact.
+|Col A|Col B|
+|---|---|
+|1|2|
+</plan>
+
+<critical>
+Inline plan compressed, expired, or unrecoverable: NEVER stop; read `local://auth-plan.md`.
+Read failure: report exact path and error; NEVER guess.
+MUST continue until complete.
+</critical>
