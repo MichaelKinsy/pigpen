@@ -88,8 +88,11 @@ type Prelude struct {
 	GuidanceFor      func(c sdk.Context) string
 	// Approval is the approval tier of host calls: "read", "write" or "exec".
 	Approval string
-	// Enabled is the live availability predicate. Nil means enabled.
-	Enabled func(c sdk.Context) bool
+	// ApprovalFor returns the approval tier for one host invocation based on
+	// its JSON parameters ("read", "write", or "exec"). When set, it takes
+	// precedence over Approval. upstream: EvalPreludeDefinition.approval function.
+	ApprovalFor func(parameters json.RawMessage) string
+	Enabled     func(c sdk.Context) bool
 	// Invoke runs a host call outside the VM. Nil for preludes whose snippets
 	// only call session tools.
 	Invoke func(call PreludeCall, parameters json.RawMessage) (*PreludeResult, error)
@@ -118,6 +121,15 @@ func (p Prelude) GuidanceText(c sdk.Context) string {
 		return p.Guidance()
 	}
 	return ""
+}
+
+// ApprovalTier returns the approval tier ("read", "write", "exec", or "") for
+// one host invocation with parameters.
+func (p Prelude) ApprovalTier(parameters json.RawMessage) string {
+	if p.ApprovalFor != nil {
+		return p.ApprovalFor(parameters)
+	}
+	return p.Approval
 }
 
 var (

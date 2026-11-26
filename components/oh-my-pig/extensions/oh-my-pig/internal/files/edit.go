@@ -93,28 +93,105 @@ func executeEdit(ctx sdk.Context, store *hashline.Store, cwd, input string) (sdk
 		if file.Op != hashline.EngineFileOpNoop {
 			queuePath := file.Absolute
 			err := withMutationQueue(ctx, queuePath, func() error {
+				journaled := isRecordFileChangeActive(ctx)
+				readSnap := func(p string) (*string, bool) {
+					if !journaled {
+						return nil, false
+					}
+					if b, rErr := os.ReadFile(p); rErr == nil {
+						s := string(b)
+						return &s, true
+					} else if errors.Is(rErr, os.ErrNotExist) {
+						return nil, true
+					}
+					return nil, false
+				}
 				switch file.Op {
 				case hashline.EngineFileOpDelete:
-					return os.Remove(file.Absolute)
+					var beforeSnap *string
+					beforeOK := false
+					if journaled {
+						if file.HasBeforeRaw {
+							// Reuse raw bytes already read during staging.
+							s := file.BeforeRaw
+							beforeSnap = &s
+							beforeOK = true
+						} else {
+							beforeSnap, beforeOK = readSnap(file.Absolute)
+						}
+					}
+					if err := os.Remove(file.Absolute); err != nil {
+						return err
+					}
+					if beforeOK {
+						runRecordFileChangeHook(ctx, "edit", file.Absolute, beforeSnap, nil)
+					}
+					return nil
 				case hashline.EngineFileOpUpdate, hashline.EngineFileOpCreate:
 					if !file.HasPersisted {
 						return fmt.Errorf("edit %s request omitted content", file.Op)
 					}
 					if file.MoveTo != nil {
-						return moveEditedFile(file.Absolute, file.MoveTo.Absolute, file.Persisted)
+						var srcBefore *string
+						srcOK := false
+						var dstBefore *string
+						dstOK := false
+						if journaled {
+							if file.HasBeforeRaw {
+								s := file.BeforeRaw
+								srcBefore = &s
+								srcOK = true
+							} else {
+								srcBefore, srcOK = readSnap(file.Absolute)
+							}
+							dstBefore, dstOK = readSnap(file.MoveTo.Absolute)
+						}
+						if err := moveEditedFile(file.Absolute, file.MoveTo.Absolute, file.Persisted); err != nil {
+							return err
+						}
+						if srcOK {
+							runRecordFileChangeHook(ctx, "edit", file.Absolute, srcBefore, nil)
+						}
+						if dstOK {
+							after := file.Persisted
+							runRecordFileChangeHook(ctx, "edit", file.MoveTo.Absolute, dstBefore, &after)
+						}
+						return nil
 					}
 					// Capture pre-write bytes for update so we can detect writes that did
 					// not land on disk (matching packages/coding-agent/src/edit/index.ts:875-925).
 					var preWriteBytes []byte
 					hasPreWrite := false
+					var journalBefore *string
+					journalBeforeOK := false
 					if file.Op == hashline.EngineFileOpUpdate {
 						if b, rErr := os.ReadFile(file.Absolute); rErr == nil {
 							preWriteBytes = b
 							hasPreWrite = true
+							if journaled {
+								s := string(b)
+								journalBefore = &s
+								journalBeforeOK = true
+							}
 						} else if !errors.Is(rErr, os.ErrNotExist) {
 							return rErr
+						} else if journaled {
+							journalBefore = nil
+							journalBeforeOK = true
 						}
 					} else if file.Op == hashline.EngineFileOpCreate {
+						if journaled {
+							if !file.Existed {
+								journalBefore = nil
+								journalBeforeOK = true
+							} else if file.HasBeforeRaw {
+								s := file.BeforeRaw
+								journalBefore = &s
+								journalBeforeOK = true
+							} else {
+								journalBefore, journalBeforeOK = readSnap(file.Absolute)
+							}
+						}
 						if mErr := os.MkdirAll(filepath.Dir(file.Absolute), 0o755); mErr != nil {
 							return mErr
 						}
@@ -130,6 +207,10 @@ func executeEdit(ctx sdk.Context, store *hashline.Store, cwd, input string) (sdk
 						if pErr == nil && bytes.Equal(postWriteBytes, preWriteBytes) && !bytes.Equal([]byte(file.Persisted), preWriteBytes) {
 							return fmt.Errorf("edit appeared successful but file content did not change on disk: %s", file.Display)
 						}
+					}
+					if journalBeforeOK {
+						after := file.Persisted
+						runRecordFileChangeHook(ctx, "edit", file.Absolute, journalBefore, &after)
 					}
 					writtenText = file.Persisted
 					return nil

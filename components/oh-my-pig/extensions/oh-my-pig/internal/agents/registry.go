@@ -140,6 +140,8 @@ type ChildSessionMeta struct {
 	Depth           int
 	Spawns          string // "*", "scout,reviewer", or ""
 	AgentID         string
+	ParentAgentID   string
+	ArtifactsDir    string
 	AgentName       string
 	// ExplicitTools records the child session's resolved explicit tool list in
 	// caller order when the agent declared frontmatter `tools:`, matching omp's
@@ -336,6 +338,88 @@ func ParentLocalRoot(ctx sdk.Context) (string, bool) {
 		return "", false
 	}
 	return defaultRuntime.Registry.ChildLocalRoot(sid)
+}
+
+// AgentIdentityFor returns the calling session's agent ID and parent agent ID
+// for change-journal attribution (Main, "" for a top-level session; child ID and
+// parent agent ID for subagents).
+// upstream: packages/coding-agent/src/sdk.ts:2649-2651
+func AgentIdentityFor(ctx sdk.Context) (agentID, parentID string) {
+	var zero sdk.Context
+	if ctx == zero {
+		return MainAgentID, ""
+	}
+	sid, err := ctx.SessionManager().GetSessionID()
+	if err != nil || sid == "" {
+		return MainAgentID, ""
+	}
+	if meta, ok := defaultRuntime.Registry.ChildMeta(sid); ok && meta.AgentID != "" {
+		parent := meta.ParentAgentID
+		if parent == "" {
+			parent = MainAgentID
+		}
+		return meta.AgentID, parent
+	}
+	return MainAgentID, ""
+}
+
+// IsAgentRunningInSession reports whether agentID is currently running in ctx's
+// session tree (matching upstream prelude-definition.ts:65-68).
+func IsAgentRunningInSession(ctx sdk.Context, agentID string) bool {
+	if agentID == "" {
+		return false
+	}
+	var sessID string
+	var zero sdk.Context
+	if ctx != zero {
+		if sid, err := ctx.SessionManager().GetSessionID(); err == nil && sid != "" {
+			if top, isSub := defaultRuntime.Registry.ResolveTopParent(sid); isSub && top != "" {
+				sessID = top
+			} else {
+				sessID = sid
+			}
+		}
+	}
+	ref, ok := defaultRuntime.Registry.GetInSession(sessID, agentID)
+	if !ok || ref == nil {
+		return false
+	}
+	ref.mu.Lock()
+	running := ref.Status == "running"
+	ref.mu.Unlock()
+	return running
+}
+
+// SessionTreeArtifactsDir returns the session tree's artifacts directory for ctx:
+// for a child subagent, the root session's artifacts dir (if backed by a session file);
+// for a top-level session, the sibling directory of a `.jsonl` session file, or "".
+// Returns "" for ephemeral (`--no-session`) sessions without a session file, matching
+// upstream sessionManager.getArtifactsDir().
+func SessionTreeArtifactsDir(ctx sdk.Context) string {
+	var zero sdk.Context
+	if ctx == zero {
+		return ""
+	}
+	if sid, err := ctx.SessionManager().GetSessionID(); err == nil && sid != "" {
+		if meta, ok := defaultRuntime.Registry.ChildMeta(sid); ok {
+			// Walk up to the top child meta that recorded the root session's artifacts dir.
+			if meta.ArtifactsDir != "" {
+				return meta.ArtifactsDir
+			}
+			if top, isSub := defaultRuntime.Registry.ResolveTopParent(sid); isSub && top != "" {
+				if parentCtx := defaultRuntime.sessionContextFor(top, zero); parentCtx != zero {
+					if sf, err := parentCtx.GetSessionFile(); err == nil && sf != nil && strings.HasSuffix(*sf, ".jsonl") {
+						return strings.TrimSuffix(*sf, ".jsonl")
+					}
+				}
+			}
+			return ""
+		}
+	}
+	if sf, err := ctx.GetSessionFile(); err == nil && sf != nil && strings.HasSuffix(*sf, ".jsonl") {
+		return strings.TrimSuffix(*sf, ".jsonl")
+	}
+	return ""
 }
 
 // ChildExplicitTools returns a copy of the explicit tool list recorded for

@@ -372,6 +372,11 @@ func (m *manager) runAstEdit(runCtx context.Context, sdkCtx sdk.Context, cwd str
 				appliedCounts := make(map[string]int, len(applyRes.files))
 				var freshTagLines []string
 				for _, fp := range applyRes.files {
+					if RecordFileChange != nil && fp.updated != fp.source {
+						before := fp.source
+						after := fp.updated
+						RecordFileChange(resolveCtx, "ast_edit", fp.candidate.absPath, &before, &after)
+					}
 					disp := fp.candidate.displayPath
 					appliedFiles = append(appliedFiles, disp)
 					appliedCounts[disp] = len(fp.changes)

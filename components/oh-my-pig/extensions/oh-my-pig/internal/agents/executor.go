@@ -986,12 +986,18 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 				localRoot = filepath.Join(req.ArtifactsDir, "local")
 			}
 		}
+		var sessionTreeArtDir string
+		if req.SDK != (sdk.Context{}) {
+			sessionTreeArtDir = SessionTreeArtifactsDir(req.SDK)
+		}
 		reg.RegisterChildSession(session.SessionID, ChildSessionMeta{
 			ParentSessionID: req.ParentSessionID,
 			LocalRoot:       localRoot,
 			Depth:           childDepth,
 			Spawns:          childSpawns,
 			AgentID:         req.ID,
+			ParentAgentID:   parentID,
+			ArtifactsDir:    sessionTreeArtDir,
 			AgentName:       req.Agent.Name,
 			ExplicitTools:   toolsList,
 		})

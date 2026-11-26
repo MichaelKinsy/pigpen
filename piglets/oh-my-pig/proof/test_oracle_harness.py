@@ -3009,5 +3009,56 @@ class TestDrawingHarnessFixes(unittest.TestCase):
             tval = compare.validate_tern_capture_dir("omp", str(tdir))
             self.assertFalse(tval["capture_valid"])
             self.assertIn("turn 33 not consumed", tval["message"])
+
+    def test_persist_session_flag_controls_no_session_and_stays_in_sandbox(self) -> None:
+        """persist_session omits --no-session on both sides while keeping session/artifact dirs inside the sandbox."""
+        from unittest import mock
+        captured: dict[str, tuple[list[str], dict[str, str]]] = {}
+
+        def fake_popen(cmd, **kwargs):  # type: ignore[no-untyped-def]
+            env = kwargs.get("env") or {}
+            if list(cmd) and cmd[0] == "/bin/true":
+                side = "omp" if ".omp" in str(env.get("PI_CODING_AGENT_DIR", "")) else "pig"
+                captured[side] = (list(cmd), dict(env))
+            proc = mock.MagicMock()
+            proc.pid = 99999
+            proc.communicate.return_value = ("", "")
+            proc.returncode = 0
+            return proc
+        for persist in (False, True):
+            captured.clear()
+            case = {
+                "name": f"persist-{persist}",
+                "persist_session": persist,
+                "calls": [],
+            }
+            with tempfile.TemporaryDirectory() as td:
+                work_root = Path(td)
+                for side in ("omp", "pig"):
+                    with mock.patch.object(oracle.subprocess, "Popen", side_effect=fake_popen), \
+                         mock.patch.object(oracle, "sandbox_cmd", side_effect=lambda c: c):
+                        proxy = mock.MagicMock()
+                        proxy.url = "http://127.0.0.1:1"
+                        proxy.snapshot.return_value = []
+                        oracle.run_side(
+                            side=side,
+                            binary="/bin/true",
+                            case=case,
+                            work_root=work_root,
+                            timeout_s=5,
+                            shared_natives_dir=None,
+                            proxy=proxy,
+                            run_tag="test-persist",
+                        )
+                for side in ("omp", "pig"):
+                    cmd, env = captured[side]
+                    if persist:
+                        self.assertNotIn("--no-session", cmd, f"{side} should omit --no-session when persist_session=True")
+                    else:
+                        self.assertIn("--no-session", cmd, f"{side} should pass --no-session by default")
+                    sess_dir = env.get("PI_CODING_AGENT_SESSION_DIR", "")
+                    home_dir = env.get("HOME", "")
+                    self.assertTrue(sess_dir.startswith(home_dir), f"{side} session dir {sess_dir!r} outside sandbox HOME {home_dir!r}")
+                    self.assertTrue(home_dir.startswith(os.path.realpath(td)), f"{side} HOME {home_dir!r} outside work_root {td!r}")
 if __name__ == "__main__":
     unittest.main()

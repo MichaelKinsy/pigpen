@@ -50,6 +50,11 @@ var PlanProposalPending = func(ctx sdk.Context) bool {
 	return gate.PlanActive(ctx)
 }
 
+// RecordFileChange is a nil-safe hook wired by the integrator to journal
+// ast_edit file mutations into the session's change journal.
+// upstream: packages/coding-agent/src/tools/ast-edit.ts:465-488
+var RecordFileChange func(ctx sdk.Context, tool, absPath string, before, after *string)
+
 // PendingPreview is one staged preview queued for `resolve` (apply) or `reject` (discard).
 // Mirrors omp's `queueResolveHandler` options in packages/coding-agent/src/tools/resolve.ts:150-158.
 type PendingPreview struct {

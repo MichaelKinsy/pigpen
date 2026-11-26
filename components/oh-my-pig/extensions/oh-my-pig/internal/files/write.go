@@ -16,9 +16,11 @@ import (
 )
 
 var (
-	diagMu       sync.RWMutex
-	diagHook     func(ctx sdk.Context, path string) string
-	editDiagHook func(ctx sdk.Context, path string) string
+	diagMu             sync.RWMutex
+	diagHook           func(ctx sdk.Context, path string) string
+	editDiagHook       func(ctx sdk.Context, path string) string
+	recordChangeHook   func(ctx sdk.Context, tool, absPath string, before, after *string)
+	recordChangeActive func(ctx sdk.Context) bool
 )
 
 // SetDiagnosticsHook installs a callback invoked after `write` mutates a file
@@ -37,6 +39,47 @@ func SetEditDiagnosticsHook(fn func(ctx sdk.Context, path string) string) {
 	diagMu.Lock()
 	defer diagMu.Unlock()
 	editDiagHook = fn
+}
+
+// SetRecordFileChangeHook installs a callback invoked after `write` or `edit`
+// mutates a file on disk, matching omp's `ToolSession.recordFileChange`.
+// upstream: packages/coding-agent/src/tools/write.ts:1080-1089, edit/index.ts:791-801
+func SetRecordFileChangeHook(fn func(ctx sdk.Context, tool, absPath string, before, after *string)) {
+	diagMu.Lock()
+	defer diagMu.Unlock()
+	recordChangeHook = fn
+}
+
+// SetRecordFileChangeActive installs a cheap predicate checked before doing any
+// extra pre-write file reads for journaling (returns false when `commit.enabled`
+// is false or the session has no artifacts directory).
+func SetRecordFileChangeActive(fn func(ctx sdk.Context) bool) {
+	diagMu.Lock()
+	defer diagMu.Unlock()
+	recordChangeActive = fn
+}
+
+func runRecordFileChangeHook(ctx sdk.Context, tool, absPath string, before, after *string) {
+	diagMu.RLock()
+	fn := recordChangeHook
+	diagMu.RUnlock()
+	if fn != nil {
+		fn(ctx, tool, absPath, before, after)
+	}
+}
+
+func isRecordFileChangeActive(ctx sdk.Context) bool {
+	diagMu.RLock()
+	fn := recordChangeHook
+	active := recordChangeActive
+	diagMu.RUnlock()
+	if fn == nil {
+		return false
+	}
+	if active != nil {
+		return active(ctx)
+	}
+	return true
 }
 
 func runDiagnosticsHook(ctx sdk.Context, path string) string {
@@ -288,6 +331,38 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 			}
 		}
 		writeContent, applied := applyTextFileConvention(cleanContent, conv)
+		var journalBefore *string
+		journalBeforeOK := false
+		if isRecordFileChangeActive(ctx) {
+			switch {
+			case existingInfo == nil:
+				// File did not exist at os.Stat above; no extra read needed.
+				journalBefore = nil
+				journalBeforeOK = true
+			case hasOldText:
+				// Reuse the pre-write bytes already read above for the diff/projection guard.
+				s := oldText
+				journalBefore = &s
+				journalBeforeOK = true
+			case existingInfo.Size() <= 8*1024*1024:
+				// File between SnapshotMaxBytes (4 MiB) and journal MAX_SNAPSHOT_CHARS (8 MiB):
+				// read once for journal replay.
+				if b, rErr := os.ReadFile(absPath); rErr == nil {
+					s := string(b)
+					journalBefore = &s
+					journalBeforeOK = true
+				} else if os.IsNotExist(rErr) {
+					journalBefore = nil
+					journalBeforeOK = true
+				}
+			default:
+				// File > 8 MiB exceeds MAX_SNAPSHOT_CHARS: record an unstored change without
+				// reading the huge file into memory by passing a NUL sentinel (unstored in journal).
+				s := "\x00"
+				journalBefore = &s
+				journalBeforeOK = true
+			}
+		}
 
 		parent := filepath.Dir(absPath)
 		if err := os.MkdirAll(parent, 0o755); err != nil {
@@ -296,7 +371,10 @@ func executeWrite(ctx sdk.Context, store *hashline.Store, cwd, rawPath string, c
 		if err := os.WriteFile(absPath, []byte(writeContent), 0o644); err != nil {
 			return err
 		}
-
+		if journalBeforeOK {
+			after := writeContent
+			runRecordFileChangeHook(ctx, "write", absPath, journalBefore, &after)
+		}
 		madeExecutable := maybeMarkExecutableForShebang(absPath, writeContent)
 
 		_, bomStripped := hashline.StripBOM(writeContent)

@@ -284,8 +284,8 @@ func dispatchBuiltinPreludeBridge(run *bridgeRun, preludeName string, rawArgs js
 		CellTimeoutMs: run.cellTimeoutMs,
 		OnUpdate:      run.onUpdate,
 	}
-	if p.Approval != "" {
-		if err := approval.CheckPrelude(run.sdkCtx, preludeName, p.Approval, params); err != nil {
+	if tier := p.ApprovalTier(params); tier != "" {
+		if err := approval.CheckPrelude(run.sdkCtx, preludeName, tier, params); err != nil {
 			if run.emitStatus != nil {
 				run.emitStatus(EvalStatusEvent{"op": preludeName, "error": err.Error()})
 			}
@@ -361,8 +361,8 @@ func dispatchPreludeCall(run *bridgeRun, rawArgs json.RawMessage) (any, error) {
 		OnUpdate:      run.onUpdate,
 	}
 
-	if p.Approval != "" {
-		if err := approval.CheckPrelude(run.sdkCtx, req.Name, p.Approval, params); err != nil {
+	if tier := p.ApprovalTier(params); tier != "" {
+		if err := approval.CheckPrelude(run.sdkCtx, req.Name, tier, params); err != nil {
 			if run.emitStatus != nil {
 				run.emitStatus(EvalStatusEvent{"op": req.Name, "error": err.Error()})
 			}

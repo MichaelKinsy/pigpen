@@ -103,17 +103,16 @@
     "target": "*",
     "case": "*",
     "side": "omp",
-    "regex": "(?:^Use the eval `commit` namespace to commit your changes \\(`d = await commit\\.draft\\(\\)`, then `await d\\.commit\\(\"subject\", \\[\"- body\"\\]\\)`\\) rather than `git add`/`git commit`: it captures only the lines you and your subagents wrote, leaving other agents' staged and unstaged work untouched\\.$|^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
+    "regex": "(?:^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
     "class": "LISTED",
     "ref_file": "internal/prompt/UPSTREAM.md",
     "ref_term": [
-      "`commit` and `dsm` eval prelude guidance blocks"
+      "`dsm` eval prelude guidance block"
     ],
     "ref_subject": [
-      "commit",
       "dsm"
     ],
-    "why": "commit and dsm eval preludes are not ported, so their guidance paragraphs are absent."
+    "why": "dsm eval prelude is not ported, so its guidance paragraphs are absent."
   },
   {
     "kind": "child_system_prompt",
@@ -219,17 +218,16 @@
     "target": "child",
     "case": "*",
     "side": "omp",
-    "regex": "(?:^Use the eval `commit` namespace to commit your changes \\(`d = await commit\\.draft\\(\\)`, then `await d\\.commit\\(\"subject\", \\[\"- body\"\\]\\)`\\) rather than `git add`/`git commit`: it captures only the lines you and your subagents wrote, leaving other agents' staged and unstaged work untouched\\.$|^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
+    "regex": "(?:^Binary analysis lives in eval's `dsm` namespace; read `help://eval/dsm` before use\\. Bare executable reads show metadata only\\.$|^Sharing a database with a child: pass the string from `db\\.handle\\(\\)` in its task/context\\. The child MUST `await dsm\\.open\\(handle\\)` to retain its own reference, then close its handle in `finally`\\. Keep the parent's reference until the children finish; NEVER pass a process-local database object or assume its variable exists in a child\\.$)",
     "class": "LISTED",
     "ref_file": "internal/prompt/UPSTREAM.md",
     "ref_term": [
-      "`commit` and `dsm` eval prelude guidance blocks"
+      "`dsm` eval prelude guidance block"
     ],
     "ref_subject": [
-      "commit",
       "dsm"
     ],
-    "why": "commit and dsm eval preludes are not ported."
+    "why": "dsm eval prelude is not ported."
   },
   {
     "kind": "child_system_prompt",
@@ -348,18 +346,17 @@
     "kind": "tool_description",
     "target": "eval",
     "case": "*",
-    "regex": "(?:^- `archive`: Read-only local history: recent projects, past sessions with recaps, full-text session search, prompt history\\. → help://eval/archive$|^- `commit`: Selective commits in a shared worktree: commit only the changes you and your subagents made while other agents and the user keep editing\\. → help://eval/commit$|^- `dsm`: Open, inspect, edit, and script binary analysis databases\\. → help://eval/dsm$)",
+    "regex": "(?:^- `archive`: Read-only local history: recent projects, past sessions with recaps, full-text session search, prompt history\\. → help://eval/archive$|^- `dsm`: Open, inspect, edit, and script binary analysis databases\\. → help://eval/dsm$)",
     "class": "LISTED",
     "ref_file": "internal/eval/UPSTREAM.md",
     "ref_term": [
-      "Built-in eval namespaces: `archive`, `commit`, `dsm`"
+      "Built-in eval namespaces: `archive`, `dsm`"
     ],
     "ref_subject": [
       "archive",
-      "commit",
       "dsm"
     ],
-    "why": "Built-in eval namespaces archive, commit, and dsm are not ported."
+    "why": "Built-in eval namespaces archive and dsm are not ported."
   },
   {
     "kind": "tool_description",

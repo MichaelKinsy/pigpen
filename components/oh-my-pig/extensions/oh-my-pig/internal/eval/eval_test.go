@@ -18,6 +18,7 @@ import (
 	"time"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/approval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/gate"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/jobs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
@@ -2266,5 +2267,78 @@ func TestFirstCallPreludeDescriptionAndOneTimeGuideInjection(t *testing.T) {
 	wantLine := "- `browser`: Drive real browser tabs; start with `const tab = await browser.open({ name, url })`. → `help://eval/browser`"
 	if !strings.Contains(desc, wantHeader+"\n"+wantLine) {
 		t.Fatalf("eval description missing first-call prelude block:\n%s", desc)
+	}
+}
+
+// TestPreludeApprovalForDispatch verifies that ApprovalFor dynamically selects
+// the approval tier per invocation (e.g. "read" vs "exec") at the eval bridge,
+// and blocks execution without running Invoke when denied.
+func TestPreludeApprovalForDispatch(t *testing.T) {
+	ResetPreludesForTests()
+	t.Cleanup(ResetPreludesForTests)
+
+	prevSetting := approval.Setting
+	prevSession := approval.SessionSetting
+	t.Cleanup(func() {
+		approval.Setting = prevSetting
+		approval.SessionSetting = prevSession
+	})
+	// Mode "write" allows tier "read" and "write" and prompts (failing closed headless) on "exec".
+	settingFn := func(_ sdk.Context, key string) any {
+		if key == "tools.approvalMode" {
+			return "write"
+		}
+		return nil
+	}
+	approval.Setting = settingFn
+	approval.SessionSetting = settingFn
+
+	invoked := 0
+	RegisterPrelude(Prelude{
+		Name: "dynapp",
+		ApprovalFor: func(parameters json.RawMessage) string {
+			var m map[string]any
+			if err := json.Unmarshal(parameters, &m); err != nil {
+				return "exec"
+			}
+			if act, _ := m["action"].(string); act == "read_op" {
+				return "read"
+			}
+			return "exec"
+		},
+		Invoke: func(_ PreludeCall, _ json.RawMessage) (*PreludeResult, error) {
+			invoked++
+			return &PreludeResult{Text: "ok"}, nil
+		},
+	})
+
+	run := &bridgeRun{
+		ctx:      context.Background(),
+		language: "py",
+	}
+
+	// Read-tier action passes under read-only mode.
+	val, err := dispatchPreludeCall(run, json.RawMessage(`{"name":"dynapp","parameters":{"action":"read_op"}}`))
+	if err != nil {
+		t.Fatalf("read_op failed under read-only mode: %v", err)
+	}
+	if val != "ok" || invoked != 1 {
+		t.Fatalf("got val=%v invoked=%d, want ok / 1", val, invoked)
+	}
+
+	// Exec-tier action is blocked under read-only mode (headless -> prompt error) and never calls Invoke.
+	if _, err := dispatchPreludeCall(run, json.RawMessage(`{"name":"dynapp","parameters":{"action":"commit"}}`)); err == nil {
+		t.Fatalf("expected exec action to be denied/prompted under read-only mode")
+	}
+	if invoked != 1 {
+		t.Fatalf("Invoke should not have run on blocked exec action; invoked=%d", invoked)
+	}
+
+	// Invalid JSON parameters default to exec tier and are also blocked.
+	if _, err := dispatchPreludeCall(run, json.RawMessage(`{"name":"dynapp","parameters":"bad"}`)); err == nil {
+		t.Fatalf("expected invalid params to be blocked under read-only mode")
+	}
+	if invoked != 1 {
+		t.Fatalf("Invoke should not have run on invalid params; invoked=%d", invoked)
 	}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
@@ -81,6 +82,7 @@ func wireSettings() {
 	browser.Setting = settings.Any
 	web.Setting = settings.Any
 	eval.Setting = settings.Any
+	commit.Setting = settings.Any
 	// ansi reads the drawing settings (statusLine.compactThinkingLevel,
 	// composer.shape, read.toolResultPreview, theme) and prints the release
 	// version on the welcome banner.
@@ -284,7 +286,8 @@ func wireSpillAndURLs() {
 	})
 
 	urls.SetConflictWriteHooks(urls.ConflictWriteHooks{
-		OnFileWritten: func(c urls.Context, absPath, _, after string) string {
+		OnFileWritten: func(c urls.Context, absPath, before, after string) string {
+			commit.RecordFileChange(c.SDK, "edit", absPath, &before, &after)
 			store := hashline.ForSession(c.SDK)
 			_, bomStripped := hashline.StripBOM(after)
 			normalized := hashline.NormalizeToLF(bomStripped)
@@ -293,6 +296,17 @@ func wireSpillAndURLs() {
 			return hashline.FormatHeader(display, tag)
 		},
 	})
+	// Selective-commit journal wiring: resolve session artifacts dir, agent identity,
+	// and running status from internal/agents, and journal writes from write/edit/ast_edit/conflict://.
+	commit.ArtifactsDirResolver = agents.SessionTreeArtifactsDir
+	commit.AgentIdentity = func(ctx sdk.Context) commit.JournalAgent {
+		id, parent := agents.AgentIdentityFor(ctx)
+		return commit.JournalAgent{Agent: id, Parent: parent}
+	}
+	commit.IsAgentRunning = agents.IsAgentRunningInSession
+	files.SetRecordFileChangeHook(commit.RecordFileChange)
+	files.SetRecordFileChangeActive(commit.JournalActive)
+	ast.RecordFileChange = commit.RecordFileChange
 }
 
 func wirePlanAndDiagnostics() {

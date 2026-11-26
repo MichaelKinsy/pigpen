@@ -1090,12 +1090,13 @@ def run_side(
             "-p",
             "--mode", "json",
             "--model", "proof/proof-1",
-            "--no-session",
             "--offline",
             "--no-extensions",
             "--no-context-files",
             "--no-title",
         ]
+        if not case.get("persist_session"):
+            cmd.append("--no-session")
         if not case.get("enable_rules"):
             cmd.append("--no-rules")
         if not case.get("no_auto_approve"):
@@ -1173,11 +1174,12 @@ def run_side(
             "-p",
             "--mode", "json",
             "--model", "proof/proof-1",
-            "--no-session",
             "--approve",
             "--no-extensions",
             "--no-context-files",
         ]
+        if not case.get("persist_session"):
+            cmd.append("--no-session")
         if not case.get("enable_skills"):
             cmd.append("--no-skills")
         if not case.get("enable_rules"):

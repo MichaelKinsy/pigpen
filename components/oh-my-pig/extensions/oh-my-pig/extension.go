@@ -15,6 +15,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ast"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/browser"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/checkpoint"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/commit"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/debug"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/eval"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/files"
@@ -54,6 +55,7 @@ var registrars = []func(*sdk.Extension){
 	github.Register,
 	checkpoint.Register,
 	eval.Register,
+	commit.Register,
 	agents.Register,
 	modes.Register,
 	browser.Register,
