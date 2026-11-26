@@ -428,9 +428,9 @@ func TestBuildTitleWithState_UpstreamCases(t *testing.T) {
 		t.Fatalf("wsl empty = %q", got)
 	}
 
-	// Native Tern title: no brand, no state separator, defaults to "omp" when unnamed.
-	if got := BuildNativeTitle("", 0); got != "omp" {
-		t.Fatalf("native empty = %q", got)
+	// Native Tern title: no brand, no state separator, defaults to "oh-my-pig" when unnamed.
+	if got := BuildNativeTitle("", 0); got != "oh-my-pig" {
+		t.Fatalf("native empty = %q, want %q", got, "oh-my-pig")
 	}
 	if got := BuildNativeTitle("🧪 FLAKY: Fix tests", 42); got != "🧪 FLAKY: Fix tests · #42" {
 		t.Fatalf("native with PR = %q", got)
@@ -630,12 +630,11 @@ func TestExtensionLifecycle_TernUnnamedUsesOmpAndClaimsOwner(t *testing.T) {
 		t.Fatalf("terminal owner claim = (%q, %q), want (%q, 4242)", claimedKey, claimedVal, terminalOwnerEnv)
 	}
 
-	// Unnamed session in Tern MUST use "omp", never the cwd basename.
+	// Unnamed session in Tern MUST use "oh-my-pig", never the cwd basename or "omp".
 	titles := h.callsTo("ui.setTitle")
-	if len(titles) != 1 || titles[0].Args["title"] != "omp" {
-		t.Fatalf("Tern unnamed titles = %+v, want single 'omp'", titles)
+	if len(titles) != 1 || titles[0].Args["title"] != "oh-my-pig" {
+		t.Fatalf("Tern unnamed titles = %+v, want single 'oh-my-pig'", titles)
 	}
-
 	// Non-tick re-emit after host overwrite (same title must NOT be swallowed).
 	h.emitEvent(sdk.EventSessionInfoChanged, nil)
 	if got := len(h.callsTo("ui.setTitle")); got != 2 {
@@ -996,5 +995,30 @@ func TestToolResultHookMediaPathStandardizesMacOSPath(t *testing.T) {
 	}
 	if got, _ := resLocal.ToolResult.Details["mediaPath"].(string); got != imgPath {
 		t.Fatalf("local:// details.mediaPath = %q, want %q", got, imgPath)
+	}
+}
+
+func TestNotifyFallbackTitlesUseOhMyPig(t *testing.T) {
+	var gotEnd, gotAsk Notification
+	var okEnd, okAsk bool
+	ext := sdk.New("notify-title-test")
+	ext.OnEvent(sdk.EventAgentEnd, func(ctx sdk.Context, data map[string]any) (any, error) {
+		gotEnd, okEnd = NotifyAgentEnd(ctx, mapEnv(nil), DefaultNotifyConfig(), data)
+		return nil, nil
+	})
+	ext.OnEvent(sdk.EventToolExecutionStart, func(ctx sdk.Context, _ map[string]any) (any, error) {
+		gotAsk, okAsk = NotifyAsk(ctx, mapEnv(nil), DefaultNotifyConfig())
+		return nil, nil
+	})
+	h := startHost(t, ext, hostOptions{SessionName: ""})
+	h.emitEvent(sdk.EventAgentEnd, map[string]any{
+		"messages": []any{map[string]any{"role": "assistant", "stopReason": "stop"}},
+	})
+	h.emitEvent(sdk.EventToolExecutionStart, map[string]any{"toolName": "ask"})
+	if !okEnd || gotEnd.Title != "oh-my-pig" {
+		t.Fatalf("NotifyAgentEnd = (%+v, %v), want title %q", gotEnd, okEnd, "oh-my-pig")
+	}
+	if !okAsk || gotAsk.Title != "oh-my-pig" {
+		t.Fatalf("NotifyAsk = (%+v, %v), want title %q", gotAsk, okAsk, "oh-my-pig")
 	}
 }

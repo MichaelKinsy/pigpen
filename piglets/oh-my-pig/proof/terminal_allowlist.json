@@ -1,19 +1,20 @@
 [
   {
-    "name": "welcome-version",
-    "omp_regex": "^\\s+██\\s+v19\\.1\\.1\\s*$",
-    "pig_regex": "^\\s+██\\s+v\\d+\\.\\d+\\.\\d+\\s*$",
+    "name": "welcome-mashup-logo",
+    "omp_regex": "^\\s+(?:████████████|██  ██(?:\\s+(?:▄▀▀▄ █▀▄▀▄ █▀▀▄|▀▄▄▀ █ █ █ █▄▄▀))?|▒▒  ██\\s+█|██\\s+v19\\.1\\.1)\\s*$",
+    "pig_regex": "^\\s+(?:█▀▀█  █▀▀█|▄▀██▀████▀██▀▄|████▀████▀████|██▀▀▀▀██▀▀▀▀██(?:\\s+▄▀▀▄ █▀▄▀▄ █▀▀▄)?|▄▄▄▄▄█████▀▀▀▀█████▄▄▄▄▄(?:\\s+▀▄▄▀ █ █ █ █▄▄▀)?|██████▀▀▀▀▀▀▀▀▀▀▀▀██████(?:\\s+█)?|▀▀▀▀▀▀████▀▀▀▀████▀▀▀▀▀▀(?:\\s+v\\d+\\.\\d+\\.\\d+)?|████    ████|▀▄▀▄    ████|▀ ▀     ████)\\s*$",
     "class": "ON_PURPOSE",
     "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
     "ref_term": [
-      "Animated welcome gradient sweep",
+      "Branded half-block π-plus-pig welcome banner",
       "PigletVersion"
     ],
     "ref_subject": [
-      "Piglet version",
+      "half-block",
+      "mashup",
       "PigletVersion"
     ],
-    "why": "Welcome banner prints the Piglet version (`v<PigletVersion>`) rather than omp's `v19.1.1`."
+    "why": "Plain-terminal welcome banner intentionally draws oh-my-pig's 24×11 half-block π-plus-pig mashup (with vertically centred wordmark and Piglet version `v<PigletVersion>`) instead of omp's 12×5 block π (`v19.1.1`)."
   },
   {
     "name": "welcome-tip-block",
@@ -21,8 +22,8 @@
     "class": "ON_PURPOSE",
     "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
     "ref_term": [
-      "Animated welcome gradient sweep",
-      "PigletVersion"
+      "Branded half-block π-plus-pig welcome banner",
+      "per-launch random welcome tip"
     ],
     "ref_subject": [
       "randomly",
@@ -129,6 +130,7 @@
     "name": "omp-stale-pre-resize-frame",
     "match_kind": "stale_pre_resize_frame",
     "class": "OMP_ARTIFACT",
+    "optional": true,
     "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
     "ref_term": [
       "Host full-screen redraws",
@@ -140,28 +142,6 @@
       "OMP_ARTIFACT"
     ],
     "why": "omp keeps a stale pre-resize copy of its active dock block in scrollback/screen after width resize while PiG clears cleanly via CSI 2J + CSI 3J; matched strictly on the omp side only when the stale block equals the active dock re-wrapped at the old width."
-  },
-  {
-    "name": "welcome-gradient-sweep-colour",
-    "kind": "colour",
-    "regions": [
-      "welcome"
-    ],
-    "omp_fg": "@omp_welcome_gradient",
-    "omp_bg": null,
-    "pig_fg": "@omp_welcome_gradient",
-    "pig_bg": null,
-    "class": "HOST",
-    "ref_file": "components/oh-my-pig/extensions/oh-my-pig/internal/ansi/UPSTREAM.md",
-    "ref_term": [
-      "Animated welcome gradient sweep",
-      "gradientLogo"
-    ],
-    "ref_subject": [
-      "gradient",
-      "gradientLogo"
-    ],
-    "why": "PiG SetHeaderRenderer renders static frames (resting 3-stop diagonal gradient) while omp animates the gradient sweep across those exact 3 stops (`welcome.ts` GRADIENT_STOPS + shine); BOTH sides must lie strictly inside `@omp_welcome_gradient`."
   },
   {
     "name": "host-user-prompt-bubble-colour",
@@ -276,7 +256,7 @@
     "kind": "blank_row",
     "side": "both",
     "hunk_names": [
-      "welcome-version",
+      "welcome-mashup-logo",
       "welcome-tip-block",
       "host-startup-notices"
     ],
@@ -290,7 +270,7 @@
       "blank separator rows",
       "quietStartup"
     ],
-    "why": "Host startup notices (`[Extensions]` and `hid 2 tools`) and welcome tip wrapping change surrounding blank separator rows inside that classified hunk."
+    "why": "Host startup notices (`[Extensions]` and `hid 2 tools`) and welcome banner/tip wrapping change surrounding blank separator rows inside that classified hunk."
   },
   {
     "name": "blank-markdown-code-block",
@@ -334,6 +314,7 @@
     "name": "blank-omp-stale-pre-resize-frame",
     "kind": "blank_row",
     "side": "omp",
+    "optional": true,
     "hunk_names": [
       "omp-stale-pre-resize-frame"
     ],

@@ -89,9 +89,8 @@ func NotifyAgentEnd(ctx sdk.Context, lookup EnvLookup, cfg NotifyConfig, data ma
 
 	title := strings.TrimSpace(ctx.SessionName())
 	if title == "" {
-		title = "omp"
+		title = NativeTerminalTitle
 	}
-
 	var n Notification
 	if stopReason == "error" {
 		if !cfg.ErrorOn {
@@ -129,7 +128,7 @@ func NotifyAsk(ctx sdk.Context, lookup EnvLookup, cfg NotifyConfig) (Notificatio
 		return Notification{}, false
 	}
 	n := Notification{
-		Title: "omp",
+		Title: NativeTerminalTitle,
 		Body:  "Waiting for input",
 		Kind:  NotifyKindAsk,
 	}

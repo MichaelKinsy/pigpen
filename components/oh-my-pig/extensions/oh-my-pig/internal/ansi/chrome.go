@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/PiG/extensions/sdk/tui"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/brand"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/dirs"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
@@ -185,16 +186,7 @@ func releaseChromeSession(sessionID string) {
 // upstream: packages/tui/src/prompt/welcome.ts, packages/tui/src/prompt/tips.txt
 // ═══════════════════════════════════════════════════════════════════════════
 
-// ompPiLogo is omp's 5-row block-grid pi mark (welcome.ts:436).
-var ompPiLogo = []string{
-	"████████████",
-	"   ██  ██   ",
-	"   ██  ██   ",
-	"   ▒▒  ██   ",
-	"       ██   ",
-}
-
-// ompWordmark is omp's half-block wordmark placed beside ompPiLogo (welcome.ts:445).
+// ompWordmark is omp's half-block wordmark placed beside the mashup logo (welcome.ts:445).
 var ompWordmark = []string{
 	"▄▀▀▄ █▀▄▀▄ █▀▀▄",
 	"▀▄▄▀ █ █ █ █▄▄▀",
@@ -202,7 +194,8 @@ var ompWordmark = []string{
 }
 
 const (
-	welcomeLogoWidth     = 12
+	welcomeLogoWidth     = brand.CanvasWidth // 24 cells (24×22 pixel mashup in half blocks -> 11 rows)
+	welcomeLogoRows      = brand.CanvasHeight / 2
 	welcomeWordmarkWidth = 15
 	welcomeLockupGap     = 4
 	welcomeTipMeasure    = 72
@@ -338,67 +331,110 @@ func formatKeyHintForOS(key string, mac bool) string {
 	return b.String()
 }
 
-// gradientStops mirrors packages/tui/src/prompt/welcome.ts:549-553 (resting static frame).
-var gradientStops = [3][3]float64{
-	{248, 79, 204},
-	{147, 98, 244},
-	{0, 219, 228},
+// noColorActive reports whether the NO_COLOR convention (non-empty NO_COLOR
+func noColorActive() bool {
+	return os.Getenv("NO_COLOR") != ""
 }
 
-var gradientRamp256 = []int{206, 170, 134, 99, 69, 74, 44}
-
-func gradientEscape(t float64, trueColor bool) string {
-	t = math.Max(0, math.Min(1, t))
-	if trueColor {
-		seg := t * float64(len(gradientStops)-1)
-		i := min(len(gradientStops)-2, int(math.Floor(seg)))
-		f := seg - float64(i)
-		a, b := gradientStops[i], gradientStops[i+1]
-		r := int(math.Round(a[0] + (b[0]-a[0])*f))
-		g := int(math.Round(a[1] + (b[1]-a[1])*f))
-		bl := int(math.Round(a[2] + (b[2]-a[2])*f))
-		return fmt.Sprintf("\x1b[38;2;%d;%d;%dm", r, g, bl)
+// welcomeAnsiRGB formats a foreground (isBg=false) or background (isBg=true) SGR
+// sequence for an RGB triplet in truecolor or xterm-256 mode using PiG SDK's
+// tui colour conversion (matching PiG's coding/piglogin/head.go HeadLines).
+func welcomeAnsiRGB(r, g, b uint8, isBg, trueColor bool) string {
+	mode := tui.TerminalColorModeTrueColor
+	if !trueColor {
+		mode = tui.TerminalColorMode256
 	}
-	idx := min(len(gradientRamp256)-1, max(0, int(math.Floor(t*float64(len(gradientRamp256)-1)+0.5))))
-	return fmt.Sprintf("\x1b[38;5;%dm", gradientRamp256[idx])
+	c := tui.RgbColorValue{R: float64(r), G: float64(g), B: float64(b)}
+	if isBg {
+		return tui.BackgroundAnsi(c, mode)
+	}
+	return tui.ForegroundAnsi(c, mode)
 }
 
-// gradientLogo applies omp's resting diagonal three-stop gradient to ompPiLogo.
-// upstream: packages/tui/src/prompt/welcome.ts:617-640
-func gradientLogo(lines []string, trueColor bool) []string {
-	rows := len(lines)
-	cols := 0
-	for _, l := range lines {
-		if n := len([]rune(l)); n > cols {
-			cols = n
-		}
+// mashupLogoHalfBlocks renders oh-my-pig's 24×22 pixel-art mashup (Candidate 3)
+// as 11 rows of 24 terminal cells using Unicode half-block characters (`▀`, `▄`, `█`)
+// so two art-pixel rows pack into each terminal row.
+//
+// Colours:
+//   - Pig head: PiG's default green sprite palette (`pig-default`: outline/pupils
+//     #18151d, body/inner-ear #48a381, highlight #64be9e, snout #32775e,
+//     blush #82dbba, eye whites #fefefe), foreground = upper pixel and
+//     background = lower pixel on each half-block cell.
+//   - π gate: flat #EEDAAD (omp's dark-theme cream) on dark/unspecified themes,
+//     or flat #1B1C20 on light themes.
+//   - Truecolor terminals emit 24-bit SGR (38;2 / 48;2); 256-color terminals
+//     (and 16-color terminals, which PiG's UITheme reports as "256color") map
+//     every pixel through PiG SDK's tui.ForegroundAnsi/BackgroundAnsi xterm-256
+//     quantiser (38;5 / 48;5); when NO_COLOR is set (noColor=true), the same
+//     half-block silhouette is drawn with no SGR colour sequences at all.
+//
+// Transparent pixels leave the terminal background untouched; each coloured cell
+// resets cleanly.
+func mashupLogoHalfBlocks(head brand.Head, piHex string, trueColor, noColor bool) []string {
+	pixels := brand.Compose(head, piHex)
+	var grid [brand.CanvasHeight][brand.CanvasWidth]string
+	for _, p := range pixels {
+		grid[p.Y][p.X] = p.Color
 	}
-	xSpan := max(1, cols-1)
-	ySpan := max(1, rows-1)
-	out := make([]string, rows)
-	for y, line := range lines {
+	rows := make([]string, welcomeLogoRows)
+	for row := range welcomeLogoRows {
+		topY := row * 2
+		botY := topY + 1
 		var b strings.Builder
-		x := 0
-		for _, ch := range line {
-			if ch == ' ' {
-				b.WriteRune(' ')
-			} else {
-				t := (float64(x)/float64(xSpan) + float64(y)/float64(ySpan)) / 2.0
-				b.WriteString(gradientEscape(t, trueColor))
-				b.WriteRune(ch)
-				b.WriteString("\x1b[39m")
+		for x := range brand.CanvasWidth {
+			tc := grid[topY][x]
+			bc := grid[botY][x]
+			if noColor {
+				switch {
+				case tc == "" && bc == "":
+					b.WriteByte(' ')
+				case tc != "" && bc == "":
+					b.WriteRune('▀')
+				case tc == "" && bc != "":
+					b.WriteRune('▄')
+				default:
+					b.WriteRune('█')
+				}
+				continue
 			}
-			x++
+			switch {
+			case tc == "" && bc == "":
+				b.WriteByte(' ')
+			case tc != "" && bc == "":
+				r, g, bl, _ := brand.ParseHexRGB(tc)
+				b.WriteString(welcomeAnsiRGB(r, g, bl, false, trueColor))
+				b.WriteRune('▀')
+				b.WriteString("\x1b[0m")
+			case tc == "" && bc != "":
+				r, g, bl, _ := brand.ParseHexRGB(bc)
+				b.WriteString(welcomeAnsiRGB(r, g, bl, false, trueColor))
+				b.WriteRune('▄')
+				b.WriteString("\x1b[0m")
+			case tc == bc:
+				r, g, bl, _ := brand.ParseHexRGB(tc)
+				b.WriteString(welcomeAnsiRGB(r, g, bl, false, trueColor))
+				b.WriteRune('█')
+				b.WriteString("\x1b[0m")
+			default:
+				tr, tg, tb, _ := brand.ParseHexRGB(tc)
+				br, bg, bb, _ := brand.ParseHexRGB(bc)
+				b.WriteString(welcomeAnsiRGB(tr, tg, tb, false, trueColor))
+				b.WriteString(welcomeAnsiRGB(br, bg, bb, true, trueColor))
+				b.WriteRune('▀')
+				b.WriteString("\x1b[0m")
+			}
 		}
-		out[y] = b.String()
+		rows[row] = b.String()
 	}
-	return out
+	return rows
 }
 
-// RenderWelcomeLines builds omp's centered welcome banner (logo + wordmark +
-// version + wrapped tip at 72 cols) with every row guaranteed <= width.
+// RenderWelcomeLines builds oh-my-pig's centered welcome banner (Candidate-3
+// half-block π-plus-pig mashup + wordmark + version + wrapped tip at 72 cols)
+// with every row guaranteed <= width.
 // upstream: packages/tui/src/prompt/welcome.ts WelcomeComponent.#renderLines
 func RenderWelcomeLines(theme sdk.UITheme, version string, width int, tipIndex int) []string {
+	noColor := noColorActive()
 	p := paletteFromTheme(theme)
 	if width <= 0 {
 		return nil
@@ -413,25 +449,43 @@ func RenderWelcomeLines(theme sdk.UITheme, version string, width int, tipIndex i
 	if version != "" && !strings.HasPrefix(version, "v") {
 		version = "v" + version
 	}
-	styledVersion := p.fg("dim", version)
+	styledVersion := version
+	if !noColor {
+		styledVersion = p.fg("dim", version)
+	}
 	lockupWidth := welcomeLogoWidth + welcomeLockupGap + max(welcomeWordmarkWidth, tui.VisibleWidth(styledVersion))
 
 	trueColor := theme.GetColorMode() != "256color"
-	styledLogo := gradientLogo(ompPiLogo, trueColor)
+	piHex := brand.PiDarkHex
+	if theme.Appearance() == "light" {
+		piHex = brand.PiLightHex
+	}
+	styledLogo := mashupLogoHalfBlocks(brand.DefaultHead(), piHex, trueColor, noColor)
 
 	var art []string
 	switch {
 	case room >= lockupWidth:
-		beside := []string{
-			"",
-			p.bold(p.fg("text", ompWordmark[0])),
-			p.bold(p.fg("text", ompWordmark[1])),
-			p.bold(p.fg("text", ompWordmark[2])),
-			styledVersion,
+		// Vertically centre the 4-row wordmark+version block (3 wordmark rows + 1 version row)
+		// beside the 11-row half-block mashup on rows 3..6 (centred alongside the pig + bar).
+		beside := make([]string, welcomeLogoRows)
+		if noColor {
+			beside[3] = ompWordmark[0]
+			beside[4] = ompWordmark[1]
+			beside[5] = ompWordmark[2]
+			beside[6] = styledVersion
+		} else {
+			beside[3] = p.bold(p.fg("text", ompWordmark[0]))
+			beside[4] = p.bold(p.fg("text", ompWordmark[1]))
+			beside[5] = p.bold(p.fg("text", ompWordmark[2]))
+			beside[6] = styledVersion
 		}
 		gap := strings.Repeat(" ", welcomeLockupGap)
 		for i, row := range styledLogo {
-			art = append(art, row+gap+beside[i])
+			if beside[i] != "" {
+				art = append(art, row+gap+beside[i])
+			} else {
+				art = append(art, row)
+			}
 		}
 	case room >= welcomeLogoWidth:
 		art = styledLogo
@@ -441,7 +495,11 @@ func RenderWelcomeLines(theme sdk.UITheme, version string, width int, tipIndex i
 	if width >= welcomeTipMinCols && len(welcomeTips) > 0 {
 		tip := expandTipKeys(welcomeTips[absMod(tipIndex, len(welcomeTips))], runtime.GOOS)
 		measure := min(welcomeTipMeasure, max(10, room))
-		wrapped := wrapAnsi(p.fg("accent", "Tip: ")+p.fg("muted", tip), measure)
+		tipLine := "Tip: " + tip
+		if !noColor {
+			tipLine = p.fg("accent", "Tip: ") + p.fg("muted", tip)
+		}
+		wrapped := wrapAnsi(tipLine, measure)
 		lines = append(lines, "")
 		for _, wline := range wrapped {
 			lines = append(lines, centerLines([]string{wline}, width)...)

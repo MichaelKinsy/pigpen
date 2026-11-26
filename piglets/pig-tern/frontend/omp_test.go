@@ -237,7 +237,7 @@ func TestOmpWorkingRowShapes(t *testing.T) {
 	if len(kids) != 5 {
 		t.Fatalf("working children count = %d, want 5: %#v", len(kids), kids)
 	}
-	if kids[0].(map[string]any)["k"] != "spinner" || props(kids[0].(map[string]any))["style"] != "starburst" {
+	if kids[0].(map[string]any)["k"] != "el" || props(kids[0].(map[string]any))["tag"] != "span" || props(kids[0].(map[string]any))["role"] != "omp.working.pig" {
 		t.Fatalf("spinner = %#v", kids[0])
 	}
 	if kids[1].(map[string]any)["k"] != "elapsed" || props(kids[1].(map[string]any))["format"] != "short" {
@@ -2435,7 +2435,7 @@ func TestOmpDrawRoundParityAgainstProof9(t *testing.T) {
 			t.Fatalf("welcome node = %#v, want card[omp.welcome]", w)
 		}
 		logo := node(ops, "n.n2.lockup/logo")
-		if logo == nil || logo["k"] != "image" || props(logo)["builtin"] != "omp" || props(logo)["w"] != float64(128) || props(logo)["role"] != "omp.welcome.logo" {
+		if logo == nil || logo["k"] != "image" || props(logo)["blob"] == nil || props(logo)["w"] != float64(ompLogoWidthPx) || props(logo)["h"] != float64(ompLogoHeightPx) || props(logo)["role"] != "omp.welcome.logo" {
 			t.Fatalf("welcome logo = %#v", logo)
 		}
 		wm := node(ops, "n.n2.lockup/mark/omp.welcome.wordmark")

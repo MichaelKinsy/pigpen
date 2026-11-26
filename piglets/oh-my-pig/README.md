@@ -16,7 +16,8 @@ beyond it.
 - **A derivative of [pig-tern](../pig-tern/README.md).** The manifest extends pig-tern, and the frontend
   member is pig-tern's with omp's look fixed on: the same roles and node shapes omp sends to Tern, so Tern's
   built-in styles for omp apply. It keeps PiG's own names towards Tern and does not present itself as omp.
-  Outside Tern, PiG draws as usual.
+  Its mark pairs PiG's active sprite pig head with omp's π on the welcome banner (in Tern and plain terminals)
+  and uses the same animated pig head for Tern's working spinner. Outside Tern, PiG draws as usual.
 - **omp's tools instead of PiG's.** The Piglet keeps none of PiG's built-in tools. The model sees omp's
   tool names, schemas and descriptions from the [`oh-my-pig` extension](../../components/oh-my-pig/README.md).
 - **One Go Binary, no Node.**

@@ -1221,9 +1221,9 @@ _RE_CARD_TAIL_DUR = re.compile(r"(·\s*)\d+(?:\.\d+)?(ms|s)(?=(?:\s*(?:─|│|$
 _RE_BOX_FILL_TRAIL = re.compile(r"(─{2,})([╮╯])$")
 _RE_BOX_SPACE_TRAIL = re.compile(r"([ ]{2,})(│)$")
 _RE_WELCOME_VERSION_ROW = re.compile(r"^\s+██\s+v\d+\.\d+\.\d+\s*$")
+_RE_PIG_WELCOME_TAIL_ROW = re.compile(r"^\s+▀ ▀\s+████\s*$")
 _RE_SGR_SEQ = re.compile(r"\x1b\[([0-9;]*)m")
 DEFAULT_TERMINAL_ALLOWLIST_PATH = Path(__file__).resolve().parent / "terminal_allowlist.json"
-
 # Welcome tip validation (Findings 17, 19, 25): canonical omp tips + port `internal/ansi/chrome.go` tips.
 WELCOME_TIP_MAX_COLS = 72
 _OMP_ANSI_TIPS_CANONICAL: list[str] = [
@@ -1429,7 +1429,10 @@ def find_welcome_tip_line_indices(lines: list[str], *, side: str = "omp") -> set
     n = len(lines)
     i = 0
     while i < n:
-        if _RE_WELCOME_VERSION_ROW.match(lines[i]):
+        is_welcome_end = bool(_RE_WELCOME_VERSION_ROW.match(lines[i])) or (
+            side == "pig" and bool(_RE_PIG_WELCOME_TAIL_ROW.match(lines[i]))
+        )
+        if is_welcome_end:
             j = i + 1
             while j < n and not lines[j].strip():
                 j += 1
@@ -2591,9 +2594,10 @@ def classify_terminal_diff(
                 "kind": e.get("kind", "text"),
                 "class": e["class"],
                 "class_in_doubt": bool(e.get("class_in_doubt")),
+                "optional": bool(e.get("optional")),
                 "ref": e["ref"],
                 "hits": entry_hits.get(i, 0),
-                "stale": entry_hits.get(i, 0) == 0,
+                "stale": (entry_hits.get(i, 0) == 0) and not bool(e.get("optional")),
             }
             for i, e in enumerate(entries)
         ],
@@ -2996,14 +3000,13 @@ def classify_screen_regions(
     usage_by_name = {u["name"]: dict(u) for u in tr_rep["allowlist_usage"]}
     for u in dk_rep["allowlist_usage"]:
         usage_by_name[u["name"]]["hits"] += u["hits"]
-        usage_by_name[u["name"]]["stale"] = usage_by_name[u["name"]]["hits"] == 0
+        usage_by_name[u["name"]]["stale"] = (usage_by_name[u["name"]]["hits"] == 0) and not bool(usage_by_name[u["name"]].get("optional"))
     if a_stale:
         for e in entries:
             if e.get("match_kind") == "stale_pre_resize_frame":
                 cnt = a_stale["stale_line_count"]
                 usage_by_name[e["name"]]["hits"] += cnt
-                usage_by_name[e["name"]]["stale"] = usage_by_name[e["name"]]["hits"] == 0
-
+                usage_by_name[e["name"]]["stale"] = (usage_by_name[e["name"]]["hits"] == 0) and not bool(usage_by_name[e["name"]].get("optional"))
     expected_hunks = sum(1 for h in merged_hunks if h["verdict"] == "expected")
     timing_hunks = sum(1 for h in merged_hunks if h["verdict"] == "timing")
     differs_hunks = sum(1 for h in merged_hunks if h["verdict"] == "differs")
@@ -3197,10 +3200,57 @@ def side_by_side(a_text: str, b_text: str, width: int = 120, label_a: str = "omp
         out.append(f"{al_fit} {mark} {bl_fit}")
     return "\n".join(out) + "\n"
 
+def check_combined_stale_allowlist(
+    reports: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Aggregate `allowlist_usage` across reports (e.g. screen + scrollback) and flag entries with 0 total hits.
+
+    Entries marked `"optional": true` (such as timing-dependent `OMP_ARTIFACT` resize ghosts)
+    are excluded from `stale_entries` while still reporting their combined hit counts.
+    """
+    combined: dict[str, dict[str, Any]] = {}
+    order: list[str] = []
+    for rep in reports:
+        for u in rep.get("allowlist_usage") or []:
+            nm = str(u.get("name") or "")
+            if not nm:
+                continue
+            if nm not in combined:
+                order.append(nm)
+                combined[nm] = {
+                    "name": nm,
+                    "kind": u.get("kind", "text"),
+                    "class": u.get("class", ""),
+                    "optional": bool(u.get("optional")),
+                    "ref": u.get("ref", ""),
+                    "hits": 0,
+                }
+            combined[nm]["hits"] += int(u.get("hits", 0))
+            if u.get("optional"):
+                combined[nm]["optional"] = True
+    usage: list[dict[str, Any]] = []
+    stale_entries: list[dict[str, Any]] = []
+    for nm in order:
+        row = combined[nm]
+        is_stale = (row["hits"] == 0) and not row["optional"]
+        row["stale"] = is_stale
+        usage.append(row)
+        if is_stale:
+            stale_entries.append(row)
+    return {
+        "stale_count": len(stale_entries),
+        "stale_entries": stale_entries,
+        "usage": usage,
+    }
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Plain-PTY ANSI screen capture & side-by-side diff")
     sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_stale = sub.add_parser("check-stale", help="Fail if any non-optional terminal_allowlist entry has 0 hits across diff JSON reports")
+    p_stale.add_argument("reports", nargs="+", help="Paths to diff JSON files (e.g. diff.json scrollback-diff.json)")
+    p_stale.add_argument("--allow-stale", action="store_true", help="Exit 0 even when stale entries exist")
 
     p_run = sub.add_parser("run", help="Run a launch script in a PTY and capture the final VT screen")
     p_run.add_argument("--launch", required=True)
@@ -3239,6 +3289,15 @@ def main() -> int:
     p_diff.add_argument("--allow-diffs", action="store_true", help="Exit 0 even when unexplained differences exist")
     p_diff.add_argument("--allow-timing", action="store_true", help="Exit 0 when the only non-expected diffs are bounded timing unit crossings")
     args = parser.parse_args()
+    if args.cmd == "check-stale":
+        loaded = [json.loads(Path(p).read_text(encoding="utf-8")) for p in args.reports]
+        res = check_combined_stale_allowlist(loaded)
+        if res["stale_count"] > 0:
+            names = ", ".join(f"{e['name']} ({e['kind']})" for e in res["stale_entries"])
+            print(f"ERROR: {res['stale_count']} stale terminal_allowlist entry(s) with 0 hits across reports: {names}", file=sys.stderr)
+            if not args.allow_stale:
+                return 1
+        return 0
     if args.cmd == "run":
         steps = json.loads(args.steps_json)
         meta = run_pty_session(
@@ -3409,7 +3468,7 @@ def main() -> int:
                 nm = allowlist[ei]["name"]
                 if nm in usage_by_name:
                     usage_by_name[nm]["hits"] += cnt
-                    usage_by_name[nm]["stale"] = usage_by_name[nm]["hits"] == 0
+                    usage_by_name[nm]["stale"] = (usage_by_name[nm]["hits"] == 0) and not bool(usage_by_name[nm].get("optional"))
         hunk_report["cell_colour_diff"] = cell_colour_report
 
     mode_report: dict[str, Any] | None = None
@@ -3422,7 +3481,7 @@ def main() -> int:
                 nm = allowlist[ei]["name"]
                 if nm in usage_by_name:
                     usage_by_name[nm]["hits"] += cnt
-                    usage_by_name[nm]["stale"] = usage_by_name[nm]["hits"] == 0
+                    usage_by_name[nm]["stale"] = (usage_by_name[nm]["hits"] == 0) and not bool(usage_by_name[nm].get("optional"))
         hunk_report["terminal_mode_diff"] = mode_report
         # Keep palette census as a summary only (not a verdict channel)
         hunk_report["sgr_palette_census"] = compare_sgr_palettes(omp_raw_bytes, pig_raw_bytes)

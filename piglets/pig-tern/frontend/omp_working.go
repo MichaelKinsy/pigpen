@@ -9,10 +9,12 @@ import (
 )
 
 // ompWorkingElement draws PiG's working indicator in omp's shape
-// (components/loader.ts:53-89):
+// (components/loader.ts:53-89), with oh-my-pig's animated pixel-art pig head
+// spinner (`el[omp.working.pig]` styled by the `omp-brand` stylesheet) in
+// place of omp's starburst spinner:
 //
 //	row(role="omp.working", align="center", gap="sm"):
-//	  - spinner(key="spinner", style="starburst", tone="accent")  [omitted when spinnerless]
+//	  - el(key="spinner", tag="span", role="omp.working.pig")     [omitted when spinnerless]
 //	  - elapsed(key="elapsed", age=ms, format="short")
 //	  - text(key="sep", text="·", role="omp.working.sep")
 //	  - shimmer(key="label", role="omp.working.label", spans=[{t, s:"muted"}],
@@ -33,9 +35,14 @@ func (s *session) ompWorkingElement(id string, working fe.Working, startedAt tim
 	}
 	var children []tern.Element
 	if !spinnerless(working) {
-		children = append(children, ui.Spinner{
-			Common: ui.Common{Key: "spinner", Tone: ui.ToneAccent},
-			Style:  ui.SpinnerStarburst,
+		children = append(children, tern.Node{
+			Kind: tern.KindEl,
+			Props: map[string]any{
+				"key":  "spinner",
+				"tag":  "span",
+				"role": "omp.working.pig",
+				"aria": "Working",
+			},
 		})
 	}
 	// upstream: packages/tui/src/components/loader.ts:72 — `elapsed(now - startedAt)`

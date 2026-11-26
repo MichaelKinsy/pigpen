@@ -1808,7 +1808,8 @@ class TestDrawingHarnessFixes(unittest.TestCase):
             " Show a short markdown example.\n"
         )
         pig_welcome = (
-            "                               ██       v0.1.0\n\n"
+            "                  ▀▀▀▀▀▀████▀▀▀▀████▀▀▀▀▀▀    v0.1.0\n"
+            "                        ▀ ▀     ████\n\n"
             "    Tip: Say workflowz in your message to drive the task with parallel\n"
             "                           subagents in eval\n\n"
             " Show a short markdown example.\n"
@@ -1850,7 +1851,8 @@ class TestDrawingHarnessFixes(unittest.TestCase):
 
         # Audit Finding 19 demonstrating input (4): nonexistent command tip or >72 cols wide -> MUST be `differs`!
         pig_fake_tip = (
-            "                               ██       v0.1.0\n\n"
+            "                  ▀▀▀▀▀▀████▀▀▀▀████▀▀▀▀▀▀    v0.1.0\n"
+            "                        ▀ ▀     ████\n\n"
             "    Tip: Try /this-command-does-not-exist right now " + ("x" * 100) + "\n\n"
             " Show a short markdown example.\n"
         )
@@ -2229,25 +2231,38 @@ class TestDrawingHarnessFixes(unittest.TestCase):
         self.assertEqual(" ".join(r["text"] for r in cc_wrong["unexplained_runs"]), "? Ask")
         self.assertEqual(cc_wrong["unexplained_runs"][0]["omp_fg"], "rgb:0;180;255")
         self.assertEqual(cc_wrong["unexplained_runs"][0]["pig_fg"], "rgb:255;0;0")
-        # 2. Welcome logo cell inside omp's animated gradient stops (e.g. mid-sweep stop `rgb:147;98;244` vs resting `rgb:248;79;204`) -> EXPECTED!
+        # 2. Welcome logo cell inside omp's animated gradient stops (e.g. mid-sweep stop `rgb:147;98;244` vs resting `rgb:248;79;204`):
+        #    tested against a dedicated fixture allowlist entry (not a stale entry in production terminal_allowlist.json).
+        grad_allow = [
+            {
+                "name": "fixture-welcome-gradient-colour",
+                "kind": "colour",
+                "regions": ["welcome"],
+                "omp_fg": "@omp_welcome_gradient",
+                "omp_bg": None,
+                "pig_fg": "@omp_welcome_gradient",
+                "pig_bg": None,
+                "class": "HOST",
+                "ref": "fixture:1",
+                "why": "Unit-test fixture for @omp_welcome_gradient colour manifold validation.",
+            }
+        ]
         omp_w_anim = _render_styled("   \x1b[38;2;147;98;244m████████████\x1b[0m")
         pig_w_rest = _render_styled("   \x1b[38;2;248;79;204m████████████\x1b[0m")
-        cc_w_ok = ansi_capture.classify_cell_colours(omp_w_anim, pig_w_rest, allow)
+        cc_w_ok = ansi_capture.classify_cell_colours(omp_w_anim, pig_w_rest, grad_allow)
         self.assertEqual(cc_w_ok["verdict"], "expected")
         self.assertEqual(cc_w_ok["unexplained"], 0)
         self.assertEqual(cc_w_ok["expected"], 1)
 
         # 3. Welcome logo cell in a colour OUTSIDE omp's gradient stops (`rgb:0;255;0` lime green) -> UNEXPLAINED!
         pig_w_bad = _render_styled("   \x1b[38;2;0;255;0m████████████\x1b[0m")
-        cc_w_bad = ansi_capture.classify_cell_colours(omp_w_anim, pig_w_bad, allow)
+        cc_w_bad = ansi_capture.classify_cell_colours(omp_w_anim, pig_w_bad, grad_allow)
         self.assertEqual(cc_w_bad["verdict"], "differs")
         self.assertEqual(cc_w_bad["unexplained"], 1)
         self.assertEqual(cc_w_bad["unexplained_runs"][0]["region"], "welcome")
         self.assertEqual(cc_w_bad["unexplained_runs"][0]["pig_fg"], "rgb:0;255;0")
         self.assertFalse(ansi_capture.is_in_omp_welcome_gradient_stops("rgb:0;255;0"))
         self.assertTrue(ansi_capture.is_in_omp_welcome_gradient_stops("rgb:147;98;244"))
-
-        # 4. Extra blank row inside a port-drawn card -> UNEXPLAINED!
         omp_card_txt = "╭─── ? Ask ───╮\n│  Choose:    │\n╰─────────────╯\n"
         pig_card_blank = "╭─── ? Ask ───╮\n│  Choose:    │\n\n╰─────────────╯\n"
         rep_blank = ansi_capture.classify_terminal_diff(omp_card_txt, pig_card_blank, allow)
@@ -3060,5 +3075,81 @@ class TestDrawingHarnessFixes(unittest.TestCase):
                     home_dir = env.get("HOME", "")
                     self.assertTrue(sess_dir.startswith(home_dir), f"{side} session dir {sess_dir!r} outside sandbox HOME {home_dir!r}")
                     self.assertTrue(home_dir.startswith(os.path.realpath(td)), f"{side} HOME {home_dir!r} outside work_root {td!r}")
+
+    def test_compare_fails_on_rejected_pig_stylesheet_error_event(self) -> None:
+        """compare.py must surface and fail on any Tern `ev:"error"` event naming a rejected program stylesheet."""
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            omp_dir = root / "omp"
+            pig_dir = root / "pig"
+            omp_dir.mkdir()
+            pig_dir.mkdir()
+            open_rec = {"dir": "out", "verb": "o", "body": {"id": "s1", "mode": "inline", "role": "omp.session"}}
+            pig_open = {"dir": "out", "verb": "o", "body": {"id": "pig", "mode": "inline", "role": "pig.session"}}
+            sheet_err = {
+                "dir": "in",
+                "verb": "e",
+                "body": {"ev": "error", "sf": "pig", "sheet": "omp-brand", "msg": "1:1: unknown property `bogus`"},
+            }
+            (omp_dir / "tsp.jsonl").write_text(json.dumps(open_rec) + "\n", encoding="utf-8")
+            (pig_dir / "tsp.jsonl").write_text(json.dumps(pig_open) + "\n" + json.dumps(sheet_err) + "\n", encoding="utf-8")
+            (omp_dir / "tsp-lines-00-started.txt").write_text("1\n", encoding="utf-8")
+            (pig_dir / "tsp-lines-00-started.txt").write_text("2\n", encoding="utf-8")
+            tree = {"ok": True, "count": 1, "nodes": [{"class": "sf-region sf-main", "children": []}]}
+            (omp_dir / "tree-00-started.json").write_text(json.dumps(tree), encoding="utf-8")
+            (pig_dir / "tree-00-started.json").write_text(json.dumps(tree), encoding="utf-8")
+            rep = compare.compare_directories(str(omp_dir), str(pig_dir))
+            self.assertEqual(rep["summary"]["pig_stylesheet_error_count"], 1)
+            self.assertEqual(rep["native_proof"]["pig"]["stylesheet_errors"][0]["sheet"], "omp-brand")
+            self.assertGreaterEqual(rep["summary"]["total_unexplained_all"], 1)
+
+    def test_ansi_check_combined_stale_allowlist_fails_on_zero_hits_across_reports(self) -> None:
+        """check_combined_stale_allowlist aggregates hits across screen + scrollback and flags 0-hit entries."""
+        r_screen = {
+            "allowlist_usage": [
+                {"name": "screen-only", "kind": "text", "class": "HOST", "ref": "a:1", "hits": 3, "stale": False},
+                {"name": "scrollback-only", "kind": "text", "class": "ON_PURPOSE", "ref": "a:2", "hits": 0, "stale": True},
+                {"name": "dead-entry", "kind": "colour", "class": "HOST", "ref": "a:3", "hits": 0, "stale": True},
+                {"name": "optional-ghost", "kind": "text", "class": "OMP_ARTIFACT", "optional": True, "ref": "a:4", "hits": 0, "stale": False},
+            ]
+        }
+        r_scroll = {
+            "allowlist_usage": [
+                {"name": "screen-only", "kind": "text", "class": "HOST", "ref": "a:1", "hits": 0, "stale": True},
+                {"name": "scrollback-only", "kind": "text", "class": "ON_PURPOSE", "ref": "a:2", "hits": 16, "stale": False},
+                {"name": "dead-entry", "kind": "colour", "class": "HOST", "ref": "a:3", "hits": 0, "stale": True},
+                {"name": "optional-ghost", "kind": "text", "class": "OMP_ARTIFACT", "optional": True, "ref": "a:4", "hits": 0, "stale": False},
+            ]
+        }
+        res = ansi_capture.check_combined_stale_allowlist([r_screen, r_scroll])
+        self.assertEqual(res["stale_count"], 1)
+        self.assertEqual([e["name"] for e in res["stale_entries"]], ["dead-entry"])
+
+        # CLI `check-stale` returns 1 when a non-optional entry has 0 combined hits, 0 when fixed.
+        import subprocess
+
+        with tempfile.TemporaryDirectory() as td:
+            p1 = Path(td) / "diff.json"
+            p2 = Path(td) / "scrollback-diff.json"
+            p1.write_text(json.dumps(r_screen), encoding="utf-8")
+            p2.write_text(json.dumps(r_scroll), encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-B", str(Path(ansi_capture.__file__)), "check-stale", str(p1), str(p2)],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(proc.returncode, 1)
+            self.assertIn("dead-entry", proc.stderr)
+            # Once dead-entry is removed, CLI exits 0.
+            r_screen["allowlist_usage"] = [u for u in r_screen["allowlist_usage"] if u["name"] != "dead-entry"]
+            r_scroll["allowlist_usage"] = [u for u in r_scroll["allowlist_usage"] if u["name"] != "dead-entry"]
+            p1.write_text(json.dumps(r_screen), encoding="utf-8")
+            p2.write_text(json.dumps(r_scroll), encoding="utf-8")
+            proc_ok = subprocess.run(
+                [sys.executable, "-B", str(Path(ansi_capture.__file__)), "check-stale", str(p1), str(p2)],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(proc_ok.returncode, 0, proc_ok.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

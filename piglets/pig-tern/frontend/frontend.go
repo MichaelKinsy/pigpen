@@ -217,6 +217,15 @@ type session struct {
 	mark                     fe.Mark
 	markDirty, markInstalled bool
 	overlaySheetSent         bool
+	// omp_brand.go: omp-brand stylesheet (welcome logo sizing/theming +
+	// animated pig working spinner) and the live welcome logo node for
+	// /sprite updates. Only used when ompRoles is on.
+	ompBrandDirty     bool
+	ompBrandSheetSent bool
+	ompBrandSheetText string
+	welcomeEntryID    string
+	welcomeLogoNodeID string
+	welcomeLogoBlob   string
 	// The views (view.go): themeTokens maps the theme's colors to their
 	// tokens; viewRules are the themed views' rules by their root's TSP id,
 	// viewsShown reports that a view was drawn, viewSheetSent that the
@@ -515,6 +524,10 @@ func (s *session) Apply(frame fe.Frame) error {
 	}
 	if frame.Mark != nil && !sameMark(*frame.Mark, s.mark) {
 		s.mark, s.markDirty = *frame.Mark, true
+		if s.ompRoles {
+			s.ompBrandDirty = true
+			s.refreshOmpWelcomeLogo()
+		}
 	}
 	for _, op := range frame.Ops {
 		switch op.Region {
@@ -565,6 +578,9 @@ func (s *session) flushLocked() error {
 			s.markInstalled = css != ""
 		}
 		s.markDirty = false
+	}
+	if err := s.sendErr(s.flushOmpBrandSheet()); err != nil {
+		return err
 	}
 	if err := s.sendErr(s.flushBlobs()); err != nil {
 		return err

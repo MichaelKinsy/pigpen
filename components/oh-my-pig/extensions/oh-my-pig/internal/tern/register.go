@@ -34,7 +34,7 @@ const terminalOwnerEnv = "PI_TERMINAL_OWNER_PID"
 //   - Interactive terminal owner claim (`PI_TERMINAL_OWNER_PID` on TUI `session_start`).
 //   - Session title lifecycle (`session_start`, `session_info_changed`,
 //     `agent_start`, `agent_end`, `ui_prompt_start`, `ui_prompt_end`,
-//     `session_shutdown`): plain native title in Tern (`omp` before named),
+//     `session_shutdown`): plain native title in Tern (`oh-my-pig` before named),
 //     `π > / ⠋ / !` title with spinner in other terminals (TUI mode only,
 //     with dialog holds keeping `!` across `agent_end`).
 //   - Completion notifications (`agent_end`) and per-call `ask` notifications

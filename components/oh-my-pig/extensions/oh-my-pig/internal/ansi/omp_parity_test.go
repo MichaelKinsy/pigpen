@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/PiG/extensions/sdk/tui"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/brand"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/files"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
@@ -486,8 +487,58 @@ func TestOmpParity_WelcomeBannerVersionAndTips(t *testing.T) {
 	}
 }
 
+func TestWelcomeBannerTrueColorAndNoColor(t *testing.T) {
+	// Truecolor case (NO_COLOR unset): pig head uses pig-default palette in
+	// half-block FG (top pixel) + BG (bottom pixel) SGR sequences, and π uses
+	// flat dark-theme cream #EEDAAD (238;218;173).
+	t.Setenv("NO_COLOR", "")
+	lines := RenderWelcomeLines(sdk.UITheme{}, "v0.1.0", 120, 0)
+	joined := strings.Join(lines, "\n")
+	for _, want := range []struct {
+		label string
+		seq   string
+	}{
+		{"pi cream #EEDAAD fg", "\x1b[38;2;238;218;173m"},
+		{"pig outline #18151d fg", "\x1b[38;2;24;21;29m"},
+		{"pig body #48a381 fg", "\x1b[38;2;72;163;129m"},
+		{"pig body #48a381 bg (lower pixel)", "\x1b[48;2;72;163;129m"},
+		{"pig highlight #64be9e bg (canvas y=3, lower half)", "\x1b[48;2;100;190;158m"},
+		{"pig snout #32775e fg", "\x1b[38;2;50;119;94m"},
+		{"pig blush #82dbba fg", "\x1b[38;2;130;219;186m"},
+		{"pig eye white #fefefe fg", "\x1b[38;2;254;254;254m"},
+	} {
+		if !strings.Contains(joined, want.seq) {
+			t.Errorf("truecolor welcome banner missing %s (%q)", want.label, want.seq)
+		}
+	}
+
+	// 256-color fallback helper emits 38;5 / 48;5 indexed sequences and no 38;2 / 48;2.
+	rows256 := mashupLogoHalfBlocks(brand.DefaultHead(), brand.PiDarkHex, false, false)
+	joined256 := strings.Join(rows256, "\n")
+	if !strings.Contains(joined256, "\x1b[38;5;") || !strings.Contains(joined256, "\x1b[48;5;") {
+		t.Errorf("256color mashup logo missing 38;5 / 48;5 indexed sequences")
+	}
+	if strings.Contains(joined256, "\x1b[38;2;") || strings.Contains(joined256, "\x1b[48;2;") {
+		t.Errorf("256color mashup logo unexpectedly emitted truecolor 38;2 / 48;2")
+	}
+
+	// NO_COLOR=1 case: zero ANSI escape sequences anywhere in the welcome banner,
+	// while keeping the half-block silhouette, wordmark, version, and tip intact.
+	t.Setenv("NO_COLOR", "1")
+	noColorLines := RenderWelcomeLines(sdk.UITheme{}, "v0.1.0", 120, 0)
+	joinedNoColor := strings.Join(noColorLines, "\n")
+	if strings.Contains(joinedNoColor, "\x1b[") {
+		t.Errorf("NO_COLOR=1 welcome banner must emit zero ANSI escapes, got:\n%q", joinedNoColor)
+	}
+	if !strings.Contains(joinedNoColor, "▄▀▀▄ █▀▄▀▄ █▀▀▄") || !strings.Contains(joinedNoColor, "v0.1.0") || !strings.Contains(joinedNoColor, "Tip:") {
+		t.Errorf("NO_COLOR=1 welcome banner missing wordmark/version/tip:\n%s", joinedNoColor)
+	}
+	if !strings.Contains(joinedNoColor, "▀ ▀     ████") {
+		t.Errorf("NO_COLOR=1 welcome banner missing half-block mashup legs:\n%s", joinedNoColor)
+	}
+}
+
 // TestOmpParity_TerminalRound3Cards verifies every Round 3 terminal card fix
-// against omp's exact captured lines from `/tmp/omp-proof11-ansi/omp.scrollback.txt`:
 //   - Ask answered card: `│  ✔ Fast ...│` (tools/ask.ts:137-145).
 //   - Write card: `╭─── ✎ Write: 🗒 generated.txt · 3 lines ───...╮` with
 //     3-column right-aligned line numbers `  1 `, `  2 `, `  3 ` (tools/write.ts:179-202,385-399).

@@ -65,7 +65,7 @@ func TestOmpRolesDock(t *testing.T) {
 		t.Fatalf("working = %#v", ops)
 	}
 	kids := row["c"].([]any)
-	if len(kids) != 5 || kids[0].(map[string]any)["k"] != "spinner" || props(kids[0].(map[string]any))["style"] != "starburst" ||
+	if len(kids) != 5 || kids[0].(map[string]any)["k"] != "el" || props(kids[0].(map[string]any))["tag"] != "span" || props(kids[0].(map[string]any))["role"] != "omp.working.pig" ||
 		kids[1].(map[string]any)["k"] != "elapsed" ||
 		kids[2].(map[string]any)["id"] != "dock.activity.status.working.sep" || props(kids[2].(map[string]any))["role"] != "omp.working.sep" ||
 		kids[3].(map[string]any)["id"] != "dock.activity.status.working.label" || kids[3].(map[string]any)["k"] != "shimmer" ||

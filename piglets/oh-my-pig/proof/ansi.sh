@@ -480,6 +480,15 @@ if [ "$MODE" = "both" ]; then
     --out "$ROOT_REAL/scrollback-diff.txt" \
     --width "$COLS" \
     "${DIFF_ARGS[@]}" || DIFF_RC=$?
+  STALE_ARGS=()
+  if [ "${ORACLE_ALLOW_DIFFS:-}" = "1" ]; then
+    STALE_ARGS+=(--allow-stale)
+  fi
+  if [ -f "$ROOT_REAL/diff.json" ] && [ -f "$ROOT_REAL/scrollback-diff.json" ]; then
+    python3 -B "$SCRIPT_DIR/ansi_capture.py" check-stale \
+      "$ROOT_REAL/diff.json" "$ROOT_REAL/scrollback-diff.json" \
+      "${STALE_ARGS[@]}" || DIFF_RC=$?
+  fi
   OUT_SIZE="$(du -sh "$ROOT_REAL" 2>/dev/null | awk '{print $1}')"
   if [ "$OMP_RUN_RC" -eq 2 ] || [ "$PIG_RUN_RC" -eq 2 ] || [ "$DIFF_RC" -eq 2 ]; then
     echo "Done (CAPTURE INCOMPLETE): omp_rc=$OMP_RUN_RC pig_rc=$PIG_RUN_RC diff_rc=$DIFF_RC (output size: $OUT_SIZE)" >&2

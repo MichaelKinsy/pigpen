@@ -2347,6 +2347,33 @@ def compare_directories(
     omp_doms = {s: extract_dom_regions(os.path.join(omp_dir, f"tree-{s}.json")) for s in steps}
     pig_doms = {s: extract_dom_regions(os.path.join(pig_dir, f"tree-{s}.json")) for s in steps}
 
+    def _collect_sheet_errors(out_dir: str) -> list[dict[str, Any]]:
+        errs: list[dict[str, Any]] = []
+        tsp_path = os.path.join(out_dir, "tsp.jsonl")
+        if not os.path.isfile(tsp_path):
+            return errs
+        with open(tsp_path, "r", encoding="utf-8", errors="replace") as fh:
+            for raw in fh:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get("dir") == "in" and rec.get("verb") == "e":
+                    body = rec.get("body")
+                    if isinstance(body, dict) and body.get("ev") == "error" and body.get("sheet"):
+                        errs.append({
+                            "sheet": body.get("sheet"),
+                            "sf": body.get("sf"),
+                            "msg": body.get("msg"),
+                        })
+        return errs
+
+    omp_sheet_errors = _collect_sheet_errors(omp_dir)
+    pig_sheet_errors = _collect_sheet_errors(pig_dir)
+
     native_proof = {
         "final_step": final_step,
         "omp": {
@@ -2354,15 +2381,16 @@ def compare_directories(
             "surface_role": omp_docs[final_step].surface_role,
             "dom_regions": omp_doms[final_step].get("region_names", []),
             "dom_surface_nodes": omp_doms[final_step].get("surface_node_count", 0),
+            "stylesheet_errors": omp_sheet_errors,
         },
         "pig": {
             "surface_id": pig_docs[final_step].surface_id,
             "surface_role": pig_docs[final_step].surface_role,
             "dom_regions": pig_doms[final_step].get("region_names", []),
             "dom_surface_nodes": pig_doms[final_step].get("surface_node_count", 0),
+            "stylesheet_errors": pig_sheet_errors,
         },
     }
-
     rows: list[dict[str, Any]] = []
     allow_hits: dict[int, int] = {i: 0 for i in range(len(allowlist))}
 
@@ -2893,10 +2921,13 @@ def compare_directories(
             "frame_count_delta_pairs_unexplained": total_unexplained_count_delta_pairs,
             "final_step_unexplained_unmatched": final_frame.get("unexplained_unmatched_count", 0),
             "final_step_unexplained_count_deltas": final_frame.get("unexplained_count_delta_count", 0),
+            "pig_stylesheet_error_count": len(pig_sheet_errors),
+            "omp_stylesheet_error_count": len(omp_sheet_errors),
             "total_unexplained_all": (
                 sum(len(r["unexpected_diffs"]) for r in rows)
                 + total_unexplained_unmatched_children
                 + total_unexplained_count_delta_pairs
+                + len(pig_sheet_errors)
             ),
             "never_compared_roles": {
                 "omp": never_compared_roles_omp,
@@ -3123,6 +3154,7 @@ def main() -> int:
         or (sm.get("unexpected_diff_count", 0) > 0)
         or (sm.get("frame_unmatched_children_unexplained", 0) > 0)
         or (sm.get("frame_count_delta_pairs_unexplained", 0) > 0)
+        or (sm.get("pig_stylesheet_error_count", 0) > 0)
     )
     if has_unexplained and not args.allow_diffs:
         return 1

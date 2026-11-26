@@ -44,10 +44,11 @@ Settings are read at use via package variable `tern.Setting func(ctx sdk.Context
 | `TERN_PANE_SOCKET`, `TERN_PANE` (env) | unset | Yes (`Pane` / `PaneFromEnv`) | Delegates to `internal/ternwire`. |
 | `TERN_BLOB_DIR` (env) | unset | Library helper (`HasBlobDir`) | Indicates local Tern blob cache availability. |
 | `PI_TERMINAL_OWNER_PID` (env) | unset | Yes (written on TUI start) | Claimed on TUI `session_start` so child processes (`internal/browser`) know this process owns the pane. |
-## Not ported
+## Deliberate differences & Not ported
 
-| Feature | Why not ported |
+| Feature | Reason |
 |---|---|
+| Native Tern tab title & fallback notification titles (`oh-my-pig` vs omp's `omp`) | On purpose: the Piglet does not present itself as `omp`, so `NativeTerminalTitle` (`title.go`) and the fallback titles in `NotifyAgentEnd`/`NotifyAsk` (`notify.go`) use `"oh-my-pig"` rather than `"omp"` when a session is unnamed. Tern does not key session handling, restore, or tab icons on the OSC 0 title (its `Agent` sparkle icon comes from opening a `Chat: true` TSP surface, and session restore/transcript hooks key on `omp.session` / `omp_session_file`). |
 | `/fork` into a Tern split pane (`wire.ts` `fork` op) and `flushToDisk` before Tern fork | On purpose (integrator decision): Tern decides the program and session from `omp_session_file`; a Tern split-pane fork has no correct success for this Binary and can start the real `omp`. omp's `/fork` (whole-session fork) behaviour is PiG's built-in `/clone`; PiG's built-in `/fork` is its user-message picker. |
 | `omp_restore` / `omp_session_file` emission (OSC 1337 `SetUserVar`) | On purpose + SDK gap: Tern would type `omp --restore\|--resume <file>` in a shell pane (handing a PiG session file to `omp`), and in an agent pane PiG has no `--restore` flag and its `--resume` takes no path. PiG's SDK also has no raw OSC 1337 write call. |
 | Native vs classic title switching on live TSP surface (`isNativeRendering` / `onNativeRenderingChange`) | SDK gap: PiG's extension SDK does not inform extensions whether a native TSP frontend is active or fell back to ANSI, so `TitleController` switches on `TERM_PROGRAM=tern`. |

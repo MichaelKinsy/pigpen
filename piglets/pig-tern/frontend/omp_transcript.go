@@ -687,12 +687,19 @@ func (s *session) ompWelcomeNode(id string, lines []string) tern.WireNode {
 					{
 						ID: id + ".lockup/logo",
 						K:  tern.KindImage,
-						P: map[string]any{
-							"builtin": "omp",
-							"alt":     name,
-							"w":       128,
-							"role":    "omp.welcome.logo",
-						},
+						P: func() map[string]any {
+							blobID := s.ompLogoBlob()
+							s.welcomeEntryID = strings.TrimPrefix(id, "n.")
+							s.welcomeLogoNodeID = id + ".lockup/logo"
+							s.welcomeLogoBlob = blobID
+							return map[string]any{
+								"blob": blobID,
+								"alt":  name,
+								"w":    ompLogoWidthPx,
+								"h":    ompLogoHeightPx,
+								"role": "omp.welcome.logo",
+							}
+						}(),
 					},
 					{
 						ID: id + ".lockup/mark",

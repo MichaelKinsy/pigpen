@@ -37,9 +37,10 @@ const (
 	// upstream: packages/coding-agent/src/utils/title-generator.ts:44
 	DefaultTerminalTitle = "π"
 	// NativeTerminalTitle is the tab title without a session name in a native TSP host.
+	// Deliberately branded "oh-my-pig" rather than omp's "omp": the Piglet does not
+	// present itself as omp, and Tern does not key session handling or icons on OSC 0.
 	// upstream: packages/coding-agent/src/utils/title-generator.ts:46
-	NativeTerminalTitle = "omp"
-
+	NativeTerminalTitle   = "oh-my-pig"
 	staticTitleWorkingSep = ":"
 	titleIdleSep          = ">"
 	titleAttentionSep     = "!"
@@ -491,7 +492,7 @@ func (tc *TitleController) shouldSpinLocked() bool {
 
 func (tc *TitleController) composeLocked() string {
 	if IsTernProgramEnv(tc.lookup) {
-		// Native Tern title uses the session name only ("omp" before named),
+		// Native Tern title uses the session name only ("oh-my-pig" before named),
 		// never the cwd basename.
 		// upstream: packages/coding-agent/src/utils/title-generator.ts:896-897,994-997,1005
 		return BuildNativeTitle(tc.sessionName, tc.pullRequest)

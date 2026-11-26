@@ -166,6 +166,7 @@ func (s *session) redrawAll() {
 		s.publishSessionFile(s.sessionFile)
 	}
 	s.markDirty, s.markInstalled, s.overlaySheetSent = true, false, false
+	s.ompBrandDirty, s.ompBrandSheetSent, s.ompBrandSheetText = true, false, ""
 	s.viewSheetSent = false
 	s.redrawDock()
 }

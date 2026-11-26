@@ -39,6 +39,76 @@
   },
   {
     "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "builtin",
+    "side": "omp-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "builtin:\"omp\""
+    ],
+    "ref_subject": [
+      "builtin:\"omp\"",
+      "mashup"
+    ],
+    "why": "Welcome logo uses oh-my-pig's π-plus-pig mashup SVG blob rather than Tern's built-in `omp` logo."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "blob",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "SVG `blob`"
+    ],
+    "ref_subject": [
+      "blob",
+      "mashup"
+    ],
+    "why": "Welcome logo ships oh-my-pig's 24×22 π-plus-pig mashup as an inline SVG blob."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "w",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": 128,
+    "pig": 48,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "`w:48`, `h:44`"
+    ],
+    "ref_subject": [
+      "w:48",
+      "mashup"
+    ],
+    "why": "Welcome logo natural width is 48 CSS px (exact 2× of the 24×22 art grid) instead of omp's 128."
+  },
+  {
+    "part": "welcome banner",
+    "node_path": "row[omp.welcome.lockup] > image[omp.welcome.logo]",
+    "prop": "h",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| Welcome card (`omp.welcome`",
+      "`w:48`, `h:44`"
+    ],
+    "ref_subject": [
+      "h:44",
+      "mashup"
+    ],
+    "why": "Welcome logo sets explicit natural height 44 CSS px (exact 2× of the 24×22 art grid)."
+  },
+  {
+    "part": "welcome banner",
     "node_path": "row[omp.welcome.lockup] > col[omp.welcome.mark] > text[omp.welcome.wordmark]",
     "prop": "spans",
     "side": "value",
@@ -176,6 +246,59 @@
       "omp.turn.usage"
     ],
     "why": "PiG frontend.Frame exposes no per-turn token/duration metrics (only session totals in Footer.UsageTotals), so `row[omp.turn.usage]` is omitted."
+  },
+  {
+    "part": "working row",
+    "node_path": "$",
+    "prop": "$count",
+    "side": "value",
+    "class": "ON_PURPOSE",
+    "omp": 2,
+    "pig": 1,
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "spinner",
+      "omp.working.pig"
+    ],
+    "why": "Working row omits the `spinner` kind in favour of `el[omp.working.pig]`, so `find_working_nodes` (which matches both `row[omp.working]` and `spinner` nodes) counts 1 on pig vs 2 on omp."
+  },
+  {
+    "part": "working row",
+    "node_path": "spinner@0",
+    "prop": "$node",
+    "side": "omp-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "spinner",
+      "omp.working.pig"
+    ],
+    "why": "Working row deliberately replaces omp's starburst `spinner` with oh-my-pig's animated pig head spinner (`el[omp.working.pig]`)."
+  },
+  {
+    "part": "working row",
+    "node_path": "el[omp.working.pig]",
+    "prop": "$node",
+    "side": "port-only",
+    "class": "ON_PURPOSE",
+    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
+    "ref_term": [
+      "| `working row` |",
+      "omp.working.pig"
+    ],
+    "ref_subject": [
+      "omp.working.pig",
+      "pig head spinner"
+    ],
+    "why": "Working row draws oh-my-pig's animated pixel-art pig head spinner (`el[omp.working.pig]`) via the `omp-brand` stylesheet."
   },
   {
     "part": "working row",
