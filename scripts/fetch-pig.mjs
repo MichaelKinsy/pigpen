@@ -13,7 +13,7 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { hostTarget } from './host-target.mjs';
-import { parsePigVersion, pigVersionMatches } from './pig-bin.mjs';
+import { PIG_VERSION_ARGS, parsePigVersion, pigVersionMatches } from './pig-bin.mjs';
 
 const requirementFile = fileURLToPath(new URL('./pig-requirement.json', import.meta.url));
 
@@ -59,7 +59,7 @@ export async function fetchPig({ target = hostTarget().target, out = '.pig-bin',
   if (!target.startsWith('windows/')) chmodSync(exe, 0o755);
   // Run it only when it is this machine's target: the pin is the version the release was made as.
   if (target === hostTarget().target) {
-    const run = spawnSync(exe, ['--version'], { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
+    const run = spawnSync(exe, PIG_VERSION_ARGS, { encoding: 'utf8', env: { ...process.env, PIG_OFFLINE: '1', PI_SKIP_VERSION_CHECK: '1' } });
     const found = parsePigVersion(run.stdout);
     if (run.status !== 0 || !found || !pigVersionMatches(found, parsePigVersion(requirement.pig))) {
       throw new Error(`${exe} reports ${JSON.stringify((run.stdout ?? '').trim().split('\n')[0])}, the pin is ${requirement.pig}`);

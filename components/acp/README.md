@@ -6,7 +6,7 @@ cancel, model and thinking-level selection, context usage, and permission reques
 
 It is a Go port of [pi-acp](https://github.com/svkozak/pi-acp) by Sergii Kozak (MIT). See [CREDITS.md](CREDITS.md)
 and the port record, [port/PORT.md](port/PORT.md). **Pinned protocol: ACP version 1, schema of
-`@agentclientprotocol/sdk` 0.26.0.** Built against PiG 0.4.0 (Pi 1.0.0); the numbers under Evidence were first recorded on PiG 0.3.0, and the end-to-end scenarios, the ACP reference client run and the Go tests pass again on 0.4.0.
+`@agentclientprotocol/sdk` 0.26.0.** Supports PiG 0.3.0 and later (every public PiG release since v0.2.0 implements `pig version`, which `pig-acp` probes first with stdin closed and `PIG_OFFLINE=1`/`PI_OFFLINE=1` under a 2 s deadline before falling back to `pig --version`). The numbers under Evidence were first recorded on PiG 0.3.0 and re-run on PiG 0.4.0; `pig-acp` 0.2.4 reads PiG's own version from `pig version` so it reports PiG 0.8.0+ accurately when `--version` prints the upstream Pi version.
 
 The Package has two parts:
 
@@ -27,7 +27,7 @@ Build the companion (Go 1.26 or later) and put it on your `PATH`:
 ```sh
 cd components/acp/extensions/acp/cmd/pig-acp
 go build -trimpath -o pig-acp .
-pig-acp --version        # pig-acp 0.2.3 (ACP protocol version 1)
+pig-acp --version        # pig-acp 0.2.4 (ACP protocol version 1)
 ```
 
 Zed, `settings.json` (`/acp` prints this with your paths filled in):
