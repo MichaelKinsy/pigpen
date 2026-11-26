@@ -25,7 +25,10 @@ func TestDispatcherReportsAConnectionTheBridgeReset(t *testing.T) {
 			if err != nil {
 				return
 			}
-			// Linger 0: Close sends a reset, as closing with unread data does.
+			// The first byte of the request proves the client's connect has returned: a reset that races the
+			// connect makes bash's /dev/tcp open fail on macOS, which is the "bridge unavailable" path, not this one.
+			_, _ = conn.Read(make([]byte, 1))
+			// Linger 0 with the rest of the request unread: Close sends a reset.
 			_ = conn.(*net.TCPConn).SetLinger(0)
 			_ = conn.Close()
 		}
