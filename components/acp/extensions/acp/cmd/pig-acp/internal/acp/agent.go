@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the adapter version reported in agentInfo.
-var Version = "0.2.3"
+var Version = "0.2.4"
 
 const (
 	modelConfigID        = "model"

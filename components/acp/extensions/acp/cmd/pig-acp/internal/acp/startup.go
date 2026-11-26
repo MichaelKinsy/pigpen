@@ -15,11 +15,37 @@ import (
 
 var leadingV = regexp.MustCompile(`^[vV]`)
 
-// pigVersionHeader is `pig --version`, or "" when the executable does not answer.
+// parsePigVersionLine extracts PiG's own version from the first line of `pig version` (`pig: 0.8.0`).
+func parsePigVersionLine(out string) string {
+	first, _, _ := strings.Cut(out, "\n")
+	first = jsTrim(first)
+	rest, ok := strings.CutPrefix(first, "pig:")
+	if !ok {
+		return ""
+	}
+	v := leadingV.ReplaceAllString(jsTrim(rest), "")
+	if v == "" {
+		return ""
+	}
+	// Strip any trailing token (e.g. build suffix after whitespace) while keeping semver(+meta).
+	if sp := strings.IndexAny(v, " \t"); sp >= 0 {
+		v = v[:sp]
+	}
+	return v
+}
+
+// pigVersionHeader returns PiG's own version: from `pig version` (first line `pig: <ver>`, required from PiG 0.8.0
+// where `--version` reports the upstream Pi version), falling back to `pig --version` for older binaries that predate
+// the `version` subcommand. Returns "" when the executable does not answer.
 func pigVersionHeader(piCommand string) string {
 	piCommand = pirpc.Command(piCommand)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	if out, err := exec.CommandContext(ctx, piCommand, "version").Output(); err == nil {
+		if v := parsePigVersionLine(string(out)); v != "" {
+			return v
+		}
+	}
 	cmd := exec.CommandContext(ctx, piCommand, "--version")
 	out, err := cmd.Output()
 	text := jsTrim(string(out))

@@ -27,7 +27,7 @@ Build the companion (Go 1.26 or later) and put it on your `PATH`:
 ```sh
 cd components/acp/extensions/acp/cmd/pig-acp
 go build -trimpath -o pig-acp .
-pig-acp --version        # pig-acp 0.2.3 (ACP protocol version 1)
+pig-acp --version        # pig-acp 0.2.4 (ACP protocol version 1)
 ```
 
 Zed, `settings.json` (`/acp` prints this with your paths filled in):
