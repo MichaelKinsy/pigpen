@@ -1,0 +1,226 @@
+--- a/packages/browser-relay/extension/background.ts
++++ b/packages/browser-relay/extension/background.ts
+@@ -1,113 +1,30 @@
+ /**
+- * omp — MV3 service worker.
++ * oh-my-pig — MV3 service worker (relay-only build).
+  *
+- * Wires the extension's parts together: the relay link through the native host (`worker/relay.ts`) whose RPCs drive
+- * tabs through `chrome.debugger`, the page overlay host, the side panel hub and its request handlers, the
+- * worker-owned rpc sessions behind the native host, and the feature modules (schedules, Teach, GIF export). CDP
+- * orchestration stays in the relay server; this worker executes its RPCs and streams tab and debugger events back.
++ * Wires the relay link through the native host (`worker/relay.ts`) whose RPCs drive
++ * tabs through `chrome.debugger`, the page overlay host, and tab/debugger/download
++ * event forwarding. CDP orchestration stays in the relay server; this worker executes
++ * its RPCs and streams tab and debugger events back.
+  */
+-import type { WorkerContext } from "./messages";
+-import { captureVisible } from "./worker/capture";
+-import { installGifExport } from "./worker/gif";
+ import { restoreRelayGroups } from "./worker/groups";
+-import {
+-	forgetTab,
+-	installOverlayEvents,
+-	overlay,
+-	relayInput,
+-	restoreAfterNavigation,
+-	setActivity,
+-	unmountAll,
+-} from "./worker/overlay-host";
+-import { activeTabContext, installPanelHandlers } from "./worker/panel-handlers";
+-import { PanelHub } from "./worker/panel-hub";
+-import { connectRelay, relayStatus, setBusy, setRelayHandlers } from "./worker/relay";
++import { forgetTab, relayInput, restoreAfterNavigation, unmountAll } from "./worker/overlay-host";
++import { connectRelay, setRelayHandlers } from "./worker/relay";
+ import { installRelayEvents } from "./worker/relay-events";
+ import { runRelayRpc } from "./worker/relay-rpc";
+-import { RPC_ABORT_LINE, RpcSessions } from "./worker/rpc-sessions";
+-import { installSchedules } from "./worker/schedules";
+-import { installSidePanel } from "./worker/side-panel";
+-import { tabContext } from "./worker/tabs";
+-import { installTeach } from "./worker/teach";
+ 
+-const hub = new PanelHub((port, windowId) => {
+-	hub.emitTo(port, { event: "relay", status: relayStatus() });
+-	void activeTabContext(windowId).then(tab => hub.emitTo(port, { event: "activeTab", windowId, tab }));
+-});
+-
+-const rpcSessions = new RpcSessions(
+-	sessions => {
+-		setBusy("rpc", sessions.some(session => !session.exited));
+-		hub.emit({ event: "rpcSessions", sessions });
+-	},
+-	(sessionKey, line) => hub.emit({ event: "rpcLine", sessionKey, line }),
+-);
+-
+-const ctx: WorkerContext = {
+-	emit: event => hub.emit(event),
+-	handle(op, handler) {
+-		hub.handle(op, handler);
+-	},
+-	tabContext,
+-	captureVisible,
+-	overlay,
+-	openRpcSession: options => rpcSessions.open(options),
+-	sendRpc: (sessionKey, line) => rpcSessions.send(sessionKey, line),
+-	onRpcLine: listener => rpcSessions.onLine(listener),
+-	setActivity,
+-	setBusy,
+-};
+-
+ setRelayHandlers({
+ 	rpc: runRelayRpc,
+ 	input: relayInput,
+-	status: status => hub.emit({ event: "relay", status }),
++	status: () => {},
+ 	disconnected: () => {
+ 		void restoreRelayGroups();
+ 		void unmountAll();
+ 	},
+ });
+ installRelayEvents();
+-installPanelHandlers(ctx, rpcSessions);
+-installOverlayEvents({
+-	emit: event => hub.emit(event),
+-	panelConnected: () => hub.connected,
+-	abortTab: async tabId => {
+-		const session = await rpcSessions.forTab(tabId);
+-		if (!session) return false;
+-		rpcSessions.send(session.sessionKey, RPC_ABORT_LINE);
+-		return true;
+-	},
+-});
+-installSidePanel(windowId => hub.hasPanel(windowId));
+-installSchedules(ctx);
+-installTeach(ctx);
+-installGifExport(ctx);
+ 
+-chrome.runtime.onConnect.addListener(port => hub.accept(port));
+-
+-// ---- panel tab tracking -----------------------------------------------------------
+-
+-function emitActiveTab(tabId: number, windowId: number): void {
+-	if (!hub.hasPanel(windowId)) return;
+-	void tabContext(tabId)
+-		.then(tab => hub.emit({ event: "activeTab", windowId, tab }))
+-		.catch(() => {
+-			// The tab closed before Chrome answered.
+-		});
+-}
+-
+-chrome.tabs.onActivated.addListener(({ tabId, windowId }) => emitActiveTab(tabId, windowId));
+-
+ chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
+ 	if (change.status === "complete") void restoreAfterNavigation(tabId, tab.groupId);
+-	const visible =
+-		change.url !== undefined ||
+-		change.title !== undefined ||
+-		change.favIconUrl !== undefined ||
+-		change.groupId !== undefined ||
+-		change.status === "complete";
+-	if (tab.active && visible) emitActiveTab(tabId, tab.windowId);
+ });
+ 
+ chrome.tabs.onRemoved.addListener(tabId => void forgetTab(tabId));
+--- a/packages/browser-relay/extension/manifest.json
++++ b/packages/browser-relay/extension/manifest.json
+@@ -1,54 +1,38 @@
+ {
+ 	"manifest_version": 3,
+-	"name": "omp",
++	"name": "oh-my-pig",
+ 	"version": "0.2.0",
+-	"description": "omp in Chrome: a side panel for omp sessions that drive your real tabs through the local omp relay.",
+-	"author": "Stencil Labs, Inc.",
+-	"homepage_url": "https://omp.sh",
++	"description": "oh-my-pig browser relay (unofficial; based on omp's MIT-licensed extension): drives your existing Chrome tabs through the local oh-my-pig relay.",
++	"author": "Michael Kinsy (oh-my-pig)",
++	"homepage_url": "https://github.com/MichaelKinsy/pigpen/tree/main/components/oh-my-pig",
+ 	"minimum_chrome_version": "120",
+ 	"permissions": [
+ 		"debugger",
+ 		"tabs",
+ 		"tabGroups",
+ 		"storage",
+-		"unlimitedStorage",
+ 		"alarms",
+ 		"scripting",
+ 		"downloads",
+-		"sidePanel",
+-		"nativeMessaging",
+-		"notifications",
+-		"offscreen"
++		"nativeMessaging"
+ 	],
+ 	"host_permissions": ["<all_urls>"],
+ 	"background": {
+ 		"service_worker": "background.js"
+ 	},
+-	"side_panel": {
+-		"default_path": "panel.html"
+-	},
+ 	"action": {
+-		"default_title": "omp",
++		"default_title": "oh-my-pig",
+ 		"default_icon": {
+-			"16": "icons/omp-16.png",
+-			"32": "icons/omp-32.png",
+-			"48": "icons/omp-48.png",
+-			"128": "icons/omp-128.png"
++			"16": "icons/oh-my-pig-16.png",
++			"32": "icons/oh-my-pig-32.png",
++			"48": "icons/oh-my-pig-48.png",
++			"128": "icons/oh-my-pig-128.png"
+ 		}
+ 	},
+ 	"icons": {
+-		"16": "icons/omp-16.png",
+-		"32": "icons/omp-32.png",
+-		"48": "icons/omp-48.png",
+-		"128": "icons/omp-128.png"
+-	},
+-	"commands": {
+-		"toggle-side-panel": {
+-			"description": "Open omp",
+-			"suggested_key": {
+-				"default": "Ctrl+E",
+-				"mac": "Command+E"
+-			}
+-		}
++		"16": "icons/oh-my-pig-16.png",
++		"32": "icons/oh-my-pig-32.png",
++		"48": "icons/oh-my-pig-48.png",
++		"128": "icons/oh-my-pig-128.png"
+ 	}
+ }
+--- a/packages/browser-relay/extension/messages.ts
++++ b/packages/browser-relay/extension/messages.ts
+@@ -10,7 +10,8 @@
+ import type { ImageContent } from "@oh-my-pi/pi-wire";
+ import type { OverlayInput, PanelCollabHost, PanelInstall } from "../../coding-agent/src/tools/browser/relay/protocol";
+ 
+-export { NATIVE_HOST, OVERLAY_HOST_TAG } from "../../coding-agent/src/tools/browser/relay/protocol";
++export { OVERLAY_HOST_TAG } from "../../coding-agent/src/tools/browser/relay/protocol";
++export const NATIVE_HOST = "dev.pi_in_go.oh_my_pig.browser";
+ export type { FromNativeHost, ToNativeHost } from "../../coding-agent/src/tools/browser/relay/protocol";
+ export type { OverlayInput, PanelCollabHost, PanelInstall };
+ 
+--- a/packages/browser-relay/extension/worker/relay.ts
++++ b/packages/browser-relay/extension/worker/relay.ts
+@@ -139,7 +139,7 @@
+ async function setBadge(connected: boolean): Promise<void> {
+ 	try {
+ 		await chrome.action.setBadgeText({ text: connected ? "on" : "" });
+-		await chrome.action.setTitle({ title: connected ? "omp · Terminal browser relay connected" : "omp · Terminal browser relay disconnected" });
++		await chrome.action.setTitle({ title: connected ? "oh-my-pig · Browser relay connected" : "oh-my-pig · Browser relay disconnected" });
+ 		await chrome.action.setBadgeBackgroundColor({
+ 			color: connected ? "#1a7f37" : "#8b8b8b",
+ 		});
+@@ -180,7 +180,6 @@
+ 		downloadsProtocol:
+ 			chrome.downloads === undefined ? undefined : DOWNLOADS_PROTOCOL_VERSION,
+ 		overlayProtocol: OVERLAY_PROTOCOL_VERSION,
+-		panelProtocol: PANEL_PROTOCOL_VERSION,
+ 		tabs: snapshots,
+ 		attachedTabIds,
+ 	};

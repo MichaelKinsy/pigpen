@@ -11,6 +11,7 @@ import (
 	"github.com/MichaelKinsy/PiG/extensions/sdk/clihook"
 
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/ompsession"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/relay"
 )
 
 // The Binary resumes omp's sessions as its own. PiG chooses the session to resume (--resume's picker,
@@ -20,6 +21,12 @@ import (
 // starts a new session reads nothing.
 func init() {
 	clihook.Register(func(h clihook.Env) clihook.Result {
+		if len(h.Args) > 0 && h.Args[0] == relay.CLICommand {
+			return clihook.Result{
+				Handled: true,
+				Exit:    runBrowserRelayCLI(h),
+			}
+		}
 		cwd, err := os.Getwd()
 		home, homeErr := os.UserHomeDir()
 		if err != nil || homeErr != nil {

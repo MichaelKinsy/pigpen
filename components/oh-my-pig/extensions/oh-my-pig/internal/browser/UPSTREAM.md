@@ -10,6 +10,8 @@ Upstream release pin: **omp `v19.1.1`** (`31ffee513f`).
 | `tools/browser/tab-call.ts` | `tab_call.go`, `backend.go` |
 | `tools/browser.ts` | `resolve.go`, `manager.go`, `register.go` |
 | `tools/browser/registry.ts` | `backend.go`, `resolve.go`, `chromium.go` |
+| `tools/browser/relay/kind.ts` | `resolve.go`, `relay_backend.go` |
+| `tools/browser/relay/probe.ts`, `tools/browser/relay/discovery.ts` | `relay_backend.go` (delegates to `internal/relay`) |
 | `tools/browser/tab-supervisor.ts` | `manager.go` |
 | `tools/browser/settings.ts` | `resolve.go` (`Settings`) |
 | `tools/browser/terminal-owner.ts` | `resolve.go` (`OwnsTerminal`) |
@@ -45,7 +47,8 @@ Upstream release pin: **omp `v19.1.1`** (`31ffee513f`).
 | `tools/browser/init-scripts.ts` | `chromium.go`, `chromium_dispatch.go` |
 | `tools/browser/open-options.ts` | `manager.go` |
 | `tools/browser/tern/kind.ts` | `resolve.go` |
-| `tools/browser/relay/kind.ts` | `resolve.go` |
+| `tools/browser/relay/kind.ts` | `resolve.go` (endpoint discovery via `relay.DiscoverRelayEndpoints`) |
+| `tools/browser/relay/probe.ts`, `tools/browser/registry.ts:308-356`, `tools/browser/downloads.ts:56-118,246-278` | `relay_backend.go`, `register.go`, `cdp.go` (shared `relay.WSConn`) |
 | `tools/browser/webkit/kind.ts` | `resolve.go` |
 | `tools/browser/cmux/rpc.ts` | `resolve.go` |
 | `utils/redact-url.ts` | `resolve.go` |
@@ -60,6 +63,7 @@ Upstream release pin: **omp `v19.1.1`** (`31ffee513f`).
 - `TestRegisterAndPreludeExport` / `TestManagerTernFallbackReuseAndIdleClose` / `TestCDPClientAgainstFakeEndpoint`
 - Pass-1 through Pass-7 unit regression tests (`review_fixes_test.go`, `review_fixes2_test.go`, `pass2_unit_test.go`, `pass4_test.go`, `pass6_test.go`, `pass7_test.go`): single `configureSession` state parity before/after reattach and fail-closed `Fetch.enable` + `Target.setAutoAttach`, child-target `Fetch.enable` ordering and fail-closed on iframe attach, at-most-once action dispatch on context abort, covered-click `ClickRefusedError` and all omp timeout hint branches (`formatSelectorMatchHint`, refusal + match count, `typingInterruptedError`, probe failure/timeout, `longerBudgetHint`), omp `captureAfterFrame` bounded stalled-renderer screenshot error, per-op timeout keeping tab alive (no `DOM.getDocument` probe), `Page.stopLoading` + bounded `readyState` poll on goto timeout, zero CDP traffic in the requested-navigation window, dropped-reply recovery on read-only queries, isolated-world never falling back to main world, per-session documentation/guidance isolation, stale profile cleanup.
 - Opt-in real headless Chromium E2E tests (gated behind `OMP_REAL_BROWSER=1` so default `go test` never touches `$HOME`): `TestRealHeadlessChromiumEndToEnd`, `TestRealHeadlessChromiumActionabilityFramesAndScreenshot`, `TestRealPass2_*`, `TestRealPass3_*`, `TestRealPass4_*`, `TestRealPass5_*`, `TestRealPass6_*`, `TestRealPass7_*`.
+- Relay end-to-end tests (`relay_backend_test.go`): `TestRelayEndToEndChainWithFakeExtension`, `TestRelayFollowerAndReconnectEndToEnd` driving a Go fake extension over native-host framing -> leader/follower -> relay server -> `RelayBridge` -> `RelayBackend` / `Manager`.
 
 ## Helper Classification (Read-Only vs Action)
 
@@ -139,8 +143,8 @@ Per-session omp settings are read via the nil-safe package hook `browser.Setting
 |---|---|---|
 | `browser.enabled` | `true` | Yes (via `browser.Setting(ctx, "browser.enabled")` in `Enabled`) |
 | `browser.cdpUrl` | `""` | Yes (via `browser.Setting`, `ResolveBrowserKind`, X11 doc check) |
-| `browser.relay` | `false` | Yes (via `browser.Setting`, resolved in `ResolveBrowserKind`; relay backend not ported) |
-| `browser.relayUrl` | `""` | Yes (via `browser.Setting`, X11 doc check) |
+| `browser.relay` | `false` | Yes (via `browser.Setting`, resolved in `ResolveBrowserKind` and served by `RelayBackend`) |
+| `browser.relayUrl` | `""` | Yes (via `browser.Setting`, `RelayBackend`, X11 doc check) |
 | `browser.headless` | `true` | Yes (via `browser.Setting`, `--headless=new` vs windowed launch) |
 | `browser.cmux` | `true` | Yes (via `browser.Setting`; cmux backend not ported, auto-falls back) |
 | `browser.tern` | `true` | Yes (via `browser.Setting`, dispatches to registered `"tern"` backend with fallback) |
@@ -171,7 +175,7 @@ Wiring notes:
 
 | Feature | Reason |
 |---|---|
-| `relay` backend (Chrome extension native-host bridge) | Not ported in wave 2; requires omp's Chrome extension and native messaging host. Explicit `app: "relay"` returns a clear error suggesting `app: "auto"`, `app: "chromium"`, or a direct CDP URL. |
+| Automatic re-adoption of relay tabs on `OMP.debuggerDetached` (`tab-worker.ts:2059-2065, 2262`, `tab-supervisor.ts:1555-1621`) | omp's `tab-worker` / `tab-supervisor` automatically re-adopts a relay tab when Chrome detaches the debugger (for reasons other than `canceled_by_user`, e.g. DevTools or a foreign-extension frame). oh-my-pig's `RelayBridge` emits `OMP.debuggerDetached` and re-announces the tab, but `relayTab` / `Manager` do not auto-readopt it: on any debugger detach (`canceled_by_user`, `replaced_with_devtools`, etc.) `relayTab` marks the session closed on `Target.detachedFromTarget` and the next call returns `"No open browser tab named \"<name>\". Open one first with browser.open({ name: \"<name>\", url: ... })."` so the model reopens the tab explicitly (verified in `relay_backend_test.go:TestRelayDebuggerDetachModelError`). Note: whole-call timeouts on a live relay tab still use `cdpTab.reattachSession`, which attaches a fresh CDP session without reloading. |
 | `webkit` backend (omp's ABKit `ABHost`/`ABView`) | Not ported in wave 2; requires omp's custom WPE WebKit binary distribution (`~/.o2/lib/abkit`). Automatic opens fall back to Chromium with omp's fallback notice. |
 | `cmux` backend (cmux WKWebView surfaces) | Not ported in wave 2; cmux-specific socket RPC. Automatic opens fall back to Chromium with omp's fallback notice. |
 | Managed Chromium auto-download (Chrome for Testing ~180 MB) | Not ported in wave 2; `FindChromiumExecutable` searches cached `~/.omp/puppeteer/chrome`, `PUPPETEER_EXECUTABLE_PATH`, and installed Chrome/Chromium/Brave/Edge (on macOS, system Chrome is used as fallback when no cached Chrome for Testing exists; Brave is also accepted). |

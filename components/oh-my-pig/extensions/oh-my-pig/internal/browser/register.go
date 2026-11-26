@@ -58,6 +58,7 @@ var Setting func(ctx sdk.Context, key string) any
 var (
 	defaultManager  = NewManager()
 	defaultChromium *ChromiumBackend
+	defaultRelay    *RelayBackend
 	registerOnce    sync.Once
 )
 
@@ -81,6 +82,7 @@ func Register(e *sdk.Extension) {
 	// a backend holding live refcounted Chromium processes.
 	registerOnce.Do(func() {
 		defaultChromium = NewChromiumBackend()
+		defaultRelay = NewRelayBackend(defaultChromium)
 	})
 	if _, ok := LookupBackend(string(KindHeadless)); !ok {
 		RegisterBackend(string(KindHeadless), defaultChromium)
@@ -91,7 +93,9 @@ func Register(e *sdk.Extension) {
 	if _, ok := LookupBackend(string(KindSpawned)); !ok {
 		RegisterBackend(string(KindSpawned), defaultChromium)
 	}
-
+	if _, ok := LookupBackend(string(KindRelay)); !ok {
+		RegisterBackend(string(KindRelay), defaultRelay)
+	}
 	// Register package-level cleanup keyed by sessionID (covers both top-level
 	// sessions and child/subagent sessions that emit no session_shutdown).
 	lifecycle.OnEnd("browser", func(sessionID string) {

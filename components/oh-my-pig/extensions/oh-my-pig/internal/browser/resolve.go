@@ -9,6 +9,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/relay"
 )
 
 // DefaultTabName is the default tab name when omitted.
@@ -306,6 +308,8 @@ func ResolveTernKind(settingEnabled bool, lookup func(string) (string, bool)) *R
 }
 
 // ResolveRelayKind resolves the omp browser relay kind from env and settings.
+// When settingURL is empty, discovers the most recently started local relay
+// endpoint from relay.DiscoverRelayEndpoints().
 // upstream: resolveRelayKind in relay/kind.ts:49
 func ResolveRelayKind(settingEnabled bool, settingURL string, lookup func(string) (string, bool)) *ResolvedKind {
 	if lookup == nil {
@@ -315,7 +319,13 @@ func ResolveRelayKind(settingEnabled bool, settingURL string, lookup func(string
 	if !IsRelayOnly(lookup) && !ParseFlag(relayEnv, settingEnabled) {
 		return nil
 	}
-	u := strings.TrimRight(strings.TrimSpace(settingURL), "/")
+	u := strings.TrimSpace(settingURL)
+	if u == "" {
+		if endpoints := relay.DiscoverRelayEndpoints(); len(endpoints) > 0 {
+			u = endpoints[0]
+		}
+	}
+	u = strings.TrimRight(u, "/")
 	return &ResolvedKind{
 		Kind:   KindRelay,
 		CdpURL: u,

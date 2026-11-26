@@ -12,13 +12,18 @@ It is not affiliated with them and they have not reviewed it.
   for omp apply. No omp source is copied into the member.
 - The tools, prompt and commands come from the [`oh-my-pig` extension](../../components/oh-my-pig/CREDITS.md),
   a Go port of parts of omp at the same commit.
-- A Binary of this Piglet redistributes two third-party bundles that the extension embeds, both unmodified:
-  - omp's JS cell rewriter, built with **`@babel/parser`** `7.29.9` by The Babel Team
+- A Binary of this Piglet redistributes three embedded bundles from the extension:
+  - omp's JS cell rewriter (unmodified), built with **`@babel/parser`** `7.29.9` by The Babel Team
     (https://github.com/babel/babel, commit `54405f212b4e6a40f0e1dfba9293b0e3f3dd20e3`, MIT,
     [licenses/babel-parser-LICENSE](licenses/babel-parser-LICENSE));
-  - an ARIA-snapshot bundle that omp builds from **Playwright** `1.61.0` by **Microsoft Corporation**
+  - an ARIA-snapshot bundle (unmodified) that omp builds from **Playwright** `1.61.0` by **Microsoft Corporation**
     (https://github.com/microsoft/playwright, commit `1cc5a90cfa3eaa430b1a991963100f95126caa47`, Apache-2.0,
     [licenses/playwright-LICENSE](licenses/playwright-LICENSE), notice at
-    [licenses/playwright-NOTICE](licenses/playwright-NOTICE)).
+    [licenses/playwright-NOTICE](licenses/playwright-NOTICE));
+  - a relay-only build of omp's Chrome extension (`packages/browser-relay` at tag `v19.1.1`, commit
+    `31ffee513f27a01bba7d4dfbe12bae239cdc646a`, MIT, [licenses/oh-my-pi-LICENSE](licenses/oh-my-pi-LICENSE)),
+    keeping upstream `LICENSE`, patched to remove the side panel and use `oh-my-pig`'s native host name,
+    attribution, and generated `icons/oh-my-pig-*.png` icons (omp's icons are not shipped; zero third-party
+    npm runtime dependencies).
 
   The extension's [credits](../../components/oh-my-pig/CREDITS.md) say where each comes from in omp.
