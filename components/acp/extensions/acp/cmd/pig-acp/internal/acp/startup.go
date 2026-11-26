@@ -34,19 +34,34 @@ func parsePigVersionLine(out string) string {
 	return v
 }
 
-// pigVersionHeader returns PiG's own version: from `pig version` (first line `pig: <ver>`, required from PiG 0.8.0
-// where `--version` reports the upstream Pi version), falling back to `pig --version` for older binaries that predate
-// the `version` subcommand. Returns "" when the executable does not answer.
+// pigVersionProbeTimeout bounds `pig version` so a binary without a `version` subcommand (for example an
+// older pre-0.2.0 build or a non-PiG command that treats `version` as a prompt) cannot stall session startup.
+var pigVersionProbeTimeout = 2 * time.Second
+
+// pigVersionHeader returns PiG's own version: from `pig version` (first line `pig: <ver>`, supported in every
+// public PiG release since v0.2.0 and required from 0.8.0 where `--version` reports the upstream Pi version),
+// falling back to `pig --version` for binaries that do not answer `version`. Stdin is closed (nil -> /dev/null)
+// and `pig version` runs under a short deadline with PIG_OFFLINE/PI_OFFLINE set so a binary without the
+// subcommand cannot read stdin or make an outbound model call before falling back. Returns "" when the
+// executable does not answer.
 func pigVersionHeader(piCommand string) string {
 	piCommand = pirpc.Command(piCommand)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if out, err := exec.CommandContext(ctx, piCommand, "version").Output(); err == nil {
+	versionCtx, versionCancel := context.WithTimeout(context.Background(), pigVersionProbeTimeout)
+	defer versionCancel()
+	vcmd := exec.CommandContext(versionCtx, piCommand, "version")
+	vcmd.Stdin = nil
+	vcmd.WaitDelay = 100 * time.Millisecond
+	vcmd.Env = append(os.Environ(), "PIG_OFFLINE=1", "PI_OFFLINE=1")
+	if out, err := vcmd.Output(); err == nil {
 		if v := parsePigVersionLine(string(out)); v != "" {
 			return v
 		}
 	}
-	cmd := exec.CommandContext(ctx, piCommand, "--version")
+	flagCtx, flagCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer flagCancel()
+	cmd := exec.CommandContext(flagCtx, piCommand, "--version")
+	cmd.Stdin = nil
+	cmd.WaitDelay = 100 * time.Millisecond
 	out, err := cmd.Output()
 	text := jsTrim(string(out))
 	if text == "" && err != nil {

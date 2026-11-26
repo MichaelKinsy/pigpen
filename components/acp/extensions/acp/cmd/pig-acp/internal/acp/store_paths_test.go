@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 	"testing"
 )
 
@@ -446,6 +447,37 @@ func TestBuildStartupInfo(t *testing.T) {
 		}
 		if got := BuildStartupInfo(t.TempDir(), script, ""); !strings.HasPrefix(got, "pig v0.5.3\n---\n") {
 			t.Errorf("got %q, want prefix pig v0.5.3", got)
+		}
+	})
+	t.Run("version probe closes stdin, sets offline env, and falls back to --version when `version` stalls", func(t *testing.T) {
+		withAgentDir(t, t.TempDir())
+		t.Setenv("HOME", t.TempDir())
+		oldTimeout := pigVersionProbeTimeout
+		pigVersionProbeTimeout = 150 * time.Millisecond
+		t.Cleanup(func() { pigVersionProbeTimeout = oldTimeout })
+
+		// 1. Verify stdin is closed (EOF immediately) and PIG_OFFLINE/PI_OFFLINE are set on `version`.
+		envLog := filepath.Join(t.TempDir(), "probe.env")
+		script := filepath.Join(t.TempDir(), "fakepig-stall")
+		write(t, script, "#!/bin/sh\nif [ \"$1\" = version ]; then\n  read -r line || line=EOF\n  printf '%s|%s|%s\n' \"$line\" \"$PIG_OFFLINE\" \"$PI_OFFLINE\" > '"+envLog+"'\n  sleep 5\n  exit 0\nfi\nif [ \"$1\" = --version ]; then echo v0.1.9; exit 0; fi\nexit 2\n")
+		if err := os.Chmod(script, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		start := time.Now()
+		got := BuildStartupInfo(t.TempDir(), script, "")
+		elapsed := time.Since(start)
+		if !strings.HasPrefix(got, "pig v0.1.9\n---\n") {
+			t.Errorf("got %q, want fallback prefix pig v0.1.9", got)
+		}
+		if elapsed > 2*time.Second {
+			t.Errorf("probe took %v, expected bounded fallback", elapsed)
+		}
+		logged, err := os.ReadFile(envLog)
+		if err != nil {
+			t.Fatalf("probe env log missing: %v", err)
+		}
+		if strings.TrimSpace(string(logged)) != "EOF|1|1" {
+			t.Errorf("version probe saw %q, want EOF|1|1 (closed stdin + PIG_OFFLINE=1 + PI_OFFLINE=1)", strings.TrimSpace(string(logged)))
 		}
 	})
 }
