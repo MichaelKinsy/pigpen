@@ -916,3 +916,274 @@ func TestSessionFlagsMaxTurnsYoloToolsetsAndDefaultTodos(t *testing.T) {
 		t.Fatalf("expected /todos to fall back to default session, got %v", msgs)
 	}
 }
+
+func TestHermesLoginAndSpriteDefinitions(t *testing.T) {
+	isValidHex := func(s string) bool {
+		if len(s) != 7 || s[0] != '#' {
+			return false
+		}
+		for i := 1; i < 7; i++ {
+			c := s[i]
+			if (c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F') {
+				return false
+			}
+		}
+		return true
+	}
+
+	checkGridsAndPalette := func(t *testing.T, label string, palette map[string]string, grids ...struct {
+		name   string
+		rows   []string
+		width  int
+		height int
+	}) {
+		t.Helper()
+		if len(palette) == 0 {
+			t.Fatalf("%s: palette must not be empty", label)
+		}
+		if len(palette) > 32 {
+			t.Fatalf("%s: palette size %d exceeds 32", label, len(palette))
+		}
+		used := map[byte]bool{}
+		for _, g := range grids {
+			if len(g.rows) != g.height {
+				t.Fatalf("%s.%s: got %d rows, want %d", label, g.name, len(g.rows), g.height)
+			}
+			for y, row := range g.rows {
+				if len(row) != g.width {
+					t.Fatalf("%s.%s[%d]: got width %d, want %d", label, g.name, y, len(row), g.width)
+				}
+				for x := range len(row) {
+					c := row[x]
+					if c > 127 || c <= ' ' {
+						t.Fatalf("%s.%s[%d][%d]: non-printable/non-ASCII byte %q", label, g.name, y, x, c)
+					}
+					if c == '.' {
+						continue
+					}
+					used[c] = true
+					if _, ok := palette[string(c)]; !ok {
+						t.Fatalf("%s.%s[%d][%d]: symbol %q missing from palette", label, g.name, y, x, c)
+					}
+				}
+			}
+		}
+		for k, v := range palette {
+			if len(k) != 1 || k == "." || k[0] <= ' ' || k[0] > 127 {
+				t.Fatalf("%s: invalid palette key %q", label, k)
+			}
+			if !used[k[0]] {
+				t.Fatalf("%s: palette key %q is unused in grids", label, k)
+			}
+			if !isValidHex(v) {
+				t.Fatalf("%s: palette[%q] = %q is not #RRGGBB", label, k, v)
+			}
+		}
+	}
+
+	login := surface.HermesLoginDefinition()
+	checkGridsAndPalette(t, "login", login.Palette,
+		struct {
+			name   string
+			rows   []string
+			width  int
+			height int
+		}{"brand", login.Brand, surface.LoginBrandWidth, surface.LoginBrandHeight},
+		struct {
+			name   string
+			rows   []string
+			width  int
+			height int
+		}{"hero", login.Hero, surface.LoginHeroWidth, surface.LoginHeroHeight},
+		struct {
+			name   string
+			rows   []string
+			width  int
+			height int
+		}{"mascot", login.Mascot, surface.LoginMascotWidth, surface.LoginMascotHeight},
+	)
+	if login.Name != "pig-hermes" || len(login.Name) > 24 {
+		t.Errorf("unexpected login.Name: %q", login.Name)
+	}
+	if login.Description != "Hermes Agent on PiG" || len(login.Description) > 48 {
+		t.Errorf("unexpected login.Description: %q", login.Description)
+	}
+	if login.Tagline != "Winged messenger, forged in Go." || len(login.Tagline) > 76 {
+		t.Errorf("unexpected login.Tagline: %q", login.Tagline)
+	}
+	if 2+len(login.Name)+2+len(login.Description) > 80 {
+		t.Errorf("login metadata width exceeds 80 columns")
+	}
+
+	sprite := surface.HermesSpriteDefinition()
+	checkGridsAndPalette(t, "sprite", sprite.Palette,
+		struct {
+			name   string
+			rows   []string
+			width  int
+			height int
+		}{"mascot", sprite.Mascot, surface.LoginMascotWidth, surface.LoginMascotHeight},
+	)
+	if sprite.ID != "hermes-pig" || len(sprite.ID) > 32 {
+		t.Errorf("unexpected sprite.ID: %q", sprite.ID)
+	}
+	if sprite.Name != "Hermes PiG" || len(sprite.Name) > 24 {
+		t.Errorf("unexpected sprite.Name: %q", sprite.Name)
+	}
+	if sprite.Tagline == "" || len(sprite.Tagline) > 76 {
+		t.Errorf("unexpected sprite.Tagline: %q", sprite.Tagline)
+	}
+}
+
+func TestGenerateAndEnsureHermesThemeFiles(t *testing.T) {
+	// Every color token in PiG v0.8.0's theme_dark.json schema.
+	requiredColorTokens := []string{
+		"accent", "border", "borderAccent", "borderMuted",
+		"success", "error", "warning", "muted", "dim", "text", "thinkingText",
+		"selectedBg", "scrollbarTrack", "scrollbarThumb", "searchMatchBg", "searchMatchText",
+		"userMessageBg", "userMessageText",
+		"customMessageBg", "customMessageText", "customMessageLabel",
+		"toolPendingBg", "toolSuccessBg", "toolErrorBg", "toolTitle", "toolOutput",
+		"mdHeading", "mdLink", "mdLinkUrl", "mdCode", "mdCodeBlock", "mdCodeBlockBorder",
+		"mdQuote", "mdQuoteBorder", "mdHr", "mdListBullet",
+		"toolDiffAdded", "toolDiffRemoved", "toolDiffContext",
+		"syntaxComment", "syntaxKeyword", "syntaxFunction", "syntaxVariable",
+		"syntaxString", "syntaxNumber", "syntaxType", "syntaxOperator", "syntaxPunctuation",
+		"thinkingOff", "thinkingMinimal", "thinkingLow", "thinkingMedium",
+		"thinkingHigh", "thinkingXhigh", "thinkingMax", "bashMode",
+	}
+
+	agentDir := t.TempDir()
+	if err := surface.EnsureThemeFiles(agentDir); err != nil {
+		t.Fatalf("EnsureThemeFiles: %v", err)
+	}
+	// Calling a second time must be idempotent.
+	if err := surface.EnsureThemeFiles(agentDir); err != nil {
+		t.Fatalf("EnsureThemeFiles (2nd call): %v", err)
+	}
+
+	names := surface.BuiltinSkinNames()
+	if len(names) != 9 {
+		t.Fatalf("expected 9 builtin skins, got %d", len(names))
+	}
+	for _, name := range names {
+		themeName := "hermes-" + name
+		path := filepath.Join(agentDir, "themes", themeName+".json")
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("missing theme file %q: %v", path, err)
+		}
+		var doc surface.ThemeDocument
+		if err := json.Unmarshal(raw, &doc); err != nil {
+			t.Fatalf("invalid JSON in %q: %v", path, err)
+		}
+		if doc.Schema != "https://pi.dev/schemas/theme.schema.json" {
+			t.Errorf("%s: unexpected $schema %q", themeName, doc.Schema)
+		}
+		if doc.Name != themeName {
+			t.Errorf("%s: got name %q", themeName, doc.Name)
+		}
+		wantAppearance := "dark"
+		if name == "daylight" || name == "warm-lightmode" {
+			wantAppearance = "light"
+		}
+		if doc.Appearance != wantAppearance {
+			t.Errorf("%s: appearance = %q, want %q", themeName, doc.Appearance, wantAppearance)
+		}
+		for _, tok := range requiredColorTokens {
+			v, ok := doc.Colors[tok]
+			if !ok || strings.TrimSpace(v) == "" {
+				t.Errorf("%s: missing color token %q", themeName, tok)
+			}
+		}
+		for _, expTok := range []string{"pageBg", "cardBg", "infoBg"} {
+			if strings.TrimSpace(doc.Export[expTok]) == "" {
+				t.Errorf("%s: missing export token %q", themeName, expTok)
+			}
+		}
+		if name == "default" {
+			if doc.Vars["accent"] != "#FFD700" || doc.Vars["border"] != "#CD7F32" {
+				t.Errorf("hermes-default missing signature gold/bronze palette: %+v", doc.Vars)
+			}
+		}
+	}
+}
+
+func TestOnSessionStartAndSkinSwitchBrandingAndThemes(t *testing.T) {
+	root := t.TempDir()
+	agentDir := filepath.Join(t.TempDir(), "agent")
+	hostInfo, _ := json.Marshal(map[string]any{"agentDir": agentDir})
+	t.Setenv("PIG_EXT_HOST_INFO", string(hostInfo))
+	t.Setenv("HERMES_HOME", root)
+	t.Setenv("HERMES_PROFILE", "")
+
+	p := paths.ResolveProfilePaths("")
+	cfg := config.Default()
+	memStore := memory.NewStore(p.MemoriesDir, cfg.MemoryLimit, cfg.UserLimit)
+
+	ext := sdk.New("pig-hermes-branding-test")
+	surface.Register(ext, p, cfg, memStore)
+
+	host := startFakeHost(t, ext, func(method string, _ map[string]any) (any, string) {
+		if method == "ui.setTheme" {
+			return map[string]any{"success": true}, ""
+		}
+		return map[string]any{}, ""
+	})
+
+	host.fireEvent("session_start", map[string]any{})
+
+	var sawSprite, sawLogin bool
+	var themeCalls []string
+	host.mu.Lock()
+	for _, c := range host.calls {
+		switch c.Method {
+		case "ui.registerSprite":
+			if id, _ := c.Args["id"].(string); id == "hermes-pig" {
+				sawSprite = true
+			}
+		case "ui.setLogin":
+			if name, _ := c.Args["name"].(string); name == "pig-hermes" {
+				sawLogin = true
+			}
+		case "ui.setTheme":
+			if theme, _ := c.Args["theme"].(string); theme != "" {
+				themeCalls = append(themeCalls, theme)
+			}
+		}
+	}
+	host.mu.Unlock()
+
+	if !sawSprite {
+		t.Errorf("expected OnSessionStart to call ui.registerSprite for hermes-pig")
+	}
+	if !sawLogin {
+		t.Errorf("expected OnSessionStart to call ui.setLogin for pig-hermes")
+	}
+	if len(themeCalls) == 0 || themeCalls[len(themeCalls)-1] != "hermes-default" {
+		t.Errorf("expected OnSessionStart to call ui.setTheme(\"hermes-default\"), got %v", themeCalls)
+	}
+
+	// Remove hermes-ares.json to prove /skin ares ensures it before calling ui.setTheme.
+	aresPath := filepath.Join(agentDir, "themes", "hermes-ares.json")
+	_ = os.Remove(aresPath)
+
+	host.runCommand("skin", "ares")
+
+	if _, err := os.Stat(aresPath); err != nil {
+		t.Fatalf("expected /skin ares to write %q: %v", aresPath, err)
+	}
+	var lastTheme string
+	host.mu.Lock()
+	for _, c := range host.calls {
+		if c.Method == "ui.setTheme" {
+			if theme, _ := c.Args["theme"].(string); theme != "" {
+				lastTheme = theme
+			}
+		}
+	}
+	host.mu.Unlock()
+	if lastTheme != "hermes-ares" {
+		t.Errorf("expected /skin ares to call ui.setTheme(\"hermes-ares\"), got %q", lastTheme)
+	}
+}

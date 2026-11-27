@@ -35,8 +35,8 @@ type OMHTheme struct {
 var builtinThemes = []OMHTheme{
 	{Name: "sky", Accent: "#38BDF8", Surface: "#0B1E28", Summary: "Sky turquoise on deep teal (OMH default)."},
 	{Name: "amber", Accent: "#F59E0B", Surface: "#1F160A", Summary: "Amber gold on deep bronze."},
-	{Name: "crimson", Accent: "#EF4444", Surface: "#220D10", Summary: "Ember red-orange on deep crimson."},
-	{Name: "mono", Accent: "#E5E7EB", Surface: "#111111", Summary: "Neutral grayscale with white accents."},
+	{Name: "crimson", Accent: "#F43F5E", Surface: "#220D10", Summary: "Ember rose-crimson on deep garnet."},
+	{Name: "mono", Accent: "#D4D4D8", Surface: "#111111", Summary: "Neutral grayscale with crisp zinc accents."},
 	{Name: "kanagawa", Accent: "#7E9CD8", Surface: "#1F1F28", Summary: "Kanagawa Wave: indigo, warm ivory, muted blue and violet."},
 }
 
@@ -244,7 +244,11 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 	ext.RegisterCommand("dag", sdk.CommandOptions{
 		Description: "Inspect OMH DAG runs and dependency frontiers (/dag [run_id])",
 		Handler: func(ctx sdk.Context, args string) error {
-			st.show(ctx, st.renderDAGView(strings.TrimSpace(args)))
+			runID := strings.TrimSpace(args)
+			if runID == "" && ctx.HasUI() {
+				return st.runInteractiveDAGOverlay(ctx)
+			}
+			st.show(ctx, st.renderDAGView(runID))
 			return nil
 		},
 	})
@@ -252,6 +256,9 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 	ext.RegisterCommand("bots", sdk.CommandOptions{
 		Description: "Show the OMH multi-session bot and delegation board",
 		Handler: func(ctx sdk.Context, args string) error {
+			if strings.TrimSpace(args) == "" && ctx.HasUI() {
+				return st.runInteractiveBotsOverlay(ctx)
+			}
 			st.show(ctx, st.renderBotsBoard())
 			return nil
 		},
@@ -262,6 +269,9 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 		Handler: func(ctx sdk.Context, args string) error {
 			fields := strings.Fields(args)
 			if len(fields) == 0 {
+				if ctx.HasUI() {
+					return st.runInteractiveModelOverlay(ctx)
+				}
 				st.show(ctx, st.renderModelChains())
 				return nil
 			}
@@ -319,14 +329,24 @@ func registerSurfaceAndHooks(ext *sdk.Extension, st *surfaceState) {
 				st.show(ctx, err.Error())
 				return nil
 			}
+			_ = EnsureOMHThemeFiles("")
+			if ctx.HasUI() {
+				_, _ = ctx.SetTheme("omh-" + th.Name)
+			}
 			ctx.SetStatus("omh", st.statusText())
 			st.show(ctx, fmt.Sprintf("OMH theme set to %s (%s)", th.Name, th.Summary))
 			return nil
 		},
 	})
 
-	// OnSessionStart: set OMH status bar item.
+	// OnSessionStart: ensure OMH theme files, register sprite & login branding, and set status bar item.
 	ext.OnSessionStart(func(ctx sdk.Context, data map[string]any) (any, error) {
+		_ = EnsureOMHThemeFiles("")
+		if ctx.HasUI() {
+			_ = ctx.RegisterSprite(OMHSpriteDefinition())
+			_ = ctx.SetLogin(OMHLoginDefinition())
+			_, _ = ctx.SetTheme("omh-" + st.currentTheme())
+		}
 		ctx.SetStatus("omh", st.statusText())
 		return nil, nil
 	})

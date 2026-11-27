@@ -237,3 +237,58 @@ func TestRingBufferConcurrencyAndWrap(t *testing.T) {
 		t.Fatalf("ring buffer exceeded capacity: %d", len(rb.Snapshot()))
 	}
 }
+
+func TestTrailingAmpersandAutoBackground(t *testing.T) {
+	// Unit cases for stripTrailingBackgroundAmp.
+	cases := []struct {
+		in       string
+		wantCmd  string
+		wantAuto bool
+	}{
+		{"sleep 10 &", "sleep 10", true},
+		{"echo hi &   ", "echo hi", true},
+		{"echo a && echo b", "", false},
+		{"echo err 2>&1", "", false},
+		{`echo "hello &"`, "", false},
+		{`echo 'hello &'`, "", false},
+		{`echo hello \&`, "", false},
+		{"echo a |& cat", "", false},
+		{"&", "", false},
+	}
+	for _, tc := range cases {
+		got, ok := stripTrailingBackgroundAmp(tc.in)
+		if ok != tc.wantAuto || got != tc.wantCmd {
+			t.Fatalf("stripTrailingBackgroundAmp(%q) = (%q, %v), want (%q, %v)", tc.in, got, ok, tc.wantCmd, tc.wantAuto)
+		}
+	}
+
+	if runtime.GOOS == "windows" {
+		t.Skip("shell background smoke test requires POSIX sh")
+	}
+
+	st := newState(config.Default())
+	defer st.registry.shutdownAll()
+
+	resAny, err := st.executeTerminal(sdk.Context{}, map[string]any{
+		"command": "sleep 5 &",
+		"workdir": t.TempDir(),
+	})
+	if err != nil {
+		t.Fatalf("executeTerminal error: %v", err)
+	}
+	res := resAny.(sdk.ToolResult)
+	if res.IsError {
+		t.Fatalf("expected auto-backgrounded command to succeed, got: %+v", res)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(res.Content), &payload); err != nil {
+		t.Fatalf("expected JSON background payload, got %q: %v", res.Content, err)
+	}
+	sid, _ := payload["session_id"].(string)
+	if sid == "" {
+		t.Fatalf("expected non-empty session_id, got: %+v", payload)
+	}
+	if promoted, _ := payload["auto_promoted"].(bool); !promoted {
+		t.Fatalf("expected auto_promoted=true, got: %+v", payload)
+	}
+}

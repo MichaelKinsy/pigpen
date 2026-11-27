@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -192,9 +193,19 @@ func (s *state) executeTerminal(ctx sdk.Context, params map[string]any) (any, er
 		timeoutSec = defaultTimeoutSec
 	}
 	autoPromoted := false
+	autoPromotedReason := ""
 	if !background && timeoutSec > maxForegroundSec {
 		background = true
 		autoPromoted = true
+		autoPromotedReason = fmt.Sprintf("timeout %ds exceeded foreground cap (%ds); started in background", timeoutSec, maxForegroundSec)
+	}
+	if !background {
+		if stripped, ok := stripTrailingBackgroundAmp(command); ok {
+			background = true
+			autoPromoted = true
+			autoPromotedReason = "trailing '&' detected; started in background"
+			command = stripped
+		}
 	}
 
 	if background {
@@ -205,7 +216,7 @@ func (s *state) executeTerminal(ctx sdk.Context, params map[string]any) (any, er
 		res := mp.summary()
 		if autoPromoted {
 			res["auto_promoted"] = true
-			res["note"] = fmt.Sprintf("timeout %ds exceeded foreground cap (%ds); started in background", timeoutSec, maxForegroundSec)
+			res["note"] = autoPromotedReason
 		}
 		if checkInterval := paramInt(params, "check_interval", 0); checkInterval > 0 {
 			res["check_interval"] = checkInterval
@@ -215,6 +226,57 @@ func (s *state) executeTerminal(ctx sdk.Context, params map[string]any) (any, er
 	}
 
 	return s.runForeground(ctx, command, workdir, time.Duration(timeoutSec)*time.Second, explicitWorkdir == "")
+}
+
+// stripTrailingBackgroundAmp detects an unquoted trailing background '&'
+// (ignoring '&&', fd redirects like '2>&1', '&>', '|&', escaped '\&', or quoted '&')
+// and returns the command with the trailing '&' stripped.
+func stripTrailingBackgroundAmp(command string) (string, bool) {
+	trimmed := strings.TrimRight(command, " \t\r\n")
+	if trimmed == "" || !strings.HasSuffix(trimmed, "&") {
+		return "", false
+	}
+
+	// Walk command tracking quotes and escapes to verify the final '&' is unquoted
+	// and not escaped.
+	var inSingle, inDouble, escaped bool
+	lastIdx := len(trimmed) - 1
+	for i := range lastIdx {
+		ch := trimmed[i]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if ch == '\\' && !inSingle {
+			escaped = true
+			continue
+		}
+		if ch == '\'' && !inDouble {
+			inSingle = !inSingle
+			continue
+		}
+		if ch == '"' && !inSingle {
+			inDouble = !inDouble
+			continue
+		}
+	}
+	if inSingle || inDouble || escaped {
+		return "", false
+	}
+
+	if lastIdx > 0 {
+		prev := trimmed[lastIdx-1]
+		// Reject &&, >& (e.g. 2>&1, >&), <& , |&
+		if prev == '&' || prev == '>' || prev == '<' || prev == '|' {
+			return "", false
+		}
+	}
+
+	stripped := strings.TrimRight(trimmed[:lastIdx], " \t\r\n")
+	if stripped == "" {
+		return "", false
+	}
+	return stripped, true
 }
 
 func (s *state) guardCommand(ctx sdk.Context, command string) error {
@@ -272,8 +334,8 @@ func (s *state) runForeground(ctx sdk.Context, command, workdir string, timeout 
 	cmd := exec.Command(shell, args...)
 	cmd.Dir = workdir
 	cmd.Env = os.Environ()
+	cmd.WaitDelay = 2 * time.Second
 	setProcGroup(cmd)
-
 	var combined syncBuffer
 	cmd.Stdout = &combined
 	cmd.Stderr = &combined
@@ -312,7 +374,7 @@ func (s *state) runForeground(ctx sdk.Context, command, workdir string, timeout 
 	exitCode := 0
 	if timedOut {
 		exitCode = 124
-	} else if waitErr != nil {
+	} else if waitErr != nil && !errors.Is(waitErr, exec.ErrWaitDelay) {
 		if exitErr, ok := waitErr.(*exec.ExitError); ok {
 			exitCode = exitErr.ExitCode()
 		} else {

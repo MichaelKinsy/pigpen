@@ -3,7 +3,6 @@
 package sessions
 
 import (
-	"context"
 	"encoding/json"
 	"path/filepath"
 	"strings"
@@ -185,6 +184,7 @@ func handleSessionSearch(ctx sdk.Context, p paths.ProfilePaths, params map[strin
 	}
 
 	dirs := resolveSearchDirs(p, sp.Profile, activeSessionFile)
+	sp.StateDBPaths = resolveStateDBPaths(p.Home, p.ProfilesDir, sp.Profile)
 	resp := ExecuteSearch(dirs, sp)
 
 	raw, err := json.MarshalIndent(resp, "", "  ")
@@ -253,23 +253,6 @@ func resolveSearchDirs(p paths.ProfilePaths, profileOverride, activeSessionFile 
 	return dirs
 }
 
-func handleBeforeCompact(ctx sdk.Context, data map[string]any) (any, error) {
-	sessionID := safeSessionID(ctx)
-	// Notify any registered external memory providers before compaction runs.
-	// Errors are intentionally ignored so compaction is never blocked by a provider failure.
-	providers := snapshotMemoryProviders()
-	if len(providers) > 0 {
-		bgCtx := context.Background()
-		for _, prov := range providers {
-			_ = prov.OnPreCompress(bgCtx, sessionID)
-		}
-	}
-
-	// Return (nil, nil) so PiG's native compaction generates and persists
-	// the structured summary cleanly without overriding or cancelling it.
-	_ = data
-	return nil, nil
-}
 
 func safeSessionID(ctx sdk.Context) (sid string) {
 	defer func() { _ = recover() }()

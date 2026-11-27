@@ -131,17 +131,31 @@ func TestWebSearchSearXNG(t *testing.T) {
 }
 
 func TestWebSearchDuckDuckGoAndLimitCap(t *testing.T) {
+	var gotQuery string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{
-			"Heading": "Go",
-			"AbstractText": "Statically typed compiled language.",
-			"AbstractURL": "https://go.dev",
-			"RelatedTopics": [
-				{"Text": "Go Tour - Interactive tour", "FirstURL": "https://go.dev/tour"},
-				{"Topics": [{"Text": "Go Blog - Official blog", "FirstURL": "https://go.dev/blog"}]}
-			]
-		}`))
+		gotQuery = r.URL.Query().Get("q")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write([]byte(`<!doctype html>
+<html><body>
+  <div class="result">
+    <h2 class="result__title">
+      <a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fgo.dev%2F&amp;rut=abc">The <b>Go</b> Programming Language</a>
+    </h2>
+    <a class="result__snippet" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fgo.dev%2F">Build simple, secure, scalable systems with <b>Go</b>.</a>
+  </div>
+  <div class="result">
+    <h2 class="result__title">
+      <a class="result__a" href="https://go.dev/tour">A Tour of Go</a>
+    </h2>
+    <a class="result__snippet" href="https://go.dev/tour">Interactive &amp; guided introduction to Go.</a>
+  </div>
+  <div class="result">
+    <h2 class="result__title">
+      <a class="result__a" href="https://go.dev/blog">The Go Blog</a>
+    </h2>
+    <a class="result__snippet" href="https://go.dev/blog">Official Go blog posts.</a>
+  </div>
+</body></html>`))
 	}))
 	defer srv.Close()
 
@@ -152,7 +166,7 @@ func TestWebSearchDuckDuckGoAndLimitCap(t *testing.T) {
 	t.Setenv("HERMES_WEB_SEARCH_BASE_URL", srv.URL)
 
 	res := handleWebSearch(context.Background(), map[string]any{
-		"query":    "go",
+		"query":    "go lang",
 		"limit":    2,
 		"provider": "duckduckgo",
 	}, config.Default())
@@ -160,9 +174,18 @@ func TestWebSearchDuckDuckGoAndLimitCap(t *testing.T) {
 	if res.IsError {
 		t.Fatalf("unexpected error: %s", res.Content)
 	}
+	if gotQuery != "go lang" {
+		t.Fatalf("expected query param 'go lang', got %q", gotQuery)
+	}
 	sr := res.StructuredContent.(SearchResponse)
 	if sr.Provider != "duckduckgo" || len(sr.Results) != 2 {
 		t.Fatalf("expected 2 capped results, got: %+v", sr)
+	}
+	if sr.Results[0].Title != "The Go Programming Language" || sr.Results[0].URL != "https://go.dev/" || !strings.Contains(sr.Results[0].Snippet, "Build simple, secure, scalable systems with Go") {
+		t.Fatalf("unexpected first DDG HTML result: %+v", sr.Results[0])
+	}
+	if sr.Results[1].Title != "A Tour of Go" || sr.Results[1].URL != "https://go.dev/tour" || sr.Results[1].Snippet != "Interactive & guided introduction to Go." {
+		t.Fatalf("unexpected second DDG HTML result: %+v", sr.Results[1])
 	}
 }
 

@@ -15,3 +15,10 @@
 | Fused Piglet binary build | `npm run build:piglet -- oh-my-hermes-pig` | **PASS** (`~/.local/bin/oh-my-hermes-pig`, 62.6 MB fused binary) |
 | Hermetic `pigeq llm` oracle proof | `PIG_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/oracle.py` | **PASS** (`1/1` case, 7 turns, 6 tool calls, 0 net, 0 leaked PIDs; proves live `omh_todo`↔`todo_list` state sharing across fused extensions) |
 | Pigpen repo gates | `npm run check` | **PASS** (46 Packages, 72 provenance records, 92 components) |
+
+| Live PTY/ANSI visual proof | `OH_MY_HERMES_BIN=~/.local/bin/oh-my-hermes-pig python3 -B piglets/oh-my-hermes-pig/proof/ansi.py` | **PASS** (`truecolor=1123`, `sgr=2423`, custom crowned winged-pig login banner + 5 real `omh-*.json` themes, `exit=0`, `0` net, `0` leaked PIDs) |
+
+## Wave 2 Look, Feel & Interactive Overlay Additions
+- **OMH Crowned Winged-Pig branding:** `ui.registerSprite("omh-pig")` + `ui.setLogin(...)` (`41x5` `OH-MY-HERMES` brand, `32x14` hero, `16x14` mascot).
+- **5 real PiG theme JSONs:** auto-installed to `<agentDir>/themes/omh-{sky,amber,crimson,mono,kanagawa}.json` and applied via `ctx.SetTheme` on startup and `/omh-theme <name>`.
+- **Interactive overlays (`overlays.go`):** `/omh-model` (category → preset/custom model + thinking picker persisted to `routing/model-chains.json`), `/dag` (run picker + pinned `sdk/kit` box-frontier widget + ready-node advancement), and `/bots` (3-level Profile → Sessions/Teams/Delegations → Detail drill-down), with clean non-UI fallback.

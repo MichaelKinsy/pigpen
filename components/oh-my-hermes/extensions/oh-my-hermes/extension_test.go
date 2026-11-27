@@ -470,3 +470,328 @@ func TestFakeHostIntegrationAllOMHToolsCommandsSeamsAndHooks(t *testing.T) {
 		}
 	}
 }
+
+func TestOMHThemeFilesAndSetTheme(t *testing.T) {
+	setupTempOMH(t)
+	agentDir := t.TempDir()
+	t.Setenv("PIG_AGENT_DIR", agentDir)
+
+	if err := ohmyhermes.EnsureOMHThemeFiles(agentDir); err != nil {
+		t.Fatalf("EnsureOMHThemeFiles failed: %v", err)
+	}
+	// Idempotent second call must also succeed without error.
+	if err := ohmyhermes.EnsureOMHThemeFiles(agentDir); err != nil {
+		t.Fatalf("second EnsureOMHThemeFiles failed: %v", err)
+	}
+
+	requiredColorKeys := []string{
+		"accent", "border", "borderAccent", "borderMuted",
+		"success", "error", "warning", "muted", "dim", "text", "thinkingText",
+		"selectedBg", "scrollbarTrack", "scrollbarThumb", "searchMatchBg", "searchMatchText",
+		"userMessageBg", "userMessageText", "customMessageBg", "customMessageText", "customMessageLabel",
+		"toolPendingBg", "toolSuccessBg", "toolErrorBg", "toolTitle", "toolOutput",
+		"mdHeading", "mdLink", "mdLinkUrl", "mdCode", "mdCodeBlock", "mdCodeBlockBorder",
+		"mdQuote", "mdQuoteBorder", "mdHr", "mdListBullet",
+		"toolDiffAdded", "toolDiffRemoved", "toolDiffContext",
+		"syntaxComment", "syntaxKeyword", "syntaxFunction", "syntaxVariable",
+		"syntaxString", "syntaxNumber", "syntaxType", "syntaxOperator", "syntaxPunctuation",
+		"thinkingOff", "thinkingMinimal", "thinkingLow", "thinkingMedium",
+		"thinkingHigh", "thinkingXhigh", "thinkingMax", "bashMode",
+	}
+
+	expectedThemes := map[string]string{
+		"omh-sky":      "#38BDF8",
+		"omh-amber":    "#F59E0B",
+		"omh-crimson":  "#F43F5E",
+		"omh-mono":     "#D4D4D8",
+		"omh-kanagawa": "#7E9CD8",
+	}
+
+	for themeName, wantAccent := range expectedThemes {
+		p := filepath.Join(agentDir, "themes", themeName+".json")
+		raw, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatalf("missing theme file %s: %v", p, err)
+		}
+		var doc struct {
+			Schema     string            `json:"$schema"`
+			Name       string            `json:"name"`
+			Appearance string            `json:"appearance"`
+			Vars       map[string]string `json:"vars"`
+			Colors     map[string]string `json:"colors"`
+			Export     map[string]string `json:"export"`
+		}
+		if err := json.Unmarshal(raw, &doc); err != nil {
+			t.Fatalf("invalid JSON in %s: %v", p, err)
+		}
+		if doc.Name != themeName {
+			t.Errorf("%s: name = %q, want %q", p, doc.Name, themeName)
+		}
+		if doc.Appearance != "dark" {
+			t.Errorf("%s: appearance = %q, want dark", p, doc.Appearance)
+		}
+		if doc.Vars["accent"] != wantAccent {
+			t.Errorf("%s: vars.accent = %q, want %q", p, doc.Vars["accent"], wantAccent)
+		}
+		for _, k := range requiredColorKeys {
+			if _, ok := doc.Colors[k]; !ok {
+				t.Errorf("%s: missing required color key %q", p, k)
+			}
+		}
+		for _, ek := range []string{"pageBg", "cardBg", "infoBg"} {
+			if doc.Export[ek] == "" {
+				t.Errorf("%s: missing export key %q", p, ek)
+			}
+		}
+	}
+
+	// Verify /omh-theme kanagawa triggers ui.setTheme("omh-kanagawa") when HasUI=true.
+	h := StartHost(t, ohmyhermes.Extension(), HostOptions{
+		Mode:  "tui",
+		HasUI: sdk.Bool(true),
+		Cwd:   t.TempDir(),
+		OnCall: func(method string, args map[string]any) (map[string]any, string) {
+			if method == "ui.setTheme" {
+				return map[string]any{"success": true}, ""
+			}
+			return map[string]any{}, ""
+		},
+	})
+	if errMsg := h.Command("omh-theme", "kanagawa"); errMsg != "" {
+		t.Fatalf("/omh-theme kanagawa failed: %s", errMsg)
+	}
+	foundThemeCall := false
+	for _, c := range h.CallsTo("ui.setTheme") {
+		if c.Args["theme"] == "omh-kanagawa" {
+			foundThemeCall = true
+			break
+		}
+	}
+	if !foundThemeCall {
+		t.Fatalf("expected ui.setTheme(\"omh-kanagawa\"), got calls: %+v", h.CallsTo("ui.setTheme"))
+	}
+}
+
+func TestOMHLoginAndSpriteDefinitionsExactDimensionsAndPalette(t *testing.T) {
+	validateGrid := func(t *testing.T, name string, rows []string, wantW, wantH int, used map[byte]bool) {
+		t.Helper()
+		if len(rows) != wantH {
+			t.Fatalf("%s height = %d, want %d", name, len(rows), wantH)
+		}
+		for y, row := range rows {
+			if len(row) != wantW {
+				t.Fatalf("%s[%d] width = %d, want %d (%q)", name, y, len(row), wantW, row)
+			}
+			for x := range len(row) {
+				ch := row[x]
+				if ch > 127 || ch < 33 {
+					t.Fatalf("%s[%d][%d] non-printable/space ASCII byte %d", name, y, x, ch)
+				}
+				if ch != '.' {
+					used[ch] = true
+				}
+			}
+		}
+	}
+	validatePalette := func(t *testing.T, label string, palette map[string]string, used map[byte]bool) {
+		t.Helper()
+		if len(palette) == 0 || len(palette) > 32 {
+			t.Fatalf("%s palette size = %d, want 1..32", label, len(palette))
+		}
+		for sym := range used {
+			hex, ok := palette[string(sym)]
+			if !ok {
+				t.Errorf("%s: symbol %q used in grid but missing from palette", label, sym)
+				continue
+			}
+			if len(hex) != 7 || hex[0] != '#' {
+				t.Errorf("%s: palette[%q] = %q, want #RRGGBB", label, sym, hex)
+			}
+		}
+		for k := range palette {
+			if len(k) != 1 || k == "." {
+				t.Errorf("%s: invalid palette key %q", label, k)
+				continue
+			}
+			if !used[k[0]] {
+				t.Errorf("%s: palette key %q is unused in grid (PiG rejects unused palette symbols)", label, k)
+			}
+		}
+	}
+
+	sprite := ohmyhermes.OMHSpriteDefinition()
+	if sprite.ID != "omh-pig" {
+		t.Errorf("sprite.ID = %q, want omh-pig", sprite.ID)
+	}
+	if len(sprite.Name) == 0 || len(sprite.Name) > 24 {
+		t.Errorf("sprite.Name length = %d out of bounds", len(sprite.Name))
+	}
+	if len(sprite.Tagline) == 0 || len(sprite.Tagline) > 76 {
+		t.Errorf("sprite.Tagline length = %d out of bounds", len(sprite.Tagline))
+	}
+	spriteUsed := make(map[byte]bool)
+	validateGrid(t, "sprite.Mascot", sprite.Mascot, 16, 14, spriteUsed)
+	validatePalette(t, "sprite", sprite.Palette, spriteUsed)
+
+	login := ohmyhermes.OMHLoginDefinition()
+	if len(login.Name) == 0 || len(login.Name) > 24 {
+		t.Errorf("login.Name length = %d out of bounds", len(login.Name))
+	}
+	if len(login.Description) == 0 || len(login.Description) > 48 {
+		t.Errorf("login.Description length = %d out of bounds", len(login.Description))
+	}
+	if len(login.Tagline) == 0 || len(login.Tagline) > 76 {
+		t.Errorf("login.Tagline length = %d out of bounds", len(login.Tagline))
+	}
+	loginUsed := make(map[byte]bool)
+	validateGrid(t, "login.Brand", login.Brand, 41, 5, loginUsed)
+	validateGrid(t, "login.Hero", login.Hero, 32, 14, loginUsed)
+	validateGrid(t, "login.Mascot", login.Mascot, 16, 14, loginUsed)
+	validatePalette(t, "login", login.Palette, loginUsed)
+
+	// Verify OnSessionStart registers sprite and login when HasUI=true.
+	setupTempOMH(t)
+	t.Setenv("PIG_AGENT_DIR", t.TempDir())
+	h := StartHost(t, ohmyhermes.Extension(), HostOptions{
+		Mode:  "tui",
+		HasUI: sdk.Bool(true),
+		Cwd:   t.TempDir(),
+	})
+	_ = h.Fire(sdk.EventSessionStart, map[string]any{})
+	if len(h.CallsTo("ui.registerSprite")) == 0 {
+		t.Errorf("expected ui.registerSprite call on session_start with HasUI=true")
+	}
+	if len(h.CallsTo("ui.setLogin")) == 0 {
+		t.Errorf("expected ui.setLogin call on session_start with HasUI=true")
+	}
+}
+
+func TestInteractiveOverlaysWithAndWithoutUI(t *testing.T) {
+	omhHome := setupTempOMH(t)
+	t.Setenv("HERMES_HOME", t.TempDir())
+	t.Setenv("PIG_AGENT_DIR", t.TempDir())
+
+	// Seed a DAG run, team, and usage record so /dag and /bots have rich data.
+	pathsFn := func() ohmyhermes.OMHPaths { return ohmyhermes.ResolvePaths(omhHome) }
+	dags := ohmyhermes.NewDAGStore(pathsFn)
+	if _, _, err := dags.Create("sess-ui", "dag-ui-1", "Overlay DAG", []ohmyhermes.DAGNode{
+		{ID: "plan", Title: "Plan"},
+		{ID: "build", Title: "Build", DependsOn: []string{"plan"}},
+	}); err != nil {
+		t.Fatalf("seed DAG failed: %v", err)
+	}
+	teams := ohmyhermes.NewTeamStore(pathsFn)
+	if _, err := teams.Create("sess-ui", "team-ui-1", "Overlay Team", []ohmyhermes.TeamLane{
+		{LaneID: "lane-a", Title: "Inspect", Category: "quick"},
+	}); err != nil {
+		t.Fatalf("seed team failed: %v", err)
+	}
+	usage.Default().Add("sess-ui", "", "claude-sonnet-4-6", 500, 200, 0.01, 1, 2)
+
+	// 1. HasUI=true: /omh-model interactive loop picks category -> preset -> persists -> done.
+	modelStep := 0
+	dagStep := 0
+	botsStep := 0
+	hUI := StartHost(t, ohmyhermes.Extension(), HostOptions{
+		Mode:  "tui",
+		HasUI: sdk.Bool(true),
+		Cwd:   t.TempDir(),
+		OnCall: func(method string, args map[string]any) (map[string]any, string) {
+			if method != "ui.select" {
+				return map[string]any{}, ""
+			}
+			title, _ := args["title"].(string)
+			rawOpts, _ := args["options"].([]any)
+			opts := make([]string, 0, len(rawOpts))
+			for _, o := range rawOpts {
+				if s, ok := o.(string); ok {
+					opts = append(opts, s)
+				}
+			}
+			switch {
+			case strings.Contains(title, "OMH Model Routing"):
+				modelStep++
+				if modelStep == 1 {
+					for _, o := range opts {
+						if strings.Contains(o, "quick") {
+							return map[string]any{"ok": true, "selected": o}, ""
+						}
+					}
+				}
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			case strings.Contains(title, "OMH Model Chain [quick]"):
+				return map[string]any{"ok": true, "selected": opts[0]}, ""
+			case strings.Contains(title, "OMH DAG Runs"):
+				dagStep++
+				if dagStep == 1 {
+					return map[string]any{"ok": true, "selected": opts[0]}, ""
+				}
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			case strings.Contains(title, "DAG dag-ui-1"):
+				// Advance first ready node ("plan"), then go back.
+				if dagStep == 1 {
+					dagStep++
+					return map[string]any{"ok": true, "selected": opts[0]}, ""
+				}
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			case strings.Contains(title, "Set status for node"):
+				return map[string]any{"ok": true, "selected": "completed"}, ""
+			case strings.Contains(title, "OMH Bot Board — Profiles"):
+				botsStep++
+				if botsStep == 1 {
+					return map[string]any{"ok": true, "selected": opts[0]}, ""
+				}
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			case strings.Contains(title, "Bot Board ["):
+				if botsStep == 1 {
+					botsStep++
+					return map[string]any{"ok": true, "selected": opts[0]}, ""
+				}
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			default:
+				// Level 3 detail view -> back
+				return map[string]any{"ok": true, "selected": opts[len(opts)-1]}, ""
+			}
+		},
+	})
+
+	if errMsg := hUI.Command("omh-model", ""); errMsg != "" {
+		t.Fatalf("interactive /omh-model failed: %s", errMsg)
+	}
+	if errMsg := hUI.Command("dag", ""); errMsg != "" {
+		t.Fatalf("interactive /dag failed: %s", errMsg)
+	}
+	if errMsg := hUI.Command("bots", ""); errMsg != "" {
+		t.Fatalf("interactive /bots failed: %s", errMsg)
+	}
+	if len(hUI.CallsTo("ui.select")) < 7 {
+		t.Fatalf("expected interactive /omh-model, /dag, /bots to invoke ui.select across flows, got %d calls", len(hUI.CallsTo("ui.select")))
+	}
+	// Verify /omh-model saved the override to routing/model-chains.json.
+	if _, err := os.Stat(filepath.Join(omhHome, "routing", "model-chains.json")); err != nil {
+		t.Fatalf("expected routing/model-chains.json written by interactive /omh-model: %v", err)
+	}
+	// Verify /dag advanced node "plan" to completed.
+	updatedDAG, err := dags.Get("dag-ui-1")
+	if err != nil {
+		t.Fatalf("reload dag-ui-1 failed: %v", err)
+	}
+	if updatedDAG.Nodes[0].Status != "completed" {
+		t.Errorf("expected interactive /dag to advance plan -> completed, got %q", updatedDAG.Nodes[0].Status)
+	}
+
+	// 2. HasUI=false: /omh-model, /dag, /bots fall back cleanly without calling ui.select.
+	hNoUI := StartHost(t, ohmyhermes.Extension(), HostOptions{
+		Mode:  "print",
+		HasUI: sdk.Bool(false),
+		Cwd:   t.TempDir(),
+	})
+	for _, cmd := range []string{"omh-model", "dag", "bots"} {
+		if errMsg := hNoUI.Command(cmd, ""); errMsg != "" {
+			t.Fatalf("non-UI /%s failed: %s", cmd, errMsg)
+		}
+	}
+	if got := len(hNoUI.CallsTo("ui.select")); got != 0 {
+		t.Fatalf("expected 0 ui.select calls when HasUI=false, got %d", got)
+	}
+}

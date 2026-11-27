@@ -111,6 +111,9 @@ func (s *state) checkWriteGuard(ctx sdk.Context, absPath string) error {
 		norm = filepath.ToSlash(filepath.Join(parentReal, filepath.Base(absPath)))
 	}
 
+	if isActiveHermesConfigPath(norm) {
+		return fmt.Errorf("refusing to write active Hermes config file %q (protected against self-modification)", absPath)
+	}
 	if sensitiveExactPaths[norm] {
 		return fmt.Errorf("refusing to write sensitive system path %q", absPath)
 	}
@@ -171,16 +174,26 @@ func sensitiveSecretReason(slashPath string) string {
 }
 
 // atomicWriteFile creates parent directories and atomically writes data via temp file + rename.
+// If absPath is a symlink, it resolves the symlink target and atomically writes to the real target
+// so the symlink itself is preserved.
 func atomicWriteFile(absPath string, data []byte) error {
-	dir := filepath.Dir(absPath)
+	targetPath := absPath
+	if linfo, err := os.Lstat(absPath); err == nil && linfo.Mode()&os.ModeSymlink != 0 {
+		resolved, err := filepath.EvalSymlinks(absPath)
+		if err != nil {
+			return fmt.Errorf("resolve symlink target %q: %w", absPath, err)
+		}
+		targetPath = resolved
+	}
+	dir := filepath.Dir(targetPath)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("create parent directory: %w", err)
 	}
 
 	perm := os.FileMode(0o644)
-	if info, err := os.Stat(absPath); err == nil {
+	if info, err := os.Stat(targetPath); err == nil {
 		if info.IsDir() {
-			return fmt.Errorf("%q is a directory", absPath)
+			return fmt.Errorf("%q is a directory", targetPath)
 		}
 		perm = info.Mode().Perm()
 	}
@@ -213,7 +226,7 @@ func atomicWriteFile(absPath string, data []byte) error {
 		return fmt.Errorf("close temp file: %w", err)
 	}
 
-	if err := os.Rename(tmpName, absPath); err != nil {
+	if err := os.Rename(tmpName, targetPath); err != nil {
 		return fmt.Errorf("atomic rename: %w", err)
 	}
 	cleanup = false

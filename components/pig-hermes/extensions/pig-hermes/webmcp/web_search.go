@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -25,7 +27,15 @@ const (
 
 	defaultTavilyBaseURL     = "https://api.tavily.com"
 	defaultBraveBaseURL      = "https://api.search.brave.com"
-	defaultDuckDuckGoBaseURL = "https://api.duckduckgo.com"
+	defaultDuckDuckGoBaseURL = "https://html.duckduckgo.com/html"
+)
+
+var (
+	ddgResultLinkRe    = regexp.MustCompile(`(?is)<a\b[^>]*class="[^"]*\bresult__a\b[^"]*"[^>]*>(.*?)</a>`)
+	ddgResultSnippetRe = regexp.MustCompile(`(?is)<(?:a|div|span)\b[^>]*class="[^"]*\bresult__snippet\b[^"]*"[^>]*>(.*?)</(?:a|div|span)>`)
+	ddgHrefAttrRe      = regexp.MustCompile(`(?is)\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')`)
+	ddgHTMLTagRe       = regexp.MustCompile(`(?s)<[^>]+>`)
+	ddgWhitespaceRe    = regexp.MustCompile(`\s+`)
 )
 
 // SearchResult is a normalized web search hit.
@@ -356,114 +366,105 @@ func searchDuckDuckGo(ctx context.Context, client *http.Client, query string, li
 	}
 	q := u.Query()
 	q.Set("q", query)
-	q.Set("format", "json")
-	q.Set("no_html", "1")
-	q.Set("skip_disambig", "1")
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "pig-hermes/1.0")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; pig-hermes/1.0)")
 
 	raw, err := doHTTPRead(client, req, maxSearchRespBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	var parsed struct {
-		Heading        string `json:"Heading"`
-		AbstractText   string `json:"AbstractText"`
-		AbstractURL    string `json:"AbstractURL"`
-		Results        []struct {
-			Text     string `json:"Text"`
-			FirstURL string `json:"FirstURL"`
-		} `json:"Results"`
-		RelatedTopics []json.RawMessage `json:"RelatedTopics"`
-	}
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return nil, fmt.Errorf("invalid JSON response: %w", err)
-	}
-
-	out := make([]SearchResult, 0, limit)
-	if parsed.AbstractText != "" && parsed.AbstractURL != "" {
-		title := strings.TrimSpace(parsed.Heading)
-		if title == "" {
-			title = query
-		}
-		out = append(out, SearchResult{
-			Title:   title,
-			URL:     strings.TrimSpace(parsed.AbstractURL),
-			Snippet: strings.TrimSpace(parsed.AbstractText),
-		})
-	}
-	for _, r := range parsed.Results {
-		if len(out) >= limit {
-			break
-		}
-		if r.FirstURL == "" && r.Text == "" {
-			continue
-		}
-		out = append(out, SearchResult{
-			Title:   ddgTitleFromText(r.Text, r.FirstURL),
-			URL:     strings.TrimSpace(r.FirstURL),
-			Snippet: strings.TrimSpace(r.Text),
-		})
-	}
-	for _, topicRaw := range parsed.RelatedTopics {
-		if len(out) >= limit {
-			break
-		}
-		var flat struct {
-			Text     string `json:"Text"`
-			FirstURL string `json:"FirstURL"`
-			Topics   []struct {
-				Text     string `json:"Text"`
-				FirstURL string `json:"FirstURL"`
-			} `json:"Topics"`
-		}
-		if err := json.Unmarshal(topicRaw, &flat); err != nil {
-			continue
-		}
-		if flat.FirstURL != "" {
-			out = append(out, SearchResult{
-				Title:   ddgTitleFromText(flat.Text, flat.FirstURL),
-				URL:     strings.TrimSpace(flat.FirstURL),
-				Snippet: strings.TrimSpace(flat.Text),
-			})
-			continue
-		}
-		for _, sub := range flat.Topics {
-			if len(out) >= limit {
-				break
-			}
-			if sub.FirstURL == "" {
-				continue
-			}
-			out = append(out, SearchResult{
-				Title:   ddgTitleFromText(sub.Text, sub.FirstURL),
-				URL:     strings.TrimSpace(sub.FirstURL),
-				Snippet: strings.TrimSpace(sub.Text),
-			})
-		}
-	}
-	return out, nil
+	return parseDuckDuckGoHTML(string(raw), limit), nil
 }
 
-func ddgTitleFromText(text, fallbackURL string) string {
-	text = strings.TrimSpace(text)
-	if idx := strings.Index(text, " - "); idx > 0 {
-		return strings.TrimSpace(text[:idx])
+func parseDuckDuckGoHTML(body string, limit int) []SearchResult {
+	if limit <= 0 {
+		limit = defaultSearchLimit
 	}
-	if len(text) > 80 {
-		return strings.TrimSpace(text[:80])
+	linkLocs := ddgResultLinkRe.FindAllStringSubmatchIndex(body, -1)
+	if len(linkLocs) == 0 {
+		return nil
 	}
-	if text != "" {
-		return text
+	out := make([]SearchResult, 0, limit)
+	for i, loc := range linkLocs {
+		if len(out) >= limit {
+			break
+		}
+		fullTag := body[loc[0]:loc[1]]
+		innerTitle := body[loc[2]:loc[3]]
+		rawHref := extractDDGHref(fullTag)
+		resolvedURL := resolveDDGRedirectURL(rawHref)
+		title := cleanDDGHTMLText(innerTitle)
+		if title == "" && resolvedURL == "" {
+			continue
+		}
+		if title == "" {
+			title = resolvedURL
+		}
+
+		// Search for the matching result__snippet between this link and the next link.
+		chunkEnd := len(body)
+		if i+1 < len(linkLocs) {
+			chunkEnd = linkLocs[i+1][0]
+		}
+		chunk := body[loc[1]:chunkEnd]
+		var snippet string
+		if sm := ddgResultSnippetRe.FindStringSubmatch(chunk); len(sm) >= 2 {
+			snippet = cleanDDGHTMLText(sm[1])
+		}
+
+		out = append(out, SearchResult{
+			Title:   title,
+			URL:     resolvedURL,
+			Snippet: snippet,
+		})
 	}
-	return fallbackURL
+	return out
+}
+
+func extractDDGHref(anchorTag string) string {
+	m := ddgHrefAttrRe.FindStringSubmatch(anchorTag)
+	if len(m) < 3 {
+		return ""
+	}
+	href := m[1]
+	if href == "" {
+		href = m[2]
+	}
+	return strings.TrimSpace(html.UnescapeString(href))
+}
+
+func resolveDDGRedirectURL(rawHref string) string {
+	rawHref = strings.TrimSpace(rawHref)
+	if rawHref == "" {
+		return ""
+	}
+	// Handle protocol-relative DuckDuckGo redirect links like //duckduckgo.com/l/?uddg=...
+	parseTarget := rawHref
+	if strings.HasPrefix(parseTarget, "//") {
+		parseTarget = "https:" + parseTarget
+	}
+	if u, err := url.Parse(parseTarget); err == nil {
+		if uddg := strings.TrimSpace(u.Query().Get("uddg")); uddg != "" {
+			return uddg
+		}
+		if strings.HasPrefix(rawHref, "//") {
+			return parseTarget
+		}
+	}
+	return rawHref
+}
+
+func cleanDDGHTMLText(s string) string {
+	stripped := ddgHTMLTagRe.ReplaceAllString(s, " ")
+	unescaped := html.UnescapeString(stripped)
+	return strings.TrimSpace(ddgWhitespaceRe.ReplaceAllString(unescaped, " "))
 }
 
 func doHTTPRead(client *http.Client, req *http.Request, maxBytes int64) ([]byte, error) {

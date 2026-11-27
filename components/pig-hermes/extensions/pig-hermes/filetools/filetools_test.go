@@ -3,11 +3,11 @@ package filetools
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 	"time"
-
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
 )
@@ -500,5 +500,89 @@ func TestReadFileDetectsNULByteInASCIIAsBinary(t *testing.T) {
 	res := resAny.(sdk.ToolResult)
 	if !res.IsError || !strings.Contains(strings.ToLower(res.Content), "binary") {
 		t.Fatalf("expected binary refusal for NUL-containing ASCII file, got isError=%v content=%q", res.IsError, res.Content)
+	}
+}
+
+func TestWriteFileSymlinkWriteThroughConfigDenyAndPartialReadGuard(t *testing.T) {
+	dir := t.TempDir()
+
+	// 1. Active Hermes config.yaml is hard-denied even under yolo=true.
+	hermesHome := filepath.Join(dir, "hermes-home")
+	t.Setenv("HERMES_HOME", hermesHome)
+	t.Setenv("HERMES_PROFILE", "")
+	cfgPath := filepath.Join(hermesHome, "config.yaml")
+	yoloCfg := config.Default()
+	yoloCfg.SetYolo(true)
+	stYolo := newState(yoloCfg)
+
+	resAny, _ := stYolo.executeWriteFile(sdk.Context{}, map[string]any{
+		"path":    cfgPath,
+		"content": "yolo: true\n",
+	})
+	res := resAny.(sdk.ToolResult)
+	if !res.IsError || !strings.Contains(res.Content, "active Hermes config file") {
+		t.Fatalf("expected hard-deny on active Hermes config.yaml even under yolo, got: %+v", res)
+	}
+
+	// 2. Partial-read baseline guard refuses write_file until full file is read.
+	st := newState(config.Default())
+	multiLine := filepath.Join(dir, "multi.txt")
+	if err := os.WriteFile(multiLine, []byte("line1\nline2\nline3\nline4\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// Partial read (limit=2 out of 4 lines).
+	_, _ = st.executeReadFile(sdk.Context{}, map[string]any{
+		"path":   multiLine,
+		"offset": 1,
+		"limit":  2,
+	})
+	resAny, _ = st.executeWriteFile(sdk.Context{}, map[string]any{
+		"path":    multiLine,
+		"content": "clobbered\n",
+	})
+	res = resAny.(sdk.ToolResult)
+	if !res.IsError || !strings.Contains(res.Content, "partially read") {
+		t.Fatalf("expected partial-read refusal on write_file, got: %+v", res)
+	}
+	// Full read clears the guard and allows write_file.
+	_, _ = st.executeReadFile(sdk.Context{}, map[string]any{"path": multiLine})
+	resAny, _ = st.executeWriteFile(sdk.Context{}, map[string]any{
+		"path":    multiLine,
+		"content": "updated cleanly\n",
+	})
+	res = resAny.(sdk.ToolResult)
+	if res.IsError {
+		t.Fatalf("expected write_file to succeed after full read, got: %+v", res)
+	}
+
+	// 3. Symlink write-through preserves symlink and updates the real target.
+	if runtime.GOOS != "windows" {
+		realTarget := filepath.Join(dir, "real-target.txt")
+		linkPath := filepath.Join(dir, "link.txt")
+		if err := os.WriteFile(realTarget, []byte("old\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(realTarget, linkPath); err != nil {
+			t.Fatalf("symlink failed: %v", err)
+		}
+		resAny, _ = st.executeWriteFile(sdk.Context{}, map[string]any{
+			"path":    linkPath,
+			"content": "new-via-symlink\n",
+		})
+		res = resAny.(sdk.ToolResult)
+		if res.IsError {
+			t.Fatalf("write_file through symlink failed: %+v", res)
+		}
+		linfo, err := os.Lstat(linkPath)
+		if err != nil {
+			t.Fatalf("lstat symlink failed: %v", err)
+		}
+		if linfo.Mode()&os.ModeSymlink == 0 {
+			t.Fatalf("expected %s to remain a symlink after write_file", linkPath)
+		}
+		gotTarget, _ := os.ReadFile(realTarget)
+		if string(gotTarget) != "new-via-symlink\n" {
+			t.Fatalf("expected real target to be updated, got %q", string(gotTarget))
+		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -490,5 +491,168 @@ func TestHandleSessionSearch_ProfileQualifiedSessionRef(t *testing.T) {
 	}
 	if !strings.Contains(toolRes.Content, "Work profile secret message") {
 		t.Fatalf("expected work profile session content, got: %s", toolRes.Content)
+	}
+}
+
+func TestStateDBDiscoveryBrowseReadAndSearch(t *testing.T) {
+	sqliteBin, err := exec.LookPath("sqlite3")
+	if err != nil {
+		t.Skip("sqlite3 binary not available on PATH")
+	}
+
+	homeDir := t.TempDir()
+	dbPath := filepath.Join(homeDir, "state.db")
+	schemaSQL := `
+CREATE TABLE sessions (
+	id TEXT PRIMARY KEY,
+	title TEXT,
+	model TEXT,
+	started_at REAL,
+	ended_at REAL,
+	parent_session_id TEXT
+);
+CREATE TABLE messages (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	session_id TEXT NOT NULL,
+	role TEXT NOT NULL,
+	content TEXT,
+	tool_call_id TEXT,
+	tool_name TEXT,
+	tool_calls TEXT,
+	timestamp REAL
+);
+INSERT INTO sessions (id, title, model, started_at, ended_at, parent_session_id)
+VALUES ('hermes-sqlite-1', 'Upstream Postgres Migration', 'nous/hermes-3', 1770000000.0, 1770000600.0, NULL);
+INSERT INTO messages (session_id, role, content, tool_call_id, tool_name, tool_calls, timestamp) VALUES
+('hermes-sqlite-1', 'user', 'Help me migrate our upstream postgres pooler config.', NULL, NULL, NULL, 1770000010.0),
+('hermes-sqlite-1', 'assistant', 'I will inspect pgbouncer.ini and update pool_mode to transaction.', NULL, NULL, '[{"id":"tc1","function":{"name":"read_file","arguments":"{\"path\":\"pgbouncer.ini\"}"}}]', 1770000020.0),
+('hermes-sqlite-1', 'tool', 'pool_mode = session', 'tc1', 'read_file', NULL, 1770000030.0);
+`
+	cmd := exec.Command(sqliteBin, dbPath)
+	cmd.Stdin = strings.NewReader(schemaSQL)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to seed temp state.db: %v\n%s", err, string(out))
+	}
+
+	// Browse includes state.db session alongside JSONL sessions.
+	jsonlRoot := makeSampleSessionsDir(t)
+	browseResp := ExecuteSearch([]string{jsonlRoot}, SearchParams{
+		StateDBPaths: []string{dbPath},
+		Limit:        10,
+	})
+	if !browseResp.Success {
+		t.Fatalf("browse failed: %+v", browseResp)
+	}
+	foundBrowse := false
+	for _, s := range browseResp.Sessions {
+		if s.SessionID == "hermes-sqlite-1" {
+			foundBrowse = true
+			if s.Title != "Upstream Postgres Migration" || s.Model != "nous/hermes-3" {
+				t.Fatalf("unexpected state.db browse entry: %+v", s)
+			}
+		}
+	}
+	if !foundBrowse {
+		t.Fatalf("expected hermes-sqlite-1 in browse results, got: %+v", browseResp.Sessions)
+	}
+
+	// Discover across JSONL + state.db finds upstream message.
+	discoverResp := ExecuteSearch([]string{jsonlRoot}, SearchParams{
+		Query:        "pgbouncer pool_mode",
+		StateDBPaths: []string{dbPath},
+	})
+	if !discoverResp.Success || discoverResp.Count != 1 || discoverResp.Results[0].SessionID != "hermes-sqlite-1" {
+		t.Fatalf("expected discover hit in hermes-sqlite-1, got: %+v", discoverResp)
+	}
+
+	// Read and search-in-session work on state.db session.
+	readResp := ExecuteSearch([]string{jsonlRoot}, SearchParams{
+		SessionID:    "hermes-sqlite-1",
+		StateDBPaths: []string{dbPath},
+	})
+	if !readResp.Success || readResp.Total != 3 {
+		t.Fatalf("expected 3 messages in state.db read, got: %+v", readResp)
+	}
+	inSessResp := ExecuteSearch([]string{jsonlRoot}, SearchParams{
+		SessionID:    "hermes-sqlite-1",
+		Query:        "transaction",
+		StateDBPaths: []string{dbPath},
+	})
+	if !inSessResp.Success || inSessResp.Count != 1 {
+		t.Fatalf("expected 1 in-session hit, got: %+v", inSessResp)
+	}
+
+	// Missing or empty state.db degrades cleanly without error.
+	missingResp := ExecuteSearch([]string{jsonlRoot}, SearchParams{
+		StateDBPaths: []string{filepath.Join(homeDir, "does-not-exist.db")},
+	})
+	if !missingResp.Success || missingResp.Count == 0 {
+		t.Fatalf("expected graceful fallback on missing state.db, got: %+v", missingResp)
+	}
+}
+
+func TestHandleBeforeCompact_HermesSummaryAndToolPruning(t *testing.T) {
+	prov := &fakeMemoryProvider{}
+	RegisterMemoryProvider(prov)
+
+	// Empty / absent messagesToSummarize delegates cleanly to PiG native compactor (returns nil, nil).
+	resNil, err := handleBeforeCompact(sdk.Context{}, map[string]any{})
+	if err != nil || resNil != nil {
+		t.Fatalf("expected (nil, nil) fallback when messagesToSummarize is absent, got (%v, %v)", resNil, err)
+	}
+
+	// Oversized tool output (>2000 chars) is pruned with `[pruned N chars]` and structured sections are emitted.
+	hugeOutput := strings.Repeat("A", 2500)
+	resAny, err := handleBeforeCompact(sdk.Context{}, map[string]any{
+		"firstKeptEntryId": "entry-42",
+		"tokensBefore":     12345,
+		"messagesToSummarize": []any{
+			map[string]any{
+				"role":    "user",
+				"content": "Refactor the auth middleware to support rotating keys.",
+			},
+			map[string]any{
+				"role": "assistant",
+				"content": []any{
+					map[string]any{"type": "text", "text": "Decided to use atomic symlink writes for key rotation."},
+					map[string]any{"type": "toolCall", "id": "c1", "name": "write_file", "arguments": map[string]any{"path": "auth/middleware.go"}},
+				},
+			},
+			map[string]any{
+				"role":     "toolResult",
+				"toolName": "terminal",
+				"content":  hugeOutput,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("handleBeforeCompact error: %v", err)
+	}
+	resMap, ok := resAny.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map result, got %T", resAny)
+	}
+	comp, ok := resMap["compaction"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected compaction map, got %+v", resMap)
+	}
+	if comp["firstKeptEntryId"] != "entry-42" || comp["tokensBefore"] != 12345 {
+		t.Fatalf("unexpected compaction metadata: %+v", comp)
+	}
+	summary, _ := comp["summary"].(string)
+	for _, want := range []string{
+		"## Goal",
+		"Refactor the auth middleware",
+		"## Progress",
+		"## Files Modified",
+		"`auth/middleware.go`",
+		"## Key Decisions",
+		"Decided to use atomic symlink writes",
+		"## Active Context",
+		"[pruned 500 chars]",
+	} {
+		if !strings.Contains(summary, want) {
+			t.Fatalf("expected compaction summary to contain %q, got:\n%s", want, summary)
+		}
 	}
 }

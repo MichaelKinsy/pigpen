@@ -12,6 +12,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/config"
+	"github.com/MichaelKinsy/pigpen/components/pig-hermes-core/paths"
 )
 
 const (
@@ -88,6 +89,12 @@ func (s *state) checkStaleness(absPath string) error {
 	if !tracked {
 		return nil
 	}
+	if !rec.fullRead {
+		return fmt.Errorf(
+			"file %q was only partially read; call read_file to read the full file before overwriting with write_file (or use patch for targeted edits)",
+			absPath,
+		)
+	}
 	if !rec.modTime.Equal(info.ModTime()) || rec.size != info.Size() {
 		return fmt.Errorf(
 			"file %q has been modified on disk since it was last read (stale baseline); call read_file again before overwriting",
@@ -95,6 +102,20 @@ func (s *state) checkStaleness(absPath string) error {
 		)
 	}
 	return nil
+}
+
+func isActiveHermesConfigPath(normSlashPath string) bool {
+	cfgFile := strings.TrimSpace(paths.ResolveProfilePaths("").ConfigFile)
+	if cfgFile == "" {
+		return false
+	}
+	cfgNorm := filepath.ToSlash(filepath.Clean(cfgFile))
+	if real, err := filepath.EvalSymlinks(cfgFile); err == nil {
+		cfgNorm = filepath.ToSlash(filepath.Clean(real))
+	} else if parentReal, err := filepath.EvalSymlinks(filepath.Dir(cfgFile)); err == nil {
+		cfgNorm = filepath.ToSlash(filepath.Join(parentReal, filepath.Base(cfgFile)))
+	}
+	return normSlashPath == cfgNorm
 }
 
 // Register registers read_file, write_file, patch, and search_files on ext.

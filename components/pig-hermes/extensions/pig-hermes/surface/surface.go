@@ -136,6 +136,14 @@ func Register(ext *sdk.Extension, p paths.ProfilePaths, cfg *config.Config, memS
 	// 4. Lifecycle hooks & Hermes compact tool renderers
 	ext.OnSessionStart(func(ctx sdk.Context, _ map[string]any) (any, error) {
 		st.applySessionFlags(ctx)
+		if ctx.HasUI() {
+			if agentDir := resolveAgentDir(); agentDir != "" {
+				_ = EnsureThemeFiles(agentDir)
+			}
+			_ = ctx.RegisterSprite(HermesSpriteDefinition())
+			_ = ctx.SetLogin(HermesLoginDefinition())
+			_, _ = ctx.SetTheme(HermesThemeName(st.currentSkin().Name))
+		}
 		st.updateStatusBar(ctx)
 		return nil, nil
 	})
@@ -630,7 +638,10 @@ func (s *state) cmdSkin(ctx sdk.Context, args string) error {
 	s.skin = sk.Name
 	s.mu.Unlock()
 
-	_, _ = ctx.SetTheme(sk.Name)
+	if agentDir := resolveAgentDir(); agentDir != "" {
+		_ = EnsureThemeFiles(agentDir)
+	}
+	_, _ = ctx.SetTheme(HermesThemeName(sk.Name))
 	_ = config.SetKey(s.paths.ConfigFile, "display.skin", sk.Name)
 	s.updateStatusBar(ctx)
 	s.show(ctx, fmt.Sprintf("Switched skin to %s (%s)", sk.Name, sk.Description))

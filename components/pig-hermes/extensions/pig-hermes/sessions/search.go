@@ -101,6 +101,7 @@ type SearchParams struct {
 	ExcludeSessionIDs []string
 	Profile           string
 	CurrentSessionID  string
+	StateDBPaths      []string // optional upstream Hermes state.db files to include
 }
 
 // SearchHitResult is one match entry returned in discover or search-in-session mode.
@@ -242,7 +243,23 @@ func ExecuteSearch(sessionDirs []string, params SearchParams) SearchResponse {
 	}
 
 	allSessions := loadSessionsFromDirs(sessionDirs)
-
+	if len(params.StateDBPaths) > 0 {
+		seenIDs := make(map[string]bool, len(allSessions))
+		for _, s := range allSessions {
+			if s != nil && s.ID != "" {
+				seenIDs[s.ID] = true
+			}
+		}
+		for _, dbPath := range params.StateDBPaths {
+			for _, s := range loadSessionsFromStateDB(dbPath) {
+				if s == nil || s.ID == "" || seenIDs[s.ID] {
+					continue
+				}
+				seenIDs[s.ID] = true
+				allSessions = append(allSessions, s)
+			}
+		}
+	}
 	// Determine mode:
 	// 1. session_id + (around_message_id > 0 or message_id != "") -> scroll
 	// 2. session_id + query != "" -> search-in-session
