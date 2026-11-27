@@ -266,7 +266,7 @@ func (s *Session) SelectModel(_ context.Context, selection ahptypes.ModelSelecti
 	if err != nil {
 		return err
 	}
-	if ok, err := sdkCtx.SetModel(selection.Id); err != nil {
+	if ok, err := sdkCtx.SetModelNamed(selection.Id); err != nil {
 		return err
 	} else if !ok {
 		return fmt.Errorf("the model %s is not available", selection.Id)

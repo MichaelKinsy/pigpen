@@ -426,15 +426,19 @@ func runChainCommand(ctx sdk.Context, args string) error {
 	return nil
 }
 
-// paneHostFor is the pane runner for this session, or nil when children run hidden (the setting, Herdr Desktop's
+// paneHostFor is the pane runner for this session, or nil when children run hidden (the settings, the terminal's
 // environment, the platform). An in-memory parent session has no directory, so the runner uses a temporary one.
-func paneHostFor(ctx sdk.Context, s subagentSettings) *paneHost {
-	if !panesEnabled(s, os.Getenv, runtime.GOOS) {
+func paneHostFor(ctx sdk.Context, s subagentSettings) paneRunner {
+	herdr, rex := panesEnabled(s, os.Getenv, runtime.GOOS), rexPanesEnabled(s, os.Getenv, runtime.GOOS)
+	if !herdr && !rex {
 		return nil
 	}
 	dir := ""
 	if f, err := ctx.GetSessionFile(); err == nil && f != nil {
 		dir, _ = ctx.SessionManager().GetSessionDir()
 	}
-	return &paneHost{socket: os.Getenv("HC_TERMINAL_SOCKET"), parent: os.Getenv("HC_TERMINAL_ID"), sessionDir: dir, notify: ctx.Notify}
+	if herdr {
+		return &paneHost{socket: os.Getenv("HC_TERMINAL_SOCKET"), parent: os.Getenv("HC_TERMINAL_ID"), sessionDir: dir, notify: ctx.Notify}
+	}
+	return &rexHost{bin: rexBinary(os.Getenv), session: os.Getenv("REX_SESSION"), parent: os.Getenv("REX_BLOCK"), sessionDir: dir, notify: ctx.Notify}
 }

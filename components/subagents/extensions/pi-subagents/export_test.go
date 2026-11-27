@@ -67,3 +67,9 @@ func StartPaneFakeParams(t *testing.T, answer string) (string, func(method strin
 	r := newPaneRig(t, bothLabels, []string{"idle/0", "working/0", "blocked/1", "blocked/1", "working/1", "done/2"}, answer)
 	return r.fake.socket, func(m string) int { return len(r.fake.calls(m)) }, r.fake.calls
 }
+
+// StartRexFake is a scripted rex CLI at /rex/bin/rex whose session is "session:s" and parent block "block:p"; it returns
+// a counter of the calls it got for a command.
+func StartRexFake(t *testing.T, answer string) func(cmd string) int {
+	return newRexRig(t, []string{"idle", "working", "done"}, answer).count
+}

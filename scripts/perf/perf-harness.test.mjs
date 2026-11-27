@@ -26,7 +26,7 @@ describe('build-singles', () => {
     mkdirSync(home);
     const fake = join(scratch, 'pig-build');
     // pig keeps receipts and a copy of every Binary it builds under PIG_HOME (default ~/.pig).
-    writeFileSync(fake, `#!/bin/sh\nif [ "$1" = --version ]; then echo ${required}; exit 0; fi\n`
+    writeFileSync(fake, `#!/bin/sh\nif [ "$1" = version ]; then echo "pig: ${required}"; exit 0; fi\n`
       + `node -e 'const e=process.env; require("fs").writeFileSync(process.argv[1], JSON.stringify({ pigHome: e.PIG_HOME || "", agentDir: e.PIG_CODING_AGENT_DIR || "", home: e.HOME }))' "${record}"\n`
       + 'mkdir -p "${PIG_HOME:-$HOME/.pig}/receipts"\nexit 0\n');
     chmodSync(fake, 0o755);

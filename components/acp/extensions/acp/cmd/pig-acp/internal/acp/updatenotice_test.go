@@ -350,3 +350,19 @@ func BenchmarkCompareSemver(b *testing.B) {
 		}
 	}
 }
+
+func TestBuildUpdateNoticeReadsPigVersionNotPiVersion(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake pig is a POSIX shell script")
+	}
+	script := filepath.Join(t.TempDir(), "fakepig")
+	write(t, script, "#!/bin/sh\nif [ \"$1\" = version ]; then printf 'pig: 0.8.0\nupstream pi: 1.6.0\n'; exit 0; fi\necho 1.6.0\n")
+	if err := os.Chmod(script, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	npmStub(t, "0.8.1\n", 0, 0)
+	got := BuildUpdateNotice(script, nil)
+	if want := notice("0.8.1", "0.8.0"); got != want {
+		t.Fatalf("BuildUpdateNotice = %q, want %q", got, want)
+	}
+}

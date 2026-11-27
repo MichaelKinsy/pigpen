@@ -124,12 +124,12 @@ func projectRootResolution(root string) string {
 // subagentSettings are the `subagents` settings that change an agent's definition at launch:
 // `defaultExtensions` and `defaultSubagentOnlyExtensions` (nil when unset), `defaultModel` and `defaultThinking` ("" when
 // unset), and the `model` and `thinking` of `agentOverrides.<name>`, keyed by agent name: a string, or false to clear
-// what the definition sets; and `herdrPanes` (nil when unset), which runs subagents in Herdr Desktop panes.
+// what the definition sets; and `herdrPanes` and `rexPanes` (nil when unset), which run subagents in Herdr Desktop or Rex panes.
 type subagentSettings struct {
 	extensions, subagentOnly      []string
 	defaultModel, defaultThinking string
 	model, thinking               map[string]any
-	herdrPanes                    *bool
+	herdrPanes, rexPanes          *bool
 }
 
 // readSubagentSettings is the original's readSubagentSettings for the fields above: a missing file sets nothing; an
@@ -189,12 +189,19 @@ func readSubagentSettings(path string) (subagentSettings, error) {
 		}
 		*f.dst = jsTrim(str)
 	}
-	if raw, ok := s.get("herdrPanes"); ok {
+	for _, f := range []struct {
+		key string
+		dst **bool
+	}{{"herdrPanes", &d.herdrPanes}, {"rexPanes", &d.rexPanes}} {
+		raw, ok := s.get(f.key)
+		if !ok {
+			continue
+		}
 		b, isBool := raw.(bool)
 		if !isBool {
-			return d, fmt.Errorf("Subagent settings in '%s' have invalid 'herdrPanes'; expected true or false.", path)
+			return d, fmt.Errorf("Subagent settings in '%s' have invalid '%s'; expected true or false.", path, f.key)
 		}
-		d.herdrPanes = &b
+		*f.dst = &b
 	}
 	// The original ignores an agentOverrides that is not an object, and reads every field of each entry; only model and
 	// thinking are ported.
@@ -266,6 +273,9 @@ func subagentSettingsFor(cwd string, scope AgentScope) (subagentSettings, error)
 		}
 		if d.herdrPanes == nil {
 			d.herdrPanes = set.herdrPanes
+		}
+		if d.rexPanes == nil {
+			d.rexPanes = set.rexPanes
 		}
 		d.model = underlay(d.model, set.model)
 		d.thinking = underlay(d.thinking, set.thinking)

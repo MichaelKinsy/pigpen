@@ -425,7 +425,7 @@ func (e *childExit) Error() string {
 // runAgent runs one child. With a parent run (a chain's, or one a caller registered) the child is that run's next step;
 // without one it is its own single run. The registry feeds the fleet inspector and the async agents view, and the run's
 // control channel stops, interrupts and steers the child (async.go).
-func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes *paneHost, parents ...*runRecord) (string, *stepRecord, error) {
+func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes paneRunner, parents ...*runRecord) (string, *stepRecord, error) {
 	var run *runRecord
 	if len(parents) > 0 && parents[0] != nil {
 		run = parents[0]
@@ -460,7 +460,7 @@ func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model stri
 }
 
 // runStep holds a child slot for one step and records its outcome.
-func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequest, panes *paneHost) (string, error) {
+func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequest, panes paneRunner) (string, error) {
 	req.OnOutput, req.OnSession = st.touchLive, st.pinSession
 	if _, dir, id := run.getLaunch(); dir != "" {
 		st.pinSession(dir, id) // hidden children pin here; a pane child pins through OnSession
@@ -533,7 +533,7 @@ func chainTask(steps []ChainStep, i int, request, previous string) string {
 
 // runChain runs the steps in order, each one's output flowing into the next; it stops at the first failing step. Every
 // agent is resolved before any child starts.
-func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string), panes *paneHost) (string, error) {
+func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentConfig, request string, progress func(string), panes paneRunner) (string, error) {
 	resolved := make([]*AgentConfig, len(c.Steps))
 	for i, s := range c.Steps {
 		a, msg := ResolveAgentName(s.Agent, agents)

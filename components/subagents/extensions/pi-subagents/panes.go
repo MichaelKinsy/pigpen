@@ -135,19 +135,26 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 		}
 	}
 
+	exit := -1
+	if t.ExitCode != nil {
+		exit = *t.ExitCode
+	}
+	return paneAnswer(dir, id, agent, t.State == "finished", exit, func() string {
+		var screen struct{ Text string }
+		_ = h.call("terminal.read", map[string]any{"terminal": addr, "lines": 40}, &screen)
+		return screen.Text
+	}), nil
+}
+
+// paneAnswer is the pane child's result: its answer from its session file, else its failure (the exit code and the
+// screen of a child that ended, a missing answer of one that did not), trimmed and capped as the hidden runner's.
+func paneAnswer(dir, id, agent string, finished bool, exit int, screen func() string) childResult {
 	res, ok := sessionAnswer(dir, id)
 	if !ok {
-		if t.State == "finished" {
-			res = childResult{Exit: -1}
-			if t.ExitCode != nil {
-				res.Exit = *t.ExitCode
-			}
+		if finished {
+			res = childResult{Exit: exit, Stderr: screen()}
 			if res.Exit == 0 {
 				res.Exit = 1 // it ended cleanly without answering (/quit): not a success
-			}
-			var screen struct{ Text string }
-			if err := h.call("terminal.read", map[string]any{"terminal": addr, "lines": 40}, &screen); err == nil {
-				res.Stderr = screen.Text
 			}
 		} else {
 			res = childResult{Exit: 1, Stderr: fmt.Sprintf("no answer in %s's session file in %s", agent, dir)}
@@ -157,9 +164,14 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 	out, errw := &headWriter{max: outputMaxBytes}, &tailWriter{max: stderrTail}
 	out.Write([]byte(res.Stdout))
 	errw.Write([]byte(res.Stderr))
-	res.Stdout = out.text() // same trimming and cap as the hidden runner
+	res.Stdout = out.text()
 	res.Stderr = strings.TrimSpace(errw.String())
-	return res, nil
+	return res
+}
+
+// paneRunner runs one child in a pane (Herdr Desktop's paneHost, Rex's rexHost).
+type paneRunner interface {
+	run(done <-chan struct{}, req childRequest, agent string) (childResult, error)
 }
 
 // panesEnabled reports whether subagents run in Herdr Desktop panes: the setting is on, the Herdr terminal environment

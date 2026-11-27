@@ -1042,5 +1042,143 @@
   "file": "panes.go",
   "find": "*s.herdrPanes && goos != \"windows\" &&",
   "replace": "*s.herdrPanes &&"
+ },
+ {
+  "name": "rex-setting",
+  "file": "discovery.go",
+  "find": "d.rexPanes = set.rexPanes",
+  "replace": "d.rexPanes = nil"
+ },
+ {
+  "name": "rex-goos",
+  "file": "rexpanes.go",
+  "find": "*s.rexPanes && goos != \"windows\" &&",
+  "replace": "*s.rexPanes &&"
+ },
+ {
+  "name": "rex-bin-dir",
+  "file": "rexpanes.go",
+  "find": "return filepath.Join(d, \"rex\")",
+  "replace": "return filepath.Join(\"rex\")"
+ },
+ {
+  "name": "rex-env-rex",
+  "file": "rexpanes.go",
+  "find": "!strings.HasPrefix(k, \"REX_\")",
+  "replace": "true"
+ },
+ {
+  "name": "rex-env-name",
+  "file": "rexpanes.go",
+  "find": "ok && shellName.MatchString(k) &&",
+  "replace": "ok &&"
+ },
+ {
+  "name": "rex-env-quote",
+  "file": "rexpanes.go",
+  "find": "strings.ReplaceAll(v, \"'\", `'\\''`)",
+  "replace": "v"
+ },
+ {
+  "name": "rex-root-record",
+  "file": "rexpanes.go",
+  "find": "if r.ID == \"\" {",
+  "replace": "if true {"
+ },
+ {
+  "name": "rex-exit-first",
+  "file": "rexpanes.go",
+  "find": "\tif proc.LastExit != nil {",
+  "replace": "\tif false {"
+ },
+ {
+  "name": "rex-task-size",
+  "file": "rexpanes.go",
+  "find": "if len(req.Stdin) > paneTaskMax {",
+  "replace": "if false {"
+ },
+ {
+  "name": "rex-fallback",
+  "file": "rexpanes.go",
+  "find": "); err != nil {\n\t\treturn fallback(fmt.Sprintf(\"Rex is not reachable (%v); %s runs without a pane.\", err, agent))",
+  "replace": "); err != nil {\n\t\treturn childResult{}, err"
+ },
+ {
+  "name": "rex-focus",
+  "file": "rexpanes.go",
+  "find": "\"--focus=false\", ",
+  "replace": ""
+ },
+ {
+  "name": "rex-shell-none",
+  "file": "rexpanes.go",
+  "find": "\"--shell=none\", ",
+  "replace": ""
+ },
+ {
+  "name": "rex-env-file",
+  "file": "rexpanes.go",
+  "find": "envFile.WriteString(rexEnvScript(req.Env))",
+  "replace": "envFile.WriteString(\"\")"
+ },
+ {
+  "name": "rex-print",
+  "file": "rexpanes.go",
+  "find": "paneArgs(req.Args, dir, id, req.Stdin)...)...)",
+  "replace": "append(append([]string{}, req.Args...), \"--session-dir\", dir, \"--session-id\", id, \"--\", req.Stdin)...)...)"
+ },
+ {
+  "name": "rex-no-block",
+  "file": "rexpanes.go",
+  "find": " || len(started.BlockIDs) == 0 || started.BlockIDs[0] == \"\"",
+  "replace": ""
+ },
+ {
+  "name": "rex-close",
+  "file": "rexpanes.go",
+  "find": "defer func() { _, _ = rexCLI(p.bin, \"block\", \"close\", \"-s\", p.session, block) }()",
+  "replace": "_ = block"
+ },
+ {
+  "name": "rex-turn",
+  "file": "rexpanes.go",
+  "find": "st == \"idle\" && turned",
+  "replace": "st == \"idle\""
+ },
+ {
+  "name": "rex-turn-blocked",
+  "file": "rexpanes.go",
+  "find": "turned = turned || st == \"working\" || st == \"blocked\"",
+  "replace": "turned = turned || st == \"working\" || st == \"blocked\" || st == \"idle\""
+ },
+ {
+  "name": "rex-notify-once",
+  "file": "rexpanes.go",
+  "find": "if st == \"blocked\" && !blocked {",
+  "replace": "if st == \"blocked\" && (!blocked || true) {"
+ },
+ {
+  "name": "rex-lost",
+  "file": "rexpanes.go",
+  "find": "return childResult{Exit: 1, Stderr: fmt.Sprintf(\"Rex stopped answering while %s ran in %s: %v\", agent, block, err)}, nil",
+  "replace": "break"
+ },
+ {
+  "name": "rex-screen-tail",
+  "file": "rexpanes.go",
+  "find": "lines[max(0, len(lines)-40):]",
+  "replace": "lines"
+ },
+ {
+  "name": "rex-wiring",
+  "file": "extension.go",
+  "find": "panesEnabled(s, os.Getenv, runtime.GOOS), rexPanesEnabled(s, os.Getenv, runtime.GOOS)",
+  "replace": "panesEnabled(s, os.Getenv, runtime.GOOS), false"
+ },
+ {
+  "name": "pane-answer-quit",
+  "file": "panes.go",
+  "find": "\t\t\tif res.Exit == 0 {\n\t\t\t\tres.Exit = 1",
+  "replace": "\t\t\tif false {\n\t\t\t\tres.Exit = 1"
  }
 ]

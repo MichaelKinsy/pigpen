@@ -21,6 +21,15 @@ func skipPanesOnWindows(t *testing.T) {
 	}
 }
 
+// skipRexPanesOnWindows is skipPanesOnWindows for Rex: rexPanesEnabled never enables Rex panes on Windows either (the
+// child starts through /bin/sh), so a tool-level test asserting a Rex pane cannot pass there.
+func skipRexPanesOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Rex panes are never enabled on Windows")
+	}
+}
+
 // The running addition through the host boundary (review rev-port-popular-5): the tool and the command with a fake
 // child runner (export_test.go).
 
@@ -208,6 +217,28 @@ func TestSubagentToolPanes(t *testing.T) {
 	raw, failure = h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
 	eq(t, failure, "", "failure")
 	eq(t, []any{fakeCalls("terminal.run"), len(*hidden), strings.Contains(string(raw), "answer")}, []any{1, 1, true}, "setting on: a pane")
+}
+
+func TestSubagentToolRexPanes(t *testing.T) {
+	skipRexPanesOnWindows(t)
+	rexCalls := sub.StartRexFake(t, "answer")
+	for k, v := range map[string]string{"HC_TERMINAL_SOCKET": "", "HC_TERMINAL_ID": "", "REX_SESSION": "session:s", "REX_BLOCK": "block:p", "REX_BIN_DIR": "/rex/bin"} {
+		t.Setenv(k, v)
+	}
+	hidden := fakeChildren(t, nil)
+	cwd := tmp(t)
+	home := withTempHome(t)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "scout.md"), agentMD("scout", "Scouts", "You scout."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, []any{rexCalls("split"), len(*hidden), strings.Contains(string(raw), "ok")}, []any{0, 1, true}, "setting off: the hidden runner")
+
+	writeFile(t, filepath.Join(home, ".pi", "agent", "settings.json"), `{"subagents": {"rexPanes": true}}`)
+	raw, failure = h.Tool("subagent", map[string]any{"agent": "scout", "task": "t"})
+	eq(t, failure, "", "failure")
+	eq(t, []any{rexCalls("split"), len(*hidden), strings.Contains(string(raw), "answer")}, []any{1, 1, true}, "setting on: a pane")
 }
 
 func TestChainPanes(t *testing.T) {

@@ -129,7 +129,7 @@ func (s *store) declineSelect(ctx sdk.Context, model, previous modelRef, state *
 		return
 	}
 	s.markReverting(previous)
-	if _, err := ctx.SetModel(previous.Provider + "/" + previous.Model); err != nil {
+	if _, err := ctx.SetModelNamed(previous.Provider + "/" + previous.Model); err != nil {
 		s.markReverting(modelRef{}) // no model_select will come to consume it
 		logf("switch back to %s: %v", previous, err)
 		ctx.Notify("switch to "+model.String()+" declined, but "+previous.String()+" could not be restored", "warning")

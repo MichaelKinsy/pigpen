@@ -181,16 +181,34 @@ func TestPiMatchesThePigItIsComparedWith(t *testing.T) {
 		_ = os.WriteFile(p, []byte("#!/bin/sh\necho '"+out+"'\n"), 0o755)
 		return p
 	}
-	pig, pi, wrong := mk("pig", "0.3.0+0.87.1"), mk("pi", "0.87.1"), mk("pi-old", "0.84.0")
+	pig, pi, wrong := fakePig(t, "0.87.1"), mk("pi", "0.87.1"), mk("pi-old", "0.84.0")
 	if err := CheckPiVersion(pi, pig, ""); err != nil {
 		t.Errorf("matching Pi rejected: %v", err)
 	}
 	if err := CheckPiVersion(wrong, pig, ""); err == nil || !strings.Contains(err.Error(), "0.84.0") || !strings.Contains(err.Error(), "0.87.1") {
 		t.Errorf("a Pi of another version was accepted: %v", err)
 	}
-	if err := CheckPiVersion(pi, mk("pig-plain", "0.3.0"), ""); err != nil {
+	if err := CheckPiVersion(pi, fakePig(t, ""), ""); err != nil {
 		t.Errorf("a pig that does not report its Pi version cannot be checked, not rejected: %v", err)
 	}
+}
+
+// fakePig is a pig as PiG 0.8.0 answers. `version` prints its own version and, when upstreamPi is not empty, the Pi it
+// follows (`1.3.0`, or `1.3.0+<commit>` for an untagged pin). `--version` prints Pi's package version alone, so a check
+// that reads the flag sees no commit and no PiG version.
+func fakePig(t *testing.T, upstreamPi string) string {
+	t.Helper()
+	script := "#!/bin/sh\nif [ \"$1\" = version ]; then echo 'pig: 0.8.0'; "
+	if upstreamPi != "" {
+		script += "echo 'upstream pi: " + upstreamPi + "'; "
+	}
+	packageVersion, _, _ := strings.Cut(upstreamPi, "+")
+	script += "exit 0; fi\necho '" + packageVersion + "'\n"
+	p := filepath.Join(t.TempDir(), "pig")
+	if err := os.WriteFile(p, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return p
 }
 
 // pigpen-jev: `pigeq check --pig <a built Piglet Binary>` loaded the extension a second time
@@ -252,7 +270,7 @@ func TestGoWorkReplacesUsedModulesAtV0(t *testing.T) {
 	}
 }
 
-// A PiG pins an untagged Pi commit, so `pig --version` prints 0.5.0+1.3.0.1402973a while a real Pi
+// A PiG pins an untagged Pi commit, so `pig version` prints `upstream pi: 1.3.0+1402973a` while a real Pi
 // build prints 1.3.0. The oracle is accepted when its package version matches and the git commit of
 // the source tree it runs from starts with the pinned commit; its version string is never faked.
 func TestPiPinnedCommitIsVerifiedFromThePiSourceTree(t *testing.T) {
@@ -278,38 +296,34 @@ func TestPiPinnedCommitIsVerifiedFromThePiSourceTree(t *testing.T) {
 	git(tree, "add", "-A")
 	git(tree, "commit", "-qm", "later")
 
-	mkPig := func(version string) string {
-		p := filepath.Join(t.TempDir(), "pig")
-		_ = os.WriteFile(p, []byte("#!/bin/sh\necho '"+version+"'\n"), 0o755)
-		return p
-	}
+	mkPig := func(upstreamPi string) string { return fakePig(t, upstreamPi) }
 	// HEAD is the later commit: another build.
-	if err := CheckPiVersion(pi, mkPig("0.5.0+1.3.0."+pinned[:8]), ""); err == nil || !strings.Contains(err.Error(), pinned[:8]) {
+	if err := CheckPiVersion(pi, mkPig("1.3.0+"+pinned[:8]), ""); err == nil || !strings.Contains(err.Error(), pinned[:8]) {
 		t.Errorf("a Pi build at another commit was accepted: %v", err)
 	}
 	git(tree, "checkout", "-q", pinned)
-	if err := CheckPiVersion(pi, mkPig("0.5.0+1.3.0."+pinned[:8]), ""); err != nil {
+	if err := CheckPiVersion(pi, mkPig("1.3.0+"+pinned[:8]), ""); err != nil {
 		t.Errorf("the pinned Pi build was rejected: %v", err)
 	}
-	if err := CheckPiVersion(pi, mkPig("0.5.0+1.3.0.deadbeef"), ""); err == nil {
+	if err := CheckPiVersion(pi, mkPig("1.3.0+deadbeef"), ""); err == nil {
 		t.Error("a pinned commit the tree is not at was accepted")
 	}
-	if err := CheckPiVersion(pi, mkPig("0.5.0+1.4.0."+pinned[:8]), ""); err == nil {
+	if err := CheckPiVersion(pi, mkPig("1.4.0+"+pinned[:8]), ""); err == nil {
 		t.Error("a Pi package version mismatch was accepted")
 	}
 	// A launcher outside the tree names the tree explicitly.
 	launcher := filepath.Join(t.TempDir(), "pi")
 	_ = os.WriteFile(launcher, []byte("#!/bin/sh\necho 1.3.0\n"), 0o755)
-	if err := CheckPiVersion(launcher, mkPig("0.5.0+1.3.0."+pinned[:8]), ""); err == nil {
+	if err := CheckPiVersion(launcher, mkPig("1.3.0+"+pinned[:8]), ""); err == nil {
 		t.Error("a Pi with no source tree to verify was accepted")
 	}
-	if err := CheckPiVersion(launcher, mkPig("0.5.0+1.3.0."+pinned[:8]), tree); err != nil {
+	if err := CheckPiVersion(launcher, mkPig("1.3.0+"+pinned[:8]), tree); err != nil {
 		t.Errorf("explicit source tree rejected: %v", err)
 	}
 	// A wrapper that fakes the pin in its version string is no longer the way in.
 	fake := filepath.Join(t.TempDir(), "pi")
 	_ = os.WriteFile(fake, []byte("#!/bin/sh\necho 1.3.0."+pinned[:8]+"\n"), 0o755)
-	if err := CheckPiVersion(fake, mkPig("0.5.0+1.3.0."+pinned[:8]), ""); err == nil {
+	if err := CheckPiVersion(fake, mkPig("1.3.0+"+pinned[:8]), ""); err == nil {
 		t.Error("a faked version string was accepted")
 	}
 }

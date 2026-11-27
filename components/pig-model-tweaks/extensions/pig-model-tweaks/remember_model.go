@@ -137,7 +137,7 @@ func restoreRememberedModel(ctx sdk.Context, st *store, data map[string]any) {
 		logf("remembered model %s/%s is not in the registry", last.Provider, last.ModelID)
 		return
 	}
-	if _, err := ctx.SetModel(spec); err != nil {
+	if _, err := ctx.SetModelNamed(spec); err != nil {
 		logf("restore %s: %v", spec, err)
 	}
 }
