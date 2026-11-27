@@ -452,7 +452,35 @@ func SaveState(cwd string, state *State) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(dir, "_state.json"), append(data, '\n'), 0o644)
+	return writeFileAtomic(filepath.Join(dir, "_state.json"), append(data, '\n'), 0o644)
+}
+
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".state-*.tmp")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	cleanup := true
+	defer func() {
+		if cleanup {
+			_ = os.Remove(tmpName)
+		}
+	}()
+	if _, err := tmp.Write(data); err != nil {
+		_ = tmp.Close()
+		return err
+	}
+	_ = tmp.Chmod(perm)
+	_ = tmp.Sync()
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	if err := renameAtomic(tmpName, path); err != nil {
+		return err
+	}
+	cleanup = false
+	return nil
 }
 
 func marshalNoEscapeIndent(v any) ([]byte, error) {

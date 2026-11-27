@@ -116,6 +116,83 @@ type ModelMeta struct {
 	ThinkingLevels  []string
 }
 
+// AgentHubItem is one subagent row published by an extension for omp's native
+// HUD counter, composer subagent spend (+X.XX), and Agent Hub overlay.
+type AgentHubItem struct {
+	ID            string
+	DisplayName   string
+	AgentType     string
+	ParentID      string
+	Status        string // "running" | "idle" | "parked" | "aborted"
+	Task          string
+	Activity      string
+	Model         string
+	ModelRole     string
+	ThinkingLevel string
+	Cost          float64
+	DurationMs    int64
+	StartedAtMs   int64
+	Requests      int
+	Tools         int
+	Tokens        int
+	ContextTokens int
+	ContextWindow int
+	CreatedAtMs   int64
+	LastActiveMs  int64
+	SessionFile   string
+	CanRevive     bool
+}
+
+// AgentHubActivity is one activity timeline event for the Agent Hub Activity tab.
+type AgentHubActivity struct {
+	ID          string
+	AgentID     string
+	Kind        string // "tool" | "response" | "irc" | "status"
+	Title       string
+	Detail      string
+	Status      string // "ok" | "pending" | "error" | "aborted"
+	TimestampMs int64
+}
+
+// AgentHubTranscriptEntry is one rendered message entry for an agent's transcript
+// viewer overlay.
+type AgentHubTranscriptEntry struct {
+	Role        string // "user" | "assistant" | "tool" | "system"
+	Text        string
+	Thinking    string
+	ToolName    string
+	ToolArgs    string
+	ToolOutput  string
+	IsError     bool
+	TimestampMs int64
+}
+
+// AgentHubSnapshot is the immutable subagent state snapshot for the current session.
+type AgentHubSnapshot struct {
+	RunningCount     int
+	InspectableCount int
+	SubagentCost     float64
+	TotalDurationMs  int64
+	TotalRequests    int
+	TotalTokens      int
+	TotalTools       int
+	Agents           []AgentHubItem
+	Activity         []AgentHubActivity
+}
+
+// CompactionMeta holds display metadata for one compaction entry supplied by a
+// derived Piglet's extension so Tern renders omp's native
+// `section[omp.compaction]` divider with exact method label, before → after
+// tokens, frame count, and expandable summary.
+type CompactionMeta struct {
+	Method       string // "snapcompact" | "soft" | "remote" | "handoff" | "shake" | ""
+	TokensBefore int
+	TokensAfter  int
+	FrameCount   int
+	Summary      string
+	Warning      string
+}
+
 // Options are what a Piglet that derives from pig-tern fixes for its member.
 type Options struct {
 	// Omp draws the transcript and the dock with omp's roles and node
@@ -146,6 +223,25 @@ type Options struct {
 	// (e.g. stripping macOS `/private` on project cwd). Absolute paths already
 	// supplied by tool details/args are preserved verbatim. Nil means identity.
 	DisplayPath func(path string) string
+	// AgentHubSnapshot returns the current subagent roster/metrics snapshot.
+	AgentHubSnapshot func() AgentHubSnapshot
+	// OnAgentHubChange subscribes to live subagent snapshot updates and returns
+	// an unsubscribe function.
+	OnAgentHubChange func(func(AgentHubSnapshot)) func()
+	// SetAgentHubOpener registers the frontend's native Agent Hub opener
+	// (invoked by `/agents` in Tern).
+	SetAgentHubOpener func(func())
+	// LoadAgentTranscript loads the transcript entries for an agent ID.
+	LoadAgentTranscript func(agentID string) []AgentHubTranscriptEntry
+	// KillAgent terminates a running or idle subagent by ID.
+	KillAgent func(agentID string) (string, error)
+	// ReviveAgent revives a parked or aborted subagent by ID.
+	ReviveAgent func(agentID string) (string, error)
+	// SendAgentMessage sends a steering/follow-up message to a subagent.
+	SendAgentMessage func(agentID, body string) error
+	// LookupCompaction resolves compaction metadata by tokensBefore for omp's
+	// native `section[omp.compaction]` divider.
+	LookupCompaction func(tokensBefore int) (CompactionMeta, bool)
 }
 
 // own member returns.
@@ -174,6 +270,7 @@ func (m member) Open(env fe.Env) (fe.Session, error) {
 	}
 	s := newSession(env)
 	s.ompRoles = s.ompRoles || m.opts.Omp
+	s.ompDerived = m.opts.Omp
 	s.onSurface = m.opts.OnSurface
 	s.pigletName = m.opts.Name
 	s.pigletVersion = m.opts.Version
@@ -181,6 +278,15 @@ func (m member) Open(env fe.Env) (fe.Session, error) {
 	s.modelMeta = m.opts.ModelMeta
 	s.onThinkingLevel = m.opts.OnThinkingLevel
 	s.displayPath = m.opts.DisplayPath
+	s.agentHubSnapshotFn = m.opts.AgentHubSnapshot
+	s.onAgentHubChangeFn = m.opts.OnAgentHubChange
+	s.setAgentHubOpenerFn = m.opts.SetAgentHubOpener
+	s.loadAgentTranscriptFn = m.opts.LoadAgentTranscript
+	s.killAgentFn = m.opts.KillAgent
+	s.reviveAgentFn = m.opts.ReviveAgent
+	s.sendAgentMessageFn = m.opts.SendAgentMessage
+	s.lookupCompaction = m.opts.LookupCompaction
+	s.initAgentHub()
 	s.start()
 	return s, nil
 }
@@ -318,6 +424,7 @@ type session struct {
 	// ompRoles is the omp role mode (roles.go, omp_*.go). now is the clock for
 	// omp's elapsed timers (time.Now by default; overridden in tests).
 	ompRoles      bool
+	ompDerived    bool
 	now           func() time.Time
 	welcomeTipIdx int
 	// pigletName and pigletVersion are Options.Name and Options.Version.
@@ -344,6 +451,18 @@ type session struct {
 	predictions        []string
 	predictionIdx      int
 	insertedPrediction string
+	// Native omp Agent Hub state & callbacks (omp_agents_hub.go).
+	agentHubSnapshotFn    func() AgentHubSnapshot
+	onAgentHubChangeFn    func(func(AgentHubSnapshot)) func()
+	setAgentHubOpenerFn   func(func())
+	loadAgentTranscriptFn func(agentID string) []AgentHubTranscriptEntry
+	killAgentFn           func(agentID string) (string, error)
+	reviveAgentFn         func(agentID string) (string, error)
+	sendAgentMessageFn    func(agentID, body string) error
+	lookupCompaction      func(tokensBefore int) (CompactionMeta, bool)
+	agentHubUnsub         func()
+	agentHub              AgentHubSnapshot
+	agentHubUI            *ompAgentHubState
 	// surfaceMu serializes callbacks and re-checks closed/fellBack so a late
 	// open notification can never overwrite a Close or fallback(false) (fixes N6).
 	onSurface    func(native bool)
@@ -714,6 +833,10 @@ func (s *session) HandleInput(data string) bool {
 	for _, item := range items {
 		switch {
 		case item.Keys != nil:
+			if s.ompRoles && len(items) == 1 && s.handleAgentHubKeyLocked(string(item.Keys)) {
+				s.mu.Unlock()
+				return true
+			}
 			if s.ompRoles && len(items) == 1 && s.handlePredictionKeyLocked(string(item.Keys)) {
 				s.mu.Unlock()
 				return true
@@ -837,7 +960,16 @@ func (s *session) Close() error {
 		s.timer.Stop()
 	}
 	s.closed = true
+	unsub := s.agentHubUnsub
+	s.agentHubUnsub = nil
+	setOpener := s.setAgentHubOpenerFn
 	s.mu.Unlock()
+	if unsub != nil {
+		unsub()
+	}
+	if setOpener != nil {
+		setOpener(nil)
+	}
 	s.notifySurface(false)
 	s.setProgress(false)
 	s.cancel()

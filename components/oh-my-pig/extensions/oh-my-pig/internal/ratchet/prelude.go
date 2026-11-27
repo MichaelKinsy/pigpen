@@ -878,15 +878,29 @@ func invokeRatchetPrelude(call eval.PreludeCall, rawParams json.RawMessage, opt 
 		}, nil
 
 	case "approve":
-		reviewed, err := RequireState(cwd, p.flow)
+		sha, already, err := func() (string, bool, error) {
+			type snap struct {
+				sha     string
+				already bool
+			}
+			res, err := withFlowLock(lockKey, func() (snap, error) {
+				st, err := RequireState(cwd, p.flow)
+				if err != nil {
+					return snap{}, err
+				}
+				digest, err := StageDigest(cwd, st, p.stage)
+				if err != nil {
+					return snap{}, err
+				}
+				rec, ok := st.Approvals[p.stage]
+				return snap{sha: digest, already: ok && rec.SHA == digest}, nil
+			})
+			return res.sha, res.already, err
+		}()
 		if err != nil {
 			return nil, err
 		}
-		sha, err := StageDigest(cwd, reviewed, p.stage)
-		if err != nil {
-			return nil, err
-		}
-		if rec, ok := reviewed.Approvals[p.stage]; ok && rec.SHA == sha {
+		if already {
 			return &eval.PreludeResult{
 				Text:    "",
 				Details: ApprovalOutcome{Approved: true, Already: new(true)},
@@ -932,7 +946,9 @@ func invokeRatchetPrelude(call eval.PreludeCall, rawParams json.RawMessage, opt 
 		return &eval.PreludeResult{Text: "", Details: recorded}, nil
 
 	case "check":
-		state, err := RequireState(cwd, p.flow)
+		state, err := withFlowLock(lockKey, func() (*State, error) {
+			return RequireState(cwd, p.flow)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -968,7 +984,9 @@ func invokeRatchetPrelude(call eval.PreludeCall, rawParams json.RawMessage, opt 
 		}, nil
 
 	case "train":
-		state, err := RequireState(cwd, p.flow)
+		state, err := withFlowLock(lockKey, func() (*State, error) {
+			return RequireState(cwd, p.flow)
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -979,7 +997,9 @@ func invokeRatchetPrelude(call eval.PreludeCall, rawParams json.RawMessage, opt 
 		return &eval.PreludeResult{Text: "", Details: view}, nil
 
 	case "status":
-		state, err := RequireState(cwd, p.flow)
+		state, err := withFlowLock(lockKey, func() (*State, error) {
+			return RequireState(cwd, p.flow)
+		})
 		if err != nil {
 			return nil, err
 		}

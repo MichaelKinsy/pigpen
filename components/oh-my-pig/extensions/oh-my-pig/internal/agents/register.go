@@ -37,6 +37,7 @@ func RegisterWithRuntime(e *sdk.Extension, rt *Runtime) {
 	// repeated Register calls are idempotent and always reach the shared Runtime.
 	lifecycle.OnEnd("agents", func(sessionID string) {
 		rt.EndSession(sessionID)
+		rt.ClearHubIfActive(sessionID)
 	})
 
 	// Register `task` tool using embedded bundled agents (no I/O at registration time).
@@ -55,6 +56,15 @@ func RegisterWithRuntime(e *sdk.Extension, rt *Runtime) {
 	// __workpool__ directly to Invoke).
 	eval.RegisterPrelude(rt.AgentPrelude())
 	eval.RegisterPrelude(rt.WorkpoolPrelude())
+
+	// Register `/agents` slash command (opens native Tern Agent Hub overlay when
+	// available, or renders a terminal summary/transcript fallback).
+	e.RegisterCommand("agents", sdk.CommandOptions{
+		Description: "Open the Agent Hub to inspect subagents and transcripts",
+		Handler: func(ctx sdk.Context, args string) error {
+			return rt.handleAgentsCommand(ctx, args)
+		},
+	})
 
 	// On session_start: bind the long-lived session_start sdk.Context for
 	// background children and job delivery, refresh `task` with live settings
@@ -85,7 +95,9 @@ func RegisterWithRuntime(e *sdk.Extension, rt *Runtime) {
 
 		// Register Main ref for this top-level session so subagents can message Main immediately.
 		artDir, _ := rt.sessionArtifactsDir(ctx)
+		rt.Registry.MarkSessionActive(sessKey)
 		rt.ensureMainRef(sessKey, ctx, artDir)
+		rt.BindHubSession(sessKey)
 
 		// Refresh `wait` with interactive TUI vs print wording.
 		ctx.RegisterTool(intent.ToolForContext(ctx, schemaorder.Apply(waitToolDef(rt, false, endTurn))))
@@ -397,6 +409,7 @@ func taskItemMatchesWireSchema(cfg Config, m map[string]any) bool {
 // ResetForTests clears package-global runtime state between tests.
 func ResetForTests() {
 	defaultRuntime.cancelAllForTests()
+	resetHubBindingsForTests()
 	defaultRuntime = newDefaultRuntime()
 	ResetTaskNames()
 }

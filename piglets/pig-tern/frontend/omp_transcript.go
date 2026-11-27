@@ -181,13 +181,27 @@ var ompErrorStatusCode = regexp.MustCompile(`^(\d{3})(?::\s*|\s+)`)
 const ompMaxErrorRows = 8
 
 // ompLinesNode recognizes PiG's assistant error/abort lines, startup
-// loaded-resources discovery sections, blank spacers, and horizontal divider
-// lines under ompRoles, returning their omp TSP nodes.
-func ompLinesNode(id, pigID string, lines []string, expanded bool) (tern.WireNode, bool) {
+// loaded-resources discovery sections, compaction/branch summary boxes,
+// async-result background job notifications, generic custom message boxes,
+// blank spacers, and horizontal divider lines under ompRoles, returning their
+// omp TSP nodes.
+func ompLinesNode(id, pigID string, lines []string, expanded bool, lookupCompaction func(int) (CompactionMeta, bool)) (tern.WireNode, bool) {
 	if node, ok := ompAssistantErrorNode(id, pigID, lines, expanded); ok {
 		return node, true
 	}
 	if node, ok := ompDiscoveryNoticeNode(id, lines); ok {
+		return node, true
+	}
+	if node, ok := ompCompactionNode(id, lines, expanded, lookupCompaction); ok {
+		return node, true
+	}
+	if node, ok := ompBranchNode(id, lines, expanded); ok {
+		return node, true
+	}
+	if node, ok := ompAsyncResultNode(id, lines); ok {
+		return node, true
+	}
+	if node, ok := ompCustomMessageNode(id, lines); ok {
 		return node, true
 	}
 	if blank(linesText(lines)) {
@@ -619,6 +633,549 @@ func ompDiscoveryNoticeNode(id string, lines []string) (tern.WireNode, bool) {
 		},
 		C: []tern.WireNode{head, body},
 	}, true
+}
+
+// ompCompactionMethodLabels mirrors COMPACTION_METHOD_LABELS in upstream omp
+// (packages/tui/src/chat/compaction-summary-message.ts:16-22), capitalized for
+// the native divider chip (`compactionNativeLabel`).
+var ompCompactionMethodLabels = map[string]string{
+	"snapcompact": "Snap-compacted",
+	"soft":        "Soft-compacted",
+	"remote":      "Remote-compacted",
+	"handoff":     "Handed-off",
+	"shake":       "Shaken",
+}
+
+var (
+	ompCompactedFromRe   = regexp.MustCompile(`^Compacted from ([0-9,]+) tokens(?:\s+\(([^)]+to expand)\))?$`)
+	ompBranchCollapsedRe = regexp.MustCompile(`^Branch summary \([^)]+to expand\)$`)
+	ompCustomTagRe       = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,63}$`)
+	ompAsyncSingleJobRe  = regexp.MustCompile(`^Background job ([^\s(]+)(?:\s+\(([^)]+)\))?\s+has completed\.?$`)
+	ompAsyncMultiJobRe   = regexp.MustCompile(`^──\s*Job ([^\s(]+)(?:\s+\(([^)]+)\))?\s*──$`)
+	ompTaskResultAttrRe  = regexp.MustCompile(`(id|agent|status|duration)="([^"]*)"`)
+)
+
+// ompCompactionNode converts PiG's CompactionSummaryMessageComponent box
+// (`[compaction]` + `Compacted from <N> tokens...`) into omp's native
+// `section[omp.compaction]` divider (compaction-summary-message.ts:204-244).
+func ompCompactionNode(id string, lines []string, _ bool, lookup func(int) (CompactionMeta, bool)) (tern.WireNode, bool) {
+	tag, tagIdx, ok := ompBracketBoxHeader(lines)
+	if !ok || tag != "compaction" {
+		return tern.WireNode{}, false
+	}
+	headerIdx := -1
+	headerLine := ""
+	for i := tagIdx + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(stripANSI(lines[i]))
+		if trimmed == "" {
+			continue
+		}
+		headerIdx = i
+		headerLine = trimmed
+		break
+	}
+	if headerIdx < 0 {
+		return tern.WireNode{}, false
+	}
+	m := ompCompactedFromRe.FindStringSubmatch(headerLine)
+	if m == nil {
+		return tern.WireNode{}, false
+	}
+	tokensBefore := parseCommaInt(m[1])
+	isExpanded := m[2] == ""
+
+	var meta CompactionMeta
+	if lookup != nil {
+		if found, ok := lookup(tokensBefore); ok {
+			meta = found
+		}
+	}
+
+	label := ompCompactionMethodLabels[strings.ToLower(strings.TrimSpace(meta.Method))]
+	if label == "" {
+		label = "Compacted"
+	}
+	headSpans := []any{map[string]any{"t": label, "s": "muted"}}
+	if meta.TokensAfter > 0 && tokensBefore > 0 {
+		headSpans = append(headSpans,
+			map[string]any{"t": " · " + ompFormatNumber(tokensBefore), "s": "muted mono"},
+			map[string]any{"t": " → ", "s": "dim"},
+			map[string]any{"t": ompFormatNumber(meta.TokensAfter) + " tokens", "s": "muted mono"},
+		)
+	} else if tokensBefore > 0 {
+		headSpans = append(headSpans,
+			map[string]any{"t": " · " + ompFormatNumber(tokensBefore) + " tokens", "s": "muted mono"},
+		)
+	}
+	if meta.Warning != "" {
+		headSpans = append(headSpans, map[string]any{"t": " ⚠", "s": "warning"})
+	}
+
+	caption := "Summary of the earlier conversation"
+	if meta.FrameCount > 0 {
+		plural := "s"
+		if meta.FrameCount == 1 {
+			plural = ""
+		}
+		caption = fmt.Sprintf("Summary · %d snapcompact frame%s attached", meta.FrameCount, plural)
+	}
+	children := []tern.WireNode{
+		{
+			ID: id + ".caption",
+			K:  tern.KindText,
+			P: map[string]any{
+				"role":  "omp.compaction.caption",
+				"spans": []any{map[string]any{"t": caption, "s": "dim"}},
+			},
+		},
+	}
+	if meta.Warning != "" {
+		children = append(children, ompNoticeRow(id+".warning", "warning", []any{map[string]any{"t": meta.Warning}}))
+	}
+	summary := strings.TrimSpace(meta.Summary)
+	if summary == "" && isExpanded {
+		summary = ompBoxBodyText(lines[headerIdx+1:])
+	}
+	if summary == "" {
+		summary = "Compacted from " + m[1] + " tokens"
+	}
+	children = append(children, tern.WireNode{
+		ID: id + ".summary",
+		K:  tern.KindMd,
+		P:  map[string]any{"text": summary},
+	})
+
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindSection,
+		P: map[string]any{
+			"role":        "omp.compaction",
+			"head":        headSpans,
+			"collapsible": true,
+			"collapsed":   !isExpanded,
+		},
+		C: children,
+	}, true
+}
+
+// ompBranchNode converts PiG's BranchSummaryMessageComponent box (`[branch]`)
+// into omp's native `section[omp.branch]` divider
+// (compaction-summary-message.ts:305-314).
+func ompBranchNode(id string, lines []string, _ bool) (tern.WireNode, bool) {
+	tag, tagIdx, ok := ompBracketBoxHeader(lines)
+	if !ok || tag != "branch" {
+		return tern.WireNode{}, false
+	}
+	headerIdx := -1
+	headerLine := ""
+	for i := tagIdx + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(stripANSI(lines[i]))
+		if trimmed == "" {
+			continue
+		}
+		headerIdx = i
+		headerLine = trimmed
+		break
+	}
+	if headerIdx < 0 {
+		return tern.WireNode{}, false
+	}
+	var isExpanded bool
+	switch {
+	case ompBranchCollapsedRe.MatchString(headerLine):
+		isExpanded = false
+	case strings.EqualFold(headerLine, "Branch Summary"):
+		isExpanded = true
+	default:
+		return tern.WireNode{}, false
+	}
+	summary := ""
+	if isExpanded {
+		summary = ompBoxBodyText(lines[headerIdx+1:])
+	}
+	if summary == "" {
+		summary = "Branch summary"
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindSection,
+		P: map[string]any{
+			"role":        "omp.branch",
+			"head":        []any{map[string]any{"t": "Branch summarized", "s": "muted"}},
+			"collapsible": true,
+			"collapsed":   !isExpanded,
+		},
+		C: []tern.WireNode{
+			{
+				ID: id + ".summary",
+				K:  tern.KindMd,
+				P:  map[string]any{"text": summary},
+			},
+		},
+	}, true
+}
+
+type ompAsyncJobInfo struct {
+	jobID    string
+	kind     string
+	duration string
+	isError  bool
+}
+
+// ompAsyncResultNode converts PiG's `[async-result]` custom message box into
+// omp's native `col[omp.status-block]` containing one `row[omp.notice.success]`
+// (or `omp.notice.error`) per completed background job
+// (transcript-render-helpers.ts:52-102, chrome/transcript-status.ts:43-67).
+func ompAsyncResultNode(id string, lines []string) (tern.WireNode, bool) {
+	tag, tagIdx, ok := ompBracketBoxHeader(lines)
+	if !ok || tag != "async-result" {
+		return tern.WireNode{}, false
+	}
+	bodyLines := ompPlainLinesTrimmed(lines[tagIdx+1:])
+	jobs := parseOmpAsyncJobs(bodyLines)
+	if len(jobs) == 0 {
+		jobs = []ompAsyncJobInfo{{}}
+	}
+	rows := make([]tern.WireNode, 0, len(jobs))
+	for i, job := range jobs {
+		tone := "success"
+		if job.isError {
+			tone = "error"
+		}
+		spans := []any{map[string]any{"t": "Background job completed"}}
+		if job.kind != "" {
+			spans = append(spans,
+				map[string]any{"t": " · ", "s": "dim"},
+				map[string]any{"t": job.kind, "s": "dim"},
+			)
+		}
+		if job.jobID != "" {
+			spans = append(spans,
+				map[string]any{"t": " · ", "s": "dim"},
+				map[string]any{"t": job.jobID, "s": "dim"},
+			)
+		}
+		if job.duration != "" {
+			spans = append(spans,
+				map[string]any{"t": " · ", "s": "dim"},
+				map[string]any{"t": job.duration, "s": "dim"},
+			)
+		}
+		rows = append(rows, ompNoticeRow(fmt.Sprintf("%s.%d", id, i), tone, spans))
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindCol,
+		P:  map[string]any{"role": "omp.status-block"},
+		C:  rows,
+	}, true
+}
+
+// parseOmpAsyncJobs extracts completed background jobs from the plain body
+// lines of PiG's `[async-result]` box (`internal/jobs/delivery.go:705-760`).
+func parseOmpAsyncJobs(lines []string) []ompAsyncJobInfo {
+	// PiG's CustomMessageComponent renders markdown inside a width-bounded Box,
+	// so long lines like `Background job <id> (long label) has completed.` or
+	// `<task-result id="..." agent="..." status="..." duration="...">` can wrap
+	// across multiple lines. Join consecutive wrapped lines before matching.
+	unwrapped := unwrapAsyncHeaderLines(lines)
+	type section struct {
+		jobID string
+		label string
+		lines []string
+	}
+	var sections []section
+	cur := -1
+	for _, line := range unwrapped {
+		if m := ompAsyncMultiJobRe.FindStringSubmatch(line); m != nil {
+			sections = append(sections, section{jobID: m[1], label: m[2]})
+			cur = len(sections) - 1
+			continue
+		}
+		if len(sections) == 0 {
+			if m := ompAsyncSingleJobRe.FindStringSubmatch(line); m != nil {
+				sections = append(sections, section{jobID: m[1], label: m[2]})
+				cur = 0
+				continue
+			}
+		}
+		if cur >= 0 {
+			sections[cur].lines = append(sections[cur].lines, line)
+		}
+	}
+	if len(sections) == 0 {
+		// Fallback: scan for bare <task-result ...> tags if header was absent.
+		joined := strings.Join(unwrapped, "\n")
+		if strings.Contains(joined, "<task-result") {
+			sections = append(sections, section{lines: unwrapped})
+		}
+	}
+	out := make([]ompAsyncJobInfo, 0, len(sections))
+	for _, sec := range sections {
+		info := ompAsyncJobInfo{jobID: sec.jobID}
+		isAgent := false
+		isBash := false
+		for _, l := range sec.lines {
+			if strings.Contains(l, "<task-result") {
+				isAgent = true
+				for _, attr := range ompTaskResultAttrRe.FindAllStringSubmatch(l, -1) {
+					switch attr[1] {
+					case "id":
+						if info.jobID == "" {
+							info.jobID = attr[2]
+						}
+					case "duration":
+						if info.duration == "" {
+							info.duration = attr[2]
+						}
+					case "status":
+						st := strings.ToLower(strings.TrimSpace(attr[2]))
+						if st == "error" || st == "failed" {
+							info.isError = true
+						}
+					}
+				}
+			}
+			if strings.Contains(l, "agent://") || strings.Contains(l, "history://") {
+				isAgent = true
+			}
+			lower := strings.ToLower(l)
+			if strings.Contains(lower, `status="error"`) || strings.Contains(lower, `status="failed"`) ||
+				strings.HasPrefix(lower, "error:") || strings.Contains(lower, "exit code:") && !strings.Contains(lower, "exit code: 0") {
+				info.isError = true
+			}
+		}
+		if !isAgent && strings.HasPrefix(info.jobID, "bg_") {
+			isBash = true
+		}
+		switch {
+		case isAgent:
+			info.kind = "agent"
+		case isBash:
+			info.kind = "bash"
+		case info.jobID != "":
+			info.kind = "job"
+		}
+		if info.jobID != "" || info.kind != "" {
+			out = append(out, info)
+		}
+	}
+	return out
+}
+
+// unwrapAsyncHeaderLines stitches wrapped `Background job ...`, `── Job ...`,
+// and `<task-result ...>` lines back onto one logical line so regex matching
+// succeeds regardless of narrow terminal widths.
+func unwrapAsyncHeaderLines(lines []string) []string {
+	out := make([]string, 0, len(lines))
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		switch {
+		case strings.HasPrefix(line, "Background job ") && !strings.HasSuffix(line, "has completed.") && !strings.HasSuffix(line, "has completed"):
+			for i+1 < len(lines) && !strings.HasPrefix(lines[i+1], "Resume ") && !strings.HasPrefix(lines[i+1], "<") {
+				i++
+				line += " " + lines[i]
+				if strings.HasSuffix(line, "has completed.") || strings.HasSuffix(line, "has completed") {
+					break
+				}
+			}
+		case strings.HasPrefix(line, "──") && !strings.HasSuffix(line, "──"):
+			for i+1 < len(lines) && !strings.HasPrefix(lines[i+1], "<") {
+				i++
+				line += " " + lines[i]
+				if strings.HasSuffix(line, "──") {
+					break
+				}
+			}
+		case strings.HasPrefix(line, "<task-result") && !strings.Contains(line, ">"):
+			for i+1 < len(lines) {
+				i++
+				line += " " + lines[i]
+				if strings.Contains(line, ">") {
+					break
+				}
+			}
+		}
+		out = append(out, line)
+	}
+	return out
+}
+
+// ompCustomMessageNode converts other PiG CustomMessageComponent purple-bg
+// boxes (`[<customType>]` + body) into omp's native `card[omp.custom]`
+// (chrome/message-frame.ts:112-123). Requires an ANSI background SGR sequence
+// (`\x1b[48;`) and a non-empty body so plain text starting with `[tag]` never
+// false-positives.
+func ompCustomMessageNode(id string, lines []string) (tern.WireNode, bool) {
+	tag, tagIdx, ok := ompBracketBoxHeader(lines)
+	if !ok {
+		return tern.WireNode{}, false
+	}
+	if !ompCustomTagRe.MatchString(tag) || ompDiscoverySectionHeadings["["+tag+"]"] {
+		return tern.WireNode{}, false
+	}
+	if !ompLinesHaveANSIBg(lines) {
+		return tern.WireNode{}, false
+	}
+	body := ompStripSystemNoticeEnvelope(ompBoxBodyText(lines[tagIdx+1:]))
+	if body == "" {
+		return tern.WireNode{}, false
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindCard,
+		P: map[string]any{
+			"role": "omp.custom",
+			"head": []any{map[string]any{"t": tag, "s": "customMessageLabel strong"}},
+		},
+		C: []tern.WireNode{
+			{
+				ID: id + ".md",
+				K:  tern.KindMd,
+				P:  map[string]any{"text": body},
+			},
+		},
+	}, true
+}
+
+// ompNoticeRow builds omp's `row[omp.notice.<tone>]` notice row
+// (chrome/transcript-notice.ts:46-56).
+func ompNoticeRow(id, tone string, spans []any) tern.WireNode {
+	iconProps := map[string]any{"name": tone}
+	if tone != "info" {
+		iconProps["tone"] = tone
+	}
+	switch tone {
+	case "warning":
+		iconProps["aria"] = "Warning"
+	case "error":
+		iconProps["aria"] = "Error"
+	}
+	return tern.WireNode{
+		ID: id,
+		K:  tern.KindRow,
+		P: map[string]any{
+			"role":  "omp.notice." + tone,
+			"tone":  tone,
+			"gap":   "sm",
+			"align": "start",
+		},
+		C: []tern.WireNode{
+			{ID: id + ".icon", K: tern.KindIcon, P: iconProps},
+			{
+				ID: id + ".text",
+				K:  tern.KindText,
+				P: map[string]any{
+					"spans":  spans,
+					"wrap":   "word",
+					"grow":   1,
+					"shrink": 1,
+				},
+			},
+		},
+	}
+}
+
+// ompBracketBoxHeader finds the first non-blank plain line in lines and
+// returns its bracketed tag (`[tag]` -> `tag`) and line index.
+func ompBracketBoxHeader(lines []string) (tag string, idx int, ok bool) {
+	for i, raw := range lines {
+		trimmed := strings.TrimSpace(stripANSI(raw))
+		if trimmed == "" {
+			continue
+		}
+		if len(trimmed) >= 3 && trimmed[0] == '[' && trimmed[len(trimmed)-1] == ']' {
+			return trimmed[1 : len(trimmed)-1], i, true
+		}
+		return "", -1, false
+	}
+	return "", -1, false
+}
+
+// ompLinesHaveANSIBg reports whether any line carries an ANSI 256-color or
+// truecolor background SGR sequence (`\x1b[48;`), as painted by PiG's
+// CustomMessageComponent box.
+func ompLinesHaveANSIBg(lines []string) bool {
+	for _, raw := range lines {
+		if strings.Contains(raw, "\x1b[48;") {
+			return true
+		}
+	}
+	return false
+}
+
+// ompPlainLinesTrimmed strips ANSI escapes and surrounding whitespace from each
+// line, skipping empty lines.
+func ompPlainLinesTrimmed(lines []string) []string {
+	out := make([]string, 0, len(lines))
+	for _, raw := range lines {
+		trimmed := strings.TrimSpace(stripANSI(raw))
+		if trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
+}
+
+// ompBoxBodyText strips ANSI escapes and PiG's 1-cell Box horizontal padding
+// while preserving internal blank lines and relative indentation.
+func ompBoxBodyText(lines []string) string {
+	plain := make([]string, len(lines))
+	start, end := -1, -1
+	for i, raw := range lines {
+		s := strings.TrimRight(stripANSI(raw), " \t")
+		plain[i] = s
+		if strings.TrimSpace(s) != "" {
+			if start < 0 {
+				start = i
+			}
+			end = i
+		}
+	}
+	if start < 0 {
+		return ""
+	}
+	slice := plain[start : end+1]
+	// Dedent common leading spaces (PiG's Box outputPad=1 indents every row).
+	minIndent := -1
+	for _, s := range slice {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		n := 0
+		for n < len(s) && s[n] == ' ' {
+			n++
+		}
+		if minIndent < 0 || n < minIndent {
+			minIndent = n
+		}
+	}
+	if minIndent > 0 {
+		for i, s := range slice {
+			if len(s) >= minIndent {
+				slice[i] = s[minIndent:]
+			} else {
+				slice[i] = ""
+			}
+		}
+	}
+	return strings.TrimSpace(strings.Join(slice, "\n"))
+}
+
+// ompStripSystemNoticeEnvelope removes a wrapping `<system-notice>` /
+// `</system-notice>` tag pair if present on the first/last lines.
+func ompStripSystemNoticeEnvelope(body string) string {
+	if body == "" {
+		return ""
+	}
+	lines := strings.Split(body, "\n")
+	if len(lines) > 0 && strings.TrimSpace(lines[0]) == "<system-notice>" {
+		lines = lines[1:]
+	}
+	if len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "</system-notice>" {
+		lines = lines[:len(lines)-1]
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
 // ompWelcomeTips holds omp's TSP tips from packages/tui/src/prompt/tips.txt

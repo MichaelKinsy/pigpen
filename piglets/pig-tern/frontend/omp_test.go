@@ -110,7 +110,7 @@ func TestOmpComposerLayoutAndInteractions(t *testing.T) {
 		t.Fatalf("git fact = %#v", gitFact)
 	}
 	usageNode := node(ops, "dock.editor.editor.bar.usage")
-	if usageNode == nil || usageNode["k"] != "text" || props(usageNode)["role"] != "omp.composer.usage" || props(usageNode)["text"] != "S0.01" {
+	if usageNode == nil || usageNode["k"] != "text" || props(usageNode)["role"] != "omp.composer.usage" || props(usageNode)["text"] != ompSubscriptionIcon+" 0.01" {
 		t.Fatalf("usage node = %#v", usageNode)
 	}
 	sendNode := node(ops, "dock.editor.editor.bar.send")
@@ -151,7 +151,9 @@ func TestOmpComposerLayoutAndInteractions(t *testing.T) {
 	}
 
 	// Working state gives omp.editor tone="pending", swaps send -> text[omp.composer.stop],
-	// and blocks model/effort clicks; removing Working restores send and clears the tone.
+	// allows PiG builtin slash commands (/model, /thinking) under bare ompRoles, and also
+	// allows /context and /usage when running as a derived Piglet (ompDerived).
+	// Removing Working restores send and clears the tone.
 	ops = h.applyOps(workingOp(fe.Insert, fe.Working{Kind: fe.WorkingAgent, Message: "Working"}))
 	if setOps := opsOn(ops, "dock.editor.editor"); len(setOps) == 0 || setOps[0].([]any)[2].(map[string]any)["tone"] != "pending" {
 		t.Fatalf("working did not set composer tone=pending: %#v", ops)
@@ -163,12 +165,27 @@ func TestOmpComposerLayoutAndInteractions(t *testing.T) {
 	}
 	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.bar.model","act":"status.model"}`)
 	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.bar.model.effort","act":"thinking.cycle"}`)
+	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.context","act":"status.context"}`)
+	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.bar.usage","act":"status.cost"}`)
 	h.synced()
 	h.mu.Lock()
-	sendsWhileWorking := len(h.sends)
+	gotWhileWorking := append([]string(nil), h.sends[4:]...)
 	h.mu.Unlock()
-	if sendsWhileWorking != 4 {
-		t.Fatalf("clicks while working sent %q", h.sends[4:])
+	if want := []string{"/model", "/thinking"}; !reflect.DeepEqual(gotWhileWorking, want) {
+		t.Fatalf("bare ompRoles clicks while working sent %q, want %q", gotWhileWorking, want)
+	}
+	// Under ompDerived (Options.Omp = true), /context and /usage also work while busy.
+	h.session.mu.Lock()
+	h.session.ompDerived = true
+	h.session.mu.Unlock()
+	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.context","act":"status.context"}`)
+	h.event(`{"ev":"action","sf":"pig","id":"dock.editor.editor.bar.usage","act":"status.cost"}`)
+	h.synced()
+	h.mu.Lock()
+	gotDerivedWorking := append([]string(nil), h.sends[6:]...)
+	h.mu.Unlock()
+	if want := []string{"/context", "/usage"}; !reflect.DeepEqual(gotDerivedWorking, want) {
+		t.Fatalf("ompDerived clicks while working sent %q, want %q", gotDerivedWorking, want)
 	}
 	ops = h.applyOps(fe.Op{Kind: fe.Remove, Region: fe.RegionDock, ID: "working"})
 	if setOps := opsOn(ops, "dock.editor.editor"); len(setOps) == 0 || setOps[0].([]any)[2].(map[string]any)["tone"] != nil {

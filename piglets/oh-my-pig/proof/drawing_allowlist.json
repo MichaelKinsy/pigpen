@@ -740,26 +740,6 @@
     "kind": "frame_child",
     "region": "dock",
     "side": "omp-only",
-    "node_kind": "row",
-    "role": "omp.hud",
-    "child_roles": [
-      "row[omp.hud.pill]"
-    ],
-    "class": "HOST",
-    "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
-    "ref_term": [
-      "omp.hud.pill",
-      "omp.hud.judge"
-    ],
-    "ref_subject": [
-      "omp.hud"
-    ],
-    "why": "PiG frontend.Frame has no dock HUD pills node kind (`omp.hud` / `omp.hud.pill` / `omp.hud.seg`)."
-  },
-  {
-    "kind": "frame_child",
-    "region": "dock",
-    "side": "omp-only",
     "node_kind": "col",
     "role": "",
     "child_roles": [
@@ -770,8 +750,8 @@
     "class": "HOST",
     "ref_file": "piglets/pig-tern/frontend/OMP-UPSTREAM.md",
     "ref_term": [
-      "omp.hud.pill",
-      "omp.hud.judge"
+      "omp.hud.judge",
+      "omp.hud.downloads"
     ],
     "ref_subject": [
       "omp.hud.judge",

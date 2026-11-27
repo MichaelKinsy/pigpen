@@ -13,6 +13,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // packages/coding-agent/src/irc/messaging.ts,
@@ -39,6 +40,19 @@ type AgentRef struct {
 	CreatedAt      time.Time
 	LastActive     time.Time
 	Activity       string
+	AgentType      string // e.g. "scout", "reviewer", "task", "sonic"
+	Task           string // user prompt / task description
+	Model          string // resolved model name/ID
+	ModelRole      string
+	ThinkingLevel  string
+	Cost           float64
+	DurationMs     int64
+	TurnStartedAt  time.Time
+	Requests       int
+	Tools          int
+	Tokens         int
+	ContextTokens  int
+	ContextWindow  int
 	Messages       []map[string]any // retained transcript snapshot for parked/in-memory reads
 	// PendingIRC holds messages queued before a child session opened.
 	PendingIRC []IRCMessage
@@ -46,8 +60,14 @@ type AgentRef struct {
 	OnDeliver func(msg IRCMessage) IrcDeliveryReceipt
 	// OnWake wakes an idle/parked subagent to process a newly delivered message.
 	// Returns true iff it took ownership of the live session and launched the wake turn.
-	OnWake    func(msg IRCMessage) bool
+	OnWake func(msg IRCMessage) bool
+	// OnRevive revives a parked or aborted subagent (starting a fresh live child
+	// session with its retained transcript context) when invoked from the Agent Hub.
+	// Returns true iff revival succeeded.
+	OnRevive  func() (string, error)
 	idleTimer *time.Timer
+	reviving  bool
+	runActive bool
 	// insertSeq preserves Map insertion order (matching JS Map iteration order in
 	// packages/coding-agent/src/registry/agent-registry.ts:202,448-461) as the
 	// stable tie-breaker when two peers share status and LastActive.
@@ -165,6 +185,11 @@ type Registry struct {
 	nextInsert    uint64
 	listeners     map[int]func()
 	nextListenID  int
+	hubListeners  map[int]func(immediate bool)
+	nextHubListen int
+	endedSessions map[string]struct{}
+	activities    map[string][]surface.AgentHubActivity
+	nextActID     int64
 }
 
 // NewRegistry creates an empty Registry.
@@ -174,6 +199,9 @@ func NewRegistry() *Registry {
 		extraArtDirs:  map[string]map[string]int{},
 		childSessions: map[string]ChildSessionMeta{},
 		listeners:     map[int]func(){},
+		activities:    map[string][]surface.AgentHubActivity{},
+		hubListeners:  map[int]func(immediate bool){},
+		endedSessions: map[string]struct{}{},
 	}
 }
 
@@ -465,6 +493,40 @@ func (r *Registry) notify() {
 	for _, fn := range fns {
 		fn()
 	}
+	r.notifyHub(true)
+}
+
+// notifyHub notifies Agent Hub subscribers without triggering generic
+// Registry.OnChange listeners (such as task-card invalidators).
+func (r *Registry) notifyHub(immediate bool) {
+	r.mu.RLock()
+	fns := make([]func(bool), 0, len(r.hubListeners))
+	for _, fn := range r.hubListeners {
+		fns = append(fns, fn)
+	}
+	r.mu.RUnlock()
+	for _, fn := range fns {
+		fn(immediate)
+	}
+}
+
+// OnHubChange subscribes to Agent Hub updates. The callback's `immediate`
+// argument is true for status/registration transitions and false for high-rate
+// telemetry/activity ticks that may be coalesced.
+func (r *Registry) OnHubChange(fn func(immediate bool)) func() {
+	r.mu.Lock()
+	if r.hubListeners == nil {
+		r.hubListeners = map[int]func(bool){}
+	}
+	r.nextHubListen++
+	id := r.nextHubListen
+	r.hubListeners[id] = fn
+	r.mu.Unlock()
+	return func() {
+		r.mu.Lock()
+		delete(r.hubListeners, id)
+		r.mu.Unlock()
+	}
 }
 
 // OnChange subscribes to registry status/message changes.
@@ -742,9 +804,25 @@ func (r *Registry) SetStatusInSession(sessionID, id, status string) {
 	ref.Status = status
 	if status != "running" {
 		ref.Activity = ""
+		ref.TurnStartedAt = time.Time{}
+	} else if ref.TurnStartedAt.IsZero() {
+		ref.TurnStartedAt = time.Now()
 	}
 	ref.LastActive = time.Now()
+	kind := ref.Kind
+	sessKey := ref.SessionID
 	ref.mu.Unlock()
+	if kind == "sub" {
+		if sessKey == "" {
+			sessKey = sessionID
+		}
+		r.RecordActivity(sessKey, surface.AgentHubActivity{
+			AgentID: id,
+			Kind:    "status",
+			Title:   "Status: " + status,
+			Status:  activityStatusForAgentStatus(status),
+		})
+	}
 	r.notify()
 }
 
@@ -769,8 +847,23 @@ func (r *Registry) SettleIfRunning(sessionID, id, status string) {
 	ref.Session = nil
 	ref.OnWake = nil
 	ref.PendingIRC = nil
+	ref.Activity = ""
+	ref.TurnStartedAt = time.Time{}
 	ref.LastActive = time.Now()
+	kind := ref.Kind
+	sessKey := ref.SessionID
 	ref.mu.Unlock()
+	if kind == "sub" {
+		if sessKey == "" {
+			sessKey = sessionID
+		}
+		r.RecordActivity(sessKey, surface.AgentHubActivity{
+			AgentID: id,
+			Kind:    "status",
+			Title:   "Status: " + status,
+			Status:  activityStatusForAgentStatus(status),
+		})
+	}
 	r.notify()
 }
 
@@ -836,6 +929,24 @@ func (ref *AgentRef) IsResumable() bool {
 		return true
 	}
 	return (ref.Status == "parked" || ref.Status == "aborted") && (ref.Session != nil || ref.SessionFile != "")
+}
+
+// CanRevive reports whether ref is a parked or aborted subagent that can be
+// revived from the Agent Hub (either via an installed OnRevive hook or an
+// OnWake handler or a resumable session/transcript).
+func (ref *AgentRef) CanRevive() bool {
+	if ref == nil {
+		return false
+	}
+	ref.mu.Lock()
+	defer ref.mu.Unlock()
+	if ref.Kind != "sub" {
+		return false
+	}
+	if ref.Status != "parked" && ref.Status != "aborted" {
+		return false
+	}
+	return ref.OnRevive != nil && !ref.reviving && !ref.runActive
 }
 
 // SendMessage delivers an IRC message to targetID (or broadcasts to "all")
@@ -942,6 +1053,20 @@ func (r *Registry) SendMessageInSession(sessionID, senderID, target, body string
 		if receipt.Outcome != "failed" {
 			delivered++
 		}
+	}
+	if delivered > 0 {
+		actAgentID := to
+		if to == MainAgentID || to == "all" {
+			actAgentID = senderID
+		}
+		r.RecordActivity(sessionID, surface.AgentHubActivity{
+			AgentID: actAgentID,
+			Kind:    "irc",
+			Title:   fmt.Sprintf("IRC %s → %s", senderID, to),
+			Detail:  OneLineLabel(body),
+			Status:  "ok",
+		})
+		r.notify()
 	}
 
 	details := CoordinationDetails{
@@ -1181,7 +1306,12 @@ func (r *Registry) ParkIdleRef(ref *AgentRef) {
 	ref.OnWake = nil
 	ref.idleTimer = nil
 	ref.Status = "parked"
+	ref.Activity = ""
+	ref.TurnStartedAt = time.Time{}
 	ref.LastActive = time.Now()
+	sessKey := ref.SessionID
+	agentID := ref.ID
+	kind := ref.Kind
 	ref.mu.Unlock()
 
 	sess.Dispose()
@@ -1189,6 +1319,14 @@ func (r *Registry) ParkIdleRef(ref *AgentRef) {
 		lifecycle.End(childSID)
 	}
 	if r != nil {
+		if kind == "sub" {
+			r.RecordActivity(sessKey, surface.AgentHubActivity{
+				AgentID: agentID,
+				Kind:    "status",
+				Title:   "Status: parked",
+				Status:  "ok",
+			})
+		}
 		r.notify()
 	}
 }
@@ -1343,8 +1481,15 @@ func (r *Registry) CancelAllRunning(sessionID string) {
 		for _, k := range toRemove {
 			delete(r.refs, k)
 		}
+		if sessionID != "" {
+			delete(r.activities, sessionID)
+		}
 		r.mu.Unlock()
 		r.notify()
+	} else if sessionID != "" {
+		r.mu.Lock()
+		delete(r.activities, sessionID)
+		r.mu.Unlock()
 	}
 }
 
@@ -1379,7 +1524,10 @@ func (r *Registry) KillAgent(sessionID, id string) (status string, message strin
 	ref.Session = nil
 	ref.OnWake = nil
 	ref.Status = "aborted"
+	ref.Activity = ""
+	ref.TurnStartedAt = time.Time{}
 	ref.LastActive = time.Now()
+	sessKey := ref.SessionID
 	ref.mu.Unlock()
 
 	if sess != nil {
@@ -1391,6 +1539,15 @@ func (r *Registry) KillAgent(sessionID, id string) (status string, message strin
 			lifecycle.End(childSID)
 		}
 	}
+	if sessKey == "" {
+		sessKey = sessionID
+	}
+	r.RecordActivity(sessKey, surface.AgentHubActivity{
+		AgentID: id,
+		Kind:    "status",
+		Title:   "Status: aborted (killed)",
+		Status:  "aborted",
+	})
 	r.notify()
 	return "cancelled", fmt.Sprintf("Killed agent %s; its transcript stays at history://%s.", id, id)
 }
@@ -1578,4 +1735,204 @@ func (r *Registry) CollectPeerRosterForSession(sessionID, selfID string) PeerRos
 		OmittedCount: omitted,
 		ParkedCount:  parked,
 	}
+}
+
+const maxActivitiesPerSession = 250
+
+func activityStatusForAgentStatus(status string) string {
+	switch status {
+	case "running":
+		return "pending"
+	case "aborted":
+		return "aborted"
+	default:
+		return "ok"
+	}
+}
+
+// ListInSessionTree returns all AgentRefs belonging to topSessionID or any
+// descendant child session whose ResolveTopParent equals topSessionID.
+func (r *Registry) ListInSessionTree(topSessionID string) []*AgentRef {
+	if r == nil {
+		return nil
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]*AgentRef, 0, len(r.refs))
+	for _, ref := range r.refs {
+		if ref == nil {
+			continue
+		}
+		if topSessionID == "" || ref.SessionID == topSessionID {
+			out = append(out, ref)
+			continue
+		}
+		if r.resolveTopParentLocked(ref.SessionID) == topSessionID {
+			out = append(out, ref)
+		}
+	}
+	return out
+}
+
+// LookupInSessionTree resolves id (exact or case-insensitive) across
+// topSessionID and all of its descendant child sessions.
+func (r *Registry) LookupInSessionTree(topSessionID, id string) (*AgentRef, bool) {
+	if ref, ok := r.LookupInSession(topSessionID, id); ok {
+		return ref, true
+	}
+	if id == "" || topSessionID == "" {
+		return nil, false
+	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	var ciMatch *AgentRef
+	for _, ref := range r.refs {
+		if ref == nil || ref.SessionID == topSessionID {
+			continue
+		}
+		if r.resolveTopParentLocked(ref.SessionID) != topSessionID {
+			continue
+		}
+		if ref.ID == id {
+			return ref, true
+		}
+		if ciMatch == nil && strings.EqualFold(ref.ID, id) {
+			ciMatch = ref
+		}
+	}
+	if ciMatch != nil {
+		return ciMatch, true
+	}
+	return nil, false
+}
+
+func (r *Registry) resolveTopParentLocked(sessionID string) string {
+	if sessionID == "" {
+		return ""
+	}
+	meta, isChild := r.childSessions[sessionID]
+	if !isChild {
+		return ""
+	}
+	cur := meta.ParentSessionID
+	visited := map[string]bool{sessionID: true}
+	for cur != "" {
+		if visited[cur] {
+			break
+		}
+		visited[cur] = true
+		next, ok := r.childSessions[cur]
+		if !ok || next.ParentSessionID == "" {
+			break
+		}
+		cur = next.ParentSessionID
+	}
+	return cur
+}
+
+// RecordActivity appends an AgentHubActivity event to sessionID's bounded
+// activity ring (capped at maxActivitiesPerSession entries).
+func (r *Registry) RecordActivity(sessionID string, ev surface.AgentHubActivity) {
+	if r == nil {
+		return
+	}
+	if ev.TimestampMs == 0 {
+		ev.TimestampMs = time.Now().UnixMilli()
+	}
+	r.mu.Lock()
+	if sessionID != "" {
+		if _, ended := r.endedSessions[sessionID]; ended {
+			r.mu.Unlock()
+			return
+		}
+	}
+	if r.activities == nil {
+		r.activities = map[string][]surface.AgentHubActivity{}
+	}
+	if ev.ID == "" {
+		r.nextActID++
+		ev.ID = "act-" + itoa(r.nextActID)
+	}
+	list := append(r.activities[sessionID], ev)
+	if len(list) >= maxActivitiesPerSession*2 {
+		copy(list, list[len(list)-maxActivitiesPerSession:])
+		list = list[:maxActivitiesPerSession]
+	}
+	r.activities[sessionID] = list
+	r.mu.Unlock()
+}
+
+// ListActivities returns a copy of sessionID's activity events (including
+// descendant child sessions in the same session tree) in newest-first order.
+func (r *Registry) ListActivities(sessionID string) []surface.AgentHubActivity {
+	if r == nil {
+		return nil
+	}
+	r.mu.RLock()
+	var merged []surface.AgentHubActivity
+	appendBounded := func(src []surface.AgentHubActivity) {
+		if len(src) > maxActivitiesPerSession {
+			src = src[len(src)-maxActivitiesPerSession:]
+		}
+		merged = append(merged, src...)
+	}
+	if sessionID == "" {
+		appendBounded(r.activities[""])
+	} else {
+		appendBounded(r.activities[sessionID])
+		for sid, src := range r.activities {
+			if sid == sessionID || sid == "" {
+				continue
+			}
+			if r.resolveTopParentLocked(sid) == sessionID {
+				appendBounded(src)
+			}
+		}
+	}
+	r.mu.RUnlock()
+	if len(merged) == 0 {
+		return nil
+	}
+	sort.SliceStable(merged, func(i, j int) bool {
+		if merged[i].TimestampMs != merged[j].TimestampMs {
+			return merged[i].TimestampMs > merged[j].TimestampMs
+		}
+		return merged[i].ID > merged[j].ID
+	})
+	if len(merged) > maxActivitiesPerSession {
+		merged = merged[:maxActivitiesPerSession]
+	}
+	return merged
+}
+
+// MarkSessionActive clears any ended-session tombstone for sessionID when a
+// session starts or is reused in tests.
+func (r *Registry) MarkSessionActive(sessionID string) {
+	if r == nil || sessionID == "" {
+		return
+	}
+	r.mu.Lock()
+	delete(r.endedSessions, sessionID)
+	r.mu.Unlock()
+}
+
+// ClearActivities removes all recorded activity events for sessionID (or all
+// sessions when sessionID == "") and tombstones sessionID so late background
+// events cannot repopulate it.
+func (r *Registry) ClearActivities(sessionID string) {
+	if r == nil {
+		return
+	}
+	r.mu.Lock()
+	if sessionID == "" {
+		clear(r.activities)
+		clear(r.endedSessions)
+	} else {
+		delete(r.activities, sessionID)
+		if r.endedSessions == nil {
+			r.endedSessions = map[string]struct{}{}
+		}
+		r.endedSessions[sessionID] = struct{}{}
+	}
+	r.mu.Unlock()
 }

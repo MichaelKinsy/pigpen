@@ -258,6 +258,7 @@ func wireLineageAndIntent() {
 	settings.ParentSession = agents.ParentSession
 	intent.ParentSession = agents.ParentSession
 	prompt.SubagentSession = agents.IsSubagent
+	snapcompact.IsSubagent = agents.IsSubagent
 
 	intent.Configured = func(ctx sdk.Context) (bool, bool) {
 		store := settings.StoreFor(ctx)

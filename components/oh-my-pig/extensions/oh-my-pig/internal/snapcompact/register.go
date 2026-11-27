@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // upstream: packages/coding-agent/src/session/compact-modes.ts
@@ -21,6 +22,14 @@ var Setting func(ctx sdk.Context, key string) any
 // HandoffPrompt renders omp's handoff document prompt for `/compact handoff [focus]`
 // (wired by wiring.go to internal/modes).
 var HandoffPrompt func(focus string) string
+
+// IsSubagent reports whether ctx belongs to a spawned child subagent session
+// (wired by wiring.go to internal/agents.IsSubagent).
+var IsSubagent func(ctx sdk.Context) bool
+
+func isTopLevelForSurface(ctx sdk.Context) bool {
+	return IsSubagent == nil || !IsSubagent(ctx)
+}
 
 // DefaultMethodOrder mirrors packages/coding-agent/src/session/compaction-methods.ts.
 var DefaultMethodOrder = []string{"remote", "snapcompact", "handoff", "shake", "soft"}
@@ -271,6 +280,9 @@ func (m *manager) onSessionStart(ctx sdk.Context, _ map[string]any) (any, error)
 	sid := sessionIDFor(ctx)
 	m.clearCache(sid)
 	m.resetTransientState(sid)
+	if isTopLevelForSurface(ctx) {
+		hydrateSurfaceCompactions(ctx)
+	}
 	return nil, nil
 }
 
@@ -278,6 +290,9 @@ func (m *manager) onSessionTree(ctx sdk.Context, _ map[string]any) (any, error) 
 	sid := sessionIDFor(ctx)
 	m.clearCache(sid)
 	m.resetTransientState(sid)
+	if isTopLevelForSurface(ctx) {
+		hydrateSurfaceCompactions(ctx)
+	}
 	return nil, nil
 }
 
@@ -318,6 +333,11 @@ func (m *manager) onSessionCompact(ctx sdk.Context, data map[string]any) (any, e
 		m.setCachedArchive(sid, summaryCacheKey(summary), archive)
 	} else {
 		m.setCachedArchive(sid, summaryCacheKey(summary), nil)
+	}
+	if isTopLevelForSurface(ctx) {
+		if meta, ok := compactionMetaFromEntry(entry); ok {
+			surface.RecordCompaction(meta)
+		}
 	}
 	return nil, nil
 }
@@ -439,6 +459,21 @@ func (m *manager) onSessionBeforeCompact(ctx sdk.Context, data map[string]any) (
 	sid := sessionIDFor(ctx)
 	forcedMode := m.consumePendingMode(sid)
 	customInstructions, _ := data["customInstructions"].(string)
+	// PiG's builtin `/compact <args>` bypasses EventInput and passes `<args>`
+	// directly as customInstructions to session_before_compact. Parse any
+	// leading mode keyword (`snapcompact`, `soft`, `remote`, `handoff`) here so
+	// `/compact snapcompact` runs snapcompact even when EventInput did not fire.
+	if forcedMode == "" && strings.TrimSpace(customInstructions) != "" {
+		parsed := ParseCompactArgs(customInstructions)
+		if parsed.Err != "" {
+			ctx.Notify(parsed.Err, "error")
+			return map[string]any{"cancel": true}, nil
+		}
+		if parsed.Mode != "" {
+			forcedMode = parsed.Mode
+			customInstructions = parsed.Instructions
+		}
+	}
 	order := resolveMethodOrder(ctx)
 
 	want, strict := wantsSnapcompactForMethodOrder(order, forcedMode, customInstructions)
@@ -560,15 +595,30 @@ func (m *manager) onSessionBeforeCompact(ctx sdk.Context, data map[string]any) (
 	archiveCopy := res.Archive
 	m.setCachedArchive(sid, summaryCacheKey(res.Summary), &archiveCopy)
 
+	tokensAfter := snapcompactTokensAfter(res)
+	frameCount := len(res.Archive.Frames)
 	details := map[string]any{
 		"readFiles":     nonNilStrings(res.ReadFiles),
 		"modifiedFiles": nonNilStrings(res.ModifiedFiles),
 		"method":        "snapcompact",
 		"shortSummary":  res.ShortSummary,
+		"tokensAfter":   tokensAfter,
+		"frameCount":    frameCount,
 		PreserveKey:     res.Archive,
 	}
+	if isTopLevelForSurface(ctx) {
+		surface.RecordCompaction(surface.CompactionMeta{
+			Method:       "snapcompact",
+			TokensBefore: res.TokensBefore,
+			TokensAfter:  tokensAfter,
+			FrameCount:   frameCount,
+			Summary:      res.Summary,
+		})
+	}
 
-	ctx.Notify(res.ShortSummary, "info")
+	if !surface.Native() {
+		ctx.Notify(res.ShortSummary, "info")
+	}
 	return map[string]any{
 		"compaction": map[string]any{
 			"summary":          res.Summary,
@@ -789,4 +839,94 @@ func nonNilStrings(s []string) []string {
 		return []string{}
 	}
 	return s
+}
+
+func snapcompactTokensAfter(res Result) int {
+	return len(res.Archive.Frames)*PlannedFrameTokens(res.Shape) +
+		(len([]rune(res.Archive.TextHead))+len([]rune(res.Archive.TextTail)))/4 +
+		len([]rune(res.Summary))/4
+}
+
+func compactionMetaFromEntry(entry map[string]any) (surface.CompactionMeta, bool) {
+	if entry == nil {
+		return surface.CompactionMeta{}, false
+	}
+	summary, _ := entry["summary"].(string)
+	tokensBefore, _ := numberField(entry, "tokensBefore")
+
+	var method, warning string
+	var tokensAfter, frameCount int
+	if details, ok := entry["details"].(map[string]any); ok && details != nil {
+		method, _ = details["method"].(string)
+		warning, _ = details["warning"].(string)
+		tokensAfter, _ = numberField(details, "tokensAfter")
+		frameCount, _ = numberField(details, "frameCount")
+	}
+	if archive, ok := ExtractArchiveFromDetails(entry["details"]); ok && archive != nil {
+		if method == "" {
+			method = "snapcompact"
+		}
+		if frameCount <= 0 {
+			frameCount = len(archive.Frames)
+		}
+	} else if archive, ok := ExtractArchiveFromDetails(entry["preserveData"]); ok && archive != nil {
+		if method == "" {
+			method = "snapcompact"
+		}
+		if frameCount <= 0 {
+			frameCount = len(archive.Frames)
+		}
+	}
+	meta := surface.CompactionMeta{
+		Method:       method,
+		TokensBefore: tokensBefore,
+		TokensAfter:  tokensAfter,
+		FrameCount:   frameCount,
+		Summary:      summary,
+		Warning:      warning,
+	}
+	if meta.TokensBefore <= 0 && meta.Summary == "" && meta.Method == "" {
+		return surface.CompactionMeta{}, false
+	}
+	return meta, true
+}
+
+func hydrateSurfaceCompactions(ctx sdk.Context) {
+	rawEntries, err := ctx.GetEntries()
+	if err != nil {
+		return
+	}
+	if len(rawEntries) == 0 {
+		surface.SetCompactions(nil)
+		return
+	}
+	// Restrict to current branch when GetBranch succeeds so abandoned branches
+	// don't pollute lookup after a tree switch.
+	branchIDs := map[string]bool{}
+	if branch, berr := ctx.GetBranch(); berr == nil && len(branch) > 0 {
+		for _, be := range branch {
+			if be.ID != "" {
+				branchIDs[be.ID] = true
+			}
+		}
+	}
+	filterByBranch := len(branchIDs) > 0
+
+	var list []surface.CompactionMeta
+	for _, raw := range rawEntries {
+		var entry map[string]any
+		if json.Unmarshal(raw, &entry) != nil {
+			continue
+		}
+		if strField(entry, "type") != "compaction" {
+			continue
+		}
+		if id := strField(entry, "id"); filterByBranch && id != "" && !branchIDs[id] {
+			continue
+		}
+		if meta, ok := compactionMetaFromEntry(entry); ok {
+			list = append(list, meta)
+		}
+	}
+	surface.SetCompactions(list)
 }

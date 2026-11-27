@@ -524,7 +524,7 @@ func (s *session) mainNodeFor(e *mainEntry, node fe.Node) tern.WireNode {
 		}
 		s.dropViewRules(id)
 		if s.ompRoles {
-			if ompNode, ok := ompLinesNode(id, strings.TrimPrefix(id, "n."), n.Lines, s.toolsExpanded); ok {
+			if ompNode, ok := ompLinesNode(id, strings.TrimPrefix(id, "n."), n.Lines, s.toolsExpanded, s.lookupCompaction); ok {
 				return ompNode
 			}
 		}

@@ -269,6 +269,9 @@ func (s *session) dockNodeChanged(e *entry, prev, next fe.Node) {
 		}
 		if isLayerNode(next) {
 			e.tid = "layer." + e.id
+			if s.agentHubUI != nil && s.agentHubUI.open {
+				s.closeAgentHubLocked(false)
+			}
 		}
 	}
 }
@@ -521,12 +524,17 @@ func (s *session) view() tern.View {
 // `row[omp.hud.activity]` whenever working or todo is present (and an empty
 // `col` otherwise, matching `EMPTY_HUD`).
 func (s *session) ompView() tern.View {
-	layer := make(tern.Nodes, 0, len(s.overlays)+2)
+	layer := make(tern.Nodes, 0, len(s.overlays)+3)
 	for _, e := range s.overlays {
 		layer = append(layer, e.view)
 	}
 	if s.hasEditor && s.autocomplete != nil {
 		layer = append(layer, s.ompAutocompleteOverlay(s.autocomplete))
+	}
+	if s.agentHubUI != nil && s.agentHubUI.open {
+		if hubNode, ok := s.ompAgentHubLayerNode(); ok {
+			layer = append(layer, hubNode)
+		}
 	}
 	var (
 		errorBannerChildren []tern.Element
@@ -620,7 +628,11 @@ func (s *session) ompView() tern.View {
 		activitySlot = slot("activity")
 	}
 
-	dock := tern.Nodes{
+	dock := make(tern.Nodes, 0, 12)
+	if hudNode, ok := s.ompAgentsHudNode(); ok {
+		dock = append(dock, hudNode)
+	}
+	dock = append(dock,
 		slot("btw"),
 		slot("omfg"),
 		slot("cleanse"),
@@ -632,7 +644,7 @@ func (s *session) ompView() tern.View {
 		slot("pending"),
 		slot("editor", editorChildren...),
 		slot("below", belowChildren...),
-	}
+	)
 	return tern.View{Main: tern.Nodes{}, Dock: dock, Layer: layer}
 }
 
@@ -702,11 +714,21 @@ func (s *session) element(e *entry, clicks bool) tern.Element {
 
 // runCommand runs one of PiG's slash commands from a click, through the
 // path Enter takes (Env.Send), as if typed into an empty editor; the draft
-// stays. It runs only while the editor takes a prompt and PiG is idle: a
-// command sent while PiG works would steer the run as a prompt.
+// stays. While PiG works, only safe slash commands are allowed under ompRoles:
+// PiG builtins (/model, /thinking) always, plus /context and /usage when
+// running as a derived Piglet (ompDerived / Options.Omp).
 func (s *session) runCommand(command string) {
 	s.mu.Lock()
-	ok := s.sendable() && !s.progress && !s.closed && !s.fellBack
+	allowWhileWorking := false
+	if s.ompRoles {
+		switch command {
+		case "/model", "/thinking":
+			allowWhileWorking = true
+		case "/context", "/usage":
+			allowWhileWorking = s.ompDerived
+		}
+	}
+	ok := s.sendable() && (!s.progress || allowWhileWorking) && !s.closed && !s.fellBack
 	s.mu.Unlock()
 	if ok && s.env.Send != nil {
 		s.env.Send(command)

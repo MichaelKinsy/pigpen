@@ -21,6 +21,7 @@ import (
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/lifecycle"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/schemaorder"
 	"github.com/MichaelKinsy/pigpen/oh-my-pig/internal/urls"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // upstream: packages/coding-agent/src/task/executor.ts,
@@ -865,6 +866,31 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 			ModelOverride: req.ModelOverride,
 		}
 	}
+	// H3: If a pre-registered ref was already aborted before RunSubagent began,
+	// bail immediately instead of overwriting it back to "running".
+	if reg != nil {
+		if existing, ok := reg.GetInSession(req.ParentSessionID, req.ID); ok && existing != nil {
+			existing.mu.Lock()
+			alreadyAborted := existing.Status == "aborted"
+			existing.mu.Unlock()
+			if alreadyAborted {
+				return SingleResult{
+					Index:         req.Index,
+					ID:            req.ID,
+					Agent:         req.Agent.Name,
+					AgentSource:   req.Agent.Source,
+					Task:          userPrompt,
+					Assignment:    req.Assignment,
+					ExitCode:      1,
+					Stderr:        "Cancelled before start",
+					Error:         "Cancelled before start",
+					Aborted:       true,
+					AbortReason:   "Cancelled before start",
+					ModelOverride: req.ModelOverride,
+				}
+			}
+		}
+	}
 	// Ensure artifacts dir exists when provided.
 	if req.ArtifactsDir != "" {
 		_ = os.MkdirAll(req.ArtifactsDir, 0o755)
@@ -875,21 +901,42 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	if parentID == "" {
 		parentID = MainAgentID
 	}
-	ref := &AgentRef{
-		ID:          req.ID,
-		DisplayName: req.Agent.Name,
-		Kind:        "sub",
-		ParentID:    parentID,
-		Status:      "running",
-		SessionID:   req.ParentSessionID,
-		OutputDir:   req.ArtifactsDir,
-		CreatedAt:   startTime,
-		LastActive:  startTime,
+	taskDesc := strings.TrimSpace(req.Assignment)
+	if taskDesc == "" {
+		taskDesc = strings.TrimSpace(userPrompt)
 	}
+	ref := &AgentRef{
+		ID:            req.ID,
+		DisplayName:   req.Agent.Name,
+		Kind:          "sub",
+		ParentID:      parentID,
+		Status:        "running",
+		SessionID:     req.ParentSessionID,
+		OutputDir:     req.ArtifactsDir,
+		CreatedAt:     startTime,
+		LastActive:    startTime,
+		AgentType:     req.Agent.Name,
+		Task:          taskDesc,
+		TurnStartedAt: startTime,
+		runActive:     true,
+	}
+	defer func() {
+		ref.mu.Lock()
+		ref.runActive = false
+		ref.mu.Unlock()
+	}()
 	if req.ArtifactsDir != "" {
 		ref.SessionFile = filepath.Join(req.ArtifactsDir, req.ID+".jsonl")
 	}
 	if reg != nil {
+		reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+			AgentID:     req.ID,
+			Kind:        "status",
+			Title:       "Spawned " + req.Agent.Name,
+			Detail:      OneLineLabel(taskDesc),
+			Status:      "pending",
+			TimestampMs: startTime.UnixMilli(),
+		})
 		reg.Register(ref)
 	}
 
@@ -922,6 +969,22 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	}
 	modelObj, modelThinkSuffix, resolvedModelRole := resolveModelForChildWithRole(req.SDK, modelCandidates)
 	thinkingLevel := ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
+	ref.mu.Lock()
+	ref.ModelRole = resolvedModelRole
+	ref.ThinkingLevel = thinkingLevel
+	if modelObj != nil {
+		prov, _ := modelObj["provider"].(string)
+		mid, _ := modelObj["id"].(string)
+		if prov != "" && mid != "" {
+			ref.Model = prov + "/" + mid
+		} else if mid != "" {
+			ref.Model = mid
+		}
+		if cw, ok := asInt(modelObj["contextWindow"]); ok && cw > 0 {
+			ref.ContextWindow = cw
+		}
+	}
+	ref.mu.Unlock()
 
 	softBudgetNotice := true
 	if req.SoftBudgetNotice != nil {
@@ -1065,37 +1128,9 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	// so the child extension's `session_start`, `before_agent_start`, and tool
 	// handlers reliably observe IsSubagent(ctx), ParentSession(ctx), recursion
 	// depth, spawn policy, and the parent's local:// root.
-	effMaxDepth := EffectiveMaxRecursionDepth(req.MaxDepth)
-	childSpawns := ""
-	if effMaxDepth < 0 || childDepth < effMaxDepth {
-		childSpawns = req.Agent.Spawns.String()
-	}
 	if reg != nil && session.SessionID != "" {
-		localRoot := req.ParentLocalRoot
-		if localRoot == "" {
-			if r, err := urls.LocalRoot(req.SDK); err == nil && r != "" {
-				localRoot = r
-			} else if req.ArtifactsDir != "" {
-				localRoot = filepath.Join(req.ArtifactsDir, "local")
-			}
-		}
-		var sessionTreeArtDir string
-		if req.SDK != (sdk.Context{}) {
-			sessionTreeArtDir = SessionTreeArtifactsDir(req.SDK)
-		}
-		reg.RegisterChildSession(session.SessionID, ChildSessionMeta{
-			ParentSessionID: req.ParentSessionID,
-			LocalRoot:       localRoot,
-			Depth:           childDepth,
-			Spawns:          childSpawns,
-			AgentID:         req.ID,
-			ParentAgentID:   parentID,
-			ArtifactsDir:    sessionTreeArtDir,
-			AgentName:       req.Agent.Name,
-			ExplicitTools:   toolsList,
-		})
+		reg.RegisterChildSession(session.SessionID, buildChildSessionMeta(req, childDepth, parentID, toolsList))
 	}
-	// BindExtensions starts the child's fused extension headless and emits
 	// `session_start` before the first Prompt (sdk/child_session.go:560).
 	if err := session.BindExtensions(); err != nil {
 		session.Dispose()
@@ -1142,15 +1177,62 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 
 	// Attach live session to registry and drain any IRC messages parked while starting.
 	var pendingIRC []IRCMessage
+	mu.Lock()
+	resolvedModelIDInit := progress.ResolvedModelIdentity
+	resolvedThinkInit := progress.ResolvedThinkingLevel
+	resolvedCWInit := progress.ContextWindow
+	mu.Unlock()
 	ref.mu.Lock()
+	stillReg := true
+	if reg != nil {
+		cur, ok := reg.GetInSession(req.ParentSessionID, req.ID)
+		stillReg = ok && cur == ref
+	}
+	if ref.Status == "aborted" || ctx.Err() != nil || !stillReg {
+		ref.mu.Unlock()
+		session.Dispose()
+		if session.SessionID != "" {
+			lifecycle.End(session.SessionID)
+			if reg != nil {
+				reg.UnregisterChildSession(session.SessionID)
+			}
+		}
+		return SingleResult{
+			Index:         req.Index,
+			ID:            req.ID,
+			Agent:         req.Agent.Name,
+			AgentSource:   req.Agent.Source,
+			Task:          userPrompt,
+			Assignment:    req.Assignment,
+			ExitCode:      1,
+			Stderr:        "Cancelled during start",
+			Error:         "Cancelled during start",
+			Aborted:       true,
+			AbortReason:   "Cancelled during start",
+			DurationMs:    time.Since(startTime).Milliseconds(),
+			ModelOverride: req.ModelOverride,
+		}
+	}
 	ref.Session = session
 	ref.ChildSessionID = session.SessionID
 	if session.SessionFile != "" {
 		ref.SessionFile = session.SessionFile
 	}
+	if resolvedModelIDInit != "" {
+		ref.Model = resolvedModelIDInit
+	}
+	if resolvedThinkInit != "" {
+		ref.ThinkingLevel = resolvedThinkInit
+	}
+	if resolvedCWInit > 0 {
+		ref.ContextWindow = resolvedCWInit
+	}
 	pendingIRC = ref.PendingIRC
 	ref.PendingIRC = nil
 	ref.mu.Unlock()
+	if reg != nil {
+		reg.notify()
+	}
 	// Subscribe to child session events to update progress, usage, and final output.
 	unsub := session.Subscribe(func(event map[string]any) {
 		evType, _ := event["type"].(string)
@@ -1232,11 +1314,34 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 			}{tool: toolName, args: argPreview, intent: intentStr, startMs: nowMs}
 			shouldEmit = true
 			if reg != nil {
-				if intentStr != "" {
-					reg.SetActivityInSession(req.ParentSessionID, req.ID, intentStr)
-				} else if toolName != "" {
-					reg.SetActivityInSession(req.ParentSessionID, req.ID, toolName+"("+argPreview+")")
+				actLabel := intentStr
+				if actLabel == "" && toolName != "" {
+					if argPreview != "" {
+						actLabel = toolName + "(" + argPreview + ")"
+					} else {
+						actLabel = toolName
+					}
 				}
+				if actLabel != "" {
+					reg.SetActivityInSession(req.ParentSessionID, req.ID, actLabel)
+				}
+				ref.mu.Lock()
+				ref.Tools = progress.ToolCount
+				ref.DurationMs = time.Since(startTime).Milliseconds()
+				ref.LastActive = time.Now()
+				ref.mu.Unlock()
+				detail := intentStr
+				if detail == "" {
+					detail = argPreview
+				}
+				reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+					AgentID:     req.ID,
+					Kind:        "tool",
+					Title:       toolName,
+					Detail:      OneLineLabel(detail),
+					Status:      "pending",
+					TimestampMs: nowMs,
+				})
 			}
 
 		case "tool_execution_end":
@@ -1289,6 +1394,24 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 					break
 				}
 			}
+			if reg != nil && toolName != "" {
+				ref.mu.Lock()
+				ref.DurationMs = time.Since(startTime).Milliseconds()
+				ref.LastActive = time.Now()
+				ref.mu.Unlock()
+				st := "ok"
+				if isErr {
+					st = "error"
+				}
+				reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+					AgentID:     req.ID,
+					Kind:        "tool",
+					Title:       toolName,
+					Detail:      OneLineLabel(finishedIntent),
+					Status:      st,
+					TimestampMs: nowMs,
+				})
+			}
 			shouldEmit = true
 		case "message_update":
 			if ame, ok := event["assistantMessageEvent"].(map[string]any); ok {
@@ -1304,6 +1427,35 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 				case "thinking_start", "thinking_delta":
 					progress.Streaming = &AgentStreaming{Kind: "thinking"}
 				}
+			}
+		case "model_select":
+			if mMap, ok := event["model"].(map[string]any); ok {
+				prov, _ := mMap["provider"].(string)
+				mid, _ := mMap["id"].(string)
+				if prov != "" {
+					lastProvider = prov
+				}
+				if mid != "" {
+					lastModelID = mid
+				}
+				if cw, ok := asInt(mMap["contextWindow"]); ok && cw > 0 {
+					progress.ContextWindow = cw
+				}
+				if prov != "" && mid != "" {
+					progress.ResolvedModelIdentity = prov + "/" + mid
+					progress.ResolvedModel = progress.ResolvedModelIdentity
+				}
+				ref.mu.Lock()
+				if progress.ResolvedModelIdentity != "" {
+					ref.Model = progress.ResolvedModelIdentity
+				} else if mid != "" {
+					ref.Model = mid
+				}
+				if progress.ContextWindow > 0 {
+					ref.ContextWindow = progress.ContextWindow
+				}
+				ref.mu.Unlock()
+				shouldEmit = true
 			}
 
 		case "message_end":
@@ -1377,6 +1529,42 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 							go func() { _ = session.Steer(notice) }()
 						}
 					}
+					if reg != nil {
+						ref.mu.Lock()
+						ref.Requests = progress.Requests
+						ref.Tokens = progress.Tokens
+						ref.Cost = progress.Cost
+						ref.ContextTokens = progress.ContextTokens
+						if progress.ContextWindow > 0 {
+							ref.ContextWindow = progress.ContextWindow
+						}
+						if lastProvider != "" && lastModelID != "" {
+							ref.Model = lastProvider + "/" + lastModelID
+						} else if lastModelID != "" && ref.Model == "" {
+							ref.Model = lastModelID
+						}
+						ref.DurationMs = time.Since(startTime).Milliseconds()
+						ref.LastActive = time.Now()
+						ref.mu.Unlock()
+						respDetail := OneLineLabel(lastReportText)
+						if respDetail == "" {
+							respDetail = OneLineLabel(lastSalvageText)
+						}
+						respStatus := "ok"
+						if lastStopReason == "error" {
+							respStatus = "error"
+						} else if lastStopReason == "aborted" {
+							respStatus = "aborted"
+						}
+						reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+							AgentID:     req.ID,
+							Kind:        "response",
+							Title:       "Assistant response",
+							Detail:      respDetail,
+							Status:      respStatus,
+							TimestampMs: nowMs,
+						})
+					}
 					shouldEmit = true
 				}
 			}
@@ -1411,6 +1599,9 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 
 		if shouldEmit {
 			emitProgress()
+			if reg != nil && (evType == "tool_execution_start" || evType == "tool_execution_end" || evType == "message_end" || evType == "model_select" || evType == "agent_end") {
+				reg.notifyHub(false)
+			}
 		}
 	})
 
@@ -1646,25 +1837,73 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 		persistTranscriptSnapshot(ref)
 	}
 
+	durationMs := time.Since(startTime).Milliseconds()
 	// Lifecycle finalization: keep idle live session when KeepAlive & not aborted; otherwise dispose.
 	if req.KeepAlive && !wasAborted {
 		ref.mu.Lock()
 		ref.Status = "idle"
+		ref.Activity = ""
+		ref.TurnStartedAt = time.Time{}
+		ref.DurationMs = durationMs
+		ref.Requests = reqCount
+		ref.Tokens = tokCount
+		ref.Cost = usageCopy.Cost.Total
+		ref.ContextTokens = ctxTokens
+		if ctxWindow > 0 {
+			ref.ContextWindow = ctxWindow
+		}
+		if resolvedModelID != "" {
+			ref.Model = resolvedModelID
+		}
+		if resolvedThink != "" {
+			ref.ThinkingLevel = resolvedThink
+		}
 		ref.LastActive = time.Now()
 		ref.OnWake = makeMonitoredWakeHandler(reg, ref, req, structured, softBudgetNotice)
+		if strings.TrimSpace(req.Worktree) == "" {
+			ref.OnRevive = makeReviveHandler(reg, ref, req, structured, softBudgetNotice)
+		}
+		ref.runActive = false
 		ref.mu.Unlock()
 		if reg != nil {
+			reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+				AgentID: req.ID,
+				Kind:    "status",
+				Title:   "Status: idle",
+				Status:  "ok",
+			})
 			reg.ArmIdleParkTimer(ref, req.AgentIdleTTLMs)
 			reg.notify()
 		}
 	} else {
-		ref.mu.Lock()
-		ref.Session = nil
-		ref.OnWake = nil
+		finalStatus := "parked"
 		if wasAborted {
-			ref.Status = "aborted"
-		} else {
-			ref.Status = "parked"
+			finalStatus = "aborted"
+		}
+		ref.mu.Lock()
+		if ref.Session == session {
+			ref.Session = nil
+		}
+		ref.OnWake = nil
+		if strings.TrimSpace(req.Worktree) == "" {
+			ref.OnRevive = makeReviveHandler(reg, ref, req, structured, softBudgetNotice)
+		}
+		ref.runActive = false
+		ref.Status = finalStatus
+		ref.TurnStartedAt = time.Time{}
+		ref.DurationMs = durationMs
+		ref.Requests = reqCount
+		ref.Tokens = tokCount
+		ref.Cost = usageCopy.Cost.Total
+		ref.ContextTokens = ctxTokens
+		if ctxWindow > 0 {
+			ref.ContextWindow = ctxWindow
+		}
+		if resolvedModelID != "" {
+			ref.Model = resolvedModelID
+		}
+		if resolvedThink != "" {
+			ref.ThinkingLevel = resolvedThink
 		}
 		ref.LastActive = time.Now()
 		ref.mu.Unlock()
@@ -1673,10 +1912,15 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 			lifecycle.End(session.SessionID)
 		}
 		if reg != nil {
+			reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+				AgentID: req.ID,
+				Kind:    "status",
+				Title:   "Status: " + finalStatus,
+				Status:  activityStatusForAgentStatus(finalStatus),
+			})
 			reg.notify()
 		}
 	}
-	durationMs := time.Since(startTime).Milliseconds()
 	mu.Lock()
 	if wasAborted {
 		progress.Status = "aborted"
@@ -1728,47 +1972,110 @@ func RunSubagent(ctx context.Context, reg *Registry, req RunRequest) SingleResul
 	return res
 }
 
-func persistTranscriptSnapshot(ref *AgentRef) {
-	ref.mu.Lock()
-	file := ref.SessionFile
-	msgs := ref.Messages
-	ref.mu.Unlock()
-	if file == "" || len(msgs) == 0 {
-		return
+// buildChildSessionMeta builds the ChildSessionMeta shared by RunSubagent and
+// makeReviveHandler so revived sessions preserve ParentLocalRoot and policy.
+func buildChildSessionMeta(req RunRequest, childDepth int, parentID string, toolsList []string) ChildSessionMeta {
+	effMaxDepth := EffectiveMaxRecursionDepth(req.MaxDepth)
+	childSpawns := ""
+	if effMaxDepth < 0 || childDepth < effMaxDepth {
+		childSpawns = req.Agent.Spawns.String()
 	}
-	// Do not overwrite an existing JSONL written by the host.
-	if info, err := os.Stat(file); err == nil && info.Size() > 0 {
-		return
+	localRoot := req.ParentLocalRoot
+	if localRoot == "" {
+		if r, err := urls.LocalRoot(req.SDK); err == nil && r != "" {
+			localRoot = r
+		} else if req.ArtifactsDir != "" {
+			localRoot = filepath.Join(req.ArtifactsDir, "local")
+		}
 	}
-	var b strings.Builder
+	var sessionTreeArtDir string
+	if req.SDK != (sdk.Context{}) {
+		sessionTreeArtDir = SessionTreeArtifactsDir(req.SDK)
+	}
+	return ChildSessionMeta{
+		ParentSessionID: req.ParentSessionID,
+		LocalRoot:       localRoot,
+		Depth:           childDepth,
+		Spawns:          childSpawns,
+		AgentID:         req.ID,
+		ParentAgentID:   parentID,
+		ArtifactsDir:    sessionTreeArtDir,
+		AgentName:       req.Agent.Name,
+		ExplicitTools:   toolsList,
+	}
+}
+
+// buildSessionEntriesFromMessages converts retained message maps into PiG
+// session JSONL entries suitable for sdk.SessionManagerInMemory.
+func buildSessionEntriesFromMessages(msgs []map[string]any) []map[string]any {
+	if len(msgs) == 0 {
+		return nil
+	}
 	ts := time.Now().UTC().Format(time.RFC3339)
-	hdr, _ := json.Marshal(map[string]any{
-		"type":      "session",
-		"version":   3,
-		"id":        ref.ID,
-		"timestamp": ts,
-	})
-	b.Write(hdr)
-	b.WriteByte('\n')
+	entries := make([]map[string]any, 0, len(msgs))
 	for i, m := range msgs {
+		if m == nil {
+			continue
+		}
 		var parent any
 		if i > 0 {
 			parent = fmt.Sprintf("m%d", i)
 		}
-		entry, err := json.Marshal(map[string]any{
+		entries = append(entries, map[string]any{
 			"type":      "message",
 			"id":        fmt.Sprintf("m%d", i+1),
 			"parentId":  parent,
 			"timestamp": ts,
 			"message":   m,
 		})
+	}
+	return entries
+}
+
+func persistTranscriptSnapshot(ref *AgentRef) {
+	persistTranscriptSnapshotForce(ref, false)
+}
+
+func persistTranscriptSnapshotForce(ref *AgentRef, overwrite bool) {
+	ref.mu.Lock()
+	file := ref.SessionFile
+	msgs := make([]map[string]any, len(ref.Messages))
+	copy(msgs, ref.Messages)
+	refID := ref.ID
+	ref.mu.Unlock()
+	if file == "" || len(msgs) == 0 {
+		return
+	}
+	// Do not overwrite an existing JSONL unless explicitly requested (e.g. post-revive wake turn).
+	if !overwrite {
+		if info, err := os.Stat(file); err == nil && info.Size() > 0 {
+			return
+		}
+	}
+	var b strings.Builder
+	ts := time.Now().UTC().Format(time.RFC3339)
+	hdr, _ := json.Marshal(map[string]any{
+		"type":      "session",
+		"version":   3,
+		"id":        refID,
+		"timestamp": ts,
+	})
+	b.Write(hdr)
+	b.WriteByte('\n')
+	for _, entryMap := range buildSessionEntriesFromMessages(msgs) {
+		entry, err := json.Marshal(entryMap)
 		if err != nil {
 			continue
 		}
 		b.Write(entry)
 		b.WriteByte('\n')
 	}
-	_ = os.WriteFile(file, []byte(b.String()), 0o644)
+	tmp := file + ".tmp"
+	if err := os.WriteFile(tmp, []byte(b.String()), 0o644); err == nil {
+		_ = os.Rename(tmp, file)
+	} else {
+		_ = os.WriteFile(file, []byte(b.String()), 0o644)
+	}
 }
 
 func extractAssistantTurnText(msg map[string]any) (texts []string, hasNonYieldToolCall bool) {
@@ -1935,10 +2242,25 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 			ref.idleTimer.Stop()
 			ref.idleTimer = nil
 		}
+		now := time.Now()
 		ref.Status = "running"
-		ref.LastActive = time.Now()
+		ref.runActive = true
+		ref.TurnStartedAt = now
+		ref.LastActive = now
+		baseDurationMs := ref.DurationMs
+		baseRequests := ref.Requests
+		baseTokens := ref.Tokens
+		baseCost := ref.Cost
+		baseTools := ref.Tools
 		ref.mu.Unlock()
 		if reg != nil {
+			reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+				AgentID: req.ID,
+				Kind:    "status",
+				Title:   "Status: running (wake)",
+				Detail:  OneLineLabel(msg.Body),
+				Status:  "pending",
+			})
 			reg.notify()
 		}
 
@@ -1981,10 +2303,12 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 					}
 					ref.mu.Lock()
 					ref.Status = "aborted"
-					ref.Session = nil
+					ref.runActive = false
+					if ref.Session == s {
+						ref.Session = nil
+					}
 					ref.OnWake = nil
 					ref.mu.Unlock()
-					s.Dispose()
 					if s.SessionID != "" {
 						lifecycle.End(s.SessionID)
 					}
@@ -2032,10 +2356,69 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 				budgetStopOnce      sync.Once
 			)
 
+			var wakeTools int
 			unsub := s.Subscribe(func(event map[string]any) {
 				evType, _ := event["type"].(string)
+				nowMs := time.Now().UnixMilli()
+				shouldNotify := false
 				wmu.Lock()
 				switch evType {
+				case "tool_execution_start":
+					toolName, _ := event["toolName"].(string)
+					argsMap, _ := event["args"].(map[string]any)
+					argPreview := summarizePrimaryArg(toolName, argsMap)
+					intentStr, _ := event["intent"].(string)
+					if intentStr == "" && argsMap != nil {
+						intentStr, _ = argsMap["i"].(string)
+					}
+					wakeTools++
+					if reg != nil {
+						actLabel := intentStr
+						if actLabel == "" && toolName != "" {
+							actLabel = toolName
+							if argPreview != "" {
+								actLabel += "(" + argPreview + ")"
+							}
+						}
+						if actLabel != "" {
+							reg.SetActivityInSession(req.ParentSessionID, req.ID, actLabel)
+						}
+						ref.mu.Lock()
+						ref.Tools = baseTools + wakeTools
+						ref.DurationMs = baseDurationMs + time.Since(turnStart).Milliseconds()
+						ref.LastActive = time.Now()
+						ref.mu.Unlock()
+						reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+							AgentID:     req.ID,
+							Kind:        "tool",
+							Title:       toolName,
+							Detail:      OneLineLabel(intentStr),
+							Status:      "pending",
+							TimestampMs: nowMs,
+						})
+						shouldNotify = true
+					}
+				case "tool_execution_end":
+					toolName, _ := event["toolName"].(string)
+					isErr, _ := event["isError"].(bool)
+					if reg != nil && toolName != "" {
+						ref.mu.Lock()
+						ref.DurationMs = baseDurationMs + time.Since(turnStart).Milliseconds()
+						ref.LastActive = time.Now()
+						ref.mu.Unlock()
+						st := "ok"
+						if isErr {
+							st = "error"
+						}
+						reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+							AgentID:     req.ID,
+							Kind:        "tool",
+							Title:       toolName,
+							Status:      st,
+							TimestampMs: nowMs,
+						})
+						shouldNotify = true
+					}
 				case "message_update":
 					if ame, ok := event["assistantMessageEvent"].(map[string]any); ok {
 						if t, _ := ame["type"].(string); t == "text_delta" {
@@ -2070,6 +2453,42 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 							usageTotals.add(u)
 							hasUsage = true
 							tokens += u.Input + u.Output + u.CacheWrite
+						}
+						if reg != nil {
+							ref.mu.Lock()
+							ref.Requests = baseRequests + requests
+							ref.Tokens = baseTokens + tokens
+							ref.Cost = baseCost + usageTotals.Cost.Total
+							if uMap, ok := m["usage"].(map[string]any); ok {
+								if ctxTok, ok := asInt(uMap["contextTokens"]); ok && ctxTok > 0 {
+									ref.ContextTokens = ctxTok
+								} else if totTok, ok := asInt(uMap["totalTokens"]); ok && totTok > 0 {
+									ref.ContextTokens = totTok
+								}
+							}
+							ref.DurationMs = baseDurationMs + time.Since(turnStart).Milliseconds()
+							ref.LastActive = time.Now()
+							ref.mu.Unlock()
+							actStatus := "ok"
+							actTitle := "Assistant response"
+							actDetail := OneLineLabel(lastReportText)
+							if sr, _ := m["stopReason"].(string); sr == "error" || sr == "aborted" {
+								actStatus = sr
+								actTitle = "Assistant " + sr
+							}
+							if em, _ := m["errorMessage"].(string); em != "" {
+								actStatus = "error"
+								actDetail = OneLineLabel(em)
+							}
+							reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+								AgentID:     req.ID,
+								Kind:        "response",
+								Title:       actTitle,
+								Detail:      actDetail,
+								Status:      actStatus,
+								TimestampMs: nowMs,
+							})
+							shouldNotify = true
 						}
 						if req.SoftBudget > 0 {
 							if budgetStopRequested {
@@ -2113,6 +2532,9 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 					}
 				}
 				wmu.Unlock()
+				if shouldNotify && reg != nil {
+					reg.notifyHub(false)
+				}
 			})
 
 			expand := false
@@ -2136,10 +2558,17 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 			}
 			unsub()
 
-			// Refresh transcript snapshot.
+			// Refresh transcript snapshot without losing pre-revive messages.
+			msgsGrew := false
 			if liveMsgs, err := s.Messages(); err == nil && len(liveMsgs) > 0 {
 				ref.mu.Lock()
-				ref.Messages = liveMsgs
+				if len(liveMsgs) >= len(ref.Messages) {
+					msgsGrew = len(liveMsgs) > len(ref.Messages)
+					ref.Messages = liveMsgs
+				} else {
+					ref.Messages = append(ref.Messages, liveMsgs...)
+					msgsGrew = true
+				}
 				ref.mu.Unlock()
 			}
 
@@ -2214,18 +2643,32 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 						ref.mu.Unlock()
 					}
 				}
-				persistTranscriptSnapshot(ref)
+				persistTranscriptSnapshotForce(ref, msgsGrew)
 			}
 
 			// Return ref to idle and re-arm idle park timer (unless aborted/disposed).
 			ref.mu.Lock()
+			ref.runActive = false
 			if ref.Status == "running" {
 				ref.Status = "idle"
 			}
+			ref.Activity = ""
+			ref.TurnStartedAt = time.Time{}
+			ref.DurationMs = baseDurationMs + durMs
+			ref.Requests = baseRequests + reqCopy
+			ref.Tokens = baseTokens + tokCopy
+			ref.Cost = baseCost + usageCopy.Cost.Total
 			ref.LastActive = time.Now()
 			stillLive := ref.Session != nil && ref.Status == "idle"
+			finalSt := ref.Status
 			ref.mu.Unlock()
 			if reg != nil {
+				reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+					AgentID: req.ID,
+					Kind:    "status",
+					Title:   "Status: " + finalSt,
+					Status:  activityStatusForAgentStatus(finalSt),
+				})
 				if stillLive {
 					reg.ArmIdleParkTimer(ref, req.AgentIdleTTLMs)
 				}
@@ -2284,6 +2727,179 @@ func makeMonitoredWakeHandler(reg *Registry, ref *AgentRef, req RunRequest, stru
 			}
 		}()
 		return true
+	}
+}
+
+// makeReviveHandler builds the OnRevive callback for a parked or aborted
+// subagent so the Agent Hub can restore a live idle child session ready to
+// receive follow-up messages.
+func makeReviveHandler(reg *Registry, ref *AgentRef, req RunRequest, structured bool, softBudgetNotice bool) func() (string, error) {
+	return func() (string, error) {
+		ref.mu.Lock()
+		if ref.reviving {
+			ref.mu.Unlock()
+			return "", fmt.Errorf("agent %s is already reviving", ref.ID)
+		}
+		if ref.runActive {
+			ref.mu.Unlock()
+			return "", fmt.Errorf("agent %s is still shutting down", ref.ID)
+		}
+		st := ref.Status
+		if st != "parked" && st != "aborted" {
+			ref.mu.Unlock()
+			return "", fmt.Errorf("agent %s is %s (only parked or aborted agents can be revived)", ref.ID, st)
+		}
+		ref.reviving = true
+		sessFile := ref.SessionFile
+		retainedMsgs := make([]map[string]any, len(ref.Messages))
+		copy(retainedMsgs, ref.Messages)
+		ref.mu.Unlock()
+		defer func() {
+			ref.mu.Lock()
+			ref.reviving = false
+			ref.mu.Unlock()
+		}()
+
+		var zero sdk.Context
+		if req.SDK == zero {
+			return "", fmt.Errorf("cannot revive agent %s: host SDK context unavailable", ref.ID)
+		}
+
+		childDepth := req.TaskDepth + 1
+		toolsList, excludeList := ResolveChildToolNames(req.Agent, childDepth, req.MaxDepth, structured)
+		effectiveIRC := req.IRCEnabled && (toolsList == nil || slices.Contains(toolsList, "write"))
+		reqForPrompt := req
+		reqForPrompt.IRCEnabled = effectiveIRC
+		roster := PeerRoster{}
+		if reg != nil && effectiveIRC {
+			roster = reg.CollectPeerRosterForSession(req.ParentSessionID, req.ID)
+		}
+		subagentSysPrompt := RenderSubagentSystemPrompt(reqForPrompt, roster, structured)
+		modelCandidates := req.ModelOverride
+		if len(modelCandidates) == 0 {
+			modelCandidates = req.Agent.Model
+		}
+		modelObj, modelThinkSuffix, _ := resolveModelForChildWithRole(req.SDK, modelCandidates)
+		thinkingLevel := ClampThinkingLevelToCeiling(modelObj, ResolveChildThinkingLevel(req.Agent.ThinkingLevel, req.Effort, modelThinkSuffix), req.MaxEffort)
+
+		// Prepare CustomTools: copy caller custom tools + inject `yield` when structured.
+		var customTools []sdk.ToolDefinition
+		if len(req.CustomTools) > 0 {
+			customTools = append(customTools, req.CustomTools...)
+		}
+		if structured {
+			yieldTool := intent.Tool(schemaorder.Apply(BuildYieldToolDefinition(req.OutputSchema, req.WorkPoolItems, func(_ YieldItem, _ bool) {})))
+			customTools = append(customTools, yieldTool)
+		}
+
+		// H1: Seed the revived child session from the agent's retained transcript.
+		var sm sdk.SessionManager
+		var smErr error
+		hasSM := false
+		if sessFile != "" {
+			if info, err := os.Stat(sessFile); err == nil && info.Size() > 0 {
+				sm, smErr = sdk.SessionManagerOpen(req.SDK, sessFile, nil, nil)
+				if smErr == nil {
+					hasSM = true
+				}
+			}
+		}
+		if !hasSM && len(retainedMsgs) > 0 {
+			entries := buildSessionEntriesFromMessages(retainedMsgs)
+			if len(entries) > 0 {
+				sm, smErr = sdk.SessionManagerInMemory(req.SDK, req.Cwd, nil, entries)
+				if smErr == nil {
+					hasSM = true
+				}
+			}
+		}
+
+		opts := sdk.CreateAgentSessionOptions{
+			Cwd:           req.Cwd,
+			AgentDir:      req.AgentDir,
+			Model:         modelObj,
+			ThinkingLevel: thinkingLevel,
+			Tools:         toolsList,
+			ExcludeTools:  excludeList,
+			NoTools:       "builtin",
+			CustomTools:   customTools,
+			InMemory:      !hasSM,
+			Resources: sdk.ResourceOptions{
+				NoExtensions:             true,
+				AdditionalExtensionPaths: []string{FusedExtensionPath},
+				NoPromptTemplates:        true,
+				NoThemes:                 true,
+				NoContextFiles:           true,
+				AppendSystemPrompt:       []string{subagentSysPrompt},
+			},
+		}
+		if hasSM {
+			opts.SessionManager = &sm
+		}
+
+		session, err := req.SDK.CreateAgentSession(opts)
+		if err != nil {
+			return "", fmt.Errorf("failed to revive agent %s: %w", ref.ID, err)
+		}
+		parentID := req.ParentAgentID
+		if parentID == "" {
+			parentID = MainAgentID
+		}
+		if reg != nil && session.SessionID != "" {
+			reg.RegisterChildSession(session.SessionID, buildChildSessionMeta(req, childDepth, parentID, toolsList))
+		}
+		if err := session.BindExtensions(); err != nil {
+			session.Dispose()
+			if session.SessionID != "" {
+				lifecycle.End(session.SessionID)
+				if reg != nil {
+					reg.UnregisterChildSession(session.SessionID)
+				}
+			}
+			return "", fmt.Errorf("failed to bind revived agent %s: %w", ref.ID, err)
+		}
+
+		// H2: Re-verify ref is still registered and revivable after CreateAgentSession + BindExtensions.
+		ref.mu.Lock()
+		stillReg := true
+		if reg != nil {
+			cur, ok := reg.GetInSession(req.ParentSessionID, ref.ID)
+			stillReg = ok && cur == ref
+		}
+		if !stillReg || !ref.reviving || (ref.Status != "parked" && ref.Status != "aborted") {
+			ref.mu.Unlock()
+			session.Dispose()
+			if session.SessionID != "" {
+				lifecycle.End(session.SessionID)
+				if reg != nil {
+					reg.UnregisterChildSession(session.SessionID)
+				}
+			}
+			return "", fmt.Errorf("agent %s was closed or modified during revive", ref.ID)
+		}
+		ref.Session = session
+		ref.ChildSessionID = session.SessionID
+		if session.SessionFile != "" {
+			ref.SessionFile = session.SessionFile
+		}
+		ref.Status = "idle"
+		ref.Activity = ""
+		ref.TurnStartedAt = time.Time{}
+		ref.LastActive = time.Now()
+		ref.OnWake = makeMonitoredWakeHandler(reg, ref, req, structured, softBudgetNotice)
+		ref.mu.Unlock()
+
+		if reg != nil {
+			reg.RecordActivity(req.ParentSessionID, surface.AgentHubActivity{
+				AgentID: ref.ID,
+				Kind:    "status",
+				Title:   "Status: idle (revived)",
+				Status:  "ok",
+			})
+			reg.ArmIdleParkTimer(ref, req.AgentIdleTTLMs)
+			reg.notify()
+		}
+		return fmt.Sprintf("Revived agent %s.", ref.ID), nil
 	}
 }
 

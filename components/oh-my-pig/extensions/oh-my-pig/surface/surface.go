@@ -40,6 +40,19 @@ var (
 	// slider, applied by the extension when model_select fires or immediately.
 	pendingThinking string
 	thinkingApplier func(level string)
+	// agentHubSnapshot holds the latest session subagent roster and cost summary
+	// published by internal/agents for Tern's HUD pill, composer billing, and
+	// native Agent Hub overlay.
+	agentHubSnapshot  AgentHubSnapshot
+	agentHubListeners = map[int]func(AgentHubSnapshot){}
+	agentHubNextID    int
+	agentHubHandlers  AgentHubHandlers
+	agentHubOpenHook  func()
+	// compactionMetas holds recent compaction metadata (method, tokensBefore,
+	// tokensAfter, frameCount, summary) published by internal/snapcompact so
+	// Tern draws omp's collapsible `section[omp.compaction]` divider instead of
+	// PiG's purple ANSI `[compaction]` box.
+	compactionMetas []CompactionMeta
 )
 
 // maxModelNames bounds modelNames; a session uses a handful of models.
@@ -191,6 +204,242 @@ func ConsumePendingThinkingLevel() string {
 	return v
 }
 
+// AgentHubItem is one subagent row published by internal/agents for Tern's
+// native HUD counter, composer subagent spend (+X.XX), and Agent Hub overlay.
+type AgentHubItem struct {
+	ID            string
+	DisplayName   string
+	AgentType     string // e.g. "scout", "reviewer", "task", "sonic"
+	ParentID      string
+	Status        string // "running" | "idle" | "parked" | "aborted"
+	Task          string
+	Activity      string
+	Model         string
+	ModelRole     string
+	ThinkingLevel string
+	Cost          float64
+	DurationMs    int64
+	StartedAtMs   int64 // Unix ms when current running turn began (for live elapsed clock)
+	Requests      int
+	Tools         int
+	Tokens        int
+	ContextTokens int
+	ContextWindow int
+	CreatedAtMs   int64
+	LastActiveMs  int64
+	SessionFile   string
+	CanRevive     bool
+}
+
+// AgentHubActivity is one activity timeline event for the Agent Hub Activity tab.
+type AgentHubActivity struct {
+	ID          string
+	AgentID     string
+	Kind        string // "tool" | "response" | "irc" | "status"
+	Title       string
+	Detail      string
+	Status      string // "ok" | "pending" | "error" | "aborted"
+	TimestampMs int64
+}
+
+// AgentHubTranscriptEntry is one rendered message entry for an agent's transcript
+// viewer overlay.
+type AgentHubTranscriptEntry struct {
+	Role        string // "user" | "assistant" | "tool" | "system"
+	Text        string
+	Thinking    string
+	ToolName    string
+	ToolArgs    string
+	ToolOutput  string
+	IsError     bool
+	TimestampMs int64
+}
+
+// AgentHubSnapshot is the immutable subagent state snapshot for the current session.
+type AgentHubSnapshot struct {
+	RunningCount     int
+	InspectableCount int
+	SubagentCost     float64
+	TotalDurationMs  int64
+	TotalRequests    int
+	TotalTokens      int
+	TotalTools       int
+	Agents           []AgentHubItem
+	Activity         []AgentHubActivity
+}
+
+// AgentHubHandlers connects Tern's native Agent Hub overlay actions back to
+// internal/agents (transcript loading, revive, kill, and steering/IRC send).
+type AgentHubHandlers struct {
+	LoadTranscript func(agentID string) []AgentHubTranscriptEntry
+	Kill           func(agentID string) (string, error)
+	Revive         func(agentID string) (string, error)
+	SendMessage    func(agentID, body string) error
+}
+
+// SetAgentHubSnapshot publishes the latest subagent roster and aggregate metrics
+// from internal/agents and notifies subscribed frontend listeners.
+func SetAgentHubSnapshot(snap AgentHubSnapshot) {
+	cp := cloneAgentHubSnapshot(snap)
+	mu.Lock()
+	agentHubSnapshot = cp
+	fns := make([]func(AgentHubSnapshot), 0, len(agentHubListeners))
+	for _, fn := range agentHubListeners {
+		fns = append(fns, fn)
+	}
+	mu.Unlock()
+	for _, fn := range fns {
+		fn(cloneAgentHubSnapshot(cp))
+	}
+}
+
+// GetAgentHubSnapshot returns a copy of the latest published AgentHubSnapshot.
+func GetAgentHubSnapshot() AgentHubSnapshot {
+	mu.Lock()
+	cp := cloneAgentHubSnapshot(agentHubSnapshot)
+	mu.Unlock()
+	return cp
+}
+
+// OnAgentHubChange subscribes fn to subagent roster/metric updates and returns
+// an unsubscribe function.
+func OnAgentHubChange(fn func(AgentHubSnapshot)) func() {
+	if fn == nil {
+		return func() {}
+	}
+	mu.Lock()
+	agentHubNextID++
+	id := agentHubNextID
+	agentHubListeners[id] = fn
+	mu.Unlock()
+	return func() {
+		mu.Lock()
+		delete(agentHubListeners, id)
+		mu.Unlock()
+	}
+}
+
+// SetAgentHubHandlers registers the extension's callbacks for Agent Hub actions.
+func SetAgentHubHandlers(h AgentHubHandlers) {
+	mu.Lock()
+	agentHubHandlers = h
+	mu.Unlock()
+}
+
+// GetAgentHubHandlers returns the registered Agent Hub callbacks.
+func GetAgentHubHandlers() AgentHubHandlers {
+	mu.Lock()
+	h := agentHubHandlers
+	mu.Unlock()
+	return h
+}
+
+// SetAgentHubOpener registers the frontend's callback that opens the native
+// Agent Hub overlay in Tern (used by `/agents`).
+func SetAgentHubOpener(fn func()) {
+	mu.Lock()
+	agentHubOpenHook = fn
+	mu.Unlock()
+}
+
+// OpenAgentHub triggers the registered frontend Agent Hub opener and reports
+// whether a native opener handled it.
+func OpenAgentHub() bool {
+	mu.Lock()
+	fn := agentHubOpenHook
+	mu.Unlock()
+	if fn == nil {
+		return false
+	}
+	fn()
+	return true
+}
+
+func cloneAgentHubSnapshot(s AgentHubSnapshot) AgentHubSnapshot {
+	if len(s.Agents) > 0 {
+		cp := make([]AgentHubItem, len(s.Agents))
+		copy(cp, s.Agents)
+		s.Agents = cp
+	}
+	if len(s.Activity) > 0 {
+		cp := make([]AgentHubActivity, len(s.Activity))
+		copy(cp, s.Activity)
+		s.Activity = cp
+	}
+	return s
+}
+
+// CompactionMeta holds display metadata for one compaction entry published by
+// internal/snapcompact so Tern renders omp's native `section[omp.compaction]`
+// divider with exact method label, before → after tokens, frame count, and
+// expandable summary.
+type CompactionMeta struct {
+	Method       string // "snapcompact" | "soft" | "remote" | "handoff" | "shake" | ""
+	TokensBefore int
+	TokensAfter  int
+	FrameCount   int
+	Summary      string
+	Warning      string
+}
+
+const maxCompactionMetas = 64
+
+// RecordCompaction records metadata for a completed compaction entry.
+func RecordCompaction(m CompactionMeta) {
+	if m.TokensBefore <= 0 && m.Summary == "" && m.Method == "" {
+		return
+	}
+	mu.Lock()
+	updated := false
+	for i := len(compactionMetas) - 1; i >= 0; i-- {
+		if compactionMetas[i].TokensBefore == m.TokensBefore && (m.Summary == "" || compactionMetas[i].Summary == "" || compactionMetas[i].Summary == m.Summary) {
+			compactionMetas[i] = m
+			updated = true
+			break
+		}
+	}
+	if !updated {
+		compactionMetas = append(compactionMetas, m)
+		if len(compactionMetas) > maxCompactionMetas {
+			compactionMetas = compactionMetas[len(compactionMetas)-maxCompactionMetas:]
+		}
+	}
+	mu.Unlock()
+}
+
+// SetCompactions replaces the recorded compaction metadata list (e.g. on
+// session start/resume/tree switch).
+func SetCompactions(list []CompactionMeta) {
+	mu.Lock()
+	if len(list) > maxCompactionMetas {
+		list = list[len(list)-maxCompactionMetas:]
+	}
+	if len(list) == 0 {
+		compactionMetas = nil
+	} else {
+		cp := make([]CompactionMeta, len(list))
+		copy(cp, list)
+		compactionMetas = cp
+	}
+	mu.Unlock()
+}
+
+// LookupCompaction finds the most recent CompactionMeta matching tokensBefore
+// (or the latest entry when tokensBefore <= 0).
+func LookupCompaction(tokensBefore int) (CompactionMeta, bool) {
+	mu.Lock()
+	defer mu.Unlock()
+	for i := len(compactionMetas) - 1; i >= 0; i-- {
+		if tokensBefore > 0 && compactionMetas[i].TokensBefore == tokensBefore {
+			return compactionMetas[i], true
+		}
+	}
+	if tokensBefore <= 0 && len(compactionMetas) > 0 {
+		return compactionMetas[len(compactionMetas)-1], true
+	}
+	return CompactionMeta{}, false
+}
+
 // DisplayPath is p as omp spells it for the user and the model: on macOS
 // without the leading /private when both spellings name the same place. The
 // frontend member uses it for the paths and links it draws, so that they match
@@ -261,5 +510,10 @@ func ResetForTests() {
 	clear(modelCatalog)
 	pendingThinking = ""
 	thinkingApplier = nil
+	agentHubSnapshot = AgentHubSnapshot{}
+	agentHubListeners = map[int]func(AgentHubSnapshot){}
+	agentHubHandlers = AgentHubHandlers{}
+	agentHubOpenHook = nil
+	compactionMetas = nil
 	mu.Unlock()
 }

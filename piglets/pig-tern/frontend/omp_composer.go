@@ -71,7 +71,7 @@ func (s *session) ompComposerElement(e *entry, editor fe.Editor, interactive boo
 	}
 	barChildren = append(barChildren, ompComposerExtras(s.hasFooter, s.footer))
 	if s.hasFooter {
-		barChildren = append(barChildren, ompComposerUsageText(s.footer, interactive, s.runCommand))
+		barChildren = append(barChildren, ompComposerUsageText(s.footer, s.agentHub.SubagentCost, interactive, s.runCommand))
 	}
 	if running {
 		barChildren = append(barChildren, ompComposerStopControl())
@@ -303,8 +303,8 @@ func ompModeFactSeg(text string) (ui.Seg, bool) {
 
 // ompComposerUsageText builds omp's session cost text in the composer bar
 // (status-line/component.ts:3740-3755).
-func ompComposerUsageText(footer fe.Footer, interactive bool, run func(string)) ui.Text {
-	cost := ompCostSummary(footer)
+func ompComposerUsageText(footer fe.Footer, subagentCost float64, interactive bool, run func(string)) ui.Text {
+	cost := ompCostSummary(footer, subagentCost)
 	title := ""
 	if cost != "" {
 		title = "Session cost " + cost
@@ -419,22 +419,41 @@ func ompThinkingLevelToken(level string) string {
 	}
 }
 
-// ompCostSummary formats PiG's UsageTotals cost as omp's billing summary
-// (status-line/metrics.ts:59-104), with two decimal places.
-func ompCostSummary(footer fe.Footer) string {
+// ompSubscriptionIcon is omp's nerd-preset subscription icon
+// (`nf-md-currency_usd_off`, packages/tui/src/theme/symbols.ts:882).
+const ompSubscriptionIcon = "\U000f067a"
+
+// ompCostSummary formats PiG's UsageTotals cost and optional subagent spend as
+// omp's billing summary (status-line/metrics.ts:34-38, 59-104), with two
+// decimal places and Tern's forced nerd symbol preset.
+func ompCostSummary(footer fe.Footer, subagentCost float64) string {
 	cost := footer.UsageTotals.Cost
-	hasCost := cost != 0 && !math.IsNaN(cost)
-	if !hasCost && !footer.UsingSubscription {
+	if math.IsNaN(cost) || math.IsInf(cost, 0) || cost < 0 {
+		cost = 0
+	}
+	if math.IsNaN(subagentCost) || math.IsInf(subagentCost, 0) || subagentCost < 0 {
+		subagentCost = 0
+	}
+	hasCost := cost != 0
+	hasSubagent := subagentCost > 0
+	if !hasCost && !hasSubagent && !footer.UsingSubscription {
 		return ""
 	}
-	if !hasCost {
-		return "(sub)"
+	var summary string
+	if hasCost || hasSubagent {
+		formatted := toFixed(cost, 2)
+		if footer.UsingSubscription {
+			summary = ompSubscriptionIcon + " " + formatted
+		} else {
+			summary = "$" + formatted
+		}
+	} else {
+		summary = ompSubscriptionIcon
 	}
-	formatted := toFixed(cost, 2)
-	if footer.UsingSubscription {
-		return "S" + formatted
+	if hasSubagent {
+		summary += " (+" + toFixed(subagentCost, 2) + ")"
 	}
-	return "$" + formatted
+	return summary
 }
 
 // ompFormatNumber mirrors omp's formatNumber (packages/utils/src/format.ts:38-52).

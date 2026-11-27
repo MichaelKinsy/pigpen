@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	sdk "github.com/MichaelKinsy/PiG/extensions/sdk"
+	"github.com/MichaelKinsy/pigpen/oh-my-pig/surface"
 )
 
 // upstream: packages/coding-agent/src/session/session-maintenance.ts:738-740,2569,3210,3357-3600,3925-4000
@@ -415,16 +416,30 @@ func (m *manager) maybeBuildMidTurnCompaction(ctx sdk.Context, sid string, turnD
 		m.mu.Unlock()
 	}
 
+	tokensAfter := snapcompactTokensAfter(res)
+	frameCount := len(res.Archive.Frames)
 	details := map[string]any{
 		"readFiles":     nonNilStrings(res.ReadFiles),
 		"modifiedFiles": nonNilStrings(res.ModifiedFiles),
 		"method":        "snapcompact",
 		"phase":         "mid_turn",
 		"shortSummary":  res.ShortSummary,
+		"tokensAfter":   tokensAfter,
+		"frameCount":    frameCount,
 		PreserveKey:     res.Archive,
 	}
-	ctx.Notify("Mid-turn compaction: "+res.ShortSummary, "info")
-
+	if isTopLevelForSurface(ctx) {
+		surface.RecordCompaction(surface.CompactionMeta{
+			Method:       "snapcompact",
+			TokensBefore: res.TokensBefore,
+			TokensAfter:  tokensAfter,
+			FrameCount:   frameCount,
+			Summary:      res.Summary,
+		})
+	}
+	if !surface.Native() {
+		ctx.Notify("Mid-turn compaction: "+res.ShortSummary, "info")
+	}
 	return map[string]any{
 		"type":             "compaction",
 		"summary":          res.Summary,
