@@ -16,14 +16,50 @@ const NAME = /^[a-z0-9][a-z0-9.-]*$/;
 // Archon's provider plugins are the only kind this repository ships; a new kind is a deliberate addition here.
 const KINDS = ['provider'];
 
-/** 'package' (has package.json), 'archon-plugin' (has archon-plugin.json). Neither or both is an error. */
+/** 'package' (package.json), 'archon-plugin' (archon-plugin.json), or 'paseo-plugin' (paseo-plugin.json). Exactly one is required. */
 export function componentKind(directory) {
-  const pkg = existsSync(join(directory, 'package.json'));
-  const plugin = existsSync(join(directory, 'archon-plugin.json'));
-  if (pkg && plugin) throw new Error(`${directory}: has both package.json and archon-plugin.json; a component is a Package or an Archon plugin`);
-  if (pkg) return 'package';
-  if (plugin) return 'archon-plugin';
-  throw new Error(`${directory}: neither package.json (a PiG Package) nor archon-plugin.json (an Archon plugin)`);
+  const kinds = [
+    existsSync(join(directory, 'package.json')) && 'package',
+    existsSync(join(directory, 'archon-plugin.json')) && 'archon-plugin',
+    existsSync(join(directory, 'paseo-plugin.json')) && 'paseo-plugin',
+  ].filter(Boolean);
+  if (kinds.length > 1) throw new Error(`${directory}: has both ${kinds.join(' and ')}; a component has exactly one manifest`);
+  if (kinds.length === 1) return kinds[0];
+  throw new Error(`${directory}: neither package.json (a PiG Package), archon-plugin.json (an Archon plugin), nor paseo-plugin.json (a Paseo plugin)`);
+}
+
+/** Every Paseo plugin component: [{dir, path, descriptor}] sorted by directory. */
+export function readPaseoPlugins(directory = root) {
+  return readdirSync(join(directory, 'components'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(directory, 'components', entry.name, 'paseo-plugin.json')))
+    .sort((a, b) => a.name.localeCompare(b.name, 'en'))
+    .map(({ name }) => {
+      const path = join(directory, 'components', name);
+      return { dir: name, path, descriptor: JSON.parse(readFileSync(join(path, 'paseo-plugin.json'), 'utf8')) };
+    });
+}
+
+/** The Paseo descriptor rules: nonempty id, name, description, and requirements.paseo. */
+export function checkPaseoDescriptor(descriptor, label = 'paseo-plugin.json') {
+  const fail = (message) => { throw new Error(`${label}: ${message}`); };
+  if (typeof descriptor !== 'object' || descriptor === null || Array.isArray(descriptor)) fail('must be an object');
+  if (typeof descriptor.id !== 'string' || !NAME.test(descriptor.id)) fail('id must be lowercase words joined by - or .');
+  if (typeof descriptor.name !== 'string' || !descriptor.name.trim()) fail('name must be a nonempty string');
+  if (typeof descriptor.description !== 'string' || !descriptor.description.trim()) fail('description must be a nonempty string');
+  if (typeof descriptor.requirements?.paseo !== 'string' || !descriptor.requirements.paseo.trim()) fail('requirements.paseo must be a nonempty string');
+}
+
+/** Validates paseo-plugin.json and runs the plugin's node unit tests under test/*.test.mjs. */
+export function validatePaseoPlugin(path, { run = spawnSync } = {}) {
+  checkPaseoDescriptor(JSON.parse(readFileSync(join(path, 'paseo-plugin.json'), 'utf8')), `${path}/paseo-plugin.json`);
+  const testDir = join(path, 'test');
+  const tests = existsSync(testDir)
+    ? readdirSync(testDir).filter((f) => f.endsWith('.test.mjs')).sort().map((f) => join(testDir, f))
+    : [];
+  if (tests.length === 0) throw new Error(`${path}: no test/*.test.mjs files`);
+  const result = run(process.execPath, ['--test', ...tests], { cwd: path, stdio: 'inherit', shell: false });
+  if (result.error) throw new Error(`${path}: node --test failed (${result.error.message})`);
+  if (result.status !== 0) throw new Error(`${path}: node --test failed`);
 }
 
 /** Every Archon plugin component: [{dir, path, descriptor}] sorted by directory. */
