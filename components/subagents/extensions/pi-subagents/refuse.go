@@ -30,7 +30,7 @@ type action struct {
 
 var (
 	// runParams are the parameters an execution ({agent, task}) honors.
-	runParams = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true}
+	runParams = map[string]bool{"agent": true, "task": true, "agentScope": true, "cwd": true, "model": true, "async": true, "includeProgress": true}
 	actions   = map[string]*action{}
 )
 
@@ -112,11 +112,6 @@ func refuseUnsupported(params map[string]any, name string) string {
 			return refusal("the `" + name + "` action")
 		}
 		allowed = a.params
-	}
-	if name == "" {
-		if v, ok := params["async"]; ok && v != nil && v != false {
-			return refusal("async (background) runs (`async: " + fmt.Sprint(v) + "`)")
-		}
 	}
 	for _, k := range present(params) {
 		if !allowed[k] {

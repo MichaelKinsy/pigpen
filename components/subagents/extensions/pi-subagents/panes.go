@@ -77,6 +77,9 @@ func (p *paneHost) run(done <-chan struct{}, req childRequest, agent string) (ch
 		labels["herdr.space"], labels["herdr.tab"] = s, b
 	}
 	id := uuidV4()
+	if req.OnSession != nil {
+		req.OnSession(dir, id) // the fleet views resolve the child's session file live
+	}
 	var started hcTerminal
 	err = h.call("terminal.run", map[string]any{
 		"argv": append([]string{req.Bin}, paneArgs(req.Args, dir, id, req.Stdin)...), "cwd": req.Cwd, "env": paneEnv(req.Env),
@@ -157,6 +160,7 @@ func paneAnswer(dir, id, agent string, finished bool, exit int, screen func() st
 			res = childResult{Exit: 1, Stderr: fmt.Sprintf("no answer in %s's session file in %s", agent, dir)}
 		}
 	}
+	res.Session = sessionFile(dir, id)
 	out, errw := &headWriter{max: outputMaxBytes}, &tailWriter{max: stderrTail}
 	out.Write([]byte(res.Stdout))
 	errw.Write([]byte(res.Stderr))
@@ -275,4 +279,13 @@ func sessionAnswer(dir, id string) (childResult, bool) {
 		res.Stderr = "Response was truncated: the model reached its output token limit."
 	}
 	return res, true
+}
+
+// sessionFile is the transcript file the child's session wrote in dir: the file sessionAnswer would read.
+func sessionFile(dir, id string) string {
+	files, _ := filepath.Glob(filepath.Join(dir, "*_"+id+".jsonl"))
+	if len(files) == 0 {
+		return ""
+	}
+	return files[len(files)-1]
 }

@@ -195,7 +195,10 @@ func TestPaneRun(t *testing.T) {
 	r.host.sessionDir = ""
 	res, err := r.host.run(nil, r.req, "scout")
 	eq(t, err, nil, "error")
-	eq(t, res, childResult{Stdout: "answer"}, "result")
+	eq(t, childResult{Stdout: res.Stdout, Stderr: res.Stderr, Exit: res.Exit}, childResult{Stdout: "answer"}, "result")
+	if !regexp.MustCompile(`1_[0-9a-f-]+\.jsonl$`).MatchString(res.Session) {
+		t.Errorf("the child's session file: %q", res.Session)
+	}
 	p := r.fake.calls("terminal.run")[0]
 	argv := p["argv"].([]any)
 	eq(t, argv[0], "pig", "bin")
@@ -424,11 +427,11 @@ func TestRunAgentPanes(t *testing.T) {
 	a := &AgentConfig{Name: "scout", SystemPromptMode: "replace"}
 	r := newPaneRig(t, bothLabels, []string{"idle/0", "working/0", "blocked/1", "blocked/1", "working/1", "done/2"}, "answer")
 
-	out, err := runAgent(nil, ".", a, "t", "", nil)
+	out, _, err := runAgent(nil, ".", a, "t", "", nil)
 	eq(t, []any{out, err, hidden}, []any{"hidden", nil, 1}, "nil panes: the hidden runner")
 	eq(t, len(r.fake.methods()), 0, "no herdr-core call")
 
-	out, err = runAgent(nil, ".", a, "t", "", r.host)
+	out, _, err = runAgent(nil, ".", a, "t", "", r.host)
 	eq(t, []any{out, err, hidden}, []any{"answer", nil, 1}, "panes: the pane runner")
 	eq(t, len(r.fake.calls("terminal.run")), 1, "terminal.run")
 }

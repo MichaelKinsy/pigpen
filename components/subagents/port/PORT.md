@@ -1,4 +1,4 @@
-# Port record: pi-subagents (partial: definitions, discovery, list and get, single-agent and chain runs)
+# Port record: pi-subagents (partial: definitions, discovery, list, get and status, single-agent and chain runs)
 
 | Input | Identity |
 |---|---|
@@ -27,7 +27,57 @@ takes what can be checked against the original by running it, and one execution 
 - the tool the model sees: `subagents_enable` (the `subagent` tool is not offered until it is called), `subagent` and the two
   tools the original registers beside them, with the original's descriptions and JSON Schemas (read from the request the original
   made, `port/gen-tooldefs.py`); `subagent {action: "list"}` and `{action: "get"}` with the original's text;
-- the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget.
+- the startup behavior the trace shows: the git root probe and the clear of the `subagent-async` widget;
+- the observability surfaces over the port's runs, in the original's rows and text (its `src/tui/render.ts`,
+  `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts`): the `subagent-async` widget (the "Async agents" view),
+  `/subagents-fleet` and `subagent({ action: "status", view: "fleet" })` (the fleet inspector's textual fallback),
+  `subagent({ action: "status" })` (the active runs list) and `{ id, view: "transcript" }` (the live transcript tail while
+  the child runs — its formatLiveForegroundTranscript over the child's session entries — and the result transcript tail once
+  it settles),
+  and the inspector TUI itself: the original's `SubagentFleetComponent` (its `src/tui/fleet.ts` frame, roster, detail pane,
+  footer and keys) as a `sdk.RemoteComponent` over `Context.Custom`, the same `ui.custom()` overlay the original mounts
+  (`anchor: center, width: 95%, minWidth: 60, maxHeight: 85%, margin: 1`).
+  Adaptations: steer, stop, Inspect, Prompt Audit and tool details are refused with the port's message where the original
+  runs them; the detail pane shows the original's live transcript events (read from the child's session entries) and its
+  live progress rows (current tool, turns, tools, tokens) over them, with the original's collapsed tool form — without its
+  markdown renderer or the expand key — and a child that keeps no transcript shows the port's remembered status and result
+  transcript tail instead; rows the port cannot fill (token accounting a message never reports) are omitted, never
+  invented; the
+  expand-key hint is the original's unconfigured wording; `Recent runs:` in the fleet text is a port addition (the port
+  runs children in the foreground, so the inspector's "recent children and completed output/session paths" live there);
+- the runs' control: `async: true` detached runs and the `stop`, `interrupt`, `resume` and `steer` actions (`bg_wait`
+  refused; the completion notification below is what wakes the session, so a wait call is not needed). A detached child
+  lives in the registry and the views; its completion is delivered to the session as the original's `subagent-notify`
+  completion notification (its runs/background/notify.ts: `sendMessage` with triggerTurn, which wakes the model; its
+  display rule, its formatSingleCompletion/formatGroupedCompletion text, and its completion-batcher: sibling successes
+  batch into one grouped message, while failures, pauses and stops flush the batch and go at once). `steer` delivers
+  mid-turn like the original: over the parent link (link.go — the agreed OS socket between a session and its children,
+  both ends this extension) the child's host queues the message at the running turn's next safe point, so the turn is
+  never interrupted and nothing in flight is lost. Its `mode` (`steer` | `follow_up` | `auto`, the original's
+  normalizeSteerDeliveryMode) is honored: `follow_up` always queues the message for the run's next turn, and so does a
+  steer no link can deliver. The receipt is the original's steeringReceipt and states delivered or queued; a steered
+  turn's answer is delivered as its steer reply notification (a port addition: the original has no per-turn reply).
+  `resume` is the original's new run id per pass, and a stopped run is not
+  resumable. Children pin
+  session files in the parent's session directory (as pane children always did) so turns can continue. The port keeps
+  the foreground default where the original defaults to async. `includeProgress` is honored: with it the result carries the
+  run's full progress record (the original's AgentProgress) over the child's transcript and output; without it the result
+  stays compact.
+- the single run's launch options (`runopts.go`): `timeoutMs` / `maxRuntimeMs`, `checkpointBeforeDeadlineMs` and
+  `output`, in the original's resolutions and texts — one positive integer no larger than 2147483647 for the deadline
+  (the two aliases only when they agree) with its 30-minute single-agent default and its terminal
+  `Subagent timed out after <n>ms.`; the pre-deadline checkpoint steer on async single runs only (its message, at the
+  lead before the deadline, never less than a second after launch and only while a step runs, over the steer route, the
+  deadline kill still applying); and the output file (its instruction in the task — the read-only wording for a child
+  that cannot write — a file the child wrote itself read back instead of overwritten, its
+  `Output saved to: <path> (<size>, <n> lines). Read this file if needed.` reference, a relative path under
+  `<artifacts>/outputs/<run id>`, an agent's own `output` frontmatter as the default and `get` showing it).
+  Adaptations: the file holds the bounded answer the port keeps (its 200 KB / 5000-line truncation) rather than the
+  child's whole output, and a child with no pinned session (a session without a directory) is not steered the
+  checkpoint — the port skips it rather than queue a turn the deadline would end. The
+  original's extension-config defaults (`config.timeoutMs`, `config.checkpointBeforeDeadlineMs`,
+  `singleRunOutputBaseDir`) are not ported: the port reads no extension config file. Checked by `runopts_test.go` and
+  `runopts_host_test.go`.
 
 **An addition, not a port: running.** The original runs a child through its own executor, scripted workflows and (in
 Pi) in-process child sessions. The port starts a child `pig --print` with the agent's model, thinking,
@@ -59,9 +109,18 @@ child process, the fake host) and shown live in tmux (`port/demo`). What keeps i
   child knows its depth from `PIG_SUBAGENT_DEPTH` (`PIG_SUBAGENT` alone counts as 1). The child loads this extension again from the
   settings, and even `--no-extensions` would not help: a Piglet Binary keeps its fused members under it, so a Binary that
   starts itself would nest without end;
+- every child also carries `PIG_PARENT_SESSION=<the session's id>` — one generic provenance marker (it names the session
+  that delegated the child; no policy, no sandbox vocabulary) beside `PIG_SUBAGENT` / `PIG_SUBAGENT_DEPTH` /
+  `PIG_AGENT_ROLE`. Child-side tooling such as pig-bg-tasks uses it to reach the delegating session (its escalation
+  relay and workspace policy); the port's own parent link (link.go) derives its socket name from the same id, and
+  steering rides that link into the running child's turn. Nested children re-declare it at every level;
 - at most 4 children run at once (the original's `MAX_CONCURRENCY`), whatever one model turn asks for;
 - a cancelled call (Escape, the session ending) sends the child SIGTERM and kills it 5 s later; on Linux a child also gets
   SIGTERM when its parent dies, so a host killed outright leaves none behind;
+- every single run has a deadline: the call's `timeoutMs` / `maxRuntimeMs`, else the original's 30-minute single-agent
+  default, and the child is stopped at it with `Subagent timed out after <n>ms.` — a run with no options of its own (a
+  chain's step, a resume's) has none. An async single run given `checkpointBeforeDeadlineMs` is steered to checkpoint
+  and hand off that long before the deadline (`runopts.go`), and `output` binds its answer to a file;
 - the child's environment is this process's without the host's internals for this extension (`PIG_EXT_*`, `PIG_HARNESS_*`);
 - the answer is the child's stdout, bounded as the original's `truncateOutput` bounds it (200 KB, 5000 lines, its marker);
   stderr (its last 8 KB) explains a failure;
@@ -98,15 +157,15 @@ dynamic fan-out validators they need; external CLI and external job runners (the
 agent catalog; the original's skills and prompt templates (their names would have to change to be Pigpen skills, and they
 document features that are not ported); the original's session-resume memory of whether `subagent` was enabled.
 
-**Refusals (M9, `refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
+**Refusals (`refuse.go`; the port's own, the original has none).** Everything above that is not ported is refused, never
 accepted and ignored: a call to `subagent` that sets a parameter the port does not honor (anything but `agent`, `task`,
-`agentScope`, `cwd`, `model` and `async: false`; for `list` and `get`, `action`, `agent` and `agentScope`, plus `capabilities` for `list`, which gives the original's capability rows as text without its `agentCapabilities` details), `async` other than
-`false`, `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
+`agentScope`, `cwd`, `model`, `async`, `includeProgress`, `timeoutMs`, `maxRuntimeMs`, `checkpointBeforeDeadlineMs` and
+`output`; for `list` and `get`, `action`, `agent` and `agentScope`, plus `capabilities` for `list`, which gives the original's capability rows as text without its `agentCapabilities` details), `workflow`, `workflowScript`, `workflowScriptPath`, `tasks`, `chain`, `parallel`, `concurrency`, `chainDir`, `chainName`, an action
 other than `list` and `get`, a run without `task`, and the tools `bg_wait` and `subagent_supervisor` (declared, as the
 original's request shows them). The original's 19 other slash commands are not registered: a command the port lacks is not offered. The text is always `@pi-in-go/pigpen-subagents (Go port) does not support
 <feature> yet. Install the original extension, npm:pi-subagents@0.73.1, which runs unchanged in PiG.`; a tool refuses with an error. The
 original's own errors for an empty call, a blank agent, a non-string task and a blank action are kept verbatim. Checked by
-`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays until the async slice:
+`refuse_test.go` (every parameter of the original's schema, one case each) and 19 mutations. One difference stays:
 the original runs in the background unless `async: false` (`asyncByDefault`); an omitted `async` runs in the foreground here.
 
 ## Mapping
@@ -121,6 +180,9 @@ the original runs in the background unless `async: false` (`asyncByDefault`); an
 | M6 | `extension/tool-activation.ts`, `extension/index.ts` (registration) | `extension.go`, `tooldefs.json` | 5 Pi scenarios (tools, system prompt snippets, startup) |
 | M7 | (addition) child process runs; `agents.ts` and `child-tool-plan.ts` (extensions, their settings defaults; model and thinking settings) | `run.go`, `child_*.go`, `agents.go`, `discovery.go`, `panes.go`, `hc.go`, `rexpanes.go` | `run_test.go`, `panes_test.go`, `hc_test.go`, `rexpanes_test.go`, `run_safety_test.go`, `run_cancel_unix_test.go`, `run_host_test.go`, `extensions_test.go`, `models_test.go` |
 | M8 | JavaScript semantics (ordered objects, UTF-16, trim) | `jsjson.go`, `jsutil.go` (copies from the powerline port) | everything that parses |
+| M9 | the observability views (`tui/render.ts` widget rows; `runs/background/fleet-view.ts`, `async-status.ts`, `run-status.ts` text; `tui/fleet.ts` inspector) | `fleet.go`, `fleet_tui.go` | `fleet_test.go`, `fleet_tui_test.go` (the original's rows, text and frame, pinned) |
+| M10 | (addition) async runs and control actions; `runs/background` control-channel semantics | `async.go`, `run.go` | `async_test.go` |
+| M11 | `runs/foreground/subagent-executor.ts` + `execution.ts` (the run deadline), `runs/background/subagent-runner.ts` (the pre-deadline checkpoint steer), `runs/shared/single-output.ts` (the output file) | `runopts.go` | `runopts_test.go`, `runopts_host_test.go` |
 
 ## Process: what was written before its tests
 
@@ -150,7 +212,7 @@ first commit (`a34f8e42`); the later fixes were tests first.
   survived when mutated) and added 42 mutations for it and its fixes: **116 mutations, all killed**. The pane work added `pane-*` mutations (the setting, the labels, the environment, the cleanup, the
   fallback, the chain wiring) and the pane tests (`panes_test.go`, `hc_test.go`, the wiring tests in `run_host_test.go`): 174 mutations. The Rex pane work added 22 `rex-*` mutations (the setting, the environment file, the root status record, the turn end, the fallback, the cleanup, the wiring), one for the
   shared `paneAnswer`, and `rexpanes_test.go` with a wiring test in `run_host_test.go`, all killed: **197 mutations** in the generator now.
-- `pig install --validate-only --json`: valid (1 command, 3 handlers, 4 tools).
+- `pig install --validate-only --json`: valid (2 commands, 3 handlers, 4 tools).
 - Piglet: `piglets/pig-popular` now selects six ports. A Binary built from this member alone gives traces equal to the Pi goldens in
   every event outside the `llm` channel (5 of 5); the `llm` channel differs by the host (a Binary's default tool set), as for the permissions port.
 - tmux, detached, interactive pig 0.4.0 (`port/demo/pane-*.txt`): the model enables the tool, lists the project's agents, runs

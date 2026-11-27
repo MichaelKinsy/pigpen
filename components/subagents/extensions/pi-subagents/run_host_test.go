@@ -1,14 +1,34 @@
 package pi_subagents_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
 
 	sub "github.com/MichaelKinsy/pigpen/pi-subagents"
 )
+
+// skipPanesOnWindows skips a test that asserts a child ran in a Herdr pane: panesEnabled never enables panes on Windows
+// (the README says so), so such a test cannot pass there however the fake herdr-core behaves.
+func skipPanesOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Herdr panes are never enabled on Windows")
+	}
+}
+
+// skipRexPanesOnWindows is skipPanesOnWindows for Rex: rexPanesEnabled never enables Rex panes on Windows either (the
+// child starts through /bin/sh), so a tool-level test asserting a Rex pane cannot pass there.
+func skipRexPanesOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Rex panes are never enabled on Windows")
+	}
+}
 
 // The running addition through the host boundary (review rev-port-popular-5): the tool and the command with a fake
 // child runner (export_test.go).
@@ -179,6 +199,7 @@ func TestModelSettingsThroughTheTool(t *testing.T) {
 }
 
 func TestSubagentToolPanes(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, fakeCalls := sub.StartPaneFake(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
@@ -199,6 +220,7 @@ func TestSubagentToolPanes(t *testing.T) {
 }
 
 func TestSubagentToolRexPanes(t *testing.T) {
+	skipRexPanesOnWindows(t)
 	rexCalls := sub.StartRexFake(t, "answer")
 	for k, v := range map[string]string{"HC_TERMINAL_SOCKET": "", "HC_TERMINAL_ID": "", "REX_SESSION": "session:s", "REX_BLOCK": "block:p", "REX_BIN_DIR": "/rex/bin"} {
 		t.Setenv(k, v)
@@ -220,6 +242,7 @@ func TestSubagentToolRexPanes(t *testing.T) {
 }
 
 func TestChainPanes(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, fakeCalls := sub.StartPaneFake(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
@@ -236,6 +259,7 @@ func TestChainPanes(t *testing.T) {
 }
 
 func TestPaneChildGetsTheParentSessionDir(t *testing.T) {
+	skipPanesOnWindows(t)
 	socket, _, params := sub.StartPaneFakeParams(t, "answer")
 	t.Setenv("HC_TERMINAL_SOCKET", socket)
 	t.Setenv("HC_TERMINAL_ID", "t1")
@@ -265,4 +289,49 @@ func TestPaneChildGetsTheParentSessionDir(t *testing.T) {
 		}
 	}
 	eq(t, i >= 0 && argv[i+1] == sessions, true, "--session-dir is the parent's session directory")
+}
+
+// `includeProgress` is honored: the result carries the run's full progress record (the original's AgentProgress), and
+// without the flag the compact result carries none (its foreground-result-size.test.ts).
+func TestIncludeProgressIsHonored(t *testing.T) {
+	fakeChildren(t, map[string]string{"build": "built it\nsecond line"})
+	cwd := tmp(t)
+	writeFile(t, filepath.Join(cwd, ".pi", "agents", "helper.md"), agentMD("helper", "Helps", "You help."))
+	h := StartHost(t, Extension(), HostOptions{Cwd: cwd})
+
+	raw, failure := h.Tool("subagent", map[string]any{"agent": "helper", "task": "build"})
+	eq(t, failure, "", "run")
+	if strings.Contains(string(raw), `"progress"`) {
+		t.Errorf("no progress without the flag: %s", raw)
+	}
+
+	raw, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "build", "includeProgress": true})
+	eq(t, failure, "", "run with includeProgress")
+	var result struct {
+		Details struct {
+			Progress []map[string]any `json:"progress"`
+		} `json:"details"`
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		t.Fatalf("result %s: %v", raw, err)
+	}
+	if len(result.Details.Progress) != 1 {
+		t.Fatalf("progress records: %s", raw)
+	}
+	rec := result.Details.Progress[0]
+	eq(t, rec["agent"], "helper", "agent")
+	eq(t, rec["status"], "completed", "status")
+	eq(t, rec["task"], "build", "task")
+	eq(t, rec["recentOutput"], []any{"built it", "second line"}, "the answer is the progress")
+	eq(t, rec["toolCount"], float64(0), "no tools without a transcript")
+
+	_, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "includeProgress": "yes"})
+	eq(t, failure, "includeProgress must be a boolean when provided.", "type")
+
+	// an async launch's record is detached (the original's detach receipt)
+	raw, failure = h.Tool("subagent", map[string]any{"agent": "helper", "task": "t", "async": true, "includeProgress": true})
+	eq(t, failure, "", "async")
+	if !strings.Contains(string(raw), `"status":"detached"`) {
+		t.Errorf("detached record: %s", raw)
+	}
 }

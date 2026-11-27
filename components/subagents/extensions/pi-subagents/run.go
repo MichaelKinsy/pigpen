@@ -33,20 +33,26 @@ const (
 )
 
 // childRequest is one child process: the program, its arguments, what it reads on stdin, where it runs and its whole
-// environment.
+// environment. OnOutput (optional) is called with the answer so far when the child produces output: the fleet views
+// show it live and as activity. OnSession (optional) is called when the child's session file is pinned (a pane child
+// pins its own).
 type childRequest struct {
-	Bin   string
-	Args  []string
-	Stdin string
-	Cwd   string
-	Env   []string
+	Bin       string
+	Args      []string
+	Stdin     string
+	Cwd       string
+	Env       []string
+	OnOutput  func(stdout string)
+	OnSession func(dir, id string)
 }
 
-// childResult is what a child gave back: its answer (stdout, bounded), the end of its stderr and its exit code.
+// childResult is what a child gave back: its answer (stdout, bounded), the end of its stderr, its exit code and, when it
+// has one, its session file.
 type childResult struct {
-	Stdout string
-	Stderr string
-	Exit   int
+	Stdout  string
+	Stderr  string
+	Exit    int
+	Session string
 }
 
 var errCancelled = errors.New("cancelled")
@@ -67,6 +73,12 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 	cmd.Stdin = strings.NewReader(req.Stdin)
 	stdout := &headWriter{max: outputMaxBytes}
 	stderr := &tailWriter{max: stderrTail}
+	notify := func() {
+		if req.OnOutput != nil {
+			req.OnOutput(stdout.text()) // the fleet views show the child's answer as it grows
+		}
+	}
+	stdout.onWrite, stderr.onWrite = notify, notify
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	configureChild(cmd)
 	unlock := lockThread()
@@ -104,16 +116,16 @@ func execChild(done <-chan struct{}, req childRequest, grace time.Duration) (chi
 
 // headWriter keeps the first max bytes and counts the whole stream.
 type headWriter struct {
-	mu    sync.Mutex
-	max   int
-	head  []byte
-	total int
-	lines int
+	mu      sync.Mutex
+	max     int
+	head    []byte
+	total   int
+	lines   int
+	onWrite func()
 }
 
 func (w *headWriter) Write(p []byte) (int, error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	w.total += len(p)
 	w.lines += strings.Count(string(p), "\n")
 	if room := w.max - len(w.head); room > 0 {
@@ -121,6 +133,10 @@ func (w *headWriter) Write(p []byte) (int, error) {
 			room = len(p)
 		}
 		w.head = append(w.head, p[:room]...)
+	}
+	w.mu.Unlock()
+	if w.onWrite != nil { // outside the lock: the listener reads this writer's text
+		w.onWrite()
 	}
 	return len(p), nil
 }
@@ -160,17 +176,21 @@ func formatBytes(n int) string {
 
 // tailWriter keeps the last max bytes.
 type tailWriter struct {
-	mu  sync.Mutex
-	max int
-	buf []byte
+	mu      sync.Mutex
+	max     int
+	buf     []byte
+	onWrite func()
 }
 
 func (w *tailWriter) Write(p []byte) (int, error) {
 	w.mu.Lock()
-	defer w.mu.Unlock()
 	w.buf = append(w.buf, p...)
 	if len(w.buf) > w.max {
 		w.buf = append([]byte(nil), w.buf[len(w.buf)-w.max:]...)
+	}
+	w.mu.Unlock()
+	if w.onWrite != nil { // outside the lock: the listener reads this writer's text
+		w.onWrite()
 	}
 	return len(p), nil
 }
@@ -210,16 +230,36 @@ func hasThinkingSuffix(model string) bool {
 	return i >= 0 && thinkingLevels[model[i+1:]]
 }
 
+// thinkingLevelFor is the child's thinking level for the views: a suffix on the call's model, else the agent's
+// `thinking`.
+func thinkingLevelFor(a *AgentConfig, model string) string {
+	if i := strings.LastIndex(model, ":"); i >= 0 && thinkingLevels[model[i+1:]] {
+		return model[i+1:]
+	}
+	if t, ok := a.Thinking.(string); ok && thinkingLevels[t] {
+		return t
+	}
+	return ""
+}
+
+// effectiveModel is the model a child runs with (buildChildArgs' resolution).
+func effectiveModel(a *AgentConfig, modelOverride string) string {
+	if modelOverride != "" {
+		return modelOverride
+	}
+	if a.Model != "" && a.Model != "inherit" {
+		return a.Model
+	}
+	return ""
+}
+
 // buildChildArgs is the child's command line: print mode and what the agent definition pins (model, thinking, tools,
 // system prompt, extensions). Without `extensions` the child discovers extensions as the original's background child (its
 // own process) does: a model provider (and its login) comes from one. The task is not an argument: it travels on stdin
 // (childPrompt).
 func buildChildArgs(a *AgentConfig, modelOverride string) []string {
 	args := []string{"--print"}
-	model := modelOverride
-	if model == "" && a.Model != "" && a.Model != "inherit" {
-		model = a.Model
-	}
+	model := effectiveModel(a, modelOverride)
 	if model != "" {
 		args = append(args, "--model", model)
 	}
@@ -273,16 +313,20 @@ func noExtensionsWarning(a *AgentConfig) string {
 func childPrompt(task string) string { return "Task: " + task }
 
 // childEnv is this process's environment without the host's internals for this extension (its socket, packed cell and
-// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent.
+// harness argument file are not the child's), and with who the child is: a subagent, how deep, which agent, and which
+// session delegated it (parent.go's PIG_PARENT_SESSION).
 func childEnv(base []string, depth int, role string) []string {
 	out := []string{}
 	for _, kv := range base {
 		k, _, _ := strings.Cut(kv, "=")
 		switch {
-		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE":
+		case strings.HasPrefix(k, "PIG_EXT_"), strings.HasPrefix(k, "PIG_HARNESS_"), k == "PIG_SUBAGENT", k == "PIG_SUBAGENT_DEPTH", k == "PIG_AGENT_ROLE", k == "PIG_PARENT_SESSION":
 			continue
 		}
 		out = append(out, kv)
+	}
+	if id := parentSessionIDFor(); id != "" {
+		out = append(out, "PIG_PARENT_SESSION="+id)
 	}
 	return append(out, "PIG_SUBAGENT=1", "PIG_SUBAGENT_DEPTH="+strconv.Itoa(depth+1), "PIG_AGENT_ROLE="+role)
 }
@@ -378,35 +422,100 @@ func (e *childExit) Error() string {
 	return fmt.Sprintf("%s exited with code %d: %s", e.agent, e.code, e.detail)
 }
 
-func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes paneRunner) (string, error) {
+// runAgent runs one child. With a parent run (a chain's, or one a caller registered) the child is that run's next step;
+// without one it is its own single run. The registry feeds the fleet inspector and the async agents view, and the run's
+// control channel stops, interrupts and steers the child (async.go).
+func runAgent(done <-chan struct{}, cwd string, a *AgentConfig, task, model string, panes paneRunner, parents ...*runRecord) (string, *stepRecord, error) {
+	var run *runRecord
+	if len(parents) > 0 && parents[0] != nil {
+		run = parents[0]
+	} else {
+		run = fleet.beginRun("single", a.Name, task, cwd)
+	}
+	run.armDeadline()        // the call's timeoutMs: the deadline kills this run's child when it passes
+	defer run.stopDeadline() // and a run that settles keeps no timer
+	st := run.addStep(a.Name, task, thinkingLevelFor(a, model))
+	depth, _ := subagentDepth(os.Getenv)
+	// The record keeps the task as the call wrote it; only the child's prompt carries the original's output-path
+	// instruction (runopts.go), as the original keeps its authoredTask apart from the effective prompt.
+	req := childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model),
+		Stdin: childPrompt(injectSingleOutputInstruction(task, run.outputFile(), a)), Cwd: cwd,
+		Env: childEnv(os.Environ(), depth, a.Name)}
+	dir, id := "", ""
+	if panes == nil {
+		// a pane child pins its own session; a hidden child pins one here, so steer and resume can continue it
+		if dir = childSessionDirFor(); dir != "" {
+			var args []string
+			args, id = sessionArgs(dir)
+			req.Args = append(req.Args, args...)
+		}
+	}
+	run.setLaunch(req, dir, id)
+	merged, stop := eitherDone(done, run.currentDone())
+	defer stop()
+	run.beginSteerPump() // this goroutine owns the run's turns
+	out, err := runStep(merged, run, st, req, panes)
+	drainSteers(run) // queued steer messages run as further turns; the run settles there
+	return out, st, err
+}
+
+// runStep holds a child slot for one step and records its outcome.
+func runStep(done <-chan struct{}, run *runRecord, st *stepRecord, req childRequest, panes paneRunner) (string, error) {
+	req.OnOutput, req.OnSession = st.touchLive, st.pinSession
+	if _, dir, id := run.getLaunch(); dir != "" {
+		st.pinSession(dir, id) // hidden children pin here; a pane child pins through OnSession
+	}
 	select {
 	case childSlots <- struct{}{}:
 	case <-done:
-		return "", fmt.Errorf("%s was cancelled", a.Name)
+		if run.didTimeout() { // the deadline fired while the step waited for a slot: it failed, it was not cancelled
+			message := run.timeoutMessage()
+			st.finish(stateFailed, "", message, "", 0)
+			return "", errors.New(message)
+		}
+		st.finish(run.terminatedState(), "", fmt.Sprintf("%s was cancelled", st.agent), "", 0)
+		return "", fmt.Errorf("%s was cancelled", st.agent)
 	}
 	defer func() { <-childSlots }()
-	depth, _ := subagentDepth(os.Getenv)
-	req := childRequest{Bin: pigBinary(), Args: buildChildArgs(a, model), Stdin: childPrompt(task), Cwd: cwd, Env: childEnv(os.Environ(), depth, a.Name)}
+	st.begin()
+	fleet.changed()
+	defer fleet.changed()
+	outputPath := run.outputFile()
+	snapshot := captureOutputSnapshot(outputPath) // a file the child writes itself is read back, not overwritten
 	var res childResult
 	var err error
 	if panes != nil {
-		res, err = panes.run(done, req, a.Name)
+		res, err = panes.run(done, req, st.agent)
 	} else {
 		res, err = runChild(done, req)
 	}
+	session := res.Session
+	if session == "" && run.sessionID != "" {
+		session = sessionFile(run.sessionDir, run.sessionID)
+	}
 	switch {
+	case errors.Is(err, errCancelled) && run.didTimeout():
+		// the run's deadline: the original's terminal timeout, not a cancellation
+		message := run.timeoutMessage()
+		st.finish(stateFailed, res.Stdout, message, session, 0)
+		return res.Stdout, errors.New(message)
 	case errors.Is(err, errCancelled):
-		return res.Stdout, fmt.Errorf("%s was cancelled", a.Name)
+		st.finish(run.terminatedState(), res.Stdout, fmt.Sprintf("%s was cancelled", st.agent), session, 0)
+		return res.Stdout, fmt.Errorf("%s was cancelled", st.agent)
 	case err != nil:
-		return "", fmt.Errorf("could not start %s: %w", a.Name, err)
+		st.finish(stateFailed, "", fmt.Sprintf("could not start %s: %v", st.agent, err), session, 0)
+		return "", fmt.Errorf("could not start %s: %w", st.agent, err)
 	case res.Exit != 0:
 		detail := res.Stderr
 		if detail == "" {
 			detail = res.Stdout
 		}
-		return res.Stdout, &childExit{agent: a.Name, code: res.Exit, detail: detail}
+		st.finish(stateFailed, res.Stdout, (&childExit{agent: st.agent, code: res.Exit, detail: detail}).Error(), session, res.Exit)
+		return res.Stdout, &childExit{agent: st.agent, code: res.Exit, detail: detail}
 	}
-	return res.Stdout, nil
+	answer := persistOutput(outputPath, res.Stdout, snapshot, res.Exit)
+	st.finish(stateComplete, answer, "", session, res.Exit)
+	return answer, nil
 }
 
 // chainTask is a step's task: its own template, else {task} for the first step and {previous} for the rest.
@@ -437,10 +546,12 @@ func runChain(done <-chan struct{}, cwd string, c *ChainConfig, agents []AgentCo
 		resolved[i] = a
 	}
 	previous := ""
+	run := fleet.beginRun("chain", c.Name, request, cwd)
+	defer fleet.changed()
 	for i, s := range c.Steps {
 		progress(fmt.Sprintf("[%d/%d] %s", i+1, len(c.Steps), s.Agent))
 		model := s.Model
-		out, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model, panes)
+		out, _, err := runAgent(done, cwd, resolved[i], chainTask(c.Steps, i, request, previous), model, panes, run)
 		if err != nil {
 			var ce *childExit
 			if errors.As(err, &ce) {

@@ -190,7 +190,10 @@ func TestRexRun(t *testing.T) {
 	r := newRexRig(t, []string{"", "idle", "working", "blocked", "blocked", "working", "done"}, "answer")
 	res, err := r.host.run(nil, r.req, "scout")
 	eq(t, err, nil, "error")
-	eq(t, res, childResult{Stdout: "answer"}, "result")
+	eq(t, res.Stdout, "answer", "result")
+	if !regexp.MustCompile(`1_[0-9a-f-]+\.jsonl$`).MatchString(res.Session) {
+		t.Errorf("the child's session file: %q", res.Session)
+	}
 
 	var split []string
 	for _, c := range r.calls {
@@ -261,7 +264,10 @@ func TestRexRunExit(t *testing.T) {
 
 	r = newRexRig(t, []string{"exit/0"}, "answer")
 	res, _ = r.host.run(nil, r.req, "scout")
-	eq(t, res, childResult{Stdout: "answer"}, "an answer before the exit counts")
+	eq(t, res.Stdout, "answer", "an answer before the exit counts")
+	if !regexp.MustCompile(`1_[0-9a-f-]+\.jsonl$`).MatchString(res.Session) {
+		t.Errorf("the child's session file: %q", res.Session)
+	}
 }
 
 func TestRexRunLostServer(t *testing.T) {
@@ -358,7 +364,7 @@ func TestRexRunFallback(t *testing.T) {
 func TestRunAgentRexPanes(t *testing.T) {
 	hiddenMustNotRun(t)
 	r := newRexRig(t, []string{"working", "done"}, "answer")
-	out, err := runAgent(nil, ".", &AgentConfig{Name: "scout", SystemPromptMode: "replace"}, "t", "", r.host)
+	out, _, err := runAgent(nil, ".", &AgentConfig{Name: "scout", SystemPromptMode: "replace"}, "t", "", r.host)
 	eq(t, []any{out, err}, []any{"answer", nil}, "the pane runner")
 	eq(t, r.count("split"), 1, "split")
 }

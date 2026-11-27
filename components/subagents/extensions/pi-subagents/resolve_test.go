@@ -43,7 +43,9 @@ func TestFindConfiguredProjectRoot(t *testing.T) {
 			t.Fatal(err)
 		}
 		if err := os.Symlink(home, alias); err != nil {
-			t.Fatal(err)
+			// this scenario needs a symlink; an account without symlink privilege (Windows without Developer Mode) cannot
+			// create one, so it skips instead of failing
+			t.Skipf("symlinks unavailable: %v", err)
 		}
 		t.Setenv("HOME", home)
 		t.Setenv("USERPROFILE", home)

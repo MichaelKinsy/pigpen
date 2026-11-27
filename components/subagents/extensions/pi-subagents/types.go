@@ -27,12 +27,15 @@ type AgentConfig struct {
 	Description string
 	Model       string
 	// Thinking is nil when unset, false when the frontmatter turns thinking off, or a level string.
-	Thinking        any
-	Tools           []string
-	McpDirectTools  []string
-	DefaultContext  string // "fork", "fresh" or ""
-	AcceptanceRole  string
-	DefaultReads    []string
+	Thinking       any
+	Tools          []string
+	McpDirectTools []string
+	DefaultContext string // "fork", "fresh" or ""
+	AcceptanceRole string
+	DefaultReads   []string
+	// Output is the agent's default single-run output file (`output` frontmatter); "" when it sets none. The
+	// call's `output` overrides it (runopts.go).
+	Output          string
 	DefaultProgress bool
 	DefaultAsync    *bool
 	Runner          *Runner

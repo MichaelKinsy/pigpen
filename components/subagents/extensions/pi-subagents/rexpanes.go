@@ -139,6 +139,9 @@ func (p *rexHost) run(done <-chan struct{}, req childRequest, agent string) (chi
 	}
 
 	id := uuidV4()
+	if req.OnSession != nil {
+		req.OnSession(dir, id) // the fleet views resolve the child's session file live
+	}
 	// --shell=none: no login shell between Rex and the child, so the environment is the parent's, as for the hidden child
 	out, err := rexCLI(p.bin, append([]string{"split", "-s", p.session, "-b", p.parent, "--focus=false", "--shell=none", "--keep-open",
 		"--cwd", req.Cwd, "--label", paneName(agent, randHex(3)), "--json", "--",

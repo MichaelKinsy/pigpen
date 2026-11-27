@@ -59,6 +59,7 @@ func TestModelSettings(t *testing.T) {
 }
 
 func TestModelSettingsFromTheHost(t *testing.T) {
+	skipUnescapedJSONPath(t)
 	home := withTempHome(t)
 	cwd := tmp(t)
 	pigUser := filepath.Join(home, ".pig", "agent", "settings.json")
