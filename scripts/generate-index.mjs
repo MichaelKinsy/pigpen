@@ -5,7 +5,7 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseDocument } from 'yaml';
 import { packageEntry, readPackageRecords, readPackages } from './packages.mjs';
-import { readArchonPlugins } from './archon-plugins.mjs';
+import { readArchonPlugins, readPaseoPlugins } from './archon-plugins.mjs';
 import { npmName } from './npm-packages.mjs';
 import { listingEntry, listingProblems, readListings } from './listings.mjs';
 import { readPinnedKeys, readReceipts, releaseFromReceipt } from './receipts.mjs';
@@ -49,6 +49,7 @@ export function reservedNames(directory = root, manifests = readManifests(direct
   const names = manifests.map(({ manifest }) => manifest.name);
   for (const { dir, manifest } of existsSync(join(directory, 'components')) ? readPackages(directory) : []) names.push(dir, manifest.name, `pigpen-${dir}`, npmName(dir));
   for (const { dir, descriptor } of existsSync(join(directory, 'components')) ? readArchonPlugins(directory) : []) names.push(dir, descriptor.name);
+  for (const { dir, descriptor } of existsSync(join(directory, 'components')) ? readPaseoPlugins(directory) : []) names.push(dir, descriptor.id);
   return new Set(names.filter((name) => typeof name === 'string').map((name) => name.toLowerCase()));
 }
 
