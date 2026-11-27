@@ -475,14 +475,22 @@ func TestSessionStartAsyncProbeNonBlockingAndSecondRunReceivesResult(t *testing.
 		t.Fatalf("run 1 expected nil _pigPromptResult while probe still running, got %q (%+v)", got1, before1.Result)
 	}
 
-	// Wait for the 1s fake rex probe to finish, then run 2 must receive the result.
-	time.Sleep(1100 * time.Millisecond)
-
-	got2, before2 := h.fireBeforeAgentStart("run 2")
-	if before2 == nil || before2.Error != nil {
-		t.Fatalf("run 2 before_agent_start error: %+v", before2)
-	}
+	// Poll until the 1s fake rex probe finishes (shell startup + sleep 1 can exceed 1.1s on macOS),
+	// then run 2 must receive the result.
 	want := "BASE\n\nYou are running in a Rex terminal: session session:async-1, tab window:async-2, pane block:async-3."
+	var got2 string
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		var before2 *wireResponse
+		got2, before2 = h.fireBeforeAgentStart("run 2")
+		if before2 == nil || before2.Error != nil {
+			t.Fatalf("run 2 before_agent_start error: %+v", before2)
+		}
+		if got2 == want || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 	if got2 != want {
 		t.Fatalf("run 2 systemPrompt mismatch:\ngot:  %q\nwant: %q", got2, want)
 	}
